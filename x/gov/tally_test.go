@@ -51,7 +51,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
 	require.True(t, tallyResults.Equals(EmptyTallyResult()))
@@ -80,7 +80,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionYes)
 	require.Nil(t, err)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
@@ -109,7 +109,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[1], OptionNo)
 	require.Nil(t, err)
 
-	passes, _, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
 }
@@ -139,7 +139,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
@@ -170,7 +170,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNoWithVeto)
 	require.Nil(t, err)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
@@ -201,7 +201,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionYes)
 	require.Nil(t, err)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
@@ -232,7 +232,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
@@ -261,11 +261,9 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, tallyResults, nonVoting := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
-	require.Equal(t, 1, len(nonVoting))
-	require.Equal(t, sdk.ValAddress(addrs[0]), nonVoting[0])
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
@@ -299,7 +297,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[3], OptionNo)
 	require.Nil(t, err)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
@@ -333,10 +331,9 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionYes)
 	require.Nil(t, err)
 
-	passes, tallyResults, nonVoting := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
-	require.Equal(t, 0, len(nonVoting))
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
 }
 
@@ -372,7 +369,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[3], OptionNo)
 	require.Nil(t, err)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
@@ -417,7 +414,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.False(t, passes)
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))
@@ -458,7 +455,7 @@ func TestTallyJailedValidator(t *testing.T) {
 	err = keeper.AddVote(ctx, proposalID, addrs[2], OptionNo)
 	require.Nil(t, err)
 
-	passes, tallyResults, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	passes, tallyResults := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
 
 	require.True(t, passes)
 	require.False(t, tallyResults.Equals(EmptyTallyResult()))

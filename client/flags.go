@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // nolint
@@ -51,6 +52,10 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Int64(FlagHeight, 0, "block height to query, omit to get most recent provable block")
+		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
+		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
+		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
+		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 	}
 	return cmds
 }
@@ -58,7 +63,7 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 // PostCommands adds common flags for commands to post tx
 func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().String(FlagFrom, "", "Name of private key with which to sign")
+		c.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 		c.Flags().Int64(FlagAccountNumber, 0, "AccountNumber number to sign the tx")
 		c.Flags().Int64(FlagSequence, 0, "Sequence number to sign the tx")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
@@ -76,6 +81,10 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagSimulate, DefaultGasLimit))
+		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
+		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
+		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
+		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 	}
 	return cmds
 }

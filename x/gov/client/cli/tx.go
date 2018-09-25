@@ -285,7 +285,6 @@ func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// nolint: gocyclo
 // GetCmdQueryProposals implements a query proposals command.
 func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{

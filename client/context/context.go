@@ -16,6 +16,9 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"os"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 const ctxAccStoreName = "acc"
@@ -23,22 +26,24 @@ const ctxAccStoreName = "acc"
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec           *codec.Codec
-	AccDecoder      auth.AccountDecoder
-	Client          rpcclient.Client
-	Logger          io.Writer
-	Height          int64
-	NodeURI         string
-	FromAddressName string
-	AccountStore    string
-	TrustNode       bool
-	UseLedger       bool
-	Async           bool
-	JSON            bool
-	PrintResponse   bool
-	Certifier       tmlite.Certifier
-	DryRun          bool
-	GenerateOnly    bool
+	Codec         *codec.Codec
+	AccDecoder    auth.AccountDecoder
+	Client        rpcclient.Client
+	Logger        io.Writer
+	Height        int64
+	NodeURI       string
+	From          string
+	AccountStore  string
+	TrustNode     bool
+	UseLedger     bool
+	Async         bool
+	JSON          bool
+	PrintResponse bool
+	Certifier     tmlite.Certifier
+	DryRun        bool
+	GenerateOnly  bool
+	fromAddress   types.AccAddress
+	fromName      string
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -51,20 +56,25 @@ func NewCLIContext() CLIContext {
 		rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
 	}
 
+	from := viper.GetString(client.FlagFrom)
+	fromAddress, fromName := fromFields(from)
+
 	return CLIContext{
-		Client:          rpc,
-		NodeURI:         nodeURI,
-		AccountStore:    ctxAccStoreName,
-		FromAddressName: viper.GetString(client.FlagFrom),
-		Height:          viper.GetInt64(client.FlagHeight),
-		TrustNode:       viper.GetBool(client.FlagTrustNode),
-		UseLedger:       viper.GetBool(client.FlagUseLedger),
-		Async:           viper.GetBool(client.FlagAsync),
-		JSON:            viper.GetBool(client.FlagJson),
-		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
-		Certifier:       createCertifier(),
-		DryRun:          viper.GetBool(client.FlagDryRun),
-		GenerateOnly:    viper.GetBool(client.FlagGenerateOnly),
+		Client:        rpc,
+		NodeURI:       nodeURI,
+		AccountStore:  ctxAccStoreName,
+		From:          viper.GetString(client.FlagFrom),
+		Height:        viper.GetInt64(client.FlagHeight),
+		TrustNode:     viper.GetBool(client.FlagTrustNode),
+		UseLedger:     viper.GetBool(client.FlagUseLedger),
+		Async:         viper.GetBool(client.FlagAsync),
+		JSON:          viper.GetBool(client.FlagJson),
+		PrintResponse: viper.GetBool(client.FlagPrintResponse),
+		Certifier:     createCertifier(),
+		DryRun:        viper.GetBool(client.FlagDryRun),
+		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
+		fromAddress:   fromAddress,
+		fromName:      fromName,
 	}
 }
 
@@ -94,16 +104,49 @@ func createCertifier() tmlite.Certifier {
 		errMsg.WriteString("--node ")
 	}
 	if errMsg.Len() != 0 {
-		fmt.Printf("must specify these options: %s when --trust-node is false\n", errMsg.String())
+		fmt.Printf("Must specify these options: %s when --trust-node is false\n", errMsg.String())
 		os.Exit(1)
 	}
 
 	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Create certifier failed: %s\n", err.Error())
+		fmt.Printf("Please check network connection and verify the address of the node to connect to\n")
+		os.Exit(1)
 	}
 
 	return certifier
+}
+
+func fromFields(from string) (fromAddr types.AccAddress, fromName string) {
+	if from == "" {
+		return nil, ""
+	}
+
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		fmt.Println("no keybase found")
+		os.Exit(1)
+	}
+
+	var info cskeys.Info
+	if addr, err := types.AccAddressFromBech32(from); err == nil {
+		info, err = keybase.GetByAddress(addr)
+		if err != nil {
+			fmt.Printf("could not find key %s\n", from)
+			os.Exit(1)
+		}
+	} else {
+		info, err = keybase.Get(from)
+		if err != nil {
+			fmt.Printf("could not find key %s\n", from)
+			os.Exit(1)
+		}
+	}
+
+	fromAddr = info.GetAddress()
+	fromName = info.GetName()
+	return
 }
 
 // WithCodec returns a copy of the context with an updated codec.
@@ -131,10 +174,9 @@ func (ctx CLIContext) WithAccountStore(accountStore string) CLIContext {
 	return ctx
 }
 
-// WithFromAddressName returns a copy of the context with an updated from
-// address.
-func (ctx CLIContext) WithFromAddressName(addrName string) CLIContext {
-	ctx.FromAddressName = addrName
+// WithFrom returns a copy of the context with an updated from address or name.
+func (ctx CLIContext) WithFrom(from string) CLIContext {
+	ctx.From = from
 	return ctx
 }
 

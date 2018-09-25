@@ -15,7 +15,6 @@ import (
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	distrcmd "github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	govcmd "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
@@ -52,20 +51,8 @@ func main() {
 	)
 	tx.AddCommands(tendermintCmd, cdc)
 
-	//Add IBC commands
-	ibcCmd := &cobra.Command{
-		Use:   "ibc",
-		Short: "Inter-Blockchain Communication subcommands",
-	}
-	ibcCmd.AddCommand(
-		client.PostCommands(
-			ibccmd.IBCTransferCmd(cdc),
-			ibccmd.IBCRelayCmd(cdc),
-		)...)
-
 	rootCmd.AddCommand(
 		tendermintCmd,
-		ibcCmd,
 		lcd.ServeCommand(cdc),
 		client.LineBreak,
 	)

@@ -43,7 +43,6 @@ func init() {
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address
-// nolint: gocyclo
 func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// collect data

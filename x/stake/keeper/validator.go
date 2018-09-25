@@ -695,7 +695,7 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Valid
 	validator.Commission.UpdateTime = blockTime
 
 	k.SetValidator(ctx, validator)
-	k.OnValidatorCommissionChange(ctx, addr)
+	k.OnValidatorCommissionChange(ctx, validator.OperatorAddr)
 	return nil
 }
 

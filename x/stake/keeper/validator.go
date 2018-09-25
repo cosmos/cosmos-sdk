@@ -699,6 +699,7 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Valid
 	validator.Commission.UpdateTime = blockTime
 
 	k.SetValidator(ctx, validator)
+	k.OnValidatorCommissionChange(ctx, addr)
 	return nil
 }
 
@@ -735,18 +736,4 @@ func ensureValidatorFound(found bool, ownerAddr []byte) {
 	if !found {
 		panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
 	}
-}
-
-//__________________________________________________________________________
-
-// XXX remove this code - this is should be superceded by commission work that bez is doing
-// get a single validator
-func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, addr sdk.ValAddress, newCommission sdk.Dec) sdk.Error {
-
-	k.OnValidatorCommissionChange(ctx, addr)
-
-	validator, _ := k.GetValidator(ctx, addr)
-	validator.Commission = newCommission
-	k.SetValidator(ctx, validator)
-	return nil
 }

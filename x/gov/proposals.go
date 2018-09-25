@@ -192,8 +192,9 @@ func (pt ProposalKind) String() string {
 func (pt ProposalKind) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", pt.String())))
+		s.Write([]byte(pt.String()))
 	default:
+		// TODO: Do this conversion more directly
 		s.Write([]byte(fmt.Sprintf("%v", byte(pt))))
 	}
 }
@@ -295,8 +296,9 @@ func (status ProposalStatus) String() string {
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", status.String())))
+		s.Write([]byte(status.String()))
 	default:
+		// TODO: Do this conversion more directly
 		s.Write([]byte(fmt.Sprintf("%v", byte(status))))
 	}
 }
@@ -322,11 +324,8 @@ func EmptyTallyResult() TallyResult {
 
 // checks if two proposals are equal
 func (resultA TallyResult) Equals(resultB TallyResult) bool {
-	if resultA.Yes.Equal(resultB.Yes) &&
+	return (resultA.Yes.Equal(resultB.Yes) &&
 		resultA.Abstain.Equal(resultB.Abstain) &&
 		resultA.No.Equal(resultB.No) &&
-		resultA.NoWithVeto.Equal(resultB.NoWithVeto) {
-		return true
-	}
-	return false
+		resultA.NoWithVeto.Equal(resultB.NoWithVeto))
 }

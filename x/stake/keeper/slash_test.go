@@ -473,7 +473,7 @@ func TestSlashBoth(t *testing.T) {
 	// slash validator
 	ctx = ctx.WithBlockHeight(12)
 	oldPool := keeper.GetPool(ctx)
-	validator, found := keeper.GetValidatorByConsPubKey(ctx, PKs[0])
+	validator, found := keeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())
 	keeper.Slash(ctx, consAddr0, 10, 10, fraction)
@@ -490,7 +490,7 @@ func TestSlashBoth(t *testing.T) {
 	// bonded tokens burned
 	require.Equal(t, int64(3), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// read updated validator
-	validator, found = keeper.GetValidatorByConsPubKey(ctx, PKs[0])
+	validator, found = keeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	// power not decreased, all stake was bonded since
 	require.Equal(t, sdk.NewDec(10), validator.GetPower())

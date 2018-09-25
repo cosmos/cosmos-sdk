@@ -174,13 +174,15 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 
 //______________________________________________________________________________________________
 //nolint
-func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to zero
-func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }
+func (d Dec) IsNil() bool       { return d.Int == nil }                 // is decimal nil
+func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 }          // is equal to zero
+func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }     // equal decimals
 func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) > 0 }      // greater than
 func (d Dec) GTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) >= 0 }     // greater than or equal
 func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) < 0 }      // less than
 func (d Dec) LTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) <= 0 }     // less than or equal
 func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} } // reverse the decimal sign
+func (d Dec) Abs() Dec          { return Dec{new(big.Int).Abs(d.Int)} } // absolute value
 
 // addition
 func (d Dec) Add(d2 Dec) Dec {

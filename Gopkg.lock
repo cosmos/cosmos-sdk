@@ -490,14 +490,6 @@
   version = "v0.23.1-rc0"
 
 [[projects]]
-  digest = "1:bf6d9a827ea3cad964c2f863302e4f6823170d0b5ed16f72cf1184a7c615067e"
-  name = "github.com/tendermint/tmlibs"
-  packages = ["cli"]
-  pruneopts = "UT"
-  revision = "49596e0a1f48866603813df843c9409fc19805c6"
-  version = "v0.9.0"
-
-[[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
@@ -677,7 +669,6 @@
     "github.com/tendermint/tendermint/rpc/lib/server",
     "github.com/tendermint/tendermint/types",
     "github.com/tendermint/tendermint/version",
-    "github.com/tendermint/tmlibs/cli",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/blowfish",
   ]

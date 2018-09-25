@@ -23,32 +23,48 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 		description := stake.Description{
 			Moniker: simulation.RandStringOfLength(r, 10),
 		}
+
+		maxCommission := sdk.NewInt(10)
+		commission := stake.NewCommissionMsg(
+			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
+			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
+			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
+		)
+
 		key := simulation.RandomKey(r, keys)
 		pubkey := key.PubKey()
 		address := sdk.ValAddress(pubkey.Address())
 		amount := m.GetAccount(ctx, sdk.AccAddress(address)).GetCoins().AmountOf(denom)
+
 		if amount.GT(sdk.ZeroInt()) {
 			amount = simulation.RandomAmount(r, amount)
 		}
+
 		if amount.Equal(sdk.ZeroInt()) {
 			return "no-operation", nil, nil
 		}
+
 		msg := stake.MsgCreateValidator{
 			Description:   description,
+			Commission:    commission,
 			ValidatorAddr: address,
 			DelegatorAddr: sdk.AccAddress(address),
 			PubKey:        pubkey,
 			Delegation:    sdk.NewCoin(denom, amount),
 		}
+
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
+
 		event(fmt.Sprintf("stake/MsgCreateValidator/%v", result.IsOK()))
+
 		// require.True(t, result.IsOK(), "expected OK result but instead got %v", result)
 		action = fmt.Sprintf("TestMsgCreateValidator: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
@@ -66,16 +82,24 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 			Website:  simulation.RandStringOfLength(r, 10),
 			Details:  simulation.RandStringOfLength(r, 10),
 		}
+
+		maxCommission := sdk.NewInt(10)
+		newCommissionRate := sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1)
+
 		key := simulation.RandomKey(r, keys)
 		pubkey := key.PubKey()
 		address := sdk.ValAddress(pubkey.Address())
+
 		msg := stake.MsgEditValidator{
-			Description:   description,
-			ValidatorAddr: address,
+			Description:    description,
+			ValidatorAddr:  address,
+			CommissionRate: &newCommissionRate,
 		}
+
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
+
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
 		if result.IsOK() {

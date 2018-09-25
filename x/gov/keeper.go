@@ -38,7 +38,11 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-// NewGovernanceMapper returns a mapper that uses go-codec to (binary) encode and decode gov types.
+// NewKeeper returns a governance keeper. It handles:
+// - submitting governance proposals
+// - depositing funds into proposals, and activating upon sufficient funds being deposited
+// - users voting on proposals, with weight proportional to stake in the system
+// - and tallying the result of the vote.
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:  key,
@@ -49,11 +53,6 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Kee
 		cdc:       cdc,
 		codespace: codespace,
 	}
-}
-
-// Returns the go-codec codec.
-func (keeper Keeper) WireCodec() *codec.Codec {
-	return keeper.cdc
 }
 
 // =====================================================

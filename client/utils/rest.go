@@ -123,6 +123,8 @@ func (br BaseReq) Sanitize() BaseReq {
 		ChainID:       strings.TrimSpace(br.ChainID),
 		Gas:           strings.TrimSpace(br.Gas),
 		GasAdjustment: strings.TrimSpace(br.GasAdjustment),
+		AccountNumber: br.AccountNumber,
+		Sequence:      br.Sequence,
 	}
 }
 

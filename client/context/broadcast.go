@@ -5,6 +5,8 @@ import (
 	"io"
 
 	"github.com/pkg/errors"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -123,11 +125,11 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 		type toJSON struct {
 			Height   int64
 			TxHash   string
-			Response string
+			Response abci.ResponseDeliverTx
 		}
 
 		if ctx.Logger != nil {
-			resJSON := toJSON{res.Height, res.Hash.String(), fmt.Sprintf("%+v", res.DeliverTx)}
+			resJSON := toJSON{res.Height, res.Hash.String(), res.DeliverTx}
 			bz, err := ctx.Codec.MarshalJSON(resJSON)
 			if err != nil {
 				return res, err

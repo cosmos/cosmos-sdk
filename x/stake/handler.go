@@ -68,7 +68,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	if found {
 		return ErrValidatorOwnerExists(k.Codespace()).Result()
 	}
-	_, found = k.GetValidatorByConsPubKey(ctx, msg.PubKey)
+	_, found = k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey))
 	if found {
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}

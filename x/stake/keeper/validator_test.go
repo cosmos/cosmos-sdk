@@ -314,7 +314,7 @@ func TestValidatorBasics(t *testing.T) {
 	resVal, found = keeper.GetValidatorByConsAddr(ctx, sdk.ConsAddress(PKs[0].Address()))
 	require.True(t, found)
 	assert.True(ValEq(t, validators[0], resVal))
-	resVal, found = keeper.GetValidatorByConsPubKey(ctx, PKs[0])
+	resVal, found = keeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	assert.True(ValEq(t, validators[0], resVal))
 

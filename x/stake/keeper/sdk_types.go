@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // Implements ValidatorSet
@@ -61,15 +60,6 @@ func (k Keeper) Validator(ctx sdk.Context, address sdk.ValAddress) sdk.Validator
 // get the sdk.validator for a particular pubkey
 func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) sdk.Validator {
 	val, found := k.GetValidatorByConsAddr(ctx, addr)
-	if !found {
-		return nil
-	}
-	return val
-}
-
-// get the sdk.validator for a particular pubkey
-func (k Keeper) ValidatorByConsPubKey(ctx sdk.Context, consPubKey crypto.PubKey) sdk.Validator {
-	val, found := k.GetValidatorByConsPubKey(ctx, consPubKey)
 	if !found {
 		return nil
 	}

@@ -99,9 +99,12 @@ func TestSlashingMsgs(t *testing.T) {
 	}
 	accs := []auth.Account{acc1}
 	mock.SetGenesis(mapp, accs)
+
 	description := stake.NewDescription("foo_moniker", "", "", "")
+	commission := stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+
 	createValidatorMsg := stake.NewMsgCreateValidator(
-		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description,
+		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission,
 	)
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})

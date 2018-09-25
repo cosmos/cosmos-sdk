@@ -38,7 +38,6 @@ type UnjailBody struct {
 	ValidatorAddr    string `json:"validator_addr"`
 }
 
-// nolint: gocyclo
 func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m UnjailBody

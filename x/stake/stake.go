@@ -12,6 +12,7 @@ type (
 	Keeper                = keeper.Keeper
 	Validator             = types.Validator
 	Description           = types.Description
+	Commission            = types.Commission
 	Delegation            = types.Delegation
 	DelegationSummary     = types.DelegationSummary
 	UnbondingDelegation   = types.UnbondingDelegation
@@ -35,7 +36,7 @@ var (
 	NewKeeper = keeper.NewKeeper
 
 	GetValidatorKey              = keeper.GetValidatorKey
-	GetValidatorByPubKeyIndexKey = keeper.GetValidatorByPubKeyIndexKey
+	GetValidatorByConsAddrKey    = keeper.GetValidatorByConsAddrKey
 	GetValidatorsBondedIndexKey  = keeper.GetValidatorsBondedIndexKey
 	GetValidatorsByPowerIndexKey = keeper.GetValidatorsByPowerIndexKey
 	GetTendermintUpdatesTKey     = keeper.GetTendermintUpdatesTKey
@@ -44,7 +45,7 @@ var (
 	ParamKey                     = keeper.ParamKey
 	PoolKey                      = keeper.PoolKey
 	ValidatorsKey                = keeper.ValidatorsKey
-	ValidatorsByPubKeyIndexKey   = keeper.ValidatorsByPubKeyIndexKey
+	ValidatorsByConsAddrKey      = keeper.ValidatorsByConsAddrKey
 	ValidatorsBondedIndexKey     = keeper.ValidatorsBondedIndexKey
 	ValidatorsByPowerIndexKey    = keeper.ValidatorsByPowerIndexKey
 	ValidatorCliffIndexKey       = keeper.ValidatorCliffIndexKey
@@ -64,13 +65,16 @@ var (
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 
-	DefaultParams       = types.DefaultParams
-	InitialPool         = types.InitialPool
-	NewValidator        = types.NewValidator
-	NewDescription      = types.NewDescription
-	NewGenesisState     = types.NewGenesisState
-	DefaultGenesisState = types.DefaultGenesisState
-	RegisterCodec       = types.RegisterCodec
+	DefaultParams         = types.DefaultParams
+	InitialPool           = types.InitialPool
+	NewValidator          = types.NewValidator
+	NewDescription        = types.NewDescription
+	NewCommission         = types.NewCommission
+	NewCommissionMsg      = types.NewCommissionMsg
+	NewCommissionWithTime = types.NewCommissionWithTime
+	NewGenesisState       = types.NewGenesisState
+	DefaultGenesisState   = types.DefaultGenesisState
+	RegisterCodec         = types.RegisterCodec
 
 	NewMsgCreateValidator           = types.NewMsgCreateValidator
 	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf

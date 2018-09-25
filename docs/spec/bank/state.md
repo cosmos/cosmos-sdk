@@ -1,2 +1,0 @@
-- SDK related specifications (ie. how multistore, signatures, etc. work).
-- Basecoin (SendTx)

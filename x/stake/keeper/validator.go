@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -58,14 +57,14 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	return validator, true
 }
 
-// get a single validator by pubkey
-func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (validator types.Validator, found bool) {
+// get a single validator by consensus address
+func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	addr := store.Get(GetValidatorByPubKeyIndexKey(pubkey))
-	if addr == nil {
+	opAddr := store.Get(GetValidatorByConsAddrKey(consAddr))
+	if opAddr == nil {
 		return validator, false
 	}
-	return k.GetValidator(ctx, addr)
+	return k.GetValidator(ctx, opAddr)
 }
 
 // set the main record holding validator details
@@ -76,9 +75,10 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // validator index
-func (k Keeper) SetValidatorByPubKeyIndex(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetValidatorByPubKeyIndexKey(validator.ConsPubKey), validator.OperatorAddr)
+	consAddr := sdk.ConsAddress(validator.ConsPubKey.Address())
+	store.Set(GetValidatorByConsAddrKey(consAddr), validator.OperatorAddr)
 }
 
 // validator index
@@ -622,8 +622,8 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 
 	// call the unbond hook if present
-	if k.validatorHooks != nil {
-		k.validatorHooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
+	if k.hooks != nil {
+		k.hooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
 	}
 
 	// return updated validator
@@ -657,8 +657,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
 	// call the bond hook if present
-	if k.validatorHooks != nil {
-		k.validatorHooks.OnValidatorBonded(ctx, validator.ConsAddress())
+	if k.hooks != nil {
+		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress())
 	}
 
 	// return updated validator
@@ -678,7 +678,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 	store.Delete(GetValidatorKey(address))
-	store.Delete(GetValidatorByPubKeyIndexKey(validator.ConsPubKey))
+	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
 	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
 
 	// delete from the current and power weighted validator groups if the validator

@@ -80,7 +80,7 @@ func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 		var err error
 		k.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) bool {
 			if !validator.GetPower().GT(sdk.ZeroDec()) {
-				err = fmt.Errorf("validator with non-positive power stored. (pubkey %v)", validator.GetPubKey())
+				err = fmt.Errorf("validator with non-positive power stored. (pubkey %v)", validator.GetConsPubKey())
 				return true
 			}
 			return false

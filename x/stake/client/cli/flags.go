@@ -58,8 +58,8 @@ func init() {
 	fsDescriptionEdit.String(FlagIdentity, types.DoNotModifyDesc, "optional identity signature (ex. UPort or Keybase)")
 	fsDescriptionEdit.String(FlagWebsite, types.DoNotModifyDesc, "optional website")
 	fsDescriptionEdit.String(FlagDetails, types.DoNotModifyDesc, "optional details")
-	fsValidator.String(FlagAddressValidator, "", "hex address of the validator")
-	fsDelegator.String(FlagAddressDelegator, "", "hex address of the delegator")
-	fsRedelegation.String(FlagAddressValidatorSrc, "", "hex address of the source validator")
-	fsRedelegation.String(FlagAddressValidatorDst, "", "hex address of the destination validator")
+	fsValidator.String(FlagAddressValidator, "", "bech address of the validator")
+	fsDelegator.String(FlagAddressDelegator, "", "bech address of the delegator")
+	fsRedelegation.String(FlagAddressValidatorSrc, "", "bech address of the source validator")
+	fsRedelegation.String(FlagAddressValidatorDst, "", "bech address of the destination validator")
 }

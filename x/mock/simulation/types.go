@@ -23,17 +23,26 @@ type (
 	// Operations can optionally provide a list of "FutureOperations" to run later
 	// These will be ran at the beginning of the corresponding block.
 	Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		privKeys []crypto.PrivKey, event func(string),
+		accounts []Account, event func(string),
 	) (action string, futureOperations []FutureOperation, err error)
 
 	// RandSetup performs the random setup the mock module needs.
-	RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
+	RandSetup func(r *rand.Rand, accounts []Account)
 
 	// An Invariant is a function which tests a particular invariant.
 	// If the invariant has been broken, it should return an error
 	// containing a descriptive message about what happened.
 	// The simulator will then halt and print the logs.
 	Invariant func(app *baseapp.BaseApp) error
+
+	// Account contains a privkey, pubkey, address tuple
+	// eventually more useful data can be placed in here.
+	// (e.g. number of coins)
+	Account struct {
+		PrivKey crypto.PrivKey
+		PubKey  crypto.PubKey
+		Address sdk.AccAddress
+	}
 
 	mockValidator struct {
 		val           abci.Validator
@@ -69,4 +78,9 @@ func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
 		}
 		return nil
 	}
+}
+
+// nolint
+func (acc Account) Equals(acc2 Account) bool {
+	return acc.Address.Equals(acc2.Address)
 }

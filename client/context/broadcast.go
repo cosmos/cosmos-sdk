@@ -39,9 +39,9 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (*ctypes.ResultBroadcastTxComm
 	return ctx.broadcastTxCommit(txBytes)
 }
 
-// BroadcastTxCommit broadcasts, transaction bytes to a Tendermint node, and
-// waits for a commit.
-func (ctx CLIContext) BroadcastTxCommit(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
+// BroadcastTxAndAwaitCommit broadcasts transaction bytes to a Tendermint node
+// and waits for a commit.
+func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err
@@ -89,12 +89,12 @@ func (ctx CLIContext) broadcastTxAsync(txBytes []byte) (*ctypes.ResultBroadcastT
 		return res, err
 	}
 
-	if ctx.JSON {
-		type toJSON struct {
-			TxHash string
-		}
+	if ctx.Logger != nil {
+		if ctx.JSON {
+			type toJSON struct {
+				TxHash string
+			}
 
-		if ctx.Logger != nil {
 			resJSON := toJSON{res.Hash.String()}
 			bz, err := ctx.Codec.MarshalJSON(resJSON)
 			if err != nil {
@@ -103,9 +103,7 @@ func (ctx CLIContext) broadcastTxAsync(txBytes []byte) (*ctypes.ResultBroadcastT
 
 			ctx.Logger.Write(bz)
 			io.WriteString(ctx.Logger, "\n")
-		}
-	} else {
-		if ctx.Logger != nil {
+		} else {
 			io.WriteString(ctx.Logger, fmt.Sprintf("async tx sent (tx hash: %s)\n", res.Hash))
 		}
 	}
@@ -114,7 +112,7 @@ func (ctx CLIContext) broadcastTxAsync(txBytes []byte) (*ctypes.ResultBroadcastT
 }
 
 func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcastTxCommit, error) {
-	res, err := ctx.BroadcastTxCommit(txBytes)
+	res, err := ctx.BroadcastTxAndAwaitCommit(txBytes)
 	if err != nil {
 		return res, err
 	}

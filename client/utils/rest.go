@@ -38,22 +38,29 @@ func WriteSimulationResponse(w http.ResponseWriter, gas int64) {
 	w.Write([]byte(fmt.Sprintf(`{"gas_estimate":%v}`, gas)))
 }
 
-// HasDryRunArg returns true if the request's URL query contains
-// the dry run argument and its value is set to "true".
-func HasDryRunArg(r *http.Request) bool { return urlQueryHasArg(r.URL, queryArgDryRun) }
+// HasDryRunArg returns true if the request's URL query contains the dry run
+// argument and its value is set to "true".
+func HasDryRunArg(r *http.Request) bool {
+	return urlQueryHasArg(r.URL, queryArgDryRun)
+}
 
-// HasGenerateOnlyArg returns whether a URL's query "generate-only" parameter is set to "true".
-func HasGenerateOnlyArg(r *http.Request) bool { return urlQueryHasArg(r.URL, queryArgGenerateOnly) }
+// HasGenerateOnlyArg returns whether a URL's query "generate-only" parameter
+// is set to "true".
+func HasGenerateOnlyArg(r *http.Request) bool {
+	return urlQueryHasArg(r.URL, queryArgGenerateOnly)
+}
 
 // ParseInt64OrReturnBadRequest converts s to a float64 value.
 func ParseInt64OrReturnBadRequest(w http.ResponseWriter, s string) (n int64, ok bool) {
 	var err error
+
 	n, err = strconv.ParseInt(s, 10, 64)
 	if err != nil {
 		err := fmt.Errorf("'%s' is not a valid int64", s)
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return n, false
 	}
+
 	return n, true
 }
 
@@ -80,11 +87,13 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, txBldr authtxb.TxBuilder,
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
 	output, err := txBldr.Codec.MarshalJSON(auth.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	w.Write(output)
 	return
 }
@@ -182,8 +191,6 @@ func (br BaseReq) FullValidate(w http.ResponseWriter) bool {
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
 func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
-	baseReq = baseReq.Sanitize()
-
 	simulateGas, gas, err := client.ReadGasFlag(baseReq.Gas)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())

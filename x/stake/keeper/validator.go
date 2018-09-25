@@ -8,6 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -195,38 +196,59 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 // at the previous block height or were removed from the validator set entirely
 // are returned to Tendermint.
 func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
-	tstore := ctx.TransientStore(k.storeTKey)
 
-	iterator := sdk.KVStorePrefixIterator(tstore, TendermintUpdatesTKey)
-	defer iterator.Close()
+	last := fetchOldValidatorSet()
+	tendermintUpdates := make(map[sdk.ValAddress]uint64)
 
-	for ; iterator.Valid(); iterator.Next() {
-		var abciVal abci.Validator
-
-		abciValBytes := iterator.Value()
-		k.cdc.MustUnmarshalBinary(abciValBytes, &abciVal)
-
-		val, found := k.GetValidator(ctx, abciVal.GetAddress())
-		if found {
-			// The validator is new or already exists in the store and must adhere to
-			// Tendermint invariants.
-			prevBonded := val.BondHeight < ctx.BlockHeight() && val.BondHeight > val.UnbondingHeight
-			zeroPower := val.GetPower().Equal(sdk.ZeroDec())
-
-			if !zeroPower || zeroPower && prevBonded {
-				updates = append(updates, abciVal)
+	for _, validator := range topvalidator { //(iterate(top hundred)) {
+		switch validator.State {
+		case Unbonded:
+			unbondedToBonded(ctx, validator.Addr)
+			tendermintUpdates[validator.Addr] = validator.Power
+		case Unbonding:
+			unbondingToBonded(ctx, validator.Addr)
+			tendermintUpdates[validator.Addr] = validator.Power
+		case Bonded: // do nothing
+			store.delete(last[validator.Addr])
+			// jailed validators are ranked last, so if we get to a jailed validator
+			// we have no more bonded validators
+			if validator.Jailed {
+				break
 			}
-		} else {
-			// Add the ABCI validator in such a case where the validator was removed
-			// from the store as it must have existed before.
-			updates = append(updates, abciVal)
 		}
 	}
-	return
+
+	for _, validator := range previousValidators {
+		bondedToUnbonding(ctx, validator.Addr)
+		tendermintUpdates[validator.Addr] = 0
+	}
+
+	return tendermintUpdates
 }
 
 //___________________________________________________________________________
 
+func (ctx sdk.Context, addr sdk.ValAddress) bondedToUnbonding() {
+	// perform appropriate store updates
+}
+
+func (ctx sdk.Context, addr sdk.ValAddress) unbondingToBonded() {
+	// perform appropriate store updates
+}
+
+func (ctx sdk.Context, addr sdk.ValAddress) unbondedToBonded() {
+	// perform appropriate store updates
+}
+
+func (ctx sdk.Context, addr sdk.ValAddress) unbondingToUnbonded() {
+	// perform appropriate store updates
+}
+
+func (ctx sdk.Context, addr sdk.ValAddress) jailValidator() {
+	// perform appropriate store updates
+}
+
+// XXX delete
 // Perform all the necessary steps for when a validator changes its power. This
 // function updates all validator stores as well as tendermint update store.
 // It may kick out validators if a new validator is entering the bonded validator
@@ -234,7 +256,7 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 //
 // nolint: gocyclo
 // TODO: Remove above nolint, function needs to be simplified!
-func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k Keeper) REFERENCEXXXDELETEUpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	tstore := ctx.TransientStore(k.storeTKey)
 	pool := k.GetPool(ctx)
 	oldValidator, oldFound := k.GetValidator(ctx, validator.OperatorAddr)

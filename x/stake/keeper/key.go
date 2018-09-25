@@ -30,8 +30,7 @@ var (
 	RedelegationByValSrcIndexKey     = []byte{0x0D} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by destination validator operator
 
-	// Keys for store prefixes (transient)
-	TendermintUpdatesTKey = []byte{0x00} // prefix for each key to a validator which is being updated
+	// XXX remove this comment? Keys for store prefixes (transient)
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -95,13 +94,6 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 		powerBytes...),
 		heightBytes...),
 		counterBytes...)
-}
-
-// get the key for the accumulated update validators
-// VALUE: abci.Validator
-// note records using these keys should never persist between blocks
-func GetTendermintUpdatesTKey(operatorAddr sdk.ValAddress) []byte {
-	return append(TendermintUpdatesTKey, operatorAddr.Bytes()...)
 }
 
 //______________________________________________________________________________

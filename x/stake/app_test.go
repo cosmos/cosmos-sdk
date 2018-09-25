@@ -21,10 +21,12 @@ var (
 	priv4 = ed25519.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
 	coins = sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(10))}
-	fee   = auth.StdFee{
-		sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(0))},
+	fee   = auth.NewStdFee(
 		100000,
-	}
+		sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(0))}...,
+	)
+
+	commissionMsg = NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
 // getMockApp returns an initialized mock application for this module.
@@ -129,7 +131,7 @@ func TestStakeMsgs(t *testing.T) {
 	// create validator
 	description := NewDescription("foo_moniker", "", "", "")
 	createValidatorMsg := NewMsgCreateValidator(
-		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description,
+		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commissionMsg,
 	)
 
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, true, priv1)
@@ -143,7 +145,7 @@ func TestStakeMsgs(t *testing.T) {
 
 	// addr1 create validator on behalf of addr2
 	createValidatorMsgOnBehalfOf := NewMsgCreateValidatorOnBehalfOf(
-		addr1, sdk.ValAddress(addr2), priv2.PubKey(), bondCoin, description,
+		addr1, sdk.ValAddress(addr2), priv2.PubKey(), bondCoin, description, commissionMsg,
 	)
 
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{createValidatorMsgOnBehalfOf}, []int64{0, 1}, []int64{1, 0}, true, true, priv1, priv2)
@@ -160,7 +162,7 @@ func TestStakeMsgs(t *testing.T) {
 
 	// edit the validator
 	description = NewDescription("bar_moniker", "", "", "")
-	editValidatorMsg := NewMsgEditValidator(sdk.ValAddress(addr1), description)
+	editValidatorMsg := NewMsgEditValidator(sdk.ValAddress(addr1), description, nil)
 
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{editValidatorMsg}, []int64{0}, []int64{2}, true, true, priv1)
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)

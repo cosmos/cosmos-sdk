@@ -339,7 +339,6 @@ func queryVoteHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 	}
 }
 
-// nolint: gocyclo
 // todo: Split this functionality into helper functions to remove the above
 func queryVotesOnProposalHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -378,7 +377,6 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 	}
 }
 
-// nolint: gocyclo
 // todo: Split this functionality into helper functions to remove the above
 func queryProposalsWithParameterFn(cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -444,7 +442,6 @@ func queryProposalsWithParameterFn(cdc *codec.Codec) http.HandlerFunc {
 	}
 }
 
-// nolint: gocyclo
 // todo: Split this functionality into helper functions to remove the above
 func queryTallyOnProposalHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -44,6 +44,7 @@ BREAKING CHANGES
     * [types] [\#2119](https://github.com/cosmos/cosmos-sdk/issues/2119) Parsed error messages and ABCI log errors to make them more human readable.
     * [simulation] Rename TestAndRunTx to Operation [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
     * [simulation] Remove log and testing.TB from Operation and Invariants, in favor of using errors \#2282
+    * [simulation] Remove usage of keys and addrs in the types, in favor of simulation.Account \#2384
     * [tools] Removed gocyclo [#2211](https://github.com/cosmos/cosmos-sdk/issues/2211)
     * [baseapp] Remove `SetTxDecoder` in favor of requiring the decoder be set in baseapp initialization. [#1441](https://github.com/cosmos/cosmos-sdk/issues/1441)
     * [baseapp] [\#1921](https://github.com/cosmos/cosmos-sdk/issues/1921) Add minimumFees field to BaseApp.
@@ -51,6 +52,7 @@ BREAKING CHANGES
     * [codec] \#2324 All referrences to wire have been renamed to codec. Additionally, wire.NewCodec is now codec.New().
     * [types] \#2343 Make sdk.Msg have a names field, to facilitate automatic tagging.
     * [baseapp] \#2366 Automatically add action tags to all messages
+    * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
 
 * Tendermint
 
@@ -76,6 +78,8 @@ FEATURES
     * [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add --generate-only flag to build an unsigned transaction and write it to STDOUT.
     * [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) New `sign` command to sign transactions generated with the --generate-only flag.
     * [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) New `broadcast` command to broadcast transactions generated offline and signed with the `sign` command.
+  * [stake][cli] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Introduced
+  new commission flags for validator commands `create-validator` and `edit-validator`.
 
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
@@ -88,6 +92,8 @@ FEATURES
   * [simulation] [\#1924](https://github.com/cosmos/cosmos-sdk/issues/1924) allow operations to specify future operations
   * [simulation] [\#1924](https://github.com/cosmos/cosmos-sdk/issues/1924) Add benchmarking capabilities, with makefile commands "test_sim_gaia_benchmark, test_sim_gaia_profile"
   * [simulation] [\#2349](https://github.com/cosmos/cosmos-sdk/issues/2349) Add time-based future scheduled operations to simulator
+  * [x/stake] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Implement
+  basis for the validator commission model.
 
 * Tendermint
 
@@ -124,6 +130,7 @@ IMPROVEMENTS
     * [simulation] Logs get written to file if large, and also get printed on panics \#2285
     * [gaiad] \#1992 Add optional flag to `gaiad testnet` to make config directory of daemon (default `gaiad`) and cli (default `gaiacli`) configurable
     * [x/stake] Add stake `Queriers` for Gaia-lite endpoints. This increases the staking endpoints performance by reusing the staking `keeper` logic for queries. [#2249](https://github.com/cosmos/cosmos-sdk/pull/2149)
+    * [types/decimal] \#2378 - Added truncate functionality to decimal
 
 * Tendermint
 

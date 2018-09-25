@@ -103,12 +103,14 @@ func testAddr(addr string) sdk.AccAddress {
 }
 
 func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
+	commission := stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return stake.MsgCreateValidator{
 		Description:   stake.Description{},
+		Commission:    commission,
 		DelegatorAddr: sdk.AccAddress(address),
 		ValidatorAddr: address,
 		PubKey:        pubKey,
-		Delegation:    sdk.Coin{"steak", amt},
+		Delegation:    sdk.NewCoin("steak", amt),
 	}
 }
 
@@ -116,6 +118,6 @@ func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmoun
 	return stake.MsgDelegate{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.Coin{"steak", delAmount},
+		Delegation:    sdk.NewCoin("steak", delAmount),
 	}
 }

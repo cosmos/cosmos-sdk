@@ -32,7 +32,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		}
 
 		// Manually set indexes for the first time
-		keeper.SetValidatorByPubKeyIndex(ctx, validator)
+		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
 
 		if validator.Status == sdk.Bonded {
@@ -75,7 +75,7 @@ func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisValidator) {
 	keeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
-			PubKey: validator.GetPubKey(),
+			PubKey: validator.GetConsPubKey(),
 			Power:  validator.GetPower().RoundInt64(),
 			Name:   validator.GetMoniker(),
 		})

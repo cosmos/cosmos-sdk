@@ -3,8 +3,6 @@ package keeper
 import (
 	"encoding/binary"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -17,7 +15,7 @@ var (
 	ParamKey                         = []byte{0x00} // key for parameters relating to staking
 	PoolKey                          = []byte{0x01} // key for the staking pools
 	ValidatorsKey                    = []byte{0x02} // prefix for each key to a validator
-	ValidatorsByPubKeyIndexKey       = []byte{0x03} // prefix for each key to a validator index, by pubkey
+	ValidatorsByConsAddrKey          = []byte{0x03} // prefix for each key to a validator index, by pubkey
 	ValidatorsBondedIndexKey         = []byte{0x04} // prefix for each key to a validator index, for bonded validators
 	ValidatorsByPowerIndexKey        = []byte{0x05} // prefix for each key to a validator index, sorted by power
 	ValidatorCliffIndexKey           = []byte{0x06} // key for the validator index of the cliff validator
@@ -44,8 +42,8 @@ func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 
 // gets the key for the validator with pubkey
 // VALUE: validator operator address ([]byte)
-func GetValidatorByPubKeyIndexKey(pubkey crypto.PubKey) []byte {
-	return append(ValidatorsByPubKeyIndexKey, pubkey.Bytes()...)
+func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
+	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
 }
 
 // gets the key for the current validator group

@@ -40,7 +40,9 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 		// prompt the user to enter some entropy
 		buf := client.BufferStdin()
 		inputEntropy, err := client.GetString("> WARNING: Generate at least 256-bits of entropy and enter the results here:", buf)
-
+		if err != nil {
+			return err
+		}
 		if len(inputEntropy) < 43 {
 			return fmt.Errorf("256-bits is 43 characters in Base-64, and 100 in Base-6. You entered %v, and probably want more", len(inputEntropy))
 		}

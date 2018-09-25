@@ -50,7 +50,7 @@ func HasGenerateOnlyArg(r *http.Request) bool {
 	return urlQueryHasArg(r.URL, queryArgGenerateOnly)
 }
 
-// ParseInt64OrReturnBadRequest converts s to a float64 value.
+// ParseInt64OrReturnBadRequest converts s to a int64 value.
 func ParseInt64OrReturnBadRequest(w http.ResponseWriter, s string) (n int64, ok bool) {
 	var err error
 

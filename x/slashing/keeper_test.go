@@ -27,7 +27,7 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithHooks(keeper.Hooks())
+	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
@@ -69,7 +69,7 @@ func TestSlashingPeriodCap(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithHooks(keeper.Hooks())
+	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
 	amtInt := int64(100)
 	addr, amt := addrs[0], sdk.NewInt(amtInt)
 	valConsPubKey, valConsAddr := pks[0], sdk.ConsAddress(pks[0].Address())
@@ -125,7 +125,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithHooks(keeper.Hooks())
+	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)
@@ -167,7 +167,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx), info.SignedBlocksCounter)
 
 	// validator should be bonded still
-	validator, _ := sk.GetValidatorByConsPubKey(ctx, val)
+	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
 	require.Equal(t, amtInt, pool.BondedTokens.RoundInt64())
@@ -181,7 +181,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
 
 	// validator should have been jailed
-	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// unrevocation should fail prior to jail expiration
@@ -194,7 +194,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, got.IsOK())
 
 	// validator should be rebonded now
-	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
 	// validator should have been slashed
@@ -212,7 +212,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	height++
 	ctx = ctx.WithBlockHeight(height)
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
-	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 
 	// 500 signed blocks
@@ -228,7 +228,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 	}
-	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 }
 
@@ -263,7 +263,7 @@ func TestHandleNewValidator(t *testing.T) {
 	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 
 	// validator should be bonded still, should not have been jailed or slashed
-	validator, _ := sk.GetValidatorByConsPubKey(ctx, val)
+	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
 	require.Equal(t, int64(100), pool.BondedTokens.RoundInt64())
@@ -297,7 +297,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	}
 
 	// validator should have been jailed and slashed
-	validator, _ := sk.GetValidatorByConsPubKey(ctx, val)
+	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed
@@ -308,7 +308,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 
 	// validator should not have been slashed twice
-	validator, _ = sk.GetValidatorByConsPubKey(ctx, val)
+	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, amtInt-1, validator.GetTokens().RoundInt64())
 
 }

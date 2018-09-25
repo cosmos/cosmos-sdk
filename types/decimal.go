@@ -174,13 +174,15 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 
 //______________________________________________________________________________________________
 //nolint
-func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to zero
-func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }
+func (d Dec) IsNil() bool       { return d.Int == nil }                 // is decimal nil
+func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 }          // is equal to zero
+func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }     // equal decimals
 func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) > 0 }      // greater than
 func (d Dec) GTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) >= 0 }     // greater than or equal
 func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) < 0 }      // less than
 func (d Dec) LTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) <= 0 }     // less than or equal
 func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} } // reverse the decimal sign
+func (d Dec) Abs() Dec          { return Dec{new(big.Int).Abs(d.Int)} } // absolute value
 
 // addition
 func (d Dec) Add(d2 Dec) Dec {
@@ -333,7 +335,7 @@ func chopPrecisionAndTruncateNonMutative(d *big.Int) *big.Int {
 	return chopPrecisionAndTruncate(tmp)
 }
 
-// RoundInt64 rounds the decimal using bankers rounding
+// TruncateInt64 truncates the decimals from the number and returns an int64
 func (d Dec) TruncateInt64() int64 {
 	chopped := chopPrecisionAndTruncateNonMutative(d.Int)
 	if !chopped.IsInt64() {
@@ -342,7 +344,7 @@ func (d Dec) TruncateInt64() int64 {
 	return chopped.Int64()
 }
 
-// RoundInt round the decimal using bankers rounding
+// TruncateInt truncates the decimals from the number and returns an Int
 func (d Dec) TruncateInt() Int {
 	return NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(d.Int))
 }

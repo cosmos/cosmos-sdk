@@ -24,13 +24,13 @@ func (v Validator) GetOperator() sdk.ValAddress {
 }
 
 // Implements sdk.Validator
-func (v Validator) GetPubKey() crypto.PubKey {
+func (v Validator) GetConsPubKey() crypto.PubKey {
 	return nil
 }
 
 // Implements sdk.Validator
 func (v Validator) GetConsAddr() sdk.ConsAddress {
-	return sdk.ConsAddress{}
+	return nil
 }
 
 // Implements sdk.Validator
@@ -45,11 +45,6 @@ func (v Validator) GetPower() sdk.Dec {
 
 // Implements sdk.Validator
 func (v Validator) GetDelegatorShares() sdk.Dec {
-	return sdk.ZeroDec()
-}
-
-// Implements sdk.Validator
-func (v Validator) GetCommission() sdk.Dec {
 	return sdk.ZeroDec()
 }
 
@@ -98,12 +93,12 @@ func (vs *ValidatorSet) Validator(ctx sdk.Context, addr sdk.ValAddress) sdk.Vali
 }
 
 // ValidatorByPubKey implements sdk.ValidatorSet
-func (vs *ValidatorSet) ValidatorByConsPubKey(ctx sdk.Context, _ crypto.PubKey) sdk.Validator {
+func (vs *ValidatorSet) ValidatorByConsPubKey(_ sdk.Context, _ crypto.PubKey) sdk.Validator {
 	panic("not implemented")
 }
 
 // ValidatorByPubKey implements sdk.ValidatorSet
-func (vs *ValidatorSet) ValidatorByConsAddr(ctx sdk.Context, _ sdk.ConsAddress) sdk.Validator {
+func (vs *ValidatorSet) ValidatorByConsAddr(_ sdk.Context, _ sdk.ConsAddress) sdk.Validator {
 	panic("not implemented")
 }
 
@@ -137,7 +132,7 @@ func (vs *ValidatorSet) RemoveValidator(addr sdk.AccAddress) {
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Slash(ctx sdk.Context, _ sdk.ConsAddress, height int64, power int64, amt sdk.Dec) {
+func (vs *ValidatorSet) Slash(_ sdk.Context, _ sdk.ConsAddress, _ int64, _ int64, _ sdk.Dec) {
 	panic("not implemented")
 }
 
@@ -152,6 +147,6 @@ func (vs *ValidatorSet) Unjail(_ sdk.Context, _ sdk.ConsAddress) {
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.ValAddress) sdk.Delegation {
+func (vs *ValidatorSet) Delegation(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) sdk.Delegation {
 	panic("not implemented")
 }

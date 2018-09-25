@@ -21,8 +21,6 @@ import (
 // CONTRACT:
 //    Infraction committed at the current height or at a past height,
 //    not at a height in the future
-//
-// nolint: gocyclo
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
 	logger := ctx.Logger().With("module", "x/stake")
 
@@ -143,7 +141,7 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 
 // set the jailed flag on a validator
 func (k Keeper) setJailed(ctx sdk.Context, consAddr sdk.ConsAddress, isJailed bool) {
-	validator, found := k.GetValidatorByConsAddr(ctx, sdk.ConsAddress(consAddr))
+	validator, found := k.GetValidatorByConsAddr(ctx, consAddr)
 	if !found {
 		panic(fmt.Errorf("validator with consensus-Address %s not found, cannot set jailed to %v", consAddr, isJailed))
 	}

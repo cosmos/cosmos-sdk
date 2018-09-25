@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -68,17 +67,6 @@ func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress
 	return k.GetValidator(ctx, opAddr)
 }
 
-// get a single validator by pubkey
-func (k Keeper) GetValidatorByConsPubKey(ctx sdk.Context, consPubKey crypto.PubKey) (validator types.Validator, found bool) {
-	store := ctx.KVStore(k.storeKey)
-	consAddr := sdk.ConsAddress(consPubKey.Address())
-	opAddr := store.Get(GetValidatorByConsAddrKey(consAddr))
-	if opAddr == nil {
-		return validator, false
-	}
-	return k.GetValidator(ctx, opAddr)
-}
-
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
@@ -87,10 +75,9 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // validator index
-// TODO change to SetValidatorByConsAddr? used for retrieving from ConsPubkey as well- kinda confusing
 func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	consAddr := sdk.ConsAddress(validator.OperatorAddr.Bytes())
+	consAddr := sdk.ConsAddress(validator.ConsPubKey.Address())
 	store.Set(GetValidatorByConsAddrKey(consAddr), validator.OperatorAddr)
 }
 
@@ -245,7 +232,6 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 // It may kick out validators if a new validator is entering the bonded validator
 // group.
 //
-// nolint: gocyclo
 // TODO: Remove above nolint, function needs to be simplified!
 func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	tstore := ctx.TransientStore(k.storeTKey)
@@ -435,9 +421,6 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 // updated in store with the ValidatorsBondedIndexKey. This store is used to
 // determine if a validator is a validator without needing to iterate over all
 // validators.
-//
-// nolint: gocyclo
-// TODO: Remove the above golint
 func (k Keeper) UpdateBondedValidators(
 	ctx sdk.Context, affectedValidator types.Validator) (
 	updatedVal types.Validator, updated bool) {
@@ -681,11 +664,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 // remove the validator record and associated indexes
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 
-	// call the hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorRemoved(ctx, address)
-	}
-
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
 	if !found {
@@ -709,6 +687,23 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
 	tstore := ctx.TransientStore(k.storeTKey)
 	tstore.Set(GetTendermintUpdatesTKey(address), bz)
+}
+
+// UpdateValidatorCommission attempts to update a validator's commission rate.
+// An error is returned if the new commission rate is invalid.
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newRate sdk.Dec) sdk.Error {
+	commission := validator.Commission
+	blockTime := ctx.BlockHeader().Time
+
+	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
+		return err
+	}
+
+	validator.Commission.Rate = newRate
+	validator.Commission.UpdateTime = blockTime
+
+	k.SetValidator(ctx, validator)
+	return nil
 }
 
 //__________________________________________________________________________
@@ -744,37 +739,4 @@ func ensureValidatorFound(found bool, ownerAddr []byte) {
 	if !found {
 		panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
 	}
-}
-
-//__________________________________________________________________________
-
-// XXX remove this code - this is should be superceded by commission work that bez is doing
-// get a single validator
-func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, addr sdk.ValAddress, newCommission sdk.Dec) sdk.Error {
-
-	// call the hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorCommissionChange(ctx, addr)
-	}
-
-	validator, found := k.GetValidator(ctx, addr)
-
-	// check for errors
-	switch {
-	case !found:
-		return types.ErrNoValidatorFound(k.Codespace())
-	case newCommission.LT(sdk.ZeroDec()):
-		return types.ErrCommissionNegative(k.Codespace())
-	case newCommission.GT(validator.CommissionMax):
-		return types.ErrCommissionBeyondMax(k.Codespace())
-		//case rateChange(Commission) > CommissionMaxChange:    // XXX XXX XXX TODO implementation
-		//return types.ErrCommissionPastRate(k.Codespace())
-	}
-
-	// TODO adjust all the commission terms appropriately
-
-	validator.Commission = newCommission
-
-	k.SetValidator(ctx, validator)
-	return nil
 }

@@ -75,7 +75,7 @@ func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisValidator) {
 	keeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
-			PubKey: validator.GetPubKey(),
+			PubKey: validator.GetConsPubKey(),
 			Power:  validator.GetPower().RoundInt64(),
 			Name:   validator.GetMoniker(),
 		})

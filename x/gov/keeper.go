@@ -38,7 +38,11 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-// NewGovernanceMapper returns a mapper that uses go-codec to (binary) encode and decode gov types.
+// NewKeeper returns a governance keeper. It handles:
+// - submitting governance proposals
+// - depositing funds into proposals, and activating upon sufficient funds being deposited
+// - users voting on proposals, with weight proportional to stake in the system
+// - and tallying the result of the vote.
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:  key,
@@ -51,11 +55,6 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Kee
 	}
 }
 
-// Returns the go-codec codec.
-func (keeper Keeper) WireCodec() *codec.Codec {
-	return keeper.cdc
-}
-
 // =====================================================
 // Proposals
 
@@ -66,15 +65,14 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 		return nil
 	}
 	var proposal Proposal = &TextProposal{
-		ProposalID:       proposalID,
-		Title:            title,
-		Description:      description,
-		ProposalType:     proposalType,
-		Status:           StatusDepositPeriod,
-		TallyResult:      EmptyTallyResult(),
-		TotalDeposit:     sdk.Coins{},
-		SubmitBlock:      ctx.BlockHeight(),
-		VotingStartBlock: -1, // TODO: Make Time
+		ProposalID:   proposalID,
+		Title:        title,
+		Description:  description,
+		ProposalType: proposalType,
+		Status:       StatusDepositPeriod,
+		TallyResult:  EmptyTallyResult(),
+		TotalDeposit: sdk.Coins{},
+		SubmitTime:   ctx.BlockHeader().Time,
 	}
 	keeper.SetProposal(ctx, proposal)
 	keeper.InactiveProposalQueuePush(ctx, proposal)
@@ -108,7 +106,6 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposal Proposal) {
 	store.Delete(KeyProposal(proposal.GetProposalID()))
 }
 
-// nolint: gocyclo
 // Get Proposal from store by ProposalID
 func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositerAddr sdk.AccAddress, status ProposalStatus, numLatest int64) []Proposal {
 
@@ -200,7 +197,7 @@ func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID int64, e
 }
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
-	proposal.SetVotingStartBlock(ctx.BlockHeight())
+	proposal.SetVotingStartTime(ctx.BlockHeader().Time)
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
 	keeper.ActiveProposalQueuePush(ctx, proposal)

@@ -69,7 +69,6 @@ type EditDelegationsBody struct {
 	CompleteRedelegates []msgCompleteRedelegateInput `json:"complete_redelegates"`
 }
 
-// nolint: gocyclo
 // TODO: Split this up into several smaller functions, and remove the above nolint
 // TODO: use sdk.ValAddress instead of sdk.AccAddress for validators in messages
 func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {

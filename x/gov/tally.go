@@ -53,10 +53,10 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 				valAddrStr := delegation.GetValidator().String()
 
 				if val, ok := currValidators[valAddrStr]; ok {
-					val.Minus = val.Minus.Add(delegation.GetBondShares())
+					val.Minus = val.Minus.Add(delegation.GetShares())
 					currValidators[valAddrStr] = val
 
-					delegatorShare := delegation.GetBondShares().Quo(val.DelegatorShares)
+					delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
 					votingPower := val.Power.Mul(delegatorShare)
 
 					results[vote.Option] = results[vote.Option].Add(votingPower)

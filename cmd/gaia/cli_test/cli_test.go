@@ -37,6 +37,72 @@ func init() {
 	gaiadHome, gaiacliHome = getTestingHomeDirs()
 }
 
+func TestGaiaCLIMinimumFees(t *testing.T) {
+	chainID, servAddr, port := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server with minimum fees
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --minimum_fees=2feeToken", gaiadHome, servAddr))
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
+
+	success := executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --amount=10steak --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+
+}
+
+func TestGaiaCLIFeesDeduction(t *testing.T) {
+	chainID, servAddr, port := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server with minimum fees
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --minimum_fees=1fooToken", gaiadHome, servAddr))
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+
+	// test simulation
+	success := executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --amount=1000fooToken --to=%s --from=foo --fee=1fooToken --dry-run", flags, barAddr), app.DefaultKeyPass)
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+	// ensure state didn't change
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+
+	// insufficient funds (coins + fees)
+	success = executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --amount=1000fooToken --to=%s --from=foo --fee=1fooToken", flags, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+	// ensure state didn't change
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+
+	// test success (transfer = coins + fees)
+	success = executeWrite(t, fmt.Sprintf(
+		"gaiacli send %v --fee=300fooToken --amount=500fooToken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(2, port)
+}
+
 func TestGaiaCLISend(t *testing.T) {
 	chainID, servAddr, port := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
@@ -173,6 +239,9 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
 	cvStr += fmt.Sprintf(" --amount=%v", "2steak")
 	cvStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
+	cvStr += fmt.Sprintf(" --commission-rate=%v", "0.05")
+	cvStr += fmt.Sprintf(" --commission-max-rate=%v", "0.20")
+	cvStr += fmt.Sprintf(" --commission-max-change-rate=%v", "0.10")
 
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(1))
 

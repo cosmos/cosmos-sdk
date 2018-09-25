@@ -1,8 +1,8 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-COMMIT_HASH := $(shell git rev-parse --short HEAD)
+VERSION := $(shell git describe --tags --long | sed 's/v\(.*\)/\1/')
 BUILD_TAGS = netgo ledger
-BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.GitCommit=${COMMIT_HASH}"
+BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION}"
 GCC := $(shell command -v gcc 2> /dev/null)
 LEDGER_ENABLED ?= true
 UNAME_S := $(shell uname -s)
@@ -142,10 +142,10 @@ test_examples:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/examples/democoin/cli_test` -tags=cli_test
 
 test_unit:
-	@go test $(PACKAGES_NOSIMULATION)
+	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION)
 
 test_race:
-	@go test -race $(PACKAGES_NOSIMULATION)
+	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)
 
 test_sim_modules:
 	@echo "Running individual module simulations..."
@@ -175,7 +175,7 @@ test_sim_gaia_profile:
 	@go test -benchmem -run=^$$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$$ -SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 test_cover:
-	@bash tests/test_cover.sh
+	@export VERSION=$(VERSION); bash tests/test_cover.sh
 
 test_lint:
 	gometalinter.v2 --config=tools/gometalinter.json ./...

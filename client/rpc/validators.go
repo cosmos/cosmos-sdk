@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmTypes "github.com/tendermint/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/spf13/viper"
 )
@@ -82,7 +81,7 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 			return nil, err
 		}
 
-		if !bytes.Equal(check.ValidatorsHash(), tmTypes.NewValidatorSet(validatorsRes.Validators).Hash()) {
+		if !bytes.Equal(check.ValidatorsHash(), tmtypes.NewValidatorSet(validatorsRes.Validators).Hash()) {
 			return nil, fmt.Errorf("got invalid validatorset")
 		}
 	}

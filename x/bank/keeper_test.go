@@ -27,6 +27,14 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 	return ms, authKey
 }
 
+func getVestingTotal(coin sdk.Coin, blockTime, vAccStartTime, vAccEndTime time.Time) sdk.Int {
+	x := blockTime.Unix() - vAccStartTime.Unix()
+	y := vAccEndTime.Unix() - vAccStartTime.Unix()
+	scale := sdk.NewDec(x).Quo(sdk.NewDec(y))
+
+	return sdk.NewDecFromInt(coin.Amount).Mul(scale).RoundInt()
+}
+
 func TestKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
@@ -383,36 +391,44 @@ func TestDelayTransferInputOutput(t *testing.T) {
 	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(20)}}, recoverAcc.TransferredCoins, "Transferred coins did not update correctly")
 }
 
-func TestSubtractVesting(t *testing.T) {
-	// SubtractCoins must still work without vesting restriction so that they can delegate locked coins.
+func TestSubtractVestingFull(t *testing.T) {
 	ms, authKey := setupMultiStore()
-
 	cdc := codec.New()
 
 	codec.RegisterCrypto(cdc)
 	auth.RegisterCodec(cdc)
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	header := abci.Header{Time: time.Now().UTC()}
+	ctx := sdk.NewContext(ms, header, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
 	coinKeeper := NewBaseKeeper(accountMapper)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
-	amt := sdk.Coins{{"steak", sdk.NewInt(100)}}
 
-	vacc := auth.NewContinuousVestingAccount(addr1, amt, time.Unix(0, 0), time.Unix(1000, 0))
+	coin := sdk.NewCoin("steak", sdk.NewInt(100))
+	amt := sdk.Coins{coin}
+
+	// create a vesting account that started vesting enough time to deduct the full
+	// original vested amount
+	vAccStartTime := header.Time.Add(-72 * time.Hour)
+	vAccEndTime := header.Time
+	require.Equal(t, coin.Amount, getVestingTotal(coin, header.Time, vAccStartTime, vAccEndTime))
+
+	vacc := auth.NewContinuousVestingAccount(addr1, amt, vAccStartTime, vAccEndTime)
 	accountMapper.SetAccount(ctx, &vacc)
 
-	dtacc := auth.NewDelayTransferAccount(addr2, amt, time.Unix(1000, 0))
-	accountMapper.SetAccount(ctx, &dtacc)
-
 	res, _, err := coinKeeper.SubtractCoins(ctx, addr1, amt)
-
-	require.Nil(t, err, "ContinuousVestingAccount fails on SubtractCoins")
+	require.Nil(t, err, "unexpected error: %v", err)
 	require.Equal(t, sdk.Coins(nil), res, "Coins did not update correctly")
 
-	res, _, err = coinKeeper.SubtractCoins(ctx, addr2, amt)
+	dAccEndTime := header.Time.Add(48 * time.Hour)
+	require.Equal(t, coin.Amount, getVestingTotal(coin, header.Time, header.Time, dAccEndTime))
 
-	require.Nil(t, err, "DelayTransferAccount fails on SubtractCoins")
+	dtacc := auth.NewDelayTransferAccount(addr2, amt, dAccEndTime)
+	accountMapper.SetAccount(ctx, &dtacc)
+
+	res, _, err = coinKeeper.SubtractCoins(ctx, addr2, amt)
+	require.Nil(t, err, "unexpected error: %v", err)
 	require.Equal(t, sdk.Coins(nil), res, "Coins did not update correctly")
 }

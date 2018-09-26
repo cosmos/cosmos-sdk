@@ -16,7 +16,8 @@ sim() {
 	echo "Running full Gaia simulation with seed $seed. This may take awhile!"
   file="$tmpdir/gaia-simulation-seed-$seed-date-$(date -Iseconds -u).stdout"
   echo "Writing stdout to $file..."
-	go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$seed -v -timeout 24h > $file
+	go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 \
+    -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$seed -v -timeout 24h > $file
 }
 
 i=0

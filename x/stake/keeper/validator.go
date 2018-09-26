@@ -72,6 +72,8 @@ func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress
 	return k.GetValidator(ctx, opAddr)
 }
 
+//___________________________________________________________________________
+
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
@@ -92,42 +94,54 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 	store.Set(GetBondedValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
 }
 
-// Update the validators power index key
-func (k Keeper) updateValidatorPower(ctx sdk.Context,
-	oldFound bool, oldValidator, newValidator types.Validator) {
-
-	store := ctx.KVStore(k.storeKey)
-	pool := store.GetPool(ctx)
-
-	// update the list ordered by voting power
-	if oldFound {
-		store.Delete(GetBondedValidatorsByPowerIndexKey(oldValidator, pool))
-	}
-	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
-	store.Set(valPower, newValidator.OperatorAddr)
-}
-
 // validator index
 func (k Keeper) SetValidatorBondedIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(GetValidatorsBondedIndexKey(validator.OperatorAddr), []byte{})
 }
 
+//___________________________________________________________________________
+
+// Update the tokens of an existing validator, update the validators power index key
+func (k Keeper) UpdateValidatorTokens(ctx sdk.Context, validator types.Validator, newTokens sdk.Dec) sdk.Error {
+	store := ctx.KVStore(k.storeKey)
+	pool := store.GetPool(ctx)
+
+	store.Delete(GetBondedValidatorsByPowerIndexKey(oldValidator, pool))
+
+	k.SetValidator(ctx, validator)
+	store.Set(valPower, newValidator.OperatorAddr)
+
+	validator.Tokens = validator.Tokens.Add(newTokens)
+	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
+}
+
+// Update the tokens for a new validator, create the validators power index key
+func (k Keeper) NewValidatorTokens(ctx sdk.Context, validator types.Validator, newTokens sdk.Dec) sdk.Error {
+	store := ctx.KVStore(k.storeKey)
+
+	validator.Tokens = validator.Tokens.Add(newTokens)
+	k.SetValidator(ctx, validator)
+
+	pool := store.GetPool(ctx)
+	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
+	store.Set(valPower, newValidator.OperatorAddr)
+}
+
 // UpdateValidatorCommission attempts to update a validator's commission rate.
 // An error is returned if the new commission rate is invalid.
-func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newRate sdk.Dec) sdk.Error {
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newRate sdk.Dec) (types.Commission, sdk.Error) {
 	commission := validator.Commission
 	blockTime := ctx.BlockHeader().Time
 
 	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
-		return err
+		return commission, err
 	}
 
-	validator.Commission.Rate = newRate
-	validator.Commission.UpdateTime = blockTime
+	commission.Rate = newRate
+	commission.UpdateTime = blockTime
 
-	k.SetValidator(ctx, validator)
-	return nil
+	return commission, nil
 }
 
 // remove the validator record and associated indexes
@@ -221,8 +235,6 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 }
 
 // get the group of bonded validators sorted by power-rank
-//
-// TODO: Rename to GetBondedValidatorsByPower or GetBondedValidatorsByPower(ctx, status)
 func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators

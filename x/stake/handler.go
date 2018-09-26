@@ -126,13 +126,13 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	validator.Description = description
 
 	if msg.CommissionRate != nil {
+		commission, err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate)
 		if err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate); err != nil {
 			return err.Result()
 		}
+		validator.Commission = commission
 	}
 
-	// We don't need to run through all the power update logic within k.UpdateValidator
-	// We just need to override the entry in state, since only the description has changed.
 	k.SetValidator(ctx, validator)
 
 	tags := sdk.NewTags(

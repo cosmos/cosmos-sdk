@@ -122,6 +122,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 // jail a validator
 func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
+	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	k.JailValidator(ctx, validator)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("validator %s jailed", consAddr))
@@ -131,6 +132,7 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 
 // unjail a validator
 func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
+	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	k.UnjailValidator(ctx, validator)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("validator %s unjailed", consAddr))

@@ -265,7 +265,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 		}
 	}
 
-	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt)
+	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt.Amount)
 
 	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)

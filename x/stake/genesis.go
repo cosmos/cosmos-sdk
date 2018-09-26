@@ -17,7 +17,7 @@ import (
 // Returns final validator set after applying all declaration and delegations
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.Validator, err error) {
 	keeper.SetPool(ctx, data.Pool)
-	keeper.SetNewParams(ctx, data.Params)
+	keeper.SetParams(ctx, data.Params)
 	keeper.InitIntraTxCounter(ctx)
 
 	for i, validator := range data.Validators {
@@ -44,7 +44,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.SetDelegation(ctx, bond)
 	}
 
-	keeper.UpdateBondedValidatorsFull(ctx)
+	//keeper.UpdateBondedValidatorsFull(ctx) // XXX TODO must calculate the genesis validator set
 
 	vals := keeper.GetValidatorsBonded(ctx)
 	res = make([]abci.Validator, len(vals))

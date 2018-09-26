@@ -52,7 +52,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 	k.SetIntraTxCounter(ctx, 0)
 
 	// calculate validator set changes
-	ValidatorUpdates = k.GetValidTendermintUpdates(ctx)
+	ValidatorUpdates = k.GetTendermintUpdates(ctx)
 	return
 }
 
@@ -127,7 +127,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 
 	if msg.CommissionRate != nil {
 		commission, err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate)
-		if err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate); err != nil {
+		if err != nil {
 			return err.Result()
 		}
 		validator.Commission = commission

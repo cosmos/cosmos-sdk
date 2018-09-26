@@ -1,12 +1,10 @@
 package keeper
 
 import (
-	"bytes"
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -77,28 +75,28 @@ func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) {
 	if validator.Status != sdk.Bonded {
 		panic(fmt.Sprintf("bad state transition bondedToUnbonded, validator: %v\n", validator))
 	}
-	beginUnbondingValidator(ctx, validator)
+	k.beginUnbondingValidator(ctx, validator)
 }
 
 func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) {
 	if validator.Status != sdk.Unbonding {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
-	bondValidator(ctx, validator)
+	k.bondValidator(ctx, validator)
 }
 
 func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) {
 	if validator.Status != sdk.Unbonded {
 		panic(fmt.Sprintf("bad state transition unbondedToBonded, validator: %v\n", validator))
 	}
-	bondValidator(ctx, validator)
+	k.bondValidator(ctx, validator)
 }
 
 func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) {
 	if validator.Status != sdk.Unbonded {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
-	completeUnbondingValidator(ctx, validator)
+	k.completeUnbondingValidator(ctx, validator)
 }
 
 //________________________________________________________________________________________________
@@ -109,11 +107,11 @@ func (k Keeper) JailValidator(ctx sdk.Context, validator types.Validator) {
 		panic(fmt.Sprintf("cannot jail already jailed validator, validator: %v\n", validator))
 	}
 
+	pool := k.GetPool(ctx)
+	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 	validator.Jailed = true
-
-	if validator.Status == sdk.Bonded {
-		validator = k.beginUnbondingValidator(ctx, newValidator)
-	}
+	k.SetValidator(ctx, validator)
+	k.SetValidatorByPowerIndex(ctx, validator, pool)
 }
 
 // remove a validator from jail
@@ -122,13 +120,11 @@ func (k Keeper) UnjailValidator(ctx sdk.Context, validator types.Validator) {
 		panic(fmt.Sprintf("cannot jail already jailed validator, validator: %v\n", validator))
 	}
 
-	store.Delete(GetBondedValidatorsByPowerIndexKey(validator, pool))
-
+	pool := k.GetPool(ctx)
+	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 	validator.Jailed = false
 	k.SetValidator(ctx, validator)
-
-	valPower = GetBondedValidatorsByPowerIndexKey(validator, pool)
-	store.Set(valPower, validator.OperatorAddr)
+	k.SetValidatorByPowerIndex(ctx, validator, pool)
 }
 
 //________________________________________________________________________________________________
@@ -138,6 +134,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) {
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
+
+	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 
 	// XXX WHAT DO WE DO FOR BondIntraTxCounter Height Now??????????????????????????
 
@@ -151,6 +149,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) {
 	k.SetValidator(ctx, validator)
 	store.Set(GetValidatorsBondedIndexKey(validator.OperatorAddr), []byte{})
 
+	k.SetValidatorByPowerIndex(ctx, validator, pool)
+
 	// call the bond hook if present
 	if k.hooks != nil {
 		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress())
@@ -158,11 +158,13 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // perform all the store operations for when a validator status begins unbonding
-func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
+
+	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 
 	// sanity check
 	if validator.Status == sdk.Unbonded ||
@@ -183,15 +185,18 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	// also remove from the Bonded types.Validators Store
 	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 
+	k.SetValidatorByPowerIndex(ctx, validator, pool)
+
 	// call the unbond hook if present
 	if k.hooks != nil {
 		k.hooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
 	}
+
+	return validator
 }
 
 // perform all the store operations for when a validator status becomes unbonded
 func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) {
-	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
 	k.SetPool(ctx, pool)
@@ -224,7 +229,7 @@ func (k Keeper) bondIncrement(ctx sdk.Context, isNewValidator bool, validator ty
 }
 
 //______________________________________________________________________________________________________
-
+/*
 // XXX Delete this reference function before merge
 // Perform all the necessary steps for when a validator changes its power. This
 // function updates all validator stores as well as tendermint update store.
@@ -317,7 +322,7 @@ func (k Keeper) XXXREFERENCEUpdateBondedValidators(
 	maxValidators := k.GetParams(ctx).MaxValidators
 	bondedValidatorsCount := 0
 	var validator, validatorToBond types.Validator
-	newValidatorBonded := false
+	//newValidatorBonded := false
 
 	// create a validator iterator ranging from largest to smallest by power
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
@@ -386,3 +391,4 @@ func (k Keeper) XXXREFERENCEUpdateBondedValidators(
 
 	return types.Validator{}, false
 }
+*/

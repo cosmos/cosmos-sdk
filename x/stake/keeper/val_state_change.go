@@ -180,9 +180,9 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 
 	// update the list ordered by voting power
 	if oldFound {
-		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
+		store.Delete(GetBondedValidatorsByPowerIndexKey(oldValidator, pool))
 	}
-	valPower = GetValidatorsByPowerIndexKey(newValidator, pool)
+	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
 	store.Set(valPower, newValidator.OperatorAddr)
 
 	return valPower

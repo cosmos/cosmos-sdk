@@ -38,7 +38,7 @@ var (
 	GetValidatorKey              = keeper.GetValidatorKey
 	GetValidatorByConsAddrKey    = keeper.GetValidatorByConsAddrKey
 	GetValidatorsBondedIndexKey  = keeper.GetValidatorsBondedIndexKey
-	GetValidatorsByPowerIndexKey = keeper.GetValidatorsByPowerIndexKey
+	GetBondedValidatorsByPowerIndexKey = keeper.GetBondedValidatorsByPowerIndexKey
 	GetTendermintUpdatesTKey     = keeper.GetTendermintUpdatesTKey
 	GetDelegationKey             = keeper.GetDelegationKey
 	GetDelegationsKey            = keeper.GetDelegationsKey

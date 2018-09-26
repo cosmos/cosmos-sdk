@@ -75,7 +75,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	pool := keeper.GetPool(ctx)
-	power := keep.GetValidatorsByPowerIndexKey(validator, pool)
+	power := keep.GetBondedValidatorsByPowerIndexKey(validator, pool)
 	require.True(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))
 
 	// create a second validator keep it bonded
@@ -99,7 +99,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	pool = keeper.GetPool(ctx)
-	power2 := GetValidatorsByPowerIndexKey(validator, pool)
+	power2 := GetBondedValidatorsByPowerIndexKey(validator, pool)
 	require.True(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power2))
 
 	// inflate a bunch
@@ -110,7 +110,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	}
 
 	// now the new record power index should be the same as the original record
-	power3 := GetValidatorsByPowerIndexKey(validator, pool)
+	power3 := GetBondedValidatorsByPowerIndexKey(validator, pool)
 	require.Equal(t, power2, power3)
 
 	// unbond self-delegation

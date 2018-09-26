@@ -89,7 +89,7 @@ func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validato
 // validator index
 func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Validator, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
+	store.Set(GetBondedValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
 }
 
 // Update the validators power index key
@@ -101,9 +101,9 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context,
 
 	// update the list ordered by voting power
 	if oldFound {
-		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
+		store.Delete(GetBondedValidatorsByPowerIndexKey(oldValidator, pool))
 	}
-	valPower = GetValidatorsByPowerIndexKey(newValidator, pool)
+	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
 	store.Set(valPower, newValidator.OperatorAddr)
 }
 
@@ -144,7 +144,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	pool := k.GetPool(ctx)
 	store.Delete(GetValidatorKey(address))
 	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
-	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
+	store.Delete(GetBondedValidatorsByPowerIndexKey(validator, pool))
 
 	// delete from the current and power weighted validator groups if the validator
 	// is bonded - and add validator with zero power to the validator updates
@@ -222,8 +222,8 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 
 // get the group of bonded validators sorted by power-rank
 //
-// TODO: Rename to GetBondedValidatorsByPower or GetValidatorsByPower(ctx, status)
-func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
+// TODO: Rename to GetBondedValidatorsByPower or GetBondedValidatorsByPower(ctx, status)
+func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	validators := make([]types.Validator, maxValidators)

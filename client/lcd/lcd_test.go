@@ -838,14 +838,16 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		`, gasAdjustment)
 	}
 	jsonStr := []byte(fmt.Sprintf(`{
-		%v%v
-		"name":"%s",
-		"password":"%s",
-		"account_number":"%d",
-		"sequence":"%d",
 		"amount":[%s],
-		"chain_id":"%s"
-	}`, gasStr, gasAdjustmentStr, name, password, accnum, sequence, coinbz, chainID))
+		"base_req": {
+			%v%v
+			"name": "%s",
+			"password": "%s",
+			"chain_id": "%s",
+			"account_number":"%d",
+			"sequence":"%d"
+		}
+	}`, coinbz, gasStr, gasAdjustmentStr, name, password, chainID, accnum, sequence))
 
 	res, body = Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send%v", receiveAddr, queryStr), jsonStr)
 	return
@@ -877,18 +879,20 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 
 	// send
 	jsonStr := []byte(fmt.Sprintf(`{
-		"name":"%s",
-		"password": "%s",
-		"account_number":"%d",
-		"sequence": "%d",
-		"src_chain_id": "%s",
 		"amount":[
 			{
 				"denom": "%s",
 				"amount": "1"
 			}
-		]
-	}`, name, password, accnum, sequence, chainID, "steak"))
+		],
+		"base_req": {
+			"name": "%s",
+			"password": "%s",
+			"chain_id": "%s",
+			"account_number":"%d",
+			"sequence":"%d"
+		}
+	}`, "steak", name, password, chainID, accnum, sequence))
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/ibc/testchain/%s/send", receiveAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -997,11 +1001,6 @@ func doDelegate(t *testing.T, port, seed, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 
 	jsonStr := []byte(fmt.Sprintf(`{
-		"name": "%s",
-		"password": "%s",
-		"account_number": "%d",
-		"sequence": "%d",
-		"chain_id": "%s",
 		"delegations": [
 			{
 				"delegator_addr": "%s",
@@ -1012,8 +1011,15 @@ func doDelegate(t *testing.T, port, seed, name, password string,
 		"begin_unbondings": [],
 		"complete_unbondings": [],
 		"begin_redelegates": [],
-		"complete_redelegates": []
-	}`, name, password, accnum, sequence, chainID, delAddr, valAddr, "steak", amount))
+		"complete_redelegates": [],
+		"base_req": {
+			"name": "%s",
+			"password": "%s",
+			"chain_id": "%s",
+			"account_number":"%d",
+			"sequence":"%d"
+		}
+	}`, delAddr, valAddr, "steak", amount, name, password, chainID, accnum, sequence))
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -1034,11 +1040,6 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 
 	jsonStr := []byte(fmt.Sprintf(`{
-		"name": "%s",
-		"password": "%s",
-		"account_number": "%d",
-		"sequence": "%d",
-		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [
 			{
@@ -1049,8 +1050,15 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 		],
 		"complete_unbondings": [],
 		"begin_redelegates": [],
-		"complete_redelegates": []
-	}`, name, password, accnum, sequence, chainID, delAddr, valAddr, amount))
+		"complete_redelegates": [],
+		"base_req": {
+			"name": "%s",
+			"password": "%s",
+			"chain_id": "%s",
+			"account_number":"%d",
+			"sequence":"%d"
+		}
+	}`, delAddr, valAddr, amount, name, password, chainID, accnum, sequence))
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -1072,11 +1080,6 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 
 	jsonStr := []byte(fmt.Sprintf(`{
-		"name": "%s",
-		"password": "%s",
-		"account_number": "%d",
-		"sequence": "%d",
-		"chain_id": "%s",
 		"delegations": [],
 		"begin_unbondings": [],
 		"complete_unbondings": [],
@@ -1088,8 +1091,15 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 				"shares": "30"
 			}
 		],
-		"complete_redelegates": []
-	}`, name, password, accnum, sequence, chainID, delAddr, valSrcAddr, valDstAddr))
+		"complete_redelegates": [],
+		"base_req": {
+			"name": "%s",
+			"password": "%s",
+			"chain_id": "%s",
+			"account_number":"%d",
+			"sequence":"%d"
+		}
+	}`, delAddr, valSrcAddr, valDstAddr, name, password, chainID, accnum, sequence))
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)

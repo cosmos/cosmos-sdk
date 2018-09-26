@@ -10,9 +10,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
@@ -29,7 +29,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 func TestKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
@@ -114,7 +114,7 @@ func TestKeeper(t *testing.T) {
 func TestSendKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
@@ -183,7 +183,7 @@ func TestSendKeeper(t *testing.T) {
 func TestViewKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())

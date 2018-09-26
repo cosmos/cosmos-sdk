@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // nolint
@@ -46,12 +47,15 @@ var (
 // GetCommands adds common flags to query commands
 func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		// TODO: make this default false when we support proofs
-		c.Flags().Bool(FlagTrustNode, true, "Don't verify proofs for responses")
+		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Int64(FlagHeight, 0, "block height to query, omit to get most recent provable block")
+		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
+		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
+		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
+		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 	}
 	return cmds
 }
@@ -59,7 +63,7 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 // PostCommands adds common flags for commands to post tx
 func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
-		c.Flags().String(FlagFrom, "", "Name of private key with which to sign")
+		c.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 		c.Flags().Int64(FlagAccountNumber, 0, "AccountNumber number to sign the tx")
 		c.Flags().Int64(FlagSequence, 0, "Sequence number to sign the tx")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
@@ -71,12 +75,16 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagAsync, false, "broadcast transactions asynchronously")
 		c.Flags().Bool(FlagJson, false, "return output in json format")
 		c.Flags().Bool(FlagPrintResponse, true, "return tx response (only works with async = false)")
-		c.Flags().Bool(FlagTrustNode, true, "Don't verify proofs for query responses")
+		c.Flags().Bool(FlagTrustNode, true, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
 		c.Flags().Bool(FlagGenerateOnly, false, "build an unsigned transaction and write it to STDOUT")
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagSimulate, DefaultGasLimit))
+		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
+		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
+		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
+		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 	}
 	return cmds
 }

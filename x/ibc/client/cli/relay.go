@@ -6,8 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -28,7 +28,7 @@ const (
 )
 
 type relayCommander struct {
-	cdc       *wire.Codec
+	cdc       *codec.Codec
 	address   sdk.AccAddress
 	decoder   auth.AccountDecoder
 	mainStore string
@@ -39,7 +39,7 @@ type relayCommander struct {
 }
 
 // IBCRelayCmd implements the IBC relay command.
-func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
+func IBCRelayCmd(cdc *codec.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
 		decoder:   authcmd.GetAccountDecoder(cdc),
@@ -91,11 +91,14 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 }
 
 // This is nolinted as someone is in the process of refactoring this to remove the goto
-// nolint: gocyclo
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
 	cliCtx := context.NewCLIContext()
 
-	passphrase, err := keys.ReadPassphraseFromStdin(cliCtx.FromAddressName)
+	name, err := cliCtx.GetFromName()
+	if err != nil {
+		panic(err)
+	}
+	passphrase, err := keys.ReadPassphraseFromStdin(name)
 	if err != nil {
 		panic(err)
 	}
@@ -202,7 +205,12 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
 	cliCtx := context.NewCLIContext()
 
-	res, err := txBldr.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})
+	name, err := cliCtx.GetFromName()
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := txBldr.BuildAndSign(name, passphrase, []sdk.Msg{msg})
 	if err != nil {
 		panic(err)
 	}

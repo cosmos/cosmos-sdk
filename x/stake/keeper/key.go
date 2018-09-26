@@ -3,8 +3,6 @@ package keeper
 import (
 	"encoding/binary"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -17,19 +15,21 @@ var (
 	ParamKey                         = []byte{0x00} // key for parameters relating to staking
 	PoolKey                          = []byte{0x01} // key for the staking pools
 	ValidatorsKey                    = []byte{0x02} // prefix for each key to a validator
-	ValidatorsByPubKeyIndexKey       = []byte{0x03} // prefix for each key to a validator index, by pubkey
+	ValidatorsByConsAddrKey          = []byte{0x03} // prefix for each key to a validator index, by pubkey
 	ValidatorsBondedIndexKey         = []byte{0x04} // prefix for each key to a validator index, for bonded validators
 	ValidatorsByPowerIndexKey        = []byte{0x05} // prefix for each key to a validator index, sorted by power
 	ValidatorCliffIndexKey           = []byte{0x06} // key for the validator index of the cliff validator
 	ValidatorPowerCliffKey           = []byte{0x07} // key for the power of the validator on the cliff
-	TendermintUpdatesKey             = []byte{0x08} // prefix for each key to a validator which is being updated
-	IntraTxCounterKey                = []byte{0x09} // key for intra-block tx index
-	DelegationKey                    = []byte{0x0A} // key for a delegation
-	UnbondingDelegationKey           = []byte{0x0B} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x0C} // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = []byte{0x0D} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey     = []byte{0x0F} // prefix for each key for an redelegation, by destination validator operator
+	IntraTxCounterKey                = []byte{0x08} // key for intra-block tx index
+	DelegationKey                    = []byte{0x09} // key for a delegation
+	UnbondingDelegationKey           = []byte{0x0A} // key for an unbonding-delegation
+	UnbondingDelegationByValIndexKey = []byte{0x0B} // prefix for each key for an unbonding-delegation, by validator operator
+	RedelegationKey                  = []byte{0x0C} // key for a redelegation
+	RedelegationByValSrcIndexKey     = []byte{0x0D} // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by destination validator operator
+
+	// Keys for store prefixes (transient)
+	TendermintUpdatesTKey = []byte{0x00} // prefix for each key to a validator which is being updated
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -42,8 +42,8 @@ func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 
 // gets the key for the validator with pubkey
 // VALUE: validator operator address ([]byte)
-func GetValidatorByPubKeyIndexKey(pubkey crypto.PubKey) []byte {
-	return append(ValidatorsByPubKeyIndexKey, pubkey.Bytes()...)
+func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
+	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
 }
 
 // gets the key for the current validator group
@@ -98,8 +98,8 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 // get the key for the accumulated update validators
 // VALUE: abci.Validator
 // note records using these keys should never persist between blocks
-func GetTendermintUpdatesKey(operatorAddr sdk.ValAddress) []byte {
-	return append(TendermintUpdatesKey, operatorAddr.Bytes()...)
+func GetTendermintUpdatesTKey(operatorAddr sdk.ValAddress) []byte {
+	return append(TendermintUpdatesTKey, operatorAddr.Bytes()...)
 }
 
 //______________________________________________________________________________

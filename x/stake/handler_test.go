@@ -17,24 +17,27 @@ import (
 //______________________________________________________________________
 
 func newTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt int64) MsgCreateValidator {
-	return types.NewMsgCreateValidator(address, pubKey, sdk.Coin{"steak", sdk.NewInt(amt)}, Description{})
+	return types.NewMsgCreateValidator(
+		address, pubKey, sdk.NewCoin("steak", sdk.NewInt(amt)), Description{}, commissionMsg,
+	)
 }
 
 func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt int64) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.Coin{"steak", sdk.NewInt(amt)},
+		Delegation:    sdk.NewCoin("steak", sdk.NewInt(amt)),
 	}
 }
 
 func newTestMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress, valPubKey crypto.PubKey, amt int64) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:   Description{},
+		Commission:    commissionMsg,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
 		PubKey:        valPubKey,
-		Delegation:    sdk.Coin{"steak", sdk.NewInt(amt)},
+		Delegation:    sdk.NewCoin("steak", sdk.NewInt(amt)),
 	}
 }
 
@@ -81,8 +84,9 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
 	// slash and jail the first validator
-	keeper.Slash(ctx, keep.PKs[0], 0, initBond, sdk.NewDecWithPrec(5, 1))
-	keeper.Jail(ctx, keep.PKs[0])
+	consAddr0 := sdk.ConsAddress(keep.PKs[0].Address())
+	keeper.Slash(ctx, consAddr0, 0, initBond, sdk.NewDecWithPrec(5, 1))
+	keeper.Jail(ctx, consAddr0)
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Unbonding, validator.Status)              // ensure is unbonding
@@ -198,11 +202,12 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	setInstantUnbondPeriod(keeper, ctx)
 
 	bondAmount := int64(10)
-	valAddr, valPubKey := sdk.ValAddress(keep.Addrs[0]), keep.PKs[0]
+	valAddr := sdk.ValAddress(keep.Addrs[0])
+	valConsPubKey, valConsAddr := keep.PKs[0], sdk.ConsAddress(keep.PKs[0].Address())
 	delAddr := keep.Addrs[1]
 
 	// create validator
-	msgCreateVal := newTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
+	msgCreateVal := newTestMsgCreateValidator(valAddr, valConsPubKey, bondAmount)
 	got := handleMsgCreateValidator(ctx, msgCreateVal, keeper)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got %v", got)
 
@@ -264,7 +269,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.Equal(t, bondAmount*2, validator.Tokens.RoundInt64())
 
 	// unjail the validator now that is has non-zero self-delegated shares
-	keeper.Unjail(ctx, valPubKey)
+	keeper.Unjail(ctx, valConsAddr)
 
 	// verify the validator can now accept delegations
 	msgDelegate = newTestMsgDelegate(delAddr, valAddr, bondAmount)
@@ -911,6 +916,7 @@ func TestCliffValidator(t *testing.T) {
 func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	valA, valB, del := sdk.ValAddress(keep.Addrs[0]), sdk.ValAddress(keep.Addrs[1]), keep.Addrs[2]
+	consAddr0 := sdk.ConsAddress(keep.PKs[0].Address())
 
 	msgCreateValidator := newTestMsgCreateValidator(valA, keep.PKs[0], 10)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
@@ -944,7 +950,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	require.Equal(t, sdk.NewDec(6), delegation.Shares)
 
 	// slash the validator by half
-	keeper.Slash(ctx, keep.PKs[0], 0, 20, sdk.NewDecWithPrec(5, 1))
+	keeper.Slash(ctx, consAddr0, 0, 20, sdk.NewDecWithPrec(5, 1))
 
 	// unbonding delegation should have been slashed by half
 	unbonding, found := keeper.GetUnbondingDelegation(ctx, del, valA)
@@ -968,7 +974,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 
 	// slash the validator for an infraction committed after the unbonding and redelegation begin
 	ctx = ctx.WithBlockHeight(3)
-	keeper.Slash(ctx, keep.PKs[0], 2, 10, sdk.NewDecWithPrec(5, 1))
+	keeper.Slash(ctx, consAddr0, 2, 10, sdk.NewDecWithPrec(5, 1))
 
 	// unbonding delegation should be unchanged
 	unbonding, found = keeper.GetUnbondingDelegation(ctx, del, valA)

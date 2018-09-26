@@ -47,7 +47,7 @@ With all that in mind, we can define the structure of our `Keeper`:
 ```go
     type Keeper struct {
         SimpleGov    sdk.StoreKey        // Key to our module's store
-        cdc                 *wire.Codec         // Codec to encore/decode structs
+        cdc                 *codec.Codec         // Codec to encore/decode structs
         ck                  bank.Keeper         // Needed to handle deposits. This module onlyl requires read/writes to Atom balance
         sm                  stake.Keeper        // Needed to compute voting power. This module only needs read access to the staking store.
         codespace           sdk.CodespaceType   // Reserves space for error codes

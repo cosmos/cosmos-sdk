@@ -7,15 +7,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 // QuizTxCmd invokes the coolness quiz transaction.
-func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
+func QuizTxCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "cool [answer]",
 		Short: "What's cooler than being cool?",
@@ -34,13 +34,13 @@ func QuizTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			msg := cool.NewMsgQuiz(from, args[0])
 
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }
 
 // SetTrendTxCmd sends a new cool trend transaction.
-func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
+func SetTrendTxCmd(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "setcool [answer]",
 		Short: "You're so cool, tell us what is cool!",
@@ -59,7 +59,7 @@ func SetTrendTxCmd(cdc *wire.Codec) *cobra.Command {
 
 			msg := cool.NewMsgSetTrend(from, args[0])
 
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }

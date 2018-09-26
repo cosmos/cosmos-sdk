@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// tests GetDelegation, GetDelegations, SetDelegation, RemoveDelegation, GetDelegations
+// tests GetDelegation, GetDelegatorDelegations, SetDelegation, RemoveDelegation, GetDelegatorDelegations
 func TestDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 10)
 	pool := keeper.GetPool(ctx)
@@ -30,6 +30,7 @@ func TestDelegation(t *testing.T) {
 	validators[2] = keeper.UpdateValidator(ctx, validators[2])
 
 	// first add a validators[0] to delegate too
+
 	bond1to1 := types.Delegation{
 		DelegatorAddr: addrDels[0],
 		ValidatorAddr: addrVals[0],
@@ -66,16 +67,16 @@ func TestDelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, bond2to3)
 
 	// test all bond retrieve capabilities
-	resBonds := keeper.GetDelegations(ctx, addrDels[0], 5)
+	resBonds := keeper.GetDelegatorDelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 3, len(resBonds))
 	require.True(t, bond1to1.Equal(resBonds[0]))
 	require.True(t, bond1to2.Equal(resBonds[1]))
 	require.True(t, bond1to3.Equal(resBonds[2]))
-	resBonds = keeper.GetDelegations(ctx, addrDels[0], 3)
+	resBonds = keeper.GetAllDelegatorDelegations(ctx, addrDels[0])
 	require.Equal(t, 3, len(resBonds))
-	resBonds = keeper.GetDelegations(ctx, addrDels[0], 2)
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
-	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 3, len(resBonds))
 	require.True(t, bond2to1.Equal(resBonds[0]))
 	require.True(t, bond2to2.Equal(resBonds[1]))
@@ -89,14 +90,33 @@ func TestDelegation(t *testing.T) {
 	require.True(t, bond2to2.Equal(allBonds[4]))
 	require.True(t, bond2to3.Equal(allBonds[5]))
 
+	resVals := keeper.GetDelegatorValidators(ctx, addrDels[0], 3)
+	require.Equal(t, 3, len(resVals))
+	resVals = keeper.GetDelegatorValidators(ctx, addrDels[1], 4)
+	require.Equal(t, 3, len(resVals))
+
+	for i := 0; i < 3; i++ {
+
+		resVal, err := keeper.GetDelegatorValidator(ctx, addrDels[0], addrVals[i])
+		require.Nil(t, err)
+		require.Equal(t, addrVals[i], resVal.GetOperator())
+
+		resVal, err = keeper.GetDelegatorValidator(ctx, addrDels[1], addrVals[i])
+		require.Nil(t, err)
+		require.Equal(t, addrVals[i], resVal.GetOperator())
+	}
+
 	// delete a record
 	keeper.RemoveDelegation(ctx, bond2to3)
 	_, found = keeper.GetDelegation(ctx, addrDels[1], addrVals[2])
 	require.False(t, found)
-	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
 	require.True(t, bond2to1.Equal(resBonds[0]))
 	require.True(t, bond2to2.Equal(resBonds[1]))
+
+	resBonds = keeper.GetAllDelegatorDelegations(ctx, addrDels[1])
+	require.Equal(t, 2, len(resBonds))
 
 	// delete all the records from delegator 2
 	keeper.RemoveDelegation(ctx, bond2to1)
@@ -105,7 +125,7 @@ func TestDelegation(t *testing.T) {
 	require.False(t, found)
 	_, found = keeper.GetDelegation(ctx, addrDels[1], addrVals[1])
 	require.False(t, found)
-	resBonds = keeper.GetDelegations(ctx, addrDels[1], 5)
+	resBonds = keeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
 }
 
@@ -123,21 +143,35 @@ func TestUnbondingDelegation(t *testing.T) {
 
 	// set and retrieve a record
 	keeper.SetUnbondingDelegation(ctx, ubd)
-	resBond, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+	resUnbond, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
-	require.True(t, ubd.Equal(resBond))
+	require.True(t, ubd.Equal(resUnbond))
 
 	// modify a records, save, and retrieve
 	ubd.Balance = sdk.NewInt64Coin("steak", 21)
 	keeper.SetUnbondingDelegation(ctx, ubd)
-	resBond, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
+
+	resUnbonds := keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 1, len(resUnbonds))
+
+	resUnbonds = keeper.GetAllUnbondingDelegations(ctx, addrDels[0])
+	require.Equal(t, 1, len(resUnbonds))
+
+	resUnbond, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
-	require.True(t, ubd.Equal(resBond))
+	require.True(t, ubd.Equal(resUnbond))
 
 	// delete a record
 	keeper.RemoveUnbondingDelegation(ctx, ubd)
 	_, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.False(t, found)
+
+	resUnbonds = keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 0, len(resUnbonds))
+
+	resUnbonds = keeper.GetAllUnbondingDelegations(ctx, addrDels[0])
+	require.Equal(t, 0, len(resUnbonds))
+
 }
 
 func TestUnbondDelegation(t *testing.T) {
@@ -413,12 +447,20 @@ func TestRedelegation(t *testing.T) {
 
 	// set and retrieve a record
 	keeper.SetRedelegation(ctx, rd)
-	resBond, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	resRed, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 
 	redelegations := keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resBond))
+	require.True(t, redelegations[0].Equal(resRed))
+
+	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resRed))
+
+	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0])
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resRed))
 
 	// check if has the redelegation
 	has = keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
@@ -429,18 +471,28 @@ func TestRedelegation(t *testing.T) {
 	rd.SharesDst = sdk.NewDec(21)
 	keeper.SetRedelegation(ctx, rd)
 
-	resBond, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	resRed, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
-	require.True(t, rd.Equal(resBond))
+	require.True(t, rd.Equal(resRed))
 
 	redelegations = keeper.GetRedelegationsFromValidator(ctx, addrVals[0])
 	require.Equal(t, 1, len(redelegations))
-	require.True(t, redelegations[0].Equal(resBond))
+	require.True(t, redelegations[0].Equal(resRed))
+
+	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 1, len(redelegations))
+	require.True(t, redelegations[0].Equal(resRed))
 
 	// delete a record
 	keeper.RemoveRedelegation(ctx, rd)
 	_, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.False(t, found)
+
+	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
+	require.Equal(t, 0, len(redelegations))
+
+	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0])
+	require.Equal(t, 0, len(redelegations))
 }
 
 func TestRedelegateSelfDelegation(t *testing.T) {

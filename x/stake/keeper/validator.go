@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -58,14 +57,14 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	return validator, true
 }
 
-// get a single validator by pubkey
-func (k Keeper) GetValidatorByPubKey(ctx sdk.Context, pubkey crypto.PubKey) (validator types.Validator, found bool) {
+// get a single validator by consensus address
+func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	addr := store.Get(GetValidatorByPubKeyIndexKey(pubkey))
-	if addr == nil {
+	opAddr := store.Get(GetValidatorByConsAddrKey(consAddr))
+	if opAddr == nil {
 		return validator, false
 	}
-	return k.GetValidator(ctx, addr)
+	return k.GetValidator(ctx, opAddr)
 }
 
 // set the main record holding validator details
@@ -76,9 +75,10 @@ func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // validator index
-func (k Keeper) SetValidatorByPubKeyIndex(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetValidatorByPubKeyIndexKey(validator.ConsPubKey), validator.OperatorAddr)
+	consAddr := sdk.ConsAddress(validator.ConsPubKey.Address())
+	store.Set(GetValidatorByConsAddrKey(consAddr), validator.OperatorAddr)
 }
 
 // validator index
@@ -103,39 +103,32 @@ func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool 
 func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
+	defer iterator.Close()
 
-	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() {
-			break
-		}
+	for ; iterator.Valid(); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
 		validators = append(validators, validator)
-		iterator.Next()
 	}
-	iterator.Close()
 	return validators
 }
 
-// Get the set of all validators, retrieve a maxRetrieve number of records
-func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve int16) (validators []types.Validator) {
+// return a given amount of all the validators
+func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
-
 	validators = make([]types.Validator, maxRetrieve)
+
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
+	defer iterator.Close()
+
 	i := 0
-	for ; ; i++ {
-		if !iterator.Valid() || i > int(maxRetrieve-1) {
-			break
-		}
+	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		addr := iterator.Key()[1:]
 		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
 		validators[i] = validator
-		iterator.Next()
+		i++
 	}
-	iterator.Close()
-	return validators[:i] // trim
+	return validators[:i] // trim if the array length < maxRetrieve
 }
 
 //___________________________________________________________________________
@@ -149,6 +142,8 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 	validators = make([]types.Validator, maxValidators)
 
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
+	defer iterator.Close()
+
 	i := 0
 	for ; iterator.Valid(); iterator.Next() {
 
@@ -163,7 +158,6 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 		validators[i] = validator
 		i++
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -174,12 +168,12 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	validators := make([]types.Validator, maxValidators)
-	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey) // largest to smallest
+
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
+	defer iterator.Close()
+
 	i := 0
-	for {
-		if !iterator.Valid() || i > int(maxValidators-1) {
-			break
-		}
+	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
 		address := iterator.Value()
 		validator, found := k.GetValidator(ctx, address)
 		ensureValidatorFound(found, address)
@@ -188,9 +182,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 			validators[i] = validator
 			i++
 		}
-		iterator.Next()
 	}
-	iterator.Close()
 	return validators[:i] // trim
 }
 
@@ -203,9 +195,11 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 // at the previous block height or were removed from the validator set entirely
 // are returned to Tendermint.
 func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
-	store := ctx.KVStore(k.storeKey)
+	tstore := ctx.TransientStore(k.storeTKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey)
+	iterator := sdk.KVStorePrefixIterator(tstore, TendermintUpdatesTKey)
+	defer iterator.Close()
+
 	for ; iterator.Valid(); iterator.Next() {
 		var abciVal abci.Validator
 
@@ -228,21 +222,7 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 			updates = append(updates, abciVal)
 		}
 	}
-
-	iterator.Close()
 	return
-}
-
-// remove all validator update entries after applied to Tendermint
-func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-
-	// delete subspace
-	iterator := sdk.KVStorePrefixIterator(store, TendermintUpdatesKey)
-	for ; iterator.Valid(); iterator.Next() {
-		store.Delete(iterator.Key())
-	}
-	iterator.Close()
 }
 
 //___________________________________________________________________________
@@ -252,10 +232,9 @@ func (k Keeper) ClearTendermintUpdates(ctx sdk.Context) {
 // It may kick out validators if a new validator is entering the bonded validator
 // group.
 //
-// nolint: gocyclo
 // TODO: Remove above nolint, function needs to be simplified!
 func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-	store := ctx.KVStore(k.storeKey)
+	tstore := ctx.TransientStore(k.storeTKey)
 	pool := k.GetPool(ctx)
 	oldValidator, oldFound := k.GetValidator(ctx, validator.OperatorAddr)
 
@@ -280,7 +259,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		(oldFound && oldValidator.Status == sdk.Bonded):
 
 		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-		store.Set(GetTendermintUpdatesKey(validator.OperatorAddr), bz)
+		tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bz)
 
 		if cliffValExists {
 			cliffAddr := sdk.ValAddress(k.GetCliffValidator(ctx))
@@ -315,7 +294,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 		// if decreased in power but still bonded, update Tendermint validator
 		if oldFound && oldValidator.BondedTokens().GT(validator.BondedTokens()) {
 			bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-			store.Set(GetTendermintUpdatesKey(validator.OperatorAddr), bz)
+			tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bz)
 		}
 	}
 
@@ -442,9 +421,6 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 // updated in store with the ValidatorsBondedIndexKey. This store is used to
 // determine if a validator is a validator without needing to iterate over all
 // validators.
-//
-// nolint: gocyclo
-// TODO: Remove the above golint
 func (k Keeper) UpdateBondedValidators(
 	ctx sdk.Context, affectedValidator types.Validator) (
 	updatedVal types.Validator, updated bool) {
@@ -459,10 +435,7 @@ func (k Keeper) UpdateBondedValidators(
 
 	// create a validator iterator ranging from largest to smallest by power
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
-	for {
-		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
-			break
-		}
+	for ; iterator.Valid() && bondedValidatorsCount < int(maxValidators); iterator.Next() {
 
 		// either retrieve the original validator from the store, or under the
 		// situation that this is the "affected validator" just use the
@@ -496,7 +469,6 @@ func (k Keeper) UpdateBondedValidators(
 		}
 
 		bondedValidatorsCount++
-		iterator.Next()
 	}
 
 	iterator.Close()
@@ -563,11 +535,7 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 	bondedValidatorsCount := 0
 
 	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
-	for {
-		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
-			break
-		}
-
+	for ; iterator.Valid() && bondedValidatorsCount < int(maxValidators); iterator.Next() {
 		var found bool
 
 		ownerAddr := iterator.Value()
@@ -590,12 +558,10 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 			if validator.Status == sdk.Bonded {
 				panic(fmt.Sprintf("jailed validator cannot be bonded for address: %s\n", ownerAddr))
 			}
-
 			break
 		}
 
 		bondedValidatorsCount++
-		iterator.Next()
 	}
 
 	iterator.Close()
@@ -645,17 +611,13 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
-	store.Set(GetTendermintUpdatesKey(validator.OperatorAddr), bzABCI)
+	tstore := ctx.TransientStore(k.storeTKey)
+	tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
 	// also remove from the Bonded types.Validators Store
 	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 
-	// call the unbond hook if present
-	if k.validatorHooks != nil {
-		k.validatorHooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
-	}
-
-	// return updated validator
+	k.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
 	return validator
 }
 
@@ -682,19 +644,17 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// add to accumulated changes for tendermint
 	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-	store.Set(GetTendermintUpdatesKey(validator.OperatorAddr), bzABCI)
+	tstore := ctx.TransientStore(k.storeTKey)
+	tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
-	// call the bond hook if present
-	if k.validatorHooks != nil {
-		k.validatorHooks.OnValidatorBonded(ctx, validator.ConsAddress())
-	}
-
-	// return updated validator
+	k.OnValidatorBonded(ctx, validator.ConsAddress())
 	return validator
 }
 
 // remove the validator record and associated indexes
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
+
+	k.OnValidatorRemoved(ctx, address)
 
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
@@ -706,7 +666,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 	store.Delete(GetValidatorKey(address))
-	store.Delete(GetValidatorByPubKeyIndexKey(validator.ConsPubKey))
+	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
 	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
 
 	// delete from the current and power weighted validator groups if the validator
@@ -717,7 +677,26 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 
 	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
-	store.Set(GetTendermintUpdatesKey(address), bz)
+	tstore := ctx.TransientStore(k.storeTKey)
+	tstore.Set(GetTendermintUpdatesTKey(address), bz)
+}
+
+// UpdateValidatorCommission attempts to update a validator's commission rate.
+// An error is returned if the new commission rate is invalid.
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newRate sdk.Dec) sdk.Error {
+	commission := validator.Commission
+	blockTime := ctx.BlockHeader().Time
+
+	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
+		return err
+	}
+
+	validator.Commission.Rate = newRate
+	validator.Commission.UpdateTime = blockTime
+
+	k.SetValidator(ctx, validator)
+	k.OnValidatorCommissionChange(ctx, validator.OperatorAddr)
+	return nil
 }
 
 //__________________________________________________________________________

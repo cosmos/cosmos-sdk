@@ -11,8 +11,9 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/wire"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -97,6 +98,20 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	if conf == nil {
 		conf, err = tcmd.ParseConfig()
 	}
+
+	cosmosConfigFilePath := filepath.Join(rootDir, "config/gaiad.toml")
+	viper.SetConfigName("cosmos")
+	_ = viper.MergeInConfig()
+	var cosmosConf *config.Config
+	if _, err := os.Stat(cosmosConfigFilePath); os.IsNotExist(err) {
+		cosmosConf, _ := config.ParseConfig()
+		config.WriteConfigFile(cosmosConfigFilePath, cosmosConf)
+	}
+
+	if cosmosConf == nil {
+		_, err = config.ParseConfig()
+	}
+
 	return
 }
 
@@ -110,7 +125,7 @@ func validateConfig(conf *cfg.Config) error {
 
 // add server commands
 func AddCommands(
-	ctx *Context, cdc *wire.Codec,
+	ctx *Context, cdc *codec.Codec,
 	rootCmd *cobra.Command, appInit AppInit,
 	appCreator AppCreator, appExport AppExporter) {
 
@@ -147,7 +162,7 @@ func AddCommands(
 //
 // NOTE: The ordering of the keys returned as the resulting JSON message is
 // non-deterministic, so the client should not rely on key ordering.
-func InsertKeyJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
+func InsertKeyJSON(cdc *codec.Codec, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
 	var jsonMap map[string]json.RawMessage
 
 	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
@@ -155,7 +170,7 @@ func InsertKeyJSON(cdc *wire.Codec, baseJSON []byte, key string, value json.RawM
 	}
 
 	jsonMap[key] = value
-	bz, err := wire.MarshalJSONIndent(cdc, jsonMap)
+	bz, err := codec.MarshalJSONIndent(cdc, jsonMap)
 
 	return json.RawMessage(bz), err
 }

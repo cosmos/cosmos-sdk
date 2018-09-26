@@ -47,7 +47,7 @@ var (
 func getMockApp(t *testing.T) *mock.App {
 	mapp := mock.NewApp()
 
-	RegisterWire(mapp.Cdc)
+	RegisterCodec(mapp.Cdc)
 	keyCool := sdk.NewKVStoreKey("cool")
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountMapper)
 	keeper := NewKeeper(keyCool, bankKeeper, mapp.RegisterCodespace(DefaultCodespace))
@@ -55,7 +55,7 @@ func getMockApp(t *testing.T) *mock.App {
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, "ice-cold"))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyCool}))
+	require.NoError(t, mapp.CompleteSetup(keyCool))
 	return mapp
 }
 

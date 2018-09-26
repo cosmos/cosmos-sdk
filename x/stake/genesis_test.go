@@ -42,6 +42,12 @@ func TestInitGenesis(t *testing.T) {
 	vals, err := InitGenesis(ctx, keeper, genesisState)
 	require.NoError(t, err)
 
+	actualGenesis := WriteGenesis(ctx, keeper)
+	require.Equal(t, genesisState.Pool, actualGenesis.Pool)
+	require.Equal(t, genesisState.Params, actualGenesis.Params)
+	require.Equal(t, genesisState.Bonds, actualGenesis.Bonds)
+	require.EqualValues(t, keeper.GetAllValidators(ctx), actualGenesis.Validators)
+
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[0]))
 	require.True(t, found)

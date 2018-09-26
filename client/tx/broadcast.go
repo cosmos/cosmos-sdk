@@ -25,7 +25,7 @@ func BroadcastTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		res, err := cliCtx.BroadcastTx([]byte(m.TxBytes))
+		res, err := cliCtx.BroadcastTxAndAwaitCommit([]byte(m.TxBytes))
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

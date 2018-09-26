@@ -46,6 +46,12 @@ func (coin Coin) IsGTE(other Coin) bool {
 	return coin.SameDenomAs(other) && (!coin.Amount.LT(other.Amount))
 }
 
+// IsLT returns true if they are the same type and the receiver is
+// a smaller value
+func (coin Coin) IsLT(other Coin) bool {
+	return !coin.IsGTE(other)
+}
+
 // IsEqual returns true if the two sets of Coins have the same value
 func (coin Coin) IsEqual(other Coin) bool {
 	return coin.SameDenomAs(other) && (coin.Amount.Equal(other.Amount))
@@ -179,6 +185,12 @@ func (coins Coins) IsGTE(coinsB Coins) bool {
 		return true
 	}
 	return diff.IsNotNegative()
+}
+
+// IsLT returns True iff every currency in coins, the currency is
+// present at a smaller amount in coins
+func (coins Coins) IsLT(coinsB Coins) bool {
+	return !coins.IsGTE(coinsB)
 }
 
 // IsZero returns true if there are no coins

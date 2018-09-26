@@ -28,7 +28,7 @@ Then, let us define the structure of our application.
 // Extended ABCI application
 type SimpleGovApp struct {
     *bam.BaseApp
-    cdc *wire.Codec
+    cdc *codec.Codec
 
     // keys to access the substores
     capKeyMainStore      *sdk.KVStoreKey

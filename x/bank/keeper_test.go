@@ -10,9 +10,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
@@ -29,12 +29,12 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 func TestKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := NewKeeper(accountMapper)
+	bankKeeper := NewBaseKeeper(accountMapper)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -114,13 +114,13 @@ func TestKeeper(t *testing.T) {
 func TestSendKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := NewKeeper(accountMapper)
-	sendKeeper := NewSendKeeper(accountMapper)
+	bankKeeper := NewBaseKeeper(accountMapper)
+	sendKeeper := NewBaseSendKeeper(accountMapper)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -183,13 +183,13 @@ func TestSendKeeper(t *testing.T) {
 func TestViewKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
 
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := NewKeeper(accountMapper)
-	viewKeeper := NewViewKeeper(accountMapper)
+	bankKeeper := NewBaseKeeper(accountMapper)
+	viewKeeper := NewBaseViewKeeper(accountMapper)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	acc := accountMapper.NewAccountWithAddress(ctx, addr)

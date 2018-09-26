@@ -14,8 +14,8 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 var (
@@ -34,14 +34,14 @@ func defaultLogger() log.Logger {
 func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
-func registerTestCodec(cdc *wire.Codec) {
+func registerTestCodec(cdc *codec.Codec) {
 	// register Tx, Msg
-	sdk.RegisterWire(cdc)
+	sdk.RegisterCodec(cdc)
 
 	// register test types
 	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
@@ -302,6 +302,7 @@ type msgCounter struct {
 
 // Implements Msg
 func (msg msgCounter) Type() string                 { return typeMsgCounter }
+func (msg msgCounter) Name() string                 { return "counter1" }
 func (msg msgCounter) GetSignBytes() []byte         { return nil }
 func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
 func (msg msgCounter) ValidateBasic() sdk.Error {
@@ -340,6 +341,7 @@ type msgCounter2 struct {
 
 // Implements Msg
 func (msg msgCounter2) Type() string                 { return typeMsgCounter2 }
+func (msg msgCounter2) Name() string                 { return "counter2" }
 func (msg msgCounter2) GetSignBytes() []byte         { return nil }
 func (msg msgCounter2) GetSigners() []sdk.AccAddress { return nil }
 func (msg msgCounter2) ValidateBasic() sdk.Error {
@@ -350,7 +352,7 @@ func (msg msgCounter2) ValidateBasic() sdk.Error {
 }
 
 // amino decode
-func testTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
+func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx txTest
 		if len(txBytes) == 0 {
@@ -448,7 +450,7 @@ func TestCheckTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 
 	for i := int64(0); i < nTxs; i++ {
@@ -489,7 +491,7 @@ func TestDeliverTx(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 
 	nBlocks := 3
@@ -532,7 +534,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 
 	// run a multi-msg tx
@@ -613,8 +615,8 @@ func TestSimulateTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
-	registerTestCodec(codec)
+	cdc := codec.New()
+	registerTestCodec(cdc)
 
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
@@ -634,7 +636,7 @@ func TestSimulateTx(t *testing.T) {
 		require.Equal(t, gasConsumed, result.GasUsed)
 
 		// simulate by calling Query with encoded tx
-		txBytes, err := codec.MarshalBinary(tx)
+		txBytes, err := cdc.MarshalBinary(tx)
 		require.Nil(t, err)
 		query := abci.RequestQuery{
 			Path: "/app/simulate",
@@ -644,7 +646,7 @@ func TestSimulateTx(t *testing.T) {
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var res sdk.Result
-		wire.Cdc.MustUnmarshalBinary(queryResult.Value, &res)
+		codec.Cdc.MustUnmarshalBinary(queryResult.Value, &res)
 		require.Nil(t, err, "Result unmarshalling failed")
 		require.True(t, res.IsOK(), res.Log)
 		require.Equal(t, gasConsumed, res.GasUsed, res.Log)
@@ -721,7 +723,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		tx.Msgs = append(tx.Msgs, msgNoDecode{})
 
 		// new codec so we can encode the tx, but we shouldn't be able to decode
-		newCdc := wire.NewCodec()
+		newCdc := codec.New()
 		registerTestCodec(newCdc)
 		newCdc.RegisterConcrete(&msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode", nil)
 
@@ -818,93 +820,4 @@ func TestTxGasLimits(t *testing.T) {
 			require.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), fmt.Sprintf("%d: %v, %v", i, tc, res))
 		}
 	}
-}
-
-//-------------------------------------------------------------------------------------------
-// Queries
-
-// Test that we can only query from the latest committed state.
-func TestQuery(t *testing.T) {
-	key, value := []byte("hello"), []byte("goodbye")
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
-			store := ctx.KVStore(capKey1)
-			store.Set(key, value)
-			return
-		})
-	}
-
-	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-			store := ctx.KVStore(capKey1)
-			store.Set(key, value)
-			return sdk.Result{}
-		})
-	}
-
-	app := setupBaseApp(t, anteOpt, routerOpt)
-
-	app.InitChain(abci.RequestInitChain{})
-
-	// NOTE: "/store/key1" tells us KVStore
-	// and the final "/key" says to use the data as the
-	// key in the given KVStore ...
-	query := abci.RequestQuery{
-		Path: "/store/key1/key",
-		Data: key,
-	}
-	tx := newTxCounter(0, 0)
-
-	// query is empty before we do anything
-	res := app.Query(query)
-	require.Equal(t, 0, len(res.Value))
-
-	// query is still empty after a CheckTx
-	resTx := app.Check(tx)
-	require.True(t, resTx.IsOK(), fmt.Sprintf("%v", resTx))
-	res = app.Query(query)
-	require.Equal(t, 0, len(res.Value))
-
-	// query is still empty after a DeliverTx before we commit
-	app.BeginBlock(abci.RequestBeginBlock{})
-	resTx = app.Deliver(tx)
-	require.True(t, resTx.IsOK(), fmt.Sprintf("%v", resTx))
-	res = app.Query(query)
-	require.Equal(t, 0, len(res.Value))
-
-	// query returns correct value after Commit
-	app.Commit()
-	res = app.Query(query)
-	require.Equal(t, value, res.Value)
-}
-
-// Test p2p filter queries
-func TestP2PQuery(t *testing.T) {
-	addrPeerFilterOpt := func(bapp *BaseApp) {
-		bapp.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
-			require.Equal(t, "1.1.1.1:8000", addrport)
-			return abci.ResponseQuery{Code: uint32(3)}
-		})
-	}
-
-	pubkeyPeerFilterOpt := func(bapp *BaseApp) {
-		bapp.SetPubKeyPeerFilter(func(pubkey string) abci.ResponseQuery {
-			require.Equal(t, "testpubkey", pubkey)
-			return abci.ResponseQuery{Code: uint32(4)}
-		})
-	}
-
-	app := setupBaseApp(t, addrPeerFilterOpt, pubkeyPeerFilterOpt)
-
-	addrQuery := abci.RequestQuery{
-		Path: "/p2p/filter/addr/1.1.1.1:8000",
-	}
-	res := app.Query(addrQuery)
-	require.Equal(t, uint32(3), res.Code)
-
-	pubkeyQuery := abci.RequestQuery{
-		Path: "/p2p/filter/pubkey/testpubkey",
-	}
-	res = app.Query(pubkeyQuery)
-	require.Equal(t, uint32(4), res.Code)
 }

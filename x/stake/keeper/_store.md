@@ -3,6 +3,7 @@
 This document provided a bit more insight as to the purpose of several related
 prefixed areas of the staking store which are accessed in `x/stake/keeper.go`.
 
+# IAVL Store 
 
 ## Validators
  - Prefix Key Space:    ValidatorsKey
@@ -36,10 +37,13 @@ prefixed areas of the staking store which are accessed in `x/stake/keeper.go`.
                         through this set to determine who we've kicked out.
                         retrieving validator by tendermint index
 
+# Transient Store 
+
+The transient store persists between transations but not between blocks 
+
 ## Tendermint Updates
- - Prefix Key Space:    TendermintUpdatesKey
+ - Prefix Key Space:    TendermintUpdatesTKey
  - Key/Sort:            Validator Operator Address
  - Value:               Tendermint ABCI Validator
  - Contains:            Validators are queued to affect the consensus validation set in Tendermint
- - Used For:            Informing Tendermint of the validator set updates, is used only intra-block, as the
-                        updates are applied then cleared on endblock
+ - Used For:            Informing Tendermint of the validator set updates

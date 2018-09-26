@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
-	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,19 +18,18 @@ import (
 // SimulateSingleInputMsgSend tests and runs a single msg send, with one input and one output, where both
 // accounts already exist.
 func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation {
-	return func(tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, fOps []simulation.FutureOperation, err sdk.Error) {
-		fromKey := simulation.RandomKey(r, keys)
-		fromAddr := sdk.AccAddress(fromKey.PubKey().Address())
-		toKey := simulation.RandomKey(r, keys)
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+		fromAcc := simulation.RandomAcc(r, accs)
+		toAcc := simulation.RandomAcc(r, accs)
 		// Disallow sending money to yourself
 		for {
-			if !fromKey.Equals(toKey) {
+			if !fromAcc.PubKey.Equals(toAcc.PubKey) {
 				break
 			}
-			toKey = simulation.RandomKey(r, keys)
+			toAcc = simulation.RandomAcc(r, accs)
 		}
-		toAddr := sdk.AccAddress(toKey.PubKey().Address())
-		initFromCoins := mapper.GetAccount(ctx, fromAddr).GetCoins()
+		toAddr := toAcc.Address
+		initFromCoins := mapper.GetAccount(ctx, fromAcc.Address).GetCoins()
 
 		if len(initFromCoins) == 0 {
 			return "skipping, no coins at all", nil, nil
@@ -46,19 +42,21 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 		}
 
 		action = fmt.Sprintf("%s is sending %s %s to %s",
-			fromAddr.String(),
+			fromAcc.Address.String(),
 			amt.String(),
 			initFromCoins[denomIndex].Denom,
 			toAddr.String(),
 		)
-		log = fmt.Sprintf("%s\n%s", log, action)
 
 		coins := sdk.Coins{{initFromCoins[denomIndex].Denom, amt}}
 		var msg = bank.MsgSend{
-			Inputs:  []bank.Input{bank.NewInput(fromAddr, coins)},
+			Inputs:  []bank.Input{bank.NewInput(fromAcc.Address, coins)},
 			Outputs: []bank.Output{bank.NewOutput(toAddr, coins)},
 		}
-		sendAndVerifyMsgSend(tb, app, mapper, msg, ctx, log, []crypto.PrivKey{fromKey})
+		goErr = sendAndVerifyMsgSend(app, mapper, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
+		if goErr != nil {
+			return "", nil, goErr
+		}
 		event("bank/sendAndVerifyMsgSend/ok")
 
 		return action, nil, nil
@@ -66,7 +64,7 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 }
 
 // Sends and verifies the transition of a msg send. This fails if there are repeated inputs or outputs
-func sendAndVerifyMsgSend(tb testing.TB, app *baseapp.BaseApp, mapper auth.AccountMapper, msg bank.MsgSend, ctx sdk.Context, log string, privkeys []crypto.PrivKey) {
+func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountMapper, msg bank.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey) error {
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
 	AccountNumbers := make([]int64, len(msg.Inputs))
@@ -89,25 +87,22 @@ func sendAndVerifyMsgSend(tb testing.TB, app *baseapp.BaseApp, mapper auth.Accou
 	res := app.Deliver(tx)
 	if !res.IsOK() {
 		// TODO: Do this in a more 'canonical' way
-		fmt.Println(res)
-		fmt.Println(log)
-		tb.FailNow()
+		return fmt.Errorf("Deliver failed %v", res)
 	}
 
 	for i := 0; i < len(msg.Inputs); i++ {
 		terminalInputCoins := mapper.GetAccount(ctx, msg.Inputs[i].Address).GetCoins()
-		require.Equal(tb,
-			initialInputAddrCoins[i].Minus(msg.Inputs[i].Coins),
-			terminalInputCoins,
-			fmt.Sprintf("Input #%d had an incorrect amount of coins\n%s", i, log),
-		)
+		if !initialInputAddrCoins[i].Minus(msg.Inputs[i].Coins).IsEqual(terminalInputCoins) {
+			return fmt.Errorf("input #%d had an incorrect amount of coins", i)
+		}
 	}
 	for i := 0; i < len(msg.Outputs); i++ {
 		terminalOutputCoins := mapper.GetAccount(ctx, msg.Outputs[i].Address).GetCoins()
 		if !terminalOutputCoins.IsEqual(initialOutputAddrCoins[i].Plus(msg.Outputs[i].Coins)) {
-			tb.Fatalf("Output #%d had an incorrect amount of coins\n%s", i, log)
+			return fmt.Errorf("output #%d had an incorrect amount of coins", i)
 		}
 	}
+	return nil
 }
 
 func randPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {

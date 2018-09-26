@@ -6,8 +6,8 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -16,7 +16,7 @@ import (
 // Keeper of the slashing store
 type Keeper struct {
 	storeKey     sdk.StoreKey
-	cdc          *wire.Codec
+	cdc          *codec.Codec
 	validatorSet sdk.ValidatorSet
 	params       params.Getter
 	// codespace
@@ -24,7 +24,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params params.Getter, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params params.Getter, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:     key,
 		cdc:          cdc,
@@ -40,10 +40,10 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
 	age := time.Sub(timestamp)
-	address := sdk.ConsAddress(addr)
+	consAddr := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
-		panic(fmt.Sprintf("Validator address %v not found", addr))
+		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
 
 	// Double sign too old
@@ -59,37 +59,37 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Cap the amount slashed to the penalty for the worst infraction
 	// within the slashing period when this infraction was committed
 	fraction := k.SlashFractionDoubleSign(ctx)
-	revisedFraction := k.capBySlashingPeriod(ctx, address, fraction, infractionHeight)
+	revisedFraction := k.capBySlashingPeriod(ctx, consAddr, fraction, infractionHeight)
 	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
 
 	// Slash validator
-	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, revisedFraction)
+	k.validatorSet.Slash(ctx, consAddr, infractionHeight, power, revisedFraction)
 
 	// Jail validator
-	k.validatorSet.Jail(ctx, pubkey)
+	k.validatorSet.Jail(ctx, consAddr)
 
 	// Set validator jail duration
-	signInfo, found := k.getValidatorSigningInfo(ctx, address)
+	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
 	if !found {
-		panic(fmt.Sprintf("Expected signing info for validator %s but not found", address))
+		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
 	signInfo.JailedUntil = time.Add(k.DoubleSignUnbondDuration(ctx))
-	k.setValidatorSigningInfo(ctx, address, signInfo)
+	k.setValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
 // handle a validator signature, must be called once per validator per block
-// nolint gocyclo
+// TODO refactor to take in a consensus address, additionally should maybe just take in the pubkey too
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
-	address := sdk.ConsAddress(addr)
+	consAddr := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
-		panic(fmt.Sprintf("Validator address %v not found", addr))
+		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
 	// Local index, so counts blocks validator *should* have signed
 	// Will use the 0-value default signing info if not present, except for start height
-	signInfo, found := k.getValidatorSigningInfo(ctx, address)
+	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
 	if !found {
 		// If this validator has never been seen before, construct a new SigningInfo with the correct start height
 		signInfo = NewValidatorSigningInfo(height, 0, time.Unix(0, 0), 0)
@@ -100,16 +100,16 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	// Update signed block bit array & counter
 	// This counter just tracks the sum of the bit array
 	// That way we avoid needing to read/write the whole array each time
-	previous := k.getValidatorSigningBitArray(ctx, address, index)
+	previous := k.getValidatorSigningBitArray(ctx, consAddr, index)
 	if previous == signed {
 		// Array value at this index has not changed, no need to update counter
 	} else if previous && !signed {
 		// Array value has changed from signed to unsigned, decrement counter
-		k.setValidatorSigningBitArray(ctx, address, index, false)
+		k.setValidatorSigningBitArray(ctx, consAddr, index, false)
 		signInfo.SignedBlocksCounter--
 	} else if !previous && signed {
 		// Array value has changed from unsigned to signed, increment counter
-		k.setValidatorSigningBitArray(ctx, address, index, true)
+		k.setValidatorSigningBitArray(ctx, consAddr, index, true)
 		signInfo.SignedBlocksCounter++
 	}
 
@@ -118,13 +118,13 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	}
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
 	if height > minHeight && signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
-		validator := k.validatorSet.ValidatorByPubKey(ctx, pubkey)
+		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 		if validator != nil && !validator.GetJailed() {
 			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
-			k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
-			k.validatorSet.Jail(ctx, pubkey)
+			k.validatorSet.Slash(ctx, consAddr, height, power, k.SlashFractionDowntime(ctx))
+			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
 		} else {
 			// Validator was (a) not found or (b) already jailed, don't slash
@@ -134,7 +134,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	}
 
 	// Set the updated signing info
-	k.setValidatorSigningInfo(ctx, address, signInfo)
+	k.setValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
 // AddValidators adds the validators to the keepers validator addr to pubkey mapping.

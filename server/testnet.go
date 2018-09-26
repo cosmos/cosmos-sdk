@@ -11,16 +11,18 @@ import (
 
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 var (
-	nodeDirPrefix = "node-dir-prefix"
-	nValidators   = "v"
-	outputDir     = "output-dir"
+	nodeDirPrefix  = "node-dir-prefix"
+	nValidators    = "v"
+	outputDir      = "output-dir"
+	nodeDaemonHome = "node-daemon-home"
+	nodeCliHome    = "node-cli-home"
 
 	startingIPAddress = "starting-ip-address"
 )
@@ -28,7 +30,7 @@ var (
 const nodeDirPerm = 0755
 
 // get cmd to initialize all files for tendermint testnet and application
-func TestnetFilesCmd(ctx *Context, cdc *wire.Codec, appInit AppInit) *cobra.Command {
+func TestnetFilesCmd(ctx *Context, cdc *codec.Codec, appInit AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
 		Short: "Initialize files for a Gaiad testnet",
@@ -39,7 +41,7 @@ Note, strict routability for addresses is turned off in the config file.
 
 Example:
 
-	gaiad testnet --v 4 --output-dir ./output --starting-ip-address 192.168.10.2
+	gaiad testnet --v 4 --o ./output --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
@@ -53,21 +55,27 @@ Example:
 		"Directory to store initialization data for the testnet")
 	cmd.Flags().String(nodeDirPrefix, "node",
 		"Prefix the directory name for each node with (node results in node0, node1, ...)")
+	cmd.Flags().String(nodeDaemonHome, "gaiad",
+		"Home directory of the node's daemon configuration")
+	cmd.Flags().String(nodeCliHome, "gaiacli",
+		"Home directory of the node's cli configuration")
 
 	cmd.Flags().String(startingIPAddress, "192.168.0.1",
 		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	return cmd
 }
 
-func testnetWithConfig(config *cfg.Config, cdc *wire.Codec, appInit AppInit) error {
+func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit AppInit) error {
 	outDir := viper.GetString(outputDir)
 	numValidators := viper.GetInt(nValidators)
 
 	// Generate private key, node ID, initial transaction
 	for i := 0; i < numValidators; i++ {
 		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
-		nodeDir := filepath.Join(outDir, nodeDirName, "gaiad")
-		clientDir := filepath.Join(outDir, nodeDirName, "gaiacli")
+		nodeDaemonHomeName := viper.GetString(nodeDaemonHome)
+		nodeCliHomeName := viper.GetString(nodeCliHome)
+		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
+		clientDir := filepath.Join(outDir, nodeDirName, nodeCliHomeName)
 		gentxsDir := filepath.Join(outDir, "gentxs")
 		config.SetRoot(nodeDir)
 
@@ -122,7 +130,8 @@ func testnetWithConfig(config *cfg.Config, cdc *wire.Codec, appInit AppInit) err
 	for i := 0; i < numValidators; i++ {
 
 		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
-		nodeDir := filepath.Join(outDir, nodeDirName, "gaiad")
+		nodeDaemonHomeName := viper.GetString(nodeDaemonHome)
+		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
 		gentxsDir := filepath.Join(outDir, "gentxs")
 		initConfig := InitConfig{
 			chainID,

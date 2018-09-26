@@ -292,6 +292,11 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 	return ConsAddress(bz), nil
 }
 
+// get ConsAddress from pubkey
+func GetConsAddress(pubkey crypto.PubKey) ConsAddress {
+	return ConsAddress(pubkey.Address())
+}
+
 // Returns boolean for whether two ConsAddress are Equal
 func (ca ConsAddress) Equals(ca2 ConsAddress) bool {
 	if ca.Empty() && ca2.Empty() {

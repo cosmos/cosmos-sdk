@@ -2,7 +2,7 @@ package simulation
 
 import (
 	"math/rand"
-	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,18 +22,27 @@ type (
 	//
 	// Operations can optionally provide a list of "FutureOperations" to run later
 	// These will be ran at the beginning of the corresponding block.
-	Operation func(
-		tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		privKeys []crypto.PrivKey, log string, event func(string),
-	) (action string, futureOperations []FutureOperation, err sdk.Error)
+	Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accounts []Account, event func(string),
+	) (action string, futureOperations []FutureOperation, err error)
 
 	// RandSetup performs the random setup the mock module needs.
-	RandSetup func(r *rand.Rand, privKeys []crypto.PrivKey)
+	RandSetup func(r *rand.Rand, accounts []Account)
 
 	// An Invariant is a function which tests a particular invariant.
-	// If the invariant has been broken, the function should halt the
-	// test and output the log.
-	Invariant func(t *testing.T, app *baseapp.BaseApp, log string)
+	// If the invariant has been broken, it should return an error
+	// containing a descriptive message about what happened.
+	// The simulator will then halt and print the logs.
+	Invariant func(app *baseapp.BaseApp) error
+
+	// Account contains a privkey, pubkey, address tuple
+	// eventually more useful data can be placed in here.
+	// (e.g. number of coins)
+	Account struct {
+		PrivKey crypto.PrivKey
+		PubKey  crypto.PubKey
+		Address sdk.AccAddress
+	}
 
 	mockValidator struct {
 		val           abci.ValidatorUpdate
@@ -42,11 +51,20 @@ type (
 
 	// FutureOperation is an operation which will be ran at the
 	// beginning of the provided BlockHeight.
+	// If both a BlockHeight and BlockTime are specified, it will use the BlockHeight.
 	// In the (likely) event that multiple operations are queued at the same
 	// block height, they will execute in a FIFO pattern.
 	FutureOperation struct {
 		BlockHeight int
+		BlockTime   time.Time
 		Op          Operation
+	}
+
+	// WeightedOperation is an operation with associated weight.
+	// This is used to bias the selection operation within the simulator.
+	WeightedOperation struct {
+		Weight int
+		Op     Operation
 	}
 )
 
@@ -54,9 +72,15 @@ type (
 // a given invariant if the mock application's last block modulo the given
 // period is congruent to the given offset.
 func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
-	return func(t *testing.T, app *baseapp.BaseApp, log string) {
+	return func(app *baseapp.BaseApp) error {
 		if int(app.LastBlockHeight())%period == offset {
-			invariant(t, app, log)
+			return invariant(app)
 		}
+		return nil
 	}
+}
+
+// nolint
+func (acc Account) Equals(acc2 Account) bool {
+	return acc.Address.Equals(acc2.Address)
 }

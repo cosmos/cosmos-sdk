@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -27,7 +27,7 @@ func setGenesis(bapp *DemocoinApp, trend string, accs ...auth.BaseAccount) error
 		CoolGenesis: cool.Genesis{trend},
 	}
 
-	stateBytes, err := wire.MarshalJSONIndent(bapp.cdc, genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(bapp.cdc, genesisState)
 	if err != nil {
 		return err
 	}

@@ -18,13 +18,13 @@ import (
 func getMockApp(t *testing.T) *mock.App {
 	mapp := mock.NewApp()
 
-	RegisterWire(mapp.Cdc)
+	RegisterCodec(mapp.Cdc)
 	keyIBC := sdk.NewKVStoreKey("ibc")
 	ibcMapper := NewMapper(mapp.Cdc, keyIBC, mapp.RegisterCodespace(DefaultCodespace))
-	bankKeeper := bank.NewKeeper(mapp.AccountMapper)
+	bankKeeper := bank.NewBaseKeeper(mapp.AccountMapper)
 	mapp.Router().AddRoute("ibc", NewHandler(ibcMapper, bankKeeper))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyIBC}))
+	require.NoError(t, mapp.CompleteSetup(keyIBC))
 	return mapp
 }
 

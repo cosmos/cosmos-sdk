@@ -96,7 +96,7 @@ func (st *iavlStore) Commit() CommitID {
 // Implements Committer.
 func (st *iavlStore) LastCommitID() CommitID {
 	return CommitID{
-		Version: st.tree.Version64(),
+		Version: st.tree.Version(),
 		Hash:    st.tree.Hash(),
 	}
 }
@@ -180,7 +180,7 @@ func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 func getHeight(tree *iavl.MutableTree, req abci.RequestQuery) int64 {
 	height := req.Height
 	if height == 0 {
-		latest := tree.Version64()
+		latest := tree.Version()
 		if tree.VersionExists(latest - 1) {
 			height = latest - 1
 		} else {

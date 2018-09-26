@@ -92,6 +92,21 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 	store.Set(GetValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
 }
 
+// Update the validators power index key
+func (k Keeper) updateValidatorPower(ctx sdk.Context,
+	oldFound bool, oldValidator, newValidator types.Validator) {
+
+	store := ctx.KVStore(k.storeKey)
+	pool := store.GetPool(ctx)
+
+	// update the list ordered by voting power
+	if oldFound {
+		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
+	}
+	valPower = GetValidatorsByPowerIndexKey(newValidator, pool)
+	store.Set(valPower, newValidator.OperatorAddr)
+}
+
 // validator index
 func (k Keeper) SetValidatorBondedIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
@@ -115,7 +130,38 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Valid
 	return nil
 }
 
-// Get the set of all validators with no limits, used during genesis dump
+// remove the validator record and associated indexes
+func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
+
+	// first retrieve the old validator record
+	validator, found := k.GetValidator(ctx, address)
+	if !found {
+		return
+	}
+
+	// delete the old validator record
+	store := ctx.KVStore(k.storeKey)
+	pool := k.GetPool(ctx)
+	store.Delete(GetValidatorKey(address))
+	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
+	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
+
+	// delete from the current and power weighted validator groups if the validator
+	// is bonded - and add validator with zero power to the validator updates
+	if store.Get(GetValidatorsBondedIndexKey(validator.OperatorAddr)) == nil {
+		return
+	}
+	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
+
+	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
+	tstore := ctx.TransientStore(k.storeTKey)
+	tstore.Set(GetTendermintUpdatesTKey(address), bz)
+}
+
+//___________________________________________________________________________
+// get groups of validators
+
+// get the set of all validators with no limits, used during genesis dump
 func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
@@ -146,8 +192,6 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators [
 	}
 	return validators[:i] // trim if the array length < maxRetrieve
 }
-
-//___________________________________________________________________________
 
 // get the group of the bonded validators
 func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validator) {
@@ -198,32 +242,4 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 		}
 	}
 	return validators[:i] // trim
-}
-
-// remove the validator record and associated indexes
-func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
-
-	// first retrieve the old validator record
-	validator, found := k.GetValidator(ctx, address)
-	if !found {
-		return
-	}
-
-	// delete the old validator record
-	store := ctx.KVStore(k.storeKey)
-	pool := k.GetPool(ctx)
-	store.Delete(GetValidatorKey(address))
-	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
-	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
-
-	// delete from the current and power weighted validator groups if the validator
-	// is bonded - and add validator with zero power to the validator updates
-	if store.Get(GetValidatorsBondedIndexKey(validator.OperatorAddr)) == nil {
-		return
-	}
-	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
-
-	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
-	tstore := ctx.TransientStore(k.storeTKey)
-	tstore.Set(GetTendermintUpdatesTKey(address), bz)
 }

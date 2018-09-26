@@ -31,7 +31,6 @@ type Context struct {
 }
 
 // create a new context
-// nolint: unparam
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
 	c := Context{
 		Context: context.Background(),
@@ -222,9 +221,11 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 func (c Context) WithMinimumFees(minFees Coins) Context {
 	return c.withValue(contextKeyMinimumFees, minFees)
 }
+
 func (c Context) WithKVGasConfig(config GasConfig) Context {
 	return c.withValue(contextKeyKVGasConfig, config)
 }
+
 func (c Context) WithTransientGasConfig(config GasConfig) Context {
 	return c.withValue(contextKeyTransientGasConfig, config)
 }

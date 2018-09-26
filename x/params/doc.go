@@ -1,15 +1,21 @@
 package params
 
 /*
-Package params provides a globally available parameter store .
+Package params provides a globally available parameter store.
 
-There are two main types, Keeper and Space. Space is an isolated namespace for a paramstore, where keys are prefixed by preconfigured spacename. Keeper has a permission to access all existing spaces and create new space.
+There are two main types, Keeper and Space. Space is an isolated namespace for a
+paramstore, where keys are prefixed by preconfigured spacename. Keeper has a
+permission to access all existing spaces and create new space.
 
-Space can be used by the individual keepers, who needs a private parameter store that the other keeper are not able to modify. Keeper can be used by the Governance keeper, who need to modify any parameter in case of the proposal passes.
+Space can be used by the individual keepers, who needs a private parameter store
+that the other keeper are not able to modify. Keeper can be used by the Governance
+keeper, who need to modify any parameter in case of the proposal passes.
 
 Basic Usage:
 
-First, declare parameter space and parameter keys for the module. Then include params.Store in the keeper. Since we prefix the keys with the spacename, it is recommended to use the same name with the module's.
+First, declare parameter space and parameter keys for the module. Then include
+params.Store in the keeper. Since we prefix the keys with the spacename, it is
+recommended to use the same name with the module's.
 
 	const (
 		DefaultParamspace = "mymodule"
@@ -27,7 +33,7 @@ First, declare parameter space and parameter keys for the module. Then include p
 		ps params.Store
 	}
 
-Pass a params.Store to NewKeeper with DefaultParamSpace(or another)
+Pass a params.Store to NewKeeper with DefaultParamSpace (or another)
 
 	app.myKeeper = mymodule.NewKeeper(app.paramStore.SubStore(mymodule.DefaultParamspace))
 
@@ -38,7 +44,8 @@ Now we can access to the paramstore using Paramstore Keys
 
 Genesis Usage:
 
-Declare a struct for parameters and make it implement ParamStruct. It will then be able to be passed to SetFromParamStruct.
+Declare a struct for parameters and make it implement ParamStruct. It will then
+be able to be passed to SetFromParamStruct.
 
 	type MyParams struct {
 		Parameter1 uint64
@@ -56,11 +63,13 @@ Declare a struct for parameters and make it implement ParamStruct. It will then 
 		k.ps.SetFromParamStruct(ctx, &data.params)
 	}
 
-The method is pointer receiver because there could be a case that we read from the store and set the result to the struct.
+The method is pointer receiver because there could be a case that we read from
+the store and set the result to the struct.
 
 Master Permission Usage:
 
-Keepers those requires master permission to the paramstore, such as gov, can take params.Keeper itself to access all substores(using GetSubstore)
+Keepers that require master permission to the paramstore, such as gov, can take
+params.Keeper itself to access all substores(using GetSubstore)
 
 	type MasterKeeper struct {
 		ps params.Store
@@ -73,5 +82,4 @@ Keepers those requires master permission to the paramstore, such as gov, can tak
 		}
 		store.Set(ctx, key, param)
 	}
-
 */

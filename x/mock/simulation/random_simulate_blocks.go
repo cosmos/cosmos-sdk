@@ -398,6 +398,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 // updateValidators mimicks Tendermint's update logic
 // nolint: unparam
 func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.ValidatorUpdate, event func(string)) map[string]mockValidator {
+
 	for _, update := range updates {
 		switch {
 		case update.Power == 0:

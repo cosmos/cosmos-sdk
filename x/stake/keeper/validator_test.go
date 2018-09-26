@@ -699,21 +699,6 @@ func TestGetValidTendermintUpdatesAllNone(t *testing.T) {
 
 	updates := keeper.GetValidTendermintUpdates(ctx)
 	assert.Equal(t, 2, len(updates))
-
-	// test from something to nothing
-	//  tendermintUpdate set: {} -> {c1, c2, c3, c4}
-	keeper.ClearTendermintUpdates(ctx)
-	require.Equal(t, 0, len(keeper.GetTendermintUpdates(ctx)))
-
-	keeper.RemoveValidator(ctx, validators[0].OperatorAddr)
-	keeper.RemoveValidator(ctx, validators[1].OperatorAddr)
-
-	updates = keeper.GetTendermintUpdates(ctx)
-	assert.Equal(t, 2, len(updates))
-	assert.Equal(t, tmtypes.TM2PB.PubKey(validators[0].ConsPubKey), updates[0].PubKey)
-	assert.Equal(t, tmtypes.TM2PB.PubKey(validators[1].ConsPubKey), updates[1].PubKey)
-	assert.Equal(t, int64(0), updates[0].Power)
-	assert.Equal(t, int64(0), updates[1].Power)
 	assert.Equal(t, validators[0].ABCIValidatorUpdate(), updates[0])
 	assert.Equal(t, validators[1].ABCIValidatorUpdate(), updates[1])
 }

@@ -68,7 +68,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return ErrValidatorOwnerExists(k.Codespace()).Result()
 	}
 
-	_, found = k.GetValidatorByPubKey(ctx, msg.PubKey)
+	_, found = k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey))
 	if found {
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
@@ -89,7 +89,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByPubKeyIndex(ctx, validator)
+	k.SetValidatorByConsAddr(ctx, validator)
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here

@@ -36,7 +36,7 @@ var (
 	NewKeeper = keeper.NewKeeper
 
 	GetValidatorKey              = keeper.GetValidatorKey
-	GetValidatorByPubKeyIndexKey = keeper.GetValidatorByPubKeyIndexKey
+	GetValidatorByConsAddrKey    = keeper.GetValidatorByConsAddrKey
 	GetValidatorsBondedIndexKey  = keeper.GetValidatorsBondedIndexKey
 	GetValidatorsByPowerIndexKey = keeper.GetValidatorsByPowerIndexKey
 	GetTendermintUpdatesTKey     = keeper.GetTendermintUpdatesTKey
@@ -45,7 +45,7 @@ var (
 	ParamKey                     = keeper.ParamKey
 	PoolKey                      = keeper.PoolKey
 	ValidatorsKey                = keeper.ValidatorsKey
-	ValidatorsByPubKeyIndexKey   = keeper.ValidatorsByPubKeyIndexKey
+	ValidatorsByConsAddrKey      = keeper.ValidatorsByConsAddrKey
 	ValidatorsBondedIndexKey     = keeper.ValidatorsBondedIndexKey
 	ValidatorsByPowerIndexKey    = keeper.ValidatorsByPowerIndexKey
 	ValidatorCliffIndexKey       = keeper.ValidatorCliffIndexKey

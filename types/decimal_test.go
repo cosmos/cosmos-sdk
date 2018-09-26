@@ -202,6 +202,32 @@ func TestBankerRoundChop(t *testing.T) {
 	}
 }
 
+func TestTruncate(t *testing.T) {
+	tests := []struct {
+		d1  Dec
+		exp int64
+	}{
+		{mustNewDecFromStr(t, "0"), 0},
+		{mustNewDecFromStr(t, "0.25"), 0},
+		{mustNewDecFromStr(t, "0.75"), 0},
+		{mustNewDecFromStr(t, "1"), 1},
+		{mustNewDecFromStr(t, "1.5"), 1},
+		{mustNewDecFromStr(t, "7.5"), 7},
+		{mustNewDecFromStr(t, "7.6"), 7},
+		{mustNewDecFromStr(t, "7.4"), 7},
+		{mustNewDecFromStr(t, "100.1"), 100},
+		{mustNewDecFromStr(t, "1000.1"), 1000},
+	}
+
+	for tcIndex, tc := range tests {
+		resNeg := tc.d1.Neg().TruncateInt64()
+		require.Equal(t, -1*tc.exp, resNeg, "negative tc %d", tcIndex)
+
+		resPos := tc.d1.TruncateInt64()
+		require.Equal(t, tc.exp, resPos, "positive tc %d", tcIndex)
+	}
+}
+
 func TestToLeftPadded(t *testing.T) {
 	tests := []struct {
 		dec    Dec

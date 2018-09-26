@@ -8,7 +8,7 @@ import (
 // InitGenesis initializes the keeper's address to pubkey map.
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	for _, validator := range data.Validators {
-		keeper.addPubkey(ctx, validator.GetPubKey())
+		keeper.addPubkey(ctx, validator.GetConsPubKey())
 	}
 	return
 }

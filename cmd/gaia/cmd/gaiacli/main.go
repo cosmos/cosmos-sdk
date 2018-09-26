@@ -18,6 +18,9 @@ import (
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"path"
+	"os"
+	"github.com/spf13/viper"
 )
 
 // rootCmd is the entry point for this binary
@@ -35,6 +38,7 @@ func main() {
 	// TODO: setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
+	rootCmd.AddCommand(client.ConfigCmd())
 
 	// add standard rpc commands
 	rpc.AddCommands(rootCmd)
@@ -131,9 +135,35 @@ func main() {
 
 	// prepare and add flags
 	executor := cli.PrepareMainCmd(rootCmd, "GA", app.DefaultCLIHome)
-	err := executor.Execute()
+	err := initConfig(rootCmd)
+	if err != nil {
+		panic(err)
+	}
+
+	err = executor.Execute()
 	if err != nil {
 		// handle with #870
 		panic(err)
 	}
+}
+
+func initConfig(cmd *cobra.Command) error {
+	home, err := cmd.PersistentFlags().GetString(cli.HomeFlag)
+	if err != nil {
+		return err
+	}
+
+	cfgFile := path.Join(home, "config", "config.toml")
+	if _, err := os.Stat(cfgFile); err == nil {
+		viper.SetConfigFile(cfgFile)
+
+		if err := viper.ReadInConfig(); err != nil {
+			return err
+		}
+	}
+
+	if err := viper.BindPFlag(cli.EncodingFlag, cmd.PersistentFlags().Lookup(cli.EncodingFlag)); err != nil {
+	    return err
+	}
+	return viper.BindPFlag(cli.OutputFlag, cmd.PersistentFlags().Lookup(cli.OutputFlag))
 }

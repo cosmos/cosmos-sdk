@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -193,63 +192,4 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	depositsIterator.Close()
 	require.Equal(t, StatusRejected, keeper.GetProposal(ctx, proposalID).GetStatus())
 	require.True(t, keeper.GetProposal(ctx, proposalID).GetTallyResult().Equals(EmptyTallyResult()))
-}
-
-func TestSlashing(t *testing.T) {
-	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10)
-	SortAddresses(addrs)
-	mapp.BeginBlock(abci.RequestBeginBlock{})
-	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
-	govHandler := NewHandler(keeper)
-	stakeHandler := stake.NewHandler(sk)
-
-	valAddrs := make([]sdk.ValAddress, len(addrs[:3]))
-	for i, addr := range addrs[:3] {
-		valAddrs[i] = sdk.ValAddress(addr)
-	}
-
-	createValidators(t, stakeHandler, ctx, valAddrs, []int64{25, 6, 7})
-
-	initTotalPower := keeper.ds.GetValidatorSet().TotalPower(ctx)
-	val0Initial := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[0])).GetPower().Quo(initTotalPower)
-	val1Initial := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[1])).GetPower().Quo(initTotalPower)
-	val2Initial := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[2])).GetPower().Quo(initTotalPower)
-
-	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("steak", 15)})
-
-	res := govHandler(ctx, newProposalMsg)
-	require.True(t, res.IsOK())
-	var proposalID int64
-	keeper.cdc.UnmarshalBinaryBare(res.Data, &proposalID)
-
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
-	ctx = ctx.WithBlockHeader(newHeader)
-
-	require.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, proposalID).GetStatus())
-
-	newVoteMsg := NewMsgVote(addrs[0], proposalID, OptionYes)
-	res = govHandler(ctx, newVoteMsg)
-	require.True(t, res.IsOK())
-
-	EndBlocker(ctx, keeper)
-
-	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod).Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod)
-	ctx = ctx.WithBlockHeader(newHeader)
-
-	require.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, proposalID).GetStatus())
-
-	EndBlocker(ctx, keeper)
-
-	require.False(t, keeper.GetProposal(ctx, proposalID).GetTallyResult().Equals(EmptyTallyResult()))
-
-	endTotalPower := keeper.ds.GetValidatorSet().TotalPower(ctx)
-	val0End := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[0])).GetPower().Quo(endTotalPower)
-	val1End := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[1])).GetPower().Quo(endTotalPower)
-	val2End := keeper.ds.GetValidatorSet().Validator(ctx, sdk.ValAddress(addrs[2])).GetPower().Quo(endTotalPower)
-
-	require.True(t, val0End.GTE(val0Initial))
-	require.True(t, val1End.LT(val1Initial))
-	require.True(t, val2End.LT(val2Initial))
 }

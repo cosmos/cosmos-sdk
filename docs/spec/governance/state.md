@@ -28,7 +28,6 @@ type TallyingProcedure struct {
   Threshold         sdk.Dec   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
   Veto              sdk.Dec   //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
   GovernancePenalty sdk.Dec             //  Penalty if validator does not vote
-  GracePeriod       time.Time               //  If validator entered validator set in this period of blocks before vote ended, governance penalty does not apply
 }
 ```
 
@@ -192,14 +191,10 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       tallyingProcedure = load(GlobalParams, 'TallyingProcedure')
 
-      // Slash validators that did not vote, or update tally if they voted
+      // Update tally if validator voted they voted
       for each validator in validators
-        if (validator.bondTime < CurrentTime - tallyingProcedure.GracePeriod)
-        // only slash if validator entered validator set before grace period
-          if (!tmpValMap(validator).HasVoted)
-            slash validator by tallyingProcedure.GovernancePenalty
-          else
-            proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
+        if tmpValMap(validator).HasVoted
+          proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
 
 
 

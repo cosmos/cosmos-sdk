@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
@@ -84,22 +83,13 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 }
 
 // GetFromAddress returns the from address from the context's name.
-func (ctx CLIContext) GetFromAddress() (from sdk.AccAddress, err error) {
-	if ctx.FromAddressName == "" {
-		return nil, errors.Errorf("must provide a from address name")
-	}
+func (ctx CLIContext) GetFromAddress() (sdk.AccAddress, error) {
+	return ctx.fromAddress, nil
+}
 
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		return nil, err
-	}
-
-	info, err := keybase.Get(ctx.FromAddressName)
-	if err != nil {
-		return nil, errors.Errorf("no key for: %s", ctx.FromAddressName)
-	}
-
-	return sdk.AccAddress(info.GetPubKey().Address()), nil
+// GetFromName returns the key name for the current context.
+func (ctx CLIContext) GetFromName() (string, error) {
+	return ctx.fromName, nil
 }
 
 // GetAccountNumber returns the next account number for the given account

@@ -66,6 +66,7 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 // remove a delegation from store
 func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
+
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr))
 }

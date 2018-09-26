@@ -14,10 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/lite"
 	tmliteErr "github.com/tendermint/tendermint/lite/errors"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -185,13 +185,13 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 }
 
 // Verify verifies the consensus proof at given height.
-func (ctx CLIContext) Verify(height int64) (lite.Commit, error) {
+func (ctx CLIContext) Verify(height int64) (tmtypes.SignedHeader, error) {
 	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
 	switch {
-	case tmliteErr.IsCommitNotFoundErr(err):
-		return lite.Commit{}, ErrVerifyCommit(height)
+	case tmliteErr.IsErrCommitNotFound(err):
+		return tmtypes.SignedHeader{}, ErrVerifyCommit(height)
 	case err != nil:
-		return lite.Commit{}, err
+		return tmtypes.SignedHeader{}, err
 	}
 
 	return check, nil

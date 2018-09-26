@@ -139,7 +139,7 @@ func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 
 // gets the prefix for all unbonding delegations from a delegator
 func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
-	bz, _ := timestamp.MarshalBinary()
+	bz := types.MsgCdc.MustMarshalBinary(timestamp)
 	return append(UnbondingQueueKey, bz...)
 }
 

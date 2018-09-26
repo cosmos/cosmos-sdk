@@ -155,8 +155,9 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 	store.Delete(GetUBDByValIndexKey(ubd.DelegatorAddr, ubd.ValidatorAddr))
 }
 
-// Gets a specific unbonding queue timeslice. A timeslice is a slice of keys to an unbonding delegation
-func (k Keeper) UnbondingQueueGetTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPairs []types.DVPair) {
+// gets a specific unbonding queue timeslice. A timeslice is a slice of DVPairs corresponding to unbonding delegations
+// that expire at a certain time.
+func (k Keeper) GetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPairs []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetUnbondingDelegationTimeKey(timestamp))
 	if bz == nil {
@@ -167,20 +168,21 @@ func (k Keeper) UnbondingQueueGetTimeSlice(ctx sdk.Context, timestamp time.Time)
 }
 
 // Sets a specific unbonding queue timeslice.
-func (k Keeper) UnbondingQueueSetTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVPair) {
+func (k Keeper) SetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(keys)
 	store.Set(GetUnbondingDelegationTimeKey(timestamp), bz)
 }
 
 // Insert an unbonding delegation to the appropriate timeslice in the unbonding queue
-func (k Keeper) UnbondingQueueInsert(ctx sdk.Context, ubd types.UnbondingDelegation) {
-	timeSlice := k.UnbondingQueueGetTimeSlice(ctx, ubd.MinTime)
+func (k Keeper) InsertUnbondingQueue(ctx sdk.Context, ubd types.UnbondingDelegation) {
+	timeSlice := k.GetUnbondingQueueTimeSlice(ctx, ubd.MinTime)
+	dvPair := types.DVPair{ubd.DelegatorAddr, ubd.ValidatorAddr}
 	if len(timeSlice) == 0 {
-		k.UnbondingQueueSetTimeSlice(ctx, ubd.MinTime, []types.DVPair{types.DVPair{ubd.DelegatorAddr, ubd.ValidatorAddr}})
+		k.SetUnbondingQueueTimeSlice(ctx, ubd.MinTime, []types.DVPair{dvPair})
 	} else {
-		timeSlice = append(timeSlice, types.DVPair{ubd.DelegatorAddr, ubd.ValidatorAddr})
-		k.UnbondingQueueSetTimeSlice(ctx, ubd.MinTime, timeSlice)
+		timeSlice = append(timeSlice, dvPair)
+		k.SetUnbondingQueueTimeSlice(ctx, ubd.MinTime, timeSlice)
 	}
 }
 
@@ -276,8 +278,9 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Delete(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr))
 }
 
-// Gets a specific redelegation queue timeslice. A timeslice is a slice of keys to an redelegation delegation
-func (k Keeper) RedelegationQueueGetTimeSlice(ctx sdk.Context, timestamp time.Time) (dvvTriplets []types.DVVTriplet) {
+// Gets a specific redelegation queue timeslice. A timeslice is a slice of DVVTriplets corresponding to redelegations
+// that expire at a certain time.
+func (k Keeper) GetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvvTriplets []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetRedelegationTimeKey(timestamp))
 	if bz == nil {
@@ -288,20 +291,21 @@ func (k Keeper) RedelegationQueueGetTimeSlice(ctx sdk.Context, timestamp time.Ti
 }
 
 // Sets a specific redelegation queue timeslice.
-func (k Keeper) RedelegationQueueSetTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVVTriplet) {
+func (k Keeper) SetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(keys)
 	store.Set(GetRedelegationTimeKey(timestamp), bz)
 }
 
 // Insert an redelegation delegation to the appropriate timeslice in the redelegation queue
-func (k Keeper) RedelegationQueueInsert(ctx sdk.Context, red types.Redelegation) {
-	timeSlice := k.RedelegationQueueGetTimeSlice(ctx, red.MinTime)
+func (k Keeper) InsertRedelegationQueue(ctx sdk.Context, red types.Redelegation) {
+	timeSlice := k.GetRedelegationQueueTimeSlice(ctx, red.MinTime)
+	dvvTriplet := types.DVVTriplet{red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr}
 	if len(timeSlice) == 0 {
-		k.RedelegationQueueSetTimeSlice(ctx, red.MinTime, []types.DVVTriplet{types.DVVTriplet{red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr}})
+		k.SetRedelegationQueueTimeSlice(ctx, red.MinTime, []types.DVVTriplet{dvvTriplet})
 	} else {
-		timeSlice = append(timeSlice, types.DVVTriplet{red.DelegatorAddr, red.ValidatorDstAddr, red.ValidatorDstAddr})
-		k.RedelegationQueueSetTimeSlice(ctx, red.MinTime, timeSlice)
+		timeSlice = append(timeSlice, dvvTriplet)
+		k.SetRedelegationQueueTimeSlice(ctx, red.MinTime, timeSlice)
 	}
 }
 
@@ -468,7 +472,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 		InitialBalance: balance,
 	}
 	k.SetUnbondingDelegation(ctx, ubd)
-	k.UnbondingQueueInsert(ctx, ubd)
+	k.InsertUnbondingQueue(ctx, ubd)
 	return ubd, nil
 }
 
@@ -533,7 +537,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		InitialBalance:   returnCoin,
 	}
 	k.SetRedelegation(ctx, red)
-	k.RedelegationQueueInsert(ctx, red)
+	k.InsertRedelegationQueue(ctx, red)
 	return red, nil
 }
 

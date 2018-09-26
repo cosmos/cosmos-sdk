@@ -52,6 +52,20 @@ type GenesisTx struct {
 	IP        string                   `json:"ip"`
 	Validator tmtypes.GenesisValidator `json:"validator"`
 	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
+	Signature []byte                   `json:"signature"`
+}
+
+func getGenTxSignBytes(cdc *codec.Codec, tx GenesisTx) []byte {
+	bz, err := cdc.MarshalJSON(GenesisTx{
+		NodeID:    tx.NodeID,
+		IP:        tx.IP,
+		Validator: tx.Validator,
+		AppGenTx:  tx.AppGenTx,
+	})
+	if err != nil {
+		panic(err)
+	}
+	return bz
 }
 
 // Storage for init command input parameters
@@ -119,7 +133,8 @@ func gentxWithConfig(cdc *codec.Codec, appInit AppInit, config *cfg.Config, genT
 		return
 	}
 	nodeID := string(nodeKey.ID())
-	pubKey := readOrCreatePrivValidator(config)
+	privVal := readOrCreatePrivValidator(config)
+	pubKey := privVal.GetPubKey()
 
 	appGenTx, cliPrint, validator, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
 	if err != nil {
@@ -132,7 +147,15 @@ func gentxWithConfig(cdc *codec.Codec, appInit AppInit, config *cfg.Config, genT
 		Validator: validator,
 		AppGenTx:  appGenTx,
 	}
-	bz, err := codec.MarshalJSONIndent(cdc, tx)
+
+	// sign the gentx with validator's key
+	sig, err := privVal.PrivKey.Sign(getGenTxSignBytes(cdc, tx))
+	if err != nil {
+		return
+	}
+	tx.Signature = sig
+
+	bz, err := cdc.MarshalJSON(tx)
 	if err != nil {
 		return
 	}
@@ -212,7 +235,8 @@ func initWithConfig(cdc *codec.Codec, appInit AppInit, config *cfg.Config, initC
 		return
 	}
 	nodeID = string(nodeKey.ID())
-	pubKey := readOrCreatePrivValidator(config)
+	privVal := readOrCreatePrivValidator(config)
+	pubKey := privVal.GetPubKey()
 
 	if initConfig.ChainID == "" {
 		initConfig.ChainID = fmt.Sprintf("test-chain-%v", cmn.RandStr(6))
@@ -311,6 +335,10 @@ func processGenTxs(genTxsDir string, cdc *codec.Codec) (
 	for _, nodeID := range nodeIDs {
 		genTx := genTxs[nodeID]
 
+		if ok := genTx.Validator.PubKey.VerifyBytes(getGenTxSignBytes(cdc, genTx), genTx.Signature); !ok {
+			err = fmt.Errorf("signature verification failed for node %q", nodeID)
+			return
+		}
 		// combine some stuff
 		validators = append(validators, genTx.Validator)
 		appGenTxs = append(appGenTxs, genTx.AppGenTx)
@@ -329,7 +357,7 @@ func processGenTxs(genTxsDir string, cdc *codec.Codec) (
 //________________________________________________________________________________________
 
 // read of create the private key file for this config
-func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
+func readOrCreatePrivValidator(tmConfig *cfg.Config) *pvm.FilePV {
 	// private validator
 	privValFile := tmConfig.PrivValidatorFile()
 	var privValidator *pvm.FilePV
@@ -339,7 +367,7 @@ func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
 		privValidator = pvm.GenFilePV(privValFile)
 		privValidator.Save()
 	}
-	return privValidator.GetPubKey()
+	return privValidator
 }
 
 // writeGenesisFile creates and writes the genesis configuration to disk. An

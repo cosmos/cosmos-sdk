@@ -56,6 +56,7 @@ BREAKING CHANGES
     * [types] \#2343 Make sdk.Msg have a names field, to facilitate automatic tagging.
     * [baseapp] \#2366 Automatically add action tags to all messages
     * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
+    * [x/staking] \#2236 more distribution hooks for distribution
 
 * Tendermint
 

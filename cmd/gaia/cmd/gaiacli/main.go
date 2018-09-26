@@ -23,6 +23,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	storeAcc      = "acc"
+	storeGov      = "gov"
+	storeSlashing = "slashing"
+	storeStake    = "stake"
+)
+
 // rootCmd is the entry point for this binary
 var (
 	rootCmd = &cobra.Command{
@@ -56,22 +63,22 @@ func main() {
 	tx.AddCommands(queryCmd, cdc)
 	queryCmd.AddCommand(client.LineBreak)
 	queryCmd.AddCommand(client.GetCommands(
-		authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
-		stakecmd.GetCmdQueryDelegation("stake", cdc),
-		stakecmd.GetCmdQueryDelegations("stake", cdc),
-		stakecmd.GetCmdQueryParams("stake", cdc),
-		stakecmd.GetCmdQueryPool("stake", cdc),
-		govcmd.GetCmdQueryProposal("gov", cdc),
-		govcmd.GetCmdQueryProposals("gov", cdc),
-		stakecmd.GetCmdQueryRedelegation("stake", cdc),
-		stakecmd.GetCmdQueryRedelegations("stake", cdc),
-		slashingcmd.GetCmdQuerySigningInfo("slashing", cdc),
-		stakecmd.GetCmdQueryUnbondingDelegation("stake", cdc),
-		stakecmd.GetCmdQueryUnbondingDelegations("stake", cdc),
-		stakecmd.GetCmdQueryValidator("stake", cdc),
-		stakecmd.GetCmdQueryValidators("stake", cdc),
-		govcmd.GetCmdQueryVote("gov", cdc),
-		govcmd.GetCmdQueryVotes("gov", cdc),
+		authcmd.GetAccountCmd(storeAcc, cdc, authcmd.GetAccountDecoder(cdc)),
+		stakecmd.GetCmdQueryDelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryDelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryParams(storeStake, cdc),
+		stakecmd.GetCmdQueryPool(storeStake, cdc),
+		govcmd.GetCmdQueryProposal(storeGov, cdc),
+		govcmd.GetCmdQueryProposals(storeGov, cdc),
+		stakecmd.GetCmdQueryRedelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
+		slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
+		stakecmd.GetCmdQueryUnbondingDelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryUnbondingDelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryValidator(storeStake, cdc),
+		stakecmd.GetCmdQueryValidators(storeStake, cdc),
+		govcmd.GetCmdQueryVote(storeGov, cdc),
+		govcmd.GetCmdQueryVotes(storeGov, cdc),
 	)...)
 
 	//Add query commands
@@ -94,10 +101,10 @@ func main() {
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
 			govcmd.GetCmdDeposit(cdc),
-			stakecmd.GetCmdRedelegate("stake", cdc),
+			stakecmd.GetCmdRedelegate(storeStake, cdc),
 			bankcmd.SendTxCmd(cdc),
 			govcmd.GetCmdSubmitProposal(cdc),
-			stakecmd.GetCmdUnbond("stake", cdc),
+			stakecmd.GetCmdUnbond(storeStake, cdc),
 			slashingcmd.GetCmdUnjail(cdc),
 			govcmd.GetCmdVote(cdc),
 		)...)

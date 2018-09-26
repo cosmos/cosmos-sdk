@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
@@ -14,9 +12,9 @@ import (
 
 // SimulateMsgUnjail
 func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
-		key := simulation.RandomKey(r, keys)
-		address := sdk.ValAddress(key.PubKey().Address())
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+		acc := simulation.RandomAcc(r, accs)
+		address := sdk.ValAddress(acc.Address)
 		msg := slashing.NewMsgUnjail(address)
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
@@ -22,7 +23,9 @@ func BlockCommand() *cobra.Command {
 		RunE:  printBlock,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	return cmd
 }

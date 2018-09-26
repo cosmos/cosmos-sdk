@@ -3,11 +3,12 @@ package rest
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
+
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
 )
 
 // contains checks if the a given query contains one of the tx types

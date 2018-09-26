@@ -230,6 +230,14 @@
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:78bbb1ba5b7c3f2ed0ea1eab57bdd3859aec7e177811563edc41198a760b06af"
+  name = "github.com/mitchellh/go-homedir"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:645110e089152bd0f4a011a2648fbb0e4df5977be73ca605781157ac297f50c4"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
@@ -490,14 +498,6 @@
   version = "v0.23.1-rc0"
 
 [[projects]]
-  digest = "1:bf6d9a827ea3cad964c2f863302e4f6823170d0b5ed16f72cf1184a7c615067e"
-  name = "github.com/tendermint/tmlibs"
-  packages = ["cli"]
-  pruneopts = "UT"
-  revision = "49596e0a1f48866603813df843c9409fc19805c6"
-  version = "v0.9.0"
-
-[[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
@@ -638,6 +638,8 @@
     "github.com/golang/protobuf/proto",
     "github.com/gorilla/mux",
     "github.com/mattn/go-isatty",
+    "github.com/mitchellh/go-homedir",
+    "github.com/pelletier/go-toml",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
@@ -677,7 +679,6 @@
     "github.com/tendermint/tendermint/rpc/lib/server",
     "github.com/tendermint/tendermint/types",
     "github.com/tendermint/tendermint/version",
-    "github.com/tendermint/tmlibs/cli",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/blowfish",
   ]

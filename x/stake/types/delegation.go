@@ -9,6 +9,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// struct that just has a delegator validator pair with no other data. To be used to marshal keys
+type DVPair struct {
+	DelegatorAddr sdk.AccAddress
+	ValidatorAddr sdk.ValAddress
+}
+
+// struct that just has a delegator validator validator triplet with no other data. To be used to marshal keys
+type DVVTriplet struct {
+	DelegatorAddr    sdk.AccAddress
+	ValidatorSrcAddr sdk.ValAddress
+	ValidatorDstAddr sdk.ValAddress
+}
+
 // Delegation represents the bond with tokens held by an account.  It is
 // owned by one delegator, and is associated with the voting power of one
 // pubKey.

@@ -12,8 +12,6 @@ const MsgType = "stake"
 
 // Verify interface at compile time
 var _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegate{}
-var _, _ sdk.Msg = &MsgBeginUnbonding{}, &MsgCompleteUnbonding{}
-var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
 
 //______________________________________________________________________
 
@@ -276,51 +274,6 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// MsgDelegate - struct for bonding transactions
-type MsgCompleteRedelegate struct {
-	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
-	ValidatorSrcAddr sdk.ValAddress `json:"validator_source_addr"`
-	ValidatorDstAddr sdk.ValAddress `json:"validator_destination_addr"`
-}
-
-func NewMsgCompleteRedelegate(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) MsgCompleteRedelegate {
-	return MsgCompleteRedelegate{
-		DelegatorAddr:    delAddr,
-		ValidatorSrcAddr: valSrcAddr,
-		ValidatorDstAddr: valDstAddr,
-	}
-}
-
-//nolint
-func (msg MsgCompleteRedelegate) Type() string { return MsgType }
-func (msg MsgCompleteRedelegate) Name() string { return "complete_redelegate" }
-func (msg MsgCompleteRedelegate) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.DelegatorAddr}
-}
-
-// get the bytes for the message signer to sign on
-func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
-
-// quick validity check
-func (msg MsgCompleteRedelegate) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
-		return ErrNilDelegatorAddr(DefaultCodespace)
-	}
-	if msg.ValidatorSrcAddr == nil {
-		return ErrNilValidatorAddr(DefaultCodespace)
-	}
-	if msg.ValidatorDstAddr == nil {
-		return ErrNilValidatorAddr(DefaultCodespace)
-	}
-	return nil
-}
-
 //______________________________________________________________________
 
 // MsgBeginUnbonding - struct for unbonding transactions
@@ -370,46 +323,6 @@ func (msg MsgBeginUnbonding) ValidateBasic() sdk.Error {
 	}
 	if msg.SharesAmount.LTE(sdk.ZeroDec()) {
 		return ErrBadSharesAmount(DefaultCodespace)
-	}
-	return nil
-}
-
-// MsgCompleteUnbonding - struct for unbonding transactions
-type MsgCompleteUnbonding struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
-}
-
-func NewMsgCompleteUnbonding(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgCompleteUnbonding {
-	return MsgCompleteUnbonding{
-		DelegatorAddr: delAddr,
-		ValidatorAddr: valAddr,
-	}
-}
-
-//nolint
-func (msg MsgCompleteUnbonding) Type() string { return MsgType }
-func (msg MsgCompleteUnbonding) Name() string { return "complete_unbonding" }
-func (msg MsgCompleteUnbonding) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.DelegatorAddr}
-}
-
-// get the bytes for the message signer to sign on
-func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
-
-// quick validity check
-func (msg MsgCompleteUnbonding) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
-		return ErrNilDelegatorAddr(DefaultCodespace)
-	}
-	if msg.ValidatorAddr == nil {
-		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	return nil
 }

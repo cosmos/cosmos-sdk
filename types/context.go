@@ -4,6 +4,7 @@ package types
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 
@@ -179,6 +180,12 @@ func (c Context) WithMultiStore(ms MultiStore) Context { return c.withValue(cont
 func (c Context) WithBlockHeader(header abci.Header) Context {
 	var _ proto.Message = &header // for cloning.
 	return c.withValue(contextKeyBlockHeader, header)
+}
+
+func (c Context) WithBlockTime(newTime time.Time) Context {
+	newHeader := c.BlockHeader()
+	newHeader.Time = newTime
+	return c.WithBlockHeader(newHeader)
 }
 
 func (c Context) WithBlockHeight(height int64) Context {

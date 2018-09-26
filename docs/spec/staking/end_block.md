@@ -16,3 +16,34 @@ EndBlock() ValidatorSetChanges
     ClearTendermintUpdates()
     return vsc
 ```
+
+
+## CompleteUnbonding
+
+Complete the unbonding and transfer the coins to the delegate. Perform any
+slashing that occurred during the unbonding period.
+
+```golang
+unbondingQueue(currTime time.Time):
+    for all unbondings whose CompleteTime < currTime:
+        validator = GetValidator(unbonding.ValidatorAddr)
+        returnTokens = ExpectedTokens * unbonding.startSlashRatio/validator.SlashRatio
+        AddCoins(unbonding.DelegatorAddr, returnTokens)
+        removeUnbondingDelegation(unbonding)
+    return
+```
+
+
+
+## CompleteRedelegation
+
+Note that unlike CompleteUnbonding slashing of redelegating shares does not
+take place during completion. Slashing on redelegated shares takes place
+actively as a slashing occurs.
+
+```golang
+redelegationQueue(currTime time.Time):
+    for all redelegations whose CompleteTime < currTime:
+        removeRedelegation(redelegation)
+    return
+```

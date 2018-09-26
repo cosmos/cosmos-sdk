@@ -16,7 +16,7 @@ type Keeper struct {
 	stores map[string]*Store
 }
 
-// NewKeeper construct a params keeper
+// NewKeeper constructs a params keeper
 func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKey) (k Keeper) {
 	k = Keeper{
 		cdc:  cdc,

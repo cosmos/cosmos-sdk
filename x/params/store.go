@@ -5,13 +5,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/store"
 )
 
-// nolint - reexport
-type Store = store.Store
-type ReadOnlyStore = store.ReadOnlyStore
-type ParamStruct = store.ParamStruct
-type KeyFieldPairs = store.KeyFieldPairs
+// re-export types from store
+type (
+	Store         = store.Store
+	ReadOnlyStore = store.ReadOnlyStore
+	ParamStruct   = store.ParamStruct
+	KeyFieldPairs = store.KeyFieldPairs
+)
 
-// nolint - reexport
+// UnmarshalParamsFromMap deserializes parameters from a given map. It returns
+// an error upon failure.
 func UnmarshalParamsFromMap(m map[string][]byte, cdc *codec.Codec, ps store.ParamStruct) error {
 	return store.UnmarshalParamsFromMap(m, cdc, ps)
 }

@@ -20,6 +20,7 @@ var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
 // MsgCreateValidator - struct for unbonding transactions
 type MsgCreateValidator struct {
 	Description
+	Commission    CommissionMsg
 	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	PubKey        crypto.PubKey  `json:"pubkey"`
@@ -28,22 +29,23 @@ type MsgCreateValidator struct {
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
-	selfDelegation sdk.Coin, description Description) MsgCreateValidator {
+	selfDelegation sdk.Coin, description Description, commission CommissionMsg) MsgCreateValidator {
 
 	return NewMsgCreateValidatorOnBehalfOf(
-		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description,
+		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description, commission,
 	)
 }
 
 // Creates validator msg by delegator address on behalf of validator address
 func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	pubkey crypto.PubKey, delegation sdk.Coin, description Description) MsgCreateValidator {
+	pubkey crypto.PubKey, delegation sdk.Coin, description Description, commission CommissionMsg) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:   description,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
 		PubKey:        pubkey,
 		Delegation:    delegation,
+		Commission:    commission,
 	}
 }
 
@@ -95,10 +97,13 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if !(msg.Delegation.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
-	empty := Description{}
-	if msg.Description == empty {
+	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
 	}
+	if msg.Commission == (CommissionMsg{}) {
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission must be included")
+	}
+
 	return nil
 }
 
@@ -108,12 +113,20 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 type MsgEditValidator struct {
 	Description
 	ValidatorAddr sdk.ValAddress `json:"address"`
+
+	// We pass a reference to the new commission rate as it's not mandatory to
+	// update. If not updated, the deserialized rate will be zero with no way to
+	// distinguish if an update was intended.
+	//
+	// REF: #2373
+	CommissionRate *sdk.Dec `json:"commission_rate"`
 }
 
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description) MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec) MsgEditValidator {
 	return MsgEditValidator{
-		Description:   description,
-		ValidatorAddr: valAddr,
+		Description:    description,
+		CommissionRate: newRate,
+		ValidatorAddr:  valAddr,
 	}
 }
 
@@ -144,10 +157,11 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
 	}
-	empty := Description{}
-	if msg.Description == empty {
+
+	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
+
 	return nil
 }
 

@@ -3,9 +3,11 @@ package keeper
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -260,12 +262,13 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	require.Equal(t, sdk.Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
 	keeper.SetPool(ctx, pool)
-	keeper.SetValidatorByPubKeyIndex(ctx, validator)
+	keeper.SetValidatorByConsAddr(ctx, validator)
 	validator = keeper.UpdateValidator(ctx, validator)
 	require.Equal(t, int64(100), validator.Tokens.RoundInt64(), "\nvalidator %v\npool %v", validator, pool)
 
 	// slash the validator by 100%
-	keeper.Slash(ctx, PKs[0], 0, 100, sdk.OneDec())
+	consAddr0 := sdk.ConsAddress(PKs[0].Address())
+	keeper.Slash(ctx, consAddr0, 0, 100, sdk.OneDec())
 	// validator should have been deleted
 	_, found := keeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found)
@@ -304,7 +307,16 @@ func TestValidatorBasics(t *testing.T) {
 
 	// set and retrieve a record
 	validators[0] = keeper.UpdateValidator(ctx, validators[0])
+	keeper.SetValidatorByConsAddr(ctx, validators[0])
 	resVal, found := keeper.GetValidator(ctx, addrVals[0])
+	require.True(t, found)
+	assert.True(ValEq(t, validators[0], resVal))
+
+	// retrieve from consensus
+	resVal, found = keeper.GetValidatorByConsAddr(ctx, sdk.ConsAddress(PKs[0].Address()))
+	require.True(t, found)
+	assert.True(ValEq(t, validators[0], resVal))
+	resVal, found = keeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	assert.True(ValEq(t, validators[0], resVal))
 
@@ -1042,4 +1054,56 @@ func TestGetValidTendermintUpdatesBondTransition(t *testing.T) {
 
 	clearTendermintUpdates(ctx, keeper)
 	require.Equal(t, 0, len(keeper.GetValidTendermintUpdates(ctx)))
+}
+
+func TestUpdateValidatorCommission(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 1000)
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Now().UTC()})
+
+	commission1 := types.NewCommissionWithTime(
+		sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1),
+		sdk.NewDecWithPrec(1, 1), time.Now().UTC().Add(time.Duration(-1)*time.Hour),
+	)
+	commission2 := types.NewCommission(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(3, 1), sdk.NewDecWithPrec(1, 1))
+
+	val1 := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	val2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
+
+	val1, _ = val1.SetInitialCommission(commission1)
+	val2, _ = val2.SetInitialCommission(commission2)
+
+	testCases := []struct {
+		validator   types.Validator
+		newRate     sdk.Dec
+		expectedErr bool
+	}{
+		{val1, sdk.ZeroDec(), true},
+		{val2, sdk.NewDecWithPrec(-1, 1), true},
+		{val2, sdk.NewDecWithPrec(4, 1), true},
+		{val2, sdk.NewDecWithPrec(3, 1), true},
+		{val2, sdk.NewDecWithPrec(2, 1), false},
+	}
+
+	for i, tc := range testCases {
+		err := keeper.UpdateValidatorCommission(ctx, tc.validator, tc.newRate)
+
+		if tc.expectedErr {
+			require.Error(t, err, "expected error for test case #%d with rate: %s", i, tc.newRate)
+		} else {
+			val, found := keeper.GetValidator(ctx, tc.validator.OperatorAddr)
+
+			require.True(t, found,
+				"expected to find validator for test case #%d with rate: %s", i, tc.newRate,
+			)
+			require.NoError(t, err,
+				"unexpected error for test case #%d with rate: %s", i, tc.newRate,
+			)
+			require.Equal(t, tc.newRate, val.Commission.Rate,
+				"expected new validator commission rate for test case #%d with rate: %s", i, tc.newRate,
+			)
+			require.Equal(t, ctx.BlockHeader().Time, val.Commission.UpdateTime,
+				"expected new validator commission update time for test case #%d with rate: %s", i, tc.newRate,
+			)
+		}
+	}
 }

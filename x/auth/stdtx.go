@@ -139,23 +139,6 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 	return sdk.MustSortJSON(bz)
 }
 
-// StdSignMsg is a convenience structure for passing along
-// a Msg with the other requirements for a StdSignDoc before
-// it is signed. For use in the CLI.
-type StdSignMsg struct {
-	ChainID       string    `json:"chain_id"`
-	AccountNumber int64     `json:"account_number"`
-	Sequence      int64     `json:"sequence"`
-	Fee           StdFee    `json:"fee"`
-	Msgs          []sdk.Msg `json:"msgs"`
-	Memo          string    `json:"memo"`
-}
-
-// get message bytes
-func (msg StdSignMsg) Bytes() []byte {
-	return StdSignBytes(msg.ChainID, msg.AccountNumber, msg.Sequence, msg.Fee, msg.Msgs, msg.Memo)
-}
-
 // Standard Signature
 type StdSignature struct {
 	crypto.PubKey `json:"pub_key"` // optional

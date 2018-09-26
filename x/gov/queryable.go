@@ -205,12 +205,12 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	var proposalID int64
 	err2 := keeper.cdc.UnmarshalJSON(req.Data, proposalID)
 	if err2 != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", err2.Error()))
+		return res, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request data - %s", err2.Error()))
 	}
 
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
-		return []byte{}, ErrUnknownProposal(DefaultCodespace, proposalID)
+		return res, ErrUnknownProposal(DefaultCodespace, proposalID)
 	}
 
 	var tallyResult TallyResult
@@ -220,7 +220,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	} else if proposal.GetStatus() == StatusPassed || proposal.GetStatus() == StatusRejected {
 		tallyResult = proposal.GetTallyResult()
 	} else {
-		_, tallyResult, _ = tally(ctx, keeper, proposal)
+		_, tallyResult = tally(ctx, keeper, proposal)
 	}
 
 	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, tallyResult)

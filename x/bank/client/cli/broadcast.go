@@ -29,9 +29,12 @@ in place of an input filename, the command reads from standard input.`,
 			if err != nil {
 				return
 			}
-			return cliCtx.EnsureBroadcastTx(txBytes)
+
+			_, err = cliCtx.BroadcastTx(txBytes)
+			return err
 		},
 	}
+
 	return cmd
 }
 

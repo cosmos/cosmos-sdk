@@ -12,3 +12,7 @@ Cosmos can interoperate with multiple other applications and cryptocurrencies. B
 
 See [this file](./DOCS_README.md) for details of the build process and
 considerations when making changes.
+
+## Version
+
+This documentation is built from the following commit:

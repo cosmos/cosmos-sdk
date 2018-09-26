@@ -430,6 +430,7 @@ func (v Validator) BondedTokens() sdk.Dec {
 	return sdk.ZeroDec()
 }
 
+// TODO remove this once the validator queue logic is implemented
 // Returns if the validator should be considered unbonded
 func (v Validator) IsUnbonded(ctx sdk.Context) bool {
 	switch v.Status {

@@ -98,10 +98,21 @@ func (k Keeper) SetValidatorBondedIndex(ctx sdk.Context, validator types.Validat
 	store.Set(GetValidatorsBondedIndexKey(validator.OperatorAddr), []byte{})
 }
 
-// used in testing
-func (k Keeper) validatorByPowerIndexExists(ctx sdk.Context, power []byte) bool {
-	store := ctx.KVStore(k.storeKey)
-	return store.Get(power) != nil
+// UpdateValidatorCommission attempts to update a validator's commission rate.
+// An error is returned if the new commission rate is invalid.
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newRate sdk.Dec) sdk.Error {
+	commission := validator.Commission
+	blockTime := ctx.BlockHeader().Time
+
+	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
+		return err
+	}
+
+	validator.Commission.Rate = newRate
+	validator.Commission.UpdateTime = blockTime
+
+	k.SetValidator(ctx, validator)
+	return nil
 }
 
 // Get the set of all validators with no limits, used during genesis dump
@@ -187,23 +198,6 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 		}
 	}
 	return validators[:i] // trim
-}
-
-// UpdateValidatorCommission attempts to update a validator's commission rate.
-// An error is returned if the new commission rate is invalid.
-func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newRate sdk.Dec) sdk.Error {
-	commission := validator.Commission
-	blockTime := ctx.BlockHeader().Time
-
-	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
-		return err
-	}
-
-	validator.Commission.Rate = newRate
-	validator.Commission.UpdateTime = blockTime
-
-	k.SetValidator(ctx, validator)
-	return nil
 }
 
 // remove the validator record and associated indexes

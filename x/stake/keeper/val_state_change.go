@@ -19,7 +19,13 @@ import (
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
 // are returned to Tendermint.
-func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
+func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
+
+	// REF CODE
+	//// add to accumulated changes for tendermint
+	//bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
+	//tstore := ctx.TransientStore(k.storeTKey)
+	//tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
 	last := fetchOldValidatorSet()
 	tendermintUpdates := make(map[sdk.ValAddress]uint64)
@@ -50,28 +56,159 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 	return tendermintUpdates
 }
 
+func kickOutValidators(k Keeper, ctx sdk.Context, toKickOut map[string]byte) {
+	for key := range toKickOut {
+		ownerAddr := []byte(key)
+		validator := k.mustGetValidator(ctx, ownerAddr)
+		k.beginUnbondingValidator(ctx, validator)
+	}
+}
+
 //___________________________________________________________________________
 // State transitions
 
-func (ctx sdk.Context, addr sdk.ValAddress) bondedToUnbonding() {
-	// perform appropriate store updates
+func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) {
+	if validator.Status != sdk.Bonded {
+		panic(fmt.Sprintf("bad state transition bondedToUnbonded, validator: %v\n", validator))
+	}
+	beginUnbondingValidator(ctx, validator)
 }
 
-func (ctx sdk.Context, addr sdk.ValAddress) unbondingToBonded() {
-	// perform appropriate store updates
+func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) {
+	if validator.Status != sdk.Unbonding {
+		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
+	}
+	bondValidator(ctx, validator)
 }
 
-func (ctx sdk.Context, addr sdk.ValAddress) unbondedToBonded() {
-	// perform appropriate store updates
+func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) {
+	if validator.Status != sdk.Unbonded {
+		panic(fmt.Sprintf("bad state transition unbondedToBonded, validator: %v\n", validator))
+	}
+	bondValidator(ctx, validator)
 }
 
-func (ctx sdk.Context, addr sdk.ValAddress) unbondingToUnbonded() {
-	// perform appropriate store updates
+func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) {
+	if validator.Status != sdk.Unbonded {
+		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
+	}
+	completeUnbondingValidator(ctx, validator)
 }
 
-func (ctx sdk.Context, addr sdk.ValAddress) jailValidator() {
-	// perform appropriate store updates
+func (k Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
+	if validator.Jailed {
+		panic(fmt.Sprintf("cannot jail already jailed validator, validator: %v\n", validator))
+	}
+
+	validator.Jailed = true
+
+	if validator.Status == sdk.Bonded {
+		validator = k.beginUnbondingValidator(ctx, newValidator)
+	}
 }
+
+//________________________________________________________________________________________________
+
+// perform all the store operations for when a validator status becomes bonded
+func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) {
+
+	store := ctx.KVStore(k.storeKey)
+	pool := k.GetPool(ctx)
+
+	validator.BondHeight = ctx.BlockHeight()
+
+	// set the status
+	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
+	k.SetPool(ctx, pool)
+
+	// save the now bonded validator record to the three referenced stores
+	k.SetValidator(ctx, validator)
+	store.Set(GetValidatorsBondedIndexKey(validator.OperatorAddr), []byte{})
+
+	// call the bond hook if present
+	if k.hooks != nil {
+		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress())
+	}
+}
+
+// perform all the store operations for when a validator status begins unbonding
+func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) {
+
+	store := ctx.KVStore(k.storeKey)
+	pool := k.GetPool(ctx)
+	params := k.GetParams(ctx)
+
+	// sanity check
+	if validator.Status == sdk.Unbonded ||
+		validator.Status == sdk.Unbonding {
+		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
+	}
+
+	// set the status
+	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
+	k.SetPool(ctx, pool)
+
+	validator.UnbondingMinTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
+	validator.UnbondingHeight = ctx.BlockHeader().Height
+
+	// save the now unbonded validator record
+	k.SetValidator(ctx, validator)
+
+	// also remove from the Bonded types.Validators Store
+	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
+
+	// call the unbond hook if present
+	if k.hooks != nil {
+		k.hooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
+	}
+}
+
+// perform all the store operations for when a validator status becomes unbonded
+func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) {
+	store := ctx.KVStore(k.storeKey)
+	pool := k.GetPool(ctx)
+	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
+	k.SetPool(ctx, pool)
+	k.SetValidator(ctx, validator)
+}
+
+//______________________________________________________________________________________________________
+
+func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidator,
+	newValidator types.Validator, pool types.Pool) (valPower []byte) {
+	store := ctx.KVStore(k.storeKey)
+
+	// update the list ordered by voting power
+	if oldFound {
+		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
+	}
+	valPower = GetValidatorsByPowerIndexKey(newValidator, pool)
+	store.Set(valPower, newValidator.OperatorAddr)
+
+	return valPower
+}
+
+// get the bond height and incremented intra-tx counter
+// nolint: unparam
+func (k Keeper) bondIncrement(ctx sdk.Context, isNewValidator bool, validator types.Validator) (
+	height int64, intraTxCounter int16) {
+
+	// if already a validator, copy the old block height and counter
+	if !isNewValidator && validator.Status == sdk.Bonded {
+		height = validator.BondHeight
+		intraTxCounter = validator.BondIntraTxCounter
+		return
+	}
+
+	height = ctx.BlockHeight()
+	counter := k.GetIntraTxCounter(ctx)
+	intraTxCounter = counter
+
+	k.SetIntraTxCounter(ctx, counter+1)
+	return
+}
+
+//______________________________________________________________________________________________________
 
 // XXX Delete this reference function before merge
 // Perform all the necessary steps for when a validator changes its power. This
@@ -89,12 +226,6 @@ func (k Keeper) REFERENCEXXXDELETEUpdateValidator(ctx sdk.Context, validator typ
 	powerIncreasing := k.getPowerIncreasing(ctx, oldFound, oldValidator, validator)
 	validator.BondHeight, validator.BondIntraTxCounter = k.bondIncrement(ctx, oldFound, oldValidator)
 	valPower := k.updateValidatorPower(ctx, oldFound, oldValidator, validator, pool)
-	cliffPower := k.GetCliffValidatorPower(ctx)
-	cliffValExists := (cliffPower != nil)
-	var valPowerLTcliffPower bool
-	if cliffValExists {
-		valPowerLTcliffPower = (bytes.Compare(valPower, cliffPower) == -1)
-	}
 
 	switch {
 
@@ -147,60 +278,6 @@ func (k Keeper) REFERENCEXXXDELETEUpdateValidator(ctx sdk.Context, validator typ
 
 	k.SetValidator(ctx, validator)
 	return validator
-}
-
-func (k Keeper) updateForJailing(ctx sdk.Context, oldFound bool, oldValidator, newValidator types.Validator) types.Validator {
-	if newValidator.Jailed && oldFound && oldValidator.Status == sdk.Bonded {
-		newValidator = k.beginUnbondingValidator(ctx, newValidator)
-
-		// need to also clear the cliff validator spot because the jail has
-		// opened up a new spot which will be filled when
-		// updateValidatorsBonded is called
-		k.clearCliffValidator(ctx)
-	}
-	return newValidator
-}
-
-// nolint: unparam
-func (k Keeper) getPowerIncreasing(ctx sdk.Context, oldFound bool, oldValidator, newValidator types.Validator) bool {
-	if oldFound && oldValidator.BondedTokens().LT(newValidator.BondedTokens()) {
-		return true
-	}
-	return false
-}
-
-// get the bond height and incremented intra-tx counter
-// nolint: unparam
-func (k Keeper) bondIncrement(
-	ctx sdk.Context, found bool, oldValidator types.Validator) (height int64, intraTxCounter int16) {
-
-	// if already a validator, copy the old block height and counter
-	if found && oldValidator.Status == sdk.Bonded {
-		height = oldValidator.BondHeight
-		intraTxCounter = oldValidator.BondIntraTxCounter
-		return
-	}
-
-	height = ctx.BlockHeight()
-	counter := k.GetIntraTxCounter(ctx)
-	intraTxCounter = counter
-
-	k.SetIntraTxCounter(ctx, counter+1)
-	return
-}
-
-func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidator,
-	newValidator types.Validator, pool types.Pool) (valPower []byte) {
-	store := ctx.KVStore(k.storeKey)
-
-	// update the list ordered by voting power
-	if oldFound {
-		store.Delete(GetValidatorsByPowerIndexKey(oldValidator, pool))
-	}
-	valPower = GetValidatorsByPowerIndexKey(newValidator, pool)
-	store.Set(valPower, newValidator.OperatorAddr)
-
-	return valPower
 }
 
 // XXX Delete this reference function before merge
@@ -266,17 +343,6 @@ func (k Keeper) XXXREFERENCEUpdateBondedValidators(
 
 	iterator.Close()
 
-	if newValidatorBonded && bytes.Equal(oldCliffValidatorAddr, validator.OperatorAddr) {
-		panic("cliff validator has not been changed, yet we bonded a new validator")
-	}
-
-	// clear or set the cliff validator
-	if bondedValidatorsCount == int(maxValidators) {
-		k.setCliffValidator(ctx, validator, k.GetPool(ctx))
-	} else if len(oldCliffValidatorAddr) > 0 {
-		k.clearCliffValidator(ctx)
-	}
-
 	// swap the cliff validator for a new validator if the affected validator
 	// was bonded
 	if newValidatorBonded {
@@ -304,150 +370,4 @@ func (k Keeper) XXXREFERENCEUpdateBondedValidators(
 	}
 
 	return types.Validator{}, false
-}
-
-// XXX Delete this reference function before merge
-// full update of the bonded validator set, many can be added/kicked
-func (k Keeper) XXXREFERENCEUpdateBondedValidatorsFull(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-
-	// clear the current validators store, add to the ToKickOut temp store
-	toKickOut := make(map[string]byte)
-	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
-	for ; iterator.Valid(); iterator.Next() {
-		ownerAddr := GetAddressFromValBondedIndexKey(iterator.Key())
-		toKickOut[string(ownerAddr)] = 0
-	}
-
-	iterator.Close()
-
-	var validator types.Validator
-
-	oldCliffValidatorAddr := k.GetCliffValidator(ctx)
-	maxValidators := k.GetParams(ctx).MaxValidators
-	bondedValidatorsCount := 0
-
-	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
-	for ; iterator.Valid() && bondedValidatorsCount < int(maxValidators); iterator.Next() {
-		var found bool
-
-		ownerAddr := iterator.Value()
-		validator = k.mustGetValidator(ctx, ownerAddr)
-
-		_, found = toKickOut[string(ownerAddr)]
-		if found {
-			delete(toKickOut, string(ownerAddr))
-		} else {
-			// If the validator wasn't in the toKickOut group it means it wasn't
-			// previously a validator, therefor update the validator to enter
-			// the validator group.
-			validator = k.bondValidator(ctx, validator)
-		}
-
-		if validator.Jailed {
-			// we should no longer consider jailed validators as they are ranked
-			// lower than any non-jailed/bonded validators
-			if validator.Status == sdk.Bonded {
-				panic(fmt.Sprintf("jailed validator cannot be bonded for address: %s\n", ownerAddr))
-			}
-			break
-		}
-
-		bondedValidatorsCount++
-	}
-
-	iterator.Close()
-
-	// clear or set the cliff validator
-	if bondedValidatorsCount == int(maxValidators) {
-		k.setCliffValidator(ctx, validator, k.GetPool(ctx))
-	} else if len(oldCliffValidatorAddr) > 0 {
-		k.clearCliffValidator(ctx)
-	}
-
-	kickOutValidators(k, ctx, toKickOut)
-	return
-}
-
-func kickOutValidators(k Keeper, ctx sdk.Context, toKickOut map[string]byte) {
-	for key := range toKickOut {
-		ownerAddr := []byte(key)
-		validator := k.mustGetValidator(ctx, ownerAddr)
-		k.beginUnbondingValidator(ctx, validator)
-	}
-}
-
-// perform all the store operations for when a validator status becomes unbonded
-func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-
-	store := ctx.KVStore(k.storeKey)
-	pool := k.GetPool(ctx)
-	params := k.GetParams(ctx)
-
-	// sanity check
-	if validator.Status == sdk.Unbonded ||
-		validator.Status == sdk.Unbonding {
-		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
-	}
-
-	// set the status
-	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
-	k.SetPool(ctx, pool)
-
-	validator.UnbondingMinTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
-	validator.UnbondingHeight = ctx.BlockHeader().Height
-
-	// save the now unbonded validator record
-	k.SetValidator(ctx, validator)
-
-	// add to accumulated changes for tendermint
-	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
-	tstore := ctx.TransientStore(k.storeTKey)
-	tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
-
-	// also remove from the Bonded types.Validators Store
-	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
-
-	// call the unbond hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
-	}
-
-	// return updated validator
-	return validator
-}
-
-// perform all the store operations for when a validator status becomes bonded
-func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
-
-	store := ctx.KVStore(k.storeKey)
-	pool := k.GetPool(ctx)
-
-	// sanity check
-	if validator.Status == sdk.Bonded {
-		panic(fmt.Sprintf("should not already be bonded, validator: %v\n", validator))
-	}
-
-	validator.BondHeight = ctx.BlockHeight()
-
-	// set the status
-	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
-	k.SetPool(ctx, pool)
-
-	// save the now bonded validator record to the three referenced stores
-	k.SetValidator(ctx, validator)
-	store.Set(GetValidatorsBondedIndexKey(validator.OperatorAddr), []byte{})
-
-	// add to accumulated changes for tendermint
-	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-	tstore := ctx.TransientStore(k.storeTKey)
-	tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
-
-	// call the bond hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress())
-	}
-
-	// return updated validator
-	return validator
 }

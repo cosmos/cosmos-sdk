@@ -25,6 +25,11 @@ func clearTendermintUpdates(ctx sdk.Context, k Keeper) {
 	iterator.Close()
 }
 
+func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Get(power) != nil
+}
+
 //_______________________________________________________
 
 func TestSetValidator(t *testing.T) {
@@ -101,20 +106,20 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 
 	pool = keeper.GetPool(ctx)
 	power := GetValidatorsByPowerIndexKey(validator, pool)
-	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
+	require.True(t, validatorByPowerIndexExists(keeper, ctx, power))
 
 	// burn half the delegator shares
 	validator, pool, burned := validator.RemoveDelShares(pool, delSharesCreated.Quo(sdk.NewDec(2)))
 	require.Equal(t, int64(50), burned.RoundInt64())
 	keeper.SetPool(ctx, pool)              // update the pool
 	keeper.UpdateValidator(ctx, validator) // update the validator, possibly kicking it out
-	require.False(t, keeper.validatorByPowerIndexExists(ctx, power))
+	require.False(t, validatorByPowerIndexExists(keeper, ctx, power))
 
 	pool = keeper.GetPool(ctx)
 	validator, found = keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	power = GetValidatorsByPowerIndexKey(validator, pool)
-	require.True(t, keeper.validatorByPowerIndexExists(ctx, power))
+	require.True(t, validatorByPowerIndexExists(keeper, ctx, power))
 }
 
 func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {

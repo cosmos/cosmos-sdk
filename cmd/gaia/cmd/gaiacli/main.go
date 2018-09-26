@@ -45,8 +45,9 @@ func main() {
 
 	//Add query commands
 	queryCmd := &cobra.Command{
-		Use:   "query",
-		Short: "Querying subcommands",
+		Use:     "query",
+		Aliases: []string{"q"},
+		Short:   "Querying subcommands",
 	}
 	queryCmd.AddCommand(
 		rpc.BlockCommand(),

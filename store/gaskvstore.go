@@ -59,7 +59,8 @@ func (gs *gasKVStore) Has(key []byte) bool {
 
 // Implements KVStore.
 func (gs *gasKVStore) Delete(key []byte) {
-	// No gas costs for deletion
+	// charge gas to prevent certain attack vectors even though space is being freed
+	gs.gasMeter.ConsumeGas(gs.gasConfig.DeleteCost, sdk.GasDeleteDesc)
 	gs.parent.Delete(key)
 }
 

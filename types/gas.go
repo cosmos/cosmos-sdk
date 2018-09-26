@@ -9,6 +9,7 @@ const (
 	GasWriteCostFlatDesc    = "WriteFlat"
 	GasReadCostFlatDesc     = "ReadFlat"
 	GasHasDesc              = "Has"
+	GasDeleteDesc           = "Delete"
 )
 
 var (
@@ -76,6 +77,7 @@ func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 // GasConfig defines gas cost for each operation on KVStores
 type GasConfig struct {
 	HasCost          Gas
+	DeleteCost       Gas
 	ReadCostFlat     Gas
 	ReadCostPerByte  Gas
 	WriteCostFlat    Gas
@@ -88,6 +90,7 @@ type GasConfig struct {
 func DefaultGasConfig() GasConfig {
 	return GasConfig{
 		HasCost:          10,
+		DeleteCost:       10,
 		ReadCostFlat:     10,
 		ReadCostPerByte:  1,
 		WriteCostFlat:    10,

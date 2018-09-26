@@ -25,7 +25,7 @@ func TestGasKVStoreBasic(t *testing.T) {
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	st.Delete(keyFmt(1))
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
-	require.Equal(t, meter.GasConsumed(), sdk.Gas(183))
+	require.Equal(t, meter.GasConsumed(), sdk.Gas(193))
 }
 
 func TestGasKVStoreIterator(t *testing.T) {

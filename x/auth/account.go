@@ -166,27 +166,31 @@ func (vacc ContinuousVestingAccount) IsVesting(blockTime time.Time) bool {
 
 // Implement Vesting Account interface. Uses time in context to calculate how many coins
 // has been released by vesting schedule and then accounts for unlocked coins that have
-// already been transferred or delegated
+// already been transferred or delegated.
 func (vacc ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coins {
 	unlockedCoins := vacc.TransferredCoins
-	scale := sdk.NewDec(blockTime.Unix() - vacc.StartTime.Unix()).Quo(sdk.NewDec(vacc.EndTime.Unix() - vacc.StartTime.Unix()))
 
-	// Add original coins unlocked by vesting schedule
-	for _, c := range vacc.OriginalVestingCoins {
-		amt := sdk.NewDecFromInt(c.Amount).Mul(scale).RoundInt()
+	x := blockTime.Unix() - vacc.StartTime.Unix()
+	y := vacc.EndTime.Unix() - vacc.StartTime.Unix()
+	scale := sdk.NewDec(x).Quo(sdk.NewDec(y))
 
-		// Must constrain with coins left in account
-		// Since some unlocked coins may have left account due to delegation
-		currentAmount := vacc.GetCoins().AmountOf(c.Denom)
-		if currentAmount.LT(amt) {
-			amt = currentAmount
+	// add original coins unlocked by vesting schedule
+	for _, origVestingCoin := range vacc.OriginalVestingCoins {
+		vAmt := sdk.NewDecFromInt(origVestingCoin.Amount).Mul(scale).RoundInt()
+
+		// Must constrain with coins left in account since some unlocked coins may
+		// have left account due to delegation.
+		currentAmount := vacc.GetCoins().AmountOf(origVestingCoin.Denom)
+
+		if currentAmount.LT(vAmt) {
+			vAmt = currentAmount
 			// prevent double count of transferred coins
-			amt = amt.Sub(vacc.TransferredCoins.AmountOf(c.Denom))
+			vAmt = vAmt.Sub(vacc.TransferredCoins.AmountOf(origVestingCoin.Denom))
 		}
 
-		// Add non-zero coins
-		if !amt.IsZero() {
-			coin := sdk.NewCoin(c.Denom, amt)
+		// add non-zero coins
+		if !vAmt.IsZero() {
+			coin := sdk.NewCoin(origVestingCoin.Denom, vAmt)
 			unlockedCoins = unlockedCoins.Plus(sdk.Coins{coin})
 		}
 	}

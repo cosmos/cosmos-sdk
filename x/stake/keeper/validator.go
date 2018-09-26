@@ -58,6 +58,14 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	return validator, true
 }
 
+func (k Keeper) mustGetValidator(ctx sdk.Context, addr sdk.ValAddress) types.Validator {
+	validator, found := GetValidator(ctx, addr)
+	if !found {
+		panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
+	}
+	return validator
+}
+
 // get a single validator by consensus address
 func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -153,8 +161,7 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 			panic("maxValidators is less than the number of records in ValidatorsBonded Store, store should have been updated")
 		}
 		address := GetAddressFromValBondedIndexKey(iterator.Key())
-		validator, found := k.GetValidator(ctx, address)
-		ensureValidatorFound(found, address)
+		validator := k.mustGetValidator(ctx, address)
 
 		validators[i] = validator
 		i++
@@ -176,8 +183,7 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 	i := 0
 	for ; iterator.Valid() && i < int(maxValidators); iterator.Next() {
 		address := iterator.Value()
-		validator, found := k.GetValidator(ctx, address)
-		ensureValidatorFound(found, address)
+		validator := k.mustGetValidator(ctx, address)
 
 		if validator.Status == sdk.Bonded {
 			validators[i] = validator
@@ -227,6 +233,7 @@ func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Valid
 }
 
 //___________________________________________________________________________
+// State transitions
 
 func (ctx sdk.Context, addr sdk.ValAddress) bondedToUnbonding() {
 	// perform appropriate store updates
@@ -248,7 +255,7 @@ func (ctx sdk.Context, addr sdk.ValAddress) jailValidator() {
 	// perform appropriate store updates
 }
 
-// XXX delete
+// XXX Delete this reference function before merge
 // Perform all the necessary steps for when a validator changes its power. This
 // function updates all validator stores as well as tendermint update store.
 // It may kick out validators if a new validator is entering the bonded validator
@@ -349,8 +356,7 @@ func (k Keeper) updateCliffValidator(ctx sdk.Context, affectedVal types.Validato
 
 	if iterator.Valid() {
 		ownerAddr := iterator.Value()
-		currVal, found := k.GetValidator(ctx, ownerAddr)
-		ensureValidatorFound(found, ownerAddr)
+		currVal := k.mustGetValidator(ctx, ownerAddr)
 
 		if currVal.Status != sdk.Bonded || currVal.Jailed {
 			panic(fmt.Sprintf("unexpected jailed or unbonded validator for address: %X\n", ownerAddr))
@@ -432,6 +438,7 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 	return valPower
 }
 
+// XXX Delete this reference function before merge
 // Update the bonded validator group based on a change to the validator
 // affectedValidator. This function potentially adds the affectedValidator to
 // the bonded validator group which kicks out the cliff validator. Under this
@@ -443,7 +450,7 @@ func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidato
 // updated in store with the ValidatorsBondedIndexKey. This store is used to
 // determine if a validator is a validator without needing to iterate over all
 // validators.
-func (k Keeper) UpdateBondedValidators(
+func (k Keeper) XXXREFERENCEUpdateBondedValidators(
 	ctx sdk.Context, affectedValidator types.Validator) (
 	updatedVal types.Validator, updated bool) {
 
@@ -467,8 +474,7 @@ func (k Keeper) UpdateBondedValidators(
 			validator = affectedValidator
 		} else {
 			var found bool
-			validator, found = k.GetValidator(ctx, ownerAddr)
-			ensureValidatorFound(found, ownerAddr)
+			validator = k.mustGetValidator(ctx, ownerAddr)
 		}
 
 		// if we've reached jailed validators no further bonded validators exist
@@ -510,8 +516,7 @@ func (k Keeper) UpdateBondedValidators(
 	// was bonded
 	if newValidatorBonded {
 		if oldCliffValidatorAddr != nil {
-			oldCliffVal, found := k.GetValidator(ctx, oldCliffValidatorAddr)
-			ensureValidatorFound(found, oldCliffValidatorAddr)
+			oldCliffVal := k.mustGetValidator(ctx, oldCliffValidatorAddr)
 
 			if bytes.Equal(validatorToBond.OperatorAddr, affectedValidator.OperatorAddr) {
 
@@ -561,8 +566,7 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 		var found bool
 
 		ownerAddr := iterator.Value()
-		validator, found = k.GetValidator(ctx, ownerAddr)
-		ensureValidatorFound(found, ownerAddr)
+		validator = k.mustGetValidator(ctx, ownerAddr)
 
 		_, found = toKickOut[string(ownerAddr)]
 		if found {
@@ -602,8 +606,7 @@ func (k Keeper) UpdateBondedValidatorsFull(ctx sdk.Context) {
 func kickOutValidators(k Keeper, ctx sdk.Context, toKickOut map[string]byte) {
 	for key := range toKickOut {
 		ownerAddr := []byte(key)
-		validator, found := k.GetValidator(ctx, ownerAddr)
-		ensureValidatorFound(found, ownerAddr)
+		validator := k.mustGetValidator(ctx, ownerAddr)
 		k.beginUnbondingValidator(ctx, validator)
 	}
 }
@@ -726,39 +729,4 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Valid
 
 	k.SetValidator(ctx, validator)
 	return nil
-}
-
-//__________________________________________________________________________
-
-// get the current validator on the cliff
-func (k Keeper) GetCliffValidator(ctx sdk.Context) []byte {
-	store := ctx.KVStore(k.storeKey)
-	return store.Get(ValidatorCliffIndexKey)
-}
-
-// get the current power of the validator on the cliff
-func (k Keeper) GetCliffValidatorPower(ctx sdk.Context) []byte {
-	store := ctx.KVStore(k.storeKey)
-	return store.Get(ValidatorPowerCliffKey)
-}
-
-// set the current validator and power of the validator on the cliff
-func (k Keeper) setCliffValidator(ctx sdk.Context, validator types.Validator, pool types.Pool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := GetValidatorsByPowerIndexKey(validator, pool)
-	store.Set(ValidatorPowerCliffKey, bz)
-	store.Set(ValidatorCliffIndexKey, validator.OperatorAddr)
-}
-
-// clear the current validator and power of the validator on the cliff
-func (k Keeper) clearCliffValidator(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(ValidatorPowerCliffKey)
-	store.Delete(ValidatorCliffIndexKey)
-}
-
-func ensureValidatorFound(found bool, ownerAddr []byte) {
-	if !found {
-		panic(fmt.Sprintf("validator record not found for address: %X\n", ownerAddr))
-	}
 }

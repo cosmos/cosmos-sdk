@@ -1,4 +1,4 @@
-# Setup and design
+# Setup And Design
 
 ## Get started
 

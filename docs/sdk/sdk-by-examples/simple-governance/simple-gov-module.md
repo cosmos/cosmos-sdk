@@ -1,4 +1,4 @@
-# Simple governance module
+# Simple Governance Module
 
 ## Module initialization 
 

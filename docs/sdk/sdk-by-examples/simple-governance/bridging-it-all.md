@@ -1,4 +1,4 @@
-# Application - Bridging it all together
+# From Module To Application
 
 ## Application structure
 
@@ -12,7 +12,7 @@ cd app
 
 We are ready to create our simple governance application!
 
-*Note: You can check the full file (with comments!) [here](link)*
+*Note: You can check the full file (with comments!) [here](https://github.com/cosmos/cosmos-sdk/blob/fedekunze/module_tutorial/examples/simpleGov/app/app.go)*
 
 The `app.go` file is the main file that defines your application. In it, you will declare all the modules you need, their keepers, handlers, stores, etc. Let us take a look at each section of this file to see how the application is constructed.
 

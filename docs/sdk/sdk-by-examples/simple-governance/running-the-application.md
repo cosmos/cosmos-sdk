@@ -1,4 +1,4 @@
-# Running the application
+# Running The Application
 
 ## Installation
 

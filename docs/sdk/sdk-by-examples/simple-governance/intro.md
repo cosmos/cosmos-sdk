@@ -6,7 +6,7 @@ Before getting in the bulk of the code, we will start by some introductory conte
 
 ## Table of contents:
 
-### Introduction - Prerequsite reading
+### Introduction - Prerequisite reading
 
 - [Intro to Tendermint and Cosmos](/introduction/tendermint-cosmos.md)
 - [Tendermint Core and ABCI](/introduction/tendermint.md)

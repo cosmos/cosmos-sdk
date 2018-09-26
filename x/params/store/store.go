@@ -81,14 +81,19 @@ func (s Store) Modified(ctx sdk.Context, key string) bool {
 }
 
 // Set parameter, return error if stored parameter has different type from input
+// Also set to the transient store to record change
 func (s Store) Set(ctx sdk.Context, key string, param interface{}) {
 	store := s.kvStore(ctx)
 	keybz := []byte(key)
 
 	bz := store.Get(keybz)
+
+	// To prevent invalid parameter set, we check the type of the stored parameter
+	// and try to match it with the provided parameter. It continues only if they matches.
+	// It is possible because parameter set happens rarely.
 	if bz != nil {
-		ptrty := reflect.PtrTo(reflect.TypeOf(param))
-		ptr := reflect.New(ptrty).Interface()
+		ptrType := reflect.PtrTo(reflect.TypeOf(param))
+		ptr := reflect.New(ptrType).Interface()
 
 		if s.cdc.UnmarshalJSON(bz, ptr) != nil {
 			panic(fmt.Errorf("Type mismatch with stored param and provided param"))
@@ -106,6 +111,7 @@ func (s Store) Set(ctx sdk.Context, key string, param interface{}) {
 }
 
 // Set raw bytes of parameter
+// Also set to the transient store to record change
 func (s Store) SetRaw(ctx sdk.Context, key string, param []byte) {
 	keybz := []byte(key)
 

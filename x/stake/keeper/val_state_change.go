@@ -95,7 +95,8 @@ func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) 
 	completeUnbondingValidator(ctx, validator)
 }
 
-func (k Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
+// send a validator to jail
+func (k Keeper) JailValidator(ctx sdk.Context, validator types.Validator) {
 	if validator.Jailed {
 		panic(fmt.Sprintf("cannot jail already jailed validator, validator: %v\n", validator))
 	}
@@ -105,6 +106,21 @@ func (k Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
 	if validator.Status == sdk.Bonded {
 		validator = k.beginUnbondingValidator(ctx, newValidator)
 	}
+}
+
+// remove a validator from jail
+func (k Keeper) UnjailValidator(ctx sdk.Context, validator types.Validator) {
+	if !validator.Jailed {
+		panic(fmt.Sprintf("cannot jail already jailed validator, validator: %v\n", validator))
+	}
+
+	store.Delete(GetBondedValidatorsByPowerIndexKey(validator, pool))
+
+	validator.Jailed = false
+	k.SetValidator(ctx, validator)
+
+	valPower = GetBondedValidatorsByPowerIndexKey(validator, pool)
+	store.Set(valPower, validator.OperatorAddr)
 }
 
 //________________________________________________________________________________________________

@@ -95,6 +95,13 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 }
 
 // validator index
+func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
+	store := ctx.KVStore(k.storeKey)
+	pool := store.GetPool(ctx)
+	store.Set(GetBondedValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
+}
+
+// validator index
 func (k Keeper) SetValidatorBondedIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(GetValidatorsBondedIndexKey(validator.OperatorAddr), []byte{})
@@ -103,29 +110,35 @@ func (k Keeper) SetValidatorBondedIndex(ctx sdk.Context, validator types.Validat
 //___________________________________________________________________________
 
 // Update the tokens of an existing validator, update the validators power index key
-func (k Keeper) UpdateValidatorTokens(ctx sdk.Context, validator types.Validator, newTokens sdk.Dec) sdk.Error {
+func (k Keeper) AddValidatorTokens(ctx sdk.Context, validator types.Validator, newTokens sdk.Dec) types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	pool := store.GetPool(ctx)
 
 	store.Delete(GetBondedValidatorsByPowerIndexKey(oldValidator, pool))
 
+	validator, pool = validator.AddTokens(pool, newTokens)
 	k.SetValidator(ctx, validator)
-	store.Set(valPower, newValidator.OperatorAddr)
+	k.SetPool(ctx, pool)
 
-	validator.Tokens = validator.Tokens.Add(newTokens)
 	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
+	store.Set(valPower, newValidator.OperatorAddr)
+	return validator
 }
 
-// Update the tokens for a new validator, create the validators power index key
-func (k Keeper) NewValidatorTokens(ctx sdk.Context, validator types.Validator, newTokens sdk.Dec) sdk.Error {
+// Update the tokens of an existing validator, update the validators power index key
+func (k Keeper) RemoveValidatorTokens(ctx sdk.Context, validator types.Validator, tokensToRemove sdk.Dec) types.Validator {
 	store := ctx.KVStore(k.storeKey)
-
-	validator.Tokens = validator.Tokens.Add(newTokens)
-	k.SetValidator(ctx, validator)
-
 	pool := store.GetPool(ctx)
+
+	store.Delete(GetBondedValidatorsByPowerIndexKey(oldValidator, pool))
+
+	validator, pool = validator.RemoveTokens(pool, tokensToBurn)
+	k.SetValidator(ctx, validator)
+	k.SetPool(ctx, pool)
+
 	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
 	store.Set(valPower, newValidator.OperatorAddr)
+	return validator
 }
 
 // UpdateValidatorCommission attempts to update a validator's commission rate.

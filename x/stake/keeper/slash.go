@@ -99,13 +99,12 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	tokensToBurn := sdk.MinDec(remainingSlashAmount, validator.Tokens)
 
 	// burn validator's tokens
+	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 	pool := k.GetPool(ctx)
-	validator, pool = validator.RemoveTokens(pool, tokensToBurn)
 	pool.LooseTokens = pool.LooseTokens.Sub(tokensToBurn)
 	k.SetPool(ctx, pool)
 
 	// update the validator, possibly kicking it out
-	validator = k.UpdateValidator(ctx, validator)
 
 	// remove validator if it has no more tokens
 	if validator.Tokens.IsZero() {
@@ -123,7 +122,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 // jail a validator
 func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	k.setJailed(ctx, consAddr, true)
+	k.JailValidator(ctx, validator)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("validator %s jailed", consAddr))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
@@ -132,21 +131,10 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 
 // unjail a validator
 func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	k.setJailed(ctx, consAddr, false)
+	k.UnjailValidator(ctx, validator)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("validator %s unjailed", consAddr))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
-	return
-}
-
-// set the jailed flag on a validator
-func (k Keeper) setJailed(ctx sdk.Context, consAddr sdk.ConsAddress, isJailed bool) {
-	validator, found := k.GetValidatorByConsAddr(ctx, consAddr)
-	if !found {
-		panic(fmt.Errorf("validator with consensus-Address %s not found, cannot set jailed to %v", consAddr, isJailed))
-	}
-	validator.Jailed = isJailed
-	k.UpdateValidator(ctx, validator) // update validator, possibly unbonding or bonding it
 	return
 }
 

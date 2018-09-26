@@ -1,15 +1,15 @@
 package client
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/mitchellh/go-homedir"
 	"bufio"
-	"path"
-	"os"
-	"io/ioutil"
-	"github.com/pelletier/go-toml"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/mitchellh/go-homedir"
+	"github.com/pelletier/go-toml"
+	"github.com/spf13/cobra"
+	"io/ioutil"
+	"os"
+	"path"
 )
 
 type cliConfig struct {
@@ -34,7 +34,7 @@ func ConfigCmd() *cobra.Command {
 	return cfg
 }
 
-func runConfigCmd(cmd *cobra.Command, args [] string) error {
+func runConfigCmd(cmd *cobra.Command, args []string) error {
 	home, err := homedir.Dir()
 	if err != nil {
 		return err

@@ -92,7 +92,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{100, banksim.SimulateSingleInputMsgSend(app.accountMapper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
-		//{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
+		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
 		{100, stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper)},
 		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
 		{100, stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper)},

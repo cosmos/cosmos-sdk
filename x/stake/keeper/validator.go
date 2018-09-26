@@ -110,19 +110,39 @@ func (k Keeper) SetValidatorBondedIndex(ctx sdk.Context, validator types.Validat
 //___________________________________________________________________________
 
 // Update the tokens of an existing validator, update the validators power index key
-func (k Keeper) AddValidatorTokens(ctx sdk.Context, validator types.Validator, newTokens sdk.Dec) types.Validator {
+func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
+	tokensToAdd sdk.Dec) (valOut types.Validator, addedShares sdk.Dec) {
+
 	store := ctx.KVStore(k.storeKey)
 	pool := store.GetPool(ctx)
 
 	store.Delete(GetBondedValidatorsByPowerIndexKey(oldValidator, pool))
 
-	validator, pool = validator.AddTokens(pool, newTokens)
+	validator, pool, addedShares = validator.AddTokensFromDel(pool, tokensToAdd)
 	k.SetValidator(ctx, validator)
 	k.SetPool(ctx, pool)
 
 	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
 	store.Set(valPower, newValidator.OperatorAddr)
-	return validator
+	return validator, addedShares
+}
+
+// Update the tokens of an existing validator, update the validators power index key
+func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
+	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Dec) {
+
+	store := ctx.KVStore(k.storeKey)
+	pool := store.GetPool(ctx)
+
+	store.Delete(GetBondedValidatorsByPowerIndexKey(oldValidator, pool))
+
+	validator, pool, removedTokens = validator.RemoveDelShares(pool, sharesToRemove)
+	k.SetValidator(ctx, validator)
+	k.SetPool(ctx, pool)
+
+	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
+	store.Set(valPower, newValidator.OperatorAddr)
+	return validator, removedTokens
 }
 
 // Update the tokens of an existing validator, update the validators power index key

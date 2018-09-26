@@ -27,35 +27,41 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator)
 	//tstore := ctx.TransientStore(k.storeTKey)
 	//tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
-	last := fetchOldValidatorSet()
-	tendermintUpdates := make(map[sdk.ValAddress]uint64)
+	// XXX code from issue
+	/*
+		last := fetchOldValidatorSet()
+		tendermintUpdates := make(map[sdk.ValAddress]uint64)
 
-	for _, validator := range topvalidator { //(iterate(top hundred)) {
-		switch validator.State {
-		case Unbonded:
-			unbondedToBonded(ctx, validator.Addr)
-			tendermintUpdates[validator.Addr] = validator.Power
-		case Unbonding:
-			unbondingToBonded(ctx, validator.Addr)
-			tendermintUpdates[validator.Addr] = validator.Power
-		case Bonded: // do nothing
-			store.delete(last[validator.Addr])
-			// jailed validators are ranked last, so if we get to a jailed validator
-			// we have no more bonded validators
-			if validator.Jailed {
-				break
+		for _, validator := range topvalidator { //(iterate(top hundred)) {
+			switch validator.State {
+			case Unbonded:
+				unbondedToBonded(ctx, validator.Addr)
+				tendermintUpdates[validator.Addr] = validator.Power
+			case Unbonding:
+				unbondingToBonded(ctx, validator.Addr)
+				tendermintUpdates[validator.Addr] = validator.Power
+			case Bonded: // do nothing
+				store.delete(last[validator.Addr])
+				// jailed validators are ranked last, so if we get to a jailed validator
+				// we have no more bonded validators
+				if validator.Jailed {
+					break
+				}
 			}
 		}
-	}
 
-	for _, validator := range previousValidators {
-		bondedToUnbonding(ctx, validator.Addr)
-		tendermintUpdates[validator.Addr] = 0
-	}
+		for _, validator := range previousValidators {
+			bondedToUnbonding(ctx, validator.Addr)
+			tendermintUpdates[validator.Addr] = 0
+		}
 
-	return tendermintUpdates
+		return tendermintUpdates
+	*/
+
+	return updates
 }
 
+// XXX FOR REFERENCE USE OR DELETED
 func kickOutValidators(k Keeper, ctx sdk.Context, toKickOut map[string]byte) {
 	for key := range toKickOut {
 		ownerAddr := []byte(key)
@@ -95,6 +101,8 @@ func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) 
 	completeUnbondingValidator(ctx, validator)
 }
 
+//________________________________________________________________________________________________
+
 // send a validator to jail
 func (k Keeper) JailValidator(ctx sdk.Context, validator types.Validator) {
 	if validator.Jailed {
@@ -130,6 +138,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) {
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
+
+	// XXX WHAT DO WE DO FOR BondIntraTxCounter Height Now??????????????????????????
 
 	validator.BondHeight = ctx.BlockHeight()
 
@@ -190,19 +200,8 @@ func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Vali
 
 //______________________________________________________________________________________________________
 
-func (k Keeper) updateValidatorPower(ctx sdk.Context, oldFound bool, oldValidator,
-	newValidator types.Validator, pool types.Pool) (valPower []byte) {
-	store := ctx.KVStore(k.storeKey)
-
-	// update the list ordered by voting power
-	if oldFound {
-		store.Delete(GetBondedValidatorsByPowerIndexKey(oldValidator, pool))
-	}
-	valPower = GetBondedValidatorsByPowerIndexKey(newValidator, pool)
-	store.Set(valPower, newValidator.OperatorAddr)
-
-	return valPower
-}
+// XXX need to figure out how to set a validator's BondIntraTxCounter - probably during delegation bonding?
+//     or keep track of tx for final bonding and set during endblock??? wish we could reduce this complexity
 
 // get the bond height and incremented intra-tx counter
 // nolint: unparam

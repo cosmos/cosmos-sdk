@@ -217,7 +217,7 @@ func subtractCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, 
 		// check if account has enough unlocked coins
 		sendableCoins := vacc.SendableCoins(blockTime)
 		if !sendableCoins.IsGTE(amt) {
-			return amt, nil, sdk.ErrInsufficientCoins("Not enough sendable coins in vesting account")
+			return amt, nil, sdk.ErrInsufficientCoins("not enough sendable coins in vesting account")
 		}
 
 		// track transfers

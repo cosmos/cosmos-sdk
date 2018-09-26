@@ -120,6 +120,11 @@ func TestKeys(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
+	// skip the test if the VERSION environment variable has not been set
+	if version.Version == "" {
+		t.SkipNow()
+	}
+
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
 

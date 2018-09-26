@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
 )
 
@@ -25,8 +25,13 @@ func SendTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg)
 		return err
 	}
 
+	name, err := cliCtx.GetFromName()
+	if err != nil {
+		return err
+	}
+
 	if txBldr.SimulateGas || cliCtx.DryRun {
-		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, cliCtx.FromAddressName, msgs)
+		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return err
 		}
@@ -36,13 +41,13 @@ func SendTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg)
 		return nil
 	}
 
-	passphrase, err := keys.GetPassphrase(cliCtx.FromAddressName)
+	passphrase, err := keys.GetPassphrase(name)
 	if err != nil {
 		return err
 	}
 
 	// build and sign the transaction
-	txBytes, err := txBldr.BuildAndSign(cliCtx.FromAddressName, passphrase, msgs)
+	txBytes, err := txBldr.BuildAndSign(name, passphrase, msgs)
 	if err != nil {
 		return err
 	}
@@ -196,7 +201,13 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 		return
 	}
 	if txBldr.SimulateGas {
-		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, cliCtx.FromAddressName, msgs)
+		var name string
+		name, err = cliCtx.GetFromName()
+		if err != nil {
+			return
+		}
+
+		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return
 		}

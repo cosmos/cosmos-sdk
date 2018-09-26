@@ -22,6 +22,5 @@ func init() {
 	cdc := codec.New()
 	RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
-	MsgCdc = cdc
-	//MsgCdc = cdc.Seal() //TODO use when upgraded to go-amino 0.9.10
+	MsgCdc = cdc.Seal()
 }

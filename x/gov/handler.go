@@ -134,7 +134,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 			continue
 		}
 
-		passes, tallyResults, nonVotingVals := tally(ctx, keeper, activeProposal)
+		passes, tallyResults := tally(ctx, keeper, activeProposal)
 		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(activeProposal.GetProposalID())
 		var action []byte
 		if passes {
@@ -151,18 +151,6 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 		logger.Info(fmt.Sprintf("proposal %d (%s) tallied; passed: %v",
 			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
-
-		for _, valAddr := range nonVotingVals {
-			val := keeper.ds.GetValidatorSet().Validator(ctx, valAddr)
-			keeper.ds.GetValidatorSet().Slash(ctx,
-				val.GetPubKey(),
-				ctx.BlockHeight(),
-				val.GetPower().RoundInt64(),
-				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
-
-			logger.Info(fmt.Sprintf("validator %s failed to vote on proposal %d; slashing",
-				val.GetOperator(), activeProposal.GetProposalID()))
-		}
 
 		resTags.AppendTag(tags.Action, action)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)

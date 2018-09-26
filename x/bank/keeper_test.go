@@ -232,43 +232,49 @@ func TestVesting(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
-	vacc := auth.NewContinuousVestingAccount(addr1, sdk.Coins{{"steak", sdk.NewInt(100)}}, time.Unix(0, 0), time.Unix(1000, 0))
+	vacc := auth.NewContinuousVestingAccount(
+		addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(100))}, time.Unix(0, 0), time.Unix(1000, 0),
+	)
 	accountMapper.SetAccount(ctx, &vacc)
 
-	// Try sending more than sendable coins
-	_, err := coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(70)}})
+	// require that we cannot send more than sendable coins
+	_, err := coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(70))})
+	require.NotNil(t, err, "expected error on invalid transfer: %v", err)
+	require.Equal(t, sdk.CodeType(10), err.Code(), "failed to error with insufficient coins")
 
-	require.NotNil(t, err, "Keeper did not error")
-	require.Equal(t, sdk.CodeType(10), err.Code(), "Did not error with insufficient coins")
+	// require that we can send less than sendable coins
+	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(40))})
+	require.Nil(t, err, "expected error on valid transfer: %v", err)
 
-	// Send less than sendable coins
-	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(40)}})
-
-	require.Nil(t, err, "Keeper errored on valid transfer")
 	acc := accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
-	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(-40)}}, acc.TransferredCoins, "Did not track transfers")
+	require.Equal(
+		t, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(-40))},
+		acc.TransferredCoins, "failed to update transferred coins",
+	)
 
-	// Receive coins
+	// receive coins
 	addr3 := sdk.AccAddress([]byte("addr3"))
 	acc3 := auth.NewBaseAccountWithAddress(addr3)
-	acc3.SetCoins(sdk.Coins{{"steak", sdk.NewInt(50)}})
+	acc3.SetCoins(sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(50))})
 	accountMapper.SetAccount(ctx, &acc3)
 
-	_, err = coinKeeper.SendCoins(ctx, addr3, addr1, sdk.Coins{{"steak", sdk.NewInt(50)}})
+	_, err = coinKeeper.SendCoins(ctx, addr3, addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(50))})
+	acc = accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.Nil(t, err, "unexpected error sending to a vesting account: %v", err)
+	require.Equal(
+		t, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(10))},
+		acc.TransferredCoins, "failed to transfer coins",
+	)
+
+	// send transferred coins
+	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(60))})
+	require.Nil(t, err, "failed to send transferred coins: %v", err)
 
 	acc = accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
-
-	require.Nil(t, err, "Send to a vesting account failed")
-	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(10)}}, acc.TransferredCoins, "Transferred coins did not change")
-
-	// Send transferred coins
-	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(60)}})
-
-	require.Nil(t, err, "Sending transferred coins failed")
-
-	acc = accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
-
-	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(-50)}}, acc.TransferredCoins, "Transferred coins did not update correctly")
+	require.Equal(
+		t, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(-50))},
+		acc.TransferredCoins, "failed to update transferred coins",
+	)
 }
 
 func TestVestingInputOutput(t *testing.T) {
@@ -286,19 +292,28 @@ func TestVestingInputOutput(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
-	vacc := auth.NewContinuousVestingAccount(addr1, sdk.Coins{{"steak", sdk.NewInt(100)}}, time.Unix(0, 0), time.Unix(1000, 0))
+	vacc := auth.NewContinuousVestingAccount(
+		addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(100))}, time.Unix(0, 0), time.Unix(1000, 0),
+	)
 	accountMapper.SetAccount(ctx, &vacc)
 
-	// Send some coins back to self to check if transferredCoins updates correctly
-	inputs := []Input{{addr1, sdk.Coins{{"steak", sdk.NewInt(50)}}}}
-	outputs := []Output{{addr1, sdk.Coins{{"steak", sdk.NewInt(20)}}}, {addr2, sdk.Coins{{"steak", sdk.NewInt(30)}}}}
-	_, err := coinKeeper.InputOutputCoins(ctx, inputs, outputs)
+	// send some coins back to self to check if transferredCoins updates correctly
+	inputs := []Input{
+		{addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(50))}},
+	}
+	outputs := []Output{
+		{addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(20))}},
+		{addr2, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(30))}},
+	}
 
+	_, err := coinKeeper.InputOutputCoins(ctx, inputs, outputs)
 	require.Nil(t, err, "InputOutput failed on valid vested spend")
 
 	acc := accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
-
-	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(-30)}}, acc.TransferredCoins, "Transferred coins did not update correctly")
+	require.Equal(
+		t, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(-30))},
+		acc.TransferredCoins, "failed to update transferred coins",
+	)
 }
 
 func TestDelayTransferSend(t *testing.T) {

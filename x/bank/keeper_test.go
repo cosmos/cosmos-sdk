@@ -418,16 +418,16 @@ func TestSubtractVestingFull(t *testing.T) {
 	vacc := auth.NewContinuousVestingAccount(addr1, amt, vAccStartTime, vAccEndTime)
 	accountMapper.SetAccount(ctx, &vacc)
 
+	// require that we be able to subtract the full desired amount
 	res, _, err := coinKeeper.SubtractCoins(ctx, addr1, amt)
 	require.Nil(t, err, "unexpected error: %v", err)
 	require.Equal(t, sdk.Coins(nil), res, "Coins did not update correctly")
 
-	dAccEndTime := header.Time.Add(48 * time.Hour)
-	require.Equal(t, coin.Amount, getVestingTotal(coin, header.Time, header.Time, dAccEndTime))
-
-	dtacc := auth.NewDelayTransferAccount(addr2, amt, dAccEndTime)
+	dtacc := auth.NewDelayTransferAccount(addr2, amt, header.Time)
 	accountMapper.SetAccount(ctx, &dtacc)
 
+	// require that we be able to subtract the full desired amount as the end time
+	// has matured
 	res, _, err = coinKeeper.SubtractCoins(ctx, addr2, amt)
 	require.Nil(t, err, "unexpected error: %v", err)
 	require.Equal(t, sdk.Coins(nil), res, "Coins did not update correctly")

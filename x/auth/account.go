@@ -231,27 +231,28 @@ func (vacc DelayTransferAccount) IsVesting(blockTime time.Time) bool {
 }
 
 // Implements VestingAccount. If Time < EndTime return only net transferred coins
-// Else return all coins in account (like BaseAccount)
+// else return all coins in account (like BaseAccount).
 func (vacc DelayTransferAccount) SendableCoins(blockTime time.Time) sdk.Coins {
-	// Check if ctx.Time < EndTime
 	if blockTime.Unix() < vacc.EndTime.Unix() {
-		// Return net transferred coins
-		// If positive, then those coins are sendable
 		sendableCoins := vacc.TransferredCoins
-		for _, c := range vacc.TransferredCoins {
-			// Must constrain with coins left in account
-			// Since some unlocked coins may have left account due to delegation
-			amt := sendableCoins.AmountOf(c.Denom)
-			currentAmount := vacc.GetCoins().AmountOf(c.Denom)
+
+		// Return net transferred coins if positive, then those coins are sendable.
+		for _, transCoin := range vacc.TransferredCoins {
+			// Must constrain with coins left in account since some unlocked coins may
+			// have left account due to delegation.
+			amt := sendableCoins.AmountOf(transCoin.Denom)
+
+			currentAmount := vacc.GetCoins().AmountOf(transCoin.Denom)
 			if currentAmount.LT(amt) {
-				delta := sdk.Coin{c.Denom, amt.Sub(currentAmount)}
+				delta := sdk.NewCoin(transCoin.Denom, amt.Sub(currentAmount))
 				sendableCoins = sendableCoins.Minus(sdk.Coins{delta})
 			}
 		}
+
 		return sendableCoins
 	}
 
-	// If EndTime has passed, DelayTransferAccount behaves like BaseAccount
+	// if EndTime has passed, DelayTransferAccount behaves like BaseAccount
 	return vacc.BaseAccount.GetCoins()
 }
 

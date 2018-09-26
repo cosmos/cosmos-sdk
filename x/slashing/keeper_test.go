@@ -27,7 +27,7 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
+	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
@@ -69,7 +69,7 @@ func TestSlashingPeriodCap(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
+	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
 	addr, amt := addrs[0], sdk.NewInt(amtInt)
 	valConsPubKey, valConsAddr := pks[0], sdk.ConsAddress(pks[0].Address())
@@ -125,7 +125,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithValidatorHooks(keeper.ValidatorHooks())
+	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)

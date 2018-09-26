@@ -56,6 +56,7 @@ BREAKING CHANGES
     * [types] \#2343 Make sdk.Msg have a names field, to facilitate automatic tagging.
     * [baseapp] \#2366 Automatically add action tags to all messages
     * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
+    * [x/staking] \#2236 more distribution hooks for distribution
 
 * Tendermint
 
@@ -81,6 +82,7 @@ FEATURES
     * [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add --generate-only flag to build an unsigned transaction and write it to STDOUT.
     * [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) New `sign` command to sign transactions generated with the --generate-only flag.
     * [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) New `broadcast` command to broadcast transactions generated offline and signed with the `sign` command.
+  * [cli] \#2220 Add `gaiacli config` feature to interactively create CLI config files to reduce the number of required flags
   * [stake][cli] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Introduced
   new commission flags for validator commands `create-validator` and `edit-validator`.
 

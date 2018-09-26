@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"path"
 
 	"github.com/stretchr/testify/require"
 
@@ -513,6 +514,48 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf("steak").Int64())
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli account %s %v", fooAddr, flags))
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf("steak").Int64())
+}
+
+func TestGaiaCLIConfig(t *testing.T) {
+	require.NoError(t, os.RemoveAll(gaiacliHome))
+	require.NoError(t, os.RemoveAll(gaiadHome))
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+	node := fmt.Sprintf("%s:%s", servAddr, port)
+	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
+	executeWrite(t, fmt.Sprintf("gaiacli --home=%s config", gaiadHome), gaiacliHome, node, "y")
+	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
+	require.NoError(t, err)
+	expectedConfig := fmt.Sprintf(`chain_id = "%s"
+encoding = "btc"
+home = "%s"
+node = "%s"
+output = "text"
+trace = false
+trust_node = true
+`, chainID, gaiacliHome, node)
+	require.Equal(t, expectedConfig, string(config))
+	// ensure a backup gets created
+	executeWrite(t, "gaiacli config", gaiacliHome, node, "y", "y")
+	configBackup, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml-old"))
+	require.NoError(t, err)
+	require.Equal(t, expectedConfig, string(configBackup))
+
+	require.NoError(t, os.RemoveAll(gaiadHome))
+	executeWrite(t, "gaiacli config", gaiacliHome, node, "y")
+
+	// ensure it works without an initialized gaiad state
+	expectedConfig = fmt.Sprintf(`chain_id = ""
+encoding = "btc"
+home = "%s"
+node = "%s"
+output = "text"
+trace = false
+trust_node = true
+`, gaiacliHome, node)
+	config, err = ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
+	require.NoError(t, err)
+	require.Equal(t, expectedConfig, string(config))
 }
 
 //___________________________________________________________________________________

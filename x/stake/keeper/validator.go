@@ -617,12 +617,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	// also remove from the Bonded types.Validators Store
 	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 
-	// call the unbond hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
-	}
-
-	// return updated validator
+	k.OnValidatorBeginUnbonding(ctx, validator.ConsAddress())
 	return validator
 }
 
@@ -652,17 +647,14 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	tstore := ctx.TransientStore(k.storeTKey)
 	tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
-	// call the bond hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress())
-	}
-
-	// return updated validator
+	k.OnValidatorBonded(ctx, validator.ConsAddress())
 	return validator
 }
 
 // remove the validator record and associated indexes
 func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
+
+	k.OnValidatorRemoved(ctx, address)
 
 	// first retrieve the old validator record
 	validator, found := k.GetValidator(ctx, address)
@@ -703,6 +695,7 @@ func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Valid
 	validator.Commission.UpdateTime = blockTime
 
 	k.SetValidator(ctx, validator)
+	k.OnValidatorCommissionChange(ctx, validator.OperatorAddr)
 	return nil
 }
 

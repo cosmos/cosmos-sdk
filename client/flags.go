@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // nolint
@@ -51,6 +52,10 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Int64(FlagHeight, 0, "block height to query, omit to get most recent provable block")
+		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
+		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
+		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
+		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 	}
 	return cmds
 }
@@ -76,6 +81,10 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagSimulate, DefaultGasLimit))
+		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
+		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
+		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
+		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 	}
 	return cmds
 }

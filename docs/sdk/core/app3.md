@@ -133,7 +133,7 @@ Now that we have a native model for accounts, it's time to introduce the native
 
 ```go
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
-// NOTE: the first signature is the FeePayer (Signatures must not be nil).
+// NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg"`
 	Fee        StdFee         `json:"fee"`
@@ -259,8 +259,7 @@ the same message could be executed over and over again.
 The PubKey is required for signature verification, but it is only required in
 the StdSignature once. From that point on, it will be stored in the account.
 
-The fee is paid by the first address returned by `msg.GetSigners()` for the first `Msg`, 
-as provided by the `FeePayer(tx Tx) sdk.AccAddress` function.
+The fee is paid by the first address returned by `msg.GetSigners()` for the first `Msg`.
 
 ## CoinKeeper
 

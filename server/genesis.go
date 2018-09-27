@@ -21,22 +21,17 @@ type GenesisMsg struct {
 func (msg GenesisMsg) Type() string             { return "server" }
 func (msg GenesisMsg) Name() string             { return "genesis" }
 func (msg GenesisMsg) ValidateBasic() sdk.Error { return nil }
-
-//nolint
-func (msg GenesisMsg) GetSignBytes() []byte {
-	bz, err := json.Marshal(GenesisMsg{
-		NodeID:    msg.NodeID,
-		IP:        msg.IP,
-		Validator: msg.Validator,
-		AppGenTx:  msg.AppGenTx,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bz)
-}
+func (msg GenesisMsg) GetSignBytes() []byte     { return sdk.MustSortJSON(mustMarshalJSON(msg)) }
 
 //nolint
 func (msg GenesisMsg) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.Validator.PubKey.Address())}
+}
+
+func mustMarshalJSON(v interface{}) []byte {
+	bz, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return bz
 }

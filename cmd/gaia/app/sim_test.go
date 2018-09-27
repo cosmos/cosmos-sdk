@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -42,14 +41,14 @@ func init() {
 	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
 }
 
-func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
+func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	var genesisAccounts []GenesisAccount
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
 		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(100)}}
 		genesisAccounts = append(genesisAccounts, GenesisAccount{
-			Address: acc,
+			Address: acc.Address,
 			Coins:   coins,
 		})
 	}
@@ -61,10 +60,10 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	// XXX Try different numbers of initially bonded validators
 	numInitiallyBonded := int64(50)
 	for i := 0; i < int(numInitiallyBonded); i++ {
-		validator := stake.NewValidator(sdk.ValAddress(accs[i]), keys[i].PubKey(), stake.Description{})
+		validator := stake.NewValidator(sdk.ValAddress(accs[i].Address), accs[i].PubKey, stake.Description{})
 		validator.Tokens = sdk.NewDec(100)
 		validator.DelegatorShares = sdk.NewDec(100)
-		delegation := stake.Delegation{accs[i], sdk.ValAddress(accs[i]), sdk.NewDec(100), 0}
+		delegation := stake.Delegation{accs[i].Address, sdk.ValAddress(accs[i].Address), sdk.NewDec(100), 0}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}

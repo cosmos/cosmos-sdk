@@ -12,9 +12,7 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/cosmos/cosmos-sdk/x/stake/types"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -66,6 +64,15 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 				Details:  viper.GetString(FlagDetails),
 			}
 
+			// get the initial validator commission parameters
+			rateStr := viper.GetString(FlagCommissionRate)
+			maxRateStr := viper.GetString(FlagCommissionMaxRate)
+			maxChangeRateStr := viper.GetString(FlagCommissionMaxChangeRate)
+			commissionMsg, err := buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr)
+			if err != nil {
+				return err
+			}
+
 			var msg sdk.Msg
 			if viper.GetString(FlagAddressDelegator) != "" {
 				delAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
@@ -73,21 +80,28 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 					return err
 				}
 
-				msg = stake.NewMsgCreateValidatorOnBehalfOf(delAddr, sdk.ValAddress(valAddr), pk, amount, description)
+				msg = stake.NewMsgCreateValidatorOnBehalfOf(
+					delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+				)
 			} else {
-				msg = stake.NewMsgCreateValidator(sdk.ValAddress(valAddr), pk, amount, description)
+				msg = stake.NewMsgCreateValidator(
+					sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+				)
 			}
+
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
+
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
 	cmd.Flags().AddFlagSet(fsPk)
 	cmd.Flags().AddFlagSet(fsAmount)
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
+	cmd.Flags().AddFlagSet(fsCommissionCreate)
 	cmd.Flags().AddFlagSet(fsDelegator)
 
 	return cmd
@@ -117,17 +131,31 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				Details:  viper.GetString(FlagDetails),
 			}
 
-			msg := stake.NewMsgEditValidator(sdk.ValAddress(valAddr), description)
+			var newRate *sdk.Dec
+
+			commissionRate := viper.GetString(FlagCommissionRate)
+			if commissionRate != "" {
+				rate, err := sdk.NewDecFromStr(commissionRate)
+				if err != nil {
+					return fmt.Errorf("invalid new commission rate: %v", err)
+				}
+
+				newRate = &rate
+			}
+
+			msg := stake.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
 
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
+
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
 	cmd.Flags().AddFlagSet(fsDescriptionEdit)
+	cmd.Flags().AddFlagSet(fsCommissionUpdate)
 
 	return cmd
 }
@@ -165,7 +193,7 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -237,7 +265,7 @@ func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -245,54 +273,6 @@ func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(fsRedelegation)
 
 	return cmd
-}
-
-// nolint: gocyclo
-// TODO: Make this pass gocyclo linting
-func getShares(
-	storeName string, cdc *codec.Codec, sharesAmountStr,
-	sharesPercentStr string, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-) (sharesAmount sdk.Dec, err error) {
-	switch {
-	case sharesAmountStr != "" && sharesPercentStr != "":
-		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
-	case sharesAmountStr == "" && sharesPercentStr == "":
-		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
-	case sharesAmountStr != "":
-		sharesAmount, err = sdk.NewDecFromStr(sharesAmountStr)
-		if err != nil {
-			return sharesAmount, err
-		}
-		if !sharesAmount.GT(sdk.ZeroDec()) {
-			return sharesAmount, errors.Errorf("shares amount must be positive number (ex. 123, 1.23456789)")
-		}
-	case sharesPercentStr != "":
-		var sharesPercent sdk.Dec
-		sharesPercent, err = sdk.NewDecFromStr(sharesPercentStr)
-		if err != nil {
-			return sharesAmount, err
-		}
-		if !sharesPercent.GT(sdk.ZeroDec()) || !sharesPercent.LTE(sdk.OneDec()) {
-			return sharesAmount, errors.Errorf("shares percent must be >0 and <=1 (ex. 0.01, 0.75, 1)")
-		}
-
-		// make a query to get the existing delegation shares
-		key := stake.GetDelegationKey(delAddr, valAddr)
-		cliCtx := context.NewCLIContext().
-			WithCodec(cdc).
-			WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
-
-		resQuery, err := cliCtx.QueryStore(key, storeName)
-		if err != nil {
-			return sharesAmount, errors.Errorf("cannot find delegation to determine percent Error: %v", err)
-		}
-		delegation, err := types.UnmarshalDelegation(cdc, key, resQuery)
-		if err != nil {
-			return sdk.ZeroDec(), err
-		}
-		sharesAmount = sharesPercent.Mul(delegation.Shares)
-	}
-	return
 }
 
 // GetCmdCompleteRedelegate implements the complete redelegation command.
@@ -328,7 +308,7 @@ func GetCmdCompleteRedelegate(cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -392,7 +372,7 @@ func GetCmdBeginUnbonding(storeName string, cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -430,7 +410,7 @@ func GetCmdCompleteUnbonding(cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

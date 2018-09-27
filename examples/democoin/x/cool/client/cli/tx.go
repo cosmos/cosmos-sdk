@@ -34,7 +34,7 @@ func QuizTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			msg := cool.NewMsgQuiz(from, args[0])
 
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }
@@ -59,7 +59,7 @@ func SetTrendTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			msg := cool.NewMsgSetTrend(from, args[0])
 
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }

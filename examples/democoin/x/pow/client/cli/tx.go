@@ -53,7 +53,7 @@ func MineCmd(cdc *codec.Codec) *cobra.Command {
 
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }

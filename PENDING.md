@@ -18,6 +18,8 @@ BREAKING CHANGES
     utilize a validator's operator address must now use the new Bech32 prefix,
     `cosmosvaloper`.
     * [cli] [\#2190](https://github.com/cosmos/cosmos-sdk/issues/2190) `gaiacli init --gen-txs` is now `gaiacli init --with-txs` to reduce confusion
+    * [cli] \#2073 --from can now be either an address or a key name
+    * [cli] [\#1184](https://github.com/cosmos/cosmos-sdk/issues/1184) Subcommands reorganisation, see [\#2390](https://github.com/cosmos/cosmos-sdk/pull/2390) for a comprehensive list of changes.
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
@@ -36,14 +38,17 @@ BREAKING CHANGES
       * `cosmosvaladdr` / `cosmosvalpub` => `cosmosvaloper` / `cosmosvaloperpub`
     * [x/stake] [#1013] TendermintUpdates now uses transient store
     * [x/gov] [#2195] Governance uses BFT Time
+    * [x/gov] \#2256 Removed slashing for governance non-voting validators
     
 * SDK
     * [core] [\#1807](https://github.com/cosmos/cosmos-sdk/issues/1807) Switch from use of rational to decimal
     * [types] [\#1901](https://github.com/cosmos/cosmos-sdk/issues/1901) Validator interface's GetOwner() renamed to GetOperator()
     * [x/slashing] [#2122](https://github.com/cosmos/cosmos-sdk/pull/2122) - Implement slashing period
-    * [types] [\#2119](https://github.com/cosmos/cosmos-sdk/issues/2119) Parsed error messages and ABCI log errors to make them more human readable.
+    * [types] [\#2119](https://github.com/cosmos/cosmos-sdk/issues/2119) Parsed error messages and ABCI log errors to make     them more human readable.
+    * [types] \#2407 MulInt method added to big decimal in order to improve efficiency of slashing
     * [simulation] Rename TestAndRunTx to Operation [#2153](https://github.com/cosmos/cosmos-sdk/pull/2153)
     * [simulation] Remove log and testing.TB from Operation and Invariants, in favor of using errors \#2282
+    * [simulation] Remove usage of keys and addrs in the types, in favor of simulation.Account \#2384
     * [tools] Removed gocyclo [#2211](https://github.com/cosmos/cosmos-sdk/issues/2211)
     * [baseapp] Remove `SetTxDecoder` in favor of requiring the decoder be set in baseapp initialization. [#1441](https://github.com/cosmos/cosmos-sdk/issues/1441)
     * [baseapp] [\#1921](https://github.com/cosmos/cosmos-sdk/issues/1921) Add minimumFees field to BaseApp.
@@ -51,6 +56,9 @@ BREAKING CHANGES
     * [codec] \#2324 All referrences to wire have been renamed to codec. Additionally, wire.NewCodec is now codec.New().
     * [types] \#2343 Make sdk.Msg have a names field, to facilitate automatic tagging.
     * [baseapp] \#2366 Automatically add action tags to all messages
+    * [x/auth] \#2377 auth.StdSignMsg -> txbuilder.StdSignMsg
+    * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
+    * [x/staking] \#2236 more distribution hooks for distribution
 
 * Tendermint
 
@@ -76,9 +84,13 @@ FEATURES
     * [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add --generate-only flag to build an unsigned transaction and write it to STDOUT.
     * [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) New `sign` command to sign transactions generated with the --generate-only flag.
     * [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) New `broadcast` command to broadcast transactions generated offline and signed with the `sign` command.
+  * [cli] \#2220 Add `gaiacli config` feature to interactively create CLI config files to reduce the number of required flags
+  * [stake][cli] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Introduced
+  new commission flags for validator commands `create-validator` and `edit-validator`.
 
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
+  * [simulation] #2313 Reworked `make test_sim_gaia_slow` to `make test_sim_gaia_full`, now simulates from multiple starting seeds in parallel
   * [cli] [\#1921] (https://github.com/cosmos/cosmos-sdk/issues/1921)
     * New configuration file `gaiad.toml` is now created to host Gaia-specific configuration.
     * New --minimum_fees/minimum_fees flag/config option to set a minimum fee.
@@ -88,6 +100,9 @@ FEATURES
   * [simulation] [\#1924](https://github.com/cosmos/cosmos-sdk/issues/1924) allow operations to specify future operations
   * [simulation] [\#1924](https://github.com/cosmos/cosmos-sdk/issues/1924) Add benchmarking capabilities, with makefile commands "test_sim_gaia_benchmark, test_sim_gaia_profile"
   * [simulation] [\#2349](https://github.com/cosmos/cosmos-sdk/issues/2349) Add time-based future scheduled operations to simulator
+  * [x/auth] \#2376 Remove FeePayer() from StdTx
+  * [x/stake] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Implement
+  basis for the validator commission model.
 
 * Tendermint
 
@@ -124,6 +139,11 @@ IMPROVEMENTS
     * [simulation] Logs get written to file if large, and also get printed on panics \#2285
     * [gaiad] \#1992 Add optional flag to `gaiad testnet` to make config directory of daemon (default `gaiad`) and cli (default `gaiacli`) configurable
     * [x/stake] Add stake `Queriers` for Gaia-lite endpoints. This increases the staking endpoints performance by reusing the staking `keeper` logic for queries. [#2249](https://github.com/cosmos/cosmos-sdk/pull/2149)
+    * [store] [\#2017](https://github.com/cosmos/cosmos-sdk/issues/2017) Refactor
+    gas iterator gas consumption to only consume gas for iterator creation and `Next`
+    calls which includes dynamic consumption of value length.
+    * [types/decimal] \#2378 - Added truncate functionality to decimal
+    * [client] [\#1184](https://github.com/cosmos/cosmos-sdk/issues/1184) Remove unused `client/tx/sign.go`.
 
 * Tendermint
 
@@ -146,5 +166,6 @@ BUG FIXES
     loading a Ledger device at runtime.
     * [\#2158](https://github.com/cosmos/cosmos-sdk/issues/2158) Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
     * [simulation] \#1924 Make simulation stop on SIGTERM
+    * [\#2388](https://github.com/cosmos/cosmos-sdk/issues/2388) Remove dependency on deprecated tendermint/tmlibs repository.
 
 * Tendermint

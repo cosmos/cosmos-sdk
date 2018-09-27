@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -38,8 +37,8 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		panic(err)
 	}
 
-	appStateFn := func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
-		mock.RandomSetGenesis(r, mapp, accs, []string{"stake"})
+	appStateFn := func(r *rand.Rand, accs []simulation.Account) json.RawMessage {
+		simulation.RandomSetGenesis(r, mapp, accs, []string{"stake"})
 		return json.RawMessage("{}")
 	}
 

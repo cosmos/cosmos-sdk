@@ -18,19 +18,18 @@ import (
 // SimulateSingleInputMsgSend tests and runs a single msg send, with one input and one output, where both
 // accounts already exist.
 func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
-		fromKey := simulation.RandomKey(r, keys)
-		fromAddr := sdk.AccAddress(fromKey.PubKey().Address())
-		toKey := simulation.RandomKey(r, keys)
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+		fromAcc := simulation.RandomAcc(r, accs)
+		toAcc := simulation.RandomAcc(r, accs)
 		// Disallow sending money to yourself
 		for {
-			if !fromKey.Equals(toKey) {
+			if !fromAcc.PubKey.Equals(toAcc.PubKey) {
 				break
 			}
-			toKey = simulation.RandomKey(r, keys)
+			toAcc = simulation.RandomAcc(r, accs)
 		}
-		toAddr := sdk.AccAddress(toKey.PubKey().Address())
-		initFromCoins := mapper.GetAccount(ctx, fromAddr).GetCoins()
+		toAddr := toAcc.Address
+		initFromCoins := mapper.GetAccount(ctx, fromAcc.Address).GetCoins()
 
 		if len(initFromCoins) == 0 {
 			return "skipping, no coins at all", nil, nil
@@ -43,7 +42,7 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 		}
 
 		action = fmt.Sprintf("%s is sending %s %s to %s",
-			fromAddr.String(),
+			fromAcc.Address.String(),
 			amt.String(),
 			initFromCoins[denomIndex].Denom,
 			toAddr.String(),
@@ -51,10 +50,10 @@ func SimulateSingleInputMsgSend(mapper auth.AccountMapper) simulation.Operation 
 
 		coins := sdk.Coins{{initFromCoins[denomIndex].Denom, amt}}
 		var msg = bank.MsgSend{
-			Inputs:  []bank.Input{bank.NewInput(fromAddr, coins)},
+			Inputs:  []bank.Input{bank.NewInput(fromAcc.Address, coins)},
 			Outputs: []bank.Output{bank.NewOutput(toAddr, coins)},
 		}
-		goErr = sendAndVerifyMsgSend(app, mapper, msg, ctx, []crypto.PrivKey{fromKey})
+		goErr = sendAndVerifyMsgSend(app, mapper, msg, ctx, []crypto.PrivKey{fromAcc.PrivKey})
 		if goErr != nil {
 			return "", nil, goErr
 		}

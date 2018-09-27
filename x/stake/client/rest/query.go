@@ -120,7 +120,6 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 	}
 }
 
-// nolint gocyclo
 // HTTP request handler to query all staking txs (msgs) from a delegator
 func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

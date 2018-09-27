@@ -45,7 +45,7 @@ build-linux:
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 update_gaia_lite_docs:
-	@statik -src=client/lcd/swaggerui -dest=client/lcd
+	@statik -src=client/lcd/swagger-ui -dest=client/lcd
 
 build_cosmos-sdk-cli:
 ifeq ($(OS),Windows_NT)

@@ -47,8 +47,6 @@ var (
 	ValidatorsByConsAddrKey            = keeper.ValidatorsByConsAddrKey
 	ValidatorsBondedIndexKey           = keeper.ValidatorsBondedIndexKey
 	ValidatorsByPowerIndexKey          = keeper.ValidatorsByPowerIndexKey
-	ValidatorCliffIndexKey             = keeper.ValidatorCliffIndexKey
-	ValidatorPowerCliffKey             = keeper.ValidatorPowerCliffKey
 	DelegationKey                      = keeper.DelegationKey
 	IntraTxCounterKey                  = keeper.IntraTxCounterKey
 	GetUBDKey                          = keeper.GetUBDKey

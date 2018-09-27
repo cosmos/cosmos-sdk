@@ -18,17 +18,14 @@ var (
 	ValidatorsByConsAddrKey          = []byte{0x03} // prefix for each key to a validator index, by pubkey
 	ValidatorsBondedIndexKey         = []byte{0x04} // prefix for each key to a validator index, for bonded validators
 	ValidatorsByPowerIndexKey        = []byte{0x05} // prefix for each key to a validator index, sorted by power
-	ValidatorCliffIndexKey           = []byte{0x06} // key for the validator index of the cliff validator
-	ValidatorPowerCliffKey           = []byte{0x07} // key for the power of the validator on the cliff
-	IntraTxCounterKey                = []byte{0x08} // key for intra-block tx index
-	DelegationKey                    = []byte{0x09} // key for a delegation
-	UnbondingDelegationKey           = []byte{0x0A} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x0B} // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = []byte{0x0C} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x0D} // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by destination validator operator
-
-	// XXX remove this comment? Keys for store prefixes (transient)
+	IntraTxCounterKey                = []byte{0x06} // key for intra-block tx index
+	DelegationKey                    = []byte{0x07} // key for a delegation
+	UnbondingDelegationKey           = []byte{0x08} // key for an unbonding-delegation
+	UnbondingDelegationByValIndexKey = []byte{0x09} // prefix for each key for an unbonding-delegation, by validator operator
+	RedelegationKey                  = []byte{0x0A} // key for a redelegation
+	RedelegationByValSrcIndexKey     = []byte{0x0B} // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey     = []byte{0x0C} // prefix for each key for an redelegation, by destination validator operator
+	BondedValidatorsIndexKey         = []byte{0x0D} // prefix for each key to the bonded validator set
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -63,6 +60,11 @@ func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 func GetBondedValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	return getValidatorPowerRank(validator, pool)
+}
+
+// get the bonded validator index key for an operator address
+func GetBondedValidatorIndexKey(operator sdk.ValAddress) []byte {
+	return append(BondedValidatorsIndexKey, operator...)
 }
 
 // get the power ranking of a validator

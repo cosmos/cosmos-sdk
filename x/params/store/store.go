@@ -9,10 +9,12 @@ import (
 )
 
 // Individual parameter store for each keeper
+// Transient store persists for a block, so we use it for
+// recording whether the parameter has been changed or not
 type Store struct {
 	cdc  *codec.Codec
-	key  sdk.StoreKey
-	tkey sdk.StoreKey
+	key  sdk.StoreKey // []byte -> []byte, stores parameter
+	tkey sdk.StoreKey // []byte -> bool, stores parameter change
 
 	space []byte
 }

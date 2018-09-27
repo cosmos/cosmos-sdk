@@ -25,12 +25,17 @@ func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
 	return ctx
 }
 
-type s struct{}
+type invalid struct{}
+
+type s struct {
+	I int
+}
 
 func createTestCodec() *codec.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	cdc.RegisterConcrete(s{}, "test/s", nil)
+	cdc.RegisterConcrete(invalid{}, "test/invalid", nil)
 	return cdc
 }
 
@@ -53,32 +58,32 @@ func TestKeeper(t *testing.T) {
 	ctx := defaultContext(skey, tkey)
 	store := NewKeeper(codec.New(), skey, tkey).Substore("test")
 
-	for _, kv := range kvs {
-		require.NotPanics(t, func() { store.Set(ctx, kv.key, kv.param) })
+	for i, kv := range kvs {
+		require.NotPanics(t, func() { store.Set(ctx, kv.key, kv.param) }, "store.Set panics, tc #%d", i)
 	}
 
-	for _, kv := range kvs {
+	for i, kv := range kvs {
 		var param int64
-		require.NotPanics(t, func() { store.Get(ctx, kv.key, &param) })
-		require.Equal(t, kv.param, param)
+		require.NotPanics(t, func() { store.Get(ctx, kv.key, &param) }, "store.Get panics, tc #%d", i)
+		require.Equal(t, kv.param, param, "stored param not equal, tc #%d", i)
 	}
 
 	cdc := codec.New()
-	for _, kv := range kvs {
+	for i, kv := range kvs {
 		var param int64
 		bz := store.GetRaw(ctx, kv.key)
 		err := cdc.UnmarshalJSON(bz, &param)
-		require.Nil(t, err)
-		require.Equal(t, kv.param, param)
+		require.Nil(t, err, "err is not nil, tc #%d", i)
+		require.Equal(t, kv.param, param, "stored param not equal, tc #%d", i)
 	}
 
-	for _, kv := range kvs {
+	for i, kv := range kvs {
 		var param bool
-		require.Panics(t, func() { store.Get(ctx, kv.key, &param) })
+		require.Panics(t, func() { store.Get(ctx, kv.key, &param) }, "invalid store.Get not panics, tc #%d", i)
 	}
 
-	for _, kv := range kvs {
-		require.Panics(t, func() { store.Set(ctx, kv.key, true) })
+	for i, kv := range kvs {
+		require.Panics(t, func() { store.Set(ctx, kv.key, true) }, "invalid store.Set not panics, tc #%d", i)
 	}
 }
 
@@ -104,32 +109,33 @@ func TestGet(t *testing.T) {
 		{"uint16", uint16(1), uint16(0), new(uint16)},
 		{"uint32", uint32(1), uint32(0), new(uint32)},
 		{"uint64", uint64(1), uint64(0), new(uint64)},
-		/*
-			{NewKey("int"), sdk.NewInt(1), *new(sdk.Int), new(sdk.Int)},
-			{NewKey("uint"), sdk.NewUint(1), *new(sdk.Uint), new(sdk.Uint)},
-			{NewKey("dec"), sdk.NewDec(1), *new(sdk.Dec), new(sdk.Dec)},
-		*/
+		{"int", sdk.NewInt(1), *new(sdk.Int), new(sdk.Int)},
+		{"uint", sdk.NewUint(1), *new(sdk.Uint), new(sdk.Uint)},
+		{"dec", sdk.NewDec(1), *new(sdk.Dec), new(sdk.Dec)},
+		{"struct", s{1}, s{0}, new(s)},
 	}
 
-	for _, kv := range kvs {
-		require.NotPanics(t, func() { store.Set(ctx, kv.key, kv.param) })
+	for i, kv := range kvs {
+		require.False(t, store.Modified(ctx, kv.key), "store.Modified returns true before setting, tc #%d", i)
+		require.NotPanics(t, func() { store.Set(ctx, kv.key, kv.param) }, "store.Set panics, tc #%d", i)
+		require.True(t, store.Modified(ctx, kv.key), "store.Modified returns false after setting, tc #%d", i)
 	}
 
-	for _, kv := range kvs {
-		require.NotPanics(t, func() { store.GetIfExists(ctx, "invalid", kv.ptr) })
-		require.Equal(t, kv.zero, reflect.ValueOf(kv.ptr).Elem().Interface())
-		require.Panics(t, func() { store.Get(ctx, "invalid", kv.ptr) })
-		require.Equal(t, kv.zero, reflect.ValueOf(kv.ptr).Elem().Interface())
+	for i, kv := range kvs {
+		require.NotPanics(t, func() { store.GetIfExists(ctx, "invalid", kv.ptr) }, "store.GetIfExists panics when no value exists, tc #%d", i)
+		require.Equal(t, kv.zero, reflect.ValueOf(kv.ptr).Elem().Interface(), "store.GetIfExists unmarshalls when no value exists, tc #%d", i)
+		require.Panics(t, func() { store.Get(ctx, "invalid", kv.ptr) }, "invalid store.Get not panics when no value exists, tc #%d", i)
+		require.Equal(t, kv.zero, reflect.ValueOf(kv.ptr).Elem().Interface(), "invalid store.Get unmarshalls when no value exists, tc #%d", i)
 
-		require.NotPanics(t, func() { store.GetIfExists(ctx, kv.key, kv.ptr) })
-		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface())
-		require.NotPanics(t, func() { store.Get(ctx, kv.key, kv.ptr) })
-		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface())
+		require.NotPanics(t, func() { store.GetIfExists(ctx, kv.key, kv.ptr) }, "store.GetIfExists panics, tc #%d", i)
+		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface(), "stored param not equal, tc #%d", i)
+		require.NotPanics(t, func() { store.Get(ctx, kv.key, kv.ptr) }, "store.Get panics, tc #%d", i)
+		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface(), "stored param not equal, tc #%d", i)
 
-		require.Panics(t, func() { store.Get(ctx, "invalid", kv.ptr) })
-		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface())
+		require.Panics(t, func() { store.Get(ctx, "invalid", kv.ptr) }, "invalid store.Get not panics when no value exists, tc #%d", i)
+		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface(), "invalid store.Get unmarshalls when no value existt, tc #%d", i)
 
-		require.Panics(t, func() { store.Get(ctx, kv.key, nil) })
-		require.Panics(t, func() { store.Get(ctx, kv.key, new(s)) })
+		require.Panics(t, func() { store.Get(ctx, kv.key, nil) }, "invalid store.Get not panics when the pointer is nil, tc #%d", i)
+		require.Panics(t, func() { store.Get(ctx, kv.key, new(invalid)) }, "invalid store.Get not panics when the pointer is different type, tc #%d", i)
 	}
 }

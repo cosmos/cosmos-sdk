@@ -105,7 +105,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 
 			// Build and sign the transaction, then broadcast to Tendermint
@@ -186,7 +186,7 @@ func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 			}
 
 			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 
 			// Build and sign the transaction, then broadcast to a Tendermint
@@ -233,7 +233,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 			}
 
 			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 
 			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]",

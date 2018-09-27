@@ -19,9 +19,13 @@ const (
 // between accounts.
 type Keeper interface {
 	SendKeeper
+
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
+
+	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	DeductFees(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -94,6 +98,24 @@ func (keeper BaseKeeper) SendCoins(
 // for any address in the outputs, the contract of AddCoins applies.
 func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
 	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
+}
+
+// DelegateCoins implements the bank Keeper interface. It will remove coins from
+// an account.
+//
+// CONTRACT: Under the context of a vesting account, it will remove coins
+// without updating the tranferred amount.
+func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+	return delegateCoins(ctx, keeper.am, addr, amt)
+}
+
+// DeductFees implements the bank Keeper interface. It will deduct fees from a
+// given account.
+//
+// CONTRACT: Under the context of a vesting account, it it will remove vested
+// coins before subtracting vesting coins.
+func (keeper BaseKeeper) DeductFees(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+	return deductFees(ctx, keeper.am, addr, amt)
 }
 
 //_____________________________________________________________________________
@@ -317,8 +339,8 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, ou
 	return allTags, nil
 }
 
-// DelegateCoins will remove coins from account without updating tranfer. Thus,
-// delegateCoins will subtract vesting coins first before subtracting vested
+// delegateCoins will remove coins from account without updating the tranferred
+// amount. Thus, it will subtract vestING coins first before subtracting vestED
 // coins.
 func delegateCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
@@ -327,7 +349,7 @@ func delegateCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, 
 	newCoins := oldCoins.Minus(amt)
 
 	if !newCoins.IsNotNegative() {
-		return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+		return nil, sdk.ErrInsufficientCoins("insufficient balance to delegate")
 	}
 
 	err := setCoins(ctx, am, addr, newCoins)
@@ -336,7 +358,8 @@ func delegateCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, 
 	return tags, err
 }
 
-// DeductFees will remove vested coins before subtracting vesting coins.
+// deductFees will deduct fees from a given account. If the account is a vesting
+// account, it will remove vested coins before subtracting vesting coins.
 func deductFees(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 

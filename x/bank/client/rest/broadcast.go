@@ -10,19 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-const (
-	// Returns with the response from CheckTx.
-	flagSync  = "sync"
-	// Returns right away, with no response
-	flagAsync = "async"
-	// Only returns error if mempool.BroadcastTx errs (ie. problem with the app) or if we timeout waiting for tx to commit.
-	flagBlock = "block"
-)
-
-
 type broadcastBody struct {
 	Tx auth.StdTx `json:"tx"`
-	Return string `json:"return"`
 }
 
 // BroadcastTxRequestHandlerFn returns the broadcast tx REST handler
@@ -38,29 +27,9 @@ func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) ht
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		var res interface{}
-		switch m.Return {
-		case flagBlock:
-			res, err = cliCtx.BroadcastTx(txBytes)
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
-		case flagSync:
-			res, err = cliCtx.BroadcastTxSync(txBytes)
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
-		case flagAsync:
-			res, err = cliCtx.BroadcastTxAsync(txBytes)
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
-		default:
-			utils.WriteErrorResponse(w, http.StatusInternalServerError,
-				"Unsupported return type. Supported types: block, sync, async")
+		res, err := cliCtx.BroadcastTx(txBytes)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

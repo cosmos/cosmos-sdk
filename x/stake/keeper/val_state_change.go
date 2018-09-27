@@ -17,7 +17,7 @@ import (
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
 // are returned to Tendermint.
-func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
+func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate) {
 
 	// REF CODE
 	//// add to accumulated changes for tendermint

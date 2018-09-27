@@ -101,12 +101,25 @@ type DelegationSet interface {
 		fn func(index int64, delegation Delegation) (stop bool))
 }
 
-// validator event hooks
-// These can be utilized to communicate between a staking keeper
-// and another keeper which must take particular actions when
-// validators are bonded and unbonded. The second keeper must implement
-// this interface, which then the staking keeper can call.
-type ValidatorHooks interface {
+//_______________________________________________________________________________
+// Event Hooks
+// These can be utilized to communicate between a staking keeper and another
+// keeper which must take particular actions when validators/delegators change
+// state. The second keeper must implement this interface, which then the
+// staking keeper can call.
+
+// TODO refactor event hooks out to the receiver modules
+
+// event hooks for staking validator object
+type StakingHooks interface {
+	OnValidatorCreated(ctx Context, address ValAddress)          // Must be called when a validator is created
+	OnValidatorCommissionChange(ctx Context, address ValAddress) // Must be called when a validator's commission is modified
+	OnValidatorRemoved(ctx Context, address ValAddress)          // Must be called when a validator is deleted
+
 	OnValidatorBonded(ctx Context, address ConsAddress)         // Must be called when a validator is bonded
 	OnValidatorBeginUnbonding(ctx Context, address ConsAddress) // Must be called when a validator begins unbonding
+
+	OnDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is created
+	OnDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified
+	OnDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is removed
 }

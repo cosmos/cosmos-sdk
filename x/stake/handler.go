@@ -98,6 +98,10 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return err.Result()
 	}
 
+	k.OnValidatorCreated(ctx, validator.OperatorAddr)
+	accAddr := sdk.AccAddress(validator.OperatorAddr)
+	k.OnDelegationCreated(ctx, accAddr, validator.OperatorAddr)
+
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionCreateValidator,
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
@@ -165,6 +169,9 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	if err != nil {
 		return err.Result()
 	}
+
+	// call the hook if present
+	k.OnDelegationCreated(ctx, msg.DelegatorAddr, validator.OperatorAddr)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionDelegate,

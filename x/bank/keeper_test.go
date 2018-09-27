@@ -331,42 +331,48 @@ func TestDelayTransferSend(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
-	dtacc := auth.NewDelayTransferAccount(addr1, sdk.Coins{{"steak", sdk.NewInt(100)}}, time.Unix(1000, 0))
+	dtacc := auth.NewDelayTransferAccount(
+		addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(100))}, time.Unix(1000, 0),
+	)
 	accountMapper.SetAccount(ctx, &dtacc)
 
 	acc := auth.NewBaseAccountWithAddress(addr2)
-	acc.SetCoins(sdk.Coins{{"steak", sdk.NewInt(50)}})
+	acc.SetCoins(sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(50))})
 	accountMapper.SetAccount(ctx, &acc)
 
-	// Send coins before EndTime fails
-	_, err := coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(1)}})
+	// send coins before EndTime fails
+	_, err := coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(1))})
+	require.NotNil(t, err, "expected keeper to fail sending locked coins")
+	require.Equal(t, sdk.CodeType(10), err.Code(), "failed error with insufficient coins")
 
-	require.NotNil(t, err, "Keeper did not error trying to send locked coins")
-	require.Equal(t, sdk.CodeType(10), err.Code(), "Did not error with insufficient coins")
-
-	// Receive coins
-	coinKeeper.SendCoins(ctx, addr2, addr1, sdk.Coins{{"steak", sdk.NewInt(50)}})
+	// receive coins
+	coinKeeper.SendCoins(ctx, addr2, addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(50))})
 
 	recoverAcc := accountMapper.GetAccount(ctx, addr1).(*auth.DelayTransferAccount)
-	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(50)}}, recoverAcc.TransferredCoins, "Transferred coins did not update correctly")
+	require.Equal(t, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(50))},
+		recoverAcc.TransferredCoins, "expected transferred coins to update correctly",
+	)
 
-	// Spend some of Received Coins
-	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(25)}})
+	// spend some of received Coins
+	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(25))})
 
 	recoverAcc = accountMapper.GetAccount(ctx, addr1).(*auth.DelayTransferAccount)
-	require.Nil(t, err, "Keeper errorred on valid spend")
-	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(25)}}, recoverAcc.TransferredCoins, "Transferred coins did not update correctly")
+	require.Nil(t, err, "expected keeper to allow valid send")
+	require.Equal(
+		t, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(25))},
+		recoverAcc.TransferredCoins, "expected transferred coins to update correctly",
+	)
 
-	// Fast-forward to EndTime
+	// fast-forward to EndTime
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1000, 0)})
 
-	// Spend all unlocked coins
-	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{{"steak", sdk.NewInt(125)}})
+	// spend all unlocked coins
+	_, err = coinKeeper.SendCoins(ctx, addr1, addr2, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(125))})
 
 	recoverAcc = accountMapper.GetAccount(ctx, addr1).(*auth.DelayTransferAccount)
-	require.Nil(t, err, "Keeper errorred on valid spend")
-	require.Equal(t, sdk.Coins(nil), recoverAcc.GetCoins(), "SendableCoins is incorrect")
-	require.False(t, recoverAcc.IsVesting(ctx.BlockHeader().Time), "Account still vesting after EndTime")
+	require.Nil(t, err, "expected keeper to allow valid send")
+	require.Equal(t, sdk.Coins(nil), recoverAcc.GetCoins(), "invalid amount of sendable coins")
+	require.False(t, recoverAcc.IsVesting(ctx.BlockHeader().Time), "account should not still be vesting after EndTime")
 }
 
 func TestDelayTransferInputOutput(t *testing.T) {
@@ -384,26 +390,35 @@ func TestDelayTransferInputOutput(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
-	vacc := auth.NewDelayTransferAccount(addr1, sdk.Coins{{"steak", sdk.NewInt(100)}}, time.Unix(1000, 0))
+	vacc := auth.NewDelayTransferAccount(
+		addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(100))}, time.Unix(1000, 0),
+	)
 	accountMapper.SetAccount(ctx, &vacc)
 
 	acc := auth.NewBaseAccountWithAddress(addr2)
-	acc.SetCoins(sdk.Coins{{"steak", sdk.NewInt(50)}})
+	acc.SetCoins(sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(50))})
 	accountMapper.SetAccount(ctx, &acc)
 
-	// Transfer coins to delay transfer account
-	coinKeeper.SendCoins(ctx, addr2, addr1, sdk.Coins{{"steak", sdk.NewInt(50)}})
+	// transfer coins to delay transfer account
+	coinKeeper.SendCoins(ctx, addr2, addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(50))})
 
-	// Send some coins back to self to check if transferredCoins updates correctly
-	inputs := []Input{{addr1, sdk.Coins{{"steak", sdk.NewInt(50)}}}}
-	outputs := []Output{{addr1, sdk.Coins{{"steak", sdk.NewInt(20)}}}, {addr2, sdk.Coins{{"steak", sdk.NewInt(30)}}}}
+	// send some coins back to self to check if transferredCoins updates correctly
+	inputs := []Input{
+		{addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(50))}},
+	}
+	outputs := []Output{
+		{addr1, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(20))}},
+		{addr2, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(30))}},
+	}
+
 	_, err := coinKeeper.InputOutputCoins(ctx, inputs, outputs)
-
 	require.Nil(t, err, "InputOutput failed on valid vested spend")
 
 	recoverAcc := accountMapper.GetAccount(ctx, addr1).(*auth.DelayTransferAccount)
-
-	require.Equal(t, sdk.Coins{{"steak", sdk.NewInt(20)}}, recoverAcc.TransferredCoins, "Transferred coins did not update correctly")
+	require.Equal(
+		t, sdk.Coins{sdk.NewCoin("steak", sdk.NewInt(20))},
+		recoverAcc.TransferredCoins, "expected transferred coins to update correctly",
+	)
 }
 
 func TestSubtractVestingFull(t *testing.T) {

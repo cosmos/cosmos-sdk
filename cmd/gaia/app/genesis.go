@@ -145,7 +145,7 @@ func GaiaAppGenTxNF(cdc *codec.Codec, pk crypto.PubKey, addr sdk.AccAddress, nam
 		Address: addr,
 		PubKey:  sdk.MustBech32ifyConsPub(pk),
 	}
-	bz, err = cdc.MarshalJSON(gaiaGenTx)
+	bz, err = codec.MarshalJSONIndent(cdc, gaiaGenTx)
 	if err != nil {
 		return
 	}

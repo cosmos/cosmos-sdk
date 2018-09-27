@@ -20,7 +20,8 @@ a private website repository has make targets consumed by a standard Jenkins tas
 ## README
 
 The [README.md](./README.md) is also the landing page for the documentation
-on the website.
+on the website. During the Jenkins build, the current commit is added to the bottom
+of the README.
 
 ## Config.js
 

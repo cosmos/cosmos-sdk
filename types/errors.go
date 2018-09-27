@@ -231,7 +231,11 @@ func (err *sdkError) TraceSDK(format string, args ...interface{}) Error {
 
 // Implements ABCIError.
 func (err *sdkError) Error() string {
-	return err.cmnError.Error()
+	return fmt.Sprintf(`ERROR:
+Codespace: %d
+Code: %d
+Message: %#v
+`, err.codespace, err.code, err.cmnError.Error())
 }
 
 // Implements ABCIError.

@@ -19,6 +19,53 @@ import (
 // are returned to Tendermint.
 func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate) {
 
+	var last map[string]interface{}
+
+	store := ctx.KVStore(k.storeKey)
+	maxValidators := k.GetParams(ctx).MaxValidators
+
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
+	count := 0
+	for ; iterator.Valid() && count < int(maxValidators); iterator.Next() {
+
+		// fetch the validator
+		operator := sdk.ValAddress(iterator.Value())
+		validator := k.mustGetValidator(ctx, operator)
+
+		// jailed validators are ranked last, so if we get to a jailed validator
+		// we have no more bonded validators
+		if validator.Jailed {
+			break
+		}
+
+		// apply the appropriate state change if necessary
+		switch validator.Status {
+		case sdk.Unbonded:
+			k.unbondedToBonded(ctx, validator)
+		case sdk.Unbonding:
+			k.unbondingToBonded(ctx, validator)
+		case sdk.Bonded:
+			// no state change
+		}
+
+		// update the validator (power might have changed)
+		updates = append(updates, validator.ABCIValidatorUpdate())
+
+		// validator still in the validator set
+		delete(last, string(operator))
+
+		// keep count
+		count++
+
+	}
+
+	// any validators left in `last` are no longer bonded
+	for operator, _ := range last {
+		validator := k.mustGetValidator(ctx, []byte(operator))
+		k.bondedToUnbonding(ctx, validator)
+		updates = append(updates, validator.ABCIValidatorUpdateZero())
+	}
+
 	// REF CODE
 	//// add to accumulated changes for tendermint
 	//bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())

@@ -18,10 +18,18 @@ type GenesisMsg struct {
 }
 
 //nolint
-func (msg GenesisMsg) Type() string             { return "server" }
-func (msg GenesisMsg) Name() string             { return "genesis" }
-func (msg GenesisMsg) ValidateBasic() sdk.Error { return nil }
-func (msg GenesisMsg) GetSignBytes() []byte     { return sdk.MustSortJSON(mustMarshalJSON(msg)) }
+func (msg GenesisMsg) Type() string { return "server" }
+func (msg GenesisMsg) Name() string { return "genesis" }
+func (msg GenesisMsg) ValidateBasic() sdk.Error {
+	if len(msg.NodeID) == 0 {
+		return sdk.ErrInvalidNode("Node couldn't be empty")
+	}
+	if len(msg.IP) == 0 {
+		return sdk.ErrInvalidIP("IP address couldn't be empty")
+	}
+	return nil
+}
+func (msg GenesisMsg) GetSignBytes() []byte { return sdk.MustSortJSON(mustMarshalJSON(msg)) }
 
 //nolint
 func (msg GenesisMsg) GetSigners() []sdk.AccAddress {

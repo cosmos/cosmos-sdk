@@ -44,13 +44,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.SetDelegation(ctx, bond)
 	}
 
-	//keeper.UpdateBondedValidatorsFull(ctx) // XXX TODO must calculate the genesis validator set
-
-	vals := keeper.GetValidatorsBonded(ctx)
-	res = make([]abci.Validator, len(vals))
-	for i, val := range vals {
-		res[i] = sdk.ABCIValidator(val)
-	}
+	res = keeper.GetTendermintUpdates(ctx)
 	return
 }
 

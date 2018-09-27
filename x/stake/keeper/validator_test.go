@@ -27,7 +27,7 @@ func clearTendermintUpdates(ctx sdk.Context, k Keeper) {
 
 func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
 	store := ctx.KVStore(k.storeKey)
-	return store.Get(power) != nil
+	return store.Has(power)
 }
 
 //_______________________________________________________

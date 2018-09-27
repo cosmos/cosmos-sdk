@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,10 +21,13 @@ import (
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"os"
 )
 
 const ctxAccStoreName = "acc"
+
+var (
+	verifier tmlite.Verifier
+)
 
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
@@ -60,6 +65,11 @@ func NewCLIContext() CLIContext {
 	from := viper.GetString(client.FlagFrom)
 	fromAddress, fromName := fromFields(from)
 
+	// We need to use a single verifier for all contexts
+	if verifier == nil {
+		verifier = createVerifier()
+	}
+
 	return CLIContext{
 		Client:        rpc,
 		NodeURI:       nodeURI,
@@ -71,7 +81,7 @@ func NewCLIContext() CLIContext {
 		Async:         viper.GetBool(client.FlagAsync),
 		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
-		Verifier:      createVerifier(),
+		Verifier:      verifier,
 		DryRun:        viper.GetBool(client.FlagDryRun),
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
 		fromAddress:   fromAddress,
@@ -109,8 +119,7 @@ func createVerifier() tmlite.Verifier {
 		os.Exit(1)
 	}
 	node := rpcclient.NewHTTP(nodeURI, "/websocket")
-	// TODO Utilize ctx.Logger correctly
-	verifier, err := tmliteProxy.NewVerifier(chainID, home, node, log.NewNopLogger())
+	verifier, err := tmliteProxy.NewVerifier(chainID, filepath.Join(home, ".gaialite"), node, log.NewNopLogger())
 
 	if err != nil {
 		fmt.Printf("Create verifier failed: %s\n", err.Error())

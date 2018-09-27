@@ -387,12 +387,12 @@ func TestIAVLStoreQuery(t *testing.T) {
 	ksub := []byte("key")
 	KVs0 := []KVPair{}
 	KVs1 := []KVPair{
-		{k1, v1},
-		{k2, v2},
+		{Key: k1, Value: v1},
+		{Key: k2, Value: v2},
 	}
 	KVs2 := []KVPair{
-		{k1, v3},
-		{k2, v2},
+		{Key: k1, Value: v3},
+		{Key: k2, Value: v2},
 	}
 	valExpSubEmpty := cdc.MustMarshalBinary(KVs0)
 	valExpSub1 := cdc.MustMarshalBinary(KVs1)

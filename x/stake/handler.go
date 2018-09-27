@@ -36,7 +36,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.ValidatorUpdate) {
 	pool := k.GetPool(ctx)
 
 	// Process provision inflation

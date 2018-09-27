@@ -8,8 +8,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
@@ -90,20 +90,19 @@ func TestBaseAccountMarshal(t *testing.T) {
 	require.Nil(t, err)
 
 	// need a codec for marshaling
-	codec := wire.NewCodec()
-	wire.RegisterCrypto(codec)
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
 
-	b, err := codec.MarshalBinary(acc)
+	b, err := cdc.MarshalBinary(acc)
 	require.Nil(t, err)
 
 	acc2 := BaseAccount{}
-	err = codec.UnmarshalBinary(b, &acc2)
+	err = cdc.UnmarshalBinary(b, &acc2)
 	require.Nil(t, err)
 	require.Equal(t, acc, acc2)
 
 	// error on bad bytes
 	acc2 = BaseAccount{}
-	err = codec.UnmarshalBinary(b[:len(b)/2], &acc2)
+	err = cdc.UnmarshalBinary(b[:len(b)/2], &acc2)
 	require.NotNil(t, err)
-
 }

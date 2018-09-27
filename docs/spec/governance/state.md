@@ -13,13 +13,13 @@ has to be created and the previous one rendered inactive.
 ```go
 type DepositProcedure struct {
   MinDeposit        sdk.Coins           //  Minimum deposit for a proposal to enter voting period. 
-  MaxDepositPeriod  int64               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
+  MaxDepositPeriod  time.Time               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
 }
 ```
 
 ```go
 type VotingProcedure struct {
-  VotingPeriod      int64               //  Length of the voting period. Initial value: 2 weeks
+  VotingPeriod      time.Time               //  Length of the voting period. Initial value: 2 weeks
 }
 ```
 
@@ -28,7 +28,6 @@ type TallyingProcedure struct {
   Threshold         sdk.Dec   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
   Veto              sdk.Dec   //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
   GovernancePenalty sdk.Dec             //  Penalty if validator does not vote
-  GracePeriod       int64               //  If validator entered validator set in this period of blocks before vote ended, governance penalty does not apply
 }
 ```
 
@@ -97,10 +96,10 @@ type Proposal struct {
   Type                  ProposalType        //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
   TotalDeposit          sdk.Coins           //  Current deposit on this proposal. Initial value is set at InitialDeposit
   Deposits              []Deposit           //  List of deposits on the proposal
-  SubmitBlock           int64               //  Height of the block where TxGovSubmitProposal was included
+  SubmitTime           time.Time               //  Time of the block where TxGovSubmitProposal was included
   Submitter             sdk.Address      //  Address of the submitter
   
-  VotingStartBlock      int64               //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+  VotingStartTime      time.Time               //  Time of the block where MinDeposit was reached. time.Time{} if MinDeposit is not reached
   CurrentStatus         ProposalStatus      //  Current status of the proposal
 
   YesVotes              sdk.Dec
@@ -137,7 +136,7 @@ For pseudocode purposes, here are the two function we will use to read or write 
 * `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the 
   `ProposalIDs` of proposals that reached `MinDeposit`. Each round, the oldest 
   element of `ProposalProcessingQueue` is checked during `BeginBlock` to see if
-  `CurrentBlock == VotingStartBlock + activeProcedure.VotingPeriod`. If it is, 
+  `CurrentTime == VotingStartTime + activeProcedure.VotingPeriod`. If it is, 
   then the application tallies the votes, compute the votes of each validator and checks if every validator in the valdiator set have voted
   and, if not, applies `GovernancePenalty`. If the proposal is accepted, deposits are refunded.
   After that proposal is ejected from `ProposalProcessingQueue` and the next element of the queue is evaluated. 
@@ -159,7 +158,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
     proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
     votingProcedure = load(GlobalParams, 'VotingProcedure')
 
-    if (CurrentBlock == proposal.VotingStartBlock + votingProcedure.VotingPeriod && proposal.CurrentStatus == ProposalStatusActive)
+    if (CurrentTime == proposal.VotingStartTime + votingProcedure.VotingPeriod && proposal.CurrentStatus == ProposalStatusActive)
 
     // End of voting period, tally
 
@@ -192,14 +191,10 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       tallyingProcedure = load(GlobalParams, 'TallyingProcedure')
 
-      // Slash validators that did not vote, or update tally if they voted
+      // Update tally if validator voted they voted
       for each validator in validators
-        if (validator.bondHeight < CurrentBlock - tallyingProcedure.GracePeriod)
-        // only slash if validator entered validator set before grace period
-          if (!tmpValMap(validator).HasVoted)
-            slash validator by tallyingProcedure.GovernancePenalty
-          else
-            proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
+        if tmpValMap(validator).HasVoted
+          proposal.updateTally(tmpValMap(validator).Vote, (validator.TotalShares - tmpValMap(validator).Minus))
 
 
 

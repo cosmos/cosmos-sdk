@@ -107,7 +107,6 @@ func updateProvisions(t *testing.T, pool Pool, params Params, hr int) (sdk.Dec, 
 }
 
 // Checks that The inflation will correctly increase or decrease after an update to the pool
-// nolint: gocyclo
 func checkInflation(t *testing.T, pool Pool, previousInflation, updatedInflation sdk.Dec, msg string) {
 	inflationChange := updatedInflation.Sub(previousInflation)
 

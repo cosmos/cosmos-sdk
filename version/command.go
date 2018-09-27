@@ -17,15 +17,10 @@ var (
 
 // return version of CLI/node and commit hash
 func GetVersion() string {
-	v := Version
-	if GitCommit != "" {
-		v = v + "-" + GitCommit
-	}
-	return v
+	return Version
 }
 
 // CMD
 func printVersion(cmd *cobra.Command, args []string) {
-	v := GetVersion()
-	fmt.Println(v)
+	fmt.Println(GetVersion())
 }

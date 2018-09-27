@@ -2,8 +2,8 @@ package server
 
 import (
 	"bytes"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/mock"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/stretchr/testify/require"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/libs/log"
@@ -18,7 +18,7 @@ func TestEmptyState(t *testing.T) {
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := NewContext(cfg, logger)
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	appInit := AppInit{
 		AppGenTx:    mock.AppGenTx,
 		AppGenState: mock.AppGenStateEmpty,

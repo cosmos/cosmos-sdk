@@ -34,7 +34,7 @@ See [testnets repo](https://github.com/cosmos/testnets).
 ## *June 13, 2018, 17:00 EST* - Gaia-6002 is making blocks!
 
 - Gaia-6002 is live and making blocks
-- Absent validators have been slashed and revoked 
+- Absent validators have been slashed and jailed 
 - Currently live with 17 validators
 
 ## *June 13, 2018, 4:30 EST* - New Testnet Gaia-6002

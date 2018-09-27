@@ -2,7 +2,7 @@
     "Linters": {
         "vet": "go tool vet -composites=false :PATH:LINE:MESSAGE"
    },
-    "Enable": ["golint", "vet", "ineffassign", "unparam", "unconvert", "misspell", "gocyclo"],
+    "Enable": ["golint", "vet", "ineffassign", "unparam", "unconvert", "misspell"],
     "Deadline": "500s",
     "Vendor": true,
     "Cyclo": 11

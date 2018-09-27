@@ -109,6 +109,8 @@ IMPROVEMENTS
   - [baseapp] Allow any alphanumeric character in route
   - [tools] Remove `rm -rf vendor/` from `make get_vendor_deps`
   - [x/auth] Recover ErrorOutOfGas panic in order to set sdk.Result attributes correctly
+  - [x/auth] \#2376 No longer runs any signature in a multi-msg, if any account/sequence number is wrong.
+  - [x/auth] \#2376 No longer charge gas for subtracting fees
   - [x/bank] Unit tests are now table-driven
   - [tests] Add tests to example apps in docs
   - [tests] Fixes ansible scripts to work with AWS too

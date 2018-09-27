@@ -2,14 +2,17 @@ package store
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/iavl"
 	cmn "github.com/tendermint/tendermint/libs/common"
-	"testing"
+	"github.com/tendermint/tendermint/libs/db"
 )
 
 func TestVerifyMultiStoreCommitInfo(t *testing.T) {
-	appHash, _ := hex.DecodeString("ebf3c1fb724d3458023c8fefef7b33add2fc1e84")
+	appHash, _ := hex.DecodeString("69959B1B4E68E0F7BD3551A50C8F849B81801AF2")
 
 	substoreRootHash, _ := hex.DecodeString("ea5d468431015c2cd6295e9a0bb1fc0e49033828")
 	storeName := "acc"
@@ -81,17 +84,17 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 	})
 
 	commitHash, err := VerifyMultiStoreCommitInfo(storeName, storeInfos, appHash)
-	assert.Nil(t, err)
-	assert.Equal(t, commitHash, substoreRootHash)
+	require.Nil(t, err)
+	require.Equal(t, commitHash, substoreRootHash)
 
 	appHash, _ = hex.DecodeString("29de216bf5e2531c688de36caaf024cd3bb09ee3")
 
 	_, err = VerifyMultiStoreCommitInfo(storeName, storeInfos, appHash)
-	assert.Error(t, err, "appHash doesn't match to the merkle root of multiStoreCommitInfo")
+	require.Error(t, err, "appHash doesn't match to the merkle root of multiStoreCommitInfo")
 }
 
 func TestVerifyRangeProof(t *testing.T) {
-	tree := iavl.NewTree(nil, 0)
+	tree := iavl.NewMutableTree(db.NewMemDB(), 0)
 
 	rand := cmn.NewRand()
 	rand.Seed(0) // for determinism
@@ -100,7 +103,7 @@ func TestVerifyRangeProof(t *testing.T) {
 		tree.Set(key, []byte(rand.Str(8)))
 	}
 
-	root := tree.Hash()
+	root := tree.WorkingHash()
 
 	key := []byte{0x32}
 	val, proof, err := tree.GetWithProof(key)

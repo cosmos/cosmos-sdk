@@ -28,7 +28,7 @@ Before getting in the bulk of the code, we will start by some introductory conte
     + [Types](module-types.md)
     + [Keeper](module-keeper.md)
     + [Handler](module-handler.md)
-    + [Wire](module-wire.md)
+    + [Wire](module-codec.md)
     + [Errors](module-errors.md)
     + Command-Line Interface and Rest API
         * [Command-Line Interface](module-cli.md)

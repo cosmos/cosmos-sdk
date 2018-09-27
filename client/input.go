@@ -24,7 +24,7 @@ func BufferStdin() *bufio.Reader {
 // It enforces the password length
 func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	if inputIsTty() {
-		pass, err = speakeasy.Ask(prompt)
+		pass, err = speakeasy.FAsk(os.Stderr, prompt)
 	} else {
 		pass, err = readLineFromBuf(buf)
 	}
@@ -100,6 +100,19 @@ func GetConfirmation(prompt string, buf *bufio.Reader) (bool, error) {
 	}
 }
 
+// GetString simply returns the trimmed string output of a given reader.
+func GetString(prompt string, buf *bufio.Reader) (string, error) {
+	if inputIsTty() && prompt != "" {
+		PrintPrefixed(prompt)
+	}
+
+	out, err := readLineFromBuf(buf)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(out), nil
+}
+
 // inputIsTty returns true iff we have an interactive prompt,
 // where we can disable echo and request to repeat the password.
 // If false, we can optimize for piped input from another command
@@ -116,4 +129,9 @@ func readLineFromBuf(buf *bufio.Reader) (string, error) {
 		return "", err
 	}
 	return strings.TrimSpace(pass), nil
+}
+
+// PrintPrefixed prints a string with > prefixed for use in prompts.
+func PrintPrefixed(msg string) {
+	fmt.Printf("> %s\n", msg)
 }

@@ -133,7 +133,7 @@ Now that we have a native model for accounts, it's time to introduce the native
 
 ```go
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
-// NOTE: the first signature is the FeePayer (Signatures must not be nil).
+// NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg"`
 	Fee        StdFee         `json:"fee"`
@@ -259,8 +259,7 @@ the same message could be executed over and over again.
 The PubKey is required for signature verification, but it is only required in
 the StdSignature once. From that point on, it will be stored in the account.
 
-The fee is paid by the first address returned by `msg.GetSigners()` for the first `Msg`, 
-as provided by the `FeePayer(tx Tx) sdk.AccAddress` function.
+The fee is paid by the first address returned by `msg.GetSigners()` for the first `Msg`.
 
 ## CoinKeeper
 
@@ -285,7 +284,7 @@ it can't increment sequence numbers, change PubKeys, or otherwise.
 A `bank.Keeper` is easily instantiated from an `AccountMapper`:
 
 ```go
-coinKeeper = bank.NewKeeper(accountMapper)
+bankKeeper = bank.NewBaseKeeper(accountMapper)
 ```
 
 We can then use it within a handler, instead of working directly with the
@@ -295,7 +294,7 @@ We can then use it within a handler, instead of working directly with the
 // Finds account with addr in AccountMapper.
 // Adds coins to account's coin array.
 // Sets updated account in AccountMapper
-app.coinKeeper.AddCoins(ctx, addr, coins)
+app.bankKeeper.AddCoins(ctx, addr, coins)
 ```
 
 See the [bank.Keeper API
@@ -336,7 +335,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 
 	// Set various mappers/keepers to interact easily with underlying stores
 	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
-	coinKeeper := bank.NewKeeper(accountMapper)
+	bankKeeper := bank.NewBaseKeeper(accountMapper)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
 	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
@@ -344,7 +343,7 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	// Register message routes.
 	// Note the handler gets access to
 	app.Router().
-		AddRoute("send", bank.NewHandler(coinKeeper))
+		AddRoute("send", bank.NewHandler(bankKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyFees)

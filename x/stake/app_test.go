@@ -20,28 +20,31 @@ var (
 	addr3 = sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	priv4 = ed25519.GenPrivKey()
 	addr4 = sdk.AccAddress(priv4.PubKey().Address())
-	coins = sdk.Coins{{"foocoin", sdk.NewInt(10)}}
-	fee   = auth.StdFee{
-		sdk.Coins{{"foocoin", sdk.NewInt(0)}},
+	coins = sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(10))}
+	fee   = auth.NewStdFee(
 		100000,
-	}
+		sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(0))}...,
+	)
+
+	commissionMsg = NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
 // getMockApp returns an initialized mock application for this module.
 func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	mApp := mock.NewApp()
 
-	RegisterWire(mApp.Cdc)
+	RegisterCodec(mApp.Cdc)
 
 	keyStake := sdk.NewKVStoreKey("stake")
-	coinKeeper := bank.NewKeeper(mApp.AccountMapper)
-	keeper := NewKeeper(mApp.Cdc, keyStake, coinKeeper, mApp.RegisterCodespace(DefaultCodespace))
+	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
+	bankKeeper := bank.NewBaseKeeper(mApp.AccountMapper)
+	keeper := NewKeeper(mApp.Cdc, keyStake, tkeyStake, bankKeeper, mApp.RegisterCodespace(DefaultCodespace))
 
 	mApp.Router().AddRoute("stake", NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper))
 
-	require.NoError(t, mApp.CompleteSetup([]*sdk.KVStoreKey{keyStake}))
+	require.NoError(t, mApp.CompleteSetup(keyStake, tkeyStake))
 	return mApp, keeper
 }
 
@@ -128,7 +131,7 @@ func TestStakeMsgs(t *testing.T) {
 	// create validator
 	description := NewDescription("foo_moniker", "", "", "")
 	createValidatorMsg := NewMsgCreateValidator(
-		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description,
+		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commissionMsg,
 	)
 
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, true, priv1)
@@ -136,13 +139,13 @@ func TestStakeMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)
-	require.Equal(t, sdk.ValAddress(addr1), validator.Operator)
+	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
 
 	// addr1 create validator on behalf of addr2
 	createValidatorMsgOnBehalfOf := NewMsgCreateValidatorOnBehalfOf(
-		addr1, sdk.ValAddress(addr2), priv2.PubKey(), bondCoin, description,
+		addr1, sdk.ValAddress(addr2), priv2.PubKey(), bondCoin, description, commissionMsg,
 	)
 
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{createValidatorMsgOnBehalfOf}, []int64{0, 1}, []int64{1, 0}, true, true, priv1, priv2)
@@ -150,7 +153,7 @@ func TestStakeMsgs(t *testing.T) {
 	mApp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr2), true)
-	require.Equal(t, sdk.ValAddress(addr2), validator.Operator)
+	require.Equal(t, sdk.ValAddress(addr2), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 
@@ -159,7 +162,7 @@ func TestStakeMsgs(t *testing.T) {
 
 	// edit the validator
 	description = NewDescription("bar_moniker", "", "", "")
-	editValidatorMsg := NewMsgEditValidator(sdk.ValAddress(addr1), description)
+	editValidatorMsg := NewMsgEditValidator(sdk.ValAddress(addr1), description, nil)
 
 	mock.SignCheckDeliver(t, mApp.BaseApp, []sdk.Msg{editValidatorMsg}, []int64{0}, []int64{2}, true, true, priv1)
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)

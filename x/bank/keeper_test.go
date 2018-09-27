@@ -443,8 +443,7 @@ func TestSubtractVestingFull(t *testing.T) {
 	coin := sdk.NewCoin(testCoinDenom, sdk.NewInt(100))
 	amt := sdk.Coins{coin}
 
-	// create a vesting account that started vesting enough time to deduct the full
-	// original vested amount
+	// create a vesting account that is fully vested
 	vAccStartTime := header.Time.Add(-72 * time.Hour)
 	vAccEndTime := header.Time
 	require.Equal(t, coin.Amount, getVestingTotal(coin, header.Time, vAccStartTime, vAccEndTime))
@@ -467,7 +466,7 @@ func TestSubtractVestingFull(t *testing.T) {
 	require.Equal(t, sdk.Coins(nil), res, "Coins did not update correctly")
 }
 
-func TestDelegateCoins(t *testing.T) {
+func TestDelegateCoinsNonVesting(t *testing.T) {
 	ms, authKey := setupMultiStore()
 	cdc := codec.New()
 
@@ -480,7 +479,6 @@ func TestDelegateCoins(t *testing.T) {
 	bankKeeper := NewBaseKeeper(accountMapper)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
-	addr2 := sdk.AccAddress([]byte("addr2"))
 
 	coin := sdk.NewCoin(testCoinDenom, sdk.NewInt(100))
 	amt := sdk.Coins{coin}
@@ -500,25 +498,147 @@ func TestDelegateCoins(t *testing.T) {
 		t, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(50))},
 		bankKeeper.GetCoins(ctx, addr1), "expected account balance to reflect delegation",
 	)
+}
 
-	vacc := auth.NewContinuousVestingAccount(addr2, amt, header.Time, header.Time)
+func TestDelegateCoinsVesting(t *testing.T) {
+	ms, authKey := setupMultiStore()
+	cdc := codec.New()
+
+	codec.RegisterCrypto(cdc)
+	auth.RegisterCodec(cdc)
+
+	header := abci.Header{Time: time.Now().UTC()}
+	ctx := sdk.NewContext(ms, header, false, log.NewNopLogger())
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := NewBaseKeeper(accountMapper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+
+	coin := sdk.NewCoin(testCoinDenom, sdk.NewInt(100))
+	amt := sdk.Coins{coin}
+
+	vacc := auth.NewContinuousVestingAccount(addr1, amt, header.Time, header.Time)
 	accountMapper.SetAccount(ctx, &vacc)
 	origTransferred := vacc.TransferredCoins
 
-	// require vesting account cannot delegate beyond their balance
-	_, err = bankKeeper.DelegateCoins(ctx, addr2, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(101))})
+	// require vesting account cannot delegate beyond their spendable balance
+	_, err := bankKeeper.DelegateCoins(ctx, addr1, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(101))})
 	require.Error(t, err, "expected delegation to fail due to lack of funds")
 
-	// require vesting account can delegate within their balance
-	_, err = bankKeeper.DelegateCoins(ctx, addr2, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(50))})
+	// require vesting account can delegate within their spendable balance
+	_, err = bankKeeper.DelegateCoins(ctx, addr1, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(50))})
 	require.NoError(t, err, "unexpected delegation failure")
 	require.Equal(
 		t, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(50))},
 		bankKeeper.GetCoins(ctx, addr1), "expected account balance to reflect delegation",
 	)
 
+	// require transferred coins have not changed
+	acc, ok := accountMapper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.True(t, ok)
+	require.Equal(t, origTransferred, acc.TransferredCoins, "expected vesting account tranferred coins to remain unchanged")
+}
+
+func TestDeductFeesNonVesting(t *testing.T) {
+	ms, authKey := setupMultiStore()
+	cdc := codec.New()
+
+	codec.RegisterCrypto(cdc)
+	auth.RegisterCodec(cdc)
+
+	header := abci.Header{Time: time.Now().UTC()}
+	ctx := sdk.NewContext(ms, header, false, log.NewNopLogger())
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := NewBaseKeeper(accountMapper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+
+	coin := sdk.NewCoin(testCoinDenom, sdk.NewInt(5))
+	amt := sdk.Coins{coin}
+
+	acc := accountMapper.NewAccountWithAddress(ctx, addr1)
+	accountMapper.SetAccount(ctx, acc)
+	bankKeeper.SetCoins(ctx, addr1, amt)
+
+	// require non-vesting account cannot pay for fees beyond their balance
+	_, err := bankKeeper.DeductFees(ctx, addr1, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(6))})
+	require.Error(t, err, "expected fee payment to fail due to lack of funds")
+
+	// require non-vesting account can pay for fees within their balance
+	_, err = bankKeeper.DeductFees(ctx, addr1, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(1))})
+	require.NoError(t, err, "unexpected fee deduction failure")
 	require.Equal(
-		t, origTransferred, vacc.TransferredCoins,
-		"expected vesting account tranferred coins to remain unchanged",
+		t, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(4))},
+		bankKeeper.GetCoins(ctx, addr1), "expected account balance to reflect fee deduction",
 	)
+}
+
+func TestDeductFeesVesting(t *testing.T) {
+	ms, authKey := setupMultiStore()
+	cdc := codec.New()
+
+	codec.RegisterCrypto(cdc)
+	auth.RegisterCodec(cdc)
+
+	header := abci.Header{Time: time.Now().UTC()}
+	ctx := sdk.NewContext(ms, header, false, log.NewNopLogger())
+	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := NewBaseKeeper(accountMapper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	addr3 := sdk.AccAddress([]byte("addr3"))
+
+	coin := sdk.NewCoin(testCoinDenom, sdk.NewInt(5))
+	amt := sdk.Coins{coin}
+
+	vacc := auth.NewContinuousVestingAccount(addr1, amt, header.Time, header.Time)
+	accountMapper.SetAccount(ctx, &vacc)
+
+	// require vesting account cannot pay for fees beyond their spendable balance
+	_, err := bankKeeper.DeductFees(ctx, addr1, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(6))})
+	require.Error(t, err, "expected fee payment to fail due to lack of funds")
+
+	vAccStartTime := header.Time.Add(-24 * time.Hour)
+	vAccEndTime := header.Time.Add(24 * time.Hour)
+
+	fee := sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(1))}
+	vacc = auth.NewContinuousVestingAccount(addr2, amt, vAccStartTime, vAccEndTime)
+	accountMapper.SetAccount(ctx, &vacc)
+
+	// require vesting account can pay for fees with their spendable balance
+	_, err = bankKeeper.DeductFees(ctx, addr2, fee)
+	require.NoError(t, err, "unexpected fee deduction failure")
+	require.Equal(
+		t, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(4))},
+		bankKeeper.GetCoins(ctx, addr2), "expected account balance to reflect fee deduction",
+	)
+
+	// require transferred coins are equal to the fee as the spendable coins are
+	// greater
+	acc, ok := accountMapper.GetAccount(ctx, addr2).(*auth.ContinuousVestingAccount)
+	require.True(t, ok)
+	require.Equal(t, fee, acc.TransferredCoins)
+
+	vAccStartTime = header.Time.Add(-1 * time.Hour)
+	vAccEndTime = header.Time.Add(1 * time.Hour)
+	vAmt := getVestingTotal(coin, header.Time, vAccStartTime, vAccEndTime)
+	fee = sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(3))}
+
+	vacc = auth.NewContinuousVestingAccount(addr3, amt, vAccStartTime, vAccEndTime)
+	accountMapper.SetAccount(ctx, &vacc)
+
+	// require vesting account can pay for fees with their spendable balance
+	_, err = bankKeeper.DeductFees(ctx, addr3, fee)
+	require.NoError(t, err, "unexpected fee deduction failure")
+	require.Equal(
+		t, sdk.Coins{sdk.NewCoin(testCoinDenom, sdk.NewInt(2))},
+		bankKeeper.GetCoins(ctx, addr3), "expected account balance to reflect fee deduction",
+	)
+
+	// require transferred coins are equal to the spendable coins as they are less
+	// than the fee
+	acc, ok = accountMapper.GetAccount(ctx, addr3).(*auth.ContinuousVestingAccount)
+	require.True(t, ok)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(testCoinDenom, vAmt)}, acc.TransferredCoins)
 }

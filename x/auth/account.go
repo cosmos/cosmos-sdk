@@ -138,10 +138,11 @@ type VestingAccount interface {
 // Implement Vesting Interface. Continuously vests coins linearly from StartTime until EndTime
 type ContinuousVestingAccount struct {
 	BaseAccount
-	OriginalVestingCoins sdk.Coins // Coins in account on Initialization
-	TransferredCoins     sdk.Coins // Net coins transferred into and out of account. May be negative
+	OriginalVestingCoins sdk.Coins // coins in account on Initialization
+	TransferredCoins     sdk.Coins // Net coins transferred into and out of account. May be negative.
 
-	// StartTime and EndTime used to calculate how much of OriginalCoins is unlocked at any given point
+	// StartTime and EndTime used to calculate how much of OriginalCoins is
+	// unlocked at any given point.
 	StartTime time.Time
 	EndTime   time.Time
 }

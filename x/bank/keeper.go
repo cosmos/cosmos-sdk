@@ -360,36 +360,37 @@ func delegateCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, 
 
 // deductFees will deduct fees from a given account. If the account is a vesting
 // account, it will remove vested coins before subtracting vesting coins.
-func deductFees(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+func deductFees(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, fees sdk.Coins) (sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := []sdk.Coin{}
 
-	for _, c := range amt {
+	for _, fee := range fees {
 		blockTime := ctx.BlockHeader().Time
 		vacc, ok := am.GetAccount(ctx, addr).(auth.VestingAccount)
 
 		if ok && vacc.IsVesting(blockTime) {
 			spendableCoins := vacc.SendableCoins(blockTime)
-			spendableAmount := spendableCoins.AmountOf(c.Denom)
+			spendableAmount := spendableCoins.AmountOf(fee.Denom)
 
-			if spendableAmount.GT(c.Amount) || spendableAmount.Equal(c.Amount) {
-				vacc.TrackTransfers([]sdk.Coin{c})
+			// TODO: utilize GTE
+			if spendableAmount.GT(fee.Amount) || spendableAmount.Equal(fee.Amount) {
+				vacc.TrackTransfers([]sdk.Coin{fee})
 			} else {
-				vacc.TrackTransfers([]sdk.Coin{sdk.NewCoin(c.Denom, spendableAmount)})
+				vacc.TrackTransfers([]sdk.Coin{sdk.NewCoin(fee.Denom, spendableAmount)})
 			}
 
 			am.SetAccount(ctx, vacc)
 		}
 
-		accountAmount := oldCoins.AmountOf(c.Denom)
-		if accountAmount.LT(c.Amount) {
-			return nil, sdk.ErrInsufficientCoins("not enough coins for fee")
+		accountAmount := oldCoins.AmountOf(fee.Denom)
+		if accountAmount.LT(fee.Amount) {
+			return nil, sdk.ErrInsufficientCoins("insufficient balance to pay fee")
 		}
 
-		if accountAmount.GT(c.Amount) {
-			newCoins = append(newCoins, sdk.NewCoin(c.Denom, accountAmount.Sub(c.Amount)))
+		if accountAmount.GT(fee.Amount) {
+			newCoins = append(newCoins, sdk.NewCoin(fee.Denom, accountAmount.Sub(fee.Amount)))
 		}
 	}
 

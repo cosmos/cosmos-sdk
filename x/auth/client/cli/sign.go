@@ -25,7 +25,7 @@ const (
 func GetSignCommand(codec *amino.Codec, decoder auth.AccountDecoder) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign <file>",
-		Short: "Sign transactions",
+		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
 Read a transaction from <file>, sign it, and print its JSON encoding.`,
 		RunE: makeSignCmd(codec, decoder),

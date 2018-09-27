@@ -23,7 +23,7 @@ NAME:	          TYPE:	  ADDRESS:						                                  PUBKEY:
 This key will only be accessible while the Ledger is plugged in and unlocked. To send some coins with this key, run the following:
 
 ```bash
-$ gaiacli send --from {{ .Key.Name }} --to {{ .Destination.AccAddr }} --chain-id=gaia-7000
+$ gaiacli tx send --from {{ .Key.Name }} --to {{ .Destination.AccAddr }} --chain-id=gaia-7000
 ```
 
 You will be asked to review and confirm the transaction on the Ledger. Once you do this you should see the result in the console! Now you can use your Ledger to manage your Atoms and Stake!

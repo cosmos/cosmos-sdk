@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -61,12 +60,12 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 
 		// Loose tokens should equal coin supply plus unbonding delegations plus tokens on unbonded validators
 		if pool.LooseTokens.RoundInt64() != loose.Int64() {
-			return errors.New(fmt.Sprintf("expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v", pool.LooseTokens.RoundInt64(), loose.Int64()))
+			return fmt.Errorf("expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v", pool.LooseTokens.RoundInt64(), loose.Int64())
 		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		if pool.BondedTokens.RoundInt64() != bonded.RoundInt64() {
-			return errors.New(fmt.Sprintf("expected bonded tokens to equal total steak held by bonded validators - pool.BondedTokens: %v, sum of bonded validator tokens: %v", pool.BondedTokens.RoundInt64(), bonded.RoundInt64()))
+			return fmt.Errorf("expected bonded tokens to equal total steak held by bonded validators - pool.BondedTokens: %v, sum of bonded validator tokens: %v", pool.BondedTokens.RoundInt64(), bonded.RoundInt64())
 		}
 
 		// TODO Inflation check on total supply

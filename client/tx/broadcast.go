@@ -1,37 +1,84 @@
 package tx
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"io/ioutil"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
-// Tx Broadcast Body
-type BroadcastTxBody struct {
+const (
+	// Returns with the response from CheckTx.
+	flagSync  = "sync"
+	// Returns right away, with no response
+	flagAsync = "async"
+	// Only returns error if mempool.BroadcastTx errs (ie. problem with the app) or if we timeout waiting for tx to commit.
+	flagBlock = "block"
+)
+
+// BroadcastBody Tx Broadcast Body
+type BroadcastBody struct {
 	TxBytes string `json:"tx"`
+	Return string `json:"return"`
 }
 
-// BroadcastTx REST Handler
-func BroadcastTxRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+// BroadcastTxRequest REST Handler
+// nolint: gocyclo
+func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var m BroadcastTxBody
-
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&m)
+		var m BroadcastBody
+		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			w.WriteHeader(400)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		err = cdc.UnmarshalJSON(body, &m)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		var output []byte
+		switch m.Return {
+		case flagBlock:
+			res, err := cliCtx.BroadcastTx([]byte(m.TxBytes))
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			output, err = cdc.MarshalJSON(res)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+		case flagSync:
+			res, err := cliCtx.BroadcastTxSync([]byte(m.TxBytes))
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			output, err = cdc.MarshalJSON(res)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+		case flagAsync:
+			res, err := cliCtx.BroadcastTxAsync([]byte(m.TxBytes))
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			output, err = cdc.MarshalJSON(res)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+		default:
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, "unsupported return type. supported types: block, sync, async")
 			return
 		}
 
-		res, err := cliCtx.BroadcastTxAndAwaitCommit([]byte(m.TxBytes))
-		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.Write([]byte(string(res.Height)))
+		w.Write(output)
 	}
 }

@@ -6,7 +6,7 @@ import (
 
 // Used for associating paramstore key and field of param structs
 type KeyFieldPair struct {
-	Key   string
+	Key   []byte
 	Field interface{}
 }
 
@@ -22,7 +22,7 @@ type ParamStruct interface {
 // unmarshalles it to ParamStruct
 func UnmarshalParamsFromMap(m map[string][]byte, cdc *codec.Codec, ps ParamStruct) error {
 	for _, p := range ps.KeyFieldPairs() {
-		err := cdc.UnmarshalJSON(m[p.Key], p.Field)
+		err := cdc.UnmarshalJSON(m[string(p.Key)], p.Field)
 		if err != nil {
 			return err
 		}

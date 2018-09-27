@@ -13,14 +13,14 @@ const (
 )
 
 // Parameter store key
-const (
-	KeyMaxEvidenceAge           = "MaxEvidenceAge"
-	KeySignedBlocksWindow       = "SignedBlocksWindow"
-	KeyMinSignedPerWindow       = "MinSignedPerWindow"
-	KeyDoubleSignUnbondDuration = "DoubleSignUnbondDuration"
-	KeyDowntimeUnbondDuration   = "DowntimeUnbondDuration"
-	KeySlashFractionDoubleSign  = "SlashFractionDoubleSign"
-	KeySlashFractionDowntime    = "SlashFractionDowntime"
+var (
+	KeyMaxEvidenceAge           = []byte("MaxEvidenceAge")
+	KeySignedBlocksWindow       = []byte("SignedBlocksWindow")
+	KeyMinSignedPerWindow       = []byte("MinSignedPerWindow")
+	KeyDoubleSignUnbondDuration = []byte("DoubleSignUnbondDuration")
+	KeyDowntimeUnbondDuration   = []byte("DowntimeUnbondDuration")
+	KeySlashFractionDoubleSign  = []byte("SlashFractionDoubleSign")
+	KeySlashFractionDowntime    = []byte("SlashFractionDowntime")
 )
 
 // Params - used for initializing default parameter for slashing at genesis

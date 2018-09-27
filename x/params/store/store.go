@@ -41,9 +41,9 @@ func (s Store) transientStore(ctx sdk.Context) sdk.KVStore {
 }
 
 // Get parameter from store
-func (s Store) Get(ctx sdk.Context, key string, ptr interface{}) {
+func (s Store) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
-	bz := store.Get([]byte(key))
+	bz := store.Get(key)
 	err := s.cdc.UnmarshalJSON(bz, ptr)
 	if err != nil {
 		panic(err)
@@ -51,9 +51,9 @@ func (s Store) Get(ctx sdk.Context, key string, ptr interface{}) {
 }
 
 // GetIfExists do not modify ptr if the stored parameter is nil
-func (s Store) GetIfExists(ctx sdk.Context, key string, ptr interface{}) {
+func (s Store) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
-	bz := store.Get([]byte(key))
+	bz := store.Get(key)
 	if bz == nil {
 		return
 	}
@@ -64,31 +64,30 @@ func (s Store) GetIfExists(ctx sdk.Context, key string, ptr interface{}) {
 }
 
 // Get raw bytes of parameter from store
-func (s Store) GetRaw(ctx sdk.Context, key string) []byte {
+func (s Store) GetRaw(ctx sdk.Context, key []byte) []byte {
 	store := s.kvStore(ctx)
-	res := store.Get([]byte(key))
+	res := store.Get(key)
 	return res
 }
 
 // Check if the parameter is set in the store
-func (s Store) Has(ctx sdk.Context, key string) bool {
+func (s Store) Has(ctx sdk.Context, key []byte) bool {
 	store := s.kvStore(ctx)
-	return store.Has([]byte(key))
+	return store.Has(key)
 }
 
 // Returns true if the parameter is set in the block
-func (s Store) Modified(ctx sdk.Context, key string) bool {
+func (s Store) Modified(ctx sdk.Context, key []byte) bool {
 	tstore := s.transientStore(ctx)
-	return tstore.Has([]byte(key))
+	return tstore.Has(key)
 }
 
 // Set parameter, return error if stored parameter has different type from input
 // Also set to the transient store to record change
-func (s Store) Set(ctx sdk.Context, key string, param interface{}) {
+func (s Store) Set(ctx sdk.Context, key []byte, param interface{}) {
 	store := s.kvStore(ctx)
-	keybz := []byte(key)
 
-	bz := store.Get(keybz)
+	bz := store.Get(key)
 
 	// To prevent invalid parameter set, we check the type of the stored parameter
 	// and try to match it with the provided parameter. It continues only if they matches.
@@ -106,22 +105,20 @@ func (s Store) Set(ctx sdk.Context, key string, param interface{}) {
 	if err != nil {
 		panic(err)
 	}
-	store.Set(keybz, bz)
+	store.Set(key, bz)
 
 	tstore := s.transientStore(ctx)
-	tstore.Set(keybz, []byte{})
+	tstore.Set(key, []byte{})
 }
 
 // Set raw bytes of parameter
 // Also set to the transient store to record change
-func (s Store) SetRaw(ctx sdk.Context, key string, param []byte) {
-	keybz := []byte(key)
-
+func (s Store) SetRaw(ctx sdk.Context, key []byte, param []byte) {
 	store := s.kvStore(ctx)
-	store.Set(keybz, param)
+	store.Set(key, param)
 
 	tstore := s.transientStore(ctx)
-	tstore.Set(keybz, []byte{})
+	tstore.Set(key, []byte{})
 }
 
 // Get to ParamStruct
@@ -154,22 +151,22 @@ type ReadOnlyStore struct {
 }
 
 // Exposes Get
-func (ros ReadOnlyStore) Get(ctx sdk.Context, key string, ptr interface{}) {
+func (ros ReadOnlyStore) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	ros.s.Get(ctx, key, ptr)
 }
 
 // Exposes GetRaw
-func (ros ReadOnlyStore) GetRaw(ctx sdk.Context, key string) []byte {
+func (ros ReadOnlyStore) GetRaw(ctx sdk.Context, key []byte) []byte {
 	return ros.s.GetRaw(ctx, key)
 }
 
 // Exposes Has
-func (ros ReadOnlyStore) Has(ctx sdk.Context, key string) bool {
+func (ros ReadOnlyStore) Has(ctx sdk.Context, key []byte) bool {
 	return ros.s.Has(ctx, key)
 }
 
 // Exposes Modified
-func (ros ReadOnlyStore) Modified(ctx sdk.Context, key string) bool {
+func (ros ReadOnlyStore) Modified(ctx sdk.Context, key []byte) bool {
 	return ros.s.Modified(ctx, key)
 }
 

@@ -15,14 +15,14 @@ import (
 const defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
 
 // nolint - Keys for parameter access
-const (
-	KeyInflationRateChange = "InflationRateChange"
-	KeyInflationMax        = "InflationMax"
-	KeyInflationMin        = "InflationMin"
-	KeyGoalBonded          = "GoalBonded"
-	KeyUnbondingTime       = "UnbondingTime"
-	KeyMaxValidators       = "MaxValidators"
-	KeyBondDenom           = "BondDenom"
+var (
+	KeyInflationRateChange = []byte("InflationRateChange")
+	KeyInflationMax        = []byte("InflationMax")
+	KeyInflationMin        = []byte("InflationMin")
+	KeyGoalBonded          = []byte("GoalBonded")
+	KeyUnbondingTime       = []byte("UnbondingTime")
+	KeyMaxValidators       = []byte("MaxValidators")
+	KeyBondDenom           = []byte("BondDenom")
 )
 
 // Params defines the high level settings for staking

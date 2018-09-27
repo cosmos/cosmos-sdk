@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -466,9 +465,13 @@ func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			bz, err := cliCtx.QueryWithData("custom/stake/"+stake.QueryParameters, nil)
+			if err != nil {
+				return err
+			}
 
-			var params types.Params
-			err := paramutils.QueryParams(cliCtx, storeName, &params)
+			var params stake.Params
+			err = cdc.UnmarshalJSON(bz, &params)
 			if err != nil {
 				return err
 			}

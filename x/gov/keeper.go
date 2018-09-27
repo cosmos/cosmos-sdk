@@ -13,10 +13,10 @@ const (
 )
 
 // Parameter store key
-const (
-	ParamStoreKeyDepositProcedure  = "depositprocedure"
-	ParamStoreKeyVotingProcedure   = "votingprocedure"
-	ParamStoreKeyTallyingProcedure = "tallyingprocedure"
+var (
+	ParamStoreKeyDepositProcedure  = []byte("depositprocedure")
+	ParamStoreKeyVotingProcedure   = []byte("votingprocedure")
+	ParamStoreKeyTallyingProcedure = []byte("tallyingprocedure")
 )
 
 // Governance Keeper

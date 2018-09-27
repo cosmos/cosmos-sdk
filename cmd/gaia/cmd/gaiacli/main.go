@@ -54,7 +54,6 @@ func main() {
 	rootCmd.AddCommand(
 		tendermintCmd,
 		lcd.ServeCommand(cdc),
-		lcd.ServeLiteCommand(cdc),
 		client.LineBreak,
 	)
 

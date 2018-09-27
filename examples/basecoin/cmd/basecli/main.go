@@ -80,7 +80,6 @@ func main() {
 	rootCmd.AddCommand(
 		client.LineBreak,
 		lcd.ServeCommand(cdc),
-		lcd.ServeLiteCommand(cdc),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

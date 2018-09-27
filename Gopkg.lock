@@ -305,14 +305,6 @@
   revision = "05ee40e3a273f7245e8777337fc7b46e533a9a92"
 
 [[projects]]
-  digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
-  name = "github.com/rakyll/statik"
-  packages = ["fs"]
-  pruneopts = "UT"
-  revision = "aa8a7b1baecd0f31a436bf7956fcdcc609a83035"
-  version = "v0.1.4"
-
-[[projects]]
   digest = "1:c4556a44e350b50a490544d9b06e9fba9c286c21d6c0e47f54f3a9214597298c"
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
@@ -647,7 +639,6 @@
     "github.com/gorilla/mux",
     "github.com/mattn/go-isatty",
     "github.com/pkg/errors",
-    "github.com/rakyll/statik/fs",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
     "github.com/spf13/viper",

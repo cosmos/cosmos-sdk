@@ -64,7 +64,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		nodeInfo := status.NodeInfo
-		output, err := cdc.MarshalJSON(nodeInfo)
+		output, err := cdc.MarshalJSONIndent(nodeInfo, "", "  ")
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

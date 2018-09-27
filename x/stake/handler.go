@@ -33,44 +33,33 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // Called every block, process inflation, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
-	cdc := types.MsgCdc
-
 	endBlockerTags := sdk.EmptyTags()
 
-	unbondingTimesliceIterator := k.UnbondingQueueIterator(ctx, ctx.BlockHeader().Time)
-	for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
-		timeslice := []types.DVPair{}
-		cdc.MustUnmarshalBinary(unbondingTimesliceIterator.Value(), &timeslice)
-		for _, dvPair := range timeslice {
-			err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddr, dvPair.ValidatorAddr)
-			if err != nil {
-				continue
-			}
-			endBlockerTags.AppendTags(sdk.NewTags(
-				tags.Action, ActionCompleteUnbonding,
-				tags.Delegator, []byte(dvPair.DelegatorAddr.String()),
-				tags.SrcValidator, []byte(dvPair.ValidatorAddr.String()),
-			))
+	matureUnbonds := k.GetAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)
+	for _, dvPair := range matureUnbonds {
+		err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddr, dvPair.ValidatorAddr)
+		if err != nil {
+			continue
 		}
-
+		endBlockerTags.AppendTags(sdk.NewTags(
+			tags.Action, ActionCompleteUnbonding,
+			tags.Delegator, []byte(dvPair.DelegatorAddr.String()),
+			tags.SrcValidator, []byte(dvPair.ValidatorAddr.String()),
+		))
 	}
 
-	redelegationTimesliceIterator := k.RedelegationQueueIterator(ctx, ctx.BlockHeader().Time)
-	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
-		timeslice := []types.DVVTriplet{}
-		cdc.MustUnmarshalBinary(redelegationTimesliceIterator.Value(), &timeslice)
-		for _, dvvTriplet := range timeslice {
-			err := k.CompleteRedelegation(ctx, dvvTriplet.DelegatorAddr, dvvTriplet.ValidatorSrcAddr, dvvTriplet.ValidatorDstAddr)
-			if err != nil {
-				continue
-			}
-			endBlockerTags.AppendTags(sdk.NewTags(
-				tags.Action, tags.ActionCompleteRedelegation,
-				tags.Delegator, []byte(dvvTriplet.DelegatorAddr.String()),
-				tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
-				tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
-			))
+	matureRedelegations := k.GetAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
+	for _, dvvTriplet := range matureRedelegations {
+		err := k.CompleteRedelegation(ctx, dvvTriplet.DelegatorAddr, dvvTriplet.ValidatorSrcAddr, dvvTriplet.ValidatorDstAddr)
+		if err != nil {
+			continue
 		}
+		endBlockerTags.AppendTags(sdk.NewTags(
+			tags.Action, tags.ActionCompleteRedelegation,
+			tags.Delegator, []byte(dvvTriplet.DelegatorAddr.String()),
+			tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
+			tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
+		))
 	}
 
 	pool := k.GetPool(ctx)

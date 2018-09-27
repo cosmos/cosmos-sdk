@@ -192,6 +192,20 @@ func (k Keeper) UnbondingQueueIterator(ctx sdk.Context, endTime time.Time) sdk.I
 	return store.Iterator(UnbondingQueueKey, sdk.InclusiveEndBytes(GetUnbondingDelegationTimeKey(endTime)))
 }
 
+// Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
+func (k Keeper) GetAllMatureUnbondingQueue(ctx sdk.Context, currTime time.Time) (matureUnbonds []types.DVPair) {
+	store := ctx.KVStore(k.storeKey)
+	// gets an iterator for all timeslices from time 0 until the current Blockheader time
+	unbondingTimesliceIterator := k.UnbondingQueueIterator(ctx, ctx.BlockHeader().Time)
+	for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
+		timeslice := []types.DVPair{}
+		k.cdc.MustUnmarshalBinary(unbondingTimesliceIterator.Value(), &timeslice)
+		matureUnbonds = append(matureUnbonds, timeslice...)
+		store.Delete(unbondingTimesliceIterator.Key())
+	}
+	return matureUnbonds
+}
+
 //_____________________________________________________________________________________
 
 // return a given amount of all the delegator redelegations
@@ -313,6 +327,20 @@ func (k Keeper) InsertRedelegationQueue(ctx sdk.Context, red types.Redelegation)
 func (k Keeper) RedelegationQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return store.Iterator(RedelegationQueueKey, sdk.InclusiveEndBytes(GetRedelegationTimeKey(endTime)))
+}
+
+// Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
+func (k Keeper) GetAllMatureRedelegationQueue(ctx sdk.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet) {
+	store := ctx.KVStore(k.storeKey)
+	// gets an iterator for all timeslices from time 0 until the current Blockheader time
+	redelegationTimesliceIterator := k.RedelegationQueueIterator(ctx, ctx.BlockHeader().Time)
+	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
+		timeslice := []types.DVVTriplet{}
+		k.cdc.MustUnmarshalBinary(redelegationTimesliceIterator.Value(), &timeslice)
+		matureRedelegations = append(matureRedelegations, timeslice...)
+		store.Delete(redelegationTimesliceIterator.Key())
+	}
+	return matureRedelegations
 }
 
 //_____________________________________________________________________________________

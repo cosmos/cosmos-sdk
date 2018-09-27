@@ -53,6 +53,10 @@ func (keeper BaseKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
+//
+// CONTRACT: Under the context of a vesting account, SubtractCoins will also
+// check if the account has enough unlocked coins to spend and will additionally
+// track the transferred coins.
 func (keeper BaseKeeper) SubtractCoins(
 	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Coins, sdk.Tags, sdk.Error) {
@@ -61,6 +65,9 @@ func (keeper BaseKeeper) SubtractCoins(
 }
 
 // AddCoins adds amt to the coins at the addr.
+//
+// CONTRACT: Under the context of a vesting account, AddCoins will also
+// additionally track transferred coins.
 func (keeper BaseKeeper) AddCoins(
 	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Coins, sdk.Tags, sdk.Error) {
@@ -68,7 +75,11 @@ func (keeper BaseKeeper) AddCoins(
 	return addCoins(ctx, keeper.am, addr, amt)
 }
 
-// SendCoins moves coins from one account to another
+// SendCoins moves coins from one account to another.
+//
+// CONTRACT: Under the context of a vesting account for the from address, the
+// contract of SubtractCoins applies and under the context of a vesting account
+// for the to address, the contract of AddCoins applies.
 func (keeper BaseKeeper) SendCoins(
 	ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Tags, sdk.Error) {
@@ -76,7 +87,11 @@ func (keeper BaseKeeper) SendCoins(
 	return sendCoins(ctx, keeper.am, fromAddr, toAddr, amt)
 }
 
-// InputOutputCoins handles a list of inputs and outputs
+// InputOutputCoins handles a list of inputs and outputs.
+//
+// CONTRACT: Under the context of a vesting account for any address in the inputs,
+// the contract of SubtractCoins applies and under the context of a vesting account
+// for any address in the outputs, the contract of AddCoins applies.
 func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
 	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
 }

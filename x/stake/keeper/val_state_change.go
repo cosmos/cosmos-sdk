@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
+	"sort"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -19,12 +21,19 @@ import (
 // are returned to Tendermint.
 func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate) {
 
-	var last map[string]interface{}
-
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 
-	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
+	// copy last validator set
+	var last map[[sdk.AddrLen]byte]interface{}
+	iterator := sdk.KVStorePrefixIterator(store, BondedValidatorsIndexKey)
+	for ; iterator.Valid(); iterator.Next() {
+		var operator [sdk.AddrLen]byte
+		copy(operator[:], iterator.Key())
+		last[operator] = nil
+	}
+
+	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
 	count := 0
 	for ; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 
@@ -52,56 +61,44 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 		updates = append(updates, validator.ABCIValidatorUpdate())
 
 		// validator still in the validator set
-		delete(last, string(operator))
+		var opbytes [sdk.AddrLen]byte
+		copy(opbytes[:], operator)
+		delete(last, opbytes)
+
+		// set the bonded validator index
+		store.Set(GetBondedValidatorIndexKey(operator), []byte{})
 
 		// keep count
 		count++
 
 	}
 
+	// sort the map keys for determinism
+	noLongerBonded := make([][]byte, len(last))
+	for oper, _ := range last {
+		var operator []byte
+		copy(operator[:], oper[:])
+		noLongerBonded = append(noLongerBonded, operator)
+	}
+	sort.SliceStable(noLongerBonded, func(i, j int) bool {
+		return bytes.Compare(noLongerBonded[i], noLongerBonded[j]) == -1
+	})
+
+	// iterate through the sorted no-longer-bonded validators
 	// any validators left in `last` are no longer bonded
-	for operator, _ := range last {
-		validator := k.mustGetValidator(ctx, []byte(operator))
+	for _, operator := range noLongerBonded {
+		// fetch the validator
+		validator := k.mustGetValidator(ctx, sdk.ValAddress(operator))
+
+		// bonded to unbonding
 		k.bondedToUnbonding(ctx, validator)
+
+		// delete from the bonded validator index
+		store.Delete(GetBondedValidatorIndexKey(operator))
+
+		// update the validator
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
 	}
-
-	// REF CODE
-	//// add to accumulated changes for tendermint
-	//bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
-	//tstore := ctx.TransientStore(k.storeTKey)
-	//tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
-
-	// XXX code from issue
-	/*
-		last := fetchOldValidatorSet()
-		tendermintUpdates := make(map[sdk.ValAddress]uint64)
-
-		for _, validator := range topvalidator { //(iterate(top hundred)) {
-			switch validator.State {
-			case Unbonded:
-				unbondedToBonded(ctx, validator.Addr)
-				tendermintUpdates[validator.Addr] = validator.Power
-			case Unbonding:
-				unbondingToBonded(ctx, validator.Addr)
-				tendermintUpdates[validator.Addr] = validator.Power
-			case Bonded: // do nothing
-				store.delete(last[validator.Addr])
-				// jailed validators are ranked last, so if we get to a jailed validator
-				// we have no more bonded validators
-				if validator.Jailed {
-					break
-				}
-			}
-		}
-
-		for _, validator := range previousValidators {
-			bondedToUnbonding(ctx, validator.Addr)
-			tendermintUpdates[validator.Addr] = 0
-		}
-
-		return tendermintUpdates
-	*/
 
 	return updates
 }

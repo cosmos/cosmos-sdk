@@ -168,7 +168,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 
 	// distribute rewards
-	distr.EndBlocker(ctx, app.distrKeeper)
+	//distr.EndBlocker(ctx, app.distrKeeper)
 
 	// Add these new validators to the addr -> pubkey map.
 	app.slashingKeeper.AddValidators(ctx, validatorUpdates)

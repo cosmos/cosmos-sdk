@@ -247,7 +247,7 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Coin,
 	validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err sdk.Error) {
 
-	// Get or create the delegator delegation
+	// get or create the delegator delegation
 	delegation, found := k.GetDelegation(ctx, delAddr, validator.OperatorAddr)
 	if !found {
 		delegation = types.Delegation{
@@ -258,8 +258,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	}
 
 	if subtractAccount {
-		// Account new shares, save
-		_, _, err = k.bankKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
+		_, err = k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
 		if err != nil {
 			return
 		}
@@ -269,7 +268,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount)
 	delegation.Shares = delegation.Shares.Add(newShares)
 
-	// Update delegation height
+	// update delegation height
 	delegation.Height = ctx.BlockHeight()
 
 	k.SetPool(ctx, pool)

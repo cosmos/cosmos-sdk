@@ -19,6 +19,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
+func newTestCodec() *codec.Codec {
+	cdc := codec.New()
+
+	auth.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+
+	return cdc
+}
+
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	authKey := sdk.NewKVStoreKey("authkey")
@@ -32,8 +41,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 
 func TestKeeperGetSet(t *testing.T) {
 	ms, authKey, capKey := setupMultiStore()
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
 
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
 	stakeKeeper := NewKeeper(capKey, bank.NewBaseKeeper(accountMapper), DefaultCodespace)
@@ -60,8 +68,7 @@ func TestKeeperGetSet(t *testing.T) {
 
 func TestBonding(t *testing.T) {
 	ms, authKey, capKey := setupMultiStore()
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 

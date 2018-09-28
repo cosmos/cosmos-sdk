@@ -14,6 +14,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func newTestCodec() *codec.Codec {
+	cdc := codec.New()
+
+	RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+
+	return cdc
+}
+
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	capKey := sdk.NewKVStoreKey("capkey")
@@ -27,8 +36,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 
 func TestAccountMapperGetSet(t *testing.T) {
 	ms, capKey, _ := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
@@ -63,8 +71,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 
 func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	ms, capKey, _ := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())

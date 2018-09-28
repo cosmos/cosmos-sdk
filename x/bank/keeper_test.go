@@ -22,6 +22,15 @@ var (
 	testCoinDenom = "steak"
 )
 
+func newTestCodec() *codec.Codec {
+	cdc := codec.New()
+
+	auth.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+
+	return cdc
+}
+
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	authKey := sdk.NewKVStoreKey("authkey")
@@ -41,9 +50,7 @@ func getVestingTotal(coin sdk.Coin, blockTime, vAccStartTime, vAccEndTime time.T
 
 func TestKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
-
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
@@ -126,9 +133,7 @@ func TestKeeper(t *testing.T) {
 
 func TestSendKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
-
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
@@ -195,9 +200,7 @@ func TestSendKeeper(t *testing.T) {
 
 func TestViewKeeper(t *testing.T) {
 	ms, authKey := setupMultiStore()
-
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)

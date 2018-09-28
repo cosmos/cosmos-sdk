@@ -9,7 +9,6 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
@@ -29,8 +28,7 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 
 func TestPowKeeperGetSet(t *testing.T) {
 	ms, capKey := setupMultiStore()
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
 
 	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())

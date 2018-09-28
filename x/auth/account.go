@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -118,24 +117,32 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 	return nil
 }
 
-// VestingAccount is an account that can define a vesting schedule
-// Vesting coins can still be delegated, but only transferred after they have vested
+// VestingAccount is an account that can define a vesting schedule. Vesting coins
+// can still be delegated, but only transferred after they have vested.
 type VestingAccount interface {
 	Account
 
 	// Returns true if account is still vesting, else false
-	// CONTRACT: After account is done vesting, account behaves exactly like BaseAccount
+	//
+	// CONTRACT: After account is done vesting, account behaves exactly like
+	// BaseAccount.
 	IsVesting(time.Time) bool
 
-	// Calculates amount of coins that can be sent to other accounts given the current blocktime
+	// Calculates amount of coins that can be sent to other accounts given the
+	// current blocktime.
 	SendableCoins(time.Time) sdk.Coins
+
+	// Calculates the amount of coins that are locked in the vesting account.
+	// LockedCoins(time.Time) sdk.Coins
+
 	// Called on bank transfer functions (e.g. bank.SendCoins and bank.InputOutputCoins)
-	// Used to track coins that are transferred in and out of vesting account after initialization
-	// while account is still vesting
+	// Used to track coins that are transferred in and out of vesting account
+	// after initialization while account is still vesting.
 	TrackTransfers(sdk.Coins)
 }
 
-// Implement Vesting Interface. Continuously vests coins linearly from StartTime until EndTime
+// Implement Vesting Interface. Continuously vests coins linearly from
+// StartTime until EndTime.
 type ContinuousVestingAccount struct {
 	BaseAccount
 	OriginalVestingCoins sdk.Coins // coins in account on Initialization
@@ -147,7 +154,10 @@ type ContinuousVestingAccount struct {
 	EndTime   time.Time
 }
 
-func NewContinuousVestingAccount(addr sdk.AccAddress, originalCoins sdk.Coins, startTime, endTime time.Time) ContinuousVestingAccount {
+func NewContinuousVestingAccount(
+	addr sdk.AccAddress, originalCoins sdk.Coins,
+	startTime, endTime time.Time) ContinuousVestingAccount {
+
 	bacc := BaseAccount{
 		Address: addr,
 		Coins:   originalCoins,
@@ -165,9 +175,9 @@ func (vacc ContinuousVestingAccount) IsVesting(blockTime time.Time) bool {
 	return blockTime.Unix() < vacc.EndTime.Unix()
 }
 
-// Implement Vesting Account interface. Uses time in context to calculate how many coins
-// has been released by vesting schedule and then accounts for unlocked coins that have
-// already been transferred or delegated.
+// Implement Vesting Account interface. Uses time in context to calculate how
+// many coins has been released by vesting schedule and then accounts for
+// unlocked coins that have already been transferred or delegated.
 func (vacc ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coins {
 	unlockedCoins := vacc.TransferredCoins
 
@@ -199,14 +209,15 @@ func (vacc ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coin
 	return unlockedCoins
 }
 
-// Implement Vesting Account. Track transfers in and out of account
-// CONTRACT: Send amounts must be negated
+// Implement Vesting Account. Track transfers in and out of account.
+//
+// CONTRACT: Send amounts must be negated.
 func (vacc *ContinuousVestingAccount) TrackTransfers(coins sdk.Coins) {
 	vacc.TransferredCoins = vacc.TransferredCoins.Plus(coins)
 }
 
-// Implements Vesting Account. Vests all original coins after EndTime but keeps them
-// all locked until that point.
+// Implements Vesting Account. Vests all original coins after EndTime but keeps
+// them all locked until that point.
 type DelayTransferAccount struct {
 	BaseAccount
 	TransferredCoins sdk.Coins // Any received coins are sendable immediately
@@ -261,17 +272,4 @@ func (vacc DelayTransferAccount) SendableCoins(blockTime time.Time) sdk.Coins {
 // Send amounts must be negated
 func (vacc *DelayTransferAccount) TrackTransfers(coins sdk.Coins) {
 	vacc.TransferredCoins = vacc.TransferredCoins.Plus(coins)
-}
-
-//----------------------------------------
-// Wire
-
-// Most users shouldn't use this, but this comes handy for tests.
-func RegisterBaseAccount(cdc *codec.Codec) {
-	cdc.RegisterInterface((*Account)(nil), nil)
-	cdc.RegisterInterface((*VestingAccount)(nil), nil)
-	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
-	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
-	cdc.RegisterConcrete(&DelayTransferAccount{}, "cosmos-sdk/DelayTransferAccount", nil)
-	codec.RegisterCrypto(cdc)
 }

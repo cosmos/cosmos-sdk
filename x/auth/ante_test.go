@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -108,10 +107,9 @@ func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []in
 
 // Test various error cases in the AnteHandler control flow.
 func TestAnteHandlerSigErrors(t *testing.T) {
-	// setup
 	ms, capKey, capKey2 := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
+
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -161,10 +159,9 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 // Test logic around account number checking with one signer and many signers.
 func TestAnteHandlerAccountNumbers(t *testing.T) {
-	// setup
 	ms, capKey, capKey2 := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
+
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -220,10 +217,9 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 
 // Test logic around sequence checking with one signer and many signers.
 func TestAnteHandlerSequences(t *testing.T) {
-	// setup
 	ms, capKey, capKey2 := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
+
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -298,10 +294,9 @@ func TestAnteHandlerSequences(t *testing.T) {
 
 // Test logic around fee deduction.
 func TestAnteHandlerFees(t *testing.T) {
-	// setup
 	ms, capKey, capKey2 := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
+
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -340,10 +335,9 @@ func TestAnteHandlerFees(t *testing.T) {
 
 // Test logic around memo gas consumption.
 func TestAnteHandlerMemoGas(t *testing.T) {
-	// setup
 	ms, capKey, capKey2 := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
+
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -383,10 +377,9 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 }
 
 func TestAnteHandlerMultiSigner(t *testing.T) {
-	// setup
 	ms, capKey, capKey2 := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
+
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -434,10 +427,9 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 }
 
 func TestAnteHandlerBadSignBytes(t *testing.T) {
-	// setup
 	ms, capKey, capKey2 := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
+
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -515,10 +507,9 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 }
 
 func TestAnteHandlerSetPubKey(t *testing.T) {
-	// setup
 	ms, capKey, capKey2 := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
+
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
 	anteHandler := NewAnteHandler(mapper, feeCollector)
@@ -570,8 +561,8 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 
 func TestProcessPubKey(t *testing.T) {
 	ms, capKey, _ := setupMultiStore()
-	cdc := codec.New()
-	RegisterBaseAccount(cdc)
+	cdc := newTestCodec()
+
 	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	// keys

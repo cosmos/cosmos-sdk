@@ -14,6 +14,10 @@ func (di DelegatorDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	height int64, totalBonded, vdTokens, totalDelShares, delegatorShares,
 	commissionRate sdk.Dec) (DelegatorDistInfo, FeePool, DecCoins) {
 
+	if vi.DelAccum.Accum.IsZero() {
+		return di, fp, DecCoins{}
+	}
+
 	vi.UpdateTotalDelAccum(height, totalDelShares)
 	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
 

@@ -26,6 +26,10 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 
 	fp.UpdateTotalValAccum(height, totalBonded)
 
+	if fp.ValAccum.Accum.IsZero() {
+		return vi, fp
+	}
+
 	// update the validators pool
 	blocks := height - vi.FeePoolWithdrawalHeight
 	vi.FeePoolWithdrawalHeight = height

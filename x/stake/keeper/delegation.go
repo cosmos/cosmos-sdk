@@ -336,7 +336,6 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
-	k.OnDelegationSharesModified(ctx, delegation.DelegatorAddr, validator.OperatorAddr)
 	return amount, nil
 }
 

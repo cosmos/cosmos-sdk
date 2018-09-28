@@ -38,10 +38,13 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		if validator.Status == sdk.Bonded {
 			keeper.SetValidatorBondedIndex(ctx, validator)
 		}
+
+		keeper.OnValidatorCreated(ctx, validator.OperatorAddr)
 	}
 
-	for _, bond := range data.Bonds {
-		keeper.SetDelegation(ctx, bond)
+	for _, delegation := range data.Bonds {
+		keeper.SetDelegation(ctx, delegation)
+		keeper.OnDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
 	keeper.UpdateBondedValidatorsFull(ctx)

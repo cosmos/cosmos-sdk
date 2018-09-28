@@ -46,12 +46,10 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ps params.Setter, ck ty
 // get the global fee pool distribution info
 func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
-
 	b := store.Get(FeePoolKey)
 	if b == nil {
 		panic("Stored fee pool should not have been nil")
 	}
-
 	k.cdc.MustUnmarshalBinary(b, &feePool)
 	return
 }

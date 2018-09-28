@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -41,6 +43,7 @@ func (k Keeper) onDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
 		WithdrawalHeight: ctx.BlockHeight(),
 	}
 	k.SetDelegatorDistInfo(ctx, ddi)
+	ctx.Logger().With("module", "x/distribution").Error(fmt.Sprintf("ddi created: %v", ddi))
 }
 
 // Withdrawal all validator rewards

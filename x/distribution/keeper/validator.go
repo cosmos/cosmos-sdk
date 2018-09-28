@@ -13,7 +13,7 @@ func (k Keeper) GetValidatorDistInfo(ctx sdk.Context,
 
 	b := store.Get(GetValidatorDistInfoKey(operatorAddr))
 	if b == nil {
-		panic("Stored delegation-distribution info should not have been nil")
+		panic("Stored validator-distribution info should not have been nil")
 	}
 
 	k.cdc.MustUnmarshalBinary(b, &vdi)

@@ -133,7 +133,7 @@ type VestingAccount interface {
 	SendableCoins(time.Time) sdk.Coins
 
 	// Calculates the amount of coins that are locked in the vesting account.
-	// LockedCoins(time.Time) sdk.Coins
+	LockedCoins(time.Time) sdk.Coins
 
 	// Called on bank transfer functions (e.g. bank.SendCoins and bank.InputOutputCoins)
 	// Used to track coins that are transferred in and out of vesting account
@@ -171,32 +171,32 @@ func NewContinuousVestingAccount(
 }
 
 // Implements VestingAccount interface.
-func (vacc ContinuousVestingAccount) IsVesting(blockTime time.Time) bool {
-	return blockTime.Unix() < vacc.EndTime.Unix()
+func (cva ContinuousVestingAccount) IsVesting(blockTime time.Time) bool {
+	return blockTime.Unix() < cva.EndTime.Unix()
 }
 
 // Implement Vesting Account interface. Uses time in context to calculate how
 // many coins has been released by vesting schedule and then accounts for
 // unlocked coins that have already been transferred or delegated.
-func (vacc ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coins {
-	unlockedCoins := vacc.TransferredCoins
+func (cva ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coins {
+	unlockedCoins := cva.TransferredCoins
 
-	x := blockTime.Unix() - vacc.StartTime.Unix()
-	y := vacc.EndTime.Unix() - vacc.StartTime.Unix()
+	x := blockTime.Unix() - cva.StartTime.Unix()
+	y := cva.EndTime.Unix() - cva.StartTime.Unix()
 	scale := sdk.NewDec(x).Quo(sdk.NewDec(y))
 
 	// add original coins unlocked by vesting schedule
-	for _, origVestingCoin := range vacc.OriginalVestingCoins {
+	for _, origVestingCoin := range cva.OriginalVestingCoins {
 		vAmt := sdk.NewDecFromInt(origVestingCoin.Amount).Mul(scale).RoundInt()
 
 		// Must constrain with coins left in account since some unlocked coins may
 		// have left account due to delegation.
-		currentAmount := vacc.GetCoins().AmountOf(origVestingCoin.Denom)
+		currentAmount := cva.GetCoins().AmountOf(origVestingCoin.Denom)
 
 		if currentAmount.LT(vAmt) {
 			vAmt = currentAmount
 			// prevent double count of transferred coins
-			vAmt = vAmt.Sub(vacc.TransferredCoins.AmountOf(origVestingCoin.Denom))
+			vAmt = vAmt.Sub(cva.TransferredCoins.AmountOf(origVestingCoin.Denom))
 		}
 
 		// add non-zero coins
@@ -209,11 +209,16 @@ func (vacc ContinuousVestingAccount) SendableCoins(blockTime time.Time) sdk.Coin
 	return unlockedCoins
 }
 
+// LockedCoins returns the amount of coins that are locked in the vesting account.
+func (cva ContinuousVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
+	return cva.GetCoins().Minus(cva.SendableCoins(blockTime))
+}
+
 // Implement Vesting Account. Track transfers in and out of account.
 //
 // CONTRACT: Send amounts must be negated.
-func (vacc *ContinuousVestingAccount) TrackTransfers(coins sdk.Coins) {
-	vacc.TransferredCoins = vacc.TransferredCoins.Plus(coins)
+func (cva *ContinuousVestingAccount) TrackTransfers(coins sdk.Coins) {
+	cva.TransferredCoins = cva.TransferredCoins.Plus(coins)
 }
 
 // Implements Vesting Account. Vests all original coins after EndTime but keeps
@@ -237,24 +242,24 @@ func NewDelayTransferAccount(addr sdk.AccAddress, originalCoins sdk.Coins, endTi
 	}
 }
 
-// Implements VestingAccount
-func (vacc DelayTransferAccount) IsVesting(blockTime time.Time) bool {
-	return blockTime.Unix() < vacc.EndTime.Unix()
+// Implements VestingAccount. It returns if the account is still vesting.
+func (dta DelayTransferAccount) IsVesting(blockTime time.Time) bool {
+	return blockTime.Unix() < dta.EndTime.Unix()
 }
 
 // Implements VestingAccount. If Time < EndTime return only net transferred coins
 // else return all coins in account (like BaseAccount).
-func (vacc DelayTransferAccount) SendableCoins(blockTime time.Time) sdk.Coins {
-	if blockTime.Unix() < vacc.EndTime.Unix() {
-		sendableCoins := vacc.TransferredCoins
+func (dta DelayTransferAccount) SendableCoins(blockTime time.Time) sdk.Coins {
+	if blockTime.Unix() < dta.EndTime.Unix() {
+		sendableCoins := dta.TransferredCoins
 
 		// Return net transferred coins if positive, then those coins are sendable.
-		for _, transCoin := range vacc.TransferredCoins {
+		for _, transCoin := range dta.TransferredCoins {
 			// Must constrain with coins left in account since some unlocked coins may
 			// have left account due to delegation.
 			amt := sendableCoins.AmountOf(transCoin.Denom)
 
-			currentAmount := vacc.GetCoins().AmountOf(transCoin.Denom)
+			currentAmount := dta.GetCoins().AmountOf(transCoin.Denom)
 			if currentAmount.LT(amt) {
 				delta := sdk.NewCoin(transCoin.Denom, amt.Sub(currentAmount))
 				sendableCoins = sendableCoins.Minus(sdk.Coins{delta})
@@ -265,11 +270,16 @@ func (vacc DelayTransferAccount) SendableCoins(blockTime time.Time) sdk.Coins {
 	}
 
 	// if EndTime has passed, DelayTransferAccount behaves like BaseAccount
-	return vacc.BaseAccount.GetCoins()
+	return dta.BaseAccount.GetCoins()
+}
+
+// LockedCoins returns the amount of coins that are locked in the vesting account.
+func (dta DelayTransferAccount) LockedCoins(blockTime time.Time) sdk.Coins {
+	return dta.GetCoins().Minus(dta.SendableCoins(blockTime))
 }
 
 // Implement Vesting Account. Track transfers in and out of account
 // Send amounts must be negated
-func (vacc *DelayTransferAccount) TrackTransfers(coins sdk.Coins) {
-	vacc.TransferredCoins = vacc.TransferredCoins.Plus(coins)
+func (dta *DelayTransferAccount) TrackTransfers(coins sdk.Coins) {
+	dta.TransferredCoins = dta.TransferredCoins.Plus(coins)
 }

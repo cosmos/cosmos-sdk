@@ -98,7 +98,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake,
 		app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.distrKeeper = distr.NewKeeper(app.cdc, app.keyDistr, app.tkeyStake,
+	app.distrKeeper = distr.NewKeeper(app.cdc, app.keyDistr, app.tkeyDistr,
 		app.paramsKeeper.Setter(), app.bankKeeper, app.stakeKeeper,
 		app.feeCollectionKeeper, app.RegisterCodespace(stake.DefaultCodespace))
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper,
@@ -168,7 +168,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 
 	// distribute rewards
-	//distr.EndBlocker(ctx, app.distrKeeper)
+	distr.EndBlocker(ctx, app.distrKeeper)
 
 	// Add these new validators to the addr -> pubkey map.
 	app.slashingKeeper.AddValidators(ctx, validatorUpdates)

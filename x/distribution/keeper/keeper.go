@@ -65,9 +65,9 @@ func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 
 // set the proposer public key for this block
 func (k Keeper) GetProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
+	tstore := ctx.KVStore(k.storeTKey)
 
-	b := store.Get(ProposerKey)
+	b := tstore.Get(ProposerKey)
 	if b == nil {
 		panic("Stored fee pool should not have been nil")
 	}
@@ -78,9 +78,9 @@ func (k Keeper) GetProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) 
 
 // get the proposer public key for this block
 func (k Keeper) SetProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
+	tstore := ctx.KVStore(k.storeTKey)
 	b := k.cdc.MustMarshalBinary(consAddr)
-	store.Set(ProposerKey, b)
+	tstore.Set(ProposerKey, b)
 }
 
 //______________________________________________________________________

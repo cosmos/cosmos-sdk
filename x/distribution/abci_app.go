@@ -15,5 +15,8 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 
 // allocate fees
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
+	if ctx.BlockHeight() < 2 {
+		return
+	}
 	k.AllocateFees(ctx)
 }

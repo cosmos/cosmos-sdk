@@ -53,5 +53,8 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	k.SetFeePool(ctx, feePool)
 
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
-	k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
+	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
+	if err != nil {
+		panic(err)
+	}
 }

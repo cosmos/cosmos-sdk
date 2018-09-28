@@ -139,7 +139,17 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		panic("InitializeTestLCD must use at least one validator")
 	}
 
-	for i := 1; i < nValidators; i++ {
+	// add the priv validator (actual node) to genesis validators
+	genDoc.Validators = append(genDoc.Validators,
+		tmtypes.GenesisValidator{
+			PubKey: privVal.PubKey,
+			Power:  1,
+			Name:   "val",
+		},
+	)
+
+	// then add some randoms
+	for i := 2; i < nValidators; i++ {
 		genDoc.Validators = append(genDoc.Validators,
 			tmtypes.GenesisValidator{
 				PubKey: ed25519.GenPrivKey().PubKey(),

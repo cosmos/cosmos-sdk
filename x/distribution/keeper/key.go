@@ -6,10 +6,10 @@ import (
 
 // keys/key-prefixes
 var (
-	FeePoolKey               = []byte{0x01} // key for global distribution state
-	ValidatorDistInfoKey     = []byte{0x02} // prefix for each key to a validator distribution
-	DelegatorDistInfoKey     = []byte{0x03} // prefix for each key to a delegation distribution
-	DelegatorWithdrawInfoKey = []byte{0x04} // prefix for each key to a delegator withdraw info
+	FeePoolKey               = []byte{0x00} // key for global distribution state
+	ValidatorDistInfoKey     = []byte{0x01} // prefix for each key to a validator distribution
+	DelegatorDistInfoKey     = []byte{0x02} // prefix for each key to a delegation distribution
+	DelegatorWithdrawInfoKey = []byte{0x03} // prefix for each key to a delegator withdraw info
 
 	// transient
 	ProposerKey = []byte{0x00} // key for storing the proposer operator address

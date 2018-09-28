@@ -8,8 +8,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// Account is a standard account using a sequence number for replay protection
-// and a pubkey for authentication.
+// Account is an interface used to store coins at a given address within state.
+// It presumes a notion of sequence numbers for replay protection,
+// a notion of account numbers for replay protection for previously pruned accounts,
+// and a pubkey for authentication purposes.
+//
+// Many complex conditions can be used in the concrete struct which implements Account.
 type Account interface {
 	GetAddress() sdk.AccAddress
 	SetAddress(sdk.AccAddress) error // errors if already set.
@@ -37,9 +41,11 @@ var _ VestingAccount = (*DelayTransferAccount)(nil)
 //-----------------------------------------------------------
 // BaseAccount
 
-// BaseAccount - base account structure.
-// Extend this by embedding this in your AppAccount.
-// See the examples/basecoin/types/account.go for an example.
+// BaseAccount - a base account structure.
+// This can be extended by embedding within in your AppAccount.
+// There are examples of this in: examples/basecoin/types/account.go.
+// However one doesn't have to use BaseAccount as long as your struct
+// implements Account.
 type BaseAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`
@@ -278,8 +284,8 @@ func (dta DelayTransferAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 	return dta.GetCoins().Minus(dta.SendableCoins(blockTime))
 }
 
-// Implement Vesting Account. Track transfers in and out of account
-// Send amounts must be negated
+// Implement Vesting Account. Track transfers in and out of account send amounts
+// must be negated.
 func (dta *DelayTransferAccount) TrackTransfers(coins sdk.Coins) {
 	dta.TransferredCoins = dta.TransferredCoins.Plus(coins)
 }

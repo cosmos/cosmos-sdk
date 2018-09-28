@@ -39,6 +39,7 @@ BREAKING CHANGES
     * [x/stake] [#1013] TendermintUpdates now uses transient store
     * [x/gov] [#2195] Governance uses BFT Time
     * [x/gov] \#2256 Removed slashing for governance non-voting validators
+    * [simulation] \#2162 Added back correct supply invariants
     
 * SDK
     * [core] [\#1807](https://github.com/cosmos/cosmos-sdk/issues/1807) Switch from use of rational to decimal
@@ -100,6 +101,7 @@ FEATURES
   * [simulation] [\#1924](https://github.com/cosmos/cosmos-sdk/issues/1924) allow operations to specify future operations
   * [simulation] [\#1924](https://github.com/cosmos/cosmos-sdk/issues/1924) Add benchmarking capabilities, with makefile commands "test_sim_gaia_benchmark, test_sim_gaia_profile"
   * [simulation] [\#2349](https://github.com/cosmos/cosmos-sdk/issues/2349) Add time-based future scheduled operations to simulator
+  * [x/auth] \#2376 Remove FeePayer() from StdTx
   * [x/stake] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Implement
   basis for the validator commission model.
 

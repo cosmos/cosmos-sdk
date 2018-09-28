@@ -23,7 +23,7 @@ func TestStdTx(t *testing.T) {
 	require.Equal(t, msgs, tx.GetMsgs())
 	require.Equal(t, sigs, tx.GetSignatures())
 
-	feePayer := FeePayer(tx)
+	feePayer := tx.GetSigners()[0]
 	require.Equal(t, addr, feePayer)
 }
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.24.2-iris1
+
+*September 28th, 2018*
+
+- Support multi-store query proof build
+- Remove precision in voting power calculation
+- Add token precision in slashing
+- Reject create-validator transaction is the new validator voting power is 0
+- Add RefundCollectedFees
+- Refactor appHash calculation to support software upgrade
+
+
 ## 0.24.2
 
 *August 22nd, 2018*

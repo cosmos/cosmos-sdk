@@ -17,7 +17,7 @@ type kvpair struct {
 	value []byte
 }
 
-func setRandomKVPairs(t *testing.T, store KVStore) []kvpair {
+func genRandomKVPairs(t *testing.T) []kvpair {
 	kvps := make([]kvpair, 20)
 
 	for i := 0; i < 20; i++ {
@@ -25,16 +25,25 @@ func setRandomKVPairs(t *testing.T, store KVStore) []kvpair {
 		rand.Read(kvps[i].key)
 		kvps[i].value = make([]byte, 32)
 		rand.Read(kvps[i].value)
-
-		store.Set(kvps[i].key, kvps[i].value)
 	}
 
+	return kvps
+}
+
+func setRandomKVPairs(t *testing.T, store KVStore) []kvpair {
+	kvps := genRandomKVPairs(t)
+	for _, kvp := range kvps {
+		store.Set(kvp.key, kvp.value)
+	}
 	return kvps
 }
 
 func testPrefixStore(t *testing.T, baseStore KVStore, prefix []byte) {
 	prefixStore := baseStore.Prefix(prefix)
 	prefixPrefixStore := prefixStore.Prefix([]byte("prefix"))
+
+	require.Panics(t, func() { prefixStore.Get(nil) })
+	require.Panics(t, func() { prefixStore.Set(nil, []byte{}) })
 
 	kvps := setRandomKVPairs(t, prefixPrefixStore)
 
@@ -108,4 +117,31 @@ func TestPrefixStoreIterate(t *testing.T) {
 	require.Equal(t, bIter.Valid(), pIter.Valid())
 	bIter.Close()
 	pIter.Close()
+}
+
+func mutateByteSlice(bz []byte) {
+	if bz[0] == byte(255) {
+		bz[0] = byte(0)
+		return
+	}
+	bz[0] += 1
+}
+
+func TestCloneAppend(t *testing.T) {
+	kvps := genRandomKVPairs(t)
+	for _, kvp := range kvps {
+		bz := cloneAppend(kvp.key, kvp.value)
+		require.Equal(t, bz, append(kvp.key, kvp.value...))
+
+		mutateByteSlice(bz)
+		require.NotEqual(t, bz, append(kvp.key, kvp.value...))
+
+		bz = cloneAppend(kvp.key, kvp.value)
+		mutateByteSlice(kvp.key)
+		require.NotEqual(t, bz, append(kvp.key, kvp.value...))
+
+		bz = cloneAppend(kvp.key, kvp.value)
+		mutateByteSlice(kvp.value)
+		require.NotEqual(t, bz, append(kvp.key, kvp.value...))
+	}
 }

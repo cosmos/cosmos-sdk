@@ -21,6 +21,9 @@ func cloneAppend(bz []byte, bz2 []byte) (res []byte) {
 }
 
 func (s prefixStore) key(key []byte) (res []byte) {
+	if key == nil {
+		panic("nil key on prefixStore")
+	}
 	res = cloneAppend(s.prefix, key)
 	return
 }
@@ -90,16 +93,14 @@ func (s prefixStore) Iterator(start, end []byte) Iterator {
 
 // Implements KVStore
 func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
-	newstart := make([]byte, len(s.prefix), len(start))
-	copy(newstart, s.prefix)
-	newstart = append(newstart, start...)
+	newstart := cloneAppend(s.prefix, start)
 
 	newend := make([]byte, len(s.prefix)+len(end))
 	if end == nil {
 		newend = sdk.PrefixEndBytes(s.prefix)
 	} else {
 		copy(newend, s.prefix)
-		newend = append(newend, end...)
+		copy(newend[len(s.prefix):], end)
 	}
 
 	return prefixIterator{

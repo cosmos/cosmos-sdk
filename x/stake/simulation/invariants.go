@@ -34,7 +34,7 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) simula
 func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) simulation.Invariant {
 	return func(app *baseapp.BaseApp) error {
 		ctx := app.NewContext(false, abci.Header{})
-		//pool := k.GetPool(ctx)
+		pool := k.GetPool(ctx)
 
 		loose := sdk.ZeroInt()
 		bonded := sdk.ZeroDec()
@@ -59,14 +59,14 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 		})
 
 		// Loose tokens should equal coin supply plus unbonding delegations plus tokens on unbonded validators
-		// XXX TODO https://github.com/cosmos/cosmos-sdk/issues/2063#issuecomment-413720872
-		// require.True(t, pool.LooseTokens.RoundInt64() == loose.Int64(), "expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v\nlog: %s",
-		//	 pool.LooseTokens.RoundInt64(), loose.Int64(), log)
+		if pool.LooseTokens.RoundInt64() != loose.Int64() {
+			return fmt.Errorf("expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v", pool.LooseTokens.RoundInt64(), loose.Int64())
+		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		// XXX TODO https://github.com/cosmos/cosmos-sdk/issues/2063#issuecomment-413720872
-		// require.True(t, pool.BondedTokens.RoundInt64() == bonded.RoundInt64(), "expected bonded tokens to equal total steak held by bonded validators - pool.BondedTokens: %v, sum of bonded validator tokens: %v\nlog: %s",
-		//   pool.BondedTokens.RoundInt64(), bonded.RoundInt64(), log)
+		if pool.BondedTokens.RoundInt64() != bonded.RoundInt64() {
+			return fmt.Errorf("expected bonded tokens to equal total steak held by bonded validators - pool.BondedTokens: %v, sum of bonded validator tokens: %v", pool.BondedTokens.RoundInt64(), bonded.RoundInt64())
+		}
 
 		// TODO Inflation check on total supply
 		return nil

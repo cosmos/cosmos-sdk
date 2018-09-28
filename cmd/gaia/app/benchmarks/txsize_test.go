@@ -26,7 +26,7 @@ func ExampleTxSendSize() {
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
 	sig, _ := priv1.Sign(msg1.GetSignBytes())
-	sigs := []auth.StdSignature{auth.StdSignature{nil, sig, 0, 0}}
+	sigs := []auth.StdSignature{{nil, sig, 0, 0}}
 	tx := auth.NewStdTx([]sdk.Msg{msg1}, auth.NewStdFee(0, coins...), sigs, "")
 	fmt.Println(len(cdc.MustMarshalBinaryBare([]sdk.Msg{msg1})))
 	fmt.Println(len(cdc.MustMarshalBinaryBare(tx)))

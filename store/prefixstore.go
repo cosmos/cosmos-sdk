@@ -16,7 +16,7 @@ type prefixStore struct {
 func cloneAppend(bz []byte, bz2 []byte) (res []byte) {
 	res = make([]byte, len(bz)+len(bz2))
 	copy(res, bz)
-	res = append(res, bz2...)
+	copy(res[len(bz):], bz2)
 	return
 }
 

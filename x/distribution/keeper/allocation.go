@@ -10,8 +10,8 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 
 	// get the proposer of this block
 	proposerConsAddr := k.GetProposerConsAddr(ctx)
-	proserValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposerConsAddr)
-	proposerDist := k.GetValidatorDistInfo(ctx, proserValidator.GetOperator())
+	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposerConsAddr)
+	proposerDist := k.GetValidatorDistInfo(ctx, proposerValidator.GetOperator())
 
 	// get the fees which have been getting collected through all the
 	// transactions in the block
@@ -26,8 +26,8 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	proposerReward := feesCollectedDec.Mul(proposerMultiplier)
 
 	// apply commission
-	commission := proposerReward.Mul(proserValidator.GetCommission())
-	remaining := proposerReward.Mul(sdk.OneDec().Sub(proserValidator.GetCommission()))
+	commission := proposerReward.Mul(proposerValidator.GetCommission())
+	remaining := proposerReward.Mul(sdk.OneDec().Sub(proposerValidator.GetCommission()))
 	proposerDist.PoolCommission = proposerDist.PoolCommission.Plus(commission)
 	proposerDist.Pool = proposerDist.Pool.Plus(remaining)
 

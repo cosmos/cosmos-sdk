@@ -21,15 +21,17 @@ import (
 // are returned to Tendermint.
 func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate) {
 
+	fmt.Printf("GetTendermintUpdates\n")
+
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 
 	// copy last validator set
-	var last map[[sdk.AddrLen]byte]interface{}
+	last := make(map[[sdk.AddrLen]byte]interface{})
 	iterator := sdk.KVStorePrefixIterator(store, BondedValidatorsIndexKey)
 	for ; iterator.Valid(); iterator.Next() {
 		var operator [sdk.AddrLen]byte
-		copy(operator[:], iterator.Key())
+		copy(operator[:], iterator.Key()[1:])
 		last[operator] = nil
 	}
 
@@ -43,6 +45,7 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 
 		// jailed validators are ranked last, so if we get to a jailed validator
 		// we have no more bonded validators
+		// TODO we can remove this if we remove jailed validators from the power store
 		if validator.Jailed {
 			break
 		}
@@ -50,9 +53,9 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 		// apply the appropriate state change if necessary
 		switch validator.Status {
 		case sdk.Unbonded:
-			k.unbondedToBonded(ctx, validator)
+			validator = k.unbondedToBonded(ctx, validator)
 		case sdk.Unbonding:
-			k.unbondingToBonded(ctx, validator)
+			validator = k.unbondingToBonded(ctx, validator)
 		case sdk.Bonded:
 			// no state change
 		}
@@ -62,10 +65,11 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 
 		// validator still in the validator set
 		var opbytes [sdk.AddrLen]byte
-		copy(opbytes[:], operator)
+		copy(opbytes[:], operator[:])
 		delete(last, opbytes)
 
 		// set the bonded validator index
+		// TODO move me
 		store.Set(GetBondedValidatorIndexKey(operator), []byte{})
 
 		// keep count
@@ -75,10 +79,12 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 
 	// sort the map keys for determinism
 	noLongerBonded := make([][]byte, len(last))
-	for oper, _ := range last {
-		var operator []byte
+	index := 0
+	for oper := range last {
+		operator := make([]byte, sdk.AddrLen)
 		copy(operator[:], oper[:])
-		noLongerBonded = append(noLongerBonded, operator)
+		noLongerBonded[index] = operator
+		index++
 	}
 	sort.SliceStable(noLongerBonded, func(i, j int) bool {
 		return bytes.Compare(noLongerBonded[i], noLongerBonded[j]) == -1
@@ -88,12 +94,14 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 	// any validators left in `last` are no longer bonded
 	for _, operator := range noLongerBonded {
 		// fetch the validator
+		// TODO might it have been deleted in RemoveValidator?
 		validator := k.mustGetValidator(ctx, sdk.ValAddress(operator))
 
 		// bonded to unbonding
 		k.bondedToUnbonding(ctx, validator)
 
 		// delete from the bonded validator index
+		// TODO move me
 		store.Delete(GetBondedValidatorIndexKey(operator))
 
 		// update the validator
@@ -105,32 +113,32 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 
 // Validator state transitions
 
-func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) types.Validator {
 	if validator.Status != sdk.Bonded {
 		panic(fmt.Sprintf("bad state transition bondedToUnbonded, validator: %v\n", validator))
 	}
-	k.beginUnbondingValidator(ctx, validator)
+	return k.beginUnbondingValidator(ctx, validator)
 }
 
-func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) unbondingToBonded(ctx sdk.Context, validator types.Validator) types.Validator {
 	if validator.Status != sdk.Unbonding {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
-	k.bondValidator(ctx, validator)
+	return k.bondValidator(ctx, validator)
 }
 
-func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) types.Validator {
 	if validator.Status != sdk.Unbonded {
 		panic(fmt.Sprintf("bad state transition unbondedToBonded, validator: %v\n", validator))
 	}
-	k.bondValidator(ctx, validator)
+	return k.bondValidator(ctx, validator)
 }
 
-func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) types.Validator {
 	if validator.Status != sdk.Unbonded {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
-	k.completeUnbondingValidator(ctx, validator)
+	return k.completeUnbondingValidator(ctx, validator)
 }
 
 // send a validator to jail
@@ -144,6 +152,7 @@ func (k Keeper) JailValidator(ctx sdk.Context, validator types.Validator) {
 	validator.Jailed = true
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
+	// TODO we should be able to just delete the index, and only set it again once unjailed
 }
 
 // remove a validator from jail
@@ -162,7 +171,7 @@ func (k Keeper) UnjailValidator(ctx sdk.Context, validator types.Validator) {
 //________________________________________________________________________________________________
 
 // perform all the store operations for when a validator status becomes bonded
-func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
@@ -187,6 +196,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) {
 	if k.hooks != nil {
 		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress())
 	}
+
+	return validator
 }
 
 // perform all the store operations for when a validator status begins unbonding
@@ -199,8 +210,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 
 	// sanity check
-	if validator.Status == sdk.Unbonded ||
-		validator.Status == sdk.Unbonding {
+	if validator.Status != sdk.Bonded {
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
 	}
 
@@ -228,11 +238,12 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 }
 
 // perform all the store operations for when a validator status becomes unbonded
-func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	pool := k.GetPool(ctx)
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
 	k.SetPool(ctx, pool)
 	k.SetValidator(ctx, validator)
+	return validator
 }
 
 // XXX need to figure out how to set a validator's BondIntraTxCounter - probably during delegation bonding?

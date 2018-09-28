@@ -76,6 +76,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 // PositivePowerInvariant checks that all stored validators have > 0 power
 func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 	return func(app *baseapp.BaseApp) error {
+		// TODO Reenable but only check after EndBlock, is this accurate now?
 		ctx := app.NewContext(false, abci.Header{})
 		var err error
 		k.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) bool {

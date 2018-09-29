@@ -11,14 +11,14 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/cli"
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"os"
-	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 const ctxAccStoreName = "acc"
@@ -29,7 +29,7 @@ type CLIContext struct {
 	Codec         *codec.Codec
 	AccDecoder    auth.AccountDecoder
 	Client        rpcclient.Client
-	Logger        io.Writer
+	Output        io.Writer
 	Height        int64
 	NodeURI       string
 	From          string
@@ -61,6 +61,7 @@ func NewCLIContext() CLIContext {
 
 	return CLIContext{
 		Client:        rpc,
+		Output:        os.Stdout,
 		NodeURI:       nodeURI,
 		AccountStore:  ctxAccStoreName,
 		From:          viper.GetString(client.FlagFrom),
@@ -162,9 +163,9 @@ func (ctx CLIContext) WithAccountDecoder(decoder auth.AccountDecoder) CLIContext
 	return ctx
 }
 
-// WithLogger returns a copy of the context with an updated logger.
-func (ctx CLIContext) WithLogger(w io.Writer) CLIContext {
-	ctx.Logger = w
+// WithOutput returns a copy of the context with an updated output writer (e.g. stdout).
+func (ctx CLIContext) WithOutput(w io.Writer) CLIContext {
+	ctx.Output = w
 	return ctx
 }
 

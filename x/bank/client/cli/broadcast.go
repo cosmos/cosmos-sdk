@@ -20,7 +20,7 @@ Read a transaction from <file> and broadcast it to a node. If you supply a dash 
 in place of an input filename, the command reads from standard input.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			cliCtx := context.NewCLIContext().WithCodec(codec).WithLogger(os.Stdout)
+			cliCtx := context.NewCLIContext().WithCodec(codec)
 			stdTx, err := readAndUnmarshalStdTx(cliCtx.Codec, args[0])
 			if err != nil {
 				return

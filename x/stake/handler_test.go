@@ -685,19 +685,25 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 	msgBeginUnbondingValidator := NewMsgBeginUnbonding(sdk.AccAddress(validatorAddr), validatorAddr, sdk.NewDec(10))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error")
+
+	// change the ctx to Block Time one second before the validator would have unbonded
 	var finishTime time.Time
 	types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
 	ctx = ctx.WithBlockTime(finishTime.Add(time.Second * -1))
-	EndBlocker(ctx, keeper)
 
-	// test that the delegator can still withdraw their bonds
+	// unbond the delegator from the validator
 	msgBeginUnbondingDelegator := NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sdk.NewDec(10))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingDelegator, keeper)
 	require.True(t, got.IsOK(), "expected no error")
-	types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
-	ctx = ctx.WithBlockTime(finishTime)
+
+	// move the Block time forward by one second
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(time.Second * 1))
+
+	// Run the EndBlocker
 	EndBlocker(ctx, keeper)
 
+	// Check to make sure that the unbonding delegation is no longer in state
+	// (meaning it was deleted in the above EndBlocker)
 	_, found := keeper.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	require.False(t, found, "should be removed from state")
 }

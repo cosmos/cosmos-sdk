@@ -19,7 +19,6 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk
 	return vi
 }
 
-// XXX TODO Update dec logic
 // move any available accumulated fees in the FeePool to the validator's pool
 func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBonded, vdTokens,
 	commissionRate sdk.Dec) (ValidatorDistInfo, FeePool) {

@@ -11,10 +11,11 @@ tags:
   description: Create and sign a send tx
 - name: version
   description: Information about the app version
+schemes:
+- https
 securityDefinitions:
   kms:
     type: basic
-
 paths:
   /version:
     get:
@@ -48,15 +49,15 @@ paths:
           schema:
             type: object
             properties:
-              pub_key:
-                $ref: '#/definitions/PubKey'
+              id:
+                type: string
               moniker:
                 type: string
-                example: 159.89.198.221
+                example: validator-name
               network:
                 type: string
                 example: gaia-2
-              remote_addr:
+              channels:
                 type: string
               listen_addr:
                 type: string
@@ -90,25 +91,25 @@ paths:
         200:
           description: The latest block
           schema:
-            $ref: "#/definitions/Block"
+            $ref: "#/definitions/QueryBlock"
   /blocks/{height}:
-    parameters:
-    - in: path
-      name: height
-      description: Block height
-      required: true
-      type: number
     get:
       summary: Get a block at a certain height
       tags:
       - ICS0
       produces:
       - application/json
+      parameters:
+      - in: path
+        name: height
+        description: Block height
+        required: true
+        type: number
       responses:
         200:
           description: The block at a specific height
           schema:
-            $ref: "#/definitions/Block"
+            $ref: "#/definitions/QueryBlock"
         404:
           description: Block at height is not available
   /validatorsets/latest:
@@ -131,18 +132,18 @@ paths:
                 items:
                   $ref: "#/definitions/Validator"
   /validatorsets/{height}:
-    parameters:
-    - in: path
-      name: height
-      description: Block height
-      required: true
-      type: number
     get:
       summary: Get a validator set a certain height
       tags:
       - ICS0
       produces:
       - application/json
+      parameters:
+      - in: path
+        name: height
+        description: Block height
+        required: true
+        type: number
       responses:
         200:
           description: The validator set at a specific block height
@@ -158,58 +159,51 @@ paths:
         404:
           description: Block at height not available
   /txs/{hash}:
-    parameters:
-    - in: path
-      name: hash
-      description: Tx hash
-      required: true
-      type: string
     get:
       summary: Get a Tx by hash
       tags:
       - ICS0
       produces:
       - application/json
+      parameters:
+      - in: path
+        name: hash
+        description: Tx hash
+        required: true
+        type: string
       responses:
         200:
           description: Tx with the provided hash
           schema:
-            $ref: "#/definitions/Tx"
+            $ref: "#/definitions/TxQuery"
         404:
           description: Tx not available for provided hash
   /txs/search:
-    parameters:
-      - in: query
-        name: tag
-        schema:
-          type: string
-          example: "coin.sender=EE5F3404034C524501629B56E0DDC38FAD651F04"
-        required: true
-      - in: query
-        name: page
-        description: Pagination page
-        schema:
-          type: number
-          default: 0
-      - in: query
-        name: size
-        description: Pagination size
-        schema:
-          type: number
-          default: 50
     get:
       tags:
       - ICS0
       summary: Query Tx
+      parameters:
+      - in: query
+        name: tag
+        type: string
+        description: "transaction tag, for instance: sender=`'cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc'`"
+        required: true
+      - in: query
+        name: page
+        description: Pagination page
+        type: integer
+      - in: query
+        name: size
+        description: Pagination size
+        type: integer
       responses:
         200:
           description: All Tx matching the provided tags
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/definitions/Tx"
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/TxQuery"
         404:
           description: Pagination is out of bounds
   /txs:
@@ -217,91 +211,107 @@ paths:
       tags:
       - ICS0
       summary: broadcast Tx
+      description: broadcast tx
+      parameters:
+      - in: body
+        name: txBroadcast
+        description: build a StdTx transaction and serilize it to a byte array with amino, then the `"tx"` field in the post body will be the base64 encoding of the byte array.
+        required: true
+        schema:
+          $ref: "#/definitions/TendertmintTx"
       responses:
         200:
           description: Broadcast tx result
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/definitions/Tx"
-  /txs/sign:
+  /tx/sign:
     post:
       tags:
       - ICS20
       summary: Sign a Tx
       description: Sign a Tx providing locally stored account and according password
-      security:
-        - sign: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/definitions/TxBuild"
+      parameters:
+      - in: body
+        name: sendToken
+        description: sign tx
+        required: true
+        schema:
+          $ref: "#/definitions/TxSign"
       responses:
         200:
           description: The signed Tx
-          content:
-            application/json:
-              schema:
-                $ref: "#/definitions/TxSigned"
+          schema:
+            $ref: "#/definitions/StdTx"
         401:
           description: Account name and/or password where wrong
-  /txs/broadcast:
+  /tx/broadcast:
     post:
       tags:
       - ICS20
       summary: Send signed Tx
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/definitions/TxSigned"
+      description: Sign a Tx providing locally stored account and according password
+      consumes:
+      - application/json
+      parameters:
+      - in: body
+        name: txBroadcast
+        description: broadcast tx
+        required: true
+        schema:
+          $ref: "#/definitions/TxBroadcast"
       responses:
         202:
           description: Tx was send and will probably be added to the next block
         400:
           description: The Tx was malformated
   /bank/balances/{address}:
-    parameters:
-    - in: path
-      name: address
-      description: Account address in bech32 format
-      required: true
-      type: string
     get:
       summary: Get the account balances
       tags:
       - ICS20
       produces:
       - application/json
+      parameters:
+      - in: path
+        name: address
+        description: Account address in bech32 format
+        required: true
+        type: string
       responses:
         200:
           description: Account balances
           schema:
-            $ref: "#/definitions/Balance"
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
         204:
           description: There is no data for the requested account. This is not a 404 as the account might exist, just does not hold data.
   /bank/accounts/{address}/transfers:
-    parameters:
-    - in: path
-      name: address
-      description: Account address in bech32 format
-      required: true
-      type: string
     post:
       summary: Send coins (build -> sign -> send)
+      description: Send coins (build -> sign -> send)
       tags:
       - ICS20
-      security:
-      - kms: []
       consumes:
       - application/json
       parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: string
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: string
+      - in: path
+        name: address
+        description: Account address in bech32 format
+        required: true
+        type: string
       - in: body
         name: account
         description: The password of the account to remove from the KMS
+        required: true
         schema:
           type: object
           properties:
@@ -312,11 +322,15 @@ paths:
             amount:
               type: array
               items:
-                $ref: "#/definitions/Coins"
+                $ref: "#/definitions/Coin"
             chain_id:
               type: string
             squence:
-              type: number
+              type: string
+            gas:
+              type: string
+            fee:
+              type: string
       responses:
         202:
           description: Tx was send and will probably be added to the next block
@@ -324,23 +338,46 @@ paths:
           description: The Tx was malformated
 
 definitions:
+  KVPair:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+  Fee:
+    type: object
+    properties:
+      gas:
+        type: string
+      amount:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
+  Msg:
+    type: string
   Address:
     type: string
     description: bech32 encoded addres
-    example: cosmos:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    example: cosmoszgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   ValidatorAddress:
     type: string
     description: bech32 encoded addres
     example: cosmosvaloper:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   PubKey:
-    type: string
-    description: bech32 encoded public key
-    example: cosmospub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    type: object
+    properties:
+      type:
+        type: string
+        example: "tendermint/PubKeySecp256k1"
+      value:
+        type: string
+        example: "Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH"
   ValidatorPubKey:
     type: string
     description: bech32 encoded public key
     example: cosmosvalconspub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
-  Coins:
+  Coin:
     type: object
     properties:
       denom:
@@ -352,96 +389,90 @@ definitions:
   Hash:
     type: string
     example: EE5F3404034C524501629B56E0DDC38FAD651F04
-  Tx:
+  Result:
     type: object
     properties:
-      type:
+      log:
         type: string
-        enum:
-        - stake/delegate
-      data:
-        type: object
-  TxChain:
+      gas_wanted:
+        type: string
+        example: "0"
+      gas_used:
+        type: string
+        example: "0"
+      tags:
+        type: array
+        items:
+          $ref: "#/definitions/KVPair"
+  TxQuery:
     type: object
     properties:
-      type:
+      hash:
         type: string
-        default: chain/tx
-      data:
+      height:
+        type: number
+      tx:
+        $ref: "#/definitions/StdTx"
+      result:
+        $ref: "#/definitions/Result"
+  TendertmintTx:
+    type: object
+    properties:
+      tx:
+        type: string
+      return:
+        type: string
+        example: block
+  TxBroadcast:
+    type: object
+    properties:
+      tx:
+        $ref: "#/definitions/StdTx"
+  TxSign:
+    type: object
+    properties:
+      tx:
+        $ref: "#/definitions/StdTx"
+      name:
+        type: string
+      password:
+        type: string
+      chain_id:
+        type: string
+      account_number:
+        type: string
+        example: "0"
+      sequence:
+        type: string
+        example: "0"
+      append_sig:
+        type: boolean
+        example: true
+  StdTx:
+    type: object
+    properties:
+      msg:
+        type: array
+        items:
+          $ref: "#/definitions/Msg"
+      fee:
+        $ref: "#/definitions/Fee"
+      memo:
+        type: string
+      signature:
         type: object
         properties:
-          chain_id:
+          signature:
             type: string
-            example: gaia-2
-          expires_at:
-            type: number
-            example: 0
-          tx:
-            type: object
-            properties:
-              type:
-                type: string
-                default: nonce
-              data:
-                type: object
-                properties:
-                  sequence:
-                    type: number
-                    example: 0
-                  signers:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        chain:
-                          type: string
-                          example: ''
-                        app:
-                          type: string
-                          default: sigs
-                        addr:
-                          $ref: "#/definitions/Address"
-                  tx:
-                    $ref: "#/definitions/Tx"
-  TxBuild:
-    type: object
-    properties:
-      type:
-        type: string
-        default: sigs/one
-      data:
-        type: object
-        properties:
-          tx:
-            $ref: "#/definitions/Tx"
-          signature:
-            type: object
-            properties:
-              Sig:
-                type: string
-                default: ''
-              Pubkey:
-                type: string
-                default: ''
-  TxSigned:
-    type: object
-    properties:
-      type:
-        type: string
-        default: sigs/one
-      data:
-        type: object
-        properties:
-          tx:
-            $ref: "#/definitions/Tx"
-          signature:
-            type: object
-            properties:
-              Sig:
-                type: string
-                example: 81B11E717789600CC192B26F452A983DF13B985EE75ABD9DD9E68D7BA007A958
-              Pubkey:
-                $ref: "#/definitions/PubKey"
+            example: MEUCIQD02fsDPra8MtbRsyB1w7bqTM55Wu138zQbFcWx4+CFyAIge5WNPfKIuvzBZ69MyqHsqD8S1IwiEp+iUb6VSdtlpgY=
+          pub_key:
+            $ref: "#/definitions/PubKey"
+          account_number:
+            type: string
+            example: "0"
+          sequence:
+            type: string
+            example: "0"
   Account:
     type: object
     properties:
@@ -452,20 +483,6 @@ definitions:
         $ref: "#/definitions/Address"
       pub_key:
         $ref: "#/definitions/PubKey"
-  Balance:
-    type: object
-    properties:
-      height:
-        type: number
-        example: 123456
-      coins:
-        type: array
-        items:
-          $ref: "#/definitions/Coins"
-      credit:
-        type: array
-        items:
-          type: object
   BlockID:
     type: object
     properties:
@@ -479,60 +496,99 @@ definitions:
             example: 0
           hash:
             $ref: "#/definitions/Hash"
+  BlockHeader:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        example: gaia-2
+      height:
+        type: number
+        example: 1
+      time:
+        type: string
+        example: '2017-12-30T05:53:09.287+01:00'
+      num_txs:
+        type: number
+        example: 0
+      last_block_id:
+        $ref: "#/definitions/BlockID"
+      total_txs:
+        type: number
+        example: 35
+      last_commit_hash:
+        $ref: "#/definitions/Hash"
+      data_hash:
+        $ref: "#/definitions/Hash"
+      validators_hash:
+        $ref: "#/definitions/Hash"
+      consensus_hash:
+        $ref: "#/definitions/Hash"
+      app_hash:
+        $ref: "#/definitions/Hash"
+      last_results_hash:
+        $ref: "#/definitions/Hash"
+      evidence_hash:
+        $ref: "#/definitions/Hash"
   Block:
     type: object
     properties:
       header:
-        type: object
-        properties:
-          chain_id:
-            type: string
-            example: gaia-2
-          height:
-            type: number
-            example: 1
-          time:
-            type: string
-            example: '2017-12-30T05:53:09.287+01:00'
-          num_txs:
-            type: number
-            example: 0
-          last_block_id:
-            $ref: "#/definitions/BlockID"
-          total_txs:
-            type: number
-            example: 35
-          last_commit_hash:
-            $ref: "#/definitions/Hash"
-          data_hash:
-            $ref: "#/definitions/Hash"
-          validators_hash:
-            $ref: "#/definitions/Hash"
-          consensus_hash:
-            $ref: "#/definitions/Hash"
-          app_hash:
-            $ref: "#/definitions/Hash"
-          last_results_hash:
-            $ref: "#/definitions/Hash"
-          evidence_hash:
-            $ref: "#/definitions/Hash"
+        $ref: "#/definitions/BlockHeader"
       txs:
         type: array
         items:
-          $ref: "#/definitions/Tx"
+          type: string
       evidence:
         type: array
         items:
-          type: object
+          type: string
       last_commit:
         type: object
         properties:
-          blockID:
+          block_id:
             $ref: "#/definitions/BlockID"
           precommits:
             type: array
             items:
               type: object
+              properties:
+                validator_address:
+                  type: string
+                validator_index:
+                  type: string
+                  example: "0"
+                height:
+                  type: string
+                  example: "0"
+                round:
+                  type: string
+                  example: "0"
+                timestamp:
+                  type: string
+                  example: '2017-12-30T05:53:09.287+01:00'
+                type:
+                  type: number
+                  example: 2
+                block_id:
+                  $ref: "#/definitions/BlockID"
+                signature:
+                  type: string
+                  example: '7uTC74QlknqYWEwg7Vn6M8Om7FuZ0EO4bjvuj6rwH1mTUJrRuMMZvAAqT9VjNgP0RA/TDp6u/92AqrZfXJSpBQ=='
+  BlockMeta:
+    type: object
+    properties:
+      header:
+        $ref: "#/definitions/BlockHeader"
+      block_id:
+        $ref: "#/definitions/BlockID"
+  QueryBlock:
+    type: object
+    properties:
+      block_meta:
+        $ref: "#/definitions/BlockMeta"
+      block:
+        $ref: "#/definitions/Block"
   Validator:
     type: object
     properties:
@@ -546,5 +602,3 @@ definitions:
       accum:
         type: number
         example: 1000
-schemes:
-- https

@@ -20,7 +20,7 @@ const (
 
 // BroadcastBody Tx Broadcast Body
 type BroadcastBody struct {
-	TxBytes string `json:"tx"`
+	TxBytes []byte `json:"tx"`
 	Return string `json:"return"`
 }
 
@@ -42,7 +42,7 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 		var output []byte
 		switch m.Return {
 		case flagBlock:
-			res, err := cliCtx.BroadcastTx([]byte(m.TxBytes))
+			res, err := cliCtx.BroadcastTx(m.TxBytes)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
@@ -53,7 +53,7 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 				return
 			}
 		case flagSync:
-			res, err := cliCtx.BroadcastTxSync([]byte(m.TxBytes))
+			res, err := cliCtx.BroadcastTxSync(m.TxBytes)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
@@ -64,7 +64,7 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 				return
 			}
 		case flagAsync:
-			res, err := cliCtx.BroadcastTxAsync([]byte(m.TxBytes))
+			res, err := cliCtx.BroadcastTxAsync(m.TxBytes)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return

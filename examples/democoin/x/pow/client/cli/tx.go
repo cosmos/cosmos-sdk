@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"os"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -25,7 +24,6 @@ func MineCmd(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			from, err := cliCtx.GetFromAddress()

@@ -144,7 +144,8 @@ func createHandler(cdc *codec.Codec) http.Handler {
 	staticServer := http.FileServer(statikFS)
 	r.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 
-	cliCtx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout)
+	cliCtx := context.NewCLIContext().WithCodec(cdc)
+
 
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")

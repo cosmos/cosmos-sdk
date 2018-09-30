@@ -36,6 +36,7 @@ func QueryAccountRequestHandlerFn(
 	decoder auth.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
 
@@ -81,6 +82,7 @@ func QueryBalancesRequestHandlerFn(
 	decoder auth.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
 

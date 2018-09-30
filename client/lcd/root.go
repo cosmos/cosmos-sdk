@@ -47,6 +47,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			listenAddr := viper.GetString(flagListenAddr)
 			handler := createHandler(cdc)
+			registerSwaggerUI(handler)
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 			maxOpen := viper.GetInt(flagMaxOpenConnections)
 			sslHosts := viper.GetString(flagSSLHosts)
@@ -129,20 +130,13 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func createHandler(cdc *codec.Codec) http.Handler {
+func createHandler(cdc *codec.Codec) *mux.Router {
 	r := mux.NewRouter()
 
 	kb, err := keys.GetKeyBase() //XXX
 	if err != nil {
 		panic(err)
 	}
-
-	statikFS, err := fs.New()
-	if err != nil {
-		panic(err)
-	}
-	staticServer := http.FileServer(statikFS)
-	r.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 
 	cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -161,6 +155,15 @@ func createHandler(cdc *codec.Codec) http.Handler {
 	gov.RegisterRoutes(cliCtx, r, cdc)
 
 	return r
+}
+
+func registerSwaggerUI(r *mux.Router) {
+	statikFS, err := fs.New()
+	if err != nil {
+		panic(err)
+	}
+	staticServer := http.FileServer(statikFS)
+	r.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 }
 
 func validateCertKeyFiles(certFile, keyFile string) error {

@@ -178,16 +178,17 @@ paths:
             $ref: "#/definitions/TxQuery"
         404:
           description: Tx not available for provided hash
-  /txs/search:
+  /txs:
     get:
       tags:
       - ICS0
-      summary: Query Tx
+      summary: Search transactions
+      description: Search transactions by tag
       parameters:
       - in: query
         name: tag
         type: string
-        description: "transaction tag, for instance: sender=`'cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc'`"
+        description: "transaction tag, for instance: sender_bech32=`'cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc'`"
         required: true
       - in: query
         name: page
@@ -206,12 +207,11 @@ paths:
               $ref: "#/definitions/TxQuery"
         404:
           description: Pagination is out of bounds
-  /txs:
     post:
       tags:
       - ICS0
       summary: broadcast Tx
-      description: broadcast tx
+      description: broadcast tx with tendermint rpc
       parameters:
       - in: body
         name: txBroadcast

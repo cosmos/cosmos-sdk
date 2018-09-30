@@ -174,7 +174,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
-		output, err := cdc.MarshalJSON(txs)
+		output, err := cdc.MarshalJSONIndent(txs, "", "  ")
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))

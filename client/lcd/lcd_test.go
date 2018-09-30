@@ -45,12 +45,6 @@ func TestKeys(t *testing.T) {
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
-	// recover key
-	res, body := doRecoverKey(t, port, seed)
-	var response keys.KeyOutput
-	err := wire.Cdc.UnmarshalJSON([]byte(body), &response)
-	require.Nil(t, err, body)
-
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
 	match := reg.MatchString(seed)
@@ -61,7 +55,7 @@ func TestKeys(t *testing.T) {
 
 	// add key
 	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed":"%s"}`, newName, newPassword, seed))
-	res, body = Request(t, port, "POST", "/keys", jsonStr)
+	res, body := Request(t, port, "POST", "/keys", jsonStr)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var resp keys.KeyOutput
@@ -80,7 +74,7 @@ func TestKeys(t *testing.T) {
 	// existing keys
 	res, body = Request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var m [3]keys.KeyOutput
+	var m [2]keys.KeyOutput
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 

@@ -2,7 +2,6 @@ package cool
 
 import (
 	"fmt"
-	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -26,7 +25,7 @@ func NewHandler(k Keeper) sdk.Handler {
 		case MsgQuiz:
 			return handleMsgQuiz(ctx, k, msg)
 		default:
-			errMsg := fmt.Sprintf("Unrecognized cool Msg type: %v", reflect.TypeOf(msg).Name())
+			errMsg := fmt.Sprintf("Unrecognized cool Msg type: %v", msg.Name())
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func init() {
@@ -20,8 +21,9 @@ func init() {
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
+	db := dbm.NewMemDB()
 	cstore := New(
-		dbm.NewMemDB(),
+		db,
 	)
 
 	algo := Secp256k1
@@ -50,6 +52,12 @@ func TestKeyManagement(t *testing.T) {
 	i2, err := cstore.Get(n2)
 	require.NoError(t, err)
 	_, err = cstore.Get(n3)
+	require.NotNil(t, err)
+	_, err = cstore.GetByAddress(accAddr(i2))
+	require.NoError(t, err)
+	addr, err := types.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+	require.NoError(t, err)
+	_, err = cstore.GetByAddress(addr)
 	require.NotNil(t, err)
 
 	// list shows them in order
@@ -92,6 +100,11 @@ func TestKeyManagement(t *testing.T) {
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
+
+	// addr cache gets nuked
+	err = cstore.Delete(n2, p2)
+	require.NoError(t, err)
+	require.False(t, db.Has(addrKey(i2.GetAddress())))
 }
 
 // TestSignVerify does some detailed checks on how we sign and validate
@@ -386,4 +399,8 @@ func ExampleNew() {
 	// Bob
 	// Carl
 	// signed by Bob
+}
+
+func accAddr(info Info) types.AccAddress {
+	return (types.AccAddress)(info.GetPubKey().Address())
 }

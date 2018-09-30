@@ -30,7 +30,7 @@ func NewTxBuilderFromCLI() TxBuilder {
 	// if chain ID is not specified manually, read default chain ID
 	chainID := viper.GetString(client.FlagChainID)
 	if chainID == "" {
-		defaultChainID, err := defaultChainID()
+		defaultChainID, err := sdk.DefaultChainID()
 		if err != nil {
 			chainID = defaultChainID
 		}
@@ -92,23 +92,23 @@ func (bldr TxBuilder) WithAccountNumber(accnum int64) TxBuilder {
 
 // Build builds a single message to be signed from a TxBuilder given a set of
 // messages. It returns an error if a fee is supplied but cannot be parsed.
-func (bldr TxBuilder) Build(msgs []sdk.Msg) (auth.StdSignMsg, error) {
+func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 	chainID := bldr.ChainID
 	if chainID == "" {
-		return auth.StdSignMsg{}, errors.Errorf("chain ID required but not specified")
+		return StdSignMsg{}, errors.Errorf("chain ID required but not specified")
 	}
 
 	fee := sdk.Coin{}
 	if bldr.Fee != "" {
 		parsedFee, err := sdk.ParseCoin(bldr.Fee)
 		if err != nil {
-			return auth.StdSignMsg{}, err
+			return StdSignMsg{}, err
 		}
 
 		fee = parsedFee
 	}
 
-	return auth.StdSignMsg{
+	return StdSignMsg{
 		ChainID:       bldr.ChainID,
 		AccountNumber: bldr.AccountNumber,
 		Sequence:      bldr.Sequence,
@@ -120,7 +120,7 @@ func (bldr TxBuilder) Build(msgs []sdk.Msg) (auth.StdSignMsg, error) {
 
 // Sign signs a transaction given a name, passphrase, and a single message to
 // signed. An error is returned if signing fails.
-func (bldr TxBuilder) Sign(name, passphrase string, msg auth.StdSignMsg) ([]byte, error) {
+func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, error) {
 	sig, err := MakeSignature(name, passphrase, msg)
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If append
 // is false, it replaces the signatures already attached with the new signature.
 func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appendSig bool) (signedStdTx auth.StdTx, err error) {
-	stdSignature, err := MakeSignature(name, passphrase, auth.StdSignMsg{
+	stdSignature, err := MakeSignature(name, passphrase, StdSignMsg{
 		ChainID:       bldr.ChainID,
 		AccountNumber: bldr.AccountNumber,
 		Sequence:      bldr.Sequence,
@@ -195,7 +195,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appen
 }
 
 // MakeSignature builds a StdSignature given key name, passphrase, and a StdSignMsg.
-func MakeSignature(name, passphrase string, msg auth.StdSignMsg) (sig auth.StdSignature, err error) {
+func MakeSignature(name, passphrase string, msg StdSignMsg) (sig auth.StdSignature, err error) {
 	keybase, err := keys.GetKeyBase()
 	if err != nil {
 		return

@@ -62,9 +62,11 @@ $ gaiacli tendermint txs --tag test1,test2 --any
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-
-	// TODO: change this to false once proofs built in
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
+	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
+	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().StringSlice(flagTags, nil, "Comma-separated list of tags that must match")
 	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")
 	return cmd
@@ -84,7 +86,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]In
 		return nil, err
 	}
 
-	prove := !viper.GetBool(client.FlagTrustNode)
+	prove := !cliCtx.TrustNode
 
 	// TODO: take these as args
 	page := 0
@@ -92,6 +94,15 @@ func searchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]In
 	res, err := node.TxSearch(query, prove, page, perPage)
 	if err != nil {
 		return nil, err
+	}
+
+	if prove {
+		for _, tx := range res.Txs {
+			err := ValidateTxResult(cliCtx, tx)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	info, err := FormatTxResults(cdc, res.Txs)

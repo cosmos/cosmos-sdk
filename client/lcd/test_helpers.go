@@ -186,6 +186,10 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// XXX: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
+	viper.Set(client.FlagTrustNode, false)
+	dir, err := ioutil.TempDir("", "lcd_test")
+	require.NoError(t, err)
+	viper.Set(cli.HomeFlag, dir)
 
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)

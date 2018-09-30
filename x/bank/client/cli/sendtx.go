@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"os"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -30,7 +28,6 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			if err := cliCtx.EnsureAccountExists(); err != nil {
@@ -67,12 +64,12 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := client.BuildMsg(from, to, coins)
+			msg := client.CreateMsg(from, to, coins)
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

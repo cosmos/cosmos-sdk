@@ -45,6 +45,10 @@ func TestKeys(t *testing.T) {
 	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
+	// get seed
+	// TODO Do we really need this endpoint?
+	res, body := Request(t, port, "GET", "/keys/seed", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	reg, err := regexp.Compile(`([a-z]+ ){12}`)
 	require.Nil(t, err)
 	match := reg.MatchString(seed)
@@ -55,7 +59,7 @@ func TestKeys(t *testing.T) {
 
 	// add key
 	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed":"%s"}`, newName, newPassword, seed))
-	res, body := Request(t, port, "POST", "/keys", jsonStr)
+	res, body = Request(t, port, "POST", "/keys", jsonStr)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var resp keys.KeyOutput
@@ -846,7 +850,7 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		}
 	}`, coinbz, gasStr, gasAdjustmentStr, name, password, chainID, accnum, sequence))
 
-	res, body = Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send%v", receiveAddr, queryStr), jsonStr)
+	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/accounts/%s/transfers%v", receiveAddr, queryStr), jsonStr)
 	return
 }
 
@@ -858,15 +862,6 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress
 	require.Nil(t, err)
 
 	return receiveAddr, resultTx
-}
-
-func doRecoverKey(t *testing.T, port, seed string) (*http.Response, string) {
-	recoverKeyURL := fmt.Sprintf("/keys/%s/recover", "test_recover")
-	passwordRecover := "1234567890"
-	jsonStrRecover := []byte(fmt.Sprintf(`{"seed":"%s", "password":"%s"}`, seed, passwordRecover))
-	res, body := Request(t, port, "POST", recoverKeyURL, jsonStrRecover)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	return res, body
 }
 
 func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {

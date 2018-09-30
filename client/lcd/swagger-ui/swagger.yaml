@@ -184,6 +184,8 @@ paths:
       - ICS0
       summary: Search transactions
       description: Search transactions by tag
+      produces:
+      - application/json
       parameters:
       - in: query
         name: tag
@@ -212,6 +214,10 @@ paths:
       - ICS0
       summary: broadcast Tx
       description: broadcast tx with tendermint rpc
+      consumes:
+      - application/json
+      produces:
+      - application/json
       parameters:
       - in: body
         name: txBroadcast
@@ -222,12 +228,18 @@ paths:
       responses:
         200:
           description: Broadcast tx result
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
   /tx/sign:
     post:
       tags:
       - ICS20
       summary: Sign a Tx
       description: Sign a Tx providing locally stored account and according password
+      consumes:
+      - application/json
+      produces:
+      - application/json
       parameters:
       - in: body
         name: sendToken
@@ -246,9 +258,11 @@ paths:
     post:
       tags:
       - ICS20
-      summary: Send signed Tx
-      description: Sign a Tx providing locally stored account and according password
+      summary: Send a signed Tx
+      description: Send a signed Tx to a Gaiad full node
       consumes:
+      - application/json
+      produces:
       - application/json
       parameters:
       - in: body
@@ -260,6 +274,8 @@ paths:
       responses:
         202:
           description: Tx was send and will probably be added to the next block
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
         400:
           description: The Tx was malformated
   /bank/balances/{address}:
@@ -292,17 +308,19 @@ paths:
       - ICS20
       consumes:
       - application/json
+      produces:
+      - application/json
       parameters:
       - in: query
         name: simulate
         description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
         required: false
-        type: string
+        type: boolean
       - in: query
         name: generate_only
         description: if true, build an unsigned transaction and write it back
         required: false
-        type: string
+        type: boolean
       - in: path
         name: address
         description: Account address in bech32 format
@@ -315,29 +333,90 @@ paths:
         schema:
           type: object
           properties:
-            name:
-              type: string
-            password:
-              type: string
+            base_req:
+              $ref: "#/definitions/BaseReq"
             amount:
               type: array
               items:
                 $ref: "#/definitions/Coin"
-            chain_id:
-              type: string
-            squence:
-              type: string
-            gas:
-              type: string
-            fee:
-              type: string
       responses:
         202:
           description: Tx was send and will probably be added to the next block
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
         400:
           description: The Tx was malformated
 
 definitions:
+  CheckTxResult:
+    type: object
+    properties:
+      code:
+        type: integer
+      data:
+        type: string
+      gas_used:
+        type: integer
+      gas_wanted:
+        type: integer
+      info:
+        type: string
+      log:
+        type: string
+      tags:
+        type: array
+        items:
+          "$ref": "#/definitions/KVPair"
+    example:
+      code: 0
+      data: data
+      log: log
+      gas_used: 5000
+      gas_wanted: 10000
+      info: info
+      tags:
+      - ''
+      - ''
+  DeliverTxResult:
+    type: object
+    properties:
+      code:
+        type: integer
+      data:
+        type: string
+      gas_used:
+        type: integer
+      gas_wanted:
+        type: integer
+      info:
+        type: string
+      log:
+        type: string
+      tags:
+        type: array
+        items:
+          "$ref": "#/definitions/KVPair"
+    example:
+      code: 5
+      data: data
+      log: log
+      gas_used: 5000
+      gas_wanted: 10000
+      info: info
+      tags:
+      - ''
+      - ''
+  BroadcastTxCommitResult:
+    type: object
+    properties:
+      check_tx:
+        $ref: "#/definitions/CheckTxResult"
+      deliver_tx:
+        $ref: "#/definitions/DeliverTxResult"
+      hash:
+        $ref: "#/definitions/Hash"
+      height:
+        type: integer
   KVPair:
     type: object
     properties:
@@ -384,8 +463,8 @@ definitions:
         type: string
         example: steak
       amount:
-        type: number
-        example: 50
+        type: string
+        example: "50"
   Hash:
     type: string
     example: EE5F3404034C524501629B56E0DDC38FAD651F04
@@ -589,6 +668,27 @@ definitions:
         $ref: "#/definitions/BlockMeta"
       block:
         $ref: "#/definitions/Block"
+  BaseReq:
+    type: object
+    properties:
+      name:
+        type: string
+      password:
+        type: string
+      chain_id:
+        type: string
+      account_number:
+        type: string
+        example: "0"
+      sequence:
+        type: string
+        example: "0"
+      gas:
+        type: string
+        example: "200000"
+      gas_adjustment:
+        type: string
+        example: "1.2"
   Validator:
     type: object
     properties:

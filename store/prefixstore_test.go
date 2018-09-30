@@ -119,12 +119,12 @@ func TestPrefixStoreIterate(t *testing.T) {
 	pIter.Close()
 }
 
-func mutateByteSlice(bz []byte) {
+func mutateFirstByte(bz []byte) {
 	if bz[0] == byte(255) {
 		bz[0] = byte(0)
 		return
 	}
-	bz[0] += 1
+	bz[0]++
 }
 
 func TestCloneAppend(t *testing.T) {
@@ -133,15 +133,15 @@ func TestCloneAppend(t *testing.T) {
 		bz := cloneAppend(kvp.key, kvp.value)
 		require.Equal(t, bz, append(kvp.key, kvp.value...))
 
-		mutateByteSlice(bz)
+		mutateFirstByte(bz)
 		require.NotEqual(t, bz, append(kvp.key, kvp.value...))
 
 		bz = cloneAppend(kvp.key, kvp.value)
-		mutateByteSlice(kvp.key)
+		mutateFirstByte(kvp.key)
 		require.NotEqual(t, bz, append(kvp.key, kvp.value...))
 
 		bz = cloneAppend(kvp.key, kvp.value)
-		mutateByteSlice(kvp.value)
+		mutateFirstByte(kvp.value)
 		require.NotEqual(t, bz, append(kvp.key, kvp.value...))
 	}
 }

@@ -38,6 +38,7 @@ func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) ht
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }

@@ -72,7 +72,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }

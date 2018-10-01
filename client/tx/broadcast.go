@@ -39,46 +39,28 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		var output []byte
+		var res interface{}
 		switch m.Return {
 		case flagBlock:
-			res, err := cliCtx.BroadcastTx(m.TxBytes)
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
-			output, err = cdc.MarshalJSON(res)
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
+			res, err = cliCtx.BroadcastTx(m.TxBytes)
 		case flagSync:
-			res, err := cliCtx.BroadcastTxSync(m.TxBytes)
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
-			output, err = cdc.MarshalJSON(res)
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
+			res, err = cliCtx.BroadcastTxSync(m.TxBytes)
 		case flagAsync:
-			res, err := cliCtx.BroadcastTxAsync(m.TxBytes)
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
-			output, err = cdc.MarshalJSON(res)
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-				return
-			}
+			res, err = cliCtx.BroadcastTxAsync(m.TxBytes)
 		default:
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, "unsupported return type. supported types: block, sync, async")
 			return
 		}
-
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		output, err := cdc.MarshalJSONIndent(res, "", "  ")
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }

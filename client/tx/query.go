@@ -142,7 +142,7 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 			w.Write([]byte(err.Error()))
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }

@@ -180,7 +180,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			w.Write([]byte(err.Error()))
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }

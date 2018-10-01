@@ -245,6 +245,6 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)
 }

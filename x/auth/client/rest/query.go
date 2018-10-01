@@ -112,12 +112,12 @@ func QueryBalancesRequestHandlerFn(
 		}
 
 		// print out whole account
-		output, err := cdc.MarshalJSON(account.GetCoins())
+		output, err := cdc.MarshalJSONIndent(account.GetCoins(), "", "  ")
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("couldn't marshall query result. Error: %s", err.Error()))
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }

@@ -25,12 +25,12 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 	maxValidators := k.GetParams(ctx).MaxValidators
 
 	// copy last validator set
-	last := make(map[[sdk.AddrLen]byte]interface{})
+	last := make(map[[sdk.AddrLen]byte][]byte)
 	iterator := sdk.KVStorePrefixIterator(store, BondedValidatorsIndexKey)
 	for ; iterator.Valid(); iterator.Next() {
 		var operator [sdk.AddrLen]byte
 		copy(operator[:], iterator.Key()[1:])
-		last[operator] = nil
+		last[operator] = iterator.Value()
 	}
 
 	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
@@ -44,7 +44,8 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 		// jailed validators are ranked last, so if we get to a jailed validator
 		// we have no more bonded validators
 		// TODO we can remove this if we remove jailed validators from the power store
-		if validator.Jailed {
+		// likewise for zero-power validators, which we never bond
+		if validator.Jailed || validator.BondedTokens().Equal(sdk.ZeroDec()) {
 			break
 		}
 
@@ -58,17 +59,26 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 			// no state change
 		}
 
-		// update the validator (power might have changed)
-		updates = append(updates, validator.ABCIValidatorUpdate())
-
 		// validator still in the validator set
 		var opbytes [sdk.AddrLen]byte
 		copy(opbytes[:], operator[:])
+
+		// fetch the old power bytes
+		powerBytes, ok := last[opbytes]
+
+		// calculate the new power bytes
+		newPowerBytes := validator.ABCIValidatorPowerBytes(k.cdc)
+
+		// update the validator set if power has changed
+		if !ok || !bytes.Equal(powerBytes, newPowerBytes) {
+			updates = append(updates, validator.ABCIValidatorUpdate())
+		}
+
+		// validator still in the validator set
 		delete(last, opbytes)
 
 		// set the bonded validator index
-		// TODO move me
-		store.Set(GetBondedValidatorIndexKey(operator), []byte{})
+		store.Set(GetBondedValidatorIndexKey(operator), newPowerBytes)
 
 		// keep count
 		count++
@@ -99,7 +109,6 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 		k.bondedToUnbonding(ctx, validator)
 
 		// delete from the bonded validator index
-		// TODO move me
 		store.Delete(GetBondedValidatorIndexKey(operator))
 
 		// update the validator
@@ -113,7 +122,7 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 
 func (k Keeper) bondedToUnbonding(ctx sdk.Context, validator types.Validator) types.Validator {
 	if validator.Status != sdk.Bonded {
-		panic(fmt.Sprintf("bad state transition bondedToUnbonded, validator: %v\n", validator))
+		panic(fmt.Sprintf("bad state transition bondedToUnbonding, validator: %v\n", validator))
 	}
 	return k.beginUnbondingValidator(ctx, validator)
 }
@@ -150,11 +159,6 @@ func (k Keeper) JailValidator(ctx sdk.Context, validator types.Validator) {
 	validator.Jailed = true
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
-
-	// if bonded, unbond
-	if validator.Status == sdk.Bonded {
-		k.bondedToUnbonding(ctx, validator)
-	}
 
 	// TODO we should be able to just delete the index, and only set it again once unjailed
 }

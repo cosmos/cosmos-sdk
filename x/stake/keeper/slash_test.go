@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -26,6 +27,7 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	for i := 0; i < numVals; i++ {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
 		validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(amt))
+		pool.BondedTokens = pool.BondedTokens.Add(sdk.NewDec(amt))
 		keeper.SetPool(ctx, pool)
 		validator = updateValidator(keeper, ctx, validator)
 		keeper.SetValidatorByConsAddr(ctx, validator)
@@ -161,6 +163,10 @@ func TestSlashRedelegation(t *testing.T) {
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 
+	// end block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 2, len(updates))
+
 	// initialbalance unchanged
 	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 10), rd.InitialBalance)
 
@@ -201,6 +207,10 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	require.True(t, found)
 	newPool := keeper.GetPool(ctx)
 
+	// end block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
+
 	// power decreased
 	require.Equal(t, sdk.NewDec(5), validator.GetPower())
 	// pool bonded shares decreased
@@ -231,6 +241,10 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	keeper.Slash(ctx, consAddr, 10, 10, fraction)
+
+	// end block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
 
 	// read updating unbonding delegation
 	ubd, found = keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])

@@ -193,7 +193,7 @@ func (k Keeper) UnbondingQueueIterator(ctx sdk.Context, endTime time.Time) sdk.I
 }
 
 // Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
-func (k Keeper) GetAllMatureUnbondingQueue(ctx sdk.Context, currTime time.Time) (matureUnbonds []types.DVPair) {
+func (k Keeper) DequeueAllMatureUnbondingQueue(ctx sdk.Context, currTime time.Time) (matureUnbonds []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	unbondingTimesliceIterator := k.UnbondingQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -330,7 +330,7 @@ func (k Keeper) RedelegationQueueIterator(ctx sdk.Context, endTime time.Time) sd
 }
 
 // Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
-func (k Keeper) GetAllMatureRedelegationQueue(ctx sdk.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet) {
+func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	redelegationTimesliceIterator := k.RedelegationQueueIterator(ctx, ctx.BlockHeader().Time)

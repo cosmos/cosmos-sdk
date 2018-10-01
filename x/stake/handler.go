@@ -35,7 +35,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
 	endBlockerTags := sdk.EmptyTags()
 
-	matureUnbonds := k.GetAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)
+	matureUnbonds := k.DequeueAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvPair := range matureUnbonds {
 		err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddr, dvPair.ValidatorAddr)
 		if err != nil {
@@ -48,7 +48,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 		))
 	}
 
-	matureRedelegations := k.GetAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
+	matureRedelegations := k.DequeueAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvvTriplet := range matureRedelegations {
 		err := k.CompleteRedelegation(ctx, dvvTriplet.DelegatorAddr, dvvTriplet.ValidatorSrcAddr, dvvTriplet.ValidatorDstAddr)
 		if err != nil {

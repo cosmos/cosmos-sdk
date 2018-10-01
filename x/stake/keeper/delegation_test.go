@@ -617,7 +617,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 
 	// end block
 	updates := keeper.GetTendermintUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	require.Equal(t, 2, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -700,7 +700,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 
 	// end block
 	updates := keeper.GetTendermintUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	require.Equal(t, 2, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)

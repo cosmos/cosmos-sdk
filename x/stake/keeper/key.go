@@ -88,12 +88,13 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 	counterBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
 
-	return append(append(append(append(
+	return append(append(append(append(append(
 		ValidatorsByPowerIndexKey,
 		jailedBytes...),
 		powerBytes...),
 		heightBytes...),
-		counterBytes...)
+		counterBytes...),
+		validator.OperatorAddr...)
 }
 
 //______________________________________________________________________________

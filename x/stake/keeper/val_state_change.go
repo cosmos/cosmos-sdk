@@ -104,7 +104,6 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 	// any validators left in `last` are no longer bonded
 	for _, operator := range noLongerBonded {
 		// fetch the validator
-		// TODO might it have been deleted in RemoveValidator?
 		validator := k.mustGetValidator(ctx, sdk.ValAddress(operator))
 
 		// bonded to unbonding

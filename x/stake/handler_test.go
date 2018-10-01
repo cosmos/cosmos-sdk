@@ -86,6 +86,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, keep.PKs[2], int64(1000000))
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
+
 	// must end-block
 	updates = keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates))
@@ -94,6 +95,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	consAddr0 := sdk.ConsAddress(keep.PKs[0].Address())
 	keeper.Slash(ctx, consAddr0, 0, initBond, sdk.NewDecWithPrec(5, 1))
 	keeper.Jail(ctx, consAddr0)
+	keeper.GetTendermintUpdates(ctx)
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Unbonding, validator.Status)              // ensure is unbonding
@@ -143,8 +145,10 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	msgCreateValidator1 := newTestMsgCreateValidator(addr1, pk1, 10)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator1, keeper)
 	require.True(t, got.IsOK(), "%v", got)
-	validator, found := keeper.GetValidator(ctx, addr1)
 
+	keeper.GetTendermintUpdates(ctx)
+
+	validator, found := keeper.GetValidator(ctx, addr1)
 	require.True(t, found)
 	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr1, validator.OperatorAddr)
@@ -323,6 +327,9 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got %v", got)
 
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
+
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status)
@@ -404,6 +411,9 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	// balance should have been subtracted after delegation
 	amt2 := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(denom)
 	require.Equal(t, amt1.Sub(sdk.NewInt(initBond)).Int64(), amt2.Int64(), "expected coins to be subtracted")
+
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
@@ -587,9 +597,9 @@ func TestJailValidator(t *testing.T) {
 	msgBeginUnbondingValidator := NewMsgBeginUnbonding(sdk.AccAddress(validatorAddr), validatorAddr, sdk.NewDec(10))
 	msgCompleteUnbondingValidator := NewMsgCompleteUnbonding(sdk.AccAddress(validatorAddr), validatorAddr)
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingValidator, keeper)
-	require.True(t, got.IsOK(), "expected no error")
+	require.True(t, got.IsOK(), "expected no error: %v", got)
 	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbondingValidator, keeper)
-	require.True(t, got.IsOK(), "expected no error")
+	require.True(t, got.IsOK(), "expected no error: %v", got)
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
@@ -771,22 +781,30 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	msgCreateValidator := newTestMsgCreateValidator(validatorAddr1, keep.PKs[0], 50)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(keeper.GetValidatorsBonded(ctx)))
 
 	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 30)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 2, len(keeper.GetValidatorsBonded(ctx)))
 
 	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, keep.PKs[2], 10)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 2, len(keeper.GetValidatorsBonded(ctx)))
 
 	// unbond the valdator-2
 	msgBeginUnbonding := NewMsgBeginUnbonding(sdk.AccAddress(validatorAddr2), validatorAddr2, sdk.NewDec(30))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
 
 	// because there are extra validators waiting to get in, the queued
 	// validator (aka. validator-1) should make it into the bonded group, thus

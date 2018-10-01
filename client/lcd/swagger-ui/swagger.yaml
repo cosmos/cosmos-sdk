@@ -221,7 +221,7 @@ paths:
       parameters:
       - in: body
         name: txBroadcast
-        description: build a StdTx transaction and serilize it to a byte array with amino, then the `"tx"` field in the post body will be the base64 encoding of the byte array.
+        description: Build a StdTx transaction and serilize it to a byte array with amino, then the `"tx"` field in the post body will be the base64 encoding of the byte array. The supported return types includes `"block"`(return after tx commit), `"sync"`(return afer CheckTx) and `"async"`(return right away).
         required: true
         schema:
           $ref: "#/definitions/TendertmintTx"

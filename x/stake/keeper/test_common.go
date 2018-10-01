@@ -202,5 +202,20 @@ func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 // does a certain by-power index record exist
 func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) bool {
 	store := ctx.KVStore(keeper.storeKey)
-	return store.Get(power) != nil
+	return store.Has(power)
+}
+
+func updateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) types.Validator {
+	keeper.SetValidator(ctx, validator)
+	keeper.GetTendermintUpdates(ctx)
+	validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
+	if !found {
+		panic("validator expected but not found")
+	}
+	return validator
+}
+
+func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(power)
 }

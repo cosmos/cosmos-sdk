@@ -71,8 +71,8 @@ func TestQueryValidators(t *testing.T) {
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
 	}
 	keeper.SetPool(ctx, pool)
-	validators[0] = keeper.UpdateValidator(ctx, validators[0])
-	validators[1] = keeper.UpdateValidator(ctx, validators[1])
+	keeper.SetValidator(ctx, validators[0])
+	keeper.SetValidator(ctx, validators[1])
 
 	// Query Validators
 	queriedValidators := keeper.GetValidators(ctx, params.MaxValidators)

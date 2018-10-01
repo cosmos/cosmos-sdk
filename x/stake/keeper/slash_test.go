@@ -27,7 +27,7 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
 		validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(amt))
 		keeper.SetPool(ctx, pool)
-		validator = keeper.UpdateValidator(ctx, validator)
+		validator = updateValidator(keeper, ctx, validator)
 		keeper.SetValidatorByConsAddr(ctx, validator)
 	}
 	pool = keeper.GetPool(ctx)

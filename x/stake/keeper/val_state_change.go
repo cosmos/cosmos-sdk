@@ -21,8 +21,6 @@ import (
 // are returned to Tendermint.
 func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate) {
 
-	fmt.Printf("GetTendermintUpdates\n")
-
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 

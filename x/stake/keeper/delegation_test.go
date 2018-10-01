@@ -520,8 +520,10 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	validator2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
 	validator2, pool, issuedShares = validator2.AddTokensFromDel(pool, sdk.NewInt(10))
 	require.Equal(t, int64(10), issuedShares.RoundInt64())
+	pool.BondedTokens = pool.BondedTokens.Add(sdk.NewDec(10))
 	keeper.SetPool(ctx, pool)
 	validator2 = updateValidator(keeper, ctx, validator2)
+	require.Equal(t, sdk.Bonded, validator2.Status)
 
 	// create a second delegation to this validator
 	validator, pool, issuedShares = validator.AddTokensFromDel(pool, sdk.NewInt(10))
@@ -663,6 +665,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	require.Equal(t, int64(10), issuedShares.RoundInt64())
 	keeper.SetPool(ctx, pool)
 	validator2 = updateValidator(keeper, ctx, validator2)
+	require.Equal(t, sdk.Bonded, validator2.Status)
 
 	header := ctx.BlockHeader()
 	blockHeight := int64(10)

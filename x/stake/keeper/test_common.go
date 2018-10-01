@@ -206,7 +206,9 @@ func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) b
 }
 
 func updateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) types.Validator {
+	pool := keeper.GetPool(ctx)
 	keeper.SetValidator(ctx, validator)
+	keeper.SetValidatorByPowerIndex(ctx, validator, pool)
 	keeper.GetTendermintUpdates(ctx)
 	validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
 	if !found {

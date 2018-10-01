@@ -308,8 +308,9 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 
 		// if the delegation is the operator of the validator then
 		// trigger a jail validator
-		if bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr) && validator.Jailed == false {
-			validator.Jailed = true
+		if bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr) && !validator.Jailed {
+			k.JailValidator(ctx, validator)
+			validator = k.mustGetValidator(ctx, validator.OperatorAddr)
 		}
 
 		k.RemoveDelegation(ctx, delegation)
@@ -358,7 +359,7 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, valSrcAddr sd
 	}
 }
 
-// complete unbonding an unbonding record
+// begin unbonding an unbonding record
 func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec) sdk.Error {
 

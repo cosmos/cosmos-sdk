@@ -63,6 +63,10 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
+	// must end-block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
 	// verify the self-delegation exists
 	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
 	require.True(t, found)
@@ -82,6 +86,9 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	msgCreateValidator = newTestMsgCreateValidator(validatorAddr3, keep.PKs[2], int64(1000000))
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
+	// must end-block
+	updates = keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
 
 	// slash and jail the first validator
 	consAddr0 := sdk.ConsAddress(keep.PKs[0].Address())
@@ -160,6 +167,11 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	msgCreateValidator4 := newTestMsgCreateValidator(addr2, pk2, 10)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator4, keeper)
 	require.True(t, got.IsOK(), "%v", got)
+
+	// must end-block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
 	validator, found = keeper.GetValidator(ctx, addr2)
 
 	require.True(t, found)
@@ -180,6 +192,11 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	msgCreateValidatorOnBehalfOf := newTestMsgCreateValidatorOnBehalfOf(delegatorAddr, validatorAddr, pk, 10)
 	got := handleMsgCreateValidator(ctx, msgCreateValidatorOnBehalfOf, keeper)
 	require.True(t, got.IsOK(), "%v", got)
+
+	// must end-block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 
 	require.True(t, found)
@@ -210,6 +227,10 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	msgCreateVal := newTestMsgCreateValidator(valAddr, valConsPubKey, bondAmount)
 	got := handleMsgCreateValidator(ctx, msgCreateVal, keeper)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got %v", got)
+
+	// must end-block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
 
 	// verify the validator exists and has the correct attributes
 	validator, found := keeper.GetValidator(ctx, valAddr)
@@ -795,6 +816,10 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	got = handleMsgDelegate(ctx, msgDelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgDelegate")
 
+	// apply Tendermint updates
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
 	// a block passes
 	ctx = ctx.WithBlockHeight(1)
 
@@ -812,6 +837,10 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	delegation, found := keeper.GetDelegation(ctx, del, valB)
 	require.True(t, found)
 	require.Equal(t, sdk.NewDec(6), delegation.Shares)
+
+	// must apply validator updates
+	updates = keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
 
 	// slash the validator by half
 	keeper.Slash(ctx, consAddr0, 0, 20, sdk.NewDecWithPrec(5, 1))

@@ -150,6 +150,12 @@ func (k Keeper) JailValidator(ctx sdk.Context, validator types.Validator) {
 	validator.Jailed = true
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
+
+	// if bonded, unbond
+	if validator.Status == sdk.Bonded {
+		k.bondedToUnbonding(ctx, validator)
+	}
+
 	// TODO we should be able to just delete the index, and only set it again once unjailed
 }
 

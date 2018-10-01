@@ -91,7 +91,7 @@ func (ctx CLIContext) broadcastTxAsync(txBytes []byte) (*ctypes.ResultBroadcastT
 		return res, err
 	}
 
-	if ctx.Logger != nil {
+	if ctx.Output != nil {
 		if ctx.JSON {
 			type toJSON struct {
 				TxHash string
@@ -103,10 +103,10 @@ func (ctx CLIContext) broadcastTxAsync(txBytes []byte) (*ctypes.ResultBroadcastT
 				return res, err
 			}
 
-			ctx.Logger.Write(bz)
-			io.WriteString(ctx.Logger, "\n")
+			ctx.Output.Write(bz)
+			io.WriteString(ctx.Output, "\n")
 		} else {
-			io.WriteString(ctx.Logger, fmt.Sprintf("async tx sent (tx hash: %s)\n", res.Hash))
+			io.WriteString(ctx.Output, fmt.Sprintf("async tx sent (tx hash: %s)\n", res.Hash))
 		}
 	}
 
@@ -128,21 +128,21 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 			Response abci.ResponseDeliverTx
 		}
 
-		if ctx.Logger != nil {
+		if ctx.Output != nil {
 			resJSON := toJSON{res.Height, res.Hash.String(), res.DeliverTx}
 			bz, err := ctx.Codec.MarshalJSON(resJSON)
 			if err != nil {
 				return res, err
 			}
 
-			ctx.Logger.Write(bz)
-			io.WriteString(ctx.Logger, "\n")
+			ctx.Output.Write(bz)
+			io.WriteString(ctx.Output, "\n")
 		}
 
 		return res, nil
 	}
 
-	if ctx.Logger != nil {
+	if ctx.Output != nil {
 		resStr := fmt.Sprintf("Committed at block %d (tx hash: %s)\n", res.Height, res.Hash.String())
 
 		if ctx.PrintResponse {
@@ -151,7 +151,7 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 			)
 		}
 
-		io.WriteString(ctx.Logger, resStr)
+		io.WriteString(ctx.Output, resStr)
 	}
 
 	return res, nil

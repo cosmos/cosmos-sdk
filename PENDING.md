@@ -39,6 +39,7 @@ BREAKING CHANGES
     * [x/stake] [#1013] TendermintUpdates now uses transient store
     * [x/gov] [#2195] Governance uses BFT Time
     * [x/gov] \#2256 Removed slashing for governance non-voting validators
+    * [simulation] \#2162 Added back correct supply invariants
     
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0

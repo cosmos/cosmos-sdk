@@ -136,7 +136,7 @@ func createHandler(cdc *codec.Codec) http.Handler {
 		panic(err)
 	}
 
-	cliCtx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout)
+	cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")

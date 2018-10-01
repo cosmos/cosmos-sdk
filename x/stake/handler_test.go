@@ -130,6 +130,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 
+	EndBlocker(ctx, keeper)
+
 	// verify that by power key nolonger exists
 	_, found = keeper.GetValidator(ctx, validatorAddr)
 	require.False(t, found)
@@ -564,10 +566,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 	// unbond them all
 	for i, delegatorAddr := range delegatorAddrs {
 		msgBeginUnbonding := NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sdk.NewDec(10))
-		msgCompleteUnbonding := NewMsgCompleteUnbonding(delegatorAddr, validatorAddr)
 		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
-		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
-		got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbonding, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 
 		//Check that the account is unbonded
@@ -595,10 +594,7 @@ func TestJailValidator(t *testing.T) {
 
 	// unbond the validators bond portion
 	msgBeginUnbondingValidator := NewMsgBeginUnbonding(sdk.AccAddress(validatorAddr), validatorAddr, sdk.NewDec(10))
-	msgCompleteUnbondingValidator := NewMsgCompleteUnbonding(sdk.AccAddress(validatorAddr), validatorAddr)
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingValidator, keeper)
-	require.True(t, got.IsOK(), "expected no error: %v", got)
-	got = handleMsgCompleteUnbonding(ctx, msgCompleteUnbondingValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error: %v", got)
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
@@ -803,6 +799,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	msgBeginUnbonding := NewMsgBeginUnbonding(sdk.AccAddress(validatorAddr2), validatorAddr2, sdk.NewDec(30))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
+
 	// apply TM updates
 	keeper.GetTendermintUpdates(ctx)
 
@@ -836,7 +833,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 
 	// apply Tendermint updates
 	updates := keeper.GetTendermintUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	require.Equal(t, 2, len(updates))
 
 	// a block passes
 	ctx = ctx.WithBlockHeight(1)
@@ -858,7 +855,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 
 	// must apply validator updates
 	updates = keeper.GetTendermintUpdates(ctx)
-	require.Equal(t, 1, len(updates))
+	require.Equal(t, 2, len(updates))
 
 	// slash the validator by half
 	keeper.Slash(ctx, consAddr0, 0, 20, sdk.NewDecWithPrec(5, 1))
@@ -901,6 +898,9 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	delegation, found = keeper.GetDelegation(ctx, del, valB)
 	require.True(t, found)
 	require.Equal(t, sdk.NewDec(3), delegation.Shares)
+
+	// end blocker
+	EndBlocker(ctx, keeper)
 
 	// validator power should have been reduced to zero
 	// ergo validator should have been removed from the store

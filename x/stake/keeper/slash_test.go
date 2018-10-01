@@ -316,6 +316,8 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	newPool = keeper.GetPool(ctx)
 	// just 1 bonded token burned again since that's all the validator now has
 	require.Equal(t, int64(10), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
 	// read updated validator
 	// power decreased by 1 again, validator is out of stake
 	// ergo validator should have been removed from the store
@@ -417,6 +419,8 @@ func TestSlashWithRedelegation(t *testing.T) {
 	newPool = keeper.GetPool(ctx)
 	// four more bonded tokens burned
 	require.Equal(t, int64(16), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
 	// read updated validator
 	// validator decreased to zero power, should have been removed from the store
 	_, found = keeper.GetValidatorByConsAddr(ctx, consAddr)

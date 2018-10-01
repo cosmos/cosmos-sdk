@@ -114,8 +114,13 @@ func TestQueryDelegation(t *testing.T) {
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
 	keeper.SetValidator(ctx, val1)
+	pool := keeper.GetPool(ctx)
+	keeper.SetValidatorByPowerIndex(ctx, val1, pool)
 
 	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin("steak", sdk.NewInt(20)), val1, true)
+
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
 
 	// Query Delegator bonded validators
 	queryParams := newTestDelegatorQuery(addrAcc2)
@@ -177,7 +182,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	require.Equal(t, delegation, delegationRes)
 
-	// Query unbonging delegation
+	// Query unbonding delegation
 	keeper.BeginUnbonding(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
 
 	query = abci.RequestQuery{

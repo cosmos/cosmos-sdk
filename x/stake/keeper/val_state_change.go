@@ -109,6 +109,11 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 		// bonded to unbonding
 		k.bondedToUnbonding(ctx, validator)
 
+		// remove validator if it has no more tokens
+		if validator.Tokens.IsZero() {
+			k.RemoveValidator(ctx, validator.OperatorAddr)
+		}
+
 		// delete from the bonded validator index
 		store.Delete(GetBondedValidatorIndexKey(operator))
 

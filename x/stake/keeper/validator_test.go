@@ -184,6 +184,8 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	// slash the validator by 100%
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())
 	keeper.Slash(ctx, consAddr0, 0, 100, sdk.OneDec())
+	// apply TM updates
+	keeper.GetTendermintUpdates(ctx)
 	// validator should have been deleted
 	_, found := keeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found)
@@ -970,13 +972,15 @@ func TestGetTendermintUpdatesBondTransition(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	pool := keeper.GetPool(ctx)
 
-	validator, found := keeper.GetValidator(ctx, validators[0].OperatorAddr)
+	var found bool
+	validators[0], found = keeper.GetValidator(ctx, validators[0].OperatorAddr)
 	require.True(t, found)
 
-	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(1))
-
+	keeper.DeleteValidatorByPowerIndex(ctx, validators[0], pool)
+	validators[0], pool, _ = validators[0].AddTokensFromDel(pool, sdk.NewInt(1))
 	keeper.SetPool(ctx, pool)
-	validators[0] = updateValidator(keeper, ctx, validator)
+	keeper.SetValidator(ctx, validators[0])
+	keeper.SetValidatorByPowerIndex(ctx, validators[0], pool)
 
 	// verify initial Tendermint updates are correct
 	require.Equal(t, 0, len(keeper.GetTendermintUpdates(ctx)))
@@ -986,16 +990,19 @@ func TestGetTendermintUpdatesBondTransition(t *testing.T) {
 	ctx = ctx.WithBlockHeight(2)
 	pool = keeper.GetPool(ctx)
 
-	validator, found = keeper.GetValidator(ctx, validators[1].OperatorAddr)
+	validators[1], found = keeper.GetValidator(ctx, validators[1].OperatorAddr)
 	require.True(t, found)
 
-	validator, pool, _ = validator.RemoveDelShares(pool, validator.DelegatorShares)
-
+	keeper.DeleteValidatorByPowerIndex(ctx, validators[0], pool)
+	validators[0], pool, _ = validators[0].RemoveDelShares(pool, validators[0].DelegatorShares)
 	keeper.SetPool(ctx, pool)
-	validator = updateValidator(keeper, ctx, validator)
+	keeper.SetValidator(ctx, validators[0])
+	keeper.SetValidatorByPowerIndex(ctx, validators[0], pool)
+	updates = keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 0, len(updates))
 
 	keeper.DeleteValidatorByPowerIndex(ctx, validators[1], pool)
-	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(250))
+	validators[1], pool, _ = validators[1].AddTokensFromDel(pool, sdk.NewInt(250))
 	keeper.SetPool(ctx, pool)
 	keeper.SetValidator(ctx, validators[1])
 	keeper.SetValidatorByPowerIndex(ctx, validators[1], pool)

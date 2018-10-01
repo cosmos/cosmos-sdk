@@ -45,6 +45,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{5, 5})
+	stake.EndBlocker(ctx, sk)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
@@ -69,6 +70,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{5, 5})
+	stake.EndBlocker(ctx, sk)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
@@ -98,6 +100,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{5, 6})
+	stake.EndBlocker(ctx, sk)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
@@ -126,6 +129,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{6, 6, 7})
+	stake.EndBlocker(ctx, sk)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
@@ -157,6 +161,7 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{6, 6, 7})
+	stake.EndBlocker(ctx, sk)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
@@ -188,6 +193,7 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{6, 6, 7})
+	stake.EndBlocker(ctx, sk)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
@@ -219,6 +225,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{6, 6, 7})
+	stake.EndBlocker(ctx, sk)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
@@ -250,6 +257,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{6, 6, 7})
+	stake.EndBlocker(ctx, sk)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
@@ -279,6 +287,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{5, 6, 7})
+	stake.EndBlocker(ctx, sk)
 
 	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin("steak", 30))
 	stakeHandler(ctx, delegator1Msg)
@@ -315,6 +324,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{5, 6, 7})
+	stake.EndBlocker(ctx, sk)
 
 	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin("steak", 30))
 	stakeHandler(ctx, delegator1Msg)
@@ -349,6 +359,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{5, 6, 7})
+	stake.EndBlocker(ctx, sk)
 
 	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg)
@@ -402,6 +413,8 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg2)
 
+	stake.EndBlocker(ctx, sk)
+
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 	proposal.SetStatus(StatusVotingPeriod)
@@ -432,6 +445,7 @@ func TestTallyJailedValidator(t *testing.T) {
 	}
 
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{25, 6, 7})
+	stake.EndBlocker(ctx, sk)
 
 	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin("steak", 10))
 	stakeHandler(ctx, delegator1Msg)
@@ -442,6 +456,8 @@ func TestTallyJailedValidator(t *testing.T) {
 	val2, found := sk.GetValidator(ctx, sdk.ValAddress(addrs[1]))
 	require.True(t, found)
 	sk.Jail(ctx, sdk.ConsAddress(val2.ConsPubKey.Address()))
+
+	stake.EndBlocker(ctx, sk)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()

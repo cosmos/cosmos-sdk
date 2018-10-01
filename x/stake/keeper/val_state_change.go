@@ -30,7 +30,9 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 	for ; iterator.Valid(); iterator.Next() {
 		var operator [sdk.AddrLen]byte
 		copy(operator[:], iterator.Key()[1:])
-		last[operator] = iterator.Value()
+		powerBytes := iterator.Value()
+		last[operator] = make([]byte, len(powerBytes))
+		copy(last[operator][:], powerBytes[:])
 	}
 
 	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
@@ -45,7 +47,7 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 		// we have no more bonded validators
 		// TODO we can remove this if we remove jailed validators from the power store
 		// likewise for zero-power validators, which we never bond
-		if validator.Jailed || validator.BondedTokens().Equal(sdk.ZeroDec()) {
+		if validator.Jailed || validator.Tokens.Equal(sdk.ZeroDec()) {
 			break
 		}
 
@@ -186,9 +188,12 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 
-	// XXX WHAT DO WE DO FOR BondIntraTxCounter Height Now??????????????????????????
-
 	validator.BondHeight = ctx.BlockHeight()
+
+	// XXX Are we OK with this? In order of power decreasing, but addresses break ties.
+	counter := k.GetIntraTxCounter(ctx)
+	validator.BondIntraTxCounter = counter
+	k.SetIntraTxCounter(ctx, counter+1)
 
 	// set the status
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)

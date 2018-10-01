@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -27,6 +26,7 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	for i := 0; i < numVals; i++ {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
 		validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(amt))
+		validator.BondIntraTxCounter = int16(i)
 		pool.BondedTokens = pool.BondedTokens.Add(sdk.NewDec(amt))
 		keeper.SetPool(ctx, pool)
 		validator = updateValidator(keeper, ctx, validator)
@@ -165,7 +165,7 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// end block
 	updates := keeper.GetTendermintUpdates(ctx)
-	require.Equal(t, 2, len(updates))
+	require.Equal(t, 1, len(updates))
 
 	// initialbalance unchanged
 	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 10), rd.InitialBalance)
@@ -211,6 +211,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	updates := keeper.GetTendermintUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
+	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
 	// power decreased
 	require.Equal(t, sdk.NewDec(5), validator.GetPower())
 	// pool bonded shares decreased

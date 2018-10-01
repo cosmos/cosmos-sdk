@@ -252,6 +252,10 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
 
+	// end block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, int64(10), validator.Tokens.RoundInt64())
@@ -302,6 +306,10 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
 	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
+
+	// end block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -373,6 +381,10 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	// unbond the all self-delegation to put validator in unbonding state
 	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
+
+	// end block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -541,6 +553,10 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(10))
 	require.NoError(t, err)
 
+	// end block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 2, len(updates))
+
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
 	require.Equal(t, int64(10), validator.Tokens.RoundInt64())
@@ -598,6 +614,10 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	// unbond the all self-delegation to put validator in unbonding state
 	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
+
+	// end block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
@@ -677,6 +697,10 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	// unbond the all self-delegation to put validator in unbonding state
 	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
+
+	// end block
+	updates := keeper.GetTendermintUpdates(ctx)
+	require.Equal(t, 1, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)

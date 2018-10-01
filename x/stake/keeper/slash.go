@@ -95,16 +95,14 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		}
 	}
 
-	// Cannot decrease balance below zero
+	// cannot decrease balance below zero
 	tokensToBurn := sdk.MinDec(remainingSlashAmount, validator.Tokens)
 
-	// burn validator's tokens
+	// burn validator's tokens and update the validator
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 	pool := k.GetPool(ctx)
 	pool.LooseTokens = pool.LooseTokens.Sub(tokensToBurn)
 	k.SetPool(ctx, pool)
-
-	// update the validator, possibly kicking it out
 
 	// remove validator if it has no more tokens
 	if validator.Tokens.IsZero() {

@@ -64,6 +64,7 @@ BREAKING CHANGES
     * [x/auth] \#2377 auth.StdSignMsg -> txbuilder.StdSignMsg
     * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
     * [x/staking] \#2236 more distribution hooks for distribution
+    * [x/stake] \#2394 Split up UpdateValidator into distinct state transitions applied only in EndBlock
 
 * Tendermint
 

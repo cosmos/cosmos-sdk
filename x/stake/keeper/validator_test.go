@@ -442,6 +442,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 		moniker := fmt.Sprintf("val#%d", int64(i))
 		validators[i] = types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{Moniker: moniker})
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, sdk.NewInt(amt))
+		validators[i].BondIntraTxCounter = int16(i)
 		keeper.SetPool(ctx, pool)
 		validators[i] = updateValidator(keeper, ctx, validators[i])
 	}
@@ -465,52 +466,46 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
 
-	/*
+	// A validator which leaves the gotValidator set due to a decrease in voting power,
+	// then increases to the original voting power, does not get its spot back in the
+	// case of a tie.
 
-		  TODO: This is no longer true, due to the BondIntraTxCounter changes.
+	// validator 3 enters bonded validator set
+	ctx = ctx.WithBlockHeight(40)
 
-			// A validator which leaves the gotValidator set due to a decrease in voting power,
-			// then increases to the original voting power, does not get its spot back in the
-			// case of a tie.
+	validators[3], found = keeper.GetValidator(ctx, validators[3].OperatorAddr)
+	require.True(t, found)
+	keeper.DeleteValidatorByPowerIndex(ctx, validators[3], pool)
+	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewInt(1))
+	keeper.SetPool(ctx, pool)
+	validators[3] = updateValidator(keeper, ctx, validators[3])
+	resValidators = keeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, nMax, uint16(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[3], resValidators[1]))
 
-			// validator 3 enters bonded validator set
-			ctx = ctx.WithBlockHeight(40)
+	// validator 3 kicked out temporarily
+	keeper.DeleteValidatorByPowerIndex(ctx, validators[3], pool)
+	validators[3], pool, _ = validators[3].RemoveDelShares(pool, sdk.NewDec(201))
+	keeper.SetPool(ctx, pool)
+	validators[3] = updateValidator(keeper, ctx, validators[3])
+	resValidators = keeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, nMax, uint16(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
 
-			validators[3], found = keeper.GetValidator(ctx, validators[3].OperatorAddr)
-			require.True(t, found)
-			keeper.DeleteValidatorByPowerIndex(ctx, validators[3], pool)
-			validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewInt(1))
-			keeper.SetPool(ctx, pool)
-			validators[3] = updateValidator(keeper, ctx, validators[3])
-			resValidators = keeper.GetBondedValidatorsByPower(ctx)
-			require.Equal(t, nMax, uint16(len(resValidators)))
-			assert.True(ValEq(t, validators[0], resValidators[0]))
-			assert.True(ValEq(t, validators[3], resValidators[1]))
-
-			// validator 3 kicked out temporarily
-			keeper.DeleteValidatorByPowerIndex(ctx, validators[3], pool)
-			validators[3], pool, _ = validators[3].RemoveDelShares(pool, sdk.NewDec(201))
-			keeper.SetPool(ctx, pool)
-			validators[3] = updateValidator(keeper, ctx, validators[3])
-			resValidators = keeper.GetBondedValidatorsByPower(ctx)
-			require.Equal(t, nMax, uint16(len(resValidators)))
-			assert.True(ValEq(t, validators[0], resValidators[0]))
-			assert.True(ValEq(t, validators[2], resValidators[1]))
-
-			// validator 4 does not get spot back
-			keeper.DeleteValidatorByPowerIndex(ctx, validators[3], pool)
-			validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewInt(200))
-			keeper.SetPool(ctx, pool)
-			validators[3] = updateValidator(keeper, ctx, validators[3])
-			resValidators = keeper.GetBondedValidatorsByPower(ctx)
-			require.Equal(t, nMax, uint16(len(resValidators)))
-			assert.True(ValEq(t, validators[0], resValidators[0]))
-			assert.True(ValEq(t, validators[2], resValidators[1]))
-			validator, exists := keeper.GetValidator(ctx, validators[3].OperatorAddr)
-			require.Equal(t, exists, true)
-			require.Equal(t, int64(40), validator.BondHeight)
-
-	*/
+	// validator 4 does not get spot back
+	keeper.DeleteValidatorByPowerIndex(ctx, validators[3], pool)
+	validators[3], pool, _ = validators[3].AddTokensFromDel(pool, sdk.NewInt(200))
+	keeper.SetPool(ctx, pool)
+	validators[3] = updateValidator(keeper, ctx, validators[3])
+	resValidators = keeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, nMax, uint16(len(resValidators)))
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
+	validator, exists := keeper.GetValidator(ctx, validators[3].OperatorAddr)
+	require.Equal(t, exists, true)
+	require.Equal(t, int64(40), validator.BondHeight)
 }
 
 func TestValidatorBondHeight(t *testing.T) {
@@ -527,6 +522,9 @@ func TestValidatorBondHeight(t *testing.T) {
 	validators[0] = types.NewValidator(sdk.ValAddress(Addrs[0]), PKs[0], types.Description{})
 	validators[1] = types.NewValidator(sdk.ValAddress(Addrs[1]), PKs[1], types.Description{})
 	validators[2] = types.NewValidator(sdk.ValAddress(Addrs[2]), PKs[2], types.Description{})
+	validators[0].BondIntraTxCounter = 0
+	validators[1].BondIntraTxCounter = 1
+	validators[2].BondIntraTxCounter = 2
 
 	validators[0], pool, _ = validators[0].AddTokensFromDel(pool, sdk.NewInt(200))
 	validators[1], pool, _ = validators[1].AddTokensFromDel(pool, sdk.NewInt(100))
@@ -535,36 +533,30 @@ func TestValidatorBondHeight(t *testing.T) {
 
 	validators[0] = updateValidator(keeper, ctx, validators[0])
 
-	/*
+	////////////////////////////////////////
+	// If two validators both increase to the same voting power in the same block,
+	// the one with the first transaction should become bonded
+	validators[1] = updateValidator(keeper, ctx, validators[1])
+	validators[2] = updateValidator(keeper, ctx, validators[2])
 
-		  TODO: This is no longer true, due to the BondIntraTxCounter changes.
+	pool = keeper.GetPool(ctx)
 
-			////////////////////////////////////////
-			// If two validators both increase to the same voting power in the same block,
-			// the one with the first transaction should become bonded
-			validators[1] = updateValidator(keeper, ctx, validators[1])
-			validators[2] = updateValidator(keeper, ctx, validators[2])
+	resValidators := keeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, uint16(len(resValidators)), params.MaxValidators)
 
-			pool = keeper.GetPool(ctx)
-
-			resValidators := keeper.GetBondedValidatorsByPower(ctx)
-			require.Equal(t, uint16(len(resValidators)), params.MaxValidators)
-
-			assert.True(ValEq(t, validators[0], resValidators[0]))
-			assert.True(ValEq(t, validators[1], resValidators[1]))
-			keeper.DeleteValidatorByPowerIndex(ctx, validators[1], pool)
-			keeper.DeleteValidatorByPowerIndex(ctx, validators[2], pool)
-			validators[1], pool, _ = validators[1].AddTokensFromDel(pool, sdk.NewInt(50))
-			validators[2], pool, _ = validators[2].AddTokensFromDel(pool, sdk.NewInt(50))
-			keeper.SetPool(ctx, pool)
-			validators[2] = updateValidator(keeper, ctx, validators[2])
-			resValidators = keeper.GetBondedValidatorsByPower(ctx)
-			require.Equal(t, params.MaxValidators, uint16(len(resValidators)))
-			validators[1] = updateValidator(keeper, ctx, validators[1])
-			assert.True(ValEq(t, validators[0], resValidators[0]))
-			assert.True(ValEq(t, validators[2], resValidators[1]))
-
-	*/
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[1], resValidators[1]))
+	keeper.DeleteValidatorByPowerIndex(ctx, validators[1], pool)
+	keeper.DeleteValidatorByPowerIndex(ctx, validators[2], pool)
+	validators[1], pool, _ = validators[1].AddTokensFromDel(pool, sdk.NewInt(50))
+	validators[2], pool, _ = validators[2].AddTokensFromDel(pool, sdk.NewInt(50))
+	keeper.SetPool(ctx, pool)
+	validators[2] = updateValidator(keeper, ctx, validators[2])
+	resValidators = keeper.GetBondedValidatorsByPower(ctx)
+	require.Equal(t, params.MaxValidators, uint16(len(resValidators)))
+	validators[1] = updateValidator(keeper, ctx, validators[1])
+	assert.True(ValEq(t, validators[0], resValidators[0]))
+	assert.True(ValEq(t, validators[2], resValidators[1]))
 }
 
 func TestFullValidatorSetPowerChange(t *testing.T) {

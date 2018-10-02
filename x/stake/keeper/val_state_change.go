@@ -61,18 +61,16 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 			// no state change
 		}
 
-		// validator still in the validator set
+		// fetch the old power bytes
 		var opbytes [sdk.AddrLen]byte
 		copy(opbytes[:], operator[:])
-
-		// fetch the old power bytes
-		powerBytes, ok := last[opbytes]
+		oldPowerBytes, ok := last[opbytes]
 
 		// calculate the new power bytes
 		newPowerBytes := validator.ABCIValidatorPowerBytes(k.cdc)
 
 		// update the validator set if power has changed
-		if !ok || !bytes.Equal(powerBytes, newPowerBytes) {
+		if !ok || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
 		}
 
@@ -88,6 +86,7 @@ func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorU
 	}
 
 	// sort the map keys for determinism
+	// sorted by address - order doesn't matter
 	noLongerBonded := make([][]byte, len(last))
 	index := 0
 	for oper := range last {
@@ -194,11 +193,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	validator.BondHeight = ctx.BlockHeight()
 
-	// XXX Are we OK with this? In order of power decreasing, but addresses break ties.
-	counter := k.GetIntraTxCounter(ctx)
-	validator.BondIntraTxCounter = counter
-	k.SetIntraTxCounter(ctx, counter+1)
-
 	// set the status
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	k.SetPool(ctx, pool)
@@ -261,27 +255,4 @@ func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Vali
 	k.SetPool(ctx, pool)
 	k.SetValidator(ctx, validator)
 	return validator
-}
-
-// XXX need to figure out how to set a validator's BondIntraTxCounter - probably during delegation bonding?
-//     or keep track of tx for final bonding and set during endblock??? wish we could reduce this complexity
-
-// get the bond height and incremented intra-tx counter
-// nolint: unparam
-func (k Keeper) bondIncrement(ctx sdk.Context, isNewValidator bool, validator types.Validator) (
-	height int64, intraTxCounter int16) {
-
-	// if already a validator, copy the old block height and counter
-	if !isNewValidator && validator.Status == sdk.Bonded {
-		height = validator.BondHeight
-		intraTxCounter = validator.BondIntraTxCounter
-		return
-	}
-
-	height = ctx.BlockHeight()
-	counter := k.GetIntraTxCounter(ctx)
-	intraTxCounter = counter
-
-	k.SetIntraTxCounter(ctx, counter+1)
-	return
 }

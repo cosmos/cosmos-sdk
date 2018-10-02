@@ -7,6 +7,7 @@
   - [List here](https://github.com/cosmos/cosmos-sdk/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Astaking+label%3Aprelaunch)
   - Need to figure out scope of work here to estimate time
   - @rigelrozanski to start next
+- Consider "tombstone" / "prison" - double-sign and you can never validate again - https://github.com/cosmos/cosmos-sdk/issues/2363
 
 ## Multisig
 

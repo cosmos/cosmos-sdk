@@ -240,6 +240,14 @@ func genesisAccountFromGenTx(genTx GaiaGenTx) GenesisAccount {
 	return NewGenesisAccount(&accAuth)
 }
 
+func genesisAccountFromStdTx(genTx auth.StdTx) GenesisAccount {
+	m := genTx.GetMsgs()[0]
+	msg := m.(stake.MsgCreateValidator)
+	accAuth := auth.NewBaseAccountWithAddress(msg.ValidatorAddr)
+	acc.Coins = sdk.Coin{msg.Delegation}
+	return NewGenesisAccount(&accAuth)
+}
+
 // GaiaValidateGenesisState ensures that the genesis state obeys the expected invariants
 // TODO: No validators are both bonded and jailed (#2088)
 // TODO: Error if there is a duplicate validator (#1708)

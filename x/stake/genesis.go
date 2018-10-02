@@ -31,7 +31,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 			return res, errors.Errorf("genesis validator cannot have zero delegator shares, validator: %v", validator)
 		}
 
-		// Manually set indexes for the first time
+		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
 	}

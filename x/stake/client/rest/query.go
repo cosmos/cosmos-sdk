@@ -57,7 +57,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 
 	// Query a redelegation of a delegator's tokens from a validator to another
 	r.HandleFunc(
-		"/stake/delegators/{delegatorAddr}/redelegations/validator_from/{validatorSrcAddr}/validator_to/{validatorDestAddr}",
+		"/stake/delegators/{delegatorAddr}/redelegations/validator_from/{validatorSrcAddr}/validator_to/{validatorDstAddr}",
 		redelegationHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 

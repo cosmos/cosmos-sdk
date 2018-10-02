@@ -568,6 +568,7 @@ func TestBonding(t *testing.T) {
 	unbonding := getUndelegation(t, port, addr, validatorOperator1)
 	require.Equal(t, "60", unbonding.Balance.Amount.String())
 
+	// TODO can't test functionality with less than 2 validators. See https://github.com/cosmos/cosmos-sdk/issues/2339
 	// test redelegation
 
 	// resultTx = doBeginRedelegation(t, port, seed, name, password, addr, validatorOperator1, validatorOperator2, 30)
@@ -959,7 +960,7 @@ func getUndelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, va
 }
 
 func getRedelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) stake.Redelegation {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/redelegations/delegator/%s/validator_from/%s/validator_to/%s", delegatorAddr, validatorSrcAddr, validatorDstAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegator/%s/redelegations/validator_from/%s/validator_to/%s", delegatorAddr, validatorSrcAddr, validatorDstAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var red stake.Redelegation

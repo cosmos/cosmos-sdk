@@ -57,7 +57,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 
 	// Query a redelegation of a delegator's tokens from a validator to another
 	r.HandleFunc(
-		"/stake/redelegations/delegator/{delegatorAddr}/validator_from/{validatorSrcAddr}/validator_to/{validatorDestAddr}",
+		"/stake/delegators/{delegatorAddr}/redelegations/validator_from/{validatorSrcAddr}/validator_to/{validatorDestAddr}",
 		redelegationHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
@@ -99,8 +99,6 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		var typesQuerySlice []string
 		vars := mux.Vars(r)
 		delegatorAddr := vars["delegatorAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
 
 		_, err := sdk.AccAddressFromBech32(delegatorAddr)
 		if err != nil {
@@ -166,6 +164,8 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			w.Write([]byte(err.Error()))
 			return
 		}
+
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }
@@ -183,13 +183,10 @@ func delegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handl
 // HTTP request handler to query a redelegation
 func redelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// read parameters
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
 		bech32ValidatorSrc := vars["validatorSrcAddr"]
 		bech32ValidatorDst := vars["validatorDstAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
 
 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		validatorSrcAddr, err := sdk.ValAddressFromBech32(bech32ValidatorSrc)
@@ -221,6 +218,7 @@ func redelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -238,9 +236,6 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) ht
 // HTTP request handler to query list of validators
 func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Set("Content-Type", "application/json")
-
 		res, err := cliCtx.QueryWithData("custom/stake/validators", nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -257,11 +252,8 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // HTTP request handler to query the validator information from a given validator address
 func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		vars := mux.Vars(r)
 		bech32validatorAddr := vars["validatorAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
 
 		validatorAddr, err := sdk.ValAddressFromBech32(bech32validatorAddr)
 		if err != nil {
@@ -289,6 +281,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -296,9 +289,6 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 // HTTP request handler to query the pool information
 func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Set("Content-Type", "application/json")
-
 		res, err := cliCtx.QueryWithData("custom/stake/pool", nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -307,6 +297,7 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -314,9 +305,6 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 // HTTP request handler to query the staking params values
 func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Set("Content-Type", "application/json")
-
 		res, err := cliCtx.QueryWithData("custom/stake/parameters", nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -325,6 +313,7 @@ func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }

@@ -50,12 +50,9 @@ func queryTxs(node rpcclient.Client, cliCtx context.CLIContext, cdc *codec.Codec
 
 func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// read parameters
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
 		bech32validator := vars["validatorAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
 
 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
@@ -85,17 +82,15 @@ func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) ht
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
 
 func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
 
 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
 		if err != nil {
@@ -123,6 +118,7 @@ func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }

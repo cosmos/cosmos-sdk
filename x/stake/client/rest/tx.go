@@ -346,6 +346,7 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }

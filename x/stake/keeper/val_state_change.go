@@ -11,10 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-//_________________________________________________________________________
-// Accumulated updates to the active/bonded validator set for tendermint
-
-// get the most recently updated validators
+// Apply and return accumulated updates to the bonded validator set
 //
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
@@ -24,18 +21,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 
-	// copy last validator set
-	last := make(map[[sdk.AddrLen]byte][]byte)
-	iterator := sdk.KVStorePrefixIterator(store, BondedValidatorsIndexKey)
-	for ; iterator.Valid(); iterator.Next() {
-		var operator [sdk.AddrLen]byte
-		copy(operator[:], iterator.Key()[1:])
-		powerBytes := iterator.Value()
-		last[operator] = make([]byte, len(powerBytes))
-		copy(last[operator][:], powerBytes[:])
-	}
+	// retrieve last validator set
+	last := k.retrieveLastValidatorSet(ctx)
 
-	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
+	// iterate over validators, highest power to lowest
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
 	count := 0
 	for ; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 
@@ -74,7 +64,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			updates = append(updates, validator.ABCIValidatorUpdate())
 		}
 
-		// validator still in the validator set
+		// validator still in the validator set, so delete from the copy
 		delete(last, opbytes)
 
 		// set the bonded validator index
@@ -85,23 +75,12 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 	}
 
-	// sort the map keys for determinism
-	// sorted by address - order doesn't matter
-	noLongerBonded := make([][]byte, len(last))
-	index := 0
-	for oper := range last {
-		operator := make([]byte, sdk.AddrLen)
-		copy(operator[:], oper[:])
-		noLongerBonded[index] = operator
-		index++
-	}
-	sort.SliceStable(noLongerBonded, func(i, j int) bool {
-		return bytes.Compare(noLongerBonded[i], noLongerBonded[j]) == -1
-	})
+	// sort the no-longer-bonded validators
+	noLongerBonded := k.sortNoLongerBonded(last)
 
 	// iterate through the sorted no-longer-bonded validators
-	// any validators left in `last` are no longer bonded
 	for _, operator := range noLongerBonded {
+
 		// fetch the validator
 		validator := k.mustGetValidator(ctx, sdk.ValAddress(operator))
 
@@ -116,8 +95,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// delete from the bonded validator index
 		store.Delete(GetBondedValidatorIndexKey(operator))
 
-		// update the validator
+		// update the validator set
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
+
 	}
 
 	return updates
@@ -255,4 +235,37 @@ func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Vali
 	k.SetPool(ctx, pool)
 	k.SetValidator(ctx, validator)
 	return validator
+}
+
+// retrieve the last validator set
+func (k Keeper) retrieveLastValidatorSet(ctx sdk.Context) map[[sdk.AddrLen]byte][]byte {
+	last := make(map[[sdk.AddrLen]byte][]byte)
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, BondedValidatorsIndexKey)
+	for ; iterator.Valid(); iterator.Next() {
+		var operator [sdk.AddrLen]byte
+		copy(operator[:], iterator.Key()[1:])
+		powerBytes := iterator.Value()
+		last[operator] = make([]byte, len(powerBytes))
+		copy(last[operator][:], powerBytes[:])
+	}
+	return last
+}
+
+// sort the validators to be unbonded
+func (k Keeper) sortNoLongerBonded(last map[[sdk.AddrLen]byte][]byte) [][]byte {
+	// sort the map keys for determinism
+	noLongerBonded := make([][]byte, len(last))
+	index := 0
+	for oper := range last {
+		operator := make([]byte, sdk.AddrLen)
+		copy(operator[:], oper[:])
+		noLongerBonded[index] = operator
+		index++
+	}
+	// sorted by address - order doesn't matter
+	sort.SliceStable(noLongerBonded, func(i, j int) bool {
+		return bytes.Compare(noLongerBonded[i], noLongerBonded[j]) == -1
+	})
+	return noLongerBonded
 }

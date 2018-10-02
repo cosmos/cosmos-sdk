@@ -46,6 +46,52 @@ func newTestRedelegationQuery(
 	}
 }
 
+func TestNewQuerier(t *testing.T) {
+	cdc := codec.New()
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	pool := keeper.GetPool(ctx)
+	// Create Validators
+	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8)}
+	var validators [2]types.Validator
+	for i, amt := range amts {
+		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
+		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
+	}
+	keeper.SetPool(ctx, pool)
+	validators[0] = keeper.UpdateValidator(ctx, validators[0])
+	validators[1] = keeper.UpdateValidator(ctx, validators[1])
+
+	query := abci.RequestQuery{
+		Path: "",
+		Data: []byte{},
+	}
+
+	querier := NewQuerier(keeper, cdc)
+
+	bz, err := querier(ctx, []string{"other"}, query)
+	require.NotNil(t, err)
+	require.Nil(t, bz)
+
+	_, err = querier(ctx, []string{"validators"}, query)
+	require.Nil(t, err)
+
+	_, err = querier(ctx, []string{"pool"}, query)
+	require.Nil(t, err)
+
+	_, err = querier(ctx, []string{"parameters"}, query)
+	require.Nil(t, err)
+
+	queryParams := newTestValidatorQuery(addrVal1)
+	bz, errRes := cdc.MarshalJSON(queryParams)
+	require.Nil(t, errRes)
+
+	query.Path = "/custom/stake/validator"
+	query.Data = bz
+
+	_, err = querier(ctx, []string{"validator"}, query)
+	require.Nil(t, err)
+}
+
 func TestQueryParametersPool(t *testing.T) {
 	cdc := codec.New()
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)

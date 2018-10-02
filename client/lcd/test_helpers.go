@@ -139,30 +139,34 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		panic("InitializeTestLCD must use at least one validator")
 	}
 
+	var validatorsPKs []crypto.PubKey
+	var appGenTxs []json.RawMessage
+	var genValidators []tmtypes.GenesisValidator
+
+	// Create new genesis validators
 	for i := 1; i < nValidators; i++ {
-		genDoc.Validators = append(genDoc.Validators,
-			tmtypes.GenesisValidator{
-				PubKey: ed25519.GenPrivKey().PubKey(),
-				Power:  1,
-				Name:   "val",
-			},
-		)
+		pk := ed25519.GenPrivKey().PubKey()
+		validatorsPKs = append(validatorsPKs, pk)
+
+		appGenTx, _, genValidator, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(pk.Address()), fmt.Sprintf("val%d", i), 1) // power = 1
+		require.NoError(t, err)
+
+		genValidators = append(genValidators, genValidator)
+		appGenTxs = append(appGenTxs, appGenTx)
 	}
 
-	var validatorsPKs []crypto.PubKey
-
-	// NOTE: It's bad practice to reuse public key address for the operator
-	// address but doing in the test for simplicity.
-	var appGenTxs []json.RawMessage
-	for _, gdValidator := range genDoc.Validators {
+	for i, gdValidator := range genDoc.Validators {
 		pk := gdValidator.PubKey
 		validatorsPKs = append(validatorsPKs, pk)
 
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(pk.Address()), "test_val1")
+		appGenTx, _, genValidator, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(pk.Address()), fmt.Sprintf("genesisVal%d", i)) // power = 100
 		require.NoError(t, err)
 
+		genDoc.Validators[i] = genValidator
 		appGenTxs = append(appGenTxs, appGenTx)
 	}
+
+	genDoc.Validators = append(genDoc.Validators, genValidators...)
 
 	genesisState, err := gapp.GaiaAppGenState(cdc, appGenTxs[:])
 	require.NoError(t, err)

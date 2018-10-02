@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -242,14 +241,14 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		return
 	}
 
-	PostProcessResponse(w, cdc, res)
+	PostProcessResponse(w, cdc, res, cliCtx.Indent)
 }
 
-func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}) {
+// PostProcessResponse performs post process for rest response
+func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent bool) {
 	var output []byte
 	switch response.(type) {
 	default:
-		indent := viper.GetBool(client.FlagIndentResponse)
 		var err error
 		if indent {
 			output, err = cdc.MarshalJSONIndent(response, "", "  ")

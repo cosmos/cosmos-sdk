@@ -53,8 +53,7 @@ $ gaiacli tendermint txs --tag test1,test2 --any
 			}
 
 			var output []byte
-			indent := viper.GetBool(client.FlagIndentResponse)
-			if indent {
+			if cliCtx.Indent {
 				output, err = cdc.MarshalJSONIndent(txs, "", "  ")
 			} else {
 				output, err = cdc.MarshalJSON(txs)
@@ -182,6 +181,6 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, txs)
+		utils.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
 	}
 }

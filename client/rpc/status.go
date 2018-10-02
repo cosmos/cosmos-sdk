@@ -40,14 +40,16 @@ func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
 // CMD
 
 func printNodeStatus(cmd *cobra.Command, args []string) error {
-	status, err := getNodeStatus(context.NewCLIContext())
+	// No need to verify proof in getting node status
+	viper.Set(client.FlagTrustNode, true)
+	cliCtx := context.NewCLIContext()
+	status, err := getNodeStatus(cliCtx)
 	if err != nil {
 		return err
 	}
 
 	var output []byte
-	indent := viper.GetBool(client.FlagIndentResponse)
-	if indent {
+	if cliCtx.Indent {
 		output, err = cdc.MarshalJSONIndent(status, "", "  ")
 	} else {
 		output, err = cdc.MarshalJSON(status)
@@ -73,7 +75,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		nodeInfo := status.NodeInfo
-		utils.PostProcessResponse(w, cdc, nodeInfo)
+		utils.PostProcessResponse(w, cdc, nodeInfo, cliCtx.Indent)
 	}
 }
 

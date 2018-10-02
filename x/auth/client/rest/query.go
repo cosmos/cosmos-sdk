@@ -65,7 +65,7 @@ func QueryAccountRequestHandlerFn(
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, account)
+		utils.PostProcessResponse(w, cdc, account, cliCtx.Indent)
 	}
 }
 
@@ -104,6 +104,6 @@ func QueryBalancesRequestHandlerFn(
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, account.GetCoins())
+		utils.PostProcessResponse(w, cdc, account.GetCoins(), cliCtx.Indent)
 	}
 }

@@ -55,6 +55,6 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

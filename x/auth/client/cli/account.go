@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/spf13/viper"
-	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // GetAccountCmdDefault invokes the GetAccountCmd for the auth.BaseAccount type.
@@ -61,8 +59,7 @@ func GetAccountCmd(storeName string, cdc *codec.Codec, decoder auth.AccountDecod
 			}
 
 			var output []byte
-			indent := viper.GetBool(client.FlagIndentResponse)
-			if indent {
+			if cliCtx.Indent {
 				output, err = cdc.MarshalJSONIndent(acc, "", "  ")
 			} else {
 				output, err = cdc.MarshalJSON(acc)

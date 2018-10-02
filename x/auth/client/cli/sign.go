@@ -58,8 +58,7 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 			return err
 		}
 		var json []byte
-		indent := viper.GetBool(client.FlagIndentResponse)
-		if indent {
+		if cliCtx.Indent {
 			json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
 		} else {
 			json, err = cdc.MarshalJSON(newTx)

@@ -79,12 +79,10 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]
 		return nil, err
 	}
 
-	indent := viper.GetBool(client.FlagIndentResponse)
-	if indent {
+	if cliCtx.Indent {
 		return cdc.MarshalJSONIndent(info, "", "  ")
-	} else {
-		return cdc.MarshalJSON(info)
 	}
+	return cdc.MarshalJSON(info)
 }
 
 // ValidateTxResult performs transaction verification
@@ -148,6 +146,6 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 			w.Write([]byte(err.Error()))
 			return
 		}
-		utils.PostProcessResponse(w, cdc, output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

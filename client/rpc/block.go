@@ -63,12 +63,10 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		}
 	}
 
-	indent := viper.GetBool(client.FlagIndentResponse)
-	if indent {
+	if cliCtx.Indent {
 		return cdc.MarshalJSONIndent(res, "", "  ")
-	} else {
-		return cdc.MarshalJSON(res)
 	}
+	return cdc.MarshalJSON(res)
 }
 
 // get the current blockchain height
@@ -133,7 +131,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		utils.PostProcessResponse(w, cdc, output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }
 
@@ -152,6 +150,6 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		utils.PostProcessResponse(w, cdc, output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

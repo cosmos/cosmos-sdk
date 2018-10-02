@@ -52,6 +52,6 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, signedTx)
+		utils.PostProcessResponse(w, cdc, signedTx, cliCtx.Indent)
 	}
 }

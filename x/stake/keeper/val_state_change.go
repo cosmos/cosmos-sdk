@@ -39,7 +39,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// if we get to a zero-power validator (which we don't bond),
 		// there are no more possible bonded validators
-		if validator.Tokens.Equal(sdk.ZeroDec()) {
+		// note: we must check the ABCI power, since we round before sending to Tendermint
+		if validator.Tokens.RoundInt64() == int64(0) {
 			break
 		}
 

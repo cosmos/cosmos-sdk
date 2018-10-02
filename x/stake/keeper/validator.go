@@ -103,20 +103,20 @@ func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Valida
 		return
 	}
 	store := ctx.KVStore(k.storeKey)
-	store.Set(GetBondedValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
+	store.Set(GetValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
 }
 
 // validator index
 func (k Keeper) DeleteValidatorByPowerIndex(ctx sdk.Context, validator types.Validator, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(GetBondedValidatorsByPowerIndexKey(validator, pool))
+	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
 }
 
 // validator index
 func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
-	store.Set(GetBondedValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
+	store.Set(GetValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
 }
 
 //___________________________________________________________________________
@@ -193,7 +193,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	pool := k.GetPool(ctx)
 	store.Delete(GetValidatorKey(address))
 	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
-	store.Delete(GetBondedValidatorsByPowerIndexKey(validator, pool))
+	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
 
 }
 

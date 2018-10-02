@@ -106,7 +106,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// remove validator if it has no more tokens
 	if validator.Tokens.IsZero() && validator.Status != sdk.Bonded {
-		// if bonded, we must remove in GetTendermintUpdates instead
+		// if bonded, we must remove in ApplyAndReturnValidatorSetUpdates instead
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 

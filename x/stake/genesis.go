@@ -44,7 +44,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.SetDelegation(ctx, bond)
 	}
 
-	res = keeper.GetTendermintUpdates(ctx)
+	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	return
 }
 

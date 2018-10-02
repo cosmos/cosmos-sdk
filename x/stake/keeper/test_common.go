@@ -209,7 +209,7 @@ func updateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) 
 	pool := keeper.GetPool(ctx)
 	keeper.SetValidator(ctx, validator)
 	keeper.SetValidatorByPowerIndex(ctx, validator, pool)
-	keeper.GetTendermintUpdates(ctx)
+	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
 	if !found {
 		panic("validator expected but not found")

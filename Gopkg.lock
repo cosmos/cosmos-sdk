@@ -239,12 +239,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:645110e089152bd0f4a011a2648fbb0e4df5977be73ca605781157ac297f50c4"
+  digest = "1:e32dfc6abff6a3633ef4d9a1022fd707c8ef26f1e1e8f855dc58dc415ce7c8f3"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "UT"
-  revision = "fa473d140ef3c6adf42d6b391fe76707f1f243c8"
-  version = "v1.0.0"
+  revision = "fe40af7a9c397fa3ddba203c38a5042c5d0475ad"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
@@ -536,7 +536,7 @@
     "salsa20/salsa",
   ]
   pruneopts = "UT"
-  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
+  revision = "e3636079e1a4c1f337f212cc5cd2aca108f6c900"
 
 [[projects]]
   digest = "1:d36f55a999540d29b6ea3c2ea29d71c76b1d9853fdcd3e5c5cb4836f2ba118f1"
@@ -556,14 +556,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:68023dc297a659d5eb2dafd62eda811456b338c5b3ec3c27da79e8a47d3f456a"
+  digest = "1:8bc8ecef1d63576cfab4d08b44a1f255dd67e5b019b7a44837d62380f266a91c"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "UT"
-  revision = "2f1df4e56cdeb503a08d8577e6f1a7eb12efab82"
+  revision = "e4b3c5e9061176387e7cea65e4dc5853801f3fb7"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -590,11 +590,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:56b0bca90b7e5d1facf5fbdacba23e4e0ce069d25381b8e2f70ef1e7ebfb9c1a"
+  digest = "1:1e6b0176e8c5dd8ff551af65c76f8b73a99bcf4d812cedff1b91711b7df4804c"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "0e822944c569bf5c9afd034adaa56208bd2906ac"
+  revision = "c7e5094acea1ca1b899e2259d80a6b0f882f81f8"
 
 [[projects]]
   digest = "1:2dab32a43451e320e49608ff4542fdfc653c95dcc35d0065ec9c6c3dd540ed74"

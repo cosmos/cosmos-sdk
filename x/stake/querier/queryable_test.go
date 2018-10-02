@@ -120,7 +120,7 @@ func TestQueryDelegation(t *testing.T) {
 	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin("steak", sdk.NewInt(20)), val1, true)
 
 	// apply TM updates
-	keeper.GetTendermintUpdates(ctx)
+	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// Query Delegator bonded validators
 	queryParams := newTestDelegatorQuery(addrAcc2)

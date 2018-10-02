@@ -164,7 +164,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.True(t, found)
 
 	// end block
-	updates := keeper.GetTendermintUpdates(ctx)
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	// initialbalance unchanged
@@ -208,7 +208,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	newPool := keeper.GetPool(ctx)
 
 	// end block
-	updates := keeper.GetTendermintUpdates(ctx)
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
 	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
@@ -244,7 +244,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	keeper.Slash(ctx, consAddr, 10, 10, fraction)
 
 	// end block
-	updates := keeper.GetTendermintUpdates(ctx)
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	// read updating unbonding delegation
@@ -317,7 +317,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// just 1 bonded token burned again since that's all the validator now has
 	require.Equal(t, int64(10), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// apply TM updates
-	keeper.GetTendermintUpdates(ctx)
+	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	// read updated validator
 	// power decreased by 1 again, validator is out of stake
 	// ergo validator should have been removed from the store
@@ -420,7 +420,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// four more bonded tokens burned
 	require.Equal(t, int64(16), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
 	// apply TM updates
-	keeper.GetTendermintUpdates(ctx)
+	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	// read updated validator
 	// validator decreased to zero power, should have been removed from the store
 	_, found = keeper.GetValidatorByConsAddr(ctx, consAddr)

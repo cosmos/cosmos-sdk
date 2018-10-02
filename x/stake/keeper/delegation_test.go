@@ -253,7 +253,7 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := keeper.GetTendermintUpdates(ctx)
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
@@ -308,7 +308,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := keeper.GetTendermintUpdates(ctx)
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
@@ -383,7 +383,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := keeper.GetTendermintUpdates(ctx)
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
@@ -554,7 +554,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := keeper.GetTendermintUpdates(ctx)
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 2, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
@@ -618,7 +618,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := keeper.GetTendermintUpdates(ctx)
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 2, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
@@ -703,7 +703,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	require.NoError(t, err)
 
 	// end block
-	updates := keeper.GetTendermintUpdates(ctx)
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 2, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])

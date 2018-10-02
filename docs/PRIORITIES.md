@@ -1,4 +1,4 @@
-# Post-0.25 Pre-Release
+# Post-0.25/GoS Pre-Release
 
 ## Staking/Slashing/Stability
 
@@ -21,27 +21,23 @@
 
 ## Gas
 
-- Simple transaction benchmarking work by @jlandrews to inform additional work here
-- Integrate @alessio's simulation work into CLI and LCD
-- Sanity Checks
+- Charge for transaction size
+- Decide what "one gas" corresponds to (standard hardware benchmarks?)
+- More benchmarking
+- Consider charging based on maximum depth of IAVL tree iteration
+- Test out gas estimation in CLI and LCD and ensure the UX works
 
 ## LCD
 
-- Bianje working on implementation ([#2147](https://github.com/cosmos/cosmos-sdk/pull/2147))
-  - ICS 0,ICS 1, ICS 20 and ICS 21 implemented in this PR :point_up:
-  - @fedekunze, @jackzampolin and @alexanderbez to review
+- Bianje working on implementation of ICS standards
 - Additional PR incoming for ICS 22 and ICS 23
-- Include [#382](https://github.com/cosmos/cosmos-sdk/issues/382)
+- Decide what ought to be ICS-standardized and what ought not to
 
 # Lower priority
 
 ## Governance v2
 
-- Simple software upgrade proposals
-  - Implementation described in [#1079](https://github.com/cosmos/cosmos-sdk/issues/1079)
-  - Agree upon a block height to switch to new version
-- Another Governance proposal from @jaekwon [#2116](https://github.com/cosmos/cosmos-sdk/pull/2116)
-- Circuit breaker
+- Circuit breaker - https://github.com/cosmos/cosmos-sdk/issues/926
 - Parameter change proposals (roughly the same implementation as circuit breaker)
 
 ## Documentation

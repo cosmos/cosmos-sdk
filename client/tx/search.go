@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/viper"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 const (
@@ -51,7 +52,14 @@ $ gaiacli tendermint txs --tag test1,test2 --any
 				return err
 			}
 
-			output, err := cdc.MarshalJSON(txs)
+			var output []byte
+			indent := viper.GetBool(client.FlagIndentResponse)
+			if indent {
+				output, err = cdc.MarshalJSONIndent(txs, "", "  ")
+			} else {
+				output, err = cdc.MarshalJSON(txs)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -174,13 +182,6 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
-		output, err := cdc.MarshalJSONIndent(txs, "", "  ")
-		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, txs)
 	}
 }

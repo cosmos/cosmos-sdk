@@ -123,6 +123,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(client.FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(flagMaxOpenConnections, 1000, "The number of maximum open connections")
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))

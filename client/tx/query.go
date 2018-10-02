@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/viper"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 // QueryTxCmd implements the default command for a tx query.
@@ -78,7 +79,12 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]
 		return nil, err
 	}
 
-	return codec.MarshalJSONIndent(cdc, info)
+	indent := viper.GetBool(client.FlagIndentResponse)
+	if indent {
+		return cdc.MarshalJSONIndent(info, "", "  ")
+	} else {
+		return cdc.MarshalJSON(info)
+	}
 }
 
 // ValidateTxResult performs transaction verification
@@ -142,7 +148,6 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 			w.Write([]byte(err.Error()))
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output)
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/spf13/viper"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 func statusCommand() *cobra.Command {
@@ -22,6 +23,7 @@ func statusCommand() *cobra.Command {
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
+	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 
@@ -43,8 +45,13 @@ func printNodeStatus(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output, err := cdc.MarshalJSON(status)
-	// output, err := cdc.MarshalJSONIndent(res, "  ", "")
+	var output []byte
+	indent := viper.GetBool(client.FlagIndentResponse)
+	if indent {
+		output, err = cdc.MarshalJSONIndent(status, "", "  ")
+	} else {
+		output, err = cdc.MarshalJSON(status)
+	}
 	if err != nil {
 		return err
 	}
@@ -66,14 +73,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		nodeInfo := status.NodeInfo
-		output, err := cdc.MarshalJSONIndent(nodeInfo, "", "  ")
-		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, nodeInfo)
 	}
 }
 

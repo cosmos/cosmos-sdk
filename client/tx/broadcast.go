@@ -4,14 +4,14 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"io/ioutil"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"io/ioutil"
 )
 
 const (
 	// Returns with the response from CheckTx.
-	flagSync  = "sync"
+	flagSync = "sync"
 	// Returns right away, with no response
 	flagAsync = "async"
 	// Only returns error if mempool.BroadcastTx errs (ie. problem with the app) or if we timeout waiting for tx to commit.
@@ -21,7 +21,7 @@ const (
 // BroadcastBody Tx Broadcast Body
 type BroadcastBody struct {
 	TxBytes []byte `json:"tx"`
-	Return string `json:"return"`
+	Return  string `json:"return"`
 }
 
 // BroadcastTxRequest REST Handler
@@ -55,12 +55,6 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		output, err := cdc.MarshalJSONIndent(res, "", "  ")
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, res)
 	}
 }

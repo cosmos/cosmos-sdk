@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 //BlockCommand returns the verified block data for a given heights
@@ -62,13 +63,12 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		}
 	}
 
-	// TODO move maarshalling into cmd/rest functions
-	// output, err := tmcodec.MarshalJSON(res)
-	output, err := cdc.MarshalJSONIndent(res, "", "  ")
-	if err != nil {
-		return nil, err
+	indent := viper.GetBool(client.FlagIndentResponse)
+	if indent {
+		return cdc.MarshalJSONIndent(res, "", "  ")
+	} else {
+		return cdc.MarshalJSON(res)
 	}
-	return output, nil
 }
 
 // get the current blockchain height
@@ -133,8 +133,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output)
 	}
 }
 
@@ -153,7 +152,6 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output)
 	}
 }

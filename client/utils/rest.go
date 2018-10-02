@@ -1,5 +1,6 @@
 package utils
 
+import "C"
 import (
 	"fmt"
 	"io/ioutil"
@@ -8,12 +9,13 @@ import (
 	"strconv"
 	"strings"
 
-	client "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -240,10 +242,26 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		return
 	}
 
-	output, err := codec.MarshalJSONIndent(cdc, res)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
+	PostProcessResponse(w, cdc, res)
+}
+
+func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}) {
+	var output []byte
+	switch response.(type) {
+	default:
+		indent := viper.GetBool(client.FlagIndentResponse)
+		var err error
+		if indent {
+			output, err = cdc.MarshalJSONIndent(response, "", "  ")
+		} else {
+			output, err = cdc.MarshalJSON(response)
+		}
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	case []byte:
+		output = response.([]byte)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)

@@ -98,12 +98,13 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		}
 	}
 
-	output, err := cdc.MarshalJSONIndent(outputValidatorsRes, "", "  ")
-	if err != nil {
-		return nil, err
-	}
+	indent := viper.GetBool(client.FlagIndentResponse)
 
-	return output, nil
+	if indent {
+		return cdc.MarshalJSONIndent(outputValidatorsRes, "", "  ")
+	} else {
+		return cdc.MarshalJSON(outputValidatorsRes)
+	}
 }
 
 // CMD

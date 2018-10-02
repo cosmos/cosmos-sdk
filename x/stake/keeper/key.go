@@ -25,7 +25,6 @@ var (
 	RedelegationKey                  = []byte{0x0A} // key for a redelegation
 	RedelegationByValSrcIndexKey     = []byte{0x0B} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x0C} // prefix for each key for an redelegation, by destination validator operator
-	BondedValidatorsIndexKey         = []byte{0x0D} // prefix for each key to the bonded validator set
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -40,12 +39,6 @@ func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 // VALUE: validator operator address ([]byte)
 func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
 	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
-}
-
-// gets the key for the current validator group
-// VALUE: none (key rearrangement with GetValKeyFromValBondedIndexKey)
-func GetValidatorsBondedIndexKey(operatorAddr sdk.ValAddress) []byte {
-	return append(ValidatorsBondedIndexKey, operatorAddr.Bytes()...)
 }
 
 // Get the validator operator address from ValBondedIndexKey
@@ -64,7 +57,7 @@ func GetBondedValidatorsByPowerIndexKey(validator types.Validator, pool types.Po
 
 // get the bonded validator index key for an operator address
 func GetBondedValidatorIndexKey(operator sdk.ValAddress) []byte {
-	return append(BondedValidatorsIndexKey, operator...)
+	return append(ValidatorsBondedIndexKey, operator...)
 }
 
 // get the power ranking of a validator

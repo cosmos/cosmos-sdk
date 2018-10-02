@@ -119,12 +119,6 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 	store.Set(GetBondedValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
 }
 
-// validator index
-func (k Keeper) SetValidatorBondedIndex(ctx sdk.Context, validator types.Validator) {
-	store := ctx.KVStore(k.storeKey)
-	store.Set(GetValidatorsBondedIndexKey(validator.OperatorAddr), []byte{})
-}
-
 //___________________________________________________________________________
 
 // Update the tokens of an existing validator, update the validators power index key
@@ -201,12 +195,6 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
 	store.Delete(GetBondedValidatorsByPowerIndexKey(validator, pool))
 
-	// delete from the current and power weighted validator groups if the validator
-	// is bonded - and add validator with zero power to the validator updates
-	if store.Get(GetValidatorsBondedIndexKey(validator.OperatorAddr)) == nil {
-		return
-	}
-	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 }
 
 //___________________________________________________________________________

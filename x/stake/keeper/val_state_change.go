@@ -162,7 +162,6 @@ func (k Keeper) UnjailValidator(ctx sdk.Context, validator types.Validator) {
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
-	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 
 	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
@@ -175,7 +174,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// save the now bonded validator record to the three referenced stores
 	k.SetValidator(ctx, validator)
-	store.Set(GetValidatorsBondedIndexKey(validator.OperatorAddr), []byte{})
 
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
 
@@ -190,7 +188,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 // perform all the store operations for when a validator status begins unbonding
 func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
-	store := ctx.KVStore(k.storeKey)
 	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
 
@@ -210,9 +207,6 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 	// save the now unbonded validator record
 	k.SetValidator(ctx, validator)
-
-	// also remove from the Bonded types.Validators Store
-	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
 
@@ -237,7 +231,7 @@ func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Vali
 func (k Keeper) retrieveLastValidatorSet(ctx sdk.Context) map[[sdk.AddrLen]byte][]byte {
 	last := make(map[[sdk.AddrLen]byte][]byte)
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, BondedValidatorsIndexKey)
+	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
 	for ; iterator.Valid(); iterator.Next() {
 		var operator [sdk.AddrLen]byte
 		copy(operator[:], iterator.Key()[1:])

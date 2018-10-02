@@ -34,10 +34,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		// Manually set indexes for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
-
-		if validator.Status == sdk.Bonded {
-			keeper.SetValidatorBondedIndex(ctx, validator)
-		}
 	}
 
 	for _, bond := range data.Bonds {

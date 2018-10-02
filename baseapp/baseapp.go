@@ -14,10 +14,10 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 // Key to store the header in the DB itself.
@@ -67,6 +67,9 @@ type BaseApp struct {
 	checkState   *state          // for CheckTx
 	deliverState *state          // for DeliverTx
 	voteInfos    []abci.VoteInfo // absent validators from begin block
+
+	// minimum fees for spam prevention
+	minimumFees sdk.Coins
 
 	// flag for sealing
 	sealed bool
@@ -120,10 +123,17 @@ func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.Codespace
 	return app.codespacer.RegisterNext(codespace)
 }
 
-// Mount a store to the provided key in the BaseApp multistore
+// Mount IAVL stores to the provided keys in the BaseApp multistore
 func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key, sdk.StoreTypeIAVL)
+	}
+}
+
+// Mount stores to the provided keys in the BaseApp multistore
+func (app *BaseApp) MountStoresTransient(keys ...*sdk.TransientStoreKey) {
+	for _, key := range keys {
+		app.MountStore(key, sdk.StoreTypeTransient)
 	}
 }
 
@@ -181,10 +191,13 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 	return nil
 }
 
+// SetMinimumFees sets the minimum fees.
+func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
+
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.Logger)
+		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).WithMinimumFees(app.minimumFees)
 	}
 	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
 }
@@ -202,7 +215,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger),
+		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinimumFees(app.minimumFees),
 	}
 }
 
@@ -324,7 +337,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		}
 
 		// Encode with json
-		value := wire.Cdc.MustMarshalBinary(result)
+		value := codec.Cdc.MustMarshalBinary(result)
 		return abci.ResponseQuery{
 			Code:  uint32(sdk.ABCICodeOK),
 			Value: value,
@@ -379,7 +392,8 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 		sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
 	}
 
-	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger)
+	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger).
+		WithMinimumFees(app.minimumFees)
 	// Passes the rest of the path as an argument to the querier.
 	// For example, in the path "custom/gov/proposal/test", the gov querier gets []string{"proposal", "test"} as the path
 	resBytes, err := querier(ctx, path[2:], req)
@@ -525,6 +539,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		if mode != runTxModeCheck {
 			msgResult = handler(ctx, msg)
 		}
+		msgResult.Tags = append(msgResult.Tags, sdk.MakeTag("action", []byte(msg.Name())))
 
 		// NOTE: GasWanted is determined by ante handler and
 		// GasUsed by the GasMeter

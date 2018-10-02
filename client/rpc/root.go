@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -40,6 +41,9 @@ func initClientCommand() *cobra.Command {
 	cmd.Flags().String(flagGenesis, "", "Genesis file to verify header validity")
 	cmd.Flags().String(flagCommit, "", "File with trusted and signed header")
 	cmd.Flags().String(flagValHash, "", "Hash of trusted validator set (hex-encoded)")
+	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
+
 	return cmd
 }
 

@@ -114,21 +114,27 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 
-		logger.Info(fmt.Sprintf("Proposal %d - \"%s\" - didn't mean minimum deposit (had only %s), deleted",
-			inactiveProposal.GetProposalID(), inactiveProposal.GetTitle(), inactiveProposal.GetTotalDeposit()))
+		logger.Info(
+			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %v steak); deleted",
+				inactiveProposal.GetProposalID(),
+				inactiveProposal.GetTitle(),
+				keeper.GetDepositProcedure(ctx).MinDeposit.AmountOf("steak"),
+				inactiveProposal.GetTotalDeposit().AmountOf("steak"),
+			),
+		)
 	}
 
 	// Check if earliest Active Proposal ended voting period yet
 	for shouldPopActiveProposalQueue(ctx, keeper) {
 		activeProposal := keeper.ActiveProposalQueuePop(ctx)
 
-		proposalStartBlock := activeProposal.GetVotingStartBlock()
+		proposalStartTime := activeProposal.GetVotingStartTime()
 		votingPeriod := keeper.GetVotingProcedure(ctx).VotingPeriod
-		if ctx.BlockHeight() < proposalStartBlock+votingPeriod {
+		if ctx.BlockHeader().Time.Before(proposalStartTime.Add(votingPeriod)) {
 			continue
 		}
 
-		passes, tallyResults, nonVotingVals := tally(ctx, keeper, activeProposal)
+		passes, tallyResults := tally(ctx, keeper, activeProposal)
 		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(activeProposal.GetProposalID())
 		var action []byte
 		if passes {
@@ -143,20 +149,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
 
-		logger.Info(fmt.Sprintf("Proposal %d - \"%s\" - tallied, passed: %v",
+		logger.Info(fmt.Sprintf("proposal %d (%s) tallied; passed: %v",
 			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
-
-		for _, valAddr := range nonVotingVals {
-			val := keeper.ds.GetValidatorSet().Validator(ctx, valAddr)
-			keeper.ds.GetValidatorSet().Slash(ctx,
-				val.GetPubKey(),
-				ctx.BlockHeight(),
-				val.GetPower().RoundInt64(),
-				keeper.GetTallyingProcedure(ctx).GovernancePenalty)
-
-			logger.Info(fmt.Sprintf("Validator %s failed to vote on proposal %d, slashing",
-				val.GetOperator(), activeProposal.GetProposalID()))
-		}
 
 		resTags.AppendTag(tags.Action, action)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
@@ -172,7 +166,7 @@ func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 		return false
 	} else if peekProposal.GetStatus() != StatusDepositPeriod {
 		return true
-	} else if ctx.BlockHeight() >= peekProposal.GetSubmitBlock()+depositProcedure.MaxDepositPeriod {
+	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetSubmitTime().Add(depositProcedure.MaxDepositPeriod)) {
 		return true
 	}
 	return false
@@ -184,7 +178,7 @@ func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 
 	if peekProposal == nil {
 		return false
-	} else if ctx.BlockHeight() >= peekProposal.GetVotingStartBlock()+votingProcedure.VotingPeriod {
+	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetVotingStartTime().Add(votingProcedure.VotingPeriod)) {
 		return true
 	}
 	return false

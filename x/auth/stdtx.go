@@ -3,15 +3,15 @@ package auth
 import (
 	"encoding/json"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/tendermint/crypto"
 )
 
 var _ sdk.Tx = (*StdTx)(nil)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
-// NOTE: the first signature is the FeePayer (Signatures must not be nil).
+// NOTE: the first signature is the fee payer (Signatures must not be nil).
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg"`
 	Fee        StdFee         `json:"fee"`
@@ -62,13 +62,6 @@ func (tx StdTx) GetMemo() string { return tx.Memo }
 // invalid), then the corresponding signature is
 // .Empty().
 func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
-
-// FeePayer returns the address responsible for paying the fees
-// for the transactions. It's the first address returned by msg.GetSigners().
-// If GetSigners() is empty, this panics.
-func FeePayer(tx sdk.Tx) sdk.AccAddress {
-	return tx.GetMsgs()[0].GetSigners()[0]
-}
 
 //__________________________________________________________
 
@@ -139,23 +132,6 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 	return sdk.MustSortJSON(bz)
 }
 
-// StdSignMsg is a convenience structure for passing along
-// a Msg with the other requirements for a StdSignDoc before
-// it is signed. For use in the CLI.
-type StdSignMsg struct {
-	ChainID       string    `json:"chain_id"`
-	AccountNumber int64     `json:"account_number"`
-	Sequence      int64     `json:"sequence"`
-	Fee           StdFee    `json:"fee"`
-	Msgs          []sdk.Msg `json:"msgs"`
-	Memo          string    `json:"memo"`
-}
-
-// get message bytes
-func (msg StdSignMsg) Bytes() []byte {
-	return StdSignBytes(msg.ChainID, msg.AccountNumber, msg.Sequence, msg.Fee, msg.Msgs, msg.Memo)
-}
-
 // Standard Signature
 type StdSignature struct {
 	crypto.PubKey `json:"pub_key"` // optional
@@ -165,7 +141,7 @@ type StdSignature struct {
 }
 
 // logic for standard transaction decoding
-func DefaultTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
+func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx = StdTx{}
 

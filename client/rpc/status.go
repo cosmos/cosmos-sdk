@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/spf13/viper"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -20,6 +21,7 @@ func statusCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	return cmd
 }
 

@@ -17,7 +17,7 @@ func NewHandler(k Keeper) sdk.Handler {
         case VoteMsg:
             return handleVoteMsg(ctx, k, msg)
         default:
-            errMsg := "Unrecognized gov Msg type: " + reflect.TypeOf(msg).Name()
+            errMsg := "Unrecognized gov Msg type: " + msg.Name()
             return sdk.ErrUnknownRequest(errMsg).Result()
         }
     }

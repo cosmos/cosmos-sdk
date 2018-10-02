@@ -7,14 +7,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"io/ioutil"
 	"path"
 )
 
 // ExportCmd dumps app state to JSON.
-func ExportCmd(ctx *Context, cdc *wire.Codec, appExporter AppExporter) *cobra.Command {
+func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.Command {
 	return &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",
@@ -50,7 +50,7 @@ func ExportCmd(ctx *Context, cdc *wire.Codec, appExporter AppExporter) *cobra.Co
 			doc.AppState = appState
 			doc.Validators = validators
 
-			encoded, err := wire.MarshalJSONIndent(cdc, doc)
+			encoded, err := codec.MarshalJSONIndent(cdc, doc)
 			if err != nil {
 				return err
 			}

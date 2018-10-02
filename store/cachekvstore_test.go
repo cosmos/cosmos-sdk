@@ -494,3 +494,25 @@ func (krc *keyRangeCounter) key() int {
 //--------------------------------------------------------
 
 func bz(s string) []byte { return []byte(s) }
+
+func BenchmarkCacheKVStoreGetNoKeyFound(b *testing.B) {
+	st := newCacheKVStore()
+	b.ResetTimer()
+	// assumes b.N < 2**24
+	for i := 0; i < b.N; i++ {
+		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
+	}
+}
+
+func BenchmarkCacheKVStoreGetKeyFound(b *testing.B) {
+	st := newCacheKVStore()
+	for i := 0; i < b.N; i++ {
+		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
+		st.Set(arr, arr)
+	}
+	b.ResetTimer()
+	// assumes b.N < 2**24
+	for i := 0; i < b.N; i++ {
+		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
+	}
+}

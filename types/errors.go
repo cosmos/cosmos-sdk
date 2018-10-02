@@ -2,11 +2,10 @@ package types
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
-	"github.com/cosmos/cosmos-sdk/wire"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -56,6 +55,7 @@ const (
 	CodeInvalidCoins      CodeType = 11
 	CodeOutOfGas          CodeType = 12
 	CodeMemoTooLarge      CodeType = 13
+	CodeInsufficientFee   CodeType = 14
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -72,7 +72,6 @@ func unknownCodeMsg(code CodeType) string {
 }
 
 // NOTE: Don't stringer this, we'll put better messages in later.
-// nolint: gocyclo
 func CodeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInternal:
@@ -101,6 +100,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "out of gas"
 	case CodeMemoTooLarge:
 		return "memo too large"
+	case CodeInsufficientFee:
+		return "insufficient fee"
 	default:
 		return unknownCodeMsg(code)
 	}
@@ -149,6 +150,9 @@ func ErrOutOfGas(msg string) Error {
 }
 func ErrMemoTooLarge(msg string) Error {
 	return newErrorWithRootCodespace(CodeMemoTooLarge, msg)
+}
+func ErrInsufficientFee(msg string) Error {
+	return newErrorWithRootCodespace(CodeInsufficientFee, msg)
 }
 
 //----------------------------------------
@@ -226,13 +230,12 @@ func (err *sdkError) TraceSDK(format string, args ...interface{}) Error {
 }
 
 // Implements ABCIError.
-// Overrides err.Error.Error().
 func (err *sdkError) Error() string {
 	return fmt.Sprintf(`ERROR:
 Codespace: %d
 Code: %d
 Message: %#v
-`, err.codespace, err.code, parseCmnError(err.cmnError.Error()))
+`, err.codespace, err.code, err.cmnError.Error())
 }
 
 // Implements ABCIError.
@@ -252,13 +255,13 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	cdc := wire.NewCodec()
-	parsedErrMsg := parseCmnError(err.cmnError.Error())
+	cdc := codec.New()
+	errMsg := err.cmnError.Error()
 	jsonErr := humanReadableError{
 		Codespace: err.codespace,
 		Code:      err.code,
 		ABCICode:  err.ABCICode(),
-		Message:   parsedErrMsg,
+		Message:   errMsg,
 	}
 	bz, er := cdc.MarshalJSON(jsonErr)
 	if er != nil {
@@ -281,13 +284,6 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 		Code: uint32(err.ABCICode()),
 		Log:  err.ABCILog(),
 	}
-}
-
-func parseCmnError(err string) string {
-	if idx := strings.Index(err, "{"); idx != -1 {
-		err = err[idx+1 : len(err)-1]
-	}
-	return err
 }
 
 // nolint

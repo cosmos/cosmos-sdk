@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	wire "github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/require"
 )
 
@@ -202,6 +202,32 @@ func TestBankerRoundChop(t *testing.T) {
 	}
 }
 
+func TestTruncate(t *testing.T) {
+	tests := []struct {
+		d1  Dec
+		exp int64
+	}{
+		{mustNewDecFromStr(t, "0"), 0},
+		{mustNewDecFromStr(t, "0.25"), 0},
+		{mustNewDecFromStr(t, "0.75"), 0},
+		{mustNewDecFromStr(t, "1"), 1},
+		{mustNewDecFromStr(t, "1.5"), 1},
+		{mustNewDecFromStr(t, "7.5"), 7},
+		{mustNewDecFromStr(t, "7.6"), 7},
+		{mustNewDecFromStr(t, "7.4"), 7},
+		{mustNewDecFromStr(t, "100.1"), 100},
+		{mustNewDecFromStr(t, "1000.1"), 1000},
+	}
+
+	for tcIndex, tc := range tests {
+		resNeg := tc.d1.Neg().TruncateInt64()
+		require.Equal(t, -1*tc.exp, resNeg, "negative tc %d", tcIndex)
+
+		resPos := tc.d1.TruncateInt64()
+		require.Equal(t, tc.exp, resPos, "positive tc %d", tcIndex)
+	}
+}
+
 func TestToLeftPadded(t *testing.T) {
 	tests := []struct {
 		dec    Dec
@@ -220,7 +246,7 @@ func TestToLeftPadded(t *testing.T) {
 	}
 }
 
-var cdc = wire.NewCodec()
+var cdc = codec.New()
 
 func TestZeroDeserializationJSON(t *testing.T) {
 	d := Dec{new(big.Int)}
@@ -242,7 +268,7 @@ func TestSerializationText(t *testing.T) {
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
 
-func TestSerializationGoWireJSON(t *testing.T) {
+func TestSerializationGocodecJSON(t *testing.T) {
 	d := mustNewDecFromStr(t, "0.333")
 
 	bz, err := cdc.MarshalJSON(d)
@@ -254,7 +280,7 @@ func TestSerializationGoWireJSON(t *testing.T) {
 	require.True(t, d.Equal(d2), "original: %v, unmarshalled: %v", d, d2)
 }
 
-func TestSerializationGoWireBinary(t *testing.T) {
+func TestSerializationGocodecBinary(t *testing.T) {
 	d := mustNewDecFromStr(t, "0.333")
 
 	bz, err := cdc.MarshalBinary(d)
@@ -273,7 +299,7 @@ type testDEmbedStruct struct {
 }
 
 // TODO make work for UnmarshalJSON
-func TestEmbeddedStructSerializationGoWire(t *testing.T) {
+func TestEmbeddedStructSerializationGocodec(t *testing.T) {
 	obj := testDEmbedStruct{"foo", 10, NewDecWithPrec(1, 3)}
 	bz, err := cdc.MarshalBinary(obj)
 	require.Nil(t, err)
@@ -298,4 +324,21 @@ func TestStringOverflow(t *testing.T) {
 		"19844653375691057515930281852116324640.0000000000",
 		dec3.String(),
 	)
+}
+
+func TestDecMulInt(t *testing.T) {
+	tests := []struct {
+		sdkDec Dec
+		sdkInt Int
+		want   Dec
+	}{
+		{NewDec(10), NewInt(2), NewDec(20)},
+		{NewDec(1000000), NewInt(100), NewDec(100000000)},
+		{NewDecWithPrec(1, 1), NewInt(10), NewDec(1)},
+		{NewDecWithPrec(1, 5), NewInt(20), NewDecWithPrec(2, 4)},
+	}
+	for i, tc := range tests {
+		got := tc.sdkDec.MulInt(tc.sdkInt)
+		require.Equal(t, tc.want, got, "Incorrect result on test case %d", i)
+	}
 }

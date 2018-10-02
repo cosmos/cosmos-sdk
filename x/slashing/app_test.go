@@ -24,13 +24,14 @@ var (
 func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 	mapp := mock.NewApp()
 
-	RegisterWire(mapp.Cdc)
+	RegisterCodec(mapp.Cdc)
 	keyStake := sdk.NewKVStoreKey("stake")
+	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
 	keyParams := sdk.NewKVStoreKey("params")
-	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
+	bankKeeper := bank.NewBaseKeeper(mapp.AccountMapper)
 	paramsKeeper := params.NewKeeper(mapp.Cdc, keyParams)
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, keyStake, coinKeeper, mapp.RegisterCodespace(stake.DefaultCodespace))
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, bankKeeper, mapp.RegisterCodespace(stake.DefaultCodespace))
 
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakeKeeper, paramsKeeper.Getter(), mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
@@ -38,7 +39,7 @@ func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 
 	mapp.SetEndBlocker(getEndBlocker(stakeKeeper))
 	mapp.SetInitChainer(getInitChainer(mapp, stakeKeeper))
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keySlashing, keyParams}))
+	require.NoError(t, mapp.CompleteSetup(keyStake, keySlashing, keyParams, tkeyStake))
 
 	return mapp, stakeKeeper, keeper
 }
@@ -98,19 +99,22 @@ func TestSlashingMsgs(t *testing.T) {
 	}
 	accs := []auth.Account{acc1}
 	mock.SetGenesis(mapp, accs)
+
 	description := stake.NewDescription("foo_moniker", "", "", "")
+	commission := stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+
 	createValidatorMsg := stake.NewMsgCreateValidator(
-		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description,
+		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission,
 	)
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
 	validator := checkValidator(t, mapp, stakeKeeper, addr1, true)
-	require.Equal(t, sdk.ValAddress(addr1), validator.Operator)
+	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
-	unjailMsg := MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.PubKey.Address())}
+	unjailMsg := MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.ConsPubKey.Address())}
 
 	// no signing info yet
 	checkValidatorSigningInfo(t, mapp, keeper, sdk.ConsAddress(addr1), false)

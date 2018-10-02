@@ -37,7 +37,7 @@ func ErrNoValidatorFound(codespace sdk.CodespaceType) sdk.Error {
 }
 
 func ErrValidatorOwnerExists(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this owner-address, must use new validator-owner address")
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this operator address, must use new validator operator address")
 }
 
 func ErrValidatorPubKeyExists(codespace sdk.CodespaceType) sdk.Error {
@@ -63,6 +63,26 @@ func ErrCommissionNegative(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrCommissionHuge(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be more than 100%")
+}
+
+func ErrCommissionGTMaxRate(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be more than the max rate")
+}
+
+func ErrCommissionUpdateTime(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be changed more than once in 24h")
+}
+
+func ErrCommissionChangeRateNegative(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "commission change rate must be positive")
+}
+
+func ErrCommissionChangeRateGTMaxRate(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "commission change rate cannot be more than the max rate")
+}
+
+func ErrCommissionGTMaxChangeRate(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be changed more than max change rate")
 }
 
 func ErrNilDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {

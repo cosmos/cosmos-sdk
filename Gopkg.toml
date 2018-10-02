@@ -53,11 +53,11 @@
 
 [[override]]
   name = "github.com/tendermint/iavl"
-  version = "=v0.10.0"
+  version = "=v0.11.0"
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=0.24.0-rc0"
+  version = "=0.24.0"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"
@@ -65,8 +65,12 @@
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
-  revision = "4296ee5701e945f9b3a7dbe51f402e0b9be57259"
+  version = "=v0.1.0"
 
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/mitchellh/go-homedir"
+  version = "1.0.0"

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
@@ -41,6 +42,8 @@ const (
 	French
 	// Italian is currently not supported.
 	Italian
+	addressSuffix = "address"
+	infoSuffix    = "info"
 )
 
 var (
@@ -179,11 +182,16 @@ func (kb dbKeybase) List() ([]Info, error) {
 	iter := kb.db.Iterator(nil, nil)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		info, err := readInfo(iter.Value())
-		if err != nil {
-			return nil, err
+		key := string(iter.Key())
+
+		// need to include only keys in storage that have an info suffix
+		if strings.HasSuffix(key, infoSuffix) {
+			info, err := readInfo(iter.Value())
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, info)
 		}
-		res = append(res, info)
 	}
 	return res, nil
 }
@@ -194,6 +202,15 @@ func (kb dbKeybase) Get(name string) (Info, error) {
 	if len(bs) == 0 {
 		return nil, fmt.Errorf("Key %s not found", name)
 	}
+	return readInfo(bs)
+}
+
+func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
+	ik := kb.db.Get(addrKey(address))
+	if len(ik) == 0 {
+		return nil, fmt.Errorf("key with address %s not found", address)
+	}
+	bs := kb.db.Get(ik)
 	return readInfo(bs)
 }
 
@@ -224,14 +241,14 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 		}
 	case offlineInfo:
 		linfo := info.(offlineInfo)
-		_, err = fmt.Fprintf(os.Stderr, "Bytes to sign:\n%s", msg)
+		_, err := fmt.Fprintf(os.Stderr, "Bytes to sign:\n%s", msg)
 		if err != nil {
-			panic(err)
+			return nil, nil, err
 		}
 		buf := bufio.NewReader(os.Stdin)
 		_, err = fmt.Fprintf(os.Stderr, "\nEnter Amino-encoded signature:\n")
 		if err != nil {
-			panic(err)
+			return nil, nil, err
 		}
 		// Will block until user inputs the signature
 		signed, err := buf.ReadString('\n')
@@ -347,6 +364,7 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 		if err != nil {
 			return err
 		}
+		kb.db.DeleteSync(addrKey(linfo.GetAddress()))
 		kb.db.DeleteSync(infoKey(name))
 		return nil
 	case ledgerInfo:
@@ -354,9 +372,11 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 		if passphrase != "yes" {
 			return fmt.Errorf("enter 'yes' exactly to delete the key - this cannot be undone")
 		}
+		kb.db.DeleteSync(addrKey(info.GetAddress()))
 		kb.db.DeleteSync(infoKey(name))
 		return nil
 	}
+
 	return nil
 }
 
@@ -413,9 +433,16 @@ func (kb dbKeybase) writeOfflineKey(pub tmcrypto.PubKey, name string) Info {
 
 func (kb dbKeybase) writeInfo(info Info, name string) {
 	// write the info by key
-	kb.db.SetSync(infoKey(name), writeInfo(info))
+	key := infoKey(name)
+	kb.db.SetSync(key, writeInfo(info))
+	// store a pointer to the infokey by address for fast lookup
+	kb.db.SetSync(addrKey(info.GetAddress()), key)
+}
+
+func addrKey(address types.AccAddress) []byte {
+	return []byte(fmt.Sprintf("%s.%s", address.String(), addressSuffix))
 }
 
 func infoKey(name string) []byte {
-	return []byte(fmt.Sprintf("%s.info", name))
+	return []byte(fmt.Sprintf("%s.%s", name, infoSuffix))
 }

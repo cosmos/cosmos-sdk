@@ -75,22 +75,14 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 	potentialPower := validator.Tokens
 	powerBytes := []byte(potentialPower.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
 
-	jailedBytes := make([]byte, 1)
-	if validator.Jailed {
-		jailedBytes[0] = byte(0x00)
-	} else {
-		jailedBytes[0] = byte(0x01)
-	}
-
 	// heightBytes and counterBytes represent strings like powerBytes does
 	heightBytes := make([]byte, binary.MaxVarintLen64)
 	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.BondHeight)) // invert height (older validators first)
 	counterBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
 
-	return append(append(append(append(
+	return append(append(append(
 		ValidatorsByPowerIndexKey,
-		jailedBytes...),
 		powerBytes...),
 		heightBytes...),
 		counterBytes...)

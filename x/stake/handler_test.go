@@ -100,6 +100,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, sdk.Unbonding, validator.Status)              // ensure is unbonding
 	require.Equal(t, int64(500000), validator.Tokens.RoundInt64()) // ensure tokens slashed
+	keeper.Unjail(ctx, consAddr0)
 
 	// the old power record should have been deleted as the power changed
 	require.False(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power))

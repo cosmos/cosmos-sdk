@@ -98,6 +98,10 @@ func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, validator types.Validato
 
 // validator index
 func (k Keeper) SetValidatorByPowerIndex(ctx sdk.Context, validator types.Validator, pool types.Pool) {
+	// jailed validators are not kept in the power index
+	if validator.Jailed {
+		return
+	}
 	store := ctx.KVStore(k.storeKey)
 	store.Set(GetBondedValidatorsByPowerIndexKey(validator, pool), validator.OperatorAddr)
 }

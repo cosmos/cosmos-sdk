@@ -33,11 +33,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		operator := sdk.ValAddress(iterator.Value())
 		validator := k.mustGetValidator(ctx, operator)
 
-		// jailed validators are ranked last, so if we get to a jailed validator
-		// we have no more bonded validators
-		// TODO we can remove this if we remove jailed validators from the power store
-		// likewise for zero-power validators, which we never bond
-		if validator.Jailed || validator.Tokens.Equal(sdk.ZeroDec()) {
+		if validator.Jailed {
+			panic("should never retrieve a jailed validator from the power store")
+		}
+
+		// if we get to a zero-power validator (which we don't bond),
+		// there are no more possible bonded validators
+		if validator.Tokens.Equal(sdk.ZeroDec()) {
 			break
 		}
 
@@ -140,12 +142,9 @@ func (k Keeper) JailValidator(ctx sdk.Context, validator types.Validator) {
 	}
 
 	pool := k.GetPool(ctx)
-	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 	validator.Jailed = true
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByPowerIndex(ctx, validator, pool)
-
-	// TODO we should be able to just delete the index, and only set it again once unjailed
+	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 }
 
 // remove a validator from jail
@@ -155,13 +154,10 @@ func (k Keeper) UnjailValidator(ctx sdk.Context, validator types.Validator) {
 	}
 
 	pool := k.GetPool(ctx)
-	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 	validator.Jailed = false
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
 }
-
-//________________________________________________________________________________________________
 
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {

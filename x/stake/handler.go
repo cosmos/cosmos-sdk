@@ -36,7 +36,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Validator) {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.ValidatorUpdate) {
 	pool := k.GetPool(ctx)
 
 	// Process provision inflation
@@ -52,7 +52,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 	k.SetIntraTxCounter(ctx, 0)
 
 	// calculate validator set changes
-	ValidatorUpdates = k.GetValidTendermintUpdates(ctx)
+	ValidatorUpdates = k.ApplyAndReturnValidatorSetUpdates(ctx)
 	return
 }
 
@@ -82,7 +82,6 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		msg.Commission.Rate, msg.Commission.MaxChangeRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
 	)
-
 	validator, err := validator.SetInitialCommission(commission)
 	if err != nil {
 		return err.Result()
@@ -90,6 +89,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByConsAddr(ctx, validator)
+	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
@@ -130,13 +130,13 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	validator.Description = description
 
 	if msg.CommissionRate != nil {
-		if err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate); err != nil {
+		commission, err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate)
+		if err != nil {
 			return err.Result()
 		}
+		validator.Commission = commission
 	}
 
-	// We don't need to run through all the power update logic within k.UpdateValidator
-	// We just need to override the entry in state, since only the description has changed.
 	k.SetValidator(ctx, validator)
 
 	tags := sdk.NewTags(

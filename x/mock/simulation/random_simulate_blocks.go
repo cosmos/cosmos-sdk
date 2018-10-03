@@ -36,7 +36,8 @@ func initChain(r *rand.Rand, accounts []Account, setups []RandSetup, app *baseap
 	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, accounts)})
 	validators = make(map[string]mockValidator)
 	for _, validator := range res.Validators {
-		validators[string(validator.Address)] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
+		str := fmt.Sprintf("%v", validator.PubKey)
+		validators[str] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
 	}
 
 	for i := 0; i < len(setups); i++ {
@@ -91,9 +92,9 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	}()
 
 	var pastTimes []time.Time
-	var pastSigningValidators [][]abci.SigningValidator
+	var pastVoteInfos [][]abci.VoteInfo
 
-	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header)
+	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header)
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
 	timeOperationQueue := []FutureOperation{}
@@ -122,7 +123,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	for i := 0; i < numBlocks && !stopEarly; i++ {
 		// Log the header time for future lookup
 		pastTimes = append(pastTimes, header.Time)
-		pastSigningValidators = append(pastSigningValidators, request.LastCommitInfo.Validators)
+		pastVoteInfos = append(pastVoteInfos, request.LastCommitInfo.Votes)
 
 		// Run the BeginBlock handler
 		app.BeginBlock(request)
@@ -157,7 +158,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
-		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastSigningValidators, event, header)
+		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header)
 
 		// Update the validator set
 		validators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
@@ -316,11 +317,11 @@ func getKeys(validators map[string]mockValidator) []string {
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 // nolint: unparam
 func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
-	pastTimes []time.Time, pastSigningValidators [][]abci.SigningValidator, event func(string), header abci.Header) abci.RequestBeginBlock {
+	pastTimes []time.Time, pastVoteInfos [][]abci.VoteInfo, event func(string), header abci.Header) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
 	}
-	signingValidators := make([]abci.SigningValidator, len(validators))
+	voteInfos := make([]abci.VoteInfo, len(validators))
 	i := 0
 	for _, key := range getKeys(validators) {
 		mVal := validators[key]
@@ -341,8 +342,14 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 		} else {
 			event("beginblock/signing/missed")
 		}
-		signingValidators[i] = abci.SigningValidator{
-			Validator:       mVal.val,
+		pubkey, err := tmtypes.PB2TM.PubKey(mVal.val.PubKey)
+		if err != nil {
+			panic(err)
+		}
+		voteInfos[i] = abci.VoteInfo{
+			Validator: abci.Validator{
+				Address: pubkey.Address(),
+			},
 			SignedLastBlock: signed,
 		}
 		i++
@@ -354,11 +361,11 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 		for r.Float64() < evidenceFraction {
 			height := header.Height
 			time := header.Time
-			vals := signingValidators
+			vals := voteInfos
 			if r.Float64() < pastEvidenceFraction {
 				height = int64(r.Intn(int(header.Height)))
 				time = pastTimes[height]
-				vals = pastSigningValidators[height]
+				vals = pastVoteInfos[height]
 			}
 			validator := vals[r.Intn(len(vals))].Validator
 			var totalVotingPower int64
@@ -378,7 +385,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 	return abci.RequestBeginBlock{
 		Header: header,
 		LastCommitInfo: abci.LastCommitInfo{
-			Validators: signingValidators,
+			Votes: voteInfos,
 		},
 		ByzantineValidators: evidence,
 	}
@@ -386,25 +393,26 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 
 // updateValidators mimicks Tendermint's update logic
 // nolint: unparam
-func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.Validator, event func(string)) map[string]mockValidator {
+func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.ValidatorUpdate, event func(string)) map[string]mockValidator {
 
 	for _, update := range updates {
+		str := fmt.Sprintf("%v", update.PubKey)
 		switch {
 		case update.Power == 0:
-			if _, ok := current[string(update.PubKey.Data)]; !ok {
+			if _, ok := current[str]; !ok {
 				tb.Fatalf("tried to delete a nonexistent validator")
 			}
 
 			event("endblock/validatorupdates/kicked")
-			delete(current, string(update.PubKey.Data))
+			delete(current, str)
 		default:
 			// Does validator already exist?
-			if mVal, ok := current[string(update.PubKey.Data)]; ok {
+			if mVal, ok := current[str]; ok {
 				mVal.val = update
 				event("endblock/validatorupdates/updated")
 			} else {
 				// Set this new validator
-				current[string(update.PubKey.Data)] = mockValidator{update, GetMemberOfInitialState(r, initialLivenessWeightings)}
+				current[str] = mockValidator{update, GetMemberOfInitialState(r, initialLivenessWeightings)}
 				event("endblock/validatorupdates/added")
 			}
 		}

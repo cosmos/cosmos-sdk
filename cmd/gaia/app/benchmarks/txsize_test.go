@@ -31,5 +31,5 @@ func ExampleTxSendSize() {
 	fmt.Println(len(cdc.MustMarshalBinaryBare([]sdk.Msg{msg1})))
 	fmt.Println(len(cdc.MustMarshalBinaryBare(tx)))
 	// output: 80
-	// 173
+	// 167
 }

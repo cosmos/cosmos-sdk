@@ -10,7 +10,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	)
+)
 
 var invalidStrs = []string{
 	"",

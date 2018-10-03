@@ -38,9 +38,7 @@ var (
 
 	GetValidatorKey              = keeper.GetValidatorKey
 	GetValidatorByConsAddrKey    = keeper.GetValidatorByConsAddrKey
-	GetValidatorsBondedIndexKey  = keeper.GetValidatorsBondedIndexKey
 	GetValidatorsByPowerIndexKey = keeper.GetValidatorsByPowerIndexKey
-	GetTendermintUpdatesTKey     = keeper.GetTendermintUpdatesTKey
 	GetDelegationKey             = keeper.GetDelegationKey
 	GetDelegationsKey            = keeper.GetDelegationsKey
 	ParamKey                     = keeper.ParamKey
@@ -49,9 +47,6 @@ var (
 	ValidatorsByConsAddrKey      = keeper.ValidatorsByConsAddrKey
 	ValidatorsBondedIndexKey     = keeper.ValidatorsBondedIndexKey
 	ValidatorsByPowerIndexKey    = keeper.ValidatorsByPowerIndexKey
-	ValidatorCliffIndexKey       = keeper.ValidatorCliffIndexKey
-	ValidatorPowerCliffKey       = keeper.ValidatorPowerCliffKey
-	TendermintUpdatesTKey        = keeper.TendermintUpdatesTKey
 	DelegationKey                = keeper.DelegationKey
 	IntraTxCounterKey            = keeper.IntraTxCounterKey
 	GetUBDKey                    = keeper.GetUBDKey

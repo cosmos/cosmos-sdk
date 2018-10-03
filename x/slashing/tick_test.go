@@ -32,7 +32,7 @@ func TestBeginBlocker(t *testing.T) {
 	// mark the validator as having signed
 	req := abci.RequestBeginBlock{
 		LastCommitInfo: abci.LastCommitInfo{
-			Validators: []abci.SigningValidator{{
+			Votes: []abci.VoteInfo{{
 				Validator:       val,
 				SignedLastBlock: true,
 			}},
@@ -54,7 +54,7 @@ func TestBeginBlocker(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			LastCommitInfo: abci.LastCommitInfo{
-				Validators: []abci.SigningValidator{{
+				Votes: []abci.VoteInfo{{
 					Validator:       val,
 					SignedLastBlock: true,
 				}},
@@ -68,7 +68,7 @@ func TestBeginBlocker(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		req = abci.RequestBeginBlock{
 			LastCommitInfo: abci.LastCommitInfo{
-				Validators: []abci.SigningValidator{{
+				Votes: []abci.VoteInfo{{
 					Validator:       val,
 					SignedLastBlock: false,
 				}},
@@ -76,6 +76,9 @@ func TestBeginBlocker(t *testing.T) {
 		}
 		BeginBlocker(ctx, req, keeper)
 	}
+
+	// end block
+	stake.EndBlocker(ctx, sk)
 
 	// validator should be jailed
 	validator, found := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk))

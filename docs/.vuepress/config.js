@@ -15,8 +15,8 @@ module.exports = {
         collapsable: false,
         children: [
           "/introduction/cosmos-hub",
-          "/introduction/tendermint-cosmos"
-          "/introduction/tendermint",
+          "/introduction/tendermint-cosmos",
+          "/introduction/tendermint"
         ]
       },
       {

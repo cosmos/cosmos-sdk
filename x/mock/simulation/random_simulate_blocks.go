@@ -36,12 +36,8 @@ func initChain(r *rand.Rand, accounts []Account, setups []RandSetup, app *baseap
 	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, accounts)})
 	validators = make(map[string]mockValidator)
 	for _, validator := range res.Validators {
-		pubkey, err := tmtypes.PB2TM.PubKey(validator.PubKey)
-		if err != nil {
-			panic(err)
-		}
-		address := pubkey.Address()
-		validators[string(address)] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
+		str := fmt.Sprintf("%v", validator.PubKey)
+		validators[str] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
 	}
 
 	for i := 0; i < len(setups); i++ {
@@ -400,22 +396,23 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.ValidatorUpdate, event func(string)) map[string]mockValidator {
 
 	for _, update := range updates {
+		str := fmt.Sprintf("%v", update.PubKey)
 		switch {
 		case update.Power == 0:
-			if _, ok := current[string(update.PubKey.Data)]; !ok {
+			if _, ok := current[str]; !ok {
 				tb.Fatalf("tried to delete a nonexistent validator")
 			}
 
 			event("endblock/validatorupdates/kicked")
-			delete(current, string(update.PubKey.Data))
+			delete(current, str)
 		default:
 			// Does validator already exist?
-			if mVal, ok := current[string(update.PubKey.Data)]; ok {
+			if mVal, ok := current[str]; ok {
 				mVal.val = update
 				event("endblock/validatorupdates/updated")
 			} else {
 				// Set this new validator
-				current[string(update.PubKey.Data)] = mockValidator{update, GetMemberOfInitialState(r, initialLivenessWeightings)}
+				current[str] = mockValidator{update, GetMemberOfInitialState(r, initialLivenessWeightings)}
 				event("endblock/validatorupdates/added")
 			}
 		}

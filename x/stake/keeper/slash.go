@@ -95,20 +95,18 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		}
 	}
 
-	// Cannot decrease balance below zero
+	// cannot decrease balance below zero
 	tokensToBurn := sdk.MinDec(remainingSlashAmount, validator.Tokens)
 
-	// burn validator's tokens
+	// burn validator's tokens and update the validator
+	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 	pool := k.GetPool(ctx)
-	validator, pool = validator.RemoveTokens(pool, tokensToBurn)
 	pool.LooseTokens = pool.LooseTokens.Sub(tokensToBurn)
 	k.SetPool(ctx, pool)
 
-	// update the validator, possibly kicking it out
-	validator = k.UpdateValidator(ctx, validator)
-
 	// remove validator if it has no more tokens
-	if validator.Tokens.IsZero() {
+	if validator.Tokens.IsZero() && validator.Status != sdk.Bonded {
+		// if bonded, we must remove in ApplyAndReturnValidatorSetUpdates instead
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
@@ -123,7 +121,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 // jail a validator
 func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	k.setJailed(ctx, consAddr, true)
+	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
+	k.jailValidator(ctx, validator)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("validator %s jailed", consAddr))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
@@ -132,21 +131,11 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 
 // unjail a validator
 func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	k.setJailed(ctx, consAddr, false)
+	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
+	k.unjailValidator(ctx, validator)
 	logger := ctx.Logger().With("module", "x/stake")
 	logger.Info(fmt.Sprintf("validator %s unjailed", consAddr))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
-	return
-}
-
-// set the jailed flag on a validator
-func (k Keeper) setJailed(ctx sdk.Context, consAddr sdk.ConsAddress, isJailed bool) {
-	validator, found := k.GetValidatorByConsAddr(ctx, consAddr)
-	if !found {
-		panic(fmt.Errorf("validator with consensus-Address %s not found, cannot set jailed to %v", consAddr, isJailed))
-	}
-	validator.Jailed = isJailed
-	k.UpdateValidator(ctx, validator) // update validator, possibly unbonding or bonding it
 	return
 }
 

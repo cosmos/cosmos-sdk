@@ -118,7 +118,6 @@ func InitializeTestLCD(
 	t *testing.T, nValidators int, initAddrs []sdk.AccAddress,
 ) (cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
 
-	// TODO: Allow caller to specify respective power for each validator
 	if nValidators < 1 {
 		panic("InitializeTestLCD must use at least one validator")
 	}
@@ -146,7 +145,7 @@ func InitializeTestLCD(
 	// append initial (proposing) validator
 	genDoc.Validators[0] = tmtypes.GenesisValidator{
 		PubKey: privVal.GetPubKey(),
-		Power:  1,
+		Power:  999999, // create enough power to enable 2/3 voting power
 		Name:   "validator-1",
 	}
 

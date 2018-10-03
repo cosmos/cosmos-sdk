@@ -182,7 +182,7 @@ func TestQueryDelegation(t *testing.T) {
 
 	require.Equal(t, delegation, delegationRes)
 
-	// Query unbonding delegation
+	// Query unbonging delegation
 	keeper.BeginUnbonding(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
 
 	query = abci.RequestQuery{

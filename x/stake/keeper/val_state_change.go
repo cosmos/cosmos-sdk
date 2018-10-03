@@ -52,23 +52,25 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			validator = k.unbondingToBonded(ctx, validator)
 		case sdk.Bonded:
 			// no state change
+		default:
+			panic("unexpected validator status")
 		}
 
 		// fetch the old power bytes
-		var opbytes [sdk.AddrLen]byte
-		copy(opbytes[:], operator[:])
-		oldPowerBytes, ok := last[opbytes]
+		var operatorBytes [sdk.AddrLen]byte
+		copy(operatorBytes[:], operator[:])
+		oldPowerBytes, found := last[operatorBytes]
 
 		// calculate the new power bytes
 		newPowerBytes := validator.ABCIValidatorPowerBytes(k.cdc)
 
 		// update the validator set if power has changed
-		if !ok || !bytes.Equal(oldPowerBytes, newPowerBytes) {
+		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
 		}
 
 		// validator still in the validator set, so delete from the copy
-		delete(last, opbytes)
+		delete(last, operatorBytes)
 
 		// set the bonded validator index
 		store.Set(GetBondedValidatorIndexKey(operator), newPowerBytes)
@@ -137,7 +139,7 @@ func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) 
 }
 
 // send a validator to jail
-func (k Keeper) JailValidator(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
 	if validator.Jailed {
 		panic(fmt.Sprintf("cannot jail already jailed validator, validator: %v\n", validator))
 	}
@@ -149,7 +151,7 @@ func (k Keeper) JailValidator(ctx sdk.Context, validator types.Validator) {
 }
 
 // remove a validator from jail
-func (k Keeper) UnjailValidator(ctx sdk.Context, validator types.Validator) {
+func (k Keeper) unjailValidator(ctx sdk.Context, validator types.Validator) {
 	if !validator.Jailed {
 		panic(fmt.Sprintf("cannot unjail already unjailed validator, validator: %v\n", validator))
 	}
@@ -228,9 +230,12 @@ func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Vali
 	return validator
 }
 
+// map of operator addresses to serialized power
+type validatorsByAddr map[[sdk.AddrLen]byte][]byte
+
 // retrieve the last validator set
-func (k Keeper) retrieveLastValidatorSet(ctx sdk.Context) map[[sdk.AddrLen]byte][]byte {
-	last := make(map[[sdk.AddrLen]byte][]byte)
+func (k Keeper) retrieveLastValidatorSet(ctx sdk.Context) validatorsByAddr {
+	last := make(validatorsByAddr)
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
 	for ; iterator.Valid(); iterator.Next() {
@@ -243,14 +248,15 @@ func (k Keeper) retrieveLastValidatorSet(ctx sdk.Context) map[[sdk.AddrLen]byte]
 	return last
 }
 
-// sort the validators to be unbonded
-func (k Keeper) sortNoLongerBonded(last map[[sdk.AddrLen]byte][]byte) [][]byte {
+// given a map of remaining validators to previous bonded power
+// returns the list of validators to be unbonded, sorted by operator address
+func (k Keeper) sortNoLongerBonded(last validatorsByAddr) [][]byte {
 	// sort the map keys for determinism
 	noLongerBonded := make([][]byte, len(last))
 	index := 0
-	for oper := range last {
+	for operatorBytes := range last {
 		operator := make([]byte, sdk.AddrLen)
-		copy(operator[:], oper[:])
+		copy(operator[:], operatorBytes[:])
 		noLongerBonded[index] = operator
 		index++
 	}

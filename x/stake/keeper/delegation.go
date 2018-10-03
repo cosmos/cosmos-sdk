@@ -309,7 +309,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 		// if the delegation is the operator of the validator then
 		// trigger a jail validator
 		if bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr) && !validator.Jailed {
-			k.JailValidator(ctx, validator)
+			k.jailValidator(ctx, validator)
 			validator = k.mustGetValidator(ctx, validator.OperatorAddr)
 		}
 

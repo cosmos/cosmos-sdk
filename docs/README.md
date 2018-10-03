@@ -10,9 +10,9 @@ Cosmos can interoperate with multiple other applications and cryptocurrencies. B
 
 ## Quick Start
 
-- [Getting started with the SDK](./sdk/core/intro.html)
+- [Getting started with the SDK](./sdk/core/intro.md)
 - [SDK Examples](../examples)
-- [Join the testnet](./getting-started/full-node.html#run-a-full-node)
+- [Join the testnet](./getting-started/join-testnet.md#run-a-full-node)
 
 ## Edit the Documentation
 

@@ -65,10 +65,13 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Slash validator
 	k.validatorSet.Slash(ctx, consAddr, infractionHeight, power, revisedFraction)
 
-	// Jail validator
-	k.validatorSet.Jail(ctx, consAddr)
+	// Jail validator if not already in jail
+	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
+	if !validator.GetJailed() {
+		k.validatorSet.Jail(ctx, consAddr)
+	}
 
-	// Set validator jail duration
+	// Set or updated validator jail duration
 	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
 	if !found {
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))

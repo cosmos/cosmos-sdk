@@ -16,7 +16,6 @@ import (
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -60,10 +59,6 @@ type AppInit struct {
 	FlagsAppGenState *pflag.FlagSet
 	FlagsAppGenTx    *pflag.FlagSet
 
-	// create the application genesis tx
-	// AppGenTx func(cdc *codec.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
-	// 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
-
 	// AppGenState creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.
 	AppGenState func(cdc *codec.Codec, appGenTx []auth.StdTx) (appState json.RawMessage, err error)
@@ -75,44 +70,6 @@ type AppInit struct {
 var DefaultAppInit = AppInit{
 	//	AppGenTx:    SimpleAppGenTx,
 	AppGenState: SimpleAppGenState,
-}
-
-// simple genesis tx
-type SimpleGenTx struct {
-	Addr sdk.AccAddress `json:"addr"`
-}
-
-// Generate a genesis transaction
-func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
-	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
-
-	var addr sdk.AccAddress
-	var secret string
-	addr, secret, err = GenerateCoinKey()
-	if err != nil {
-		return
-	}
-
-	var bz []byte
-	simpleGenTx := SimpleGenTx{addr}
-	bz, err = cdc.MarshalJSON(simpleGenTx)
-	if err != nil {
-		return
-	}
-	appGenTx = json.RawMessage(bz)
-
-	mm := map[string]string{"secret": secret}
-	bz, err = cdc.MarshalJSON(mm)
-	if err != nil {
-		return
-	}
-	cliPrint = json.RawMessage(bz)
-
-	validator = tmtypes.GenesisValidator{
-		PubKey: pk,
-		Power:  10,
-	}
-	return
 }
 
 // create the genesis app state

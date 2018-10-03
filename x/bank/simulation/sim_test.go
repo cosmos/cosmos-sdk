@@ -32,14 +32,15 @@ func TestBankWithRandomMessages(t *testing.T) {
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
 		[]simulation.WeightedOperation{
-			{1, SimulateSingleInputMsgSend(mapper)},
+			{1, SingleInputSendTx(mapper)},
+			{1, SingleInputSendMsg(mapper, bankKeeper)},
 		},
 		[]simulation.RandSetup{},
 		[]simulation.Invariant{
 			NonnegativeBalanceInvariant(mapper),
 			TotalCoinsInvariant(mapper, func() sdk.Coins { return mapp.TotalCoinsSupply }),
 		},
-		30, 30,
+		30, 60,
 		false,
 	)
 }

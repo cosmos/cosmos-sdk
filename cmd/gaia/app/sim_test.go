@@ -90,7 +90,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
-		{100, banksim.SimulateSingleInputMsgSend(app.accountMapper)},
+		{100, banksim.SingleInputSendMsg(app.accountMapper, app.bankKeeper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
 		{100, stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper)},

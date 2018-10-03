@@ -97,7 +97,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	keeper.DeleteValidatorByPowerIndex(ctx, validator, pool)
 	validator, pool, burned := validator.RemoveDelShares(pool, delSharesCreated.Quo(sdk.NewDec(2)))
 	require.Equal(t, int64(50), burned.RoundInt64())
-	keeper.SetPool(ctx, pool)               // update the pool
+	keeper.SetPool(ctx, pool)                      // update the pool
 	testingUpdateValidator(keeper, ctx, validator) // update the validator, possibly kicking it out
 	require.False(t, validatorByPowerIndexExists(keeper, ctx, power))
 

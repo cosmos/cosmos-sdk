@@ -116,7 +116,7 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.Acc
 // returns a cleanup function, a set of validator public keys, and a port.
 func InitializeTestLCD(
 	t *testing.T, nValidators int, initAddrs []sdk.AccAddress,
-) (cleanup func(), valPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
+) (cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
 
 	// TODO: Allow caller to specify respective power for each validator
 	if nValidators < 1 {
@@ -167,7 +167,7 @@ func InitializeTestLCD(
 		operAddr := ed25519.GenPrivKey().PubKey().Address()
 		pk := gdValidator.PubKey
 
-		valPubKeys = append(valPubKeys, pk)
+		valConsPubKeys = append(valConsPubKeys, pk)
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 
 		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(operAddr), gdValidator.Name)
@@ -220,7 +220,7 @@ func InitializeTestLCD(
 		lcd.Close()
 	}
 
-	return cleanup, valPubKeys, valOperAddrs, port
+	return cleanup, valConsPubKeys, valOperAddrs, port
 }
 
 // startTM creates and starts an in-process Tendermint node with memDB and

@@ -67,18 +67,19 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 
 	potentialPower := validator.Tokens
 	powerBytes := []byte(potentialPower.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+	powerBytesLen := len(powerBytes)
+	// key is of format prefix || powerbytes || heightBytes || counterBytes
+	key := make([]byte, 1+powerBytesLen+8+2)
 
-	// heightBytes and counterBytes represent strings like powerBytes does
-	heightBytes := make([]byte, binary.MaxVarintLen64)
-	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.BondHeight)) // invert height (older validators first)
-	counterBytes := make([]byte, 2)
-	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
+	key[0] = ValidatorsByPowerIndexKey[0]
+	copy(key[1:powerBytesLen+1], powerBytes)
 
-	return append(append(append(
-		ValidatorsByPowerIndexKey,
-		powerBytes...),
-		heightBytes...),
-		counterBytes...)
+	// include heightBytes height is inverted (older validators first)
+	binary.BigEndian.PutUint64(key[powerBytesLen+1:powerBytesLen+9], ^uint64(validator.BondHeight))
+	// include counterBytes, counter is inverted (first txns have priority)
+	binary.BigEndian.PutUint16(key[powerBytesLen+9:powerBytesLen+11], ^uint16(validator.BondIntraTxCounter))
+
+	return key
 }
 
 //______________________________________________________________________________

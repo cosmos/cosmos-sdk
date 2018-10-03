@@ -25,7 +25,7 @@ func TestGetValidatorPowerRank(t *testing.T) {
 		validator types.Validator
 		wantHex   string
 	}{
-		{val1, "05303030303030303030303132ffffffffffffffff0000ffff"},
+		{val1, "05303030303030303030303132ffffffffffffffffffff"},
 	}
 	for i, tt := range tests {
 		got := hex.EncodeToString(getValidatorPowerRank(tt.validator))

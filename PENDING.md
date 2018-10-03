@@ -174,5 +174,7 @@ BUG FIXES
     * [\#2158](https://github.com/cosmos/cosmos-sdk/issues/2158) Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
     * [simulation] \#1924 Make simulation stop on SIGTERM
     * [\#2388](https://github.com/cosmos/cosmos-sdk/issues/2388) Remove dependency on deprecated tendermint/tmlibs repository.
+    * [\#2416](https://github.com/cosmos/cosmos-sdk/issues/2416) Refactored
+    `InitializeTestLCD` to properly include proposing validator in genesis state.
 
 * Tendermint

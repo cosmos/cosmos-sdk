@@ -45,7 +45,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithIsCheckTx(isCheckTx)
 	c = c.WithTxBytes(nil)
 	c = c.WithLogger(logger)
-	c = c.WithSigningValidators(nil)
+	c = c.WithVoteInfos(nil)
 	c = c.WithGasMeter(NewInfiniteGasMeter())
 	c = c.WithMinimumFees(Coins{})
 	return c
@@ -138,7 +138,7 @@ const (
 	contextKeyIsCheckTx
 	contextKeyTxBytes
 	contextKeyLogger
-	contextKeySigningValidators
+	contextKeyVoteInfos
 	contextKeyGasMeter
 	contextKeyMinimumFees
 )
@@ -164,8 +164,8 @@ func (c Context) TxBytes() []byte { return c.Value(contextKeyTxBytes).([]byte) }
 
 func (c Context) Logger() log.Logger { return c.Value(contextKeyLogger).(log.Logger) }
 
-func (c Context) SigningValidators() []abci.SigningValidator {
-	return c.Value(contextKeySigningValidators).([]abci.SigningValidator)
+func (c Context) VoteInfos() []abci.VoteInfo {
+	return c.Value(contextKeyVoteInfos).([]abci.VoteInfo)
 }
 
 func (c Context) GasMeter() GasMeter { return c.Value(contextKeyGasMeter).(GasMeter) }
@@ -199,8 +199,8 @@ func (c Context) WithTxBytes(txBytes []byte) Context { return c.withValue(contex
 
 func (c Context) WithLogger(logger log.Logger) Context { return c.withValue(contextKeyLogger, logger) }
 
-func (c Context) WithSigningValidators(SigningValidators []abci.SigningValidator) Context {
-	return c.withValue(contextKeySigningValidators, SigningValidators)
+func (c Context) WithVoteInfos(VoteInfos []abci.VoteInfo) Context {
+	return c.withValue(contextKeyVoteInfos, VoteInfos)
 }
 
 func (c Context) WithGasMeter(meter GasMeter) Context { return c.withValue(contextKeyGasMeter, meter) }

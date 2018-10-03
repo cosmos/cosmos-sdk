@@ -29,7 +29,7 @@ func setGenesis(baseApp *BasecoinApp, accounts ...*types.AppAccount) (types.Gene
 
 	// initialize and commit the chain
 	baseApp.InitChain(abci.RequestInitChain{
-		Validators: []abci.Validator{}, AppStateBytes: stateBytes,
+		Validators: []abci.ValidatorUpdate{}, AppStateBytes: stateBytes,
 	})
 	baseApp.Commit()
 
@@ -72,7 +72,7 @@ func TestGenesis(t *testing.T) {
 
 	// initialize the chain with the expected genesis state
 	baseApp.InitChain(abci.RequestInitChain{
-		Validators: []abci.Validator{}, AppStateBytes: stateBytes,
+		Validators: []abci.ValidatorUpdate{}, AppStateBytes: stateBytes,
 	})
 
 	ctx = baseApp.BaseApp.NewContext(true, abci.Header{})

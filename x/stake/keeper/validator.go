@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -194,19 +195,22 @@ func (k Keeper) GetValidatorsByPower(ctx sdk.Context) []types.Validator {
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
 // are returned to Tendermint.
-func (k Keeper) GetValidTendermintUpdates(ctx sdk.Context) (updates []abci.Validator) {
+func (k Keeper) GetTendermintUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate) {
 	tstore := ctx.TransientStore(k.storeTKey)
 
 	iterator := sdk.KVStorePrefixIterator(tstore, TendermintUpdatesTKey)
 	defer iterator.Close()
-
 	for ; iterator.Valid(); iterator.Next() {
-		var abciVal abci.Validator
+		var abciVal abci.ValidatorUpdate
 
 		abciValBytes := iterator.Value()
 		k.cdc.MustUnmarshalBinary(abciValBytes, &abciVal)
 
-		val, found := k.GetValidator(ctx, abciVal.GetAddress())
+		pub, err := tmtypes.PB2TM.PubKey(abciVal.GetPubKey())
+		if err != nil {
+			panic(err)
+		}
+		val, found := k.GetValidator(ctx, sdk.ValAddress(pub.Address()))
 		if found {
 			// The validator is new or already exists in the store and must adhere to
 			// Tendermint invariants.
@@ -258,7 +262,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 	case powerIncreasing && !validator.Jailed &&
 		(oldFound && oldValidator.Status == sdk.Bonded):
 
-		bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
+		bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorUpdate())
 		tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bz)
 
 		if cliffValExists {
@@ -293,7 +297,7 @@ func (k Keeper) UpdateValidator(ctx sdk.Context, validator types.Validator) type
 
 		// if decreased in power but still bonded, update Tendermint validator
 		if oldFound && oldValidator.BondedTokens().GT(validator.BondedTokens()) {
-			bz := k.cdc.MustMarshalBinary(validator.ABCIValidator())
+			bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorUpdate())
 			tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bz)
 		}
 	}
@@ -610,7 +614,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.SetValidator(ctx, validator)
 
 	// add to accumulated changes for tendermint
-	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
+	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorUpdateZero())
 	tstore := ctx.TransientStore(k.storeTKey)
 	tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
@@ -643,7 +647,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	store.Set(GetValidatorsBondedIndexKey(validator.OperatorAddr), []byte{})
 
 	// add to accumulated changes for tendermint
-	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidator())
+	bzABCI := k.cdc.MustMarshalBinary(validator.ABCIValidatorUpdate())
 	tstore := ctx.TransientStore(k.storeTKey)
 	tstore.Set(GetTendermintUpdatesTKey(validator.OperatorAddr), bzABCI)
 
@@ -676,7 +680,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	}
 	store.Delete(GetValidatorsBondedIndexKey(validator.OperatorAddr))
 
-	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorZero())
+	bz := k.cdc.MustMarshalBinary(validator.ABCIValidatorUpdateZero())
 	tstore := ctx.TransientStore(k.storeTKey)
 	tstore.Set(GetTendermintUpdatesTKey(address), bz)
 }

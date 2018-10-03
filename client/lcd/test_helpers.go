@@ -33,6 +33,7 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	nm "github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
@@ -186,7 +187,8 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// XXX: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
-	viper.Set(client.FlagTrustNode, false)
+	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
+	viper.Set(client.FlagTrustNode, true)
 	dir, err := ioutil.TempDir("", "lcd_test")
 	require.NoError(t, err)
 	viper.Set(cli.HomeFlag, dir)
@@ -222,9 +224,14 @@ func startTM(
 ) (*nm.Node, error) {
 	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
 	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
+	nodeKey, err := p2p.LoadOrGenNodeKey(tmcfg.NodeKeyFile())
+	if err != nil {
+		return nil, err
+	}
 	node, err := nm.NewNode(
 		tmcfg,
 		privVal,
+		nodeKey,
 		proxy.NewLocalClientCreator(app),
 		genDocProvider,
 		dbProvider,

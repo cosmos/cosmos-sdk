@@ -52,11 +52,14 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 		itr.Next()
 	}
 	// END TODO
-	iterator := store.ReverseIterator(start, end)
+	iterator := sdk.KVStoreReversePrefixIterator(store, GetValidatorSlashingPeriodPrefix(address))
 	if !iterator.Valid() {
 		panic(fmt.Sprintf("expected to find slashing period for validator %s before height %d, but none was found", address, height))
 	}
 	slashingPeriod = k.unmarshalSlashingPeriodKeyValue(iterator.Key(), iterator.Value())
+	if slashingPeriod.StartHeight > height {
+		panic(fmt.Sprintf("expected to find slashing period for validator %s before height %d, but instead was from height %d", address, height, slashingPeriod.StartHeight))
+	}
 	return
 }
 
@@ -71,7 +74,7 @@ func (k Keeper) addOrUpdateValidatorSlashingPeriod(ctx sdk.Context, slashingPeri
 	}
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(slashingPeriodValue)
-	fmt.Printf("Set slashing period for validator: %X => %s\n", GetValidatorSlashingPeriodKey(slashingPeriod.ValidatorAddr, slashingPeriod.StartHeight), slashingPeriod.ValidatorAddr)
+	fmt.Printf("Set slashing period for validator at height %d: %X => %s\n", slashingPeriod.StartHeight, GetValidatorSlashingPeriodKey(slashingPeriod.ValidatorAddr, slashingPeriod.StartHeight), slashingPeriod.ValidatorAddr)
 	store.Set(GetValidatorSlashingPeriodKey(slashingPeriod.ValidatorAddr, slashingPeriod.StartHeight), bz)
 }
 

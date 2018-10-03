@@ -66,7 +66,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	distributionHeight := infractionHeight - ValidatorUpdateDelay
 
 	// Slash validator
-	k.validatorSet.Slash(ctx, consAddr, infractionHeight, power, revisedFraction)
+	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, revisedFraction)
 
 	// Jail validator
 	k.validatorSet.Jail(ctx, consAddr)
@@ -129,7 +129,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.
 			distributionHeight := height - ValidatorUpdateDelay - 1
-			k.validatorSet.Slash(ctx, consAddr, height, power, k.SlashFractionDowntime(ctx))
+			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
 		} else {

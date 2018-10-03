@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 
@@ -15,7 +16,7 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ConsAddress, fr
 
 	// Sanity check
 	if slashingPeriod.EndHeight > 0 && slashingPeriod.EndHeight < infractionHeight {
-		panic(fmt.Sprintf("slashing period ended before infraction: infraction height %d, slashing period ended at %d", infractionHeight, slashingPeriod.EndHeight))
+		panic(fmt.Sprintf("slashing period ended before infraction: validator %s, infraction height %d, slashing period ended at %d", address, infractionHeight, slashingPeriod.EndHeight))
 	}
 
 	// Calculate the updated total slash amount
@@ -41,9 +42,19 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 	// Get the most recent slashing period at or before the infraction height
 	start := GetValidatorSlashingPeriodPrefix(address)
 	end := sdk.PrefixEndBytes(GetValidatorSlashingPeriodKey(address, height))
+	fmt.Printf("start: %X, end: %X, diff: %v\n", start, end, bytes.Compare(start, end))
+	// TODO
+	itr := sdk.KVStorePrefixIterator(store, GetValidatorSlashingPeriodPrefix(address))
+	for itr.Valid() {
+		fmt.Printf("Key: %X\n", itr.Key())
+		period := k.unmarshalSlashingPeriodKeyValue(itr.Key(), itr.Value())
+		fmt.Printf("Found %X => %v\n", address, period)
+		itr.Next()
+	}
+	// END TODO
 	iterator := store.ReverseIterator(start, end)
 	if !iterator.Valid() {
-		panic("expected to find slashing period, but none was found")
+		panic(fmt.Sprintf("expected to find slashing period for validator %s before height %d, but none was found", address, height))
 	}
 	slashingPeriod = k.unmarshalSlashingPeriodKeyValue(iterator.Key(), iterator.Value())
 	return
@@ -60,6 +71,7 @@ func (k Keeper) addOrUpdateValidatorSlashingPeriod(ctx sdk.Context, slashingPeri
 	}
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(slashingPeriodValue)
+	fmt.Printf("Set slashing period for validator: %X => %s\n", GetValidatorSlashingPeriodKey(slashingPeriod.ValidatorAddr, slashingPeriod.StartHeight), slashingPeriod.ValidatorAddr)
 	store.Set(GetValidatorSlashingPeriodKey(slashingPeriod.ValidatorAddr, slashingPeriod.StartHeight), bz)
 }
 

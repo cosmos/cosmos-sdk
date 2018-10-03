@@ -45,6 +45,9 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	got := stake.NewHandler(stakeKeeper)(ctx, msgCreateVal)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got: %v", got)
 
+	// end block
+	stake.EndBlocker(ctx, stakeKeeper)
+
 	// set dummy signing info
 	newInfo := ValidatorSigningInfo{
 		StartHeight:         int64(0),

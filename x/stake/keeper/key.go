@@ -18,18 +18,13 @@ var (
 	ValidatorsByConsAddrKey          = []byte{0x03} // prefix for each key to a validator index, by pubkey
 	ValidatorsBondedIndexKey         = []byte{0x04} // prefix for each key to a validator index, for bonded validators
 	ValidatorsByPowerIndexKey        = []byte{0x05} // prefix for each key to a validator index, sorted by power
-	ValidatorCliffIndexKey           = []byte{0x06} // key for the validator index of the cliff validator
-	ValidatorPowerCliffKey           = []byte{0x07} // key for the power of the validator on the cliff
-	IntraTxCounterKey                = []byte{0x08} // key for intra-block tx index
-	DelegationKey                    = []byte{0x09} // key for a delegation
-	UnbondingDelegationKey           = []byte{0x0A} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x0B} // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = []byte{0x0C} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x0D} // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by destination validator operator
-
-	// Keys for store prefixes (transient)
-	TendermintUpdatesTKey = []byte{0x00} // prefix for each key to a validator which is being updated
+	IntraTxCounterKey                = []byte{0x06} // key for intra-block tx index
+	DelegationKey                    = []byte{0x07} // key for a delegation
+	UnbondingDelegationKey           = []byte{0x08} // key for an unbonding-delegation
+	UnbondingDelegationByValIndexKey = []byte{0x09} // prefix for each key for an unbonding-delegation, by validator operator
+	RedelegationKey                  = []byte{0x0A} // key for a redelegation
+	RedelegationByValSrcIndexKey     = []byte{0x0B} // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey     = []byte{0x0C} // prefix for each key for an redelegation, by destination validator operator
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -46,12 +41,6 @@ func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
 	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
 }
 
-// gets the key for the current validator group
-// VALUE: none (key rearrangement with GetValKeyFromValBondedIndexKey)
-func GetValidatorsBondedIndexKey(operatorAddr sdk.ValAddress) []byte {
-	return append(ValidatorsBondedIndexKey, operatorAddr.Bytes()...)
-}
-
 // Get the validator operator address from ValBondedIndexKey
 func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 	return IndexKey[1:] // remove prefix bytes
@@ -66,6 +55,11 @@ func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []
 	return getValidatorPowerRank(validator, pool)
 }
 
+// get the bonded validator index key for an operator address
+func GetBondedValidatorIndexKey(operator sdk.ValAddress) []byte {
+	return append(ValidatorsBondedIndexKey, operator...)
+}
+
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
 // nolint: unparam
@@ -74,32 +68,17 @@ func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
 	potentialPower := validator.Tokens
 	powerBytes := []byte(potentialPower.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
 
-	jailedBytes := make([]byte, 1)
-	if validator.Jailed {
-		jailedBytes[0] = byte(0x00)
-	} else {
-		jailedBytes[0] = byte(0x01)
-	}
-
 	// heightBytes and counterBytes represent strings like powerBytes does
 	heightBytes := make([]byte, binary.MaxVarintLen64)
 	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.BondHeight)) // invert height (older validators first)
 	counterBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
 
-	return append(append(append(append(
+	return append(append(append(
 		ValidatorsByPowerIndexKey,
-		jailedBytes...),
 		powerBytes...),
 		heightBytes...),
 		counterBytes...)
-}
-
-// get the key for the accumulated update validators
-// VALUE: abci.Validator
-// note records using these keys should never persist between blocks
-func GetTendermintUpdatesTKey(operatorAddr sdk.ValAddress) []byte {
-	return append(TendermintUpdatesTKey, operatorAddr.Bytes()...)
 }
 
 //______________________________________________________________________________

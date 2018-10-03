@@ -56,10 +56,11 @@ func TestNewQuerier(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
+		validators[i].BondIntraTxCounter = int16(i)
+		keeper.SetValidator(ctx, validators[i])
+		keeper.SetValidatorByPowerIndex(ctx, validators[i], pool)
 	}
 	keeper.SetPool(ctx, pool)
-	validators[0] = keeper.UpdateValidator(ctx, validators[0])
-	validators[1] = keeper.UpdateValidator(ctx, validators[1])
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -127,8 +128,8 @@ func TestQueryValidators(t *testing.T) {
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
 	}
 	keeper.SetPool(ctx, pool)
-	validators[0] = keeper.UpdateValidator(ctx, validators[0])
-	validators[1] = keeper.UpdateValidator(ctx, validators[1])
+	keeper.SetValidator(ctx, validators[0])
+	keeper.SetValidator(ctx, validators[1])
 
 	// Query Validators
 	queriedValidators := keeper.GetValidators(ctx, params.MaxValidators)
@@ -170,8 +171,13 @@ func TestQueryDelegation(t *testing.T) {
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
 	keeper.SetValidator(ctx, val1)
+	pool := keeper.GetPool(ctx)
+	keeper.SetValidatorByPowerIndex(ctx, val1, pool)
 
 	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin("steak", sdk.NewInt(20)), val1, true)
+
+	// apply TM updates
+	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// Query Delegator bonded validators
 	queryParams := newTestDelegatorQuery(addrAcc2)

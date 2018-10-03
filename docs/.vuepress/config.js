@@ -15,6 +15,7 @@ module.exports = {
         collapsable: false,
         children: [
           "/introduction/cosmos-hub",
+          "/introduction/tendermint-cosmos"
           "/introduction/tendermint",
         ]
       },
@@ -55,6 +56,18 @@ module.exports = {
       //   ]
       // },
       {
+        title: "SDK by Examples - Simple Governance",
+        collapsable: false,
+        children: [
+          ["/sdk/sdk-by-examples/simple-governance/intro", "Intro"],
+          "/sdk/sdk-by-examples/simple-governance/setup-and-design",
+          "/sdk/sdk-by-examples/simple-governance/app-init",
+          "/sdk/sdk-by-examples/simple-governance/simple-gov-module",
+          "/sdk/sdk-by-examples/simple-governance/bridging-it-all",
+          "/sdk/sdk-by-examples/simple-governance/running-the-application"
+        ]
+      },
+      {
         title: "Lotion JS",
         collapsable: false,
         children: [
@@ -69,6 +82,13 @@ module.exports = {
           ["/validators/security", "Security"],
           ["/validators/validator-setup", "Validator Setup"],
           "/validators/validator-faq"
+        ]
+      },
+      {
+        title: "Clients",
+        collapsable: false,
+        children: [
+          ["/clients/service-providers", "Service Providers"]
         ]
       },
       {

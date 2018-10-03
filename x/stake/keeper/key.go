@@ -52,7 +52,7 @@ func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 // VALUE: validator operator address ([]byte)
 func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
-	return getValidatorPowerRank(validator, pool)
+	return getValidatorPowerRank(validator)
 }
 
 // get the bonded validator index key for an operator address
@@ -63,7 +63,7 @@ func GetBondedValidatorIndexKey(operator sdk.ValAddress) []byte {
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
 // nolint: unparam
-func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
+func getValidatorPowerRank(validator types.Validator) []byte {
 
 	potentialPower := validator.Tokens
 	powerBytes := []byte(potentialPower.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
@@ -138,28 +138,42 @@ func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 // gets the key for a redelegation
 // VALUE: stake/types.RedelegationKey
 func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	return append(append(
-		GetREDsKey(delAddr.Bytes()),
-		valSrcAddr.Bytes()...),
-		valDstAddr.Bytes()...)
+	key := make([]byte, 1+sdk.AddrLen*3)
+
+	copy(key[0:sdk.AddrLen+1], GetREDsKey(delAddr.Bytes()))
+	copy(key[sdk.AddrLen+1:2*sdk.AddrLen+1], valSrcAddr.Bytes())
+	copy(key[2*sdk.AddrLen+1:3*sdk.AddrLen+1], valDstAddr.Bytes())
+
+	return key
 }
 
 // gets the index-key for a redelegation, stored by source-validator-index
 // VALUE: none (key rearrangement used)
 func GetREDByValSrcIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	return append(append(
-		GetREDsFromValSrcIndexKey(valSrcAddr),
-		delAddr.Bytes()...),
-		valDstAddr.Bytes()...)
+	REDSFromValsSrcKey := GetREDsFromValSrcIndexKey(valSrcAddr)
+	offset := len(REDSFromValsSrcKey)
+
+	// key is of the form REDSFromValsSrcKey || delAddr || valDstAddr
+	key := make([]byte, len(REDSFromValsSrcKey)+2*sdk.AddrLen)
+	copy(key[0:offset], REDSFromValsSrcKey)
+	copy(key[offset:offset+sdk.AddrLen], delAddr.Bytes())
+	copy(key[offset+sdk.AddrLen:offset+2*sdk.AddrLen], valDstAddr.Bytes())
+	return key
 }
 
 // gets the index-key for a redelegation, stored by destination-validator-index
 // VALUE: none (key rearrangement used)
 func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	return append(append(
-		GetREDsToValDstIndexKey(valDstAddr),
-		delAddr.Bytes()...),
-		valSrcAddr.Bytes()...)
+	REDSToValsDstKey := GetREDsToValDstIndexKey(valDstAddr)
+	offset := len(REDSToValsDstKey)
+
+	// key is of the form REDSToValsDstKey || delAddr || valSrcAddr
+	key := make([]byte, len(REDSToValsDstKey)+2*sdk.AddrLen)
+	copy(key[0:offset], REDSToValsDstKey)
+	copy(key[offset:offset+sdk.AddrLen], delAddr.Bytes())
+	copy(key[offset+sdk.AddrLen:offset+2*sdk.AddrLen], valSrcAddr.Bytes())
+
+	return key
 }
 
 // rearranges the ValSrcIndexKey to get the REDKey

@@ -195,6 +195,12 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, len(delValidators), len(validatorsResp))
 	require.ElementsMatch(t, delValidators, validatorsResp)
 
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	_, err = queryDelegatorValidators(ctx, cdc, query, keeper)
+	require.NotNil(t, err)
+
 	// Query bonded validator
 	queryBondParams := newTestBondQuery(addrAcc2, addrVal1)
 	bz, errRes = cdc.MarshalJSON(queryBondParams)
@@ -214,6 +220,12 @@ func TestQueryDelegation(t *testing.T) {
 
 	require.Equal(t, delValidators[0], validator)
 
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	_, err = queryDelegatorValidator(ctx, cdc, query, keeper)
+	require.NotNil(t, err)
+
 	// Query delegation
 
 	query = abci.RequestQuery{
@@ -232,6 +244,12 @@ func TestQueryDelegation(t *testing.T) {
 	require.Nil(t, errRes)
 
 	require.Equal(t, delegation, delegationRes)
+
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	_, err = queryDelegation(ctx, cdc, query, keeper)
+	require.NotNil(t, err)
 
 	// Query unbonging delegation
 	keeper.BeginUnbonding(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
@@ -253,6 +271,12 @@ func TestQueryDelegation(t *testing.T) {
 
 	require.Equal(t, unbond, unbondRes)
 
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	_, err = queryUnbondingDelegation(ctx, cdc, query, keeper)
+	require.NotNil(t, err)
+
 	// Query Delegator Summary
 
 	query = abci.RequestQuery{
@@ -268,6 +292,12 @@ func TestQueryDelegation(t *testing.T) {
 	require.Nil(t, errRes)
 
 	require.Equal(t, unbond, summary.UnbondingDelegations[0])
+
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	_, err = queryDelegator(ctx, cdc, query, keeper)
+	require.NotNil(t, err)
 }
 
 func TestQueryRedelegation(t *testing.T) {
@@ -305,4 +335,20 @@ func TestQueryRedelegation(t *testing.T) {
 	require.Nil(t, errRes)
 
 	require.Equal(t, redelegation, redelegationRes)
+
+	// error unknown request
+	query.Data = bz[:len(bz)-1]
+
+	_, err = queryRedelegation(ctx, cdc, query, keeper)
+	require.NotNil(t, err)
+
+	// error no redelegation
+	queryBondParams := newTestBondQuery(addrAcc2, val1.OperatorAddr)
+	bz, errRes = cdc.MarshalJSON(queryBondParams)
+	require.Nil(t, errRes)
+
+	query.Data = bz
+
+	_, err = queryRedelegation(ctx, cdc, query, keeper)
+	require.NotNil(t, err)
 }

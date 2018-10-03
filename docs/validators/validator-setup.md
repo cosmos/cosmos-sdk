@@ -22,14 +22,14 @@ Your `cosmosvalconspub` can be used to create a new validator by staking tokens.
 gaiad tendermint show-validator
 ```
 
-Next, craft your `gaiacli stake create-validator` command:
+Next, craft your `gaiacli tx create-validator` command:
 
 ::: warning Note
 Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
 :::
 
 ```bash
-gaiacli stake create-validator \
+gaiacli tx create-validator \
   --amount=5steak \
   --pubkey=$(gaiad tendermint show-validator) \
   --address-validator=<account_cosmosval>
@@ -52,7 +52,7 @@ You can edit your validator's public description. This info is to identify your 
 The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
-gaiacli stake edit-validator
+gaiacli tx edit-validator
   --validator=<account_cosmos>
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
@@ -75,7 +75,7 @@ __Note__: The `commission-rate` value must adhere to the following invariants:
 View the validator's information with this command:
 
 ```bash
-gaiacli stake validator <account_cosmos>
+gaiacli query validator <account_cosmos>
 ```
 
 ### Track Validator Signing Information
@@ -83,7 +83,7 @@ gaiacli stake validator <account_cosmos>
 In order to keep track of a validator's signatures in the past you can do so by using the `signing-info` command:
 
 ```bash
-gaiacli stake signing-information <validator-pubkey>\
+gaiacli query signing-information <validator-pubkey>\
   --chain-id=<chain_id>
 ```
 
@@ -92,7 +92,7 @@ gaiacli stake signing-information <validator-pubkey>\
 When a validator is "jailed" for downtime, you must submit an `Unjail` transaction in order to be able to get block proposer rewards again (depends on the zone fee distribution).
 
 ```bash
-gaiacli stake unjail \
+gaiacli tx unjail \
 	--from=<key_name> \
 	--chain-id=<chain_id>
   --validator=<account_cosmosval> \
@@ -104,7 +104,7 @@ gaiacli stake unjail \
 Your validator is active if the following command returns anything:
 
 ```bash
-gaiacli tendermint validator-set | grep "$(gaiad tendermint show-validator)"
+gaiacli query tendermint-validator-set | grep "$(gaiad tendermint show-validator)"
 ```
 
 You should also be able to see your validator on the [Explorer](https://explorecosmos.network/validators). You are looking for the `bech32` encoded `address` in the `~/.gaiad/config/priv_validator.json` file.
@@ -128,7 +128,7 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmos>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unjail <cosmos> --chain-id=<chain_id> --name=<name>
+gaiacli tx unjail <cosmos> --chain-id=<chain_id> --name=<name>
 ```
 
 ::: danger Warning

@@ -8,8 +8,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// Account is a standard account using a sequence number for replay protection
-// and a pubkey for authentication.
+// Account is an interface used to store coins at a given address within state.
+// It presumes a notion of sequence numbers for replay protection,
+// a notion of account numbers for replay protection for previously pruned accounts,
+// and a pubkey for authentication purposes.
+//
+// Many complex conditions can be used in the concrete struct which implements Account.
 type Account interface {
 	GetAddress() sdk.AccAddress
 	SetAddress(sdk.AccAddress) error // errors if already set.
@@ -35,9 +39,11 @@ type AccountDecoder func(accountBytes []byte) (Account, error)
 
 var _ Account = (*BaseAccount)(nil)
 
-// BaseAccount - base account structure.
-// Extend this by embedding this in your AppAccount.
-// See the examples/basecoin/types/account.go for an example.
+// BaseAccount - a base account structure.
+// This can be extended by embedding within in your AppAccount.
+// There are examples of this in: examples/basecoin/types/account.go.
+// However one doesn't have to use BaseAccount as long as your struct
+// implements Account.
 type BaseAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`
@@ -118,7 +124,7 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 //----------------------------------------
 // Wire
 
-// Most users shouldn't use this, but this comes handy for tests.
+// Most users shouldn't use this, but this comes in handy for tests.
 func RegisterBaseAccount(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)

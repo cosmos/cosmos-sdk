@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -26,7 +25,6 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			amounstStr := viper.GetString(FlagAmount)
@@ -94,7 +92,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -116,7 +114,6 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			valAddr, err := cliCtx.GetFromAddress()
@@ -150,7 +147,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -169,7 +166,6 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			amount, err := sdk.ParseCoin(viper.GetString(FlagAmount))
@@ -193,7 +189,7 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -228,7 +224,6 @@ func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			var err error
@@ -265,7 +260,7 @@ func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -284,7 +279,6 @@ func GetCmdCompleteRedelegate(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			delAddr, err := cliCtx.GetFromAddress()
@@ -308,7 +302,7 @@ func GetCmdCompleteRedelegate(cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -342,7 +336,6 @@ func GetCmdBeginUnbonding(storeName string, cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			delAddr, err := cliCtx.GetFromAddress()
@@ -372,7 +365,7 @@ func GetCmdBeginUnbonding(storeName string, cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -391,7 +384,6 @@ func GetCmdCompleteUnbonding(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			delAddr, err := cliCtx.GetFromAddress()
@@ -410,7 +402,7 @@ func GetCmdCompleteUnbonding(cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

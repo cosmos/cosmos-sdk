@@ -14,7 +14,7 @@ type Keeper struct {
 	storeTKey  sdk.StoreKey
 	cdc        *codec.Codec
 	bankKeeper bank.Keeper
-	hooks      sdk.ValidatorHooks
+	hooks      sdk.StakingHooks
 
 	// codespace
 	codespace sdk.CodespaceType
@@ -33,7 +33,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespa
 }
 
 // Set the validator hooks
-func (k Keeper) WithValidatorHooks(sh sdk.ValidatorHooks) Keeper {
+func (k Keeper) WithHooks(sh sdk.StakingHooks) Keeper {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
@@ -64,25 +64,9 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	return
 }
 
-// Need a distinct function because setParams depends on an existing previous
-// record of params to exist (to check if maxValidators has changed) - and we
-// panic on retrieval if it doesn't exist - hence if we use setParams for the very
-// first params set it will panic.
-func (k Keeper) SetNewParams(ctx sdk.Context, params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(params)
-	store.Set(ParamKey, b)
-}
-
 // set the params
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	store := ctx.KVStore(k.storeKey)
-	exParams := k.GetParams(ctx)
-
-	// if max validator count changes, must recalculate validator set
-	if exParams.MaxValidators != params.MaxValidators {
-		k.UpdateBondedValidatorsFull(ctx)
-	}
 	b := k.cdc.MustMarshalBinary(params)
 	store.Set(ParamKey, b)
 }

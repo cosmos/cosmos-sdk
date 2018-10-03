@@ -215,6 +215,16 @@ func (d Dec) Mul(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// multiplication
+func (d Dec) MulInt(i Int) Dec {
+	mul := new(big.Int).Mul(d.Int, i.i)
+
+	if mul.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{mul}
+}
+
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {
 

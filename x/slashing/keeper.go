@@ -79,7 +79,6 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 // handle a validator signature, must be called once per validator per block
 // TODO refactor to take in a consensus address, additionally should maybe just take in the pubkey too
-// nolint gocyclo
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
@@ -139,7 +138,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 }
 
 // AddValidators adds the validators to the keepers validator addr to pubkey mapping.
-func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.Validator) {
+func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.ValidatorUpdate) {
 	for i := 0; i < len(vals); i++ {
 		val := vals[i]
 		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)

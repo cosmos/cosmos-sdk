@@ -121,6 +121,9 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(client.FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(flagMaxOpenConnections, 1000, "The number of maximum open connections")
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
+	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 
 	return cmd
 }
@@ -133,7 +136,7 @@ func createHandler(cdc *codec.Codec) http.Handler {
 		panic(err)
 	}
 
-	cliCtx := context.NewCLIContext().WithCodec(cdc).WithLogger(os.Stdout)
+	cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")

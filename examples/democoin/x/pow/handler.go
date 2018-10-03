@@ -1,8 +1,6 @@
 package pow
 
 import (
-	"reflect"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -12,7 +10,7 @@ func (pk Keeper) Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 	case MsgMine:
 		return handleMsgMine(ctx, pk, msg)
 	default:
-		errMsg := "Unrecognized pow Msg type: " + reflect.TypeOf(msg).Name()
+		errMsg := "Unrecognized pow Msg type: " + msg.Name()
 		return sdk.ErrUnknownRequest(errMsg).Result()
 	}
 }

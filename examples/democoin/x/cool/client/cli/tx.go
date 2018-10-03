@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -24,7 +22,6 @@ func QuizTxCmd(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			from, err := cliCtx.GetFromAddress()
@@ -34,7 +31,7 @@ func QuizTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			msg := cool.NewMsgQuiz(from, args[0])
 
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }
@@ -49,7 +46,6 @@ func SetTrendTxCmd(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
 			from, err := cliCtx.GetFromAddress()
@@ -59,7 +55,7 @@ func SetTrendTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			msg := cool.NewMsgSetTrend(from, args[0])
 
-			return utils.SendTx(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 }

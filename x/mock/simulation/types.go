@@ -45,7 +45,7 @@ type (
 	}
 
 	mockValidator struct {
-		val           abci.Validator
+		val           abci.ValidatorUpdate
 		livenessState int
 	}
 

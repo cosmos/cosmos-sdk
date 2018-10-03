@@ -159,9 +159,9 @@ test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
 	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=400 -SimulationBlockSize=200 -SimulationCommit=true -v -timeout 24h
 
-test_sim_gaia_slow:
-	@echo "Running full Gaia simulation. This may take a while!"
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationVerbose=true -SimulationCommit=true -v -timeout 24h
+test_sim_gaia_full:
+	@echo "Running full multi-seed Gaia simulation. This may take awhile!"
+	@sh scripts/multisim.sh
 
 SIM_NUM_BLOCKS ?= 210
 SIM_BLOCK_SIZE ?= 200
@@ -179,7 +179,7 @@ test_cover:
 
 test_lint:
 	gometalinter.v2 --config=tools/gometalinter.json ./...
-	!(gometalinter.v2 --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	!(gometalinter.v2 --exclude /usr/lib/go/src/ --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)

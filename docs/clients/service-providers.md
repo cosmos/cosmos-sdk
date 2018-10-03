@@ -62,7 +62,7 @@ gaiacli account <YOUR_ADDRESS>
 Here is the command to send coins via the CLI:
 
 ```bash
-gaiacli send --amount=10faucetToken --chain-id=<name_of_testnet_chain> --name=<key_name> --to=<destination_address>
+gaiacli tx send --amount=10faucetToken --chain-id=<name_of_testnet_chain> --name=<key_name> --to=<destination_address>
 ```
 
 Flags:
@@ -88,7 +88,7 @@ The Rest Server acts as an intermediary between the front-end and the full-node.
 To start the Rest server: 
 
 ```bash
-gaiacli advanced rest-server --trust-node=false --node=<full_node_address:full_node_port>
+gaiacli rest-server --trust-node=false --node=<full_node_address:full_node_port>
 ```
 
 Flags:

@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -8,10 +9,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"bytes"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/viper"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -20,14 +21,17 @@ import (
 //ValidatorCommand returns the validator set for a given height
 func ValidatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validator-set [height]",
+		Use:   "tendermint-validator-set [height]",
 		Short: "Get the full tendermint validator set at given height",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  printValidators,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
+	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
 	return cmd
 }
 
@@ -72,12 +76,12 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	}
 
 	if !cliCtx.TrustNode {
-		check, err := cliCtx.Certify(validatorsRes.BlockHeight)
+		check, err := cliCtx.Verify(validatorsRes.BlockHeight)
 		if err != nil {
 			return nil, err
 		}
 
-		if !bytes.Equal(check.ValidatorsHash(), tmtypes.NewValidatorSet(validatorsRes.Validators).Hash()) {
+		if !bytes.Equal(check.ValidatorsHash, tmtypes.NewValidatorSet(validatorsRes.Validators).Hash()) {
 			return nil, fmt.Errorf("got invalid validatorset")
 		}
 	}

@@ -66,7 +66,7 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 // remove a delegation from store
 func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
-
+	k.OnDelegationRemoved(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr))
 }
@@ -265,23 +265,20 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 		}
 	}
 
-	pool := k.GetPool(ctx)
-	validator, pool, newShares = validator.AddTokensFromDel(pool, bondAmt.Amount)
+	validator, newShares = k.AddValidatorTokensAndShares(ctx, validator, bondAmt.Amount)
+
+	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)
-
-	// Update delegation height
 	delegation.Height = ctx.BlockHeight()
-
-	k.SetPool(ctx, pool)
 	k.SetDelegation(ctx, delegation)
-	k.UpdateValidator(ctx, validator)
-
-	return
+	return newShares, nil
 }
 
 // unbond the the delegation return
 func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 	shares sdk.Dec) (amount sdk.Dec, err sdk.Error) {
+
+	k.OnDelegationSharesModified(ctx, delAddr, valAddr)
 
 	// check if delegation has any shares in it unbond
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
@@ -311,8 +308,9 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 
 		// if the delegation is the operator of the validator then
 		// trigger a jail validator
-		if bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr) && validator.Jailed == false {
-			validator.Jailed = true
+		if bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr) && !validator.Jailed {
+			k.jailValidator(ctx, validator)
+			validator = k.mustGetValidator(ctx, validator.OperatorAddr)
 		}
 
 		k.RemoveDelegation(ctx, delegation)
@@ -323,17 +321,14 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	}
 
 	// remove the coins from the validator
-	pool := k.GetPool(ctx)
-	validator, pool, amount = validator.RemoveDelShares(pool, shares)
+	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
 
-	k.SetPool(ctx, pool)
-
-	// update then remove validator if necessary
-	validator = k.UpdateValidator(ctx, validator)
-	if validator.DelegatorShares.IsZero() {
+	if validator.DelegatorShares.IsZero() && validator.Status != sdk.Bonded {
+		// if bonded, we must remove in EndBlocker instead
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
+	k.OnDelegationSharesModified(ctx, delegation.DelegatorAddr, validator.OperatorAddr)
 	return amount, nil
 }
 
@@ -365,7 +360,7 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, valSrcAddr sd
 	}
 }
 
-// complete unbonding an unbonding record
+// begin unbonding an unbonding record
 func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec) sdk.Error {
 

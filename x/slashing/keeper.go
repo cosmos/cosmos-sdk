@@ -63,6 +63,9 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
 
 	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
+	// Note that this *can* result in a "distributionHeight" of -1,
+	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
+	// That's fine since this is just used to filter unbonding delegations & redelegations.
 	distributionHeight := infractionHeight - ValidatorUpdateDelay
 
 	// Slash validator
@@ -128,6 +131,9 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
 			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.
+			// Note that this *can* result in a "distributionHeight" of -1 or -2,
+			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
+			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - ValidatorUpdateDelay - 1
 			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)

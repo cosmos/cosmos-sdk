@@ -56,30 +56,30 @@ func TestWithdrawCommission(t *testing.T) {
 	// initialize
 	height := int64(0)
 	fp := InitialFeePool()
-	vi1 := NewValidatorDistInfo(valAddr1, height)
-	commissionRate1 := sdk.NewDecWithPrec(2, 2)
-	validatorTokens1 := sdk.NewDec(10)
-	totalBondedTokens := validatorTokens1.Add(sdk.NewDec(90)) // validator-1 is 10% of total power
+	vi := NewValidatorDistInfo(valAddr1, height)
+	commissionRate := sdk.NewDecWithPrec(2, 2)
+	validatorTokens := sdk.NewDec(10)
+	totalBondedTokens := validatorTokens.Add(sdk.NewDec(90)) // validator-1 is 10% of total power
 
 	// simulate adding some stake for inflation
 	height = 10
 	fp.Pool = DecCoins{DecCoin{"stake", sdk.NewDec(1000)}}
 
 	// for a more fun staring condition, have an non-withdraw update
-	vi1, fp = vi1.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens1, commissionRate1)
+	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens, commissionRate)
 	require.True(sdk.DecEq(t, sdk.NewDec(900), fp.ValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(100-2), vi1.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi1.PoolCommission[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(100-2), vi.Pool[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi.PoolCommission[0].Amount))
 
 	// add more blocks and inflation
 	height = 20
 	fp.Pool[0].Amount = fp.Pool[0].Amount.Add(sdk.NewDec(1000))
 
-	vi1, fp, commissionRecv := vi1.WithdrawCommission(fp, height, totalBondedTokens, validatorTokens1, commissionRate1)
+	vi, fp, commissionRecv := vi.WithdrawCommission(fp, height, totalBondedTokens, validatorTokens, commissionRate)
 	require.True(sdk.DecEq(t, sdk.NewDec(1800), fp.ValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(200-4), vi1.Pool[0].Amount))
-	assert.Zero(t, len(vi1.PoolCommission))
+	assert.True(sdk.DecEq(t, sdk.NewDec(200-4), vi.Pool[0].Amount))
+	assert.Zero(t, len(vi.PoolCommission))
 	assert.True(sdk.DecEq(t, sdk.NewDec(4), commissionRecv[0].Amount))
 }

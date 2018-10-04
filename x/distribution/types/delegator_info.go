@@ -1,6 +1,8 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // distribution info for a delegation
 type DelegatorDistInfo struct {
@@ -22,13 +24,14 @@ func NewDelegatorDistInfo(delegatorAddr sdk.AccAddress, valOperatorAddr sdk.ValA
 // withdraw rewards from delegator
 func (di DelegatorDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	height int64, totalBonded, vdTokens, totalDelShares, delegatorShares,
-	commissionRate sdk.Dec) (DelegatorDistInfo, FeePool, DecCoins) {
+	commissionRate sdk.Dec) (DelegatorDistInfo, ValidatorDistInfo, FeePool, DecCoins) {
+
+	vi = vi.UpdateTotalDelAccum(height, totalDelShares)
 
 	if vi.DelAccum.Accum.IsZero() {
-		return di, fp, DecCoins{}
+		return di, vi, fp, DecCoins{}
 	}
 
-	vi.UpdateTotalDelAccum(height, totalDelShares)
 	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
 
 	blocks := height - di.WithdrawalHeight
@@ -40,7 +43,7 @@ func (di DelegatorDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	vi.Pool = remainingTokens
 	vi.DelAccum.Accum = vi.DelAccum.Accum.Sub(accum)
 
-	return di, fp, withdrawalTokens
+	return di, vi, fp, withdrawalTokens
 }
 
 //_____________________________________________________________________

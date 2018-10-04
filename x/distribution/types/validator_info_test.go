@@ -26,7 +26,7 @@ func TestTakeFeePoolRewards(t *testing.T) {
 
 	// simulate adding some stake for inflation
 	height = 10
-	fp.Pool = DecCoins{DecCoin{"stake", sdk.NewDec(1000)}}
+	fp.Pool = DecCoins{NewDecCoin("stake", 1000)}
 
 	vi1, fp = vi1.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens1, commissionRate1)
 	require.True(sdk.DecEq(t, sdk.NewDec(900), fp.ValAccum.Accum))
@@ -63,7 +63,7 @@ func TestWithdrawCommission(t *testing.T) {
 
 	// simulate adding some stake for inflation
 	height = 10
-	fp.Pool = DecCoins{DecCoin{"stake", sdk.NewDec(1000)}}
+	fp.Pool = DecCoins{NewDecCoin("stake", 1000)}
 
 	// for a more fun staring condition, have an non-withdraw update
 	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens, commissionRate)

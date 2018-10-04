@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +13,14 @@ type DecCoin struct {
 	Amount sdk.Dec `json:"amount"`
 }
 
-func NewDecCoin(coin sdk.Coin) DecCoin {
+func NewDecCoin(denom string, amount int64) DecCoin {
+	return DecCoin{
+		Denom:  denom,
+		Amount: sdk.NewDec(amount),
+	}
+}
+
+func NewDecCoinFromCoin(coin sdk.Coin) DecCoin {
 	return DecCoin{
 		Denom:  coin.Denom,
 		Amount: sdk.NewDecFromInt(coin.Amount),
@@ -21,16 +29,16 @@ func NewDecCoin(coin sdk.Coin) DecCoin {
 
 // Adds amounts of two coins with same denom
 func (coin DecCoin) Plus(coinB DecCoin) DecCoin {
-	if !(coin.Denom == coinB.Denom) {
-		return coin
+	if coin.Denom != coinB.Denom {
+		panic(fmt.Sprintf("coin denom different: %v %v\n", coin.Denom, coinB.Denom))
 	}
 	return DecCoin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
 // Subtracts amounts of two coins with same denom
 func (coin DecCoin) Minus(coinB DecCoin) DecCoin {
-	if !(coin.Denom == coinB.Denom) {
-		return coin
+	if coin.Denom != coinB.Denom {
+		panic(fmt.Sprintf("coin denom different: %v %v\n", coin.Denom, coinB.Denom))
 	}
 	return DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 }
@@ -48,7 +56,7 @@ type DecCoins []DecCoin
 func NewDecCoins(coins sdk.Coins) DecCoins {
 	dcs := make(DecCoins, len(coins))
 	for i, coin := range coins {
-		dcs[i] = NewDecCoin(coin)
+		dcs[i] = NewDecCoinFromCoin(coin)
 	}
 	return dcs
 }

@@ -28,7 +28,7 @@ func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgSetWithdr
 }
 
 func (msg MsgSetWithdrawAddress) Type() string { return MsgType }
-func (msg MsgSetWithdrawAddress) Name() string { return "withdraw_delegation_rewards_all" }
+func (msg MsgSetWithdrawAddress) Name() string { return "set_withdraw_address" }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {

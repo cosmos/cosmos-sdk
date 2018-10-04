@@ -26,7 +26,7 @@ func TestWithdrawRewards(t *testing.T) {
 
 	// simulate adding some stake for inflation
 	height = 10
-	fp.Pool = DecCoins{DecCoin{"stake", sdk.NewDec(1000)}}
+	fp.Pool = DecCoins{NewDecCoin("stake", 1000)}
 
 	// withdraw rewards
 	di1, vi, fp, rewardRecv1 := di1.WithdrawRewards(fp, vi, height, totalBondedTokens,

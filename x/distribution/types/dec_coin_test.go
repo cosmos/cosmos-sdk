@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -11,23 +12,16 @@ func TestPlusDecCoin(t *testing.T) {
 	decCoinA1 := DecCoin{"A", sdk.NewDecWithPrec(11, 1)}
 	decCoinA2 := DecCoin{"A", sdk.NewDecWithPrec(22, 1)}
 	decCoinB1 := DecCoin{"B", sdk.NewDecWithPrec(11, 1)}
-	decCoinC1 := DecCoin{"C", sdk.NewDecWithPrec(11, 1)}
-	decCoinCn4 := DecCoin{"C", sdk.NewDecWithPrec(-44, 1)}
-	decCoinC5 := DecCoin{"C", sdk.NewDecWithPrec(55, 1)}
 
-	cases := []struct {
-		inputOne DecCoin
-		inputTwo DecCoin
-		expected DecCoin
-	}{
-		{decCoinA1, decCoinA1, decCoinA2},
-		{decCoinA1, decCoinB1, decCoinA1},
-		{decCoinCn4, decCoinC5, decCoinC1},
-	}
-	for tcIndex, tc := range cases {
-		res := tc.inputOne.Plus(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
-	}
+	// regular add
+	res := decCoinA1.Plus(decCoinA1)
+	require.Equal(t, decCoinA2, res, "sum of coins is incorrect")
+
+	// bad denom add
+	assert.Panics(t, func() {
+		decCoinA1.Plus(decCoinB1)
+	}, "expected panic on sum of different denoms")
+
 }
 
 func TestPlusCoins(t *testing.T) {

@@ -37,6 +37,7 @@ BREAKING CHANGES
       * `cosmosaccaddr` / `cosmosaccpub` => `cosmos` / `cosmospub`
       * `cosmosvaladdr` / `cosmosvalpub` => `cosmosvaloper` / `cosmosvaloperpub`
     * [x/stake] [#1013] TendermintUpdates now uses transient store
+    * [x/stake] \#2435 Remove empty bytes from the ValidatorPowerRank store key
     * [x/gov] [#2195] Governance uses BFT Time
     * [x/gov] \#2256 Removed slashing for governance non-voting validators
     * [simulation] \#2162 Added back correct supply invariants
@@ -129,6 +130,7 @@ IMPROVEMENTS
     * [x/auth] Signature verification's gas cost now accounts for pubkey type. [#2046](https://github.com/tendermint/tendermint/pull/2046)
     * [x/stake] [x/slashing] Ensure delegation invariants to jailed validators [#1883](https://github.com/cosmos/cosmos-sdk/issues/1883).
     * [x/stake] Improve speed of GetValidator, which was shown to be a performance bottleneck. [#2046](https://github.com/tendermint/tendermint/pull/2200)
+    * [x/stake] \#2435 Improve memory efficiency of getting the various store keys
     * [genesis] \#2229 Ensure that there are no duplicate accounts or validators in the genesis state.
     * Add SDK validation to `config.toml` (namely disabling `create_empty_blocks`) \#1571
     * \#1941(https://github.com/cosmos/cosmos-sdk/issues/1941) Version is now inferred via `git describe --tags`.

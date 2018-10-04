@@ -17,24 +17,25 @@ const (
 	DefaultGasLimit      = 200000
 	GasFlagSimulate      = "simulate"
 
-	FlagUseLedger     = "ledger"
-	FlagChainID       = "chain-id"
-	FlagNode          = "node"
-	FlagHeight        = "height"
-	FlagGas           = "gas"
-	FlagGasAdjustment = "gas-adjustment"
-	FlagTrustNode     = "trust-node"
-	FlagFrom          = "from"
-	FlagName          = "name"
-	FlagAccountNumber = "account-number"
-	FlagSequence      = "sequence"
-	FlagMemo          = "memo"
-	FlagFee           = "fee"
-	FlagAsync         = "async"
-	FlagJson          = "json"
-	FlagPrintResponse = "print-response"
-	FlagDryRun        = "dry-run"
-	FlagGenerateOnly  = "generate-only"
+	FlagUseLedger      = "ledger"
+	FlagChainID        = "chain-id"
+	FlagNode           = "node"
+	FlagHeight         = "height"
+	FlagGas            = "gas"
+	FlagGasAdjustment  = "gas-adjustment"
+	FlagTrustNode      = "trust-node"
+	FlagFrom           = "from"
+	FlagName           = "name"
+	FlagAccountNumber  = "account-number"
+	FlagSequence       = "sequence"
+	FlagMemo           = "memo"
+	FlagFee            = "fee"
+	FlagAsync          = "async"
+	FlagJson           = "json"
+	FlagPrintResponse  = "print-response"
+	FlagDryRun         = "dry-run"
+	FlagGenerateOnly   = "generate-only"
+	FlagIndentResponse = "indent"
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -47,6 +48,7 @@ var (
 // GetCommands adds common flags to query commands
 func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
+		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
@@ -63,6 +65,7 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 // PostCommands adds common flags for commands to post tx
 func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
+		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
 		c.Flags().Int64(FlagAccountNumber, 0, "AccountNumber number to sign the tx")
 		c.Flags().Int64(FlagSequence, 0, "Sequence number to sign the tx")

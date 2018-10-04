@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/spf13/viper"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
@@ -22,6 +23,7 @@ func statusCommand() *cobra.Command {
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
+	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 	return cmd
 }
 
@@ -38,13 +40,20 @@ func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
 // CMD
 
 func printNodeStatus(cmd *cobra.Command, args []string) error {
-	status, err := getNodeStatus(context.NewCLIContext())
+	// No need to verify proof in getting node status
+	viper.Set(client.FlagTrustNode, true)
+	cliCtx := context.NewCLIContext()
+	status, err := getNodeStatus(cliCtx)
 	if err != nil {
 		return err
 	}
 
-	output, err := cdc.MarshalJSON(status)
-	// output, err := cdc.MarshalJSONIndent(res, "  ", "")
+	var output []byte
+	if cliCtx.Indent {
+		output, err = cdc.MarshalJSONIndent(status, "", "  ")
+	} else {
+		output, err = cdc.MarshalJSON(status)
+	}
 	if err != nil {
 		return err
 	}
@@ -66,14 +75,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		}
 
 		nodeInfo := status.NodeInfo
-		output, err := cdc.MarshalJSON(nodeInfo)
-		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, nodeInfo, cliCtx.Indent)
 	}
 }
 

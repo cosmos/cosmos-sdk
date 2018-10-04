@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.10.3
+    - image: circleci/golang:1.11.1
   environment:
     GOBIN: /tmp/workspace/bin
 

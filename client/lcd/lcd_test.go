@@ -372,8 +372,9 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 
 	// broadcast tx
 	broadcastPayload := struct {
-		Tx auth.StdTx `json:"tx"`
-	}{Tx: signedMsg}
+		Tx     auth.StdTx `json:"tx"`
+		Return string     `json:"return"`
+	}{Tx: signedMsg, Return: "block"}
 	json, err = cdc.MarshalJSON(broadcastPayload)
 	require.Nil(t, err)
 	res, body = Request(t, port, "POST", "/tx/broadcast", json)
@@ -851,7 +852,7 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 		}
 	}`, coinbz, gasStr, gasAdjustmentStr, name, password, chainID, accnum, sequence))
 
-	res, body = Request(t, port, "POST", fmt.Sprintf("/accounts/%s/send%v", receiveAddr, queryStr), jsonStr)
+	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/accounts/%s/transfers%v", receiveAddr, queryStr), jsonStr)
 	return
 }
 

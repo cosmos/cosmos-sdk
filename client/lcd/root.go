@@ -18,6 +18,7 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -46,6 +47,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			listenAddr := viper.GetString(flagListenAddr)
 			handler := createHandler(cdc)
+			registerSwaggerUI(handler)
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 			maxOpen := viper.GetInt(flagMaxOpenConnections)
 			sslHosts := viper.GetString(flagSSLHosts)
@@ -121,6 +123,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(client.FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(flagMaxOpenConnections, 1000, "The number of maximum open connections")
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
@@ -128,7 +131,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func createHandler(cdc *codec.Codec) http.Handler {
+func createHandler(cdc *codec.Codec) *mux.Router {
 	r := mux.NewRouter()
 
 	kb, err := keys.GetKeyBase() //XXX
@@ -152,6 +155,15 @@ func createHandler(cdc *codec.Codec) http.Handler {
 	gov.RegisterRoutes(cliCtx, r, cdc)
 
 	return r
+}
+
+func registerSwaggerUI(r *mux.Router) {
+	statikFS, err := fs.New()
+	if err != nil {
+		panic(err)
+	}
+	staticServer := http.FileServer(statikFS)
+	r.PathPrefix("/swagger-ui/").Handler(http.StripPrefix("/swagger-ui/", staticServer))
 }
 
 func validateCertKeyFiles(certFile, keyFile string) error {

@@ -10,6 +10,11 @@ built from the files in this (`/docs`) directory for
 and [develop](https://github.com/cosmos/cosmos-sdk/tree/develop/docs),
 respectively.
 
+Besides, gaia-lite API docs are also provided by gaia-lite. The default API docs page is:
+```
+https://localhost:1317/swagger-ui/
+```
+
 ## How It Works
 
 There is a Jenkins job listening for changes in the `/docs` directory, on both
@@ -93,3 +98,18 @@ then navigate to localhost:8080 in your browser.
 
 Because the build processes are identical (as is the information contained herein), this file should be kept in sync as
 much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/develop/docs/DOCS_README.md).
+
+## Update and Build the RPC docs
+
+1. Execute the following command at the root directory to install the swagger-ui generate tool.
+    ```
+    make get_tools
+    ```
+2. Edit API docs
+    1. Directly Edit API docs manually: `client/lcd/swagger-ui/swagger.yaml`.
+    2. Edit API docs within [SwaggerHub](https://app.swaggerhub.com). Please refer to this [document](https://app.swaggerhub.com/help/index) for how to use the about website to edit API docs.
+3. Download `swagger.yaml` and replace the old `swagger.yaml` under fold `client/lcd/swagger-ui`.
+4. Compile gaiacli
+    ```
+    make install
+    ```

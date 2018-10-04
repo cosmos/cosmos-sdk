@@ -177,7 +177,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 
 		kb, err := GetKeyBase()
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
@@ -207,8 +207,8 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 
 		// check if already exists
 		infos, err := kb.List()
-		for _, i := range infos {
-			if i.GetName() == m.Name {
+		for _, info := range infos {
+			if info.GetName() == m.Name {
 				w.WriteHeader(http.StatusConflict)
 				w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", m.Name)))
 				return
@@ -311,8 +311,8 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 		}
 		// check if already exists
 		infos, err := kb.List()
-		for _, i := range infos {
-			if i.GetName() == name {
+		for _, info := range infos {
+			if info.GetName() == name {
 				w.WriteHeader(http.StatusConflict)
 				w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", name)))
 				return

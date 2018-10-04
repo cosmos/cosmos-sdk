@@ -83,6 +83,13 @@ func (am AccountMapper) SetAccount(ctx sdk.Context, acc Account) {
 	store.Set(AddressStoreKey(addr), bz)
 }
 
+// RemoveAccount removes an account for the account mapper store.
+func (am AccountMapper) RemoveAccount(ctx sdk.Context, acc Account) {
+	addr := acc.GetAddress()
+	store := ctx.KVStore(am.key)
+	store.Delete(AddressStoreKey(addr))
+}
+
 // Implements sdk.AccountMapper.
 func (am AccountMapper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(am.key)

@@ -209,7 +209,8 @@ jobs:
               cd /tmp
               wget https://dl.google.com/go/go1.11.linux-amd64.tar.gz
               sudo tar -xvf go1.11.linux-amd64.tar.gz
-              sudo mv -f go /usr/local
+              sudo rm -rf /usr/local/go
+              sudo mv go /usr/local
               set -x
               make get_tools
               make get_vendor_deps

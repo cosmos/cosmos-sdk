@@ -52,5 +52,5 @@ func TestWithdrawRewards(t *testing.T) {
 	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(4), vi.PoolCommission[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(147), rewardRecv2[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(98), rewardRecv2[0].Amount))
 }

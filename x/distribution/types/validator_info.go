@@ -49,7 +49,7 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	remainingTokens := fp.Pool.Minus(withdrawalTokens)
 
 	commission := withdrawalTokens.MulDec(commissionRate)
-	afterCommission := withdrawalTokens.MulDec(sdk.OneDec().Sub(commissionRate))
+	afterCommission := withdrawalTokens.Minus(commission)
 
 	fp.ValAccum.Accum = fp.ValAccum.Accum.Sub(accum)
 	fp.Pool = remainingTokens

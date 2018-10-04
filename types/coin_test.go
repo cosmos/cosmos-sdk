@@ -443,7 +443,7 @@ func BenchmarkCoinsAdditionIntersect(b *testing.B) {
 		}
 	}
 
-	benchmarkSizes := [][]int{[]int{1, 1}, []int{5, 5}, []int{5, 20}, []int{1, 1000}, []int{2, 1000}}
+	benchmarkSizes := [][]int{{1, 1}, {5, 5}, {5, 20}, {1, 1000}, {2, 1000}}
 	for i := 0; i < len(benchmarkSizes); i++ {
 		sizeA := benchmarkSizes[i][0]
 		sizeB := benchmarkSizes[i][1]
@@ -469,7 +469,7 @@ func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
 		}
 	}
 
-	benchmarkSizes := [][]int{[]int{1, 1}, []int{5, 5}, []int{5, 20}, []int{1, 1000}, []int{2, 1000}, []int{1000, 2}}
+	benchmarkSizes := [][]int{{1, 1}, {5, 5}, {5, 20}, {1, 1000}, {2, 1000}, {1000, 2}}
 	for i := 0; i < len(benchmarkSizes); i++ {
 		sizeA := benchmarkSizes[i][0]
 		sizeB := benchmarkSizes[i][1]

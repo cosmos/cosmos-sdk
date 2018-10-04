@@ -33,12 +33,7 @@ func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) ht
 			return
 		}
 
-		output, err := codec.MarshalJSONIndent(cdc, res)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 

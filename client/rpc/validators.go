@@ -12,8 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/spf13/viper"
+	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 // TODO these next two functions feel kinda hacky based on their placement
@@ -76,12 +77,12 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	}
 
 	if !cliCtx.TrustNode {
-		check, err := cliCtx.Certify(validatorsRes.BlockHeight)
+		check, err := cliCtx.Verify(validatorsRes.BlockHeight)
 		if err != nil {
 			return nil, err
 		}
 
-		if !bytes.Equal(check.ValidatorsHash(), tmtypes.NewValidatorSet(validatorsRes.Validators).Hash()) {
+		if !bytes.Equal(check.ValidatorsHash, tmtypes.NewValidatorSet(validatorsRes.Validators).Hash()) {
 			return nil, fmt.Errorf("got invalid validatorset")
 		}
 	}
@@ -98,12 +99,11 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		}
 	}
 
-	output, err := cdc.MarshalJSON(outputValidatorsRes)
-	if err != nil {
-		return nil, err
+	if cliCtx.Indent {
+		return cdc.MarshalJSONIndent(outputValidatorsRes, "", "  ")
 	}
+	return cdc.MarshalJSON(outputValidatorsRes)
 
-	return output, nil
 }
 
 // CMD
@@ -158,8 +158,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }
 
@@ -179,7 +178,6 @@ func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerF
 			w.Write([]byte(err.Error()))
 			return
 		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

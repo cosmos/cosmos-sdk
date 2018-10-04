@@ -15,9 +15,9 @@ import (
 // addition, it also sets any delegations found in data. Finally, it updates
 // the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.Validator, err error) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.ValidatorUpdate, err error) {
 	keeper.SetPool(ctx, data.Pool)
-	keeper.SetNewParams(ctx, data.Params)
+	keeper.SetParams(ctx, data.Params)
 	keeper.InitIntraTxCounter(ctx)
 
 	for i, validator := range data.Validators {
@@ -31,13 +31,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 			return res, errors.Errorf("genesis validator cannot have zero delegator shares, validator: %v", validator)
 		}
 
-		// Manually set indexes for the first time
+		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
-
-		if validator.Status == sdk.Bonded {
-			keeper.SetValidatorBondedIndex(ctx, validator)
-		}
 
 		keeper.OnValidatorCreated(ctx, validator.OperatorAddr)
 	}
@@ -47,13 +43,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.OnDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
-	keeper.UpdateBondedValidatorsFull(ctx)
-
-	vals := keeper.GetValidatorsBonded(ctx)
-	res = make([]abci.Validator, len(vals))
-	for i, val := range vals {
-		res[i] = sdk.ABCIValidator(val)
-	}
+	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	return
 }
 

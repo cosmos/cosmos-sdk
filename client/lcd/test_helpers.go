@@ -33,6 +33,7 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	nm "github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
@@ -114,7 +115,14 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.Acc
 // their respective sockets where nValidators is the total number of validators
 // and initAddrs are the accounts to initialize with some steak tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.
-func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress) (func(), []crypto.PubKey, string) {
+func InitializeTestLCD(
+	t *testing.T, nValidators int, initAddrs []sdk.AccAddress,
+) (cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
+
+	if nValidators < 1 {
+		panic("InitializeTestLCD must use at least one validator")
+	}
+
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 100
 	config.Consensus.SkipTimeoutCommit = false
@@ -135,40 +143,34 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
 	require.NoError(t, err)
 
-	if nValidators < 1 {
-		panic("InitializeTestLCD must use at least one validator")
+	// append initial (proposing) validator
+	genDoc.Validators[0] = tmtypes.GenesisValidator{
+		PubKey: privVal.GetPubKey(),
+		Power:  999999, // create enough power to enable 2/3 voting power
+		Name:   "validator-1",
 	}
 
-	//// add the priv validator (actual node) to genesis validators
-	//genDoc.Validators = append(genDoc.Validators,
-	//tmtypes.GenesisValidator{
-	//PubKey: privVal.PubKey,
-	//Power:  1,
-	//Name:   "val",
-	//},
-	//)
-
-	// then add some randoms
+	// append any additional (non-proposing) validators
 	for i := 1; i < nValidators; i++ {
 		genDoc.Validators = append(genDoc.Validators,
 			tmtypes.GenesisValidator{
 				PubKey: ed25519.GenPrivKey().PubKey(),
 				Power:  1,
-				Name:   "val",
+				Name:   fmt.Sprintf("validator-%d", i+1),
 			},
 		)
 	}
 
-	var validatorsPKs []crypto.PubKey
-
-	// NOTE: It's bad practice to reuse public key address for the operator
-	// address but doing in the test for simplicity.
 	var appGenTxs []json.RawMessage
-	for _, gdValidator := range genDoc.Validators {
-		pk := gdValidator.PubKey
-		validatorsPKs = append(validatorsPKs, pk)
 
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(pk.Address()), "test_val1")
+	for _, gdValidator := range genDoc.Validators {
+		operAddr := ed25519.GenPrivKey().PubKey().Address()
+		pk := gdValidator.PubKey
+
+		valConsPubKeys = append(valConsPubKeys, pk)
+		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
+
+		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(operAddr), gdValidator.Name)
 		require.NoError(t, err)
 
 		appGenTxs = append(appGenTxs, appGenTx)
@@ -196,7 +198,8 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// XXX: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
-	viper.Set(client.FlagTrustNode, false)
+	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
+	viper.Set(client.FlagTrustNode, true)
 	dir, err := ioutil.TempDir("", "lcd_test")
 	require.NoError(t, err)
 	viper.Set(cli.HomeFlag, dir)
@@ -211,14 +214,14 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	tests.WaitForLCDStart(port)
 	tests.WaitForHeight(1, port)
 
-	cleanup := func() {
+	cleanup = func() {
 		logger.Debug("cleaning up LCD initialization")
 		node.Stop()
 		node.Wait()
 		lcd.Close()
 	}
 
-	return cleanup, validatorsPKs, port
+	return cleanup, valConsPubKeys, valOperAddrs, port
 }
 
 // startTM creates and starts an in-process Tendermint node with memDB and
@@ -232,9 +235,14 @@ func startTM(
 ) (*nm.Node, error) {
 	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
 	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
+	nodeKey, err := p2p.LoadOrGenNodeKey(tmcfg.NodeKeyFile())
+	if err != nil {
+		return nil, err
+	}
 	node, err := nm.NewNode(
 		tmcfg,
 		privVal,
+		nodeKey,
 		proxy.NewLocalClientCreator(app),
 		genDocProvider,
 		dbProvider,

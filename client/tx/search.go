@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -51,7 +52,13 @@ $ gaiacli tendermint txs --tag test1,test2 --any
 				return err
 			}
 
-			output, err := cdc.MarshalJSON(txs)
+			var output []byte
+			if cliCtx.Indent {
+				output, err = cdc.MarshalJSONIndent(txs, "", "  ")
+			} else {
+				output, err = cdc.MarshalJSON(txs)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -174,13 +181,6 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
-		output, err := cdc.MarshalJSON(txs)
-		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
 	}
 }

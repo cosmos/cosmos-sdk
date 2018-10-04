@@ -31,7 +31,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 	}
 
 	// Initialize the chain
-	vals := []abci.Validator{}
+	vals := []abci.ValidatorUpdate{}
 	gapp.InitChain(abci.RequestInitChain{Validators: vals, AppStateBytes: stateBytes})
 	gapp.Commit()
 

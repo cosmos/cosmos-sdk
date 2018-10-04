@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -231,13 +230,12 @@ func (err *sdkError) TraceSDK(format string, args ...interface{}) Error {
 }
 
 // Implements ABCIError.
-// Overrides err.Error.Error().
 func (err *sdkError) Error() string {
 	return fmt.Sprintf(`ERROR:
 Codespace: %d
 Code: %d
 Message: %#v
-`, err.codespace, err.code, parseCmnError(err.cmnError.Error()))
+`, err.codespace, err.code, err.cmnError.Error())
 }
 
 // Implements ABCIError.
@@ -258,12 +256,12 @@ func (err *sdkError) Code() CodeType {
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
 	cdc := codec.New()
-	parsedErrMsg := parseCmnError(err.cmnError.Error())
+	errMsg := err.cmnError.Error()
 	jsonErr := humanReadableError{
 		Codespace: err.codespace,
 		Code:      err.code,
 		ABCICode:  err.ABCICode(),
-		Message:   parsedErrMsg,
+		Message:   errMsg,
 	}
 	bz, er := cdc.MarshalJSON(jsonErr)
 	if er != nil {
@@ -286,13 +284,6 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 		Code: uint32(err.ABCICode()),
 		Log:  err.ABCILog(),
 	}
-}
-
-func parseCmnError(err string) string {
-	if idx := strings.Index(err, "{"); idx != -1 {
-		err = err[idx+1 : len(err)-1]
-	}
-	return err
 }
 
 // nolint

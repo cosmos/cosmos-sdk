@@ -12,6 +12,7 @@ INEFFASSIGN = github.com/gordonklaus/ineffassign
 MISSPELL = github.com/client9/misspell/cmd/misspell
 ERRCHECK = github.com/kisielk/errcheck
 UNPARAM = mvdan.cc/unparam
+STATIK = github.com/rakyll/statik
 
 DEP_CHECK := $(shell command -v dep 2> /dev/null)
 GOLINT_CHECK := $(shell command -v golint 2> /dev/null)
@@ -21,6 +22,7 @@ INEFFASSIGN_CHECK := $(shell command -v ineffassign 2> /dev/null)
 MISSPELL_CHECK := $(shell command -v misspell 2> /dev/null)
 ERRCHECK_CHECK := $(shell command -v errcheck 2> /dev/null)
 UNPARAM_CHECK := $(shell command -v unparam 2> /dev/null)
+STATIK_CHECK := $(shell command -v statik 2> /dev/null)
 
 check_tools:
 ifndef DEP_CHECK
@@ -66,6 +68,12 @@ ifndef UNPARAM_CHECK
 else
 	@echo "Found unparam in path."
 endif
+ifndef STATIK_CHECK
+	@echo "No statik in path.  Install with 'make get_tools'."
+else
+	@echo "Found statik in path."
+endif
+
 
 get_tools:
 ifdef DEP_CHECK
@@ -73,6 +81,13 @@ ifdef DEP_CHECK
 else
 	@echo "Installing dep"
 	go get -v $(DEP)
+endif
+ifdef STATIK_CHECK
+	@echo "Statik is already installed.  Run 'make update_tools' to update."
+else
+	@echo "Installing statik"
+	go version
+	go get -v $(STATIK)
 endif
 
 get_dev_tools:
@@ -119,6 +134,12 @@ else
 	@echo "Installing unparam"
 	go get -v $(UNPARAM)
 endif
+ifdef STATIK_CHECK
+	@echo "statik is already installed.  Run 'make update_tools' to update."
+else
+	@echo "Installing statik"
+	go get -v $(STATIK)
+endif
 
 update_tools:
 	@echo "Updating dep"
@@ -140,6 +161,8 @@ update_dev_tools:
 	go get -u -v $(ERRCHECK)
 	@echo "Updating unparam"
 	go get -u -v $(UNPARAM)
+	@echo "Updating statik"
+	go get -u -v $(STATIK)
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.

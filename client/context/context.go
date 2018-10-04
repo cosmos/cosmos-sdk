@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,13 +17,17 @@ import (
 	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/log"
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"os"
 )
 
 const ctxAccStoreName = "acc"
+
+var (
+	verifier tmlite.Verifier
+)
 
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
@@ -39,7 +45,7 @@ type CLIContext struct {
 	Async         bool
 	JSON          bool
 	PrintResponse bool
-	Certifier     tmlite.Certifier
+	Verifier      tmlite.Verifier
 	DryRun        bool
 	GenerateOnly  bool
 	fromAddress   types.AccAddress
@@ -60,6 +66,11 @@ func NewCLIContext() CLIContext {
 	from := viper.GetString(client.FlagFrom)
 	fromAddress, fromName := fromFields(from)
 
+	// We need to use a single verifier for all contexts
+	if verifier == nil {
+		verifier = createVerifier()
+	}
+
 	return CLIContext{
 		Client:        rpc,
 		Output:        os.Stdout,
@@ -72,7 +83,7 @@ func NewCLIContext() CLIContext {
 		Async:         viper.GetBool(client.FlagAsync),
 		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
-		Certifier:     createCertifier(),
+		Verifier:      verifier,
 		DryRun:        viper.GetBool(client.FlagDryRun),
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
 		fromAddress:   fromAddress,
@@ -81,7 +92,12 @@ func NewCLIContext() CLIContext {
 	}
 }
 
-func createCertifier() tmlite.Certifier {
+func createVerifier() tmlite.Verifier {
+	trustNodeDefined := viper.IsSet(client.FlagTrustNode)
+	if !trustNodeDefined {
+		return nil
+	}
+
 	trustNode := viper.GetBool(client.FlagTrustNode)
 	if trustNode {
 		return nil
@@ -105,15 +121,16 @@ func createCertifier() tmlite.Certifier {
 		fmt.Printf("Must specify these options: %s when --trust-node is false\n", errMsg.String())
 		os.Exit(1)
 	}
+	node := rpcclient.NewHTTP(nodeURI, "/websocket")
+	verifier, err := tmliteProxy.NewVerifier(chainID, filepath.Join(home, ".gaialite"), node, log.NewNopLogger())
 
-	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
 	if err != nil {
-		fmt.Printf("Create certifier failed: %s\n", err.Error())
+		fmt.Printf("Create verifier failed: %s\n", err.Error())
 		fmt.Printf("Please check network connection and verify the address of the node to connect to\n")
 		os.Exit(1)
 	}
 
-	return certifier
+	return verifier
 }
 
 func fromFields(from string) (fromAddr types.AccAddress, fromName string) {
@@ -204,8 +221,8 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 	return ctx
 }
 
-// WithCertifier - return a copy of the context with an updated Certifier
-func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
-	ctx.Certifier = certifier
+// WithVerifier - return a copy of the context with an updated Verifier
+func (ctx CLIContext) WithVerifier(verifier tmlite.Verifier) CLIContext {
+	ctx.Verifier = verifier
 	return ctx
 }

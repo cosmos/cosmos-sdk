@@ -9,7 +9,7 @@ From the [networks/local directory](https://github.com/cosmos/cosmos-sdk/tree/de
 
 ### Requirements
 
-- [Install gaia](https://cosmos.network/docs/getting-started/installation.html)
+- [Install gaia](./installation.md)
 - [Install docker](https://docs.docker.com/engine/installation/)
 - [Install docker-compose](https://docs.docker.com/compose/install/)
 

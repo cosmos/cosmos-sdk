@@ -42,7 +42,7 @@ func init() {
 func TestKeys(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	// get seed
@@ -125,7 +125,7 @@ func TestVersion(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
 
 	// node info
@@ -148,7 +148,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
 
 	// node info
@@ -170,7 +170,7 @@ func TestNodeStatus(t *testing.T) {
 }
 
 func TestBlock(t *testing.T) {
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
 
 	var resultBlock ctypes.ResultBlock
@@ -200,7 +200,7 @@ func TestBlock(t *testing.T) {
 }
 
 func TestValidators(t *testing.T) {
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
 
 	var resultVals rpc.ResultValidatorsOutput
@@ -235,7 +235,7 @@ func TestValidators(t *testing.T) {
 func TestCoinSend(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	bz, err := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
@@ -303,7 +303,7 @@ func TestCoinSend(t *testing.T) {
 func DisabledTestIBCTransfer(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	acc := getAccount(t, port, addr)
@@ -332,7 +332,7 @@ func DisabledTestIBCTransfer(t *testing.T) {
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 	acc := getAccount(t, port, addr)
 
@@ -392,7 +392,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 func TestTxs(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	// query wrong
@@ -451,7 +451,7 @@ func TestTxs(t *testing.T) {
 func TestPoolParamsQuery(t *testing.T) {
 	_, password := "test", "1234567890"
 	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	defaultParams := stake.DefaultParams()
@@ -485,9 +485,11 @@ func TestPoolParamsQuery(t *testing.T) {
 }
 
 func TestValidatorsQuery(t *testing.T) {
-	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
-	require.Equal(t, 1, len(pks))
+
+	require.Equal(t, 1, len(valPubKeys))
+	require.Equal(t, 1, len(operAddrs))
 
 	validators := getValidators(t, port)
 	require.Equal(t, len(validators), 1)
@@ -495,35 +497,35 @@ func TestValidatorsQuery(t *testing.T) {
 	// make sure all the validators were found (order unknown because sorted by operator addr)
 	foundVal := false
 
-	if validators[0].ConsPubKey == pks[0] {
+	if validators[0].ConsPubKey == valPubKeys[0] {
 		foundVal = true
 	}
 
-	require.True(t, foundVal, "pk %v, operator %v", pks[0], validators[0].OperatorAddr)
+	require.True(t, foundVal, "pk %v, operator %v", operAddrs[0], validators[0].OperatorAddr)
 }
 
 func TestValidatorQuery(t *testing.T) {
-	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
-	require.Equal(t, 1, len(pks))
+	require.Equal(t, 1, len(valPubKeys))
+	require.Equal(t, 1, len(operAddrs))
 
-	validator1Operator := sdk.ValAddress(pks[0].Address())
-	validator := getValidator(t, port, validator1Operator)
-	assert.Equal(t, validator.OperatorAddr, validator1Operator, "The returned validator does not hold the correct data")
+	validator := getValidator(t, port, operAddrs[0])
+	assert.Equal(t, validator.OperatorAddr, operAddrs[0], "The returned validator does not hold the correct data")
 }
 
 func TestBonding(t *testing.T) {
 	name, password, denom := "test", "1234567890", "steak"
 	addr, seed := CreateAddr(t, name, password, GetKeyBase(t))
-	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+
+	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	amt := sdk.NewDec(60)
-	validator1Operator := sdk.ValAddress(pks[0].Address())
-	validator := getValidator(t, port, validator1Operator)
+	validator := getValidator(t, port, operAddrs[0])
 
 	// create bond TX
-	resultTx := doDelegate(t, port, seed, name, password, addr, validator1Operator, 60)
+	resultTx := doDelegate(t, port, seed, name, password, addr, operAddrs[0], 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -535,7 +537,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
 
 	// query validator
-	bond := getDelegation(t, port, addr, validator1Operator)
+	bond := getDelegation(t, port, addr, operAddrs[0])
 	require.Equal(t, amt, bond.Shares)
 
 	summary := getDelegationSummary(t, port, addr)
@@ -546,17 +548,17 @@ func TestBonding(t *testing.T) {
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
-	require.Equal(t, validator1Operator, bondedValidators[0].OperatorAddr)
+	require.Equal(t, operAddrs[0], bondedValidators[0].OperatorAddr)
 	require.Equal(t, validator.DelegatorShares.Add(amt).String(), bondedValidators[0].DelegatorShares.String())
 
-	bondedValidator := getDelegatorValidator(t, port, addr, validator1Operator)
-	require.Equal(t, validator1Operator, bondedValidator.OperatorAddr)
+	bondedValidator := getDelegatorValidator(t, port, addr, operAddrs[0])
+	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
 
 	//////////////////////
 	// testing unbonding
 
 	// create unbond TX
-	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, validator1Operator, 60)
+	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, operAddrs[0], 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -567,7 +569,7 @@ func TestBonding(t *testing.T) {
 	coins = acc.GetCoins()
 	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
-	unbonding := getUndelegation(t, port, addr, validator1Operator)
+	unbonding := getUndelegation(t, port, addr, operAddrs[0])
 	require.Equal(t, "60", unbonding.Balance.Amount.String())
 
 	summary = getDelegationSummary(t, port, addr)
@@ -600,7 +602,7 @@ func TestBonding(t *testing.T) {
 func TestSubmitProposal(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	// create SubmitProposal TX
@@ -622,7 +624,7 @@ func TestSubmitProposal(t *testing.T) {
 func TestDeposit(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	// create SubmitProposal TX
@@ -656,7 +658,7 @@ func TestDeposit(t *testing.T) {
 func TestVote(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	// create SubmitProposal TX
@@ -694,12 +696,12 @@ func TestVote(t *testing.T) {
 func TestUnjail(t *testing.T) {
 	_, password := "test", "1234567890"
 	addr, _ := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, pks, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	// XXX: any less than this and it fails
 	tests.WaitForHeight(3, port)
-	pkString, _ := sdk.Bech32ifyConsPub(pks[0])
+	pkString, _ := sdk.Bech32ifyConsPub(valPubKeys[0])
 	signingInfo := getSigningInfo(t, port, pkString)
 	tests.WaitForHeight(4, port)
 	require.Equal(t, true, signingInfo.IndexOffset > 0)
@@ -712,7 +714,7 @@ func TestProposalsQuery(t *testing.T) {
 	name2, password2 := "test2", "1234567890"
 	addr, seed := CreateAddr(t, "test", password1, GetKeyBase(t))
 	addr2, seed2 := CreateAddr(t, "test2", password2, GetKeyBase(t))
-	cleanup, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr, addr2})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr, addr2})
 	defer cleanup()
 
 	// Addr1 proposes (and deposits) proposals #1 and #2

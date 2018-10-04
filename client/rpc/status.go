@@ -9,9 +9,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	"github.com/spf13/viper"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/spf13/viper"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 func statusCommand() *cobra.Command {

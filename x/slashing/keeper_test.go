@@ -85,13 +85,16 @@ func TestSlashingPeriodCap(t *testing.T) {
 
 	// double sign less than max age
 	keeper.handleDoubleSign(ctx, valConsPubKey.Address(), 0, time.Unix(0, 0), amtInt)
-
 	// should be jailed
 	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	// end block
+	stake.EndBlocker(ctx, sk)
 	// update block height
 	ctx = ctx.WithBlockHeight(int64(1))
 	// unjail to measure power
 	sk.Unjail(ctx, valConsAddr)
+	// end block
+	stake.EndBlocker(ctx, sk)
 	// power should be reduced
 	expectedPower := sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
 	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
@@ -100,10 +103,14 @@ func TestSlashingPeriodCap(t *testing.T) {
 	keeper.handleDoubleSign(ctx, valConsPubKey.Address(), 0, time.Unix(0, 0), amtInt)
 	// should be jailed
 	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	// end block
+	stake.EndBlocker(ctx, sk)
 	// update block height
 	ctx = ctx.WithBlockHeight(int64(2))
 	// unjail to measure power
 	sk.Unjail(ctx, valConsAddr)
+	// end block
+	stake.EndBlocker(ctx, sk)
 	// power should be equal, no more should have been slashed
 	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
 	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
@@ -114,6 +121,8 @@ func TestSlashingPeriodCap(t *testing.T) {
 	require.True(t, sk.Validator(ctx, addr).GetJailed())
 	// unjail to measure power
 	sk.Unjail(ctx, valConsAddr)
+	// end block
+	stake.EndBlocker(ctx, sk)
 	// power should be reduced
 	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(18).Quo(sdk.NewDec(20)))
 	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
@@ -180,6 +189,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
 
+	// end block
+	stake.EndBlocker(ctx, sk)
+
 	// validator should have been jailed
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
@@ -192,6 +204,9 @@ func TestHandleAbsentValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.DowntimeUnbondDuration(ctx))})
 	got = slh(ctx, NewMsgUnjail(addr))
 	require.True(t, got.IsOK())
+
+	// end block
+	stake.EndBlocker(ctx, sk)
 
 	// validator should be rebonded now
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
@@ -222,12 +237,19 @@ func TestHandleAbsentValidator(t *testing.T) {
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 	}
 
+	// end block
+	stake.EndBlocker(ctx, sk)
+
 	// validator should be jailed again after 500 unsigned blocks
 	nextHeight = height + keeper.MinSignedPerWindow(ctx) + 1
 	for ; height <= nextHeight; height++ {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 	}
+
+	// end block
+	stake.EndBlocker(ctx, sk)
+
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 }
@@ -295,6 +317,9 @@ func TestHandleAlreadyJailed(t *testing.T) {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
 	}
+
+	// end block
+	stake.EndBlocker(ctx, sk)
 
 	// validator should have been jailed and slashed
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))

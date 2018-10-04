@@ -19,9 +19,9 @@ import (
 
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"path"
-	"os"
 	"github.com/spf13/viper"
+	"os"
+	"path"
 )
 
 const (
@@ -153,7 +153,7 @@ func initConfig(cmd *cobra.Command) error {
 	}
 
 	if err := viper.BindPFlag(cli.EncodingFlag, cmd.PersistentFlags().Lookup(cli.EncodingFlag)); err != nil {
-	    return err
+		return err
 	}
 	return viper.BindPFlag(cli.OutputFlag, cmd.PersistentFlags().Lookup(cli.OutputFlag))
 }

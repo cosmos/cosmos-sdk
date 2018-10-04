@@ -49,7 +49,7 @@
 
 [[override]]
   name = "github.com/tendermint/go-amino"
-  version = "=v0.12.0-rc0"
+  version = "=v0.12.0"
 
 [[override]]
   name = "github.com/tendermint/iavl"
@@ -57,7 +57,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=v0.23.1-rc0"
+  version = "=0.24.0"
 
 [[constraint]]
   name = "github.com/bartekn/go-bip39"

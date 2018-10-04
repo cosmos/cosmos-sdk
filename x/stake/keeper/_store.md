@@ -41,9 +41,3 @@ prefixed areas of the staking store which are accessed in `x/stake/keeper.go`.
 
 The transient store persists between transations but not between blocks 
 
-## Tendermint Updates
- - Prefix Key Space:    TendermintUpdatesTKey
- - Key/Sort:            Validator Operator Address
- - Value:               Tendermint ABCI Validator
- - Contains:            Validators are queued to affect the consensus validation set in Tendermint
- - Used For:            Informing Tendermint of the validator set updates

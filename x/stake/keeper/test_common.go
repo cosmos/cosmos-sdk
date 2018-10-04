@@ -111,7 +111,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	ck := bank.NewBaseKeeper(accountMapper)
 	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
-	keeper.SetNewParams(ctx, types.DefaultParams())
+	keeper.SetParams(ctx, types.DefaultParams())
 	keeper.InitIntraTxCounter(ctx)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
@@ -202,5 +202,22 @@ func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 // does a certain by-power index record exist
 func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) bool {
 	store := ctx.KVStore(keeper.storeKey)
-	return store.Get(power) != nil
+	return store.Has(power)
+}
+
+func testingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) types.Validator {
+	pool := keeper.GetPool(ctx)
+	keeper.SetValidator(ctx, validator)
+	keeper.SetValidatorByPowerIndex(ctx, validator, pool)
+	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
+	if !found {
+		panic("validator expected but not found")
+	}
+	return validator
+}
+
+func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(power)
 }

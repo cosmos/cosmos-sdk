@@ -305,22 +305,27 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 	return d, nil
 }
 
-// ABCIValidator returns an abci.Validator from a staked validator type.
-func (v Validator) ABCIValidator() abci.Validator {
-	return abci.Validator{
-		PubKey:  tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Address: v.ConsPubKey.Address(),
-		Power:   v.BondedTokens().RoundInt64(),
+// ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staked validator type
+// with the full validator power
+func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
+	return abci.ValidatorUpdate{
+		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
+		Power:  v.BondedTokens().RoundInt64(),
 	}
 }
 
-// ABCIValidatorZero returns an abci.Validator from a staked validator type
-// with with zero power used for validator updates.
-func (v Validator) ABCIValidatorZero() abci.Validator {
-	return abci.Validator{
-		PubKey:  tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Address: v.ConsPubKey.Address(),
-		Power:   0,
+// ABCIValidatorPowerBytes
+func (v Validator) ABCIValidatorPowerBytes(cdc *codec.Codec) []byte {
+	power := v.BondedTokens().RoundInt64()
+	return cdc.MustMarshalBinary(power)
+}
+
+// ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staked validator type
+// with zero power used for validator updates.
+func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
+	return abci.ValidatorUpdate{
+		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
+		Power:  0,
 	}
 }
 
@@ -430,6 +435,7 @@ func (v Validator) BondedTokens() sdk.Dec {
 	return sdk.ZeroDec()
 }
 
+// TODO remove this once the validator queue logic is implemented
 // Returns if the validator should be considered unbonded
 func (v Validator) IsUnbonded(ctx sdk.Context) bool {
 	switch v.Status {

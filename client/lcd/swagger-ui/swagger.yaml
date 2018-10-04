@@ -346,6 +346,184 @@ paths:
             $ref: "#/definitions/BroadcastTxCommitResult"
         400:
           description: The Tx was malformated
+  /keys:
+    get:
+      summary: List of accounts stored locally
+      tags:
+      - ICS1
+      produces:
+      - application/json
+      responses:
+        200:
+          description: Array of accounts
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Account'
+    post:
+      summary: Create a new account locally
+      tags:
+      - ICS1
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: account
+        description: The account to create
+        schema:
+          type: object
+          required:
+          - name
+          - password
+          - seed
+          properties:
+            name:
+              type: string
+            password:
+              type: string
+            seed:
+              type: string
+      responses:
+        200:
+          description: Returns account information of the created key
+          schema:
+            $ref: "#/definitions/Account"
+  /keys/seed:
+    get:
+      summary: Create a new seed to create a new account with
+      tags:
+      - ICS1
+      responses:
+        200:
+          description: 16 word Seed
+          schema:
+            type: string
+  /keys/{name}/recover:
+    post:
+      summary: Recover a account from a seed
+      tags:
+      - ICS1
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: name
+        description: Account name
+        required: true
+        type: string
+      - in: body
+        name: pwdAndSeed
+        description: Provide password and seed to recover a key
+        schema:
+          type: object
+          required:
+          - password
+          - seed
+          properties:
+            password:
+              type: string
+            seed:
+              type: string
+      responses:
+        200:
+          description: Returns account information of the recovered key
+          schema:
+            $ref: "#/definitions/Account"
+  /keys/{name}:
+    parameters:
+    - in: path
+      name: name
+      description: Account name
+      required: true
+      type: string
+    get:
+      summary: Get a certain locally stored account
+      tags:
+      - ICS1
+      produces:
+      - application/json
+      responses:
+        200:
+          description: Locally stored account
+          schema:
+            $ref: "#/definitions/Account"
+        404:
+          description: Account is not available
+    put:
+      summary: Update the password for this account in the KMS
+      tags:
+      - ICS1
+      consumes:
+      - application/json
+      parameters:
+      - in: body
+        name: account
+        description: The new and old password
+        schema:
+          type: object
+          required:
+          - new_password
+          - old_password
+          properties:
+            new_password:
+              type: string
+            old_password:
+              type: string
+      responses:
+        200:
+          description: Updated password
+        401:
+          description: Password is wrong
+        404:
+          description: Account is not available
+    delete:
+      summary: Remove an account
+      tags:
+      - ICS1
+      consumes:
+      - application/json
+      parameters:
+      - in: body
+        name: account
+        description: The password of the account to remove from the KMS
+        schema:
+          type: object
+          required:
+          - password
+          properties:
+            password:
+              type: string
+      responses:
+        200:
+          description: Removed account
+        401:
+          description: Password is wrong
+        404:
+          description: Account is not available
+  /auth/accounts/{address}:
+    get:
+      summary: Get the account information on blockchain
+      tags:
+      - ICS1
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: address
+        description: Account address
+        required: true
+        type: string
+      responses:
+        200:
+          description: Account information on the blockchain
+          schema:
+            $ref: "#/definitions/AccountQueryResponse"
+        404:
+          description: Account is not available
 
 definitions:
   CheckTxResult:
@@ -561,7 +739,35 @@ definitions:
       address:
         $ref: "#/definitions/Address"
       pub_key:
-        $ref: "#/definitions/PubKey"
+        type: string
+        example: "cosmospub1addwnpepqfgv3pakxazq2fgs8tmmhmzsrs94fptl7kyztyxprjpf0mkus3h7cxqe70s"
+      type:
+        type: string
+        example: local
+      seed:
+        type: string
+  AccountInfo:
+    type: object
+    properties:
+      account_number:
+        type: string
+      address:
+        type: string
+      coins:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
+      public_key:
+        type: string
+      sequence:
+        type: string
+  AccountQueryResponse:
+    type: object
+    properties:
+      type:
+        type: string
+      value:
+        $ref: "#/definitions/AccountInfo"
   BlockID:
     type: object
     properties:

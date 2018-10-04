@@ -15,8 +15,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 const (

@@ -50,7 +50,7 @@ type CLIContext struct {
 	GenerateOnly  bool
 	fromAddress   types.AccAddress
 	fromName      string
-	Indent		  bool
+	Indent        bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the

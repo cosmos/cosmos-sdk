@@ -178,27 +178,27 @@ func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 }
 
 // GetREDKeyFromValSrcIndexKey rearranges the ValSrcIndexKey to get the REDKey
-func GetREDKeyFromValSrcIndexKey(IndexKey []byte) []byte {
+func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
 	// note that first byte is prefix byte
-	if len(IndexKey) != 3*sdk.AddrLen+1 {
+	if len(indexKey) != 3*sdk.AddrLen+1 {
 		panic("unexpected key length")
 	}
-	valSrcAddr := IndexKey[1 : sdk.AddrLen+1]
-	delAddr := IndexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
-	valDstAddr := IndexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
+	valSrcAddr := indexKey[1 : sdk.AddrLen+1]
+	delAddr := indexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
+	valDstAddr := indexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
 
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
 
-// rearranges the ValDstIndexKey to get the REDKey
-func GetREDKeyFromValDstIndexKey(IndexKey []byte) []byte {
+// GetREDKeyFromValDstIndexKey rearranges the ValDstIndexKey to get the REDKey
+func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 	// note that first byte is prefix byte
-	if len(IndexKey) != 3*sdk.AddrLen+1 {
+	if len(indexKey) != 3*sdk.AddrLen+1 {
 		panic("unexpected key length")
 	}
-	valDstAddr := IndexKey[1 : sdk.AddrLen+1]
-	delAddr := IndexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
-	valSrcAddr := IndexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
+	valDstAddr := indexKey[1 : sdk.AddrLen+1]
+	delAddr := indexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
+	valSrcAddr := indexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
 

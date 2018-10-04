@@ -26,22 +26,22 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	sumPowerPrecommitValidators := sdk.NewDec(1) // XXX TODO actually calculate this
 	proposerMultiplier := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(
 		sumPowerPrecommitValidators).Quo(bondedTokens))
-	proposerReward := feesCollectedDec.Mul(proposerMultiplier)
+	proposerReward := feesCollectedDec.MulDec(proposerMultiplier)
 
 	// apply commission
-	commission := proposerReward.Mul(proposerValidator.GetCommission())
-	remaining := proposerReward.Mul(sdk.OneDec().Sub(proposerValidator.GetCommission()))
+	commission := proposerReward.MulDec(proposerValidator.GetCommission())
+	remaining := proposerReward.MulDec(sdk.OneDec().Sub(proposerValidator.GetCommission()))
 	proposerDist.PoolCommission = proposerDist.PoolCommission.Plus(commission)
 	proposerDist.Pool = proposerDist.Pool.Plus(remaining)
 
 	// allocate community funding
 	communityTax := k.GetCommunityTax(ctx)
-	communityFunding := feesCollectedDec.Mul(communityTax)
+	communityFunding := feesCollectedDec.MulDec(communityTax)
 	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Plus(communityFunding)
 
 	// set the global pool within the distribution module
-	poolReceived := feesCollectedDec.Mul(sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax))
+	poolReceived := feesCollectedDec.MulDec(sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax))
 	feePool.Pool = feePool.Pool.Plus(poolReceived)
 
 	k.SetValidatorDistInfo(ctx, proposerDist)

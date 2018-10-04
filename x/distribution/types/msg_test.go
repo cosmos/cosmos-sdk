@@ -22,12 +22,12 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		{emptyDelAddr, emptyDelAddr, false},
 	}
 
-	for _, tc := range tests {
+	for i, tc := range tests {
 		msg := NewMsgSetWithdrawAddress(tc.delegatorAddr, tc.withdrawAddr)
 		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
 		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.NotNil(t, msg.ValidateBasic(), "test index: %v", i)
 		}
 	}
 }
@@ -44,12 +44,12 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 		{delAddr1, emptyValAddr, false},
 		{emptyDelAddr, emptyValAddr, false},
 	}
-	for _, tc := range tests {
+	for i, tc := range tests {
 		msg := NewMsgWithdrawDelegatorReward(tc.delegatorAddr, tc.validatorAddr)
 		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
 		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.NotNil(t, msg.ValidateBasic(), "test index: %v", i)
 		}
 	}
 }
@@ -60,15 +60,15 @@ func TestMsgWithdrawDelegatorRewardsAll(t *testing.T) {
 		delegatorAddr sdk.AccAddress
 		expectPass    bool
 	}{
-		{delAddr, true},
+		{delAddr1, true},
 		{emptyDelAddr, false},
 	}
-	for _, tc := range tests {
+	for i, tc := range tests {
 		msg := NewMsgWithdrawDelegatorRewardsAll(tc.delegatorAddr)
 		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
 		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.NotNil(t, msg.ValidateBasic(), "test index: %v", i)
 		}
 	}
 }
@@ -82,12 +82,12 @@ func TestMsgWithdrawValidatorRewardsAll(t *testing.T) {
 		{valAddr1, true},
 		{emptyValAddr, false},
 	}
-	for _, tc := range tests {
+	for i, tc := range tests {
 		msg := NewMsgWithdrawValidatorRewardsAll(tc.validatorAddr)
 		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
 		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
+			require.NotNil(t, msg.ValidateBasic(), "test index: %v", i)
 		}
 	}
 }

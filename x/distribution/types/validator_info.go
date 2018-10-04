@@ -1,6 +1,8 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // distribution info for a particular validator
 type ValidatorDistInfo struct {
@@ -13,6 +15,16 @@ type ValidatorDistInfo struct {
 	DelAccum TotalAccum `json:"del_accum"` // total proposer pool accumulation factor held by delegators
 }
 
+func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) ValidatorDistInfo {
+	return ValidatorDistInfo{
+		OperatorAddr:            operatorAddr,
+		FeePoolWithdrawalHeight: currentHeight,
+		Pool:           DecCoins{},
+		PoolCommission: DecCoins{},
+		DelAccum:       NewTotalAccum(currentHeight),
+	}
+}
+
 // update total delegator accumululation
 func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk.Dec) ValidatorDistInfo {
 	vi.DelAccum = vi.DelAccum.Update(height, totalDelShares)
@@ -23,7 +35,7 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk
 func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBonded, vdTokens,
 	commissionRate sdk.Dec) (ValidatorDistInfo, FeePool) {
 
-	fp.UpdateTotalValAccum(height, totalBonded)
+	fp = fp.UpdateTotalValAccum(height, totalBonded)
 
 	if fp.ValAccum.Accum.IsZero() {
 		return vi, fp
@@ -33,11 +45,11 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	blocks := height - vi.FeePoolWithdrawalHeight
 	vi.FeePoolWithdrawalHeight = height
 	accum := sdk.NewDec(blocks).Mul(vdTokens)
-	withdrawalTokens := fp.Pool.Mul(accum.Quo(fp.ValAccum.Accum))
-	remainingTokens := fp.Pool.Mul(sdk.OneDec().Sub(accum.Quo(fp.ValAccum.Accum)))
+	withdrawalTokens := fp.Pool.MulDec(accum).QuoDec(fp.ValAccum.Accum)
+	remainingTokens := fp.Pool.Minus(withdrawalTokens)
 
-	commission := withdrawalTokens.Mul(commissionRate)
-	afterCommission := withdrawalTokens.Mul(sdk.OneDec().Sub(commissionRate))
+	commission := withdrawalTokens.MulDec(commissionRate)
+	afterCommission := withdrawalTokens.MulDec(sdk.OneDec().Sub(commissionRate))
 
 	fp.ValAccum.Accum = fp.ValAccum.Accum.Sub(accum)
 	fp.Pool = remainingTokens

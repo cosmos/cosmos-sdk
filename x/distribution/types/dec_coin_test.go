@@ -4,17 +4,16 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPlusDecCoin(t *testing.T) {
-	decCoinA1 := DecCoin("A", sdk.NewDecWithPrec(11, 1))
-	decCoinA2 := DecCoin("A", sdk.NewDecWithPrec(22, 1))
-	decCoinB1 := DecCoin("B", sdk.NewDecWithPrec(11, 1))
-	decCoinC1 := DecCoin("C", sdk.NewDecWithPrec(11, 1))
-	decCoinCn4 := DecCoin("C", sdk.NewDecWithPrec(-44, 1))
-	decCoinC5 := DecCoin("C", sdk.NewDecWithPrec(55, 1))
+	decCoinA1 := DecCoin{"A", sdk.NewDecWithPrec(11, 1)}
+	decCoinA2 := DecCoin{"A", sdk.NewDecWithPrec(22, 1)}
+	decCoinB1 := DecCoin{"B", sdk.NewDecWithPrec(11, 1)}
+	decCoinC1 := DecCoin{"C", sdk.NewDecWithPrec(11, 1)}
+	decCoinCn4 := DecCoin{"C", sdk.NewDecWithPrec(-44, 1)}
+	decCoinC5 := DecCoin{"C", sdk.NewDecWithPrec(55, 1)}
 
 	cases := []struct {
 		inputOne DecCoin
@@ -51,7 +50,6 @@ func TestPlusCoins(t *testing.T) {
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
-		assert.True(t, res.IsValid())
 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
 }

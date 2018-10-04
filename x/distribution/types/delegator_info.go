@@ -9,6 +9,16 @@ type DelegatorDistInfo struct {
 	WithdrawalHeight int64          `json:"withdrawal_height"` // last time this delegation withdrew rewards
 }
 
+func NewDelegatorDistInfo(delegatorAddr sdk.AccAddress, valOperatorAddr sdk.ValAddress,
+	currentHeight int64) DelegatorDistInfo {
+
+	return DelegatorDistInfo{
+		DelegatorAddr:    delegatorAddr,
+		ValOperatorAddr:  valOperatorAddr,
+		WithdrawalHeight: currentHeight,
+	}
+}
+
 // withdraw rewards from delegator
 func (di DelegatorDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	height int64, totalBonded, vdTokens, totalDelShares, delegatorShares,
@@ -24,8 +34,8 @@ func (di DelegatorDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	blocks := height - di.WithdrawalHeight
 	di.WithdrawalHeight = height
 	accum := delegatorShares.Mul(sdk.NewDec(blocks))
-	withdrawalTokens := vi.Pool.Mul(accum.Quo(vi.DelAccum.Accum))
-	remainingTokens := vi.Pool.Mul(sdk.OneDec().Sub(accum.Quo(vi.DelAccum.Accum)))
+	withdrawalTokens := vi.Pool.MulDec(accum.Quo(vi.DelAccum.Accum))
+	remainingTokens := vi.Pool.MulDec(sdk.OneDec().Sub(accum.Quo(vi.DelAccum.Accum)))
 
 	vi.Pool = remainingTokens
 	vi.DelAccum.Accum = vi.DelAccum.Accum.Sub(accum)

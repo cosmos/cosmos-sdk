@@ -1,6 +1,8 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // total accumulation tracker
 type TotalAccum struct {
@@ -29,7 +31,7 @@ func (ta TotalAccum) Update(height int64, accumCreatedPerBlock sdk.Dec) TotalAcc
 type FeePool struct {
 	ValAccum      TotalAccum `json:"val_accum"`      // total valdator accum held by validators
 	Pool          DecCoins   `json:"pool"`           // funds for all validators which have yet to be withdrawn
-	CommunityPool DecCoins   `json:"community_pool"` // pool for community funds yet to be spent}
+	CommunityPool DecCoins   `json:"community_pool"` // pool for community funds yet to be spent
 }
 
 // update total validator accumulation factor

@@ -27,6 +27,14 @@ func (coin DecCoin) Plus(coinB DecCoin) DecCoin {
 	return DecCoin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
+// Subtracts amounts of two coins with same denom
+func (coin DecCoin) Minus(coinB DecCoin) DecCoin {
+	if !(coin.Denom == coinB.Denom) {
+		return coin
+	}
+	return DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
+}
+
 // return the decimal coins with trunctated decimals
 func (coin DecCoin) TruncateDecimal() sdk.Coin {
 	return sdk.NewCoin(coin.Denom, coin.Amount.TruncateInt())
@@ -89,15 +97,45 @@ func (coins DecCoins) Plus(coinsB DecCoins) DecCoins {
 	}
 }
 
-// multiply all the coins by a multiple
-func (coins DecCoins) Mul(multiple sdk.Dec) DecCoins {
-	products := make([]DecCoin, len(coins))
+// Negative returns a set of coins with all amount negative
+func (coins DecCoins) Negative() DecCoins {
+	res := make([]DecCoin, 0, len(coins))
+	for _, coin := range coins {
+		res = append(res, DecCoin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.Neg(),
+		})
+	}
+	return res
+}
+
+// Minus subtracts a set of coins from another (adds the inverse)
+func (coins DecCoins) Minus(coinsB DecCoins) DecCoins {
+	return coins.Plus(coinsB.Negative())
+}
+
+// multiply all the coins by a decimal
+func (coins DecCoins) MulDec(d sdk.Dec) DecCoins {
+	res := make([]DecCoin, len(coins))
 	for i, coin := range coins {
 		product := DecCoin{
 			Denom:  coin.Denom,
-			Amount: coin.Amount.Mul(multiple),
+			Amount: coin.Amount.Mul(d),
 		}
-		products[i] = product
+		res[i] = product
 	}
-	return products
+	return res
+}
+
+// divide all the coins by a multiple
+func (coins DecCoins) QuoDec(d sdk.Dec) DecCoins {
+	res := make([]DecCoin, len(coins))
+	for i, coin := range coins {
+		quotient := DecCoin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.Quo(d),
+		}
+		res[i] = quotient
+	}
+	return res
 }

@@ -9,7 +9,7 @@ import (
 
 // set the proposer for determining distribution during endblock
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
-	consAddr := sdk.ConsAddress(req.Header.Proposer.Address)
+	consAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	k.SetProposerConsAddr(ctx, consAddr)
 }
 

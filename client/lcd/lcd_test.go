@@ -54,15 +54,28 @@ func TestKeys(t *testing.T) {
 	match := reg.MatchString(seed)
 	require.True(t, match, "Returned seed has wrong format", seed)
 
-	newName := "test_newname"
-	newPassword := "0987654321"
-
-	// add key
-	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed":"%s"}`, newName, newPassword, seed))
-	res, body = Request(t, port, "POST", "/keys", jsonStr)
+	recoverName := "test_recovername"
+	recoverPassword := "0987654321"
+	// recover key
+	jsonStr := []byte(fmt.Sprintf(`{"password":"%s", "seed":"%s"}`, recoverPassword, seed))
+	res, body = Request(t, port, "POST", fmt.Sprintf("/keys/%s/recover", recoverName), jsonStr)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var resp keys.KeyOutput
+	err = codec.Cdc.UnmarshalJSON([]byte(body), &resp)
+	require.Nil(t, err, body)
+
+	addr1Bech32 := resp.Address
+	_, err = sdk.AccAddressFromBech32(addr1Bech32)
+	require.NoError(t, err, "Failed to return a correct bech32 address")
+
+	newName := "test_newname"
+	newPassword := "0987654321"
+	// add key
+	jsonStr = []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed":"%s"}`, newName, newPassword, seed))
+	res, body = Request(t, port, "POST", "/keys", jsonStr)
+
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	err = codec.Cdc.UnmarshalJSON([]byte(body), &resp)
 	require.Nil(t, err, body)
 
@@ -78,7 +91,7 @@ func TestKeys(t *testing.T) {
 	// existing keys
 	res, body = Request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var m [2]keys.KeyOutput
+	var m [3]keys.KeyOutput
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
@@ -88,6 +101,8 @@ func TestKeys(t *testing.T) {
 	require.Equal(t, addrBech32, m[0].Address, "Did not serve keys Address correctly")
 	require.Equal(t, newName, m[1].Name, "Did not serve keys name correctly")
 	require.Equal(t, addr2Bech32, m[1].Address, "Did not serve keys Address correctly")
+	require.Equal(t, recoverName, m[2].Name, "Did not serve keys name correctly")
+	require.Equal(t, addr1Bech32, m[2].Address, "Did not serve keys Address correctly")
 
 	// select key
 	keyEndpoint := fmt.Sprintf("/keys/%s", newName)
@@ -243,7 +258,7 @@ func TestCoinSend(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -802,7 +817,7 @@ func TestProposalsQuery(t *testing.T) {
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", addr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", addr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var acc auth.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)

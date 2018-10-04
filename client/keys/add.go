@@ -268,6 +268,7 @@ type RecoverKeyBody struct {
 	Seed     string `json:"seed"`
 }
 
+// RecoverRequestHandler performs key recover request
 func RecoverRequestHandler(indent bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

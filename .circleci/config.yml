@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.11.0
+    - image: circleci/golang:1.11.1
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -192,14 +192,7 @@ jobs:
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
   localnet:
-      working_directory: /home/circleci/.go_workspace/src/github.com/cosmos/cosmos-sdk
-      machine:
-        image: circleci/classic:latest
-      environment:
-        GOBIN: /home/circleci/.go_workspace/bin
-        GOPATH: /home/circleci/.go_workspace/
-        GOOS: linux
-        GOARCH: amd64
+      <<: *defaults
       parallelism: 1
       steps:
         - checkout

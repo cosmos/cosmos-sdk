@@ -111,6 +111,7 @@ FEATURES
   * [x/auth] \#2376 Remove FeePayer() from StdTx
   * [x/stake] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Implement
   basis for the validator commission model.
+  * [x/auth] Support account removal in the account mapper.
 
 * Tendermint
 

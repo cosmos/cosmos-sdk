@@ -192,7 +192,14 @@ jobs:
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 
   localnet:
-      <<: *defaults
+      working_directory: /home/circleci/.go_workspace/src/github.com/cosmos/cosmos-sdk
+      machine:
+        image: circleci/classic:latest
+      environment:
+        GOBIN: /home/circleci/.go_workspace/bin
+        GOPATH: /home/circleci/.go_workspace/
+        GOOS: linux
+        GOARCH: amd64
       parallelism: 1
       steps:
         - checkout
@@ -200,6 +207,13 @@ jobs:
             name: run localnet and exit on failure
             command: |
               set -x
+              cd /tmp
+              wget https://dl.google.com/go/go1.11.linux-amd64.tar.gz
+              sudo tar -xvf go1.11.linux-amd64.tar.gz
+              sudo mv go /usr/local
+              make get_tools
+              make get_vendor_deps
+              make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
 

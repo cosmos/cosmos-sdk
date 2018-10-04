@@ -206,11 +206,11 @@ jobs:
         - run:
             name: run localnet and exit on failure
             command: |
-              set -x
               cd /tmp
               wget https://dl.google.com/go/go1.11.linux-amd64.tar.gz
               sudo tar -xvf go1.11.linux-amd64.tar.gz
-              sudo mv go /usr/local
+              sudo mv -f go /usr/local
+              set -x
               make get_tools
               make get_vendor_deps
               make build-linux

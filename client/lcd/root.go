@@ -141,7 +141,6 @@ func createHandler(cdc *codec.Codec) *mux.Router {
 
 	cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")

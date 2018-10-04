@@ -372,8 +372,8 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 
 	// broadcast tx
 	broadcastPayload := struct {
-		Tx auth.StdTx `json:"tx"`
-		Return string `json:"return"`
+		Tx     auth.StdTx `json:"tx"`
+		Return string     `json:"return"`
 	}{Tx: signedMsg, Return: "block"}
 	json, err = cdc.MarshalJSON(broadcastPayload)
 	require.Nil(t, err)

@@ -6,5 +6,5 @@
     "Deadline": "500s",
     "Vendor": true,
     "Cyclo": 11,
-    "Exclude": ["/usr/lib/go/src/"]
+    "Exclude": ["/usr/lib/go/src/", "client/lcd/statik/statik.go"]
 }

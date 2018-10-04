@@ -32,7 +32,7 @@ TMP_BUILD_TAGS := $(BUILD_TAGS)
 BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
 endif
 
-build: check-ledger
+build: check-ledger update_gaia_lite_docs
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
@@ -43,6 +43,9 @@ endif
 
 build-linux:
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
+
+update_gaia_lite_docs:
+	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
 
 build_cosmos-sdk-cli:
 ifeq ($(OS),Windows_NT)
@@ -64,7 +67,7 @@ else
 	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
 endif
 
-install: check-ledger
+install: check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
@@ -179,14 +182,14 @@ test_cover:
 
 test_lint:
 	gometalinter.v2 --config=tools/gometalinter.json ./...
-	!(gometalinter.v2 --exclude /usr/lib/go/src/ --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	!(gometalinter.v2 --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
 
 benchmark:
 	@go test -bench=. $(PACKAGES_NOSIMULATION)

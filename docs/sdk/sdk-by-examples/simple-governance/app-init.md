@@ -1,4 +1,4 @@
-## Application initialization 
+# Application Initialization 
 
 In the root of your fork of the SDK, create an `app` and `cmd` folder. In this folder, we will create the main file for our application, `app.go` and the repository to handle REST and CLI commands for our app. 
 

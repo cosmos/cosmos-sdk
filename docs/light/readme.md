@@ -20,6 +20,7 @@ LCD will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 2. [**Get Started**](getting_started.md)
 3. [**API**](api.md)
 4. [**Specifications**](specification.md)
+4. [**Update API docs To Swagger-UI**](update_API_docs.md)
 
 ## Overview
 

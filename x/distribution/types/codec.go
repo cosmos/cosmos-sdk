@@ -12,7 +12,7 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgSetWithdrawAddress{}, "cosmos-sdk/MsgModifyWithdrawAddress", nil)
 }
 
-// generic sealed codec to be used throught module
+// generic sealed codec to be used throughout module
 var MsgCdc *codec.Codec
 
 func init() {

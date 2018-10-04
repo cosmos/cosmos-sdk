@@ -17,10 +17,14 @@ func NewTotalAccum(height int64) TotalAccum {
 	}
 }
 
-// update total validator accumulation factor
-func (ta TotalAccum) Update(height int64, accumCreatedPerBlock sdk.Dec) TotalAccum {
+// update total validator accumulation factor for the new height
+// CONTRACT: height should be greater than the old height
+func (ta TotalAccum) UpdateForNewHeight(height int64, accumCreatedPerBlock sdk.Dec) TotalAccum {
 	blocks := height - ta.UpdateHeight
-	ta.Accum = ta.Accum.Add(accumCreatedPerBlock.Mul(sdk.NewDec(blocks)))
+	if blocks < 0 {
+		panic("reverse updated for new height")
+	}
+	ta.Accum = ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)))
 	ta.UpdateHeight = height
 	return ta
 }
@@ -36,7 +40,7 @@ type FeePool struct {
 
 // update total validator accumulation factor
 func (f FeePool) UpdateTotalValAccum(height int64, totalBondedTokens sdk.Dec) FeePool {
-	f.ValAccum = f.ValAccum.Update(height, totalBondedTokens)
+	f.ValAccum = f.ValAccum.UpdateForNewHeight(height, totalBondedTokens)
 	return f
 }
 

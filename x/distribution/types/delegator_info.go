@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// distribution info for a delegation
+// distribution info for a delegation - used to determine entitled rewards
 type DelegatorDistInfo struct {
 	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
 	ValOperatorAddr  sdk.ValAddress `json:"val_operator_addr"`
@@ -36,7 +36,7 @@ func (di DelegatorDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 
 	blocks := height - di.WithdrawalHeight
 	di.WithdrawalHeight = height
-	accum := delegatorShares.Mul(sdk.NewDec(blocks))
+	accum := delegatorShares.MulInt(sdk.NewInt(blocks))
 	withdrawalTokens := vi.Pool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
 	remainingTokens := vi.Pool.Minus(withdrawalTokens)
 
@@ -44,12 +44,4 @@ func (di DelegatorDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	vi.DelAccum.Accum = vi.DelAccum.Accum.Sub(accum)
 
 	return di, vi, fp, withdrawalTokens
-}
-
-//_____________________________________________________________________
-
-// withdraw address for the delegation rewards
-type DelegatorWithdrawInfo struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	WithdrawAddr  sdk.AccAddress `json:"withdraw_addr"`
 }

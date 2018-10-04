@@ -27,7 +27,7 @@ func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) Vali
 
 // update total delegator accumululation
 func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk.Dec) ValidatorDistInfo {
-	vi.DelAccum = vi.DelAccum.Update(height, totalDelShares)
+	vi.DelAccum = vi.DelAccum.UpdateForNewHeight(height, totalDelShares)
 	return vi
 }
 
@@ -44,7 +44,7 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	// update the validators pool
 	blocks := height - vi.FeePoolWithdrawalHeight
 	vi.FeePoolWithdrawalHeight = height
-	accum := sdk.NewDec(blocks).Mul(vdTokens)
+	accum := vdTokens.MulInt(sdk.NewInt(blocks))
 	withdrawalTokens := fp.Pool.MulDec(accum).QuoDec(fp.ValAccum.Accum)
 	remainingTokens := fp.Pool.Minus(withdrawalTokens)
 

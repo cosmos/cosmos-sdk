@@ -22,20 +22,19 @@ func init() {
 
 // Test that a validator is slashed correctly
 // when we discover evidence of infraction
-// TODO fix this test to not be using the same pubkey/address for signing and operating, it's confusing
 func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
 	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
-	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
-	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, val, amt))
+	operatorAddr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
+	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
-	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
-	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
+	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, operatorAddr).GetPower()))
 
 	// handle a signature to set signing info
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
@@ -44,13 +43,13 @@ func TestHandleDoubleSign(t *testing.T) {
 	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 
 	// should be jailed
-	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	require.True(t, sk.Validator(ctx, operatorAddr).GetJailed())
 	// unjail to measure power
-	sk.Unjail(ctx, sdk.ConsAddress(addr)) // TODO distinguish cons address
+	sk.Unjail(ctx, sdk.ConsAddress(val.Address()))
 	// power should be reduced
 	require.Equal(
 		t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))),
-		sk.Validator(ctx, addr).GetPower(),
+		sk.Validator(ctx, operatorAddr).GetPower(),
 	)
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.MaxEvidenceAge(ctx))})
 
@@ -58,74 +57,73 @@ func TestHandleDoubleSign(t *testing.T) {
 	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 	require.Equal(
 		t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))),
-		sk.Validator(ctx, addr).GetPower(),
+		sk.Validator(ctx, operatorAddr).GetPower(),
 	)
 }
 
 // Test that the amount a validator is slashed for multiple double signs
 // is correctly capped by the slashing period in which they were committed
-// TODO properly distinguish between consensus and operator address is variable names
 func TestSlashingPeriodCap(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
 	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
-	addr, amt := addrs[0], sdk.NewInt(amtInt)
-	valConsPubKey, valConsAddr := pks[0], sdk.ConsAddress(pks[0].Address())
-	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, valConsPubKey, amt))
+	operatorAddr, amt := addrs[0], sdk.NewInt(amtInt)
+	valConsPubKey, valConsAddr := pks[0], pks[0].Address()
+	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(operatorAddr, valConsPubKey, amt))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
-	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
-	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
+	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, operatorAddr).GetPower()))
 
 	// handle a signature to set signing info
-	keeper.handleValidatorSignature(ctx, valConsPubKey.Address(), amtInt, true)
+	keeper.handleValidatorSignature(ctx, valConsAddr, amtInt, true)
 
 	// double sign less than max age
-	keeper.handleDoubleSign(ctx, valConsPubKey.Address(), 0, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, valConsAddr, 0, time.Unix(0, 0), amtInt)
 	// should be jailed
-	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	require.True(t, sk.Validator(ctx, operatorAddr).GetJailed())
 	// end block
 	stake.EndBlocker(ctx, sk)
 	// update block height
 	ctx = ctx.WithBlockHeight(int64(1))
 	// unjail to measure power
-	sk.Unjail(ctx, valConsAddr)
+	sk.Unjail(ctx, sdk.ConsAddress(valConsAddr))
 	// end block
 	stake.EndBlocker(ctx, sk)
 	// power should be reduced
 	expectedPower := sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
-	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, expectedPower, sk.Validator(ctx, operatorAddr).GetPower())
 
 	// double sign again, same slashing period
-	keeper.handleDoubleSign(ctx, valConsPubKey.Address(), 0, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, valConsAddr, 0, time.Unix(0, 0), amtInt)
 	// should be jailed
-	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	require.True(t, sk.Validator(ctx, operatorAddr).GetJailed())
 	// end block
 	stake.EndBlocker(ctx, sk)
 	// update block height
 	ctx = ctx.WithBlockHeight(int64(2))
 	// unjail to measure power
-	sk.Unjail(ctx, valConsAddr)
+	sk.Unjail(ctx, sdk.ConsAddress(valConsAddr))
 	// end block
 	stake.EndBlocker(ctx, sk)
 	// power should be equal, no more should have been slashed
 	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
-	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, expectedPower, sk.Validator(ctx, operatorAddr).GetPower())
 
 	// double sign again, new slashing period
-	keeper.handleDoubleSign(ctx, valConsPubKey.Address(), 2, time.Unix(0, 0), amtInt)
+	keeper.handleDoubleSign(ctx, valConsAddr, 2, time.Unix(0, 0), amtInt)
 	// should be jailed
-	require.True(t, sk.Validator(ctx, addr).GetJailed())
+	require.True(t, sk.Validator(ctx, operatorAddr).GetJailed())
 	// unjail to measure power
-	sk.Unjail(ctx, valConsAddr)
+	sk.Unjail(ctx, sdk.ConsAddress(valConsAddr))
 	// end block
 	stake.EndBlocker(ctx, sk)
 	// power should be reduced
 	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(18).Quo(sdk.NewDec(20)))
-	require.Equal(t, expectedPower, sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, expectedPower, sk.Validator(ctx, operatorAddr).GetPower())
 }
 
 // Test a validator through uptime, downtime, revocation,

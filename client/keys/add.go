@@ -168,10 +168,11 @@ type NewKeyBody struct {
 func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	var kb keys.Keybase
 	var m NewKeyBody
+	var msg string
 
 	kb, err := GetKeyBase()
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
@@ -185,13 +186,15 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if m.Name == "" {
+		msg = "You have to specify a name for the locally stored account."
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("You have to specify a name for the locally stored account."))
+		w.Write([]byte(msg))
 		return
 	}
 	if m.Password == "" {
+		msg = "You have to specify a password for the locally stored account."
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("You have to specify a password for the locally stored account."))
+		w.Write([]byte(msg))
 		return
 	}
 
@@ -199,8 +202,9 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	infos, err := kb.List()
 	for _, i := range infos {
 		if i.GetName() == m.Name {
+			msg = fmt.Sprintf("Account with name %s already exists.", m.Name)
 			w.WriteHeader(http.StatusConflict)
-			w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", m.Name)))
+			w.Write([]byte(msg))
 			return
 		}
 	}
@@ -233,6 +237,7 @@ func AddNewKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(bz)
 }
 
@@ -256,5 +261,8 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	algo := keys.SigningAlgo(algoType)
 
 	seed := getSeed(algo)
-	w.Write([]byte(seed))
+	bz := []byte(seed)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(bz)
 }

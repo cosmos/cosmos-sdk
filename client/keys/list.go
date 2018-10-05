@@ -38,32 +38,35 @@ func runListCmd(cmd *cobra.Command, args []string) error {
 func QueryKeysRequestHandler(w http.ResponseWriter, r *http.Request) {
 	kb, err := GetKeyBase()
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 	infos, err := kb.List()
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 	// an empty list will be JSONized as null, but we want to keep the empty list
 	if len(infos) == 0 {
-		w.Write([]byte("[]"))
+		w.WriteHeader(http.StatusNoContent)
+		w.Write([]byte("No content for keys"))
 		return
 	}
 	keysOutput, err := Bech32KeysOutput(infos)
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 	output, err := json.MarshalIndent(keysOutput, "", "  ")
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)
 }

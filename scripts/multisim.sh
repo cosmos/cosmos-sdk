@@ -28,7 +28,7 @@ for seed in ${seeds[@]}; do
   sim $seed &
   pids[${i}]=$!
   i=$(($i+1))
-  sleep 0.1 # start in order, nicer logs
+  sleep 5 # start in order, nicer logs
 done
 
 echo "Simulation processes spawned, waiting for completion..."

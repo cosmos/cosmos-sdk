@@ -41,7 +41,7 @@ BREAKING CHANGES
     * [x/gov] [#2195] Governance uses BFT Time
     * [x/gov] \#2256 Removed slashing for governance non-voting validators
     * [simulation] \#2162 Added back correct supply invariants
-    
+
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0
       * Validator set updates delayed by one block
@@ -122,6 +122,7 @@ IMPROVEMENTS
 
 * Gaia REST API (`gaiacli advanced rest-server`)
     * [x/stake] [\#2000](https://github.com/cosmos/cosmos-sdk/issues/2000) Added tests for new staking endpoints
+    * [gaia-lite] [\#2445](https://github.com/cosmos/cosmos-sdk/issues/2445) Standarized REST error responses
 
 * Gaia CLI  (`gaiacli`)
     * [cli] #2060 removed `--select` from `block` command

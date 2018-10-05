@@ -68,7 +68,7 @@ func (k Keeper) unmarshalSlashingPeriodKeyValue(key []byte, value []byte) Valida
 	var slashingPeriodValue ValidatorSlashingPeriodValue
 	k.cdc.MustUnmarshalBinary(value, &slashingPeriodValue)
 	address := sdk.ConsAddress(key[1 : 1+sdk.AddrLen])
-	startHeight := int64(binary.LittleEndian.Uint64(key[1+sdk.AddrLen : 1+sdk.AddrLen+8]))
+	startHeight := int64(binary.LittleEndian.Uint64(key[1+sdk.AddrLen:1+sdk.AddrLen+8]) - 1)
 	return ValidatorSlashingPeriod{
 		ValidatorAddr: address,
 		StartHeight:   startHeight,

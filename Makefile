@@ -164,7 +164,7 @@ test_sim_gaia_fast:
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@sh scripts/multisim.sh 10
+	@bash scripts/multisim.sh 10
 
 SIM_NUM_BLOCKS ?= 210
 SIM_BLOCK_SIZE ?= 200

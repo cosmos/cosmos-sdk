@@ -26,6 +26,8 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
+	// validator added pre-genesis
+	ctx = ctx.WithBlockHeight(-1)
 	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
 	operatorAddr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)

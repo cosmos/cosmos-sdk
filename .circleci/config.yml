@@ -136,6 +136,24 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make test_sim_gaia_fast
 
+  test_sim_gaia_multi_seed:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
+      - run:
+          name: Test multi-seed Gaia simulation
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_sim_gaia_multi_seed
+
   test_cover:
     <<: *defaults
     parallelism: 4

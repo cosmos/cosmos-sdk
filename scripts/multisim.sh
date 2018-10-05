@@ -6,9 +6,9 @@ blocks=$1
 echo "Running multi-seed simulation with seeds ${seeds[@]}"
 echo "Running $blocks blocks per seed"
 echo "Edit scripts/multisim.sh to add new seeds. Keeping parameters in the file makes failures easy to reproduce."
-echo "This script will kill all sub-simulations on SIGINT/SIGTERM/EXIT (i.e. Ctrl-C)."
+echo "This script will kill all sub-simulations on SIGINT/SIGTERM (i.e. Ctrl-C)."
 
-trap 'kill $(jobs -pr)' SIGINT SIGTERM EXIT
+trap 'kill $(jobs -pr)' SIGINT SIGTERM
 
 tmpdir=$(mktemp -d)
 echo "Using temporary log directory: $tmpdir"

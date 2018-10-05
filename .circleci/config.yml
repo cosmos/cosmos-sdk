@@ -258,6 +258,9 @@ workflows:
       - test_sim_gaia_fast:
           requires:
             - setup_dependencies
+      - test_sim_gaia_multi_seed:
+          requires:
+            - setup_dependencies
       - test_cover:
           requires:
             - setup_dependencies

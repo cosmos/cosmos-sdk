@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // key prefix bytes
@@ -34,8 +35,8 @@ func GetValidatorSlashingPeriodPrefix(v sdk.ConsAddress) []byte {
 // stored by *Tendermint* address (not operator address) followed by start height
 func GetValidatorSlashingPeriodKey(v sdk.ConsAddress, startHeight int64) []byte {
 	b := make([]byte, 8)
-	// this needs to be height + 1 because the slashing period for genesis validators starts at height -1
-	binary.BigEndian.PutUint64(b, uint64(startHeight+1))
+	// this needs to be height + ValidatorUpdateDelay because the slashing period for genesis validators starts at height -ValidatorUpdateDelay
+	binary.BigEndian.PutUint64(b, uint64(startHeight+stake.ValidatorUpdateDelay))
 	return append(GetValidatorSlashingPeriodPrefix(v), b...)
 }
 

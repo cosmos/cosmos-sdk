@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // Cap an infraction's slash amount by the slashing period in which it was committed
@@ -68,7 +69,7 @@ func (k Keeper) unmarshalSlashingPeriodKeyValue(key []byte, value []byte) Valida
 	var slashingPeriodValue ValidatorSlashingPeriodValue
 	k.cdc.MustUnmarshalBinary(value, &slashingPeriodValue)
 	address := sdk.ConsAddress(key[1 : 1+sdk.AddrLen])
-	startHeight := int64(binary.BigEndian.Uint64(key[1+sdk.AddrLen:1+sdk.AddrLen+8]) - 1)
+	startHeight := int64(binary.BigEndian.Uint64(key[1+sdk.AddrLen:1+sdk.AddrLen+8]) - uint64(stake.ValidatorUpdateDelay))
 	return ValidatorSlashingPeriod{
 		ValidatorAddr: address,
 		StartHeight:   startHeight,

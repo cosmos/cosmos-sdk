@@ -194,6 +194,24 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
+	// validator should have been slashed
+	require.Equal(t, int64(99), validator.GetTokens().RoundInt64())
+
+	// 502nd block *also* missed (since the LastCommit would have still included the just-unbonded validator)
+	height++
+	ctx = ctx.WithBlockHeight(height)
+	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, false)
+	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
+	require.True(t, found)
+	require.Equal(t, int64(0), info.StartHeight)
+	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-2, info.SignedBlocksCounter)
+
+	// end block
+	stake.EndBlocker(ctx, sk)
+
+	// validator should not have been slashed any more, since it was already jailed
+	require.Equal(t, int64(99), validator.GetTokens().RoundInt64())
+
 	// unrevocation should fail prior to jail expiration
 	got = slh(ctx, NewMsgUnjail(addr))
 	require.False(t, got.IsOK())
@@ -219,7 +237,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, height, info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
+	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-2, info.SignedBlocksCounter)
 
 	// validator should not be immediately jailed again
 	height++

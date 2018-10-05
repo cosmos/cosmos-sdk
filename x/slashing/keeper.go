@@ -56,23 +56,26 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
 
-	// Cap the amount slashed to the penalty for the worst infraction
-	// within the slashing period when this infraction was committed
-	fraction := k.SlashFractionDoubleSign(ctx)
-	revisedFraction := k.capBySlashingPeriod(ctx, consAddr, fraction, infractionHeight)
-	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
-
 	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
 	// Note that this *can* result in a "distributionHeight" of -1,
 	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
 	distributionHeight := infractionHeight - ValidatorUpdateDelay
 
+	// Cap the amount slashed to the penalty for the worst infraction
+	// within the slashing period when this infraction was committed
+	fraction := k.SlashFractionDoubleSign(ctx)
+	revisedFraction := k.capBySlashingPeriod(ctx, consAddr, fraction, distributionHeight)
+	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
+
 	// Slash validator
 	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, revisedFraction)
 
-	// Jail validator
-	k.validatorSet.Jail(ctx, consAddr)
+	// Jail validator if not already jailed
+	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
+	if !validator.GetJailed() {
+		k.validatorSet.Jail(ctx, consAddr)
+	}
 
 	// Set validator jail duration
 	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)

@@ -197,8 +197,10 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
 
+	slashAmt := sdk.NewDec(amtInt).Mul(keeper.SlashFractionDowntime(ctx)).RoundInt64()
+
 	// validator should have been slashed
-	require.Equal(t, int64(99), validator.GetTokens().RoundInt64())
+	require.Equal(t, amtInt-slashAmt, validator.GetTokens().RoundInt64())
 
 	// 502nd block *also* missed (since the LastCommit would have still included the just-unbonded validator)
 	height++
@@ -214,14 +216,15 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should not have been slashed any more, since it was already jailed
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, int64(99), validator.GetTokens().RoundInt64())
+	require.Equal(t, amtInt-slashAmt, validator.GetTokens().RoundInt64())
 
 	// 502nd block *double signed* (oh no!)
 	keeper.handleDoubleSign(ctx, val.Address(), height, ctx.BlockHeader().Time, amtInt)
 
 	// validator should have been slashed
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	require.Equal(t, int64(94), validator.GetTokens().RoundInt64())
+	secondSlashAmt := sdk.NewDec(amtInt).Mul(keeper.SlashFractionDoubleSign(ctx)).RoundInt64()
+	require.Equal(t, amtInt-slashAmt-secondSlashAmt, validator.GetTokens().RoundInt64())
 
 	// unrevocation should fail prior to jail expiration
 	got = slh(ctx, NewMsgUnjail(addr))
@@ -241,8 +244,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// validator should have been slashed
 	pool = sk.GetPool(ctx)
-	slashAmt := sdk.NewDec(amtInt).Mul(keeper.SlashFractionDowntime(ctx)).RoundInt64()
-	require.Equal(t, amtInt-slashAmt-5, pool.BondedTokens.RoundInt64())
+	require.Equal(t, amtInt-slashAmt-secondSlashAmt, pool.BondedTokens.RoundInt64())
 
 	// validator start height should have been changed
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))

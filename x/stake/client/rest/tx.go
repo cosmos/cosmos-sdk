@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -79,15 +78,13 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		err = cdc.UnmarshalJSON(body, &req)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -98,8 +95,7 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 
 		info, err := kb.Get(baseReq.Name)
 		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 
@@ -114,13 +110,13 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 		for _, msg := range req.Delegations {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
 			valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
@@ -141,7 +137,7 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 		for _, msg := range req.BeginRedelegates {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
@@ -152,18 +148,18 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 
 			valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 			valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
 			shares, err := sdk.NewDecFromStr(msg.SharesAmount)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode shares amount. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
@@ -180,19 +176,19 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 		for _, msg := range req.CompleteRedelegates {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
 			valSrcAddr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
 			valDstAddr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
@@ -213,7 +209,7 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 		for _, msg := range req.BeginUnbondings {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
@@ -224,13 +220,13 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 
 			valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
 			shares, err := sdk.NewDecFromStr(msg.SharesAmount)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode shares amount. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
@@ -246,13 +242,13 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 		for _, msg := range req.CompleteUnbondings {
 			delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode delegator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 
 			valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Couldn't decode validator. Error: %s", err.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
 

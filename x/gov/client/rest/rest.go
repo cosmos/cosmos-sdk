@@ -198,6 +198,7 @@ func queryProposalHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -227,7 +228,6 @@ func queryDepositHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 
 		depositerAddr, err := sdk.AccAddressFromBech32(bechDepositerAddr)
 		if err != nil {
-			err := errors.Errorf("'%s' needs to be bech32 encoded", RestDepositer)
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -251,20 +251,7 @@ func queryDepositHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			return
 		}
 
-		var deposit gov.Deposit
-		cdc.UnmarshalJSON(res, &deposit)
-		if deposit.Empty() {
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinary(gov.QueryProposalParams{params.ProposalID}))
-			if err != nil || len(res) == 0 {
-				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
-				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-				return
-			}
-			err = errors.Errorf("depositer [%s] did not deposit on proposalID [%d]", bechDepositerAddr, proposalID)
-			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-			return
-		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -294,7 +281,6 @@ func queryVoteHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 
 		voterAddr, err := sdk.AccAddressFromBech32(bechVoterAddr)
 		if err != nil {
-			err := errors.Errorf("'%s' needs to be bech32 encoded", RestVoter)
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -317,24 +303,7 @@ func queryVoteHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			return
 		}
 
-		var vote gov.Vote
-		cdc.UnmarshalJSON(res, &vote)
-		if vote.Empty() {
-			bz, err := cdc.MarshalJSON(gov.QueryProposalParams{params.ProposalID})
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-				return
-			}
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
-			if err != nil || len(res) == 0 {
-				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
-				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-				return
-			}
-			err = errors.Errorf("voter [%s] did not deposit on proposalID [%d]", bechVoterAddr, proposalID)
-			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-			return
-		}
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -373,6 +342,7 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -390,7 +360,6 @@ func queryProposalsWithParameterFn(cdc *codec.Codec) http.HandlerFunc {
 		if len(bechVoterAddr) != 0 {
 			voterAddr, err := sdk.AccAddressFromBech32(bechVoterAddr)
 			if err != nil {
-				err := errors.Errorf("'%s' needs to be bech32 encoded", RestVoter)
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
@@ -400,7 +369,6 @@ func queryProposalsWithParameterFn(cdc *codec.Codec) http.HandlerFunc {
 		if len(bechDepositerAddr) != 0 {
 			depositerAddr, err := sdk.AccAddressFromBech32(bechDepositerAddr)
 			if err != nil {
-				err := errors.Errorf("'%s' needs to be bech32 encoded", RestDepositer)
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
@@ -410,7 +378,6 @@ func queryProposalsWithParameterFn(cdc *codec.Codec) http.HandlerFunc {
 		if len(strProposalStatus) != 0 {
 			proposalStatus, err := gov.ProposalStatusFromString(strProposalStatus)
 			if err != nil {
-				err := errors.Errorf("'%s' is not a valid Proposal Status", strProposalStatus)
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
@@ -438,6 +405,7 @@ func queryProposalsWithParameterFn(cdc *codec.Codec) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -480,6 +448,7 @@ func queryTallyOnProposalHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }

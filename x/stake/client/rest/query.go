@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -140,7 +139,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		node, err := cliCtx.GetNode()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Couldn't get current Node information. Error: %s", err.Error())))
+			w.Write([]byte(err.Error()))
 			return
 		}
 

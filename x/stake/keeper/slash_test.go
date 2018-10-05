@@ -191,6 +191,34 @@ func TestSlashAtFutureHeight(t *testing.T) {
 	require.Panics(t, func() { keeper.Slash(ctx, consAddr, 1, 10, fraction) })
 }
 
+// test slash at a negative height
+// this just represents pre-genesis and should have the same effect as slashing at height 0
+func TestSlashAtNegativeHeight(t *testing.T) {
+	ctx, keeper, _ := setupHelper(t, 10)
+	consAddr := sdk.ConsAddress(PKs[0].Address())
+	fraction := sdk.NewDecWithPrec(5, 1)
+
+	oldPool := keeper.GetPool(ctx)
+	validator, found := keeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+	keeper.Slash(ctx, consAddr, -2, 10, fraction)
+
+	// read updated state
+	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
+	require.True(t, found)
+	newPool := keeper.GetPool(ctx)
+
+	// end block
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
+
+	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
+	// power decreased
+	require.Equal(t, sdk.NewDec(5), validator.GetPower())
+	// pool bonded shares decreased
+	require.Equal(t, sdk.NewDec(5).RoundInt64(), oldPool.BondedTokens.Sub(newPool.BondedTokens).RoundInt64())
+}
+
 // tests Slash at the current height
 func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	ctx, keeper, _ := setupHelper(t, 10)

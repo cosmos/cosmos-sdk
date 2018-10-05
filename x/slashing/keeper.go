@@ -56,16 +56,21 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
 
+	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
+	// Note that this *can* result in a "distributionHeight" of -1,
+	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
+	// That's fine since this is just used to filter unbonding delegations & redelegations.
+	distributionHeight := infractionHeight - ValidatorUpdateDelay
+
 	// Cap the amount slashed to the penalty for the worst infraction
 	// within the slashing period when this infraction was committed
 	fraction := k.SlashFractionDoubleSign(ctx)
-	revisedFraction := k.capBySlashingPeriod(ctx, consAddr, fraction, infractionHeight)
+	revisedFraction := k.capBySlashingPeriod(ctx, consAddr, fraction, distributionHeight)
 	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
 
 	// Slash validator
-	k.validatorSet.Slash(ctx, consAddr, infractionHeight, power, revisedFraction)
+	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, revisedFraction)
 
-	// Jail validator if not already in jail
 	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 	if !validator.GetJailed() {
 		k.validatorSet.Jail(ctx, consAddr)
@@ -126,7 +131,13 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
-			k.validatorSet.Slash(ctx, consAddr, height, power, k.SlashFractionDowntime(ctx))
+			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
+			// and subtract an additional 1 since this is the LastCommit.
+			// Note that this *can* result in a "distributionHeight" of -1 or -2,
+			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
+			// That's fine since this is just used to filter unbonding delegations & redelegations.
+			distributionHeight := height - ValidatorUpdateDelay - 1
+			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
 		} else {

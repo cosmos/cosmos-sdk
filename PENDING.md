@@ -28,6 +28,7 @@ BREAKING CHANGES
     * [x/stake, x/slashing] [#1305](https://github.com/cosmos/cosmos-sdk/issues/1305) - Rename "revoked" to "jailed"
     * [x/stake] [#1676] Revoked and jailed validators put into the unbonding state
     * [x/stake] [#1877] Redelegations/unbonding-delegation from unbonding validator have reduced time
+    * [x/slashing] \#1789 Slashing changes for Tendermint validator set offset (NextValSet)
     * [x/stake] [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Validator
     operator type has now changed to `sdk.ValAddress`
     * [x/stake] [\#2221](https://github.com/cosmos/cosmos-sdk/issues/2221) New
@@ -137,6 +138,7 @@ IMPROVEMENTS
     * [genesis] \#2229 Ensure that there are no duplicate accounts or validators in the genesis state.
     * Add SDK validation to `config.toml` (namely disabling `create_empty_blocks`) \#1571
     * \#1941(https://github.com/cosmos/cosmos-sdk/issues/1941) Version is now inferred via `git describe --tags`.
+    * [x/distribution] \#1671 add distribution types and tests
 
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.

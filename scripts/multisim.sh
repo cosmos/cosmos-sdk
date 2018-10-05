@@ -1,12 +1,14 @@
 #!/bin/bash
 
 seeds=(1 2 4 7 9 20 32 123 124 582 1893 2989 3012 4728 37827 981928 87821 891823782 989182 89182391)
+blocks=$1
 
-echo "Running multi-seed simulation with seeds: ${seeds[@]}"
+echo "Running multi-seed simulation with seeds ${seeds[@]}"
+echo "Running $blocks blocks per seed"
 echo "Edit scripts/multisim.sh to add new seeds. Keeping parameters in the file makes failures easy to reproduce."
-echo "This script will kill all sub-simulations on SIGINT/SIGTERM/EXIT (i.e. Ctrl-C)."
+echo "This script will kill all sub-simulations on SIGINT/SIGTERM (i.e. Ctrl-C)."
 
-trap 'kill $(jobs -pr)' SIGINT SIGTERM EXIT
+trap 'kill $(jobs -pr)' SIGINT SIGTERM
 
 tmpdir=$(mktemp -d)
 echo "Using temporary log directory: $tmpdir"
@@ -16,7 +18,7 @@ sim() {
 	echo "Running full Gaia simulation with seed $seed. This may take awhile!"
   file="$tmpdir/gaia-simulation-seed-$seed-date-$(date -Iseconds -u).stdout"
   echo "Writing stdout to $file..."
-	go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=200 \
+	go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=$blocks \
     -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$seed -v -timeout 24h > $file
 }
 

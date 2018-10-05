@@ -124,11 +124,12 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetEndBlocker(app.EndBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keyDistr,
 		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.MountStoresTransient(app.tkeyParams, app.tkeyStake, app.tkeyDistr)
+	app.SetEndBlocker(app.EndBlocker)
+
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -168,7 +169,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 
 	// distribute rewards
-	//distr.EndBlocker(ctx, app.distrKeeper)
+	distr.EndBlocker(ctx, app.distrKeeper)
 
 	// Add these new validators to the addr -> pubkey map.
 	app.slashingKeeper.AddValidators(ctx, validatorUpdates)

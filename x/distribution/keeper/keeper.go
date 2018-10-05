@@ -33,6 +33,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ps params.Setter, ck ty
 		storeKey:            key,
 		storeTKey:           tkey,
 		cdc:                 cdc,
+		ps:                  ps,
 		bankKeeper:          ck,
 		stakeKeeper:         sk,
 		feeCollectionKeeper: fck,
@@ -94,6 +95,6 @@ func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
 }
 
 // nolint: errcheck
-func (k Keeper) setCommunityTax(ctx sdk.Context, communityTax sdk.Dec) {
+func (k Keeper) SetCommunityTax(ctx sdk.Context, communityTax sdk.Dec) {
 	k.ps.Set(ctx, ParamStoreKeyCommunityTax, &communityTax)
 }

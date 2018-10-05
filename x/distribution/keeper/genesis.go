@@ -34,7 +34,7 @@ func (k Keeper) GetAllDDIs(ctx sdk.Context) (ddis []types.DelegatorDistInfo) {
 }
 
 // Get the set of all delegator-withdraw addresses with no limits, used during genesis dump
-func (k Keeper) GetAllDWs(ctx sdk.Context) (dws []types.DelegatorWithdrawInfo) {
+func (k Keeper) GetAllDWIs(ctx sdk.Context) (dwis []types.DelegatorWithdrawInfo) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, DelegatorDistInfoKey)
 	defer iterator.Close()
@@ -44,7 +44,7 @@ func (k Keeper) GetAllDWs(ctx sdk.Context) (dws []types.DelegatorWithdrawInfo) {
 			DelegatorAddr: sdk.AccAddress(iterator.Key()),
 			WithdrawAddr:  sdk.AccAddress(iterator.Value()),
 		}
-		dws = append(dws, dw)
+		dwis = append(dwis, dw)
 	}
-	return dws
+	return dwis
 }

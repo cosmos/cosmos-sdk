@@ -8,6 +8,7 @@ import (
 // InitGenesis sets distribution information for genesis
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetFeePool(ctx, data.FeePool)
+	keeper.SetCommunityTax(ctx, data.CommunityTax)
 
 	for _, vdi := range data.ValidatorDistInfos {
 		keeper.SetValidatorDistInfo(ctx, vdi)
@@ -24,14 +25,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 // GenesisState will contain the pool, and validator/delegator distribution info's
 func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	feePool := keeper.GetFeePool(ctx)
+	communityTax := keeper.GetCommunityTax(ctx)
 	vdis := keeper.GetAllVDIs(ctx)
 	ddis := keeper.GetAllDDIs(ctx)
-	dws := keeper.GetAllDWs(ctx)
-
-	return GenesisState{
-		FeePool:                feePool,
-		ValidatorDistInfos:     vdis,
-		DelegatorDistInfos:     ddis,
-		DelegatorWithdrawInfos: dws,
-	}
+	dwis := keeper.GetAllDWIs(ctx)
+	return NewGenesisState(feePool, communityTax, vdis, ddis, dwis)
 }

@@ -1,4 +1,4 @@
-# Load Balancing Module - WIP
+# Load Balancing
 
 The LCD will be an important bridge between service providers and cosmos blockchain network. Suppose
 a service provider wants to monitor token information for millions of accounts. Then it has to keep
@@ -7,14 +7,12 @@ requests to full node to get token information and necessary proof which will co
 computing and bandwidth resource. Too many requests to a single full node may result in some bad
 situations:
 
-```text
 1. The full node crash possibility increases.
 2. The reply delay increases.
 3. The system reliability will decrease.
 4. As the full node may belong to other people or associates, they may deny too frequent access from a single client.
-```
 
-It is very urgent to solve this problems. Here we consider to import load balancing into LCD. By the
+It is very urgent to solve this problem. Here we consider to import load balancing into LCD. By the
 help of load balancing, LCD can distribute millions of requests to a set of full nodes. Thus the
 load of each full node won't be too heavy and the unavailable full nodes will be wiped out of query
 list. In addition, the system reliability will increase.
@@ -147,7 +145,7 @@ probability to be selected which are determined by their weight.
 
 ### Hash
 
-//TODO
+Forthcoming
 
 ## Load Balancing Manager
 

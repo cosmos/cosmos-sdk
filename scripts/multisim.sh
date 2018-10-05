@@ -1,6 +1,6 @@
 #!/bin/bash
 
-seeds=(1 2 4 7 9 20 32 123 4728 37827 981928 87821 891823782 989182 89182391)
+seeds=(1 2 4 7 9 20 32 123 124 582 1893 2989 3012 4728 37827 981928 87821 891823782 989182 89182391)
 blocks=$1
 
 echo "Running multi-seed simulation with seeds ${seeds[@]}"
@@ -28,7 +28,7 @@ for seed in ${seeds[@]}; do
   sim $seed &
   pids[${i}]=$!
   i=$(($i+1))
-  sleep 5 # start in order, nicer logs
+  sleep 10 # start in order, nicer logs
 done
 
 echo "Simulation processes spawned, waiting for completion..."
@@ -40,11 +40,12 @@ for pid in ${pids[*]}; do
   wait $pid
   last=$?
   seed=${seeds[${i}]}
-  if [ $last -ne 0 ]; then
+  if [ $last -ne 0 ]
+  then
     echo "Simulation with seed $seed failed!"
     code=1
   else
-    echo "Simulation with seed $seed OK!"
+    echo "Simulation with seed $seed OK"
   fi
   i=$(($i+1))
 done

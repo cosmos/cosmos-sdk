@@ -42,6 +42,7 @@ BREAKING CHANGES
     * [x/gov] [#2195] Governance uses BFT Time
     * [x/gov] \#2256 Removed slashing for governance non-voting validators
     * [simulation] \#2162 Added back correct supply invariants
+    * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0

@@ -35,7 +35,7 @@ func GetValidatorSlashingPeriodPrefix(v sdk.ConsAddress) []byte {
 func GetValidatorSlashingPeriodKey(v sdk.ConsAddress, startHeight int64) []byte {
 	b := make([]byte, 8)
 	// this needs to be height + 1 because the slashing period for genesis validators starts at height -1
-	binary.LittleEndian.PutUint64(b, uint64(startHeight+1))
+	binary.BigEndian.PutUint64(b, uint64(startHeight+1))
 	return append(GetValidatorSlashingPeriodPrefix(v), b...)
 }
 

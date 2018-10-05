@@ -306,30 +306,6 @@ func PrefixEndBytes(prefix []byte) []byte {
 	return end
 }
 
-// PrefixStartBytes returns the []byte that would start a
-// range query for all []byte with a certain prefix
-func PrefixStartBytes(prefix []byte) []byte {
-	if prefix == nil {
-		return nil
-	}
-
-	end := make([]byte, len(prefix))
-	copy(end, prefix)
-
-	for {
-		if end[len(end)-1] != byte(0) {
-			end[len(end)-1]--
-			break
-		} else {
-			end = end[:len(end)-1]
-			if len(end) == 0 {
-				panic("could not subtract")
-			}
-		}
-	}
-	return end
-}
-
 // TransientStoreKey is used for indexing transient stores in a MultiStore
 type TransientStoreKey struct {
 	name string

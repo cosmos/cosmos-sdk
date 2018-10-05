@@ -71,6 +71,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Slash validator
 	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, revisedFraction)
 
+	// Jail validator if not already jailed
 	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 	if !validator.GetJailed() {
 		k.validatorSet.Jail(ctx, consAddr)

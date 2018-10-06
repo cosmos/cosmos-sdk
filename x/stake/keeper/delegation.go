@@ -447,10 +447,10 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, valSrcAddr sd
 
 		// the longest wait - just unbonding period from now
 		minTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
-		height = ctx.BlockHeader().Height
+		height = ctx.BlockHeight()
 		return minTime, height, false
 
-	case validator.IsUnbonded(ctx):
+	case validator.Status == sdk.Unbonded:
 		return minTime, height, true
 
 	case validator.Status == sdk.Unbonding:

@@ -35,6 +35,22 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.ValidatorUpdate) {
 	endBlockerTags := sdk.EmptyTags()
 
+	matureUnbondingValidators := k.DequeueAllMatureValidatorQueue(ctx, ctx.BlockHeader().Time)
+	for _, valAddr := range matureUnbondingValidators {
+		val, found := k.GetValidator(ctx, valAddr)
+		if !found || val.GetStatus() != sdk.Unbonding {
+			continue
+		}
+		k.UnbondingToUnbonded(ctx, val)
+
+		// endBlockerTags.AppendTags(sdk.NewTags(
+		// 	tags.Action, tags.,
+		// 	tags.V, []byte(dvvTriplet.DelegatorAddr.String()),
+		// 	tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
+		// 	tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
+		// ))
+	}
+
 	matureUnbonds := k.DequeueAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvPair := range matureUnbonds {
 		err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddr, dvPair.ValidatorAddr)

@@ -8,6 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Additional capicity to be allocated for Store.space
+// So we don't have to allocate extra space each time appending to the key
+const extraKeyCap = 20
+
 // Individual parameter store for each keeper
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
@@ -20,23 +24,30 @@ type Store struct {
 }
 
 // NewStore constructs a store with namestore
-func NewStore(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string) Store {
-	return Store{
+func NewStore(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string) (res Store) {
+	res = Store{
 		cdc:  cdc,
 		key:  key,
 		tkey: tkey,
-
-		space: []byte(space),
 	}
+
+	spacebz := []byte(space)
+	res.space = make([]byte, len(spacebz), len(spacebz)+extraKeyCap)
+	copy(res.space, spacebz)
+	return
 }
 
-// Returns a KVStore identical with ctx,TransientStore(s.key).Prefix()
+// Returns a KVStore identical with ctx.KVStore(s.key).Prefix()
 func (s Store) kvStore(ctx sdk.Context) sdk.KVStore {
+	// append here is safe, appends within a function won't cause
+	// weird side effects when its singlethreaded
 	return ctx.KVStore(s.key).Prefix(append(s.space, '/'))
 }
 
 // Returns a KVStore identical with ctx.TransientStore(s.tkey).Prefix()
 func (s Store) transientStore(ctx sdk.Context) sdk.KVStore {
+	// append here is safe, appends within a function won't cause
+	// weird side effects when its singlethreaded
 	return ctx.TransientStore(s.tkey).Prefix(append(s.space, '/'))
 }
 
@@ -123,14 +134,14 @@ func (s Store) SetRaw(ctx sdk.Context, key []byte, param []byte) {
 
 // Get to ParamStruct
 func (s Store) GetStruct(ctx sdk.Context, ps ParamStruct) {
-	for _, pair := range ps.KeyFieldPairs() {
+	for _, pair := range ps.KeyValuePairs() {
 		s.Get(ctx, pair.Key, pair.Field)
 	}
 }
 
 // Set from ParamStruct
 func (s Store) SetStruct(ctx sdk.Context, ps ParamStruct) {
-	for _, pair := range ps.KeyFieldPairs() {
+	for _, pair := range ps.KeyValuePairs() {
 		// pair.Field is a pointer to the field, so indirecting the ptr.
 		// go-amino automatically handles it but just for sure,
 		// since SetStruct is meant to be used in InitGenesis

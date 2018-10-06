@@ -25,6 +25,8 @@ var (
 	KeyBondDenom           = []byte("BondDenom")
 )
 
+var _ params.ParamStruct = (*Params)(nil)
+
 // Params defines the high level settings for staking
 type Params struct {
 	InflationRateChange sdk.Dec `json:"inflation_rate_change"` // maximum annual change in inflation rate
@@ -39,8 +41,8 @@ type Params struct {
 }
 
 // Implements params.ParamStruct
-func (p *Params) KeyFieldPairs() params.KeyFieldPairs {
-	return params.KeyFieldPairs{
+func (p *Params) KeyValuePairs() params.KeyValuePairs {
+	return params.KeyValuePairs{
 		{KeyInflationRateChange, &p.InflationRateChange},
 		{KeyInflationMax, &p.InflationMax},
 		{KeyInflationMin, &p.InflationMin},

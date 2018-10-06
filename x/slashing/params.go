@@ -28,15 +28,15 @@ type Params struct {
 	MaxEvidenceAge           time.Duration `json:"max-evidence-age"`
 	SignedBlocksWindow       int64         `json:"signed-blocks-window"`
 	MinSignedPerWindow       sdk.Dec       `json:"min-signed-per-window"`
-	DoubleSignUnbondDuration time.Duration `json:"doublesign-unbond-duration"`
+	DoubleSignUnbondDuration time.Duration `json:"double-sign-unbond-duration"`
 	DowntimeUnbondDuration   time.Duration `json:"downtime-unbond-duration"`
-	SlashFractionDoubleSign  sdk.Dec       `json:"slash-fraction-doublesign"`
+	SlashFractionDoubleSign  sdk.Dec       `json:"slash-fraction-double-sign"`
 	SlashFractionDowntime    sdk.Dec       `json:"slash-fraction-downtime"`
 }
 
 // Implements params.ParamStruct
-func (p *Params) KeyFieldPairs() params.KeyFieldPairs {
-	return params.KeyFieldPairs{
+func (p *Params) KeyValuePairs() params.KeyValuePairs {
+	return params.KeyValuePairs{
 		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},
 		{KeySignedBlocksWindow, &p.SignedBlocksWindow},
 		{KeyMinSignedPerWindow, &p.MinSignedPerWindow},

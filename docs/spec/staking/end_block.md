@@ -1,6 +1,6 @@
 # End-Block 
 
-## Validator Set Changes
+## Unbonding Validator Queue
 
 For all unbonding validators that have finished their unbonding period, this switches their validator.Status
 from sdk.Unbonding to sdk.Unbonded

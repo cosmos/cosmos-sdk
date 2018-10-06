@@ -42,13 +42,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 			continue
 		}
 		k.UnbondingToUnbonded(ctx, val)
-
-		// endBlockerTags.AppendTags(sdk.NewTags(
-		// 	tags.Action, tags.,
-		// 	tags.V, []byte(dvvTriplet.DelegatorAddr.String()),
-		// 	tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
-		// 	tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
-		// ))
 	}
 
 	matureUnbonds := k.DequeueAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)

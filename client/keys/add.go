@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -61,7 +60,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		name = "inmemorykey"
 	} else {
 		if len(args) != 1 || len(args[0]) == 0 {
-			return errors.New("you must provide a name for the key")
+			return errMissingName()
 		}
 		name = args[0]
 		kb, err = GetKeyBase()
@@ -196,12 +195,14 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		}
 		if m.Name == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("You have to specify a name for the locally stored account."))
+			err = errMissingName()
+			w.Write([]byte(err.Error()))
 			return
 		}
 		if m.Password == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("You have to specify a password for the locally stored account."))
+			err = errMissingPassword()
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -210,7 +211,8 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		for _, info := range infos {
 			if info.GetName() == m.Name {
 				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", m.Name)))
+				err = errKeyNameConflict(m.Name)
+				w.Write([]byte(err.Error()))
 				return
 			}
 		}
@@ -289,17 +291,20 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 
 		if name == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("You have to specify a name for the locally stored account."))
+			err = errMissingName()
+			w.Write([]byte(err.Error()))
 			return
 		}
 		if m.Password == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("You have to specify a password for the locally stored account."))
+			err = errMissingPassword()
+			w.Write([]byte(err.Error()))
 			return
 		}
 		if m.Seed == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("You have to specify seed for key recover."))
+			err = errMissingSeed()
+			w.Write([]byte(err.Error()))
 			return
 		}
 
@@ -314,7 +319,8 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 		for _, info := range infos {
 			if info.GetName() == name {
 				w.WriteHeader(http.StatusConflict)
-				w.Write([]byte(fmt.Sprintf("Account with name %s already exists.", name)))
+				err = errKeyNameConflict(name)
+				w.Write([]byte(err.Error()))
 				return
 			}
 		}

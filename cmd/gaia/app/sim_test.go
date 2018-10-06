@@ -53,9 +53,11 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			Coins:   coins,
 		})
 	}
-	govGenesis := gov.DefaultGenesisState()
+
 	// Default genesis state
+	govGenesis := gov.DefaultGenesisState()
 	stakeGenesis := stake.DefaultGenesisState()
+	slashingGenesis := slashing.DefaultGenesisState()
 	var validators []stake.Validator
 	var delegations []stake.Delegation
 	// XXX Try different numbers of initially bonded validators
@@ -77,7 +79,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		StakeData:    stakeGenesis,
-		SlashingData: slashing.DefaultGenesisState(),
+		SlashingData: slashingGenesis,
 		GovData:      govGenesis,
 	}
 

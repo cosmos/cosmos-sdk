@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -101,9 +100,8 @@ func (s Store) Modified(ctx sdk.Context, key []byte) bool {
 func (s Store) Set(ctx sdk.Context, key []byte, param interface{}) {
 	store := s.kvStore(ctx)
 
-	ty, ok := s.table.m[string(key)]
+	ty, ok := s.table[string(key)]
 	if !ok {
-		fmt.Println(string(key), ty, param, reflect.TypeOf(param))
 		panic("Parameter not registered")
 	}
 

@@ -19,6 +19,7 @@ var (
 	ParamStoreKeyTallyingProcedure = []byte("tallyingprocedure")
 )
 
+// Type declaration for parameters
 func ParamTable() params.Table {
 	return params.NewTable(
 		ParamStoreKeyDepositProcedure, DepositProcedure{},

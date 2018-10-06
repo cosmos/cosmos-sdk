@@ -23,6 +23,7 @@ var (
 	KeySlashFractionDowntime    = []byte("SlashFractionDowntime")
 )
 
+// ParamTable for slashing module
 func ParamTable() params.Table {
 	return params.NewTable().RegisterParamStruct(&Params{})
 }

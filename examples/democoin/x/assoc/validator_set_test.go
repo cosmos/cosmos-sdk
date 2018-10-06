@@ -1,7 +1,7 @@
 package assoc
 
 import (
-	//	"bytes"
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -53,23 +53,19 @@ func TestValidatorSet(t *testing.T) {
 	require.Equal(t, base.Validator(ctx, addr1), valset.Validator(ctx, addr1))
 	require.Equal(t, base.Validator(ctx, addr2), valset.Validator(ctx, addr2))
 
-	// XXX: Will be fixed by #2248
-	// Associations is broken because of prefixstore iterator
-	/*
-		assocs := valset.Associations(ctx, addr1)
-		require.Equal(t, 1, len(assocs))
-		require.True(t, bytes.Equal(assoc1, assocs[0]))
+	assocs := valset.Associations(ctx, addr1)
+	require.Equal(t, 1, len(assocs))
+	require.True(t, bytes.Equal(assoc1, assocs[0]))
 
-		require.False(t, valset.Associate(ctx, addr1, assoc2))
-		require.False(t, valset.Associate(ctx, addr2, assoc1))
+	require.False(t, valset.Associate(ctx, addr1, assoc2))
+	require.False(t, valset.Associate(ctx, addr2, assoc1))
 
-		valset.Dissociate(ctx, addr1, assoc1)
-		valset.Dissociate(ctx, addr2, assoc2)
+	valset.Dissociate(ctx, addr1, assoc1)
+	valset.Dissociate(ctx, addr2, assoc2)
 
-		require.Equal(t, base.Validator(ctx, addr1), valset.Validator(ctx, addr1))
-		require.Equal(t, base.Validator(ctx, addr2), valset.Validator(ctx, addr2))
+	require.Equal(t, base.Validator(ctx, addr1), valset.Validator(ctx, addr1))
+	require.Equal(t, base.Validator(ctx, addr2), valset.Validator(ctx, addr2))
 
-		require.Nil(t, valset.Validator(ctx, assoc1))
-		require.Nil(t, valset.Validator(ctx, assoc2))
-	*/
+	require.Nil(t, valset.Validator(ctx, assoc1))
+	require.Nil(t, valset.Validator(ctx, assoc2))
 }

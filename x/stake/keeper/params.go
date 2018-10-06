@@ -13,6 +13,7 @@ const (
 	DefaultParamspace = "stake"
 )
 
+// ParamTable for stake module
 func ParamTable() params.Table {
 	return params.NewTable().RegisterParamStruct(&types.Params{})
 }

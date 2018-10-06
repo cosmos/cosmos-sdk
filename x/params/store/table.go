@@ -4,20 +4,16 @@ import (
 	"reflect"
 )
 
-type Table struct {
-	m      map[string]reflect.Type
-	sealed bool
-}
+// Table stores appropriate type for each parameter key
+type Table map[string]reflect.Type
 
+// Constructs new table
 func NewTable(keytypes ...interface{}) (res Table) {
 	if len(keytypes)%2 != 0 {
 		panic("odd number arguments in NewTypeTable")
 	}
 
-	res = Table{
-		m:      make(map[string]reflect.Type),
-		sealed: false,
-	}
+	res = make(map[string]reflect.Type)
 
 	for i := 0; i < len(keytypes); i += 2 {
 		res = res.RegisterType(keytypes[i].([]byte), keytypes[i+1])
@@ -26,13 +22,10 @@ func NewTable(keytypes ...interface{}) (res Table) {
 	return
 }
 
+// Register single key-type pair
 func (t Table) RegisterType(key []byte, ty interface{}) Table {
-	if t.sealed {
-		panic("RegisterType() on sealed Table")
-	}
-
 	keystr := string(key)
-	if _, ok := t.m[keystr]; ok {
+	if _, ok := t[keystr]; ok {
 		panic("duplicate parameter key")
 	}
 
@@ -43,11 +36,12 @@ func (t Table) RegisterType(key []byte, ty interface{}) Table {
 		rty = rty.Elem()
 	}
 
-	t.m[keystr] = rty
+	t[keystr] = rty
 
 	return t
 }
 
+// Register multiple pairs from ParamStruct
 func (t Table) RegisterParamStruct(ps ParamStruct) Table {
 	for _, kvp := range ps.KeyValuePairs() {
 		t = t.RegisterType(kvp.Key, kvp.Value)

@@ -30,8 +30,8 @@ func buildProof(iavlProof []byte, storeName string, storeInfos []storeInfo) []by
 	return proof
 }
 
-// VerifyMultiStoreCommitInfo verify multiStoreCommitInfo against appHash
-func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo, appHash []byte) ([]byte, error) {
+// VerifyCommitInfo verify multiStoreCommitInfo against appHash
+func VerifyCommitInfo(storeName string, storeInfos []storeInfo, appHash []byte) ([]byte, error) {
 	var substoreCommitHash []byte
 	var height int64
 	for _, storeInfo := range storeInfos {

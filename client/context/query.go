@@ -218,7 +218,7 @@ func (ctx CLIContext) verifyProof(_ string, resp abci.ResponseQuery) error {
 	}
 
 	// Verify the substore commit hash against trusted appHash
-	substoreCommitHash, err := rootmulti.VerifyMultiStoreCommitInfo(
+	substoreCommitHash, err := rootmulti.VerifyCommitInfo(
 		multiStoreProof.StoreName, multiStoreProof.StoreInfos, commit.Header.AppHash,
 	)
 	if err != nil {

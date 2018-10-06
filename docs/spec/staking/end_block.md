@@ -2,6 +2,21 @@
 
 ## Validator Set Changes
 
+For all unbonding validators that have finished their unbonding period, this switches their validator.Status
+from sdk.Unbonding to sdk.Unbonded
+
+```golang
+validatorQueue(currTime time.Time):
+    // unbonding validators are in ordered queue from oldest to newest
+    for all unbondingValidators whose CompleteTime < currTime:
+        validator = GetValidator(unbondingValidator.ValidatorAddr)
+        validator.Status = sdk.Bonded
+        SetValidator(unbondingValidator)
+    return
+```
+
+## Validator Set Changes
+
 The Tendermint validator set may be updated by state transitions that run at
 the end of every block. The Tendermint validator set may be changed by
 validators either being jailed due to inactivity/unexpected behaviour (covered

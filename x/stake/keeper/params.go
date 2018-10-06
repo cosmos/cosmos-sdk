@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -11,6 +12,10 @@ import (
 const (
 	DefaultParamspace = "stake"
 )
+
+func ParamTable() params.Table {
+	return params.NewTable().RegisterParamStruct(&types.Params{})
+}
 
 // InflationRateChange - Maximum annual change in inflation rate
 func (k Keeper) InflationRateChange(ctx sdk.Context) (res sdk.Dec) {

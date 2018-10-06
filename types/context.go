@@ -47,8 +47,6 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithVoteInfos(nil)
 	c = c.WithGasMeter(NewInfiniteGasMeter())
 	c = c.WithMinimumFees(Coins{})
-	c = c.WithKVGasConfig(KVGasConfig())
-	c = c.WithTransientGasConfig(TransientGasConfig())
 	return c
 }
 
@@ -74,12 +72,12 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), c.KVGasConfig())
+	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedKVGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
 func (c Context) TransientStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), c.TransientGasConfig())
+	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedTransientGasConfig)
 }
 
 //----------------------------------------
@@ -142,8 +140,6 @@ const (
 	contextKeyVoteInfos
 	contextKeyGasMeter
 	contextKeyMinimumFees
-	contextKeyKVGasConfig
-	contextKeyTransientGasConfig
 )
 
 // NOTE: Do not expose MultiStore.
@@ -178,12 +174,6 @@ func (c Context) IsCheckTx() bool { return c.Value(contextKeyIsCheckTx).(bool) }
 func (c Context) MinimumFees() Coins { return c.Value(contextKeyMinimumFees).(Coins) }
 
 func (c Context) WithMultiStore(ms MultiStore) Context { return c.withValue(contextKeyMultiStore, ms) }
-
-func (c Context) KVGasConfig() GasConfig { return c.Value(contextKeyKVGasConfig).(GasConfig) }
-
-func (c Context) TransientGasConfig() GasConfig {
-	return c.Value(contextKeyTransientGasConfig).(GasConfig)
-}
 
 func (c Context) WithBlockHeader(header abci.Header) Context {
 	var _ proto.Message = &header // for cloning.
@@ -220,14 +210,6 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 
 func (c Context) WithMinimumFees(minFees Coins) Context {
 	return c.withValue(contextKeyMinimumFees, minFees)
-}
-
-func (c Context) WithKVGasConfig(config GasConfig) Context {
-	return c.withValue(contextKeyKVGasConfig, config)
-}
-
-func (c Context) WithTransientGasConfig(config GasConfig) Context {
-	return c.withValue(contextKeyTransientGasConfig, config)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

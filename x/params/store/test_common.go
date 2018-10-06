@@ -21,7 +21,7 @@ const (
 )
 
 // Returns components for testing
-func DefaultTestComponents(t *testing.T) (sdk.Context, Store, func() sdk.CommitID) {
+func DefaultTestComponents(t *testing.T, table Table) (sdk.Context, Store, func() sdk.CommitID) {
 	cdc := codec.New()
 	key := sdk.NewKVStoreKey("params")
 	tkey := sdk.NewTransientStoreKey("tparams")
@@ -34,7 +34,7 @@ func DefaultTestComponents(t *testing.T) (sdk.Context, Store, func() sdk.CommitI
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
-	store := NewStore(cdc, key, tkey, TestParamStore)
+	store := NewStore(cdc, key, tkey, TestParamStore, table)
 
 	return ctx, store, ms.Commit
 }

@@ -30,7 +30,7 @@ func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKe
 }
 
 // Allocate substore used for keepers
-func (k Keeper) Substore(storename string) Store {
+func (k Keeper) Substore(storename string, table Table) Store {
 	_, ok := k.stores[storename]
 	if ok {
 		panic("substore already occupied")
@@ -40,7 +40,7 @@ func (k Keeper) Substore(storename string) Store {
 		panic("cannot use empty string for substore")
 	}
 
-	store := store.NewStore(k.cdc, k.key, k.tkey, storename)
+	store := store.NewStore(k.cdc, k.key, k.tkey, storename, table)
 
 	k.stores[storename] = &store
 

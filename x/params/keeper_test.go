@@ -49,14 +49,26 @@ func TestKeeper(t *testing.T) {
 		{"key3", 182},
 		{"key4", 17582},
 		{"key5", 2768554},
-		{"store1/key1", 1157279},
-		{"store1/key2", 9058701},
+		{"key6", 1157279},
+		{"key7", 9058701},
 	}
+
+	table := NewTable(
+		[]byte("key1"), int64(0),
+		[]byte("key2"), int64(0),
+		[]byte("key3"), int64(0),
+		[]byte("key4"), int64(0),
+		[]byte("key5"), int64(0),
+		[]byte("key6"), int64(0),
+		[]byte("key7"), int64(0),
+		[]byte("extra1"), bool(false),
+		[]byte("extra2"), string(""),
+	)
 
 	skey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(skey, tkey)
-	store := NewKeeper(codec.New(), skey, tkey).Substore("test")
+	store := NewKeeper(codec.New(), skey, tkey).Substore("test", table)
 
 	for i, kv := range kvs {
 		require.NotPanics(t, func() { store.Set(ctx, []byte(kv.key), kv.param) }, "store.Set panics, tc #%d", i)
@@ -93,8 +105,6 @@ func TestGet(t *testing.T) {
 	ctx := defaultContext(key, tkey)
 	keeper := NewKeeper(createTestCodec(), key, tkey)
 
-	store := keeper.Substore("test")
-
 	kvs := []struct {
 		key   string
 		param interface{}
@@ -114,6 +124,23 @@ func TestGet(t *testing.T) {
 		{"dec", sdk.NewDec(1), *new(sdk.Dec), new(sdk.Dec)},
 		{"struct", s{1}, s{0}, new(s)},
 	}
+
+	table := NewTable(
+		[]byte("string"), string(""),
+		[]byte("bool"), bool(false),
+		[]byte("int16"), int16(0),
+		[]byte("int32"), int32(0),
+		[]byte("int64"), int64(0),
+		[]byte("uint16"), uint16(0),
+		[]byte("uint32"), uint32(0),
+		[]byte("uint64"), uint64(0),
+		[]byte("int"), sdk.Int{},
+		[]byte("uint"), sdk.Uint{},
+		[]byte("dec"), sdk.Dec{},
+		[]byte("struct"), s{},
+	)
+
+	store := keeper.Substore("test", table)
 
 	for i, kv := range kvs {
 		require.False(t, store.Modified(ctx, []byte(kv.key)), "store.Modified returns true before setting, tc #%d", i)

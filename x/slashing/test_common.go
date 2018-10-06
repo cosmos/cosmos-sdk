@@ -71,8 +71,8 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
 
 	ck := bank.NewBaseKeeper(accountMapper)
-	paramstore := params.NewKeeper(cdc, keyParams, tkeyParams).Substore(DefaultParamspace)
-	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, paramstore, stake.DefaultCodespace)
+	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
+	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, paramsKeeper.Substore(stake.DefaultParamspace, stake.ParamTable()), stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 
 	genesis.Pool.LooseTokens = sdk.NewDec(initCoins.MulRaw(int64(len(addrs))).Int64())
@@ -86,6 +86,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 		})
 	}
 	require.Nil(t, err)
+	paramstore := paramsKeeper.Substore(DefaultParamspace, ParamTable())
 	keeper := NewKeeper(cdc, keySlashing, sk, paramstore, DefaultCodespace)
 
 	require.NotPanics(t, func() {

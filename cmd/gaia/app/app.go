@@ -97,14 +97,14 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.stakeKeeper = stake.NewKeeper(
 		app.cdc,
 		app.keyStake, app.tkeyStake,
-		app.bankKeeper, app.paramsKeeper.Substore(stake.DefaultParamspace),
+		app.bankKeeper, app.paramsKeeper.Substore(stake.DefaultParamspace, stake.ParamTable()),
 		app.RegisterCodespace(stake.DefaultCodespace),
 	)
 
 	app.slashingKeeper = slashing.NewKeeper(
 		app.cdc,
 		app.keySlashing,
-		app.stakeKeeper, app.paramsKeeper.Substore(slashing.DefaultParamspace),
+		app.stakeKeeper, app.paramsKeeper.Substore(slashing.DefaultParamspace, slashing.ParamTable()),
 		app.RegisterCodespace(slashing.DefaultCodespace),
 	)
 
@@ -115,7 +115,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.govKeeper = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
-		app.paramsKeeper, app.paramsKeeper.Substore(gov.DefaultParamspace), app.bankKeeper, app.stakeKeeper,
+		app.paramsKeeper, app.paramsKeeper.Substore(gov.DefaultParamspace, gov.ParamTable()), app.bankKeeper, app.stakeKeeper,
 		app.RegisterCodespace(gov.DefaultCodespace),
 	)
 

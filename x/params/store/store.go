@@ -21,14 +21,18 @@ type Store struct {
 	tkey sdk.StoreKey // []byte -> bool, stores parameter change
 
 	space []byte
+
+	table Table
 }
 
 // NewStore constructs a store with namestore
-func NewStore(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string) (res Store) {
+func NewStore(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string, table Table) (res Store) {
 	res = Store{
 		cdc:  cdc,
 		key:  key,
 		tkey: tkey,
+
+		table: table,
 	}
 
 	spacebz := []byte(space)
@@ -77,8 +81,7 @@ func (s Store) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 // Get raw bytes of parameter from store
 func (s Store) GetRaw(ctx sdk.Context, key []byte) []byte {
 	store := s.kvStore(ctx)
-	res := store.Get(key)
-	return res
+	return store.Get(key)
 }
 
 // Check if the parameter is set in the store
@@ -98,18 +101,19 @@ func (s Store) Modified(ctx sdk.Context, key []byte) bool {
 func (s Store) Set(ctx sdk.Context, key []byte, param interface{}) {
 	store := s.kvStore(ctx)
 
-	bz := store.Get(key)
+	ty, ok := s.table.m[string(key)]
+	if !ok {
+		fmt.Println(string(key), ty, param, reflect.TypeOf(param))
+		panic("Parameter not registered")
+	}
 
-	// To prevent invalid parameter set, we check the type of the stored parameter
-	// and try to match it with the provided parameter. It continues only if they matches.
-	// It is possible because parameter set happens rarely.
-	if bz != nil {
-		ptrType := reflect.PtrTo(reflect.TypeOf(param))
-		ptr := reflect.New(ptrType).Interface()
+	pty := reflect.TypeOf(param)
+	if pty.Kind() == reflect.Ptr {
+		pty = pty.Elem()
+	}
 
-		if s.cdc.UnmarshalJSON(bz, ptr) != nil {
-			panic(fmt.Errorf("Type mismatch with stored param and provided param"))
-		}
+	if pty != ty {
+		panic("Type mismatch with registered table")
 	}
 
 	bz, err := s.cdc.MarshalJSON(param)
@@ -122,20 +126,10 @@ func (s Store) Set(ctx sdk.Context, key []byte, param interface{}) {
 	tstore.Set(key, []byte{})
 }
 
-// Set raw bytes of parameter
-// Also set to the transient store to record change
-func (s Store) SetRaw(ctx sdk.Context, key []byte, param []byte) {
-	store := s.kvStore(ctx)
-	store.Set(key, param)
-
-	tstore := s.transientStore(ctx)
-	tstore.Set(key, []byte{})
-}
-
 // Get to ParamStruct
 func (s Store) GetStruct(ctx sdk.Context, ps ParamStruct) {
 	for _, pair := range ps.KeyValuePairs() {
-		s.Get(ctx, pair.Key, pair.Field)
+		s.Get(ctx, pair.Key, pair.Value)
 	}
 }
 
@@ -146,7 +140,7 @@ func (s Store) SetStruct(ctx sdk.Context, ps ParamStruct) {
 		// go-amino automatically handles it but just for sure,
 		// since SetStruct is meant to be used in InitGenesis
 		// so this method will not be called frequently
-		v := reflect.Indirect(reflect.ValueOf(pair.Field)).Interface()
+		v := reflect.Indirect(reflect.ValueOf(pair.Value)).Interface()
 		s.Set(ctx, pair.Key, v)
 	}
 }

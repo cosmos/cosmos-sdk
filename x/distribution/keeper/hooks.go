@@ -37,12 +37,12 @@ func (k Keeper) onValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
 func (k Keeper) onDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
 
-	ddi := types.DelegatorDistInfo{
+	ddi := types.DelegationDistInfo{
 		DelegatorAddr:    delAddr,
 		ValOperatorAddr:  valAddr,
 		WithdrawalHeight: ctx.BlockHeight(),
 	}
-	k.SetDelegatorDistInfo(ctx, ddi)
+	k.SetDelegationDistInfo(ctx, ddi)
 	ctx.Logger().With("module", "x/distribution").Error(fmt.Sprintf("ddi created: %v", ddi))
 }
 
@@ -57,7 +57,7 @@ func (k Keeper) onDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddre
 func (k Keeper) onDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
 
-	k.RemoveDelegatorDistInfo(ctx, delAddr, valAddr)
+	k.RemoveDelegationDistInfo(ctx, delAddr, valAddr)
 }
 
 //_________________________________________________________________________________________

@@ -172,9 +172,9 @@ For delegations (including validator's self-delegation) all rewards from reward
 pool have already had the validator's commission taken away.
 
 ```
-func (di DelegatorDistInfo) WithdrawRewards(g FeePool, vi ValidatorDistInfo,
+func (di DelegationDistInfo) WithdrawRewards(g FeePool, vi ValidatorDistInfo,
     height int64, totalBonded, vdTokens, totalDelShares, commissionRate Dec) (
-    di DelegatorDistInfo, g FeePool, withdrawn DecCoins)
+    di DelegationDistInfo, g FeePool, withdrawn DecCoins)
 
     vi.UpdateTotalDelAccum(height, totalDelShares) 
     g = vi.TakeFeePoolRewards(g, height, totalBonded, vdTokens, commissionRate) 

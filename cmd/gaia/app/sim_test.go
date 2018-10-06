@@ -15,6 +15,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
@@ -52,18 +53,23 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			Coins:   coins,
 		})
 	}
-	govGenesis := gov.DefaultGenesisState()
+
 	// Default genesis state
 	stakeGenesis := stake.DefaultGenesisState()
 	var validators []stake.Validator
 	var delegations []stake.Delegation
+
 	// XXX Try different numbers of initially bonded validators
 	numInitiallyBonded := int64(50)
+	valAddrs := make([]sdk.ValAddress, numInitiallyBonded)
 	for i := 0; i < int(numInitiallyBonded); i++ {
-		validator := stake.NewValidator(sdk.ValAddress(accs[i].Address), accs[i].PubKey, stake.Description{})
+		valAddr := sdk.ValAddress(accs[i].Address)
+		valAddrs[i] = valAddr
+
+		validator := stake.NewValidator(valAddr, accs[i].PubKey, stake.Description{})
 		validator.Tokens = sdk.NewDec(100)
 		validator.DelegatorShares = sdk.NewDec(100)
-		delegation := stake.Delegation{accs[i].Address, sdk.ValAddress(accs[i].Address), sdk.NewDec(100), 0}
+		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(100), 0}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
@@ -73,10 +79,12 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	// No inflation, for now
 	stakeGenesis.Params.InflationMax = sdk.NewDec(0)
 	stakeGenesis.Params.InflationMin = sdk.NewDec(0)
+
 	genesis := GenesisState{
 		Accounts:  genesisAccounts,
 		StakeData: stakeGenesis,
-		GovData:   govGenesis,
+		DistrData: distr.DefaultGenesisWithValidators(valAddrs),
+		GovData:   gov.DefaultGenesisState(),
 	}
 
 	// Marshal genesis

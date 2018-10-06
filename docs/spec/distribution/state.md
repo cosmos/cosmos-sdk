@@ -59,10 +59,10 @@ properties change (aka bonded tokens etc.) its properties will remain constant
 and the delegator's _accumulation_ factor can be calculated passively knowing
 only the height of the last withdrawal and its current properties. 
  
- - DelegatorDistInfo: ` 0x02 | DelegatorAddr | ValOperatorAddr -> amino(delegatorDist)`
+ - DelegationDistInfo: ` 0x02 | DelegatorAddr | ValOperatorAddr -> amino(delegatorDist)`
 
 ```golang
-type DelegatorDistInfo struct {
+type DelegationDistInfo struct {
     WithdrawalHeight int64    // last time this delegation withdrew rewards
 }
 ```

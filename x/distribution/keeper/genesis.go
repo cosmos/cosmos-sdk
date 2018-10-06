@@ -20,13 +20,13 @@ func (k Keeper) GetAllVDIs(ctx sdk.Context) (vdis []types.ValidatorDistInfo) {
 }
 
 // Get the set of all delegator-distribution-info's with no limits, used during genesis dump
-func (k Keeper) GetAllDDIs(ctx sdk.Context) (ddis []types.DelegatorDistInfo) {
+func (k Keeper) GetAllDDIs(ctx sdk.Context) (ddis []types.DelegationDistInfo) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, DelegatorDistInfoKey)
+	iterator := sdk.KVStorePrefixIterator(store, DelegationDistInfoKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var ddi types.DelegatorDistInfo
+		var ddi types.DelegationDistInfo
 		k.cdc.MustUnmarshalBinary(iterator.Value(), &ddi)
 		ddis = append(ddis, ddi)
 	}
@@ -36,7 +36,7 @@ func (k Keeper) GetAllDDIs(ctx sdk.Context) (ddis []types.DelegatorDistInfo) {
 // Get the set of all delegator-withdraw addresses with no limits, used during genesis dump
 func (k Keeper) GetAllDWIs(ctx sdk.Context) (dwis []types.DelegatorWithdrawInfo) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, DelegatorDistInfoKey)
+	iterator := sdk.KVStorePrefixIterator(store, DelegationDistInfoKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

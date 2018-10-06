@@ -6,8 +6,8 @@ import (
 )
 
 // get the delegator distribution info
-func (k Keeper) GetDelegatorDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
-	valOperatorAddr sdk.ValAddress) (ddi types.DelegatorDistInfo) {
+func (k Keeper) GetDelegationDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
+	valOperatorAddr sdk.ValAddress) (ddi types.DelegationDistInfo) {
 
 	store := ctx.KVStore(k.storeKey)
 
@@ -21,14 +21,14 @@ func (k Keeper) GetDelegatorDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
 }
 
 // set the delegator distribution info
-func (k Keeper) SetDelegatorDistInfo(ctx sdk.Context, ddi types.DelegatorDistInfo) {
+func (k Keeper) SetDelegationDistInfo(ctx sdk.Context, ddi types.DelegationDistInfo) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(ddi)
 	store.Set(GetDelegationDistInfoKey(ddi.DelegatorAddr, ddi.ValOperatorAddr), b)
 }
 
 // remove a delegator distribution info
-func (k Keeper) RemoveDelegatorDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
+func (k Keeper) RemoveDelegationDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
 	valOperatorAddr sdk.ValAddress) {
 
 	store := ctx.KVStore(k.storeKey)
@@ -69,7 +69,7 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 	height := ctx.BlockHeight()
 	bondedTokens := k.stakeKeeper.TotalPower(ctx)
 	feePool := k.GetFeePool(ctx)
-	delInfo := k.GetDelegatorDistInfo(ctx, delegatorAddr, validatorAddr)
+	delInfo := k.GetDelegationDistInfo(ctx, delegatorAddr, validatorAddr)
 	valInfo := k.GetValidatorDistInfo(ctx, validatorAddr)
 	validator := k.stakeKeeper.Validator(ctx, validatorAddr)
 	delegation := k.stakeKeeper.Delegation(ctx, delegatorAddr, validatorAddr)
@@ -109,7 +109,7 @@ func (k Keeper) GetDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, 
 	// iterate over all the delegations
 	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
 		valAddr := del.GetValidator()
-		delInfo := k.GetDelegatorDistInfo(ctx, delAddr, valAddr)
+		delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
 		valInfo := k.GetValidatorDistInfo(ctx, valAddr)
 		validator := k.stakeKeeper.Validator(ctx, valAddr)
 		delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
@@ -119,7 +119,7 @@ func (k Keeper) GetDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, 
 		withdraw = withdraw.Plus(diWithdraw)
 		k.SetFeePool(ctx, feePool)
 		k.SetValidatorDistInfo(ctx, valInfo)
-		k.SetDelegatorDistInfo(ctx, delInfo)
+		k.SetDelegationDistInfo(ctx, delInfo)
 		return false
 	}
 	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)

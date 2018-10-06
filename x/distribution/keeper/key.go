@@ -8,7 +8,7 @@ import (
 var (
 	FeePoolKey               = []byte{0x00} // key for global distribution state
 	ValidatorDistInfoKey     = []byte{0x01} // prefix for each key to a validator distribution
-	DelegatorDistInfoKey     = []byte{0x02} // prefix for each key to a delegation distribution
+	DelegationDistInfoKey     = []byte{0x02} // prefix for each key to a delegation distribution
 	DelegatorWithdrawInfoKey = []byte{0x03} // prefix for each key to a delegator withdraw info
 
 	// transient
@@ -22,14 +22,14 @@ func GetValidatorDistInfoKey(operatorAddr sdk.ValAddress) []byte {
 }
 
 // gets the key for delegator distribution for a validator
-// VALUE: distribution/types.DelegatorDistInfo
+// VALUE: distribution/types.DelegationDistInfo
 func GetDelegationDistInfoKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationDistInfosKey(delAddr), valAddr.Bytes()...)
 }
 
 // gets the prefix for a delegator's distributions across all validators
 func GetDelegationDistInfosKey(delAddr sdk.AccAddress) []byte {
-	return append(DelegatorDistInfoKey, delAddr.Bytes()...)
+	return append(DelegationDistInfoKey, delAddr.Bytes()...)
 }
 
 // gets the prefix for a delegator's withdraw info

@@ -201,8 +201,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// load the initial stake information
 	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 	if err != nil {
-		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-		// return sdk.ErrGenesisParse("").TraceCause(err, "")
+		panic(err) // TODO find a way to do this w/o panics
 	}
 
 	// load the address to pubkey map
@@ -212,8 +211,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
 	err = GaiaValidateGenesisState(genesisState)
 	if err != nil {
-		// TODO find a way to do this w/o panics
-		panic(err)
+		panic(err) // TODO find a way to do this w/o panics
 	}
 
 	return abci.ResponseInitChain{

@@ -13,8 +13,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	for _, vdi := range data.ValidatorDistInfos {
 		keeper.SetValidatorDistInfo(ctx, vdi)
 	}
-	for _, ddi := range data.DelegatorDistInfos {
-		keeper.SetDelegatorDistInfo(ctx, ddi)
+	for _, ddi := range data.DelegationDistInfos {
+		keeper.SetDelegationDistInfo(ctx, ddi)
 	}
 	for _, dw := range data.DelegatorWithdrawInfos {
 		keeper.SetDelegatorWithdrawAddr(ctx, dw.DelegatorAddr, dw.WithdrawAddr)

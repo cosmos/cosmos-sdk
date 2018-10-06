@@ -12,7 +12,7 @@ type (
 	Hooks  = keeper.Hooks
 
 	DelegatorWithdrawInfo = types.DelegatorWithdrawInfo
-	DelegatorDistInfo     = types.DelegatorDistInfo
+	DelegationDistInfo     = types.DelegationDistInfo
 	ValidatorDistInfo     = types.ValidatorDistInfo
 	TotalAccum            = types.TotalAccum
 	FeePool               = types.FeePool
@@ -34,14 +34,15 @@ var (
 	GetDelegatorWithdrawAddrKey = keeper.GetDelegatorWithdrawAddrKey
 	FeePoolKey                  = keeper.FeePoolKey
 	ValidatorDistInfoKey        = keeper.ValidatorDistInfoKey
-	DelegatorDistInfoKey        = keeper.DelegatorDistInfoKey
+	DelegationDistInfoKey        = keeper.DelegationDistInfoKey
 	DelegatorWithdrawInfoKey    = keeper.DelegatorWithdrawInfoKey
 	ProposerKey                 = keeper.ProposerKey
 
 	InitialFeePool = types.InitialFeePool
 
-	NewGenesisState     = types.NewGenesisState
-	DefaultGenesisState = types.DefaultGenesisState
+	NewGenesisState              = types.NewGenesisState
+	DefaultGenesisState          = types.DefaultGenesisState
+	DefaultGenesisWithValidators = types.DefaultGenesisWithValidators
 
 	RegisterCodec = types.RegisterCodec
 

@@ -49,7 +49,7 @@ func (gs *gasKVStore) Has(key []byte) bool {
 
 // Implements types.KVStore.
 func (gs *gasKVStore) Delete(key []byte) {
-	// No gas costs for deletion
+	gs.tank.DeleteFlat()
 	gs.parent.Delete(key)
 }
 

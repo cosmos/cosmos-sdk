@@ -85,13 +85,13 @@ func TestVerifyMultiStoreCommitInfo(t *testing.T) {
 		},
 	})
 
-	commitHash, err := VerifyMultiStoreCommitInfo(storeName, storeInfos, appHash)
+	commitHash, err := VerifyCommitInfo(storeName, storeInfos, appHash)
 	require.Nil(t, err)
 	require.Equal(t, commitHash, substoreRootHash)
 
 	appHash, _ = hex.DecodeString("29de216bf5e2531c688de36caaf024cd3bb09ee3")
 
-	_, err = VerifyMultiStoreCommitInfo(storeName, storeInfos, appHash)
+	_, err = VerifyCommitInfo(storeName, storeInfos, appHash)
 	require.Error(t, err, "appHash doesn't match to the merkle root of multiStoreCommitInfo")
 }
 

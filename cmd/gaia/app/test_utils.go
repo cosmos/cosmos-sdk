@@ -37,6 +37,8 @@ func NewTestGaiaAppGenState(
 			return GenesisState{}, err
 		}
 
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc))
+
 		// create the genesis account for the given genesis tx
 		genAccs[i] = genesisAccountFromGenTx(genTx)
 	}

@@ -146,7 +146,7 @@ func InitializeTestLCD(
 	// append initial (proposing) validator
 	genDoc.Validators[0] = tmtypes.GenesisValidator{
 		PubKey: privVal.GetPubKey(),
-		Power:  999999, // create enough power to enable 2/3 voting power
+		Power:  100, // create enough power to enable 2/3 voting power
 		Name:   "validator-1",
 	}
 

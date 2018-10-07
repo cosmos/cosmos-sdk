@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// nolint: reexport
+// nolint - reexport
 type (
 	PruningStrategy  = types.PruningStrategy
 	CommitStore      = types.CommitStore
@@ -23,8 +23,8 @@ type (
 	KVPair = types.KVPair
 
 	StoreKey          = types.StoreKey
-	KVStoreKey        = iavl.KVStoreKey
-	TransientStoreKey = transient.TransientStoreKey
+	KVStoreKey        = iavl.StoreKey
+	TransientStoreKey = transient.StoreKey
 
 	Gas       = types.Gas
 	GasTank   = types.GasTank
@@ -37,14 +37,14 @@ type (
 	ErrorOutOfGas = types.ErrorOutOfGas
 )
 
-// nolint: reexport
+// nolint - reexport
 const (
 	PruneNothing    = types.PruneNothing
 	PruneEverything = types.PruneEverything
 	PruneSyncable   = types.PruneSyncable
 )
 
-// nolint: reexport
+// nolint - reexport
 func KVStorePrefixIterator(store KVStore, prefix []byte) Iterator {
 	return types.KVStorePrefixIterator(store, prefix)
 }

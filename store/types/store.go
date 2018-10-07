@@ -24,7 +24,7 @@ const (
 	PruneNothing PruningStrategy = iota
 )
 
-// Stores of MultiStore must implement CommitStore.
+// Stores of MultiStore must implement commitStore.
 type CommitStore interface {
 	// CONTRACT: return zero CommitID to skip writing
 	Commit() CommitID
@@ -50,13 +50,9 @@ type MultiStore interface { //nolint
 	// TODO: recursive multistore not yet supported
 	// GetMultiStore(StoreKey) MultiStore
 
-	// CacheWrap cache wraps
-	// Having this method here because there is currently no
-	// implementation of MultiStore that panics on CacheWrap().
-	// Move this method to CacheWrapperMultiStore when needed
-	CacheWrap() CacheMultiStore
-
 	GetTracer() *Tracer
+
+	CacheWrap() CacheMultiStore
 }
 
 // From MultiStore.CacheMultiStore()....
@@ -147,9 +143,7 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 	return kvs.ReverseIterator(prefix, PrefixEndBytes(prefix))
 }
 
-type CacheWrapperKVStore interface {
-	KVStore
-
+type cacheWrappableKVStore interface {
 	// CacheWrap cache wraps
 	CacheWrap() CacheKVStore
 }
@@ -158,7 +152,8 @@ type CacheWrapperKVStore interface {
 // the CacheKVStore, all previously created CacheKVStores on the
 // object expire.
 type CacheKVStore interface {
-	CacheWrapperKVStore
+	KVStore
+	cacheWrappableKVStore
 
 	// Writes operations to underlying KVStore
 	Write()
@@ -166,8 +161,9 @@ type CacheKVStore interface {
 
 // Stores of MultiStore must implement CommitStore.
 type CommitKVStore interface {
-	CommitStore
 	KVStore
+	CommitStore
+	cacheWrappableKVStore
 
 	// Load a specific persisted version.  When you load an old
 	// version, or when the last commit attempt didn't complete,

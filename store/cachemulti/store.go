@@ -14,6 +14,8 @@ import (
 
 // Store holds many cache-wrapped stores.
 // Implements MultiStore.
+// TODO: support recursive multistores,
+// currently only using CacheKVStores
 type Store struct {
 	db         types.CacheKVStore
 	stores     map[types.StoreKey]types.CacheKVStore

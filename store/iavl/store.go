@@ -10,6 +10,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
+	"github.com/cosmos/cosmos-sdk/store/cache"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -118,6 +119,11 @@ func (st *Store) SetPruning(pruning types.PruningStrategy) {
 // VersionExists returns whether or not a given version is stored.
 func (st *Store) VersionExists(version int64) bool {
 	return st.tree.VersionExists(version)
+}
+
+// Implements types.KVStore
+func (st *Store) CacheWrap() types.CacheKVStore {
+	return cache.NewStore(st)
 }
 
 // Implements types.KVStore.

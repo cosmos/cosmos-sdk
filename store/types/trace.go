@@ -10,6 +10,7 @@ import (
 // every trace operation.
 type TraceContext map[string]interface{}
 
+// Tracer is pair of io.Writer and TraceContext
 type Tracer struct {
 	Writer  io.Writer
 	Context TraceContext

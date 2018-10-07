@@ -66,7 +66,9 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	ms.MountStoreWithDB(tkeyParams, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
+
+	cms := ms.CacheWrap()
+	ctx := sdk.NewContext(cms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, auth.ProtoBaseAccount)
 

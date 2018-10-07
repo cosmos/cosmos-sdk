@@ -6,33 +6,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-var _ types.StoreKey = (*KVStoreKey)(nil)
+var _ types.StoreKey = (*StoreKey)(nil)
 
-// KVStoreKey is used for accessing substores.
+// StoreKey is used for accessing substores.
 // Only the pointer value should ever be used - it functions as a capabilities key.
-type KVStoreKey struct {
+type StoreKey struct {
 	name string
 }
 
-// NewKVStoreKey returns a new pointer to a KVStoreKey.
+// NewStoreKey returns a new pointer to a StoreKey.
 // Use a pointer so keys don't collide.
-func NewKey(name string) *KVStoreKey {
-	return &KVStoreKey{
+func NewKey(name string) *StoreKey {
+	return &StoreKey{
 		name: name,
 	}
 }
 
 // Implements StoreKey
-func (key *KVStoreKey) Name() string {
+func (key *StoreKey) Name() string {
 	return key.name
 }
 
 // Implements StoreKey
-func (key *KVStoreKey) String() string {
-	return fmt.Sprintf("KVStoreKey{%p, %s}", key, key.name)
+func (key *StoreKey) String() string {
+	return fmt.Sprintf("StoreKey{%p, %s}", key, key.name)
 }
 
 // Implements StoreKey
-func (key *KVStoreKey) NewStore() types.CommitStore {
+func (key *StoreKey) NewStore() types.CommitStore {
 	return &Store{}
 }

@@ -52,7 +52,7 @@ func NewTestGaiaAppGenState(
 
 		// add the validator
 		desc := stake.NewDescription(tmVal.Name, "", "", "")
-		validator := stake.NewValidator(sdk.ValAddress(valOperAddrs[i]), tmVal.PubKey, desc)
+		validator := stake.NewValidator(valOperAddrs[i], tmVal.PubKey, desc)
 
 		validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, power)
 		stakeData.Validators = append(stakeData.Validators, validator)

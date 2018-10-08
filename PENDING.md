@@ -111,6 +111,7 @@ FEATURES
   * [x/auth] \#2376 Remove FeePayer() from StdTx
   * [x/stake] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Implement
   basis for the validator commission model.
+  * [x/auth] Support account removal in the account mapper.
 
 * Tendermint
 
@@ -135,6 +136,7 @@ IMPROVEMENTS
     * [genesis] \#2229 Ensure that there are no duplicate accounts or validators in the genesis state.
     * Add SDK validation to `config.toml` (namely disabling `create_empty_blocks`) \#1571
     * \#1941(https://github.com/cosmos/cosmos-sdk/issues/1941) Version is now inferred via `git describe --tags`.
+    * [x/distribution] \#1671 add distribution types and tests
 
 * SDK
     * [tools] Make get_vendor_deps deletes `.vendor-new` directories, in case scratch files are present.

@@ -190,7 +190,7 @@ func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 		return c
 	}
 	return c.withValue(contextKeyConsensusParams, params).
-		WithGasMeter(NewGasMeter(params.TxSize.MaxGas))
+		WithGasMeter(NewGasMeter(params.BlockSize.MaxGas))
 }
 
 func (c Context) WithChainID(chainID string) Context { return c.withValue(contextKeyChainID, chainID) }

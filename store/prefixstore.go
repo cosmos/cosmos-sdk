@@ -152,13 +152,15 @@ func (iter prefixIterator) Next() {
 	}
 	iter.iter.Next()
 	if !iter.iter.Valid() || !bytes.HasPrefix(iter.iter.Key(), iter.prefix) {
-		iter.iter.Close()
 		iter.valid = false
 	}
 }
 
 // Implements Iterator
 func (iter prefixIterator) Key() (key []byte) {
+	if !iter.valid {
+		panic("prefixIterator invalid, cannot call Key()")
+	}
 	key = iter.iter.Key()
 	key = stripPrefix(key, iter.prefix)
 	return
@@ -166,6 +168,9 @@ func (iter prefixIterator) Key() (key []byte) {
 
 // Implements Iterator
 func (iter prefixIterator) Value() []byte {
+	if !iter.valid() {
+		panic("prefixIterator invalid, cannot call Value()")
+	}
 	return iter.iter.Value()
 }
 

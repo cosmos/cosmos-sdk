@@ -168,7 +168,7 @@ func (iter prefixIterator) Key() (key []byte) {
 
 // Implements Iterator
 func (iter prefixIterator) Value() []byte {
-	if !iter.valid() {
+	if !iter.valid {
 		panic("prefixIterator invalid, cannot call Value()")
 	}
 	return iter.iter.Value()

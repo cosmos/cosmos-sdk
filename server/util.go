@@ -177,7 +177,7 @@ func InsertKeyJSON(cdc *codec.Codec, baseJSON []byte, key string, value json.Raw
 
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
 // TODO there must be a better way to get external IP
-func externalIP() (string, error) {
+func ExternalIP() (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err

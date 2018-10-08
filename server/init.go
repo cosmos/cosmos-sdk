@@ -74,7 +74,7 @@ func GenTxCmd(ctx *Context, cdc *codec.Codec, appInit AppInit) *cobra.Command {
 
 			ip := viper.GetString(FlagIP)
 			if len(ip) == 0 {
-				eip, err := externalIP()
+				eip, err := ExternalIP()
 				if err != nil {
 					return err
 				}

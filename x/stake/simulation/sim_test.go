@@ -49,9 +49,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 			{5, SimulateMsgEditValidator(stakeKeeper)},
 			{15, SimulateMsgDelegate(mapper, stakeKeeper)},
 			{10, SimulateMsgBeginUnbonding(mapper, stakeKeeper)},
-			{3, SimulateMsgCompleteUnbonding(stakeKeeper)},
 			{10, SimulateMsgBeginRedelegate(mapper, stakeKeeper)},
-			{3, SimulateMsgCompleteRedelegate(stakeKeeper)},
 		}, []simulation.RandSetup{
 			Setup(mapp, stakeKeeper),
 		}, []simulation.Invariant{

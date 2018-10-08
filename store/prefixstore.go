@@ -118,6 +118,8 @@ func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
 	return newPrefixIterator(s.prefix, start, end, iter)
 }
 
+var _ sdk.Iterator = (*prefixIterator)(nil)
+
 type prefixIterator struct {
 	prefix     []byte
 	start, end []byte
@@ -125,8 +127,8 @@ type prefixIterator struct {
 	valid      bool
 }
 
-func newPrefixIterator(prefix, start, end []byte, parent Iterator) prefixIterator {
-	return prefixIterator{
+func newPrefixIterator(prefix, start, end []byte, parent Iterator) *prefixIterator {
+	return &prefixIterator{
 		prefix: prefix,
 		start:  start,
 		end:    end,
@@ -136,17 +138,17 @@ func newPrefixIterator(prefix, start, end []byte, parent Iterator) prefixIterato
 }
 
 // Implements Iterator
-func (iter prefixIterator) Domain() ([]byte, []byte) {
+func (iter *prefixIterator) Domain() ([]byte, []byte) {
 	return iter.start, iter.end
 }
 
 // Implements Iterator
-func (iter prefixIterator) Valid() bool {
+func (iter *prefixIterator) Valid() bool {
 	return iter.valid && iter.iter.Valid()
 }
 
 // Implements Iterator
-func (iter prefixIterator) Next() {
+func (iter *prefixIterator) Next() {
 	if !iter.valid {
 		panic("prefixIterator invalid, cannot call Next()")
 	}
@@ -157,7 +159,7 @@ func (iter prefixIterator) Next() {
 }
 
 // Implements Iterator
-func (iter prefixIterator) Key() (key []byte) {
+func (iter *prefixIterator) Key() (key []byte) {
 	if !iter.valid {
 		panic("prefixIterator invalid, cannot call Key()")
 	}
@@ -167,7 +169,7 @@ func (iter prefixIterator) Key() (key []byte) {
 }
 
 // Implements Iterator
-func (iter prefixIterator) Value() []byte {
+func (iter *prefixIterator) Value() []byte {
 	if !iter.valid {
 		panic("prefixIterator invalid, cannot call Value()")
 	}
@@ -175,7 +177,7 @@ func (iter prefixIterator) Value() []byte {
 }
 
 // Implements Iterator
-func (iter prefixIterator) Close() {
+func (iter *prefixIterator) Close() {
 	iter.iter.Close()
 }
 

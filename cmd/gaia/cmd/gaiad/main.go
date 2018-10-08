@@ -30,8 +30,7 @@ func main() {
 	}
 
 	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(),
-		server.ConstructAppCreator(newApp, "gaia"),
-		server.ConstructAppExporter(exportAppStateAndTMValidators, "gaia"))
+		newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)

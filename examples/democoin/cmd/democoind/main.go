@@ -71,8 +71,7 @@ func main() {
 	}
 
 	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit,
-		server.ConstructAppCreator(newApp, "democoin"),
-		server.ConstructAppExporter(exportAppStateAndTMValidators, "democoin"))
+		newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

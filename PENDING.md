@@ -68,6 +68,16 @@ BREAKING CHANGES
     * [x/stake] \#2394 Split up UpdateValidator into distinct state transitions applied only in EndBlock
 
 * Tendermint
+  * Update tendermint version from v0.23.0 to v0.25.0, notable changes
+    * Mempool now won't build too large blocks, or too computationally expensive blocks
+    * Maximum tx sizes and gas are now removed, and are implicitly the blocks maximums
+    * ABCI validators no longer send the pubkey. The pubkey is only sent in validator updates
+    * Validator set changes are now delayed by one block 
+    * Block header now includes the next validator sets hash
+    * BFT time is implemented
+    * Secp256k1 signature format has changed
+    * There is now a threshold multisig format
+    * See the [tendermint changelog](https://github.com/tendermint/tendermint/blob/master/CHANGELOG.md) for other changes.
 
 FEATURES
 

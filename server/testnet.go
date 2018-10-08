@@ -156,7 +156,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit AppInit) er
 func getIP(i int) (ip string, err error) {
 	ip = viper.GetString(startingIPAddress)
 	if len(ip) == 0 {
-		ip, err = externalIP()
+		ip, err = ExternalIP()
 		if err != nil {
 			return "", err
 		}

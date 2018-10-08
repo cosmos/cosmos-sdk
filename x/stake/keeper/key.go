@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -25,6 +26,8 @@ var (
 	RedelegationKey                  = []byte{0x0A} // key for a redelegation
 	RedelegationByValSrcIndexKey     = []byte{0x0B} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x0C} // prefix for each key for an redelegation, by destination validator operator
+	UnbondingQueueKey                = []byte{0x0D} // prefix for the timestamps in unbonding queue
+	RedelegationQueueKey             = []byte{0x0E} // prefix for the timestamps in redelegations queue
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -134,6 +137,12 @@ func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 	return append(UnbondingDelegationByValIndexKey, valAddr.Bytes()...)
 }
 
+// gets the prefix for all unbonding delegations from a delegator
+func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	return append(UnbondingQueueKey, bz...)
+}
+
 //________________________________________________________________________________
 
 // gets the key for a redelegation
@@ -177,29 +186,35 @@ func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.V
 	return key
 }
 
-// rearranges the ValSrcIndexKey to get the REDKey
-func GetREDKeyFromValSrcIndexKey(IndexKey []byte) []byte {
-	addrs := IndexKey[1:] // remove prefix bytes
-	if len(addrs) != 3*sdk.AddrLen {
+// GetREDKeyFromValSrcIndexKey rearranges the ValSrcIndexKey to get the REDKey
+func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
+	// note that first byte is prefix byte
+	if len(indexKey) != 3*sdk.AddrLen+1 {
 		panic("unexpected key length")
 	}
-	valSrcAddr := addrs[:sdk.AddrLen]
-	delAddr := addrs[sdk.AddrLen : 2*sdk.AddrLen]
-	valDstAddr := addrs[2*sdk.AddrLen:]
+	valSrcAddr := indexKey[1 : sdk.AddrLen+1]
+	delAddr := indexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
+	valDstAddr := indexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
 
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
 
-// rearranges the ValDstIndexKey to get the REDKey
-func GetREDKeyFromValDstIndexKey(IndexKey []byte) []byte {
-	addrs := IndexKey[1:] // remove prefix bytes
-	if len(addrs) != 3*sdk.AddrLen {
+// GetREDKeyFromValDstIndexKey rearranges the ValDstIndexKey to get the REDKey
+func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
+	// note that first byte is prefix byte
+	if len(indexKey) != 3*sdk.AddrLen+1 {
 		panic("unexpected key length")
 	}
-	valDstAddr := addrs[:sdk.AddrLen]
-	delAddr := addrs[sdk.AddrLen : 2*sdk.AddrLen]
-	valSrcAddr := addrs[2*sdk.AddrLen:]
+	valDstAddr := indexKey[1 : sdk.AddrLen+1]
+	delAddr := indexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
+	valSrcAddr := indexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
+}
+
+// gets the prefix for all unbonding delegations from a delegator
+func GetRedelegationTimeKey(timestamp time.Time) []byte {
+	bz, _ := timestamp.MarshalBinary()
+	return append(RedelegationQueueKey, bz...)
 }
 
 //______________

@@ -306,6 +306,13 @@ func PrefixEndBytes(prefix []byte) []byte {
 	return end
 }
 
+// InclusiveEndBytes returns the []byte that would end a
+// range query such that the input would be included
+func InclusiveEndBytes(inclusiveBytes []byte) (exclusiveBytes []byte) {
+	exclusiveBytes = append(inclusiveBytes, byte(0x00))
+	return exclusiveBytes
+}
+
 // TransientStoreKey is used for indexing transient stores in a MultiStore
 type TransientStoreKey struct {
 	name string

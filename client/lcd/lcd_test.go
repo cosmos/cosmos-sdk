@@ -860,7 +860,7 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 	return
 }
 
-func doRecoverKey(t *testing.T, port, recoverName, recoverPassword, seed string)  {
+func doRecoverKey(t *testing.T, port, recoverName, recoverPassword, seed string) {
 	jsonStr := []byte(fmt.Sprintf(`{"password":"%s", "seed":"%s"}`, recoverPassword, seed))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/keys/%s/recover", recoverName), jsonStr)
 

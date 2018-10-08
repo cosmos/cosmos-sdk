@@ -1,7 +1,6 @@
 package store
 
 import (
-	"bytes"
 	"math/rand"
 	"testing"
 
@@ -127,9 +126,17 @@ func TestPrefixStoreIteratorEdgeCase(t *testing.T) {
 	baseStore.Set([]byte{0xAB, 0x00}, []byte{})
 	baseStore.Set([]byte{0xAB, 0x00, 0x00}, []byte{})
 
-	for iter := prefixStore.Iterator(nil, nil); iter.Valid(); iter.Next() {
-		require.True(t, bytes.HasPrefix(iter.Key(), prefix))
-	}
+	iter := prefixStore.Iterator(nil, nil)
+
+	checkDomain(t, iter, nil, nil)
+	checkItem(t, iter, []byte{}, bz(""))
+	checkNext(t, iter, true)
+	checkItem(t, iter, []byte{0x00}, bz(""))
+	checkNext(t, iter, false)
+
+	checkInvalid(t, iter)
+
+	iter.Close()
 }
 
 func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
@@ -150,9 +157,14 @@ func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
 	baseStore.Set([]byte{0xAA, 0xFF, 0xFE}, []byte{})
 
 	iter := prefixStore.ReverseIterator(nil, nil)
-	for ; iter.Valid(); iter.Next() {
-		require.True(t, bytes.HasPrefix(iter.Key(), prefix))
-	}
+
+	checkDomain(t, iter, nil, nil)
+	checkItem(t, iter, []byte{0x00}, bz(""))
+	checkNext(t, iter, true)
+	checkItem(t, iter, []byte{}, bz(""))
+	checkNext(t, iter, false)
+
+	checkInvalid(t, iter)
 
 	iter.Close()
 
@@ -172,9 +184,207 @@ func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
 	baseStore.Set([]byte{0xA9, 0xFF, 0xFF}, []byte{})
 
 	iter = prefixStore.ReverseIterator(nil, nil)
-	for ; iter.Valid(); iter.Next() {
-		require.True(t, bytes.HasPrefix(iter.Key(), prefix))
-	}
+
+	checkDomain(t, iter, nil, nil)
+	checkItem(t, iter, []byte{0x00}, bz(""))
+	checkNext(t, iter, true)
+	checkItem(t, iter, []byte{}, bz(""))
+	checkNext(t, iter, false)
+
+	checkInvalid(t, iter)
 
 	iter.Close()
+}
+
+// Tests below are ported from https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db_test.go
+
+func mockStoreWithStuff() sdk.KVStore {
+	db := dbm.NewMemDB()
+	store := dbStoreAdapter{db}
+	// Under "key" prefix
+	store.Set(bz("key"), bz("value"))
+	store.Set(bz("key1"), bz("value1"))
+	store.Set(bz("key2"), bz("value2"))
+	store.Set(bz("key3"), bz("value3"))
+	store.Set(bz("something"), bz("else"))
+	store.Set(bz(""), bz(""))
+	store.Set(bz("k"), bz("val"))
+	store.Set(bz("ke"), bz("valu"))
+	store.Set(bz("kee"), bz("valuu"))
+	return store
+}
+
+func checkValue(t *testing.T, store sdk.KVStore, key []byte, expected []byte) {
+	bz := store.Get(key)
+	require.Equal(t, expected, bz)
+}
+
+func checkValid(t *testing.T, itr sdk.Iterator, expected bool) {
+	valid := itr.Valid()
+	require.Equal(t, expected, valid)
+}
+
+func checkNext(t *testing.T, itr sdk.Iterator, expected bool) {
+	itr.Next()
+	valid := itr.Valid()
+	require.Equal(t, expected, valid)
+}
+
+func checkDomain(t *testing.T, itr sdk.Iterator, start, end []byte) {
+	ds, de := itr.Domain()
+	require.Equal(t, start, ds)
+	require.Equal(t, end, de)
+}
+
+func checkItem(t *testing.T, itr sdk.Iterator, key, value []byte) {
+	require.Exactly(t, key, itr.Key())
+	require.Exactly(t, value, itr.Value())
+}
+
+func checkInvalid(t *testing.T, itr sdk.Iterator) {
+	checkValid(t, itr, false)
+	checkKeyPanics(t, itr)
+	checkValuePanics(t, itr)
+	checkNextPanics(t, itr)
+}
+
+func checkKeyPanics(t *testing.T, itr sdk.Iterator) {
+	require.Panics(t, func() { itr.Key() })
+}
+
+func checkValuePanics(t *testing.T, itr sdk.Iterator) {
+	require.Panics(t, func() { itr.Value() })
+}
+
+func checkNextPanics(t *testing.T, itr sdk.Iterator) {
+	require.Panics(t, func() { itr.Next() })
+}
+
+func TestPrefixDBSimple(t *testing.T) {
+	store := mockStoreWithStuff()
+	pstore := store.Prefix(bz("key"))
+
+	checkValue(t, pstore, bz("key"), nil)
+	checkValue(t, pstore, bz(""), bz("value"))
+	checkValue(t, pstore, bz("key1"), nil)
+	checkValue(t, pstore, bz("1"), bz("value1"))
+	checkValue(t, pstore, bz("key2"), nil)
+	checkValue(t, pstore, bz("2"), bz("value2"))
+	checkValue(t, pstore, bz("key3"), nil)
+	checkValue(t, pstore, bz("3"), bz("value3"))
+	checkValue(t, pstore, bz("something"), nil)
+	checkValue(t, pstore, bz("k"), nil)
+	checkValue(t, pstore, bz("ke"), nil)
+	checkValue(t, pstore, bz("kee"), nil)
+}
+
+func TestPrefixDBIterator1(t *testing.T) {
+	store := mockStoreWithStuff()
+	pstore := store.Prefix(bz("key"))
+
+	itr := pstore.Iterator(nil, nil)
+	checkDomain(t, itr, nil, nil)
+	checkItem(t, itr, bz(""), bz("value"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("1"), bz("value1"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("2"), bz("value2"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("3"), bz("value3"))
+	checkNext(t, itr, false)
+	checkInvalid(t, itr)
+	itr.Close()
+}
+
+func TestPrefixDBIterator2(t *testing.T) {
+	store := mockStoreWithStuff()
+	pstore := store.Prefix(bz("key"))
+
+	itr := pstore.Iterator(nil, bz(""))
+	checkDomain(t, itr, nil, bz(""))
+	checkInvalid(t, itr)
+	itr.Close()
+}
+
+func TestPrefixDBIterator3(t *testing.T) {
+	store := mockStoreWithStuff()
+	pstore := store.Prefix(bz("key"))
+
+	itr := pstore.Iterator(bz(""), nil)
+	checkDomain(t, itr, bz(""), nil)
+	checkItem(t, itr, bz(""), bz("value"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("1"), bz("value1"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("2"), bz("value2"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("3"), bz("value3"))
+	checkNext(t, itr, false)
+	checkInvalid(t, itr)
+	itr.Close()
+}
+
+func TestPrefixDBIterator4(t *testing.T) {
+	store := mockStoreWithStuff()
+	pstore := store.Prefix(bz("key"))
+
+	itr := pstore.Iterator(bz(""), bz(""))
+	checkDomain(t, itr, bz(""), bz(""))
+	checkInvalid(t, itr)
+	itr.Close()
+}
+
+func TestPrefixDBReverseIterator1(t *testing.T) {
+	store := mockStoreWithStuff()
+	pstore := store.Prefix(bz("key"))
+
+	itr := pstore.ReverseIterator(nil, nil)
+	checkDomain(t, itr, nil, nil)
+	checkItem(t, itr, bz("3"), bz("value3"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("2"), bz("value2"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("1"), bz("value1"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz(""), bz("value"))
+	checkNext(t, itr, false)
+	checkInvalid(t, itr)
+	itr.Close()
+}
+
+func TestPrefixDBReverseIterator2(t *testing.T) {
+	store := mockStoreWithStuff()
+	pstore := store.Prefix(bz("key"))
+
+	itr := pstore.ReverseIterator(nil, bz(""))
+	checkDomain(t, itr, nil, bz(""))
+	checkItem(t, itr, bz("3"), bz("value3"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("2"), bz("value2"))
+	checkNext(t, itr, true)
+	checkItem(t, itr, bz("1"), bz("value1"))
+	checkNext(t, itr, false)
+	checkInvalid(t, itr)
+	itr.Close()
+}
+
+func TestPrefixDBReverseIterator3(t *testing.T) {
+	store := mockStoreWithStuff()
+	pstore := store.Prefix(bz("key"))
+
+	itr := pstore.ReverseIterator(bz(""), nil)
+	checkDomain(t, itr, bz(""), nil)
+	checkItem(t, itr, bz(""), bz("value"))
+	checkNext(t, itr, false)
+	checkInvalid(t, itr)
+	itr.Close()
+}
+
+func TestPrefixDBReverseIterator4(t *testing.T) {
+	store := mockStoreWithStuff()
+	pstore := store.Prefix(bz("key"))
+
+	itr := pstore.ReverseIterator(bz(""), bz(""))
+	checkInvalid(t, itr)
+	itr.Close()
 }

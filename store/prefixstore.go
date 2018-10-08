@@ -9,6 +9,10 @@ import (
 
 var _ KVStore = prefixStore{}
 
+// prefixStore is similar with tendermint/tendermint/libs/db/prefix_db
+// both gives access only to the limited subset of the store
+// for convinience or safety
+
 type prefixStore struct {
 	parent KVStore
 	prefix []byte
@@ -84,13 +88,9 @@ func (s prefixStore) Iterator(start, end []byte) Iterator {
 		newend = cloneAppend(s.prefix, end)
 	}
 
-	return prefixIterator{
-		prefix: s.prefix,
-		start:  start,
-		end:    end,
-		iter:   s.parent.Iterator(newstart, newend),
-	}
+	iter := s.parent.Iterator(newstart, newend)
 
+	return newPrefixIterator(s.prefix, start, end, iter)
 }
 
 // Implements KVStore
@@ -115,12 +115,7 @@ func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
 		skipOne(iter, cpIncr(s.prefix))
 	}
 
-	return prefixIterator{
-		prefix: s.prefix,
-		start:  start,
-		end:    end,
-		iter:   iter,
-	}
+	return newPrefixIterator(s.prefix, start, end, iter)
 }
 
 type prefixIterator struct {
@@ -128,6 +123,16 @@ type prefixIterator struct {
 	start, end []byte
 	iter       Iterator
 	valid      bool
+}
+
+func newPrefixIterator(prefix, start, end []byte, parent Iterator) prefixIterator {
+	return prefixIterator{
+		prefix: prefix,
+		start:  start,
+		end:    end,
+		iter:   parent,
+		valid:  parent.Valid() && bytes.HasPrefix(parent.Key(), prefix),
+	}
 }
 
 // Implements Iterator
@@ -155,7 +160,7 @@ func (iter prefixIterator) Next() {
 // Implements Iterator
 func (iter prefixIterator) Key() (key []byte) {
 	key = iter.iter.Key()
-	key = key[len(iter.prefix):]
+	key = stripPrefix(key, iter.prefix)
 	return
 }
 

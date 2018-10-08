@@ -164,13 +164,12 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
+  digest = "1:ea40c24cdbacd054a6ae9de03e62c5f252479b96c716375aace5c120d68647c8"
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -447,7 +446,7 @@
   version = "v0.11.0"
 
 [[projects]]
-  digest = "1:f4fcc1a4dbe079b200556ca26c1ff1dacf23712125b9c265d8f02c0dbc318f39"
+  digest = "1:a69eebd15b05045ffdb10a984e001fadc5666f74383de3d2a9ee5862ee99cfdc"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -478,6 +477,7 @@
     "libs/clist",
     "libs/common",
     "libs/db",
+    "libs/errors",
     "libs/events",
     "libs/flowrate",
     "libs/log",
@@ -512,8 +512,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "d419fffe18531317c28c29a292ad7d253f6cafdf"
-  version = "v0.24.0"
+  revision = "0c9c3292c918617624f6f3fbcd95eceade18bcd5"
+  version = "v0.25.0"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"

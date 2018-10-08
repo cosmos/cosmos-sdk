@@ -17,7 +17,7 @@ var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
 
 //______________________________________________________________________
 
-// MsgCreateValidator - struct for unbonding transactions
+// MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
 	Description
 	Commission    CommissionMsg

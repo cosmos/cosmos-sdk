@@ -69,7 +69,6 @@ func GenTxCmd(ctx *Context, cdc *codec.Codec, appInit AppInit) *cobra.Command {
 		Short: "Create genesis transaction file (under [--home]/config/gentx/gentx-[nodeID].json)",
 		Args:  cobra.NoArgs,
 		RunE: func(_ *cobra.Command, args []string) error {
-
 			config := ctx.Config
 			config.SetRoot(viper.GetString(tmcli.HomeFlag))
 
@@ -112,6 +111,8 @@ func GenTxCmd(ctx *Context, cdc *codec.Codec, appInit AppInit) *cobra.Command {
 	return cmd
 }
 
+// NOTE: This will update (write) the config file with
+// updated name (moniker) for node.
 func gentxWithConfig(cdc *codec.Codec, appInit AppInit, config *cfg.Config, genTxConfig serverconfig.GenTx) (
 	cliPrint json.RawMessage, genTxFile json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())

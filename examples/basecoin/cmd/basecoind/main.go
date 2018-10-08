@@ -29,8 +29,7 @@ func main() {
 	}
 
 	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit,
-		server.ConstructAppCreator(newApp, "basecoin"),
-		server.ConstructAppExporter(exportAppStateAndTMValidators, "basecoin"))
+		newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")

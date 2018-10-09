@@ -319,6 +319,9 @@ func getKeys(validators map[string]mockValidator) []string {
 // randomProposer picks a random proposer from the current validator set
 func randomProposer(r *rand.Rand, validators map[string]mockValidator) common.HexBytes {
 	keys := getKeys(validators)
+	if len(keys) == 0 {
+		return nil
+	}
 	key := keys[r.Intn(len(keys))]
 	proposer := validators[key].val
 	pk, err := tmtypes.PB2TM.PubKey(proposer.PubKey)

@@ -50,6 +50,7 @@ type CLIContext struct {
 	GenerateOnly  bool
 	fromAddress   types.AccAddress
 	fromName      string
+	Indent        bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -87,6 +88,7 @@ func NewCLIContext() CLIContext {
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
 		fromAddress:   fromAddress,
 		fromName:      fromName,
+		Indent:        viper.GetBool(client.FlagIndentResponse),
 	}
 }
 

@@ -23,9 +23,7 @@ type (
 	MsgEditValidator        = types.MsgEditValidator
 	MsgDelegate             = types.MsgDelegate
 	MsgBeginUnbonding       = types.MsgBeginUnbonding
-	MsgCompleteUnbonding    = types.MsgCompleteUnbonding
 	MsgBeginRedelegate      = types.MsgBeginRedelegate
-	MsgCompleteRedelegate   = types.MsgCompleteRedelegate
 	GenesisState            = types.GenesisState
 	QueryDelegatorParams    = querier.QueryDelegatorParams
 	QueryValidatorParams    = querier.QueryValidatorParams
@@ -77,9 +75,7 @@ var (
 	NewMsgEditValidator             = types.NewMsgEditValidator
 	NewMsgDelegate                  = types.NewMsgDelegate
 	NewMsgBeginUnbonding            = types.NewMsgBeginUnbonding
-	NewMsgCompleteUnbonding         = types.NewMsgCompleteUnbonding
 	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
-	NewMsgCompleteRedelegate        = types.NewMsgCompleteRedelegate
 
 	NewQuerier = querier.NewQuerier
 )

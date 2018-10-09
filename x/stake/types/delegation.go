@@ -9,6 +9,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// DVPair is struct that just has a delegator-validator pair with no other data.
+// It is intended to be used as a marshalable pointer. For example, a DVPair can be used to construct the
+// key to getting an UnbondingDelegation from state.
+type DVPair struct {
+	DelegatorAddr sdk.AccAddress
+	ValidatorAddr sdk.ValAddress
+}
+
+// DVVTriplet is struct that just has a delegator-validator-validator triplet with no other data.
+// It is intended to be used as a marshalable pointer. For example, a DVVTriplet can be used to construct the
+// key to getting a Redelegation from state.
+type DVVTriplet struct {
+	DelegatorAddr    sdk.AccAddress
+	ValidatorSrcAddr sdk.ValAddress
+	ValidatorDstAddr sdk.ValAddress
+}
+
 // Delegation represents the bond with tokens held by an account.  It is
 // owned by one delegator, and is associated with the voting power of one
 // pubKey.

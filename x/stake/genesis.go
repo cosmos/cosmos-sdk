@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -76,5 +78,60 @@ func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisVali
 		return false
 	})
 
+	return
+}
+
+// ValidateGenesis validates the provided staking genesis state to ensure the
+// expected invariants holds. (i.e. params in correct bounds, no duplicate validators)
+func ValidateGenesis(data types.GenesisState) error {
+	err := validateGenesisStateValidators(data.Validators)
+	if err != nil {
+		return err
+	}
+	err = validateParams(data.Params)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateParams(params types.Params) error {
+	if params.GoalBonded.LTE(sdk.ZeroDec()) {
+		bondedPercent := params.GoalBonded.MulInt(sdk.NewInt(100)).String()
+		return fmt.Errorf("staking parameter GoalBonded should be positive, instead got %s percent", bondedPercent)
+	}
+	if params.GoalBonded.GT(sdk.OneDec()) {
+		bondedPercent := params.GoalBonded.MulInt(sdk.NewInt(100)).String()
+		return fmt.Errorf("staking parameter GoalBonded should be less than 100 percent, instead got %s percent", bondedPercent)
+	}
+	if params.BondDenom == "" {
+		return fmt.Errorf("staking parameter BondDenom can't be an empty string")
+	}
+	if params.InflationMax.LT(params.InflationMin) {
+		return fmt.Errorf("staking parameter Max inflation must be greater than or equal to min inflation")
+	}
+	return nil
+}
+
+func validateGenesisStateValidators(validators []types.Validator) (err error) {
+	addrMap := make(map[string]bool, len(validators))
+	for i := 0; i < len(validators); i++ {
+		val := validators[i]
+		strKey := string(val.ConsPubKey.Bytes())
+		if _, ok := addrMap[strKey]; ok {
+			return fmt.Errorf("duplicate validator in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
+		}
+		if val.Jailed && val.Status == sdk.Bonded {
+			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
+		}
+		if val.Tokens.IsZero() {
+			return fmt.Errorf("genesis validator cannot have zero pool shares, validator: %v", val)
+		}
+		if val.DelegatorShares.IsZero() {
+			return fmt.Errorf("genesis validator cannot have zero delegator shares, validator: %v", val)
+		}
+		addrMap[strKey] = true
+	}
 	return
 }

@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestInitGenesis(t *testing.T) {
@@ -104,4 +106,60 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	}
 
 	require.Equal(t, abcivals, vals)
+}
+
+func TestValidateGenesis(t *testing.T) {
+	genValidators1 := make([]types.Validator, 1, 5)
+	pk := ed25519.GenPrivKey().PubKey()
+	genValidators1[0] = types.NewValidator(sdk.ValAddress(pk.Address()), pk, types.NewDescription("", "", "", ""))
+	genValidators1[0].Tokens = sdk.OneDec()
+	genValidators1[0].DelegatorShares = sdk.OneDec()
+
+	tests := []struct {
+		name    string
+		mutate  func(*types.GenesisState)
+		wantErr bool
+	}{
+		{"default", func(*types.GenesisState) {}, false},
+		// validate params
+		{"200% goalbonded", func(data *types.GenesisState) { (*data).Params.GoalBonded = sdk.OneDec().Add(sdk.OneDec()) }, true},
+		{"-67% goalbonded", func(data *types.GenesisState) { (*data).Params.GoalBonded = sdk.OneDec().Neg() }, true},
+		{"no bond denom", func(data *types.GenesisState) { (*data).Params.BondDenom = "" }, true},
+		{"min inflation > max inflation", func(data *types.GenesisState) {
+			(*data).Params.InflationMin = (*data).Params.InflationMax.Add(sdk.OneDec())
+		}, true},
+		{"min inflation = max inflation", func(data *types.GenesisState) {
+			(*data).Params.InflationMax = (*data).Params.InflationMin
+		}, false},
+		// validate genesis validators
+		{"duplicate validator", func(data *types.GenesisState) {
+			(*data).Validators = genValidators1
+			(*data).Validators = append((*data).Validators, genValidators1[0])
+		}, true},
+		{"no pool shares", func(data *types.GenesisState) {
+			(*data).Validators = genValidators1
+			(*data).Validators[0].Tokens = sdk.ZeroDec()
+		}, true},
+		{"no delegator shares", func(data *types.GenesisState) {
+			(*data).Validators = genValidators1
+			(*data).Validators[0].DelegatorShares = sdk.ZeroDec()
+		}, true},
+		{"jailed and bonded validator", func(data *types.GenesisState) {
+			(*data).Validators = genValidators1
+			(*data).Validators[0].Jailed = true
+			(*data).Validators[0].Status = sdk.Bonded
+		}, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			genesisState := types.DefaultGenesisState()
+			tt.mutate(&genesisState)
+			if tt.wantErr {
+				assert.Error(t, ValidateGenesis(genesisState))
+			} else {
+				assert.NoError(t, ValidateGenesis(genesisState))
+			}
+		})
+	}
 }

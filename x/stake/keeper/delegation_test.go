@@ -250,7 +250,7 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, delegation)
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
+	_, err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
 
 	// end block
@@ -306,7 +306,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 
 	// unbond the all self-delegation to put validator in unbonding state
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
+	_, err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
 
 	// end block
@@ -328,7 +328,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond some of the other delegation's shares
-	err = keeper.BeginUnbonding(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
+	_, err = keeper.BeginUnbonding(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
 	require.NoError(t, err)
 
 	// retrieve the unbonding delegation
@@ -382,7 +382,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond the all self-delegation to put validator in unbonding state
-	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
+	_, err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
 
 	// end block
@@ -404,7 +404,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond some of the other delegation's shares
-	err = keeper.BeginUnbonding(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
+	_, err = keeper.BeginUnbonding(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
 	require.NoError(t, err)
 
 	// no ubd should have been found, coins should have been returned direcly to account
@@ -553,7 +553,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	}
 	keeper.SetDelegation(ctx, delegation)
 
-	err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(10))
+	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(10))
 	require.NoError(t, err)
 
 	// end block
@@ -618,7 +618,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond the all self-delegation to put validator in unbonding state
-	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
+	_, err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
 
 	// end block
@@ -640,7 +640,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond some of the other delegation's shares
-	err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(6))
+	_, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(6))
 	require.NoError(t, err)
 
 	// retrieve the unbonding delegation
@@ -704,7 +704,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond the all self-delegation to put validator in unbonding state
-	err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
+	_, err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
 	require.NoError(t, err)
 
 	// end block
@@ -726,7 +726,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeader(header)
 
 	// unbond some of the other delegation's shares
-	err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(6))
+	_, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(6))
 	require.NoError(t, err)
 
 	// no ubd should have been found, coins should have been returned direcly to account

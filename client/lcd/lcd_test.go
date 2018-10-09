@@ -522,8 +522,11 @@ func TestBonding(t *testing.T) {
 	name, password, denom := "test", "1234567890", "steak"
 	addr, seed := CreateAddr(t, name, password, GetKeyBase(t))
 
-	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 2, []sdk.AccAddress{addr})
 	defer cleanup()
+
+	require.Equal(t, 2, len(valPubKeys))
+	require.Equal(t, 2, len(operAddrs))
 
 	amt := sdk.NewDec(60)
 	validator := getValidator(t, port, operAddrs[0])

@@ -7,8 +7,16 @@ info:
 tags:
 - name: ICS0
   description: Tendermint APIs, such as query blocks, transactions and validatorset
+- name: ICS1
+  description: Key management APIs
 - name: ICS20
-  description: Create and sign a send tx
+  description: Create, sign and broadcast transactions
+- name: ICS21
+  description: Stake module APIs
+- name: ICS22
+  description: Governance module APIs
+- name: ICS23
+  description: Slashing module APIs
 - name: version
   description: Information about the app version
 schemes:
@@ -524,6 +532,586 @@ paths:
             $ref: "#/definitions/AccountQueryResponse"
         404:
           description: Account is not available
+  /stake/delegators/{delegatorAddr}/delegations:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    post:
+      summary: Submit delegation
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: delegation
+        description: The password of the account to remove from the KMS
+        schema:
+          type: object
+          properties:
+            delegations:
+              type: array
+              items:
+                type: object
+                properties:
+                  delegator_addr:
+                    $ref: "#/definitions/Address"
+                  validator_addr:
+                    $ref: "#/definitions/ValidatorAddress"
+                  delegation:
+                    $ref: "#/definitions/Coin"
+            begin_unbondings:
+              type: array
+              items:
+                type: object
+                properties:
+                  delegator_addr:
+                    $ref: "#/definitions/Address"
+                  validator_src_addr:
+                    $ref: "#/definitions/ValidatorAddress"
+                  validator_dst_addr:
+                    $ref: "#/definitions/ValidatorAddress"
+                  shares:
+                    type: string
+                    example: "100"
+            begin_redelegates:
+              type: array
+              items:
+                type: object
+                properties:
+                  delegator_addr:
+                    $ref: "#/definitions/Address"
+                  validator_addr:
+                    $ref: "#/definitions/ValidatorAddress"
+                  shares:
+                    type: string
+                    example: "100"
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+  /stake/delegators/{delegatorAddr}:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: AccAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Get all delegations (delegation, undelegation) from a delegator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+  /stake/delegators/{delegatorAddr}/validators:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Query all validators that a delegator is bonded to
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+  /stake/delegators/{delegatorAddr}/validators/{validatorAddr}:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    - in: path
+      name: validatorAddr
+      description: Bech32 ValAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Query a validator that a delegator is bonded to
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+  /stake/delegators/{delegatorAddr}/txs:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: AccAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Get all staking txs (i.e msgs) from a delegator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/TxQuery"
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+  /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    - in: path
+      name: validatorAddr
+      description: Bech32 ValAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Query the current delegation status between a delegator and a validator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+  /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    - in: path
+      name: validatorAddr
+      description: Bech32 ValAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Query all unbonding delegations between a delegator and a validator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+  /stake/validators:
+    get:
+      summary: Get all validator candidates
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        500:
+          description: Internal Server Error
+  /stake/validators/{validatorAddr}:
+    parameters:
+    - in: path
+      name: validatorAddr
+      description: Bech32 ValAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Query the information from a single validator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        404:
+          description: Not Found
+        500:
+          description: Internal Server Error
+  /stake/pool:
+    get:
+      summary: Get the current state of the staking pool
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        500:
+          description: Internal Server Error
+  /stake/parameters:
+    get:
+      summary: Get the current staking parameter values
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+        500:
+          description: Internal Server Error
+  /slashing/signing_info/{validator_pub}:
+    get:
+      description: Get validator's sign info
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS23
+      summary: Get validator's sign info
+      parameters:
+      - type: string
+        description: validator's public key
+        name: validator_pub
+        required: true
+        in: path
+      responses:
+        '200':
+          description: OK
+  /slashing/unrevoke:
+    post:
+      description: Unrevoke a revoked validator
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS23
+      summary: Unrevoke a revoked validator
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - description: ''
+        name: UnrevokeBody
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            base_req:
+              "$ref": "#/definitions/BaseReq"
+            validator_addr:
+              type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+  /gov/proposals:
+    post:
+      description: Send transaction to submit a proposal
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      summary: Submit a proposal
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - description: valid value of `"proposal_type"` can be `"Text"`, `"ParameterChange"`, `"SoftwareUpgrade"`
+        name: postProposalBody
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            base_req:
+              "$ref": "#/definitions/BaseReq"
+            title:
+              type: string
+            description:
+              type: string
+            proposal_type:
+              type: string
+            proposer:
+              "$ref": "#/definitions/Address"
+            initial_deposit:
+              type: array
+              items:
+                $ref: "#/definitions/Coin"
+      responses:
+        '200':
+          description: OK
+          schema:
+            "$ref": "#/definitions/BroadcastTxCommitResult"
+    get:
+      description: Query proposals information with parameters
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - in: query
+        name: voter
+        description: voter address
+        required: false
+        type: string
+      - in: query
+        name: depositer
+        description: depositer address
+        required: false
+        type: string
+      - in: query
+        name: status
+        description: proposal status, valid values can be `"DepositPeriod"`, `"VotingPeriod"`, `"Passed"`, `"Rejected"`
+        required: false
+        type: string
+      summary: Query proposals
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              "$ref": "#/definitions/TextProposal"
+  /gov/proposals/{proposal-id}/deposits:
+    post:
+      description: Send transaction to deposit tokens to a proposal
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      summary: Deposit tokens to a proposal
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - type: string
+        description: proposal id
+        name: proposal-id
+        required: true
+        in: path
+      - description: ''
+        name: depositBody
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            base_req:
+              "$ref": "#/definitions/BaseReq"
+            depositer:
+              "$ref": "#/definitions/Address"
+            amount:
+              type: array
+              items:
+                $ref: "#/definitions/Coin"
+      responses:
+        200:
+          description: OK
+          schema:
+            "$ref": "#/definitions/BroadcastTxCommitResult"
+  /gov/proposals/{proposal-id}/votes:
+    post:
+      description: Send transaction to vote a proposal
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      summary: Vote a proposal
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - type: string
+        description: proposal id
+        name: proposal-id
+        required: true
+        in: path
+      - description: valid value of `"option"` field can be `"Yes"`, `"No"`, `"NoWithVeto"` and `"Abstain"`
+        name: voteBody
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            base_req:
+              "$ref": "#/definitions/BaseReq"
+            voter:
+              "$ref": "#/definitions/Address"
+            option:
+              type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            "$ref": "#/definitions/BroadcastTxCommitResult"
+    get:
+      description: Query voters information by proposal-id
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      summary: Query voters
+      parameters:
+      - type: string
+        description: proposal id
+        name: proposal-id
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              "$ref": "#/definitions/Vote"
+  /gov/proposals/{proposal-id}:
+    get:
+      description: Query a proposal by id
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      summary: Query a proposal
+      parameters:
+      - type: string
+        name: proposal-id
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            "$ref": "#/definitions/TextProposal"
+  /gov/proposals/{proposal-id}/deposits/{depositer}:
+    get:
+      description: Query deposit by proposal-id and depositer address
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      summary: Query deposit
+      parameters:
+      - type: string
+        description: proposal id
+        name: proposal-id
+        required: true
+        in: path
+      - type: string
+        description: depositer address
+        name: depositer
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Deposite"
+  /gov/proposals/{proposal-id}/votes/{voter}:
+    get:
+      description: Query vote information by proposal-id and voter address
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      summary: Query vote
+      parameters:
+      - type: string
+        description: proposal id
+        name: proposal-id
+        required: true
+        in: path
+      - type: string
+        description: voter address
+        name: voter
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Vote"
 
 definitions:
   CheckTxResult:
@@ -615,12 +1203,12 @@ definitions:
     type: string
   Address:
     type: string
-    description: bech32 encoded addres
+    description: bech32 encoded address
     example: cosmoszgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   ValidatorAddress:
     type: string
-    description: bech32 encoded addres
-    example: cosmosvaloper:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    description: bech32 encoded address
+    example: cosmosvaloper1depk54cuajgkzea6zpgkq36tnjwdzv4avv9cxd
   PubKey:
     type: object
     properties:
@@ -908,3 +1496,55 @@ definitions:
       accum:
         type: number
         example: 1000
+  TextProposal:
+    type: object
+    properties:
+      proposal_id:
+        type: integer
+      title:
+        type: string
+      description:
+        type: string
+      proposal_type:
+        type: string
+      proposal_status:
+        type: string
+      tally_result:
+        type: object
+        properties:
+          yes:
+            type: string
+          abstain:
+            type: string
+          no:
+            type: string
+          no_with_veto:
+            type: string
+      submit_block:
+        type: string
+      total_deposit:
+        type: array
+        items:
+          "$ref": "#/definitions/Coin"
+      voting_start_block:
+        type: string
+  Deposite:
+    type: object
+    properties:
+      amount:
+        type: array
+        items:
+          "$ref": "#/definitions/Coin"
+      proposal_id:
+        type: integer
+      depositer:
+        "$ref": "#/definitions/Address"
+  Vote:
+    type: object
+    properties:
+      voter:
+        type: string
+      proposal_id:
+        type: integer
+      option:
+        type: string

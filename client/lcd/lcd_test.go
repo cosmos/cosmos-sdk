@@ -10,9 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/ethereum/go-ethereum/p2p"
+	p2p "github.com/tendermint/tendermint/p2p"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -23,6 +22,7 @@ import (
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
+	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"

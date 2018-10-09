@@ -1,7 +1,6 @@
 package keys
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -91,44 +90,39 @@ func getBechKeyOut(bechPrefix string) (bechKeyOutFn, error) {
 // REST
 
 // get key REST handler
-func GetKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-	bechPrefix := r.URL.Query().Get(FlagBechPrefix)
+func GetKeyRequestHandler(indent bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		name := vars["name"]
+		bechPrefix := r.URL.Query().Get(FlagBechPrefix)
 
-	if bechPrefix == "" {
-		bechPrefix = "acc"
+		if bechPrefix == "" {
+			bechPrefix = "acc"
+		}
+
+		bechKeyOut, err := getBechKeyOut(bechPrefix)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		info, err := GetKeyInfo(name)
+		// TODO: check for the error if key actually does not exist, instead of
+		// assuming this as the reason
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		keyOutput, err := bechKeyOut(info)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		PostProcessResponse(w, cdc, keyOutput, indent)
 	}
-
-	bechKeyOut, err := getBechKeyOut(bechPrefix)
-	if err != nil {
-		w.WriteHeader(400)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	info, err := GetKeyInfo(name)
-	// TODO: check for the error if key actually does not exist, instead of
-	// assuming this as the reason
-	if err != nil {
-		w.WriteHeader(404)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	keyOutput, err := bechKeyOut(info)
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	output, err := json.MarshalIndent(keyOutput, "", "  ")
-	if err != nil {
-		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
-	}
-
-	w.Write(output)
 }

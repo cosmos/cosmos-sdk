@@ -1,7 +1,7 @@
-package lib
+package store
 
 import (
-	"fmt"
+	//	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,7 +12,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,7 +22,7 @@ type S struct {
 
 func defaultComponents(key sdk.StoreKey) (sdk.Context, *codec.Codec) {
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
+	cms := NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
@@ -31,23 +30,11 @@ func defaultComponents(key sdk.StoreKey) (sdk.Context, *codec.Codec) {
 	return ctx, cdc
 }
 
-func TestNewLinear(t *testing.T) {
-	cdc := codec.New()
-	require.NotPanics(t, func() { NewLinear(cdc, nil, nil) })
-	require.NotPanics(t, func() { NewLinear(cdc, nil, DefaultLinearKeys()) })
-	require.NotPanics(t, func() { NewLinear(cdc, nil, &LinearKeys{[]byte{0xAA}, []byte{0xBB}, []byte{0xCC}}) })
-
-	require.Panics(t, func() { NewLinear(cdc, nil, &LinearKeys{nil, nil, nil}) })
-	require.Panics(t, func() { NewLinear(cdc, nil, &LinearKeys{[]byte{0xAA}, nil, nil}) })
-	require.Panics(t, func() { NewLinear(cdc, nil, &LinearKeys{nil, []byte{0xBB}, nil}) })
-	require.Panics(t, func() { NewLinear(cdc, nil, &LinearKeys{nil, nil, []byte{0xCC}}) })
-}
-
 func TestList(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	ctx, cdc := defaultComponents(key)
 	store := ctx.KVStore(key)
-	lm := NewList(cdc, store, nil)
+	lm := NewList(cdc, store)
 
 	val := S{1, true}
 	var res S
@@ -94,7 +81,7 @@ func TestQueue(t *testing.T) {
 	ctx, cdc := defaultComponents(key)
 	store := ctx.KVStore(key)
 
-	qm := NewQueue(cdc, store, nil)
+	qm := NewQueue(cdc, store)
 
 	val := S{1, true}
 	var res S
@@ -125,20 +112,14 @@ func TestQueue(t *testing.T) {
 	require.True(t, qm.IsEmpty())
 }
 
-func TestOptions(t *testing.T) {
+func TestKeys(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	ctx, cdc := defaultComponents(key)
 	store := ctx.KVStore(key)
-
-	keys := &LinearKeys{
-		LengthKey: []byte{0xDE, 0xAD},
-		ElemKey:   []byte{0xBE, 0xEF},
-		TopKey:    []byte{0x12, 0x34},
-	}
-	linear := NewLinear(cdc, store, keys)
+	queue := NewQueue(cdc, store)
 
 	for i := 0; i < 10; i++ {
-		linear.Push(i)
+		queue.Push(i)
 	}
 
 	var len uint64
@@ -147,23 +128,44 @@ func TestOptions(t *testing.T) {
 	var actual int
 
 	// Checking keys.LengthKey
-	err := cdc.UnmarshalBinary(store.Get(keys.LengthKey), &len)
+	err := cdc.UnmarshalBinary(store.Get(LengthKey()), &len)
 	require.Nil(t, err)
-	require.Equal(t, len, linear.Len())
+	require.Equal(t, len, queue.List.Len())
 
 	// Checking keys.ElemKey
 	for i := 0; i < 10; i++ {
-		linear.Get(uint64(i), &expected)
-		bz := store.Get(append(keys.ElemKey, []byte(fmt.Sprintf("%020d", i))...))
+		queue.List.Get(uint64(i), &expected)
+		bz := store.Get(ElemKey(uint64(i)))
 		err = cdc.UnmarshalBinary(bz, &actual)
 		require.Nil(t, err)
 		require.Equal(t, expected, actual)
 	}
 
-	linear.Pop()
+	queue.Pop()
 
-	err = cdc.UnmarshalBinary(store.Get(keys.TopKey), &top)
+	err = cdc.UnmarshalBinary(store.Get(TopKey()), &top)
 	require.Nil(t, err)
-	require.Equal(t, top, linear.getTop())
+	require.Equal(t, top, queue.getTop())
 
 }
+
+/*
+func TestListRandom(t *testing.T) {
+	key := sdk.NewKVStoreKey("test")
+	ctx, cdc := defaultComponents(key)
+	store := ctx.KVStore(key)
+	list := NewList(cdc, store)
+	mocklist := []uint32{}
+
+	for i := 0; i < 10000; {
+		limit := rand.Int31() % 1000
+		for j := int32(0); j < limit; j++ {
+			item := rand.Uint32()
+			list.Push(item)
+			mocklist = append(mocklist, item)
+		}
+
+		require.Equal()
+	}
+}
+*/

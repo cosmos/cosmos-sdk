@@ -23,13 +23,27 @@ const (
 )
 
 //----------------------------------------
+// REST error utilities
+
+// checks if the reported REST error has the expected format of 'Error{<msg>}'
+func errMustHaveValidFormat(msg string) {
+	msg = strings.TrimSpace(msg)
+	if len(msg) == 0 {
+		panic("Error can't be blank")
+	} else if !strings.HasPrefix(msg, "Error{") {
+		panic(fmt.Sprintf("%s doesn't match the expected format", msg))
+	}
+}
+
+//----------------------------------------
 // Basic HTTP utilities
 
 // WriteErrorResponse prepares and writes a HTTP error
 // given a status code and an error message.
-func WriteErrorResponse(w http.ResponseWriter, status int, msg string) {
+func WriteErrorResponse(w http.ResponseWriter, status int, err string, msg ...string) {
+	errMustHaveValidFormat(err)
 	w.WriteHeader(status)
-	w.Write([]byte(msg))
+	w.Write([]byte(err))
 }
 
 // WriteGasEstimateResponse prepares and writes an HTTP

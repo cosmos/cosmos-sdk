@@ -77,6 +77,9 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	}
 
 	validators := initChain(r, accs, setups, app, appStateFn)
+	// Second variable to keep pending validator set (delayed one block since TM 0.24)
+	// Initially this is the same as the initial validator set
+	nextValidators := validators
 
 	header := abci.Header{Height: 0, Time: timestamp}
 	opCount := 0
@@ -160,8 +163,9 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		// Generate a random RequestBeginBlock with the current validator set for the next block
 		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header)
 
-		// Update the validator set
-		validators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
+		// Update the validator set, which will be reflected in the application on the next block
+		validators = nextValidators
+		nextValidators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
 	}
 	if stopEarly {
 		DisplayEvents(events)

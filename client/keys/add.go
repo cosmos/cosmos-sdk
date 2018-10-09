@@ -241,6 +241,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		PostProcessResponse(w, cdc, keyOutput, indent)
 	}
 }
+
 // function to just a new seed to display in the UI before actually persisting it in the keybase
 func getSeed(algo keys.SigningAlgo) string {
 	kb := client.MockKeyBase()

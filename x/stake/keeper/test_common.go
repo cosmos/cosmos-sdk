@@ -203,7 +203,8 @@ func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) b
 	return store.Has(power)
 }
 
-func testingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) types.Validator {
+// update validator for testing
+func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) types.Validator {
 	pool := keeper.GetPool(ctx)
 	keeper.SetValidator(ctx, validator)
 	keeper.SetValidatorByPowerIndex(ctx, validator, pool)

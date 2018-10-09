@@ -57,6 +57,7 @@ var (
 	GetREDsFromValSrcIndexKey    = keeper.GetREDsFromValSrcIndexKey
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
+	TestingUpdateValidator       = keeper.TestingUpdateValidator
 
 	DefaultParams         = types.DefaultParams
 	InitialPool           = types.InitialPool

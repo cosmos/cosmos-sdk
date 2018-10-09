@@ -57,7 +57,8 @@ func MakeTestCodec() *codec.Codec {
 }
 
 // hogpodge of all sorts of input required for testing
-func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
+func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (
+	sdk.Context, auth.AccountMapper, Keeper, stake.Keeper) {
 
 	keyDistr := sdk.NewKVStoreKey("distr")
 	tkeyDistr := sdk.NewTransientStoreKey("transient_distr")
@@ -99,5 +100,5 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	pk := params.NewKeeper(cdc, keyParams)
 	keeper := NewKeeper(cdc, keyDistr, tkeyDistr, pk.Setter(), ck, sk, fck, types.DefaultCodespace)
 
-	return ctx, accountMapper, keeper
+	return ctx, accountMapper, keeper, sk
 }

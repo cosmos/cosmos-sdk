@@ -10,19 +10,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/ethereum/go-ethereum/p2p"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	client "github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/client/keys"
-	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
 	tests "github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -565,7 +565,7 @@ func TestBonding(t *testing.T) {
 	// test unbonding
 
 	// create unbond TX
-	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, operAddrs[0], 60)
+	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, operAddrs[0], 30)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -577,55 +577,49 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
 
 	unbonding := getUndelegation(t, port, addr, operAddrs[0])
-	require.Equal(t, "60", unbonding.Balance.Amount.String())
+	require.Equal(t, "30", unbonding.Balance.Amount.String())
 
-	// TODO can't test functionality with less than 2 validators. See https://github.com/cosmos/cosmos-sdk/issues/2339
 	// test redelegation
+	resultTx = doBeginRedelegation(t, port, seed, name, password, addr, operAddrs[0], operAddrs[1], 30)
+	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// resultTx = doBeginRedelegation(t, port, seed, name, password, addr, validatorOperator1, validatorOperator2, 30)
-	// tests.WaitForHeight(resultTx.Height+1, port)
-	//
-	// require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	// require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
-	//
-	// redelegation := getRedelegation(t, port, addr, validatorOperator1, validatorOperator2)
-	// require.Equal(t, validatorOperator1.String(), redelegation.ValidatorSrcAddr.String())
-	// require.Equal(t, validatorOperator2.String(), redelegation.ValidatorDstAddr.String())
-	// require.Equal(t, "30", redelegation.Balance.Amount.String())
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
-	// TODO test that the bond to the validatorSrc has decreased
+	redelegation := getRedelegation(t, port, addr, operAddrs[0], operAddrs[1])
+	require.Equal(t, operAddrs[0].String(), redelegation.ValidatorSrcAddr.String())
+	require.Equal(t, operAddrs[1].String(), redelegation.ValidatorDstAddr.String())
+	require.Equal(t, "30", redelegation.Balance.Amount.String())
 
-	// TODO test that the bond to the validatorDst has increased
+	// test that the bond to the validatorDst has increased
+	delTo := getDelegation(t, port, addr, operAddrs[1])
+	require.Equal(t, sdk.NewDec(30), delTo.GetShares())
 
 	// test delegator summary
-
 	summary = getDelegationSummary(t, port, addr)
 
-	require.Len(t, summary.Delegations, 0, "Delegation summary holds all delegations")
+	require.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
 	require.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
-	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
+	assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
 
 	bondedValidators = getDelegatorValidators(t, port, addr)
-	require.Len(t, bondedValidators, 0, "There's no delegation as the user withdraw all funds")
+	require.Len(t, bondedValidators, 1, "There's a delegation as the user only withdraw half of the funds")
 
 	// TODO Undonding status not currently implemented
 	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)
 
-	// TODO add redelegation, need more complex capabilities such to mock context and
-	// TODO check summary for redelegation
-
 	// query txs
 	txs := getBondingTxs(t, port, addr, "")
-	assert.Len(t, txs, 2, "All Txs found")
+	require.Len(t, txs, 3, "All Txs found")
 
 	txs = getBondingTxs(t, port, addr, "bond")
-	assert.Len(t, txs, 1, "All bonding txs found")
+	require.Len(t, txs, 1, "All bonding txs found")
 
 	txs = getBondingTxs(t, port, addr, "unbond")
-	assert.Len(t, txs, 1, "All unbonding txs found")
+	require.Len(t, txs, 1, "All unbonding txs found")
 
-	// txs = getBondingTxs(t, port, addr, "redelegate")
-	// assert.Len(t, txs, 1, "All unbonding txs found")
+	txs = getBondingTxs(t, port, addr, "redelegate")
+	require.Len(t, txs, 1, "All redelegation txs found")
 }
 
 func TestSubmitProposal(t *testing.T) {
@@ -985,7 +979,7 @@ func getUndelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, va
 }
 
 func getRedelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) stake.Redelegation {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegator/%s/redelegations/validator_from/%s/validator_to/%s", delegatorAddr, validatorSrcAddr, validatorDstAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations/validator_from/%s/validator_to/%s", delegatorAddr, validatorSrcAddr, validatorDstAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var red stake.Redelegation
@@ -1066,9 +1060,7 @@ func doDelegate(t *testing.T, port, seed, name, password string,
 			}
 		],
 		"begin_unbondings": [],
-		"complete_unbondings": [],
 		"begin_redelegates": [],
-		"complete_redelegates": [],
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
@@ -1105,9 +1097,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 				"shares": "%d"
 			}
 		],
-		"complete_unbondings": [],
 		"begin_redelegates": [],
-		"complete_redelegates": [],
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
@@ -1139,7 +1129,6 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	jsonStr := []byte(fmt.Sprintf(`{
 		"delegations": [],
 		"begin_unbondings": [],
-		"complete_unbondings": [],
 		"begin_redelegates": [
 			{
 				"delegator_addr": "%s",
@@ -1148,7 +1137,6 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 				"shares": "%d"
 			}
 		],
-		"complete_redelegates": [],
 		"base_req": {
 			"name": "%s",
 			"password": "%s",

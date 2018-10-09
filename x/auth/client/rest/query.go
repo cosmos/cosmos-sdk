@@ -16,7 +16,7 @@ import (
 // register REST routes
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
 	r.HandleFunc(
-		"/accounts/{address}",
+		"/auth/accounts/{address}",
 		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(
@@ -35,7 +35,6 @@ func QueryAccountRequestHandlerFn(
 	decoder auth.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		bech32addr := vars["address"]
 

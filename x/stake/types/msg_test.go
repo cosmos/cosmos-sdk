@@ -178,31 +178,6 @@ func TestMsgBeginRedelegate(t *testing.T) {
 }
 
 // test ValidateBasic for MsgUnbond
-func TestMsgCompleteRedelegate(t *testing.T) {
-	tests := []struct {
-		name             string
-		delegatorAddr    sdk.AccAddress
-		validatorSrcAddr sdk.ValAddress
-		validatorDstAddr sdk.ValAddress
-		expectPass       bool
-	}{
-		{"regular", sdk.AccAddress(addr1), addr2, addr3, true},
-		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, addr3, false},
-		{"empty source validator", sdk.AccAddress(addr1), emptyAddr, addr3, false},
-		{"empty destination validator", sdk.AccAddress(addr1), addr2, emptyAddr, false},
-	}
-
-	for _, tc := range tests {
-		msg := NewMsgCompleteRedelegate(tc.delegatorAddr, tc.validatorSrcAddr, tc.validatorDstAddr)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
-	}
-}
-
-// test ValidateBasic for MsgUnbond
 func TestMsgBeginUnbonding(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -220,29 +195,6 @@ func TestMsgBeginUnbonding(t *testing.T) {
 
 	for _, tc := range tests {
 		msg := NewMsgBeginUnbonding(tc.delegatorAddr, tc.validatorAddr, tc.sharesAmount)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
-	}
-}
-
-// test ValidateBasic for MsgUnbond
-func TestMsgCompleteUnbonding(t *testing.T) {
-	tests := []struct {
-		name          string
-		delegatorAddr sdk.AccAddress
-		validatorAddr sdk.ValAddress
-		expectPass    bool
-	}{
-		{"regular", sdk.AccAddress(addr1), addr2, true},
-		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, false},
-		{"empty validator", sdk.AccAddress(addr1), emptyAddr, false},
-	}
-
-	for _, tc := range tests {
-		msg := NewMsgCompleteUnbonding(tc.delegatorAddr, tc.validatorAddr)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

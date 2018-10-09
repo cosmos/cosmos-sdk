@@ -44,7 +44,7 @@ BREAKING CHANGES
     * [simulation] \#2162 Added back correct supply invariants
     * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
-    
+
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0
       * Validator set updates delayed by one block
@@ -75,7 +75,7 @@ BREAKING CHANGES
     * Mempool now won't build too large blocks, or too computationally expensive blocks
     * Maximum tx sizes and gas are now removed, and are implicitly the blocks maximums
     * ABCI validators no longer send the pubkey. The pubkey is only sent in validator updates
-    * Validator set changes are now delayed by one block 
+    * Validator set changes are now delayed by one block
     * Block header now includes the next validator sets hash
     * BFT time is implemented
     * Secp256k1 signature format has changed
@@ -85,6 +85,7 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [gaia-lite] [\#2182](https://github.com/cosmos/cosmos-sdk/issues/2182) Added redelegation endpoint
   * [gaia-lite] Endpoints to query staking pool and params
   * [gaia-lite] [\#2110](https://github.com/cosmos/cosmos-sdk/issues/2110) Add support for `simulate=true` requests query argument to endpoints that send txs to run simulations of transactions
   * [gaia-lite] [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add support for `generate_only=true` query argument to generate offline unsigned transactions

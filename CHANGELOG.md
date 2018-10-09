@@ -71,7 +71,6 @@ FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
     - [x/gov] Can now query governance proposals by ProposalStatus
-    - [x/stake] \#2336 Added redelegation endpoint
 
 * Gaia CLI  (`gaiacli`)
     - [x/gov] added `query-proposals` command. Can filter by `depositer`, `voter`, and `status`

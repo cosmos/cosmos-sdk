@@ -115,7 +115,7 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -194,6 +194,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			w.Write([]byte(err.Error()))
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }
@@ -240,7 +241,7 @@ func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) h
 
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -288,7 +289,7 @@ func delegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handl
 
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -327,7 +328,7 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) h
 
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -369,7 +370,7 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) ht
 
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -427,7 +428,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -445,7 +446,7 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -463,7 +464,7 @@ func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }

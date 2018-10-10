@@ -18,7 +18,7 @@ tags:
 - name: ICS23
   description: Slashing module APIs
 - name: version
-  description: Information about the app version
+  description: Query app version
 schemes:
 - https
 securityDefinitions:
@@ -38,7 +38,7 @@ paths:
     get:
       summary: Version of the connected node
       tags:
-      - ICS0
+      - version
       description: Get the version of the SDK running on the connected node to compare against expected
       responses:
         200:
@@ -614,7 +614,7 @@ paths:
     parameters:
     - in: path
       name: delegatorAddr
-      description: AccAddress of Delegator
+      description: Bech32 AccAddress of Delegator
       required: true
       type: string
     get:
@@ -648,6 +648,8 @@ paths:
           description: OK
         404:
           description: Not Found
+        500:
+          description: Internal Server Error
   /stake/delegators/{delegatorAddr}/validators/{validatorAddr}:
     parameters:
     - in: path
@@ -671,11 +673,13 @@ paths:
           description: OK
         404:
           description: Not Found
+        500:
+          description: Internal Server Error
   /stake/delegators/{delegatorAddr}/txs:
     parameters:
     - in: path
       name: delegatorAddr
-      description: AccAddress of Delegator
+      description: Bech32 AccAddress of Delegator
       required: true
       type: string
     get:
@@ -702,7 +706,7 @@ paths:
       type: string
     - in: path
       name: validatorAddr
-      description: Bech32 ValAddress of Delegator
+      description: Bech32 OperatorAddress of validator
       required: true
       type: string
     get:
@@ -716,6 +720,8 @@ paths:
           description: OK
         404:
           description: Not Found
+        500:
+          description: Internal Server Error
   /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
     parameters:
     - in: path
@@ -725,7 +731,7 @@ paths:
       type: string
     - in: path
       name: validatorAddr
-      description: Bech32 ValAddress of Delegator
+      description: Bech32 OperatorAddress of validator
       required: true
       type: string
     get:
@@ -751,13 +757,15 @@ paths:
       responses:
         200:
           description: OK
+        404:
+          description: Not Found
         500:
           description: Internal Server Error
   /stake/validators/{validatorAddr}:
     parameters:
     - in: path
       name: validatorAddr
-      description: Bech32 ValAddress of Delegator
+      description: Bech32 OperatorAddress of validator
       required: true
       type: string
     get:
@@ -797,33 +805,35 @@ paths:
           description: OK
         500:
           description: Internal Server Error
-  /slashing/signing_info/{validator_pub}:
+  /slashing/signing_info/{validator}:
     get:
-      description: Get validator's sign info
+      summary: Get sign info of given validator
+      description: Get sign info of given validator
       produces:
       - application/json
       tags:
       - ICS23
-      summary: Get validator's sign info
       parameters:
       - type: string
-        description: validator's public key
-        name: validator_pub
+        description: Bech32 validator public key
+        name: validator
         required: true
         in: path
       responses:
         '200':
           description: OK
-  /slashing/unrevoke:
+        500:
+          description: Internal Server Error
+  /slashing/unjail:
     post:
-      description: Unrevoke a revoked validator
+      summary: Unjail a jailed validator
+      description: Send transaction to unjail a jailed validator
       consumes:
       - application/json
       produces:
       - application/json
       tags:
       - ICS23
-      summary: Unrevoke a revoked validator
       parameters:
       - in: query
         name: simulate
@@ -836,7 +846,7 @@ paths:
         required: false
         type: boolean
       - description: ''
-        name: UnrevokeBody
+        name: UnjailBody
         in: body
         required: true
         schema:
@@ -845,14 +855,17 @@ paths:
             base_req:
               "$ref": "#/definitions/BaseReq"
             validator_addr:
-              type: string
+              "$ref": "#/definitions/ValidatorAddress"
       responses:
         200:
           description: OK
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
+        500:
+          description: Internal Server Error
   /gov/proposals:
     post:
+      summary: Submit a proposal
       description: Send transaction to submit a proposal
       consumes:
       - application/json
@@ -860,7 +873,6 @@ paths:
       - application/json
       tags:
       - ICS22
-      summary: Submit a proposal
       parameters:
       - in: query
         name: simulate
@@ -894,11 +906,14 @@ paths:
               items:
                 $ref: "#/definitions/Coin"
       responses:
-        '200':
+        200:
           description: OK
           schema:
             "$ref": "#/definitions/BroadcastTxCommitResult"
+        500:
+          description: Internal Server Error
     get:
+      summary: Query proposals
       description: Query proposals information with parameters
       produces:
       - application/json
@@ -920,7 +935,6 @@ paths:
         description: proposal status, valid values can be `"DepositPeriod"`, `"VotingPeriod"`, `"Passed"`, `"Rejected"`
         required: false
         type: string
-      summary: Query proposals
       responses:
         200:
           description: OK
@@ -928,8 +942,11 @@ paths:
             type: array
             items:
               "$ref": "#/definitions/TextProposal"
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposal-id}/deposits:
     post:
+      summary: Deposit tokens to a proposal
       description: Send transaction to deposit tokens to a proposal
       consumes:
       - application/json
@@ -937,7 +954,6 @@ paths:
       - application/json
       tags:
       - ICS22
-      summary: Deposit tokens to a proposal
       parameters:
       - in: query
         name: simulate
@@ -974,8 +990,11 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/BroadcastTxCommitResult"
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposal-id}/votes:
     post:
+      summary: Vote a proposal
       description: Send transaction to vote a proposal
       consumes:
       - application/json
@@ -983,7 +1002,6 @@ paths:
       - application/json
       tags:
       - ICS22
-      summary: Vote a proposal
       parameters:
       - in: query
         name: simulate
@@ -1018,13 +1036,15 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/BroadcastTxCommitResult"
+        500:
+          description: Internal Server Error
     get:
+      summary: Query voters
       description: Query voters information by proposal-id
       produces:
       - application/json
       tags:
       - ICS22
-      summary: Query voters
       parameters:
       - type: string
         description: proposal id
@@ -1038,14 +1058,16 @@ paths:
             type: array
             items:
               "$ref": "#/definitions/Vote"
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposal-id}:
     get:
+      summary: Query a proposal
       description: Query a proposal by id
       produces:
       - application/json
       tags:
       - ICS22
-      summary: Query a proposal
       parameters:
       - type: string
         name: proposal-id
@@ -1056,14 +1078,16 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/TextProposal"
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposal-id}/deposits/{depositer}:
     get:
+      summary: Query deposit
       description: Query deposit by proposal-id and depositer address
       produces:
       - application/json
       tags:
       - ICS22
-      summary: Query deposit
       parameters:
       - type: string
         description: proposal id
@@ -1071,7 +1095,7 @@ paths:
         required: true
         in: path
       - type: string
-        description: depositer address
+        description: Bech32 depositer address
         name: depositer
         required: true
         in: path
@@ -1080,14 +1104,16 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Deposite"
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposal-id}/votes/{voter}:
     get:
+      summary: Query vote
       description: Query vote information by proposal-id and voter address
       produces:
       - application/json
       tags:
       - ICS22
-      summary: Query vote
       parameters:
       - type: string
         description: proposal id
@@ -1095,7 +1121,7 @@ paths:
         required: true
         in: path
       - type: string
-        description: voter address
+        description: Bech32 voter address
         name: voter
         required: true
         in: path
@@ -1104,6 +1130,8 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Vote"
+        500:
+          description: Internal Server Error
 
 definitions:
   CheckTxResult:

@@ -197,7 +197,7 @@ func queryProposalHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -264,7 +264,7 @@ func queryDepositHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -335,6 +335,7 @@ func queryVoteHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -372,7 +373,7 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -437,7 +438,7 @@ func queryProposalsWithParameterFn(cdc *codec.Codec) http.HandlerFunc {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }
@@ -479,7 +480,7 @@ func queryTallyOnProposalHandlerFn(cdc *codec.Codec) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }

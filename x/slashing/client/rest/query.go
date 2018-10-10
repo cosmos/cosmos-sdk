@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/gorilla/mux"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
@@ -49,13 +50,6 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 			return
 		}
 
-		output, err := cdc.MarshalJSON(signingInfo)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, signingInfo, cliCtx.Indent)
 	}
 }

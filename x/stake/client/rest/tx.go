@@ -271,7 +271,7 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(output)
 	}
 }

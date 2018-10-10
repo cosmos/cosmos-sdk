@@ -2,8 +2,6 @@
 package stake
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/params"
-
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/querier"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
@@ -160,8 +158,3 @@ var (
 	TagMoniker      = tags.Moniker
 	TagIdentity     = tags.Identity
 )
-
-// nolint - reexport
-func ParamTable() params.Table {
-	return keeper.ParamTable()
-}

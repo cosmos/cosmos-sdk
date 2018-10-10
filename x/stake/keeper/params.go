@@ -14,8 +14,8 @@ const (
 )
 
 // ParamTable for stake module
-func ParamTable() params.Table {
-	return params.NewTable().RegisterParamStruct(&types.Params{})
+func ParamTypeTable() params.TypeTable {
+	return params.NewTypeTable().RegisterParamSet(&types.Params{})
 }
 
 // InflationRateChange - Maximum annual change in inflation rate
@@ -74,5 +74,5 @@ func (k Keeper) GetParams(ctx sdk.Context) (res types.Params) {
 
 // set the params
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetStruct(ctx, &params)
+	k.paramstore.SetParamSet(ctx, &params)
 }

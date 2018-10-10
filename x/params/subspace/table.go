@@ -1,16 +1,16 @@
-package store
+package subspace
 
 import (
 	"reflect"
 )
 
-// Table stores appropriate type for each parameter key
-type Table map[string]reflect.Type
+// TypeTable subspaces appropriate type for each parameter key
+type TypeTable map[string]reflect.Type
 
 // Constructs new table
-func NewTable(keytypes ...interface{}) (res Table) {
+func NewTypeTable(keytypes ...interface{}) (res TypeTable) {
 	if len(keytypes)%2 != 0 {
-		panic("odd number arguments in NewTypeTable")
+		panic("odd number arguments in NewTypeTypeTable")
 	}
 
 	res = make(map[string]reflect.Type)
@@ -23,7 +23,7 @@ func NewTable(keytypes ...interface{}) (res Table) {
 }
 
 // Register single key-type pair
-func (t Table) RegisterType(key []byte, ty interface{}) Table {
+func (t TypeTable) RegisterType(key []byte, ty interface{}) TypeTable {
 	keystr := string(key)
 	if _, ok := t[keystr]; ok {
 		panic("duplicate parameter key")
@@ -41,8 +41,8 @@ func (t Table) RegisterType(key []byte, ty interface{}) Table {
 	return t
 }
 
-// Register multiple pairs from ParamStruct
-func (t Table) RegisterParamStruct(ps ParamStruct) Table {
+// Register multiple pairs from ParamSet
+func (t TypeTable) RegisterParamSet(ps ParamSet) TypeTable {
 	for _, kvp := range ps.KeyValuePairs() {
 		t = t.RegisterType(kvp.Key, kvp.Value)
 	}

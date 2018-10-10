@@ -33,7 +33,7 @@ var (
 	KeyBondDenom           = []byte("BondDenom")
 )
 
-var _ params.ParamStruct = (*Params)(nil)
+var _ params.ParamSet = (*Params)(nil)
 
 // Params defines the high level settings for staking
 type Params struct {
@@ -48,7 +48,7 @@ type Params struct {
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
 }
 
-// Implements params.ParamStruct
+// Implements params.ParamSet
 func (p *Params) KeyValuePairs() params.KeyValuePairs {
 	return params.KeyValuePairs{
 		{KeyInflationRateChange, &p.InflationRateChange},

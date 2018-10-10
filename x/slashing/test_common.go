@@ -49,7 +49,7 @@ func createTestCodec() *codec.Codec {
 	return cdc
 }
 
-func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Store, Keeper) {
+func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
@@ -72,7 +72,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 
 	ck := bank.NewBaseKeeper(accountMapper)
 	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
-	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, paramsKeeper.Substore(stake.DefaultParamspace, stake.ParamTable()), stake.DefaultCodespace)
+	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 
 	genesis.Pool.LooseTokens = sdk.NewDec(initCoins.MulRaw(int64(len(addrs))).Int64())
@@ -86,7 +86,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 		})
 	}
 	require.Nil(t, err)
-	paramstore := paramsKeeper.Substore(DefaultParamspace, ParamTable())
+	paramstore := paramsKeeper.Subspace(DefaultParamspace)
 	keeper := NewKeeper(cdc, keySlashing, sk, paramstore, DefaultCodespace)
 
 	require.NotPanics(t, func() {

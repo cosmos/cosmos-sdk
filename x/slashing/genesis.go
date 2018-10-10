@@ -24,5 +24,5 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 		keeper.addPubkey(ctx, validator.GetConsPubKey())
 	}
 
-	keeper.paramstore.SetStruct(ctx, &data.Params)
+	keeper.paramspace.SetParamSet(ctx, &data.Params)
 }

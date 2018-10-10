@@ -1,6 +1,6 @@
-package store
+package subspace
 
-// Used for associating paramstore key and field of param structs
+// Used for associating paramsubspace key and field of param structs
 type KeyValuePair struct {
 	Key   []byte
 	Value interface{}
@@ -10,6 +10,6 @@ type KeyValuePair struct {
 type KeyValuePairs []KeyValuePair
 
 // Interface for structs containing parameters for a module
-type ParamStruct interface {
+type ParamSet interface {
 	KeyValuePairs() KeyValuePairs
 }

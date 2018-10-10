@@ -30,7 +30,7 @@ recommended to use the same name with the module's.
 		cdc *wire.Codec
 		key sdk.StoreKey
 
-		ps params.Store
+		ps params.Subspace
 	}
 
 Pass a params.Store to NewKeeper with DefaultParamSpace (or another)

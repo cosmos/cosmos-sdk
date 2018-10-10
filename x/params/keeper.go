@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/params/store"
+	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
 // Keeper of the global paramstore
@@ -13,7 +13,7 @@ type Keeper struct {
 	key  sdk.StoreKey
 	tkey sdk.StoreKey
 
-	stores map[string]*Store
+	spaces map[string]*Subspace
 }
 
 // NewKeeper constructs a params keeper
@@ -23,35 +23,35 @@ func NewKeeper(cdc *codec.Codec, key *sdk.KVStoreKey, tkey *sdk.TransientStoreKe
 		key:  key,
 		tkey: tkey,
 
-		stores: make(map[string]*Store),
+		spaces: make(map[string]*Subspace),
 	}
 
 	return k
 }
 
-// Allocate substore used for keepers
-func (k Keeper) Substore(storename string, table Table) Store {
-	_, ok := k.stores[storename]
+// Allocate subspace used for keepers
+func (k Keeper) Subspace(spacename string) Subspace {
+	_, ok := k.spaces[spacename]
 	if ok {
-		panic("substore already occupied")
+		panic("subspace already occupied")
 	}
 
-	if storename == "" {
-		panic("cannot use empty string for substore")
+	if spacename == "" {
+		panic("cannot use empty string for subspace")
 	}
 
-	store := store.NewStore(k.cdc, k.key, k.tkey, storename, table)
+	space := subspace.NewSubspace(k.cdc, k.key, k.tkey, spacename)
 
-	k.stores[storename] = &store
+	k.spaces[spacename] = &space
 
-	return store
+	return space
 }
 
 // Get existing substore from keeper
-func (k Keeper) GetSubstore(storename string) (Store, bool) {
-	store, ok := k.stores[storename]
+func (k Keeper) GetSubspace(storename string) (Subspace, bool) {
+	space, ok := k.spaces[storename]
 	if !ok {
-		return Store{}, false
+		return Subspace{}, false
 	}
-	return *store, ok
+	return *space, ok
 }

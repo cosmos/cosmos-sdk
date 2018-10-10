@@ -53,7 +53,7 @@ func TestKeeper(t *testing.T) {
 		{"key7", 9058701},
 	}
 
-	table := NewTable(
+	table := NewTypeTable(
 		[]byte("key1"), int64(0),
 		[]byte("key2"), int64(0),
 		[]byte("key3"), int64(0),
@@ -68,7 +68,7 @@ func TestKeeper(t *testing.T) {
 	skey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(skey, tkey)
-	store := NewKeeper(codec.New(), skey, tkey).Substore("test", table)
+	store := NewKeeper(codec.New(), skey, tkey).Subspace("test").WithTypeTable(table)
 
 	for i, kv := range kvs {
 		require.NotPanics(t, func() { store.Set(ctx, []byte(kv.key), kv.param) }, "store.Set panics, tc #%d", i)
@@ -125,7 +125,7 @@ func TestGet(t *testing.T) {
 		{"struct", s{1}, s{0}, new(s)},
 	}
 
-	table := NewTable(
+	table := NewTypeTable(
 		[]byte("string"), string(""),
 		[]byte("bool"), bool(false),
 		[]byte("int16"), int16(0),
@@ -140,7 +140,7 @@ func TestGet(t *testing.T) {
 		[]byte("struct"), s{},
 	)
 
-	store := keeper.Substore("test", table)
+	store := keeper.Subspace("test").WithTypeTable(table)
 
 	for i, kv := range kvs {
 		require.False(t, store.Modified(ctx, []byte(kv.key)), "store.Modified returns true before setting, tc #%d", i)

@@ -1,4 +1,4 @@
-package store
+package subspace
 
 import (
 	"reflect"
@@ -7,55 +7,73 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Additional capicity to be allocated for Store.space
+// Additional capicity to be allocated for Subspace.name
 // So we don't have to allocate extra space each time appending to the key
 const extraKeyCap = 20
 
 // Individual parameter store for each keeper
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
-type Store struct {
+type Subspace struct {
 	cdc  *codec.Codec
 	key  sdk.StoreKey // []byte -> []byte, stores parameter
 	tkey sdk.StoreKey // []byte -> bool, stores parameter change
 
-	space []byte
+	name []byte
 
-	table Table
+	table TypeTable
 }
 
-// NewStore constructs a store with namestore
-func NewStore(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, space string, table Table) (res Store) {
-	res = Store{
+// NewSubspace constructs a store with namestore
+func NewSubspace(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name string) (res Subspace) {
+	res = Subspace{
 		cdc:  cdc,
 		key:  key,
 		tkey: tkey,
+	}
 
+	namebz := []byte(name)
+	res.name = make([]byte, len(namebz), len(namebz)+extraKeyCap)
+	copy(res.name, namebz)
+	return
+}
+
+// WithTypeTable initializes TypeTable and returns modified Subspace
+func (s Subspace) WithTypeTable(table TypeTable) (res Subspace) {
+	if table == nil {
+		panic("SetTypeTable() called with nil TypeTable")
+	}
+	if s.table != nil {
+		panic("SetTypeTable() called on initialized Subspace")
+	}
+
+	res = Subspace{
+		cdc:   s.cdc,
+		key:   s.key,
+		tkey:  s.tkey,
+		name:  s.name,
 		table: table,
 	}
 
-	spacebz := []byte(space)
-	res.space = make([]byte, len(spacebz), len(spacebz)+extraKeyCap)
-	copy(res.space, spacebz)
 	return
 }
 
 // Returns a KVStore identical with ctx.KVStore(s.key).Prefix()
-func (s Store) kvStore(ctx sdk.Context) sdk.KVStore {
+func (s Subspace) kvStore(ctx sdk.Context) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
-	return ctx.KVStore(s.key).Prefix(append(s.space, '/'))
+	return ctx.KVStore(s.key).Prefix(append(s.name, '/'))
 }
 
 // Returns a KVStore identical with ctx.TransientStore(s.tkey).Prefix()
-func (s Store) transientStore(ctx sdk.Context) sdk.KVStore {
+func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
-	return ctx.TransientStore(s.tkey).Prefix(append(s.space, '/'))
+	return ctx.TransientStore(s.tkey).Prefix(append(s.name, '/'))
 }
 
 // Get parameter from store
-func (s Store) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 	err := s.cdc.UnmarshalJSON(bz, ptr)
@@ -65,7 +83,7 @@ func (s Store) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 }
 
 // GetIfExists do not modify ptr if the stored parameter is nil
-func (s Store) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
+func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
 	bz := store.Get(key)
 	if bz == nil {
@@ -78,26 +96,26 @@ func (s Store) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 }
 
 // Get raw bytes of parameter from store
-func (s Store) GetRaw(ctx sdk.Context, key []byte) []byte {
+func (s Subspace) GetRaw(ctx sdk.Context, key []byte) []byte {
 	store := s.kvStore(ctx)
 	return store.Get(key)
 }
 
 // Check if the parameter is set in the store
-func (s Store) Has(ctx sdk.Context, key []byte) bool {
+func (s Subspace) Has(ctx sdk.Context, key []byte) bool {
 	store := s.kvStore(ctx)
 	return store.Has(key)
 }
 
 // Returns true if the parameter is set in the block
-func (s Store) Modified(ctx sdk.Context, key []byte) bool {
+func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 	tstore := s.transientStore(ctx)
 	return tstore.Has(key)
 }
 
 // Set parameter, return error if stored parameter has different type from input
 // Also set to the transient store to record change
-func (s Store) Set(ctx sdk.Context, key []byte, param interface{}) {
+func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 	store := s.kvStore(ctx)
 
 	ty, ok := s.table[string(key)]
@@ -122,17 +140,18 @@ func (s Store) Set(ctx sdk.Context, key []byte, param interface{}) {
 
 	tstore := s.transientStore(ctx)
 	tstore.Set(key, []byte{})
+
 }
 
-// Get to ParamStruct
-func (s Store) GetStruct(ctx sdk.Context, ps ParamStruct) {
+// Get to ParamSet
+func (s Subspace) GetParamSet(ctx sdk.Context, ps ParamSet) {
 	for _, pair := range ps.KeyValuePairs() {
 		s.Get(ctx, pair.Key, pair.Value)
 	}
 }
 
-// Set from ParamStruct
-func (s Store) SetStruct(ctx sdk.Context, ps ParamStruct) {
+// Set from ParamSet
+func (s Subspace) SetParamSet(ctx sdk.Context, ps ParamSet) {
 	for _, pair := range ps.KeyValuePairs() {
 		// pair.Field is a pointer to the field, so indirecting the ptr.
 		// go-amino automatically handles it but just for sure,
@@ -143,37 +162,37 @@ func (s Store) SetStruct(ctx sdk.Context, ps ParamStruct) {
 	}
 }
 
-// Returns internal namespace
-func (s Store) Space() string {
-	return string(s.space)
+// Returns name of Subspace
+func (s Subspace) Name() string {
+	return string(s.name)
 }
 
-// Wrapper of Store, provides immutable functions only
-type ReadOnlyStore struct {
-	s Store
+// Wrapper of Subspace, provides immutable functions only
+type ReadOnlySubspace struct {
+	s Subspace
 }
 
 // Exposes Get
-func (ros ReadOnlyStore) Get(ctx sdk.Context, key []byte, ptr interface{}) {
+func (ros ReadOnlySubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	ros.s.Get(ctx, key, ptr)
 }
 
 // Exposes GetRaw
-func (ros ReadOnlyStore) GetRaw(ctx sdk.Context, key []byte) []byte {
+func (ros ReadOnlySubspace) GetRaw(ctx sdk.Context, key []byte) []byte {
 	return ros.s.GetRaw(ctx, key)
 }
 
 // Exposes Has
-func (ros ReadOnlyStore) Has(ctx sdk.Context, key []byte) bool {
+func (ros ReadOnlySubspace) Has(ctx sdk.Context, key []byte) bool {
 	return ros.s.Has(ctx, key)
 }
 
 // Exposes Modified
-func (ros ReadOnlyStore) Modified(ctx sdk.Context, key []byte) bool {
+func (ros ReadOnlySubspace) Modified(ctx sdk.Context, key []byte) bool {
 	return ros.s.Modified(ctx, key)
 }
 
 // Exposes Space
-func (ros ReadOnlyStore) Space() string {
-	return ros.s.Space()
+func (ros ReadOnlySubspace) Name() string {
+	return ros.s.Name()
 }

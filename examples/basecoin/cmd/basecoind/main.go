@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -28,9 +29,12 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, server.DefaultAppInit,
-		server.ConstructAppCreator(newApp, "basecoin"),
-		server.ConstructAppExporter(exportAppStateAndTMValidators, "basecoin"))
+	appInit := server.DefaultAppInit
+	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc, appInit))
+	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc, appInit))
+
+	server.AddCommands(ctx, cdc, rootCmd, appInit,
+		newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.basecoind")

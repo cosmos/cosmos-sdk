@@ -392,7 +392,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	require.True(t, ctx.BlockHeader().Time.Add(params.UnbondingTime).Equal(validator.UnbondingMinTime))
 
 	// unbond the validator
-	keeper.UnbondingToUnbonded(ctx, validator)
+	keeper.unbondingToUnbonded(ctx, validator)
 
 	// unbond some of the other delegation's shares
 	_, err = keeper.BeginUnbonding(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
@@ -705,7 +705,7 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	require.True(t, ctx.BlockHeader().Time.Add(params.UnbondingTime).Equal(validator.UnbondingMinTime))
 
 	// unbond the validator
-	keeper.UnbondingToUnbonded(ctx, validator)
+	keeper.unbondingToUnbonded(ctx, validator)
 
 	// redelegate some of the delegation's shares
 	_, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(6))

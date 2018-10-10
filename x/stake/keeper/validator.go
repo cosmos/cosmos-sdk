@@ -332,3 +332,15 @@ func (k Keeper) DequeueAllMatureValidatorQueue(ctx sdk.Context, currTime time.Ti
 	}
 	return matureValsAddrs
 }
+
+// Unbonds all the unbonding validators that have finished their unbonding period
+func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
+	matureUnbondingValidators := k.DequeueAllMatureValidatorQueue(ctx, ctx.BlockHeader().Time)
+	for _, valAddr := range matureUnbondingValidators {
+		val, found := k.GetValidator(ctx, valAddr)
+		if !found || val.GetStatus() != sdk.Unbonding {
+			continue
+		}
+		k.unbondingToUnbonded(ctx, val)
+	}
+}

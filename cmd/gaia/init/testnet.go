@@ -1,7 +1,8 @@
-package server
+package init
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server"
 	"net"
 	"path/filepath"
 
@@ -30,7 +31,7 @@ var (
 const nodeDirPerm = 0755
 
 // get cmd to initialize all files for tendermint testnet and application
-func TestnetFilesCmd(ctx *Context, cdc *codec.Codec, appInit AppInit) *cobra.Command {
+func TestnetFilesCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "testnet",
 		Short: "Initialize files for a Gaiad testnet",
@@ -65,7 +66,7 @@ Example:
 	return cmd
 }
 
-func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit AppInit) error {
+func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppInit) error {
 	outDir := viper.GetString(outputDir)
 	numValidators := viper.GetInt(nValidators)
 
@@ -133,7 +134,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit AppInit) er
 		nodeDaemonHomeName := viper.GetString(nodeDaemonHome)
 		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
 		gentxsDir := filepath.Join(outDir, "gentxs")
-		initConfig := InitConfig{
+		initConfig := server.InitConfig{
 			chainID,
 			true,
 			gentxsDir,
@@ -156,7 +157,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit AppInit) er
 func getIP(i int) (ip string, err error) {
 	ip = viper.GetString(startingIPAddress)
 	if len(ip) == 0 {
-		ip, err = ExternalIP()
+		ip, err = server.ExternalIP()
 		if err != nil {
 			return "", err
 		}

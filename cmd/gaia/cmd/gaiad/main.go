@@ -16,6 +16,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -28,8 +29,11 @@ func main() {
 		Short:             "Gaia Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
+	appInit := app.GaiaAppInit()
+	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc, appInit))
+	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc, appInit))
 
-	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(),
+	server.AddCommands(ctx, cdc, rootCmd, appInit,
 		newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -26,6 +27,8 @@ var (
 	RedelegationKey                  = []byte{0x0A} // key for a redelegation
 	RedelegationByValSrcIndexKey     = []byte{0x0B} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x0C} // prefix for each key for an redelegation, by destination validator operator
+	UnbondingQueueKey                = []byte{0x0D} // prefix for the timestamps in unbonding queue
+	RedelegationQueueKey             = []byte{0x0E} // prefix for the timestamps in redelegations queue
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -135,6 +138,12 @@ func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 	return append(UnbondingDelegationByValIndexKey, valAddr.Bytes()...)
 }
 
+// gets the prefix for all unbonding delegations from a delegator
+func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	return append(UnbondingQueueKey, bz...)
+}
+
 //________________________________________________________________________________
 
 // gets the key for a redelegation
@@ -201,6 +210,12 @@ func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 	delAddr := indexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
 	valSrcAddr := indexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
+}
+
+// gets the prefix for all unbonding delegations from a delegator
+func GetRedelegationTimeKey(timestamp time.Time) []byte {
+	bz, _ := timestamp.MarshalBinary()
+	return append(RedelegationQueueKey, bz...)
 }
 
 //______________

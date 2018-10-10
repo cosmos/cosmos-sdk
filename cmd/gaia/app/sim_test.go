@@ -101,9 +101,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
 		{100, stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper)},
 		{100, stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper)},
 		{100, stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper)},
 		{100, slashingsim.SimulateMsgUnjail(app.slashingKeeper)},
 	}
 }

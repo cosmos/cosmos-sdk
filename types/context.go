@@ -4,6 +4,7 @@ package types
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 
@@ -180,6 +181,12 @@ func (c Context) WithBlockHeader(header abci.Header) Context {
 	return c.withValue(contextKeyBlockHeader, header)
 }
 
+func (c Context) WithBlockTime(newTime time.Time) Context {
+	newHeader := c.BlockHeader()
+	newHeader.Time = newTime
+	return c.WithBlockHeader(newHeader)
+}
+
 func (c Context) WithBlockHeight(height int64) Context {
 	return c.withValue(contextKeyBlockHeight, height)
 }
@@ -189,7 +196,7 @@ func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 		return c
 	}
 	return c.withValue(contextKeyConsensusParams, params).
-		WithGasMeter(NewGasMeter(params.TxSize.MaxGas))
+		WithGasMeter(NewGasMeter(params.BlockSize.MaxGas))
 }
 
 func (c Context) WithChainID(chainID string) Context { return c.withValue(contextKeyChainID, chainID) }

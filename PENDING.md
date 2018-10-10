@@ -28,6 +28,7 @@ BREAKING CHANGES
     * [x/stake, x/slashing] [#1305](https://github.com/cosmos/cosmos-sdk/issues/1305) - Rename "revoked" to "jailed"
     * [x/stake] [#1676] Revoked and jailed validators put into the unbonding state
     * [x/stake] [#1877] Redelegations/unbonding-delegation from unbonding validator have reduced time
+    * [x/slashing] \#1789 Slashing changes for Tendermint validator set offset (NextValSet)
     * [x/stake] [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Validator
     operator type has now changed to `sdk.ValAddress`
     * [x/stake] [\#2221](https://github.com/cosmos/cosmos-sdk/issues/2221) New
@@ -41,6 +42,8 @@ BREAKING CHANGES
     * [x/gov] [#2195] Governance uses BFT Time
     * [x/gov] \#2256 Removed slashing for governance non-voting validators
     * [simulation] \#2162 Added back correct supply invariants
+    * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
+    * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
     
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0
@@ -68,6 +71,16 @@ BREAKING CHANGES
     * [x/stake] \#2394 Split up UpdateValidator into distinct state transitions applied only in EndBlock
 
 * Tendermint
+  * Update tendermint version from v0.23.0 to v0.25.0, notable changes
+    * Mempool now won't build too large blocks, or too computationally expensive blocks
+    * Maximum tx sizes and gas are now removed, and are implicitly the blocks maximums
+    * ABCI validators no longer send the pubkey. The pubkey is only sent in validator updates
+    * Validator set changes are now delayed by one block 
+    * Block header now includes the next validator sets hash
+    * BFT time is implemented
+    * Secp256k1 signature format has changed
+    * There is now a threshold multisig format
+    * See the [tendermint changelog](https://github.com/tendermint/tendermint/blob/master/CHANGELOG.md) for other changes.
 
 FEATURES
 
@@ -77,7 +90,7 @@ FEATURES
   * [gaia-lite] [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add support for `generate_only=true` query argument to generate offline unsigned transactions
   * [gaia-lite] [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) Add /sign endpoint to sign transactions generated with `generate_only=true`.
   * [gaia-lite] [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) Add /broadcast endpoint to broadcast transactions signed by the /sign endpoint.
-  * [gaia-lite] [\#2113](https://github.com/cosmos/cosmos-sdk/issues/2113) Rename `/accounts/{address}/send` to `/bank/accounts/{address}/transfers`
+  * [gaia-lite] [\#2113](https://github.com/cosmos/cosmos-sdk/issues/2113) Rename `/accounts/{address}/send` to `/bank/accounts/{address}/transfers`, rename `/accounts/{address}` to `/auth/accounts/{address}`
 
 * Gaia CLI  (`gaiacli`)
   * [cli] Cmds to query staking pool and params
@@ -134,6 +147,7 @@ IMPROVEMENTS
     * [x/stake] Improve speed of GetValidator, which was shown to be a performance bottleneck. [#2046](https://github.com/tendermint/tendermint/pull/2200)
     * [x/stake] \#2435 Improve memory efficiency of getting the various store keys
     * [genesis] \#2229 Ensure that there are no duplicate accounts or validators in the genesis state.
+    * [genesis] \#2450 Validate staking genesis parameters.
     * Add SDK validation to `config.toml` (namely disabling `create_empty_blocks`) \#1571
     * \#1941(https://github.com/cosmos/cosmos-sdk/issues/1941) Version is now inferred via `git describe --tags`.
     * [x/distribution] \#1671 add distribution types and tests

@@ -70,9 +70,8 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	got = stake.NewHandler(stakeKeeper)(ctx, msgBeginUnbonding)
 	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got: %v", got)
 
-	msgCompleteUnbonding := stake.NewMsgCompleteUnbonding(sdk.AccAddress(valAddr), valAddr)
-	got = stake.NewHandler(stakeKeeper)(ctx, msgCompleteUnbonding)
-	require.True(t, got.IsOK(), "expected complete unbonding validator msg to be ok, got: %v", got)
+	err := stakeKeeper.CompleteUnbonding(ctx, sdk.AccAddress(valAddr), valAddr)
+	require.Nil(t, err, "expected complete unbonding validator to be ok, got: %v", err)
 
 	// verify validator still exists and is jailed
 	validator, found := stakeKeeper.GetValidator(ctx, valAddr)

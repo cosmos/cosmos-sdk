@@ -10,9 +10,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// defaultUnbondingTime reflects three weeks in seconds as the default
-// unbonding time.
-const defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
+const (
+	// defaultUnbondingTime reflects three weeks in seconds as the default
+	// unbonding time.
+	defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
+
+	// Delay, in blocks, between when validator updates are returned to Tendermint and when they are applied
+	// For example, if this is 0, the validator set at the end of a block will sign the next block, or
+	// if this is 1, the validator set at the end of a block will sign the block after the next.
+	// Constant as this should not change without a hard fork.
+	ValidatorUpdateDelay int64 = 1
+)
 
 // nolint - Keys for parameter access
 var (

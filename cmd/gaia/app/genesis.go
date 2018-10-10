@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	"github.com/spf13/pflag"
 
@@ -163,7 +162,6 @@ func GaiaAppGenTxNF(cdc *codec.Codec, pk crypto.PubKey, addr sdk.AccAddress, nam
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
 func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisState GenesisState, err error) {
-
 	if len(appGenTxs) == 0 {
 		err = errors.New("must provide at least genesis transaction")
 		return
@@ -201,6 +199,7 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 		GovData:      gov.DefaultGenesisState(),
 		SlashingData: slashingData,
 	}
+
 	return
 }
 
@@ -247,25 +246,9 @@ func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
 	if err != nil {
 		return
 	}
-	err = validateGenesisStateValidators(genesisState.StakeData.Validators)
+	err = stake.ValidateGenesis(genesisState.StakeData)
 	if err != nil {
 		return
-	}
-	return
-}
-
-func validateGenesisStateValidators(validators []stakeTypes.Validator) (err error) {
-	addrMap := make(map[string]bool, len(validators))
-	for i := 0; i < len(validators); i++ {
-		val := validators[i]
-		strKey := string(val.ConsPubKey.Bytes())
-		if _, ok := addrMap[strKey]; ok {
-			return fmt.Errorf("Duplicate validator in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
-		}
-		if val.Jailed && val.Status == sdk.Bonded {
-			return fmt.Errorf("Validator is bonded and jailed in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
-		}
-		addrMap[strKey] = true
 	}
 	return
 }

@@ -7,9 +7,7 @@ corresponding updates to the state. Transactions:
 * TxEditValidator
 * TxDelegation
 * TxStartUnbonding
-* TxCompleteUnbonding
 * TxRedelegate
-* TxCompleteRedelegation
 
 Other important state changes:
 
@@ -188,27 +186,6 @@ startUnbonding(tx TxStartUnbonding):
     return
 ```
 
-### TxCompleteUnbonding
-
-Complete the unbonding and transfer the coins to the delegate. Perform any
-slashing that occurred during the unbonding period.
-
-```golang
-type TxUnbondingComplete struct {
-    DelegatorAddr sdk.Address
-    ValidatorAddr sdk.Address
-}
-
-redelegationComplete(tx TxRedelegate):
-    unbonding = getUnbondingDelegation(tx.DelegatorAddr, tx.Validator)
-    if unbonding.CompleteTime >= CurrentBlockTime && unbonding.CompleteHeight >= CurrentBlockHeight
-        validator = GetValidator(tx.ValidatorAddr)
-        returnTokens = ExpectedTokens * tx.startSlashRatio/validator.SlashRatio
-	    AddCoins(unbonding.DelegatorAddr, returnTokens)
-        removeUnbondingDelegation(unbonding)
-    return
-```
-
 ### TxRedelegation
 
 The redelegation command allows delegators to instantly switch validators. Once
@@ -240,26 +217,6 @@ redelegate(tx TxRedelegate):
     redelegation = newRedelegation(tx.DelegatorAddr, tx.validatorFrom,
         tx.validatorTo, tx.Shares, createdCoins, tx.CompletedTime)
     setRedelegation(redelegation)
-    return
-```
-
-### TxCompleteRedelegation
-
-Note that unlike TxCompleteUnbonding slashing of redelegating shares does not
-take place during completion. Slashing on redelegated shares takes place
-actively as a slashing occurs.
-
-```golang
-type TxRedelegationComplete struct {
-    DelegatorAddr Address
-    ValidatorFrom Validator
-    ValidatorTo   Validator
-}
-
-redelegationComplete(tx TxRedelegate):
-    redelegation = getRedelegation(tx.DelegatorAddr, tx.validatorFrom, tx.validatorTo)
-    if redelegation.CompleteTime >= CurrentBlockTime && redelegation.CompleteHeight >= CurrentBlockHeight
-        removeRedelegation(redelegation)
     return
 ```
 

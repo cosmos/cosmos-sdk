@@ -1267,10 +1267,6 @@ definitions:
     type: string
     description: bech32 encoded address
     example: cosmosvaloper1depk54cuajgkzea6zpgkq36tnjwdzv4avv9cxd
-  ValidatorPubKey:
-    type: string
-    description: bech32 encoded public key
-    example: cosmosvalconspub:zgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
   Coin:
     type: object
     properties:
@@ -1494,13 +1490,14 @@ definitions:
       address:
         $ref: '#/definitions/ValidatorAddress'
       pub_key:
-        $ref: "#/definitions/ValidatorPubKey"
+        type: string
+        example: cosmosvalconspub1zcjduepq7sjfglw7ra4mjxpw4ph7dtdhdheh7nz8dfgl6t8u2n5szuuql9mqsrwquu
       power:
-        type: number
-        example: 1000
+        type: string
+        example: "1000"
       accum:
-        type: number
-        example: 1000
+        type: string
+        example: "1000"
   TextProposal:
     type: object
     properties:

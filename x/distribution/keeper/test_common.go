@@ -23,24 +23,31 @@ import (
 )
 
 var (
-	delPk1       = ed25519.GenPrivKey().PubKey()
-	delPk2       = ed25519.GenPrivKey().PubKey()
-	delPk3       = ed25519.GenPrivKey().PubKey()
-	delAddr1     = sdk.AccAddress(delPk1.Address())
-	delAddr2     = sdk.AccAddress(delPk2.Address())
-	delAddr3     = sdk.AccAddress(delPk3.Address())
-	addrs        = []sdk.AccAddress{delAddr1, delAddr2, delAddr3}
+	delPk1   = ed25519.GenPrivKey().PubKey()
+	delPk2   = ed25519.GenPrivKey().PubKey()
+	delPk3   = ed25519.GenPrivKey().PubKey()
+	delAddr1 = sdk.AccAddress(delPk1.Address())
+	delAddr2 = sdk.AccAddress(delPk2.Address())
+	delAddr3 = sdk.AccAddress(delPk3.Address())
+
+	valPk1      = ed25519.GenPrivKey().PubKey()
+	valPk2      = ed25519.GenPrivKey().PubKey()
+	valPk3      = ed25519.GenPrivKey().PubKey()
+	valAddr1    = sdk.ValAddress(valPk1.Address())
+	valAddr2    = sdk.ValAddress(valPk2.Address())
+	valAddr3    = sdk.ValAddress(valPk3.Address())
+	valAccAddr1 = sdk.AccAddress(valPk1.Address()) // generate acc addresses for these validator keys too
+	valAccAddr2 = sdk.AccAddress(valPk2.Address())
+	valAccAddr3 = sdk.AccAddress(valPk3.Address())
+
+	addrs = []sdk.AccAddress{
+		delAddr1, delAddr2, delAddr3,
+		valAccAddr1, valAccAddr2, valAccAddr3,
+	}
+
 	emptyDelAddr sdk.AccAddress
-
-	valPk1       = ed25519.GenPrivKey().PubKey()
-	valPk2       = ed25519.GenPrivKey().PubKey()
-	valPk3       = ed25519.GenPrivKey().PubKey()
-	valAddr1     = sdk.ValAddress(delPk1.Address())
-	valAddr2     = sdk.ValAddress(delPk2.Address())
-	valAddr3     = sdk.ValAddress(delPk3.Address())
 	emptyValAddr sdk.ValAddress
-
-	emptyPubkey crypto.PubKey
+	emptyPubkey  crypto.PubKey
 )
 
 // create a codec used only for testing

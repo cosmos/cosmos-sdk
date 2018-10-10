@@ -18,6 +18,12 @@ import (
 // the bonded validators.
 // Returns final validator set after applying all declaration and delegations
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.ValidatorUpdate, err error) {
+
+	// We need to pretend to be "n blocks before genesis", where "n" is the validator update delay,
+	// so that e.g. slashing periods are correctly initialized for the validator set
+	// e.g. with a one-block offset - the first TM block is at height 0, so state updates applied from genesis.json are in block -1.
+	ctx = ctx.WithBlockHeight(-types.ValidatorUpdateDelay)
+
 	keeper.SetPool(ctx, data.Pool)
 	keeper.SetParams(ctx, data.Params)
 	keeper.InitIntraTxCounter(ctx)

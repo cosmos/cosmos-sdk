@@ -54,9 +54,13 @@ func TestKeys(t *testing.T) {
 	match := reg.MatchString(seed)
 	require.True(t, match, "Returned seed has wrong format", seed)
 
+	// recover key
+	recoverName := "test_recovername"
+	recoverPassword := "1234567890"
+	doRecoverKey(t, port, recoverName, recoverPassword, seed)
+
 	newName := "test_newname"
 	newPassword := "0987654321"
-
 	// add key
 	jsonStr := []byte(fmt.Sprintf(`{"name":"%s", "password":"%s", "seed":"%s"}`, newName, newPassword, seed))
 	res, body = Request(t, port, "POST", "/keys", jsonStr)
@@ -78,7 +82,7 @@ func TestKeys(t *testing.T) {
 	// existing keys
 	res, body = Request(t, port, "GET", "/keys", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var m [2]keys.KeyOutput
+	var m [3]keys.KeyOutput
 	err = cdc.UnmarshalJSON([]byte(body), &m)
 	require.Nil(t, err)
 
@@ -243,7 +247,7 @@ func TestCoinSend(t *testing.T) {
 	someFakeAddr := sdk.AccAddress(bz)
 
 	// query empty
-	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", someFakeAddr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", someFakeAddr), nil)
 	require.Equal(t, http.StatusNoContent, res.StatusCode, body)
 
 	acc := getAccount(t, port, addr)
@@ -518,8 +522,11 @@ func TestBonding(t *testing.T) {
 	name, password, denom := "test", "1234567890", "steak"
 	addr, seed := CreateAddr(t, name, password, GetKeyBase(t))
 
-	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 2, []sdk.AccAddress{addr})
 	defer cleanup()
+
+	require.Equal(t, 2, len(valPubKeys))
+	require.Equal(t, 2, len(operAddrs))
 
 	amt := sdk.NewDec(60)
 	validator := getValidator(t, port, operAddrs[0])
@@ -802,7 +809,7 @@ func TestProposalsQuery(t *testing.T) {
 //_____________________________________________________________________________
 // get the account to get the sequence
 func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/accounts/%s", addr), nil)
+	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", addr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var acc auth.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)
@@ -854,6 +861,20 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 
 	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/accounts/%s/transfers%v", receiveAddr, queryStr), jsonStr)
 	return
+}
+
+func doRecoverKey(t *testing.T, port, recoverName, recoverPassword, seed string) {
+	jsonStr := []byte(fmt.Sprintf(`{"password":"%s", "seed":"%s"}`, recoverPassword, seed))
+	res, body := Request(t, port, "POST", fmt.Sprintf("/keys/%s/recover", recoverName), jsonStr)
+
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var resp keys.KeyOutput
+	err := codec.Cdc.UnmarshalJSON([]byte(body), &resp)
+	require.Nil(t, err, body)
+
+	addr1Bech32 := resp.Address
+	_, err = sdk.AccAddressFromBech32(addr1Bech32)
+	require.NoError(t, err, "Failed to return a correct bech32 address")
 }
 
 func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (receiveAddr sdk.AccAddress, resultTx ctypes.ResultBroadcastTxCommit) {

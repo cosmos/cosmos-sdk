@@ -11,10 +11,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/viper"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 // TODO these next two functions feel kinda hacky based on their placement

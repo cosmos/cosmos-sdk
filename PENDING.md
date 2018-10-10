@@ -28,6 +28,7 @@ BREAKING CHANGES
     * [x/stake, x/slashing] [#1305](https://github.com/cosmos/cosmos-sdk/issues/1305) - Rename "revoked" to "jailed"
     * [x/stake] [#1676] Revoked and jailed validators put into the unbonding state
     * [x/stake] [#1877] Redelegations/unbonding-delegation from unbonding validator have reduced time
+    * [x/slashing] \#1789 Slashing changes for Tendermint validator set offset (NextValSet)
     * [x/stake] [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Validator
     operator type has now changed to `sdk.ValAddress`
     * [x/stake] [\#2221](https://github.com/cosmos/cosmos-sdk/issues/2221) New
@@ -41,6 +42,7 @@ BREAKING CHANGES
     * [x/gov] [#2195] Governance uses BFT Time
     * [x/gov] \#2256 Removed slashing for governance non-voting validators
     * [simulation] \#2162 Added back correct supply invariants
+    * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
     
 * SDK

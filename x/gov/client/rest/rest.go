@@ -17,7 +17,7 @@ import (
 // REST Variable names
 // nolint
 const (
-	RestProposalID     = "proposal-id"
+	RestProposalID     = "proposalId"
 	RestDepositer      = "depositer"
 	RestVoter          = "voter"
 	RestProposalStatus = "status"

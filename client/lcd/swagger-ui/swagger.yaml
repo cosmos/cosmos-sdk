@@ -118,6 +118,8 @@ paths:
           description: The block at a specific height
           schema:
             $ref: "#/definitions/BlockQuery"
+        400:
+          description: Invalid height
         404:
           description: Block at height is not available
   /validatorsets/latest:
@@ -184,8 +186,8 @@ paths:
           description: Tx with the provided hash
           schema:
             $ref: "#/definitions/TxQuery"
-        404:
-          description: Tx not available for provided hash
+        500:
+          description: Internal Server Error
   /txs:
     get:
       tags:
@@ -215,8 +217,10 @@ paths:
             type: array
             items:
               $ref: "#/definitions/TxQuery"
-        404:
-          description: Pagination is out of bounds
+        400:
+          description: Invalid request
+        500:
+          description: Internal Server Error
     post:
       tags:
       - ICS0
@@ -244,6 +248,8 @@ paths:
           description: Broadcast tx result
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
+        500:
+          description: Internal Server Error
   /tx/sign:
     post:
       tags:
@@ -575,8 +581,8 @@ paths:
                     type: string
                   sequence:
                     type: string
-        404:
-          description: Account is not available
+        204:
+          description: No content about this account address
   /stake/delegators/{delegatorAddr}/delegations:
     parameters:
     - in: path
@@ -653,8 +659,10 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
-        404:
-          description: Not Found
+        400:
+          description: Invalid request
+        401:
+          description: Password is wrong
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}:
@@ -673,8 +681,8 @@ paths:
       responses:
         200:
           description: OK
-        404:
-          description: Not Found
+        400:
+          description: Invalid delegatorAddr
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/validators:
@@ -693,8 +701,8 @@ paths:
       responses:
         200:
           description: OK
-        404:
-          description: Not Found
+        400:
+          description: Invalid delegatorAddr
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/validators/{validatorAddr}:
@@ -718,8 +726,8 @@ paths:
       responses:
         200:
           description: OK
-        404:
-          description: Not Found
+        400:
+          description: Invalid delegatorAddr or validatorAddr
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/txs:
@@ -739,9 +747,11 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/TxQuery"
-        404:
-          description: Not Found
+            type: array
+            items:
+              $ref: "#/definitions/TxQuery"
+        400:
+          description: Invalid delegatorAddr
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}:
@@ -765,8 +775,8 @@ paths:
       responses:
         200:
           description: OK
-        404:
-          description: Not Found
+        400:
+          description: Invalid delegatorAddr or validatorAddr
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
@@ -790,8 +800,8 @@ paths:
       responses:
         200:
           description: OK
-        404:
-          description: Not Found
+        400:
+          description: Invalid delegatorAddr or validatorAddr
         500:
           description: Internal Server Error
   /stake/validators:
@@ -804,8 +814,6 @@ paths:
       responses:
         200:
           description: OK
-        404:
-          description: Not Found
         500:
           description: Internal Server Error
   /stake/validators/{validatorAddr}:
@@ -824,8 +832,6 @@ paths:
       responses:
         200:
           description: OK
-        404:
-          description: Not Found
         500:
           description: Internal Server Error
   /stake/pool:
@@ -852,7 +858,7 @@ paths:
           description: OK
         500:
           description: Internal Server Error
-  /slashing/signing_info/{validator}:
+  /slashing/validators/{validatorPubKey}/signing_info:
     get:
       summary: Get sign info of given validator
       description: Get sign info of given validator
@@ -863,15 +869,17 @@ paths:
       parameters:
       - type: string
         description: Bech32 validator public key
-        name: validator
+        name: validatorPubKey
         required: true
         in: path
       responses:
-        '200':
+        200:
           description: OK
+        204:
+          description: No sign info of this validator
         500:
           description: Internal Server Error
-  /slashing/unjail:
+  /slashing/validators/{validatorAddr}/unjail:
     post:
       summary: Unjail a jailed validator
       description: Send transaction to unjail a jailed validator
@@ -892,6 +900,11 @@ paths:
         description: if true, build an unsigned transaction and write it back
         required: false
         type: boolean
+      - type: string
+        description: Bech32 validator address
+        name: validatorAddr
+        required: true
+        in: path
       - description: ''
         name: UnjailBody
         in: body
@@ -901,8 +914,6 @@ paths:
           properties:
             base_req:
               "$ref": "#/definitions/BaseReq"
-            validator_addr:
-              "$ref": "#/definitions/ValidatorAddress"
       responses:
         200:
           description: OK
@@ -932,7 +943,7 @@ paths:
         required: false
         type: boolean
       - description: valid value of `"proposal_type"` can be `"Text"`, `"ParameterChange"`, `"SoftwareUpgrade"`
-        name: postProposalBody
+        name: post_proposal_body
         in: body
         required: true
         schema:
@@ -989,9 +1000,11 @@ paths:
             type: array
             items:
               "$ref": "#/definitions/TextProposal"
+        400:
+          description: Invalid request
         500:
           description: Internal Server Error
-  /gov/proposals/{proposal-id}/deposits:
+  /gov/proposals/{proposalId}/deposits:
     post:
       summary: Deposit tokens to a proposal
       description: Send transaction to deposit tokens to a proposal
@@ -1014,11 +1027,11 @@ paths:
         type: boolean
       - type: string
         description: proposal id
-        name: proposal-id
+        name: proposalId
         required: true
         in: path
       - description: ''
-        name: depositBody
+        name: deposit_body
         in: body
         required: true
         schema:
@@ -1039,7 +1052,7 @@ paths:
             "$ref": "#/definitions/BroadcastTxCommitResult"
         500:
           description: Internal Server Error
-  /gov/proposals/{proposal-id}/votes:
+  /gov/proposals/{proposalId}/votes:
     post:
       summary: Vote a proposal
       description: Send transaction to vote a proposal
@@ -1062,7 +1075,7 @@ paths:
         type: boolean
       - type: string
         description: proposal id
-        name: proposal-id
+        name: proposalId
         required: true
         in: path
       - description: valid value of `"option"` field can be `"Yes"`, `"No"`, `"NoWithVeto"` and `"Abstain"`
@@ -1087,7 +1100,7 @@ paths:
           description: Internal Server Error
     get:
       summary: Query voters
-      description: Query voters information by proposal-id
+      description: Query voters information by proposalId
       produces:
       - application/json
       tags:
@@ -1095,7 +1108,7 @@ paths:
       parameters:
       - type: string
         description: proposal id
-        name: proposal-id
+        name: proposalId
         required: true
         in: path
       responses:
@@ -1105,9 +1118,11 @@ paths:
             type: array
             items:
               "$ref": "#/definitions/Vote"
+        400:
+          description: Invalid request
         500:
           description: Internal Server Error
-  /gov/proposals/{proposal-id}:
+  /gov/proposals/{proposalId}:
     get:
       summary: Query a proposal
       description: Query a proposal by id
@@ -1117,7 +1132,7 @@ paths:
       - ICS22
       parameters:
       - type: string
-        name: proposal-id
+        name: proposalId
         required: true
         in: path
       responses:
@@ -1125,12 +1140,16 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/TextProposal"
+        400:
+          description: Invalid request
+        404:
+          description: Found no proposal
         500:
           description: Internal Server Error
-  /gov/proposals/{proposal-id}/deposits/{depositer}:
+  /gov/proposals/{proposalId}/deposits/{depositer}:
     get:
       summary: Query deposit
-      description: Query deposit by proposal-id and depositer address
+      description: Query deposit by proposalId and depositer address
       produces:
       - application/json
       tags:
@@ -1138,7 +1157,7 @@ paths:
       parameters:
       - type: string
         description: proposal id
-        name: proposal-id
+        name: proposalId
         required: true
         in: path
       - type: string
@@ -1151,12 +1170,16 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Deposite"
+        400:
+          description: Invalid request
+        404:
+          description: Found no deposite
         500:
           description: Internal Server Error
-  /gov/proposals/{proposal-id}/votes/{voter}:
+  /gov/proposals/{proposalId}/votes/{voter}:
     get:
       summary: Query vote
-      description: Query vote information by proposal-id and voter address
+      description: Query vote information by proposalId and voter address
       produces:
       - application/json
       tags:
@@ -1164,7 +1187,7 @@ paths:
       parameters:
       - type: string
         description: proposal id
-        name: proposal-id
+        name: proposalId
         required: true
         in: path
       - type: string
@@ -1177,6 +1200,10 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Vote"
+        400:
+          description: Invalid request
+        404:
+          description: Found no vote
         500:
           description: Internal Server Error
 

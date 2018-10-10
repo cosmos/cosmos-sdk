@@ -14,7 +14,7 @@ import (
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 	r.HandleFunc(
-		"/slashing/signing_info/{validator}",
+		"/slashing/validators/{validatorPubKey}/signing_info",
 		signingInfoHandlerFn(cliCtx, "slashing", cdc),
 	).Methods("GET")
 }
@@ -25,7 +25,7 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		pk, err := sdk.GetConsPubKeyBech32(vars["validator"])
+		pk, err := sdk.GetConsPubKeyBech32(vars["validatorPubKey"])
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
@@ -38,6 +38,11 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(fmt.Sprintf("couldn't query signing info. Error: %s", err.Error())))
+			return
+		}
+
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

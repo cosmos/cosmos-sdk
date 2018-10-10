@@ -67,6 +67,8 @@ type Hooks struct {
 	k Keeper
 }
 
+var _ sdk.StakingHooks = Hooks{}
+
 // New Validator Hooks
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
@@ -89,3 +91,7 @@ func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddres
 func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.k.onDelegationRemoved(ctx, delAddr, valAddr)
 }
+
+// nolint - unused hooks for interface
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress)         {}
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress) {}

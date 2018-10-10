@@ -77,9 +77,15 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
+
+	ms.MountStoreWithDB(tkeyDistr, sdk.StoreTypeTransient, nil)
+	ms.MountStoreWithDB(keyDistr, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyFeeCollection, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
@@ -106,6 +112,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (
 	fck := auth.NewFeeCollectionKeeper(cdc, keyFeeCollection)
 	pk := params.NewKeeper(cdc, keyParams)
 	keeper := NewKeeper(cdc, keyDistr, tkeyDistr, pk.Setter(), ck, sk, fck, types.DefaultCodespace)
+
+	// set the distribution hooks on staking
+	sk = sk.WithHooks(keeper.Hooks())
+
+	// set genesis items required for distribution
+	keeper.SetFeePool(ctx, types.InitialFeePool())
+	keeper.SetCommunityTax(ctx, sdk.NewDecWithPrec(2, 2))
 
 	return ctx, accountMapper, keeper, sk
 }

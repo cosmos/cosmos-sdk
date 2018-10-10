@@ -24,8 +24,8 @@ func TestWithdrawDelegationReward(t *testing.T) {
 
 	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(90), amt.Int64())
-	_ = keeper
-	//keeper.WithdrawDelegationReward(ctx, delAddr1, valAddr1)
+
+	keeper.WithdrawDelegationReward(ctx, delAddr1, valAddr1)
 }
 
 func TestWithdrawDelegationRewardsAll(t *testing.T) {

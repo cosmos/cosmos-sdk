@@ -15,7 +15,7 @@ var _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegate{}
 
 //______________________________________________________________________
 
-// MsgCreateValidator - struct for unbonding transactions
+// MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
 	Description
 	Commission    CommissionMsg

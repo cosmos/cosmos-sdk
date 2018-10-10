@@ -367,7 +367,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/Account'
+              $ref: '#/definitions/KeyOutput'
     post:
       summary: Create a new account locally
       tags:
@@ -397,7 +397,7 @@ paths:
         200:
           description: Returns account information of the created key
           schema:
-            $ref: "#/definitions/Account"
+            $ref: "#/definitions/KeyOutput"
   /keys/seed:
     get:
       summary: Create a new seed to create a new account with
@@ -440,7 +440,7 @@ paths:
         200:
           description: Returns account information of the recovered key
           schema:
-            $ref: "#/definitions/Account"
+            $ref: "#/definitions/KeyOutput"
   /keys/{name}:
     parameters:
     - in: path
@@ -458,7 +458,7 @@ paths:
         200:
           description: Locally stored account
           schema:
-            $ref: "#/definitions/Account"
+            $ref: "#/definitions/KeyOutput"
         404:
           description: Account is not available
     put:
@@ -529,7 +529,25 @@ paths:
         200:
           description: Account information on the blockchain
           schema:
-            $ref: "#/definitions/AccountQueryResponse"
+            type: object
+            properties:
+              type:
+                type: string
+              value:
+                type: object
+                properties:
+                  account_number:
+                    type: string
+                  address:
+                    type: string
+                  coins:
+                    type: array
+                    items:
+                      $ref: "#/definitions/Coin"
+                  public_key:
+                    type: string
+                  sequence:
+                    type: string
         404:
           description: Account is not available
   /stake/delegators/{delegatorAddr}/delegations:
@@ -558,6 +576,8 @@ paths:
         schema:
           type: object
           properties:
+            base_req:
+              "$ref": "#/definitions/BaseReq"
             delegations:
               type: array
               items:
@@ -576,9 +596,7 @@ paths:
                 properties:
                   delegator_addr:
                     $ref: "#/definitions/Address"
-                  validator_src_addr:
-                    $ref: "#/definitions/ValidatorAddress"
-                  validator_dst_addr:
+                  validator_addr:
                     $ref: "#/definitions/ValidatorAddress"
                   shares:
                     type: string
@@ -590,7 +608,9 @@ paths:
                 properties:
                   delegator_addr:
                     $ref: "#/definitions/Address"
-                  validator_addr:
+                  validator_src_addr:
+                    $ref: "#/definitions/ValidatorAddress"
+                  validator_dst_addr:
                     $ref: "#/definitions/ValidatorAddress"
                   shares:
                     type: string
@@ -1224,7 +1244,7 @@ definitions:
   Address:
     type: string
     description: bech32 encoded address
-    example: cosmoszgnkwr7eyyv643dllwfpdwensmgdtz89yu73zq
+    example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
   ValidatorAddress:
     type: string
     description: bech32 encoded address
@@ -1338,44 +1358,23 @@ definitions:
           sequence:
             type: string
             example: "0"
-  Account:
+  KeyOutput:
     type: object
     properties:
       name:
         type: string
         example: Main Account
       address:
-        $ref: "#/definitions/Address"
+        type: string
+        example: cosmos1depk54cuajgkzea6zpgkq36tnjwdzv4afc3d27
       pub_key:
         type: string
-        example: "cosmospub1addwnpepqfgv3pakxazq2fgs8tmmhmzsrs94fptl7kyztyxprjpf0mkus3h7cxqe70s"
+        example: "cosmospub1addwnpepqtqc88gfdxyzcdm2eqr3tnlnxnelyqehy8k95qzgwdz5zccdft9rq5q7wj2"
       type:
         type: string
         example: local
       seed:
         type: string
-  AccountInfo:
-    type: object
-    properties:
-      account_number:
-        type: string
-      address:
-        type: string
-      coins:
-        type: array
-        items:
-          $ref: "#/definitions/Coin"
-      public_key:
-        type: string
-      sequence:
-        type: string
-  AccountQueryResponse:
-    type: object
-    properties:
-      type:
-        type: string
-      value:
-        $ref: "#/definitions/AccountInfo"
   BlockID:
     type: object
     properties:

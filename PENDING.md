@@ -170,6 +170,7 @@ IMPROVEMENTS
     calls which includes dynamic consumption of value length.
     * [types/decimal] \#2378 - Added truncate functionality to decimal
     * [client] [\#1184](https://github.com/cosmos/cosmos-sdk/issues/1184) Remove unused `client/tx/sign.go`.
+    * [tools] \#2464 Lock binary dependencies to a specific version
 
 * Tendermint
 

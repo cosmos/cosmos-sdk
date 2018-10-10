@@ -8,7 +8,8 @@ LEDGER_ENABLED ?= true
 UNAME_S := $(shell uname -s)
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
-	github.com/alecthomas/gometalinter
+	github.com/alecthomas/gometalinter \
+	github.com/rakyll/statik
 all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
 
 ########################################

@@ -6,6 +6,9 @@ BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/ve
 GCC := $(shell command -v gcc 2> /dev/null)
 LEDGER_ENABLED ?= true
 UNAME_S := $(shell uname -s)
+GOTOOLS = \
+	github.com/golang/dep/cmd/dep \
+	github.com/alecthomas/gometalinter
 all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
 
 ########################################
@@ -91,22 +94,25 @@ dist:
 ### Tools & dependencies
 
 check_tools:
-	cd tools && $(MAKE) check_tools
-
-check_dev_tools:
-	cd tools && $(MAKE) check_dev_tools
+	@# https://stackoverflow.com/a/25668869
+	@echo "Found tools: $(foreach tool,$(notdir $(GOTOOLS)),\
+        $(if $(shell which $(tool)),$(tool),$(error "No $(tool) in PATH")))"
 
 update_tools:
-	cd tools && $(MAKE) update_tools
+	@echo "--> Updating tools to correct version"
+	./scripts/get_tools.sh
 
 update_dev_tools:
-	cd tools && $(MAKE) update_dev_tools
+	@echo "--> Downloading linters (this may take awhile)"
+	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 
 get_tools:
-	cd tools && $(MAKE) get_tools
+	@echo "--> Installing tools"
+	./scripts/get_tools.sh
 
 get_dev_tools:
-	cd tools && $(MAKE) get_dev_tools
+	@echo "--> Downloading linters (this may take awhile)"
+	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 
 get_vendor_deps:
 	@echo "--> Generating vendor directory via dep ensure"
@@ -182,7 +188,7 @@ test_cover:
 
 test_lint:
 	gometalinter.v2 --config=tools/gometalinter.json ./...
-	!(gometalinter.v2 --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	!(gometalinter.v2 --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)

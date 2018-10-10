@@ -11,6 +11,12 @@ import (
 func (k Keeper) AllocateFees(ctx sdk.Context) {
 	ctx.Logger().With("module", "x/distribution").Error(fmt.Sprintf("allocation height: %v", ctx.BlockHeight()))
 
+	// if there is no power in the system nothing should be allocated
+	bondedTokens := k.stakeKeeper.TotalPower(ctx)
+	if bondedTokens.IsZero() {
+		return
+	}
+
 	// get the proposer of this block
 	proposerConsAddr := k.GetProposerConsAddr(ctx)
 	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposerConsAddr)
@@ -22,8 +28,7 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	feesCollectedDec := types.NewDecCoins(feesCollected)
 
 	// allocated rewards to proposer
-	bondedTokens := k.stakeKeeper.TotalPower(ctx)
-	sumPowerPrecommitValidators := sdk.NewDec(1) // XXX TODO actually calculate this
+	sumPowerPrecommitValidators := k.GetSumPrecommitPower(ctx)
 	proposerMultiplier := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(
 		sumPowerPrecommitValidators).Quo(bondedTokens))
 	proposerReward := feesCollectedDec.MulDec(proposerMultiplier)

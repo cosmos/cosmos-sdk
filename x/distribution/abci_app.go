@@ -1,8 +1,6 @@
 package distribution
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,8 +10,10 @@ import (
 // set the proposer for determining distribution during endblock
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 	consAddr := sdk.ConsAddress(req.Header.ProposerAddress)
-	fmt.Printf("debug consAddr: %v\n", consAddr)
 	k.SetProposerConsAddr(ctx, consAddr)
+
+	// XXX TODO actually calculate this
+	k.SetSumPrecommitPower(ctx, sdk.NewDec(1))
 }
 
 // allocate fees

@@ -8,11 +8,17 @@ import (
 var (
 	FeePoolKey               = []byte{0x00} // key for global distribution state
 	ValidatorDistInfoKey     = []byte{0x01} // prefix for each key to a validator distribution
-	DelegationDistInfoKey     = []byte{0x02} // prefix for each key to a delegation distribution
+	DelegationDistInfoKey    = []byte{0x02} // prefix for each key to a delegation distribution
 	DelegatorWithdrawInfoKey = []byte{0x03} // prefix for each key to a delegator withdraw info
 
 	// transient
-	ProposerKey = []byte{0x00} // key for storing the proposer operator address
+	ProposerKey          = []byte{0x00} // key for storing the proposer operator address
+	SumPrecommitPowerKey = []byte{0x01} // key for storing the power of the precommit validators
+)
+
+// nolint
+const (
+	ParamStoreKeyCommunityTax = "distr/community-tax"
 )
 
 // gets the key for the validator distribution info from address

@@ -7,11 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// nolint
-const (
-	ParamStoreKeyCommunityTax = "distr/community-tax"
-)
-
 // keeper of the stake store
 type Keeper struct {
 	storeKey            sdk.StoreKey
@@ -70,7 +65,7 @@ func (k Keeper) GetProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) 
 
 	b := tstore.Get(ProposerKey)
 	if b == nil {
-		panic("Stored fee pool should not have been nil")
+		panic("Proposer cons address was likely not set in begin block")
 	}
 
 	k.cdc.MustUnmarshalBinary(b, &consAddr)
@@ -86,7 +81,30 @@ func (k Keeper) SetProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
 
 //______________________________________________________________________
 
-// Returns the current Deposit Procedure from the global param store
+// set the proposer public key for this block
+func (k Keeper) GetSumPrecommitPower(ctx sdk.Context) (sumPrecommitPower sdk.Dec) {
+	tstore := ctx.KVStore(k.storeTKey)
+
+	b := tstore.Get(ProposerKey)
+	if b == nil {
+		panic("Proposer cons address was likely not set in begin block")
+	}
+
+	k.cdc.MustUnmarshalBinary(b, &sumPrecommitPower)
+	return
+}
+
+// get the proposer public key for this block
+func (k Keeper) SetSumPrecommitPower(ctx sdk.Context, sumPrecommitPower sdk.Dec) {
+	tstore := ctx.KVStore(k.storeTKey)
+	b := k.cdc.MustMarshalBinary(sumPrecommitPower)
+	tstore.Set(ProposerKey, b)
+}
+
+//______________________________________________________________________
+// PARAM STORE
+
+// Returns the current CommunityTax rate from the global param store
 // nolint: errcheck
 func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
 	var communityTax sdk.Dec

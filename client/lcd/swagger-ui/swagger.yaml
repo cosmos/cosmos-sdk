@@ -99,7 +99,7 @@ paths:
         200:
           description: The latest block
           schema:
-            $ref: "#/definitions/QueryBlock"
+            $ref: "#/definitions/BlockQuery"
   /blocks/{height}:
     get:
       summary: Get a block at a certain height
@@ -117,7 +117,7 @@ paths:
         200:
           description: The block at a specific height
           schema:
-            $ref: "#/definitions/QueryBlock"
+            $ref: "#/definitions/BlockQuery"
         404:
           description: Block at height is not available
   /validatorsets/latest:
@@ -232,7 +232,13 @@ paths:
         description: Build a StdTx transaction and serilize it to a byte array with amino, then the `"tx"` field in the post body will be the base64 encoding of the byte array. The supported return types includes `"block"`(return after tx commit), `"sync"`(return afer CheckTx) and `"async"`(return right away).
         required: true
         schema:
-          $ref: "#/definitions/TendertmintTx"
+          type: object
+          properties:
+            tx:
+              type: string
+            return:
+              type: string
+              example: block
       responses:
         200:
           description: Broadcast tx result
@@ -254,7 +260,25 @@ paths:
         description: sign tx
         required: true
         schema:
-          $ref: "#/definitions/TxSign"
+          type: object
+          properties:
+            tx:
+              $ref: "#/definitions/StdTx"
+            name:
+              type: string
+            password:
+              type: string
+            chain_id:
+              type: string
+            account_number:
+              type: string
+              example: "0"
+            sequence:
+              type: string
+              example: "0"
+            append_sig:
+              type: boolean
+              example: true
       responses:
         200:
           description: The signed Tx
@@ -278,7 +302,10 @@ paths:
         description: broadcast tx
         required: true
         schema:
-          $ref: "#/definitions/TxBroadcast"
+          type: object
+          properties:
+            tx:
+              $ref: "#/definitions/StdTx"
       responses:
         202:
           description: Tx was send and will probably be added to the next block
@@ -1230,15 +1257,6 @@ definitions:
         type: string
       value:
         type: string
-  Fee:
-    type: object
-    properties:
-      gas:
-        type: string
-      amount:
-        type: array
-        items:
-          $ref: "#/definitions/Coin"
   Msg:
     type: string
   Address:
@@ -1249,15 +1267,6 @@ definitions:
     type: string
     description: bech32 encoded address
     example: cosmosvaloper1depk54cuajgkzea6zpgkq36tnjwdzv4avv9cxd
-  PubKey:
-    type: object
-    properties:
-      type:
-        type: string
-        example: "tendermint/PubKeySecp256k1"
-      value:
-        type: string
-        example: "Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH"
   ValidatorPubKey:
     type: string
     description: bech32 encoded public key
@@ -1274,21 +1283,6 @@ definitions:
   Hash:
     type: string
     example: EE5F3404034C524501629B56E0DDC38FAD651F04
-  Result:
-    type: object
-    properties:
-      log:
-        type: string
-      gas_wanted:
-        type: string
-        example: "0"
-      gas_used:
-        type: string
-        example: "0"
-      tags:
-        type: array
-        items:
-          $ref: "#/definitions/KVPair"
   TxQuery:
     type: object
     properties:
@@ -1299,40 +1293,20 @@ definitions:
       tx:
         $ref: "#/definitions/StdTx"
       result:
-        $ref: "#/definitions/Result"
-  TendertmintTx:
-    type: object
-    properties:
-      tx:
-        type: string
-      return:
-        type: string
-        example: block
-  TxBroadcast:
-    type: object
-    properties:
-      tx:
-        $ref: "#/definitions/StdTx"
-  TxSign:
-    type: object
-    properties:
-      tx:
-        $ref: "#/definitions/StdTx"
-      name:
-        type: string
-      password:
-        type: string
-      chain_id:
-        type: string
-      account_number:
-        type: string
-        example: "0"
-      sequence:
-        type: string
-        example: "0"
-      append_sig:
-        type: boolean
-        example: true
+        type: object
+        properties:
+          log:
+            type: string
+          gas_wanted:
+            type: string
+            example: "0"
+          gas_used:
+            type: string
+            example: "0"
+          tags:
+            type: array
+            items:
+              $ref: "#/definitions/KVPair"
   StdTx:
     type: object
     properties:
@@ -1341,7 +1315,14 @@ definitions:
         items:
           $ref: "#/definitions/Msg"
       fee:
-        $ref: "#/definitions/Fee"
+        type: object
+        properties:
+          gas:
+            type: string
+          amount:
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
       memo:
         type: string
       signature:
@@ -1351,7 +1332,14 @@ definitions:
             type: string
             example: MEUCIQD02fsDPra8MtbRsyB1w7bqTM55Wu138zQbFcWx4+CFyAIge5WNPfKIuvzBZ69MyqHsqD8S1IwiEp+iUb6VSdtlpgY=
           pub_key:
-            $ref: "#/definitions/PubKey"
+            type: object
+            properties:
+              type:
+                type: string
+                example: "tendermint/PubKeySecp256k1"
+              value:
+                type: string
+                example: "Avz04VhtKJh8ACCVzlI8aTosGy0ikFXKIVHQ3jKMrosH"
           account_number:
             type: string
             example: "0"
@@ -1467,18 +1455,16 @@ definitions:
                 signature:
                   type: string
                   example: '7uTC74QlknqYWEwg7Vn6M8Om7FuZ0EO4bjvuj6rwH1mTUJrRuMMZvAAqT9VjNgP0RA/TDp6u/92AqrZfXJSpBQ=='
-  BlockMeta:
-    type: object
-    properties:
-      header:
-        $ref: "#/definitions/BlockHeader"
-      block_id:
-        $ref: "#/definitions/BlockID"
-  QueryBlock:
+  BlockQuery:
     type: object
     properties:
       block_meta:
-        $ref: "#/definitions/BlockMeta"
+        type: object
+        properties:
+          header:
+            $ref: "#/definitions/BlockHeader"
+          block_id:
+            $ref: "#/definitions/BlockID"
       block:
         $ref: "#/definitions/Block"
   BaseReq:

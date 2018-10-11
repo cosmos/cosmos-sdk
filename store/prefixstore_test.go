@@ -118,7 +118,6 @@ func TestPrefixStoreIterate(t *testing.T) {
 	pIter.Close()
 }
 
-<<<<<<< HEAD
 func incFirstByte(bz []byte) {
 	if bz[0] == byte(255) {
 		bz[0] = byte(0)
@@ -144,7 +143,8 @@ func TestCloneAppend(t *testing.T) {
 		incFirstByte(kvp.value)
 		require.NotEqual(t, bz, append(kvp.key, kvp.value...))
 	}
-=======
+}
+
 func TestPrefixStoreIteratorEdgeCase(t *testing.T) {
 	db := dbm.NewMemDB()
 	baseStore := dbStoreAdapter{db}
@@ -423,5 +423,4 @@ func TestPrefixDBReverseIterator4(t *testing.T) {
 	itr := pstore.ReverseIterator(bz(""), bz(""))
 	checkInvalid(t, itr)
 	itr.Close()
->>>>>>> develop
 }

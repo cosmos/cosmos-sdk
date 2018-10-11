@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/crypto"
@@ -61,19 +63,19 @@ type AppInit struct {
 	FlagsAppGenTx    *pflag.FlagSet
 
 	// create the application genesis tx
-	AppGenTx func(cdc *codec.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
-		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
+	// AppGenTx func(cdc *codec.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
+	// 	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
 
 	// AppGenState creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.
-	AppGenState func(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error)
+	AppGenState func(cdc *codec.Codec, appGenTx []auth.StdTx) (appState json.RawMessage, err error)
 }
 
 //_____________________________________________________________________
 
 // simple default application init
 var DefaultAppInit = AppInit{
-	AppGenTx:    SimpleAppGenTx,
+	//	AppGenTx:    SimpleAppGenTx,
 	AppGenState: SimpleAppGenState,
 }
 
@@ -116,19 +118,20 @@ func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey, genTxConfig serverconfig
 }
 
 // create the genesis app state
-func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func SimpleAppGenState(cdc *codec.Codec, appGenTxs []auth.StdTx) (appState json.RawMessage, err error) {
 
 	if len(appGenTxs) != 1 {
 		err = errors.New("must provide a single genesis transaction")
 		return
 	}
 
-	var genTx SimpleGenTx
-	err = cdc.UnmarshalJSON(appGenTxs[0], &genTx)
-	if err != nil {
+	msgs := appGenTxs[0].GetMsgs()
+	if len(msgs) != 1 {
+		err = errors.New("must provide a single genesis message")
 		return
 	}
 
+	msg := msgs[0].(stake.MsgCreateValidator)
 	appState = json.RawMessage(fmt.Sprintf(`{
   "accounts": [{
     "address": "%s",
@@ -139,7 +142,7 @@ func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState 
       }
     ]
   }]
-}`, genTx.Addr))
+}`, msg.ValidatorAddr))
 	return
 }
 

@@ -12,9 +12,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"net/http"
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // KeyDBName is the directory under root where we store the keys

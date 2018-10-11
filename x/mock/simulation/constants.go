@@ -14,7 +14,7 @@ const (
 	numKeys int = 250
 
 	// Chance that double-signing evidence is found on a given block
-	evidenceFraction float64 = 0.01
+	evidenceFraction float64 = 0.5
 
 	// TODO Remove in favor of binary search for invariant violation
 	onOperation bool = false

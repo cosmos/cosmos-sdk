@@ -84,6 +84,7 @@ func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, para
 	}
 	require.Nil(t, err)
 	keeper := NewKeeper(cdc, keySlashing, sk, params.Getter(), DefaultCodespace)
+	sk = sk.WithHooks(keeper.Hooks())
 	return ctx, ck, sk, params.Setter(), keeper
 }
 

@@ -28,7 +28,6 @@ func TestHandleDoubleSign(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t)
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
-	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
 	operatorAddr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(operatorAddr, val, amt))
@@ -69,7 +68,6 @@ func TestSlashingPeriodCap(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
 	operatorAddr, amt := addrs[0], sdk.NewInt(amtInt)
 	valConsPubKey, valConsAddr := pks[0], pks[0].Address()
@@ -135,7 +133,6 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t)
-	sk = sk.WithHooks(keeper.Hooks())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)
@@ -146,14 +143,12 @@ func TestHandleAbsentValidator(t *testing.T) {
 	keeper.AddValidators(ctx, validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
 	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
+	// will exist since the validator has been bonded
 	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
-	require.False(t, found)
+	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, int64(0), info.IndexOffset)
 	require.Equal(t, int64(0), info.SignedBlocksCounter)
-	// default time.Time value
-	var blankTime time.Time
-	require.Equal(t, blankTime, info.JailedUntil)
 	height := int64(0)
 
 	// 1000 first blocks OK
@@ -292,15 +287,17 @@ func TestHandleNewValidator(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t)
 	addr, val, amt := addrs[0], pks[0], int64(100)
 	sh := stake.NewHandler(sk)
+
+	// 1000 first blocks not a validator
+	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 1)
+
+	// Validator created
 	got := sh(ctx, newTestMsgCreateValidator(addr, val, sdk.NewInt(amt)))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
 	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt)}})
 	require.Equal(t, sdk.NewDec(amt), sk.Validator(ctx, addr).GetPower())
-
-	// 1000 first blocks not a validator
-	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 1)
 
 	// Now a validator, for two blocks
 	keeper.handleValidatorSignature(ctx, val.Address(), 100, true)

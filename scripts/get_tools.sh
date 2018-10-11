@@ -5,11 +5,9 @@ set -e
 # specific git hash.
 #
 # repos it installs:
-#   github.com/mitchellh/gox
 #   github.com/golang/dep/cmd/dep
 #   gopkg.in/alecthomas/gometalinter.v2
-#   github.com/gogo/protobuf/protoc-gen-gogo
-#   github.com/square/certstrap
+#   github.com/rakyll/statiik
 
 ## check if GOPATH is set
 if [ -z ${GOPATH+x} ]; then

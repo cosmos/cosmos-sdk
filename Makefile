@@ -188,8 +188,8 @@ test_cover:
 	@export VERSION=$(VERSION); bash tests/test_cover.sh
 
 test_lint:
-	gometalinter.v2 --config=tools/gometalinter.json ./...
-	!(gometalinter.v2 --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	gometalinter --config=tools/gometalinter.json ./...
+	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)

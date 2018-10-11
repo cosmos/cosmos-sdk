@@ -40,7 +40,7 @@ type ValidatorSigningInfo struct {
     IndexOffset           int64     // Offset into the signed block bit array
     JailedUntilHeight     int64     // Block height until which the validator is jailed,
                                     // or sentinel value of 0 for not jailed
-    SignedBlocksCounter   int64     // Running counter of signed blocks
+    MissedBlocksCounter   int64     // Running counter of missed blocks
 }
 
 ```
@@ -49,7 +49,7 @@ Where:
 * `StartHeight` is set to the height that the candidate became an active validator (with non-zero voting power).
 * `IndexOffset` is incremented each time the candidate was a bonded validator in a block (and may have signed a precommit or not).
 * `JailedUntil` is set whenever the candidate is jailed due to downtime
-* `SignedBlocksCounter` is a counter kept to avoid unnecessary array reads. `SignedBlocksBitArray.Sum() == SignedBlocksCounter` always.
+* `MissedBlocksCounter` is a counter kept to avoid unnecessary array reads. `MissedBlocksBitArray.Sum() == MissedBlocksCounter` always.
 
 ## Slashing Period
 

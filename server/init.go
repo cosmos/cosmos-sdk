@@ -45,7 +45,6 @@ type AppInit struct {
 
 	// flags required for application init functions
 	FlagsAppGenState *pflag.FlagSet
-	FlagsAppGenTx    *pflag.FlagSet
 
 	// AppGenState creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.

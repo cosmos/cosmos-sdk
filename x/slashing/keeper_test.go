@@ -148,7 +148,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, int64(0), info.IndexOffset)
-	require.Equal(t, int64(0), info.SignedBlocksCounter)
+	require.Equal(t, int64(0), info.MissedBlocksCounter)
 	height := int64(0)
 
 	// 1000 first blocks OK
@@ -159,7 +159,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx), info.SignedBlocksCounter)
+	require.Equal(t, int64(0), info.MissedBlocksCounter)
 
 	// 500 blocks missed
 	for ; height < keeper.SignedBlocksWindow(ctx)+(keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)); height++ {
@@ -169,7 +169,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx), info.SignedBlocksCounter)
+	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx), info.MissedBlocksCounter)
 
 	// validator should be bonded still
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
@@ -183,7 +183,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-1, info.SignedBlocksCounter)
+	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)+1, info.MissedBlocksCounter)
 
 	// end block
 	stake.EndBlocker(ctx, sk)
@@ -204,7 +204,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-2, info.SignedBlocksCounter)
+	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)+2, info.MissedBlocksCounter)
 
 	// end block
 	stake.EndBlocker(ctx, sk)
@@ -246,7 +246,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, height, info.StartHeight)
 	// we've missed 2 blocks more than the maximum
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)-2, info.SignedBlocksCounter)
+	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)+2, info.MissedBlocksCounter)
 
 	// validator should not be immediately jailed again
 	height++
@@ -308,7 +308,7 @@ func TestHandleNewValidator(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, keeper.SignedBlocksWindow(ctx)+1, info.StartHeight)
 	require.Equal(t, int64(2), info.IndexOffset)
-	require.Equal(t, int64(1), info.SignedBlocksCounter)
+	require.Equal(t, int64(1), info.MissedBlocksCounter)
 	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 
 	// validator should be bonded still, should not have been jailed or slashed

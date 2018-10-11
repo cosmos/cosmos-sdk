@@ -53,7 +53,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 		StartHeight:         int64(0),
 		IndexOffset:         int64(0),
 		JailedUntil:         time.Unix(0, 0),
-		SignedBlocksCounter: int64(0),
+		MissedBlocksCounter: int64(0),
 	}
 	slashingKeeper.setValidatorSigningInfo(ctx, consAddr, newInfo)
 

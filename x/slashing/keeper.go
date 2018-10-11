@@ -110,23 +110,25 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	// This counter just tracks the sum of the bit array
 	// That way we avoid needing to read/write the whole array each time
 	previous := k.getValidatorSigningBitArray(ctx, consAddr, index)
-	if previous == signed {
+	missed := !signed
+	if previous == missed {
 		// Array value at this index has not changed, no need to update counter
-	} else if previous && !signed {
-		// Array value has changed from signed to unsigned, decrement counter
-		k.setValidatorSigningBitArray(ctx, consAddr, index, false)
-		signInfo.SignedBlocksCounter--
-	} else if !previous && signed {
-		// Array value has changed from unsigned to signed, increment counter
+	} else if !previous && missed {
+		// Array value has changed from not missed to missed, increment counter
 		k.setValidatorSigningBitArray(ctx, consAddr, index, true)
-		signInfo.SignedBlocksCounter++
+		signInfo.MissedBlocksCounter++
+	} else if previous && !missed {
+		// Array value has changed from missed to not missed, decrement counter
+		k.setValidatorSigningBitArray(ctx, consAddr, index, false)
+		signInfo.MissedBlocksCounter--
 	}
 
-	if !signed {
-		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d signed, threshold %d", addr, height, signInfo.SignedBlocksCounter, k.MinSignedPerWindow(ctx)))
+	if missed {
+		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d missed, threshold %d", addr, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
 	}
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
-	if height > minHeight && signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
+	maxMissed := k.SignedBlocksWindow(ctx) - k.MinSignedPerWindow(ctx)
+	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 		if validator != nil && !validator.GetJailed() {
 			// Downtime confirmed: slash and jail the validator

@@ -48,25 +48,25 @@ func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.ConsAdd
 }
 
 // Construct a new `ValidatorSigningInfo` struct
-func NewValidatorSigningInfo(startHeight int64, indexOffset int64, jailedUntil time.Time, signedBlocksCounter int64) ValidatorSigningInfo {
+func NewValidatorSigningInfo(startHeight int64, indexOffset int64, jailedUntil time.Time, missedBlocksCounter int64) ValidatorSigningInfo {
 	return ValidatorSigningInfo{
 		StartHeight:         startHeight,
 		IndexOffset:         indexOffset,
 		JailedUntil:         jailedUntil,
-		SignedBlocksCounter: signedBlocksCounter,
+		MissedBlocksCounter: missedBlocksCounter,
 	}
 }
 
 // Signing info for a validator
 type ValidatorSigningInfo struct {
-	StartHeight         int64     `json:"start_height"`          // height at which validator was first a candidate OR was unjailed
-	IndexOffset         int64     `json:"index_offset"`          // index offset into signed block bit array
-	JailedUntil         time.Time `json:"jailed_until"`          // timestamp validator cannot be unjailed until
-	SignedBlocksCounter int64     `json:"signed_blocks_counter"` // signed blocks counter (to avoid scanning the array every time)
+	StartHeight         int64     `json:"start_height"`            // height at which validator was first a candidate OR was unjailed
+	IndexOffset         int64     `json:"index_offset"`            // index offset into signed block bit array
+	JailedUntil         time.Time `json:"jailed_until"`            // timestamp validator cannot be unjailed until
+	MissedBlocksCounter int64     `json:"misseded_blocks_counter"` // missed blocks counter (to avoid scanning the array every time)
 }
 
 // Return human readable signing info
 func (i ValidatorSigningInfo) HumanReadableString() string {
-	return fmt.Sprintf("Start height: %d, index offset: %d, jailed until: %v, signed blocks counter: %d",
-		i.StartHeight, i.IndexOffset, i.JailedUntil, i.SignedBlocksCounter)
+	return fmt.Sprintf("Start height: %d, index offset: %d, jailed until: %v, missed blocks counter: %d",
+		i.StartHeight, i.IndexOffset, i.JailedUntil, i.MissedBlocksCounter)
 }

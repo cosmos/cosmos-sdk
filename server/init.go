@@ -17,17 +17,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-//Parameter names, for init gen-tx command
-var (
-	FlagName       = "name"
-	FlagClientHome = "home-client"
-	FlagOWK        = "owk"
-)
-
-//parameter names, init command
-var (
+// parameter names, init command
+const (
+	FlagMoniker   = "moniker"
 	FlagOverwrite = "overwrite"
-	FlagWithTxs   = "with-txs"
 	FlagIP        = "ip"
 	FlagChainID   = "chain-id"
 )
@@ -35,8 +28,8 @@ var (
 // Storage for init command input parameters
 type InitConfig struct {
 	ChainID   string
-	GenTxs    bool
 	GenTxsDir string
+	Moniker   string
 	Overwrite bool
 }
 

@@ -713,7 +713,6 @@ func TestUnjail(t *testing.T) {
 	tests.WaitForHeight(4, port)
 	require.Equal(t, true, signingInfo.IndexOffset > 0)
 	require.Equal(t, time.Unix(0, 0).UTC(), signingInfo.JailedUntil)
-	require.Equal(t, true, signingInfo.SignedBlocksCounter > 0)
 }
 
 func TestProposalsQuery(t *testing.T) {

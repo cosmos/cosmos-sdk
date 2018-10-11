@@ -7,17 +7,19 @@ import (
 )
 
 func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
-	// Create a new signing info if necessary
-	_, found := k.getValidatorSigningInfo(ctx, address)
-	if !found {
-		signingInfo := ValidatorSigningInfo{
+	// Update the signing info start height or create a new signing info
+	signingInfo, found := k.getValidatorSigningInfo(ctx, address)
+	if found {
+		signingInfo.StartHeight = ctx.BlockHeight()
+	} else {
+		signingInfo = ValidatorSigningInfo{
 			StartHeight:         ctx.BlockHeight(),
 			IndexOffset:         0,
 			JailedUntil:         time.Unix(0, 0),
 			MissedBlocksCounter: 0,
 		}
-		k.setValidatorSigningInfo(ctx, address, signingInfo)
 	}
+	k.setValidatorSigningInfo(ctx, address, signingInfo)
 
 	// Create a new slashing period when a validator is bonded
 	slashingPeriod := ValidatorSlashingPeriod{

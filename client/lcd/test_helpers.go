@@ -2,7 +2,6 @@ package lcd
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -22,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -225,18 +225,18 @@ func InitializeTestLCD(
 		)
 	}
 
-	var appGenTxs []json.RawMessage
+	var validatorsPKs []crypto.PubKey
 
+	// NOTE: It's bad practice to reuse public key address for the operator
+	// address but doing in the test for simplicity.
+	var appGenTxs []auth.StdTx
 	for _, gdValidator := range genDoc.Validators {
 		operAddr := ed25519.GenPrivKey().PubKey().Address()
 		pk := gdValidator.PubKey
 
-		valConsPubKeys = append(valConsPubKeys, pk)
-		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
-
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(operAddr), gdValidator.Name)
-		require.NoError(t, err)
-
+		desc := stake.NewDescription("test_val1", "", "", "")
+		msg := stake.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin("stake", 100), desc, stake.CommissionMsg{})
+		appGenTx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
 		appGenTxs = append(appGenTxs, appGenTx)
 	}
 

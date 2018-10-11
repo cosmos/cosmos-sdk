@@ -3,15 +3,12 @@ package init
 import (
 	"fmt"
 	"net"
+	"os"
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/server"
 
 	"github.com/spf13/cobra"
-
-	gc "github.com/cosmos/cosmos-sdk/server/config"
-
-	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/viper"
@@ -46,9 +43,12 @@ Example:
 	gaiad testnet --v 4 --o ./output --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			config := ctx.Config
-			err := testnetWithConfig(config, cdc, appInit)
-			return err
+			/*
+				config := ctx.Config
+				err := testnetWithConfig(config, cdc, appInit)
+				return err
+			*/
+			return nil
 		},
 	}
 	cmd.Flags().Int(nValidators, 4,

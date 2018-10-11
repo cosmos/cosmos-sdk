@@ -5,12 +5,16 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/spf13/pflag"
 )
@@ -62,10 +66,17 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 // get app init parameters for server init command
 func GaiaAppInit() server.AppInit {
 	fsAppGenState := pflag.NewFlagSet("", pflag.ContinueOnError)
+	fsAppGenTx := pflag.NewFlagSet("", pflag.ContinueOnError)
+	fsAppGenTx.String(server.FlagName, "", "validator moniker, required")
+	fsAppGenTx.String(server.FlagClientHome, DefaultCLIHome,
+		"home directory for the client, used for key generation")
+	fsAppGenTx.Bool(server.FlagOWK, false, "overwrite the accounts created")
 
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,
+		FlagsAppGenTx:    fsAppGenTx,
 		AppGenState:      GaiaAppGenStateJSON,
+		AppGenTx:         GaiaAppGenTx,
 	}
 }
 
@@ -74,6 +85,56 @@ type GaiaGenTx struct {
 	Name    string         `json:"name"`
 	Address sdk.AccAddress `json:"address"`
 	PubKey  string         `json:"pub_key"`
+}
+
+// GaiaAppGenTx generates a Gaia genesis transaction.
+func GaiaAppGenTx(
+	cdc *codec.Codec, pk crypto.PubKey, genTxConfig config.GenTx,
+) (appGenTx auth.StdTx, cliPrint json.RawMessage, err error) {
+	if genTxConfig.Name == "" {
+		err = errors.New("Must specify --name (validator moniker)")
+		return
+	}
+
+	buf := client.BufferStdin()
+	prompt := fmt.Sprintf("Password for account '%s' (default %s):", genTxConfig.Name, DefaultKeyPass)
+
+	keyPass, err := client.GetPassword(prompt, buf)
+	if err != nil && keyPass != "" {
+		// An error was returned that either failed to read the password from
+		// STDIN or the given password is not empty but failed to meet minimum
+		// length requirements.
+		return
+	}
+
+	if keyPass == "" {
+		keyPass = DefaultKeyPass
+	}
+
+	addr, secret, err := server.GenerateSaveCoinKey(
+		genTxConfig.CliRoot,
+		genTxConfig.Name,
+		keyPass,
+		genTxConfig.Overwrite,
+	)
+	if err != nil {
+		return
+	}
+
+	mm := map[string]string{"secret": secret}
+	bz, err := cdc.MarshalJSON(mm)
+	if err != nil {
+		return
+	}
+
+	desc := stake.NewDescription(genTxConfig.Name, "", "", "")
+	comm := stakeTypes.CommissionMsg{}
+	msg := stake.NewMsgCreateValidator(sdk.ValAddress(addr), pk, sdk.NewInt64Coin("steak", 50), desc, comm)
+	appGenTx = auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
+
+	cliPrint = json.RawMessage(bz)
+
+	return
 }
 
 // Create the core parameters for genesis initialization for gaia

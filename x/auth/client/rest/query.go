@@ -91,7 +91,7 @@ func QueryBalancesRequestHandlerFn(
 
 		// the query will return empty if there is no data for this account
 		if len(res) == 0 {
-			utils.WriteErrorResponse(w, http.StatusNoContent, "")
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

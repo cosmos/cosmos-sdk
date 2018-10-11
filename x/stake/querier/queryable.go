@@ -78,7 +78,7 @@ func queryValidators(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []by
 
 	res, errRes := codec.MarshalJSONIndent(cdc, validators)
 	if err != nil {
-		return nil, sdk.ErrInternal(errRes.Error())
+		return nil, sdk.ErrInternal(utils.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
 	}
 	return res, nil
 }

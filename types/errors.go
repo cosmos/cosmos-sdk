@@ -257,7 +257,7 @@ func (err *sdkError) Code() CodeType {
 func (err *sdkError) ABCILog() string {
 	cdc := codec.New()
 	errMsg := err.cmnError.Error()
-	jsonErr := humanReadableError{
+	jsonErr := HumanReadableError{
 		Codespace: err.codespace,
 		Code:      err.code,
 		ABCICode:  err.ABCICode(),
@@ -286,8 +286,8 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 	}
 }
 
-// nolint
-type humanReadableError struct {
+// parses the error into an object-like struct for exporting
+type HumanReadableError struct {
 	Codespace CodespaceType `json:"codespace"`
 	Code      CodeType      `json:"code"`
 	ABCICode  ABCICodeType  `json:"abci_code"`

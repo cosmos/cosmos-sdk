@@ -10,8 +10,6 @@ import (
 // Create a new validator distribution record
 func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 
-	fmt.Printf("debug asdgojasklnaslkjv addr: %v\n", addr)
-
 	height := ctx.BlockHeight()
 	vdi := types.ValidatorDistInfo{
 		OperatorAddr:            addr,

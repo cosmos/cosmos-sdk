@@ -85,7 +85,7 @@ func (k Keeper) SetProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
 func (k Keeper) GetSumPrecommitPower(ctx sdk.Context) (sumPrecommitPower sdk.Dec) {
 	tstore := ctx.KVStore(k.storeTKey)
 
-	b := tstore.Get(ProposerKey)
+	b := tstore.Get(SumPrecommitPowerKey)
 	if b == nil {
 		panic("Proposer cons address was likely not set in begin block")
 	}
@@ -98,7 +98,7 @@ func (k Keeper) GetSumPrecommitPower(ctx sdk.Context) (sumPrecommitPower sdk.Dec
 func (k Keeper) SetSumPrecommitPower(ctx sdk.Context, sumPrecommitPower sdk.Dec) {
 	tstore := ctx.KVStore(k.storeTKey)
 	b := k.cdc.MustMarshalBinary(sumPrecommitPower)
-	tstore.Set(ProposerKey, b)
+	tstore.Set(SumPrecommitPowerKey, b)
 }
 
 //______________________________________________________________________

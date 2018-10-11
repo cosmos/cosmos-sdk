@@ -32,6 +32,16 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 	)
 }
 
+func NewTestMsgCreateValidatorWithCommission(address sdk.ValAddress, pubKey crypto.PubKey,
+	amt int64, commissionRate sdk.Dec) MsgCreateValidator {
+
+	commission := NewCommissionMsg(commissionRate, sdk.OneDec(), sdk.ZeroDec())
+
+	return types.NewMsgCreateValidator(
+		address, pubKey, sdk.NewCoin("steak", sdk.NewInt(amt)), Description{}, commission,
+	)
+}
+
 func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt int64) MsgDelegate {
 	return MsgDelegate{
 		DelegatorAddr: delAddr,

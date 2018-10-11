@@ -2,9 +2,10 @@ package init
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server"
 	"net"
 	"path/filepath"
+
+	"github.com/cosmos/cosmos-sdk/server"
 
 	"github.com/spf13/cobra"
 

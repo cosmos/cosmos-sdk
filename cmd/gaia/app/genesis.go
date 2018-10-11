@@ -88,9 +88,9 @@ type GaiaGenTx struct {
 }
 
 // GaiaAppGenTx generates a Gaia genesis transaction.
-func GaiaAppGenTx(
-	cdc *codec.Codec, pk crypto.PubKey, genTxConfig config.GenTx,
-) (appGenTx auth.StdTx, cliPrint json.RawMessage, err error) {
+func GaiaAppGenTx(cdc *codec.Codec, pk crypto.PubKey, genTxConfig config.GenTx) (
+	appGenTx auth.StdTx, cliPrint json.RawMessage, err error) {
+
 	if genTxConfig.Name == "" {
 		err = errors.New("Must specify --name (validator moniker)")
 		return

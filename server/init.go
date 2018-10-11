@@ -21,11 +21,11 @@ import (
 
 // parameter names, init command
 const (
-	FlagMoniker    = "moniker"
+	FlagName       = "name"
 	FlagOverwrite  = "overwrite"
+	FlagWithTxs    = "with-txs"
 	FlagIP         = "ip"
 	FlagChainID    = "chain-id"
-	FlagName       = "name"
 	FlagClientHome = "home-client"
 	FlagOWK        = "owk"
 )
@@ -33,6 +33,7 @@ const (
 // Storage for init command input parameters
 type InitConfig struct {
 	ChainID   string
+	GenTxs    bool
 	GenTxsDir string
 	Moniker   string
 	Overwrite bool

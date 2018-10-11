@@ -19,7 +19,7 @@ func NodeVersionRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		version, err := cliCtx.Query("/app/version", nil)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

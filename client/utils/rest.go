@@ -26,13 +26,21 @@ const (
 // REST error utilities
 
 // checks if the reported REST error has the expected format of 'Error{<msg>}'
-func errMustHaveValidFormat(msg string) {
-	msg = strings.TrimSpace(msg)
-	if len(msg) == 0 {
+func errMustHaveValidFormat(err string) {
+	err = strings.TrimSpace(err)
+	if len(err) == 0 {
 		panic("Error can't be blank")
-	} else if !strings.HasPrefix(msg, "Error{") {
-		panic(fmt.Sprintf("%s doesn't match the expected format", msg))
+	} else if !strings.HasPrefix(err, "Error{") {
+		panic(fmt.Sprintf("%s doesn't match the expected format", err))
 	}
+}
+
+// appends a message to the head of the given error
+func AppendMsgToErr(msg string, err string) string {
+	if strings.HasPrefix(err, "Error{") {
+		err = err[6 : len(err)-1]
+	}
+	return fmt.Sprintf("Error{%s; %s}", msg, err)
 }
 
 //----------------------------------------
@@ -46,7 +54,7 @@ func WriteErrorResponse(w http.ResponseWriter, status int, err string, msg ...st
 	w.Write([]byte(err))
 }
 
-// WriteGasEstimateResponse prepares and writes an HTTP
+// WriteSimulationResponse prepares and writes an HTTP
 // response for transactions simulations.
 func WriteSimulationResponse(w http.ResponseWriter, gas int64) {
 	w.WriteHeader(http.StatusOK)

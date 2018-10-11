@@ -42,6 +42,8 @@ func SetupViper(t *testing.T) func() {
 	rootDir, err := ioutil.TempDir("", "mock-sdk-cmd")
 	require.Nil(t, err)
 	viper.Set(cli.HomeFlag, rootDir)
+	viper.Set(FlagName, "moniker")
+	viper.Set(FlagOWK, true)
 	return func() {
 		err := os.RemoveAll(rootDir)
 		if err != nil {

@@ -23,6 +23,7 @@ import (
 // init parameters
 var CoolAppInit = server.AppInit{
 	AppGenState: CoolAppGenState,
+	AppGenTx:    server.SimpleAppGenTx,
 }
 
 // coolGenAppParams sets up the app_state and appends the cool app state

@@ -300,7 +300,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 			return res
 		}
 		msg := fmt.Sprintf("proof from store %s is nil", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return sdk.ErrInternal(msg).QueryResult()
 	}
 
 	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)

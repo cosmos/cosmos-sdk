@@ -31,7 +31,7 @@ func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
 
 			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
 			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg})
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},

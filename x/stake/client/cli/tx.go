@@ -7,23 +7,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
-	"github.com/tendermint/tendermint/p2p"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-const (
-	flagGenesisFormat = "genesis-format"
-	flagIP            = "ip"
-	flagNodeKeyFile   = "node-key-file"
-)
 
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
@@ -96,21 +88,12 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 				)
 			}
 
-			if viper.GetBool(flagGenesisFormat) {
-				ip := viper.GetString(flagIP)
-				if len(ip) == 0 {
-					eip, err := server.ExternalIP()
-					if err != nil {
-						return err
-					}
-					ip = eip
+			if viper.GetBool(FlagGenesisFormat) {
+				ip := viper.GetString(FlagIP)
+				nodeID := viper.GetString(FlagNodeID)
+				if nodeID != "" && ip != "" {
+					txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
 				}
-
-				nodeKey, err := p2p.LoadOrGenNodeKey(viper.GetString(flagNodeKeyFile))
-				if err != nil {
-					return err
-				}
-				txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:26656", string(nodeKey.ID()), ip))
 
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true)
 			}
@@ -129,9 +112,9 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(fsCommissionCreate)
 	cmd.Flags().AddFlagSet(fsDelegator)
-	cmd.Flags().Bool(flagGenesisFormat, false, "Export the transaction in gen-tx format; it implies --generate-only")
-	cmd.Flags().String(flagIP, "", fmt.Sprintf("External IP to use as node's public address; if left blank IP will be retrieved from this machine. It takes effect only when used in combination with --%s", flagGenesisFormat))
-	cmd.Flags().String(flagNodeKeyFile, "", "Path to to node_key.json")
+	cmd.Flags().Bool(FlagGenesisFormat, false, "Export the transaction in gen-tx format; it implies --generate-only")
+	cmd.Flags().String(FlagIP, "", fmt.Sprintf("Node's public IP. It takes effect only when used in combination with --%s", FlagGenesisFormat))
+	cmd.Flags().String(FlagNodeID, "", "Node's ID")
 
 	return cmd
 }

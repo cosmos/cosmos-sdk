@@ -8,7 +8,7 @@ The core IBC protocol is payload-agnostic. On top of IBC, developers can impleme
 
 IBC requires two blockchains with cheaply verifiable rapid finality and Merkle tree substate proofs. The protocol makes no assumptions of block confirmation times or maximum network latency of packet transmissions, and the two consensus algorithms remain completely independent. Each chain maintains a local partial order and inter-chain message sequencing ensures cross-chain linearity. Once the two chains have registered a trust relationship, cryptographically verifiable packets can be sent between them.
 
-IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc), and later described in more detail by the [IBC specification paper](https://github.com/cosmos/ibc/raw/master/CosmosIBCSpecification.pdf). This document supersedes both. It explains the requirements and structure of the protocol and provides sufficient detail for both analysis and implementation.
+IBC was first outlined in the [Cosmos Whitepaper](https://github.com/cosmos/cosmos/blob/master/WHITEPAPER.md#inter-blockchain-communication-ibc), and later described in more detail by the [IBC specification paper](https://github.com/cosmos/ibc/blob/master/CosmosIBCSpecification.pdf). This document supersedes both. It explains the requirements and structure of the protocol and provides sufficient detail for both analysis and implementation.
 
 ## Contents
 

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +40,7 @@ func TestAllocateFeesBasic(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	ctx = ctx.WithProposer(valConsAddr1)
+	fmt.Printf("debug valConsAddr1: %v\n", valConsAddr1.String())
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
 	keeper.SetSumPrecommitPower(ctx, sdk.NewDec(10))
 	keeper.AllocateFees(ctx)

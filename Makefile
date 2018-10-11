@@ -106,6 +106,7 @@ update_tools:
 update_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
+	go get -u github.com/tendermint/lint/golint
 
 get_tools:
 	@echo "--> Installing tools"
@@ -114,6 +115,7 @@ get_tools:
 get_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
+	go get github.com/tendermint/lint/golint
 
 get_vendor_deps:
 	@echo "--> Generating vendor directory via dep ensure"

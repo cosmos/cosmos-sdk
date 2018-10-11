@@ -67,15 +67,8 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 func GaiaAppInit() server.AppInit {
 	fsAppGenState := pflag.NewFlagSet("", pflag.ContinueOnError)
 
-	fsAppGenTx := pflag.NewFlagSet("", pflag.ContinueOnError)
-	fsAppGenTx.String(server.FlagName, "", "validator moniker, required")
-	fsAppGenTx.String(server.FlagClientHome, DefaultCLIHome,
-		"home directory for the client, used for key generation")
-	fsAppGenTx.Bool(server.FlagOWK, false, "overwrite the accounts created")
-
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,
-		FlagsAppGenTx:    fsAppGenTx,
 		AppGenState:      GaiaAppGenStateJSON,
 	}
 }

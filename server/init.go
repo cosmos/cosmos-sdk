@@ -30,6 +30,9 @@ const (
 	FlagOWK        = "owk"
 )
 
+// DefaultKeyPass contains the default key password for genesis transactions
+const DefaultKeyPass = "12345678"
+
 // Storage for init command input parameters
 type InitConfig struct {
 	ChainID   string
@@ -59,7 +62,6 @@ type AppInit struct {
 
 // simple default application init
 var DefaultAppInit = AppInit{
-	//	AppGenTx:    SimpleAppGenTx,
 	AppGenState: SimpleAppGenState,
 }
 

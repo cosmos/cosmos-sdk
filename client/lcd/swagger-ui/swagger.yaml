@@ -140,7 +140,7 @@ paths:
               validators:
                 type: array
                 items:
-                  $ref: "#/definitions/Validator"
+                  $ref: "#/definitions/TendermintValidator"
   /validatorsets/{height}:
     get:
       summary: Get a validator set a certain height
@@ -165,7 +165,7 @@ paths:
               validators:
                 type: array
                 items:
-                  $ref: "#/definitions/Validator"
+                  $ref: "#/definitions/TendermintValidator"
         404:
           description: Block at height not available
   /txs/{hash}:
@@ -701,6 +701,10 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Validator"
         400:
           description: Invalid delegatorAddr
         500:
@@ -726,6 +730,8 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            $ref: "#/definitions/Validator"
         400:
           description: Invalid delegatorAddr or validatorAddr
         500:
@@ -814,6 +820,10 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Validator"
         500:
           description: Internal Server Error
   /stake/validators/{validatorAddr}:
@@ -832,6 +842,8 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            $ref: "#/definitions/Validator"
         500:
           description: Internal Server Error
   /stake/pool:
@@ -844,6 +856,21 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            type: object
+            properties:
+              loose_tokens:
+                type: string
+              bonded_tokens:
+                type: string
+              inflation_last_time:
+                type: string
+              inflation:
+                type: string
+              date_last_commission_reset:
+                type: string
+              prev_bonded_shares:
+                type: string
         500:
           description: Internal Server Error
   /stake/parameters:
@@ -856,6 +883,23 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            type: object
+            properties:
+              inflation_rate_change:
+                type: string
+              inflation_max:
+                type: string
+              inflation_min:
+                type: string
+              goal_bonded:
+                type: string
+              unbonding_time:
+                type: string
+              max_validators:
+                type: integer
+              bond_denom:
+                type: string
         500:
           description: Internal Server Error
   /slashing/validators/{validatorPubKey}/signing_info:
@@ -875,6 +919,17 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            type: object
+            properties:
+              start_height:
+                type: string
+              index_offset:
+                type: string
+              jailed_until:
+                type: string
+              signed_blocks_counter:
+                type: string
         204:
           description: No sign info of this validator
         500:
@@ -1511,7 +1566,7 @@ definitions:
       gas_adjustment:
         type: string
         example: "1.2"
-  Validator:
+  TendermintValidator:
     type: object
     properties:
       address:
@@ -1577,3 +1632,57 @@ definitions:
         type: integer
       option:
         type: string
+  Validator:
+    type: object
+    properties:
+      operator_address:
+        $ref: '#/definitions/ValidatorAddress'
+      consensus_pubkey:
+        type: string
+        example: cosmosvalconspub1zcjduepq7sjfglw7ra4mjxpw4ph7dtdhdheh7nz8dfgl6t8u2n5szuuql9mqsrwquu
+      jailed:
+        type: boolean
+      status:
+        type: integer
+      tokens:
+        type: string
+      delegator_shares:
+        type: string
+      description:
+        type: object
+        properties:
+          moniker:
+            type: string
+          identity:
+            type: string
+          website:
+            type: string
+          details:
+            type: string
+      bond_height:
+        type: string
+        example: '0'
+      bond_intra_tx_counter:
+        type: integer
+        example: 0
+      unbonding_height:
+        type: string
+        example: '0'
+      unbonding_time:
+        type: string
+        example: '1970-01-01T00:00:00Z'
+      commission:
+        type: object
+        properties:
+          rate:
+            type: string
+            example: '0'
+          max_rate:
+            type: string
+            example: '0'
+          max_change_rate:
+            type: string
+            example: '0'
+          update_time:
+            type: string
+            example: '1970-01-01T00:00:00Z'

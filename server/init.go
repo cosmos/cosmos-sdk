@@ -51,8 +51,6 @@ type InitConfig struct {
 	Overwrite bool
 }
 
-//________________________________________________________________________________________
-
 //_____________________________________________________________________
 
 // Core functionality passed from the application to the server init command

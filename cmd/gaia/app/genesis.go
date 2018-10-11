@@ -81,6 +81,7 @@ func GaiaAppInit() server.AppInit {
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,
 		FlagsAppGenTx:    fsAppGenTx,
+		AppGenState:      GaiaAppGenStateJSON,
 	}
 }
 
@@ -213,7 +214,7 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 
 func addValidatorToStakeData(msg stake.MsgCreateValidator, stakeData stake.GenesisState) stake.GenesisState {
 	validator := stake.NewValidator(
-		sdk.ValAddress(msg.ValidatorAddr), sdk.MustGetConsPubKeyBech32(msg.PubKey), genTx.Description,
+		sdk.ValAddress(msg.ValidatorAddr), msg.PubKey, msg.Description,
 	)
 
 	stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
@@ -237,7 +238,7 @@ func addValidatorToStakeData(msg stake.MsgCreateValidator, stakeData stake.Genes
 
 func genesisAccountFromMsgCreateValidator(msg stake.MsgCreateValidator) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
-	accAuth.Coins = sdk.Coins{msg.Delegation}
+	accAuth.Coins = []sdk.Coin{msg.Delegation}
 	return NewGenesisAccount(&accAuth)
 }
 
@@ -272,8 +273,7 @@ func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
 }
 
 // GaiaAppGenState but with JSON
-func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
-
+func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []auth.StdTx) (appState json.RawMessage, err error) {
 	// create the final app state
 	genesisState, err := GaiaAppGenState(cdc, appGenTxs)
 	if err != nil {

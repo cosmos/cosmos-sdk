@@ -9,10 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
-	"github.com/tendermint/tendermint/crypto"
 
 	dbm "github.com/tendermint/tendermint/libs/db"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,14 +32,6 @@ var (
 	FlagChainID   = "chain-id"
 )
 
-// genesis piece structure for creating combined genesis
-type GenesisTx struct {
-	NodeID    string                   `json:"node_id"`
-	IP        string                   `json:"ip"`
-	Validator tmtypes.GenesisValidator `json:"validator"`
-	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
-}
-
 // Storage for init command input parameters
 type InitConfig struct {
 	ChainID   string
@@ -49,8 +39,6 @@ type InitConfig struct {
 	GenTxsDir string
 	Overwrite bool
 }
-
-//_____________________________________________________________________
 
 // Core functionality passed from the application to the server init command
 type AppInit struct {

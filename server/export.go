@@ -20,7 +20,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			home := viper.GetString("home")
-			traceStore := viper.GetString(flagTraceStore)
+			traceWriterFile := viper.GetString(flagTraceStore)
 			emptyState, err := isEmptyState(home)
 			if err != nil {
 				return err
@@ -37,7 +37,15 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 				return nil
 			}
 
-			appState, validators, err := appExporter(home, ctx.Logger, traceStore)
+			db, err := openDB(home)
+			if err != nil {
+				return err
+			}
+			traceWriter, err := openTraceWriter(traceWriterFile)
+			if err != nil {
+				return err
+			}
+			appState, validators, err := appExporter(ctx.Logger, db, traceWriter)
 			if err != nil {
 				return errors.Errorf("error exporting state: %v\n", err)
 			}

@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -70,9 +71,11 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
+	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc, CoolAppInit))
+	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc, CoolAppInit))
+
 	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit,
-		server.ConstructAppCreator(newApp, "democoin"),
-		server.ConstructAppExporter(exportAppStateAndTMValidators, "democoin"))
+		newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

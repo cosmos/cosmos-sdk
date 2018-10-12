@@ -24,7 +24,6 @@ const (
 	FlagWithTxs    = "with-txs"
 	FlagIP         = "ip"
 	FlagChainID    = "chain-id"
-	FlagClientHome = "home-client"
 )
 
 // DefaultKeyPass contains the default key password for genesis transactions

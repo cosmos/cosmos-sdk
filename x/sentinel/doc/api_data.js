@@ -1,6 +1,73 @@
 define({ "api": [
   {
     "type": "post",
+    "url": "/send-sign",
+    "title": "To Create sigature of the client.",
+    "name": "CreateSignature",
+    "group": "Sentinel_Tendermint",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "name",
+            "description": "<p>AccountName of the client.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "string",
+            "optional": false,
+            "field": "password",
+            "description": "<p>password of account.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "session_id",
+            "description": "<p>session-id.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "amount",
+            "description": "<p>Amount to create signature.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "counter",
+            "description": "<p>Counter value of the sigature.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "Boolean",
+            "optional": false,
+            "field": "isfial",
+            "description": "<p>boolean value for is this final signature or not.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Response:",
+          "content": "10lz2f928xpzsyggqhc9mu80qj59vx0rc6sedxmsfhca8ysuhhtgqypar3h4ty0pgftwqygp6vm54drttw5grlz4p5n238cvzxe2vpxmu6hhnqvt0uxstg7et4vdqhm4v",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "rest/service.go",
+    "groupTitle": "Sentinel_Tendermint"
+  },
+  {
+    "type": "post",
     "url": "/vpn/getpayment",
     "title": "To get payment of vpn service",
     "name": "GetVPNPayment",
@@ -433,7 +500,7 @@ define({ "api": [
     "groupTitle": "Sentinel_Tendermint"
   },
   {
-    "type": "post",
+    "type": "get",
     "url": "/session/{sessionId}",
     "title": "To get session data.",
     "name": "getSessionData",
@@ -448,7 +515,7 @@ define({ "api": [
       ]
     },
     "version": "0.0.0",
-    "filename": "rest/service.go",
+    "filename": "rest/query.go",
     "groupTitle": "Sentinel_Tendermint"
   },
   {

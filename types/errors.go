@@ -258,7 +258,7 @@ func (err *sdkError) Code() CodeType {
 func (err *sdkError) ABCILog() string {
 	cdc := codec.New()
 	errMsg := err.cmnError.Error()
-	jsonErr := HumanReadableError{
+	jsonErr := humanReadableError{
 		Codespace: err.codespace,
 		Code:      err.code,
 		ABCICode:  err.ABCICode(),
@@ -292,10 +292,6 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 
 // appends a message to the head of the given error
 func AppendMsgToErr(msg string, err string) string {
-	msgIdx := strings.Index(err, "message\":\"")
-	if msgIdx != -1 {
-		err = MustGetABCILogMsg(err)
-	}
 	if strings.HasPrefix(err, "Error{") && strings.HasSuffix(err, "}") {
 		err = err[6 : len(err)-1]
 	}
@@ -321,7 +317,7 @@ func ErrMustHaveValidFormat(err string) {
 }
 
 // parses the error into an object-like struct for exporting
-type HumanReadableError struct {
+type humanReadableError struct {
 	Codespace CodespaceType `json:"codespace"`
 	Code      CodeType      `json:"code"`
 	ABCICode  ABCICodeType  `json:"abci_code"`

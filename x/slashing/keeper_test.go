@@ -364,3 +364,88 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	require.Equal(t, amtInt-1, validator.GetTokens().RoundInt64())
 
 }
+
+// Test a validator dipping in and out of the validator set
+// Ensure that missed blocks are tracked correctly
+func TestValidatorDippingInAndOut(t *testing.T) {
+
+	// initial setup
+	ctx, _, sk, _, keeper := createTestInput(t)
+	params := sk.GetParams(ctx)
+	params.MaxValidators = 1
+	sk.SetParams(ctx, params)
+	amtInt := int64(100)
+	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
+	sh := stake.NewHandler(sk)
+	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
+	require.True(t, got.IsOK())
+	validatorUpdates := stake.EndBlocker(ctx, sk)
+	keeper.AddValidators(ctx, validatorUpdates)
+
+	// 100 first blocks OK
+	height := int64(0)
+	for ; height < int64(100); height++ {
+		ctx = ctx.WithBlockHeight(height)
+		keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
+	}
+
+	// validator kicked out of validator set
+	newAmt := int64(101)
+	got = sh(ctx, newTestMsgCreateValidator(addrs[1], pks[1], sdk.NewInt(newAmt)))
+	require.True(t, got.IsOK())
+	validatorUpdates = stake.EndBlocker(ctx, sk)
+	require.Equal(t, 2, len(validatorUpdates))
+	keeper.AddValidators(ctx, validatorUpdates)
+	validator, _ := sk.GetValidator(ctx, addr)
+	require.Equal(t, sdk.Unbonding, validator.Status)
+
+	// 600 more blocks happened
+	height = int64(700)
+	ctx = ctx.WithBlockHeight(height)
+
+	// validator added back in
+	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], sdk.NewInt(2)))
+	require.True(t, got.IsOK())
+	validatorUpdates = stake.EndBlocker(ctx, sk)
+	require.Equal(t, 2, len(validatorUpdates))
+	validator, _ = sk.GetValidator(ctx, addr)
+	require.Equal(t, sdk.Bonded, validator.Status)
+	newAmt = int64(102)
+
+	// validator misses a block
+	keeper.handleValidatorSignature(ctx, val.Address(), newAmt, false)
+	height++
+
+	// shouldn't be jailed/kicked yet
+	validator, _ = sk.GetValidator(ctx, addr)
+	require.Equal(t, sdk.Bonded, validator.Status)
+
+	// validator misses 500 blocks
+	for ; height < int64(1202); height++ {
+		ctx = ctx.WithBlockHeight(height)
+		keeper.handleValidatorSignature(ctx, val.Address(), newAmt, false)
+	}
+
+	// should not yet be jailed & kicked
+	stake.EndBlocker(ctx, sk)
+	validator, _ = sk.GetValidator(ctx, addr)
+	require.Equal(t, sdk.Bonded, validator.Status)
+
+	// validator signs 500 blocks
+	for ; height < int64(1701); height++ {
+		ctx = ctx.WithBlockHeight(height)
+		keeper.handleValidatorSignature(ctx, val.Address(), newAmt, true)
+	}
+
+	// should have exceeded threshold
+	signingInfo, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
+	require.True(t, found)
+	require.Equal(t, int64(700), signingInfo.StartHeight)
+	require.Equal(t, int64(1101), signingInfo.IndexOffset)
+	require.Equal(t, int64(501), signingInfo.MissedBlocksCounter)
+
+	// should be jailed & kicked
+	stake.EndBlocker(ctx, sk)
+	validator, _ = sk.GetValidator(ctx, addr)
+	require.Equal(t, sdk.Unbonding, validator.Status)
+}

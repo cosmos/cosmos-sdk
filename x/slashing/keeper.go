@@ -128,7 +128,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	}
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
 	maxMissed := k.SignedBlocksWindow(ctx) - k.MinSignedPerWindow(ctx)
-	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
+	if height >= minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 		if validator != nil && !validator.GetJailed() {
 			// Downtime confirmed: slash and jail the validator

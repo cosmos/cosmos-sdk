@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -48,6 +50,7 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	feePool := k.GetFeePool(ctx)
 	valInfo, feePool, commission := valInfo.WithdrawCommission(feePool, height, bondedTokens,
 		validator.GetTokens(), validator.GetCommission())
+	fmt.Printf("debug within wvra commission: %v\n", commission[0].Amount.String())
 	withdraw = withdraw.Plus(commission)
 	k.SetValidatorDistInfo(ctx, valInfo)
 	k.SetFeePool(ctx, feePool)

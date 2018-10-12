@@ -1,7 +1,126 @@
 package keeper
 
-import "testing"
+import (
+	"testing"
 
-func TestWithdrawValidatorRewardsAll(t *testing.T) {
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/stretchr/testify/require"
+)
+
+func TestWithdrawValidatorRewardsAllNoDelegator(t *testing.T) {
+	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
+	stakeHandler := stake.NewHandler(sk)
+	denom := sk.GetParams(ctx).BondDenom
+
+	//first make a validator
+	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, 10)
+	got := stakeHandler(ctx, msgCreateValidator)
+	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
+	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	totalPower := int64(10)
+	totalPowerDec := sdk.NewDec(totalPower)
+
+	// allocate 100 denom of fees
+	feeInputs := sdk.NewInt(100)
+	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
+	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
+	keeper.SetProposerConsAddr(ctx, valConsAddr1)
+	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.AllocateFees(ctx)
+
+	// withdraw self-delegation reward
+	ctx = ctx.WithBlockHeight(1)
+	keeper.WithdrawValidatorRewardsAll(ctx, valOpAddr1)
+	amt := accMapper.GetAccount(ctx, valAccAddr1).GetCoins().AmountOf(denom)
+	expRes := sdk.NewDec(90).Add(sdk.NewDec(100)).TruncateInt()
+	require.True(sdk.IntEq(t, expRes, amt))
+}
+
+func TestWithdrawValidatorRewardsAllDelegatorNoCommission(t *testing.T) {
+	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
+	stakeHandler := stake.NewHandler(sk)
+	denom := sk.GetParams(ctx).BondDenom
+
+	//first make a validator
+	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, 10)
+	got := stakeHandler(ctx, msgCreateValidator)
+	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
+	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	// delegate
+	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
+	got = stakeHandler(ctx, msgDelegate)
+	require.True(t, got.IsOK())
+	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
+	require.Equal(t, int64(90), amt.Int64())
+
+	totalPower := int64(20)
+	totalPowerDec := sdk.NewDec(totalPower)
+
+	// allocate 100 denom of fees
+	feeInputs := sdk.NewInt(100)
+	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
+	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
+	keeper.SetProposerConsAddr(ctx, valConsAddr1)
+	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.AllocateFees(ctx)
+
+	// withdraw self-delegation reward
+	ctx = ctx.WithBlockHeight(1)
+	keeper.WithdrawValidatorRewardsAll(ctx, valOpAddr1)
+	amt = accMapper.GetAccount(ctx, valAccAddr1).GetCoins().AmountOf(denom)
+	expRes := sdk.NewDec(90).Add(sdk.NewDec(100).Quo(sdk.NewDec(2))).TruncateInt() // 90 + 100 tokens * 10/20
+	require.True(sdk.IntEq(t, expRes, amt))
+}
+
+func TestWithdrawValidatorRewardsAllDelegatorWithCommission(t *testing.T) {
+	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
+	stakeHandler := stake.NewHandler(sk)
+	denom := sk.GetParams(ctx).BondDenom
+
+	//first make a validator
+	commission := sdk.NewDecWithPrec(1, 1)
+	msgCreateValidator := stake.NewTestMsgCreateValidatorWithCommission(
+		valOpAddr1, valConsPk1, 10, commission)
+	got := stakeHandler(ctx, msgCreateValidator)
+	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
+	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	// delegate
+	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
+	got = stakeHandler(ctx, msgDelegate)
+	require.True(t, got.IsOK())
+	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
+	require.Equal(t, int64(90), amt.Int64())
+
+	totalPower := int64(20)
+	totalPowerDec := sdk.NewDec(totalPower)
+
+	// allocate 100 denom of fees
+	feeInputs := sdk.NewInt(100)
+	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
+	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
+	keeper.SetProposerConsAddr(ctx, valConsAddr1)
+	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.AllocateFees(ctx)
+
+	// withdraw self-delegation reward
+	ctx = ctx.WithBlockHeight(1)
+	keeper.WithdrawValidatorRewardsAll(ctx, valOpAddr1)
+	amt = accMapper.GetAccount(ctx, valAccAddr1).GetCoins().AmountOf(denom)
+	commissionTaken := sdk.NewDec(100).Mul(commission)
+	afterCommission := sdk.NewDec(100).Sub(commissionTaken)
+	selfDelegationReward := afterCommission.Quo(sdk.NewDec(2))
+	expRes := sdk.NewDec(90).Add(commissionTaken).Add(selfDelegationReward).TruncateInt() // 90 + 100 tokens * 10/20
+	require.True(sdk.IntEq(t, expRes, amt))
+}
+
+func TestWithdrawValidatorRewardsAllMultipleValidator(t *testing.T) {
+
+}
+
+func TestWithdrawValidatorRewardsAllMultipleDelegator(t *testing.T) {
 
 }

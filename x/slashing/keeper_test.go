@@ -366,7 +366,8 @@ func TestHandleAlreadyJailed(t *testing.T) {
 }
 
 // Test a validator dipping in and out of the validator set
-// Ensure that missed blocks are tracked correctly
+// Ensure that missed blocks are tracked correctly and that
+// the start height of the signing info is reset correctly
 func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// initial setup

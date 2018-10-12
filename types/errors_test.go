@@ -65,3 +65,36 @@ func TestErrFn(t *testing.T) {
 
 	require.Equal(t, ABCICodeOK, ToABCICode(CodespaceRoot, CodeOK))
 }
+
+func TestErrorFormat(t *testing.T) {
+	// default err msg
+	err := errFns[0]("")
+	msg := err.Stacktrace().Error()
+	require.NotPanicsf(t, func() { ErrMustHaveValidFormat(msg) }, "Should have a valid format")
+
+	// custom err msg
+	err = errFns[1]("this is a custom error")
+	msg = err.Stacktrace().Error()
+	require.NotPanicsf(t, func() { ErrMustHaveValidFormat(msg) }, "Should have a valid format")
+
+	// custom err msg with aditional value
+	err = errFns[2]("")
+	msg = AppendMsgToErr("Error", err.Stacktrace().Error())
+	require.NotPanicsf(t, func() { ErrMustHaveValidFormat(msg) }, "Should have a valid format")
+
+	// unexpected err msg
+	err = errFns[3]("")
+	require.Panicsf(t, func() { ErrMustHaveValidFormat(err.ABCILog()) }, "Shouldn't have a valid format")
+}
+
+func TestGetABCILogMsg(t *testing.T) {
+	for i, errFn := range errFns {
+		err := errFn("")
+		msg := MustGetABCILogMsg(err.ABCILog())
+		require.Equal(t, err.Stacktrace().Error(), msg, "Err function expected to return the 'message' value from the ABCI Log. tc #%d", i)
+	}
+
+	// invalid format
+	err := errFns[0]("")
+	require.Panicsf(t, func() { MustGetABCILogMsg(err.Stacktrace().Error()) }, "Shouldn't have a valid format")
+}

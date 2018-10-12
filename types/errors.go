@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -283,6 +284,39 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 	return abci.ResponseQuery{
 		Code: uint32(err.ABCICode()),
 		Log:  err.ABCILog(),
+	}
+}
+
+//----------------------------------------
+// REST error utilities
+
+// appends a message to the head of the given error
+func AppendMsgToErr(msg string, err string) string {
+	msgIdx := strings.Index(err, "message\":\"")
+	if msgIdx != -1 {
+		err = MustGetABCILogMsg(err)
+	}
+	if strings.HasPrefix(err, "Error{") && strings.HasSuffix(err, "}") {
+		err = err[6 : len(err)-1]
+	}
+	return fmt.Sprintf("Error{%s; %s}", msg, err)
+}
+
+// returns the 'message' value from the ABCILog or panics if wrong format
+func MustGetABCILogMsg(abciLog string) string {
+	msgIdx := strings.Index(abciLog, "message\":\"")
+	if msgIdx == -1 {
+		panic(fmt.Sprintf("invalid format: %s", abciLog))
+	}
+	msg := abciLog[msgIdx+len("message\":\"") : len(abciLog)-2]
+	return msg
+}
+
+// checks if the reported REST error has the expected format of 'Error{<msg>}'
+func ErrMustHaveValidFormat(err string) {
+	err = strings.TrimSpace(err)
+	if !strings.HasPrefix(err, "Error{") || !strings.HasSuffix(err, "}") {
+		panic(fmt.Sprintf("%s doesn't match the expected format", err))
 	}
 }
 

@@ -22,7 +22,6 @@ const (
 	FlagName       = "name"
 	FlagOverwrite  = "overwrite"
 	FlagWithTxs    = "with-txs"
-	FlagIP         = "ip"
 	FlagChainID    = "chain-id"
 )
 

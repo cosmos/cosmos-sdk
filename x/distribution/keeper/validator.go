@@ -40,7 +40,7 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	height := ctx.BlockHeight()
 	validator := k.stakeKeeper.Validator(ctx, operatorAddr)
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-	withdraw := k.GetDelegatorRewardsAll(ctx, accAddr, height)
+	withdraw := k.getDelegatorRewardsAll(ctx, accAddr, height)
 
 	// withdrawal validator commission rewards
 	bondedTokens := k.stakeKeeper.TotalPower(ctx)

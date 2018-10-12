@@ -91,7 +91,7 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 // return all rewards for all delegations of a delegator
 func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.AccAddress) {
 	height := ctx.BlockHeight()
-	withdraw := k.GetDelegatorRewardsAll(ctx, delegatorAddr, height)
+	withdraw := k.getDelegatorRewardsAll(ctx, delegatorAddr, height)
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delegatorAddr)
 	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
 	if err != nil {
@@ -100,7 +100,7 @@ func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.
 }
 
 // return all rewards for all delegations of a delegator
-func (k Keeper) GetDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, height int64) types.DecCoins {
+func (k Keeper) getDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, height int64) types.DecCoins {
 
 	withdraw := types.DecCoins{}
 	bondedTokens := k.stakeKeeper.TotalPower(ctx)

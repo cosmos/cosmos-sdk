@@ -10,12 +10,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 
-	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -47,11 +45,6 @@ type AppInit struct {
 
 	// flags required for application init functions
 	FlagsAppGenState *pflag.FlagSet
-	FlagsAppGenTx    *pflag.FlagSet
-
-	// create the application genesis tx
-	AppGenTx func(cdc *codec.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
-		appGenTx auth.StdTx, cliPrint json.RawMessage, err error)
 
 	// AppGenState creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.

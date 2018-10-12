@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -66,35 +67,41 @@ func TestErrFn(t *testing.T) {
 	require.Equal(t, ABCICodeOK, ToABCICode(CodespaceRoot, CodeOK))
 }
 
-func TestErrorFormat(t *testing.T) {
-	// default err msg
-	err := errFns[0]("")
-	msg := err.Stacktrace().Error()
-	require.NotPanicsf(t, func() { ErrMustHaveValidFormat(msg) }, "Should have a valid format")
-
-	// custom err msg
-	err = errFns[1]("this is a custom error")
-	msg = err.Stacktrace().Error()
-	require.NotPanicsf(t, func() { ErrMustHaveValidFormat(msg) }, "Should have a valid format")
-
-	// custom err msg with aditional value
-	err = errFns[2]("")
-	msg = AppendMsgToErr("Error", err.Stacktrace().Error())
-	require.NotPanicsf(t, func() { ErrMustHaveValidFormat(msg) }, "Should have a valid format")
-
-	// unexpected err msg
-	err = errFns[3]("")
-	require.Panicsf(t, func() { ErrMustHaveValidFormat(err.ABCILog()) }, "Shouldn't have a valid format")
-}
-
-func TestGetABCILogMsg(t *testing.T) {
+func TestErrVerifyFormat(t *testing.T) {
 	for i, errFn := range errFns {
 		err := errFn("")
-		msg := MustGetABCILogMsg(err.ABCILog())
-		require.Equal(t, err.Stacktrace().Error(), msg, "Err function expected to return the 'message' value from the ABCI Log. tc #%d", i)
+		abciLog := err.ABCILog()
+		msgIdx := mustGetMsgIndex(abciLog)
+		msg := ErrEnsureFormat(abciLog, msgIdx)
+		require.Equal(t, fmt.Sprintf("%s%s}",
+			abciLog[:msgIdx],
+			abciLog[msgIdx+len("Error{"):len(abciLog)-1]),
+			msg,
+			fmt.Sprintf("Should have formatted the error message. tc #%d", i))
 	}
+}
 
-	// invalid format
-	err := errFns[0]("")
-	require.Panicsf(t, func() { MustGetABCILogMsg(err.Stacktrace().Error()) }, "Shouldn't have a valid format")
+func TestAppendMsgToErr(t *testing.T) {
+	for i, errFn := range errFns {
+		err := errFn("")
+		errMsg := err.Stacktrace().Error()
+		abciLog := err.ABCILog()
+
+		// plain msg error
+		msg := AppendMsgToErr("something unexpected happened", errMsg)
+		require.Equal(t, fmt.Sprintf("something unexpected happened; %s",
+			errMsg[len("Error{"):len(errMsg)-1]),
+			msg,
+			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
+
+		// ABCI Log msg error
+		msg = AppendMsgToErr("something unexpected happened", abciLog)
+		msgIdx := mustGetMsgIndex(abciLog)
+		require.Equal(t, fmt.Sprintf("%s%s; %s}",
+			abciLog[:msgIdx],
+			"something unexpected happened",
+			abciLog[msgIdx+len("Error{"):len(abciLog)-1]),
+			msg,
+			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
+	}
 }

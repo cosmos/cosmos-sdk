@@ -290,30 +290,49 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 //----------------------------------------
 // REST error utilities
 
+// ensures that the value of the ABCI Log error message is correctly formatted
+func ErrEnsureFormat(abciLog string, msgIdx int) string {
+	msg := abciLog[msgIdx : len(abciLog)-2]
+	msg = parseErrorMsg(msg)
+	return fmt.Sprintf("%s%s%s",
+		abciLog[:msgIdx],
+		msg,
+		abciLog[len(abciLog)-3:],
+	)
+}
+
 // appends a message to the head of the given error
 func AppendMsgToErr(msg string, err string) string {
-	if strings.HasPrefix(err, "Error{") && strings.HasSuffix(err, "}") {
-		err = err[6 : len(err)-1]
+	msgIdx := strings.Index(err, "message\":\"")
+	if msgIdx != -1 {
+		errMsg := err[msgIdx+len("message\":\"") : len(err)-2]
+		errMsg = fmt.Sprintf("%s; %s", msg, parseErrorMsg(errMsg))
+		return fmt.Sprintf("%s%s%s",
+			err[:msgIdx+len("message\":\"")],
+			errMsg,
+			err[len(err)-3:],
+		)
 	}
-	return fmt.Sprintf("Error{%s; %s}", msg, err)
+	if strings.HasPrefix(err, "Error{") && strings.HasSuffix(err, "}") {
+		err = parseErrorMsg(err)
+	}
+	return fmt.Sprintf("%s; %s", msg, err)
 }
 
-// returns the 'message' value from the ABCILog or panics if wrong format
-func MustGetABCILogMsg(abciLog string) string {
+func mustGetMsgIndex(abciLog string) int {
 	msgIdx := strings.Index(abciLog, "message\":\"")
 	if msgIdx == -1 {
-		panic(fmt.Sprintf("invalid format: %s", abciLog))
+		panic(fmt.Sprintf("invalid error format: %s", abciLog))
 	}
-	msg := abciLog[msgIdx+len("message\":\"") : len(abciLog)-2]
-	return msg
+	return msgIdx + len("message\":\"")
 }
 
-// checks if the reported REST error has the expected format of 'Error{<msg>}'
-func ErrMustHaveValidFormat(err string) {
-	err = strings.TrimSpace(err)
-	if !strings.HasPrefix(err, "Error{") || !strings.HasSuffix(err, "}") {
-		panic(fmt.Sprintf("%s doesn't match the expected format", err))
+// parses the error 'message' value from err.Stacktrace().Error()
+func parseErrorMsg(err string) string {
+	if strings.HasPrefix(err, "Error{") && strings.HasSuffix(err, "}") {
+		err = err[len("Error{") : len(err)-1]
 	}
+	return strings.TrimSpace(err)
 }
 
 // parses the error into an object-like struct for exporting

@@ -319,6 +319,7 @@ func AppendMsgToErr(msg string, err string) string {
 	return fmt.Sprintf("%s; %s", msg, err)
 }
 
+// returns the index of the message in the ABCI Log
 func mustGetMsgIndex(abciLog string) int {
 	msgIdx := strings.Index(abciLog, "message\":\"")
 	if msgIdx == -1 {

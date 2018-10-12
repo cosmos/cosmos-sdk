@@ -79,6 +79,7 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 
 	k.SetFeePool(ctx, feePool)
 	k.SetValidatorDistInfo(ctx, valInfo)
+	k.SetDelegationDistInfo(ctx, delInfo)
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delegatorAddr)
 	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
 	if err != nil {

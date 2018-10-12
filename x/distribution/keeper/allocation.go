@@ -32,14 +32,12 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	proposerMultiplier := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(
 		sumPowerPrecommitValidators).Quo(bondedTokens))
 	proposerReward := feesCollectedDec.MulDec(proposerMultiplier)
-	fmt.Printf("debug proposerReward: %v\n", proposerReward[0].Amount.String())
 
 	// apply commission
 	commission := proposerReward.MulDec(proposerValidator.GetCommission())
 	remaining := proposerReward.MulDec(sdk.OneDec().Sub(proposerValidator.GetCommission()))
 	proposerDist.PoolCommission = proposerDist.PoolCommission.Plus(commission)
 	proposerDist.Pool = proposerDist.Pool.Plus(remaining)
-	fmt.Printf("debug proposerDist.Pool: %v\n", proposerDist.Pool[0].Amount.String())
 
 	// allocate community funding
 	communityTax := k.GetCommunityTax(ctx)
@@ -50,7 +48,6 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	// set the global pool within the distribution module
 	poolReceived := feesCollectedDec.MulDec(sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax))
 	feePool.Pool = feePool.Pool.Plus(poolReceived)
-	fmt.Printf("debug poolReceived: %v\n", poolReceived[0].Amount.String())
 
 	k.SetValidatorDistInfo(ctx, proposerDist)
 	k.SetFeePool(ctx, feePool)

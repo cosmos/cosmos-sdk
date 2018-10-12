@@ -55,7 +55,7 @@ type AppInit struct {
 
 	// AppGenState creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.
-	AppGenState func(cdc *codec.Codec, appGenTx []auth.StdTx) (appState json.RawMessage, err error)
+	AppGenState func(cdc *codec.Codec, appGenTx []json.RawMessage) (appState json.RawMessage, err error)
 }
 
 //_____________________________________________________________________
@@ -66,14 +66,19 @@ var DefaultAppInit = AppInit{
 }
 
 // create the genesis app state
-func SimpleAppGenState(cdc *codec.Codec, appGenTxs []auth.StdTx) (appState json.RawMessage, err error) {
+func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 
 	if len(appGenTxs) != 1 {
 		err = errors.New("must provide a single genesis transaction")
 		return
 	}
 
-	msgs := appGenTxs[0].GetMsgs()
+	var tx auth.StdTx
+	err = cdc.UnmarshalJSON(appGenTxs[0], &tx)
+	if err != nil {
+		return
+	}
+	msgs := tx.GetMsgs()
 	if len(msgs) != 1 {
 		err = errors.New("must provide a single genesis message")
 		return

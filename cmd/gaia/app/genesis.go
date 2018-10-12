@@ -4,16 +4,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	"io/ioutil"
+	"os"
+	"path"
+	"sort"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-
 	"github.com/spf13/pflag"
+
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var (
@@ -25,6 +30,7 @@ var (
 // State to Unmarshal
 type GenesisState struct {
 	Accounts  []GenesisAccount   `json:"accounts"`
+	Txs       []json.RawMessage  `json:"txs"`
 	StakeData stake.GenesisState `json:"stake"`
 	GovData   gov.GenesisState   `json:"gov"`
 }
@@ -70,15 +76,8 @@ func GaiaAppInit() server.AppInit {
 		FlagsAppGenState: fsAppGenState,
 		FlagsAppGenTx:    fsAppGenTx,
 		AppGenState:      GaiaAppGenStateJSON,
-		AppGenTx:         server.SimpleAppGenTx,
+		//AppGenTx:         server.SimpleAppGenTx,
 	}
-}
-
-// simple genesis tx
-type GaiaGenTx struct {
-	Name    string         `json:"name"`
-	Address sdk.AccAddress `json:"address"`
-	PubKey  string         `json:"pub_key"`
 }
 
 // Create the core parameters for genesis initialization for gaia
@@ -93,13 +92,13 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 	stakeData := stake.DefaultGenesisState()
 	genaccs := make([]GenesisAccount, len(appGenTxs))
 
-	for i, jsonRawMessage := range appGenTxs {
-		var genTx auth.StdTx
-		err = cdc.UnmarshalJSON(jsonRawMessage, &genTx)
+	for i, genTx := range appGenTxs {
+		var tx auth.StdTx
+		err = cdc.UnmarshalJSON(genTx, &tx)
 		if err != nil {
 			return
 		}
-		msgs := genTx.GetMsgs()
+		msgs := tx.GetMsgs()
 		if len(msgs) == 0 {
 			err = errors.New("must provide at least genesis message")
 			return
@@ -111,15 +110,16 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
 
 		// add the validator
-		if len(msg.Description.Moniker) > 0 {
-			stakeData = addValidatorToStakeData(msg, stakeData)
-		}
+		//if len(msg.Description.Moniker) > 0 {
+		//	stakeData = addValidatorToStakeData(msg, stakeData)
+		//}
 
 	}
 
 	// create the final app state
 	genesisState = GenesisState{
 		Accounts:  genaccs,
+		Txs:       appGenTxs,
 		StakeData: stakeData,
 		GovData:   gov.DefaultGenesisState(),
 	}
@@ -166,11 +166,11 @@ func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
 	if err != nil {
 		return
 	}
-	err = stake.ValidateGenesis(genesisState.StakeData)
-	if err != nil {
-		return
+	// skip stakeData validation as genesis is created from txs
+	if len(genesisState.Txs) > 0 {
+		return nil
 	}
-	return
+	return stake.ValidateGenesis(genesisState.StakeData)
 }
 
 // Ensures that there are no duplicate accounts in the genesis state,
@@ -188,12 +188,73 @@ func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
 }
 
 // GaiaAppGenState but with JSON
-func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []auth.StdTx) (appState json.RawMessage, err error) {
+func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 	// create the final app state
 	genesisState, err := GaiaAppGenState(cdc, appGenTxs)
 	if err != nil {
 		return nil, err
 	}
 	appState, err = codec.MarshalJSONIndent(cdc, genesisState)
+	return
+}
+
+
+// ProcessStdTxs processes and validates application's genesis StdTxs and returns the list of validators,
+// appGenTxs, and persistent peers required to generate genesis.json.
+func ProcessStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
+	validators []tmtypes.GenesisValidator, appGenTxs []auth.StdTx, persistentPeers string, err error) {
+	var fos []os.FileInfo
+	fos, err = ioutil.ReadDir(genTxsDir)
+	if err != nil {
+		return
+	}
+
+	var addresses []string
+	for _, fo := range fos {
+		filename := path.Join(genTxsDir, fo.Name())
+		if !fo.IsDir() && (path.Ext(filename) != ".json") {
+			continue
+		}
+
+		// get the genStdTx
+		var jsonRawTx []byte
+		jsonRawTx, err = ioutil.ReadFile(filename)
+		if err != nil {
+			return
+		}
+		var genStdTx auth.StdTx
+		err = cdc.UnmarshalJSON(jsonRawTx, &genStdTx)
+		if err != nil {
+			return
+		}
+		appGenTxs = append(appGenTxs , genStdTx)
+
+		nodeAddr := genStdTx.GetMemo()
+		if len(nodeAddr) == 0 {
+			err = fmt.Errorf("couldn't find node's address in %s", fo.Name())
+			return
+		}
+
+		msgs := genStdTx.GetMsgs()
+		if len(msgs) != 1 {
+			err = errors.New("each genesis transaction must provide a single genesis message")
+			return
+		}
+		msg := msgs[0].(stake.MsgCreateValidator)
+		validators = append(validators, tmtypes.GenesisValidator{
+			PubKey: msg.PubKey,
+			Power:  freeFermionVal,
+			Name:   msg.Description.Moniker,
+		})
+
+		// exclude itself from persistent peers
+		if msg.Description.Moniker != moniker {
+			addresses = append(addresses, nodeAddr)
+		}
+	}
+
+	sort.Strings(addresses)
+	persistentPeers = strings.Join(addresses, ",")
+
 	return
 }

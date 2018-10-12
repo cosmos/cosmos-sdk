@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -30,18 +29,18 @@ func NewTestGaiaAppGenState(
 
 	// get genesis account information
 	genAccs := make([]GenesisAccount, len(appGenTxs))
-	for i, appGenTx := range appGenTxs {
-
-		var genTx GaiaGenTx
-		if err := cdc.UnmarshalJSON(appGenTx, &genTx); err != nil {
-			return GenesisState{}, err
-		}
-
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc))
-
-		// create the genesis account for the given genesis tx
-		genAccs[i] = genesisAccountFromGenTx(genTx)
-	}
+	//for _, appGenTx := range appGenTxs {
+	//
+	//	var genTx GaiaGenTx
+	//	if err := cdc.UnmarshalJSON(appGenTx, &genTx); err != nil {
+	//		return GenesisState{}, err
+	//	}
+	//
+	//	stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc))
+	//
+	//	// create the genesis account for the given genesis tx
+	//	//genAccs[i] = genesisAccountFromGenTx(genTx)
+	//}
 
 	for i, tmVal := range tmVals {
 		var issuedDelShares sdk.Dec
@@ -70,7 +69,7 @@ func NewTestGaiaAppGenState(
 
 	return GenesisState{
 		Accounts:  genAccs,
-		StakeData: stakeData,
-		GovData:   gov.DefaultGenesisState(),
+		//StakeData: stakeData,
+		//GovData:   gov.DefaultGenesisState(),
 	}, nil
 }

@@ -193,6 +193,22 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		panic(err)
 	}
 
+	if len(genesisState.Txs) > 0 {
+		for _, genTx := range genesisState.Txs {
+			var tx auth.StdTx
+			err = app.cdc.UnmarshalJSON(genTx, &tx)
+			if err != nil {
+				panic(err)
+			}
+			res := app.BaseApp.Deliver(tx)
+			if !res.IsOK() {
+				panic(res.Log)
+			}
+		}
+
+		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	}
+
 	return abci.ResponseInitChain{
 		Validators: validators,
 	}

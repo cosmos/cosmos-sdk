@@ -2,6 +2,7 @@ package lcd
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -161,13 +162,13 @@ func InitializeTestLCD(
 		)
 	}
 
-	var validatorsPKs []crypto.PubKey
+	//var validatorsPKs []crypto.PubKey
 
 	// NOTE: It's bad practice to reuse public key address for the operator
 	// address but doing in the test for simplicity.
 	var appGenTxs []auth.StdTx
 	for _, gdValidator := range genDoc.Validators {
-		operAddr := ed25519.GenPrivKey().PubKey().Address()
+		//operAddr := ed25519.GenPrivKey().PubKey().Address()
 		pk := gdValidator.PubKey
 
 		desc := stake.NewDescription("test_val1", "", "", "")
@@ -176,7 +177,7 @@ func InitializeTestLCD(
 		appGenTxs = append(appGenTxs, appGenTx)
 	}
 
-	genesisState, err := gapp.NewTestGaiaAppGenState(cdc, appGenTxs[:], genDoc.Validators, valOperAddrs)
+	genesisState, err := gapp.NewTestGaiaAppGenState(cdc, []json.RawMessage{}, genDoc.Validators, valOperAddrs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts

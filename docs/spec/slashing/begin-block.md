@@ -109,7 +109,7 @@ for val in block.Validators:
   // included in 50% of the recent LastCommits
   minHeight = signInfo.StartHeight + SIGNED_BLOCKS_WINDOW
   maxMissed = SIGNED_BLOCKS_WINDOW / 2
-  if height >= minHeight AND signInfo.MissedBlocksCounter > maxMissed:
+  if height > minHeight AND signInfo.MissedBlocksCounter > maxMissed:
     signInfo.JailedUntil = block.Time + DOWNTIME_UNBOND_DURATION
 
     slash & unbond the validator

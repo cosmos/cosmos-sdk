@@ -421,8 +421,8 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 
-	// validator misses 500 blocks
-	for ; height < int64(1202); height++ {
+	// validator misses 501 blocks
+	for ; height < int64(1203); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), newAmt, false)
 	}
@@ -433,7 +433,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.Status)
 
 	// validator signs 500 blocks
-	for ; height < int64(1701); height++ {
+	for ; height < int64(1702); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), newAmt, true)
 	}
@@ -442,7 +442,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	signingInfo, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(700), signingInfo.StartHeight)
-	require.Equal(t, int64(1101), signingInfo.IndexOffset)
+	require.Equal(t, int64(1102), signingInfo.IndexOffset)
 	require.Equal(t, int64(501), signingInfo.MissedBlocksCounter)
 
 	// should be jailed & kicked

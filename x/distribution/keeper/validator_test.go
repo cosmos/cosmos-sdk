@@ -20,14 +20,13 @@ func TestWithdrawValidatorRewardsAllNoDelegator(t *testing.T) {
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	totalPower := int64(10)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// withdraw self-delegation reward
@@ -57,14 +56,13 @@ func TestWithdrawValidatorRewardsAllDelegatorNoCommission(t *testing.T) {
 	require.Equal(t, int64(90), amt.Int64())
 
 	totalPower := int64(20)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// withdraw self-delegation reward
@@ -96,14 +94,13 @@ func TestWithdrawValidatorRewardsAllDelegatorWithCommission(t *testing.T) {
 	require.Equal(t, int64(90), amt.Int64())
 
 	totalPower := int64(20)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// withdraw validator reward
@@ -141,14 +138,13 @@ func TestWithdrawValidatorRewardsAllMultipleValidator(t *testing.T) {
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	totalPower := int64(100)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(1000)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// withdraw validator reward
@@ -192,14 +188,13 @@ func TestWithdrawValidatorRewardsAllMultipleDelegator(t *testing.T) {
 	require.Equal(t, int64(80), amt.Int64())
 
 	totalPower := int64(40)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// withdraw validator reward

@@ -27,14 +27,13 @@ func TestWithdrawDelegationRewardBasic(t *testing.T) {
 	require.Equal(t, int64(90), amt.Int64())
 
 	totalPower := int64(20)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// withdraw delegation
@@ -66,14 +65,13 @@ func TestWithdrawDelegationRewardWithCommission(t *testing.T) {
 	require.Equal(t, int64(90), amt.Int64())
 
 	totalPower := int64(20)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// withdraw delegation
@@ -111,14 +109,13 @@ func TestWithdrawDelegationRewardTwoDelegators(t *testing.T) {
 	require.Equal(t, int64(80), amt.Int64())
 
 	totalPower := int64(40)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// delegator 1 withdraw delegation
@@ -158,14 +155,13 @@ func TestWithdrawDelegationRewardTwoDelegatorsUneven(t *testing.T) {
 	require.Equal(t, int64(90), amt.Int64())
 
 	totalPower := int64(30)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(90)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 	ctx = ctx.WithBlockHeight(1)
 
@@ -181,7 +177,7 @@ func TestWithdrawDelegationRewardTwoDelegatorsUneven(t *testing.T) {
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 	ctx = ctx.WithBlockHeight(2)
 
@@ -248,14 +244,13 @@ func TestWithdrawDelegationRewardsAll(t *testing.T) {
 	// grand total: 160
 
 	totalPower := int64(160)
-	totalPowerDec := sdk.NewDec(totalPower)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(1000)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// withdraw delegation

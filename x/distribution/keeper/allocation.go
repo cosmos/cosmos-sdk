@@ -12,7 +12,7 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	ctx.Logger().With("module", "x/distribution").Error(fmt.Sprintf("allocation height: %v", ctx.BlockHeight()))
 
 	// if there is no power in the system nothing should be allocated
-	bondedTokens := k.stakeKeeper.TotalPower(ctx)
+	bondedTokens := k.stakeKeeper.TotalPower(ctx).TruncateInt()
 	if bondedTokens.IsZero() {
 		return
 	}
@@ -29,8 +29,14 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 
 	// allocated rewards to proposer
 	sumPowerPrecommitValidators := k.GetSumPrecommitPower(ctx)
-	proposerMultiplier := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(
-		sumPowerPrecommitValidators).Quo(bondedTokens))
+	percentVoting := sdk.NewDec(sumPowerPrecommitValidators).QuoInt(bondedTokens)
+
+	// rare edge case for rounding tendermint power vs bonded decimal power
+	if percentVoting.GT(sdk.OneDec()) {
+		percentVoting = sdk.OneDec()
+	}
+
+	proposerMultiplier := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(percentVoting))
 	proposerReward := feesCollectedDec.MulDec(proposerMultiplier)
 
 	// apply commission
@@ -46,7 +52,7 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	feePool.CommunityPool = feePool.CommunityPool.Plus(communityFunding)
 
 	// set the global pool within the distribution module
-	poolReceived := feesCollectedDec.MulDec(sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax))
+	poolReceived := feesCollectedDec.Minus(proposerReward).Minus(communityFunding)
 	feePool.Pool = feePool.Pool.Plus(poolReceived)
 
 	k.SetValidatorDistInfo(ctx, proposerDist)

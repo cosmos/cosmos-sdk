@@ -19,10 +19,9 @@ func TestSetGetProposerConsAddr(t *testing.T) {
 func TestSetGetSumPrecommitPower(t *testing.T) {
 	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 0)
 
-	someDec := sdk.NewDec(333)
-	keeper.SetSumPrecommitPower(ctx, someDec)
+	keeper.SetSumPrecommitPower(ctx, 333)
 	res := keeper.GetSumPrecommitPower(ctx)
-	require.True(sdk.DecEq(t, someDec, res))
+	require.Equal(t, int64(333), res)
 }
 
 func TestSetGetCommunityTax(t *testing.T) {

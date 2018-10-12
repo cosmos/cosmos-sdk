@@ -82,7 +82,7 @@ func (k Keeper) SetProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
 //______________________________________________________________________
 
 // set the proposer public key for this block
-func (k Keeper) GetSumPrecommitPower(ctx sdk.Context) (sumPrecommitPower sdk.Dec) {
+func (k Keeper) GetSumPrecommitPower(ctx sdk.Context) (sumPrecommitPower int64) {
 	tstore := ctx.KVStore(k.storeTKey)
 
 	b := tstore.Get(SumPrecommitPowerKey)
@@ -95,7 +95,7 @@ func (k Keeper) GetSumPrecommitPower(ctx sdk.Context) (sumPrecommitPower sdk.Dec
 }
 
 // get the proposer public key for this block
-func (k Keeper) SetSumPrecommitPower(ctx sdk.Context, sumPrecommitPower sdk.Dec) {
+func (k Keeper) SetSumPrecommitPower(ctx sdk.Context, sumPrecommitPower int64) {
 	tstore := ctx.KVStore(k.storeTKey)
 	b := k.cdc.MustMarshalBinary(sumPrecommitPower)
 	tstore.Set(SumPrecommitPowerKey, b)

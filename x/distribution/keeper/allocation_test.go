@@ -42,7 +42,7 @@ func TestAllocateFeesBasic(t *testing.T) {
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// verify that these fees have been received by the feePool
@@ -59,7 +59,6 @@ func TestAllocateFeesWithCommunityTax(t *testing.T) {
 
 	//first make a validator
 	totalPower := int64(10)
-	totalPowerDec := sdk.NewDec(totalPower)
 	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
@@ -69,7 +68,7 @@ func TestAllocateFeesWithCommunityTax(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec)
+	keeper.SetSumPrecommitPower(ctx, totalPower)
 	keeper.AllocateFees(ctx)
 
 	// verify that these fees have been received by the feePool
@@ -86,8 +85,7 @@ func TestAllocateFeesWithPartialPrecommitPower(t *testing.T) {
 	denom := sk.GetParams(ctx).BondDenom
 
 	//first make a validator
-	totalPower := int64(10)
-	totalPowerDec := sdk.NewDec(totalPower)
+	totalPower := int64(100)
 	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
@@ -97,7 +95,7 @@ func TestAllocateFeesWithPartialPrecommitPower(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPowerDec.Mul(sdk.NewDecWithPrec(25, 2))) // 25% precommit power
+	keeper.SetSumPrecommitPower(ctx, 25) // 25% precommit power
 	keeper.AllocateFees(ctx)
 
 	// verify that these fees have been received by the feePool

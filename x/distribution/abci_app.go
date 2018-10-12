@@ -12,8 +12,14 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	consAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	k.SetProposerConsAddr(ctx, consAddr)
 
-	// XXX TODO actually calculate this
-	k.SetSumPrecommitPower(ctx, sdk.NewDec(1))
+	// determine the total number of signed power
+	sumPrecommitPower := int64(0)
+	for _, voteInfo := range req.LastCommitInfo.GetVotes() {
+		if voteInfo.SignedLastBlock {
+			sumPrecommitPower += voteInfo.Validator.Power
+		}
+	}
+	k.SetSumPrecommitPower(ctx, sumPrecommitPower)
 }
 
 // allocate fees

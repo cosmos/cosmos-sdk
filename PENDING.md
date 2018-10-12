@@ -70,6 +70,7 @@ BREAKING CHANGES
     * [x/staking] \#2236 more distribution hooks for distribution
     * [x/stake] \#2394 Split up UpdateValidator into distinct state transitions applied only in EndBlock
     * [x/stake] \#2412 Added an unbonding validator queue to EndBlock to automatically update validator.Status when finished Unbonding
+    * [x/stake] \#1673 Validators are no longer deleted until they can no longer possibly be slashed
 
 * Tendermint
   * Update tendermint version from v0.23.0 to v0.25.0, notable changes

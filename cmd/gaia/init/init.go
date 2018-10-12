@@ -66,7 +66,6 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	cmd.Flags().String(server.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().Bool(server.FlagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().AddFlagSet(appInit.FlagsAppGenState)
-	cmd.Flags().AddFlagSet(appInit.FlagsAppGenTx) // need to add this flagset for when no GenTx's provided
 	return cmd
 }
 

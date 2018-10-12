@@ -28,8 +28,7 @@ const (
 // WriteErrorResponse prepares and writes a HTTP error
 // given a status code and an error message.
 func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
-	msgIdx := sdk.mustGetMsgIndex(err)
-	err = sdk.ErrEnsureFormat(err, msgIdx)
+	err = sdk.ErrEnsureFormat(err)
 	w.WriteHeader(status)
 	w.Write([]byte(err))
 }

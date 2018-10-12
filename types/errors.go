@@ -291,7 +291,8 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 // REST error utilities
 
 // ensures that the value of the ABCI Log error message is correctly formatted
-func ErrEnsureFormat(abciLog string, msgIdx int) string {
+func ErrEnsureFormat(abciLog string) string {
+	msgIdx := mustGetMsgIndex(abciLog)
 	msg := abciLog[msgIdx : len(abciLog)-2]
 	msg = parseErrorMsg(msg)
 	return fmt.Sprintf("%s%s%s",

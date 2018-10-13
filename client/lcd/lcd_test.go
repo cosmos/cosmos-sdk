@@ -746,6 +746,15 @@ func TestProposalsQuery(t *testing.T) {
 	resultTx = doDeposit(t, port, seed2, name2, password2, addr2, proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
+	deposits := getDeposits(t, port, proposalID1)
+	require.Len(t, deposits, 1)
+
+	deposits = getDeposits(t, port, proposalID2)
+	require.Len(t, deposits, 2)
+
+	deposits = getDeposits(t, port, proposalID3)
+	require.Len(t, deposits, 1)
+
 	// Only proposals #1 should be in Deposit Period
 	proposals := getProposalsFilterStatus(t, port, gov.StatusDepositPeriod)
 	require.Len(t, proposals, 1)
@@ -1166,6 +1175,15 @@ func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
 	err := cdc.UnmarshalJSON([]byte(body), &proposal)
 	require.Nil(t, err)
 	return proposal
+}
+
+func getDeposits(t *testing.T, port string, proposalID int64) []gov.Deposit {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/deposits", proposalID), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var deposits []gov.Deposit
+	err := cdc.UnmarshalJSON([]byte(body), &deposits)
+	require.Nil(t, err)
+	return deposits
 }
 
 func getDeposit(t *testing.T, port string, proposalID int64, depositerAddr sdk.AccAddress) gov.Deposit {

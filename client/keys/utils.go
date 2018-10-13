@@ -2,6 +2,7 @@ package keys
 
 import (
 	"fmt"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"path/filepath"
 
 	"github.com/spf13/viper"
@@ -24,14 +25,6 @@ const KeyDBName = "keys"
 var keybase keys.Keybase
 
 type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
-
-// TODO make keybase take a database not load from the directory
-
-// initialize a keybase based on the configuration
-func GetKeyBase() (keys.Keybase, error) {
-	rootDir := viper.GetString(cli.HomeFlag)
-	return GetKeyBaseFromDir(rootDir)
-}
 
 // GetKeyInfo returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
@@ -82,10 +75,28 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 	return passphrase, nil
 }
 
+// TODO make keybase take a database not load from the directory
+
 // initialize a keybase based on the configuration
-func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
+func GetKeyBase() (keys.Keybase, error) {
+	rootDir := viper.GetString(cli.HomeFlag)
+	return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
+}
+
+// initialize a keybase based on the configuration with write permission
+func GetKeyBaseWithWritePerm() (keys.Keybase, error) {
+	rootDir := viper.GetString(cli.HomeFlag)
+	return GetKeyBaseFromDirWithWritePerm(rootDir)
+}
+
+// initialize a keybase at particular dir with write permission
+func GetKeyBaseFromDirWithWritePerm(rootDir string) (keys.Keybase, error) {
+	return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: false})
+}
+
+func getKeyBaseFromDirWithOpts(rootDir string, o *opt.Options) (keys.Keybase, error) {
 	if keybase == nil {
-		db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "keys"))
+		db, err := dbm.NewGoLevelDBWithOpts(KeyDBName, filepath.Join(rootDir, "keys"), o)
 		if err != nil {
 			return nil, err
 		}

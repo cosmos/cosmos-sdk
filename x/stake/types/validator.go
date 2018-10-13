@@ -36,56 +36,61 @@ type Validator struct {
 	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
+	UnbondingRedelegationCounter int64 `json:"unbonding_redelegation_counter"` // counter of all currently active redelegations and unbonding delegations from this validator
+
 	Commission Commission `json:"commission"` // commission parameters
 }
 
 // NewValidator - initialize a new validator
 func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		OperatorAddr:       operator,
-		ConsPubKey:         pubKey,
-		Jailed:             false,
-		Status:             sdk.Unbonded,
-		Tokens:             sdk.ZeroDec(),
-		DelegatorShares:    sdk.ZeroDec(),
-		Description:        description,
-		BondHeight:         int64(0),
-		BondIntraTxCounter: int16(0),
-		UnbondingHeight:    int64(0),
-		UnbondingMinTime:   time.Unix(0, 0).UTC(),
-		Commission:         NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		OperatorAddr:                 operator,
+		ConsPubKey:                   pubKey,
+		Jailed:                       false,
+		Status:                       sdk.Unbonded,
+		Tokens:                       sdk.ZeroDec(),
+		DelegatorShares:              sdk.ZeroDec(),
+		Description:                  description,
+		BondHeight:                   int64(0),
+		BondIntraTxCounter:           int16(0),
+		UnbondingHeight:              int64(0),
+		UnbondingMinTime:             time.Unix(0, 0).UTC(),
+		UnbondingRedelegationCounter: int64(0),
+		Commission:                   NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 	}
 }
 
 // what's kept in the store value
 type validatorValue struct {
-	ConsPubKey         crypto.PubKey
-	Jailed             bool
-	Status             sdk.BondStatus
-	Tokens             sdk.Dec
-	DelegatorShares    sdk.Dec
-	Description        Description
-	BondHeight         int64
-	BondIntraTxCounter int16
-	UnbondingHeight    int64
-	UnbondingMinTime   time.Time
-	Commission         Commission
+	ConsPubKey                   crypto.PubKey
+	Jailed                       bool
+	Status                       sdk.BondStatus
+	Tokens                       sdk.Dec
+	DelegatorShares              sdk.Dec
+	Description                  Description
+	BondHeight                   int64
+	BondIntraTxCounter           int16
+	UnbondingHeight              int64
+	UnbondingMinTime             time.Time
+	UnbondingRedelegationCounter int64
+	Commission                   Commission
 }
 
 // return the redelegation without fields contained within the key for the store
 func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 	val := validatorValue{
-		ConsPubKey:         validator.ConsPubKey,
-		Jailed:             validator.Jailed,
-		Status:             validator.Status,
-		Tokens:             validator.Tokens,
-		DelegatorShares:    validator.DelegatorShares,
-		Description:        validator.Description,
-		BondHeight:         validator.BondHeight,
-		BondIntraTxCounter: validator.BondIntraTxCounter,
-		UnbondingHeight:    validator.UnbondingHeight,
-		UnbondingMinTime:   validator.UnbondingMinTime,
-		Commission:         validator.Commission,
+		ConsPubKey:                   validator.ConsPubKey,
+		Jailed:                       validator.Jailed,
+		Status:                       validator.Status,
+		Tokens:                       validator.Tokens,
+		DelegatorShares:              validator.DelegatorShares,
+		Description:                  validator.Description,
+		BondHeight:                   validator.BondHeight,
+		BondIntraTxCounter:           validator.BondIntraTxCounter,
+		UnbondingHeight:              validator.UnbondingHeight,
+		UnbondingMinTime:             validator.UnbondingMinTime,
+		UnbondingRedelegationCounter: validator.UnbondingRedelegationCounter,
+		Commission:                   validator.Commission,
 	}
 	return cdc.MustMarshalBinary(val)
 }
@@ -112,18 +117,19 @@ func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator
 	}
 
 	return Validator{
-		OperatorAddr:       operatorAddr,
-		ConsPubKey:         storeValue.ConsPubKey,
-		Jailed:             storeValue.Jailed,
-		Tokens:             storeValue.Tokens,
-		Status:             storeValue.Status,
-		DelegatorShares:    storeValue.DelegatorShares,
-		Description:        storeValue.Description,
-		BondHeight:         storeValue.BondHeight,
-		BondIntraTxCounter: storeValue.BondIntraTxCounter,
-		UnbondingHeight:    storeValue.UnbondingHeight,
-		UnbondingMinTime:   storeValue.UnbondingMinTime,
-		Commission:         storeValue.Commission,
+		OperatorAddr:                 operatorAddr,
+		ConsPubKey:                   storeValue.ConsPubKey,
+		Jailed:                       storeValue.Jailed,
+		Tokens:                       storeValue.Tokens,
+		Status:                       storeValue.Status,
+		DelegatorShares:              storeValue.DelegatorShares,
+		Description:                  storeValue.Description,
+		BondHeight:                   storeValue.BondHeight,
+		BondIntraTxCounter:           storeValue.BondIntraTxCounter,
+		UnbondingHeight:              storeValue.UnbondingHeight,
+		UnbondingMinTime:             storeValue.UnbondingMinTime,
+		UnbondingRedelegationCounter: storeValue.UnbondingRedelegationCounter,
+		Commission:                   storeValue.Commission,
 	}, nil
 }
 
@@ -147,6 +153,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Unbonding Height: %d\n", v.UnbondingHeight)
 	resp += fmt.Sprintf("Minimum Unbonding Time: %v\n", v.UnbondingMinTime)
+	resp += fmt.Sprintf("Unbonding & rdelegation counter: %v\n", v.UnbondingRedelegationCounter)
 	resp += fmt.Sprintf("Commission: {%s}\n", v.Commission)
 
 	return resp, nil
@@ -171,6 +178,8 @@ type bechValidator struct {
 	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
+	UnbondingRedelegationCounter int64 `json:"unbonding_redelegation_counter"` // counter of all currently active redelegations and unbonding delegations from this validator
+
 	Commission Commission `json:"commission"` // commission parameters
 }
 
@@ -182,18 +191,19 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 	}
 
 	return codec.Cdc.MarshalJSON(bechValidator{
-		OperatorAddr:       v.OperatorAddr,
-		ConsPubKey:         bechConsPubKey,
-		Jailed:             v.Jailed,
-		Status:             v.Status,
-		Tokens:             v.Tokens,
-		DelegatorShares:    v.DelegatorShares,
-		Description:        v.Description,
-		BondHeight:         v.BondHeight,
-		BondIntraTxCounter: v.BondIntraTxCounter,
-		UnbondingHeight:    v.UnbondingHeight,
-		UnbondingMinTime:   v.UnbondingMinTime,
-		Commission:         v.Commission,
+		OperatorAddr:                 v.OperatorAddr,
+		ConsPubKey:                   bechConsPubKey,
+		Jailed:                       v.Jailed,
+		Status:                       v.Status,
+		Tokens:                       v.Tokens,
+		DelegatorShares:              v.DelegatorShares,
+		Description:                  v.Description,
+		BondHeight:                   v.BondHeight,
+		BondIntraTxCounter:           v.BondIntraTxCounter,
+		UnbondingHeight:              v.UnbondingHeight,
+		UnbondingMinTime:             v.UnbondingMinTime,
+		UnbondingRedelegationCounter: v.UnbondingRedelegationCounter,
+		Commission:                   v.Commission,
 	})
 }
 
@@ -208,18 +218,19 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*v = Validator{
-		OperatorAddr:       bv.OperatorAddr,
-		ConsPubKey:         consPubKey,
-		Jailed:             bv.Jailed,
-		Tokens:             bv.Tokens,
-		Status:             bv.Status,
-		DelegatorShares:    bv.DelegatorShares,
-		Description:        bv.Description,
-		BondHeight:         bv.BondHeight,
-		BondIntraTxCounter: bv.BondIntraTxCounter,
-		UnbondingHeight:    bv.UnbondingHeight,
-		UnbondingMinTime:   bv.UnbondingMinTime,
-		Commission:         bv.Commission,
+		OperatorAddr:                 bv.OperatorAddr,
+		ConsPubKey:                   consPubKey,
+		Jailed:                       bv.Jailed,
+		Tokens:                       bv.Tokens,
+		Status:                       bv.Status,
+		DelegatorShares:              bv.DelegatorShares,
+		Description:                  bv.Description,
+		BondHeight:                   bv.BondHeight,
+		BondIntraTxCounter:           bv.BondIntraTxCounter,
+		UnbondingHeight:              bv.UnbondingHeight,
+		UnbondingMinTime:             bv.UnbondingMinTime,
+		UnbondingRedelegationCounter: bv.UnbondingRedelegationCounter,
+		Commission:                   bv.Commission,
 	}
 	return nil
 }
@@ -234,6 +245,7 @@ func (v Validator) Equal(v2 Validator) bool {
 		v.Tokens.Equal(v2.Tokens) &&
 		v.DelegatorShares.Equal(v2.DelegatorShares) &&
 		v.Description == v2.Description &&
+		v.UnbondingRedelegationCounter == v2.UnbondingRedelegationCounter &&
 		v.Commission.Equal(v2.Commission)
 }
 

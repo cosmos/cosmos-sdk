@@ -72,7 +72,7 @@ func TestErrVerifyFormat(t *testing.T) {
 		err := errFn("")
 		abciLog := err.ABCILog()
 		msgIdx := mustGetMsgIndex(abciLog)
-		msg := ErrEnsureFormat(abciLog, msgIdx)
+		msg := ErrEnsureFormat(abciLog)
 		require.Equal(t, fmt.Sprintf("%s%s}",
 			abciLog[:msgIdx],
 			abciLog[msgIdx+len("Error{"):len(abciLog)-1]),

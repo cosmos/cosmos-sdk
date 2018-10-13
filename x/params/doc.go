@@ -33,7 +33,7 @@ recommended to use the same name with the module's.
 		ps params.Subspace
 	}
 
-Pass a params.Subspace to NewKeeper with DefaultParamSubspace (or another)
+Pass a params.Subspace to NewKeeper with DefaultParamspace (or another)
 
 	app.myKeeper = mymodule.NewKeeper(app.paramStore.SubStore(mymodule.DefaultParamspace))
 
@@ -79,7 +79,7 @@ params.Keeper itself to access all subspace(using GetSubspace)
 	}
 
 	func (k MasterKeeper) SetParam(ctx sdk.Context, space string, key string, param interface{}) {
-		space, ok := k.ps.GetSubspace(space)
+		space, ok := k.pk.GetSubspace(space)
 		if !ok {
 			return
 		}

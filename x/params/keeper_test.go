@@ -82,7 +82,7 @@ func TestKeeper(t *testing.T) {
 	for i, kv := range kvs {
 		var param int64
 		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), &param) }, "space.Get panics, tc #%d", i)
-		require.Equal(t, kv.param, param, "param not equal, tc #%d", i)
+		require.Equal(t, kv.param, param, "stored param not equal, tc #%d", i)
 	}
 
 	// Test space.GetRaw
@@ -91,7 +91,7 @@ func TestKeeper(t *testing.T) {
 		bz := space.GetRaw(ctx, []byte(kv.key))
 		err := cdc.UnmarshalJSON(bz, &param)
 		require.Nil(t, err, "err is not nil, tc #%d", i)
-		require.Equal(t, kv.param, param, "param not equal, tc #%d", i)
+		require.Equal(t, kv.param, param, "stored param not equal, tc #%d", i)
 	}
 
 	// Test store.Get equals space.Get
@@ -101,7 +101,7 @@ func TestKeeper(t *testing.T) {
 		require.NotNil(t, bz, "KVStore.Get returns nil, tc #%d", i)
 		err := cdc.UnmarshalJSON(bz, &param)
 		require.NoError(t, err, "UnmarshalJSON returns error, tc #%d", i)
-		require.Equal(t, kv.param, param, "param not equal, tc #%d", i)
+		require.Equal(t, kv.param, param, "stored param not equal, tc #%d", i)
 	}
 
 	// Test invalid space.Get
@@ -195,9 +195,9 @@ func TestSubspace(t *testing.T) {
 		require.Equal(t, kv.zero, indirect(kv.ptr), "invalid space.Get unmarshalls when no value exists, tc #%d", i)
 
 		require.NotPanics(t, func() { space.GetIfExists(ctx, []byte(kv.key), kv.ptr) }, "space.GetIfExists panics, tc #%d", i)
-		require.Equal(t, kv.param, indirect(kv.ptr), "spaced param not equal, tc #%d", i)
+		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
 		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), kv.ptr) }, "space.Get panics, tc #%d", i)
-		require.Equal(t, kv.param, indirect(kv.ptr), "spaced param not equal, tc #%d", i)
+		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
 
 		require.Panics(t, func() { space.Get(ctx, []byte("invalid"), kv.ptr) }, "invalid space.Get not panics when no value exists, tc #%d", i)
 		require.Equal(t, kv.param, indirect(kv.ptr), "invalid space.Get unmarshalls when no value existt, tc #%d", i)
@@ -212,6 +212,6 @@ func TestSubspace(t *testing.T) {
 		require.NotNil(t, bz, "store.Get() returns nil, tc #%d", i)
 		err := cdc.UnmarshalJSON(bz, kv.ptr)
 		require.NoError(t, err, "cdc.UnmarshalJSON() returns error, tc #%d", i)
-		require.Equal(t, kv.param, indirect(kv.ptr), "param not equal, tc #%d", i)
+		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
 	}
 }

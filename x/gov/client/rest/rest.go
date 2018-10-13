@@ -227,6 +227,7 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(res)
 	}
 }

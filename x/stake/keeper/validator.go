@@ -320,27 +320,31 @@ func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time) sdk.I
 }
 
 // Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
-func (k Keeper) DequeueAllMatureValidatorQueue(ctx sdk.Context, currTime time.Time) (matureValsAddrs []sdk.ValAddress) {
-	store := ctx.KVStore(k.storeKey)
+func (k Keeper) GetAllMatureValidatorQueue(ctx sdk.Context, currTime time.Time) (matureValsAddrs []sdk.ValAddress) {
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	validatorTimesliceIterator := k.ValidatorQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; validatorTimesliceIterator.Valid(); validatorTimesliceIterator.Next() {
 		timeslice := []sdk.ValAddress{}
 		k.cdc.MustUnmarshalBinary(validatorTimesliceIterator.Value(), &timeslice)
 		matureValsAddrs = append(matureValsAddrs, timeslice...)
-		store.Delete(validatorTimesliceIterator.Key())
 	}
 	return matureValsAddrs
 }
 
 // Unbonds all the unbonding validators that have finished their unbonding period
 func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
-	matureUnbondingValidators := k.DequeueAllMatureValidatorQueue(ctx, ctx.BlockHeader().Time)
-	for _, valAddr := range matureUnbondingValidators {
-		val, found := k.GetValidator(ctx, valAddr)
-		if !found || val.GetStatus() != sdk.Unbonding {
-			continue
+	store := ctx.KVStore(k.storeKey)
+	validatorTimesliceIterator := k.ValidatorQueueIterator(ctx, ctx.BlockHeader().Time)
+	for ; validatorTimesliceIterator.Valid(); validatorTimesliceIterator.Next() {
+		timeslice := []sdk.ValAddress{}
+		k.cdc.MustUnmarshalBinary(validatorTimesliceIterator.Value(), &timeslice)
+		for _, valAddr := range timeslice {
+			val, found := k.GetValidator(ctx, valAddr)
+			if !found || val.GetStatus() != sdk.Unbonding {
+				continue
+			}
+			k.unbondingToUnbonded(ctx, val)
 		}
-		k.unbondingToUnbonded(ctx, val)
+		store.Delete(validatorTimesliceIterator.Key())
 	}
 }

@@ -5,7 +5,9 @@ import (
 )
 
 // TypeTable subspaces appropriate type for each parameter key
-type TypeTable map[string]reflect.Type
+type TypeTable struct {
+	m map[string]reflect.Type
+}
 
 // Constructs new table
 func NewTypeTable(keytypes ...interface{}) (res TypeTable) {
@@ -13,7 +15,9 @@ func NewTypeTable(keytypes ...interface{}) (res TypeTable) {
 		panic("odd number arguments in NewTypeTypeTable")
 	}
 
-	res = make(map[string]reflect.Type)
+	res = TypeTable{
+		m: make(map[string]reflect.Type),
+	}
 
 	for i := 0; i < len(keytypes); i += 2 {
 		res = res.RegisterType(keytypes[i].([]byte), keytypes[i+1])
@@ -25,7 +29,7 @@ func NewTypeTable(keytypes ...interface{}) (res TypeTable) {
 // Register single key-type pair
 func (t TypeTable) RegisterType(key []byte, ty interface{}) TypeTable {
 	keystr := string(key)
-	if _, ok := t[keystr]; ok {
+	if _, ok := t.m[keystr]; ok {
 		panic("duplicate parameter key")
 	}
 
@@ -36,7 +40,7 @@ func (t TypeTable) RegisterType(key []byte, ty interface{}) TypeTable {
 		rty = rty.Elem()
 	}
 
-	t[keystr] = rty
+	t.m[keystr] = rty
 
 	return t
 }
@@ -47,4 +51,14 @@ func (t TypeTable) RegisterParamSet(ps ParamSet) TypeTable {
 		t = t.RegisterType(kvp.Key, kvp.Value)
 	}
 	return t
+}
+
+func (t TypeTable) maxKeyLength() (res int) {
+	for k := range t.m {
+		l := len(k)
+		if l > res {
+			res = l
+		}
+	}
+	return
 }

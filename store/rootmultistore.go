@@ -295,10 +295,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return res
 	}
 
-	if len(res.Proof) == 0 {
-		if len(res.Value) == 0 {
-			return res
-		}
+	if len(res.Proof) == 0 && len(res.Value) != 0 {
 		msg := fmt.Sprintf("proof from store %s is nil", storeName)
 		return sdk.ErrInternal(msg).QueryResult()
 	}

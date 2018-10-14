@@ -12,13 +12,16 @@ import (
 type MultiStoreProof struct {
 	StoreInfos []storeInfo
 	StoreName  string
-	RangeProof iavl.RangeProof
+	RangeProof *iavl.RangeProof
 }
 
 // buildMultiStoreProof build MultiStoreProof based on iavl proof and storeInfos
 func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []storeInfo) []byte {
-	var rangeProof iavl.RangeProof
-	cdc.MustUnmarshalBinary(iavlProof, &rangeProof)
+	var rangeProof *iavl.RangeProof
+	if iavlProof != nil {
+		rangeProof = &iavl.RangeProof{}
+		cdc.MustUnmarshalBinary(iavlProof, rangeProof)
+	}
 
 	msp := MultiStoreProof{
 		StoreInfos: storeInfos,
@@ -33,14 +36,16 @@ func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []store
 // VerifyMultiStoreCommitInfo verify multiStoreCommitInfo against appHash
 func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo, appHash []byte) ([]byte, error) {
 	var substoreCommitHash []byte
+	found := false
 	var height int64
 	for _, storeInfo := range storeInfos {
 		if storeInfo.Name == storeName {
+			found = true
 			substoreCommitHash = storeInfo.Core.CommitID.Hash
 			height = storeInfo.Core.CommitID.Version
 		}
 	}
-	if len(substoreCommitHash) == 0 {
+	if !found {
 		return nil, cmn.NewError("failed to get substore root commit hash by store name")
 	}
 
@@ -56,6 +61,10 @@ func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo, appHas
 
 // VerifyRangeProof verify iavl RangeProof
 func VerifyRangeProof(key, value []byte, substoreCommitHash []byte, rangeProof *iavl.RangeProof) error {
+	// Both rangeProof and substoreCommitHash are nil
+	if substoreCommitHash == nil && rangeProof == nil {
+		return nil
+	}
 
 	// verify the proof to ensure data integrity.
 	err := rangeProof.Verify(substoreCommitHash)

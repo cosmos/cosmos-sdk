@@ -225,7 +225,7 @@ func (ctx CLIContext) verifyProof(_ string, resp abci.ResponseQuery) error {
 		return errors.Wrap(err, "failed in verifying the proof against appHash")
 	}
 
-	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
+	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, multiStoreProof.RangeProof)
 	if err != nil {
 		return errors.Wrap(err, "failed in the range proof verification")
 	}

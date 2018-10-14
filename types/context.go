@@ -32,7 +32,6 @@ type Context struct {
 }
 
 // create a new context
-// nolint: unparam
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
 	c := Context{
 		Context: context.Background(),
@@ -74,7 +73,7 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedDefaultGasConfig)
+	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedKVGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.

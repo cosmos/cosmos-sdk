@@ -7,17 +7,34 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// nolint
+// Parameter store default namestore
 const (
-	ParamStoreKeyDepositProcedure  = "gov/depositprocedure"
-	ParamStoreKeyVotingProcedure   = "gov/votingprocedure"
-	ParamStoreKeyTallyingProcedure = "gov/tallyingprocedure"
+	DefaultParamspace = "gov"
 )
+
+// Parameter store key
+var (
+	ParamStoreKeyDepositProcedure  = []byte("depositprocedure")
+	ParamStoreKeyVotingProcedure   = []byte("votingprocedure")
+	ParamStoreKeyTallyingProcedure = []byte("tallyingprocedure")
+)
+
+// Type declaration for parameters
+func ParamTypeTable() params.TypeTable {
+	return params.NewTypeTable(
+		ParamStoreKeyDepositProcedure, DepositProcedure{},
+		ParamStoreKeyVotingProcedure, VotingProcedure{},
+		ParamStoreKeyTallyingProcedure, TallyingProcedure{},
+	)
+}
 
 // Governance Keeper
 type Keeper struct {
-	// The reference to the ParamSetter to get and set Global Params
-	ps params.Setter
+	// The reference to the Param Keeper to get and set Global Params
+	paramsKeeper params.Keeper
+
+	// The reference to the Paramstore to get and set gov specific params
+	paramSpace params.Subspace
 
 	// The reference to the CoinKeeper to modify balances
 	ck bank.Keeper
@@ -43,15 +60,16 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ps params.Setter, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
-		storeKey:  key,
-		ps:        ps,
-		ck:        ck,
-		ds:        ds,
-		vs:        ds.GetValidatorSet(),
-		cdc:       cdc,
-		codespace: codespace,
+		storeKey:     key,
+		paramsKeeper: paramsKeeper,
+		paramSpace:   paramSpace.WithTypeTable(ParamTypeTable()),
+		ck:           ck,
+		ds:           ds,
+		vs:           ds.GetValidatorSet(),
+		cdc:          cdc,
+		codespace:    codespace,
 	}
 }
 
@@ -210,7 +228,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // nolint: errcheck
 func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 	var depositProcedure DepositProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
+	keeper.paramSpace.Get(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
 	return depositProcedure
 }
 
@@ -218,7 +236,7 @@ func (keeper Keeper) GetDepositProcedure(ctx sdk.Context) DepositProcedure {
 // nolint: errcheck
 func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 	var votingProcedure VotingProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
+	keeper.paramSpace.Get(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
 	return votingProcedure
 }
 
@@ -226,23 +244,23 @@ func (keeper Keeper) GetVotingProcedure(ctx sdk.Context) VotingProcedure {
 // nolint: errcheck
 func (keeper Keeper) GetTallyingProcedure(ctx sdk.Context) TallyingProcedure {
 	var tallyingProcedure TallyingProcedure
-	keeper.ps.Get(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
+	keeper.paramSpace.Get(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 	return tallyingProcedure
 }
 
 // nolint: errcheck
 func (keeper Keeper) setDepositProcedure(ctx sdk.Context, depositProcedure DepositProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
+	keeper.paramSpace.Set(ctx, ParamStoreKeyDepositProcedure, &depositProcedure)
 }
 
 // nolint: errcheck
 func (keeper Keeper) setVotingProcedure(ctx sdk.Context, votingProcedure VotingProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
+	keeper.paramSpace.Set(ctx, ParamStoreKeyVotingProcedure, &votingProcedure)
 }
 
 // nolint: errcheck
 func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, tallyingProcedure TallyingProcedure) {
-	keeper.ps.Set(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
+	keeper.paramSpace.Set(ctx, ParamStoreKeyTallyingProcedure, &tallyingProcedure)
 }
 
 // =====================================================

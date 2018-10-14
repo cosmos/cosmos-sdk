@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -107,7 +108,7 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 
 		// create the genesis account, give'm few steaks and a buncha token with there name
 		genaccs[i] = genesisAccountFromMsgCreateValidator(msg)
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(msg.Delegation.Amount)) // increase the supply
 
 		// add the validator
 		//if len(msg.Description.Moniker) > 0 {
@@ -129,11 +130,26 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 	return
 }
 
-func addValidatorToStakeData(msg stake.MsgCreateValidator, stakeData stake.GenesisState) stake.GenesisState {
-	validator := stake.NewValidator(
-		sdk.ValAddress(msg.ValidatorAddr), msg.PubKey, msg.Description,
-	)
+func DefaultState(moniker string, pubKey crypto.PubKey) (genesisState GenesisState, genValidator tmtypes.GenesisValidator) {
+	acc := NewDefaultGenesisAccount(sdk.AccAddress(pubKey.Address()))
+	stakeData := stake.DefaultGenesisState()
+	validator := stake.NewValidator(sdk.ValAddress(acc.Address), pubKey, stake.NewDescription(moniker, "", "", ""))
+	stakeData = addValidatorToStakeData(validator, stakeData)
+	stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc))
+	genesisState = GenesisState{
+		Accounts:  []GenesisAccount{acc},
+		StakeData: stakeData,
+		GovData:   gov.DefaultGenesisState(),
+	}
+	genValidator = tmtypes.GenesisValidator{
+		Name: moniker,
+		PubKey: pubKey,
+		Power: freeFermionVal,
+	}
+	return
+}
 
+func addValidatorToStakeData(validator stake.Validator, stakeData stake.GenesisState) stake.GenesisState {
 	stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
 
 	// add some new shares to the validator
@@ -259,4 +275,13 @@ func ProcessStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
 	persistentPeers = strings.Join(addresses, ",")
 
 	return
+}
+
+func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
+	accAuth := auth.NewBaseAccountWithAddress(addr)
+	accAuth.Coins = []sdk.Coin{
+		{"fooToken", sdk.NewInt(1000)},
+		{"steak", freeFermionsAcc},
+	}
+	return NewGenesisAccount(&accAuth)
 }

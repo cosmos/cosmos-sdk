@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 
@@ -254,6 +255,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	}
 
+	fmt.Printf("%+v\n", validators)
 	return abci.ResponseInitChain{
 		Validators: validators,
 	}

@@ -3,10 +3,10 @@ package init
 import (
 	"encoding/json"
 	"fmt"
-	"errors"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/privval"
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,6 +18,13 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/types"
+)
+
+const (
+	flagChainID = "chain-id"
+	flagWithTxs = "with-txs"
+	flagMoniker = "moniker"
+	flagOverwrite = "overwrite"
 )
 
 
@@ -32,19 +39,17 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
-			initConfig := server.InitConfig{
-				viper.GetString(server.FlagChainID),
-				viper.GetBool(server.FlagWithTxs),
-				filepath.Join(config.RootDir, "config", "gentx"),
-				viper.GetString(server.FlagName),
-				viper.GetBool(server.FlagOverwrite),
+			chainID := viper.GetString(flagChainID)
+			if chainID == "" {
+				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
 			}
-
-			chainID, nodeID, appMessage, err := initWithConfig(cdc, appInit, config, initConfig)
-			if err != nil {
-				return err
-			}
+			genTxsDir := filepath.Join(config.RootDir, "config", "gentx")
+			moniker := viper.GetString(flagMoniker)
+			withTxs := viper.GetBool(flagWithTxs)
+			overwriteGenesis := viper.GetBool(flagOverwrite)
+			nodeID, appMessage, err := initWithConfig(cdc, appInit, config, chainID, moniker, genTxsDir, withTxs, overwriteGenesis)
 			// print out some key information
+
 			toPrint := struct {
 				ChainID    string          `json:"chain_id"`
 				NodeID     string          `json:"node_id"`
@@ -62,29 +67,25 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 			return nil
 		},
 	}
-	cmd.Flags().BoolP(server.FlagOverwrite, "o", false, "overwrite the genesis.json file")
-	cmd.Flags().String(server.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().Bool(server.FlagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
-	cmd.Flags().AddFlagSet(appInit.FlagsAppGenState)
+
+	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
+	cmd.Flags().String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().Bool(flagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
+	cmd.Flags().String(flagMoniker, "", "moniker")
+	//cmd.Flags().AddFlagSet(appInit.FlagsAppGenState)
 	return cmd
 }
 
-func initWithConfig(cdc *codec.Codec, appInit server.AppInit, config *cfg.Config, initConfig server.InitConfig) (
-	chainID string, nodeID string, appMessage json.RawMessage, err error) {
+func initWithConfig(cdc *codec.Codec, appInit server.AppInit, config *cfg.Config, chainID, moniker, genTxsDir string, withGenTxs, overwriteGenesis bool) (
+	nodeID string, appMessage json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return
 	}
 	nodeID = string(nodeKey.ID())
-	//pubKey := readOrCreatePrivValidator(config)
-
-	if initConfig.ChainID == "" {
-		initConfig.ChainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
-	}
-	chainID = initConfig.ChainID
 
 	genFile := config.GenesisFile()
-	if !initConfig.Overwrite && common.FileExists(genFile) {
+	if !overwriteGenesis && common.FileExists(genFile) {
 		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
 		return
 	}
@@ -93,16 +94,16 @@ func initWithConfig(cdc *codec.Codec, appInit server.AppInit, config *cfg.Config
 	var appGenTxs []auth.StdTx
 	var persistentPeers string
 	var genTxs []json.RawMessage
+	var appState json.RawMessage
+	var validators []types.GenesisValidator
 
-	if initConfig.GenTxs {
-		_, appGenTxs, persistentPeers, err = app.ProcessStdTxs(initConfig.Moniker, initConfig.GenTxsDir, cdc)
+	if withGenTxs {
+		_, appGenTxs, persistentPeers, err = app.ProcessStdTxs(moniker, genTxsDir, cdc)
 		if err != nil {
 			return
 		}
 		genTxs = make([]json.RawMessage, len(appGenTxs))
 		config.P2P.PersistentPeers = persistentPeers
-		configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
-		cfg.WriteConfigFile(configFilePath, config)
 		for i, stdTx := range appGenTxs {
 			var jsonRawTx json.RawMessage
 			jsonRawTx, err = cdc.MarshalJSON(stdTx)
@@ -111,38 +112,25 @@ func initWithConfig(cdc *codec.Codec, appInit server.AppInit, config *cfg.Config
 			}
 			genTxs[i] = jsonRawTx
 		}
+
+		appState, err = app.GaiaAppGenStateJSON(cdc, genTxs)
+		if err != nil {
+			return
+		}
 	} else {
-		panic(errors.New("WIP"))
-		//genTxConfig := servercfg.GenTx{
-		//	viper.GetString(server.FlagName),
-		//	viper.GetString(server.FlagClientHome),
-		//	viper.GetBool(server.FlagOWK),
-		//	"127.0.0.1",
-		//}
-		//
-		//// Write updated config with moniker
-		//config.Moniker = genTxConfig.Name
-		//configFilePath := filepath.Join(config.RootDir, "config", "config.toml")
-		//cfg.WriteConfigFile(configFilePath, config)
-		//_, am, err := appInit.AppGenTx(cdc, pubKey, genTxConfig)
-		//appMessage = am
-		//if err != nil {
-		//	return "", "", nil, err
-		//}
-		//validators = []types.GenesisValidator{validator)
-		//jsonMsg, err := json.Marshal(appGenTx)
-		//if err != nil {
-		//	return
-		//}
-		//appGenTxs = []json.RawMessage{jsonMsg}
+		var genesisState app.GenesisState
+		pubKey := readOrCreatePrivValidator(config)
+		config.Moniker = moniker
+		genesisState, genValidator := app.DefaultState(config.Moniker, pubKey)
+		appState, err = codec.MarshalJSONIndent(cdc, genesisState)
+		if err != nil {
+			return
+		}
+		validators = []types.GenesisValidator{genValidator}
 	}
 
-	appState, err := app.GaiaAppGenStateJSON(cdc, genTxs)
-	if err != nil {
-		return
-	}
-	
-	err = writeGenesisFile(cdc, genFile, initConfig.ChainID, nil, appState)
+	cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+	err = writeGenesisFile(cdc, genFile, chainID, validators, appState)
 	if err != nil {
 		return
 	}
@@ -166,4 +154,18 @@ func writeGenesisFile(cdc *codec.Codec, genesisFile, chainID string, validators 
 	}
 
 	return genDoc.SaveAs(genesisFile)
+}
+
+// read of create the private key file for this config
+func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
+	// private validator
+	privValFile := tmConfig.PrivValidatorFile()
+	var privValidator *privval.FilePV
+	if common.FileExists(privValFile) {
+		privValidator = privval.LoadFilePV(privValFile)
+	} else {
+		privValidator = privval.GenFilePV(privValFile)
+		privValidator.Save()
+	}
+	return privValidator.GetPubKey()
 }

@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"os"
 )
 
 const (
@@ -33,6 +33,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if !ok {
 			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
+		fmt.Fprintf(os.Stderr,"Block Height: %d", ctx.BlockHeight())
 
 		// Ensure that the provided fees meet a minimum threshold for the validator, if this is a CheckTx.
 		// This is only for local mempool purposes, and thus is only ran on check tx.

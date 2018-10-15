@@ -71,6 +71,14 @@ func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 	return ctx.TransientStore(s.tkey).Prefix(append(s.name, '/'))
 }
 
+func concat(key []byte, subkey []byte) (res []byte) {
+	res = make([]byte, len(key)+1+len(subkey))
+	copy(res, key)
+	res[len(key)] = '/'
+	copy(res[len(key)+1:], subkey)
+	return
+}
+
 // Get parameter from store
 func (s Subspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 	store := s.kvStore(ctx)
@@ -94,6 +102,14 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 	}
 }
 
+func (s Subspace) GetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, ptr interface{}) {
+	s.Get(ctx, concat(key, subkey), ptr)
+}
+
+func (s Subspace) GetWithSubkeyIfExists(ctx sdk.Context, key []byte, subkey []byte, ptr interface{}) {
+	s.GetIfExists(ctx, concat(key, subkey), ptr)
+}
+
 // Get raw bytes of parameter from store
 func (s Subspace) GetRaw(ctx sdk.Context, key []byte) []byte {
 	store := s.kvStore(ctx)
@@ -112,11 +128,7 @@ func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 	return tstore.Has(key)
 }
 
-// Set parameter, return error if stored parameter has different type from input
-// Also set to the transient store to record change
-func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
-	store := s.kvStore(ctx)
-
+func (s Subspace) checkType(store sdk.KVStore, key []byte, param interface{}) {
 	ty, ok := s.table.m[string(key)]
 	if !ok {
 		panic("Parameter not registered")
@@ -130,6 +142,14 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 	if pty != ty {
 		panic("Type mismatch with registered table")
 	}
+}
+
+// Set parameter, return error if stored parameter has different type from input
+// Also set to the transient store to record change
+func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
+	store := s.kvStore(ctx)
+
+	s.checkType(store, key, param)
 
 	bz, err := s.cdc.MarshalJSON(param)
 	if err != nil {
@@ -140,6 +160,23 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 	tstore := s.transientStore(ctx)
 	tstore.Set(key, []byte{})
 
+}
+
+func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param interface{}) {
+	store := s.kvStore(ctx)
+
+	s.checkType(store, key, param)
+
+	newkey := concat(key, subkey)
+
+	bz, err := s.cdc.MarshalJSON(param)
+	if err != nil {
+		panic(err)
+	}
+	store.Set(newkey, bz)
+
+	tstore := s.transientStore(ctx)
+	tstore.Set(newkey, []byte{})
 }
 
 // Get to ParamSet

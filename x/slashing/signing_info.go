@@ -28,7 +28,7 @@ func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (signed bool) {
+func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (signed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetValidatorSigningBitArrayKey(address, index))
 	if bz == nil {
@@ -41,7 +41,7 @@ func (k Keeper) getValidatorSigningBitArray(ctx sdk.Context, address sdk.ConsAdd
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) setValidatorSigningBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, signed bool) {
+func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, signed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(signed)
 	store.Set(GetValidatorSigningBitArrayKey(address, index), bz)

@@ -11,12 +11,6 @@ import (
 func (k Keeper) AllocateFees(ctx sdk.Context) {
 	ctx.Logger().With("module", "x/distribution").Error(fmt.Sprintf("allocation height: %v", ctx.BlockHeight()))
 
-	// if there is no power in the system nothing should be allocated
-	bondedTokens := k.stakeKeeper.TotalPower(ctx).TruncateInt()
-	if bondedTokens.IsZero() {
-		return
-	}
-
 	// get the proposer of this block
 	proposerConsAddr := k.GetProposerConsAddr(ctx)
 	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposerConsAddr)
@@ -28,20 +22,14 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	feesCollectedDec := types.NewDecCoins(feesCollected)
 
 	// allocated rewards to proposer
-	sumPowerPrecommitValidators := k.GetSumPrecommitPower(ctx)
-	percentVoting := sdk.NewDec(sumPowerPrecommitValidators).QuoInt(bondedTokens)
+	percentVotes := k.GetPercentPrecommitVotes(ctx)
 
-	// rare edge case for rounding tendermint power vs bonded decimal power
-	if percentVoting.GT(sdk.OneDec()) {
-		percentVoting = sdk.OneDec()
-	}
-
-	proposerMultiplier := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(percentVoting))
+	proposerMultiplier := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(percentVotes))
 	proposerReward := feesCollectedDec.MulDec(proposerMultiplier)
 
 	// apply commission
 	commission := proposerReward.MulDec(proposerValidator.GetCommission())
-	remaining := proposerReward.MulDec(sdk.OneDec().Sub(proposerValidator.GetCommission()))
+	remaining := proposerReward.Minus(commission)
 	proposerDist.PoolCommission = proposerDist.PoolCommission.Plus(commission)
 	proposerDist.Pool = proposerDist.Pool.Plus(remaining)
 

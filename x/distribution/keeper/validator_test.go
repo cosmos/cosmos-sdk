@@ -19,14 +19,12 @@ func TestWithdrawValidatorRewardsAllNoDelegator(t *testing.T) {
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	totalPower := int64(10)
-
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPower)
+	keeper.SetPercentPrecommitVotes(ctx, sdk.OneDec())
 	keeper.AllocateFees(ctx)
 
 	// withdraw self-delegation reward
@@ -55,14 +53,12 @@ func TestWithdrawValidatorRewardsAllDelegatorNoCommission(t *testing.T) {
 	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(90), amt.Int64())
 
-	totalPower := int64(20)
-
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPower)
+	keeper.SetPercentPrecommitVotes(ctx, sdk.OneDec())
 	keeper.AllocateFees(ctx)
 
 	// withdraw self-delegation reward
@@ -93,14 +89,12 @@ func TestWithdrawValidatorRewardsAllDelegatorWithCommission(t *testing.T) {
 	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(90), amt.Int64())
 
-	totalPower := int64(20)
-
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPower)
+	keeper.SetPercentPrecommitVotes(ctx, sdk.OneDec())
 	keeper.AllocateFees(ctx)
 
 	// withdraw validator reward
@@ -137,14 +131,12 @@ func TestWithdrawValidatorRewardsAllMultipleValidator(t *testing.T) {
 
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	totalPower := int64(100)
-
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(1000)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPower)
+	keeper.SetPercentPrecommitVotes(ctx, sdk.OneDec())
 	keeper.AllocateFees(ctx)
 
 	// withdraw validator reward
@@ -187,14 +179,12 @@ func TestWithdrawValidatorRewardsAllMultipleDelegator(t *testing.T) {
 	amt = accMapper.GetAccount(ctx, delAddr2).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(80), amt.Int64())
 
-	totalPower := int64(40)
-
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetSumPrecommitPower(ctx, totalPower)
+	keeper.SetPercentPrecommitVotes(ctx, sdk.OneDec())
 	keeper.AllocateFees(ctx)
 
 	// withdraw validator reward

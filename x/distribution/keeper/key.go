@@ -12,8 +12,8 @@ var (
 	DelegatorWithdrawInfoKey = []byte{0x03} // prefix for each key to a delegator withdraw info
 
 	// transient
-	ProposerKey          = []byte{0x00} // key for storing the proposer operator address
-	SumPrecommitPowerKey = []byte{0x01} // key for storing the power of the precommit validators
+	ProposerKey              = []byte{0x00} // key for storing the proposer operator address
+	PercentPrecommitVotesKey = []byte{0x01} // key for storing the power of the precommit validators
 )
 
 // nolint

@@ -16,12 +16,13 @@ func TestSetGetProposerConsAddr(t *testing.T) {
 	require.True(t, res.Equals(valConsAddr1), "expected: %v got: %v", valConsAddr1.String(), res.String())
 }
 
-func TestSetGetSumPrecommitPower(t *testing.T) {
+func TestSetGetPercentPrecommitVotes(t *testing.T) {
 	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 0)
 
-	keeper.SetSumPrecommitPower(ctx, 333)
-	res := keeper.GetSumPrecommitPower(ctx)
-	require.Equal(t, int64(333), res)
+	someDec := sdk.NewDec(333)
+	keeper.SetPercentPrecommitVotes(ctx, someDec)
+	res := keeper.GetPercentPrecommitVotes(ctx)
+	require.True(sdk.DecEq(t, someDec, res))
 }
 
 func TestSetGetCommunityTax(t *testing.T) {

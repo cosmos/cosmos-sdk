@@ -1,7 +1,7 @@
 # End Block
 
 At each endblock, the fees received are allocated to the proposer, community fund,
-and pool.  When the validator is the proposer of the round, that
+and global pool.  When the validator is the proposer of the round, that
 validator (and their delegators) receives between 1% and 5% of fee rewards, the
 reserve community tax is then charged, then the remainder is distributed
 proportionally by voting power to all bonded validators independent of whether

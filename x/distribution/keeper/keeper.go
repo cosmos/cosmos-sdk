@@ -82,23 +82,23 @@ func (k Keeper) SetProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
 //______________________________________________________________________
 
 // set the proposer public key for this block
-func (k Keeper) GetSumPrecommitPower(ctx sdk.Context) (sumPrecommitPower int64) {
+func (k Keeper) GetPercentPrecommitVotes(ctx sdk.Context) (percentPrecommitVotes sdk.Dec) {
 	tstore := ctx.KVStore(k.storeTKey)
 
-	b := tstore.Get(SumPrecommitPowerKey)
+	b := tstore.Get(PercentPrecommitVotesKey)
 	if b == nil {
 		panic("Proposer cons address was likely not set in begin block")
 	}
 
-	k.cdc.MustUnmarshalBinary(b, &sumPrecommitPower)
+	k.cdc.MustUnmarshalBinary(b, &percentPrecommitVotes)
 	return
 }
 
 // get the proposer public key for this block
-func (k Keeper) SetSumPrecommitPower(ctx sdk.Context, sumPrecommitPower int64) {
+func (k Keeper) SetPercentPrecommitVotes(ctx sdk.Context, percentPrecommitVotes sdk.Dec) {
 	tstore := ctx.KVStore(k.storeTKey)
-	b := k.cdc.MustMarshalBinary(sumPrecommitPower)
-	tstore.Set(SumPrecommitPowerKey, b)
+	b := k.cdc.MustMarshalBinary(percentPrecommitVotes)
+	tstore.Set(PercentPrecommitVotesKey, b)
 }
 
 //______________________________________________________________________

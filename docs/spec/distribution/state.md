@@ -42,7 +42,7 @@ Validator distribution information for the relevant validator is updated each ti
 
 ```golang
 type ValidatorDistInfo struct {
-    FewPoolWithdrawalHeight     int64    // last height this validator withdrew from the global fee pool
+    FeePoolWithdrawalHeight     int64    // last height this validator withdrew from the global fee pool
     Pool                       DecCoins // rewards owed to delegators, commission has already been charged (includes proposer reward)
     PoolCommission             DecCoins // commission collected by this validator (pending withdrawal) 
 

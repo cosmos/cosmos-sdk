@@ -54,6 +54,7 @@ func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.C
 	for ; iter.Valid(); iter.Next() {
 		store.Delete(iter.Key())
 	}
+	iter.Close()
 }
 
 // Construct a new `ValidatorSigningInfo` struct

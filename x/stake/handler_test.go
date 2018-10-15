@@ -863,6 +863,48 @@ func TestTransitiveRedelegation(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error")
 }
 
+func TestConflictingRedelegation(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr := sdk.ValAddress(keep.Addrs[0])
+	validatorAddr2 := sdk.ValAddress(keep.Addrs[1])
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 1
+	keeper.SetParams(ctx, params)
+
+	// create the validators
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	msgCreateValidator = newTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 10)
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// end block to bond them
+	EndBlocker(ctx, keeper)
+
+	// begin redelegate
+	msgBeginRedelegate := NewMsgBeginRedelegate(sdk.AccAddress(validatorAddr), validatorAddr, validatorAddr2, sdk.NewDec(5))
+	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
+	require.True(t, got.IsOK(), "expected no error, %v", got)
+
+	// cannot redelegate again while first redelegation still exists
+	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
+	require.True(t, !got.IsOK(), "expected an error, msg: %v", msgBeginRedelegate)
+
+	// progress forward in time
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(10 * time.Second))
+
+	// complete first redelegation
+	EndBlocker(ctx, keeper)
+
+	// now should be able to redelegate again
+	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
+	require.True(t, got.IsOK(), "expected no error")
+}
+
 func TestUnbondingWhenExcessValidators(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	validatorAddr1 := sdk.ValAddress(keep.Addrs[0])

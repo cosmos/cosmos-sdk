@@ -26,8 +26,25 @@ func NewTypeTable(keytypes ...interface{}) (res TypeTable) {
 	return
 }
 
+func isAlphaNumeric(key []byte) bool {
+	for _, b := range key {
+		if !((48 <= b && b <= 57) || // numeric
+			(65 <= b && b <= 90) || // upper case
+			(97 <= b && b <= 122)) { // lower case
+			return false
+		}
+	}
+	return true
+}
+
 // Register single key-type pair
 func (t TypeTable) RegisterType(key []byte, ty interface{}) TypeTable {
+	if len(key) == 0 {
+		panic("cannot register empty key")
+	}
+	if !isAlphaNumeric(key) {
+		panic("non alphanumeric parameter key")
+	}
 	keystr := string(key)
 	if _, ok := t.m[keystr]; ok {
 		panic("duplicate parameter key")

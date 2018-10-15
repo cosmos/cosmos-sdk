@@ -526,6 +526,13 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec) (types.Redelegation, sdk.Error) {
 
+	// check if there is already a redelgation in progress from src to dst
+	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
+	_, found := k.GetRedelegation(ctx, delAddr, valSrcAddr, valDstAddr)
+	if found {
+		return types.Redelegation{}, types.ErrConflictingRedelegation(k.Codespace())
+	}
+
 	// check if this is a transitive redelegation
 	if k.HasReceivingRedelegation(ctx, delAddr, valSrcAddr) {
 		return types.Redelegation{}, types.ErrTransitiveRedelegation(k.Codespace())

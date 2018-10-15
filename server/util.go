@@ -42,7 +42,7 @@ func NewContext(config *cfg.Config, logger log.Logger) *Context {
 
 // PersistentPreRunEFn returns a PersistentPreRunE function for cobra
 // that initailizes the passed in context with a properly configured
-// logger and config objecy
+// logger and config object.
 func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if cmd.Name() == version.VersionCmd.Name() {
@@ -85,7 +85,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// the following parse config is needed to create directories
-		conf, _ = tcmd.ParseConfig()
+		conf, _ = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
 		conf.ProfListenAddress = "localhost:6060"
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
@@ -96,7 +96,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	}
 
 	if conf == nil {
-		conf, err = tcmd.ParseConfig()
+		conf, err = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
 	}
 
 	cosmosConfigFilePath := filepath.Join(rootDir, "config/gaiad.toml")
@@ -143,8 +143,6 @@ func AddCommands(
 	)
 
 	rootCmd.AddCommand(
-		InitCmd(ctx, cdc, appInit),
-		TestnetFilesCmd(ctx, cdc, appInit),
 		StartCmd(ctx, appCreator),
 		UnsafeResetAllCmd(ctx),
 		client.LineBreak,
@@ -177,7 +175,7 @@ func InsertKeyJSON(cdc *codec.Codec, baseJSON []byte, key string, value json.Raw
 
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
 // TODO there must be a better way to get external IP
-func externalIP() (string, error) {
+func ExternalIP() (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err

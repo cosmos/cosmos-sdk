@@ -146,7 +146,7 @@ func InitializeTestLCD(
 	// append initial (proposing) validator
 	genDoc.Validators[0] = tmtypes.GenesisValidator{
 		PubKey: privVal.GetPubKey(),
-		Power:  999999, // create enough power to enable 2/3 voting power
+		Power:  100, // create enough power to enable 2/3 voting power
 		Name:   "validator-1",
 	}
 
@@ -176,7 +176,7 @@ func InitializeTestLCD(
 		appGenTxs = append(appGenTxs, appGenTx)
 	}
 
-	genesisState, err := gapp.GaiaAppGenState(cdc, appGenTxs[:])
+	genesisState, err := gapp.NewTestGaiaAppGenState(cdc, appGenTxs[:], genDoc.Validators, valOperAddrs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts

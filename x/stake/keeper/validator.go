@@ -3,6 +3,7 @@ package keeper
 import (
 	"container/list"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -280,4 +281,70 @@ func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 		}
 	}
 	return validators[:i] // trim
+}
+
+// gets a specific validator queue timeslice. A timeslice is a slice of ValAddresses corresponding to unbonding validators
+// that expire at a certain time.
+func (k Keeper) GetValidatorQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (valAddrs []sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(GetValidatorQueueTimeKey(timestamp))
+	if bz == nil {
+		return []sdk.ValAddress{}
+	}
+	k.cdc.MustUnmarshalBinary(bz, &valAddrs)
+	return valAddrs
+}
+
+// Sets a specific validator queue timeslice.
+func (k Keeper) SetValidatorQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	bz := k.cdc.MustMarshalBinary(keys)
+	store.Set(GetValidatorQueueTimeKey(timestamp), bz)
+}
+
+// Insert an validator address to the appropriate timeslice in the validator queue
+func (k Keeper) InsertValidatorQueue(ctx sdk.Context, val types.Validator) {
+	timeSlice := k.GetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime)
+	if len(timeSlice) == 0 {
+		k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, []sdk.ValAddress{val.OperatorAddr})
+	} else {
+		timeSlice = append(timeSlice, val.OperatorAddr)
+		k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, timeSlice)
+	}
+}
+
+// Returns all the validator queue timeslices from time 0 until endTime
+func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	return store.Iterator(ValidatorQueueKey, sdk.InclusiveEndBytes(GetValidatorQueueTimeKey(endTime)))
+}
+
+// Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
+func (k Keeper) GetAllMatureValidatorQueue(ctx sdk.Context, currTime time.Time) (matureValsAddrs []sdk.ValAddress) {
+	// gets an iterator for all timeslices from time 0 until the current Blockheader time
+	validatorTimesliceIterator := k.ValidatorQueueIterator(ctx, ctx.BlockHeader().Time)
+	for ; validatorTimesliceIterator.Valid(); validatorTimesliceIterator.Next() {
+		timeslice := []sdk.ValAddress{}
+		k.cdc.MustUnmarshalBinary(validatorTimesliceIterator.Value(), &timeslice)
+		matureValsAddrs = append(matureValsAddrs, timeslice...)
+	}
+	return matureValsAddrs
+}
+
+// Unbonds all the unbonding validators that have finished their unbonding period
+func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	validatorTimesliceIterator := k.ValidatorQueueIterator(ctx, ctx.BlockHeader().Time)
+	for ; validatorTimesliceIterator.Valid(); validatorTimesliceIterator.Next() {
+		timeslice := []sdk.ValAddress{}
+		k.cdc.MustUnmarshalBinary(validatorTimesliceIterator.Value(), &timeslice)
+		for _, valAddr := range timeslice {
+			val, found := k.GetValidator(ctx, valAddr)
+			if !found || val.GetStatus() != sdk.Unbonding {
+				continue
+			}
+			k.unbondingToUnbonded(ctx, val)
+		}
+		store.Delete(validatorTimesliceIterator.Key())
+	}
 }

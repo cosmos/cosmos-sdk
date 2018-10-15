@@ -212,9 +212,16 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		}
 
 		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+		app.slashingKeeper.AddValidators(ctx, validators)
 	}
 
-	fmt.Printf("%+v\n", validators)
+	// sanity check
+	if len(req.Validators) > 0 {
+		if len(req.Validators) != len(validators) {
+			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators): "))
+		}
+	}
+
 	return abci.ResponseInitChain{
 		Validators: validators,
 	}

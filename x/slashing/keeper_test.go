@@ -12,10 +12,12 @@ import (
 
 // Have to change these parameters for tests
 // lest the tests take forever
-func init() {
-	defaultSignedBlocksWindow = 1000
-	defaultDowntimeUnbondDuration = 60 * 60
-	defaultDoubleSignUnbondDuration = 60 * 60
+func keeperTestParams() Params {
+	params := DefaultParams()
+	params.SignedBlocksWindow = 1000
+	params.DowntimeUnbondDuration = 60 * 60
+	params.DoubleSignUnbondDuration = 60 * 60
+	return params
 }
 
 // ______________________________________________________________
@@ -25,7 +27,7 @@ func init() {
 func TestHandleDoubleSign(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
 	amtInt := int64(100)
@@ -67,7 +69,7 @@ func TestHandleDoubleSign(t *testing.T) {
 func TestSlashingPeriodCap(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	amtInt := int64(100)
 	operatorAddr, amt := addrs[0], sdk.NewInt(amtInt)
 	valConsPubKey, valConsAddr := pks[0], pks[0].Address()
@@ -132,7 +134,7 @@ func TestSlashingPeriodCap(t *testing.T) {
 func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)
@@ -284,7 +286,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 // and that they are not immediately jailed
 func TestHandleNewValidator(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	addr, val, amt := addrs[0], pks[0], int64(100)
 	sh := stake.NewHandler(sk)
 
@@ -323,7 +325,7 @@ func TestHandleNewValidator(t *testing.T) {
 func TestHandleAlreadyJailed(t *testing.T) {
 
 	// initial setup
-	ctx, _, sk, _, keeper := createTestInput(t)
+	ctx, _, sk, _, keeper := createTestInput(t, DefaultParams())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	sh := stake.NewHandler(sk)
@@ -371,7 +373,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// initial setup
-	ctx, _, sk, _, keeper := createTestInput(t)
+	ctx, _, sk, _, keeper := createTestInput(t, keeperTestParams())
 	params := sk.GetParams(ctx)
 	params.MaxValidators = 1
 	sk.SetParams(ctx, params)

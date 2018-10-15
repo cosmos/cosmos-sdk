@@ -629,6 +629,56 @@ func TestJailValidator(t *testing.T) {
 	require.True(t, got.IsOK(), "expected ok, got %v", got)
 }
 
+func TestValidatorQueue(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	validatorAddr, delegatorAddr := sdk.ValAddress(keep.Addrs[0]), keep.Addrs[1]
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 7 * time.Second
+	keeper.SetParams(ctx, params)
+
+	// create the validator
+	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// bond a delegator
+	msgDelegate := newTestMsgDelegate(delegatorAddr, validatorAddr, 10)
+	got = handleMsgDelegate(ctx, msgDelegate, keeper)
+	require.True(t, got.IsOK(), "expected ok, got %v", got)
+
+	EndBlocker(ctx, keeper)
+
+	// unbond the all self-delegation to put validator in unbonding state
+	msgBeginUnbondingValidator := NewMsgBeginUnbonding(sdk.AccAddress(validatorAddr), validatorAddr, sdk.NewDec(10))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error: %v", got)
+	var finishTime time.Time
+	types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+	ctx = ctx.WithBlockTime(finishTime)
+	EndBlocker(ctx, keeper)
+	origHeader := ctx.BlockHeader()
+
+	validator, found := keeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.True(t, validator.GetStatus() == sdk.Unbonding, "%v", validator)
+
+	// should still be unbonding at time 6 seconds later
+	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 6))
+	EndBlocker(ctx, keeper)
+	validator, found = keeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.True(t, validator.GetStatus() == sdk.Unbonding, "%v", validator)
+
+	// should be in unbonded state at time 7 seconds later
+	ctx = ctx.WithBlockTime(origHeader.Time.Add(time.Second * 7))
+	EndBlocker(ctx, keeper)
+	validator, found = keeper.GetValidator(ctx, validatorAddr)
+	require.True(t, found)
+	require.True(t, validator.GetStatus() == sdk.Unbonded, "%v", validator)
+}
+
 func TestUnbondingPeriod(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	validatorAddr := sdk.ValAddress(keep.Addrs[0])

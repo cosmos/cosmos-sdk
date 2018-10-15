@@ -20,7 +20,7 @@ We will describe the steps to run and interract with a full-node for the Cosmos 
 
 First, you need to [install the software](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/getting-started/installation.md).
 
-Then, you can start [running a full-node](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/getting-started/full-node.md).
+Then, you can start [running a full-node](https://github.com/cosmos/cosmos-sdk/blob/develop/docs/getting-started/join-testnet.md).
 
 ### Command-Line interface
 

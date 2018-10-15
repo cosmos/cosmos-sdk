@@ -28,23 +28,32 @@ func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (signed bool) {
+func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64) (missed bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(GetValidatorSigningBitArrayKey(address, index))
+	bz := store.Get(GetValidatorMissedBlockBitArrayKey(address, index))
 	if bz == nil {
-		// lazy: treat empty key as unsigned
-		signed = false
+		// lazy: treat empty key as not missed
+		missed = false
 		return
 	}
-	k.cdc.MustUnmarshalBinary(bz, &signed)
+	k.cdc.MustUnmarshalBinary(bz, &missed)
 	return
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, signed bool) {
+func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(signed)
-	store.Set(GetValidatorSigningBitArrayKey(address, index), bz)
+	bz := k.cdc.MustMarshalBinary(missed)
+	store.Set(GetValidatorMissedBlockBitArrayKey(address, index), bz)
+}
+
+// Stored by *validator* address (not operator address)
+func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, GetValidatorMissedBlockBitArrayPrefixKey(address))
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
 }
 
 // Construct a new `ValidatorSigningInfo` struct

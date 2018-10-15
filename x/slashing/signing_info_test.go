@@ -28,7 +28,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 	require.Equal(t, info.MissedBlocksCounter, int64(10))
 }
 
-func TestGetSetValidatorSigningBitArray(t *testing.T) {
+func TestGetSetValidatorMissedBlockBitArray(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t, DefaultParams())
 	missed := keeper.getValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0)
 	require.False(t, missed) // treat empty key as not missed

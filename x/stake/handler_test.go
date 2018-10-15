@@ -612,12 +612,12 @@ func TestValidatorQueue(t *testing.T) {
 	keeper.SetParams(ctx, params)
 
 	// create the validator
-	msgCreateValidator := newTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
 	// bond a delegator
-	msgDelegate := newTestMsgDelegate(delegatorAddr, validatorAddr, 10)
+	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, 10)
 	got = handleMsgDelegate(ctx, msgDelegate, keeper)
 	require.True(t, got.IsOK(), "expected ok, got %v", got)
 

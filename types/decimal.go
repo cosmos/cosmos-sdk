@@ -244,10 +244,6 @@ func (d Dec) Quo(d2 Dec) Dec {
 // quotient
 func (d Dec) QuoInt(i Int) Dec {
 	mul := new(big.Int).Quo(d.Int, i.i)
-
-	if mul.BitLen() > 255+DecimalPrecisionBits {
-		panic("Int overflow")
-	}
 	return Dec{mul}
 }
 

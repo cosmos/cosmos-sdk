@@ -90,6 +90,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyFeeCollection := sdk.NewKVStoreKey("fee")
 	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -101,15 +102,18 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyFeeCollection, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	cdc := MakeTestCodec()
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
 	ck := bank.NewBaseKeeper(accountMapper)
-	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, stake.DefaultCodespace)
+	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	sk.SetPool(ctx, stake.InitialPool())
 	sk.SetParams(ctx, stake.DefaultParams())
 	sk.InitIntraTxCounter(ctx)
@@ -126,8 +130,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	}
 
 	fck := DummyFeeCollectionKeeper{}
-	pk := params.NewKeeper(cdc, keyParams)
-	keeper := NewKeeper(cdc, keyDistr, tkeyDistr, pk.Setter(), ck, sk, fck, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyDistr, tkeyDistr, pk.Subspace(DefaultParamspace), ck, sk, fck, types.DefaultCodespace)
 
 	// set the distribution hooks on staking
 	sk = sk.WithHooks(keeper.Hooks())

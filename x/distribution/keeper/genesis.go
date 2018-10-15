@@ -6,7 +6,7 @@ import (
 )
 
 // Get the set of all validator-distribution-info's with no limits, used during genesis dump
-func (k Keeper) GetAllVDIs(ctx sdk.Context) (vdis []types.ValidatorDistInfo) {
+func (k Keeper) GetAllValidatorDistInfos(ctx sdk.Context) (vdis []types.ValidatorDistInfo) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
 	defer iterator.Close()
@@ -20,7 +20,7 @@ func (k Keeper) GetAllVDIs(ctx sdk.Context) (vdis []types.ValidatorDistInfo) {
 }
 
 // Get the set of all delegator-distribution-info's with no limits, used during genesis dump
-func (k Keeper) GetAllDDIs(ctx sdk.Context) (ddis []types.DelegationDistInfo) {
+func (k Keeper) GetAllDelegationDistInfos(ctx sdk.Context) (ddis []types.DelegationDistInfo) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, DelegationDistInfoKey)
 	defer iterator.Close()
@@ -34,7 +34,7 @@ func (k Keeper) GetAllDDIs(ctx sdk.Context) (ddis []types.DelegationDistInfo) {
 }
 
 // Get the set of all delegator-withdraw addresses with no limits, used during genesis dump
-func (k Keeper) GetAllDWIs(ctx sdk.Context) (dwis []types.DelegatorWithdrawInfo) {
+func (k Keeper) GetAllDelegatorWithdrawInfos(ctx sdk.Context) (dwis []types.DelegatorWithdrawInfo) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, DelegationDistInfoKey)
 	defer iterator.Close()

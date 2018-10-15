@@ -46,14 +46,17 @@ func TestAllocateFeesBasic(t *testing.T) {
 	keeper.AllocateFees(ctx)
 
 	// verify that these fees have been received by the feePool
+	percentProposer := sdk.NewDecWithPrec(5, 2)
+	percentRemaining := sdk.OneDec().Sub(percentProposer)
 	feePool = keeper.GetFeePool(ctx)
-	expRes := sdk.NewDecFromInt(feeInputs).Mul(sdk.NewDecWithPrec(95, 2)) // 5% goes to proposer
+	expRes := sdk.NewDecFromInt(feeInputs).Mul(percentRemaining)
 	require.Equal(t, 1, len(feePool.Pool))
 	require.True(sdk.DecEq(t, expRes, feePool.Pool[0].Amount))
 }
 
 func TestAllocateFeesWithCommunityTax(t *testing.T) {
-	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.NewDecWithPrec(1, 2)) //1%
+	communityTax := sdk.NewDecWithPrec(1, 2) //1%
+	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, communityTax)
 	stakeHandler := stake.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
@@ -74,13 +77,16 @@ func TestAllocateFeesWithCommunityTax(t *testing.T) {
 	// verify that these fees have been received by the feePool
 	feePool := keeper.GetFeePool(ctx)
 	// 5% goes to proposer, 1% community tax
-	expRes := sdk.NewDecFromInt(feeInputs).Mul(sdk.NewDecWithPrec(94, 2))
+	percentProposer := sdk.NewDecWithPrec(5, 2)
+	percentRemaining := sdk.OneDec().Sub(communityTax.Add(percentProposer))
+	expRes := sdk.NewDecFromInt(feeInputs).Mul(percentRemaining)
 	require.Equal(t, 1, len(feePool.Pool))
 	require.True(sdk.DecEq(t, expRes, feePool.Pool[0].Amount))
 }
 
 func TestAllocateFeesWithPartialPrecommitPower(t *testing.T) {
-	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.NewDecWithPrec(1, 2)) //1%
+	communityTax := sdk.NewDecWithPrec(1, 2)
+	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, communityTax)
 	stakeHandler := stake.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
@@ -95,13 +101,16 @@ func TestAllocateFeesWithPartialPrecommitPower(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetPercentPrecommitVotes(ctx, sdk.NewDecWithPrec(25, 2))
+	percentPrecommitVotes := sdk.NewDecWithPrec(25, 2)
+	keeper.SetPercentPrecommitVotes(ctx, percentPrecommitVotes)
 	keeper.AllocateFees(ctx)
 
 	// verify that these fees have been received by the feePool
 	feePool := keeper.GetFeePool(ctx)
-	// 1% + 4%*0.25 goes to proposer, 1% community tax
-	expRes := sdk.NewDecFromInt(feeInputs).Mul(sdk.NewDecWithPrec(97, 2))
+	// 1% + 4%*0.25 to proposer + 1% community tax = 97%
+	percentProposer := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(percentPrecommitVotes))
+	percentRemaining := sdk.OneDec().Sub(communityTax.Add(percentProposer))
+	expRes := sdk.NewDecFromInt(feeInputs).Mul(percentRemaining)
 	require.Equal(t, 1, len(feePool.Pool))
 	require.True(sdk.DecEq(t, expRes, feePool.Pool[0].Amount))
 }

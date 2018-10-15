@@ -14,11 +14,14 @@ var (
 	// transient
 	ProposerKey              = []byte{0x00} // key for storing the proposer operator address
 	PercentPrecommitVotesKey = []byte{0x01} // key for storing the power of the precommit validators
+
+	// params store
+	ParamStoreKeyCommunityTax = []byte("distr/community-tax")
 )
 
-// nolint
 const (
-	ParamStoreKeyCommunityTax = "distr/community-tax"
+	// default paramspace for params keeper
+	DefaultParamspace = "distr"
 )
 
 // gets the key for the validator distribution info from address

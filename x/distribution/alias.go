@@ -12,7 +12,7 @@ type (
 	Hooks  = keeper.Hooks
 
 	DelegatorWithdrawInfo = types.DelegatorWithdrawInfo
-	DelegationDistInfo     = types.DelegationDistInfo
+	DelegationDistInfo    = types.DelegationDistInfo
 	ValidatorDistInfo     = types.ValidatorDistInfo
 	TotalAccum            = types.TotalAccum
 	FeePool               = types.FeePool
@@ -34,9 +34,10 @@ var (
 	GetDelegatorWithdrawAddrKey = keeper.GetDelegatorWithdrawAddrKey
 	FeePoolKey                  = keeper.FeePoolKey
 	ValidatorDistInfoKey        = keeper.ValidatorDistInfoKey
-	DelegationDistInfoKey        = keeper.DelegationDistInfoKey
+	DelegationDistInfoKey       = keeper.DelegationDistInfoKey
 	DelegatorWithdrawInfoKey    = keeper.DelegatorWithdrawInfoKey
 	ProposerKey                 = keeper.ProposerKey
+	DefaultParamspace           = keeper.DefaultParamspace
 
 	InitialFeePool = types.InitialFeePool
 

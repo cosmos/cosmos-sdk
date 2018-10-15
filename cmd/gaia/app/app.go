@@ -111,8 +111,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.distrKeeper = distr.NewKeeper(
 		app.cdc,
 		app.keyDistr, app.tkeyDistr,
-		app.paramsKeeper.Setter(), app.bankKeeper, app.stakeKeeper,
-		app.feeCollectionKeeper,
+		app.paramsKeeper.Subspace(distr.DefaultParamspace),
+		app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper,
 		app.RegisterCodespace(stake.DefaultCodespace),
 	)
 	app.slashingKeeper = slashing.NewKeeper(

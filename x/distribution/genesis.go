@@ -26,8 +26,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	feePool := keeper.GetFeePool(ctx)
 	communityTax := keeper.GetCommunityTax(ctx)
-	vdis := keeper.GetAllVDIs(ctx)
-	ddis := keeper.GetAllDDIs(ctx)
-	dwis := keeper.GetAllDWIs(ctx)
+	vdis := keeper.GetAllValidatorDistInfos(ctx)
+	ddis := keeper.GetAllDelegationDistInfos(ctx)
+	dwis := keeper.GetAllDelegatorWithdrawInfos(ctx)
 	return NewGenesisState(feePool, communityTax, vdis, ddis, dwis)
 }

@@ -12,7 +12,7 @@ type Keeper struct {
 	storeKey            sdk.StoreKey
 	storeTKey           sdk.StoreKey
 	cdc                 *codec.Codec
-	ps                  params.Setter
+	paramSpace          params.Subspace
 	bankKeeper          types.BankKeeper
 	stakeKeeper         types.StakeKeeper
 	feeCollectionKeeper types.FeeCollectionKeeper
@@ -21,14 +21,14 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ps params.Setter, ck types.BankKeeper,
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
 	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{
 		storeKey:            key,
 		storeTKey:           tkey,
 		cdc:                 cdc,
-		ps:                  ps,
+		paramSpace:          paramSpace.WithTypeTable(ParamTypeTable()),
 		bankKeeper:          ck,
 		stakeKeeper:         sk,
 		feeCollectionKeeper: fck,
@@ -104,15 +104,22 @@ func (k Keeper) SetPercentPrecommitVotes(ctx sdk.Context, percentPrecommitVotes 
 //______________________________________________________________________
 // PARAM STORE
 
+// Type declaration for parameters
+func ParamTypeTable() params.TypeTable {
+	return params.NewTypeTable(
+		ParamStoreKeyCommunityTax, sdk.Dec{},
+	)
+}
+
 // Returns the current CommunityTax rate from the global param store
 // nolint: errcheck
 func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
 	var communityTax sdk.Dec
-	k.ps.Get(ctx, ParamStoreKeyCommunityTax, &communityTax)
+	k.paramSpace.Get(ctx, ParamStoreKeyCommunityTax, &communityTax)
 	return communityTax
 }
 
 // nolint: errcheck
 func (k Keeper) SetCommunityTax(ctx sdk.Context, communityTax sdk.Dec) {
-	k.ps.Set(ctx, ParamStoreKeyCommunityTax, &communityTax)
+	k.paramSpace.Set(ctx, ParamStoreKeyCommunityTax, &communityTax)
 }

@@ -188,7 +188,9 @@ func (c Context) WithBlockTime(newTime time.Time) Context {
 }
 
 func (c Context) WithBlockHeight(height int64) Context {
-	return c.withValue(contextKeyBlockHeight, height)
+	newHeader := c.BlockHeader()
+	newHeader.Height = height
+	return c.withValue(contextKeyBlockHeight, height).withValue(contextKeyBlockHeader, newHeader)
 }
 
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {

@@ -374,12 +374,8 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	}
 	keeper.SetDelegation(ctx, delegation)
 
-	header := ctx.BlockHeader()
-	blockHeight := int64(10)
-	header.Height = blockHeight
-	blockTime := time.Unix(333, 0)
-	header.Time = blockTime
-	ctx = ctx.WithBlockHeader(header)
+	ctx = ctx.WithBlockHeight(10)
+	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
 	// unbond the all self-delegation to put validator in unbonding state
 	_, err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
@@ -391,17 +387,12 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, blockHeight, validator.UnbondingHeight)
+	require.Equal(t, ctx.BlockHeight(), validator.UnbondingHeight)
 	params := keeper.GetParams(ctx)
-	require.True(t, blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingMinTime))
+	require.True(t, ctx.BlockHeader().Time.Add(params.UnbondingTime).Equal(validator.UnbondingMinTime))
 
-	// change the context to one which makes the validator considered unbonded
-	header = ctx.BlockHeader()
-	blockHeight2 := int64(20)
-	header.Height = blockHeight2
-	blockTime2 := time.Unix(444, 0).Add(params.UnbondingTime)
-	header.Time = blockTime2
-	ctx = ctx.WithBlockHeader(header)
+	// unbond the validator
+	keeper.unbondingToUnbonded(ctx, validator)
 
 	// unbond some of the other delegation's shares
 	_, err = keeper.BeginUnbonding(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
@@ -696,12 +687,8 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	validator2 = testingUpdateValidator(keeper, ctx, validator2)
 	require.Equal(t, sdk.Bonded, validator2.Status)
 
-	header := ctx.BlockHeader()
-	blockHeight := int64(10)
-	header.Height = blockHeight
-	blockTime := time.Unix(333, 0)
-	header.Time = blockTime
-	ctx = ctx.WithBlockHeader(header)
+	ctx = ctx.WithBlockHeight(10)
+	ctx = ctx.WithBlockTime(time.Unix(333, 0))
 
 	// unbond the all self-delegation to put validator in unbonding state
 	_, err := keeper.BeginUnbonding(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
@@ -713,23 +700,18 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, blockHeight, validator.UnbondingHeight)
+	require.Equal(t, ctx.BlockHeight(), validator.UnbondingHeight)
 	params := keeper.GetParams(ctx)
-	require.True(t, blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingMinTime))
+	require.True(t, ctx.BlockHeader().Time.Add(params.UnbondingTime).Equal(validator.UnbondingMinTime))
 
-	// change the context to one which makes the validator considered unbonded
-	header = ctx.BlockHeader()
-	blockHeight2 := int64(20)
-	header.Height = blockHeight2
-	blockTime2 := time.Unix(444, 0).Add(params.UnbondingTime)
-	header.Time = blockTime2
-	ctx = ctx.WithBlockHeader(header)
+	// unbond the validator
+	keeper.unbondingToUnbonded(ctx, validator)
 
-	// unbond some of the other delegation's shares
+	// redelegate some of the delegation's shares
 	_, err = keeper.BeginRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1], sdk.NewDec(6))
 	require.NoError(t, err)
 
-	// no ubd should have been found, coins should have been returned direcly to account
-	ubd, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
-	require.False(t, found, "%v", ubd)
+	// no red should have been found
+	red, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
+	require.False(t, found, "%v", red)
 }

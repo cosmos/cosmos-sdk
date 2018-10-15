@@ -29,6 +29,7 @@ var (
 	RedelegationByValDstIndexKey     = []byte{0x0C} // prefix for each key for an redelegation, by destination validator operator
 	UnbondingQueueKey                = []byte{0x0D} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey             = []byte{0x0E} // prefix for the timestamps in redelegations queue
+	ValidatorQueueKey                = []byte{0x0F} // prefix for the timestamps in validator queue
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -84,6 +85,12 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 	binary.BigEndian.PutUint16(key[powerBytesLen+9:powerBytesLen+11], ^uint16(validator.BondIntraTxCounter))
 
 	return key
+}
+
+// gets the prefix for all unbonding delegations from a delegator
+func GetValidatorQueueTimeKey(timestamp time.Time) []byte {
+	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	return append(ValidatorQueueKey, bz...)
 }
 
 //______________________________________________________________________________

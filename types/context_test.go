@@ -164,15 +164,16 @@ func TestContextWithCustom(t *testing.T) {
 	meter := types.NewGasMeter(10000)
 	minFees := types.Coins{types.NewInt64Coin("feeCoin", 1)}
 
-	ctx = types.NewContext(nil, header, ischeck, logger).
+	ctx = types.NewContext(nil, header, ischeck, logger)
+	require.Equal(t, header, ctx.BlockHeader())
+
+	ctx = ctx.
 		WithBlockHeight(height).
 		WithChainID(chainid).
 		WithTxBytes(txbytes).
 		WithVoteInfos(voteinfos).
 		WithGasMeter(meter).
 		WithMinimumFees(minFees)
-
-	require.Equal(t, header, ctx.BlockHeader())
 	require.Equal(t, height, ctx.BlockHeight())
 	require.Equal(t, chainid, ctx.ChainID())
 	require.Equal(t, ischeck, ctx.IsCheckTx())

@@ -9,9 +9,7 @@ import (
 func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
 	// Update the signing info start height or create a new signing info
 	signingInfo, found := k.getValidatorSigningInfo(ctx, address)
-	if found {
-		signingInfo.StartHeight = ctx.BlockHeight()
-	} else {
+	if !found {
 		signingInfo = ValidatorSigningInfo{
 			StartHeight:         ctx.BlockHeight(),
 			IndexOffset:         0,

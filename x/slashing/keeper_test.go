@@ -380,6 +380,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	sk.SetParams(ctx, params)
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
+	consAddr := sdk.ConsAddress(addr)
 	sh := stake.NewHandler(sk)
 	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
@@ -425,31 +426,48 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	require.Equal(t, sdk.Bonded, validator.Status)
 
 	// validator misses 501 blocks
-	for ; height < int64(1203); height++ {
+	for ; height < int64(1201); height++ {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), newAmt, false)
 	}
 
-	// should not yet be jailed & kicked
+	// should now be jailed & kicked
+	stake.EndBlocker(ctx, sk)
+	validator, _ = sk.GetValidator(ctx, addr)
+	require.Equal(t, sdk.Unbonding, validator.Status)
+
+	signInfo, found := keeper.getValidatorSigningInfo(ctx, consAddr)
+	require.True(t, found)
+	require.Equal(t, int64(0), signInfo.MissedBlocksCounter)
+	require.Equal(t, int64(0), signInfo.IndexOffset)
+	// array should be cleared
+	for offset := int64(0); offset < keeper.SignedBlocksWindow(ctx); offset++ {
+		missed := keeper.getValidatorMissedBlockBitArray(ctx, consAddr, offset)
+		require.False(t, missed)
+	}
+
+	// some blocks pass
+	height = int64(5000)
+	ctx = ctx.WithBlockHeight(height)
+
+	// validator rejoins and starts signing again
+	sk.Unjail(ctx, consAddr)
+	keeper.handleValidatorSignature(ctx, val.Address(), newAmt, true)
+
+	// validator should not be kicked
 	stake.EndBlocker(ctx, sk)
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 
-	// validator signs 500 blocks
-	for ; height < int64(1702); height++ {
+	// validator misses 501 blocks
+	for height = int64(5001); height < int64(5503); height++ {
 		ctx = ctx.WithBlockHeight(height)
-		keeper.handleValidatorSignature(ctx, val.Address(), newAmt, true)
+		keeper.handleValidatorSignature(ctx, val.Address(), newAmt, false)
 	}
 
-	// should have exceeded threshold
-	signingInfo, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
-	require.True(t, found)
-	require.Equal(t, int64(700), signingInfo.StartHeight)
-	require.Equal(t, int64(1102), signingInfo.IndexOffset)
-	require.Equal(t, int64(501), signingInfo.MissedBlocksCounter)
-
-	// should be jailed & kicked
+	// validator should now be jailed & kicked
 	stake.EndBlocker(ctx, sk)
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Unbonding, validator.Status)
+
 }

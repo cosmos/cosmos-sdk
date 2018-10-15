@@ -46,11 +46,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrValidatorJailed(k.codespace).Result()
 	}
 
-	// update the starting height so the validator can't be immediately jailed
-	// again
-	info.StartHeight = ctx.BlockHeight()
-	k.setValidatorSigningInfo(ctx, consAddr, info)
-
+	// unjail the validator
 	k.validatorSet.Unjail(ctx, consAddr)
 
 	tags := sdk.NewTags("action", []byte("unjail"), "validator", []byte(msg.ValidatorAddr.String()))

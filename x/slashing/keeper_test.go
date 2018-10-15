@@ -245,10 +245,10 @@ func TestHandleAbsentValidator(t *testing.T) {
 	pool = sk.GetPool(ctx)
 	require.Equal(t, amtInt-slashAmt-secondSlashAmt, pool.BondedTokens.RoundInt64())
 
-	// validator start height should have been changed
+	// validator start height should not have been changed
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
-	require.Equal(t, height, info.StartHeight)
+	require.Equal(t, int64(0), info.StartHeight)
 	// we've missed 2 blocks more than the maximum, so the counter was reset to 0 at 1 block more and is now 1
 	require.Equal(t, int64(1), info.MissedBlocksCounter)
 

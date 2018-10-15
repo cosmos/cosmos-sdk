@@ -17,18 +17,18 @@ Information about validator activity is tracked in a `ValidatorSigningInfo`.
 It is indexed in the store as follows:
 
 - SigningInfo: ` 0x01 | ValTendermintAddr -> amino(valSigningInfo)`
-- SigningBitArray: ` 0x02 | ValTendermintAddr | LittleEndianUint64(signArrayIndex) -> VarInt(didSign)`
+- MissedBlocksBitArray: ` 0x02 | ValTendermintAddr | LittleEndianUint64(signArrayIndex) -> VarInt(didMiss)`
 
 The first map allows us to easily lookup the recent signing info for a
 validator, according to the Tendermint validator address. The second map acts as
-a bit-array of size `SIGNED_BLOCKS_WINDOW` that tells us if the validator signed for a given index in the bit-array.
+a bit-array of size `SIGNED_BLOCKS_WINDOW` that tells us if the validator missed the block for a given index in the bit-array.
 
 The index in the bit-array is given as little endian uint64.
 
 The result is a `varint` that takes on `0` or `1`, where `0` indicates the
-validator did not sign the corresponding block, and `1` indicates they did.
+validator did not miss (did sign) the corresponding block, and `1` indicates they missed the block (did not sign).
 
-Note that the SigningBitArray is not explicitly initialized up-front. Keys are
+Note that the MissedBlocksBitArray is not explicitly initialized up-front. Keys are
 added as we progress through the first `SIGNED_BLOCKS_WINDOW` blocks for a newly
 bonded validator.
 

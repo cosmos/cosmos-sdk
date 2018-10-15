@@ -93,14 +93,14 @@ for val in block.Validators:
 
   index := signInfo.IndexOffset % SIGNED_BLOCKS_WINDOW
   signInfo.IndexOffset++
-  previous = SigningBitArray.Get(val.Address, index)
+  previous = MissedBlockBitArray.Get(val.Address, index)
 
   // update counter if array has changed
   if !previous and val in block.AbsentValidators:
-    SigningBitArray.Set(val.Address, index, true)
+    MissedBlockBitArray.Set(val.Address, index, true)
     signInfo.MissedBlocksCounter++
   else if previous and val not in block.AbsentValidators:
-    SigningBitArray.Set(val.Address, index, false)
+    MissedBlockBitArray.Set(val.Address, index, false)
     signInfo.MissedBlocksCounter--
   // else previous == val not in block.AbsentValidators, no change
 
@@ -111,7 +111,9 @@ for val in block.Validators:
   maxMissed = SIGNED_BLOCKS_WINDOW / 2
   if height > minHeight AND signInfo.MissedBlocksCounter > maxMissed:
     signInfo.JailedUntil = block.Time + DOWNTIME_UNBOND_DURATION
-
+    signInfo.IndexOffset = 0
+    signInfo.MissedBlocksCounter = 0
+    clearMissedBlockBitArray()
     slash & unbond the validator
 
   SigningInfo.Set(val.Address, signInfo)

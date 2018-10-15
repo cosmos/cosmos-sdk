@@ -9,7 +9,7 @@ import (
 )
 
 func TestHookOnValidatorBonded(t *testing.T) {
-	ctx, _, _, _, keeper := createTestInput(t)
+	ctx, _, _, _, keeper := createTestInput(t, DefaultParams())
 	addr := sdk.ConsAddress(addrs[0])
 	keeper.onValidatorBonded(ctx, addr)
 	period := keeper.getValidatorSlashingPeriodForHeight(ctx, addr, ctx.BlockHeight())
@@ -17,7 +17,7 @@ func TestHookOnValidatorBonded(t *testing.T) {
 }
 
 func TestHookOnValidatorBeginUnbonding(t *testing.T) {
-	ctx, _, _, _, keeper := createTestInput(t)
+	ctx, _, _, _, keeper := createTestInput(t, DefaultParams())
 	addr := sdk.ConsAddress(addrs[0])
 	keeper.onValidatorBonded(ctx, addr)
 	keeper.onValidatorBeginUnbonding(ctx, addr)

@@ -151,6 +151,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(0), info.StartHeight)
 	require.Equal(t, int64(0), info.IndexOffset)
 	require.Equal(t, int64(0), info.MissedBlocksCounter)
+	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 	height := int64(0)
 
 	// 1000 first blocks OK

@@ -88,12 +88,41 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 
 	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
-	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
-	app.stakeKeeper = app.stakeKeeper.WithHooks(app.slashingKeeper.Hooks())
-	app.govKeeper = gov.NewKeeper(app.cdc, app.keyGov, app.paramsKeeper.Setter(), app.bankKeeper, app.stakeKeeper, app.RegisterCodespace(gov.DefaultCodespace))
-	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(app.cdc, app.keyFeeCollection)
+
+	app.paramsKeeper = params.NewKeeper(
+		app.cdc,
+		app.keyParams, app.tkeyParams,
+	)
+
+	app.stakeKeeper = stake.NewKeeper(
+		app.cdc,
+		app.keyStake, app.tkeyStake,
+		app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace),
+		app.RegisterCodespace(stake.DefaultCodespace),
+	)
+
+	app.slashingKeeper = slashing.NewKeeper(
+		app.cdc,
+		app.keySlashing,
+		app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
+		app.RegisterCodespace(slashing.DefaultCodespace),
+	)
+
+	app.stakeKeeper = app.stakeKeeper.WithHooks(
+		app.slashingKeeper.Hooks(),
+	)
+
+	app.govKeeper = gov.NewKeeper(
+		app.cdc,
+		app.keyGov,
+		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, app.stakeKeeper,
+		app.RegisterCodespace(gov.DefaultCodespace),
+	)
+
+	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
+		app.cdc,
+		app.keyFeeCollection,
+	)
 
 	// register message routes
 	app.Router().
@@ -184,7 +213,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	}
 
 	// load the address to pubkey map
-	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.StakeData)
+	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
 
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	err = GaiaValidateGenesisState(genesisState)

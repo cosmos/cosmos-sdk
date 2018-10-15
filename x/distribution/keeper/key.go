@@ -16,7 +16,9 @@ var (
 	PercentPrecommitVotesKey = []byte{0x01} // key for storing the power of the precommit validators
 
 	// params store
-	ParamStoreKeyCommunityTax = []byte("distr/community-tax")
+	ParamStoreKeyCommunityTax        = []byte("community-tax")
+	ParamStoreKeyBaseProposerReward  = []byte("base-proposer-reward")
+	ParamStoreKeyBonusProposerReward = []byte("bonus-proposer-reward")
 )
 
 const (

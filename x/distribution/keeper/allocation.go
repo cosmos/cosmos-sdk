@@ -23,8 +23,9 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 
 	// allocated rewards to proposer
 	percentVotes := k.GetPercentPrecommitVotes(ctx)
-
-	proposerMultiplier := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(percentVotes))
+	baseProposerReward := k.GetBaseProposerReward(ctx)
+	bonusProposerReward := k.GetBonusProposerReward(ctx)
+	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.Mul(percentVotes))
 	proposerReward := feesCollectedDec.MulDec(proposerMultiplier)
 
 	// apply commission

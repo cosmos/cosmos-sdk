@@ -13,17 +13,21 @@ type DelegatorWithdrawInfo struct {
 type GenesisState struct {
 	FeePool                FeePool                 `json:"fee_pool"`
 	CommunityTax           sdk.Dec                 `json:"community_tax"`
+	BaseProposerReward     sdk.Dec                 `json:"base_proposer_reward"`
+	BonusProposerReward    sdk.Dec                 `json:"bonus_proposer_reward"`
 	ValidatorDistInfos     []ValidatorDistInfo     `json:"validator_dist_infos"`
 	DelegationDistInfos    []DelegationDistInfo    `json:"delegator_dist_infos"`
 	DelegatorWithdrawInfos []DelegatorWithdrawInfo `json:"delegator_withdraw_infos"`
 }
 
-func NewGenesisState(feePool FeePool, communityTax sdk.Dec,
+func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
 	vdis []ValidatorDistInfo, ddis []DelegationDistInfo, dwis []DelegatorWithdrawInfo) GenesisState {
 
 	return GenesisState{
 		FeePool:                feePool,
 		CommunityTax:           communityTax,
+		BaseProposerReward:     baseProposerReward,
+		BonusProposerReward:    bonusProposerReward,
 		ValidatorDistInfos:     vdis,
 		DelegationDistInfos:    ddis,
 		DelegatorWithdrawInfos: dwis,
@@ -33,8 +37,10 @@ func NewGenesisState(feePool FeePool, communityTax sdk.Dec,
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		FeePool:      InitialFeePool(),
-		CommunityTax: sdk.NewDecWithPrec(2, 2), // 2%
+		FeePool:             InitialFeePool(),
+		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
+		BaseProposerReward:  sdk.NewDecWithPrec(1, 2), // 1%
+		BonusProposerReward: sdk.NewDecWithPrec(4, 2), // 4%
 	}
 }
 
@@ -53,6 +59,8 @@ func DefaultGenesisWithValidators(valAddrs []sdk.ValAddress) GenesisState {
 	return GenesisState{
 		FeePool:             InitialFeePool(),
 		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
+		BaseProposerReward:  sdk.NewDecWithPrec(1, 2), // 1%
+		BonusProposerReward: sdk.NewDecWithPrec(4, 2), // 4%
 		ValidatorDistInfos:  vdis,
 		DelegationDistInfos: ddis,
 	}

@@ -46,7 +46,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// should not be slashing unbonded
-	if validator.IsUnbonded(ctx) {
+	if validator.Status == sdk.Unbonded {
 		panic(fmt.Sprintf("should not be slashing unbonded validator: %s", validator.GetOperator()))
 	}
 

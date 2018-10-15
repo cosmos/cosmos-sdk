@@ -131,8 +131,9 @@ func (k Keeper) unbondedToBonded(ctx sdk.Context, validator types.Validator) typ
 	return k.bondValidator(ctx, validator)
 }
 
+// switches a validator from unbonding state to unbonded state
 func (k Keeper) unbondingToUnbonded(ctx sdk.Context, validator types.Validator) types.Validator {
-	if validator.Status != sdk.Unbonded {
+	if validator.Status != sdk.Unbonding {
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
 	return k.completeUnbondingValidator(ctx, validator)
@@ -212,6 +213,9 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.SetValidator(ctx, validator)
 
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
+
+	// Adds to unbonding validator queue
+	k.InsertValidatorQueue(ctx, validator)
 
 	// call the unbond hook if present
 	if k.hooks != nil {

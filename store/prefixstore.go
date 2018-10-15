@@ -26,6 +26,9 @@ func cloneAppend(bz []byte, tail []byte) (res []byte) {
 }
 
 func (s prefixStore) key(key []byte) (res []byte) {
+	if key == nil {
+		panic("nil key on prefixStore")
+	}
 	res = cloneAppend(s.prefix, key)
 	return
 }

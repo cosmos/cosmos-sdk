@@ -7,8 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/privval"
+	"os"
 	"path/filepath"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
@@ -21,10 +23,11 @@ import (
 )
 
 const (
-	flagChainID = "chain-id"
-	flagWithTxs = "with-txs"
-	flagMoniker = "moniker"
-	flagOverwrite = "overwrite"
+	flagChainID              = "chain-id"
+	flagWithTxs              = "with-txs"
+	flagMoniker              = "moniker"
+	flagOverwrite            = "overwrite"
+	flagEnsurePrivValNodeKey = "ensure-privval-nodekey"
 )
 
 
@@ -72,7 +75,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	cmd.Flags().String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().Bool(flagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().String(flagMoniker, "", "moniker")
-	//cmd.Flags().AddFlagSet(appInit.FlagsAppGenState)
+	cmd.Flags().Bool(flagEnsurePrivValNodeKey, false, "Ensure priv_validator.json and node_key.json files are created and exit")
 	return cmd
 }
 
@@ -83,6 +86,16 @@ func initWithConfig(cdc *codec.Codec, appInit server.AppInit, config *cfg.Config
 		return
 	}
 	nodeID = string(nodeKey.ID())
+	if viper.GetBool(flagEnsurePrivValNodeKey) {
+		privValFile := config.PrivValidatorFile()
+		if !common.FileExists(privValFile) {
+			fmt.Fprintf(os.Stderr, "%s does not exist, creating ...\n", privValFile)
+		}
+		pk := readOrCreatePrivValidator(privValFile)
+		fmt.Fprintf(os.Stderr,"validator public key: %s\n", sdk.MustBech32ifyConsPub(pk))
+		return
+	}
+
 
 	genFile := config.GenesisFile()
 	if !overwriteGenesis && common.FileExists(genFile) {
@@ -119,7 +132,7 @@ func initWithConfig(cdc *codec.Codec, appInit server.AppInit, config *cfg.Config
 		}
 	} else {
 		var genesisState app.GenesisState
-		pubKey := readOrCreatePrivValidator(config)
+		pubKey := readOrCreatePrivValidator(config.PrivValidatorFile())
 		config.Moniker = moniker
 		genesisState, genValidator := app.DefaultState(config.Moniker, pubKey)
 		appState, err = codec.MarshalJSONIndent(cdc, genesisState)
@@ -157,9 +170,8 @@ func writeGenesisFile(cdc *codec.Codec, genesisFile, chainID string, validators 
 }
 
 // read of create the private key file for this config
-func readOrCreatePrivValidator(tmConfig *cfg.Config) crypto.PubKey {
+func readOrCreatePrivValidator(privValFile string) crypto.PubKey {
 	// private validator
-	privValFile := tmConfig.PrivValidatorFile()
 	var privValidator *privval.FilePV
 	if common.FileExists(privValFile) {
 		privValidator = privval.LoadFilePV(privValFile)

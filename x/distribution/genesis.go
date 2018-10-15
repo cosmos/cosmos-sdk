@@ -9,6 +9,8 @@ import (
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetFeePool(ctx, data.FeePool)
 	keeper.SetCommunityTax(ctx, data.CommunityTax)
+	keeper.SetBaseProposerReward(ctx, data.BaseProposerReward)
+	keeper.SetBonusProposerReward(ctx, data.BonusProposerReward)
 
 	for _, vdi := range data.ValidatorDistInfos {
 		keeper.SetValidatorDistInfo(ctx, vdi)

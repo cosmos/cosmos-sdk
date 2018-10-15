@@ -28,7 +28,7 @@ Next you will find a few useful CLI commands to interact with the Full-Node.
 
 #### Creating a key-pair
 
-To generate a new key (default ed25519 elliptic curve):
+To generate a new key (default secp256k1 elliptic curve):
 
 ```bash
 gaiacli keys add <your_key_name>

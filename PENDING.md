@@ -69,6 +69,7 @@ BREAKING CHANGES
     * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
     * [x/staking] \#2236 more distribution hooks for distribution
     * [x/stake] \#2394 Split up UpdateValidator into distinct state transitions applied only in EndBlock
+    * [x/stake] \#2412 Added an unbonding validator queue to EndBlock to automatically update validator.Status when finished Unbonding
 
 * Tendermint
   * Update tendermint version from v0.23.0 to v0.25.0, notable changes
@@ -170,6 +171,7 @@ IMPROVEMENTS
     calls which includes dynamic consumption of value length.
     * [types/decimal] \#2378 - Added truncate functionality to decimal
     * [client] [\#1184](https://github.com/cosmos/cosmos-sdk/issues/1184) Remove unused `client/tx/sign.go`.
+    * [tools] \#2464 Lock binary dependencies to a specific version
 
 * Tendermint
 

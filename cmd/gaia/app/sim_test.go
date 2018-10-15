@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	stake "github.com/cosmos/cosmos-sdk/x/stake"
 	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
@@ -55,7 +56,9 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	}
 
 	// Default genesis state
+	govGenesis := gov.DefaultGenesisState()
 	stakeGenesis := stake.DefaultGenesisState()
+	slashingGenesis := slashing.DefaultGenesisState()
 	var validators []stake.Validator
 	var delegations []stake.Delegation
 
@@ -81,10 +84,11 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	stakeGenesis.Params.InflationMin = sdk.NewDec(0)
 
 	genesis := GenesisState{
-		Accounts:  genesisAccounts,
-		StakeData: stakeGenesis,
-		DistrData: distr.DefaultGenesisWithValidators(valAddrs),
-		GovData:   gov.DefaultGenesisState(),
+		Accounts:     genesisAccounts,
+		StakeData:    stakeGenesis,
+		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),
+		SlashingData: slashingGenesis,
+		GovData:      govGenesis,
 	}
 
 	// Marshal genesis

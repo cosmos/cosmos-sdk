@@ -44,7 +44,7 @@ BREAKING CHANGES
     * [simulation] \#2162 Added back correct supply invariants
     * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
-    
+
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0
       * Validator set updates delayed by one block
@@ -76,7 +76,7 @@ BREAKING CHANGES
     * Mempool now won't build too large blocks, or too computationally expensive blocks
     * Maximum tx sizes and gas are now removed, and are implicitly the blocks maximums
     * ABCI validators no longer send the pubkey. The pubkey is only sent in validator updates
-    * Validator set changes are now delayed by one block 
+    * Validator set changes are now delayed by one block
     * Block header now includes the next validator sets hash
     * BFT time is implemented
     * Secp256k1 signature format has changed
@@ -92,6 +92,7 @@ FEATURES
   * [gaia-lite] [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) Add /sign endpoint to sign transactions generated with `generate_only=true`.
   * [gaia-lite] [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) Add /broadcast endpoint to broadcast transactions signed by the /sign endpoint.
   * [gaia-lite] [\#2113](https://github.com/cosmos/cosmos-sdk/issues/2113) Rename `/accounts/{address}/send` to `/bank/accounts/{address}/transfers`, rename `/accounts/{address}` to `/auth/accounts/{address}`
+  * [gaia-lite] [\#2478](https://github.com/cosmos/cosmos-sdk/issues/2478) Add query gov proposal's deposits endpoint
 
 * Gaia CLI  (`gaiacli`)
   * [cli] Cmds to query staking pool and params

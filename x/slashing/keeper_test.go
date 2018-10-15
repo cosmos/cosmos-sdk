@@ -375,6 +375,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// initial setup
+	// keeperTestParams set the SignedBlocksWindow to 1000 and MaxMissedBlocksPerWindow to 500
 	ctx, _, sk, _, keeper := createTestInput(t, keeperTestParams())
 	params := sk.GetParams(ctx)
 	params.MaxValidators = 1
@@ -426,8 +427,9 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 
-	// validator misses 501 blocks
-	for ; height < int64(1201); height++ {
+	// validator misses 500 more blocks, 501 total
+	latest := height
+	for ; height < latest+500; height++ {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), newAmt, false)
 	}
@@ -437,6 +439,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Unbonding, validator.Status)
 
+	// check all the signing information
 	signInfo, found := keeper.getValidatorSigningInfo(ctx, consAddr)
 	require.True(t, found)
 	require.Equal(t, int64(0), signInfo.MissedBlocksCounter)
@@ -454,14 +457,16 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator rejoins and starts signing again
 	sk.Unjail(ctx, consAddr)
 	keeper.handleValidatorSignature(ctx, val.Address(), newAmt, true)
+	height++
 
-	// validator should not be kicked
+	// validator should not be kicked since we reset counter/array when it was jailed
 	stake.EndBlocker(ctx, sk)
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 
 	// validator misses 501 blocks
-	for height = int64(5001); height < int64(5503); height++ {
+	latest = height
+	for ; height < latest+501; height++ {
 		ctx = ctx.WithBlockHeight(height)
 		keeper.handleValidatorSignature(ctx, val.Address(), newAmt, false)
 	}

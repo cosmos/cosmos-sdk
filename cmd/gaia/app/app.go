@@ -246,7 +246,11 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 			if err != nil {
 				panic(err)
 			}
-			res := app.BaseApp.Deliver(tx)
+			bz, err := app.cdc.MarshalBinary(tx)
+			if err != nil {
+				panic(err)
+			}
+			res := app.BaseApp.DeliverTx(bz)
 			if !res.IsOK() {
 				panic(res.Log)
 			}

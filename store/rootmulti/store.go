@@ -28,7 +28,7 @@ type Store struct {
 	lastCommitID types.CommitID
 	pruning      types.PruningStrategy
 	storesParams map[types.StoreKey]storeParams
-	stores       map[types.StoreKey]types.CommitKVStore
+	kvstores     map[types.StoreKey]types.CommitKVStore
 	keysByName   map[string]types.StoreKey
 
 	tracer *types.Tracer
@@ -43,7 +43,7 @@ func NewStore(db dbm.DB) *Store {
 	return &Store{
 		db:           db,
 		storesParams: make(map[types.StoreKey]storeParams),
-		stores:       make(map[types.StoreKey]types.CommitKVStore),
+		kvstores:     make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:   make(map[string]types.StoreKey),
 
 		tracer: new(types.Tracer),
@@ -64,7 +64,7 @@ func (rs *Store) GetGasTank() *types.GasTank {
 // Implements CommitMultiStore
 func (rs *Store) SetPruning(pruning types.PruningStrategy) {
 	rs.pruning = pruning
-	for _, substore := range rs.stores {
+	for _, substore := range rs.kvstores {
 		substore.SetPruning(pruning)
 	}
 }
@@ -89,13 +89,21 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, db dbm.DB) {
 
 // Implements CommitMultiStore.
 func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
-	return rs.stores[key]
+	return rs.kvstores[key]
 }
 
 // Implements CommitMultiStore.
 func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
-	return rs.stores[key].(types.CommitKVStore)
+	return rs.kvstores[key]
 }
+
+/*
+// Recursive MultiStore not yet implemented
+// Implements CommitMultiStore
+func (rs *Store) GetCommitMultiStore(key types.StoreKey) types.CommitMultiStore {
+	return rs.multistores[key]
+}
+*/
 
 // Implements CommitMultiStore.
 func (rs *Store) LoadLatestVersion() error {
@@ -129,7 +137,7 @@ func (rs *Store) LoadMultiStoreVersion(ver int64) error {
 		if info, ok := infos[key]; ok {
 			id = info.Core.CommitID
 		}
-		store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
+		store, err := rs.loadCommitKVStoreFromParams(key, id, storeParams)
 		if err != nil {
 			return fmt.Errorf("failed to load Store: %v", err)
 		}
@@ -269,7 +277,7 @@ func parsePath(path string) (storeName string, subpath string, err types.Error) 
 
 //----------------------------------------
 
-func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (store types.CommitKVStore, err error) {
+func (rs *Store) loadCommitKVStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (store types.CommitKVStore, err error) {
 	var db dbm.DB
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))

@@ -32,7 +32,6 @@ type Context struct {
 }
 
 // create a new context
-// nolint: unparam
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
 	c := Context{
 		Context: context.Background(),
@@ -74,7 +73,7 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedDefaultGasConfig)
+	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedKVGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
@@ -189,7 +188,9 @@ func (c Context) WithBlockTime(newTime time.Time) Context {
 }
 
 func (c Context) WithBlockHeight(height int64) Context {
-	return c.withValue(contextKeyBlockHeight, height)
+	newHeader := c.BlockHeader()
+	newHeader.Height = height
+	return c.withValue(contextKeyBlockHeight, height).withValue(contextKeyBlockHeader, newHeader)
 }
 
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {

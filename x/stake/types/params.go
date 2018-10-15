@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const (
@@ -21,6 +22,19 @@ const (
 	ValidatorUpdateDelay int64 = 1
 )
 
+// nolint - Keys for parameter access
+var (
+	KeyInflationRateChange = []byte("InflationRateChange")
+	KeyInflationMax        = []byte("InflationMax")
+	KeyInflationMin        = []byte("InflationMin")
+	KeyGoalBonded          = []byte("GoalBonded")
+	KeyUnbondingTime       = []byte("UnbondingTime")
+	KeyMaxValidators       = []byte("MaxValidators")
+	KeyBondDenom           = []byte("BondDenom")
+)
+
+var _ params.ParamSet = (*Params)(nil)
+
 // Params defines the high level settings for staking
 type Params struct {
 	InflationRateChange sdk.Dec `json:"inflation_rate_change"` // maximum annual change in inflation rate
@@ -32,6 +46,19 @@ type Params struct {
 
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
+}
+
+// Implements params.ParamSet
+func (p *Params) KeyValuePairs() params.KeyValuePairs {
+	return params.KeyValuePairs{
+		{KeyInflationRateChange, &p.InflationRateChange},
+		{KeyInflationMax, &p.InflationMax},
+		{KeyInflationMin, &p.InflationMin},
+		{KeyGoalBonded, &p.GoalBonded},
+		{KeyUnbondingTime, &p.UnbondingTime},
+		{KeyMaxValidators, &p.MaxValidators},
+		{KeyBondDenom, &p.BondDenom},
+	}
 }
 
 // Equal returns a boolean determining if two Param types are identical.

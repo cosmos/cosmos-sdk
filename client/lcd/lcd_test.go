@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/ethereum/go-ethereum/p2p"
+	p2p "github.com/tendermint/tendermint/p2p"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -756,8 +756,8 @@ func TestProposalsQuery(t *testing.T) {
 	require.Len(t, deposits, 2)
 	deposit = getDeposit(t, port, proposalID2, addr)
 	require.Equal(t, deposit, deposits[0])
-	deposit2 := getDeposit(t, port, proposalID2, addr2)
-	require.Equal(t, deposit2, deposits[1])
+	deposit = getDeposit(t, port, proposalID2, addr2)
+	require.Equal(t, deposit, deposits[1])
 
 	deposits = getDeposits(t, port, proposalID3)
 	require.Len(t, deposits, 1)

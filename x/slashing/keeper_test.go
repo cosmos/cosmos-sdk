@@ -186,7 +186,8 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)+1, info.MissedBlocksCounter)
+	// counter now reset to zero
+	require.Equal(t, int64(0), info.MissedBlocksCounter)
 
 	// end block
 	stake.EndBlocker(ctx, sk)
@@ -207,7 +208,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)+2, info.MissedBlocksCounter)
+	require.Equal(t, int64(1), info.MissedBlocksCounter)
 
 	// end block
 	stake.EndBlocker(ctx, sk)
@@ -248,8 +249,8 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, height, info.StartHeight)
-	// we've missed 2 blocks more than the maximum
-	require.Equal(t, keeper.SignedBlocksWindow(ctx)-keeper.MinSignedPerWindow(ctx)+2, info.MissedBlocksCounter)
+	// we've missed 2 blocks more than the maximum, so the counter was reset to 0 at 1 block more and is now 1
+	require.Equal(t, int64(1), info.MissedBlocksCounter)
 
 	// validator should not be immediately jailed again
 	height++

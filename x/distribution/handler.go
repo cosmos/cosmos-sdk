@@ -58,6 +58,10 @@ func handleMsgWithdrawDelegatorRewardsAll(ctx sdk.Context, msg types.MsgWithdraw
 
 func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDelegatorReward, k keeper.Keeper) sdk.Result {
 
+	if !k.HasDelegationDistInfo(ctx, msg.DelegatorAddr, msg.ValidatorAddr) {
+		return ErrNoDelegatorDistInfo(k.codespace).Result()
+	}
+
 	k.WithdrawDelegationReward(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
 
 	tags := sdk.NewTags(

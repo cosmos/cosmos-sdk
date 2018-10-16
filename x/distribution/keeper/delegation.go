@@ -5,6 +5,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// check whether a delegator distribution info exists
+func (k Keeper) HasDelegationDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
+	valOperatorAddr sdk.ValAddress) (has bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(GetDelegationDistInfoKey(delAddr, valOperatorAddr))
+}
+
 // get the delegator distribution info
 func (k Keeper) GetDelegationDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
 	valOperatorAddr sdk.ValAddress) (ddi types.DelegationDistInfo) {

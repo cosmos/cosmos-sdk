@@ -3,8 +3,6 @@ package init
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/tendermint/crypto"
@@ -12,9 +10,9 @@ import (
 	"os"
 	"path/filepath"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
@@ -22,8 +20,6 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/types"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 const (
@@ -56,7 +52,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 			moniker := viper.GetString(flagMoniker)
 			withTxs := viper.GetBool(flagWithTxs)
 			overwriteGenesis := viper.GetBool(flagOverwrite)
-			nodeID, appMessage, err := initWithConfig(cdc, appInit, config, chainID, moniker, genTxsDir, withTxs, overwriteGenesis)
+			nodeID, appMessage, err := initWithConfig(cdc, config, chainID, moniker, genTxsDir, withTxs, overwriteGenesis)
 			// print out some key information
 
 			toPrint := struct {
@@ -87,7 +83,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	return cmd
 }
 
-func initWithConfig(cdc *codec.Codec, appInit server.AppInit, config *cfg.Config, chainID, moniker, genTxsDir string, withGenTxs, overwriteGenesis bool) (
+func initWithConfig(cdc *codec.Codec, config *cfg.Config, chainID, moniker, genTxsDir string, withGenTxs, overwriteGenesis bool) (
 	nodeID string, appMessage json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
@@ -139,31 +135,31 @@ func initWithConfig(cdc *codec.Codec, appInit server.AppInit, config *cfg.Config
 			return
 		}
 	} else {
-		var genesisState app.GenesisState
-		pubKey := readOrCreatePrivValidator(config.PrivValidatorFile())
-		config.Moniker = moniker
-		ip, err := server.ExternalIP()
-		if err != nil {
-			return
-		}
-		txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
-		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
-		clientRoot := viper.GetString(flagClientHome)
-		addr, secret, err := server.GenerateSaveCoinKey(clientRoot, moniker, server.DefaultKeyPass, viper.GetBool(flagOWK))
-		if err != nil {
-			return
-		}
-		appMessage, err = json.Marshal(map[string]string{"secret": secret})
-		if err != nil {
-			return
-		}
-
-		genesisState, genValidator := app.DefaultState(cliCtx.Codec, config.Moniker, pubKey, server.DefaultKeyPass)
-		appState, err = codec.MarshalJSONIndent(cdc, genesisState)
-		if err != nil {
-			return
-		}
-		validators = []types.GenesisValidator{genValidator}
+		//var genesisState app.GenesisState
+		//pubKey := readOrCreatePrivValidator(config.PrivValidatorFile())
+		//config.Moniker = moniker
+		//_, err := server.ExternalIP()
+		//if err != nil {
+		//	return
+		//}
+		//txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+		//cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+		//clientRoot := viper.GetString(flagClientHome)
+		//addr, secret, err := server.GenerateSaveCoinKey(clientRoot, moniker, server.DefaultKeyPass, viper.GetBool(flagOWK))
+		//if err != nil {
+		//	return
+		//}
+		//appMessage, err = json.Marshal(map[string]string{"secret": secret})
+		//if err != nil {
+		//	return
+		//}
+		//
+		//genesisState, genValidator := app.DefaultState(cliCtx.Codec, config.Moniker, pubKey, server.DefaultKeyPass)
+		//appState, err = codec.MarshalJSONIndent(cdc, genesisState)
+		//if err != nil {
+		//	return
+		//}
+		//validators = []types.GenesisValidator{genValidator}
 	}
 
 	cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)

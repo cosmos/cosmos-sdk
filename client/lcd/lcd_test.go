@@ -717,33 +717,31 @@ func TestUnjail(t *testing.T) {
 }
 
 func TestProposalsQuery(t *testing.T) {
-	name, password1 := "test", "1234567890"
-	name2, password2 := "test2", "1234567890"
-	addrs, seeds := CreateAddrs(t, "test", password1, GetKeyBase(t), 2)
+	addrs, seeds, names, passwords := CreateAddrs(t, GetKeyBase(t), 2)
 
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addrs[0], addrs[1]})
 	defer cleanup()
 
 	// Addr1 proposes (and deposits) proposals #1 and #2
-	resultTx := doSubmitProposal(t, port, seeds[0], name, password1, addrs[0], 5)
+	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
 	var proposalID1 int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doSubmitProposal(t, port, seeds[0], name, password1, addrs[0], 5)
+	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
 	var proposalID2 int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
-	resultTx = doSubmitProposal(t, port, seeds[1], name2, password2, addrs[1], 5)
+	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], 5)
 	var proposalID3 int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
-	resultTx = doDeposit(t, port, seeds[1], name2, password2, addrs[1], proposalID2, 5)
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID2, 5)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doDeposit(t, port, seeds[1], name2, password2, addrs[1], proposalID3, 5)
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, 5)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check deposits match proposal and individual deposits
@@ -765,7 +763,7 @@ func TestProposalsQuery(t *testing.T) {
 	require.Equal(t, deposit, deposits[0])
 
 	// increasing the amount of the deposit should update the existing one
-	resultTx = doDeposit(t, port, seeds[0], name, password1, addrs[0], proposalID1, 1)
+	resultTx = doDeposit(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID1, 1)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	deposits = getDeposits(t, port, proposalID1)
@@ -782,13 +780,13 @@ func TestProposalsQuery(t *testing.T) {
 	require.Equal(t, proposalID3, proposals[1].GetProposalID())
 
 	// Addr1 votes on proposals #2 & #3
-	resultTx = doVote(t, port, seeds[0], name, password1, addrs[0], proposalID2)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doVote(t, port, seeds[0], name, password1, addrs[0], proposalID3)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 votes on proposal #3
-	resultTx = doVote(t, port, seeds[1], name2, password2, addrs[1], proposalID3)
+	resultTx = doVote(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals

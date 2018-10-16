@@ -114,13 +114,15 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.Acc
 
 // Type that combines an Address with the pnemonic of the private key to that address
 type AddrSeed struct {
-	Address sdk.AccAddress
-	Seed    string
+	Address  sdk.AccAddress
+	Seed     string
+	Name     string
+	Password string
 }
 
 // CreateAddr adds multiple address to the key store and returns the addresses and associated seeds in lexographical order by address.
 // It also requires that the keys could be created.
-func CreateAddrs(t *testing.T, name, password string, kb crkeys.Keybase, numAddrs int) ([]sdk.AccAddress, []string) {
+func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.AccAddress, seeds, names, passwords []string) {
 	var (
 		err  error
 		info crkeys.Info
@@ -130,21 +132,23 @@ func CreateAddrs(t *testing.T, name, password string, kb crkeys.Keybase, numAddr
 	addrSeeds := AddrSeedSlice{}
 
 	for i := 0; i < numAddrs; i++ {
+		name := fmt.Sprintf("test%d", i)
+		password := "1234567890"
 		info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
 		require.NoError(t, err)
-		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed})
+		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
 	}
 
 	sort.Sort(addrSeeds)
 
-	addrs := []sdk.AccAddress{}
-	seeds := []string{}
 	for i := range addrSeeds {
 		addrs = append(addrs, addrSeeds[i].Address)
 		seeds = append(seeds, addrSeeds[i].Seed)
+		names = append(names, addrSeeds[i].Name)
+		passwords = append(passwords, addrSeeds[i].Password)
 	}
 
-	return addrs, seeds
+	return addrs, seeds, names, passwords
 }
 
 // implement `Interface` in sort package.

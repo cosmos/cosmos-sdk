@@ -18,9 +18,9 @@ There are three main pieces to consider:
 
 We will describe the steps to run and interract with a full-node for the Cosmos Hub. For other SDK-based blockchain, the process should be similar. 
 
-First, you need to [install the software](../getting-started/installation).
+First, you need to [install the software](../../getting-started/installation).
 
-Then, you can start [running a full-node](../getting-started/join-testnet).
+Then, you can start [running a full-node](../../getting-started/join-testnet).
 
 ### Command-Line interface
 

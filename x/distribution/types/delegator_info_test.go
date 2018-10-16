@@ -18,10 +18,10 @@ func TestWithdrawRewards(t *testing.T) {
 	validatorDelShares := sdk.NewDec(10)
 	totalBondedTokens := validatorTokens.Add(sdk.NewDec(90)) // validator-1 is 10% of total power
 
-	di1 := NewDelegatorDistInfo(delAddr1, valAddr1, height)
+	di1 := NewDelegationDistInfo(delAddr1, valAddr1, height)
 	di1Shares := sdk.NewDec(5) // this delegator has half the shares in the validator
 
-	di2 := NewDelegatorDistInfo(delAddr2, valAddr1, height)
+	di2 := NewDelegationDistInfo(delAddr2, valAddr1, height)
 	di2Shares := sdk.NewDec(5)
 
 	// simulate adding some stake for inflation

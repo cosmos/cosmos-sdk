@@ -16,7 +16,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
-	msg := newTestMsgCreateValidator(addr, val, amt)
+	msg := NewTestMsgCreateValidator(addr, val, amt)
 	got := stake.NewHandler(sk)(ctx, msg)
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
@@ -41,7 +41,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	valPubKey, bondAmount := pks[0], sdk.NewInt(amount)
 	valAddr, consAddr := addrs[1], sdk.ConsAddress(addrs[0])
 
-	msgCreateVal := newTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
+	msgCreateVal := NewTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
 	got := stake.NewHandler(stakeKeeper)(ctx, msgCreateVal)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got: %v", got)
 
@@ -53,7 +53,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 		StartHeight:         int64(0),
 		IndexOffset:         int64(0),
 		JailedUntil:         time.Unix(0, 0),
-		SignedBlocksCounter: int64(0),
+		MissedBlocksCounter: int64(0),
 	}
 	slashingKeeper.setValidatorSigningInfo(ctx, consAddr, newInfo)
 

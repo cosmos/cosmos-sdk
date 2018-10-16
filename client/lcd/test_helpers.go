@@ -152,7 +152,7 @@ func InitializeTestLCD(
 	msg := stake.NewMsgCreateValidator(
 		sdk.ValAddress(operAddr),
 		privVal.PubKey,
-		sdk.NewCoin("steak", sdk.NewInt(10000000000)),
+		sdk.NewCoin("steak", sdk.NewInt(50)),
 		stake.Description{Moniker: fmt.Sprintf("validator-%d", 0)},
 		stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 	)

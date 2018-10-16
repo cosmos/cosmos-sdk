@@ -27,7 +27,7 @@ import (
 var (
 	// bonded tokens given to genesis validators/accounts
 	freeFermionVal  = int64(100)
-	freeFermionsAcc = sdk.NewInt(50)
+	freeFermionsAcc = sdk.NewInt(150)
 )
 
 // State to Unmarshal
@@ -107,7 +107,7 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 		msg := msgs[0].(stake.MsgCreateValidator)
 
 		// create the genesis account, give'm few steaks and a buncha token with there name
-		genaccs[i] = genesisAccountFromMsgCreateValidator(msg)
+		genaccs[i] = genesisAccountFromMsgCreateValidator(msg, freeFermionsAcc)
 		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
 
 		// add the validator
@@ -135,7 +135,7 @@ func DefaultState(moniker string, pubKey crypto.PubKey) (genesisState GenesisSta
 	stakeData := stake.DefaultGenesisState()
 	validator := stake.NewValidator(sdk.ValAddress(acc.Address), pubKey, stake.NewDescription(moniker, "", "", ""))
 	stakeData = addValidatorToStakeData(validator, stakeData)
-	stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc))
+	//stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc))
 	genesisState = GenesisState{
 		Accounts:  []GenesisAccount{acc},
 		StakeData: stakeData,
@@ -169,11 +169,11 @@ func addValidatorToStakeData(validator stake.Validator, stakeData stake.GenesisS
 	return stakeData
 }
 
-func genesisAccountFromMsgCreateValidator(msg stake.MsgCreateValidator) GenesisAccount {
+func genesisAccountFromMsgCreateValidator(msg stake.MsgCreateValidator, amount sdk.Int) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
 	accAuth.Coins = []sdk.Coin{
 		{msg.Description.Moniker + "Token", sdk.NewInt(1000)},
-		{"steak", freeFermionsAcc},
+		{"steak", amount},
 	}
 	return NewGenesisAccount(&accAuth)
 }

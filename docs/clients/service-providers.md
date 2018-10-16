@@ -18,7 +18,7 @@ There are three main pieces to consider:
 
 We will describe the steps to run and interract with a full-node for the Cosmos Hub. For other SDK-based blockchain, the process should be similar. 
 
-First, you need to [install the software](/docs/getting-started/installation.md).
+First, you need to [install the software](../getting-started/installation.md).
 
 Then, you can start [running a full-node](../getting-started/join-testnet.md).
 
@@ -88,7 +88,7 @@ The Rest Server acts as an intermediary between the front-end and the full-node.
 To start the Rest server: 
 
 ```bash
-gaiacli advanced rest-server  --node=<full_node_address:full_node_port>
+gaiacli advanced rest-server --node=<full_node_address:full_node_port>
 ```
 
 Flags:
@@ -101,12 +101,12 @@ Flags:
 
 The recommended way to listen for incoming transaction is to periodically query the blockchain through the following endpoint of the LCD:
 
-[`/bank/balance/{account}`](https://cosmos-staging.interblock.io/rpc/#/ICS20/get_bank_balances__address_)
+[`/bank/balance/{account}`](https://cosmos.network/rpc/#/ICS20/get_bank_balances__address_)
 
 ## Rest API
 
-The Rest API documents all the available endpoints that you can use to interract with your full node. It can be found [here](https://cosmos-staging.interblock.io/rpc/). 
+The Rest API documents all the available endpoints that you can use to interract with your full node. It can be found [here](https://cosmos.network/rpc/). 
 
-The API is divided into ICS standards for each category of endpoints. For example, the [ICS20](https://cosmos-staging.interblock.io/rpc/#/ICS20/) describes the API to interact with tokens. 
+The API is divided into ICS standards for each category of endpoints. For example, the [ICS20](https://cosmos.network/rpc/#/ICS20/) describes the API to interact with tokens. 
 
-To give more flexibility to implementers, we have separated the different steps that are involved in the process of sending transactions. You will be able to generate unsigned transactions (example with [coin transfer](https://cosmos-staging.interblock.io/rpc/#/ICS20/post_bank_accounts__address__transfers)), [sign](https://cosmos-staging.interblock.io/rpc/#/ICS20/post_tx_sign) and [broadcast](https://cosmos-staging.interblock.io/rpc/#/ICS20/post_tx_broadcast) them with different API endpoints. This allows service providers to use their own signing mechanism for instance. 
+To give more flexibility to implementers, we have separated the different steps that are involved in the process of sending transactions. You will be able to generate unsigned transactions (example with [coin transfer](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)), [sign](https://cosmos.network/rpc/#/ICS20/post_tx_sign) and [broadcast](https://cosmos.network/rpc/#/ICS20/post_tx_broadcast) them with different API endpoints. This allows service providers to use their own signing mechanism for instance. 

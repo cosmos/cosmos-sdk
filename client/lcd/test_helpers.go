@@ -243,7 +243,6 @@ func InitializeTestLCD(
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 	}
 
-	//genesisState, err := gapp.NewTestGaiaAppGenState(cdc, nil, genDoc.Validators, valOperAddrs)
 	genesisState, err := gapp.GaiaAppGenState(cdc, genTxs)
 	require.NoError(t, err)
 

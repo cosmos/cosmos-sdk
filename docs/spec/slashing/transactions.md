@@ -25,10 +25,6 @@ handleMsgUnjail(tx TxUnjail)
     if block time < info.JailedUntil
       fail with "Validator still jailed, cannot unjail until period has expired"
 
-    // Update the start height so the validator won't be immediately unbonded again
-    info.StartHeight = BlockHeight
-    setValidatorSigningInfo(info)
-
     validator.Jailed = false
     setValidator(validator)
 

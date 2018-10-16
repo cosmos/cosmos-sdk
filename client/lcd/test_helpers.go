@@ -146,38 +146,22 @@ func InitializeTestLCD(
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
 	genDoc.Validators = nil
 	genDoc.SaveAs(genesisFile)
-
-	operPrivKey := secp256k1.GenPrivKey()
-	operAddr := operPrivKey.PubKey().Address()
-	msg := stake.NewMsgCreateValidator(
-		sdk.ValAddress(operAddr),
-		privVal.PubKey,
-		sdk.NewCoin("steak", sdk.NewInt(50)),
-		stake.Description{Moniker: fmt.Sprintf("validator-%d", 0)},
-		stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-	)
-	stdSignMsg := txbuilder.StdSignMsg{
-		ChainID: genDoc.ChainID,
-		Msgs: []sdk.Msg{msg},
-	}
-	sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
-	require.Nil(t, err)
-	tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
-	txBytes, err := cdc.MarshalJSON(tx)
-	require.Nil(t, err)
-//	fee := auth.StdFee{}
-	// append initial (proposing) validator
-	genTxs := []json.RawMessage{txBytes}
+	genTxs := []json.RawMessage{}
 
 	// append any additional (non-proposing) validators
 	for i:=0 ; i<nValidators; i++ {
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
-		pubKey := ed25519.GenPrivKey().PubKey()
+		pubKey := privVal.PubKey
+		delegation := 100
+		if i > 0 {
+			pubKey = ed25519.GenPrivKey().PubKey()
+			delegation = 1
+		}
 		msg := stake.NewMsgCreateValidator(
 			sdk.ValAddress(operAddr),
 			pubKey,
-			sdk.NewCoin("steak", sdk.NewInt(1)),
+			sdk.NewCoin("steak", sdk.NewInt(int64(delegation))),
 			stake.Description{Moniker: fmt.Sprintf("validator-%d", i+1)},
 			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
@@ -299,7 +283,7 @@ func Request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 		res *http.Response
 	)
 	url := fmt.Sprintf("http://localhost:%v%v", port, path)
-	fmt.Println("REQUEST " + method + " " + url)
+	//fmt.Println("REQUEST " + method + " " + url)
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(payload))
 	require.Nil(t, err)

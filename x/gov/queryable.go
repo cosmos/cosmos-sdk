@@ -116,7 +116,7 @@ type QueryDepositsParams struct {
 
 // nolint: unparam
 func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
-	var params QueryDepositParams
+	var params QueryDepositsParams
 	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
 	if err2 != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err2.Error()))

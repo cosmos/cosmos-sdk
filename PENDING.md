@@ -70,6 +70,8 @@ BREAKING CHANGES
     * [x/staking] \#2236 more distribution hooks for distribution
     * [x/stake] \#2394 Split up UpdateValidator into distinct state transitions applied only in EndBlock
     * [x/stake] \#2412 Added an unbonding validator queue to EndBlock to automatically update validator.Status when finished Unbonding
+    * [x/stake] \#2500 Block conflicting redelegations until we add an index
+    * [x/params] Global Paramstore refactored
 
 * Tendermint
   * Update tendermint version from v0.23.0 to v0.25.0, notable changes
@@ -92,6 +94,7 @@ FEATURES
   * [gaia-lite] [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) Add /sign endpoint to sign transactions generated with `generate_only=true`.
   * [gaia-lite] [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) Add /broadcast endpoint to broadcast transactions signed by the /sign endpoint.
   * [gaia-lite] [\#2113](https://github.com/cosmos/cosmos-sdk/issues/2113) Rename `/accounts/{address}/send` to `/bank/accounts/{address}/transfers`, rename `/accounts/{address}` to `/auth/accounts/{address}`
+  * [gaia-lite] [\#2478](https://github.com/cosmos/cosmos-sdk/issues/2478) Add query gov proposal's deposits endpoint
 
 * Gaia CLI  (`gaiacli`)
   * [cli] Cmds to query staking pool and params

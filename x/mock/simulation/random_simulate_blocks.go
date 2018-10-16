@@ -15,6 +15,7 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	common "github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -81,7 +82,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	// Initially this is the same as the initial validator set
 	nextValidators := validators
 
-	header := abci.Header{Height: 0, Time: timestamp}
+	header := abci.Header{Height: 0, Time: timestamp, ProposerAddress: randomProposer(r, validators)}
 	opCount := 0
 
 	// Setup code to catch SIGTERM's
@@ -150,6 +151,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
+		header.ProposerAddress = randomProposer(r, validators)
 		logWriter("EndBlock")
 
 		if testingMode {
@@ -316,6 +318,21 @@ func getKeys(validators map[string]mockValidator) []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+// randomProposer picks a random proposer from the current validator set
+func randomProposer(r *rand.Rand, validators map[string]mockValidator) common.HexBytes {
+	keys := getKeys(validators)
+	if len(keys) == 0 {
+		return nil
+	}
+	key := keys[r.Intn(len(keys))]
+	proposer := validators[key].val
+	pk, err := tmtypes.PB2TM.PubKey(proposer.PubKey)
+	if err != nil {
+		panic(err)
+	}
+	return pk.Address()
 }
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction

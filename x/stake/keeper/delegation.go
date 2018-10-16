@@ -380,14 +380,14 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 	shares sdk.Dec) (amount sdk.Dec, err sdk.Error) {
 
-	k.OnDelegationSharesModified(ctx, delAddr, valAddr)
-
 	// check if delegation has any shares in it unbond
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		err = types.ErrNoDelegatorForAddress(k.Codespace())
 		return
 	}
+
+	k.OnDelegationSharesModified(ctx, delAddr, valAddr)
 
 	// retrieve the amount to remove
 	if delegation.Shares.LT(shares) {
@@ -430,7 +430,6 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
-	k.OnDelegationSharesModified(ctx, delegation.DelegatorAddr, validator.OperatorAddr)
 	return amount, nil
 }
 
@@ -525,6 +524,13 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 // complete unbonding an unbonding record
 func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec) (types.Redelegation, sdk.Error) {
+
+	// check if there is already a redelgation in progress from src to dst
+	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
+	_, found := k.GetRedelegation(ctx, delAddr, valSrcAddr, valDstAddr)
+	if found {
+		return types.Redelegation{}, types.ErrConflictingRedelegation(k.Codespace())
+	}
 
 	// check if this is a transitive redelegation
 	if k.HasReceivingRedelegation(ctx, delAddr, valSrcAddr) {

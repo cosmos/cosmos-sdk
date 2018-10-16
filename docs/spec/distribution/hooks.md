@@ -6,7 +6,7 @@
 
 The pool of a new delegator bond will be 0 for the height at which the bond was
 added, or the withdrawal has taken place. This is achieved by setting
-`DelegatorDistInfo.WithdrawalHeight` to the height of the triggering transaction. 
+`DelegationDistInfo.WithdrawalHeight` to the height of the triggering transaction. 
 
 ## Commission rate change
  

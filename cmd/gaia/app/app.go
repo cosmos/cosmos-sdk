@@ -110,7 +110,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	)
 	app.distrKeeper = distr.NewKeeper(
 		app.cdc,
-		app.keyDistr, app.tkeyDistr,
+		app.keyDistr,
 		app.paramsKeeper.Subspace(distr.DefaultParamspace),
 		app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper,
 		app.RegisterCodespace(stake.DefaultCodespace),
@@ -178,6 +178,8 @@ func MakeCodec() *codec.Codec {
 // application updates every end block
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
+
+	// distribute rewards from previous block
 	distr.BeginBlocker(ctx, req, app.distrKeeper)
 
 	return abci.ResponseBeginBlock{
@@ -188,9 +190,6 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-
-	// distribute rewards
-	distr.EndBlocker(ctx, app.distrKeeper)
 
 	tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)

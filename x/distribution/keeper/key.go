@@ -10,10 +10,7 @@ var (
 	ValidatorDistInfoKey     = []byte{0x01} // prefix for each key to a validator distribution
 	DelegationDistInfoKey    = []byte{0x02} // prefix for each key to a delegation distribution
 	DelegatorWithdrawInfoKey = []byte{0x03} // prefix for each key to a delegator withdraw info
-
-	// transient
-	ProposerKey              = []byte{0x00} // key for storing the proposer operator address
-	PercentPrecommitVotesKey = []byte{0x01} // key for storing the power of the precommit validators
+	ProposerKey              = []byte{0x04} // key for storing the proposer operator address
 
 	// params store
 	ParamStoreKeyCommunityTax        = []byte("community-tax")

@@ -41,9 +41,7 @@ func TestAllocateFeesBasic(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetPercentPrecommitVotes(ctx, sdk.OneDec())
-	keeper.AllocateFees(ctx)
+	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
 
 	// verify that these fees have been received by the feePool
 	percentProposer := sdk.NewDecWithPrec(5, 2)
@@ -70,9 +68,7 @@ func TestAllocateFeesWithCommunityTax(t *testing.T) {
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
-	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	keeper.SetPercentPrecommitVotes(ctx, sdk.OneDec())
-	keeper.AllocateFees(ctx)
+	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
 
 	// verify that these fees have been received by the feePool
 	feePool := keeper.GetFeePool(ctx)
@@ -100,10 +96,8 @@ func TestAllocateFeesWithPartialPrecommitPower(t *testing.T) {
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
-	keeper.SetProposerConsAddr(ctx, valConsAddr1)
 	percentPrecommitVotes := sdk.NewDecWithPrec(25, 2)
-	keeper.SetPercentPrecommitVotes(ctx, percentPrecommitVotes)
-	keeper.AllocateFees(ctx)
+	keeper.AllocateFees(ctx, percentPrecommitVotes, valConsAddr1)
 
 	// verify that these fees have been received by the feePool
 	feePool := keeper.GetFeePool(ctx)

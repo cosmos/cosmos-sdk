@@ -8,21 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSetGetProposerConsAddr(t *testing.T) {
+func TestSetGetPreviousProposerConsAddr(t *testing.T) {
 	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 0)
 
-	keeper.SetProposerConsAddr(ctx, valConsAddr1)
-	res := keeper.GetProposerConsAddr(ctx)
+	keeper.SetPreviousProposerConsAddr(ctx, valConsAddr1)
+	res := keeper.GetPreviousProposerConsAddr(ctx)
 	require.True(t, res.Equals(valConsAddr1), "expected: %v got: %v", valConsAddr1.String(), res.String())
-}
-
-func TestSetGetPercentPrecommitVotes(t *testing.T) {
-	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 0)
-
-	someDec := sdk.NewDec(333)
-	keeper.SetPercentPrecommitVotes(ctx, someDec)
-	res := keeper.GetPercentPrecommitVotes(ctx)
-	require.True(sdk.DecEq(t, someDec, res))
 }
 
 func TestSetGetCommunityTax(t *testing.T) {

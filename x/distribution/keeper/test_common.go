@@ -84,7 +84,6 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	sdk.Context, auth.AccountMapper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
 
 	keyDistr := sdk.NewKVStoreKey("distr")
-	tkeyDistr := sdk.NewTransientStoreKey("transient_distr")
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
@@ -95,7 +94,6 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 
-	ms.MountStoreWithDB(tkeyDistr, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyDistr, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
@@ -130,7 +128,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	}
 
 	fck := DummyFeeCollectionKeeper{}
-	keeper := NewKeeper(cdc, keyDistr, tkeyDistr, pk.Subspace(DefaultParamspace), ck, sk, fck, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), ck, sk, fck, types.DefaultCodespace)
 
 	// set the distribution hooks on staking
 	sk = sk.WithHooks(keeper.Hooks())

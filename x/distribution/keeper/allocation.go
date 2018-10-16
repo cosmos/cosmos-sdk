@@ -8,12 +8,11 @@ import (
 )
 
 // Allocate fees handles distribution of the collected fees
-func (k Keeper) AllocateFees(ctx sdk.Context) {
+func (k Keeper) AllocateFees(ctx sdk.Context, percentVotes sdk.Dec, proposer sdk.ConsAddress) {
 	ctx.Logger().With("module", "x/distribution").Error(fmt.Sprintf("allocation height: %v", ctx.BlockHeight()))
 
 	// get the proposer of this block
-	proposerConsAddr := k.GetProposerConsAddr(ctx)
-	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposerConsAddr)
+	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposer)
 	proposerDist := k.GetValidatorDistInfo(ctx, proposerValidator.GetOperator())
 
 	// get the fees which have been getting collected through all the
@@ -22,7 +21,6 @@ func (k Keeper) AllocateFees(ctx sdk.Context) {
 	feesCollectedDec := types.NewDecCoins(feesCollected)
 
 	// allocated rewards to proposer
-	percentVotes := k.GetPercentPrecommitVotes(ctx)
 	baseProposerReward := k.GetBaseProposerReward(ctx)
 	bonusProposerReward := k.GetBonusProposerReward(ctx)
 	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.Mul(percentVotes))

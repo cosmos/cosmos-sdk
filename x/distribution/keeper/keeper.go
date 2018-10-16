@@ -10,7 +10,6 @@ import (
 // keeper of the stake store
 type Keeper struct {
 	storeKey            sdk.StoreKey
-	storeTKey           sdk.StoreKey
 	cdc                 *codec.Codec
 	paramSpace          params.Subspace
 	bankKeeper          types.BankKeeper
@@ -21,12 +20,11 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
 	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{
 		storeKey:            key,
-		storeTKey:           tkey,
 		cdc:                 cdc,
 		paramSpace:          paramSpace.WithTypeTable(ParamTypeTable()),
 		bankKeeper:          ck,
@@ -60,12 +58,12 @@ func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 //______________________________________________________________________
 
 // set the proposer public key for this block
-func (k Keeper) GetProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) {
-	tstore := ctx.KVStore(k.storeTKey)
+func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) {
+	store := ctx.KVStore(k.storeKey)
 
-	b := tstore.Get(ProposerKey)
+	b := store.Get(ProposerKey)
 	if b == nil {
-		panic("Proposer cons address was likely not set in begin block")
+		panic("Previous proposer not set")
 	}
 
 	k.cdc.MustUnmarshalBinary(b, &consAddr)
@@ -73,32 +71,10 @@ func (k Keeper) GetProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) 
 }
 
 // get the proposer public key for this block
-func (k Keeper) SetProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	tstore := ctx.KVStore(k.storeTKey)
+func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
+	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(consAddr)
-	tstore.Set(ProposerKey, b)
-}
-
-//______________________________________________________________________
-
-// set the proposer public key for this block
-func (k Keeper) GetPercentPrecommitVotes(ctx sdk.Context) (percentPrecommitVotes sdk.Dec) {
-	tstore := ctx.KVStore(k.storeTKey)
-
-	b := tstore.Get(PercentPrecommitVotesKey)
-	if b == nil {
-		panic("Proposer cons address was likely not set in begin block")
-	}
-
-	k.cdc.MustUnmarshalBinary(b, &percentPrecommitVotes)
-	return
-}
-
-// get the proposer public key for this block
-func (k Keeper) SetPercentPrecommitVotes(ctx sdk.Context, percentPrecommitVotes sdk.Dec) {
-	tstore := ctx.KVStore(k.storeTKey)
-	b := k.cdc.MustMarshalBinary(percentPrecommitVotes)
-	tstore.Set(PercentPrecommitVotesKey, b)
+	store.Set(ProposerKey, b)
 }
 
 //______________________________________________________________________

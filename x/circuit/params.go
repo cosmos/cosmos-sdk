@@ -6,8 +6,14 @@ import (
 
 const DefaultParamspace = "circuit"
 
-var MsgTypeKey = []byte("msgtype")
+var (
+	MsgTypeKey = []byte("msgtype")
+	MsgNameKey = []byte("msgname")
+)
 
 func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(MsgTypeKey, bool(false))
+	return params.NewTypeTable(
+		MsgTypeKey, bool(false),
+		MsgNameKey, bool(false),
+	)
 }

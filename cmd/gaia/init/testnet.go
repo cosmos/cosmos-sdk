@@ -115,6 +115,8 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		nodeID := string(nodeKey.ID())
 		memo := fmt.Sprintf("%s@%s:26656", nodeID, ip)
 
+		buf := client.BufferStdin()
+		prompt := fmt.Sprintf("Password for account '%s' (default %s):", nodeDirName, server.DefaultKeyPass)
 		keyPass, err := client.GetPassword(prompt, buf)
 		if err != nil && keyPass != "" {
 			// An error was returned that either failed to read the password from
@@ -137,8 +139,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 			return err
 		}
 		// Save private key seed words
-		name := fmt.Sprintf("%v.json", "key_seed")
-		err = writeFile(name, clientDir, cliPrint)
+		err = writeFile(fmt.Sprintf("%v.json", "key_seed"), clientDir, cliPrint)
 		if err != nil {
 			return err
 		}
@@ -148,7 +149,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 			sdk.ValAddress(addr),
 			valPubKey,
 			sdk.NewInt64Coin("steak", 100),
-			stake.NewDescription(nodeDir, "", "", ""),
+			stake.NewDescription(nodeDirName, "", "", ""),
 			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
 		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{}, memo)
@@ -166,8 +167,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		}
 
 		// Gather gentxs folder
-		name := fmt.Sprintf("%v.json", nodeDirName)
-		err = writeFile(name, gentxsDir, txBytes)
+		err = writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBytes)
 		if err != nil {
 			return err
 		}

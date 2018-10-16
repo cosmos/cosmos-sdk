@@ -118,8 +118,8 @@ type AddrSeed struct {
 	Seed    string
 }
 
-// CreateAddr adds an address to the key store and returns an address and seed.
-// It also requires that the key could be created.
+// CreateAddr adds multiple address to the key store and returns the addresses and associated seeds in lexographical order by address.
+// It also requires that the keys could be created.
 func CreateAddrs(t *testing.T, name, password string, kb crkeys.Keybase, numAddrs int) ([]sdk.AccAddress, []string) {
 	var (
 		err  error

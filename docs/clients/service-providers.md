@@ -20,7 +20,7 @@ We will describe the steps to run and interract with a full-node for the Cosmos 
 
 First, you need to [install the software](/docs/getting-started/installation.md).
 
-Then, you can start [running a full-node](../../getting-started/join-testnet.md).
+Then, you can start [running a full-node](../getting-started/join-testnet.md).
 
 ### Command-Line interface
 

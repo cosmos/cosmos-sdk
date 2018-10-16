@@ -1,7 +1,9 @@
 package init
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -113,9 +115,31 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		nodeID := string(nodeKey.ID())
 		memo := fmt.Sprintf("%s@%s:26656", nodeID, ip)
 
-		addr, _, err := server.GenerateSaveCoinKey(clientDir, nodeDirName, server.DefaultKeyPass, true)
+		keyPass, err := client.GetPassword(prompt, buf)
+		if err != nil && keyPass != "" {
+			// An error was returned that either failed to read the password from
+			// STDIN or the given password is not empty but failed to meet minimum
+			// length requirements.
+			return err
+		}
+		if keyPass == "" {
+			keyPass = server.DefaultKeyPass
+		}
+
+		addr, secret, err := server.GenerateSaveCoinKey(clientDir, nodeDirName, keyPass, true)
 		if err != nil {
 			_ = os.RemoveAll(outDir)
+			return err
+		}
+		info := map[string]string{"secret": secret}
+		cliPrint, err := json.Marshal(info)
+		if err != nil {
+			return err
+		}
+		// Save private key seed words
+		name := fmt.Sprintf("%v.json", "key_seed")
+		err = writeFile(name, clientDir, cliPrint)
+		if err != nil {
 			return err
 		}
 

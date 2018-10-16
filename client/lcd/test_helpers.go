@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -109,6 +110,65 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.Acc
 	require.NoError(t, err)
 
 	return sdk.AccAddress(info.GetPubKey().Address()), seed
+}
+
+// Type that combines an Address with the pnemonic of the private key to that address
+type AddrSeed struct {
+	Address sdk.AccAddress
+	Seed    string
+}
+
+// CreateAddr adds an address to the key store and returns an address and seed.
+// It also requires that the key could be created.
+func CreateAddrs(t *testing.T, name, password string, kb crkeys.Keybase, numAddrs int) ([]sdk.AccAddress, []string) {
+	var (
+		err  error
+		info crkeys.Info
+		seed string
+	)
+
+	addrSeeds := AddrSeedSlice{}
+
+	for i := 0; i < numAddrs; i++ {
+		info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
+		require.NoError(t, err)
+		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed})
+	}
+
+	sort.Sort(addrSeeds)
+
+	addrs := []sdk.AccAddress{}
+	seeds := []string{}
+	for i := range addrSeeds {
+		addrs = append(addrs, addrSeeds[i].Address)
+		seeds = append(seeds, addrSeeds[i].Seed)
+	}
+
+	return addrs, seeds
+}
+
+// implement `Interface` in sort package.
+type AddrSeedSlice []AddrSeed
+
+func (b AddrSeedSlice) Len() int {
+	return len(b)
+}
+
+// Sorts lexographically by Address
+func (b AddrSeedSlice) Less(i, j int) bool {
+	// bytes package already implements Comparable for []byte.
+	switch bytes.Compare(b[i].Address.Bytes(), b[j].Address.Bytes()) {
+	case -1:
+		return true
+	case 0, 1:
+		return false
+	default:
+		panic("not fail-able with `bytes.Comparable` bounded [-1, 1].")
+	}
+}
+
+func (b AddrSeedSlice) Swap(i, j int) {
+	b[j], b[i] = b[i], b[j]
 }
 
 // InitializeTestLCD starts Tendermint and the LCD in process, listening on

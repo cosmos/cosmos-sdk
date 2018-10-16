@@ -105,8 +105,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	k.SetPool(ctx, pool)
 
 	// remove validator if it has no more tokens
-	if validator.Tokens.IsZero() && validator.Status != sdk.Bonded {
-		// if bonded, we must remove in ApplyAndReturnValidatorSetUpdates instead
+	if validator.Tokens.IsZero() && validator.Status == sdk.Unbonded {
+		// if not unbonded, we must remove in EndBlocker instead
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 

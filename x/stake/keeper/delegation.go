@@ -425,8 +425,8 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	// remove the coins from the validator
 	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
 
-	if validator.DelegatorShares.IsZero() && validator.Status != sdk.Bonded {
-		// if bonded, we must remove in EndBlocker instead
+	if validator.DelegatorShares.IsZero() && validator.Status == sdk.Unbonded {
+		// if not unbonded, we must remove in EndBlocker instead
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
@@ -500,8 +500,17 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 		Balance:        balance,
 		InitialBalance: balance,
 	}
+
 	k.SetUnbondingDelegation(ctx, ubd)
 	k.InsertUnbondingQueue(ctx, ubd)
+
+	// increment validator's unbonding/redelegations counter
+	validator, found := k.GetValidator(ctx, valAddr)
+	if found {
+		validator.UnbondingRedelegationCounter++
+		k.SetValidator(ctx, validator)
+	}
+
 	return ubd, nil
 }
 
@@ -518,7 +527,16 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	if err != nil {
 		return err
 	}
+
 	k.RemoveUnbondingDelegation(ctx, ubd)
+
+	// decrement validator's unbonding/redelegations counter
+	validator, found := k.GetValidator(ctx, valAddr)
+	if found {
+		validator.UnbondingRedelegationCounter--
+		k.SetValidator(ctx, validator)
+	}
+
 	return nil
 }
 
@@ -566,6 +584,14 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 	k.SetRedelegation(ctx, red)
 	k.InsertRedelegationQueue(ctx, red)
+
+	// increment validator's unbonding/redelegations counter
+	validator, found := k.GetValidator(ctx, valSrcAddr)
+	if found {
+		validator.UnbondingRedelegationCounter++
+		k.SetValidator(ctx, validator)
+	}
+
 	return red, nil
 }
 
@@ -585,5 +611,19 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	k.RemoveRedelegation(ctx, red)
+
+	// decrement validator's unbonding/redelegations counter
+	validator, found := k.GetValidator(ctx, valSrcAddr)
+	if found {
+		validator.UnbondingRedelegationCounter--
+
+		if validator.Status == sdk.Unbonded && validator.DelegatorShares.IsZero() {
+			k.RemoveValidator(ctx, validator.OperatorAddr)
+		} else {
+			k.SetValidator(ctx, validator)
+		}
+
+	}
+
 	return nil
 }

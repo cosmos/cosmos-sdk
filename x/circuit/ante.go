@@ -13,6 +13,10 @@ func NewAnteHandler(space params.Subspace) sdk.AnteHandler {
 			if breaker {
 				return ctx, sdk.ErrUnauthorized("msg type circuit breaked").Result(), true
 			}
+			space.GetWithSubkeyIfExists(ctx, MsgNameKey, []byte(msg.Name()), &breaker)
+			if breaker {
+				return ctx, sdk.ErrUnauthorized("msg name circuit breaked").Result(), true
+			}
 		}
 		return ctx, sdk.Result{}, false
 	}

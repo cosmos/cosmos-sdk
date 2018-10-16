@@ -21,38 +21,60 @@ func (msg) GetSignBytes() []byte { return nil }
 
 func (msg) GetSigners() []sdk.AccAddress { return nil }
 
-func (msg) Name() string { return "" }
-
 type msg1 struct{ msg }
 
-func (msg1) Type() string { return "msg1" }
+func (msg1) Type() string { return "msg" }
+
+func (msg1) Name() string { return "msg1" }
 
 type msg2 struct{ msg }
 
-func (msg2) Type() string { return "msg2" }
+func (msg2) Type() string { return "msg" }
+
+func (msg2) Name() string { return "msg2" }
+
+type othermsg struct{ msg }
+
+func (othermsg) Type() string { return "othermsg" }
+
+func (othermsg) Name() string { return "othermsg" }
+
+func testMsg(t *testing.T, ctx sdk.Context, space params.Subspace, msg sdk.Msg, ty bool, name bool) {
+	ante := NewAnteHandler(space)
+
+	_, _, abort := ante(ctx, tx{msg}, false)
+	require.Equal(t, ty || name, abort)
+
+	table := []struct {
+		ty   bool
+		name bool
+	}{
+		{false, false},
+		{false, true},
+		{true, false},
+		{true, true},
+	}
+
+	for i, tc := range table {
+		require.NotPanics(t, func() { space.SetWithSubkey(ctx, MsgTypeKey, []byte(msg.Type()), tc.ty) }, "panic setting breaker, tc #%d", i)
+		require.NotPanics(t, func() { space.SetWithSubkey(ctx, MsgNameKey, []byte(msg.Name()), tc.name) }, "panic setting breaker, tc #%d", i)
+
+		_, _, abort := ante(ctx, tx{msg}, false)
+		require.Equal(t, tc.ty || tc.name, abort)
+	}
+}
 
 func TestAnteHandler(t *testing.T) {
 	ctx, space, _ := params.DefaultTestComponents(t, ParamTypeTable())
 
 	data := GenesisState{
-		CircuitBreakTypes: []string{"msg2"},
+		MsgTypes: []string{"othermsg"},
+		MsgNames: []string{"msg2"},
 	}
 
 	InitGenesis(ctx, space, data)
 
-	ante := NewAnteHandler(space)
-
-	_, _, abort := ante(ctx, tx{msg1{}}, false)
-	require.False(t, abort)
-
-	_, _, abort = ante(ctx, tx{msg2{}}, false)
-	require.True(t, abort)
-
-	space.SetWithSubkey(ctx, MsgTypeKey, []byte(msg1{}.Type()), true)
-	space.SetWithSubkey(ctx, MsgTypeKey, []byte(msg2{}.Type()), false)
-
-	_, _, abort = ante(ctx, tx{msg1{}}, false)
-	require.True(t, abort)
-	_, _, abort = ante(ctx, tx{msg2{}}, false)
-	require.False(t, abort)
+	testMsg(t, ctx, space, msg1{}, false, false)
+	testMsg(t, ctx, space, msg2{}, false, true)
+	testMsg(t, ctx, space, othermsg{}, true, false)
 }

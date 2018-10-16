@@ -241,6 +241,12 @@ func (d Dec) Quo(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// quotient
+func (d Dec) QuoInt(i Int) Dec {
+	mul := new(big.Int).Quo(d.Int, i.i)
+	return Dec{mul}
+}
+
 func (d Dec) String() string {
 	str := d.ToLeftPaddedWithDecimals(Precision)
 	placement := len(str) - Precision
@@ -462,6 +468,6 @@ func MaxDec(d1, d2 Dec) Dec {
 }
 
 // intended to be used with require/assert:  require.True(DecEq(...))
-func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, Dec, Dec) {
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, string, string) {
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }

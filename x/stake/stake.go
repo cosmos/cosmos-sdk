@@ -56,6 +56,7 @@ var (
 	GetREDsFromValSrcIndexKey    = keeper.GetREDsFromValSrcIndexKey
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
+	TestingUpdateValidator       = keeper.TestingUpdateValidator
 
 	DefaultParamspace      = keeper.DefaultParamspace
 	KeyInflationRateChange = types.KeyInflationRateChange

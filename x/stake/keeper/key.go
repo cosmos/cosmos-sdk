@@ -71,8 +71,15 @@ func GetBondedValidatorIndexKey(operator sdk.ValAddress) []byte {
 func getValidatorPowerRank(validator types.Validator) []byte {
 
 	potentialPower := validator.Tokens
-	powerBytes := []byte(potentialPower.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+
+	// todo: deal with cases above 2**64, ref https://github.com/cosmos/cosmos-sdk/issues/2439#issuecomment-427167556
+	tendermintPower := potentialPower.RoundInt64()
+	tendermintPowerBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(tendermintPowerBytes[:], uint64(tendermintPower))
+
+	powerBytes := tendermintPowerBytes
 	powerBytesLen := len(powerBytes)
+
 	// key is of format prefix || powerbytes || heightBytes || counterBytes
 	key := make([]byte, 1+powerBytesLen+8+2)
 

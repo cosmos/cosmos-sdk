@@ -370,6 +370,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 		voteInfos[i] = abci.VoteInfo{
 			Validator: abci.Validator{
 				Address: pubkey.Address(),
+				Power:   mVal.val.Power,
 			},
 			SignedLastBlock: signed,
 		}

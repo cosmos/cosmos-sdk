@@ -1,5 +1,9 @@
 # Post-0.25/GoS Pre-Release
 
+## Staking / Slashing - Stability
+
+- [Prelaunch Issues](https://github.com/cosmos/cosmos-sdk/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Astaking+label%3Aprelaunch-2.0)
+
 ## Multisig
 
 - Need to test changes in https://github.com/cosmos/cosmos-sdk/pull/2165
@@ -9,12 +13,15 @@
 
 - CheckEvidence/DeliverEvidence
 - CheckTx/DeliverTx ordering semantics
+- ABCI Error string update (only on the SDK side)
+- Need to verify correct proposer reward semantics
 
 ## Gas
 
 - Write specification and explainer document for Gas in Cosmos
   * Charge for transaction size
   * Decide what "one gas" corresponds to (standard hardware benchmarks?)
+  * Consider charging based on maximum depth of IAVL tree iteration
 - Test out gas estimation in CLI and LCD and ensure the UX works
 
 ## LCD

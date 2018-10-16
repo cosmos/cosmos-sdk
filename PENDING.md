@@ -44,6 +44,7 @@ BREAKING CHANGES
     * [simulation] \#2162 Added back correct supply invariants
     * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
+    * [x/mock/simulation] \#2485 Check for supply conservation (including expected inflation) in simulation
 
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0

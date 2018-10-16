@@ -108,7 +108,7 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 
 		// create the genesis account, give'm few steaks and a buncha token with there name
 		genaccs[i] = genesisAccountFromMsgCreateValidator(msg)
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(msg.Delegation.Amount)) // increase the supply
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
 
 		// add the validator
 		//if len(msg.Description.Moniker) > 0 {
@@ -171,7 +171,10 @@ func addValidatorToStakeData(validator stake.Validator, stakeData stake.GenesisS
 
 func genesisAccountFromMsgCreateValidator(msg stake.MsgCreateValidator) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
-	accAuth.Coins = []sdk.Coin{msg.Delegation}
+	accAuth.Coins = []sdk.Coin{
+		{msg.Description.Moniker + "Token", sdk.NewInt(1000)},
+		{"steak", freeFermionsAcc},
+	}
 	return NewGenesisAccount(&accAuth)
 }
 

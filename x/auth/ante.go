@@ -292,7 +292,7 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 
 func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	// set the gas meter
-	if simulate {
+	if simulate || ctx.BlockHeight() == 0 {
 		return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	}
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))

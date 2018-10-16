@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -22,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -40,6 +40,7 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
+	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -205,43 +206,61 @@ func InitializeTestLCD(
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
+	println(genesisFile)
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
-	require.NoError(t, err)
+	genDoc.Validators = nil
 
-	// append initial (proposing) validator
-	genDoc.Validators[0] = tmtypes.GenesisValidator{
-		PubKey: privVal.GetPubKey(),
-		Power:  100, // create enough power to enable 2/3 voting power
-		Name:   "validator-1",
+	operPrivKey := ed25519.GenPrivKey()
+	operAddr := operPrivKey.PubKey().Address()
+	msg := stake.NewMsgCreateValidator(
+		sdk.ValAddress(operAddr),
+		privVal.PubKey,
+		sdk.NewCoin("steak", sdk.NewInt(1)),
+		stake.Description{Moniker: fmt.Sprintf("validator-%d", 0)},
+		stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+	)
+	stdSignMsg := txbuilder.StdSignMsg{
+		ChainID: genDoc.ChainID,
+		Msgs: []sdk.Msg{msg},
 	}
+	sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
+	require.Nil(t, err)
+	tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+	txBytes, err := cdc.MarshalJSON(tx)
+	require.Nil(t, err)
+//	fee := auth.StdFee{}
+	// append initial (proposing) validator
+	genTxs := []json.RawMessage{txBytes}
 
 	// append any additional (non-proposing) validators
-	for i := 1; i < nValidators; i++ {
-		genDoc.Validators = append(genDoc.Validators,
-			tmtypes.GenesisValidator{
-				PubKey: ed25519.GenPrivKey().PubKey(),
-				Power:  1,
-				Name:   fmt.Sprintf("validator-%d", i+1),
-			},
-		)
-	}
+	//for i:=0 ; i<nValidators; i++ {
+	//	operPrivKey := ed25519.GenPrivKey()
+	//	operAddr := operPrivKey.PubKey().Address()
+	//	pubKey := ed25519.GenPrivKey().PubKey()
+	//	msg := stake.NewMsgCreateValidator(
+	//		sdk.ValAddress(operAddr),
+	//		pubKey,
+	//		sdk.NewCoin("steak", sdk.NewInt(1)),
+	//		stake.Description{Moniker: fmt.Sprintf("validator-%d", i+1)},
+	//		stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+	//	)
+	//	stdSignMsg := txbuilder.StdSignMsg{
+	//		ChainID: genDoc.ChainID,
+	//		Msgs: []sdk.Msg{msg},
+	//		Fee: fee,
+	//	}
+	//	sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
+	//	require.Nil(t, err)
+	//	tx := auth.NewStdTx([]sdk.Msg{msg}, fee, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+	//	txBytes, err := cdc.MarshalJSON(tx)
+	//	require.Nil(t, err)
+	//	genTxs = append(genTxs, txBytes)
+	//	valConsPubKeys = append(valConsPubKeys, pubKey)
+	//	valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
+	//}
 
-	//var validatorsPKs []crypto.PubKey
-
-	// NOTE: It's bad practice to reuse public key address for the operator
-	// address but doing in the test for simplicity.
-	var appGenTxs []auth.StdTx
-	for _, gdValidator := range genDoc.Validators {
-		//operAddr := ed25519.GenPrivKey().PubKey().Address()
-		pk := gdValidator.PubKey
-
-		desc := stake.NewDescription("test_val1", "", "", "")
-		msg := stake.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin("stake", 100), desc, stake.CommissionMsg{})
-		appGenTx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
-		appGenTxs = append(appGenTxs, appGenTx)
-	}
-
-	genesisState, err := gapp.NewTestGaiaAppGenState(cdc, []json.RawMessage{}, genDoc.Validators, valOperAddrs)
+	//genesisState, err := gapp.NewTestGaiaAppGenState(cdc, nil, genDoc.Validators, valOperAddrs)
+	genesisState, err := gapp.GaiaAppGenState(cdc, genTxs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts

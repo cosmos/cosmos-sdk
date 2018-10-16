@@ -496,7 +496,7 @@ func TestValidatorsQuery(t *testing.T) {
 	require.Equal(t, 1, len(operAddrs))
 
 	validators := getValidators(t, port)
-	require.Equal(t, len(validators), 1)
+	require.Equal(t, 1, len(validators), fmt.Sprintf("%+v", validators))
 
 	// make sure all the validators were found (order unknown because sorted by operator addr)
 	foundVal := false

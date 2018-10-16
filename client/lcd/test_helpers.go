@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -142,16 +143,16 @@ func InitializeTestLCD(
 	cdc = gapp.MakeCodec()
 
 	genesisFile := config.GenesisFile()
-	println(genesisFile)
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
 	genDoc.Validators = nil
+	genDoc.SaveAs(genesisFile)
 
-	operPrivKey := ed25519.GenPrivKey()
+	operPrivKey := secp256k1.GenPrivKey()
 	operAddr := operPrivKey.PubKey().Address()
 	msg := stake.NewMsgCreateValidator(
 		sdk.ValAddress(operAddr),
 		privVal.PubKey,
-		sdk.NewCoin("steak", sdk.NewInt(1)),
+		sdk.NewCoin("steak", sdk.NewInt(10000000000)),
 		stake.Description{Moniker: fmt.Sprintf("validator-%d", 0)},
 		stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 	)
@@ -169,31 +170,30 @@ func InitializeTestLCD(
 	genTxs := []json.RawMessage{txBytes}
 
 	// append any additional (non-proposing) validators
-	//for i:=0 ; i<nValidators; i++ {
-	//	operPrivKey := ed25519.GenPrivKey()
-	//	operAddr := operPrivKey.PubKey().Address()
-	//	pubKey := ed25519.GenPrivKey().PubKey()
-	//	msg := stake.NewMsgCreateValidator(
-	//		sdk.ValAddress(operAddr),
-	//		pubKey,
-	//		sdk.NewCoin("steak", sdk.NewInt(1)),
-	//		stake.Description{Moniker: fmt.Sprintf("validator-%d", i+1)},
-	//		stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-	//	)
-	//	stdSignMsg := txbuilder.StdSignMsg{
-	//		ChainID: genDoc.ChainID,
-	//		Msgs: []sdk.Msg{msg},
-	//		Fee: fee,
-	//	}
-	//	sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
-	//	require.Nil(t, err)
-	//	tx := auth.NewStdTx([]sdk.Msg{msg}, fee, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
-	//	txBytes, err := cdc.MarshalJSON(tx)
-	//	require.Nil(t, err)
-	//	genTxs = append(genTxs, txBytes)
-	//	valConsPubKeys = append(valConsPubKeys, pubKey)
-	//	valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
-	//}
+	for i:=0 ; i<nValidators; i++ {
+		operPrivKey := secp256k1.GenPrivKey()
+		operAddr := operPrivKey.PubKey().Address()
+		pubKey := ed25519.GenPrivKey().PubKey()
+		msg := stake.NewMsgCreateValidator(
+			sdk.ValAddress(operAddr),
+			pubKey,
+			sdk.NewCoin("steak", sdk.NewInt(1)),
+			stake.Description{Moniker: fmt.Sprintf("validator-%d", i+1)},
+			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		)
+		stdSignMsg := txbuilder.StdSignMsg{
+			ChainID: genDoc.ChainID,
+			Msgs: []sdk.Msg{msg},
+		}
+		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
+		require.Nil(t, err)
+		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+		txBytes, err := cdc.MarshalJSON(tx)
+		require.Nil(t, err)
+		genTxs = append(genTxs, txBytes)
+		valConsPubKeys = append(valConsPubKeys, pubKey)
+		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
+	}
 
 	//genesisState, err := gapp.NewTestGaiaAppGenState(cdc, nil, genDoc.Validators, valOperAddrs)
 	genesisState, err := gapp.GaiaAppGenState(cdc, genTxs)

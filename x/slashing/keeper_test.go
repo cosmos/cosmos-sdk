@@ -296,7 +296,7 @@ func TestHandleNewValidator(t *testing.T) {
 	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 1)
 
 	// Validator created
-	got := sh(ctx, newTestMsgCreateValidator(addr, val, sdk.NewInt(amt)))
+	got := sh(ctx, NewTestMsgCreateValidator(addr, val, sdk.NewInt(amt)))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
@@ -384,7 +384,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	consAddr := sdk.ConsAddress(addr)
 	sh := stake.NewHandler(sk)
-	got := sh(ctx, newTestMsgCreateValidator(addr, val, amt))
+	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
@@ -398,7 +398,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// validator kicked out of validator set
 	newAmt := int64(101)
-	got = sh(ctx, newTestMsgCreateValidator(addrs[1], pks[1], sdk.NewInt(newAmt)))
+	got = sh(ctx, NewTestMsgCreateValidator(addrs[1], pks[1], sdk.NewInt(newAmt)))
 	require.True(t, got.IsOK())
 	validatorUpdates = stake.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))

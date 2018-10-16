@@ -407,17 +407,36 @@ func (d *Dec) UnmarshalAmino(text string) (err error) {
 	return nil
 }
 
-// MarshalJSON defines custom encoding scheme
+// MarshalJSON marshals the decimal
 func (d Dec) MarshalJSON() ([]byte, error) {
 	if d.Int == nil {
 		return nilJSON, nil
 	}
-
 	bz, err := d.Int.MarshalText()
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(string(bz))
+	var bzWDec []byte
+	// TODO: Remove trailing zeros
+	// case 1, pure decimal
+	if len(bz) <= 10 {
+		bzWDec = make([]byte, 12)
+		// 0. prefix
+		bzWDec[0] = byte('0')
+		bzWDec[1] = byte('.')
+		// set relevant digits to 0
+		for i := 0; i < 10-len(bz); i++ {
+			bzWDec[i+2] = byte('0')
+		}
+		// set last few digits
+		copy(bzWDec[2+(10-len(bz)):], bz)
+	} else {
+		bzWDec = make([]byte, len(bz)+1)
+		copy(bzWDec, bz[:len(bz)-10])
+		bzWDec[len(bz)-10] = byte('.')
+		copy(bzWDec[len(bz)-9:], bz[len(bz)-10:])
+	}
+	return json.Marshal(string(bzWDec))
 }
 
 // UnmarshalJSON defines custom decoding scheme
@@ -431,7 +450,13 @@ func (d *Dec) UnmarshalJSON(bz []byte) error {
 	if err != nil {
 		return err
 	}
-	return d.Int.UnmarshalText([]byte(text))
+	// TODO: Reuse dec allocation
+	newDec, err := NewDecFromStr(text)
+	if err != nil {
+		return err
+	}
+	d.Int = newDec.Int
+	return nil
 }
 
 //___________________________________________________________________________________

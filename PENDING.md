@@ -72,6 +72,8 @@ BREAKING CHANGES
     * [x/stake] \#2412 Added an unbonding validator queue to EndBlock to automatically update validator.Status when finished Unbonding
     * [x/stake] \#2500 Block conflicting redelegations until we add an index
     * [x/params] Global Paramstore refactored
+    * [types] \#2506 sdk.Dec MarshalJSON now marshals as a normal Decimal, with 10 digits of decimal precision
+
 
 * Tendermint
   * Update tendermint version from v0.23.0 to v0.25.0, notable changes

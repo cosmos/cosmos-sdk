@@ -104,11 +104,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	pool.LooseTokens = pool.LooseTokens.Sub(tokensToBurn)
 	k.SetPool(ctx, pool)
 
-	// remove validator if it has no more tokens
-	if validator.Tokens.IsZero() && validator.Status != sdk.Bonded {
-		// if bonded, we must remove in ApplyAndReturnValidatorSetUpdates instead
-		k.RemoveValidator(ctx, validator.OperatorAddr)
-	}
+	// possibly remove the validator
+	k.MaybeRemoveValidator(ctx, validator.OperatorAddr)
 
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(

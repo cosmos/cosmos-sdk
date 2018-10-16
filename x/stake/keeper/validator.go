@@ -348,3 +348,13 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 		store.Delete(validatorTimesliceIterator.Key())
 	}
 }
+
+// Possibly remove a validator
+func (k Keeper) MaybeRemoveValidator(ctx sdk.Context, addr sdk.ValAddress) {
+	val := k.mustGetValidator(ctx, addr)
+	// We can safely remove the validator iff the validator is unbonded, has no delegator shares,
+	//   and has no outstanding unbonding delegations or redelegations
+	if val.Status == sdk.Unbonded && val.Tokens.IsZero() && val.UnbondingRedelegationCounter == int64(0) {
+		k.RemoveValidator(ctx, addr)
+	}
+}

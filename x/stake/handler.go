@@ -48,6 +48,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 			tags.Delegator, []byte(dvPair.DelegatorAddr.String()),
 			tags.SrcValidator, []byte(dvPair.ValidatorAddr.String()),
 		))
+
+		k.MaybeRemoveValidator(ctx, dvPair.ValidatorAddr)
 	}
 
 	matureRedelegations := k.DequeueAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
@@ -62,6 +64,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 			tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
 			tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
 		))
+
+		k.MaybeRemoveValidator(ctx, dvvTriplet.ValidatorSrcAddr)
 	}
 
 	pool := k.GetPool(ctx)

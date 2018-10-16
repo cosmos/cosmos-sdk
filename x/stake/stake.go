@@ -116,7 +116,6 @@ var (
 	ErrValidatorOwnerExists  = types.ErrValidatorOwnerExists
 	ErrValidatorPubKeyExists = types.ErrValidatorPubKeyExists
 	ErrValidatorJailed       = types.ErrValidatorJailed
-	ErrBadRemoveValidator    = types.ErrBadRemoveValidator
 	ErrDescriptionLength     = types.ErrDescriptionLength
 	ErrCommissionNegative    = types.ErrCommissionNegative
 	ErrCommissionHuge        = types.ErrCommissionHuge

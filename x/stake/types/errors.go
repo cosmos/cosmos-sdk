@@ -48,10 +48,6 @@ func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "validator for this address is currently jailed")
 }
 
-func ErrBadRemoveValidator(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "error removing validator")
-}
-
 func ErrDescriptionLength(codespace sdk.CodespaceType, descriptor string, got, max int) sdk.Error {
 	msg := fmt.Sprintf("bad description length for %v, got length %v, max is %v", descriptor, got, max)
 	return sdk.NewError(codespace, CodeInvalidValidator, msg)

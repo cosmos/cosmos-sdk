@@ -73,6 +73,7 @@ BREAKING CHANGES
     * [x/stake] \#2412 Added an unbonding validator queue to EndBlock to automatically update validator.Status when finished Unbonding
     * [x/stake] \#2500 Block conflicting redelegations until we add an index
     * [x/params] Global Paramstore refactored
+    * [x/stake] \#2508 Utilize Tendermint power for validator power key
 
 * Tendermint
   * Update tendermint version from v0.23.0 to v0.25.0, notable changes

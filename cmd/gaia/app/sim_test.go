@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distributionsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
@@ -103,6 +104,10 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{100, banksim.SingleInputSendMsg(app.accountMapper, app.bankKeeper)},
+		{50, distributionsim.SimulateMsgSetWithdrawAddress(app.accountMapper, app.distrKeeper)},
+		{50, distributionsim.SimulateMsgWithdrawDelegatorRewardsAll(app.accountMapper, app.distrKeeper)},
+		{50, distributionsim.SimulateMsgWithdrawDelegatorReward(app.accountMapper, app.distrKeeper)},
+		{50, distributionsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountMapper, app.distrKeeper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
 		{100, stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper)},
@@ -117,6 +122,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountMapper),
+		distributionsim.AllInvariants(app.bankKeeper, app.distrKeeper, app.accountMapper),
 		govsim.AllInvariants(),
 		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.accountMapper),
 		slashingsim.AllInvariants(),

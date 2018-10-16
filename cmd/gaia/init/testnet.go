@@ -184,7 +184,15 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		config.SetRoot(nodeDir)
 
 		// Run `init` and generate genesis.json and config.toml
-		_, _, err := initWithConfig(cdc, config, chainID, moniker, gentxsDir, true, true)
+		initCfg := InitConfig{
+			ChainID: chainID,
+			GenTxsDir: gentxsDir,
+			Moniker: moniker,
+			WithTxs: true,
+			Overwrite: true,
+			OverwriteKeys: false,
+		}
+		_, _, err := initWithConfig(cdc, config, initCfg)
 		if err != nil {
 			return err
 		}

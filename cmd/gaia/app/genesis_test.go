@@ -36,13 +36,8 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 		msg := msgs[0].(stake.MsgCreateValidator)
 
 		// get genesis flag account information
-		genAccs[i] = genesisAccountFromMsgCreateValidator(msg)
+		genAccs[i] = genesisAccountFromMsgCreateValidator(msg, freeFermionsAcc)
 		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
-
-		// add the validator
-		if len(msg.Name()) > 0 {
-			stakeData = addValidatorToStakeData(msg, stakeData)
-		}
 	}
 
 	// create the final app state

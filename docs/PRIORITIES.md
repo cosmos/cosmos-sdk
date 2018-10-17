@@ -40,3 +40,7 @@
 
 - Circuit breaker - https://github.com/cosmos/cosmos-sdk/issues/926
 - Parameter change proposals (roughly the same implementation as circuit breaker)
+
+## Staking / Slashing - Stability
+
+- Consider "tombstone" / "prison" - double-sign and you can never validate again - https://github.com/cosmos/cosmos-sdk/issues/2363

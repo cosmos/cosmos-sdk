@@ -99,13 +99,16 @@ func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
 	return armorStr
 }
 
+// encrypt the given privKey with the passphrase using a randomly
+// generated salt and the xsalsa20 cipher. returns the salt and the
+// encrypted priv key.
 func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
 	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
 		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
 	}
-	key = crypto.Sha256(key) // Get 32 bytes
+	key = crypto.Sha256(key) // get 32 bytes
 	privKeyBytes := privKey.Bytes()
 	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }

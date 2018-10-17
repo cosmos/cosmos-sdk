@@ -128,5 +128,6 @@ func readLineFromBuf(buf *bufio.Reader) (string, error) {
 
 // PrintPrefixed prints a string with > prefixed for use in prompts.
 func PrintPrefixed(msg string) {
-	fmt.Printf("> %s\n", msg)
+	msg = fmt.Sprintf("> %s\n", msg)
+	fmt.Fprint(os.Stderr, msg)
 }

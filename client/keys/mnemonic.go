@@ -12,9 +12,7 @@ import (
 
 const (
 	flagUserEntropy = "unsafe-entropy"
-)
 
-const (
 	mnemonicEntropySize = 256
 )
 

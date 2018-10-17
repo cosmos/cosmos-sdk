@@ -74,8 +74,6 @@
   name = "github.com/zondax/ledger-goclient"
   version = "=v0.1.0"
 
-<<<<<<< HEAD
-
 ## transitive deps, with releases:
 
 [[override]]

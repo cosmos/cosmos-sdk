@@ -28,6 +28,7 @@ func newKeyCommand() *cobra.Command {
 Optionally specify a bip39 mnemonic, a bip39 passphrase to further secure the mnemonic,
 and a bip32 HD path to derive a specific account. The key will be stored under the given name 
 and encrypted with the given password. The only input that is required is the encryption password.`,
+		Args: cobra.ExactArgs(1),
 		RunE: runNewCmd,
 	}
 	cmd.Flags().Bool(flagNewDefault, false, "Skip the prompts and just use the default values for everything")
@@ -47,11 +48,6 @@ output
 */
 // nolint: gocyclo
 func runNewCmd(cmd *cobra.Command, args []string) error {
-
-	if len(args) != 1 || len(args[0]) == 0 {
-		return errors.New("you must provide a name for the key")
-	}
-
 	name := args[0]
 	kb, err := GetKeyBase()
 	if err != nil {

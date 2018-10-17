@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/json"
+	"time"
+
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -32,6 +34,17 @@ func MustSortJSON(toSortJSON []byte) []byte {
 		panic(err)
 	}
 	return js
+}
+
+// Formats a time.Time into a []byte that can be sorted
+func FormatTimeBytes(t time.Time) []byte {
+	return []byte(t.UTC().Round(0).Format("2006-01-02T15:04:05.000000000"))
+}
+
+// Parses a []byte encoded using FormatTimeKey back into a time.Time
+func ParseTimeBytes(bz []byte) (time.Time, error) {
+	str := string(bz)
+	return time.Parse("2006-01-02T15:04:05.000000000", str)
 }
 
 // DefaultChainID returns the chain ID from the genesis file if present. An

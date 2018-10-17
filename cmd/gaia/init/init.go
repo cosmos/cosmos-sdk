@@ -3,6 +3,8 @@ package init
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/tendermint/crypto"
@@ -20,6 +22,8 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/types"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 const (
@@ -28,6 +32,8 @@ const (
 	flagMoniker              = "moniker"
 	flagOverwrite            = "overwrite"
 	flagEnsurePrivValNodeKey = "ensure-privval-nodekey"
+	flagClientHome           = "home-client"
+	flagOWK                  = "owk"
 )
 
 
@@ -76,6 +82,8 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	cmd.Flags().Bool(flagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().String(flagMoniker, "", "moniker")
 	cmd.Flags().Bool(flagEnsurePrivValNodeKey, false, "Ensure priv_validator.json and node_key.json files are created and exit")
+	cmd.Flags().String(flagClientHome, "", "client's home directory")
+	cmd.Flags().Bool(flagOWK, false, "overwrite client's keys")
 	return cmd
 }
 
@@ -134,7 +142,23 @@ func initWithConfig(cdc *codec.Codec, appInit server.AppInit, config *cfg.Config
 		var genesisState app.GenesisState
 		pubKey := readOrCreatePrivValidator(config.PrivValidatorFile())
 		config.Moniker = moniker
-		genesisState, genValidator := app.DefaultState(config.Moniker, pubKey)
+		ip, err := server.ExternalIP()
+		if err != nil {
+			return
+		}
+		txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+		clientRoot := viper.GetString(flagClientHome)
+		addr, secret, err := server.GenerateSaveCoinKey(clientRoot, moniker, server.DefaultKeyPass, viper.GetBool(flagOWK))
+		if err != nil {
+			return
+		}
+		appMessage, err = json.Marshal(map[string]string{"secret": secret})
+		if err != nil {
+			return
+		}
+
+		genesisState, genValidator := app.DefaultState(cliCtx.Codec, config.Moniker, pubKey, server.DefaultKeyPass)
 		appState, err = codec.MarshalJSONIndent(cdc, genesisState)
 		if err != nil {
 			return

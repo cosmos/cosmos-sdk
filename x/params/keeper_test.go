@@ -65,45 +65,82 @@ func TestKeeper(t *testing.T) {
 		[]byte("extra2"), string(""),
 	)
 
+	cdc := codec.New()
 	skey := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(skey, tkey)
-	store := NewKeeper(codec.New(), skey, tkey).Subspace("test").WithTypeTable(table)
+	keeper := NewKeeper(cdc, skey, tkey)
+	space := keeper.Subspace("test").WithTypeTable(table)
+	store := ctx.KVStore(skey).Prefix([]byte("test/"))
 
+	// Set params
 	for i, kv := range kvs {
-		require.NotPanics(t, func() { store.Set(ctx, []byte(kv.key), kv.param) }, "store.Set panics, tc #%d", i)
+		require.NotPanics(t, func() { space.Set(ctx, []byte(kv.key), kv.param) }, "space.Set panics, tc #%d", i)
 	}
 
+	// Test space.Get
 	for i, kv := range kvs {
 		var param int64
-		require.NotPanics(t, func() { store.Get(ctx, []byte(kv.key), &param) }, "store.Get panics, tc #%d", i)
+		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), &param) }, "space.Get panics, tc #%d", i)
 		require.Equal(t, kv.param, param, "stored param not equal, tc #%d", i)
 	}
 
-	cdc := codec.New()
+	// Test space.GetRaw
 	for i, kv := range kvs {
 		var param int64
-		bz := store.GetRaw(ctx, []byte(kv.key))
+		bz := space.GetRaw(ctx, []byte(kv.key))
 		err := cdc.UnmarshalJSON(bz, &param)
 		require.Nil(t, err, "err is not nil, tc #%d", i)
 		require.Equal(t, kv.param, param, "stored param not equal, tc #%d", i)
 	}
 
+	// Test store.Get equals space.Get
 	for i, kv := range kvs {
-		var param bool
-		require.Panics(t, func() { store.Get(ctx, []byte(kv.key), &param) }, "invalid store.Get not panics, tc #%d", i)
+		var param int64
+		bz := store.Get([]byte(kv.key))
+		require.NotNil(t, bz, "KVStore.Get returns nil, tc #%d", i)
+		err := cdc.UnmarshalJSON(bz, &param)
+		require.NoError(t, err, "UnmarshalJSON returns error, tc #%d", i)
+		require.Equal(t, kv.param, param, "stored param not equal, tc #%d", i)
 	}
 
+	// Test invalid space.Get
 	for i, kv := range kvs {
-		require.Panics(t, func() { store.Set(ctx, []byte(kv.key), true) }, "invalid store.Set not panics, tc #%d", i)
+		var param bool
+		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), &param) }, "invalid space.Get not panics, tc #%d", i)
+	}
+
+	// Test invalid space.Set
+	for i, kv := range kvs {
+		require.Panics(t, func() { space.Set(ctx, []byte(kv.key), true) }, "invalid space.Set not panics, tc #%d", i)
+	}
+
+	// Test GetSubspace
+	for i, kv := range kvs {
+		var gparam, param int64
+		gspace, ok := keeper.GetSubspace("test")
+		require.True(t, ok, "cannot retrieve subspace, tc #%d", i)
+
+		require.NotPanics(t, func() { gspace.Get(ctx, []byte(kv.key), &gparam) })
+		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), &param) })
+		require.Equal(t, gparam, param, "GetSubspace().Get not equal with space.Get, tc #%d", i)
+
+		require.NotPanics(t, func() { gspace.Set(ctx, []byte(kv.key), int64(i)) })
+		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), &param) })
+		require.Equal(t, int64(i), param, "GetSubspace().Set not equal with space.Get, tc #%d", i)
 	}
 }
 
-func TestGet(t *testing.T) {
+func indirect(ptr interface{}) interface{} {
+	return reflect.ValueOf(ptr).Elem().Interface()
+}
+
+func TestSubspace(t *testing.T) {
+	cdc := createTestCodec()
 	key := sdk.NewKVStoreKey("test")
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(key, tkey)
-	keeper := NewKeeper(createTestCodec(), key, tkey)
+	keeper := NewKeeper(cdc, key, tkey)
 
 	kvs := []struct {
 		key   string
@@ -140,29 +177,41 @@ func TestGet(t *testing.T) {
 		[]byte("struct"), s{},
 	)
 
-	store := keeper.Subspace("test").WithTypeTable(table)
+	store := ctx.KVStore(key).Prefix([]byte("test/"))
+	space := keeper.Subspace("test").WithTypeTable(table)
 
+	// Test space.Set, space.Modified
 	for i, kv := range kvs {
-		require.False(t, store.Modified(ctx, []byte(kv.key)), "store.Modified returns true before setting, tc #%d", i)
-		require.NotPanics(t, func() { store.Set(ctx, []byte(kv.key), kv.param) }, "store.Set panics, tc #%d", i)
-		require.True(t, store.Modified(ctx, []byte(kv.key)), "store.Modified returns false after setting, tc #%d", i)
+		require.False(t, space.Modified(ctx, []byte(kv.key)), "space.Modified returns true before setting, tc #%d", i)
+		require.NotPanics(t, func() { space.Set(ctx, []byte(kv.key), kv.param) }, "space.Set panics, tc #%d", i)
+		require.True(t, space.Modified(ctx, []byte(kv.key)), "space.Modified returns false after setting, tc #%d", i)
 	}
 
+	// Test space.Get, space.GetIfExists
 	for i, kv := range kvs {
-		require.NotPanics(t, func() { store.GetIfExists(ctx, []byte("invalid"), kv.ptr) }, "store.GetIfExists panics when no value exists, tc #%d", i)
-		require.Equal(t, kv.zero, reflect.ValueOf(kv.ptr).Elem().Interface(), "store.GetIfExists unmarshalls when no value exists, tc #%d", i)
-		require.Panics(t, func() { store.Get(ctx, []byte("invalid"), kv.ptr) }, "invalid store.Get not panics when no value exists, tc #%d", i)
-		require.Equal(t, kv.zero, reflect.ValueOf(kv.ptr).Elem().Interface(), "invalid store.Get unmarshalls when no value exists, tc #%d", i)
+		require.NotPanics(t, func() { space.GetIfExists(ctx, []byte("invalid"), kv.ptr) }, "space.GetIfExists panics when no value exists, tc #%d", i)
+		require.Equal(t, kv.zero, indirect(kv.ptr), "space.GetIfExists unmarshalls when no value exists, tc #%d", i)
+		require.Panics(t, func() { space.Get(ctx, []byte("invalid"), kv.ptr) }, "invalid space.Get not panics when no value exists, tc #%d", i)
+		require.Equal(t, kv.zero, indirect(kv.ptr), "invalid space.Get unmarshalls when no value exists, tc #%d", i)
 
-		require.NotPanics(t, func() { store.GetIfExists(ctx, []byte(kv.key), kv.ptr) }, "store.GetIfExists panics, tc #%d", i)
-		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface(), "stored param not equal, tc #%d", i)
-		require.NotPanics(t, func() { store.Get(ctx, []byte(kv.key), kv.ptr) }, "store.Get panics, tc #%d", i)
-		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface(), "stored param not equal, tc #%d", i)
+		require.NotPanics(t, func() { space.GetIfExists(ctx, []byte(kv.key), kv.ptr) }, "space.GetIfExists panics, tc #%d", i)
+		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
+		require.NotPanics(t, func() { space.Get(ctx, []byte(kv.key), kv.ptr) }, "space.Get panics, tc #%d", i)
+		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
 
-		require.Panics(t, func() { store.Get(ctx, []byte("invalid"), kv.ptr) }, "invalid store.Get not panics when no value exists, tc #%d", i)
-		require.Equal(t, kv.param, reflect.ValueOf(kv.ptr).Elem().Interface(), "invalid store.Get unmarshalls when no value existt, tc #%d", i)
+		require.Panics(t, func() { space.Get(ctx, []byte("invalid"), kv.ptr) }, "invalid space.Get not panics when no value exists, tc #%d", i)
+		require.Equal(t, kv.param, indirect(kv.ptr), "invalid space.Get unmarshalls when no value existt, tc #%d", i)
 
-		require.Panics(t, func() { store.Get(ctx, []byte(kv.key), nil) }, "invalid store.Get not panics when the pointer is nil, tc #%d", i)
-		require.Panics(t, func() { store.Get(ctx, []byte(kv.key), new(invalid)) }, "invalid store.Get not panics when the pointer is different type, tc #%d", i)
+		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), nil) }, "invalid space.Get not panics when the pointer is nil, tc #%d", i)
+		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), new(invalid)) }, "invalid space.Get not panics when the pointer is different type, tc #%d", i)
+	}
+
+	// Test store.Get equals space.Get
+	for i, kv := range kvs {
+		bz := store.Get([]byte(kv.key))
+		require.NotNil(t, bz, "store.Get() returns nil, tc #%d", i)
+		err := cdc.UnmarshalJSON(bz, kv.ptr)
+		require.NoError(t, err, "cdc.UnmarshalJSON() returns error, tc #%d", i)
+		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
 	}
 }

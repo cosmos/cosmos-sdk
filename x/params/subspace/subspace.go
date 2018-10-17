@@ -7,10 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Additional capicity to be allocated for Subspace.name
-// So we don't have to allocate extra space each time appending to the key
-const extraKeyCap = 20
-
 // Individual parameter store for each keeper
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
@@ -30,32 +26,35 @@ func NewSubspace(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name str
 		cdc:  cdc,
 		key:  key,
 		tkey: tkey,
+		name: []byte(name),
+		table: TypeTable{
+			m: make(map[string]reflect.Type),
+		},
 	}
 
-	namebz := []byte(name)
-	res.name = make([]byte, len(namebz), len(namebz)+extraKeyCap)
-	copy(res.name, namebz)
 	return
 }
 
 // WithTypeTable initializes TypeTable and returns modified Subspace
-func (s Subspace) WithTypeTable(table TypeTable) (res Subspace) {
-	if table == nil {
+func (s Subspace) WithTypeTable(table TypeTable) Subspace {
+	if table.m == nil {
 		panic("SetTypeTable() called with nil TypeTable")
 	}
-	if s.table != nil {
-		panic("SetTypeTable() called on initialized Subspace")
+	if len(s.table.m) != 0 {
+		panic("SetTypeTable() called on already initialized Subspace")
 	}
 
-	res = Subspace{
-		cdc:   s.cdc,
-		key:   s.key,
-		tkey:  s.tkey,
-		name:  s.name,
-		table: table,
+	for k, v := range table.m {
+		s.table.m[k] = v
 	}
 
-	return
+	// Allocate additional capicity for Subspace.name
+	// So we don't have to allocate extra space each time appending to the key
+	name := s.name
+	s.name = make([]byte, len(name), len(name)+table.maxKeyLength())
+	copy(s.name, name)
+
+	return s
 }
 
 // Returns a KVStore identical with ctx.KVStore(s.key).Prefix()
@@ -118,7 +117,7 @@ func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 	store := s.kvStore(ctx)
 
-	ty, ok := s.table[string(key)]
+	ty, ok := s.table.m[string(key)]
 	if !ok {
 		panic("Parameter not registered")
 	}

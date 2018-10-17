@@ -49,6 +49,11 @@ func (v Validator) GetDelegatorShares() sdk.Dec {
 }
 
 // Implements sdk.Validator
+func (v Validator) GetCommission() sdk.Dec {
+	return sdk.ZeroDec()
+}
+
+// Implements sdk.Validator
 func (v Validator) GetJailed() bool {
 	return false
 }

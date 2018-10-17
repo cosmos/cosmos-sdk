@@ -17,7 +17,7 @@ func TestBeginBlocker(t *testing.T) {
 	addr, pk, amt := addrs[2], pks[2], sdk.NewInt(100)
 
 	// bond the validator
-	got := stake.NewHandler(sk)(ctx, newTestMsgCreateValidator(addr, pk, amt))
+	got := stake.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
 	validatorUpdates := stake.EndBlocker(ctx, sk)
 	keeper.AddValidators(ctx, validatorUpdates)
@@ -45,7 +45,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, ctx.BlockHeight(), info.StartHeight)
 	require.Equal(t, int64(1), info.IndexOffset)
 	require.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
-	require.Equal(t, int64(1), info.SignedBlocksCounter)
+	require.Equal(t, int64(0), info.MissedBlocksCounter)
 
 	height := int64(0)
 

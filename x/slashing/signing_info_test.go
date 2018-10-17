@@ -17,7 +17,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 		StartHeight:         int64(4),
 		IndexOffset:         int64(3),
 		JailedUntil:         time.Unix(2, 0),
-		SignedBlocksCounter: int64(10),
+		MissedBlocksCounter: int64(10),
 	}
 	keeper.setValidatorSigningInfo(ctx, sdk.ConsAddress(addrs[0]), newInfo)
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(addrs[0]))
@@ -25,14 +25,14 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 	require.Equal(t, info.StartHeight, int64(4))
 	require.Equal(t, info.IndexOffset, int64(3))
 	require.Equal(t, info.JailedUntil, time.Unix(2, 0).UTC())
-	require.Equal(t, info.SignedBlocksCounter, int64(10))
+	require.Equal(t, info.MissedBlocksCounter, int64(10))
 }
 
-func TestGetSetValidatorSigningBitArray(t *testing.T) {
+func TestGetSetValidatorMissedBlockBitArray(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t, DefaultParams())
-	signed := keeper.getValidatorSigningBitArray(ctx, sdk.ConsAddress(addrs[0]), 0)
-	require.False(t, signed) // treat empty key as unsigned
-	keeper.setValidatorSigningBitArray(ctx, sdk.ConsAddress(addrs[0]), 0, true)
-	signed = keeper.getValidatorSigningBitArray(ctx, sdk.ConsAddress(addrs[0]), 0)
-	require.True(t, signed) // now should be signed
+	missed := keeper.getValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0)
+	require.False(t, missed) // treat empty key as not missed
+	keeper.setValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0, true)
+	missed = keeper.getValidatorMissedBlockBitArray(ctx, sdk.ConsAddress(addrs[0]), 0)
+	require.True(t, missed) // now should be missed
 }

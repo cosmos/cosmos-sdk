@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -116,7 +117,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		memo := fmt.Sprintf("%s@%s:26656", nodeID, ip)
 
 		buf := client.BufferStdin()
-		prompt := fmt.Sprintf("Password for account '%s' (default %s):", nodeDirName, server.DefaultKeyPass)
+		prompt := fmt.Sprintf("Password for account '%s' (default %s):", nodeDirName, app.DefaultKeyPass)
 		keyPass, err := client.GetPassword(prompt, buf)
 		if err != nil && keyPass != "" {
 			// An error was returned that either failed to read the password from
@@ -125,7 +126,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 			return err
 		}
 		if keyPass == "" {
-			keyPass = server.DefaultKeyPass
+			keyPass = app.DefaultKeyPass
 		}
 
 		addr, secret, err := server.GenerateSaveCoinKey(clientDir, nodeDirName, keyPass, true)
@@ -154,7 +155,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		)
 		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{}, memo)
 		txBldr := authtx.NewTxBuilderFromCLI().WithChainID(chainID).WithMemo(memo)
-		signedTx, err := txBldr.SignStdTx(nodeDirName, server.DefaultKeyPass, tx, false)
+		signedTx, err := txBldr.SignStdTx(nodeDirName, app.DefaultKeyPass, tx, false)
 		if err != nil {
 			_ = os.RemoveAll(outDir)
 			return err

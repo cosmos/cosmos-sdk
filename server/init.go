@@ -23,9 +23,6 @@ const (
 	FlagChainID    = "chain-id"
 )
 
-// DefaultKeyPass contains the default key password for genesis transactions
-const DefaultKeyPass = "12345678"
-
 // Storage for init command input parameters
 type InitConfig struct {
 	ChainID   string

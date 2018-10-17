@@ -262,10 +262,9 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	algo := keys.SigningAlgo(algoType)
 
 	seed := getSeed(algo)
-	bz := []byte(seed)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(bz)
+	w.Write([]byte(seed))
 }
 
 // RecoverKeyBody is recover key request REST body

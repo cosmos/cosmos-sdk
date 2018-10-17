@@ -18,3 +18,10 @@ func InitGenesis(ctx sdk.Context, space params.Subspace, data GenesisState) {
 		space.SetWithSubkey(ctx, MsgNameKey, []byte(name), true)
 	}
 }
+
+func DefaultGenesisState() GenesisState {
+	return GenesisState{
+		MsgTypes: nil,
+		MsgNames: nil,
+	}
+}

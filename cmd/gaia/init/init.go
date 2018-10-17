@@ -28,7 +28,6 @@ import (
 const (
 	flagChainID              = "chain-id"
 	flagWithTxs              = "with-txs"
-	flagMoniker              = "moniker"
 	flagOverwrite            = "overwrite"
 	flagClientHome           = "home-client"
 	flagOWK                  = "owk"
@@ -62,7 +61,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 			initCfg := InitConfig{
 				ChainID: chainID,
 				GenTxsDir: viper.GetString(filepath.Join(config.RootDir, "config", "gentx")),
-				Moniker: viper.GetString(flagMoniker),
+				Moniker: viper.GetString(client.FlagName),
 				ClientHome: viper.GetString(flagClientHome),
 				WithTxs: viper.GetBool(flagWithTxs),
 				Overwrite: viper.GetBool(flagOverwrite),
@@ -70,6 +69,9 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 			}
 			nodeID, appMessage, err := initWithConfig(cdc, config, initCfg)
 			// print out some key information
+			if err != nil {
+				return err
+			}
 
 			toPrint := struct {
 				ChainID    string          `json:"chain_id"`
@@ -93,7 +95,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().Bool(flagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
-	cmd.Flags().String(flagMoniker, "", "moniker")
+	cmd.Flags().String(client.FlagName, "", "moniker")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().Bool(flagOWK, false, "overwrite client's keys")
 	return cmd
@@ -107,7 +109,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg InitConfig) (
 	}
 	nodeID = string(nodeKey.ID())
 	privValFile := config.PrivValidatorFile()
-	readOrCreatePrivValidator(privValFile)
+	valPubKey := readOrCreatePrivValidator(privValFile)
 	genFile := config.GenesisFile()
 	if !initCfg.Overwrite && common.FileExists(genFile) {
 		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
@@ -170,7 +172,6 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg InitConfig) (
 			return
 		}
 
-		valPubKey := readOrCreatePrivValidator(config.PrivValidatorFile())
 		msg := stake.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKey,

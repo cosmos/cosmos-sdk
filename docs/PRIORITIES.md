@@ -33,7 +33,7 @@
 - gaiad / gaiacli
 - LCD
 - Each module
-
+- Tags [#1780](https://github.com/cosmos/cosmos-sdk/issues/1780)
 # Lower priority
 
 ## Governance v2

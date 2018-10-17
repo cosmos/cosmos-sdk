@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -43,6 +44,8 @@ type GaiaApp struct {
 	keyStake         *sdk.KVStoreKey
 	tkeyStake        *sdk.TransientStoreKey
 	keySlashing      *sdk.KVStoreKey
+	keyDistr         *sdk.KVStoreKey
+	tkeyDistr        *sdk.TransientStoreKey
 	keyGov           *sdk.KVStoreKey
 	keyFeeCollection *sdk.KVStoreKey
 	keyParams        *sdk.KVStoreKey
@@ -54,6 +57,7 @@ type GaiaApp struct {
 	bankKeeper          bank.Keeper
 	stakeKeeper         stake.Keeper
 	slashingKeeper      slashing.Keeper
+	distrKeeper         distr.Keeper
 	govKeeper           gov.Keeper
 	paramsKeeper        params.Keeper
 }
@@ -72,6 +76,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		keyAccount:       sdk.NewKVStoreKey("acc"),
 		keyStake:         sdk.NewKVStoreKey("stake"),
 		tkeyStake:        sdk.NewTransientStoreKey("transient_stake"),
+		keyDistr:         sdk.NewKVStoreKey("distr"),
+		tkeyDistr:        sdk.NewTransientStoreKey("transient_distr"),
 		keySlashing:      sdk.NewKVStoreKey("slashing"),
 		keyGov:           sdk.NewKVStoreKey("gov"),
 		keyFeeCollection: sdk.NewKVStoreKey("fee"),
@@ -88,30 +94,33 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 
 	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
-
+	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
+		app.cdc,
+		app.keyFeeCollection,
+	)
 	app.paramsKeeper = params.NewKeeper(
 		app.cdc,
 		app.keyParams, app.tkeyParams,
 	)
-
 	app.stakeKeeper = stake.NewKeeper(
 		app.cdc,
 		app.keyStake, app.tkeyStake,
 		app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace),
 		app.RegisterCodespace(stake.DefaultCodespace),
 	)
-
+	app.distrKeeper = distr.NewKeeper(
+		app.cdc,
+		app.keyDistr,
+		app.paramsKeeper.Subspace(distr.DefaultParamspace),
+		app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper,
+		app.RegisterCodespace(stake.DefaultCodespace),
+	)
 	app.slashingKeeper = slashing.NewKeeper(
 		app.cdc,
 		app.keySlashing,
 		app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
 		app.RegisterCodespace(slashing.DefaultCodespace),
 	)
-
-	app.stakeKeeper = app.stakeKeeper.WithHooks(
-		app.slashingKeeper.Hooks(),
-	)
-
 	app.govKeeper = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
@@ -119,15 +128,15 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		app.RegisterCodespace(gov.DefaultCodespace),
 	)
 
-	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
-		app.cdc,
-		app.keyFeeCollection,
-	)
+	// register the staking hooks
+	app.stakeKeeper = app.stakeKeeper.WithHooks(
+		NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
 
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
+		AddRoute("distr", distr.NewHandler(app.distrKeeper)).
 		AddRoute("slashing", slashing.NewHandler(app.slashingKeeper)).
 		AddRoute("gov", gov.NewHandler(app.govKeeper))
 
@@ -138,11 +147,12 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetEndBlocker(app.EndBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake,
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keyDistr,
 		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
-	app.MountStoresTransient(app.tkeyParams, app.tkeyStake)
+	app.MountStoresTransient(app.tkeyParams, app.tkeyStake, app.tkeyDistr)
+	app.SetEndBlocker(app.EndBlocker)
+
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -156,6 +166,7 @@ func MakeCodec() *codec.Codec {
 	var cdc = codec.New()
 	bank.RegisterCodec(cdc)
 	stake.RegisterCodec(cdc)
+	distr.RegisterCodec(cdc)
 	slashing.RegisterCodec(cdc)
 	gov.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
@@ -168,6 +179,9 @@ func MakeCodec() *codec.Codec {
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 
+	// distribute rewards from previous block
+	distr.BeginBlocker(ctx, req, app.distrKeeper)
+
 	return abci.ResponseBeginBlock{
 		Tags: tags.ToKVPairs(),
 	}
@@ -176,10 +190,13 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+
 	tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
+
 	// Add these new validators to the addr -> pubkey map.
 	app.slashingKeeper.AddValidators(ctx, validatorUpdates)
+
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
@@ -208,18 +225,17 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// load the initial stake information
 	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 	if err != nil {
-		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-		// return sdk.ErrGenesisParse("").TraceCause(err, "")
+		panic(err) // TODO find a way to do this w/o panics
 	}
 
 	// load the address to pubkey map
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
 
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
+	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
 	err = GaiaValidateGenesisState(genesisState)
 	if err != nil {
-		// TODO find a way to do this w/o panics
-		panic(err)
+		panic(err) // TODO find a way to do this w/o panics
 	}
 
 	return abci.ResponseInitChain{
@@ -243,6 +259,7 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	genState := GenesisState{
 		Accounts:  accounts,
 		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
+		DistrData: distr.WriteGenesis(ctx, app.distrKeeper),
 		GovData:   gov.WriteGenesis(ctx, app.govKeeper),
 	}
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
@@ -251,4 +268,44 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	}
 	validators = stake.WriteValidators(ctx, app.stakeKeeper)
 	return appState, validators, nil
+}
+
+//______________________________________________________________________________________________
+
+// Combined Staking Hooks
+type Hooks struct {
+	dh distr.Hooks
+	sh slashing.Hooks
+}
+
+func NewHooks(dh distr.Hooks, sh slashing.Hooks) Hooks {
+	return Hooks{dh, sh}
+}
+
+var _ sdk.StakingHooks = Hooks{}
+
+// nolint
+func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
+	h.dh.OnValidatorCreated(ctx, addr)
+}
+func (h Hooks) OnValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
+	h.dh.OnValidatorCommissionChange(ctx, addr)
+}
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
+	h.dh.OnValidatorRemoved(ctx, addr)
+}
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress) {
+	h.sh.OnValidatorBonded(ctx, addr)
+}
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress) {
+	h.sh.OnValidatorBeginUnbonding(ctx, addr)
+}
+func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)
+}
+func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.dh.OnDelegationSharesModified(ctx, delAddr, valAddr)
+}
+func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.dh.OnDelegationRemoved(ctx, delAddr, valAddr)
 }

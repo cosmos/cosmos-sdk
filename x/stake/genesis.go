@@ -42,10 +42,13 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
+
+		keeper.OnValidatorCreated(ctx, validator.OperatorAddr)
 	}
 
-	for _, bond := range data.Bonds {
-		keeper.SetDelegation(ctx, bond)
+	for _, delegation := range data.Bonds {
+		keeper.SetDelegation(ctx, delegation)
+		keeper.OnDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
 	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)

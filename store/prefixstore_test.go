@@ -119,10 +119,6 @@ func TestPrefixStoreIterate(t *testing.T) {
 }
 
 func incFirstByte(bz []byte) {
-	if bz[0] == byte(255) {
-		bz[0] = byte(0)
-		return
-	}
 	bz[0]++
 }
 

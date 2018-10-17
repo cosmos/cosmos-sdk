@@ -22,8 +22,8 @@ type (
 
 	KVPair = types.KVPair
 
-	StoreKey          = types.StoreKey
-	KVStoreKey        = iavl.StoreKey
+	KVStoreKey        = types.KVStoreKey
+	IAVLStoreKey      = iavl.StoreKey
 	TransientStoreKey = transient.StoreKey
 
 	Gas       = types.Gas
@@ -57,7 +57,7 @@ func PrefixEndBytes(prefix []byte) []byte {
 func InclusiveEndBytes(inclusiveBytes []byte) []byte {
 	return types.InclusiveEndBytes(inclusiveBytes)
 }
-func NewKVStoreKey(name string) *KVStoreKey {
+func NewKVStoreKey(name string) *IAVLStoreKey {
 	return iavl.NewKey(name)
 }
 func NewTransientStoreKey(name string) *TransientStoreKey {

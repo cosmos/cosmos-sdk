@@ -12,14 +12,14 @@ import (
 //----------------------------------------
 // Store
 
-// Store holds many cache-wrapped stores.
+// Store holds many cache-wrapped kvstores.
 // Implements MultiStore.
-// TODO: support recursive multistores,
+// TODO: support recursive multikvstores,
 // currently only using CacheKVStores
 type Store struct {
 	db         types.CacheKVStore
-	stores     map[types.StoreKey]types.CacheKVStore
-	keysByName map[string]types.StoreKey
+	kvstores   map[types.KVStoreKey]types.CacheKVStore
+	keysByName map[string]types.KVStoreKey
 
 	tracer *types.Tracer
 	tank   *types.GasTank
@@ -27,20 +27,20 @@ type Store struct {
 
 var _ types.CacheMultiStore = Store{}
 
-func NewStore(db dbm.DB, keysByName map[string]types.StoreKey, stores map[types.StoreKey]types.CommitKVStore, tracer *types.Tracer, tank *types.GasTank) Store {
+func NewStore(db dbm.DB, keysByName map[string]types.KVStoreKey, kvstores map[types.KVStoreKey]types.CommitKVStore, tracer *types.Tracer, tank *types.GasTank) Store {
 	cms := Store{
 		db:         cache.NewStore(dbadapter.NewStore(db)),
-		stores:     make(map[types.StoreKey]types.CacheKVStore, len(stores)),
+		kvstores:   make(map[types.KVStoreKey]types.CacheKVStore, len(kvstores)),
 		keysByName: keysByName,
 		tracer:     tracer,
 		tank:       tank,
 	}
 
-	for key, store := range stores {
+	for key, store := range kvstores {
 		if tracer.Enabled() {
-			cms.stores[key] = cache.NewStore(trace.NewStore(store, tracer))
+			cms.kvstores[key] = cache.NewStore(trace.NewStore(store, tracer))
 		} else {
-			cms.stores[key] = cache.NewStore(store)
+			cms.kvstores[key] = cache.NewStore(store)
 		}
 	}
 
@@ -49,16 +49,16 @@ func NewStore(db dbm.DB, keysByName map[string]types.StoreKey, stores map[types.
 
 func newCacheMultiStoreFromCMS(cms Store) Store {
 	cms2 := Store{
-		db:     cache.NewStore(cms.db),
-		stores: make(map[types.StoreKey]types.CacheKVStore, len(cms.stores)),
-		tracer: cms.tracer,
+		db:       cache.NewStore(cms.db),
+		kvstores: make(map[types.KVStoreKey]types.CacheKVStore, len(cms.kvstores)),
+		tracer:   cms.tracer,
 	}
 
-	for key, store := range cms.stores {
+	for key, store := range cms.kvstores {
 		if cms2.tracer.Enabled() {
-			cms2.stores[key] = cache.NewStore(trace.NewStore(store, cms.tracer))
+			cms2.kvstores[key] = cache.NewStore(trace.NewStore(store, cms.tracer))
 		} else {
-			cms2.stores[key] = cache.NewStore(store)
+			cms2.kvstores[key] = cache.NewStore(store)
 		}
 	}
 
@@ -78,7 +78,7 @@ func (cms Store) GetGasTank() *types.GasTank {
 // Implements CacheMultiStore.
 func (cms Store) Write() {
 	cms.db.Write()
-	for _, store := range cms.stores {
+	for _, store := range cms.kvstores {
 		store.Write()
 	}
 }
@@ -89,6 +89,6 @@ func (cms Store) CacheWrap() types.CacheMultiStore {
 }
 
 // Implements MultiStore.
-func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
-	return cms.stores[key].(types.KVStore)
+func (cms Store) GetKVStore(key types.KVStoreKey) types.KVStore {
+	return cms.kvstores[key].(types.KVStore)
 }

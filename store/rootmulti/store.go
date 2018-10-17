@@ -27,9 +27,9 @@ type Store struct {
 	db           dbm.DB
 	lastCommitID types.CommitID
 	pruning      types.PruningStrategy
-	storesParams map[types.StoreKey]storeParams
-	kvstores     map[types.StoreKey]types.CommitKVStore
-	keysByName   map[string]types.StoreKey
+	storeParams  map[types.KVStoreKey]storeParams
+	kvstores     map[types.KVStoreKey]types.CommitKVStore
+	keysByName   map[string]types.KVStoreKey
 
 	tracer *types.Tracer
 	tank   *types.GasTank
@@ -41,10 +41,10 @@ var _ types.Queryable = (*Store)(nil)
 // nolint
 func NewStore(db dbm.DB) *Store {
 	return &Store{
-		db:           db,
-		storesParams: make(map[types.StoreKey]storeParams),
-		kvstores:     make(map[types.StoreKey]types.CommitKVStore),
-		keysByName:   make(map[string]types.StoreKey),
+		db:          db,
+		storeParams: make(map[types.KVStoreKey]storeParams),
+		kvstores:    make(map[types.KVStoreKey]types.CommitKVStore),
+		keysByName:  make(map[string]types.KVStoreKey),
 
 		tracer: new(types.Tracer),
 		tank:   new(types.GasTank),
@@ -70,17 +70,17 @@ func (rs *Store) SetPruning(pruning types.PruningStrategy) {
 }
 
 // Implements CommitMultiStore.
-func (rs *Store) MountStoreWithDB(key types.StoreKey, db dbm.DB) {
+func (rs *Store) MountKVStoreWithDB(key types.KVStoreKey, db dbm.DB) {
 	if key == nil {
 		panic("MountStoreWithDB() key cannot be nil")
 	}
-	if _, ok := rs.storesParams[key]; ok {
+	if _, ok := rs.storeParams[key]; ok {
 		panic(fmt.Sprintf("Store duplicate store key %v", key))
 	}
 	if _, ok := rs.keysByName[key.Name()]; ok {
 		panic(fmt.Sprintf("Store duplicate store key name %v", key))
 	}
-	rs.storesParams[key] = storeParams{
+	rs.storeParams[key] = storeParams{
 		key: key,
 		db:  db,
 	}
@@ -88,19 +88,14 @@ func (rs *Store) MountStoreWithDB(key types.StoreKey, db dbm.DB) {
 }
 
 // Implements CommitMultiStore.
-func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
-	return rs.kvstores[key]
-}
-
-// Implements CommitMultiStore.
-func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
+func (rs *Store) GetCommitKVStore(key types.KVStoreKey) types.CommitKVStore {
 	return rs.kvstores[key]
 }
 
 /*
 // Recursive MultiStore not yet implemented
 // Implements CommitMultiStore
-func (rs *Store) GetCommitMultiStore(key types.StoreKey) types.CommitMultiStore {
+func (rs *Store) GetCommitMultiStore(key types.KVStoreKey) types.CommitMultiStore {
 	return rs.multistores[key]
 }
 */
@@ -115,7 +110,7 @@ func (rs *Store) LoadLatestVersion() error {
 func (rs *Store) LoadMultiStoreVersion(ver int64) error {
 	// Convert StoreInfos slice to map
 	var lastCommitID types.CommitID
-	infos := make(map[types.StoreKey]storeInfo)
+	infos := make(map[types.KVStoreKey]storeInfo)
 	if ver != 0 {
 		// Get commitInfo
 		cInfo, err := getCommitInfo(rs.db, ver)
@@ -131,8 +126,8 @@ func (rs *Store) LoadMultiStoreVersion(ver int64) error {
 	}
 
 	// Load each Store
-	var newStores = make(map[types.StoreKey]types.CommitKVStore)
-	for key, storeParams := range rs.storesParams {
+	var newStores = make(map[types.KVStoreKey]types.CommitKVStore)
+	for key, storeParams := range rs.storeParams {
 		var id types.CommitID
 		if info, ok := infos[key]; ok {
 			id = info.Core.CommitID
@@ -146,7 +141,7 @@ func (rs *Store) LoadMultiStoreVersion(ver int64) error {
 
 	// Success.
 	rs.lastCommitID = lastCommitID
-	rs.stores = newStores
+	rs.kvstores = newStores
 	return nil
 }
 
@@ -163,7 +158,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	// Commit stores.
 	version := rs.lastCommitID.Version + 1
-	commitInfo := commitStores(version, rs.stores)
+	commitInfo := commitStores(version, rs.kvstores)
 
 	// Need to update atomically.
 	batch := rs.db.NewBatch()
@@ -185,14 +180,14 @@ func (rs *Store) Commit() types.CommitID {
 
 // Implements types.MultiStore.
 func (rs *Store) CacheWrap() types.CacheMultiStore {
-	return cachemulti.NewStore(rs.db, rs.keysByName, rs.stores, rs.tracer, rs.tank)
+	return cachemulti.NewStore(rs.db, rs.keysByName, rs.kvstores, rs.tracer, rs.tank)
 }
 
 // GetKVStore implements the types.MultiStore interface. If tracing is enabled on the
 // Store, a wrapped TraceKVStore will be returned with the given
 // tracer, otherwise, the original types.KVStore will be returned.
-func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
-	store := rs.stores[key].(types.KVStore)
+func (rs *Store) GetKVStore(key types.KVStoreKey) types.KVStore {
+	store := rs.kvstores[key].(types.KVStore)
 
 	if rs.tracer.Enabled() {
 		store = trace.NewStore(store, rs.tracer)
@@ -206,14 +201,14 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 // getStoreByName will first convert the original name to
 // a special key, before looking up the types.CommitStore.
 // This is not exposed to the extensions (which will need the
-// types.StoreKey), but is useful in main, and particularly app.Query,
+// types.KVStoreKey), but is useful in main, and particularly app.Query,
 // in order to convert human strings into types.CommitStores.
 func (rs *Store) getStoreByName(name string) types.KVStore {
 	key := rs.keysByName[name]
 	if key == nil {
 		return nil
 	}
-	return rs.stores[key]
+	return rs.kvstores[key]
 }
 
 //---------------------- Query ------------------
@@ -277,7 +272,7 @@ func parsePath(path string) (storeName string, subpath string, err types.Error) 
 
 //----------------------------------------
 
-func (rs *Store) loadCommitKVStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (store types.CommitKVStore, err error) {
+func (rs *Store) loadCommitKVStoreFromParams(key types.KVStoreKey, id types.CommitID, params storeParams) (store types.CommitKVStore, err error) {
 	var db dbm.DB
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
@@ -293,35 +288,10 @@ func (rs *Store) loadCommitKVStoreFromParams(key types.StoreKey, id types.Commit
 
 	store.SetPruning(rs.pruning)
 	return
-
-	// XXX: move to store subdirectories LoadKVStoreVersion
-	/*
-		switch params.typ {
-		case types.StoreTypeMulti:
-			panic("recursive types.MultiStores not yet supported")
-			// TODO: id?
-			// return NewCommitMultiStore(db, id)
-		case types.StoreTypeIAVL:
-			store, err = LoadIAVLStore(db, id, rs.pruning)
-			return
-		case types.StoreTypeDB:
-			panic("dbm.DB is not a types.CommitStore")
-		case types.StoreTypeTransient:
-			_, ok := key.(*types.TransientStoreKey)
-			if !ok {
-				err = fmt.Errorf("invalid types.StoreKey for types.StoreTypeTransient: %s", key.String())
-				return
-			}
-			store = transient.NewStore()
-			return
-		default:
-			panic(fmt.Sprintf("unrecognized store type %v", params.typ))
-		}
-	*/
 }
 
-func (rs *Store) nameToKey(name string) types.StoreKey {
-	for key := range rs.storesParams {
+func (rs *Store) nameToKey(name string) types.KVStoreKey {
+	for key := range rs.storeParams {
 		if key.Name() == name {
 			return key
 		}
@@ -333,7 +303,7 @@ func (rs *Store) nameToKey(name string) types.StoreKey {
 // storeParams
 
 type storeParams struct {
-	key types.StoreKey
+	key types.KVStoreKey
 	db  dbm.DB
 	typ reflect.Type
 }
@@ -422,7 +392,7 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 }
 
 // Commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore) commitInfo {
+func commitStores(version int64, storeMap map[types.KVStoreKey]types.CommitKVStore) commitInfo {
 	storeInfos := make([]storeInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {

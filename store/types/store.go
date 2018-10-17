@@ -45,7 +45,7 @@ type Queryable interface {
 
 type MultiStore interface { //nolint
 	// Convenience for fetching substores.
-	GetKVStore(StoreKey) KVStore
+	GetKVStore(KVStoreKey) KVStore
 
 	// TODO: recursive multistore not yet supported
 	// GetMultiStore(StoreKey) MultiStore
@@ -67,19 +67,21 @@ type CommitMultiStore interface {
 	CommitStore
 	MultiStore
 
-	// Mount a store of type using the given db.
+	// Mount a KVStore of the key using the given db.
 	// If db == nil, the new store will use the CommitMultiStore db.
-	MountStoreWithDB(key StoreKey, db dbm.DB)
+	MountKVStoreWithDB(key KVStoreKey, db dbm.DB)
+
+	// TODO: recursive multistore not implemented
+	// Mount a MultiStore of the key using the given db.
+	// If db == nil, the new store will use the CommitMultiStore db.
+	// MountMultiStoreWithDB(key MultiStoreKey, db dbm.DB)
 
 	// Panics on a nil key.
-	GetCommitStore(key StoreKey) CommitStore
-
-	// Panics on a nil key.
-	GetCommitKVStore(key StoreKey) CommitKVStore
+	GetCommitKVStore(key KVStoreKey) CommitKVStore
 
 	// Panics on a nil key.
 	// TODO: recursive multistore not yet supported
-	// GetCommitMultiStore(key StoreKey) CommitMultiStore
+	// GetCommitMultiStore(key MultiStoreKey) CommitMultiStore
 
 	// Load the latest persisted version.  Called once after all
 	// calls to Mount*Store() are complete.
@@ -192,12 +194,22 @@ func (cid CommitID) String() string {
 //----------------------------------------
 // Keys for accessing substores
 
-// StoreKey is a key used to index stores in a MultiStore.
-type StoreKey interface {
+// KVStoreKey is a key used to index KVStores in a MultiStore.
+type KVStoreKey interface {
 	Name() string
 	String() string
-	NewStore() CommitStore
+	NewStore() CommitKVStore
 }
+
+/*
+// TODO: recursive multistore not implemented
+// MultiStoreKey is a key used to index MultiStores in a MultiStore.
+type MultiStoreKey interface {
+	Name() string
+	String() string
+	NewStore() CommitMultiStore
+}
+*/
 
 // PrefixEndBytes returns the []byte that would end a
 // range query for all []byte with a certain prefix

@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-var _ types.StoreKey = (*StoreKey)(nil)
+var _ types.KVStoreKey = (*StoreKey)(nil)
 
 // StoreKey is used for indexing transient stores in a MultiStore
 type StoreKey struct {
@@ -32,6 +32,6 @@ func (key *StoreKey) String() string {
 }
 
 // Implements StoreKey
-func (key *StoreKey) NewStore() types.CommitStore {
+func (key *StoreKey) NewStore() types.CommitKVStore {
 	return &Store{}
 }

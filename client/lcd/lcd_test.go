@@ -717,55 +717,53 @@ func TestUnjail(t *testing.T) {
 }
 
 func TestProposalsQuery(t *testing.T) {
-	name, password1 := "test", "1234567890"
-	name2, password2 := "test2", "1234567890"
-	addr, seed := CreateAddr(t, "test", password1, GetKeyBase(t))
-	addr2, seed2 := CreateAddr(t, "test2", password2, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr, addr2})
+	addrs, seeds, names, passwords := CreateAddrs(t, GetKeyBase(t), 2)
+
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addrs[0], addrs[1]})
 	defer cleanup()
 
 	// Addr1 proposes (and deposits) proposals #1 and #2
-	resultTx := doSubmitProposal(t, port, seed, name, password1, addr, 5)
+	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
 	var proposalID1 int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doSubmitProposal(t, port, seed, name, password1, addr, 5)
+	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
 	var proposalID2 int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
-	resultTx = doSubmitProposal(t, port, seed2, name2, password2, addr2, 5)
+	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], 5)
 	var proposalID3 int64
 	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
-	resultTx = doDeposit(t, port, seed2, name2, password2, addr2, proposalID2, 5)
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID2, 5)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doDeposit(t, port, seed2, name2, password2, addr2, proposalID3, 5)
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, 5)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check deposits match proposal and individual deposits
 	deposits := getDeposits(t, port, proposalID1)
 	require.Len(t, deposits, 1)
-	deposit := getDeposit(t, port, proposalID1, addr)
+	deposit := getDeposit(t, port, proposalID1, addrs[0])
 	require.Equal(t, deposit, deposits[0])
 
 	deposits = getDeposits(t, port, proposalID2)
 	require.Len(t, deposits, 2)
-	deposit = getDeposit(t, port, proposalID2, addr)
-	require.Equal(t, deposit, deposits[0])
-	deposit = getDeposit(t, port, proposalID2, addr2)
-	require.Equal(t, deposit, deposits[1])
+	deposit = getDeposit(t, port, proposalID2, addrs[0])
+	require.True(t, deposit.Equals(deposits[0]))
+	deposit = getDeposit(t, port, proposalID2, addrs[1])
+	require.True(t, deposit.Equals(deposits[1]))
 
 	deposits = getDeposits(t, port, proposalID3)
 	require.Len(t, deposits, 1)
-	deposit = getDeposit(t, port, proposalID3, addr2)
+	deposit = getDeposit(t, port, proposalID3, addrs[1])
 	require.Equal(t, deposit, deposits[0])
 
 	// increasing the amount of the deposit should update the existing one
-	resultTx = doDeposit(t, port, seed, name, password1, addr, proposalID1, 1)
+	resultTx = doDeposit(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID1, 1)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	deposits = getDeposits(t, port, proposalID1)
@@ -782,13 +780,13 @@ func TestProposalsQuery(t *testing.T) {
 	require.Equal(t, proposalID3, proposals[1].GetProposalID())
 
 	// Addr1 votes on proposals #2 & #3
-	resultTx = doVote(t, port, seed, name, password1, addr, proposalID2)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doVote(t, port, seed, name, password1, addr, proposalID3)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 votes on proposal #3
-	resultTx = doVote(t, port, seed2, name2, password2, addr2, proposalID3)
+	resultTx = doVote(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals
@@ -798,37 +796,37 @@ func TestProposalsQuery(t *testing.T) {
 	require.Equal(t, proposalID3, (proposals[2]).GetProposalID())
 
 	// Test query deposited by addr1
-	proposals = getProposalsFilterDepositer(t, port, addr)
+	proposals = getProposalsFilterDepositer(t, port, addrs[0])
 	require.Equal(t, proposalID1, (proposals[0]).GetProposalID())
 
 	// Test query deposited by addr2
-	proposals = getProposalsFilterDepositer(t, port, addr2)
+	proposals = getProposalsFilterDepositer(t, port, addrs[1])
 	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
 	require.Equal(t, proposalID3, (proposals[1]).GetProposalID())
 
 	// Test query voted by addr1
-	proposals = getProposalsFilterVoter(t, port, addr)
+	proposals = getProposalsFilterVoter(t, port, addrs[0])
 	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
 	require.Equal(t, proposalID3, (proposals[1]).GetProposalID())
 
 	// Test query voted by addr2
-	proposals = getProposalsFilterVoter(t, port, addr2)
+	proposals = getProposalsFilterVoter(t, port, addrs[1])
 	require.Equal(t, proposalID3, (proposals[0]).GetProposalID())
 
 	// Test query voted and deposited by addr1
-	proposals = getProposalsFilterVoterDepositer(t, port, addr, addr)
+	proposals = getProposalsFilterVoterDepositer(t, port, addrs[0], addrs[0])
 	require.Equal(t, proposalID2, (proposals[0]).GetProposalID())
 
 	// Test query votes on Proposal 2
 	votes := getVotes(t, port, proposalID2)
 	require.Len(t, votes, 1)
-	require.Equal(t, addr, votes[0].Voter)
+	require.Equal(t, addrs[0], votes[0].Voter)
 
 	// Test query votes on Proposal 3
 	votes = getVotes(t, port, proposalID3)
 	require.Len(t, votes, 2)
-	require.True(t, addr.String() == votes[0].Voter.String() || addr.String() == votes[1].Voter.String())
-	require.True(t, addr2.String() == votes[0].Voter.String() || addr2.String() == votes[1].Voter.String())
+	require.True(t, addrs[0].String() == votes[0].Voter.String() || addrs[0].String() == votes[1].Voter.String())
+	require.True(t, addrs[1].String() == votes[0].Voter.String() || addrs[1].String() == votes[1].Voter.String())
 }
 
 //_____________________________________________________________________________

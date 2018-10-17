@@ -151,7 +151,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg InitConfig) (
 		}
 		memo := fmt.Sprintf("%s@%s:26656", nodeID, ip)
 		buf := client.BufferStdin()
-		prompt := fmt.Sprintf("Password for account '%s' (default %s):", moniker, server.DefaultKeyPass)
+		prompt := fmt.Sprintf("Password for account '%s' (default %s):", moniker, app.DefaultKeyPass)
 		keyPass, err = client.GetPassword(prompt, buf)
 		if err != nil && keyPass != "" {
 			// An error was returned that either failed to read the password from
@@ -160,7 +160,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg InitConfig) (
 			return
 		}
 		if keyPass == "" {
-			keyPass = server.DefaultKeyPass
+			keyPass = app.DefaultKeyPass
 		}
 
 		addr, secret, err = server.GenerateSaveCoinKey(initCfg.ClientHome, moniker, keyPass, initCfg.OverwriteKeys)

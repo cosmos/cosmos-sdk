@@ -59,22 +59,51 @@
   name = "github.com/tendermint/tendermint"
   version = "=0.25.0"
 
+## deps without releases:
+
 [[constraint]]
-  name = "github.com/bartekn/go-bip39"
-  revision = "a05967ea095d81c8fe4833776774cfaff8e5036c"
+  name = "golang.org/x/crypto"
+  source = "https://github.com/tendermint/crypto"
+  revision = "3764759f34a542a3aef74d6b02e35be7ab893bba"
+
+[[constraint]]
+  name = "github.com/cosmos/go-bip39"
+  revision = "52158e4697b87de16ed390e1bdaf813e581008fa"
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
   version = "=v0.1.0"
 
+## transitive deps, with releases:
+
+[[override]]
+  name = "github.com/davecgh/go-spew"
+  version = "=v1.1.0"
+
 [[constraint]]
   name = "github.com/rakyll/statik"
   version = "=v0.1.4"
+
+[[constraint]]
+  name = "github.com/mitchellh/go-homedir"
+  version = "1.0.0"
+
+## transitive deps, without releases:
+#
+
+[[override]]
+  name = "github.com/syndtr/goleveldb"
+  revision = "c4c61651e9e37fa117f53c5a906d3b63090d8445"
+
+[[override]]
+  name = "golang.org/x/sys"
+  revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
+
+[[override]]
+  name = "google.golang.org/genproto"
+  revision = "383e8b2c3b9e36c4076b235b32537292176bae20"
 
 [prune]
   go-tests = true
   unused-packages = true
 
-[[constraint]]
-  name = "github.com/mitchellh/go-homedir"
-  version = "1.0.0"

@@ -72,8 +72,7 @@ module.exports = {
         collapsable: false,
         children: [
 	  "/light/",
-	  "/light/getting_started",
-	  "/light/load_balancer"
+	  "/light/getting_started"
 	]
       },
       {

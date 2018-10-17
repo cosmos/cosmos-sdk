@@ -1,20 +1,20 @@
 # Overview
 
-**See the Cosmos SDK Light Client RPC documentation [here](https://cosmos.network/rpc/)**
+**See the Cosmos SDK lite Client RPC documentation [here](https://cosmos.network/rpc/)**
 
 ## Introduction
 
-A light client allows clients, such as mobile phones, to receive proofs of the state of the
-blockchain from any full node. Light clients do not have to trust any full node, since they are able
+A lite client allows clients, such as mobile phones, to receive proofs of the state of the
+blockchain from any full node. lite clients do not have to trust any full node, since they are able
 to verify any proof they receive and hence full nodes cannot lie about the state of the network.
 
-A light client can provide the same security as a full node with the minimal requirements on
+A lite client can provide the same security as a full node with the minimal requirements on
 bandwidth, computing and storage resource. As well, it can also provide modular functionality
 according to users' configuration. These fantastic features allow developers to build fully secure,
 efficient and usable mobile apps, websites or any other applications without deploying or
 maintaining any full blockchain nodes.
 
-### What is a Light Client
+### What is a lite Client
 
 The LCD is split into two separate components. The first component is generic for any Tendermint
 based application. It handles the security and connectivity aspects of following the header chain
@@ -44,7 +44,7 @@ that offers stability guarantees around the zone API.
 
 ### Comparision
 
-A full node of ABCI is different from its light client in the following ways:
+A full node of ABCI is different from its lite client in the following ways:
 
 || Full Node | LCD | Description|
 |-| ------------- | ----- | -------------- |

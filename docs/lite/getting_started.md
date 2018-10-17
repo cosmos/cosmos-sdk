@@ -1,6 +1,7 @@
 # Getting Started
 
 To start a REST server, we need to specify the following parameters:
+
 | Parameter   | Type      | Default                 | Required | Description                                          |
 | ----------- | --------- | ----------------------- | -------- | ---------------------------------------------------- |
 | chain-id    | string    | null                    | true     | chain id of the full node to connect                 |
@@ -31,4 +32,4 @@ gaiacli rest-server --chain-id=test \
 If no certificate/keyfile pair is supplied, a self-signed certificate will be generated and its fingerprint printed out.
 Append `--insecure` to the command line if you want to disable the secure layer and listen on an insecure HTTP port.
 
-For more information about the LCD RPC, see the [swagger documentation](https://cosmos.network/rpc/)
+For more information about the Gaia-Lite RPC, see the [swagger documentation](https://cosmos.network/rpc/)

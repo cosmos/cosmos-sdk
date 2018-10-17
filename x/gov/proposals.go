@@ -68,10 +68,10 @@ type TextProposal struct {
 	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
 
-	SubmitTime   time.Time `json:"submit_block"`  //  Height of the block where TxGovSubmitProposal was included
+	SubmitTime   time.Time `json:"submit_time"`   //  Height of the block where TxGovSubmitProposal was included
 	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_block"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingStartTime time.Time `json:"voting_start_time"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
 }
 
 // Implements Proposal Interface

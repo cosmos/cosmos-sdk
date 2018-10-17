@@ -3,8 +3,19 @@ package hd
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/bip39"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/cosmos/go-bip39"
 )
+
+var defaultBIP39Passphrase = ""
+
+// return bip39 seed with empty passphrase
+func mnemonicToSeed(mnemonic string) []byte {
+	return bip39.NewSeed(mnemonic, defaultBIP39Passphrase)
+}
 
 //nolint
 func ExampleStringifyPathParams() {
@@ -13,10 +24,57 @@ func ExampleStringifyPathParams() {
 	// Output: 44'/0'/0'/0/0
 }
 
+func TestParamsFromPath(t *testing.T) {
+	goodCases := []struct {
+		params *BIP44Params
+		path   string
+	}{
+		{&BIP44Params{44, 0, 0, false, 0}, "44'/0'/0'/0/0"},
+		{&BIP44Params{44, 1, 0, false, 0}, "44'/1'/0'/0/0"},
+		{&BIP44Params{44, 0, 1, false, 0}, "44'/0'/1'/0/0"},
+		{&BIP44Params{44, 0, 0, true, 0}, "44'/0'/0'/1/0"},
+		{&BIP44Params{44, 0, 0, false, 1}, "44'/0'/0'/0/1"},
+		{&BIP44Params{44, 1, 1, true, 1}, "44'/1'/1'/1/1"},
+		{&BIP44Params{44, 118, 52, true, 41}, "44'/118'/52'/1/41"},
+	}
+
+	for i, c := range goodCases {
+		params, err := NewParamsFromPath(c.path)
+		errStr := fmt.Sprintf("%d %v", i, c)
+		assert.NoError(t, err, errStr)
+		assert.EqualValues(t, c.params, params, errStr)
+		assert.Equal(t, c.path, c.params.String())
+	}
+
+	badCases := []struct {
+		path string
+	}{
+		{"43'/0'/0'/0/0"},   // doesnt start with 44
+		{"44'/1'/0'/0/0/5"}, // too many fields
+		{"44'/0'/1'/0"},     // too few fields
+		{"44'/0'/0'/2/0"},   // change field can only be 0/1
+		{"44/0'/0'/0/0"},    // first field needs '
+		{"44'/0/0'/0/0"},    // second field needs '
+		{"44'/0'/0/0/0"},    // third field needs '
+		{"44'/0'/0'/0'/0"},  // fourth field must not have '
+		{"44'/0'/0'/0/0'"},  // fifth field must not have '
+		{"44'/-1'/0'/0/0"},  // no negatives
+		{"44'/0'/0'/-1/0"},  // no negatives
+	}
+
+	for i, c := range badCases {
+		params, err := NewParamsFromPath(c.path)
+		errStr := fmt.Sprintf("%d %v", i, c)
+		assert.Nil(t, params, errStr)
+		assert.Error(t, err, errStr)
+	}
+
+}
+
 //nolint
 func ExampleSomeBIP32TestVecs() {
 
-	seed := bip39.MnemonicToSeed("barrel original fuel morning among eternal " +
+	seed := mnemonicToSeed("barrel original fuel morning among eternal " +
 		"filter ball stove pluck matrix mechanic")
 	master, ch := ComputeMastersFromSeed(seed)
 	fmt.Println("keys from fundraiser test-vector (cosmos, bitcoin, ether)")
@@ -35,14 +93,14 @@ func ExampleSomeBIP32TestVecs() {
 	fmt.Println("keys generated via https://coinomi.com/recovery-phrase-tool.html")
 	fmt.Println()
 
-	seed = bip39.MnemonicToSeed(
+	seed = mnemonicToSeed(
 		"advice process birth april short trust crater change bacon monkey medal garment " +
 			"gorilla ranch hour rival razor call lunar mention taste vacant woman sister")
 	master, ch = ComputeMastersFromSeed(seed)
 	priv, _ = DerivePrivateKeyForPath(master, ch, "44'/1'/1'/0/4")
 	fmt.Println(hex.EncodeToString(priv[:]))
 
-	seed = bip39.MnemonicToSeed("idea naive region square margin day captain habit " +
+	seed = mnemonicToSeed("idea naive region square margin day captain habit " +
 		"gun second farm pact pulse someone armed")
 	master, ch = ComputeMastersFromSeed(seed)
 	priv, _ = DerivePrivateKeyForPath(master, ch, "44'/0'/0'/0/420")
@@ -53,7 +111,7 @@ func ExampleSomeBIP32TestVecs() {
 	fmt.Println()
 
 	// bip32 path: m/0/7
-	seed = bip39.MnemonicToSeed("monitor flock loyal sick object grunt duty ride develop assault harsh history")
+	seed = mnemonicToSeed("monitor flock loyal sick object grunt duty ride develop assault harsh history")
 	master, ch = ComputeMastersFromSeed(seed)
 	priv, _ = DerivePrivateKeyForPath(master, ch, "0/7")
 	fmt.Println(hex.EncodeToString(priv[:]))

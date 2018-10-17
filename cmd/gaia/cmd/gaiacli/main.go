@@ -1,7 +1,11 @@
 package main
 
 import (
+	"os"
+	"path"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/tendermint/tendermint/libs/cli"
 
@@ -10,18 +14,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/version"
+
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	distrcmd "github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	govcmd "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/spf13/viper"
-	"os"
-	"path"
 )
 
 const (
@@ -101,11 +104,13 @@ func main() {
 			stakecmd.GetCmdCreateValidator(cdc),
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
-			govcmd.GetCmdDeposit(cdc),
 			stakecmd.GetCmdRedelegate(storeStake, cdc),
+			stakecmd.GetCmdUnbond(storeStake, cdc),
+			distrcmd.GetCmdWithdrawRewards(cdc),
+			distrcmd.GetCmdSetWithdrawAddr(cdc),
+			govcmd.GetCmdDeposit(cdc),
 			bankcmd.SendTxCmd(cdc),
 			govcmd.GetCmdSubmitProposal(cdc),
-			stakecmd.GetCmdUnbond(storeStake, cdc),
 			slashingcmd.GetCmdUnjail(cdc),
 			govcmd.GetCmdVote(cdc),
 		)...)

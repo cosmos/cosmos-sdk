@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -111,6 +112,69 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.Acc
 	return sdk.AccAddress(info.GetPubKey().Address()), seed
 }
 
+// Type that combines an Address with the pnemonic of the private key to that address
+type AddrSeed struct {
+	Address  sdk.AccAddress
+	Seed     string
+	Name     string
+	Password string
+}
+
+// CreateAddr adds multiple address to the key store and returns the addresses and associated seeds in lexographical order by address.
+// It also requires that the keys could be created.
+func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.AccAddress, seeds, names, passwords []string) {
+	var (
+		err  error
+		info crkeys.Info
+		seed string
+	)
+
+	addrSeeds := AddrSeedSlice{}
+
+	for i := 0; i < numAddrs; i++ {
+		name := fmt.Sprintf("test%d", i)
+		password := "1234567890"
+		info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
+		require.NoError(t, err)
+		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
+	}
+
+	sort.Sort(addrSeeds)
+
+	for i := range addrSeeds {
+		addrs = append(addrs, addrSeeds[i].Address)
+		seeds = append(seeds, addrSeeds[i].Seed)
+		names = append(names, addrSeeds[i].Name)
+		passwords = append(passwords, addrSeeds[i].Password)
+	}
+
+	return addrs, seeds, names, passwords
+}
+
+// implement `Interface` in sort package.
+type AddrSeedSlice []AddrSeed
+
+func (b AddrSeedSlice) Len() int {
+	return len(b)
+}
+
+// Sorts lexographically by Address
+func (b AddrSeedSlice) Less(i, j int) bool {
+	// bytes package already implements Comparable for []byte.
+	switch bytes.Compare(b[i].Address.Bytes(), b[j].Address.Bytes()) {
+	case -1:
+		return true
+	case 0, 1:
+		return false
+	default:
+		panic("not fail-able with `bytes.Comparable` bounded [-1, 1].")
+	}
+}
+
+func (b AddrSeedSlice) Swap(i, j int) {
+	b[j], b[i] = b[i], b[j]
+}
+
 // InitializeTestLCD starts Tendermint and the LCD in process, listening on
 // their respective sockets where nValidators is the total number of validators
 // and initAddrs are the accounts to initialize with some steak tokens. It
@@ -146,7 +210,7 @@ func InitializeTestLCD(
 	// append initial (proposing) validator
 	genDoc.Validators[0] = tmtypes.GenesisValidator{
 		PubKey: privVal.GetPubKey(),
-		Power:  999999, // create enough power to enable 2/3 voting power
+		Power:  100, // create enough power to enable 2/3 voting power
 		Name:   "validator-1",
 	}
 
@@ -176,7 +240,7 @@ func InitializeTestLCD(
 		appGenTxs = append(appGenTxs, appGenTx)
 	}
 
-	genesisState, err := gapp.GaiaAppGenState(cdc, appGenTxs[:])
+	genesisState, err := gapp.NewTestGaiaAppGenState(cdc, appGenTxs[:], genDoc.Validators, valOperAddrs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts

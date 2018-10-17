@@ -7,11 +7,33 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// defaultUnbondingTime reflects three weeks in seconds as the default
-// unbonding time.
-const defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
+const (
+	// defaultUnbondingTime reflects three weeks in seconds as the default
+	// unbonding time.
+	defaultUnbondingTime time.Duration = 60 * 60 * 24 * 3 * time.Second
+
+	// Delay, in blocks, between when validator updates are returned to Tendermint and when they are applied
+	// For example, if this is 0, the validator set at the end of a block will sign the next block, or
+	// if this is 1, the validator set at the end of a block will sign the block after the next.
+	// Constant as this should not change without a hard fork.
+	ValidatorUpdateDelay int64 = 1
+)
+
+// nolint - Keys for parameter access
+var (
+	KeyInflationRateChange = []byte("InflationRateChange")
+	KeyInflationMax        = []byte("InflationMax")
+	KeyInflationMin        = []byte("InflationMin")
+	KeyGoalBonded          = []byte("GoalBonded")
+	KeyUnbondingTime       = []byte("UnbondingTime")
+	KeyMaxValidators       = []byte("MaxValidators")
+	KeyBondDenom           = []byte("BondDenom")
+)
+
+var _ params.ParamSet = (*Params)(nil)
 
 // Params defines the high level settings for staking
 type Params struct {
@@ -24,6 +46,19 @@ type Params struct {
 
 	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
 	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
+}
+
+// Implements params.ParamSet
+func (p *Params) KeyValuePairs() params.KeyValuePairs {
+	return params.KeyValuePairs{
+		{KeyInflationRateChange, &p.InflationRateChange},
+		{KeyInflationMax, &p.InflationMax},
+		{KeyInflationMin, &p.InflationMin},
+		{KeyGoalBonded, &p.GoalBonded},
+		{KeyUnbondingTime, &p.UnbondingTime},
+		{KeyMaxValidators, &p.MaxValidators},
+		{KeyBondDenom, &p.BondDenom},
+	}
 }
 
 // Equal returns a boolean determining if two Param types are identical.

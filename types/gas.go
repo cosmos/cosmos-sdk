@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	cachedDefaultGasConfig   = DefaultGasConfig()
+	cachedKVGasConfig        = KVGasConfig()
 	cachedTransientGasConfig = TransientGasConfig()
 )
 
@@ -86,8 +86,8 @@ type GasConfig struct {
 	IterNextCostFlat Gas
 }
 
-// DefaultGasConfig returns a default gas config for KVStores.
-func DefaultGasConfig() GasConfig {
+// KVGasConfig returns a default gas config for KVStores.
+func KVGasConfig() GasConfig {
 	return GasConfig{
 		HasCost:          10,
 		DeleteCost:       10,
@@ -103,5 +103,5 @@ func DefaultGasConfig() GasConfig {
 // TransientGasConfig returns a default gas config for TransientStores.
 func TransientGasConfig() GasConfig {
 	// TODO: define gasconfig for transient stores
-	return DefaultGasConfig()
+	return KVGasConfig()
 }

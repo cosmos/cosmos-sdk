@@ -1,13 +1,8 @@
 # Post-0.25/GoS Pre-Release
 
-## Staking/Slashing/Stability
+## Staking / Slashing - Stability
 
-- Other slashing issues blocking for launch - [#1256](https://github.com/cosmos/cosmos-sdk/issues/1256)
-- Miscellaneous minor staking issues
-  - [List here](https://github.com/cosmos/cosmos-sdk/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Astaking+label%3Aprelaunch)
-  - Need to figure out scope of work here to estimate time
-  - @rigelrozanski to start next
-- Consider "tombstone" / "prison" - double-sign and you can never validate again - https://github.com/cosmos/cosmos-sdk/issues/2363
+- [Prelaunch Issues](https://github.com/cosmos/cosmos-sdk/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Astaking+label%3Aprelaunch-2.0)
 
 ## Multisig
 
@@ -16,24 +11,29 @@
 
 ## ABCI Changes
 
-- Need to update for new ABCI changes when/if they land - error string, tags are list of lists
+- CheckEvidence/DeliverEvidence
+- CheckTx/DeliverTx ordering semantics
+- ABCI Error string update (only on the SDK side)
 - Need to verify correct proposer reward semantics
-- CheckEvidence/DeliverEvidence, CheckTx/DeliverTx ordering semantics
 
 ## Gas
 
-- Charge for transaction size
-- Decide what "one gas" corresponds to (standard hardware benchmarks?)
-- More benchmarking
-- Consider charging based on maximum depth of IAVL tree iteration
+- Write specification and explainer document for Gas in Cosmos
+  * Charge for transaction size
+  * Decide what "one gas" corresponds to (standard hardware benchmarks?)
+  * Consider charging based on maximum depth of IAVL tree iteration
 - Test out gas estimation in CLI and LCD and ensure the UX works
 
 ## LCD
 
-- Bianje working on implementation of ICS standards
-- Additional PR incoming for ICS 22 and ICS 23
-- Decide what ought to be ICS-standardized and what ought not to
+- Bianje working with Voyager team (@fedekunze) to complete implementation and documentation.
 
+## Documentation
+
+- gaiad / gaiacli
+- LCD
+- Each module
+- Tags [#1780](https://github.com/cosmos/cosmos-sdk/issues/1780)
 # Lower priority
 
 ## Governance v2
@@ -41,6 +41,6 @@
 - Circuit breaker - https://github.com/cosmos/cosmos-sdk/issues/926
 - Parameter change proposals (roughly the same implementation as circuit breaker)
 
-## Documentation
+## Staking / Slashing - Stability
 
-- gaiad / gaiacli / gaialite documentation!
+- Consider "tombstone" / "prison" - double-sign and you can never validate again - https://github.com/cosmos/cosmos-sdk/issues/2363

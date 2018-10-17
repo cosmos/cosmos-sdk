@@ -9,27 +9,25 @@ import (
 )
 
 type (
-	Keeper                = keeper.Keeper
-	Validator             = types.Validator
-	Description           = types.Description
-	Commission            = types.Commission
-	Delegation            = types.Delegation
-	DelegationSummary     = types.DelegationSummary
-	UnbondingDelegation   = types.UnbondingDelegation
-	Redelegation          = types.Redelegation
-	Params                = types.Params
-	Pool                  = types.Pool
-	MsgCreateValidator    = types.MsgCreateValidator
-	MsgEditValidator      = types.MsgEditValidator
-	MsgDelegate           = types.MsgDelegate
-	MsgBeginUnbonding     = types.MsgBeginUnbonding
-	MsgCompleteUnbonding  = types.MsgCompleteUnbonding
-	MsgBeginRedelegate    = types.MsgBeginRedelegate
-	MsgCompleteRedelegate = types.MsgCompleteRedelegate
-	GenesisState          = types.GenesisState
-	QueryDelegatorParams  = querier.QueryDelegatorParams
-	QueryValidatorParams  = querier.QueryValidatorParams
-	QueryBondsParams      = querier.QueryBondsParams
+	Keeper               = keeper.Keeper
+	Validator            = types.Validator
+	Description          = types.Description
+	Commission           = types.Commission
+	Delegation           = types.Delegation
+	DelegationSummary    = types.DelegationSummary
+	UnbondingDelegation  = types.UnbondingDelegation
+	Redelegation         = types.Redelegation
+	Params               = types.Params
+	Pool                 = types.Pool
+	MsgCreateValidator   = types.MsgCreateValidator
+	MsgEditValidator     = types.MsgEditValidator
+	MsgDelegate          = types.MsgDelegate
+	MsgBeginUnbonding    = types.MsgBeginUnbonding
+	MsgBeginRedelegate   = types.MsgBeginRedelegate
+	GenesisState         = types.GenesisState
+	QueryDelegatorParams = querier.QueryDelegatorParams
+	QueryValidatorParams = querier.QueryValidatorParams
+	QueryBondsParams     = querier.QueryBondsParams
 )
 
 var (
@@ -40,7 +38,6 @@ var (
 	GetValidatorsByPowerIndexKey = keeper.GetValidatorsByPowerIndexKey
 	GetDelegationKey             = keeper.GetDelegationKey
 	GetDelegationsKey            = keeper.GetDelegationsKey
-	ParamKey                     = keeper.ParamKey
 	PoolKey                      = keeper.PoolKey
 	ValidatorsKey                = keeper.ValidatorsKey
 	ValidatorsByConsAddrKey      = keeper.ValidatorsByConsAddrKey
@@ -59,6 +56,15 @@ var (
 	GetREDsFromValSrcIndexKey    = keeper.GetREDsFromValSrcIndexKey
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
+	TestingUpdateValidator       = keeper.TestingUpdateValidator
+
+	DefaultParamspace      = keeper.DefaultParamspace
+	KeyInflationRateChange = types.KeyInflationRateChange
+	KeyInflationMax        = types.KeyInflationMax
+	KeyGoalBonded          = types.KeyGoalBonded
+	KeyUnbondingTime       = types.KeyUnbondingTime
+	KeyMaxValidators       = types.KeyMaxValidators
+	KeyBondDenom           = types.KeyBondDenom
 
 	DefaultParams         = types.DefaultParams
 	InitialPool           = types.InitialPool
@@ -76,11 +82,21 @@ var (
 	NewMsgEditValidator             = types.NewMsgEditValidator
 	NewMsgDelegate                  = types.NewMsgDelegate
 	NewMsgBeginUnbonding            = types.NewMsgBeginUnbonding
-	NewMsgCompleteUnbonding         = types.NewMsgCompleteUnbonding
 	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
-	NewMsgCompleteRedelegate        = types.NewMsgCompleteRedelegate
 
 	NewQuerier = querier.NewQuerier
+)
+
+const (
+	QueryValidators          = querier.QueryValidators
+	QueryValidator           = querier.QueryValidator
+	QueryDelegator           = querier.QueryDelegator
+	QueryDelegation          = querier.QueryDelegation
+	QueryUnbondingDelegation = querier.QueryUnbondingDelegation
+	QueryDelegatorValidators = querier.QueryDelegatorValidators
+	QueryDelegatorValidator  = querier.QueryDelegatorValidator
+	QueryPool                = querier.QueryPool
+	QueryParameters          = querier.QueryParameters
 )
 
 const (

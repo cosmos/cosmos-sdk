@@ -4,6 +4,7 @@ package types
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 
@@ -31,7 +32,6 @@ type Context struct {
 }
 
 // create a new context
-// nolint: unparam
 func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Logger) Context {
 	c := Context{
 		Context: context.Background(),
@@ -73,7 +73,7 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedDefaultGasConfig)
+	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedKVGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
@@ -181,8 +181,22 @@ func (c Context) WithBlockHeader(header abci.Header) Context {
 	return c.withValue(contextKeyBlockHeader, header)
 }
 
+func (c Context) WithBlockTime(newTime time.Time) Context {
+	newHeader := c.BlockHeader()
+	newHeader.Time = newTime
+	return c.WithBlockHeader(newHeader)
+}
+
+func (c Context) WithProposer(addr ConsAddress) Context {
+	newHeader := c.BlockHeader()
+	newHeader.ProposerAddress = addr.Bytes()
+	return c.WithBlockHeader(newHeader)
+}
+
 func (c Context) WithBlockHeight(height int64) Context {
-	return c.withValue(contextKeyBlockHeight, height)
+	newHeader := c.BlockHeader()
+	newHeader.Height = height
+	return c.withValue(contextKeyBlockHeight, height).withValue(contextKeyBlockHeader, newHeader)
 }
 
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
@@ -190,7 +204,7 @@ func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 		return c
 	}
 	return c.withValue(contextKeyConsensusParams, params).
-		WithGasMeter(NewGasMeter(params.TxSize.MaxGas))
+		WithGasMeter(NewGasMeter(params.BlockSize.MaxGas))
 }
 
 func (c Context) WithChainID(chainID string) Context { return c.withValue(contextKeyChainID, chainID) }

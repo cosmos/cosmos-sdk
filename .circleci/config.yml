@@ -56,6 +56,7 @@ jobs:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
+            make get_tools
             make get_dev_tools
       - run:
           name: Lint source
@@ -135,6 +136,24 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_sim_gaia_fast
+
+  test_sim_gaia_multi_seed:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
+      - run:
+          name: Test multi-seed Gaia simulation
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_sim_gaia_multi_seed
 
   test_cover:
     <<: *defaults
@@ -238,6 +257,9 @@ workflows:
           requires:
             - setup_dependencies
       - test_sim_gaia_fast:
+          requires:
+            - setup_dependencies
+      - test_sim_gaia_multi_seed:
           requires:
             - setup_dependencies
       - test_cover:

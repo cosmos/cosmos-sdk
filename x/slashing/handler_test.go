@@ -12,11 +12,11 @@ import (
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
-	ctx, ck, sk, _, keeper := createTestInput(t)
+	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
-	msg := newTestMsgCreateValidator(addr, val, amt)
+	msg := NewTestMsgCreateValidator(addr, val, amt)
 	got := stake.NewHandler(sk)(ctx, msg)
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
@@ -30,7 +30,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 }
 
 func TestJailedValidatorDelegations(t *testing.T) {
-	ctx, _, stakeKeeper, _, slashingKeeper := createTestInput(t)
+	ctx, _, stakeKeeper, _, slashingKeeper := createTestInput(t, DefaultParams())
 
 	stakeParams := stakeKeeper.GetParams(ctx)
 	stakeParams.UnbondingTime = 0
@@ -41,7 +41,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	valPubKey, bondAmount := pks[0], sdk.NewInt(amount)
 	valAddr, consAddr := addrs[1], sdk.ConsAddress(addrs[0])
 
-	msgCreateVal := newTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
+	msgCreateVal := NewTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
 	got := stake.NewHandler(stakeKeeper)(ctx, msgCreateVal)
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got: %v", got)
 
@@ -53,7 +53,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 		StartHeight:         int64(0),
 		IndexOffset:         int64(0),
 		JailedUntil:         time.Unix(0, 0),
-		SignedBlocksCounter: int64(0),
+		MissedBlocksCounter: int64(0),
 	}
 	slashingKeeper.setValidatorSigningInfo(ctx, consAddr, newInfo)
 
@@ -70,9 +70,8 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	got = stake.NewHandler(stakeKeeper)(ctx, msgBeginUnbonding)
 	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got: %v", got)
 
-	msgCompleteUnbonding := stake.NewMsgCompleteUnbonding(sdk.AccAddress(valAddr), valAddr)
-	got = stake.NewHandler(stakeKeeper)(ctx, msgCompleteUnbonding)
-	require.True(t, got.IsOK(), "expected complete unbonding validator msg to be ok, got: %v", got)
+	err := stakeKeeper.CompleteUnbonding(ctx, sdk.AccAddress(valAddr), valAddr)
+	require.Nil(t, err, "expected complete unbonding validator to be ok, got: %v", err)
 
 	// verify validator still exists and is jailed
 	validator, found := stakeKeeper.GetValidator(ctx, valAddr)

@@ -302,6 +302,3 @@ func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (sign
 	}
 	return
 }
-
-// BurnFeeHandler burns all fees (decreasing total supply)
-func BurnFeeHandler(_ sdk.Context, _ sdk.Tx, _ sdk.Coins) {}

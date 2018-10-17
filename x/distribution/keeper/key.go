@@ -13,9 +13,9 @@ var (
 	ProposerKey              = []byte{0x04} // key for storing the proposer operator address
 
 	// params store
-	ParamStoreKeyCommunityTax        = []byte("community-tax")
-	ParamStoreKeyBaseProposerReward  = []byte("base-proposer-reward")
-	ParamStoreKeyBonusProposerReward = []byte("bonus-proposer-reward")
+	ParamStoreKeyCommunityTax        = []byte("CommunityTax")
+	ParamStoreKeyBaseProposerReward  = []byte("BaseProposerReward")
+	ParamStoreKeyBonusProposerReward = []byte("BonusProposerReward")
 )
 
 const (

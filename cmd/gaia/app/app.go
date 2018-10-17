@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/circuit"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -159,7 +160,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
+	app.SetAnteHandler(app.NewAnteHandler())
 	app.MountStoresTransient(app.tkeyParams, app.tkeyStake, app.tkeyDistr)
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -213,6 +214,18 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
+	}
+}
+
+func (app *GaiaApp) NewAnteHandler() sdk.AnteHandler {
+	authante := auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper)
+	circuitante := circuit.NewAnteHandler(app.paramsKeeper.Subspace(circuit.DefaultParamspace))
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newctx sdk.Context, res sdk.Result, abort bool) {
+		newctx, res, abort = authante(ctx, tx, simulate)
+		if abort {
+			return
+		}
+		return circuitante(newctx, tx, simulate)
 	}
 }
 

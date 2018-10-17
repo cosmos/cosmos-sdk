@@ -6,6 +6,7 @@ import (
 )
 
 func NewAnteHandler(space params.Subspace) sdk.AnteHandler {
+	space = space.WithTypeTable(ParamTypeTable())
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, sdk.Result, bool) {
 		for _, msg := range tx.GetMsgs() {
 			var breaker bool

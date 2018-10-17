@@ -400,6 +400,7 @@ paths:
           description: 16 word Seed
           schema:
             type: string
+          example: blossom pool issue kidney elevator blame furnace winter account merry vessel security depend exact travel bargain problem jelly rural net again mask roast chest
   /keys/{name}/recover:
     post:
       summary: Recover a account from a seed

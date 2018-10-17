@@ -32,8 +32,8 @@ func executeInit(t *testing.T) {
 		chainID string
 		initRes map[string]json.RawMessage
 	)
-	out := tests.ExecuteT(t, fmt.Sprintf("democoind --home=%s init", democoindHome), "")
-	err := json.Unmarshal([]byte(out), &initRes)
+	_, stderr := tests.ExecuteT(t, fmt.Sprintf("democoind --home=%s init", democoindHome), "")
+	err := json.Unmarshal([]byte(stderr), &initRes)
 	require.NoError(t, err)
 	err = json.Unmarshal(initRes["chain_id"], &chainID)
 	require.NoError(t, err)

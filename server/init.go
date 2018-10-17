@@ -123,7 +123,8 @@ func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (s
 	if !overwrite {
 		_, err := keybase.Get(keyName)
 		if err == nil {
-			return sdk.AccAddress([]byte{}), "", errors.New("key already exists, overwrite is disabled")
+			return sdk.AccAddress([]byte{}), "", fmt.Errorf(
+				"key already exists, overwrite is disabled (clientRoot: %s)", clientRoot)
 		}
 	}
 

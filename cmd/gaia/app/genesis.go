@@ -81,8 +81,6 @@ func GaiaAppInit() server.AppInit {
 	return server.AppInit{
 		FlagsAppGenState: fsAppGenState,
 		FlagsAppGenTx:    fsAppGenTx,
-		AppGenTx:         GaiaAppGenTx,
-		AppGenState:      GaiaAppGenStateJSON,
 	}
 }
 
@@ -171,27 +169,34 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 
 	// start with the default staking genesis state
 	stakeData := stake.DefaultGenesisState()
-
 	slashingData := slashing.DefaultGenesisState()
 
 	// get genesis flag account information
 	genaccs := make([]GenesisAccount, len(appGenTxs))
-	for i, appGenTx := range appGenTxs {
 
-		var genTx GaiaGenTx
-		err = cdc.UnmarshalJSON(appGenTx, &genTx)
+	for i, jsonRawMessage := range appGenTxs {
+		var genTx auth.StdTx
+		err = cdc.UnmarshalJSON(jsonRawMessage, &genTx)
 		if err != nil {
 			return
 		}
+		msgs := genTx.GetMsgs()
+		if len(msgs) == 0 {
+			err = errors.New("must provide at least genesis message")
+			return
+		}
+		msg := msgs[0].(stake.MsgCreateValidator)
 
+		//			genaccs[i] = genesisAccountFromGenTx(genTx)
 		// create the genesis account, give'm few steaks and a buncha token with there name
-		genaccs[i] = genesisAccountFromGenTx(genTx)
+		genaccs[i] = genesisAccountFromMsgCreateValidator(msg)
 		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
 
 		// add the validator
-		if len(genTx.Name) > 0 {
-			stakeData = addValidatorToStakeData(genTx, stakeData)
+		if len(msg.Description.Moniker) > 0 {
+			stakeData = addValidatorToStakeData(msg, stakeData)
 		}
+
 	}
 
 	// create the final app state
@@ -206,10 +211,9 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 	return
 }
 
-func addValidatorToStakeData(genTx GaiaGenTx, stakeData stake.GenesisState) stake.GenesisState {
-	desc := stake.NewDescription(genTx.Name, "", "", "")
+func addValidatorToStakeData(msg stake.MsgCreateValidator, stakeData stake.GenesisState) stake.GenesisState {
 	validator := stake.NewValidator(
-		sdk.ValAddress(genTx.Address), sdk.MustGetConsPubKeyBech32(genTx.PubKey), desc,
+		sdk.ValAddress(msg.ValidatorAddr), sdk.MustGetConsPubKeyBech32(msg.PubKey), genTx.Description,
 	)
 
 	stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
@@ -231,20 +235,9 @@ func addValidatorToStakeData(genTx GaiaGenTx, stakeData stake.GenesisState) stak
 	return stakeData
 }
 
-func genesisAccountFromGenTx(genTx GaiaGenTx) GenesisAccount {
-	accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
-	accAuth.Coins = sdk.Coins{
-		{genTx.Name + "Token", sdk.NewInt(1000)},
-		{"steak", freeFermionsAcc},
-	}
-	return NewGenesisAccount(&accAuth)
-}
-
-func genesisAccountFromStdTx(genTx auth.StdTx) GenesisAccount {
-	m := genTx.GetMsgs()[0]
-	msg := m.(stake.MsgCreateValidator)
-	accAuth := auth.NewBaseAccountWithAddress(msg.ValidatorAddr)
-	acc.Coins = sdk.Coin{msg.Delegation}
+func genesisAccountFromMsgCreateValidator(msg stake.MsgCreateValidator) GenesisAccount {
+	accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
+	accAuth.Coins = sdk.Coins{msg.Delegation}
 	return NewGenesisAccount(&accAuth)
 }
 

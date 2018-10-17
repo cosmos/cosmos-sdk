@@ -49,7 +49,7 @@
 
 [[override]]
   name = "github.com/tendermint/go-amino"
-  version = "=v0.12.0-rc0"
+  version = "=v0.12.0"
 
 [[override]]
   name = "github.com/tendermint/iavl"
@@ -57,7 +57,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=v0.23.1-rc0"
+  version = "=0.25.0"
 
 ## deps without releases:
 
@@ -74,12 +74,21 @@
   name = "github.com/zondax/ledger-goclient"
   version = "=v0.1.0"
 
+<<<<<<< HEAD
 
 ## transitive deps, with releases:
 
 [[override]]
   name = "github.com/davecgh/go-spew"
   version = "=v1.1.0"
+
+[[constraint]]
+  name = "github.com/rakyll/statik"
+  version = "=v0.1.4"
+
+[[constraint]]
+  name = "github.com/mitchellh/go-homedir"
+  version = "1.0.0"
 
 ## transitive deps, without releases:
 #
@@ -96,7 +105,7 @@
   name = "google.golang.org/genproto"
   revision = "383e8b2c3b9e36c4076b235b32537292176bae20"
 
-
 [prune]
   go-tests = true
   unused-packages = true
+

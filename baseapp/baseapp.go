@@ -64,9 +64,9 @@ type BaseApp struct {
 	// checkState is set on initialization and reset on Commit.
 	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
 	// See methods setCheckState and setDeliverState.
-	checkState       *state                  // for CheckTx
-	deliverState     *state                  // for DeliverTx
-	signedValidators []abci.SigningValidator // absent validators from begin block
+	checkState   *state          // for CheckTx
+	deliverState *state          // for DeliverTx
+	voteInfos    []abci.VoteInfo // absent validators from begin block
 
 	// minimum fees for spam prevention
 	minimumFees sdk.Coins
@@ -384,12 +384,12 @@ func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// path[0] should be "custom" because "/custom" prefix is required for keeper queries.
 	// the queryRouter routes using path[1]. For example, in the path "custom/gov/proposal", queryRouter routes using "gov"
-	if path[1] == "" {
-		sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
+	if len(path) < 2 || path[1] == "" {
+		return sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
 	}
 	querier := app.queryRouter.Route(path[1])
 	if querier == nil {
-		sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
+		return sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
 	}
 
 	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger).
@@ -435,7 +435,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// set the signed validators for addition to context in deliverTx
 	// TODO: communicate this result to the address to pubkey map in slashing
-	app.signedValidators = req.LastCommitInfo.GetValidators()
+	app.voteInfos = req.LastCommitInfo.GetVotes()
 	return
 }
 
@@ -509,12 +509,12 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 }
 
 // retrieve the context for the ante handler and store the tx bytes; store
-// the signing validators if the tx runs within the deliverTx() state.
+// the vote infos if the tx runs within the deliverTx() state.
 func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	// Get the context
 	ctx = getState(app, mode).ctx.WithTxBytes(txBytes)
 	if mode == runTxModeDeliver {
-		ctx = ctx.WithSigningValidators(app.signedValidators)
+		ctx = ctx.WithVoteInfos(app.voteInfos)
 	}
 	return
 }

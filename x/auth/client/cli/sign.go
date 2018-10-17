@@ -25,7 +25,7 @@ const (
 func GetSignCommand(codec *amino.Codec, decoder auth.AccountDecoder) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign <file>",
-		Short: "Sign transactions",
+		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
 Read a transaction from <file>, sign it, and print its JSON encoding.`,
 		RunE: makeSignCmd(codec, decoder),
@@ -57,7 +57,12 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		if err != nil {
 			return err
 		}
-		json, err := cdc.MarshalJSON(newTx)
+		var json []byte
+		if cliCtx.Indent {
+			json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
+		} else {
+			json, err = cdc.MarshalJSON(newTx)
+		}
 		if err != nil {
 			return err
 		}

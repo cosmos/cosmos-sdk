@@ -215,6 +215,16 @@ func (d Dec) Mul(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// multiplication
+func (d Dec) MulInt(i Int) Dec {
+	mul := new(big.Int).Mul(d.Int, i.i)
+
+	if mul.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{mul}
+}
+
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {
 
@@ -229,6 +239,12 @@ func (d Dec) Quo(d2 Dec) Dec {
 		panic("Int overflow")
 	}
 	return Dec{chopped}
+}
+
+// quotient
+func (d Dec) QuoInt(i Int) Dec {
+	mul := new(big.Int).Quo(d.Int, i.i)
+	return Dec{mul}
 }
 
 func (d Dec) String() string {
@@ -452,6 +468,6 @@ func MaxDec(d1, d2 Dec) Dec {
 }
 
 // intended to be used with require/assert:  require.True(DecEq(...))
-func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, Dec, Dec) {
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, string, string) {
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }

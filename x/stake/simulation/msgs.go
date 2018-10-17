@@ -16,7 +16,9 @@ import (
 // SimulateMsgCreateValidator
 func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		description := stake.Description{
@@ -71,7 +73,9 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 // SimulateMsgEditValidator
 func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		description := stake.Description{
 			Moniker:  simulation.RandStringOfLength(r, 10),
@@ -109,7 +113,9 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 // SimulateMsgDelegate
 func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		validatorAcc := simulation.RandomAcc(r, accs)
@@ -145,7 +151,9 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operat
 // SimulateMsgBeginUnbonding
 func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		validatorAcc := simulation.RandomAcc(r, accs)
@@ -178,37 +186,12 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 	}
 }
 
-// SimulateMsgCompleteUnbonding
-func SimulateMsgCompleteUnbonding(k stake.Keeper) simulation.Operation {
-	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
-
-		validatorAcc := simulation.RandomAcc(r, accs)
-		validatorAddress := sdk.ValAddress(validatorAcc.Address)
-		delegatorAcc := simulation.RandomAcc(r, accs)
-		delegatorAddress := delegatorAcc.Address
-		msg := stake.MsgCompleteUnbonding{
-			DelegatorAddr: delegatorAddress,
-			ValidatorAddr: validatorAddress,
-		}
-		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
-		}
-		ctx, write := ctx.CacheContext()
-		result := handler(ctx, msg)
-		if result.IsOK() {
-			write()
-		}
-		event(fmt.Sprintf("stake/MsgCompleteUnbonding/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgCompleteUnbonding: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil, nil
-	}
-}
-
 // SimulateMsgBeginRedelegate
 func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		sourceValidatorAcc := simulation.RandomAcc(r, accs)
@@ -241,36 +224,6 @@ func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation
 		}
 		event(fmt.Sprintf("stake/MsgBeginRedelegate/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgBeginRedelegate: %s", msg.GetSignBytes())
-		return action, nil, nil
-	}
-}
-
-// SimulateMsgCompleteRedelegate
-func SimulateMsgCompleteRedelegate(k stake.Keeper) simulation.Operation {
-	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
-
-		validatorSrcAcc := simulation.RandomAcc(r, accs)
-		validatorSrcAddress := sdk.ValAddress(validatorSrcAcc.Address)
-		validatorDstAcc := simulation.RandomAcc(r, accs)
-		validatorDstAddress := sdk.ValAddress(validatorDstAcc.Address)
-		delegatorAcc := simulation.RandomAcc(r, accs)
-		delegatorAddress := delegatorAcc.Address
-		msg := stake.MsgCompleteRedelegate{
-			DelegatorAddr:    delegatorAddress,
-			ValidatorSrcAddr: validatorSrcAddress,
-			ValidatorDstAddr: validatorDstAddress,
-		}
-		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
-		}
-		ctx, write := ctx.CacheContext()
-		result := handler(ctx, msg)
-		if result.IsOK() {
-			write()
-		}
-		event(fmt.Sprintf("stake/MsgCompleteRedelegate/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgCompleteRedelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
 }

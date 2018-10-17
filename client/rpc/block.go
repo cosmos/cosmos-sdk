@@ -8,8 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 )
 
@@ -22,7 +24,9 @@ func BlockCommand() *cobra.Command {
 		RunE:  printBlock,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	return cmd
 }
@@ -43,7 +47,7 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	}
 
 	if !cliCtx.TrustNode {
-		check, err := cliCtx.Certify(res.Block.Height)
+		check, err := cliCtx.Verify(res.Block.Height)
 		if err != nil {
 			return nil, err
 		}
@@ -59,13 +63,10 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		}
 	}
 
-	// TODO move maarshalling into cmd/rest functions
-	// output, err := tmcodec.MarshalJSON(res)
-	output, err := cdc.MarshalJSON(res)
-	if err != nil {
-		return nil, err
+	if cliCtx.Indent {
+		return cdc.MarshalJSONIndent(res, "", "  ")
 	}
-	return output, nil
+	return cdc.MarshalJSON(res)
 }
 
 // get the current blockchain height
@@ -130,7 +131,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }
 
@@ -149,6 +150,6 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

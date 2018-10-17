@@ -13,9 +13,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/spf13/viper"
 )
 
 // QueryTxCmd implements the default command for a tx query.
@@ -41,8 +43,11 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
+	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	return cmd
 }
 
@@ -74,12 +79,15 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]
 		return nil, err
 	}
 
-	return codec.MarshalJSONIndent(cdc, info)
+	if cliCtx.Indent {
+		return cdc.MarshalJSONIndent(info, "", "  ")
+	}
+	return cdc.MarshalJSON(info)
 }
 
 // ValidateTxResult performs transaction verification
 func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
-	check, err := cliCtx.Certify(res.Height)
+	check, err := cliCtx.Verify(res.Height)
 	if err != nil {
 		return err
 	}
@@ -138,7 +146,6 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 			w.Write([]byte(err.Error()))
 			return
 		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

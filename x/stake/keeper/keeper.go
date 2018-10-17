@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -14,18 +15,20 @@ type Keeper struct {
 	storeTKey  sdk.StoreKey
 	cdc        *codec.Codec
 	bankKeeper bank.Keeper
-	hooks      sdk.ValidatorHooks
+	hooks      sdk.StakingHooks
+	paramstore params.Subspace
 
 	// codespace
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:   key,
 		storeTKey:  tkey,
 		cdc:        cdc,
 		bankKeeper: ck,
+		paramstore: paramstore.WithTypeTable(ParamTypeTable()),
 		hooks:      nil,
 		codespace:  codespace,
 	}
@@ -33,7 +36,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, codespa
 }
 
 // Set the validator hooks
-func (k Keeper) WithValidatorHooks(sh sdk.ValidatorHooks) Keeper {
+func (k Keeper) WithHooks(sh sdk.StakingHooks) Keeper {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
@@ -46,45 +49,6 @@ func (k Keeper) WithValidatorHooks(sh sdk.ValidatorHooks) Keeper {
 // return the codespace
 func (k Keeper) Codespace() sdk.CodespaceType {
 	return k.codespace
-}
-
-//_________________________________________________________________________
-// some generic reads/writes that don't need their own files
-
-// load/save the global staking params
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-
-	b := store.Get(ParamKey)
-	if b == nil {
-		panic("Stored params should not have been nil")
-	}
-
-	k.cdc.MustUnmarshalBinary(b, &params)
-	return
-}
-
-// Need a distinct function because setParams depends on an existing previous
-// record of params to exist (to check if maxValidators has changed) - and we
-// panic on retrieval if it doesn't exist - hence if we use setParams for the very
-// first params set it will panic.
-func (k Keeper) SetNewParams(ctx sdk.Context, params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(params)
-	store.Set(ParamKey, b)
-}
-
-// set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	exParams := k.GetParams(ctx)
-
-	// if max validator count changes, must recalculate validator set
-	if exParams.MaxValidators != params.MaxValidators {
-		k.UpdateBondedValidatorsFull(ctx)
-	}
-	b := k.cdc.MustMarshalBinary(params)
-	store.Set(ParamKey, b)
 }
 
 //_______________________________________________________________________

@@ -58,7 +58,12 @@ func GetAccountCmd(storeName string, cdc *codec.Codec, decoder auth.AccountDecod
 				return err
 			}
 
-			output, err := codec.MarshalJSONIndent(cdc, acc)
+			var output []byte
+			if cliCtx.Indent {
+				output, err = cdc.MarshalJSONIndent(acc, "", "  ")
+			} else {
+				output, err = cdc.MarshalJSON(acc)
+			}
 			if err != nil {
 				return err
 			}

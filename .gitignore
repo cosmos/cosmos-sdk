@@ -2,6 +2,9 @@
 .DS_Store
 *.swp
 *.swo
+*.swl
+*.swm
+*.swn
 .vscode
 .idea
 
@@ -17,6 +20,7 @@ docs/_build
 examples/basecoin/app/data
 baseapp/data/*
 client/lcd/keys/*
+client/lcd/statik/statik.go
 mytestnet
 
 # Testing

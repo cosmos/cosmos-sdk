@@ -464,15 +464,17 @@ func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current staking parameters information",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			key := stake.ParamKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			res, err := cliCtx.QueryStore(key, storeName)
+			bz, err := cliCtx.QueryWithData("custom/stake/"+stake.QueryParameters, nil)
 			if err != nil {
 				return err
 			}
 
-			params := types.MustUnmarshalParams(cdc, res)
+			var params stake.Params
+			err = cdc.UnmarshalJSON(bz, &params)
+			if err != nil {
+				return err
+			}
 
 			switch viper.Get(cli.OutputFlag) {
 			case "text":

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -12,24 +13,23 @@ import (
 //nolint
 var (
 	// Keys for store prefixes
-	ParamKey                         = []byte{0x00} // key for parameters relating to staking
+	// TODO DEPRECATED: delete in next release and reorder keys
+	// ParamKey                         = []byte{0x00} // key for parameters relating to staking
 	PoolKey                          = []byte{0x01} // key for the staking pools
 	ValidatorsKey                    = []byte{0x02} // prefix for each key to a validator
 	ValidatorsByConsAddrKey          = []byte{0x03} // prefix for each key to a validator index, by pubkey
 	ValidatorsBondedIndexKey         = []byte{0x04} // prefix for each key to a validator index, for bonded validators
 	ValidatorsByPowerIndexKey        = []byte{0x05} // prefix for each key to a validator index, sorted by power
-	ValidatorCliffIndexKey           = []byte{0x06} // key for the validator index of the cliff validator
-	ValidatorPowerCliffKey           = []byte{0x07} // key for the power of the validator on the cliff
-	IntraTxCounterKey                = []byte{0x08} // key for intra-block tx index
-	DelegationKey                    = []byte{0x09} // key for a delegation
-	UnbondingDelegationKey           = []byte{0x0A} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x0B} // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = []byte{0x0C} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x0D} // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey     = []byte{0x0E} // prefix for each key for an redelegation, by destination validator operator
-
-	// Keys for store prefixes (transient)
-	TendermintUpdatesTKey = []byte{0x00} // prefix for each key to a validator which is being updated
+	IntraTxCounterKey                = []byte{0x06} // key for intra-block tx index
+	DelegationKey                    = []byte{0x07} // key for a delegation
+	UnbondingDelegationKey           = []byte{0x08} // key for an unbonding-delegation
+	UnbondingDelegationByValIndexKey = []byte{0x09} // prefix for each key for an unbonding-delegation, by validator operator
+	RedelegationKey                  = []byte{0x0A} // key for a redelegation
+	RedelegationByValSrcIndexKey     = []byte{0x0B} // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey     = []byte{0x0C} // prefix for each key for an redelegation, by destination validator operator
+	UnbondingQueueKey                = []byte{0x0D} // prefix for the timestamps in unbonding queue
+	RedelegationQueueKey             = []byte{0x0E} // prefix for the timestamps in redelegations queue
+	ValidatorQueueKey                = []byte{0x0F} // prefix for the timestamps in validator queue
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -46,12 +46,6 @@ func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
 	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
 }
 
-// gets the key for the current validator group
-// VALUE: none (key rearrangement with GetValKeyFromValBondedIndexKey)
-func GetValidatorsBondedIndexKey(operatorAddr sdk.ValAddress) []byte {
-	return append(ValidatorsBondedIndexKey, operatorAddr.Bytes()...)
-}
-
 // Get the validator operator address from ValBondedIndexKey
 func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 	return IndexKey[1:] // remove prefix bytes
@@ -63,43 +57,47 @@ func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
 // VALUE: validator operator address ([]byte)
 func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
-	return getValidatorPowerRank(validator, pool)
+	return getValidatorPowerRank(validator)
+}
+
+// get the bonded validator index key for an operator address
+func GetBondedValidatorIndexKey(operator sdk.ValAddress) []byte {
+	return append(ValidatorsBondedIndexKey, operator...)
 }
 
 // get the power ranking of a validator
 // NOTE the larger values are of higher value
 // nolint: unparam
-func getValidatorPowerRank(validator types.Validator, pool types.Pool) []byte {
+func getValidatorPowerRank(validator types.Validator) []byte {
 
 	potentialPower := validator.Tokens
-	powerBytes := []byte(potentialPower.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
 
-	jailedBytes := make([]byte, 1)
-	if validator.Jailed {
-		jailedBytes[0] = byte(0x00)
-	} else {
-		jailedBytes[0] = byte(0x01)
-	}
+	// todo: deal with cases above 2**64, ref https://github.com/cosmos/cosmos-sdk/issues/2439#issuecomment-427167556
+	tendermintPower := potentialPower.RoundInt64()
+	tendermintPowerBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(tendermintPowerBytes[:], uint64(tendermintPower))
 
-	// heightBytes and counterBytes represent strings like powerBytes does
-	heightBytes := make([]byte, binary.MaxVarintLen64)
-	binary.BigEndian.PutUint64(heightBytes, ^uint64(validator.BondHeight)) // invert height (older validators first)
-	counterBytes := make([]byte, 2)
-	binary.BigEndian.PutUint16(counterBytes, ^uint16(validator.BondIntraTxCounter)) // invert counter (first txns have priority)
+	powerBytes := tendermintPowerBytes
+	powerBytesLen := len(powerBytes)
 
-	return append(append(append(append(
-		ValidatorsByPowerIndexKey,
-		jailedBytes...),
-		powerBytes...),
-		heightBytes...),
-		counterBytes...)
+	// key is of format prefix || powerbytes || heightBytes || counterBytes
+	key := make([]byte, 1+powerBytesLen+8+2)
+
+	key[0] = ValidatorsByPowerIndexKey[0]
+	copy(key[1:powerBytesLen+1], powerBytes)
+
+	// include heightBytes height is inverted (older validators first)
+	binary.BigEndian.PutUint64(key[powerBytesLen+1:powerBytesLen+9], ^uint64(validator.BondHeight))
+	// include counterBytes, counter is inverted (first txns have priority)
+	binary.BigEndian.PutUint16(key[powerBytesLen+9:powerBytesLen+11], ^uint16(validator.BondIntraTxCounter))
+
+	return key
 }
 
-// get the key for the accumulated update validators
-// VALUE: abci.Validator
-// note records using these keys should never persist between blocks
-func GetTendermintUpdatesTKey(operatorAddr sdk.ValAddress) []byte {
-	return append(TendermintUpdatesTKey, operatorAddr.Bytes()...)
+// gets the prefix for all unbonding delegations from a delegator
+func GetValidatorQueueTimeKey(timestamp time.Time) []byte {
+	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	return append(ValidatorQueueKey, bz...)
 }
 
 //______________________________________________________________________________
@@ -154,58 +152,84 @@ func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 	return append(UnbondingDelegationByValIndexKey, valAddr.Bytes()...)
 }
 
+// gets the prefix for all unbonding delegations from a delegator
+func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
+	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	return append(UnbondingQueueKey, bz...)
+}
+
 //________________________________________________________________________________
 
 // gets the key for a redelegation
 // VALUE: stake/types.RedelegationKey
 func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	return append(append(
-		GetREDsKey(delAddr.Bytes()),
-		valSrcAddr.Bytes()...),
-		valDstAddr.Bytes()...)
+	key := make([]byte, 1+sdk.AddrLen*3)
+
+	copy(key[0:sdk.AddrLen+1], GetREDsKey(delAddr.Bytes()))
+	copy(key[sdk.AddrLen+1:2*sdk.AddrLen+1], valSrcAddr.Bytes())
+	copy(key[2*sdk.AddrLen+1:3*sdk.AddrLen+1], valDstAddr.Bytes())
+
+	return key
 }
 
 // gets the index-key for a redelegation, stored by source-validator-index
 // VALUE: none (key rearrangement used)
 func GetREDByValSrcIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	return append(append(
-		GetREDsFromValSrcIndexKey(valSrcAddr),
-		delAddr.Bytes()...),
-		valDstAddr.Bytes()...)
+	REDSFromValsSrcKey := GetREDsFromValSrcIndexKey(valSrcAddr)
+	offset := len(REDSFromValsSrcKey)
+
+	// key is of the form REDSFromValsSrcKey || delAddr || valDstAddr
+	key := make([]byte, len(REDSFromValsSrcKey)+2*sdk.AddrLen)
+	copy(key[0:offset], REDSFromValsSrcKey)
+	copy(key[offset:offset+sdk.AddrLen], delAddr.Bytes())
+	copy(key[offset+sdk.AddrLen:offset+2*sdk.AddrLen], valDstAddr.Bytes())
+	return key
 }
 
 // gets the index-key for a redelegation, stored by destination-validator-index
 // VALUE: none (key rearrangement used)
 func GetREDByValDstIndexKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
-	return append(append(
-		GetREDsToValDstIndexKey(valDstAddr),
-		delAddr.Bytes()...),
-		valSrcAddr.Bytes()...)
+	REDSToValsDstKey := GetREDsToValDstIndexKey(valDstAddr)
+	offset := len(REDSToValsDstKey)
+
+	// key is of the form REDSToValsDstKey || delAddr || valSrcAddr
+	key := make([]byte, len(REDSToValsDstKey)+2*sdk.AddrLen)
+	copy(key[0:offset], REDSToValsDstKey)
+	copy(key[offset:offset+sdk.AddrLen], delAddr.Bytes())
+	copy(key[offset+sdk.AddrLen:offset+2*sdk.AddrLen], valSrcAddr.Bytes())
+
+	return key
 }
 
-// rearranges the ValSrcIndexKey to get the REDKey
-func GetREDKeyFromValSrcIndexKey(IndexKey []byte) []byte {
-	addrs := IndexKey[1:] // remove prefix bytes
-	if len(addrs) != 3*sdk.AddrLen {
+// GetREDKeyFromValSrcIndexKey rearranges the ValSrcIndexKey to get the REDKey
+func GetREDKeyFromValSrcIndexKey(indexKey []byte) []byte {
+	// note that first byte is prefix byte
+	if len(indexKey) != 3*sdk.AddrLen+1 {
 		panic("unexpected key length")
 	}
-	valSrcAddr := addrs[:sdk.AddrLen]
-	delAddr := addrs[sdk.AddrLen : 2*sdk.AddrLen]
-	valDstAddr := addrs[2*sdk.AddrLen:]
+	valSrcAddr := indexKey[1 : sdk.AddrLen+1]
+	delAddr := indexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
+	valDstAddr := indexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
 
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
 }
 
-// rearranges the ValDstIndexKey to get the REDKey
-func GetREDKeyFromValDstIndexKey(IndexKey []byte) []byte {
-	addrs := IndexKey[1:] // remove prefix bytes
-	if len(addrs) != 3*sdk.AddrLen {
+// GetREDKeyFromValDstIndexKey rearranges the ValDstIndexKey to get the REDKey
+func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
+	// note that first byte is prefix byte
+	if len(indexKey) != 3*sdk.AddrLen+1 {
 		panic("unexpected key length")
 	}
-	valDstAddr := addrs[:sdk.AddrLen]
-	delAddr := addrs[sdk.AddrLen : 2*sdk.AddrLen]
-	valSrcAddr := addrs[2*sdk.AddrLen:]
+	valDstAddr := indexKey[1 : sdk.AddrLen+1]
+	delAddr := indexKey[sdk.AddrLen+1 : 2*sdk.AddrLen+1]
+	valSrcAddr := indexKey[2*sdk.AddrLen+1 : 3*sdk.AddrLen+1]
 	return GetREDKey(delAddr, valSrcAddr, valDstAddr)
+}
+
+// gets the prefix for all unbonding delegations from a delegator
+func GetRedelegationTimeKey(timestamp time.Time) []byte {
+	bz, _ := timestamp.MarshalBinary()
+	return append(RedelegationQueueKey, bz...)
 }
 
 //______________

@@ -1,4 +1,4 @@
-## Tendermint and Cosmos
+# Tendermint and Cosmos
 
 Blockchains can be divided into three conceptual layers:
 

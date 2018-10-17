@@ -20,7 +20,6 @@ type FeeCollectionKeeper struct {
 	cdc *codec.Codec
 }
 
-// NewFeeKeeper returns a new FeeKeeper
 func NewFeeCollectionKeeper(cdc *codec.Codec, key sdk.StoreKey) FeeCollectionKeeper {
 	return FeeCollectionKeeper{
 		key: key,
@@ -28,7 +27,7 @@ func NewFeeCollectionKeeper(cdc *codec.Codec, key sdk.StoreKey) FeeCollectionKee
 	}
 }
 
-// Adds to Collected Fee Pool
+// retrieves the collected fee pool
 func (fck FeeCollectionKeeper) GetCollectedFees(ctx sdk.Context) sdk.Coins {
 	store := ctx.KVStore(fck.key)
 	bz := store.Get(collectedFeesKey)
@@ -41,14 +40,12 @@ func (fck FeeCollectionKeeper) GetCollectedFees(ctx sdk.Context) sdk.Coins {
 	return *feePool
 }
 
-// Sets to Collected Fee Pool
 func (fck FeeCollectionKeeper) setCollectedFees(ctx sdk.Context, coins sdk.Coins) {
 	bz := fck.cdc.MustMarshalBinary(coins)
 	store := ctx.KVStore(fck.key)
 	store.Set(collectedFeesKey, bz)
 }
 
-// Adds to Collected Fee Pool
 func (fck FeeCollectionKeeper) addCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
 	newCoins := fck.GetCollectedFees(ctx).Plus(coins)
 	fck.setCollectedFees(ctx, newCoins)
@@ -56,7 +53,7 @@ func (fck FeeCollectionKeeper) addCollectedFees(ctx sdk.Context, coins sdk.Coins
 	return newCoins
 }
 
-// Clears the collected Fee Pool
+// clear the fee pool
 func (fck FeeCollectionKeeper) ClearCollectedFees(ctx sdk.Context) {
 	fck.setCollectedFees(ctx, sdk.Coins{})
 }

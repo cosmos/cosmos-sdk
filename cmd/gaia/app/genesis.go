@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,8 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/spf13/pflag"
-
+	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -70,10 +68,8 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 
 // get app init parameters for server init command
 func GaiaAppInit() server.AppInit {
-	fsAppGenState := pflag.NewFlagSet("", pflag.ContinueOnError)
 
 	return server.AppInit{
-		FlagsAppGenState: fsAppGenState,
 		AppGenState:      GaiaAppGenStateJSON,
 	}
 }

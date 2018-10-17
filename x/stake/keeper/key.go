@@ -96,7 +96,7 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 
 // gets the prefix for all unbonding delegations from a delegator
 func GetValidatorQueueTimeKey(timestamp time.Time) []byte {
-	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	bz := sdk.FormatTimeBytes(timestamp)
 	return append(ValidatorQueueKey, bz...)
 }
 
@@ -154,7 +154,7 @@ func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 
 // gets the prefix for all unbonding delegations from a delegator
 func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
-	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	bz := sdk.FormatTimeBytes(timestamp)
 	return append(UnbondingQueueKey, bz...)
 }
 
@@ -228,7 +228,7 @@ func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 
 // gets the prefix for all unbonding delegations from a delegator
 func GetRedelegationTimeKey(timestamp time.Time) []byte {
-	bz, _ := timestamp.MarshalBinary()
+	bz := sdk.FormatTimeBytes(timestamp)
 	return append(RedelegationQueueKey, bz...)
 }
 

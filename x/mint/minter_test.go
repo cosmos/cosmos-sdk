@@ -1,4 +1,4 @@
-package types
+package mint
 
 import (
 	"math/rand"
@@ -12,7 +12,7 @@ import (
 //changing the int in NewSource will allow you to test different, deterministic, sets of operations
 var r = rand.New(rand.NewSource(6595))
 
-func TestGetInflation(t *testing.T) {
+func TestNextInflation(t *testing.T) {
 	pool := InitialPool()
 	params := DefaultParams()
 
@@ -83,7 +83,6 @@ func TestProcessProvisions(t *testing.T) {
 }
 
 //_________________________________________________________________________________________
-////////////////////////////////HELPER FUNCTIONS BELOW/////////////////////////////////////
 
 // Final check on the global pool values for what the total tokens accumulated from each hour of provisions
 func checkFinalPoolValues(t *testing.T, pool Pool, initialTotalTokens, cumulativeExpProvs sdk.Dec) {
@@ -120,12 +119,15 @@ func checkInflation(t *testing.T, pool Pool, previousInflation, updatedInflation
 		if previousInflation.Equal(sdk.NewDecWithPrec(20, 2)) {
 			require.Equal(t, true, inflationChange.IsZero(), msg)
 
-			//This else statement covers the one off case where we first hit 20%, but we still needed a positive ROC to get to 67% bonded ratio (i.e. we went from 19.99999% to 20%)
+			//This else statement covers the one off case where we first hit
+			//20%, but we still needed a positive ROC to get to 67% bonded
+			//ratio (i.e. we went from 19.99999% to 20%)
 		} else {
 			require.Equal(t, true, inflationChange.GT(sdk.ZeroDec()), msg)
 		}
 
-	//ABOVE 67% - Rate of change should be negative while the bond is above 67, and should stay negative until we reach inflation of 7%
+	//ABOVE 67% - Rate of change should be negative while the bond is above 67,
+	//and should stay negative until we reach inflation of 7%
 	case pool.BondedRatio().GT(sdk.NewDecWithPrec(67, 2)) &&
 		updatedInflation.LT(sdk.NewDecWithPrec(20, 2)) && updatedInflation.GT(sdk.NewDecWithPrec(7, 2)):
 		require.Equal(t, true, inflationChange.LT(sdk.ZeroDec()), msg)
@@ -137,7 +139,9 @@ func checkInflation(t *testing.T, pool Pool, previousInflation, updatedInflation
 		if previousInflation.Equal(sdk.NewDecWithPrec(7, 2)) {
 			require.Equal(t, true, inflationChange.IsZero(), msg)
 
-			//This else statement covers the one off case where we first hit 7%, but we still needed a negative ROC to continue to get down to 67%. (i.e. we went from 7.00001% to 7%)
+			//This else statement covers the one off case where we first hit
+			//7%, but we still needed a negative ROC to continue to get down to
+			//67%. (i.e. we went from 7.00001% to 7%)
 		} else {
 			require.Equal(t, true, inflationChange.LT(sdk.ZeroDec()), msg)
 		}

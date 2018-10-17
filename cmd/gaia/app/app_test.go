@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/stretchr/testify/require"
@@ -24,6 +25,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 	genesisState := GenesisState{
 		Accounts:     genaccs,
 		StakeData:    stake.DefaultGenesisState(),
+		DistrData:    distr.DefaultGenesisState(),
 		SlashingData: slashing.DefaultGenesisState(),
 	}
 

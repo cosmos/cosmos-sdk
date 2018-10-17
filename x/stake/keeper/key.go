@@ -34,6 +34,17 @@ var (
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
 
+// Formats a time.Time into a []byte that can be sorted
+func FormatTimeKey(t time.Time) []byte {
+	return []byte(t.UTC().Round(0).Format("2006-01-02T15:04:05.000000000"))
+}
+
+// Parses a []byte encoded using FormatTimeKey back into a time.Time
+func ParseTimeKey(bz []byte) (time.Time, error) {
+	str := string(bz)
+	return time.Parse("2006-01-02T15:04:05.000000000", str)
+}
+
 // gets the key for the validator with address
 // VALUE: stake/types.Validator
 func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
@@ -71,8 +82,15 @@ func GetBondedValidatorIndexKey(operator sdk.ValAddress) []byte {
 func getValidatorPowerRank(validator types.Validator) []byte {
 
 	potentialPower := validator.Tokens
-	powerBytes := []byte(potentialPower.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+
+	// todo: deal with cases above 2**64, ref https://github.com/cosmos/cosmos-sdk/issues/2439#issuecomment-427167556
+	tendermintPower := potentialPower.RoundInt64()
+	tendermintPowerBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(tendermintPowerBytes[:], uint64(tendermintPower))
+
+	powerBytes := tendermintPowerBytes
 	powerBytesLen := len(powerBytes)
+
 	// key is of format prefix || powerbytes || heightBytes || counterBytes
 	key := make([]byte, 1+powerBytesLen+8+2)
 
@@ -89,7 +107,7 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 
 // gets the prefix for all unbonding delegations from a delegator
 func GetValidatorQueueTimeKey(timestamp time.Time) []byte {
-	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	bz := sdk.FormatTimeBytes(timestamp)
 	return append(ValidatorQueueKey, bz...)
 }
 
@@ -147,7 +165,7 @@ func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 
 // gets the prefix for all unbonding delegations from a delegator
 func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
-	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	bz := sdk.FormatTimeBytes(timestamp)
 	return append(UnbondingQueueKey, bz...)
 }
 
@@ -221,7 +239,7 @@ func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 
 // gets the prefix for all unbonding delegations from a delegator
 func GetRedelegationTimeKey(timestamp time.Time) []byte {
-	bz, _ := timestamp.MarshalBinary()
+	bz := sdk.FormatTimeBytes(timestamp)
 	return append(RedelegationQueueKey, bz...)
 }
 

@@ -1,11 +1,25 @@
 package slashing
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Create a new slashing period when a validator is bonded
 func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
+	// Update the signing info start height or create a new signing info
+	_, found := k.getValidatorSigningInfo(ctx, address)
+	if !found {
+		signingInfo := ValidatorSigningInfo{
+			StartHeight:         ctx.BlockHeight(),
+			IndexOffset:         0,
+			JailedUntil:         time.Unix(0, 0),
+			MissedBlocksCounter: 0,
+		}
+		k.setValidatorSigningInfo(ctx, address, signingInfo)
+	}
+
+	// Create a new slashing period when a validator is bonded
 	slashingPeriod := ValidatorSlashingPeriod{
 		ValidatorAddr: address,
 		StartHeight:   ctx.BlockHeight(),

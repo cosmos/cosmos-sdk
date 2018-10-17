@@ -5,16 +5,16 @@ import (
 )
 
 // distribution info for a delegation - used to determine entitled rewards
-type DelegatorDistInfo struct {
+type DelegationDistInfo struct {
 	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
 	ValOperatorAddr  sdk.ValAddress `json:"val_operator_addr"`
 	WithdrawalHeight int64          `json:"withdrawal_height"` // last time this delegation withdrew rewards
 }
 
-func NewDelegatorDistInfo(delegatorAddr sdk.AccAddress, valOperatorAddr sdk.ValAddress,
-	currentHeight int64) DelegatorDistInfo {
+func NewDelegationDistInfo(delegatorAddr sdk.AccAddress, valOperatorAddr sdk.ValAddress,
+	currentHeight int64) DelegationDistInfo {
 
-	return DelegatorDistInfo{
+	return DelegationDistInfo{
 		DelegatorAddr:    delegatorAddr,
 		ValOperatorAddr:  valOperatorAddr,
 		WithdrawalHeight: currentHeight,
@@ -22,9 +22,9 @@ func NewDelegatorDistInfo(delegatorAddr sdk.AccAddress, valOperatorAddr sdk.ValA
 }
 
 // withdraw rewards from delegator
-func (di DelegatorDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
+func (di DelegationDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	height int64, totalBonded, vdTokens, totalDelShares, delegatorShares,
-	commissionRate sdk.Dec) (DelegatorDistInfo, ValidatorDistInfo, FeePool, DecCoins) {
+	commissionRate sdk.Dec) (DelegationDistInfo, ValidatorDistInfo, FeePool, DecCoins) {
 
 	vi = vi.UpdateTotalDelAccum(height, totalDelShares)
 

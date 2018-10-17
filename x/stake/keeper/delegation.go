@@ -380,14 +380,14 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 	shares sdk.Dec) (amount sdk.Dec, err sdk.Error) {
 
-	k.OnDelegationSharesModified(ctx, delAddr, valAddr)
-
 	// check if delegation has any shares in it unbond
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		err = types.ErrNoDelegatorForAddress(k.Codespace())
 		return
 	}
+
+	k.OnDelegationSharesModified(ctx, delAddr, valAddr)
 
 	// retrieve the amount to remove
 	if delegation.Shares.LT(shares) {
@@ -430,7 +430,6 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
-	k.OnDelegationSharesModified(ctx, delegation.DelegatorAddr, validator.OperatorAddr)
 	return amount, nil
 }
 

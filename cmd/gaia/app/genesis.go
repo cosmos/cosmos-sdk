@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -181,8 +181,8 @@ func CollectStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
 
 	var addresses []string
 	for _, fo := range fos {
-		filename := path.Join(genTxsDir, fo.Name())
-		if !fo.IsDir() && (path.Ext(filename) != ".json") {
+		filename := filepath.Join(genTxsDir, fo.Name())
+		if !fo.IsDir() && (filepath.Ext(filename) != ".json") {
 			continue
 		}
 

@@ -13,7 +13,8 @@ import (
 //nolint
 var (
 	// Keys for store prefixes
-	ParamKey                         = []byte{0x00} // key for parameters relating to staking
+	// TODO DEPRECATED: delete in next release and reorder keys
+	// ParamKey                         = []byte{0x00} // key for parameters relating to staking
 	PoolKey                          = []byte{0x01} // key for the staking pools
 	ValidatorsKey                    = []byte{0x02} // prefix for each key to a validator
 	ValidatorsByConsAddrKey          = []byte{0x03} // prefix for each key to a validator index, by pubkey
@@ -28,6 +29,7 @@ var (
 	RedelegationByValDstIndexKey     = []byte{0x0C} // prefix for each key for an redelegation, by destination validator operator
 	UnbondingQueueKey                = []byte{0x0D} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey             = []byte{0x0E} // prefix for the timestamps in redelegations queue
+	ValidatorQueueKey                = []byte{0x0F} // prefix for the timestamps in validator queue
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -69,8 +71,15 @@ func GetBondedValidatorIndexKey(operator sdk.ValAddress) []byte {
 func getValidatorPowerRank(validator types.Validator) []byte {
 
 	potentialPower := validator.Tokens
-	powerBytes := []byte(potentialPower.ToLeftPadded(maxDigitsForAccount)) // power big-endian (more powerful validators first)
+
+	// todo: deal with cases above 2**64, ref https://github.com/cosmos/cosmos-sdk/issues/2439#issuecomment-427167556
+	tendermintPower := potentialPower.RoundInt64()
+	tendermintPowerBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(tendermintPowerBytes[:], uint64(tendermintPower))
+
+	powerBytes := tendermintPowerBytes
 	powerBytesLen := len(powerBytes)
+
 	// key is of format prefix || powerbytes || heightBytes || counterBytes
 	key := make([]byte, 1+powerBytesLen+8+2)
 
@@ -83,6 +92,12 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 	binary.BigEndian.PutUint16(key[powerBytesLen+9:powerBytesLen+11], ^uint16(validator.BondIntraTxCounter))
 
 	return key
+}
+
+// gets the prefix for all unbonding delegations from a delegator
+func GetValidatorQueueTimeKey(timestamp time.Time) []byte {
+	bz := sdk.FormatTimeBytes(timestamp)
+	return append(ValidatorQueueKey, bz...)
 }
 
 //______________________________________________________________________________
@@ -139,7 +154,7 @@ func GetUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 
 // gets the prefix for all unbonding delegations from a delegator
 func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
-	bz := types.MsgCdc.MustMarshalBinary(timestamp)
+	bz := sdk.FormatTimeBytes(timestamp)
 	return append(UnbondingQueueKey, bz...)
 }
 
@@ -213,7 +228,7 @@ func GetREDKeyFromValDstIndexKey(indexKey []byte) []byte {
 
 // gets the prefix for all unbonding delegations from a delegator
 func GetRedelegationTimeKey(timestamp time.Time) []byte {
-	bz, _ := timestamp.MarshalBinary()
+	bz := sdk.FormatTimeBytes(timestamp)
 	return append(RedelegationQueueKey, bz...)
 }
 

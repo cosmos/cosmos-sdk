@@ -87,8 +87,14 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 }
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
-func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (err error) {
-	stdTx, err := buildUnsignedStdTx(txBldr, cliCtx, msgs)
+// Don't perform online validation or lookups if offline is true.
+func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
+	var stdTx auth.StdTx
+	if offline {
+		stdTx, err = buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
+	} else {
+		stdTx, err = buildUnsignedStdTx(txBldr, cliCtx, msgs)
+	}
 	if err != nil {
 		return
 	}
@@ -204,6 +210,10 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	if err != nil {
 		return
 	}
+	return buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
+}
+
+func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	if txBldr.SimulateGas {
 		var name string
 		name, err = cliCtx.GetFromName()

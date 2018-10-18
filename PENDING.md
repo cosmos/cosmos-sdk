@@ -44,7 +44,7 @@ BREAKING CHANGES
     * [simulation] \#2162 Added back correct supply invariants
     * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
-    
+
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0
       * Validator set updates delayed by one block
@@ -69,13 +69,18 @@ BREAKING CHANGES
     * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
     * [x/staking] \#2236 more distribution hooks for distribution
     * [x/stake] \#2394 Split up UpdateValidator into distinct state transitions applied only in EndBlock
+    * [x/slashing] \#2480 Fix signing info handling bugs & faulty slashing
+    * [x/stake] \#2412 Added an unbonding validator queue to EndBlock to automatically update validator.Status when finished Unbonding
+    * [x/stake] \#2500 Block conflicting redelegations until we add an index
+    * [x/params] Global Paramstore refactored
+    * [x/stake] \#2508 Utilize Tendermint power for validator power key
 
 * Tendermint
   * Update tendermint version from v0.23.0 to v0.25.0, notable changes
     * Mempool now won't build too large blocks, or too computationally expensive blocks
     * Maximum tx sizes and gas are now removed, and are implicitly the blocks maximums
     * ABCI validators no longer send the pubkey. The pubkey is only sent in validator updates
-    * Validator set changes are now delayed by one block 
+    * Validator set changes are now delayed by one block
     * Block header now includes the next validator sets hash
     * BFT time is implemented
     * Secp256k1 signature format has changed
@@ -91,6 +96,7 @@ FEATURES
   * [gaia-lite] [\#1953](https://github.com/cosmos/cosmos-sdk/issues/1953) Add /sign endpoint to sign transactions generated with `generate_only=true`.
   * [gaia-lite] [\#1954](https://github.com/cosmos/cosmos-sdk/issues/1954) Add /broadcast endpoint to broadcast transactions signed by the /sign endpoint.
   * [gaia-lite] [\#2113](https://github.com/cosmos/cosmos-sdk/issues/2113) Rename `/accounts/{address}/send` to `/bank/accounts/{address}/transfers`, rename `/accounts/{address}` to `/auth/accounts/{address}`
+  * [gaia-lite] [\#2478](https://github.com/cosmos/cosmos-sdk/issues/2478) Add query gov proposal's deposits endpoint
 
 * Gaia CLI  (`gaiacli`)
   * [cli] Cmds to query staking pool and params
@@ -135,6 +141,7 @@ IMPROVEMENTS
 
 * Gaia REST API (`gaiacli advanced rest-server`)
     * [x/stake] [\#2000](https://github.com/cosmos/cosmos-sdk/issues/2000) Added tests for new staking endpoints
+    * [gaia-lite] Added example to Swagger specification for /keys/seed.
 
 * Gaia CLI  (`gaiacli`)
     * [cli] #2060 removed `--select` from `block` command
@@ -170,6 +177,7 @@ IMPROVEMENTS
     calls which includes dynamic consumption of value length.
     * [types/decimal] \#2378 - Added truncate functionality to decimal
     * [client] [\#1184](https://github.com/cosmos/cosmos-sdk/issues/1184) Remove unused `client/tx/sign.go`.
+    * [tools] \#2464 Lock binary dependencies to a specific version
 
 * Tendermint
 

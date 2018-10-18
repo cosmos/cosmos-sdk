@@ -18,6 +18,7 @@ module.exports = {
           "/introduction/cosmos-hub",
           "/introduction/tendermint-cosmos",
           "/introduction/tendermint"
+          "/introduction/faq"
         ]
       },
       {

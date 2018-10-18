@@ -1,6 +1,7 @@
 module.exports = {
-  title: "Cosmos Network",
+  title: "Cosmos Documentation",
   description: "Documentation for the Cosmos Network.",
+  ga: "UA-51029217-2",
   dest: "./dist/docs",
   base: "/docs/",
   markdown: {
@@ -66,6 +67,14 @@ module.exports = {
           "/sdk/sdk-by-examples/simple-governance/bridging-it-all",
           "/sdk/sdk-by-examples/simple-governance/running-the-application"
         ]
+      },
+      {
+        title: "Light Client",
+        collapsable: false,
+        children: [
+	  "/light/",
+	  "/light/getting_started"
+	]
       },
       {
         title: "Lotion JS",

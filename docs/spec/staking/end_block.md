@@ -3,15 +3,19 @@
 ## Unbonding Validator Queue
 
 For all unbonding validators that have finished their unbonding period, this switches their validator.Status
-from sdk.Unbonding to sdk.Unbonded
+from sdk.Unbonding to sdk.Unbonded if they still have any delegation left.  Otherwise, it deletes it from state.
 
 ```golang
 validatorQueue(currTime time.Time):
     // unbonding validators are in ordered queue from oldest to newest
     for all unbondingValidators whose CompleteTime < currTime:
         validator = GetValidator(unbondingValidator.ValidatorAddr)
-        validator.Status = sdk.Bonded
-        SetValidator(unbondingValidator)
+        if validator.DelegatorShares == 0 {
+            RemoveValidator(unbondingValidator)
+        } else {
+            validator.Status = sdk.Unbonded
+            SetValidator(unbondingValidator)
+        }
     return
 ```
 

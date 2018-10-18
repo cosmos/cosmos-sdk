@@ -343,7 +343,11 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 			if !found || val.GetStatus() != sdk.Unbonding {
 				continue
 			}
-			k.unbondingToUnbonded(ctx, val)
+			if val.GetDelegatorShares().IsZero() {
+				k.RemoveValidator(ctx, val.OperatorAddr)
+			} else {
+				k.unbondingToUnbonded(ctx, val)
+			}
 		}
 		store.Delete(validatorTimesliceIterator.Key())
 	}

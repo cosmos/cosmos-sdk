@@ -115,10 +115,11 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 		},
 	}
 
-	cmd.Flags().String(cli.HomeFlag, "", "node's home directory")
-	cmd.Flags().String(flagClientHome, "", "client's home directory")
+	cmd.Flags().String(cli.HomeFlag, app.DefaultNodeHome, "node's home directory")
+	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(client.FlagName, "", "moniker")
+	cmd.Flags().String(client.FlagName, "", "validator's moniker")
+	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
 }
 

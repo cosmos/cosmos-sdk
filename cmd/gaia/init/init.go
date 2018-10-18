@@ -26,20 +26,20 @@ import (
 )
 
 const (
-	flagChainID              = "chain-id"
-	flagWithTxs              = "with-txs"
-	flagOverwrite            = "overwrite"
-	flagClientHome           = "home-client"
-	flagOWK                  = "owk"
+	flagChainID    = "chain-id"
+	flagWithTxs    = "with-txs"
+	flagOverwrite  = "overwrite"
+	flagClientHome = "home-client"
+	flagOWK        = "owk"
 )
 
 type InitConfig struct {
-	ChainID string
-	GenTxsDir string
-	Moniker string
-	ClientHome string
-	WithTxs bool
-	Overwrite bool
+	ChainID       string
+	GenTxsDir     string
+	Moniker       string
+	ClientHome    string
+	WithTxs       bool
+	Overwrite     bool
 	OverwriteKeys bool
 }
 
@@ -59,12 +59,12 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
 			}
 			initCfg := InitConfig{
-				ChainID: chainID,
-				GenTxsDir: viper.GetString(filepath.Join(config.RootDir, "config", "gentx")),
-				Moniker: viper.GetString(client.FlagName),
-				ClientHome: viper.GetString(flagClientHome),
-				WithTxs: viper.GetBool(flagWithTxs),
-				Overwrite: viper.GetBool(flagOverwrite),
+				ChainID:       chainID,
+				GenTxsDir:     viper.GetString(filepath.Join(config.RootDir, "config", "gentx")),
+				Moniker:       viper.GetString(client.FlagName),
+				ClientHome:    viper.GetString(flagClientHome),
+				WithTxs:       viper.GetBool(flagWithTxs),
+				Overwrite:     viper.GetBool(flagOverwrite),
 				OverwriteKeys: viper.GetBool(flagOWK),
 			}
 			nodeID, appMessage, err := initWithConfig(cdc, config, initCfg)
@@ -109,7 +109,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg InitConfig) (
 	}
 	nodeID = string(nodeKey.ID())
 	privValFile := config.PrivValidatorFile()
-	valPubKey := readOrCreatePrivValidator(privValFile)
+	valPubKey := ReadOrCreatePrivValidator(privValFile)
 	genFile := config.GenesisFile()
 	if !initCfg.Overwrite && common.FileExists(genFile) {
 		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
@@ -198,16 +198,15 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg InitConfig) (
 	if err != nil {
 		return
 	}
-	err = writeGenesisFile(cdc, genFile, chainID, nil, appState)
+	err = WriteGenesisFile(cdc, genFile, chainID, nil, appState)
 
 	return
 }
 
-
-// writeGenesisFile creates and writes the genesis configuration to disk. An
+// WriteGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
 // nolint: unparam
-func writeGenesisFile(cdc *codec.Codec, genesisFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage) error {
+func WriteGenesisFile(cdc *codec.Codec, genesisFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage) error {
 	genDoc := types.GenesisDoc{
 		ChainID:    chainID,
 		Validators: validators,
@@ -222,7 +221,7 @@ func writeGenesisFile(cdc *codec.Codec, genesisFile, chainID string, validators 
 }
 
 // read of create the private key file for this config
-func readOrCreatePrivValidator(privValFile string) crypto.PubKey {
+func ReadOrCreatePrivValidator(privValFile string) crypto.PubKey {
 	// private validator
 	var privValidator *privval.FilePV
 	if common.FileExists(privValFile) {

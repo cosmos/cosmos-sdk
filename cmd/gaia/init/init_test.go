@@ -2,6 +2,7 @@ package init
 
 import (
 	"bytes"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/tendermint/tendermint/libs/cli"
 	"io"
@@ -97,7 +98,7 @@ func TestStartStandAlone(t *testing.T) {
 		os.RemoveAll(home)
 	}()
 	viper.Set(cli.HomeFlag, home)
-	viper.Set(server.FlagName, "moniker")
+	viper.Set(client.FlagName, "moniker")
 	defer setupClientHome(t)()
 
 	logger := log.NewNopLogger()

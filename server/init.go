@@ -2,25 +2,17 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/pkg/errors"
+	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/types"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-// parameter names, init command
-const (
-	FlagName       = "name"
-	FlagOverwrite  = "overwrite"
-	FlagWithTxs    = "with-txs"
-	FlagChainID    = "chain-id"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // Storage for init command input parameters
@@ -39,11 +31,44 @@ type AppInit struct {
 	AppGenState func(cdc *codec.Codec, appGenTx []json.RawMessage) (appState json.RawMessage, err error)
 }
 
+// SimpleGenTx is a simple genesis tx
+type SimpleGenTx struct {
+	Addr sdk.AccAddress `json:"addr"`
+}
+
 //_____________________________________________________________________
 
 // simple default application init
 var DefaultAppInit = AppInit{
 	AppGenState: SimpleAppGenState,
+}
+
+// Generate a genesis transaction
+func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (appGenTx, cliPrint json.RawMessage, validator types.GenesisValidator, err error) {
+	var addr sdk.AccAddress
+	var secret string
+	addr, secret, err = GenerateCoinKey()
+	if err != nil {
+		return
+	}
+	var bz []byte
+	simpleGenTx := SimpleGenTx{Addr: addr}
+	bz, err = cdc.MarshalJSON(simpleGenTx)
+	if err != nil {
+		return
+	}
+	appGenTx = json.RawMessage(bz)
+	mm := map[string]string{"secret": secret}
+	bz, err = cdc.MarshalJSON(mm)
+	if err != nil {
+		return
+	}
+	cliPrint = json.RawMessage(bz)
+	validator = tmtypes.GenesisValidator{
+		PubKey: pk,
+		Power:  10,
+	}
+	return
 }
 
 // create the genesis app state
@@ -54,18 +79,12 @@ func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState 
 		return
 	}
 
-	var tx auth.StdTx
+	var tx SimpleGenTx
 	err = cdc.UnmarshalJSON(appGenTxs[0], &tx)
 	if err != nil {
 		return
 	}
-	msgs := tx.GetMsgs()
-	if len(msgs) != 1 {
-		err = errors.New("must provide a single genesis message")
-		return
-	}
 
-	msg := msgs[0].(stake.MsgCreateValidator)
 	appState = json.RawMessage(fmt.Sprintf(`{
   "accounts": [{
     "address": "%s",
@@ -76,7 +95,7 @@ func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState 
       }
     ]
   }]
-}`, msg.ValidatorAddr))
+}`, tx.Addr))
 	return
 }
 

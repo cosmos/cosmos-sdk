@@ -145,7 +145,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 			return err
 		}
 
-		valPubKey := readOrCreatePrivValidator(config.PrivValidatorFile())
+		valPubKey := ReadOrCreatePrivValidator(config.PrivValidatorFile())
 		msg := stake.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKey,

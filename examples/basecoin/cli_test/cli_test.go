@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	"github.com/stretchr/testify/require"
@@ -13,10 +14,11 @@ import (
 
 var (
 	basecoindHome = ""
+	basecliHome   = ""
 )
 
 func init() {
-	basecoindHome = getTestingHomeDir()
+	basecoindHome, basecliHome = getTestingHomeDirs()
 }
 
 func TestInitStartSequence(t *testing.T) {
@@ -32,7 +34,7 @@ func executeInit(t *testing.T) {
 		chainID string
 		initRes map[string]json.RawMessage
 	)
-	_, stderr := tests.ExecuteT(t, fmt.Sprintf("basecoind --home=%s init", basecoindHome), "")
+	_, stderr := tests.ExecuteT(t, fmt.Sprintf("basecoind --home=%s --home-client=%s init", basecoindHome, basecliHome), app.DefaultKeyPass)
 	err := json.Unmarshal([]byte(stderr), &initRes)
 	require.NoError(t, err)
 	err = json.Unmarshal(initRes["chain_id"], &chainID)
@@ -45,8 +47,9 @@ func executeStart(t *testing.T, servAddr, port string) {
 	tests.WaitForTMStart(port)
 }
 
-func getTestingHomeDir() string {
+func getTestingHomeDirs() (string, string) {
 	tmpDir := os.TempDir()
 	basecoindHome := fmt.Sprintf("%s%s.test_basecoind", tmpDir, string(os.PathSeparator))
-	return basecoindHome
+	basecliHome := fmt.Sprintf("%s%s.test_basecli", tmpDir, string(os.PathSeparator))
+	return basecoindHome, basecliHome
 }

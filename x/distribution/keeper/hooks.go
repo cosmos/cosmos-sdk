@@ -14,16 +14,18 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 	vdi := types.ValidatorDistInfo{
 		OperatorAddr:            addr,
 		FeePoolWithdrawalHeight: height,
-		Pool:           types.DecCoins{},
-		PoolCommission: types.DecCoins{},
-		DelAccum:       types.NewTotalAccum(height),
+		Pool:                    types.DecCoins{},
+		PoolCommission:          types.DecCoins{},
+		DelAccum:                types.NewTotalAccum(height),
 	}
 	k.SetValidatorDistInfo(ctx, vdi)
 }
 
 // Withdrawal all validator rewards
 func (k Keeper) onValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
-	k.WithdrawValidatorRewardsAll(ctx, addr)
+	if err := k.WithdrawValidatorRewardsAll(ctx, addr); err != nil {
+		panic(err)
+	}
 }
 
 // Withdrawal all validator distribution rewards and cleanup the distribution record
@@ -50,7 +52,9 @@ func (k Keeper) onDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
 func (k Keeper) onDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
 
-	k.WithdrawDelegationReward(ctx, delAddr, valAddr)
+	if err := k.WithdrawDelegationReward(ctx, delAddr, valAddr); err != nil {
+		panic(err)
+	}
 }
 
 // Withdrawal all validator distribution rewards and cleanup the distribution record

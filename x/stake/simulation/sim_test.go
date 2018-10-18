@@ -8,7 +8,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -22,13 +24,17 @@ func TestStakeWithRandomMessages(t *testing.T) {
 	bank.RegisterCodec(mapp.Cdc)
 	mapper := mapp.AccountMapper
 	bankKeeper := bank.NewBaseKeeper(mapper)
+	feeKey := sdk.NewKVStoreKey("fee")
 	stakeKey := sdk.NewKVStoreKey("stake")
 	stakeTKey := sdk.NewTransientStoreKey("transient_stake")
 	paramsKey := sdk.NewKVStoreKey("params")
 	paramsTKey := sdk.NewTransientStoreKey("transient_params")
+	distrKey := sdk.NewKVStoreKey("distr")
 
-	paramstore := params.NewKeeper(mapp.Cdc, paramsKey, paramsTKey).Subspace(stake.DefaultParamspace)
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, stakeTKey, bankKeeper, paramstore, stake.DefaultCodespace)
+	feeCollectionKeeper := auth.NewFeeCollectionKeeper(mapp.Cdc, feeKey)
+	paramstore := params.NewKeeper(mapp.Cdc, paramsKey, paramsTKey)
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, stakeTKey, bankKeeper, paramstore.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
+	distrKeeper := distribution.NewKeeper(mapp.Cdc, distrKey, paramstore.Subspace(distribution.DefaultParamspace), bankKeeper, stakeKeeper, feeCollectionKeeper, distribution.DefaultCodespace)
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
 	mapp.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		validatorUpdates := stake.EndBlocker(ctx, stakeKeeper)
@@ -58,7 +64,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		}, []simulation.RandSetup{
 			Setup(mapp, stakeKeeper),
 		}, []simulation.Invariant{
-			AllInvariants(bankKeeper, stakeKeeper, mapp.AccountMapper),
+			AllInvariants(bankKeeper, stakeKeeper, distrKeeper, mapp.AccountMapper),
 		}, 10, 100,
 		false,
 	)

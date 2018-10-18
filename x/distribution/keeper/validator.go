@@ -74,6 +74,7 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	return nil
 }
 
+// iterate over all the validator distribution infos (inefficient, just used to check invariants)
 func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context, fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)

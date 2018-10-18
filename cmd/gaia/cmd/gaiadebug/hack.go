@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/circuit"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -188,7 +187,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
-	app.SetAnteHandler(app.NewAnteHandler())
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keySlashing, app.keyParams)
 	app.MountStore(app.tkeyParams, sdk.StoreTypeTransient)
 	err := app.LoadLatestVersion(app.keyMain)
@@ -230,18 +229,6 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
-	}
-}
-
-func (app *GaiaApp) NewAnteHandler() sdk.AnteHandler {
-	authante := auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper)
-	circuitante := circuit.NewAnteHandler(app.paramsKeeper.Subspace(circuit.DefaultParamspace))
-	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newctx sdk.Context, res sdk.Result, abort bool) {
-		newctx, res, abort = authante(ctx, tx, simulate)
-		if abort {
-			return
-		}
-		return circuitante(newctx, tx, simulate)
 	}
 }
 

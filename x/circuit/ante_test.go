@@ -39,8 +39,8 @@ func (othermsg) Type() string { return "othermsg" }
 
 func (othermsg) Name() string { return "othermsg" }
 
-func testMsg(t *testing.T, ctx sdk.Context, space params.Subspace, msg sdk.Msg, ty bool, name bool) {
-	ante := NewAnteHandler(space)
+func testMsg(t *testing.T, ctx sdk.Context, k Keeper, msg sdk.Msg, ty bool, name bool) {
+	ante := NewAnteHandler(k)
 
 	_, _, abort := ante(ctx, tx{msg}, false)
 	require.Equal(t, ty || name, abort)
@@ -56,8 +56,8 @@ func testMsg(t *testing.T, ctx sdk.Context, space params.Subspace, msg sdk.Msg, 
 	}
 
 	for i, tc := range table {
-		require.NotPanics(t, func() { space.SetWithSubkey(ctx, MsgTypeKey, []byte(msg.Type()), tc.ty) }, "panic setting breaker, tc #%d", i)
-		require.NotPanics(t, func() { space.SetWithSubkey(ctx, MsgNameKey, []byte(msg.Name()), tc.name) }, "panic setting breaker, tc #%d", i)
+		require.NotPanics(t, func() { k.space.SetWithSubkey(ctx, MsgTypeKey, []byte(msg.Type()), tc.ty) }, "panic setting breaker, tc #%d", i)
+		require.NotPanics(t, func() { k.space.SetWithSubkey(ctx, MsgNameKey, []byte(msg.Name()), tc.name) }, "panic setting breaker, tc #%d", i)
 
 		_, _, abort := ante(ctx, tx{msg}, false)
 		require.Equal(t, tc.ty || tc.name, abort)
@@ -65,16 +65,18 @@ func testMsg(t *testing.T, ctx sdk.Context, space params.Subspace, msg sdk.Msg, 
 }
 
 func TestAnteHandler(t *testing.T) {
-	ctx, space, _ := params.DefaultTestComponents(t, ParamTypeTable())
+	ctx, space, _ := params.DefaultTestComponents(t)
+
+	k := NewKeeper(space)
 
 	data := GenesisState{
 		MsgTypes: []string{"othermsg"},
 		MsgNames: []string{"msg2"},
 	}
 
-	InitGenesis(ctx, space, data)
+	InitGenesis(ctx, k, data)
 
-	testMsg(t, ctx, space, msg1{}, false, false)
-	testMsg(t, ctx, space, msg2{}, false, true)
-	testMsg(t, ctx, space, othermsg{}, true, false)
+	testMsg(t, ctx, k, msg1{}, false, false)
+	testMsg(t, ctx, k, msg2{}, false, true)
+	testMsg(t, ctx, k, othermsg{}, true, false)
 }

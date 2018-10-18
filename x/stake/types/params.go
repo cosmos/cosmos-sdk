@@ -39,8 +39,8 @@ type Params struct {
 }
 
 // Implements params.ParamSet
-func (p *Params) KeyValuePairs() params.KeyValuePairs {
-	return params.KeyValuePairs{
+func (p *Params) ParamSetPairs() params.ParamSetPairs {
+	return params.ParamSetPairs{
 		{KeyUnbondingTime, &p.UnbondingTime},
 		{KeyMaxValidators, &p.MaxValidators},
 		{KeyBondDenom, &p.BondDenom},

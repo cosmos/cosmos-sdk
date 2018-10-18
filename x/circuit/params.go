@@ -11,8 +11,8 @@ var (
 	MsgNameKey = []byte("msgname")
 )
 
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable(
 		MsgTypeKey, bool(false),
 		MsgNameKey, bool(false),
 	)

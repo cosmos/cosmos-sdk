@@ -66,6 +66,7 @@ type GaiaApp struct {
 	distrKeeper         distr.Keeper
 	govKeeper           gov.Keeper
 	paramsKeeper        params.Keeper
+	circuitKeeper       circuit.Keeper
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
@@ -143,6 +144,10 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.stakeKeeper = app.stakeKeeper.WithHooks(
 		NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
 
+	app.circuitKeeper = circuit.NewKeeper(
+		app.paramsKeeper.Subspace(circuit.DefaultParamspace),
+	)
+
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
@@ -219,7 +224,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 
 func (app *GaiaApp) NewAnteHandler() sdk.AnteHandler {
 	authante := auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper)
-	circuitante := circuit.NewAnteHandler(app.paramsKeeper.Subspace(circuit.DefaultParamspace))
+	circuitante := circuit.NewAnteHandler(app.circuitKeeper)
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newctx sdk.Context, res sdk.Result, abort bool) {
 		newctx, res, abort = authante(ctx, tx, simulate)
 		if abort {
@@ -295,6 +300,9 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 			}
 		}
 	}
+
+	// load initially circuit breaked msg types
+	circuit.InitGenesis(ctx, app.circuitKeeper, genesisState.CircuitData)
 
 	return abci.ResponseInitChain{
 		Validators: validators,

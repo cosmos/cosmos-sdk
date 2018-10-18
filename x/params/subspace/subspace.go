@@ -17,7 +17,7 @@ type Subspace struct {
 
 	name []byte
 
-	table TypeTable
+	table KeyTable
 }
 
 // NewSubspace constructs a store with namestore
@@ -27,21 +27,21 @@ func NewSubspace(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name str
 		key:  key,
 		tkey: tkey,
 		name: []byte(name),
-		table: TypeTable{
-			m: make(map[string]reflect.Type),
+		table: KeyTable{
+			m: make(map[string]attribute),
 		},
 	}
 
 	return
 }
 
-// WithTypeTable initializes TypeTable and returns modified Subspace
-func (s Subspace) WithTypeTable(table TypeTable) Subspace {
+// WithKeyTable initializes KeyTable and returns modified Subspace
+func (s Subspace) WithKeyTable(table KeyTable) Subspace {
 	if table.m == nil {
-		panic("SetTypeTable() called with nil TypeTable")
+		panic("SetKeyTable() called with nil KeyTable")
 	}
 	if len(s.table.m) != 0 {
-		panic("SetTypeTable() called on already initialized Subspace")
+		panic("SetKeyTable() called on already initialized Subspace")
 	}
 
 	for k, v := range table.m {
@@ -64,11 +64,16 @@ func (s Subspace) kvStore(ctx sdk.Context) sdk.KVStore {
 	return ctx.KVStore(s.key).Prefix(append(s.name, '/'))
 }
 
-// Returns a KVStore identical with ctx.TransientStore(s.tkey).Prefix()
-func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
+// Returns a transient store for modification
+func (s Subspace) modifiedStore(ctx sdk.Context) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
-	return ctx.TransientStore(s.tkey).Prefix(append(s.name, '/'))
+	return ctx.TransientStore(s.tkey).Prefix(append(s.name, "/m/"...))
+}
+
+// Returns a transient store for block-level sync parameter
+func (s Subspace) syncStore(ctx sdk.Context) sdk.KVStore {
+	return ctx.TransientStore(s.tkey).Prefix(append(s.name, "/s/"...))
 }
 
 func concat(key []byte, subkey []byte) (res []byte) {
@@ -124,16 +129,17 @@ func (s Subspace) Has(ctx sdk.Context, key []byte) bool {
 
 // Returns true if the parameter is set in the block
 func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
-	tstore := s.transientStore(ctx)
+	tstore := s.modifiedStore(ctx)
 	return tstore.Has(key)
 }
 
 func (s Subspace) checkType(store sdk.KVStore, key []byte, param interface{}) {
-	ty, ok := s.table.m[string(key)]
+	attr, ok := s.table.m[string(key)]
 	if !ok {
 		panic("Parameter not registered")
 	}
 
+	ty := attr.ty
 	pty := reflect.TypeOf(param)
 	if pty.Kind() == reflect.Ptr {
 		pty = pty.Elem()
@@ -157,7 +163,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 	}
 	store.Set(key, bz)
 
-	tstore := s.transientStore(ctx)
+	tstore := s.modifiedStore(ctx)
 	tstore.Set(key, []byte{})
 
 }
@@ -175,20 +181,20 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 	}
 	store.Set(newkey, bz)
 
-	tstore := s.transientStore(ctx)
+	tstore := s.modifiedStore(ctx)
 	tstore.Set(newkey, []byte{})
 }
 
 // Get to ParamSet
 func (s Subspace) GetParamSet(ctx sdk.Context, ps ParamSet) {
-	for _, pair := range ps.KeyValuePairs() {
+	for _, pair := range ps.ParamSetPairs() {
 		s.Get(ctx, pair.Key, pair.Value)
 	}
 }
 
 // Set from ParamSet
 func (s Subspace) SetParamSet(ctx sdk.Context, ps ParamSet) {
-	for _, pair := range ps.KeyValuePairs() {
+	for _, pair := range ps.ParamSetPairs() {
 		// pair.Field is a pointer to the field, so indirecting the ptr.
 		// go-amino automatically handles it but just for sure,
 		// since SetStruct is meant to be used in InitGenesis

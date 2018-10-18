@@ -20,8 +20,8 @@ var (
 )
 
 // Type declaration for parameters
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable(
 		ParamStoreKeyDepositProcedure, DepositProcedure{},
 		ParamStoreKeyVotingProcedure, VotingProcedure{},
 		ParamStoreKeyTallyingProcedure, TallyingProcedure{},
@@ -64,7 +64,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, p
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
-		paramSpace:   paramSpace.WithTypeTable(ParamTypeTable()),
+		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           ck,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),

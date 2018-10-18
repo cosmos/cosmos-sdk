@@ -57,7 +57,7 @@ func main() {
 }
 
 // get cmd to initialize all files for tendermint and application
-// nolint: golint
+// nolint: errcheck
 func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",

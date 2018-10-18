@@ -71,7 +71,11 @@ func (k Keeper) RemoveDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAd
 
 // withdraw all the rewards for a single delegation
 func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	validatorAddr sdk.ValAddress) {
+	validatorAddr sdk.ValAddress) sdk.Error {
+
+	if !k.HasDelegationDistInfo(ctx, delegatorAddr, validatorAddr) {
+		return types.ErrNoDelegationDistInfo(k.codespace)
+	}
 
 	height := ctx.BlockHeight()
 	bondedTokens := k.stakeKeeper.TotalPower(ctx)
@@ -92,6 +96,7 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 	if err != nil {
 		panic(err)
 	}
+	return nil
 }
 
 //___________________________________________________________________________________________

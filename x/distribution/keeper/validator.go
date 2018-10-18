@@ -5,6 +5,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// check whether a validator has distribution info
+func (k Keeper) HasValidatorDistInfo(ctx sdk.Context,
+	operatorAddr sdk.ValAddress) (exists bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(GetValidatorDistInfoKey(operatorAddr))
+}
+
 // get the validator distribution info
 func (k Keeper) GetValidatorDistInfo(ctx sdk.Context,
 	operatorAddr sdk.ValAddress) (vdi types.ValidatorDistInfo) {
@@ -34,7 +41,11 @@ func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress)
 }
 
 // withdrawal all the validator rewards including the commission
-func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) {
+func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+
+	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
+		return types.ErrNoValidatorDistInfo(k.codespace)
+	}
 
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
@@ -57,4 +68,6 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	if err != nil {
 		panic(err)
 	}
+
+	return nil
 }

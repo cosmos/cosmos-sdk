@@ -25,3 +25,6 @@ func ErrNilValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
 func ErrNoDelegationDistInfo(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeNoDistributionInfo, "no delegation distribution info")
 }
+func ErrNoValidatorDistInfo(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeNoDistributionInfo, "no validator distribution info")
+}

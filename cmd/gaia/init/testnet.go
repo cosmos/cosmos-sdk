@@ -108,7 +108,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 			_ = os.RemoveAll(outDir)
 			return err
 		}
-		nodeIDs[i], valPubKeys[i], err = InitNodeValidatorFiles(config)
+		nodeIDs[i], valPubKeys[i], err = InitializeNodeValidatorFiles(config)
 		if err != nil {
 			_ = os.RemoveAll(outDir)
 			return err

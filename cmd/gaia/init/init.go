@@ -85,7 +85,7 @@ enabled, and the genesis file will not be generated.
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
 			}
-			nodeID, valPubKey, err := InitNodeValidatorFiles(config)
+			nodeID, valPubKey, err := InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return err
 			}
@@ -133,7 +133,7 @@ enabled, and the genesis file will not be generated.
 	cmd.Flags().String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().Bool(flagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
-	cmd.Flags().String(flagMoniker, "", "overrides --name flag and set the validator's moniker to a different value")
+	cmd.Flags().String(flagMoniker, "", "overrides --name flag and set the validator's moniker to a different value; ignored if it runs without the --with-txs flag")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().Bool(flagOWK, false, "overwrite client's keys")
 	cmd.Flags().Bool(flagSkipGenesis, false, "do not create genesis.json")
@@ -141,7 +141,8 @@ enabled, and the genesis file will not be generated.
 	return cmd
 }
 
-func InitNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
+// InitializeNodeValidatorFiles creates private validator and p2p configuration files.
+func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return
@@ -186,6 +187,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 		var addr sdk.AccAddress
 		var signedTx auth.StdTx
 
+		config.Moniker = initCfg.Name
 		ip, err = server.ExternalIP()
 		if err != nil {
 			return

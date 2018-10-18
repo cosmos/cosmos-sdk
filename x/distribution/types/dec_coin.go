@@ -43,9 +43,11 @@ func (coin DecCoin) Minus(coinB DecCoin) DecCoin {
 	return DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 }
 
-// return the decimal coins with trunctated decimals
-func (coin DecCoin) TruncateDecimal() sdk.Coin {
-	return sdk.NewCoin(coin.Denom, coin.Amount.TruncateInt())
+// return the decimal coins with trunctated decimals, and return the change
+func (coin DecCoin) TruncateDecimal() (sdk.Coin, DecCoin) {
+	truncated := coin.Amount.TruncateInt()
+	change := coin.Amount.Sub(sdk.NewDecFromInt(truncated))
+	return sdk.NewCoin(coin.Denom, truncated), DecCoin{coin.Denom, change}
 }
 
 //_______________________________________________________________________
@@ -61,13 +63,16 @@ func NewDecCoins(coins sdk.Coins) DecCoins {
 	return dcs
 }
 
-// return the coins with trunctated decimals
-func (coins DecCoins) TruncateDecimal() sdk.Coins {
+// return the coins with trunctated decimals, and return the change
+func (coins DecCoins) TruncateDecimal() (sdk.Coins, DecCoins) {
+	changeSum := DecCoins{}
 	out := make(sdk.Coins, len(coins))
 	for i, coin := range coins {
-		out[i] = coin.TruncateDecimal()
+		truncated, change := coin.TruncateDecimal()
+		out[i] = truncated
+		changeSum = changeSum.Plus(DecCoins{change})
 	}
-	return out
+	return out, changeSum
 }
 
 // Plus combines two sets of coins

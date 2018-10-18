@@ -139,7 +139,7 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 	viper.Set(client.FlagName, "moniker")
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
-	nodeID, valPubKey, err := initNodeValidatorFiles(cfg)
+	nodeID, valPubKey, err := InitNodeValidatorFiles(cfg)
 	require.Nil(t, err)
 	require.NotEqual(t, "", nodeID)
 	require.NotEqual(t, 0, len(valPubKey.Bytes()))

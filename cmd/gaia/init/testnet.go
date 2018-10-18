@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/tendermint/tendermint/p2p"
 	"net"
 	"os"
 	"path/filepath"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/crypto"
 	cfg "github.com/tendermint/tendermint/config"
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
@@ -76,6 +76,8 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 	// Generate genesis.json and config.toml
 	chainID := "chain-" + cmn.RandStr(6)
 	monikers := make([]string, numValidators)
+	nodeIDs := make([]string, numValidators)
+	valPubKeys := make([]crypto.PubKey, numValidators)
 
 	// Generate private key, node ID, initial transaction
 	for i := 0; i < numValidators; i++ {
@@ -106,13 +108,12 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 			_ = os.RemoveAll(outDir)
 			return err
 		}
-		nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+		nodeIDs[i], valPubKeys[i], err = InitNodeValidatorFiles(config)
 		if err != nil {
 			_ = os.RemoveAll(outDir)
 			return err
 		}
-		nodeID := string(nodeKey.ID())
-		memo := fmt.Sprintf("%s@%s:26656", nodeID, ip)
+		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
 
 		buf := client.BufferStdin()
 		prompt := fmt.Sprintf("Password for account '%s' (default %s):", nodeDirName, app.DefaultKeyPass)
@@ -143,10 +144,9 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 			return err
 		}
 
-		valPubKey := ReadOrCreatePrivValidator(config.PrivValidatorFile())
 		msg := stake.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
-			valPubKey,
+			valPubKeys[i],
 			sdk.NewInt64Coin("steak", 100),
 			stake.NewDescription(nodeDirName, "", "", ""),
 			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
@@ -168,6 +168,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		// Gather gentxs folder
 		err = writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBytes)
 		if err != nil {
+			_ = os.RemoveAll(outDir)
 			return err
 		}
 	}
@@ -182,23 +183,19 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		config.Moniker = nodeDirName
 		config.SetRoot(nodeDir)
 
-		nodeID, valPubKey, err := initNodeValidatorFiles(config)
-		if err != nil {
-			return err
-		}
+		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		// Run `init` and generate genesis.json and config.toml
 		initCfg := initConfig{
 			ChainID:       chainID,
 			GenTxsDir:     gentxsDir,
-			Moniker:       moniker,
+			Name:          moniker,
 			WithTxs:       true,
 			Overwrite:     true,
 			OverwriteKeys: false,
 			NodeID:        nodeID,
 			ValPubKey:     valPubKey,
 		}
-		_, err = initWithConfig(cdc, config, initCfg)
-		if err != nil {
+		if _, err := initWithConfig(cdc, config, initCfg); err != nil {
 			return err
 		}
 	}

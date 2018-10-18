@@ -32,21 +32,23 @@ const (
 	flagClientHome  = "home-client"
 	flagOWK         = "owk"
 	flagSkipGenesis = "skip-genesis"
+	flagMoniker     = "moniker"
 )
 
 type initConfig struct {
 	ChainID       string
 	GenTxsDir     string
-	Moniker       string
+	Name          string
+	NodeID        string
 	ClientHome    string
 	WithTxs       bool
 	Overwrite     bool
 	OverwriteKeys bool
-	NodeID        string
 	ValPubKey     crypto.PubKey
 }
 
 type printInfo struct {
+	Moniker    string          `json:"moniker"`
 	ChainID    string          `json:"chain_id"`
 	NodeID     string          `json:"node_id"`
 	AppMessage json.RawMessage `json:"app_message"`
@@ -68,38 +70,51 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
-		Long: `This command initializes validators's and node's configuration files.
-Genesis file will not be generated if run with --skip-genesis.`,
+		Long: `Initialize validators's and node's configuration files.
+
+Note that only node's configuration files will be written if the flag --skip-genesis is
+enabled, and the genesis file will not be generated.
+`,
 		Args:  cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
-
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
+
+			name := viper.GetString(client.FlagName)
 			chainID := viper.GetString(flagChainID)
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
 			}
-			nodeID, valPubKey, err := initNodeValidatorFiles(config)
+			nodeID, valPubKey, err := InitNodeValidatorFiles(config)
 			if err != nil {
 				return err
 			}
+
+			if viper.GetString(flagMoniker) != "" {
+				config.Moniker = viper.GetString(flagMoniker)
+			}
+			if config.Moniker == "" {
+				config.Moniker = name
+			}
 			toPrint := printInfo{
 				ChainID: chainID,
+				Moniker: config.Moniker,
 				NodeID: nodeID,
 			}
 			if viper.GetBool(flagSkipGenesis) {
+				cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 				return displayInfo(cdc, toPrint)
 			}
 
 			initCfg := initConfig{
 				ChainID:       chainID,
 				GenTxsDir:     viper.GetString(filepath.Join(config.RootDir, "config", "gentx")),
-				Moniker:       viper.GetString(client.FlagName),
+				Name:          name,
+				NodeID:        nodeID,
 				ClientHome:    viper.GetString(flagClientHome),
 				WithTxs:       viper.GetBool(flagWithTxs),
 				Overwrite:     viper.GetBool(flagOverwrite),
 				OverwriteKeys: viper.GetBool(flagOWK),
-				NodeID:        nodeID,
 				ValPubKey:     valPubKey,
 			}
 			appMessage, err := initWithConfig(cdc, config, initCfg)
@@ -117,7 +132,8 @@ Genesis file will not be generated if run with --skip-genesis.`,
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().Bool(flagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
-	cmd.Flags().String(client.FlagName, "", "moniker")
+	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
+	cmd.Flags().String(flagMoniker, "", "overrides --name flag and set the validator's moniker to a different value")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().Bool(flagOWK, false, "overwrite client's keys")
 	cmd.Flags().Bool(flagSkipGenesis, false, "do not create genesis.json")
@@ -125,7 +141,7 @@ Genesis file will not be generated if run with --skip-genesis.`,
 	return cmd
 }
 
-func initNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
+func InitNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return
@@ -149,11 +165,10 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 	var genTxs []json.RawMessage
 	var appState json.RawMessage
 	var jsonRawTx json.RawMessage
-	moniker := initCfg.Moniker
 	chainID := initCfg.ChainID
 
 	if initCfg.WithTxs {
-		_, appGenTxs, persistentPeers, err = app.CollectStdTxs(moniker, initCfg.GenTxsDir, cdc)
+		_, appGenTxs, persistentPeers, err = app.CollectStdTxs(config.Moniker, initCfg.GenTxsDir, cdc)
 		if err != nil {
 			return
 		}
@@ -171,14 +186,13 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 		var addr sdk.AccAddress
 		var signedTx auth.StdTx
 
-		config.Moniker = moniker
 		ip, err = server.ExternalIP()
 		if err != nil {
 			return
 		}
 		memo := fmt.Sprintf("%s@%s:26656", initCfg.NodeID, ip)
 		buf := client.BufferStdin()
-		prompt := fmt.Sprintf("Password for account '%s' (default %s):", moniker, app.DefaultKeyPass)
+		prompt := fmt.Sprintf("Password for account %q (default: %q):", initCfg.Name, app.DefaultKeyPass)
 		keyPass, err = client.GetPassword(prompt, buf)
 		if err != nil && keyPass != "" {
 			// An error was returned that either failed to read the password from
@@ -190,7 +204,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 			keyPass = app.DefaultKeyPass
 		}
 
-		addr, secret, err = server.GenerateSaveCoinKey(initCfg.ClientHome, moniker, keyPass, initCfg.OverwriteKeys)
+		addr, secret, err = server.GenerateSaveCoinKey(initCfg.ClientHome, initCfg.Name, keyPass, initCfg.OverwriteKeys)
 		if err != nil {
 			return
 		}
@@ -203,12 +217,12 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 			sdk.ValAddress(addr),
 			initCfg.ValPubKey,
 			sdk.NewInt64Coin("steak", 100),
-			stake.NewDescription(moniker, "", "", ""),
+			stake.NewDescription(config.Moniker, "", "", ""),
 			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
 		txBldr := authtx.NewTxBuilderFromCLI().WithCodec(cdc).WithMemo(memo).WithChainID(chainID)
 		signedTx, err = txBldr.SignStdTx(
-			moniker, keyPass, auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{}, memo), false,
+			initCfg.Name, keyPass, auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{}, memo), false,
 		)
 		if err != nil {
 			return

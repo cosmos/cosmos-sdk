@@ -182,6 +182,10 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		config.Moniker = nodeDirName
 		config.SetRoot(nodeDir)
 
+		nodeID, valPubKey, err := initNodeValidatorFiles(config)
+		if err != nil {
+			return err
+		}
 		// Run `init` and generate genesis.json and config.toml
 		initCfg := initConfig{
 			ChainID:       chainID,
@@ -190,8 +194,10 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 			WithTxs:       true,
 			Overwrite:     true,
 			OverwriteKeys: false,
+			NodeID:        nodeID,
+			ValPubKey:     valPubKey,
 		}
-		_, _, err := initWithConfig(cdc, config, initCfg)
+		_, err = initWithConfig(cdc, config, initCfg)
 		if err != nil {
 			return err
 		}

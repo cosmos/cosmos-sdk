@@ -128,3 +128,19 @@ func TestStartStandAlone(t *testing.T) {
 		svr.Stop()
 	}
 }
+
+func TestInitNodeValidatorFiles(t *testing.T) {
+	home, err := ioutil.TempDir("", "mock-sdk-cmd")
+	require.Nil(t, err)
+	defer func() {
+		os.RemoveAll(home)
+	}()
+	viper.Set(cli.HomeFlag, home)
+	viper.Set(client.FlagName, "moniker")
+	cfg, err := tcmd.ParseConfig()
+	require.Nil(t, err)
+	nodeID, valPubKey, err := initNodeValidatorFiles(cfg)
+	require.Nil(t, err)
+	require.NotEqual(t, "", nodeID)
+	require.NotEqual(t, 0, len(valPubKey.Bytes()))
+}

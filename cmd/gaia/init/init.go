@@ -26,11 +26,12 @@ import (
 )
 
 const (
-	flagChainID    = "chain-id"
-	flagWithTxs    = "with-txs"
-	flagOverwrite  = "overwrite"
-	flagClientHome = "home-client"
-	flagOWK        = "owk"
+	flagChainID     = "chain-id"
+	flagWithTxs     = "with-txs"
+	flagOverwrite   = "overwrite"
+	flagClientHome  = "home-client"
+	flagOWK         = "owk"
+	flagSkipGenesis = "skip-genesis"
 )
 
 type initConfig struct {
@@ -41,6 +42,24 @@ type initConfig struct {
 	WithTxs       bool
 	Overwrite     bool
 	OverwriteKeys bool
+	NodeID        string
+	ValPubKey     crypto.PubKey
+}
+
+type printInfo struct {
+	ChainID    string          `json:"chain_id"`
+	NodeID     string          `json:"node_id"`
+	AppMessage json.RawMessage `json:"app_message"`
+}
+
+// nolint: errcheck
+func displayInfo(cdc *codec.Codec, info printInfo) error {
+	out, err := codec.MarshalJSONIndent(cdc, info)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stderr, "%s\n", string(out))
+	return nil
 }
 
 // get cmd to initialize all files for tendermint and application
@@ -48,7 +67,9 @@ type initConfig struct {
 func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize genesis config, priv-validator file, and p2p-node file",
+		Short: "Initialize private validator, p2p, genesis, and application configuration files",
+		Long: `This command initializes validators's and node's configuration files.
+Genesis file will not be generated if run with --skip-genesis.`,
 		Args:  cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 
@@ -58,6 +79,18 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
 			}
+			nodeID, valPubKey, err := initNodeValidatorFiles(config)
+			if err != nil {
+				return err
+			}
+			toPrint := printInfo{
+				ChainID: chainID,
+				NodeID: nodeID,
+			}
+			if viper.GetBool(flagSkipGenesis) {
+				return displayInfo(cdc, toPrint)
+			}
+
 			initCfg := initConfig{
 				ChainID:       chainID,
 				GenTxsDir:     viper.GetString(filepath.Join(config.RootDir, "config", "gentx")),
@@ -66,28 +99,17 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 				WithTxs:       viper.GetBool(flagWithTxs),
 				Overwrite:     viper.GetBool(flagOverwrite),
 				OverwriteKeys: viper.GetBool(flagOWK),
+				NodeID:        nodeID,
+				ValPubKey:     valPubKey,
 			}
-			nodeID, appMessage, err := initWithConfig(cdc, config, initCfg)
+			appMessage, err := initWithConfig(cdc, config, initCfg)
 			// print out some key information
 			if err != nil {
 				return err
 			}
 
-			toPrint := struct {
-				ChainID    string          `json:"chain_id"`
-				NodeID     string          `json:"node_id"`
-				AppMessage json.RawMessage `json:"app_message"`
-			}{
-				chainID,
-				nodeID,
-				appMessage,
-			}
-			out, err := codec.MarshalJSONIndent(cdc, toPrint)
-			if err != nil {
-				return err
-			}
-			fmt.Fprintf(os.Stderr, "%s\n", string(out))
-			return nil
+			toPrint.AppMessage = appMessage
+			return displayInfo(cdc, toPrint)
 		},
 	}
 
@@ -98,19 +120,23 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	cmd.Flags().String(client.FlagName, "", "moniker")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().Bool(flagOWK, false, "overwrite client's keys")
+	cmd.Flags().Bool(flagSkipGenesis, false, "do not create genesis.json")
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
 }
 
-func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
-	nodeID string, appMessage json.RawMessage, err error) {
+func initNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return
 	}
 	nodeID = string(nodeKey.ID())
-	privValFile := config.PrivValidatorFile()
-	valPubKey := ReadOrCreatePrivValidator(privValFile)
+	valPubKey = ReadOrCreatePrivValidator(config.PrivValidatorFile())
+	return
+}
+
+func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
+	appMessage json.RawMessage, err error) {
 	genFile := config.GenesisFile()
 	if !initCfg.Overwrite && common.FileExists(genFile) {
 		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
@@ -150,7 +176,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 		if err != nil {
 			return
 		}
-		memo := fmt.Sprintf("%s@%s:26656", nodeID, ip)
+		memo := fmt.Sprintf("%s@%s:26656", initCfg.NodeID, ip)
 		buf := client.BufferStdin()
 		prompt := fmt.Sprintf("Password for account '%s' (default %s):", moniker, app.DefaultKeyPass)
 		keyPass, err = client.GetPassword(prompt, buf)
@@ -175,7 +201,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 
 		msg := stake.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
-			valPubKey,
+			initCfg.ValPubKey,
 			sdk.NewInt64Coin("steak", 100),
 			stake.NewDescription(moniker, "", "", ""),
 			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
@@ -199,7 +225,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 	if err != nil {
 		return
 	}
-	err = WriteGenesisFile(cdc, genFile, chainID, nil, appState)
+	err = WriteGenesisFile(genFile, chainID, nil, appState)
 
 	return
 }
@@ -207,7 +233,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 // WriteGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
 // nolint: unparam
-func WriteGenesisFile(cdc *codec.Codec, genesisFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage) error {
+func WriteGenesisFile(genesisFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage) error {
 	genDoc := types.GenesisDoc{
 		ChainID:    chainID,
 		Validators: validators,

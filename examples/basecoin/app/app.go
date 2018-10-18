@@ -22,6 +22,7 @@ const (
 	appName = "BasecoinApp"
 )
 
+// default home directories for expected binaries
 var (
 	DefaultCLIHome  = os.ExpandEnv("$HOME/.basecli")
 	DefaultNodeHome = os.ExpandEnv("$HOME/.basecoind")

@@ -28,6 +28,7 @@ const (
 	appName = "DemocoinApp"
 )
 
+// default home directories for expected binaries
 var (
 	DefaultCLIHome  = os.ExpandEnv("$HOME/.democli")
 	DefaultNodeHome = os.ExpandEnv("$HOME/.democoind")

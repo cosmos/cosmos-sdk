@@ -152,3 +152,27 @@ func (coins DecCoins) QuoDec(d sdk.Dec) DecCoins {
 	}
 	return res
 }
+
+// returns the amount of a denom from deccoins
+func (coins DecCoins) AmountOf(denom string) sdk.Dec {
+	switch len(coins) {
+	case 0:
+		return sdk.ZeroDec()
+	case 1:
+		coin := coins[0]
+		if coin.Denom == denom {
+			return coin.Amount
+		}
+		return sdk.ZeroDec()
+	default:
+		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
+		coin := coins[midIdx]
+		if denom < coin.Denom {
+			return coins[:midIdx].AmountOf(denom)
+		} else if denom == coin.Denom {
+			return coin.Amount
+		} else {
+			return coins[midIdx+1:].AmountOf(denom)
+		}
+	}
+}

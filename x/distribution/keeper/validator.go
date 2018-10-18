@@ -73,3 +73,18 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 
 	return nil
 }
+
+func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context, fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
+	defer iter.Close()
+	index := int64(0)
+	for ; iter.Valid(); iter.Next() {
+		var vdi types.ValidatorDistInfo
+		k.cdc.MustUnmarshalBinary(iter.Value(), &vdi)
+		if fn(index, vdi) {
+			return
+		}
+		index++
+	}
+}

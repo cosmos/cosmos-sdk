@@ -92,11 +92,9 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 				if nodeID != "" && ip != "" {
 					txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
 				}
-
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true)
 			}
 
-			if cliCtx.GenerateOnly {
+			if viper.GetBool(FlagGenesisFormat) || cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true)
 			}
 

@@ -255,8 +255,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		}
 
 		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-		app.slashingKeeper.AddValidators(ctx, validators)
 	}
+	app.slashingKeeper.AddValidators(ctx, validators)
 
 	// sanity check
 	if len(req.Validators) > 0 {

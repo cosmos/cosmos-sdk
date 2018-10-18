@@ -121,16 +121,6 @@ func TestValidateGenesis(t *testing.T) {
 		wantErr bool
 	}{
 		{"default", func(*types.GenesisState) {}, false},
-		// validate params
-		{"200% goalbonded", func(data *types.GenesisState) { (*data).Params.GoalBonded = sdk.OneDec().Add(sdk.OneDec()) }, true},
-		{"-67% goalbonded", func(data *types.GenesisState) { (*data).Params.GoalBonded = sdk.OneDec().Neg() }, true},
-		{"no bond denom", func(data *types.GenesisState) { (*data).Params.BondDenom = "" }, true},
-		{"min inflation > max inflation", func(data *types.GenesisState) {
-			(*data).Params.InflationMin = (*data).Params.InflationMax.Add(sdk.OneDec())
-		}, true},
-		{"min inflation = max inflation", func(data *types.GenesisState) {
-			(*data).Params.InflationMax = (*data).Params.InflationMin
-		}, false},
 		// validate genesis validators
 		{"duplicate validator", func(data *types.GenesisState) {
 			(*data).Validators = genValidators1

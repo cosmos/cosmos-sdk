@@ -1,9 +1,10 @@
-package keeper
+package mint
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // keeper of the stake store
@@ -11,22 +12,42 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        *codec.Codec
 	paramSpace params.Subspace
-
-	// codespace
-	codespace sdk.CodespaceType
+	sk         StakeKeeper
+	fck        FeeCollectionKeeper
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace,
-	codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
+	paramSpace params.Subspace, sk StakeKeeper, fck FeeCollectionKeeper) Keeper {
 
 	keeper := Keeper{
 		storeKey:   key,
 		cdc:        cdc,
 		paramSpace: paramSpace.WithTypeTable(ParamTypeTable()),
-		codespace:  codespace,
+		sk:         sk,
+		fck:        fck,
 	}
 	return keeper
 }
+
+//____________________________________________________________________
+// Keys
+
+var (
+	minterKey = []byte{0x00} // the one key to use for the keeper store
+
+	// params store for inflation params
+	ParamStoreKeyParams = []byte("params")
+)
+
+// ParamTable for stake module
+func ParamTypeTable() params.TypeTable {
+	return params.NewTypeTable().RegisterParamSet(&types.Params{})
+}
+
+const (
+	// default paramspace for params keeper
+	DefaultParamspace = "mint"
+)
 
 //______________________________________________________________________
 
@@ -52,52 +73,13 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter Minter) {
 
 // Returns the current BaseProposerReward rate from the global param store
 // nolint: errcheck
-func (k Keeper) GetInflationRateChange(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyInflationRateChange, &percent)
-	return percent
+func (k Keeper) GetParams(ctx sdk.Context) Params {
+	var params Params
+	k.paramSpace.Get(ctx, ParamStoreKeyParams, &params)
+	return params
 }
 
 // nolint: errcheck
-func (k Keeper) SetInflationRateChange(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyInflationRateChange, &percent)
-}
-
-// Returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetInflationMax(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyInflationMax, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetInflationMax(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyInflationMax, &percent)
-}
-
-// Returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetInflationMin(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyInflationMin, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetInflationMin(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyInflationMin, &percent)
-}
-
-// Returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetGoalBonded(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyGoalBonded, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetGoalBonded(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyGoalBonded, &percent)
+func (k Keeper) SetParams(ctx sdk.Context, params Params) {
+	k.paramSpace.Set(ctx, ParamStoreKeyParams, &params)
 }

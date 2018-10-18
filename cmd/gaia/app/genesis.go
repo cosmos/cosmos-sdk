@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
@@ -35,6 +36,7 @@ var (
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`
 	StakeData    stake.GenesisState    `json:"stake"`
+	MintData     mint.GenesisState     `json:"mint"`
 	DistrData    distr.GenesisState    `json:"distr"`
 	GovData      gov.GenesisState      `json:"gov"`
 	SlashingData slashing.GenesisState `json:"slashing"`
@@ -198,6 +200,7 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 	genesisState = GenesisState{
 		Accounts:     genaccs,
 		StakeData:    stakeData,
+		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
 		GovData:      gov.DefaultGenesisState(),
 		SlashingData: slashingData,

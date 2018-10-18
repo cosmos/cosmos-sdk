@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAllocateFeesBasic(t *testing.T) {
+func TestAllocateTokensBasic(t *testing.T) {
 
 	// no community tax on inputs
 	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
@@ -41,7 +41,7 @@ func TestAllocateFeesBasic(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// verify that these fees have been received by the feePool
 	percentProposer := sdk.NewDecWithPrec(5, 2)
@@ -52,7 +52,7 @@ func TestAllocateFeesBasic(t *testing.T) {
 	require.True(sdk.DecEq(t, expRes, feePool.Pool[0].Amount))
 }
 
-func TestAllocateFeesWithCommunityTax(t *testing.T) {
+func TestAllocateTokensWithCommunityTax(t *testing.T) {
 	communityTax := sdk.NewDecWithPrec(1, 2) //1%
 	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, communityTax)
 	stakeHandler := stake.NewHandler(sk)
@@ -68,7 +68,7 @@ func TestAllocateFeesWithCommunityTax(t *testing.T) {
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// verify that these fees have been received by the feePool
 	feePool := keeper.GetFeePool(ctx)
@@ -80,7 +80,7 @@ func TestAllocateFeesWithCommunityTax(t *testing.T) {
 	require.True(sdk.DecEq(t, expRes, feePool.Pool[0].Amount))
 }
 
-func TestAllocateFeesWithPartialPrecommitPower(t *testing.T) {
+func TestAllocateTokensWithPartialPrecommitPower(t *testing.T) {
 	communityTax := sdk.NewDecWithPrec(1, 2)
 	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, communityTax)
 	stakeHandler := stake.NewHandler(sk)
@@ -97,7 +97,7 @@ func TestAllocateFeesWithPartialPrecommitPower(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	percentPrecommitVotes := sdk.NewDecWithPrec(25, 2)
-	keeper.AllocateFees(ctx, percentPrecommitVotes, valConsAddr1)
+	keeper.AllocateTokens(ctx, percentPrecommitVotes, valConsAddr1)
 
 	// verify that these fees have been received by the feePool
 	feePool := keeper.GetFeePool(ctx)

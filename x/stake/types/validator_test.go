@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -185,10 +184,8 @@ func TestRemoveDelShares(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
-		BondedTokens:      sdk.NewDec(248305),
-		LooseTokens:       sdk.NewDec(232147),
-		InflationLastTime: time.Unix(0, 0),
-		Inflation:         sdk.NewDecWithPrec(7, 2),
+		BondedTokens: sdk.NewDec(248305),
+		LooseTokens:  sdk.NewDec(232147),
 	}
 	shares := sdk.NewDec(29)
 	_, newPool, tokens := validator.RemoveDelShares(pool, shares)
@@ -238,10 +235,8 @@ func TestPossibleOverflow(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
-		LooseTokens:       sdk.NewDec(100),
-		BondedTokens:      poolTokens,
-		InflationLastTime: time.Unix(0, 0),
-		Inflation:         sdk.NewDecWithPrec(7, 2),
+		LooseTokens:  sdk.NewDec(100),
+		BondedTokens: poolTokens,
 	}
 	tokens := int64(71)
 	msg := fmt.Sprintf("validator %#v", validator)

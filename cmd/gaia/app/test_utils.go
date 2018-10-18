@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -73,6 +74,7 @@ func NewTestGaiaAppGenState(
 	return GenesisState{
 		Accounts:     genAccs,
 		StakeData:    stakeData,
+		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
 		SlashingData: slashing.DefaultGenesisState(),
 		GovData:      gov.DefaultGenesisState(),

@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,8 +27,6 @@ func InitialPool() Pool {
 	return Pool{
 		LooseTokens:             sdk.ZeroDec(),
 		BondedTokens:            sdk.ZeroDec(),
-		InflationLastTime:       time.Unix(0, 0),
-		Inflation:               sdk.NewDecWithPrec(7, 2),
 		DateLastCommissionReset: 0,
 	}
 }

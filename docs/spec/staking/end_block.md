@@ -10,7 +10,7 @@ validatorQueue(currTime time.Time):
     // unbonding validators are in ordered queue from oldest to newest
     for all unbondingValidators whose CompleteTime < currTime:
         validator = GetValidator(unbondingValidator.ValidatorAddr)
-        if validator.DelegatorShares != 0 {
+        if validator.DelegatorShares == 0 {
             RemoveValidator(unbondingValidator)
         } else {
             validator.Status = sdk.Bonded

@@ -98,6 +98,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	cmd.Flags().String(client.FlagName, "", "moniker")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().Bool(flagOWK, false, "overwrite client's keys")
+	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
 }
 

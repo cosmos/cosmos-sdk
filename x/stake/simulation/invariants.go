@@ -58,6 +58,12 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 			return false
 		})
 
+		// add community pool
+
+		// add validator distribution yet-to-be-withdrawn-by-delegators
+
+		// add validator distribution commission
+
 		// Loose tokens should equal coin supply plus unbonding delegations plus tokens on unbonded validators
 		if pool.LooseTokens.RoundInt64() != loose.Int64() {
 			return fmt.Errorf("expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v", pool.LooseTokens.RoundInt64(), loose.Int64())

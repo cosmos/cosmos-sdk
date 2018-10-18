@@ -13,7 +13,7 @@ validatorQueue(currTime time.Time):
         if validator.DelegatorShares != 0 {
             RemoveValidator(unbondingValidator)
         } else {
-            validator.Status = sdk.Bonded
+            validator.Status = sdk.Unbonded
             SetValidator(unbondingValidator)
         }
     return

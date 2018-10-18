@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -14,9 +15,9 @@ import (
 
 // AllInvariants runs all invariants of the stake module.
 // Currently: total supply, positive power
-func AllInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) simulation.Invariant {
+func AllInvariants(ck bank.Keeper, k stake.Keeper, d distribution.Keeper, am auth.AccountMapper) simulation.Invariant {
 	return func(app *baseapp.BaseApp) error {
-		err := SupplyInvariants(ck, k, am)(app)
+		err := SupplyInvariants(ck, k, d, am)(app)
 		if err != nil {
 			return err
 		}
@@ -31,19 +32,19 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) simula
 
 // SupplyInvariants checks that the total supply reflects all held loose tokens, bonded tokens, and unbonding delegations
 // nolint: unparam
-func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) simulation.Invariant {
+func SupplyInvariants(ck bank.Keeper, k stake.Keeper, d distribution.Keeper, am auth.AccountMapper) simulation.Invariant {
 	return func(app *baseapp.BaseApp) error {
 		ctx := app.NewContext(false, abci.Header{})
 		pool := k.GetPool(ctx)
 
-		loose := sdk.ZeroInt()
+		loose := sdk.ZeroDec()
 		bonded := sdk.ZeroDec()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(acc.GetCoins().AmountOf("steak"))
+			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf("steak")))
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) bool {
-			loose = loose.Add(ubd.Balance.Amount)
+			loose = loose.Add(sdk.NewDecFromInt(ubd.Balance.Amount))
 			return false
 		})
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
@@ -51,21 +52,36 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, am auth.AccountMapper) sim
 			case sdk.Bonded:
 				bonded = bonded.Add(validator.GetPower())
 			case sdk.Unbonding:
-				loose = loose.Add(validator.GetTokens().RoundInt())
+				loose = loose.Add(validator.GetTokens())
 			case sdk.Unbonded:
-				loose = loose.Add(validator.GetTokens().RoundInt())
+				loose = loose.Add(validator.GetTokens())
 			}
 			return false
 		})
 
+		feePool := d.GetFeePool(ctx)
+
+		// add community pool
+		loose = loose.Add(feePool.CommunityPool.AmountOf("steak"))
+
+		// add validator distribution pool
+		loose = loose.Add(feePool.Pool.AmountOf("steak"))
+
+		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
+		d.IterateValidatorDistInfos(ctx, func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
+			loose = loose.Add(distInfo.Pool.AmountOf("steak"))
+			loose = loose.Add(distInfo.PoolCommission.AmountOf("steak"))
+			return false
+		})
+
 		// Loose tokens should equal coin supply plus unbonding delegations plus tokens on unbonded validators
-		if pool.LooseTokens.RoundInt64() != loose.Int64() {
-			return fmt.Errorf("expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v", pool.LooseTokens.RoundInt64(), loose.Int64())
+		if !pool.LooseTokens.Equal(loose) {
+			return fmt.Errorf("expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v", pool.LooseTokens, loose)
 		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		if pool.BondedTokens.RoundInt64() != bonded.RoundInt64() {
-			return fmt.Errorf("expected bonded tokens to equal total steak held by bonded validators - pool.BondedTokens: %v, sum of bonded validator tokens: %v", pool.BondedTokens.RoundInt64(), bonded.RoundInt64())
+		if !pool.BondedTokens.Equal(bonded) {
+			return fmt.Errorf("expected bonded tokens to equal total steak held by bonded validators - pool.BondedTokens: %v, sum of bonded validator tokens: %v", pool.BondedTokens, bonded)
 		}
 
 		// TODO Inflation check on total supply

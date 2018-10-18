@@ -5,6 +5,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// check whether a delegator distribution info exists
+func (k Keeper) HasDelegationDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
+	valOperatorAddr sdk.ValAddress) (has bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(GetDelegationDistInfoKey(delAddr, valOperatorAddr))
+}
+
 // get the delegator distribution info
 func (k Keeper) GetDelegationDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
 	valOperatorAddr sdk.ValAddress) (ddi types.DelegationDistInfo) {
@@ -64,7 +71,11 @@ func (k Keeper) RemoveDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAd
 
 // withdraw all the rewards for a single delegation
 func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccAddress,
-	validatorAddr sdk.ValAddress) {
+	validatorAddr sdk.ValAddress) sdk.Error {
+
+	if !k.HasDelegationDistInfo(ctx, delegatorAddr, validatorAddr) {
+		return types.ErrNoDelegationDistInfo(k.codespace)
+	}
 
 	height := ctx.BlockHeight()
 	bondedTokens := k.stakeKeeper.TotalPower(ctx)
@@ -77,14 +88,17 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 	delInfo, valInfo, feePool, withdraw := delInfo.WithdrawRewards(feePool, valInfo, height, bondedTokens,
 		validator.GetTokens(), validator.GetDelegatorShares(), delegation.GetShares(), validator.GetCommission())
 
-	k.SetFeePool(ctx, feePool)
 	k.SetValidatorDistInfo(ctx, valInfo)
 	k.SetDelegationDistInfo(ctx, delInfo)
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delegatorAddr)
-	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
+	coinsToAdd, change := withdraw.TruncateDecimal()
+	feePool.CommunityPool = feePool.CommunityPool.Plus(change)
+	k.SetFeePool(ctx, feePool)
+	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coinsToAdd)
 	if err != nil {
 		panic(err)
 	}
+	return nil
 }
 
 //___________________________________________________________________________________________
@@ -93,8 +107,12 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.AccAddress) {
 	height := ctx.BlockHeight()
 	withdraw := k.getDelegatorRewardsAll(ctx, delegatorAddr, height)
+	feePool := k.GetFeePool(ctx)
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delegatorAddr)
-	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
+	coinsToAdd, change := withdraw.TruncateDecimal()
+	feePool.CommunityPool = feePool.CommunityPool.Plus(change)
+	k.SetFeePool(ctx, feePool)
+	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coinsToAdd)
 	if err != nil {
 		panic(err)
 	}

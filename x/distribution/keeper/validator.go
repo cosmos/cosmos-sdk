@@ -5,6 +5,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// check whether a validator has distribution info
+func (k Keeper) HasValidatorDistInfo(ctx sdk.Context,
+	operatorAddr sdk.ValAddress) (exists bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(GetValidatorDistInfoKey(operatorAddr))
+}
+
 // get the validator distribution info
 func (k Keeper) GetValidatorDistInfo(ctx sdk.Context,
 	operatorAddr sdk.ValAddress) (vdi types.ValidatorDistInfo) {
@@ -34,7 +41,11 @@ func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress)
 }
 
 // withdrawal all the validator rewards including the commission
-func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) {
+func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+
+	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
+		return types.ErrNoValidatorDistInfo(k.codespace)
+	}
 
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
@@ -50,11 +61,30 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 		validator.GetTokens(), validator.GetCommission())
 	withdraw = withdraw.Plus(commission)
 	k.SetValidatorDistInfo(ctx, valInfo)
-	k.SetFeePool(ctx, feePool)
 
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
-	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
+	truncated, change := withdraw.TruncateDecimal()
+	feePool.CommunityPool = feePool.CommunityPool.Plus(change)
+	k.SetFeePool(ctx, feePool)
+	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, truncated)
 	if err != nil {
 		panic(err)
+	}
+
+	return nil
+}
+
+func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context, fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
+	defer iter.Close()
+	index := int64(0)
+	for ; iter.Valid(); iter.Next() {
+		var vdi types.ValidatorDistInfo
+		k.cdc.MustUnmarshalBinary(iter.Value(), &vdi)
+		if fn(index, vdi) {
+			return
+		}
+		index++
 	}
 }

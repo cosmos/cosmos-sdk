@@ -175,9 +175,9 @@ func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []json.RawMessage) (appStat
 	return
 }
 
-// ProcessStdTxs processes and validates application's genesis StdTxs and returns the list of validators,
+// CollectStdTxs processes and validates application's genesis StdTxs and returns the list of validators,
 // appGenTxs, and persistent peers required to generate genesis.json.
-func ProcessStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
+func CollectStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
 	validators []tmtypes.GenesisValidator, appGenTxs []auth.StdTx, persistentPeers string, err error) {
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
@@ -216,6 +216,9 @@ func ProcessStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
 			err = errors.New("each genesis transaction must provide a single genesis message")
 			return
 		}
+
+		// TODO: this could be decoupled from stake.MsgCreateValidator
+		// TODO: and we likely want to do it for real world Gaia
 		msg := msgs[0].(stake.MsgCreateValidator)
 		validators = append(validators, tmtypes.GenesisValidator{
 			PubKey: msg.PubKey,

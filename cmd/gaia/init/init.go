@@ -126,7 +126,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 	chainID := initCfg.ChainID
 
 	if initCfg.WithTxs {
-		_, appGenTxs, persistentPeers, err = app.ProcessStdTxs(moniker, initCfg.GenTxsDir, cdc)
+		_, appGenTxs, persistentPeers, err = app.CollectStdTxs(moniker, initCfg.GenTxsDir, cdc)
 		if err != nil {
 			return
 		}

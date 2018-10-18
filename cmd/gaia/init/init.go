@@ -33,7 +33,7 @@ const (
 	flagOWK        = "owk"
 )
 
-type InitConfig struct {
+type initConfig struct {
 	ChainID       string
 	GenTxsDir     string
 	Moniker       string
@@ -58,7 +58,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
 			}
-			initCfg := InitConfig{
+			initCfg := initConfig{
 				ChainID:       chainID,
 				GenTxsDir:     viper.GetString(filepath.Join(config.RootDir, "config", "gentx")),
 				Moniker:       viper.GetString(client.FlagName),
@@ -101,7 +101,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	return cmd
 }
 
-func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg InitConfig) (
+func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 	nodeID string, appMessage json.RawMessage, err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {

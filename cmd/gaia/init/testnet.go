@@ -49,10 +49,8 @@ Example:
 	gaiad testnet --v 4 --o ./output --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(_ *cobra.Command, _ []string) error {
-				config := ctx.Config
-				err := testnetWithConfig(config, cdc, appInit)
-				return err
-			return nil
+			config := ctx.Config
+			return testnetWithConfig(config, cdc, appInit)
 		},
 	}
 	cmd.Flags().Int(nValidators, 4,
@@ -185,12 +183,12 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		config.SetRoot(nodeDir)
 
 		// Run `init` and generate genesis.json and config.toml
-		initCfg := InitConfig{
-			ChainID: chainID,
-			GenTxsDir: gentxsDir,
-			Moniker: moniker,
-			WithTxs: true,
-			Overwrite: true,
+		initCfg := initConfig{
+			ChainID:       chainID,
+			GenTxsDir:     gentxsDir,
+			Moniker:       moniker,
+			WithTxs:       true,
+			Overwrite:     true,
 			OverwriteKeys: false,
 		}
 		_, _, err := initWithConfig(cdc, config, initCfg)

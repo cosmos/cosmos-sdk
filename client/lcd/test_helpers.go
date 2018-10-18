@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
@@ -41,7 +42,6 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
-	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -208,12 +208,13 @@ func InitializeTestLCD(
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
+	require.Nil(t, err)
 	genDoc.Validators = nil
 	genDoc.SaveAs(genesisFile)
 	genTxs := []json.RawMessage{}
 
 	// append any additional (non-proposing) validators
-	for i:=0 ; i<nValidators; i++ {
+	for i := 0; i < nValidators; i++ {
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
 		pubKey := privVal.PubKey
@@ -231,7 +232,7 @@ func InitializeTestLCD(
 		)
 		stdSignMsg := txbuilder.StdSignMsg{
 			ChainID: genDoc.ChainID,
-			Msgs: []sdk.Msg{msg},
+			Msgs:    []sdk.Msg{msg},
 		}
 		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
 		require.Nil(t, err)

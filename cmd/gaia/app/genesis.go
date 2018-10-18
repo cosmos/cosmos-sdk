@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -35,7 +34,7 @@ type GenesisState struct {
 	DistrData    distr.GenesisState    `json:"distr"`
 	GovData      gov.GenesisState      `json:"gov"`
 	SlashingData slashing.GenesisState `json:"slashing"`
-	Txs       []json.RawMessage  `json:"txs"`
+	Txs          []json.RawMessage     `json:"txs"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -70,7 +69,7 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 func GaiaAppInit() server.AppInit {
 
 	return server.AppInit{
-		AppGenState:      GaiaAppGenStateJSON,
+		AppGenState: GaiaAppGenStateJSON,
 	}
 }
 
@@ -120,49 +119,10 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 		DistrData:    distr.DefaultGenesisState(),
 		GovData:      gov.DefaultGenesisState(),
 		SlashingData: slashingData,
-		Txs:       appGenTxs,
+		Txs:          appGenTxs,
 	}
 
 	return
-}
-
-func DefaultState(moniker string, pubKey crypto.PubKey) (genesisState GenesisState, genValidator tmtypes.GenesisValidator) {
-	acc := NewDefaultGenesisAccount(sdk.AccAddress(pubKey.Address()))
-	stakeData := stake.DefaultGenesisState()
-	validator := stake.NewValidator(sdk.ValAddress(acc.Address), pubKey, stake.NewDescription(moniker, "", "", ""))
-	stakeData = addValidatorToStakeData(validator, stakeData)
-	//stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc))
-	genesisState = GenesisState{
-		Accounts:  []GenesisAccount{acc},
-		StakeData: stakeData,
-		GovData:   gov.DefaultGenesisState(),
-	}
-	genValidator = tmtypes.GenesisValidator{
-		Name: moniker,
-		PubKey: pubKey,
-		Power: freeFermionVal,
-	}
-	return
-}
-
-func addValidatorToStakeData(validator stake.Validator, stakeData stake.GenesisState) stake.GenesisState {
-	stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(freeFermionVal)) // increase the supply
-
-	// add some new shares to the validator
-	var issuedDelShares sdk.Dec
-	validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, sdk.NewInt(freeFermionVal))
-	stakeData.Validators = append(stakeData.Validators, validator)
-
-	// create the self-delegation from the issuedDelShares
-	delegation := stake.Delegation{
-		DelegatorAddr: sdk.AccAddress(validator.OperatorAddr),
-		ValidatorAddr: validator.OperatorAddr,
-		Shares:        issuedDelShares,
-		Height:        0,
-	}
-
-	stakeData.Bonds = append(stakeData.Bonds, delegation)
-	return stakeData
 }
 
 func genesisAccountFromMsgCreateValidator(msg stake.MsgCreateValidator, amount sdk.Int) GenesisAccount {
@@ -215,7 +175,6 @@ func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []json.RawMessage) (appStat
 	return
 }
 
-
 // ProcessStdTxs processes and validates application's genesis StdTxs and returns the list of validators,
 // appGenTxs, and persistent peers required to generate genesis.json.
 func ProcessStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
@@ -244,7 +203,7 @@ func ProcessStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
 		if err != nil {
 			return
 		}
-		appGenTxs = append(appGenTxs , genStdTx)
+		appGenTxs = append(appGenTxs, genStdTx)
 
 		nodeAddr := genStdTx.GetMemo()
 		if len(nodeAddr) == 0 {

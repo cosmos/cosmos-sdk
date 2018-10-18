@@ -126,4 +126,3 @@ func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, storeTracer io.
 	bapp := app.NewBasecoinApp(logger, db)
 	return bapp.ExportAppStateAndValidators()
 }
-

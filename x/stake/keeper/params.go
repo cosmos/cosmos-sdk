@@ -14,8 +14,8 @@ const (
 )
 
 // ParamTable for stake module
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable().RegisterParamSet(&types.Params{})
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable().RegisterParamSet(&types.Params{})
 }
 
 // UnbondingTime

@@ -13,14 +13,14 @@ type (
 	Subspace         = subspace.Subspace
 	ReadOnlySubspace = subspace.ReadOnlySubspace
 	ParamSet         = subspace.ParamSet
-	KeyValuePairs    = subspace.KeyValuePairs
-	TypeTable        = subspace.TypeTable
+	ParamSetPairs    = subspace.ParamSetPairs
+	KeyTable         = subspace.KeyTable
 )
 
 // re-export functions from subspace
-func NewTypeTable(keytypes ...interface{}) TypeTable {
-	return subspace.NewTypeTable(keytypes...)
+func NewKeyTable(keytypes ...interface{}) KeyTable {
+	return subspace.NewKeyTable(keytypes...)
 }
-func DefaultTestComponents(t *testing.T, table TypeTable) (sdk.Context, Subspace, func() sdk.CommitID) {
-	return subspace.DefaultTestComponents(t, table)
+func DefaultTestComponents(t *testing.T) (sdk.Context, Subspace, func() sdk.CommitID) {
+	return subspace.DefaultTestComponents(t)
 }

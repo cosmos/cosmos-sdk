@@ -26,7 +26,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, c
 	keeper := Keeper{
 		storeKey:            key,
 		cdc:                 cdc,
-		paramSpace:          paramSpace.WithTypeTable(ParamTypeTable()),
+		paramSpace:          paramSpace.WithKeyTable(ParamKeyTable()),
 		bankKeeper:          ck,
 		stakeKeeper:         sk,
 		feeCollectionKeeper: fck,
@@ -109,8 +109,8 @@ func (k Keeper) GetWithdrawContext(ctx sdk.Context,
 // PARAM STORE
 
 // Type declaration for parameters
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable(
 		ParamStoreKeyCommunityTax, sdk.Dec{},
 		ParamStoreKeyBaseProposerReward, sdk.Dec{},
 		ParamStoreKeyBonusProposerReward, sdk.Dec{},

@@ -28,7 +28,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramst
 		storeTKey:  tkey,
 		cdc:        cdc,
 		bankKeeper: ck,
-		paramstore: paramstore.WithTypeTable(ParamTypeTable()),
+		paramstore: paramstore.WithKeyTable(ParamKeyTable()),
 		hooks:      nil,
 		codespace:  codespace,
 	}

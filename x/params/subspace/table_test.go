@@ -11,15 +11,15 @@ type testparams struct {
 	b bool
 }
 
-func (tp *testparams) KeyValuePairs() KeyValuePairs {
-	return KeyValuePairs{
+func (tp *testparams) ParamSetPairs() ParamSetPairs {
+	return ParamSetPairs{
 		{[]byte("i"), &tp.i},
 		{[]byte("b"), &tp.b},
 	}
 }
 
-func TestTypeTable(t *testing.T) {
-	table := NewTypeTable()
+func TestKeyTable(t *testing.T) {
+	table := NewKeyTable()
 
 	require.Panics(t, func() { table.RegisterType([]byte(""), nil) })
 	require.Panics(t, func() { table.RegisterType([]byte("!@#$%"), nil) })

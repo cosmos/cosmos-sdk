@@ -1,30 +1,20 @@
-# Cosmos-Sdk Light Client
+# Overview
+
+**See the Cosmos SDK lite Client RPC documentation [here](https://cosmos.network/rpc/)**
 
 ## Introduction
 
-A light client allows clients, such as mobile phones, to receive proofs of the state of the
-blockchain from any full node. Light clients do not have to trust any full node, since they are able
+A lite client allows clients, such as mobile phones, to receive proofs of the state of the
+blockchain from any full node. lite clients do not have to trust any full node, since they are able
 to verify any proof they receive and hence full nodes cannot lie about the state of the network.
 
-A light client can provide the same security as a full node with the minimal requirements on
-bandwidth, computing and storage resource. Besides, it can also provide modular functionality
+A lite client can provide the same security as a full node with the minimal requirements on
+bandwidth, computing and storage resource. As well, it can also provide modular functionality
 according to users' configuration. These fantastic features allow developers to build fully secure,
 efficient and usable mobile apps, websites or any other applications without deploying or
 maintaining any full blockchain nodes.
 
-LCD will be used in the Cosmos Hub, the first Hub in the Cosmos network.
-
-## Contents
-
-1. [**Overview**](##Overview)
-2. [**Get Started**](getting_started.md)
-3. [**API**](api.md)
-4. [**Specifications**](specification.md)
-4. [**Update API docs To Swagger-UI**](update_API_docs.md)
-
-## Overview
-
-### What is a Light Client
+### What is a lite Client
 
 The LCD is split into two separate components. The first component is generic for any Tendermint
 based application. It handles the security and connectivity aspects of following the header chain
@@ -54,7 +44,7 @@ that offers stability guarantees around the zone API.
 
 ### Comparision
 
-A full node of ABCI is different from its light client in the following ways:
+A full node of ABCI is different from its lite client in the following ways:
 
 || Full Node | LCD | Description|
 |-| ------------- | ----- | -------------- |
@@ -71,22 +61,22 @@ A full node of ABCI is different from its light client in the following ways:
 According to the above table, LCD can meet all users' functionality and security requirements, but
 only requires little resource on bandwidth, computing, storage and power.
 
-## How does LCD achieve high security?
+## Achieving Security
 
-### Trusted validator set
+### Trusted Validator Set
 
-The base design philosophy of lcd follows the two rules:
+The base design philosophy of the LCD follows two rules:
 
 1. **Doesn't trust any blockchain nodes, including validator nodes and other full nodes**
 2. **Only trusts the whole validator set**
 
 The original trusted validator set should be prepositioned into its trust store, usually this
-validator set comes from genesis file. During running time, if LCD detects different validator set,
-it will verify it and save new validated validator set to trust store.
+validator set comes from genesis file. During runtime, if LCD detects a different validator set,
+it will verify it and save new validated validator set to the trust store.
 
 ![validator-set-change](pics/validatorSetChange.png)
 
-### Trust propagation
+### Trust Propagation
 
 From the above section, we come to know how to get trusted validator set and how lcd keeps track of
 validator set evolution. Validator set is the foundation of trust, and the trust can propagate to
@@ -97,5 +87,4 @@ follows:
 
 In general, by trusted validator set, LCD can verify each block commit which contains all pre-commit
 data and block header data. Then the block hash, data hash and appHash are trusted. Based on this
-and merkle proof, all transactions data and ABCI states can be verified too. Detailed implementation
-will be posted on technical specification.
+and merkle proof, all transactions data and ABCI states can be verified too.

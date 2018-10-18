@@ -15,15 +15,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-// Storage for init command input parameters
-type InitConfig struct {
-	ChainID   string
-	GenTxs    bool
-	GenTxsDir string
-	Moniker   string
-	Overwrite bool
-}
-
 // Core functionality passed from the application to the server init command
 type AppInit struct {
 	// AppGenState creates the core parameters initialization. It takes in a

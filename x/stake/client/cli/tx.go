@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{

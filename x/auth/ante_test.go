@@ -336,7 +336,6 @@ func TestAnteHandlerSequences(t *testing.T) {
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
-
 	// replay fails
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
 

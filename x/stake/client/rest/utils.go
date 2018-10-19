@@ -78,9 +78,7 @@ func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) ht
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -110,8 +108,6 @@ func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
 	"io/ioutil"
 	"net"
 	"os"
@@ -42,6 +43,7 @@ func SetupViper(t *testing.T) func() {
 	rootDir, err := ioutil.TempDir("", "mock-sdk-cmd")
 	require.Nil(t, err)
 	viper.Set(cli.HomeFlag, rootDir)
+	viper.Set(client.FlagName, "moniker")
 	return func() {
 		err := os.RemoveAll(rootDir)
 		if err != nil {

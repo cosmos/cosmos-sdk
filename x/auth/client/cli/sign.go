@@ -19,6 +19,7 @@ import (
 const (
 	flagAppend    = "append"
 	flagPrintSigs = "print-sigs"
+	flagOffline   = "offline"
 )
 
 // GetSignCommand returns the sign command
@@ -27,13 +28,18 @@ func GetSignCommand(codec *amino.Codec, decoder auth.AccountDecoder) *cobra.Comm
 		Use:   "sign <file>",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
-Read a transaction from <file>, sign it, and print its JSON encoding.`,
+Read a transaction from <file>, sign it, and print its JSON encoding.
+
+The --offline flag makes sure that the client will not reach out to the local cache.
+Thus account number or sequence number lookups will not be performed and it is
+recommended to set such parameters manually.`,
 		RunE: makeSignCmd(codec, decoder),
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
 	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten")
 	cmd.Flags().Bool(flagPrintSigs, false, "Print the addresses that must sign the transaction and those who have already signed it, then exit")
+	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
 	return cmd
 }
 
@@ -53,7 +59,7 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(decoder)
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
-		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, viper.GetBool(flagAppend))
+		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, viper.GetBool(flagAppend), viper.GetBool(flagOffline))
 		if err != nil {
 			return err
 		}

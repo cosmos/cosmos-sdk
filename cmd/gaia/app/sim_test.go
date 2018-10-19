@@ -18,6 +18,7 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
@@ -79,13 +80,16 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	stakeGenesis.Pool.LooseTokens = sdk.NewDec(int64(100*250) + (numInitiallyBonded * 100))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
+
 	// No inflation, for now
-	stakeGenesis.Params.InflationMax = sdk.NewDec(0)
-	stakeGenesis.Params.InflationMin = sdk.NewDec(0)
+	mintGenesis := mint.DefaultGenesisState()
+	mintGenesis.Params.InflationMax = sdk.NewDec(0)
+	mintGenesis.Params.InflationMin = sdk.NewDec(0)
 
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		StakeData:    stakeGenesis,
+		MintData:     mintGenesis,
 		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),
 		SlashingData: slashingGenesis,
 		GovData:      govGenesis,

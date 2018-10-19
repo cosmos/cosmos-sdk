@@ -85,13 +85,6 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	power2 := GetValidatorsByPowerIndexKey(validator, pool)
 	require.True(t, keep.ValidatorByPowerIndexExists(ctx, keeper, power2))
 
-	// inflate a bunch
-	params := keeper.GetParams(ctx)
-	for i := 0; i < 200; i++ {
-		pool = pool.ProcessProvisions(params)
-		keeper.SetPool(ctx, pool)
-	}
-
 	// now the new record power index should be the same as the original record
 	power3 := GetValidatorsByPowerIndexKey(validator, pool)
 	require.Equal(t, power2, power3)

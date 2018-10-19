@@ -160,9 +160,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -209,9 +207,7 @@ func redelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -233,9 +229,7 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -266,9 +260,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -280,9 +272,7 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -294,8 +284,6 @@ func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

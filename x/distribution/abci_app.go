@@ -13,7 +13,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	if ctx.BlockHeight() > 1 {
 		previousPercentPrecommitVotes := getPreviousPercentPrecommitVotes(req)
 		previousProposer := k.GetPreviousProposerConsAddr(ctx)
-		k.AllocateFees(ctx, previousPercentPrecommitVotes, previousProposer)
+		k.AllocateTokens(ctx, previousPercentPrecommitVotes, previousProposer)
 	}
 
 	consAddr := sdk.ConsAddress(req.Header.ProposerAddress)

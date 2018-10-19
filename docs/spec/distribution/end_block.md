@@ -15,7 +15,7 @@ pool which validator holds individually
 (`ValidatorDistribution.ProvisionsRewardPool`). 
 
 ```
-func AllocateFees(feesCollected sdk.Coins, feePool FeePool, proposer ValidatorDistribution, 
+func AllocateTokens(feesCollected sdk.Coins, feePool FeePool, proposer ValidatorDistribution, 
               sumPowerPrecommitValidators, totalBondedTokens, communityTax, 
               proposerCommissionRate sdk.Dec)
 

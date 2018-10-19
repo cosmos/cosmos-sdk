@@ -1,8 +1,6 @@
 package querier
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
@@ -17,7 +15,6 @@ const (
 	QueryDelegator           = "delegator"
 	QueryDelegation          = "delegation"
 	QueryUnbondingDelegation = "unbondingDelegation"
-	QueryRedelegation        = "redelegation"
 	QueryDelegatorValidators = "delegatorValidators"
 	QueryDelegatorValidator  = "delegatorValidator"
 	QueryPool                = "pool"
@@ -38,8 +35,6 @@ func NewQuerier(k keep.Keeper, cdc *codec.Codec) sdk.Querier {
 			return queryDelegation(ctx, cdc, req, k)
 		case QueryUnbondingDelegation:
 			return queryUnbondingDelegation(ctx, cdc, req, k)
-		case QueryRedelegation:
-			return queryRedelegation(ctx, cdc, req, k)
 		case QueryDelegatorValidators:
 			return queryDelegatorValidators(ctx, cdc, req, k)
 		case QueryDelegatorValidator:
@@ -74,14 +69,6 @@ type QueryValidatorParams struct {
 type QueryBondsParams struct {
 	DelegatorAddr sdk.AccAddress
 	ValidatorAddr sdk.ValAddress
-}
-
-// defines the params for the following query:
-// - 'custom/stake/redelegation'
-type QueryRedelegationParams struct {
-	DelegatorAddr    sdk.AccAddress
-	ValidatorSrcAddr sdk.ValAddress
-	ValidatorDstAddr sdk.ValAddress
 }
 
 func queryValidators(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
@@ -213,26 +200,6 @@ func queryUnbondingDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.Reques
 	res, errRes = codec.MarshalJSONIndent(cdc, unbond)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
-	}
-	return res, nil
-}
-
-func queryRedelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryRedelegationParams
-
-	errRes := cdc.UnmarshalJSON(req.Data, &params)
-	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownRequest(fmt.Sprintf("incorrectly formatted request address: %s", errRes.Error()))
-	}
-
-	redelegation, found := k.GetRedelegation(ctx, params.DelegatorAddr, params.ValidatorSrcAddr, params.ValidatorDstAddr)
-	if !found {
-		return []byte{}, types.ErrNoRedelegation(types.DefaultCodespace)
-	}
-
-	res, errRes = codec.MarshalJSONIndent(cdc, redelegation)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(fmt.Sprintf("could not marshal result to JSON: %s", errRes.Error()))
 	}
 	return res, nil
 }

@@ -55,12 +55,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 		unbondingDelegationHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
-	// Query a redelegation of a delegator's tokens from a validator to another
-	r.HandleFunc(
-		"/stake/delegators/{delegatorAddr}/redelegations/validator_from/{validatorSrcAddr}/validator_to/{validatorDstAddr}",
-		redelegationHandlerFn(cliCtx, cdc),
-	).Methods("GET")
-
 	// Get all validators
 	r.HandleFunc(
 		"/stake/validators",
@@ -171,43 +165,6 @@ func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) h
 // HTTP request handler to query a delegation
 func delegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return queryBonds(cliCtx, cdc, "custom/stake/delegation")
-}
-
-// HTTP request handler to query a redelegation
-func redelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		bech32delegator := vars["delegatorAddr"]
-		bech32ValidatorSrc := vars["validatorSrcAddr"]
-		bech32ValidatorDst := vars["validatorDstAddr"]
-
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		validatorSrcAddr, err := sdk.ValAddressFromBech32(bech32ValidatorSrc)
-		validatorDstAddr, err := sdk.ValAddressFromBech32(bech32ValidatorDst)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		params := stake.QueryRedelegationParams{
-			DelegatorAddr:    delegatorAddr,
-			ValidatorSrcAddr: validatorSrcAddr,
-			ValidatorDstAddr: validatorDstAddr,
-		}
-
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		res, err := cliCtx.QueryWithData("custom/stake/redelegation", bz)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
-	}
 }
 
 // HTTP request handler to query all delegator bonded validators

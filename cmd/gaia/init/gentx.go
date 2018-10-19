@@ -49,7 +49,6 @@ following delegation and commission default parameters:
 			if err != nil {
 				return err
 			}
-			//chainID := viper.GetString(flagChainID)
 			ip, err := server.ExternalIP()
 			if err != nil {
 				return err
@@ -82,7 +81,7 @@ following delegation and commission default parameters:
 	}
 
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
-	cmd.Flags().String(flagChainID, "", "genesis file chain-id")
+	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd

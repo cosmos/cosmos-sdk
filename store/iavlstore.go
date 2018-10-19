@@ -5,9 +5,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
+	merkle "github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
@@ -224,13 +224,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				break
 			}
 			res.Value = value
-			cdc := amino.NewCodec()
-			p, err := cdc.MarshalBinary(proof)
-			if err != nil {
-				res.Log = err.Error()
-				break
-			}
-			res.Proof = p
+			res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLValueOp(key, proof).ProofOp()}}
 		} else {
 			_, res.Value = tree.GetVersioned(key, res.Height)
 		}

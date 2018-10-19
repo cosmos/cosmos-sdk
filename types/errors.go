@@ -294,7 +294,6 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 func AppendMsgToErr(msg string, err string) string {
 	msgIdx := strings.Index(err, "message\":\"")
 	if msgIdx != -1 {
-		fmt.Println(err)
 		errMsg := err[msgIdx+len("message\":\"") : len(err)-2]
 		errMsg = fmt.Sprintf("%s; %s", msg, errMsg)
 		return fmt.Sprintf("%s%s%s",

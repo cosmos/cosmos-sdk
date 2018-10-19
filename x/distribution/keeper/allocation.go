@@ -18,6 +18,7 @@ func (k Keeper) AllocateFees(ctx sdk.Context, percentVotes sdk.Dec, proposer sdk
 	// get the fees which have been getting collected through all the
 	// transactions in the block
 	feesCollected := k.feeCollectionKeeper.GetCollectedFees(ctx)
+	fmt.Printf("fees collected: %v\n", feesCollected)
 	feesCollectedDec := types.NewDecCoins(feesCollected)
 
 	// allocated rewards to proposer

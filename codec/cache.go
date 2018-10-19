@@ -26,19 +26,19 @@ func newLRU(size int) *lru {
 	}
 }
 
-type Cache struct {
+type cache struct {
 	cdc Codec
 
 	json *lru
 	bin  *lru
 }
 
-func newCache(cdc Codec, size int) *Cache {
+func newCache(cdc Codec, size int) *cache {
 	if size < 0 {
 		panic("negative cache size")
 	}
 
-	return &Cache{
+	return &cache{
 		cdc: cdc,
 
 		json: newLRU(size),
@@ -83,11 +83,11 @@ func (lru *lru) write(bz []byte, ptr interface{}) {
 	lru.m[strbz] = e
 }
 
-func (c *Cache) MarshalJSON(o interface{}) ([]byte, error) {
+func (c *cache) MarshalJSON(o interface{}) ([]byte, error) {
 	return c.cdc.MarshalJSON(o)
 }
 
-func (c *Cache) UnmarshalJSON(bz []byte, ptr interface{}) (err error) {
+func (c *cache) UnmarshalJSON(bz []byte, ptr interface{}) (err error) {
 	lru := c.json
 	if lru.read(bz, ptr) {
 		return
@@ -100,11 +100,11 @@ func (c *Cache) UnmarshalJSON(bz []byte, ptr interface{}) (err error) {
 	return
 }
 
-func (c *Cache) MarshalBinary(o interface{}) ([]byte, error) {
+func (c *cache) MarshalBinary(o interface{}) ([]byte, error) {
 	return c.cdc.MarshalBinary(o)
 }
 
-func (c *Cache) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
+func (c *cache) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
 	lru := c.bin
 	if lru.read(bz, ptr) {
 		return
@@ -117,11 +117,11 @@ func (c *Cache) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
 	return
 }
 
-func (c *Cache) MustMarshalBinary(o interface{}) []byte {
+func (c *cache) MustMarshalBinary(o interface{}) []byte {
 	return c.cdc.MustMarshalBinary(o)
 }
 
-func (c *Cache) MustUnmarshalBinary(bz []byte, ptr interface{}) {
+func (c *cache) MustUnmarshalBinary(bz []byte, ptr interface{}) {
 	lru := c.bin
 	if lru.read(bz, ptr) {
 		return

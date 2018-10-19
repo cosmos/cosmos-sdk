@@ -148,7 +148,6 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 			return err.Result()
 		}
 		validator.Commission = commission
-		// call the hook if present
 		k.OnValidatorCommissionChange(ctx, msg.ValidatorAddr)
 	}
 

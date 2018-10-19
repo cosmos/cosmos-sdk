@@ -29,6 +29,7 @@ func benchmarkCachePool(b *testing.B, cdc *CachePool, datanum, lambda int) {
 	tcs := randgen(datanum)
 	b.ResetTimer()
 
+	exec := executor()
 	var chit int
 	for i := 0; i < b.N; i++ {
 
@@ -36,15 +37,19 @@ func benchmarkCachePool(b *testing.B, cdc *CachePool, datanum, lambda int) {
 		tc := tcs[index]
 		ptr := tc.ptr()
 
-		bz, _ := cdc.MarshalJSON(tc.value)
-		hit, _ := cdc.logUnmarshalJSON(bz, ptr)
-		chit += hit
+		exec(func() {
+			bz, _ := cdc.MarshalJSON(tc.value)
+			hit, _ := cdc.logUnmarshalJSON(bz, ptr)
+			chit += hit
+		})
 
-		bz, _ = cdc.MarshalBinary(tc.value)
-		hit, _ = cdc.logUnmarshalBinary(bz, ptr)
-		chit += hit
+		exec(func() {
+			bz, _ := cdc.MarshalBinary(tc.value)
+			hit, _ := cdc.logUnmarshalBinary(bz, ptr)
+			chit += hit
+		})
 	}
-	b.Logf("Cache hit %.2f%%", float64(chit)/2/float64(b.N)*100)
+	//	b.Logf("Cache hit %.2f%%", float64(chit)/2/float64(b.N)*100)
 }
 
 // Size 1000 Lambda 10

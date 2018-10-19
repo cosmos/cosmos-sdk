@@ -30,23 +30,29 @@ func benchmarkCache(b *testing.B, cdc *cache, datanum, lambda int) {
 	b.ResetTimer()
 
 	var chit int
+	exec := executor()
 	for i := 0; i < b.N; i++ {
 
 		index := int(rand.ExpFloat64()*float64(datanum)/float64(lambda)) % datanum
 		tc := tcs[index]
 		ptr := tc.ptr()
 
-		bz, _ := cdc.MarshalJSON(tc.value)
-		hit, _ := cdc.logUnmarshalJSON(bz, ptr)
-		chit += hit
+		exec(func() {
+			bz, _ := cdc.MarshalJSON(tc.value)
+			hit, _ := cdc.logUnmarshalJSON(bz, ptr)
+			chit += hit
+		})
 
-		bz, _ = cdc.MarshalBinary(tc.value)
-		hit, _ = cdc.logUnmarshalBinary(bz, ptr)
-		chit += hit
+		exec(func() {
+			bz, _ := cdc.MarshalBinary(tc.value)
+			hit, _ := cdc.logUnmarshalBinary(bz, ptr)
+			chit += hit
+		})
 	}
-	b.Logf("Cache hit %.2f%%", float64(chit)/2/float64(b.N)*100)
+	//	b.Logf("Cache hit %.2f%%", float64(chit)/2/float64(b.N)*100)
 }
 
+/*
 // Size 1000 Lambda 10
 func BenchmarkNoCacheSize1000Lambda10(b *testing.B) {
 	cdc := New()
@@ -274,9 +280,11 @@ func Benchmark5PercentCacheSize10000Lambda100(b *testing.B) {
 	cdc.Seal()
 	benchmarkCache(b, newCache(cdc, 5000), 100000, 100)
 }
-
+*/
 func (c *cache) logUnmarshalBinary(bz []byte, ptr interface{}) (hit int, err error) {
 	lru := c.bin
+	lru.lock()
+	defer lru.unlock()
 	if lru.read(bz, ptr) {
 		return 1, nil
 	}
@@ -290,6 +298,8 @@ func (c *cache) logUnmarshalBinary(bz []byte, ptr interface{}) (hit int, err err
 
 func (c *cache) logUnmarshalJSON(bz []byte, ptr interface{}) (hit int, err error) {
 	lru := c.json
+	lru.lock()
+	defer lru.unlock()
 	if lru.read(bz, ptr) {
 		return 1, nil
 	}

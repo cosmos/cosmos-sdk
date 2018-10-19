@@ -3,6 +3,7 @@ package codec
 import (
 	"container/list"
 	"reflect"
+	//"sync"
 )
 
 type kvpair struct {
@@ -15,6 +16,8 @@ type lru struct {
 	l *list.List
 
 	size int
+
+	//	mtx *sync.Mutex
 }
 
 func newLRU(size int) *lru {
@@ -23,6 +26,8 @@ func newLRU(size int) *lru {
 		l: list.New(),
 
 		size: size,
+
+		//	mtx: &sync.Mutex{},
 	}
 }
 
@@ -83,12 +88,22 @@ func (lru *lru) write(bz []byte, ptr interface{}) {
 	lru.m[strbz] = e
 }
 
+func (lru *lru) lock() {
+	//lru.mtx.Lock()
+}
+
+func (lru *lru) unlock() {
+	//lru.mtx.Unlock()
+}
+
 func (c *cache) MarshalJSON(o interface{}) ([]byte, error) {
 	return c.cdc.MarshalJSON(o)
 }
 
 func (c *cache) UnmarshalJSON(bz []byte, ptr interface{}) (err error) {
 	lru := c.json
+	lru.lock()
+	defer lru.unlock()
 	if lru.read(bz, ptr) {
 		return
 	}
@@ -106,6 +121,8 @@ func (c *cache) MarshalBinary(o interface{}) ([]byte, error) {
 
 func (c *cache) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
 	lru := c.bin
+	lru.lock()
+	defer lru.unlock()
 	if lru.read(bz, ptr) {
 		return
 	}
@@ -123,6 +140,8 @@ func (c *cache) MustMarshalBinary(o interface{}) []byte {
 
 func (c *cache) MustUnmarshalBinary(bz []byte, ptr interface{}) {
 	lru := c.bin
+	lru.lock()
+	defer lru.unlock()
 	if lru.read(bz, ptr) {
 		return
 	}

@@ -9,23 +9,28 @@ type CachePool struct {
 
 var _ Codec = (*CachePool)(nil)
 
+const maxcache = 5
+
 func newCachePool(cdc *Amino, size int) *CachePool {
 	return &CachePool{
 		cdc:  cdc,
 		size: size,
 
-		caches: make(chan *cache),
+		caches: make(chan *cache, maxcache),
 	}
 }
 
 func (pool *CachePool) acquireCache() (res *cache) {
+	if len(pool.caches) >= maxcache {
+		res = <-pool.caches
+		return
+	}
+
 	select {
 	case res = <-pool.caches:
 		return
 	default:
-		res = &cache{
-			cdc: newCache(pool.cdc, pool.size),
-		}
+		res = newCache(pool.cdc, pool.size)
 		return
 	}
 }
@@ -34,11 +39,8 @@ func (pool *CachePool) returnCache(cache *cache) {
 	pool.caches <- cache
 }
 
-func (pool *CachePool) MarshalJSON(o interface{}) (res []byte, err error) {
-	cache := pool.acquireCache()
-	res, err = cache.MarshalJSON(o)
-	pool.returnCache(cache)
-	return
+func (pool *CachePool) MarshalJSON(o interface{}) ([]byte, error) {
+	return pool.cdc.MarshalJSON(o)
 }
 
 func (pool *CachePool) UnmarshalJSON(bz []byte, ptr interface{}) (err error) {
@@ -48,11 +50,8 @@ func (pool *CachePool) UnmarshalJSON(bz []byte, ptr interface{}) (err error) {
 	return
 }
 
-func (pool *CachePool) MarshalBinary(o interface{}) (res []byte, err error) {
-	cache := pool.acquireCache()
-	res, err = cache.MarshalBinary(o)
-	pool.returnCache(cache)
-	return
+func (pool *CachePool) MarshalBinary(o interface{}) ([]byte, error) {
+	return pool.cdc.MarshalBinary(o)
 }
 
 func (pool *CachePool) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
@@ -62,11 +61,8 @@ func (pool *CachePool) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
 	return
 }
 
-func (pool *CachePool) MustMarshalBinary(o interface{}) (res []byte) {
-	cache := pool.acquireCache()
-	res = cache.MustMarshalBinary(o)
-	pool.returnCache(cache)
-	return
+func (pool *CachePool) MustMarshalBinary(o interface{}) []byte {
+	return pool.cdc.MustMarshalBinary(o)
 }
 
 func (pool *CachePool) MustUnmarshalBinary(bz []byte, ptr interface{}) {

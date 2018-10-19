@@ -109,16 +109,33 @@ func benchmarkAmino(b *testing.B, cdc *Amino, datanum int, lambda int) {
 	tcs := randgen(datanum)
 	b.ResetTimer()
 
+	exec := executor()
 	for i := 0; i < b.N; i++ {
 		index := int(rand.ExpFloat64()*float64(datanum)/float64(lambda)) % datanum
 		tc := tcs[index]
 		ptr := tc.ptr()
 
-		bz, _ := cdc.MarshalJSON(tc.value)
-		cdc.UnmarshalJSON(bz, ptr)
-
-		bz, _ = cdc.MarshalBinary(tc.value)
-		cdc.UnmarshalBinary(bz, ptr)
+		exec(func() {
+			bz, _ := cdc.MarshalJSON(tc.value)
+			cdc.UnmarshalJSON(bz, ptr)
+		})
+		exec(func() {
+			bz, _ := cdc.MarshalBinary(tc.value)
+			cdc.UnmarshalBinary(bz, ptr)
+		})
 	}
 
+}
+
+const gonum = 5
+
+func executor() func(func()) {
+	ch := make(chan bool, gonum)
+	return func(f func()) {
+		ch <- true
+		go func() {
+			defer func() { <-ch }()
+			f()
+		}()
+	}
 }

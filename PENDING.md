@@ -154,6 +154,7 @@ IMPROVEMENTS
     * [x/stake] [\#2000](https://github.com/cosmos/cosmos-sdk/issues/2000) Added tests for new staking endpoints
     * [gaia-lite] [\#2445](https://github.com/cosmos/cosmos-sdk/issues/2445) Standarized REST error responses
     * [gaia-lite] Added example to Swagger specification for /keys/seed.
+    * [x/stake] Refactor REST utils
 
 * Gaia CLI  (`gaiacli`)
     * [cli] #2060 removed `--select` from `block` command

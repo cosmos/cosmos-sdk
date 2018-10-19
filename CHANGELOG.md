@@ -7,7 +7,7 @@
 BUG FIXES
 
 * Tendermint
-  - Fix unbounded consensus WAL growth 
+  - Fix unbounded consensus WAL growth
 
 ## 0.24.1
 

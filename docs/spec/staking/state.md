@@ -24,11 +24,6 @@ overall functioning of the stake module.
 
 ```golang
 type Params struct {
-    InflationRateChange sdk.Dec // maximum annual change in inflation rate
-    InflationMax        sdk.Dec // maximum inflation rate
-    InflationMin        sdk.Dec // minimum inflation rate
-    GoalBonded          sdk.Dec // Goal of percent bonded atoms
-
     MaxValidators uint16 // maximum number of validators
     BondDenom     string // bondable coin denomination
 }

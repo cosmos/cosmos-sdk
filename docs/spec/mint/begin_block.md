@@ -6,7 +6,7 @@ Inflation occurs at the beginning of each block.
 
 ### NextInflation
 
-The target annual inflation rate is recalculated for each previsions cycle. The
+The target annual inflation rate is recalculated for each provisions cycle. The
 inflation is also subject to a rate change (positive or negative) depending on
 the distance from the desired ratio (67%). The maximum rate change possible is
 defined to be 13% per year, however the annual inflation is capped as between
@@ -18,10 +18,10 @@ NextInflation(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 
 	// increase the new annual inflation for this next cycle
 	inflation += inflationRateChange
-	if inflation.GT(params.InflationMax) {
+	if inflation > params.InflationMax {
 		inflation = params.InflationMax
 	}
-	if inflation < params.InflationMin) {
+	if inflation < params.InflationMin {
 		inflation = params.InflationMin
 	}
 

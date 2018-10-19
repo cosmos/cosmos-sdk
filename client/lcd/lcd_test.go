@@ -566,7 +566,7 @@ func TestBonding(t *testing.T) {
 
 	// create unbond TX
 	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, operAddrs[0], 60)
-	tests.WaitForHeight(resultTx.Height+2, port)
+	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)

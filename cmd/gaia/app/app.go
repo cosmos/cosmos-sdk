@@ -2,15 +2,7 @@ package app
 
 import (
 	"encoding/json"
-	"io"
-	"os"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
-
+	"fmt"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,10 +13,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
+	"io"
+	"os"
+	"sort"
 )
 
 const (
 	appName = "GaiaApp"
+	// DefaultKeyPass contains the default key password for genesis transactions
+	DefaultKeyPass = "12345678"
 )
 
 // default home directories for expected binaries
@@ -236,6 +238,38 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	err = GaiaValidateGenesisState(genesisState)
 	if err != nil {
 		panic(err) // TODO find a way to do this w/o panics
+	}
+
+	if len(genesisState.GenTxs) > 0 {
+		for _, genTx := range genesisState.GenTxs {
+			var tx auth.StdTx
+			err = app.cdc.UnmarshalJSON(genTx, &tx)
+			if err != nil {
+				panic(err)
+			}
+			bz := app.cdc.MustMarshalBinary(tx)
+			res := app.BaseApp.DeliverTx(bz)
+			if !res.IsOK() {
+				panic(res.Log)
+			}
+		}
+
+		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	}
+	app.slashingKeeper.AddValidators(ctx, validators)
+
+	// sanity check
+	if len(req.Validators) > 0 {
+		if len(req.Validators) != len(validators) {
+			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d) ", len(req.Validators), len(validators)))
+		}
+		sort.Sort(abci.ValidatorUpdates(req.Validators))
+		sort.Sort(abci.ValidatorUpdates(validators))
+		for i, val := range validators {
+			if !val.Equal(req.Validators[i]) {
+				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
+			}
+		}
 	}
 
 	return abci.ResponseInitChain{

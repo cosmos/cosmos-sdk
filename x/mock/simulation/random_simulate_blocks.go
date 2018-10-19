@@ -82,7 +82,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	// Initially this is the same as the initial validator set
 	nextValidators := validators
 
-	header := abci.Header{Height: 0, Time: timestamp, ProposerAddress: randomProposer(r, validators)}
+	header := abci.Header{Height: 1, Time: timestamp, ProposerAddress: randomProposer(r, validators)}
 	opCount := 0
 
 	// Setup code to catch SIGTERM's
@@ -399,7 +399,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 			time := header.Time
 			vals := voteInfos
 			if r.Float64() < pastEvidenceFraction {
-				height = int64(r.Intn(int(header.Height)))
+				height = int64(r.Intn(int(header.Height) - 1))
 				time = pastTimes[height]
 				vals = pastVoteInfos[height]
 			}

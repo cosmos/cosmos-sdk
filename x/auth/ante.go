@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -81,7 +80,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
-		res = validateAccNumAndSequence(signerAccs, stdSigs)
+		res = validateAccNumAndSequence(ctx, signerAccs, stdSigs)
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
@@ -149,17 +148,23 @@ func getSignerAccs(ctx sdk.Context, am AccountMapper, addrs []sdk.AccAddress) (a
 	return
 }
 
-func validateAccNumAndSequence(accs []Account, sigs []StdSignature) sdk.Result {
+func validateAccNumAndSequence(ctx sdk.Context, accs []Account, sigs []StdSignature) sdk.Result {
 	for i := 0; i < len(accs); i++ {
-		accnum := accs[i].GetAccountNumber()
-		seq := accs[i].GetSequence()
+		// On InitChain, make sure account number == 0
+		if ctx.BlockHeight() == 0 && sigs[i].AccountNumber != 0 {
+			return sdk.ErrInvalidSequence(
+				fmt.Sprintf("Invalid account number for BlockHeight == 0. Got %d, expected 0", sigs[i].AccountNumber)).Result()
+		}
+
 		// Check account number.
-		if accnum != sigs[i].AccountNumber {
+		accnum := accs[i].GetAccountNumber()
+		if ctx.BlockHeight() != 0 && accnum != sigs[i].AccountNumber {
 			return sdk.ErrInvalidSequence(
 				fmt.Sprintf("Invalid account number. Got %d, expected %d", sigs[i].AccountNumber, accnum)).Result()
 		}
 
 		// Check sequence number.
+		seq := accs[i].GetSequence()
 		if seq != sigs[i].Sequence {
 			return sdk.ErrInvalidSequence(
 				fmt.Sprintf("Invalid sequence. Got %d, expected %d", sigs[i].Sequence, seq)).Result()
@@ -287,7 +292,7 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 
 func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	// set the gas meter
-	if simulate {
+	if simulate || ctx.BlockHeight() == 0 {
 		return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	}
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))

@@ -48,6 +48,7 @@ BREAKING CHANGES
     * [x/stake] \#1673 Validators are no longer deleted until they can no longer possibly be slashed
     * [\#1890](https://github.com/cosmos/cosmos-sdk/issues/1890) Start chain with initial state + sequence of transactions
       * [cli] Rename `gaiad init gentx` to `gaiad gentx`.
+      * [cli] Add `--skip-genesis` flag to `gaiad init` to prevent `genesis.json` generation.
       * Drop `GenesisTx` in favor of a signed `StdTx` with only one `MsgCreateValidator` message.
       * [cli] Port `gaiad init` and `gaiad testnet` to work with `StdTx` genesis transactions.
       * [cli] Add `--moniker` flag to `gaiad init` to override moniker when generating `genesis.json` - i.e. it takes effect when running with the `--with-txs` flag, it is ignored otherwise.

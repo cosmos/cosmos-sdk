@@ -111,7 +111,7 @@ func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, stdTx auth.StdTx, appendSig bool, offline bool) (auth.StdTx, error) {
 	var signedStdTx auth.StdTx
 
-	keybase, err := keys.GetKeyBase()
+	keybase, err := keys.GetReadOnlyKeyBase()
 	if err != nil {
 		return signedStdTx, err
 	}

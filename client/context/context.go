@@ -138,7 +138,7 @@ func fromFields(from string) (fromAddr types.AccAddress, fromName string) {
 		return nil, ""
 	}
 
-	keybase, err := keys.GetKeyBase()
+	keybase, err := keys.GetReadOnlyKeyBase()
 	if err != nil {
 		fmt.Println("no keybase found")
 		os.Exit(1)

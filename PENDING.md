@@ -145,6 +145,7 @@ FEATURES
   * [x/stake] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Implement
   basis for the validator commission model.
   * [x/auth] Support account removal in the account mapper.
+  * [client/keys] [\#2544](https://github.com/cosmos/cosmos-sdk/issues/2544) Add `GetReadOnlyKeyBase()` to acquire read-only LevelDB databases.
 
 * Tendermint
 

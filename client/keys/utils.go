@@ -2,6 +2,7 @@ package keys
 
 import (
 	"fmt"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"path/filepath"
 
 	"github.com/spf13/viper"
@@ -27,16 +28,22 @@ type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
 
 // TODO make keybase take a database not load from the directory
 
-// initialize a keybase based on the configuration
+// GetKeyBase initializes a keybase based on the configuration.
 func GetKeyBase() (keys.Keybase, error) {
 	rootDir := viper.GetString(cli.HomeFlag)
-	return GetKeyBaseFromDir(rootDir)
+	return GetKeyBaseFromDir(rootDir, false)
+}
+
+// GetReadOnlyKeyBase initializes a read-only keybase based on the configuration.
+func GetReadOnlyKeyBase() (keys.Keybase, error) {
+	rootDir := viper.GetString(cli.HomeFlag)
+	return GetKeyBaseFromDir(rootDir, true)
 }
 
 // GetKeyInfo returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
 func GetKeyInfo(name string) (keys.Info, error) {
-	keybase, err := GetKeyBase()
+	keybase, err := GetReadOnlyKeyBase()
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +90,13 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 }
 
 // initialize a keybase based on the configuration
-func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
+func GetKeyBaseFromDir(rootDir string, readOnly bool) (keys.Keybase, error) {
+	var opts *opt.Options
+	if readOnly {
+		opts = &opt.Options{ReadOnly: true}
+	}
 	if keybase == nil {
-		db, err := dbm.NewGoLevelDB(KeyDBName, filepath.Join(rootDir, "keys"))
+		db, err := dbm.NewGoLevelDBWithOpts(KeyDBName, filepath.Join(rootDir, "keys"), opts)
 		if err != nil {
 			return nil, err
 		}

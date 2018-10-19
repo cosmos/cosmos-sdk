@@ -150,7 +150,7 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 		return nil, err
 	}
 
-	keybase, err := keys.GetKeyBase()
+	keybase, err := keys.GetReadOnlyKeyBase()
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appen
 
 // MakeSignature builds a StdSignature given key name, passphrase, and a StdSignMsg.
 func MakeSignature(name, passphrase string, msg StdSignMsg) (sig auth.StdSignature, err error) {
-	keybase, err := keys.GetKeyBase()
+	keybase, err := keys.GetReadOnlyKeyBase()
 	if err != nil {
 		return
 	}

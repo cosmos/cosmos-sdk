@@ -187,11 +187,11 @@ func MakeCodec() *codec.Codec {
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 
-	// mint new tokens
-	mint.BeginBlocker(ctx, app.mintKeeper)
-
 	// distribute rewards from previous block
 	distr.BeginBlocker(ctx, req, app.distrKeeper)
+
+	// mint new tokens for this new block
+	mint.BeginBlocker(ctx, app.mintKeeper)
 
 	return abci.ResponseBeginBlock{
 		Tags: tags.ToKVPairs(),

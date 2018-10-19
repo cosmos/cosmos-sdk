@@ -1,8 +1,8 @@
 package init
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -27,24 +27,24 @@ import (
 )
 
 const (
-	flagWithTxs     = "with-txs"
-	flagOverwrite   = "overwrite"
-	flagClientHome  = "home-client"
-	flagOWK         = "owk"
-	flagSkipGenesis = "skip-genesis"
-	flagMoniker     = "moniker"
+	flagWithTxs      = "with-txs"
+	flagOverwrite    = "overwrite"
+	flagClientHome   = "home-client"
+	flagOverwriteKey = "overwrite-key"
+	flagSkipGenesis  = "skip-genesis"
+	flagMoniker      = "moniker"
 )
 
 type initConfig struct {
-	ChainID       string
-	GenTxsDir     string
-	Name          string
-	NodeID        string
-	ClientHome    string
-	WithTxs       bool
-	Overwrite     bool
-	OverwriteKeys bool
-	ValPubKey     crypto.PubKey
+	ChainID      string
+	GenTxsDir    string
+	Name         string
+	NodeID       string
+	ClientHome   string
+	WithTxs      bool
+	Overwrite    bool
+	OverwriteKey bool
+	ValPubKey    crypto.PubKey
 }
 
 type printInfo struct {
@@ -107,15 +107,15 @@ enabled, and the genesis file will not be generated.
 			}
 
 			initCfg := initConfig{
-				ChainID:       chainID,
-				GenTxsDir:     filepath.Join(config.RootDir, "config", "gentx"),
-				Name:          name,
-				NodeID:        nodeID,
-				ClientHome:    viper.GetString(flagClientHome),
-				WithTxs:       viper.GetBool(flagWithTxs),
-				Overwrite:     viper.GetBool(flagOverwrite),
-				OverwriteKeys: viper.GetBool(flagOWK),
-				ValPubKey:     valPubKey,
+				ChainID:      chainID,
+				GenTxsDir:    filepath.Join(config.RootDir, "config", "gentx"),
+				Name:         name,
+				NodeID:       nodeID,
+				ClientHome:   viper.GetString(flagClientHome),
+				WithTxs:      viper.GetBool(flagWithTxs),
+				Overwrite:    viper.GetBool(flagOverwrite),
+				OverwriteKey: viper.GetBool(flagOverwriteKey),
+				ValPubKey:    valPubKey,
 			}
 			appMessage, err := initWithConfig(cdc, config, initCfg)
 			// print out some key information
@@ -135,7 +135,7 @@ enabled, and the genesis file will not be generated.
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(flagMoniker, "", "overrides --name flag and set the validator's moniker to a different value; ignored if it runs without the --with-txs flag")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
-	cmd.Flags().Bool(flagOWK, false, "overwrite client's keys")
+	cmd.Flags().Bool(flagOverwriteKey, false, "overwrite client's key")
 	cmd.Flags().Bool(flagSkipGenesis, false, "do not create genesis.json")
 	return cmd
 }
@@ -210,7 +210,7 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 			keyPass = app.DefaultKeyPass
 		}
 
-		addr, secret, err = server.GenerateSaveCoinKey(initCfg.ClientHome, initCfg.Name, keyPass, initCfg.OverwriteKeys)
+		addr, secret, err = server.GenerateSaveCoinKey(initCfg.ClientHome, initCfg.Name, keyPass, initCfg.OverwriteKey)
 		if err != nil {
 			return
 		}

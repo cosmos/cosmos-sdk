@@ -186,14 +186,14 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		// Run `init` and generate genesis.json and config.toml
 		initCfg := initConfig{
-			ChainID:       chainID,
-			GenTxsDir:     gentxsDir,
-			Name:          moniker,
-			WithTxs:       true,
-			Overwrite:     true,
-			OverwriteKeys: false,
-			NodeID:        nodeID,
-			ValPubKey:     valPubKey,
+			ChainID:      chainID,
+			GenTxsDir:    gentxsDir,
+			Name:         moniker,
+			WithTxs:      true,
+			Overwrite:    true,
+			OverwriteKey: false,
+			NodeID:       nodeID,
+			ValPubKey:    valPubKey,
 		}
 		if _, err := initWithConfig(cdc, config, initCfg); err != nil {
 			return err

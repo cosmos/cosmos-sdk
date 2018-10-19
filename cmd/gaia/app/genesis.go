@@ -34,7 +34,7 @@ type GenesisState struct {
 	DistrData    distr.GenesisState    `json:"distr"`
 	GovData      gov.GenesisState      `json:"gov"`
 	SlashingData slashing.GenesisState `json:"slashing"`
-	Txs          []json.RawMessage     `json:"txs"`
+	GenTxs       []json.RawMessage     `json:"gentxs"`
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -95,8 +95,8 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 			return
 		}
 		msgs := tx.GetMsgs()
-		if len(msgs) == 0 {
-			err = errors.New("must provide at least genesis message")
+		if len(msgs) != 1 {
+			err = errors.New("must provide genesis StdTx with exactly 1 CreateValidator message")
 			return
 		}
 		msg := msgs[0].(stake.MsgCreateValidator)
@@ -113,7 +113,7 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 		DistrData:    distr.DefaultGenesisState(),
 		GovData:      gov.DefaultGenesisState(),
 		SlashingData: slashingData,
-		Txs:          appGenTxs,
+		GenTxs:       appGenTxs,
 	}
 
 	return
@@ -138,7 +138,7 @@ func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
 		return
 	}
 	// skip stakeData validation as genesis is created from txs
-	if len(genesisState.Txs) > 0 {
+	if len(genesisState.GenTxs) > 0 {
 		return nil
 	}
 	return stake.ValidateGenesis(genesisState.StakeData)

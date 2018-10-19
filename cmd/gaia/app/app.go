@@ -240,8 +240,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		panic(err) // TODO find a way to do this w/o panics
 	}
 
-	if len(genesisState.Txs) > 0 {
-		for _, genTx := range genesisState.Txs {
+	if len(genesisState.GenTxs) > 0 {
+		for _, genTx := range genesisState.GenTxs {
 			var tx auth.StdTx
 			err = app.cdc.UnmarshalJSON(genTx, &tx)
 			if err != nil {

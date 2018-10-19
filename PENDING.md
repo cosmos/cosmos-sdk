@@ -100,7 +100,6 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-  * [gaia-lite] [\#2182](https://github.com/cosmos/cosmos-sdk/issues/2182) Added redelegation endpoint
   * [gaia-lite] Endpoints to query staking pool and params
   * [gaia-lite] [\#2110](https://github.com/cosmos/cosmos-sdk/issues/2110) Add support for `simulate=true` requests query argument to endpoints that send txs to run simulations of transactions
   * [gaia-lite] [\#966](https://github.com/cosmos/cosmos-sdk/issues/966) Add support for `generate_only=true` query argument to generate offline unsigned transactions
@@ -155,6 +154,7 @@ IMPROVEMENTS
     * [x/stake] [\#2000](https://github.com/cosmos/cosmos-sdk/issues/2000) Added tests for new staking endpoints
     * [gaia-lite] [\#2445](https://github.com/cosmos/cosmos-sdk/issues/2445) Standarized REST error responses
     * [gaia-lite] Added example to Swagger specification for /keys/seed.
+    * [x/stake] Refactor REST utils
 
 * Gaia CLI  (`gaiacli`)
     * [cli] #2060 removed `--select` from `block` command

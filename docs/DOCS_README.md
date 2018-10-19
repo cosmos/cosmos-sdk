@@ -15,7 +15,6 @@ Besides, gaia-lite API docs are also provided by gaia-lite. The default API docs
 https://localhost:1317/swagger-ui/
 ```
 
-<<<<<<< HEAD
 ## How It Works
 
 There is a Jenkins job listening for changes in the `/docs` directory, on both
@@ -114,11 +113,3 @@ much as possible with its [counterpart in the Tendermint Core repo](https://gith
     ```
     make install
     ```
-=======
-Under the hood, Jenkins listens for changes (on develop or master) in ./docs then rebuilds
-either the staging or production site depending on which branch the changes were made.
-
-To update the Table of Contents (layout of the documentation sidebar), edit the
-`config.js` in this directory, while the `README.md` is the landing page for the
-website documentation.
->>>>>>> 50675b8015ab0dbac91a926a2df746174dbb33f7

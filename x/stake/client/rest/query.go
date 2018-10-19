@@ -64,7 +64,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 	// Get all validators
 	r.HandleFunc(
 		"/stake/validators",
-		validatorsHandlerFn(cliCtx),
+		validatorsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 	// Get a single validator info
@@ -76,13 +76,13 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 	// Get the current state of the staking pool
 	r.HandleFunc(
 		"/stake/pool",
-		poolHandlerFn(cliCtx),
+		poolHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 	// Get the current staking parameter values
 	r.HandleFunc(
 		"/stake/parameters",
-		paramsHandlerFn(cliCtx),
+		paramsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 }
@@ -95,7 +95,6 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 // HTTP request handler to query all staking txs (msgs) from a delegator
 func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var output []byte
 		var typesQuerySlice []string
 		vars := mux.Vars(r)
 		delegatorAddr := vars["delegatorAddr"]
@@ -155,7 +154,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			txs = append(txs, foundTxs...)
 		}
 
-		output, err = cdc.MarshalJSON(txs)
+		res, err := cdc.MarshalJSON(txs)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -222,7 +221,7 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) ht
 }
 
 // HTTP request handler to query list of validators
-func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func validatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData("custom/stake/validators", nil)
 		if err != nil {
@@ -265,7 +264,7 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 }
 
 // HTTP request handler to query the pool information
-func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func poolHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData("custom/stake/pool", nil)
 		if err != nil {
@@ -277,7 +276,7 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // HTTP request handler to query the staking params values
-func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData("custom/stake/parameters", nil)
 		if err != nil {

@@ -210,7 +210,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	testCases := []appTestCase{
 		{
 			msgs:       []sdk.Msg{sendMsg3},
-			accNums:    []int64{0, 2},
+			accNums:    []int64{0, 0},
 			accSeqs:    []int64{0, 0},
 			expSimPass: true,
 			expPass:    true,
@@ -258,7 +258,7 @@ func TestMsgSendDependent(t *testing.T) {
 		},
 		{
 			msgs:       []sdk.Msg{sendMsg4},
-			accNums:    []int64{1},
+			accNums:    []int64{0},
 			accSeqs:    []int64{0},
 			expSimPass: true,
 			expPass:    true,

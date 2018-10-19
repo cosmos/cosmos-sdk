@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -47,7 +46,7 @@ func QueryAccountRequestHandlerFn(
 
 		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("couldn't query account. Error: %s", err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -60,7 +59,7 @@ func QueryAccountRequestHandlerFn(
 		// decode the value
 		account, err := decoder(res)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("couldn't parse query result. Result: %s. Error: %s", res, err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -86,7 +85,7 @@ func QueryBalancesRequestHandlerFn(
 
 		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("couldn't query account. Error: %s", err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -99,7 +98,7 @@ func QueryBalancesRequestHandlerFn(
 		// decode the value
 		account, err := decoder(res)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("couldn't parse query result. Result: %s. Error: %s", res, err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

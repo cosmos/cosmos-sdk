@@ -69,6 +69,14 @@ module.exports = {
         ]
       },
       {
+        title: "Light Client",
+        collapsable: false,
+        children: [
+	  "/light/",
+	  "/light/getting_started"
+	]
+      },
+      {
         title: "Lotion JS",
         collapsable: false,
         children: [

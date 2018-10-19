@@ -25,25 +25,24 @@ var (
 	emptyPubkey crypto.PubKey
 )
 
-func makeGenesisState(genTxs []GaiaGenTx) GenesisState {
+func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 	// start with the default staking genesis state
 	stakeData := stake.DefaultGenesisState()
+	genAccs := make([]GenesisAccount, len(genTxs))
 
-	// get genesis flag account information
-	genaccs := make([]GenesisAccount, len(genTxs))
 	for i, genTx := range genTxs {
-		genaccs[i] = genesisAccountFromGenTx(genTx)
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
+		msgs := genTx.GetMsgs()
+		require.Equal(t, 1, len(msgs))
+		msg := msgs[0].(stake.MsgCreateValidator)
 
-		// add the validator
-		if len(genTx.Name) > 0 {
-			stakeData = addValidatorToStakeData(genTx, stakeData)
-		}
+		// get genesis flag account information
+		genAccs[i] = genesisAccountFromMsgCreateValidator(msg, freeFermionsAcc)
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
 	}
 
 	// create the final app state
 	return GenesisState{
-		Accounts:  genaccs,
+		Accounts:  genAccs,
 		StakeData: stakeData,
 		GovData:   gov.DefaultGenesisState(),
 	}
@@ -75,17 +74,23 @@ func TestGaiaAppGenState(t *testing.T) {
 	// TODO        correct: genesis account created, canididates created, pool token variance
 }
 
+func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
+	desc := stake.NewDescription(name, "", "", "")
+	comm := stakeTypes.CommissionMsg{}
+	msg := stake.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin("steak", 50), desc, comm)
+	return auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
+}
+
 func TestGaiaGenesisValidation(t *testing.T) {
-	genTxs := make([]GaiaGenTx, 2)
-	addr := pk1.Address()
+	genTxs := make([]auth.StdTx, 2)
 	// Test duplicate accounts fails
-	genTxs[0] = GaiaGenTx{"", sdk.AccAddress(addr), ""}
-	genTxs[1] = GaiaGenTx{"", sdk.AccAddress(addr), ""}
-	genesisState := makeGenesisState(genTxs)
+	genTxs[0] = makeMsg("test-0", pk1)
+	genTxs[1] = makeMsg("test-1", pk1)
+	genesisState := makeGenesisState(t, genTxs)
 	err := GaiaValidateGenesisState(genesisState)
 	require.NotNil(t, err)
 	// Test bonded + jailed validator fails
-	genesisState = makeGenesisState(genTxs[:1])
+	genesisState = makeGenesisState(t, genTxs)
 	val1 := stakeTypes.NewValidator(addr1, pk1, stakeTypes.Description{Moniker: "test #2"})
 	val1.Jailed = true
 	val1.Status = sdk.Bonded
@@ -94,7 +99,7 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	require.NotNil(t, err)
 	// Test duplicate validator fails
 	val1.Jailed = false
-	genesisState = makeGenesisState(genTxs[:1])
+	genesisState = makeGenesisState(t, genTxs)
 	val2 := stakeTypes.NewValidator(addr1, pk1, stakeTypes.Description{Moniker: "test #3"})
 	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val1)
 	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val2)

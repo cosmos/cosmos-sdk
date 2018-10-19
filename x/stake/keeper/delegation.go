@@ -425,8 +425,8 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	// remove the coins from the validator
 	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
 
-	if validator.DelegatorShares.IsZero() && validator.Status != sdk.Bonded {
-		// if bonded, we must remove in EndBlocker instead
+	if validator.DelegatorShares.IsZero() && validator.Status == sdk.Unbonded {
+		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
@@ -501,6 +501,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	}
 	k.SetUnbondingDelegation(ctx, ubd)
 	k.InsertUnbondingQueue(ctx, ubd)
+
 	return ubd, nil
 }
 

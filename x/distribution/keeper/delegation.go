@@ -123,10 +123,10 @@ func (k Keeper) getDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, 
 
 	withdraw := types.DecCoins{}
 	bondedTokens := k.stakeKeeper.TotalPower(ctx)
-	feePool := k.GetFeePool(ctx)
 
 	// iterate over all the delegations
 	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
+		feePool := k.GetFeePool(ctx)
 		valAddr := del.GetValidator()
 		delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
 		valInfo := k.GetValidatorDistInfo(ctx, valAddr)
@@ -142,7 +142,5 @@ func (k Keeper) getDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, 
 		return false
 	}
 	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
-
-	k.SetFeePool(ctx, feePool)
 	return withdraw
 }

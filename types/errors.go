@@ -290,32 +290,18 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 //----------------------------------------
 // REST error utilities
 
-// ensures that the value of the ABCI Log error message is correctly formatted
-func ErrEnsureFormat(abciLog string) string {
-	msgIdx := mustGetMsgIndex(abciLog)
-	msg := abciLog[msgIdx : len(abciLog)-2]
-	msg = parseErrorMsg(msg)
-	return fmt.Sprintf("%s%s%s",
-		abciLog[:msgIdx],
-		msg,
-		abciLog[len(abciLog)-3:],
-	)
-}
-
 // appends a message to the head of the given error
 func AppendMsgToErr(msg string, err string) string {
 	msgIdx := strings.Index(err, "message\":\"")
 	if msgIdx != -1 {
+		fmt.Println(err)
 		errMsg := err[msgIdx+len("message\":\"") : len(err)-2]
-		errMsg = fmt.Sprintf("%s; %s", msg, parseErrorMsg(errMsg))
+		errMsg = fmt.Sprintf("%s; %s", msg, errMsg)
 		return fmt.Sprintf("%s%s%s",
 			err[:msgIdx+len("message\":\"")],
 			errMsg,
-			err[len(err)-3:],
+			err[len(err)-2:],
 		)
-	}
-	if strings.HasPrefix(err, "Error{") && strings.HasSuffix(err, "}") {
-		err = parseErrorMsg(err)
 	}
 	return fmt.Sprintf("%s; %s", msg, err)
 }
@@ -327,14 +313,6 @@ func mustGetMsgIndex(abciLog string) int {
 		panic(fmt.Sprintf("invalid error format: %s", abciLog))
 	}
 	return msgIdx + len("message\":\"")
-}
-
-// parses the error 'message' value from err.Stacktrace().Error()
-func parseErrorMsg(err string) string {
-	if strings.HasPrefix(err, "Error{") && strings.HasSuffix(err, "}") {
-		err = err[len("Error{") : len(err)-1]
-	}
-	return strings.TrimSpace(err)
 }
 
 // parses the error into an object-like struct for exporting

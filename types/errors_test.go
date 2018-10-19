@@ -67,20 +67,6 @@ func TestErrFn(t *testing.T) {
 	require.Equal(t, ABCICodeOK, ToABCICode(CodespaceRoot, CodeOK))
 }
 
-func TestErrVerifyFormat(t *testing.T) {
-	for i, errFn := range errFns {
-		err := errFn("")
-		abciLog := err.ABCILog()
-		msgIdx := mustGetMsgIndex(abciLog)
-		msg := ErrEnsureFormat(abciLog)
-		require.Equal(t, fmt.Sprintf("%s%s}",
-			abciLog[:msgIdx],
-			abciLog[msgIdx+len("Error{"):len(abciLog)-1]),
-			msg,
-			fmt.Sprintf("Should have formatted the error message. tc #%d", i))
-	}
-}
-
 func TestAppendMsgToErr(t *testing.T) {
 	for i, errFn := range errFns {
 		err := errFn("")
@@ -90,7 +76,7 @@ func TestAppendMsgToErr(t *testing.T) {
 		// plain msg error
 		msg := AppendMsgToErr("something unexpected happened", errMsg)
 		require.Equal(t, fmt.Sprintf("something unexpected happened; %s",
-			errMsg[len("Error{"):len(errMsg)-1]),
+			errMsg),
 			msg,
 			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
 
@@ -100,7 +86,7 @@ func TestAppendMsgToErr(t *testing.T) {
 		require.Equal(t, fmt.Sprintf("%s%s; %s}",
 			abciLog[:msgIdx],
 			"something unexpected happened",
-			abciLog[msgIdx+len("Error{"):len(abciLog)-1]),
+			abciLog[msgIdx:len(abciLog)-1]),
 			msg,
 			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
 	}

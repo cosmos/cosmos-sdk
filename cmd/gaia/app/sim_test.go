@@ -51,7 +51,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
-		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(100)}}
+		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(10000)}}
 		genesisAccounts = append(genesisAccounts, GenesisAccount{
 			Address: acc.Address,
 			Coins:   coins,
@@ -73,20 +73,16 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		valAddrs[i] = valAddr
 
 		validator := stake.NewValidator(valAddr, accs[i].PubKey, stake.Description{})
-		validator.Tokens = sdk.NewDec(100)
-		validator.DelegatorShares = sdk.NewDec(100)
-		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(100), 0}
+		validator.Tokens = sdk.NewDec(10000)
+		validator.DelegatorShares = sdk.NewDec(10000)
+		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(10000), 0}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakeGenesis.Pool.LooseTokens = sdk.NewDec(int64(100*250) + (numInitiallyBonded * 100))
+	stakeGenesis.Pool.LooseTokens = sdk.NewDec(int64(10000*250) + (numInitiallyBonded * 10000))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
-
-	// No inflation, for now
 	mintGenesis := mint.DefaultGenesisState()
-	mintGenesis.Params.InflationMax = sdk.NewDec(0)
-	mintGenesis.Params.InflationMin = sdk.NewDec(0)
 
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,

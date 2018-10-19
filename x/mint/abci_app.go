@@ -21,5 +21,8 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	minter.InflationLastTime = blockTime
 	minter, mintedCoin := minter.ProcessProvisions(params, totalSupply, bondedRatio)
 	k.fck.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
+	pool := k.sk.GetPool(ctx)
+	pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDecFromInt(mintedCoin.Amount))
+	k.sk.SetPool(ctx, pool)
 	k.SetMinter(ctx, minter)
 }

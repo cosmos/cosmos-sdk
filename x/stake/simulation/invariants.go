@@ -87,7 +87,6 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, f auth.FeeCollectionKeeper
 			return fmt.Errorf("expected bonded tokens to equal total steak held by bonded validators - pool.BondedTokens: %v, sum of bonded validator tokens: %v", pool.BondedTokens, bonded)
 		}
 
-		// TODO Inflation check on total supply
 		return nil
 	}
 }

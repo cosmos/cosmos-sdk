@@ -92,7 +92,7 @@ func (p Pool) ProcessProvisions(params Params) Pool {
 		Mul(p.TokenSupply()).
 		Quo(hrsPerYrDec)
 
-	// TODO add to the fees provisions
+		// TODO add to the fees provisions
 	p.LooseTokens = p.LooseTokens.Add(provisions)
 	return p
 }

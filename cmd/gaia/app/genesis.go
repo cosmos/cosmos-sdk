@@ -42,6 +42,19 @@ type GenesisState struct {
 	SlashingData slashing.GenesisState `json:"slashing"`
 }
 
+func NewGenesisState(accounts []GenesisAccount, stakeData stake.GenesisState, mintData mint.GenesisState,
+	distrData distr.GenesisState, govData gov.GenesisState, slashingData slashing.GenesisState) GenesisState {
+
+	return GenesisState{
+		Accounts:     accounts,
+		StakeData:    stakeData,
+		MintData:     mintData,
+		DistrData:    distrData,
+		GovData:      govData,
+		SlashingData: slashingData,
+	}
+}
+
 // GenesisAccount doesn't need pubkey or sequence
 type GenesisAccount struct {
 	Address sdk.AccAddress `json:"address"`

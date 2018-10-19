@@ -19,7 +19,7 @@ type Params struct {
 // default minting module parameters
 func DefaultParams() Params {
 	return Params{
-		MintDenom:           "stake",
+		MintDenom:           "steak",
 		InflationRateChange: sdk.NewDecWithPrec(13, 2),
 		InflationMax:        sdk.NewDecWithPrec(20, 2),
 		InflationMin:        sdk.NewDecWithPrec(7, 2),

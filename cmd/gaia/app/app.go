@@ -153,11 +153,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		AddRoute("stake", stake.NewQuerier(app.stakeKeeper, app.cdc))
 
 	// initialize BaseApp
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keyMint, app.keyDistr,
+		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keyDistr,
-		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.MountStoresTransient(app.tkeyParams, app.tkeyStake, app.tkeyDistr)
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -241,8 +241,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 
 	// load the address to pubkey map
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
-
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
+	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
 	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
 	err = GaiaValidateGenesisState(genesisState)
 	if err != nil {
@@ -266,13 +266,14 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 		return false
 	}
 	app.accountMapper.IterateAccounts(ctx, appendAccount)
-
-	genState := GenesisState{
-		Accounts:  accounts,
-		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
-		DistrData: distr.WriteGenesis(ctx, app.distrKeeper),
-		GovData:   gov.WriteGenesis(ctx, app.govKeeper),
-	}
+	genState := NewGenesisState(
+		accounts,
+		stake.WriteGenesis(ctx, app.stakeKeeper),
+		mint.WriteGenesis(ctx, app.mintKeeper),
+		distr.WriteGenesis(ctx, app.distrKeeper),
+		gov.WriteGenesis(ctx, app.govKeeper),
+		slashing.GenesisState{}, // TODO create write methods
+	)
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {
 		return nil, nil, err

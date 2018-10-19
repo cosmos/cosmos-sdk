@@ -108,10 +108,12 @@ func GetKeyRequestHandler(indent bool) http.HandlerFunc {
 		}
 
 		info, err := GetKeyInfo(name)
-		// TODO: check for the error if key actually does not exist, instead of
-		// assuming this as the reason
-		if err != nil {
+		if IsKeyNotFoundErr(err, name) {
 			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
+			return
+		} else if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}

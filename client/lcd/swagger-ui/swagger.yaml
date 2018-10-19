@@ -33,7 +33,7 @@ paths:
       description: Get the version of gaia-lite running locally to compare against expected
       responses:
         200:
-          description: Plaintext version i.e. "v0.5.0"
+          description: Plaintext version i.e. "v0.25.0"
   /node_version:
     get:
       summary: Version of the connected node
@@ -42,7 +42,9 @@ paths:
       description: Get the version of the SDK running on the connected node to compare against expected
       responses:
         200:
-          description: Plaintext version i.e. "v0.5.0"
+          description: Plaintext version i.e. "v0.25.0"
+        500:
+          description: failed to query node version
   /node_info:
     get:
       description: Information about the connected node
@@ -79,6 +81,8 @@ paths:
                 type: array
                 items:
                   type: string
+        500:
+          description: Failed to query node status
   /syncing:
     get:
       summary: Syncing state of node
@@ -88,6 +92,8 @@ paths:
       responses:
         200:
           description: '"true" or "false"'
+        500:
+          description: Server internal error
   /blocks/latest:
     get:
       summary: Get the latest block
@@ -100,6 +106,8 @@ paths:
           description: The latest block
           schema:
             $ref: "#/definitions/BlockQuery"
+        500:
+          description: Server internal error
   /blocks/{height}:
     get:
       summary: Get a block at a certain height
@@ -118,10 +126,12 @@ paths:
           description: The block at a specific height
           schema:
             $ref: "#/definitions/BlockQuery"
+        404:
+          description: Request block height doesn't
         400:
           description: Invalid height
-        404:
-          description: Block at height is not available
+        500:
+          description: Server internal error
   /validatorsets/latest:
     get:
       summary: Get the latest validator set
@@ -141,6 +151,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/definitions/TendermintValidator"
+        500:
+          description: Server internal error
   /validatorsets/{height}:
     get:
       summary: Get a validator set a certain height
@@ -168,6 +180,10 @@ paths:
                   $ref: "#/definitions/TendermintValidator"
         404:
           description: Block at height not available
+        400:
+          description: Invalid height
+        500:
+          description: Server internal error
   /txs/{hash}:
     get:
       summary: Get a Tx by hash
@@ -218,7 +234,7 @@ paths:
             items:
               $ref: "#/definitions/TxQuery"
         400:
-          description: Invalid request
+          description: Invalid search tags
         500:
           description: Internal Server Error
     post:
@@ -290,8 +306,12 @@ paths:
           description: The signed Tx
           schema:
             $ref: "#/definitions/StdTx"
+        400:
+          description: The Tx was malformated or key doesn't exist
         401:
-          description: Account name and/or password where wrong
+          description: Key password is wrong
+        500:
+          description: Server internal error
   /tx/broadcast:
     post:
       tags:
@@ -319,6 +339,8 @@ paths:
             $ref: "#/definitions/BroadcastTxCommitResult"
         400:
           description: The Tx was malformated
+        500:
+          description: Server internal error
   /bank/balances/{address}:
     get:
       summary: Get the account balances
@@ -340,7 +362,9 @@ paths:
             items:
               $ref: "#/definitions/Coin"
         204:
-          description: There is no data for the requested account. This is not a 404 as the account might exist, just does not hold data.
+          description: There is no data for the requested account
+        500:
+          description: Server internal error
   /bank/accounts/{address}/transfers:
     post:
       summary: Send coins (build -> sign -> send)
@@ -386,7 +410,11 @@ paths:
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
         400:
-          description: The Tx was malformated
+          description: Invalid request
+        401:
+          description: Key password is wrong
+        500:
+          description: Server internal error
   /keys:
     get:
       summary: List of accounts stored locally
@@ -401,6 +429,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/KeyOutput'
+        500:
+          description: Server internal error
     post:
       summary: Create a new account locally
       tags:
@@ -431,6 +461,12 @@ paths:
           description: Returns account information of the created key
           schema:
             $ref: "#/definitions/KeyOutput"
+        400:
+          description: Invalid request
+        409:
+          description: Key name confliction
+        500:
+          description: Server internal error
   /keys/seed:
     get:
       summary: Create a new seed to create a new account with
@@ -475,6 +511,12 @@ paths:
           description: Returns account information of the recovered key
           schema:
             $ref: "#/definitions/KeyOutput"
+        400:
+          description: Invalid request
+        409:
+          description: Key name confliction
+        500:
+          description: Server internal error
   /keys/{name}:
     parameters:
     - in: path
@@ -494,7 +536,7 @@ paths:
           schema:
             $ref: "#/definitions/KeyOutput"
         404:
-          description: Account is not available
+          description: Key doesn't exist
     put:
       summary: Update the password for this account in the KMS
       tags:
@@ -519,9 +561,9 @@ paths:
         200:
           description: Updated password
         401:
-          description: Password is wrong
+          description: Key password is wrong
         404:
-          description: Account is not available
+          description: Key doesn't exist
     delete:
       summary: Remove an account
       tags:
@@ -543,9 +585,9 @@ paths:
         200:
           description: Removed account
         401:
-          description: Password is wrong
+          description: Key password is wrong
         404:
-          description: Account is not available
+          description: Key doesn't exist
   /auth/accounts/{address}:
     get:
       summary: Get the account information on blockchain
@@ -584,6 +626,8 @@ paths:
                     type: string
         204:
           description: No content about this account address
+        500:
+          description: Server internel error
   /stake/delegators/{delegatorAddr}/delegations:
     parameters:
     - in: path
@@ -661,9 +705,9 @@ paths:
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
         400:
-          description: Invalid request
+          description: Invalid delegator address or delegation body
         401:
-          description: Password is wrong
+          description: Key password is wrong
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}:
@@ -682,8 +726,28 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            type: object
+            properties:
+              redelegations:
+                type: array
+                items:
+                  type: object
+                  "$ref": "#/definitions/Redelegation"
+              unbonding_delegations:
+                type: array
+                items:
+                  type: object
+                  "$ref": "#/definitions/UnbondingDelegation"
+              delegations:
+                type: array
+                items:
+                  type: object
+                  "$ref": "#/definitions/Delegation"
         400:
-          description: Invalid delegatorAddr
+          description: Invalid delegator address
+        204:
+          description: No content
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/validators:
@@ -706,8 +770,10 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Validator"
+        204:
+          description: No content
         400:
-          description: Invalid delegatorAddr
+          description: Invalid delegator address
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/validators/{validatorAddr}:
@@ -733,8 +799,10 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Validator"
+        204:
+          description: No content
         400:
-          description: Invalid delegatorAddr or validatorAddr
+          description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/txs:
@@ -757,8 +825,10 @@ paths:
             type: array
             items:
               $ref: "#/definitions/TxQuery"
+        204:
+          description: No content
         400:
-          description: Invalid delegatorAddr
+          description: Invalid delegator address
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}:
@@ -774,7 +844,7 @@ paths:
       required: true
       type: string
     get:
-      summary: Query the current delegation status between a delegator and a validator
+      summary: Query the current delegation between a delegator and a validator
       tags:
       - ICS21
       produces:
@@ -782,8 +852,12 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            $ref: "#/definitions/Delegation"
+        204:
+          description: No content
         400:
-          description: Invalid delegatorAddr or validatorAddr
+          description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
@@ -807,8 +881,15 @@ paths:
       responses:
         200:
           description: OK
+          schema:
+            type: array
+            items:
+              type: object
+              "$ref": "#/definitions/UnbondingDelegation"
+        204:
+          description: No content
         400:
-          description: Invalid delegatorAddr or validatorAddr
+          description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
   /stake/validators:
@@ -825,6 +906,8 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Validator"
+        204:
+          description: No content
         500:
           description: Internal Server Error
   /stake/validators/{validatorAddr}:
@@ -845,6 +928,10 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Validator"
+        204:
+          description: No content
+        400:
+          description: Invalid validator address
         500:
           description: Internal Server Error
   /stake/pool:
@@ -872,6 +959,8 @@ paths:
                 type: string
               prev_bonded_shares:
                 type: string
+        204:
+          description: No content
         500:
           description: Internal Server Error
   /stake/parameters:
@@ -901,6 +990,8 @@ paths:
                 type: integer
               bond_denom:
                 type: string
+        204:
+          description: No content
         500:
           description: Internal Server Error
   /slashing/validators/{validatorPubKey}/signing_info:
@@ -933,6 +1024,8 @@ paths:
                 type: string
         204:
           description: No sign info of this validator
+        400:
+          description: Invalid validator public key
         500:
           description: Internal Server Error
   /slashing/validators/{validatorAddr}/unjail:
@@ -975,6 +1068,10 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid validator address or base_req
+        401:
+          description: Key password is wrong
         500:
           description: Internal Server Error
   /gov/proposals:
@@ -998,7 +1095,7 @@ paths:
         description: if true, build an unsigned transaction and write it back
         required: false
         type: boolean
-      - description: valid value of `"proposal_type"` can be `"Text"`, `"ParameterChange"`, `"SoftwareUpgrade"`
+      - description: valid value of `"proposal_type"` can be `"text"`, `"parameter_change"`, `"software_upgrade"`
         name: post_proposal_body
         in: body
         required: true
@@ -1024,6 +1121,10 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid proposal body
+        401:
+          description: Key password is wrong
         500:
           description: Internal Server Error
     get:
@@ -1046,7 +1147,7 @@ paths:
         type: string
       - in: query
         name: status
-        description: proposal status, valid values can be `"DepositPeriod"`, `"VotingPeriod"`, `"Passed"`, `"Rejected"`
+        description: proposal status, valid values can be `"deposit_period"`, `"voting_period"`, `"passed"`, `"rejected"`
         required: false
         type: string
       responses:
@@ -1056,8 +1157,10 @@ paths:
             type: array
             items:
               "$ref": "#/definitions/TextProposal"
+        204:
+          description: No content
         400:
-          description: Invalid request
+          description: Invalid query parameters
         500:
           description: Internal Server Error
   /gov/proposals/{proposalId}/deposits:
@@ -1087,7 +1190,7 @@ paths:
         required: true
         in: path
       - description: ''
-        name: deposit_body
+        name: post_deposit_body
         in: body
         required: true
         schema:
@@ -1106,6 +1209,10 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid proposal id or deposite body
+        401:
+          description: Key password is wrong
         500:
           description: Internal Server Error
   /gov/proposals/{proposalId}/votes:
@@ -1134,8 +1241,8 @@ paths:
         name: proposalId
         required: true
         in: path
-      - description: valid value of `"option"` field can be `"Yes"`, `"No"`, `"NoWithVeto"` and `"Abstain"`
-        name: voteBody
+      - description: valid value of `"option"` field can be `"yes"`, `"no"`, `"no_with_veto"` and `"abstain"`
+        name: post_vote_body
         in: body
         required: true
         schema:
@@ -1152,6 +1259,10 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid proposal id or vote body
+        401:
+          description: Key password is wrong
         500:
           description: Internal Server Error
     get:
@@ -1174,8 +1285,10 @@ paths:
             type: array
             items:
               "$ref": "#/definitions/Vote"
+        204:
+          description: No content
         400:
-          description: Invalid request
+          description: Invalid proposal id
         500:
           description: Internal Server Error
   /gov/proposals/{proposalId}:
@@ -1196,10 +1309,10 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/TextProposal"
+        204:
+          description: No content
         400:
-          description: Invalid request
-        404:
-          description: Found no proposal
+          description: Invalid proposal id
         500:
           description: Internal Server Error
   /gov/proposals/{proposalId}/deposits/{depositer}:
@@ -1226,8 +1339,10 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Deposite"
+        204:
+          description: No content
         400:
-          description: Invalid request
+          description: Invalid proposal id or depositer address
         404:
           description: Found no deposite
         500:
@@ -1256,8 +1371,10 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Vote"
+        204:
+          description: No content
         400:
-          description: Invalid request
+          description: Invalid proposal id or voter address
         404:
           description: Found no vote
         500:
@@ -1553,6 +1670,7 @@ definitions:
         type: string
       password:
         type: string
+        example: "12345678"
       chain_id:
         type: string
       account_number:
@@ -1687,3 +1805,50 @@ definitions:
           update_time:
             type: string
             example: '1970-01-01T00:00:00Z'
+  Delegation:
+    type: object
+    properties:
+      delegator_addr:
+        type: string
+      validator_addr:
+        type: string
+      shares:
+        type: string
+      height:
+        type: integer
+  UnbondingDelegation:
+    type: object
+    properties:
+      delegator_addr:
+        type: string
+      validator_addr:
+        type: string
+      initial_balance:
+        type: string
+      balance:
+        type: string
+      creation_height:
+        type: integer
+      min_time:
+        type: integer
+  Redelegation:
+    type: object
+    properties:
+      delegator_addr:
+        type: string
+      validator_src_addr:
+        type: string
+      validator_dst_addr:
+        type: string
+      creation_height:
+        type: integer
+      min_time:
+        type: integer
+      initial_balance:
+        type: string
+      balance:
+        type: string
+      shares_src:
+        type: string
+      shares_dst:
+        type: string

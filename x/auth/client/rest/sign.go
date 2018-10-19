@@ -47,7 +47,13 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		}
 
 		signedTx, err := txBldr.SignStdTx(m.LocalAccountName, m.Password, m.Tx, m.AppendSig)
-		if err != nil {
+		if utils.IsKeyNotFoundErr(err, m.LocalAccountName) {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		} else if utils.IsWrongKeyPasswordErr(err) {
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
+			return
+		} else if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}

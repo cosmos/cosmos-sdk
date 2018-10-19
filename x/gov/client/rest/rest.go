@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 
 // REST Variable names
@@ -43,7 +44,7 @@ type postProposalReq struct {
 	BaseReq        utils.BaseReq    `json:"base_req"`
 	Title          string           `json:"title"`           //  Title of the proposal
 	Description    string           `json:"description"`     //  Description of the proposal
-	ProposalType   gov.ProposalKind `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	ProposalType   string			`json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 	Proposer       sdk.AccAddress   `json:"proposer"`        //  Address of the proposer
 	InitialDeposit sdk.Coins        `json:"initial_deposit"` // Coins to add to the proposal's deposit
 }
@@ -57,7 +58,7 @@ type depositReq struct {
 type voteReq struct {
 	BaseReq utils.BaseReq  `json:"base_req"`
 	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
-	Option  gov.VoteOption `json:"option"` //  option from OptionSet chosen by the voter
+	Option  string		   `json:"option"` //  option from OptionSet chosen by the voter
 }
 
 func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
@@ -65,6 +66,7 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		var req postProposalReq
 		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -73,8 +75,14 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
+		proposalType, err := gov.ProposalTypeFromString(client.NormalizeProposalType(req.ProposalType))
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		// create the message
-		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, req.ProposalType, req.Proposer, req.InitialDeposit)
+		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, proposalType, req.Proposer, req.InitialDeposit)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -151,8 +159,14 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
+		voteOption, err := gov.VoteOptionFromString(client.NormalizeVoteOption(req.Option))
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		// create the message
-		msg := gov.NewMsgVote(req.Voter, proposalID, req.Option)
+		msg := gov.NewMsgVote(req.Voter, proposalID, voteOption)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -195,6 +209,11 @@ func queryProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
@@ -222,6 +241,11 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		res, err := cliCtx.QueryWithData("custom/gov/deposits", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -273,6 +297,11 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		res, err := cliCtx.QueryWithData("custom/gov/deposit", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -340,6 +369,11 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 			return
 		}
 
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		var vote gov.Vote
 		cdc.UnmarshalJSON(res, &vote)
 		if vote.Empty() {
@@ -394,6 +428,11 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			return
 		}
 
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
@@ -429,7 +468,7 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		}
 
 		if len(strProposalStatus) != 0 {
-			proposalStatus, err := gov.ProposalStatusFromString(strProposalStatus)
+			proposalStatus, err := gov.ProposalStatusFromString(client.NormalizeProposalStatus(strProposalStatus))
 			if err != nil {
 				err := errors.Errorf("'%s' is not a valid Proposal Status", strProposalStatus)
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -456,6 +495,12 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
+
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
@@ -493,6 +538,11 @@ func queryTallyOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
+			return
+		}
+
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

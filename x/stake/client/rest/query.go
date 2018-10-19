@@ -116,6 +116,11 @@ func delegatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			return
 		}
 
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		w.Write(res)
 	}
 }
@@ -241,6 +246,11 @@ func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) h
 			return
 		}
 
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		w.Write(res)
 	}
 }
@@ -289,6 +299,11 @@ func delegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handl
 			return
 		}
 
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		w.Write(res)
 	}
 }
@@ -325,6 +340,11 @@ func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) h
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 
+			return
+		}
+
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -370,6 +390,11 @@ func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) ht
 			return
 		}
 
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		w.Write(res)
 	}
 }
@@ -385,6 +410,11 @@ func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 
+			return
+		}
+
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -428,6 +458,11 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			return
 		}
 
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		w.Write(res)
 	}
 }
@@ -446,6 +481,11 @@ func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		w.Write(res)
 	}
 }
@@ -461,6 +501,11 @@ func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 
+			return
+		}
+
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

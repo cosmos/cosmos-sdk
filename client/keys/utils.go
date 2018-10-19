@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"net/http"
+	"strings"
 )
 
 // KeyDBName is the directory under root where we store the keys
@@ -255,4 +256,20 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)
+}
+
+// IsKeyNotFoundErr - check if the error means that the specified key doesn't exist
+func IsKeyNotFoundErr(err error, name string) bool {
+	if err != nil && strings.Contains(err.Error(), fmt.Sprintf("Key %s not found", name)) {
+		return true
+	}
+	return false
+}
+
+// IsWrongKeyPasswordErr - check if the error means that the specified key password is wrong
+func IsWrongKeyPasswordErr(err error) bool {
+	if err != nil && strings.Contains(err.Error(), "Ciphertext decryption failed") {
+		return true
+	}
+	return false
 }

@@ -52,7 +52,7 @@ const (
 
 //______________________________________________________________________
 
-// get the global fee pool distribution info
+// get the minter
 func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(minterKey)
@@ -63,7 +63,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter Minter) {
 	return
 }
 
-// set the global fee pool distribution info
+// set the minter
 func (k Keeper) SetMinter(ctx sdk.Context, minter Minter) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(minter)
@@ -72,15 +72,14 @@ func (k Keeper) SetMinter(ctx sdk.Context, minter Minter) {
 
 //______________________________________________________________________
 
-// Returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
+// get inflation params from the global param store
 func (k Keeper) GetParams(ctx sdk.Context) Params {
 	var params Params
 	k.paramSpace.Get(ctx, ParamStoreKeyParams, &params)
 	return params
 }
 
-// nolint: errcheck
+// set inflation params from the global param store
 func (k Keeper) SetParams(ctx sdk.Context, params Params) {
 	k.paramSpace.Set(ctx, ParamStoreKeyParams, &params)
 }

@@ -289,7 +289,6 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.True(t, defaultParams.Equal(params))
 
 	pool := executeGetPool(t, fmt.Sprintf("gaiacli query pool --output=json %v", flags))
-	require.Equal(t, initialPool.DateLastCommissionReset, pool.DateLastCommissionReset)
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 }
 

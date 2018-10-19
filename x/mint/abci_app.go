@@ -6,12 +6,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Called every block, process inflation, update validator set
+// Called every block, process inflation on the first block of every hour
 func BeginBlocker(ctx sdk.Context, k Keeper) {
-	// Process provision inflation
+
 	blockTime := ctx.BlockHeader().Time
 	minter := k.GetMinter(ctx)
-	if blockTime.Sub(minter.InflationLastTime) < time.Hour { // nothing to mint!
+	if blockTime.Sub(minter.InflationLastTime) < time.Hour { // only mint on the hour!
 		return
 	}
 

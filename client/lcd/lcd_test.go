@@ -480,7 +480,6 @@ func TestPoolParamsQuery(t *testing.T) {
 	var pool stake.Pool
 	err = cdc.UnmarshalJSON([]byte(body), &pool)
 	require.Nil(t, err)
-	require.Equal(t, initialPool.DateLastCommissionReset, pool.DateLastCommissionReset)
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 	require.Equal(t, initialPool.LooseTokens, pool.LooseTokens)
 }

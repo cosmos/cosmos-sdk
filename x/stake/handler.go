@@ -30,7 +30,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-// Called every block, process inflation, update validator set
+// Called every block, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.ValidatorUpdate) {
 	endBlockerTags := sdk.EmptyTags()
 

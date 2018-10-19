@@ -10,9 +10,8 @@ import (
 
 // Pool - dynamic parameters of the current state
 type Pool struct {
-	LooseTokens             sdk.Dec `json:"loose_tokens"`               // tokens which are not bonded in a validator
-	BondedTokens            sdk.Dec `json:"bonded_tokens"`              // reserve of bonded tokens
-	DateLastCommissionReset int64   `json:"date_last_commission_reset"` // unix timestamp for last commission accounting reset (daily)
+	LooseTokens  sdk.Dec `json:"loose_tokens"`  // tokens which are not bonded in a validator
+	BondedTokens sdk.Dec `json:"bonded_tokens"` // reserve of bonded tokens
 }
 
 // nolint
@@ -25,9 +24,8 @@ func (p Pool) Equal(p2 Pool) bool {
 // initial pool for testing
 func InitialPool() Pool {
 	return Pool{
-		LooseTokens:             sdk.ZeroDec(),
-		BondedTokens:            sdk.ZeroDec(),
-		DateLastCommissionReset: 0,
+		LooseTokens:  sdk.ZeroDec(),
+		BondedTokens: sdk.ZeroDec(),
 	}
 }
 
@@ -78,7 +76,6 @@ func (p Pool) HumanReadableString() string {
 	resp += fmt.Sprintf("Bonded Tokens: %s\n", p.BondedTokens)
 	resp += fmt.Sprintf("Token Supply: %s\n", p.TokenSupply())
 	resp += fmt.Sprintf("Bonded Ratio: %v\n", p.BondedRatio())
-	resp += fmt.Sprintf("Date of Last Commission Reset: %d\n", p.DateLastCommissionReset)
 	return resp
 }
 

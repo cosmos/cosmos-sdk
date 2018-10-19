@@ -12,10 +12,6 @@ inflation information, etc.
 type Pool struct {
     LooseTokens         int64   // tokens not associated with any bonded validator
     BondedTokens        int64   // reserve of bonded tokens
-    InflationLastTime   int64   // block which the last inflation was processed // TODO make time
-    Inflation           sdk.Dec // current annual inflation rate
-
-    DateLastCommissionReset int64  // unix timestamp for last commission accounting reset (daily)
 }
 ```
 

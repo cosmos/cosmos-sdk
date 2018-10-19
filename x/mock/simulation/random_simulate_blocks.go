@@ -384,11 +384,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 			time := header.Time
 			vals := voteInfos
 			if r.Float64() < pastEvidenceFraction {
-				height = int64(r.Intn(int(header.Height)))
-				// we start at height 1
-				if height == 0 {
-					height = 1
-				}
+				height = int64(r.Intn(int(header.Height) - 1))
 				time = pastTimes[height]
 				vals = pastVoteInfos[height]
 			}

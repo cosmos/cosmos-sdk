@@ -12,10 +12,6 @@ inflation information, etc.
 type Pool struct {
     LooseTokens         int64   // tokens not associated with any bonded validator
     BondedTokens        int64   // reserve of bonded tokens
-    InflationLastTime   int64   // block which the last inflation was processed // TODO make time
-    Inflation           sdk.Dec // current annual inflation rate
-
-    DateLastCommissionReset int64  // unix timestamp for last commission accounting reset (daily)
 }
 ```
 
@@ -28,11 +24,6 @@ overall functioning of the stake module.
 
 ```golang
 type Params struct {
-    InflationRateChange sdk.Dec // maximum annual change in inflation rate
-    InflationMax        sdk.Dec // maximum inflation rate
-    InflationMin        sdk.Dec // minimum inflation rate
-    GoalBonded          sdk.Dec // Goal of percent bonded atoms
-
     MaxValidators uint16 // maximum number of validators
     BondDenom     string // bondable coin denomination
 }

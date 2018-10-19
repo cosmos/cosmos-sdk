@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -46,6 +47,7 @@ type GaiaApp struct {
 	keyStake         *sdk.KVStoreKey
 	tkeyStake        *sdk.TransientStoreKey
 	keySlashing      *sdk.KVStoreKey
+	keyMint          *sdk.KVStoreKey
 	keyDistr         *sdk.KVStoreKey
 	tkeyDistr        *sdk.TransientStoreKey
 	keyGov           *sdk.KVStoreKey
@@ -59,6 +61,7 @@ type GaiaApp struct {
 	bankKeeper          bank.Keeper
 	stakeKeeper         stake.Keeper
 	slashingKeeper      slashing.Keeper
+	mintKeeper          mint.Keeper
 	distrKeeper         distr.Keeper
 	govKeeper           gov.Keeper
 	paramsKeeper        params.Keeper
@@ -78,6 +81,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		keyAccount:       sdk.NewKVStoreKey("acc"),
 		keyStake:         sdk.NewKVStoreKey("stake"),
 		tkeyStake:        sdk.NewTransientStoreKey("transient_stake"),
+		keyMint:          sdk.NewKVStoreKey("mint"),
 		keyDistr:         sdk.NewKVStoreKey("distr"),
 		tkeyDistr:        sdk.NewTransientStoreKey("transient_distr"),
 		keySlashing:      sdk.NewKVStoreKey("slashing"),
@@ -109,6 +113,10 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		app.keyStake, app.tkeyStake,
 		app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace),
 		app.RegisterCodespace(stake.DefaultCodespace),
+	)
+	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint,
+		app.paramsKeeper.Subspace(mint.DefaultParamspace),
+		app.stakeKeeper, app.feeCollectionKeeper,
 	)
 	app.distrKeeper = distr.NewKeeper(
 		app.cdc,
@@ -147,11 +155,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		AddRoute("stake", stake.NewQuerier(app.stakeKeeper, app.cdc))
 
 	// initialize BaseApp
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keyMint, app.keyDistr,
+		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keyDistr,
-		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.MountStoresTransient(app.tkeyParams, app.tkeyStake, app.tkeyDistr)
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -183,6 +191,9 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 
 	// distribute rewards from previous block
 	distr.BeginBlocker(ctx, req, app.distrKeeper)
+
+	// mint new tokens for this new block
+	mint.BeginBlocker(ctx, app.mintKeeper)
 
 	return abci.ResponseBeginBlock{
 		Tags: tags.ToKVPairs(),
@@ -232,8 +243,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 
 	// load the address to pubkey map
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
-
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
+	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
 	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
 	err = GaiaValidateGenesisState(genesisState)
 	if err != nil {
@@ -289,13 +300,14 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 		return false
 	}
 	app.accountMapper.IterateAccounts(ctx, appendAccount)
-
-	genState := GenesisState{
-		Accounts:  accounts,
-		StakeData: stake.WriteGenesis(ctx, app.stakeKeeper),
-		DistrData: distr.WriteGenesis(ctx, app.distrKeeper),
-		GovData:   gov.WriteGenesis(ctx, app.govKeeper),
-	}
+	genState := NewGenesisState(
+		accounts,
+		stake.WriteGenesis(ctx, app.stakeKeeper),
+		mint.WriteGenesis(ctx, app.mintKeeper),
+		distr.WriteGenesis(ctx, app.distrKeeper),
+		gov.WriteGenesis(ctx, app.govKeeper),
+		slashing.GenesisState{}, // TODO create write methods
+	)
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {
 		return nil, nil, err

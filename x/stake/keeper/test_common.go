@@ -73,18 +73,6 @@ func MakeTestCodec() *codec.Codec {
 	return cdc
 }
 
-// default params without inflation
-func ParamsNoInflation() types.Params {
-	return types.Params{
-		InflationRateChange: sdk.ZeroDec(),
-		InflationMax:        sdk.ZeroDec(),
-		InflationMin:        sdk.ZeroDec(),
-		GoalBonded:          sdk.NewDecWithPrec(67, 2),
-		MaxValidators:       100,
-		BondDenom:           "steak",
-	}
-}
-
 // hogpodge of all sorts of input required for testing
 func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
 

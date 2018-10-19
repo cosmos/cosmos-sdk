@@ -72,6 +72,19 @@ func (k Keeper) TotalPower(ctx sdk.Context) sdk.Dec {
 	return pool.BondedTokens
 }
 
+// total power from the bond
+func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
+	pool := k.GetPool(ctx)
+	return pool.BondedRatio()
+}
+
+// when minting new tokens
+func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Dec) {
+	pool := k.GetPool(ctx)
+	pool.LooseTokens = pool.LooseTokens.Add(newTokens)
+	k.SetPool(ctx, pool)
+}
+
 //__________________________________________________________________________
 
 // Implements DelegationSet

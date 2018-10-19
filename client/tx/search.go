@@ -151,7 +151,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 
 		value, err := url.QueryUnescape(keyValue[1])
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not decode address", err.Error()))
 			return
 		}
 

@@ -44,6 +44,7 @@ BREAKING CHANGES
     * [simulation] \#2162 Added back correct supply invariants
     * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
+    * [x/stake] \#1673 Validators are no longer deleted until they can no longer possibly be slashed
 
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0

@@ -19,9 +19,9 @@ func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) Vali
 	return ValidatorDistInfo{
 		OperatorAddr:            operatorAddr,
 		FeePoolWithdrawalHeight: currentHeight,
-		Pool:           DecCoins{},
-		PoolCommission: DecCoins{},
-		DelAccum:       NewTotalAccum(currentHeight),
+		Pool:                    DecCoins{},
+		PoolCommission:          DecCoins{},
+		DelAccum:                NewTotalAccum(currentHeight),
 	}
 }
 

@@ -7,13 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/tendermint/tendermint/libs/common"
 	"io/ioutil"
 	"os"
@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	defaultAmount = "100steak"
-	defaultCommissionRate = "0.1"
-	defaultCommissionMaxRate = "0.2"
+	defaultAmount                  = "100steak"
+	defaultCommissionRate          = "0.1"
+	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
 )
 
@@ -90,16 +90,16 @@ following delegation and commission default parameters:
 }
 
 func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip string, valPubKey crypto.PubKey) {
-	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome)) // --home
-	viper.Set(client.FlagFrom, viper.GetString(client.FlagName)) // --from
-	viper.Set(cli.FlagNodeID, nodeID) // --node-id
-	viper.Set(cli.FlagIP, ip) // --ip
+	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome))     // --home
+	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))   // --from
+	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
+	viper.Set(cli.FlagIP, ip)                                      // --ip
 	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
-	viper.Set(cli.FlagAmount, defaultAmount) // --amount
+	viper.Set(cli.FlagAmount, defaultAmount)                       // --amount
 	viper.Set(cli.FlagCommissionRate, defaultCommissionRate)
 	viper.Set(cli.FlagCommissionMaxRate, defaultCommissionMaxRate)
 	viper.Set(cli.FlagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
-	viper.Set(cli.FlagGenesisFormat, true) // --genesis-format
+	viper.Set(cli.FlagGenesisFormat, true)     // --genesis-format
 	viper.Set(cli.FlagMoniker, config.Moniker) // --moniker
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))

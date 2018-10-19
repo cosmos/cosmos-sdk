@@ -75,7 +75,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 Note that only node's configuration files will be written if the flag --skip-genesis is
 enabled, and the genesis file will not be generated.
 `,
-		Args:  cobra.NoArgs,
+		Args: cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
@@ -99,7 +99,7 @@ enabled, and the genesis file will not be generated.
 			toPrint := printInfo{
 				ChainID: chainID,
 				Moniker: config.Moniker,
-				NodeID: nodeID,
+				NodeID:  nodeID,
 			}
 			if viper.GetBool(flagSkipGenesis) {
 				cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)

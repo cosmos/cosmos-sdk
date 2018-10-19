@@ -359,6 +359,13 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 		}
 	}
 
+	// call the appropriate hook if present
+	if found {
+		k.OnDelegationSharesModified(ctx, delAddr, validator.OperatorAddr)
+	} else {
+		k.OnDelegationCreated(ctx, delAddr, validator.OperatorAddr)
+	}
+
 	if subtractAccount {
 		// Account new shares, save
 		_, _, err = k.bankKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
@@ -373,6 +380,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	delegation.Shares = delegation.Shares.Add(newShares)
 	delegation.Height = ctx.BlockHeight()
 	k.SetDelegation(ctx, delegation)
+
 	return newShares, nil
 }
 
@@ -567,7 +575,6 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	if err != nil {
 		return types.Redelegation{}, err
 	}
-	k.OnDelegationCreated(ctx, delAddr, valDstAddr)
 
 	// create the unbonding delegation
 	minTime, height, completeNow := k.getBeginInfo(ctx, valSrcAddr)

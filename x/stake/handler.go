@@ -114,8 +114,6 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	k.OnValidatorCreated(ctx, validator.OperatorAddr)
-	accAddr := sdk.AccAddress(validator.OperatorAddr)
-	k.OnDelegationCreated(ctx, accAddr, validator.OperatorAddr)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionCreateValidator,
@@ -150,6 +148,8 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 			return err.Result()
 		}
 		validator.Commission = commission
+		// call the hook if present
+		k.OnValidatorCommissionChange(ctx, msg.ValidatorAddr)
 	}
 
 	k.SetValidator(ctx, validator)
@@ -184,9 +184,6 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	if err != nil {
 		return err.Result()
 	}
-
-	// call the hook if present
-	k.OnDelegationCreated(ctx, msg.DelegatorAddr, validator.OperatorAddr)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionDelegate,

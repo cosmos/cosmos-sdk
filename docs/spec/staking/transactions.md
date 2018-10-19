@@ -180,7 +180,7 @@ startUnbonding(tx TxStartUnbonding):
 
 	validator = updateValidator(validator)
 
-	if validator.DelegatorShares == 0 {
+	if validator.Status == Unbonded && validator.DelegatorShares == 0 {
 		removeValidator(validator.Operator)
 
     return
@@ -189,8 +189,7 @@ startUnbonding(tx TxStartUnbonding):
 ### TxRedelegation
 
 The redelegation command allows delegators to instantly switch validators. Once
-the unbonding period has passed, the redelegation must be completed with
-txRedelegationComplete.
+the unbonding period has passed, the redelegation is automatically completed in the EndBlocker.
 
 ```golang
 type TxRedelegate struct {

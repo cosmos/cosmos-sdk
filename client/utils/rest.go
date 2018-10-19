@@ -1,6 +1,5 @@
 package utils
 
-import "C"
 import (
 	"fmt"
 	"io/ioutil"

@@ -44,6 +44,7 @@ BREAKING CHANGES
     * [simulation] \#2162 Added back correct supply invariants
     * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
+    * [x/stake] \#1673 Validators are no longer deleted until they can no longer possibly be slashed
 
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0
@@ -69,9 +70,11 @@ BREAKING CHANGES
     * [x/staking] \#2244 staking now holds a consensus-address-index instead of a consensus-pubkey-index
     * [x/staking] \#2236 more distribution hooks for distribution
     * [x/stake] \#2394 Split up UpdateValidator into distinct state transitions applied only in EndBlock
+    * [x/slashing] \#2480 Fix signing info handling bugs & faulty slashing
     * [x/stake] \#2412 Added an unbonding validator queue to EndBlock to automatically update validator.Status when finished Unbonding
     * [x/stake] \#2500 Block conflicting redelegations until we add an index
     * [x/params] Global Paramstore refactored
+    * [x/stake] \#2508 Utilize Tendermint power for validator power key
 
 * Tendermint
   * Update tendermint version from v0.23.0 to v0.25.0, notable changes
@@ -140,6 +143,7 @@ IMPROVEMENTS
 * Gaia REST API (`gaiacli advanced rest-server`)
     * [x/stake] [\#2000](https://github.com/cosmos/cosmos-sdk/issues/2000) Added tests for new staking endpoints
     * [gaia-lite] [\#2445](https://github.com/cosmos/cosmos-sdk/issues/2445) Standarized REST error responses
+    * [gaia-lite] Added example to Swagger specification for /keys/seed.
 
 * Gaia CLI  (`gaiacli`)
     * [cli] #2060 removed `--select` from `block` command

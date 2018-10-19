@@ -231,7 +231,6 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	defaultParams := stake.DefaultParams()
 	initialPool := stake.InitialPool()
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100)) // Delegate tx on GaiaAppGenState
-	initialPool = initialPool.ProcessProvisions(defaultParams)               // provisions are added to the pool every hour
 
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli tx create-validator %v", flags)
@@ -290,8 +289,6 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.True(t, defaultParams.Equal(params))
 
 	pool := executeGetPool(t, fmt.Sprintf("gaiacli query pool --output=json %v", flags))
-	require.Equal(t, initialPool.DateLastCommissionReset, pool.DateLastCommissionReset)
-	require.Equal(t, initialPool.PrevBondedShares, pool.PrevBondedShares)
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 }
 

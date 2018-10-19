@@ -92,7 +92,7 @@ func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
-			fck.addCollectedFees(newCtx, stdTx.Fee.Amount)
+			fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
 		}
 
 		for i := 0; i < len(stdSigs); i++ {

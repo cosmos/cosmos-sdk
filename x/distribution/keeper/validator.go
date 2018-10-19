@@ -58,7 +58,7 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
 	feePool := k.GetFeePool(ctx)
 	valInfo, feePool, commission := valInfo.WithdrawCommission(feePool, height, bondedTokens,
-		validator.GetTokens(), validator.GetCommission())
+		validator.GetPower(), validator.GetCommission())
 	withdraw = withdraw.Plus(commission)
 	k.SetValidatorDistInfo(ctx, valInfo)
 

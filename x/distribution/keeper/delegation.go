@@ -86,7 +86,7 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 	delegation := k.stakeKeeper.Delegation(ctx, delegatorAddr, validatorAddr)
 
 	delInfo, valInfo, feePool, withdraw := delInfo.WithdrawRewards(feePool, valInfo, height, bondedTokens,
-		validator.GetTokens(), validator.GetDelegatorShares(), delegation.GetShares(), validator.GetCommission())
+		validator.GetPower(), validator.GetDelegatorShares(), delegation.GetShares(), validator.GetCommission())
 
 	k.SetValidatorDistInfo(ctx, valInfo)
 	k.SetDelegationDistInfo(ctx, delInfo)
@@ -134,7 +134,7 @@ func (k Keeper) getDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, 
 		delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
 
 		delInfo, valInfo, feePool, diWithdraw := delInfo.WithdrawRewards(feePool, valInfo, height, bondedTokens,
-			validator.GetTokens(), validator.GetDelegatorShares(), delegation.GetShares(), validator.GetCommission())
+			validator.GetPower(), validator.GetDelegatorShares(), delegation.GetShares(), validator.GetCommission())
 		withdraw = withdraw.Plus(diWithdraw)
 		k.SetFeePool(ctx, feePool)
 		k.SetValidatorDistInfo(ctx, valInfo)

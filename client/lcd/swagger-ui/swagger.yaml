@@ -1215,6 +1215,31 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
+    get:
+      summary: Query deposits
+      description: Query deposits by proposalId
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        name: proposalId
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              "$ref": "#/definitions/Deposit"
+        204:
+          description: No content
+        400:
+          description: Invalid proposal id
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposalId}/votes:
     post:
       summary: Vote a proposal
@@ -1309,32 +1334,6 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/TextProposal"
-        204:
-          description: No content
-        400:
-          description: Invalid proposal id
-        500:
-          description: Internal Server Error
-  /gov/proposal/{proposalId}/deposits:
-    get:
-      summary: Query deposits
-      description: Query deposits by proposalId
-      produces:
-      - application/json
-      tags:
-      - ICS22
-      parameters:
-      - type: string
-        name: proposalId
-        required: true
-        in: path
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              "$ref": "#/definitions/TextProposal"
         204:
           description: No content
         400:

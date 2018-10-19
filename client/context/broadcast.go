@@ -55,15 +55,11 @@ func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (*ctypes.ResultBroadc
 	}
 
 	if !res.CheckTx.IsOK() {
-		return res, errors.Errorf("checkTx failed: (%d) %s",
-			res.CheckTx.Code,
-			res.CheckTx.Log)
+		return res, errors.Errorf(res.CheckTx.Log)
 	}
 
 	if !res.DeliverTx.IsOK() {
-		return res, errors.Errorf("deliverTx failed: (%d) %s",
-			res.DeliverTx.Code,
-			res.DeliverTx.Log)
+		return res, errors.Errorf(res.DeliverTx.Log)
 	}
 
 	return res, err

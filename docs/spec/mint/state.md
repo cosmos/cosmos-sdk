@@ -4,7 +4,7 @@
 
 The minter is a space for holding current inflation information.
 
- - Minter: `0x00 -> amino(pool)`
+ - Minter: `0x00 -> amino(minter)`
 
 ```golang
 type Minter struct {

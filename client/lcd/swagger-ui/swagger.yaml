@@ -2,8 +2,8 @@
 swagger: '2.0'
 info:
   version: 1.1.0
-  title: Gaia-Lite (former LCD) to interface with Cosmos BaseServer via REST
-  description: Specification for Gaia-lite provided by `gaiacli rest-server`
+  title: Gaia-Lite for Cosmos
+  description: A REST interface for state queries, transaction generation, signing, and broadcast.
 tags:
 - name: ICS0
   description: Tendermint APIs, such as query blocks, transactions and validatorset
@@ -474,10 +474,10 @@ paths:
       - ICS1
       responses:
         200:
-          description: 16 word Seed
+          description: 24 word Seed
           schema:
             type: string
-          example: blossom pool issue kidney elevator blame furnace winter account merry vessel security depend exact travel bargain problem jelly rural net again mask roast chest
+            example: blossom pool issue kidney elevator blame furnace winter account merry vessel security depend exact travel bargain problem jelly rural net again mask roast chest
   /keys/{name}/recover:
     post:
       summary: Recover a account from a seed
@@ -1210,7 +1210,7 @@ paths:
           schema:
             "$ref": "#/definitions/BroadcastTxCommitResult"
         400:
-          description: Invalid proposal id or deposite body
+          description: Invalid proposal id or deposit body
         401:
           description: Key password is wrong
         500:
@@ -1315,6 +1315,32 @@ paths:
           description: Invalid proposal id
         500:
           description: Internal Server Error
+  /gov/proposal/{proposalId}/deposits:
+    get:
+      summary: Query deposits
+      description: Query deposits by proposalId
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        name: proposalId
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              "$ref": "#/definitions/TextProposal"
+        204:
+          description: No content
+        400:
+          description: Invalid proposal id
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposalId}/deposits/{depositer}:
     get:
       summary: Query deposit
@@ -1338,13 +1364,13 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/Deposite"
+            $ref: "#/definitions/Deposit"
         204:
           description: No content
         400:
           description: Invalid proposal id or depositer address
         404:
-          description: Found no deposite
+          description: Found no deposit
         500:
           description: Internal Server Error
   /gov/proposals/{proposalId}/votes/{voter}:
@@ -1723,15 +1749,15 @@ definitions:
             type: string
           no_with_veto:
             type: string
-      submit_block:
+      submit_time:
         type: string
       total_deposit:
         type: array
         items:
           "$ref": "#/definitions/Coin"
-      voting_start_block:
+      voting_start_time:
         type: string
-  Deposite:
+  Deposit:
     type: object
     properties:
       amount:

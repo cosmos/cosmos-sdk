@@ -45,6 +45,9 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	blocks := height - vi.FeePoolWithdrawalHeight
 	vi.FeePoolWithdrawalHeight = height
 	accum := vdTokens.MulInt(sdk.NewInt(blocks))
+	if accum.GT(fp.ValAccum.Accum) {
+		panic("individual accum should never be greater than the total")
+	}
 	withdrawalTokens := fp.Pool.MulDec(accum).QuoDec(fp.ValAccum.Accum)
 	remainingTokens := fp.Pool.Minus(withdrawalTokens)
 

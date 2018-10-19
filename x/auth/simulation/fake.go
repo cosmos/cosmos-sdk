@@ -40,6 +40,10 @@ func SimulateDeductFee(m auth.AccountMapper, f auth.FeeCollectionKeeper) simulat
 			panic(err)
 		}
 		m.SetAccount(ctx, stored)
+		if !coins.IsNotNegative() {
+			panic("setting negative fees")
+		}
+
 		f.AddCollectedFees(ctx, coins)
 
 		event(fmt.Sprintf("auth/SimulateDeductFee/true"))

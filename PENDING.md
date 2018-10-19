@@ -20,6 +20,7 @@ BREAKING CHANGES
     * [cli] [\#2190](https://github.com/cosmos/cosmos-sdk/issues/2190) `gaiacli init --gen-txs` is now `gaiacli init --with-txs` to reduce confusion
     * [cli] \#2073 --from can now be either an address or a key name
     * [cli] [\#1184](https://github.com/cosmos/cosmos-sdk/issues/1184) Subcommands reorganisation, see [\#2390](https://github.com/cosmos/cosmos-sdk/pull/2390) for a comprehensive list of changes.
+    * [cli] [\#2524](https://github.com/cosmos/cosmos-sdk/issues/2524) Add support offline mode to `gaiacli tx sign`. Lookups are not performed if the flag `--offline` is on.
 
 * Gaia
     * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
@@ -115,6 +116,7 @@ FEATURES
   * [cli] \#2220 Add `gaiacli config` feature to interactively create CLI config files to reduce the number of required flags
   * [stake][cli] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Introduced
   new commission flags for validator commands `create-validator` and `edit-validator`.
+  * [stake][cli] [\#1890](https://github.com/cosmos/cosmos-sdk/issues/1890) Add `--genesis-format` flag to `gaiacli tx create-validator` to produce transactions in genesis-friendly format.
 
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
@@ -122,6 +124,11 @@ FEATURES
   * [cli] [\#1921] (https://github.com/cosmos/cosmos-sdk/issues/1921)
     * New configuration file `gaiad.toml` is now created to host Gaia-specific configuration.
     * New --minimum_fees/minimum_fees flag/config option to set a minimum fee.
+  * [cli] [\#1890](https://github.com/cosmos/cosmos-sdk/issues/1890) Start chain with initial state + sequence of transactions
+    * Replace `gaiad init gentx` with `gaiacli tx create-validator > gentx.json`.
+    * Drop `GenesisTx` in favor of a signed `StdTx` with only one `MsgCreateValidator` message.
+    * Port `gaiad init` and `gaiad testnet` to work with `StdTx` genesis transactions.
+    * Add `--moniker` flag to `gaiad init` to override moniker when generating `genesis.json` - i.e. it takes effect when running with the `--with-txs` flag, it is ignored otherwise.
 
 * SDK
   * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers

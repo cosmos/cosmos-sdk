@@ -142,7 +142,5 @@ func (k Keeper) getDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, 
 		return false
 	}
 	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
-
-	k.SetFeePool(ctx, feePool)
 	return withdraw
 }

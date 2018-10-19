@@ -46,6 +46,11 @@ BREAKING CHANGES
     * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
     * [x/stake] \#1673 Validators are no longer deleted until they can no longer possibly be slashed
+    * [\#1890](https://github.com/cosmos/cosmos-sdk/issues/1890) Start chain with initial state + sequence of transactions
+      * [cli] Rename `gaiad init gentx` to `gaiad gentx`.
+      * Drop `GenesisTx` in favor of a signed `StdTx` with only one `MsgCreateValidator` message.
+      * [cli] Port `gaiad init` and `gaiad testnet` to work with `StdTx` genesis transactions.
+      * [cli] Add `--moniker` flag to `gaiad init` to override moniker when generating `genesis.json` - i.e. it takes effect when running with the `--with-txs` flag, it is ignored otherwise.
 
 * SDK
     * [core] \#2219 Update to Tendermint 0.24.0
@@ -124,11 +129,6 @@ FEATURES
   * [cli] [\#1921] (https://github.com/cosmos/cosmos-sdk/issues/1921)
     * New configuration file `gaiad.toml` is now created to host Gaia-specific configuration.
     * New --minimum_fees/minimum_fees flag/config option to set a minimum fee.
-  * [cli] [\#1890](https://github.com/cosmos/cosmos-sdk/issues/1890) Start chain with initial state + sequence of transactions
-    * Replace `gaiad init gentx` with `gaiacli tx create-validator > gentx.json`.
-    * Drop `GenesisTx` in favor of a signed `StdTx` with only one `MsgCreateValidator` message.
-    * Port `gaiad init` and `gaiad testnet` to work with `StdTx` genesis transactions.
-    * Add `--moniker` flag to `gaiad init` to override moniker when generating `genesis.json` - i.e. it takes effect when running with the `--with-txs` flag, it is ignored otherwise.
 
 * SDK
   * [querier] added custom querier functionality, so ABCI query requests can be handled by keepers

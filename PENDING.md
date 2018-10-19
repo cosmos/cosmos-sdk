@@ -143,6 +143,7 @@ IMPROVEMENTS
 
 * Gaia REST API (`gaiacli advanced rest-server`)
     * [x/stake] [\#2000](https://github.com/cosmos/cosmos-sdk/issues/2000) Added tests for new staking endpoints
+    * [gaia-lite] [\#2445](https://github.com/cosmos/cosmos-sdk/issues/2445) Standarized REST error responses
     * [gaia-lite] Added example to Swagger specification for /keys/seed.
 
 * Gaia CLI  (`gaiacli`)

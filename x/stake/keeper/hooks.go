@@ -29,9 +29,9 @@ func (k Keeper) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
 	}
 }
 
-func (k Keeper) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress) {
+func (k Keeper) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress, operator sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorBeginUnbonding(ctx, address)
+		k.hooks.OnValidatorBeginUnbonding(ctx, address, operator)
 	}
 }
 

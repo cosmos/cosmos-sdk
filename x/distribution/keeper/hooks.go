@@ -33,6 +33,13 @@ func (k Keeper) onValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
 	k.RemoveValidatorDistInfo(ctx, addr)
 }
 
+// Withdraw all validator rewards
+func (k Keeper) onValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ValAddress) {
+	if err := k.WithdrawValidatorRewardsAll(ctx, addr); err != nil {
+		panic(err)
+	}
+}
+
 //_________________________________________________________________________________________
 
 // Create a new delegator distribution record
@@ -96,6 +103,9 @@ func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valA
 	h.k.onDelegationRemoved(ctx, delAddr, valAddr)
 }
 
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, addr sdk.ValAddress) {
+	h.k.onValidatorBeginUnbonding(ctx, addr)
+}
+
 // nolint - unused hooks for interface
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress)         {}
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress) {}
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress) {}

@@ -1020,7 +1020,7 @@ paths:
                 type: string
               jailed_until:
                 type: string
-              signed_blocks_counter:
+              missed_blocks_counter:
                 type: string
         204:
           description: No sign info of this validator
@@ -1623,6 +1623,8 @@ definitions:
         $ref: "#/definitions/Hash"
       validators_hash:
         $ref: "#/definitions/Hash"
+      next_validators_hash:
+        $ref: "#/definitions/Hash"
       consensus_hash:
         $ref: "#/definitions/Hash"
       app_hash:
@@ -1631,6 +1633,8 @@ definitions:
         $ref: "#/definitions/Hash"
       evidence_hash:
         $ref: "#/definitions/Hash"
+      proposer_address:
+        $ref: "#/definitions/Address"
   Block:
     type: object
     properties:

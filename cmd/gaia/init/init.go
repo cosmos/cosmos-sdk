@@ -108,7 +108,7 @@ enabled, and the genesis file will not be generated.
 
 			initCfg := initConfig{
 				ChainID:       chainID,
-				GenTxsDir:     viper.GetString(filepath.Join(config.RootDir, "config", "gentx")),
+				GenTxsDir:     filepath.Join(config.RootDir, "config", "gentx"),
 				Name:          name,
 				NodeID:        nodeID,
 				ClientHome:    viper.GetString(flagClientHome),

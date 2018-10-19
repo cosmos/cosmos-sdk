@@ -53,17 +53,17 @@
 
 [[override]]
   name = "github.com/tendermint/iavl"
-  version = "=v0.11.0"
+  branch = "develop"
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=0.25.0"
+  version = "v0.26.0-dev0"
 
 ## deps without releases:
 
 [[constraint]]
   name = "golang.org/x/crypto"
-  source = "https://github.com/tendermint/crypto"
+  source = "github.com/tendermint/crypto"
   revision = "3764759f34a542a3aef74d6b02e35be7ab893bba"
 
 [[constraint]]

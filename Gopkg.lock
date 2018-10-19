@@ -424,18 +424,6 @@
   revision = "e5840949ff4fff0c56f9b6a541e22b63581ea9df"
 
 [[projects]]
-  branch = "master"
-  digest = "1:087aaa7920e5d0bf79586feb57ce01c35c830396ab4392798112e8aae8c47722"
-  name = "github.com/tendermint/ed25519"
-  packages = [
-    ".",
-    "edwards25519",
-    "extra25519",
-  ]
-  pruneopts = "UT"
-  revision = "d8387025d2b9d158cf4efb07e7ebf814bcce2057"
-
-[[projects]]
   digest = "1:2c971a45c89ca2ccc735af50919cdee05fbdc54d4bf50625073693300e31ead8"
   name = "github.com/tendermint/go-amino"
   packages = ["."]
@@ -444,15 +432,15 @@
   version = "v0.12.0"
 
 [[projects]]
-  digest = "1:53397098d6acb7613358683cc84ae59281a60c6033f0bff62fa8d3f279c6c430"
+  branch = "develop"
+  digest = "1:590cc84aff04203523ab9ce66c488458cfe2753e8537ae2222e4df4ec046685c"
   name = "github.com/tendermint/iavl"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3acc91fb8811db2c5409a855ae1f8e441fe98e2d"
-  version = "v0.11.0"
+  revision = "7843043a9aaa922dc83752bc2c8009dfa66317b2"
 
 [[projects]]
-  digest = "1:a69eebd15b05045ffdb10a984e001fadc5666f74383de3d2a9ee5862ee99cfdc"
+  digest = "1:46b0d485c59804b2adfd925480d4e4e7749f3ba766ff718db8fba6e8caa4db7b"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -518,8 +506,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "0c9c3292c918617624f6f3fbcd95eceade18bcd5"
-  version = "v0.25.0"
+  revision = "37928cb9907a60ae79d5b387d1d89ffc43dc07d8"
+  version = "v0.26.0-dev0"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
@@ -530,13 +518,15 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:aaff04fa01d9b824fde6799759cc597b3ac3671b9ad31924c28b6557d0ee5284"
+  digest = "1:6f6dc6060c4e9ba73cf28aa88f12a69a030d3d19d518ef8e931879eaa099628d"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
     "blowfish",
     "chacha20poly1305",
     "curve25519",
+    "ed25519",
+    "ed25519/internal/edwards25519",
     "hkdf",
     "internal/chacha20",
     "internal/subtle",
@@ -551,7 +541,7 @@
   ]
   pruneopts = "UT"
   revision = "3764759f34a542a3aef74d6b02e35be7ab893bba"
-  source = "https://github.com/tendermint/crypto"
+  source = "github.com/tendermint/crypto"
 
 [[projects]]
   digest = "1:d36f55a999540d29b6ea3c2ea29d71c76b1d9853fdcd3e5c5cb4836f2ba118f1"

@@ -15,7 +15,7 @@ These instructions are for setting up a brand new full node from scratch.
 First, initialize the node and create the necessary config files:
 
 ```bash
-gaiad init --name <your_custom_name>
+gaiad init --skip-genesis --name <your_custom_name>
 ```
 
 ::: warning Note

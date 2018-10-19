@@ -3,6 +3,7 @@ package clitest
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"os"
 	"testing"
 
@@ -13,10 +14,11 @@ import (
 
 var (
 	democoindHome = ""
+	democliHome   = ""
 )
 
 func init() {
-	democoindHome = getTestingHomeDir()
+	democoindHome, democliHome = getTestingHomeDirs()
 }
 
 func TestInitStartSequence(t *testing.T) {
@@ -32,8 +34,8 @@ func executeInit(t *testing.T) {
 		chainID string
 		initRes map[string]json.RawMessage
 	)
-	out := tests.ExecuteT(t, fmt.Sprintf("democoind --home=%s init", democoindHome), "")
-	err := json.Unmarshal([]byte(out), &initRes)
+	_, stderr := tests.ExecuteT(t, fmt.Sprintf("democoind --home=%s --home-client=%s init --name=test", democoindHome, democliHome), app.DefaultKeyPass)
+	err := json.Unmarshal([]byte(stderr), &initRes)
 	require.NoError(t, err)
 	err = json.Unmarshal(initRes["chain_id"], &chainID)
 	require.NoError(t, err)
@@ -45,8 +47,9 @@ func executeStart(t *testing.T, servAddr, port string) {
 	tests.WaitForTMStart(port)
 }
 
-func getTestingHomeDir() string {
+func getTestingHomeDirs() (string, string) {
 	tmpDir := os.TempDir()
 	democoindHome := fmt.Sprintf("%s%s.test_democoind", tmpDir, string(os.PathSeparator))
-	return democoindHome
+	democliHome := fmt.Sprintf("%s%s.test_democli", tmpDir, string(os.PathSeparator))
+	return democoindHome, democliHome
 }

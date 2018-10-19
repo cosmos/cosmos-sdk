@@ -27,6 +27,8 @@ const (
 	defaultCommissionMaxChangeRate = "0.01"
 )
 
+// GenTxCmd builds the gaiad gentx command.
+// nolint: errcheck
 func GenTxCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gentx",

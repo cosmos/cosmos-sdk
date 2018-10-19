@@ -95,7 +95,6 @@ func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddres
 func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.k.onDelegationRemoved(ctx, delAddr, valAddr)
 }
-
 func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, addr sdk.ValAddress) {
 	h.k.onValidatorModified(ctx, addr)
 }

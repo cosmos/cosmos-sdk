@@ -82,7 +82,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	// Initially this is the same as the initial validator set
 	nextValidators := validators
 
-	header := abci.Header{Height: 0, Time: timestamp, ProposerAddress: randomProposer(r, validators)}
+	header := abci.Header{Height: 1, Time: timestamp, ProposerAddress: randomProposer(r, validators)}
 	opCount := 0
 
 	// Setup code to catch SIGTERM's

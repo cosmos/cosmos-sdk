@@ -35,7 +35,10 @@ func SimulateDeductFee(m auth.AccountMapper, f auth.FeeCollectionKeeper) simulat
 		}
 
 		coins := sdk.Coins{sdk.NewCoin(initCoins[denomIndex].Denom, amt)}
-		stored.SetCoins(initCoins.Minus(coins))
+		err = stored.SetCoins(initCoins.Minus(coins))
+		if err != nil {
+			panic(err)
+		}
 		m.SetAccount(ctx, stored)
 		f.AddCollectedFees(ctx, coins)
 

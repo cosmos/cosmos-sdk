@@ -1,6 +1,7 @@
 package init
 
 import (
+	"errors"
 	"encoding/json"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -26,7 +27,6 @@ import (
 )
 
 const (
-	flagChainID     = "chain-id"
 	flagWithTxs     = "with-txs"
 	flagOverwrite   = "overwrite"
 	flagClientHome  = "home-client"
@@ -81,7 +81,7 @@ enabled, and the genesis file will not be generated.
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 
 			name := viper.GetString(client.FlagName)
-			chainID := viper.GetString(flagChainID)
+			chainID := viper.GetString(client.FlagChainID)
 			if chainID == "" {
 				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
 			}
@@ -93,7 +93,7 @@ enabled, and the genesis file will not be generated.
 			if viper.GetString(flagMoniker) != "" {
 				config.Moniker = viper.GetString(flagMoniker)
 			}
-			if config.Moniker == "" {
+			if config.Moniker == "" && name != "" {
 				config.Moniker = name
 			}
 			toPrint := printInfo{
@@ -130,14 +130,13 @@ enabled, and the genesis file will not be generated.
 
 	cmd.Flags().String(cli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
-	cmd.Flags().String(flagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().Bool(flagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(flagMoniker, "", "overrides --name flag and set the validator's moniker to a different value; ignored if it runs without the --with-txs flag")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().Bool(flagOWK, false, "overwrite client's keys")
 	cmd.Flags().Bool(flagSkipGenesis, false, "do not create genesis.json")
-	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
 }
 
@@ -186,6 +185,11 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 		var ip, keyPass, secret string
 		var addr sdk.AccAddress
 		var signedTx auth.StdTx
+
+		if initCfg.Name == "" {
+			err = errors.New("must specify validator's moniker (--name)")
+			return
+		}
 
 		config.Moniker = initCfg.Name
 		ip, err = server.ExternalIP()

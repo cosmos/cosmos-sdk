@@ -111,6 +111,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().Bool(FlagGenesisFormat, false, "Export the transaction in gen-tx format; it implies --generate-only")
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("Node's public IP. It takes effect only when used in combination with --%s", FlagGenesisFormat))
 	cmd.Flags().String(FlagNodeID, "", "Node's ID")
+	cmd.MarkFlagRequired(client.FlagFrom)
 
 	return cmd
 }

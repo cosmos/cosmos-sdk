@@ -590,6 +590,10 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, "30", summary.UnbondingDelegations[0].Balance.Amount.String())
 	require.Equal(t, "30", summary.Redelegations[0].Balance.Amount.String())
 
+	validatorUbds := getValidatorUnbondingDelegations(t, port, operAddrs[0])
+	require.Len(t, validatorUbds, 1)
+	require.Equal(t, "30", validatorUbds[0].Balance.Amount.String())
+
 	validatorReds := getValidatorRedelegations(t, port, operAddrs[0])
 	require.Len(t, validatorReds, 1)
 	require.Equal(t, "30", validatorReds[0].Balance.Amount.String())
@@ -1180,6 +1184,17 @@ func getValidator(t *testing.T, port string, validatorAddr sdk.ValAddress) stake
 	require.Nil(t, err)
 
 	return validator
+}
+
+func getValidatorUnbondingDelegations(t *testing.T, port string, validatorAddr sdk.ValAddress) []stake.UnbondingDelegation {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s/unbonding_delegations", validatorAddr.String()), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var ubds []stake.UnbondingDelegation
+	err := cdc.UnmarshalJSON([]byte(body), &ubds)
+	require.Nil(t, err)
+
+	return ubds
 }
 
 func getValidatorRedelegations(t *testing.T, port string, validatorAddr sdk.ValAddress) []stake.Redelegation {

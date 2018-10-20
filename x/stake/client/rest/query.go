@@ -66,6 +66,12 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 		validatorHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
+	// Get all unbonding delegations from a validator
+	r.HandleFunc(
+		"/stake/validators/{validatorAddr}/unbonding_delegations",
+		validatorUnbondingDelegationsHandlerFn(cliCtx, cdc),
+	).Methods("GET")
+
 	// Get all outgoing redelegations from a validator
 	r.HandleFunc(
 		"/stake/validators/{validatorAddr}/redelegations",
@@ -197,6 +203,11 @@ func validatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handl
 // HTTP request handler to query the validator information from a given validator address
 func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return queryValidator(cliCtx, cdc, "custom/stake/validator")
+}
+
+// HTTP request handler to query all unbonding delegations from a validator
+func validatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+	return queryValidator(cliCtx, cdc, "custom/stake/validatorUnbondingDelegations")
 }
 
 // HTTP request handler to query all redelegations from a source validator

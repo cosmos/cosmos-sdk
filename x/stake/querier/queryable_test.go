@@ -82,6 +82,9 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"validator"}, query)
 	require.Nil(t, err)
 
+	_, err = querier(ctx, []string{"validatorUnbondingDelegations"}, query)
+	require.Nil(t, err)
+
 	_, err = querier(ctx, []string{"validatorRedelegations"}, query)
 	require.Nil(t, err)
 }

@@ -305,6 +305,12 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 	return d, nil
 }
 
+// ABCIValidatorPowerBytes
+func (v Validator) ABCIValidatorPowerBytes(cdc *codec.Codec) []byte {
+	power := v.BondedTokens().RoundInt64()
+	return cdc.MustMarshalBinary(power)
+}
+
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staked validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
@@ -314,18 +320,30 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	}
 }
 
-// ABCIValidatorPowerBytes
-func (v Validator) ABCIValidatorPowerBytes(cdc *codec.Codec) []byte {
-	power := v.BondedTokens().RoundInt64()
-	return cdc.MustMarshalBinary(power)
-}
-
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staked validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
 		Power:  0,
+	}
+}
+
+// ValidatorUpdate returns an sdk.ValidatorUpdate from a staked validator type
+// with the full validator power
+func (v Validator) ValidatorUpdate() sdk.ValidatorUpdate {
+	return sdk.ValidatorUpdate{
+		Address: sdk.GetConsAddress(v.ConsPubKey),
+		Power:   v.BondedTokens().RoundInt64(),
+	}
+}
+
+// ValidatorUpdateZero returns an sdk.ValidatorUpdate from a staked validator type
+// with zero power used for validator updates.
+func (v Validator) ValidatorUpdateZero() sdk.ValidatorUpdate {
+	return sdk.ValidatorUpdate{
+		Address: sdk.GetConsAddress(v.ConsPubKey),
+		Power:   0,
 	}
 }
 

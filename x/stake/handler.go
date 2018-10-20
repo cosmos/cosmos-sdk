@@ -32,7 +32,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // Called every block, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (
-	ValidatorUpdates []abci.ValidatorUpdate, totalPower int64) {
+	TendermintUpdates []abci.ValidatorUpdate,
+	ValidatorUpdates []sdk.ValidatorUpdate, totalPower int64) {
 
 	endBlockerTags := sdk.EmptyTags()
 

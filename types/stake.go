@@ -49,6 +49,12 @@ type Validator interface {
 	GetBondHeight() int64         // height in which the validator became active
 }
 
+// validator update
+type ValidatorUpdate struct {
+	Address ConsAddress
+	Power   int64
+}
+
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{

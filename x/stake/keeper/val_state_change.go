@@ -17,7 +17,7 @@ import (
 // at the previous block height or were removed from the validator set entirely
 // are returned to Tendermint.
 func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (
-	updates []abci.ValidatorUpdate, totalPower int64) {
+	tendermintUpdates []abci.ValidatorUpdate, updates []sdk.ValidatorUpdate, totalPower int64) {
 
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
@@ -69,7 +69,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (
 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
-			updates = append(updates, validator.ABCIValidatorUpdate())
+			tendermintUpdates = append(tendermintUpdates, validator.ABCIValidatorUpdate())
+			updates = append(updates, validator.ValidatorUpdate())
 		}
 
 		// validator still in the validator set, so delete from the copy
@@ -104,10 +105,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (
 		store.Delete(GetBondedValidatorIndexKey(operator))
 
 		// update the validator set
-		updates = append(updates, validator.ABCIValidatorUpdateZero())
+		tendermintUpdates = append(tendermintUpdates, validator.ABCIValidatorUpdateZero())
+		updates = append(updates, validator.ValidatorUpdateZero())
 	}
 
-	return updates, totalPower
+	return tendermintUpdates, updates, totalPower
 }
 
 // Validator state transitions

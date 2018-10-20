@@ -1092,6 +1092,7 @@ paths:
               type: string
             proposal_type:
               type: string
+              example: "text"
             proposer:
               "$ref": "#/definitions/Address"
             initial_deposit:
@@ -1257,6 +1258,7 @@ paths:
               "$ref": "#/definitions/Address"
             option:
               type: string
+              example: "yes"
       responses:
         200:
           description: OK

@@ -22,7 +22,7 @@ func TestAllocateTokensBasic(t *testing.T) {
 	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// verify everything has been set in staking correctly
 	validator, found := sk.GetValidator(ctx, valOpAddr1)
@@ -63,7 +63,7 @@ func TestAllocateTokensWithCommunityTax(t *testing.T) {
 	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
@@ -91,7 +91,7 @@ func TestAllocateTokensWithPartialPrecommitPower(t *testing.T) {
 	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)

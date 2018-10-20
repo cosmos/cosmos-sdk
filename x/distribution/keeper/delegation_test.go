@@ -17,7 +17,7 @@ func TestWithdrawDelegationRewardBasic(t *testing.T) {
 	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, 10)
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// delegate
 	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
@@ -51,7 +51,7 @@ func TestWithdrawDelegationRewardWithCommission(t *testing.T) {
 		valOpAddr1, valConsPk1, 10, sdk.NewDecWithPrec(1, 1))
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// delegate
 	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
@@ -85,7 +85,7 @@ func TestWithdrawDelegationRewardTwoDelegators(t *testing.T) {
 		valOpAddr1, valConsPk1, 10, sdk.NewDecWithPrec(1, 1))
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// delegate
 	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
@@ -127,7 +127,7 @@ func TestWithdrawDelegationRewardTwoDelegatorsUneven(t *testing.T) {
 		valOpAddr1, valConsPk1, 10, sdk.ZeroDec())
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// delegate
 	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
@@ -204,7 +204,7 @@ func TestWithdrawDelegationRewardsAll(t *testing.T) {
 	got = stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// delegate to all the validators
 	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)

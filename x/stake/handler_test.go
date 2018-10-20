@@ -37,7 +37,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
 	// must end-block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	// verify the self-delegation exists
@@ -61,7 +61,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
 	// must end-block
-	updates = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	// slash and jail the first validator
@@ -143,7 +143,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	require.True(t, got.IsOK(), "%v", got)
 
 	// must end-block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	validator, found = keeper.GetValidator(ctx, addr2)
@@ -168,7 +168,7 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	require.True(t, got.IsOK(), "%v", got)
 
 	// must end-block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
@@ -203,7 +203,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.True(t, got.IsOK(), "expected create validator msg to be ok, got %v", got)
 
 	// must end-block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	// verify the validator exists and has the correct attributes
@@ -942,7 +942,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error on runMsgDelegate")
 
 	// apply Tendermint updates
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 2, len(updates))
 
 	// a block passes
@@ -964,7 +964,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	require.Equal(t, sdk.NewDec(6), delegation.Shares)
 
 	// must apply validator updates
-	updates = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 2, len(updates))
 
 	// slash the validator by half

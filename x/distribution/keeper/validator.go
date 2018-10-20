@@ -11,7 +11,7 @@ func (k Keeper) GetPreviousValidatorPower(ctx sdk.Context, consAddr sdk.ConsAddr
 
 	b := store.Get(GetPreviousValidatorPowerKey(consAddr))
 	if b == nil {
-		panic("Previous proposer not set")
+		panic("Previous validator power not set")
 	}
 
 	k.cdc.MustUnmarshalBinary(b, &prevTotalPower)

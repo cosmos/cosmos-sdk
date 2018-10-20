@@ -164,7 +164,7 @@ func TestSlashRedelegation(t *testing.T) {
 	require.True(t, found)
 
 	// end block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	// initialbalance unchanged
@@ -209,7 +209,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	newPool := keeper.GetPool(ctx)
 
 	// end block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
 	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
@@ -236,7 +236,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	newPool := keeper.GetPool(ctx)
 
 	// end block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates), "cons addr: %v, updates: %v", []byte(consAddr), updates)
 
 	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
@@ -272,7 +272,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	keeper.Slash(ctx, consAddr, 10, 10, fraction)
 
 	// end block
-	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	updates, _, _ := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	require.Equal(t, 1, len(updates))
 
 	// read updating unbonding delegation

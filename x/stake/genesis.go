@@ -103,19 +103,8 @@ func ValidateGenesis(data types.GenesisState) error {
 }
 
 func validateParams(params types.Params) error {
-	if params.GoalBonded.LTE(sdk.ZeroDec()) {
-		bondedPercent := params.GoalBonded.MulInt(sdk.NewInt(100)).String()
-		return fmt.Errorf("staking parameter GoalBonded should be positive, instead got %s percent", bondedPercent)
-	}
-	if params.GoalBonded.GT(sdk.OneDec()) {
-		bondedPercent := params.GoalBonded.MulInt(sdk.NewInt(100)).String()
-		return fmt.Errorf("staking parameter GoalBonded should be less than 100 percent, instead got %s percent", bondedPercent)
-	}
 	if params.BondDenom == "" {
 		return fmt.Errorf("staking parameter BondDenom can't be an empty string")
-	}
-	if params.InflationMax.LT(params.InflationMin) {
-		return fmt.Errorf("staking parameter Max inflation must be greater than or equal to min inflation")
 	}
 	return nil
 }

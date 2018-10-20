@@ -4,16 +4,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -25,6 +28,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
@@ -111,6 +115,69 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.Acc
 	return sdk.AccAddress(info.GetPubKey().Address()), seed
 }
 
+// Type that combines an Address with the pnemonic of the private key to that address
+type AddrSeed struct {
+	Address  sdk.AccAddress
+	Seed     string
+	Name     string
+	Password string
+}
+
+// CreateAddr adds multiple address to the key store and returns the addresses and associated seeds in lexographical order by address.
+// It also requires that the keys could be created.
+func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.AccAddress, seeds, names, passwords []string) {
+	var (
+		err  error
+		info crkeys.Info
+		seed string
+	)
+
+	addrSeeds := AddrSeedSlice{}
+
+	for i := 0; i < numAddrs; i++ {
+		name := fmt.Sprintf("test%d", i)
+		password := "1234567890"
+		info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
+		require.NoError(t, err)
+		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
+	}
+
+	sort.Sort(addrSeeds)
+
+	for i := range addrSeeds {
+		addrs = append(addrs, addrSeeds[i].Address)
+		seeds = append(seeds, addrSeeds[i].Seed)
+		names = append(names, addrSeeds[i].Name)
+		passwords = append(passwords, addrSeeds[i].Password)
+	}
+
+	return addrs, seeds, names, passwords
+}
+
+// implement `Interface` in sort package.
+type AddrSeedSlice []AddrSeed
+
+func (b AddrSeedSlice) Len() int {
+	return len(b)
+}
+
+// Sorts lexographically by Address
+func (b AddrSeedSlice) Less(i, j int) bool {
+	// bytes package already implements Comparable for []byte.
+	switch bytes.Compare(b[i].Address.Bytes(), b[j].Address.Bytes()) {
+	case -1:
+		return true
+	case 0, 1:
+		return false
+	default:
+		panic("not fail-able with `bytes.Comparable` bounded [-1, 1].")
+	}
+}
+
+func (b AddrSeedSlice) Swap(i, j int) {
+	b[j], b[i] = b[i], b[j]
+}
+
 // InitializeTestLCD starts Tendermint and the LCD in process, listening on
 // their respective sockets where nValidators is the total number of validators
 // and initAddrs are the accounts to initialize with some steak tokens. It
@@ -141,42 +208,43 @@ func InitializeTestLCD(
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
-	require.NoError(t, err)
-
-	// append initial (proposing) validator
-	genDoc.Validators[0] = tmtypes.GenesisValidator{
-		PubKey: privVal.GetPubKey(),
-		Power:  100, // create enough power to enable 2/3 voting power
-		Name:   "validator-1",
-	}
+	require.Nil(t, err)
+	genDoc.Validators = nil
+	genDoc.SaveAs(genesisFile)
+	genTxs := []json.RawMessage{}
 
 	// append any additional (non-proposing) validators
-	for i := 1; i < nValidators; i++ {
-		genDoc.Validators = append(genDoc.Validators,
-			tmtypes.GenesisValidator{
-				PubKey: ed25519.GenPrivKey().PubKey(),
-				Power:  1,
-				Name:   fmt.Sprintf("validator-%d", i+1),
-			},
+	for i := 0; i < nValidators; i++ {
+		operPrivKey := secp256k1.GenPrivKey()
+		operAddr := operPrivKey.PubKey().Address()
+		pubKey := privVal.PubKey
+		delegation := 100
+		if i > 0 {
+			pubKey = ed25519.GenPrivKey().PubKey()
+			delegation = 1
+		}
+		msg := stake.NewMsgCreateValidator(
+			sdk.ValAddress(operAddr),
+			pubKey,
+			sdk.NewCoin("steak", sdk.NewInt(int64(delegation))),
+			stake.Description{Moniker: fmt.Sprintf("validator-%d", i+1)},
+			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
-	}
-
-	var appGenTxs []json.RawMessage
-
-	for _, gdValidator := range genDoc.Validators {
-		operAddr := ed25519.GenPrivKey().PubKey().Address()
-		pk := gdValidator.PubKey
-
-		valConsPubKeys = append(valConsPubKeys, pk)
+		stdSignMsg := txbuilder.StdSignMsg{
+			ChainID: genDoc.ChainID,
+			Msgs:    []sdk.Msg{msg},
+		}
+		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
+		require.Nil(t, err)
+		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+		txBytes, err := cdc.MarshalJSON(tx)
+		require.Nil(t, err)
+		genTxs = append(genTxs, txBytes)
+		valConsPubKeys = append(valConsPubKeys, pubKey)
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
-
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(operAddr), gdValidator.Name)
-		require.NoError(t, err)
-
-		appGenTxs = append(appGenTxs, appGenTx)
 	}
 
-	genesisState, err := gapp.NewTestGaiaAppGenState(cdc, appGenTxs[:], genDoc.Validators, valOperAddrs)
+	genesisState, err := gapp.GaiaAppGenState(cdc, genTxs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts

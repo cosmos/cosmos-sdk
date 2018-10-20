@@ -2,47 +2,64 @@ package init
 
 import (
 	"bytes"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/tendermint/tendermint/libs/cli"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/stretchr/testify/require"
 	abciServer "github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/spf13/viper"
 )
 
 func TestInitCmd(t *testing.T) {
 	defer server.SetupViper(t)()
+	defer setupClientHome(t)()
 
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := server.NewContext(cfg, logger)
-	cdc := codec.New()
+	cdc := app.MakeCodec()
 	appInit := server.AppInit{
 		AppGenState: mock.AppGenState,
-		AppGenTx:    mock.AppGenTx,
 	}
 	cmd := InitCmd(ctx, cdc, appInit)
 	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
 }
 
+func setupClientHome(t *testing.T) func() {
+	clientDir, err := ioutil.TempDir("", "mock-sdk-cmd")
+	require.Nil(t, err)
+	viper.Set(flagClientHome, clientDir)
+	viper.Set(flagOverwriteKey, true)
+	return func() {
+		if err := os.RemoveAll(clientDir); err != nil {
+			// TODO: Handle with #870
+			panic(err)
+		}
+	}
+}
+
 func TestEmptyState(t *testing.T) {
 	defer server.SetupViper(t)()
+	defer setupClientHome(t)()
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := server.NewContext(cfg, logger)
-	cdc := codec.New()
+	cdc := app.MakeCodec()
 	appInit := server.AppInit{
-		AppGenTx:    mock.AppGenTx,
 		AppGenState: mock.AppGenStateEmpty,
 	}
 	cmd := InitCmd(ctx, cdc, appInit)
@@ -80,15 +97,17 @@ func TestStartStandAlone(t *testing.T) {
 	defer func() {
 		os.RemoveAll(home)
 	}()
+	viper.Set(cli.HomeFlag, home)
+	viper.Set(client.FlagName, "moniker")
+	defer setupClientHome(t)()
 
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
 	ctx := server.NewContext(cfg, logger)
-	cdc := codec.New()
+	cdc := app.MakeCodec()
 	appInit := server.AppInit{
 		AppGenState: mock.AppGenState,
-		AppGenTx:    mock.AppGenTx,
 	}
 	initCmd := InitCmd(ctx, cdc, appInit)
 	err = initCmd.RunE(nil, nil)
@@ -108,4 +127,20 @@ func TestStartStandAlone(t *testing.T) {
 	case <-timer.C:
 		svr.Stop()
 	}
+}
+
+func TestInitNodeValidatorFiles(t *testing.T) {
+	home, err := ioutil.TempDir("", "mock-sdk-cmd")
+	require.Nil(t, err)
+	defer func() {
+		os.RemoveAll(home)
+	}()
+	viper.Set(cli.HomeFlag, home)
+	viper.Set(client.FlagName, "moniker")
+	cfg, err := tcmd.ParseConfig()
+	require.Nil(t, err)
+	nodeID, valPubKey, err := InitializeNodeValidatorFiles(cfg)
+	require.Nil(t, err)
+	require.NotEqual(t, "", nodeID)
+	require.NotEqual(t, 0, len(valPubKey.Bytes()))
 }

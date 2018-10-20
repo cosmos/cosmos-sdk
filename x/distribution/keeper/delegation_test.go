@@ -30,7 +30,7 @@ func TestWithdrawDelegationRewardBasic(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// withdraw delegation
 	ctx = ctx.WithBlockHeight(1)
@@ -64,7 +64,7 @@ func TestWithdrawDelegationRewardWithCommission(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// withdraw delegation
 	ctx = ctx.WithBlockHeight(1)
@@ -104,7 +104,7 @@ func TestWithdrawDelegationRewardTwoDelegators(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// delegator 1 withdraw delegation
 	ctx = ctx.WithBlockHeight(1)
@@ -146,7 +146,7 @@ func TestWithdrawDelegationRewardTwoDelegatorsUneven(t *testing.T) {
 	feeInputs := sdk.NewInt(90)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 	ctx = ctx.WithBlockHeight(1)
 
 	// delegator 1 withdraw delegation early, delegator 2 just keeps it's accum
@@ -160,7 +160,7 @@ func TestWithdrawDelegationRewardTwoDelegatorsUneven(t *testing.T) {
 	feeInputs = sdk.NewInt(180)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 	ctx = ctx.WithBlockHeight(2)
 
 	// delegator 2 now withdraws everything it's entitled to
@@ -228,7 +228,7 @@ func TestWithdrawDelegationRewardsAll(t *testing.T) {
 	feeInputs := sdk.NewInt(1000)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// withdraw delegation
 	ctx = ctx.WithBlockHeight(1)

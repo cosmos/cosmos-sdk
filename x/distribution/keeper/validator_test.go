@@ -23,7 +23,7 @@ func TestWithdrawValidatorRewardsAllNoDelegator(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// withdraw self-delegation reward
 	ctx = ctx.WithBlockHeight(1)
@@ -55,7 +55,7 @@ func TestWithdrawValidatorRewardsAllDelegatorNoCommission(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// withdraw self-delegation reward
 	ctx = ctx.WithBlockHeight(1)
@@ -89,7 +89,7 @@ func TestWithdrawValidatorRewardsAllDelegatorWithCommission(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// withdraw validator reward
 	ctx = ctx.WithBlockHeight(1)
@@ -129,7 +129,7 @@ func TestWithdrawValidatorRewardsAllMultipleValidator(t *testing.T) {
 	feeInputs := sdk.NewInt(1000)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// withdraw validator reward
 	ctx = ctx.WithBlockHeight(1)
@@ -175,7 +175,7 @@ func TestWithdrawValidatorRewardsAllMultipleDelegator(t *testing.T) {
 	feeInputs := sdk.NewInt(100)
 	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
 	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateFees(ctx, sdk.OneDec(), valConsAddr1)
+	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
 
 	// withdraw validator reward
 	ctx = ctx.WithBlockHeight(1)

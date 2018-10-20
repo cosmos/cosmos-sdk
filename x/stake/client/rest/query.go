@@ -1,12 +1,12 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -58,89 +58,50 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 	// Get all validators
 	r.HandleFunc(
 		"/stake/validators",
-		validatorsHandlerFn(cliCtx),
+		validatorsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 	// Get a single validator info
 	r.HandleFunc(
-		"/stake/validators/{addr}",
+		"/stake/validators/{validatorAddr}",
 		validatorHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 	// Get the current state of the staking pool
 	r.HandleFunc(
 		"/stake/pool",
-		poolHandlerFn(cliCtx),
+		poolHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 	// Get the current staking parameter values
 	r.HandleFunc(
 		"/stake/parameters",
-		paramsHandlerFn(cliCtx),
+		paramsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 }
 
 // HTTP request handler to query a delegator delegations
 func delegatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		vars := mux.Vars(r)
-		bech32delegator := vars["delegatorAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
-
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		params := stake.QueryDelegatorParams{
-			DelegatorAddr: delegatorAddr,
-		}
-
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		res, err := cliCtx.QueryWithData("custom/stake/delegator", bz)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-
-			return
-		}
-
-		w.Write(res)
-	}
+	return queryDelegator(cliCtx, cdc, "custom/stake/delegator")
 }
 
 // HTTP request handler to query all staking txs (msgs) from a delegator
 func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var output []byte
 		var typesQuerySlice []string
 		vars := mux.Vars(r)
 		delegatorAddr := vars["delegatorAddr"]
 
-		w.Header().Set("Content-Type", "application/json")
-
 		_, err := sdk.AccAddressFromBech32(delegatorAddr)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		node, err := cliCtx.GetNode()
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Couldn't get current Node information. Error: %s", err.Error())))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -182,230 +143,61 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		for _, action := range actions {
 			foundTxs, errQuery := queryTxs(node, cliCtx, cdc, action, delegatorAddr)
 			if errQuery != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(errQuery.Error()))
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			}
 			txs = append(txs, foundTxs...)
 		}
 
-		output, err = cdc.MarshalJSON(txs)
+		res, err := cdc.MarshalJSON(txs)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
 // HTTP request handler to query an unbonding-delegation
 func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		bech32delegator := vars["delegatorAddr"]
-		bech32validator := vars["validatorAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
-
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		params := stake.QueryBondsParams{
-			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validatorAddr,
-		}
-
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		res, err := cliCtx.QueryWithData("custom/stake/unbondingDelegation", bz)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-
-			return
-		}
-
-		w.Write(res)
-	}
+	return queryBonds(cliCtx, cdc, "custom/stake/unbondingDelegation")
 }
 
-// HTTP request handler to query a bonded validator
+// HTTP request handler to query a delegation
 func delegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// read parameters
-		vars := mux.Vars(r)
-		bech32delegator := vars["delegatorAddr"]
-		bech32validator := vars["validatorAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
-
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		params := stake.QueryBondsParams{
-			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validatorAddr,
-		}
-
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		res, err := cliCtx.QueryWithData("custom/stake/delegation", bz)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-
-			return
-		}
-
-		w.Write(res)
-	}
+	return queryBonds(cliCtx, cdc, "custom/stake/delegation")
 }
 
 // HTTP request handler to query all delegator bonded validators
 func delegatorValidatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// read parameters
-		vars := mux.Vars(r)
-		bech32delegator := vars["delegatorAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
-
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		params := stake.QueryDelegatorParams{
-			DelegatorAddr: delegatorAddr,
-		}
-
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		res, err := cliCtx.QueryWithData("custom/stake/delegatorValidators", bz)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-
-			return
-		}
-
-		w.Write(res)
-	}
+	return queryDelegator(cliCtx, cdc, "custom/stake/delegatorValidators")
 }
 
 // HTTP request handler to get information from a currently bonded validator
 func delegatorValidatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		vars := mux.Vars(r)
-		bech32delegator := vars["delegatorAddr"]
-		bech32validator := vars["validatorAddr"]
-
-		w.Header().Set("Content-Type", "application/json")
-
-		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
-		validatorAddr, err := sdk.ValAddressFromBech32(bech32validator)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		params := stake.QueryBondsParams{
-			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validatorAddr,
-		}
-
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		res, err := cliCtx.QueryWithData("custom/stake/delegatorValidator", bz)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-
-			return
-		}
-
-		w.Write(res)
-	}
+	return queryBonds(cliCtx, cdc, "custom/stake/delegatorValidator")
 }
 
 // HTTP request handler to query list of validators
-func validatorsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func validatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Set("Content-Type", "application/json")
-
 		res, err := cliCtx.QueryWithData("custom/stake/validators", nil)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
 // HTTP request handler to query the validator information from a given validator address
 func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		vars := mux.Vars(r)
-		bech32validatorAddr := vars["addr"]
-
-		w.Header().Set("Content-Type", "application/json")
+		bech32validatorAddr := vars["validatorAddr"]
 
 		validatorAddr, err := sdk.ValAddressFromBech32(bech32validatorAddr)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -415,55 +207,39 @@ func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		res, err := cliCtx.QueryWithData("custom/stake/validator", bz)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
 // HTTP request handler to query the pool information
-func poolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func poolHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Set("Content-Type", "application/json")
-
 		res, err := cliCtx.QueryWithData("custom/stake/pool", nil)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
 // HTTP request handler to query the staking params values
-func paramsHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Set("Content-Type", "application/json")
-
 		res, err := cliCtx.QueryWithData("custom/stake/parameters", nil)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		w.Write(res)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"os"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -25,6 +26,12 @@ import (
 
 const (
 	appName = "DemocoinApp"
+)
+
+// default home directories for expected binaries
+var (
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.democli")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.democoind")
 )
 
 // Extended ABCI application

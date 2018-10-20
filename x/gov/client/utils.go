@@ -3,17 +3,13 @@ package client
 // NormalizeVoteOption - normalize user specified vote option
 func NormalizeVoteOption(option string) string {
 	switch option {
-	case "yes":
-	case "Yes":
+	case "Yes", "yes":
 		return "Yes"
-	case "abstain":
-	case "Abstain":
+	case "Abstain", "abstain":
 		return "Abstain"
-	case "no":
-	case "No":
+	case "No", "no":
 		return "No"
-	case "no_with_veto":
-	case "NoWithVeto":
+	case "NoWithVeto", "no_with_veto":
 		return "NoWithVeto"
 	}
 	return ""
@@ -22,14 +18,11 @@ func NormalizeVoteOption(option string) string {
 //NormalizeProposalType - normalize user specified proposal type
 func NormalizeProposalType(proposalType string) string {
 	switch proposalType {
-	case "text":
-	case "Text":
+	case "Text", "text":
 		return "Text"
-	case "parameter_change":
-	case "ParameterChange":
+	case "ParameterChange", "parameter_change":
 		return "ParameterChange"
-	case "software_upgrade":
-	case "SoftwareUpgrade":
+	case "SoftwareUpgrade", "software_upgrade":
 		return "SoftwareUpgrade"
 	}
 	return ""
@@ -38,17 +31,13 @@ func NormalizeProposalType(proposalType string) string {
 //NormalizeProposalStatus - normalize user specified proposal status
 func NormalizeProposalStatus(status string) string {
 	switch status {
-	case "deposit_period":
-	case "DepositPeriod":
+	case "DepositPeriod", "deposit_period":
 		return "DepositPeriod"
-	case "voting_period":
-	case "VotingPeriod":
+	case "VotingPeriod", "voting_period":
 		return "VotingPeriod"
-	case "passed":
-	case "Passed":
+	case "Passed", "passed":
 		return "Passed"
-	case "rejected":
-	case "Rejected":
+	case "Rejected", "rejected":
 		return "Rejected"
 	}
 	return ""

@@ -230,24 +230,6 @@ func TestTruncate(t *testing.T) {
 	}
 }
 
-func TestToLeftPadded(t *testing.T) {
-	tests := []struct {
-		dec    Dec
-		digits int8
-		exp    string
-	}{
-		{mustNewDecFromStr(t, "33.3"), 8, "00000033"},
-		{mustNewDecFromStr(t, "50"), 8, "00000050"},
-		{mustNewDecFromStr(t, "333"), 8, "00000333"},
-		{mustNewDecFromStr(t, "333"), 12, "000000000333"},
-		{mustNewDecFromStr(t, "0.3333"), 8, "00000000"},
-	}
-	for tcIndex, tc := range tests {
-		res := tc.dec.ToLeftPadded(tc.digits)
-		require.Equal(t, tc.exp, res, "incorrect left padding, tc %d", tcIndex)
-	}
-}
-
 var cdc = codec.New()
 
 func TestDecMarshalJSON(t *testing.T) {

@@ -248,29 +248,32 @@ func (d Dec) QuoInt(i Int) Dec {
 }
 
 func (d Dec) String() string {
-	str := d.ToLeftPaddedWithDecimals(Precision)
-	placement := len(str) - Precision
-	if placement < 0 {
-		panic("too few decimal digits")
+	bz, err := d.Int.MarshalText()
+	if err != nil {
+		return ""
 	}
-	return str[:placement] + "." + str[placement:]
-}
-
-// TODO panic if negative or if totalDigits < len(initStr)???
-// evaluate as an integer and return left padded string
-func (d Dec) ToLeftPaddedWithDecimals(totalDigits int8) string {
-	intStr := d.Int.String()
-	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
-	return fmt.Sprintf(fcode, intStr)
-}
-
-// TODO panic if negative or if totalDigits < len(initStr)???
-// evaluate as an integer and return left padded string
-func (d Dec) ToLeftPadded(totalDigits int8) string {
-	chopped := chopPrecisionAndRoundNonMutative(d.Int)
-	intStr := chopped.String()
-	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
-	return fmt.Sprintf(fcode, intStr)
+	var bzWDec []byte
+	// TODO: Remove trailing zeros
+	// case 1, purely decimal
+	if len(bz) <= 10 {
+		bzWDec = make([]byte, 12)
+		// 0. prefix
+		bzWDec[0] = byte('0')
+		bzWDec[1] = byte('.')
+		// set relevant digits to 0
+		for i := 0; i < 10-len(bz); i++ {
+			bzWDec[i+2] = byte('0')
+		}
+		// set last few digits
+		copy(bzWDec[2+(10-len(bz)):], bz)
+	} else {
+		// len(bz) + 1 to account for the decimal point that is being added
+		bzWDec = make([]byte, len(bz)+1)
+		copy(bzWDec, bz[:len(bz)-10])
+		bzWDec[len(bz)-10] = byte('.')
+		copy(bzWDec[len(bz)-9:], bz[len(bz)-10:])
+	}
+	return string(bzWDec)
 }
 
 //     ____
@@ -412,31 +415,8 @@ func (d Dec) MarshalJSON() ([]byte, error) {
 	if d.Int == nil {
 		return nilJSON, nil
 	}
-	bz, err := d.Int.MarshalText()
-	if err != nil {
-		return nil, err
-	}
-	var bzWDec []byte
-	// TODO: Remove trailing zeros
-	// case 1, pure decimal
-	if len(bz) <= 10 {
-		bzWDec = make([]byte, 12)
-		// 0. prefix
-		bzWDec[0] = byte('0')
-		bzWDec[1] = byte('.')
-		// set relevant digits to 0
-		for i := 0; i < 10-len(bz); i++ {
-			bzWDec[i+2] = byte('0')
-		}
-		// set last few digits
-		copy(bzWDec[2+(10-len(bz)):], bz)
-	} else {
-		bzWDec = make([]byte, len(bz)+1)
-		copy(bzWDec, bz[:len(bz)-10])
-		bzWDec[len(bz)-10] = byte('.')
-		copy(bzWDec[len(bz)-9:], bz[len(bz)-10:])
-	}
-	return json.Marshal(string(bzWDec))
+
+	return json.Marshal(d.String())
 }
 
 // UnmarshalJSON defines custom decoding scheme

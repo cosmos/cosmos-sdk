@@ -70,15 +70,16 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
 	validator := k.stakeKeeper.Validator(ctx, operatorAddr)
+	blockValidatorPower := sdk.NewDec(k.GetPreviousValidatorPower(ctx, validator.GetConsAddr()))
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
 	withdraw := k.getDelegatorRewardsAll(ctx, accAddr, height)
 
 	// withdrawal validator commission rewards
-	bondedTokens := k.stakeKeeper.TotalPower(ctx)
+	blockBondedTokens := sdk.NewDec(k.GetPreviousTotalPower(ctx))
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
 	feePool := k.GetFeePool(ctx)
-	valInfo, feePool, commission := valInfo.WithdrawCommission(feePool, height, bondedTokens,
-		validator.GetPower(), validator.GetCommission())
+	valInfo, feePool, commission := valInfo.WithdrawCommission(feePool, height, blockBondedTokens,
+		blockValidatorPower, validator.GetCommission())
 	withdraw = withdraw.Plus(commission)
 	k.SetValidatorDistInfo(ctx, valInfo)
 

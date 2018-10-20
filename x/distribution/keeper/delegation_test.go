@@ -34,6 +34,8 @@ func TestWithdrawDelegationRewardBasic(t *testing.T) {
 
 	// withdraw delegation
 	ctx = ctx.WithBlockHeight(1)
+	keeper.SetPreviousTotalPower(ctx, 10)
+	keeper.SetPreviousValidatorPower(ctx, valConsAddr1, 10)
 	keeper.WithdrawDelegationReward(ctx, delAddr1, valOpAddr1)
 	amt = accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
 

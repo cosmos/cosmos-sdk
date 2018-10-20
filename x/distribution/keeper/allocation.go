@@ -8,7 +8,7 @@ import (
 )
 
 // Allocate fees handles distribution of the collected fees
-func (k Keeper) AllocateFees(ctx sdk.Context, percentVotes sdk.Dec, proposer sdk.ConsAddress) {
+func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer sdk.ConsAddress) {
 	ctx.Logger().With("module", "x/distribution").Error(fmt.Sprintf("allocation height: %v", ctx.BlockHeight()))
 
 	// get the proposer of this block

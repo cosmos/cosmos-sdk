@@ -35,10 +35,10 @@ func TestGetValidatorPowerRank(t *testing.T) {
 		validator types.Validator
 		wantHex   string
 	}{
-		{val1, "05303030303030303030303030ffffffffffffffffffff"},
-		{val2, "05303030303030303030303031ffffffffffffffffffff"},
-		{val3, "05303030303030303030303130ffffffffffffffffffff"},
-		{val4, "0531303939353131363237373736ffffffffffffffffffff"},
+		{val1, "050000000000000000ffffffffffffffffffff"},
+		{val2, "050000000000000001ffffffffffffffffffff"},
+		{val3, "05000000000000000affffffffffffffffffff"},
+		{val4, "050000010000000000ffffffffffffffffffff"},
 	}
 	for i, tt := range tests {
 		got := hex.EncodeToString(getValidatorPowerRank(tt.validator))

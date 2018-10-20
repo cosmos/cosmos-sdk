@@ -58,13 +58,10 @@ var (
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 	TestingUpdateValidator       = keeper.TestingUpdateValidator
 
-	DefaultParamspace      = keeper.DefaultParamspace
-	KeyInflationRateChange = types.KeyInflationRateChange
-	KeyInflationMax        = types.KeyInflationMax
-	KeyGoalBonded          = types.KeyGoalBonded
-	KeyUnbondingTime       = types.KeyUnbondingTime
-	KeyMaxValidators       = types.KeyMaxValidators
-	KeyBondDenom           = types.KeyBondDenom
+	DefaultParamspace = keeper.DefaultParamspace
+	KeyUnbondingTime  = types.KeyUnbondingTime
+	KeyMaxValidators  = types.KeyMaxValidators
+	KeyBondDenom      = types.KeyBondDenom
 
 	DefaultParams         = types.DefaultParams
 	InitialPool           = types.InitialPool

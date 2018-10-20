@@ -1,20 +1,24 @@
 package init
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 	"net"
+	"os"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
-
-	gc "github.com/cosmos/cosmos-sdk/server/config"
-
-	"os"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
@@ -46,8 +50,7 @@ Example:
 	`,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
-			err := testnetWithConfig(config, cdc, appInit)
-			return err
+			return testnetWithConfig(config, cdc, appInit)
 		},
 	}
 	cmd.Flags().Int(nValidators, 4,
@@ -69,6 +72,12 @@ Example:
 func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppInit) error {
 	outDir := viper.GetString(outputDir)
 	numValidators := viper.GetInt(nValidators)
+
+	// Generate genesis.json and config.toml
+	chainID := "chain-" + cmn.RandStr(6)
+	monikers := make([]string, numValidators)
+	nodeIDs := make([]string, numValidators)
+	valPubKeys := make([]crypto.PubKey, numValidators)
 
 	// Generate private key, node ID, initial transaction
 	for i := 0; i < numValidators; i++ {
@@ -92,60 +101,101 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec, appInit server.AppI
 			return err
 		}
 
+		monikers = append(monikers, nodeDirName)
 		config.Moniker = nodeDirName
 		ip, err := getIP(i)
 		if err != nil {
+			_ = os.RemoveAll(outDir)
 			return err
 		}
+		nodeIDs[i], valPubKeys[i], err = InitializeNodeValidatorFiles(config)
+		if err != nil {
+			_ = os.RemoveAll(outDir)
+			return err
+		}
+		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
 
-		genTxConfig := gc.GenTx{
-			nodeDirName,
-			clientDir,
-			true,
-			ip,
+		buf := client.BufferStdin()
+		prompt := fmt.Sprintf("Password for account '%s' (default %s):", nodeDirName, app.DefaultKeyPass)
+		keyPass, err := client.GetPassword(prompt, buf)
+		if err != nil && keyPass != "" {
+			// An error was returned that either failed to read the password from
+			// STDIN or the given password is not empty but failed to meet minimum
+			// length requirements.
+			return err
+		}
+		if keyPass == "" {
+			keyPass = app.DefaultKeyPass
 		}
 
-		// Run `init gen-tx` and generate initial transactions
-		cliPrint, genTxFile, err := gentxWithConfig(cdc, appInit, config, genTxConfig)
+		addr, secret, err := server.GenerateSaveCoinKey(clientDir, nodeDirName, keyPass, true)
+		if err != nil {
+			_ = os.RemoveAll(outDir)
+			return err
+		}
+		info := map[string]string{"secret": secret}
+		cliPrint, err := json.Marshal(info)
 		if err != nil {
 			return err
 		}
-
 		// Save private key seed words
-		name := fmt.Sprintf("%v.json", "key_seed")
-		err = writeFile(name, clientDir, cliPrint)
+		err = writeFile(fmt.Sprintf("%v.json", "key_seed"), clientDir, cliPrint)
 		if err != nil {
+			return err
+		}
+
+		msg := stake.NewMsgCreateValidator(
+			sdk.ValAddress(addr),
+			valPubKeys[i],
+			sdk.NewInt64Coin("steak", 100),
+			stake.NewDescription(nodeDirName, "", "", ""),
+			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		)
+		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{}, memo)
+		txBldr := authtx.NewTxBuilderFromCLI().WithChainID(chainID).WithMemo(memo)
+		signedTx, err := txBldr.SignStdTx(nodeDirName, app.DefaultKeyPass, tx, false)
+		if err != nil {
+			_ = os.RemoveAll(outDir)
+			return err
+		}
+
+		txBytes, err := cdc.MarshalJSON(signedTx)
+		if err != nil {
+			_ = os.RemoveAll(outDir)
 			return err
 		}
 
 		// Gather gentxs folder
-		name = fmt.Sprintf("%v.json", nodeDirName)
-		err = writeFile(name, gentxsDir, genTxFile)
+		err = writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBytes)
 		if err != nil {
+			_ = os.RemoveAll(outDir)
 			return err
 		}
 	}
 
-	// Generate genesis.json and config.toml
-	chainID := "chain-" + cmn.RandStr(6)
 	for i := 0; i < numValidators; i++ {
 
 		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
 		nodeDaemonHomeName := viper.GetString(nodeDaemonHome)
 		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
 		gentxsDir := filepath.Join(outDir, "gentxs")
-		initConfig := server.InitConfig{
-			chainID,
-			true,
-			gentxsDir,
-			true,
-		}
+		moniker := monikers[i]
 		config.Moniker = nodeDirName
 		config.SetRoot(nodeDir)
 
+		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
 		// Run `init` and generate genesis.json and config.toml
-		_, _, _, err := initWithConfig(cdc, appInit, config, initConfig)
-		if err != nil {
+		initCfg := initConfig{
+			ChainID:      chainID,
+			GenTxsDir:    gentxsDir,
+			Name:         moniker,
+			WithTxs:      true,
+			Overwrite:    true,
+			OverwriteKey: false,
+			NodeID:       nodeID,
+			ValPubKey:    valPubKey,
+		}
+		if _, err := initWithConfig(cdc, config, initCfg); err != nil {
 			return err
 		}
 	}

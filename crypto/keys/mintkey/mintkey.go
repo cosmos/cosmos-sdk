@@ -1,16 +1,17 @@
-package keys
+package mintkey
 
 import (
 	"encoding/hex"
 	"fmt"
 
-	cmn "github.com/tendermint/tendermint/libs/common"
+	"golang.org/x/crypto/bcrypt"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/armor"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
+
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 const (
@@ -34,11 +35,16 @@ const (
 // TODO: Consider increasing default
 var BcryptSecurityParameter = 12
 
-func armorInfoBytes(bz []byte) string {
+//-----------------------------------------------------------------
+// add armor
+
+// Armor the InfoBytes
+func ArmorInfoBytes(bz []byte) string {
 	return armorBytes(bz, blockTypeKeyInfo)
 }
 
-func armorPubKeyBytes(bz []byte) string {
+// Armor the PubKeyBytes
+func ArmorPubKeyBytes(bz []byte) string {
 	return armorBytes(bz, blockTypePubKey)
 }
 
@@ -50,11 +56,16 @@ func armorBytes(bz []byte, blockType string) string {
 	return armor.EncodeArmor(blockType, header, bz)
 }
 
-func unarmorInfoBytes(armorStr string) (bz []byte, err error) {
+//-----------------------------------------------------------------
+// remove armor
+
+// Unarmor the InfoBytes
+func UnarmorInfoBytes(armorStr string) (bz []byte, err error) {
 	return unarmorBytes(armorStr, blockTypeKeyInfo)
 }
 
-func unarmorPubKeyBytes(armorStr string) (bz []byte, err error) {
+// Unarmor the PubKeyBytes
+func UnarmorPubKeyBytes(armorStr string) (bz []byte, err error) {
 	return unarmorBytes(armorStr, blockTypePubKey)
 }
 
@@ -74,7 +85,11 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, err error) {
 	return
 }
 
-func encryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
+//-----------------------------------------------------------------
+// encrypt/decrypt with armor
+
+// Encrypt and armor the private key.
+func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
 		"kdf":  "bcrypt",
@@ -84,7 +99,22 @@ func encryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
 	return armorStr
 }
 
-func unarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, error) {
+// encrypt the given privKey with the passphrase using a randomly
+// generated salt and the xsalsa20 cipher. returns the salt and the
+// encrypted priv key.
+func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
+	saltBytes = crypto.CRandBytes(16)
+	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
+	if err != nil {
+		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
+	}
+	key = crypto.Sha256(key) // get 32 bytes
+	privKeyBytes := privKey.Bytes()
+	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
+}
+
+// Unarmor and decrypt the private key.
+func UnarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, error) {
 	var privKey crypto.PrivKey
 	blockType, header, encBytes, err := armor.DecodeArmor(armorStr)
 	if err != nil {
@@ -105,17 +135,6 @@ func unarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, 
 	}
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
 	return privKey, err
-}
-
-func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
-	saltBytes = crypto.CRandBytes(16)
-	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-	if err != nil {
-		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
-	}
-	key = crypto.Sha256(key) // Get 32 bytes
-	privKeyBytes := privKey.Bytes()
-	return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 }
 
 func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privKey crypto.PrivKey, err error) {

@@ -1,6 +1,7 @@
 # Getting Started
 
 To start a REST server, we need to specify the following parameters:
+
 | Parameter   | Type      | Default                 | Required | Description                                          |
 | ----------- | --------- | ----------------------- | -------- | ---------------------------------------------------- |
 | chain-id    | string    | null                    | true     | chain id of the full node to connect                 |
@@ -9,12 +10,12 @@ To start a REST server, we need to specify the following parameters:
 | trust-node  | bool      | "false"                 | true     | Whether this LCD is connected to a trusted full node |
 | trust-store | DIRECTORY | "$HOME/.lcd"            | false    | directory for save checkpoints and validator sets    |
 
-Sample command:
+For example::
 
 ```bash
 gaiacli rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
-    --node tcp://localhost:46657 \
+    --node tcp://localhost:26657 \
     --trust-node=false
 ```
 
@@ -23,7 +24,7 @@ The server listens on HTTPS by default. You can set the SSL certificate to be us
 ```bash
 gaiacli rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
-    --node tcp://localhost:46657 \
+    --node tcp://localhost:26657 \
     --trust-node=false \
     --certfile=mycert.pem --keyfile=mykey.key
 ```
@@ -31,26 +32,4 @@ gaiacli rest-server --chain-id=test \
 If no certificate/keyfile pair is supplied, a self-signed certificate will be generated and its fingerprint printed out.
 Append `--insecure` to the command line if you want to disable the secure layer and listen on an insecure HTTP port.
 
-## Gaia Light Use Cases
-
-LCD could be very helpful for related service providers. For a wallet service provider, LCD could
-make transaction faster and more reliable in the following cases.
-
-### Create an account
-
-![deposit](pics/create-account.png)
-
-First you need to get a new seed phrase :[get-seed](api.md#keysseed---get)
-
-After having new seed, you could generate a new account with it : [keys](api.md#keys---post)
-
-### Transfer a token
-
-![transfer](pics/transfer-tokens.png)
-
-The first step is to build an asset transfer transaction. Here we can post all necessary parameters
-to /create_transfer to get the unsigned transaction byte array. Refer to this link for detailed
-operation: [build transaction](api.md#create_transfer---post)
-
-Then sign the returned transaction byte array with users' private key. Finally broadcast the signed
-transaction. Refer to this link for how to broadcast the signed transaction: [broadcast transaction](api.md#create_transfer---post)
+For more information about the Gaia-Lite RPC, see the [swagger documentation](https://cosmos.network/rpc/)

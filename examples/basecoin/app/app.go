@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"os"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +20,12 @@ import (
 
 const (
 	appName = "BasecoinApp"
+)
+
+// default home directories for expected binaries
+var (
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.basecli")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.basecoind")
 )
 
 // BasecoinApp implements an extended ABCI application. It contains a BaseApp,

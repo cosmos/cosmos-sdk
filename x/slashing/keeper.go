@@ -102,8 +102,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	// Will use the 0-value default signing info if not present, except for start height
 	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
 	if !found {
-		// If this validator has never been seen before, construct a new SigningInfo with the correct start height
-		signInfo = NewValidatorSigningInfo(height, 0, time.Unix(0, 0), 0)
+		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++
@@ -111,24 +110,27 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	// Update signed block bit array & counter
 	// This counter just tracks the sum of the bit array
 	// That way we avoid needing to read/write the whole array each time
-	previous := k.getValidatorSigningBitArray(ctx, consAddr, index)
-	if previous == signed {
+	previous := k.getValidatorMissedBlockBitArray(ctx, consAddr, index)
+	missed := !signed
+	switch {
+	case !previous && missed:
+		// Array value has changed from not missed to missed, increment counter
+		k.setValidatorMissedBlockBitArray(ctx, consAddr, index, true)
+		signInfo.MissedBlocksCounter++
+	case previous && !missed:
+		// Array value has changed from missed to not missed, decrement counter
+		k.setValidatorMissedBlockBitArray(ctx, consAddr, index, false)
+		signInfo.MissedBlocksCounter--
+	default:
 		// Array value at this index has not changed, no need to update counter
-	} else if previous && !signed {
-		// Array value has changed from signed to unsigned, decrement counter
-		k.setValidatorSigningBitArray(ctx, consAddr, index, false)
-		signInfo.SignedBlocksCounter--
-	} else if !previous && signed {
-		// Array value has changed from unsigned to signed, increment counter
-		k.setValidatorSigningBitArray(ctx, consAddr, index, true)
-		signInfo.SignedBlocksCounter++
 	}
 
-	if !signed {
-		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d signed, threshold %d", addr, height, signInfo.SignedBlocksCounter, k.MinSignedPerWindow(ctx)))
+	if missed {
+		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d missed, threshold %d", addr, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
 	}
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
-	if height > minHeight && signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
+	maxMissed := k.SignedBlocksWindow(ctx) - k.MinSignedPerWindow(ctx)
+	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 		if validator != nil && !validator.GetJailed() {
 			// Downtime confirmed: slash and jail the validator
@@ -143,6 +145,10 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
+			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
+			signInfo.MissedBlocksCounter = 0
+			signInfo.IndexOffset = 0
+			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
 		} else {
 			// Validator was (a) not found or (b) already jailed, don't slash
 			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed",

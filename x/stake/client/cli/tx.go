@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -87,7 +86,15 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 				)
 			}
 
-			if cliCtx.GenerateOnly {
+			if viper.GetBool(FlagGenesisFormat) {
+				ip := viper.GetString(FlagIP)
+				nodeID := viper.GetString(FlagNodeID)
+				if nodeID != "" && ip != "" {
+					txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
+				}
+			}
+
+			if viper.GetBool(FlagGenesisFormat) || cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true)
 			}
 
@@ -101,6 +108,10 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(fsCommissionCreate)
 	cmd.Flags().AddFlagSet(fsDelegator)
+	cmd.Flags().Bool(FlagGenesisFormat, false, "Export the transaction in gen-tx format; it implies --generate-only")
+	cmd.Flags().String(FlagIP, "", fmt.Sprintf("Node's public IP. It takes effect only when used in combination with --%s", FlagGenesisFormat))
+	cmd.Flags().String(FlagNodeID, "", "Node's ID")
+	cmd.MarkFlagRequired(client.FlagFrom)
 
 	return cmd
 }

@@ -3,6 +3,10 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"sort"
+
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,9 +23,6 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"io"
-	"os"
-	"sort"
 )
 
 const (
@@ -265,7 +266,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 			}
 		}
 
-		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+		validators, _ = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	}
 	app.slashingKeeper.AddValidators(ctx, validators)
 
@@ -344,6 +345,7 @@ func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress) {
 	h.sh.OnValidatorBonded(ctx, addr)
 }
 func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress, operator sdk.ValAddress) {
+	h.dh.OnValidatorBeginUnbonding(ctx, addr, operator)
 	h.sh.OnValidatorBeginUnbonding(ctx, addr, operator)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {

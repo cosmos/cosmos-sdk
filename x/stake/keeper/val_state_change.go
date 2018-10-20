@@ -16,7 +16,8 @@ import (
 // CONTRACT: Only validators with non-zero power or zero-power that were bonded
 // at the previous block height or were removed from the validator set entirely
 // are returned to Tendermint.
-func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []abci.ValidatorUpdate) {
+func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (
+	updates []abci.ValidatorUpdate, totalPower int64) {
 
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
@@ -40,9 +41,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// if we get to a zero-power validator (which we don't bond),
 		// there are no more possible bonded validators
 		// note: we must check the ABCI power, since we round before sending to Tendermint
-		if validator.Tokens.RoundInt64() == int64(0) {
+		roundedTokens := validator.Tokens.RoundInt64()
+		if roundedTokens == int64(0) {
 			break
 		}
+		totalPower += roundedTokens
 
 		// apply the appropriate state change if necessary
 		switch validator.Status {
@@ -67,6 +70,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
+			distrUpdates = append(distrUpdates, validator.DistrValidatorUpdate())
 		}
 
 		// validator still in the validator set, so delete from the copy
@@ -102,10 +106,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// update the validator set
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
-
 	}
 
-	return updates
+	return updates, totalPower
 }
 
 // Validator state transitions

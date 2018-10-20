@@ -329,6 +329,22 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	}
 }
 
+// validator update for distribution
+func (v Validator) DistrValidatorUpdate() sdk.ValidatorPowerUpdates {
+	return abci.ValidatorUpdate{
+		PubKey: sdk.ConsAddress(v.ConsPubKey.Address()),
+		Power:  v.BondedTokens().RoundInt64(),
+	}
+}
+
+// validator update for distribution with zero power
+func (v Validator) DistrValidatorUpdateZero() abci.ValidatorUpdate {
+	return abci.ValidatorUpdate{
+		PubKey: sdk.ConsAddress(v.ConsPubKey.Address()),
+		Power:  0,
+	}
+}
+
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
 func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator, Pool) {

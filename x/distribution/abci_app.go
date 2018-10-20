@@ -20,6 +20,15 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	k.SetPreviousProposerConsAddr(ctx, consAddr)
 }
 
+// set the total power and validator power's for next block
+func EndBlocker(ctx sdk.Context, totalPower sdk.Dec, validatorPowerUpdates []sdk.ValidatorPowerUpdates) {
+	k.SetPreviousTotalPower(ctx, consAddr)
+
+	for _, vpu := range ValidatorPowerUpdates {
+		k.SetPreviousValidatorPower(ctx, vpu.ConsAddr, vpu.Power)
+	}
+}
+
 // percent precommit votes for the previous block
 func getPreviousPercentPrecommitVotes(req abci.RequestBeginBlock) sdk.Dec {
 

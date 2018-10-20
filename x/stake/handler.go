@@ -31,7 +31,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 // Called every block, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.ValidatorUpdate) {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) (
+	ValidatorUpdates []abci.ValidatorUpdate, totalPower int64) {
+
 	endBlockerTags := sdk.EmptyTags()
 
 	k.UnbondAllMatureValidatorQueue(ctx)
@@ -67,8 +69,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 	k.SetIntraTxCounter(ctx, 0)
 
 	// calculate validator set changes
-	ValidatorUpdates = k.ApplyAndReturnValidatorSetUpdates(ctx)
-	return
+	return k.ApplyAndReturnValidatorSetUpdates(ctx)
 }
 
 //_____________________________________________________________________

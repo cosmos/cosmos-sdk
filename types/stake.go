@@ -81,6 +81,12 @@ type ValidatorSet interface {
 	Delegation(Context, AccAddress, ValAddress) Delegation
 }
 
+// validator power updates for distribution
+type ValidatorPowerUpdates struct {
+	ConsAddr sdk.ConsAddress
+	Power    int64
+}
+
 //_______________________________________________________________________________
 
 // delegation bond for a delegated proof of stake system

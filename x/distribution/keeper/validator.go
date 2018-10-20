@@ -5,6 +5,28 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// get the validator distribution info
+func (k Keeper) GetPreviousValidatorPower(ctx sdk.Context,
+	consAddr sdk.ConsAddress) (power sdk.Dec) {
+
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(GetPreviousValidatorPowerKey(consAddr))
+	if b == nil {
+		panic("Stored previous validator power should not have been nil")
+	}
+	k.cdc.MustUnmarshalBinary(b, &power)
+	return
+}
+
+// set the validator distribution info
+func (k Keeper) SetPreviousValidatorPower(ctx sdk.Context, consAddr sdk.ConsAddress, power sdk.Dec) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshalBinary(power)
+	store.Set(GetValidatorDistInfoKey(consAddr), b)
+}
+
+//___________________________________________________________________
+
 // check whether a validator has distribution info
 func (k Keeper) HasValidatorDistInfo(ctx sdk.Context,
 	operatorAddr sdk.ValAddress) (exists bool) {
@@ -17,12 +39,10 @@ func (k Keeper) GetValidatorDistInfo(ctx sdk.Context,
 	operatorAddr sdk.ValAddress) (vdi types.ValidatorDistInfo) {
 
 	store := ctx.KVStore(k.storeKey)
-
 	b := store.Get(GetValidatorDistInfoKey(operatorAddr))
 	if b == nil {
 		panic("Stored validator-distribution info should not have been nil")
 	}
-
 	k.cdc.MustUnmarshalBinary(b, &vdi)
 	return
 }

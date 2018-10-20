@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,9 +21,9 @@ func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) Vali
 	return ValidatorDistInfo{
 		OperatorAddr:            operatorAddr,
 		FeePoolWithdrawalHeight: currentHeight,
-		Pool:                    DecCoins{},
-		PoolCommission:          DecCoins{},
-		DelAccum:                NewTotalAccum(currentHeight),
+		Pool:           DecCoins{},
+		PoolCommission: DecCoins{},
+		DelAccum:       NewTotalAccum(currentHeight),
 	}
 }
 
@@ -46,6 +48,8 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	vi.FeePoolWithdrawalHeight = height
 	accum := vdTokens.MulInt(sdk.NewInt(blocks))
 	if accum.GT(fp.ValAccum.Accum) {
+
+		fmt.Printf("debug vdTokens: %v\n", vdTokens)
 		panic("individual accum should never be greater than the total")
 	}
 	withdrawalTokens := fp.Pool.MulDec(accum).QuoDec(fp.ValAccum.Accum)

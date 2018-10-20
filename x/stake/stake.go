@@ -14,7 +14,6 @@ type (
 	Description          = types.Description
 	Commission           = types.Commission
 	Delegation           = types.Delegation
-	DelegationSummary    = types.DelegationSummary
 	UnbondingDelegation  = types.UnbondingDelegation
 	Redelegation         = types.Redelegation
 	Params               = types.Params

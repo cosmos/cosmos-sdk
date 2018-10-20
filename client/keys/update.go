@@ -83,10 +83,17 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	getNewpass := func() (string, error) { return m.NewPassword, nil }
 
-	// TODO check if account exists and if password is correct
 	err = kb.Update(name, m.OldPassword, getNewpass)
-	if err != nil {
+	if IsKeyNotFoundErr(err, name) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(err.Error()))
+		return
+	} else if IsWrongKeyPasswordErr(err) {
 		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(err.Error()))
+		return
+	} else if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}

@@ -80,9 +80,16 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO handle error if key is not available or pass is wrong
 	err = kb.Delete(name, m.Password)
-	if err != nil {
+	if IsKeyNotFoundErr(err, name) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(err.Error()))
+		return
+	} else if IsWrongKeyPasswordErr(err) {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(err.Error()))
+		return
+	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return

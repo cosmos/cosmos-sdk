@@ -2,111 +2,59 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/pkg/errors"
-	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/crypto"
-
 	dbm "github.com/tendermint/tendermint/libs/db"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/tendermint/tendermint/types"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
-
-//Parameter names, for init gen-tx command
-var (
-	FlagName       = "name"
-	FlagClientHome = "home-client"
-	FlagOWK        = "owk"
-)
-
-//parameter names, init command
-var (
-	FlagOverwrite = "overwrite"
-	FlagWithTxs   = "with-txs"
-	FlagIP        = "ip"
-	FlagChainID   = "chain-id"
-)
-
-// genesis piece structure for creating combined genesis
-type GenesisTx struct {
-	NodeID    string                   `json:"node_id"`
-	IP        string                   `json:"ip"`
-	Validator tmtypes.GenesisValidator `json:"validator"`
-	AppGenTx  json.RawMessage          `json:"app_gen_tx"`
-}
-
-// Storage for init command input parameters
-type InitConfig struct {
-	ChainID   string
-	GenTxs    bool
-	GenTxsDir string
-	Overwrite bool
-}
-
-//________________________________________________________________________________________
-
-//_____________________________________________________________________
 
 // Core functionality passed from the application to the server init command
 type AppInit struct {
-
-	// flags required for application init functions
-	FlagsAppGenState *pflag.FlagSet
-	FlagsAppGenTx    *pflag.FlagSet
-
-	// create the application genesis tx
-	AppGenTx func(cdc *codec.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
-		appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error)
-
 	// AppGenState creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.
-	AppGenState func(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error)
+	AppGenState func(cdc *codec.Codec, appGenTx []json.RawMessage) (appState json.RawMessage, err error)
+}
+
+// SimpleGenTx is a simple genesis tx
+type SimpleGenTx struct {
+	Addr sdk.AccAddress `json:"addr"`
 }
 
 //_____________________________________________________________________
 
 // simple default application init
 var DefaultAppInit = AppInit{
-	AppGenTx:    SimpleAppGenTx,
 	AppGenState: SimpleAppGenState,
 }
 
-// simple genesis tx
-type SimpleGenTx struct {
-	Addr sdk.AccAddress `json:"addr"`
-}
-
 // Generate a genesis transaction
-func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey, genTxConfig serverconfig.GenTx) (
-	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
-
+func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (appGenTx, cliPrint json.RawMessage, validator types.GenesisValidator, err error) {
 	var addr sdk.AccAddress
 	var secret string
 	addr, secret, err = GenerateCoinKey()
 	if err != nil {
 		return
 	}
-
 	var bz []byte
-	simpleGenTx := SimpleGenTx{addr}
+	simpleGenTx := SimpleGenTx{Addr: addr}
 	bz, err = cdc.MarshalJSON(simpleGenTx)
 	if err != nil {
 		return
 	}
 	appGenTx = json.RawMessage(bz)
-
 	mm := map[string]string{"secret": secret}
 	bz, err = cdc.MarshalJSON(mm)
 	if err != nil {
 		return
 	}
 	cliPrint = json.RawMessage(bz)
-
 	validator = tmtypes.GenesisValidator{
 		PubKey: pk,
 		Power:  10,
@@ -122,8 +70,8 @@ func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState 
 		return
 	}
 
-	var genTx SimpleGenTx
-	err = cdc.UnmarshalJSON(appGenTxs[0], &genTx)
+	var tx SimpleGenTx
+	err = cdc.UnmarshalJSON(appGenTxs[0], &tx)
 	if err != nil {
 		return
 	}
@@ -138,7 +86,7 @@ func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState 
       }
     ]
   }]
-}`, genTx.Addr))
+}`, tx.Addr))
 	return
 }
 
@@ -176,7 +124,8 @@ func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (s
 	if !overwrite {
 		_, err := keybase.Get(keyName)
 		if err == nil {
-			return sdk.AccAddress([]byte{}), "", errors.New("key already exists, overwrite is disabled")
+			return sdk.AccAddress([]byte{}), "", fmt.Errorf(
+				"key already exists, overwrite is disabled (clientRoot: %s)", clientRoot)
 		}
 	}
 

@@ -480,11 +480,7 @@ func TestPoolParamsQuery(t *testing.T) {
 	var pool stake.Pool
 	err = cdc.UnmarshalJSON([]byte(body), &pool)
 	require.Nil(t, err)
-	require.Equal(t, initialPool.DateLastCommissionReset, pool.DateLastCommissionReset)
-	require.Equal(t, initialPool.PrevBondedShares, pool.PrevBondedShares)
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
-	require.Equal(t, initialPool.NextInflation(params), pool.Inflation)
-	initialPool = initialPool.ProcessProvisions(params) // provisions are added to the pool every hour
 	require.Equal(t, initialPool.LooseTokens, pool.LooseTokens)
 }
 
@@ -496,7 +492,7 @@ func TestValidatorsQuery(t *testing.T) {
 	require.Equal(t, 1, len(operAddrs))
 
 	validators := getValidators(t, port)
-	require.Equal(t, len(validators), 1)
+	require.Equal(t, 1, len(validators), fmt.Sprintf("%+v", validators))
 
 	// make sure all the validators were found (order unknown because sorted by operator addr)
 	foundVal := false

@@ -452,7 +452,7 @@
   version = "v0.11.0"
 
 [[projects]]
-  digest = "1:a69eebd15b05045ffdb10a984e001fadc5666f74383de3d2a9ee5862ee99cfdc"
+  digest = "1:f9c7a1f3ee087476f4883c33cc7c1bdbe56b9670b2fb27855ea2f386393272f5"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -518,8 +518,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "0c9c3292c918617624f6f3fbcd95eceade18bcd5"
-  version = "v0.25.0"
+  revision = "90eda9bfb6e6daeed1c8015df41cb36772d91778"
+  version = "v0.25.1-rc0"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"

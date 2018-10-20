@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -52,10 +51,7 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 
 		valAddr, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
-			utils.WriteErrorResponse(
-				w, http.StatusInternalServerError,
-				fmt.Sprintf("failed to decode validator; error: %s", err.Error()),
-			)
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

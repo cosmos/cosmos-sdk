@@ -30,7 +30,7 @@ func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "txs",
 		Short: "Search for all transactions that match the given tags.",
 		Long: strings.TrimSpace(`
-Search for transactions that match the given tags. By default, transactions must match ALL tags 
+Search for transactions that match the given tags. By default, transactions must match ALL tags
 passed to the --tags option. To match any transaction, use the --any option.
 
 For example:
@@ -151,8 +151,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 
 		value, err := url.QueryUnescape(keyValue[1])
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Could not decode address: " + err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not decode address", err.Error()))
 			return
 		}
 
@@ -161,8 +160,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			prefix := strings.Split(bech32address, "1")[0]
 			bz, err := sdk.GetFromBech32(bech32address, prefix)
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(err.Error()))
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
 
@@ -171,8 +169,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 
 		txs, err := searchTxs(cliCtx, cdc, []string{tag})
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 

@@ -278,7 +278,6 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 
 		depositerAddr, err := sdk.AccAddressFromBech32(bechDepositerAddr)
 		if err != nil {
-			err := errors.Errorf("'%s' needs to be bech32 encoded", RestDepositer)
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -348,7 +347,6 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 
 		voterAddr, err := sdk.AccAddressFromBech32(bechVoterAddr)
 		if err != nil {
-			err := errors.Errorf("'%s' needs to be bech32 encoded", RestVoter)
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -428,11 +426,6 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			return
 		}
 
-		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
@@ -450,7 +443,6 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		if len(bechVoterAddr) != 0 {
 			voterAddr, err := sdk.AccAddressFromBech32(bechVoterAddr)
 			if err != nil {
-				err := errors.Errorf("'%s' needs to be bech32 encoded", RestVoter)
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
@@ -460,7 +452,6 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		if len(bechDepositerAddr) != 0 {
 			depositerAddr, err := sdk.AccAddressFromBech32(bechDepositerAddr)
 			if err != nil {
-				err := errors.Errorf("'%s' needs to be bech32 encoded", RestDepositer)
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
@@ -470,7 +461,6 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		if len(strProposalStatus) != 0 {
 			proposalStatus, err := gov.ProposalStatusFromString(client.NormalizeProposalStatus(strProposalStatus))
 			if err != nil {
-				err := errors.Errorf("'%s' is not a valid Proposal Status", strProposalStatus)
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
@@ -493,11 +483,6 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		res, err := cliCtx.QueryWithData("custom/gov/proposals", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -538,11 +523,6 @@ func queryTallyOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
-			return
-		}
-
-		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

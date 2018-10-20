@@ -26,12 +26,12 @@ const (
 
 // WriteErrorResponse prepares and writes a HTTP error
 // given a status code and an error message.
-func WriteErrorResponse(w http.ResponseWriter, status int, msg string) {
+func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
 	w.WriteHeader(status)
-	w.Write([]byte(msg))
+	w.Write([]byte(err))
 }
 
-// WriteGasEstimateResponse prepares and writes an HTTP
+// WriteSimulationResponse prepares and writes an HTTP
 // response for transactions simulations.
 func WriteSimulationResponse(w http.ResponseWriter, gas int64) {
 	w.WriteHeader(http.StatusOK)

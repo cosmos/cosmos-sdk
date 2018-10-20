@@ -2,7 +2,6 @@ package stake
 
 import (
 	"bytes"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
@@ -31,7 +30,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-// Called every block, process inflation, update validator set
+// Called every block, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.ValidatorUpdate) {
 	endBlockerTags := sdk.EmptyTags()
 
@@ -62,17 +61,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 			tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
 			tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
 		))
-	}
-
-	pool := k.GetPool(ctx)
-
-	// Process provision inflation
-	blockTime := ctx.BlockHeader().Time
-	if blockTime.Sub(pool.InflationLastTime) >= time.Hour {
-		params := k.GetParams(ctx)
-		pool.InflationLastTime = blockTime
-		pool = pool.ProcessProvisions(params)
-		k.SetPool(ctx, pool)
 	}
 
 	// reset the intra-transaction counter

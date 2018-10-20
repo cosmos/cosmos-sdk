@@ -241,6 +241,22 @@ func TestQueryDelegation(t *testing.T) {
 
 	require.Equal(t, delegation, delegationRes)
 
+	// Query Delegator Delegations
+
+	query = abci.RequestQuery{
+		Path: "/custom/stake/delegatorDelegations",
+		Data: bz,
+	}
+
+	res, err = queryDelegatorDelegations(ctx, cdc, query, keeper)
+	require.Nil(t, err)
+
+	var delegatorDelegations []types.Delegation
+	errRes = cdc.UnmarshalJSON(res, &delegatorDelegations)
+	require.Nil(t, errRes)
+	require.Len(t, delegatorDelegations, 1)
+	require.Equal(t, delegation, delegatorDelegations[0])
+
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
@@ -273,25 +289,24 @@ func TestQueryDelegation(t *testing.T) {
 	_, err = queryUnbondingDelegation(ctx, cdc, query, keeper)
 	require.NotNil(t, err)
 
-	// Query Delegator Summary
+	// Query Delegator Delegations
 
 	query = abci.RequestQuery{
-		Path: "/custom/stake/delegator",
+		Path: "/custom/stake/delegatorUnbondingDelegations",
 		Data: bz,
 	}
 
-	res, err = queryDelegator(ctx, cdc, query, keeper)
+	res, err = queryDelegatorUnbondingDelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var summary types.DelegationSummary
-	errRes = cdc.UnmarshalJSON(res, &summary)
+	var delegatorUbds []types.UnbondingDelegation
+	errRes = cdc.UnmarshalJSON(res, &delegatorUbds)
 	require.Nil(t, errRes)
-
-	require.Equal(t, unbond, summary.UnbondingDelegations[0])
+	require.Equal(t, unbond, delegatorUbds[0])
 
 	// error unknown request
 	query.Data = bz[:len(bz)-1]
 
-	_, err = queryDelegator(ctx, cdc, query, keeper)
+	_, err = queryDelegatorUnbondingDelegations(ctx, cdc, query, keeper)
 	require.NotNil(t, err)
 }

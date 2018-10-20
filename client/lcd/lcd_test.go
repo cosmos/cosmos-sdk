@@ -543,11 +543,9 @@ func TestBonding(t *testing.T) {
 	bond := getDelegation(t, port, addr, operAddrs[0])
 	require.Equal(t, amt, bond.Shares)
 
-	summary := getDelegationSummary(t, port, addr)
-
-	require.Len(t, summary.Delegations, 1, "Delegation summary holds all delegations")
-	require.Equal(t, amt, summary.Delegations[0].Shares)
-	require.Len(t, summary.UnbondingDelegations, 0, "Delegation summary holds all unbonding-delegations")
+	delegatorDels := getDelegatorDelegations(t, port, addr)
+	require.Len(t, delegatorDels, 1)
+	require.Equal(t, amt, delegatorDels[0].Shares)
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
@@ -575,11 +573,12 @@ func TestBonding(t *testing.T) {
 	unbonding := getUndelegation(t, port, addr, operAddrs[0])
 	require.Equal(t, "60", unbonding.Balance.Amount.String())
 
-	summary = getDelegationSummary(t, port, addr)
+	delegatorDels = getDelegatorDelegations(t, port, addr)
+	require.Len(t, delegatorDels, 0)
 
-	require.Len(t, summary.Delegations, 0, "Delegation summary holds all delegations")
-	require.Len(t, summary.UnbondingDelegations, 1, "Delegation summary holds all unbonding-delegations")
-	require.Equal(t, "60", summary.UnbondingDelegations[0].Balance.Amount.String())
+	delegatorUbds := getDelegatorUnbondingDelegations(t, port, addr)
+	require.Len(t, delegatorUbds, 1)
+	require.Equal(t, "60", delegatorUbds[0].Balance.Amount.String())
 
 	bondedValidators = getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 0, "There's no delegation as the user withdraw all funds")
@@ -587,9 +586,8 @@ func TestBonding(t *testing.T) {
 	// TODO Undonding status not currently implemented
 	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)
 
-	// TODO add redelegation, need more complex capabilities such to mock context and
-	// TODO check summary for redelegation
-	// assert.Len(t, summary.Redelegations, 1, "Delegation summary holds all redelegations")
+	delegatorReds := getDelegatorRedelegations(t, port, addr)
+	require.Len(t, delegatorReds, 0)
 
 	// query txs
 	txs := getBondingTxs(t, port, addr, "")
@@ -981,16 +979,40 @@ func getUndelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, va
 	return unbondings
 }
 
-func getDelegationSummary(t *testing.T, port string, delegatorAddr sdk.AccAddress) stake.DelegationSummary {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s", delegatorAddr), nil)
+func getDelegatorDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.Delegation {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var summary stake.DelegationSummary
+	var dels []stake.Delegation
 
-	err := cdc.UnmarshalJSON([]byte(body), &summary)
+	err := cdc.UnmarshalJSON([]byte(body), &dels)
 	require.Nil(t, err)
 
-	return summary
+	return dels
+}
+
+func getDelegatorUnbondingDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.UnbondingDelegation {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations", delegatorAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var ubds []stake.UnbondingDelegation
+
+	err := cdc.UnmarshalJSON([]byte(body), &ubds)
+	require.Nil(t, err)
+
+	return ubds
+}
+
+func getDelegatorRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.Redelegation {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations", delegatorAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var reds []stake.Redelegation
+
+	err := cdc.UnmarshalJSON([]byte(body), &reds)
+	require.Nil(t, err)
+
+	return reds
 }
 
 func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []tx.Info {

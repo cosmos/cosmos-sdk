@@ -209,11 +209,6 @@ func queryProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
@@ -241,11 +236,6 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		res, err := cliCtx.QueryWithData("custom/gov/deposits", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -296,11 +286,6 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		res, err := cliCtx.QueryWithData("custom/gov/deposit", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -364,11 +349,6 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 		res, err := cliCtx.QueryWithData("custom/gov/vote", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		if len(res) == 0 {
-			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

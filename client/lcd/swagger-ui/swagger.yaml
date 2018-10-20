@@ -746,8 +746,6 @@ paths:
                   "$ref": "#/definitions/Delegation"
         400:
           description: Invalid delegator address
-        204:
-          description: No content
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/validators:
@@ -770,8 +768,6 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Validator"
-        204:
-          description: No content
         400:
           description: Invalid delegator address
         500:
@@ -799,8 +795,6 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Validator"
-        204:
-          description: No content
         400:
           description: Invalid delegator address or validator address
         500:
@@ -826,7 +820,7 @@ paths:
             items:
               $ref: "#/definitions/TxQuery"
         204:
-          description: No content
+          description: No staking transaction about this delegator address
         400:
           description: Invalid delegator address
         500:
@@ -854,8 +848,6 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Delegation"
-        204:
-          description: No content
         400:
           description: Invalid delegator address or validator address
         500:
@@ -886,8 +878,6 @@ paths:
             items:
               type: object
               "$ref": "#/definitions/UnbondingDelegation"
-        204:
-          description: No content
         400:
           description: Invalid delegator address or validator address
         500:
@@ -906,8 +896,6 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Validator"
-        204:
-          description: No content
         500:
           description: Internal Server Error
   /stake/validators/{validatorAddr}:
@@ -928,8 +916,6 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Validator"
-        204:
-          description: No content
         400:
           description: Invalid validator address
         500:
@@ -959,8 +945,6 @@ paths:
                 type: string
               prev_bonded_shares:
                 type: string
-        204:
-          description: No content
         500:
           description: Internal Server Error
   /stake/parameters:
@@ -990,8 +974,6 @@ paths:
                 type: integer
               bond_denom:
                 type: string
-        204:
-          description: No content
         500:
           description: Internal Server Error
   /slashing/validators/{validatorPubKey}/signing_info:
@@ -1157,8 +1139,6 @@ paths:
             type: array
             items:
               "$ref": "#/definitions/TextProposal"
-        204:
-          description: No content
         400:
           description: Invalid query parameters
         500:
@@ -1234,8 +1214,6 @@ paths:
             type: array
             items:
               "$ref": "#/definitions/Deposit"
-        204:
-          description: No content
         400:
           description: Invalid proposal id
         500:
@@ -1310,8 +1288,6 @@ paths:
             type: array
             items:
               "$ref": "#/definitions/Vote"
-        204:
-          description: No content
         400:
           description: Invalid proposal id
         500:
@@ -1334,8 +1310,6 @@ paths:
           description: OK
           schema:
             "$ref": "#/definitions/TextProposal"
-        204:
-          description: No content
         400:
           description: Invalid proposal id
         500:
@@ -1364,8 +1338,6 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Deposit"
-        204:
-          description: No content
         400:
           description: Invalid proposal id or depositer address
         404:
@@ -1396,8 +1368,6 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/Vote"
-        204:
-          description: No content
         400:
           description: Invalid proposal id or voter address
         404:

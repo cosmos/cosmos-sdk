@@ -5,24 +5,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-// get the validator distribution info
-func (k Keeper) GetPreviousValidatorPower(ctx sdk.Context,
-	consAddr sdk.ConsAddress) (power sdk.Dec) {
-
+// set the total power from previous tendermint block
+func (k Keeper) GetPreviousValidatorPower(ctx sdk.Context, consAddr sdk.ConsAddress) (prevTotalPower int64) {
 	store := ctx.KVStore(k.storeKey)
+
 	b := store.Get(GetPreviousValidatorPowerKey(consAddr))
 	if b == nil {
-		panic("Stored previous validator power should not have been nil")
+		panic("Previous proposer not set")
 	}
-	k.cdc.MustUnmarshalBinary(b, &power)
+
+	k.cdc.MustUnmarshalBinary(b, &prevTotalPower)
 	return
 }
 
-// set the validator distribution info
-func (k Keeper) SetPreviousValidatorPower(ctx sdk.Context, consAddr sdk.ConsAddress, power sdk.Dec) {
+// get the proposer public key for this block
+func (k Keeper) SetPreviousValidatorPower(ctx sdk.Context, consAddr sdk.ConsAddress, prevTotalPower int64) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(power)
-	store.Set(GetValidatorDistInfoKey(consAddr), b)
+	b := k.cdc.MustMarshalBinary(prevTotalPower)
+	store.Set(GetPreviousValidatorPowerKey(consAddr), b)
 }
 
 //___________________________________________________________________

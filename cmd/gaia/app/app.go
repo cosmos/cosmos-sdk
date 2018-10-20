@@ -206,7 +206,8 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 
 	tags := gov.EndBlocker(ctx, app.govKeeper)
-	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
+	validatorUpdates, totalPower := stake.EndBlocker(ctx, app.stakeKeeper)
+	distr.EndBlocker(ctx, validatorUpdates, totalPower)
 
 	// Add these new validators to the addr -> pubkey map.
 	app.slashingKeeper.AddValidators(ctx, validatorUpdates)

@@ -21,11 +21,12 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 }
 
 // set the total power and validator power's for next block
-func EndBlocker(ctx sdk.Context, totalPower sdk.Dec, validatorPowerUpdates []sdk.ValidatorPowerUpdates) {
-	k.SetPreviousTotalPower(ctx, consAddr)
+func EndBlocker(ctx sdk.Context, k keeper.Keeper, validatorUpdates []abci.ValidatorUpdate, totalPower int64) {
+	k.SetPreviousTotalPower(ctx, totalPower)
 
-	for _, vpu := range ValidatorPowerUpdates {
-		k.SetPreviousValidatorPower(ctx, vpu.ConsAddr, vpu.Power)
+	for _, vu := range validatorUpdates {
+		consAddr := sdk.GetConsAddress(vu.PubKey)
+		k.SetPreviousValidatorPower(ctx, consAddr, vu.Power)
 	}
 }
 

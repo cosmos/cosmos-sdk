@@ -70,7 +70,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
-			distrUpdates = append(distrUpdates, validator.DistrValidatorUpdate())
 		}
 
 		// validator still in the validator set, so delete from the copy

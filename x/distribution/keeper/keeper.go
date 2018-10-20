@@ -91,27 +91,7 @@ func (k Keeper) GetPreviousTotalPower(ctx sdk.Context) (prevTotalPower int64) {
 }
 
 // get the proposer public key for this block
-func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, prevTotalPower int64) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(prevTotalPower)
-	store.Set(PreviousTotalPowerKey, b)
-}
-
-// set the total power from previous tendermint block
-func (k Keeper) GetPreviousValidatorPower(ctx sdk.Context) (prevTotalPower int64) {
-	store := ctx.KVStore(k.storeKey)
-
-	b := store.Get(PreviousTotalPowerKey)
-	if b == nil {
-		panic("Previous proposer not set")
-	}
-
-	k.cdc.MustUnmarshalBinary(b, &prevTotalPower)
-	return
-}
-
-// get the proposer public key for this block
-func (k Keeper) SetPreviousValidatorPower(ctx sdk.Context, prevTotalPower int64) {
+func (k Keeper) SetPreviousTotalPower(ctx sdk.Context, prevTotalPower int64) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(prevTotalPower)
 	store.Set(PreviousTotalPowerKey, b)

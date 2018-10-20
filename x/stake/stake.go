@@ -85,6 +85,20 @@ var (
 )
 
 const (
+	QueryValidators                    = querier.QueryValidators
+	QueryValidator                     = querier.QueryValidator
+	QueryDelegatorDelegations          = querier.QueryDelegatorDelegations
+	QueryDelegatorUnbondingDelegations = querier.QueryDelegatorUnbondingDelegations
+	QueryDelegatorRedelegations        = querier.QueryDelegatorRedelegations
+	QueryDelegation                    = querier.QueryDelegation
+	QueryUnbondingDelegation           = querier.QueryUnbondingDelegation
+	QueryDelegatorValidators           = querier.QueryDelegatorValidators
+	QueryDelegatorValidator            = querier.QueryDelegatorValidator
+	QueryPool                          = querier.QueryPool
+	QueryParameters                    = querier.QueryParameters
+)
+
+const (
 	DefaultCodespace      = types.DefaultCodespace
 	CodeInvalidValidator  = types.CodeInvalidValidator
 	CodeInvalidDelegation = types.CodeInvalidDelegation

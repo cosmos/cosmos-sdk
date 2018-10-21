@@ -61,7 +61,7 @@ func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []
 }
 
 // get the bonded validator index key for an operator address
-func GetBondedValidatorIndexKey(operator sdk.ValAddress) []byte {
+func GetValidatorsBondedIndexKey(operator sdk.ValAddress) []byte {
 	return append(ValidatorsBondedIndexKey, operator...)
 }
 

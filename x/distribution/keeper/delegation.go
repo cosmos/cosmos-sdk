@@ -77,6 +77,7 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 		return types.ErrNoDelegationDistInfo(k.codespace)
 	}
 
+	// TODO: Reconcile with duplicate code in getDelegatorRewardsAll.
 	height := ctx.BlockHeight()
 	bondedTokens := k.stakeKeeper.TotalPower(ctx)
 	feePool := k.GetFeePool(ctx)
@@ -125,6 +126,7 @@ func (k Keeper) getDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, 
 	bondedTokens := k.stakeKeeper.TotalPower(ctx)
 
 	// iterate over all the delegations
+	// TODO: Reconcile with duplicate code in WithdrawDelegationReward.
 	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
 		feePool := k.GetFeePool(ctx)
 		valAddr := del.GetValidator()

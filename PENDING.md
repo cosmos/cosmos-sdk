@@ -81,6 +81,7 @@ BREAKING CHANGES
     * [x/stake] \#2412 Added an unbonding validator queue to EndBlock to automatically update validator.Status when finished Unbonding
     * [x/stake] \#2500 Block conflicting redelegations until we add an index
     * [x/params] Global Paramstore refactored
+    * [types] \#2506 sdk.Dec MarshalJSON now marshals as a normal Decimal, with 10 digits of decimal precision
     * [x/stake] \#2508 Utilize Tendermint power for validator power key
     * [x/stake] \#2531 Remove all inflation logic
     * [x/mint] \#2531 Add minting module and inflation logic

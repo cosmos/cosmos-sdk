@@ -5,7 +5,7 @@ import (
 )
 
 // Register concrete types on codec codec
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.Amino) {
 
 	cdc.RegisterConcrete(MsgSubmitProposal{}, "cosmos-sdk/MsgSubmitProposal", nil)
 	cdc.RegisterConcrete(MsgDeposit{}, "cosmos-sdk/MsgDeposit", nil)

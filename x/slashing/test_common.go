@@ -39,7 +39,7 @@ var (
 	initCoins = sdk.NewInt(200)
 )
 
-func createTestCodec() *codec.Codec {
+func createTestCodec() sdk.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)

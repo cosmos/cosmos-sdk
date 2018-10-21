@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -23,7 +22,7 @@ var (
 )
 
 // command to withdraw rewards
-func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
+func GetCmdWithdrawRewards(cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards",
 		Short: "withdraw rewards for either: all-delegations, a delegation, or a validator",
@@ -82,7 +81,7 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdDelegate implements the delegate command.
-func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
+func GetCmdSetWithdrawAddr(cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",

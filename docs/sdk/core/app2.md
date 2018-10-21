@@ -144,7 +144,7 @@ func NewCodec() *codec.Codec {
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
-	crypto.RegisterAmino(cdc)
+	sdk.RegisterCrypto(cdc)
 	return cdc
 }
 ```

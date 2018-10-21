@@ -142,14 +142,10 @@ func (c *Cache) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
 }
 
 func (c *Cache) MustUnmarshalBinary(bz []byte, ptr interface{}) {
-	lru := c.bin
-	lru.lock()
-	defer lru.unlock()
-	if lru.read(bz, ptr) {
-		return
+	err := c.UnmarshalBinary(bz, ptr)
+	if err != nil {
+		panic(err)
 	}
-	c.Amino.MustUnmarshalBinary(bz, ptr)
-	lru.write(bz, ptr)
 }
 
 func (c *Cache) UnmarshalBinaryBare(bz []byte, ptr interface{}) (err error) {
@@ -167,7 +163,9 @@ func (c *Cache) UnmarshalBinaryBare(bz []byte, ptr interface{}) (err error) {
 	return
 }
 
-func (c *Cache) Seal() Codec {
-	c.Amino.Seal()
-	return c
+func (c *Cache) MustUnmarshalBinaryBare(bz []byte, ptr interface{}) {
+	err := c.UnmarshalBinaryBare(bz, ptr)
+	if err != nil {
+		panic(err)
+	}
 }

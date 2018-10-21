@@ -3,7 +3,6 @@ package cli
 import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -13,7 +12,7 @@ import (
 )
 
 // GetCmdUnjail implements the create unjail validator command.
-func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
+func GetCmdUnjail(cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,

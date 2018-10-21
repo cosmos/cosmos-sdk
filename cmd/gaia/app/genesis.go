@@ -90,7 +90,7 @@ func GaiaAppInit() server.AppInit {
 
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
-func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisState GenesisState, err error) {
+func GaiaAppGenState(cdc sdk.Codec, appGenTxs []json.RawMessage) (genesisState GenesisState, err error) {
 	if len(appGenTxs) == 0 {
 		err = errors.New("must provide at least genesis transaction")
 		return
@@ -175,7 +175,7 @@ func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
 }
 
 // GaiaAppGenState but with JSON
-func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func GaiaAppGenStateJSON(cdc sdk.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 	// create the final app state
 	genesisState, err := GaiaAppGenState(cdc, appGenTxs)
 	if err != nil {
@@ -187,7 +187,7 @@ func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []json.RawMessage) (appStat
 
 // CollectStdTxs processes and validates application's genesis StdTxs and returns the list of validators,
 // appGenTxs, and persistent peers required to generate genesis.json.
-func CollectStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
+func CollectStdTxs(moniker string, genTxsDir string, cdc sdk.Codec) (
 	validators []tmtypes.GenesisValidator, appGenTxs []auth.StdTx, persistentPeers string, err error) {
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)

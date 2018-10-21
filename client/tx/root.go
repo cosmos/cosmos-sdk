@@ -9,7 +9,7 @@ import (
 )
 
 // AddCommands adds a number of tx-query related subcommands
-func AddCommands(cmd *cobra.Command, cdc *codec.Codec) {
+func AddCommands(cmd *cobra.Command, cdc codec.Codec) {
 	cmd.AddCommand(
 		SearchTxCmd(cdc),
 		QueryTxCmd(cdc),
@@ -17,7 +17,7 @@ func AddCommands(cmd *cobra.Command, cdc *codec.Codec) {
 }
 
 // register REST routes
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc codec.Codec) {
 	r.HandleFunc("/txs/{hash}", QueryTxRequestHandlerFn(cdc, cliCtx)).Methods("GET")
 	r.HandleFunc("/txs", SearchTxRequestHandlerFn(cliCtx, cdc)).Methods("GET")
 	r.HandleFunc("/txs", BroadcastTxRequest(cliCtx, cdc)).Methods("POST")

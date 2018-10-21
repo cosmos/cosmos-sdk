@@ -9,11 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/spf13/cobra"
-	amino "github.com/tendermint/go-amino"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 )
 
 // GetSignCommand returns the sign command
-func GetSignCommand(codec *amino.Codec, decoder auth.AccountDecoder) *cobra.Command {
+func GetSignCommand(codec codec.Codec, decoder auth.AccountDecoder) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign <file>",
 		Short: "Sign transactions generated offline",
@@ -43,7 +43,7 @@ recommended to set such parameters manually.`,
 	return cmd
 }
 
-func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd(cdc codec.Codec, decoder auth.AccountDecoder) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
 		stdTx, err := readAndUnmarshalStdTx(cdc, args[0])
 		if err != nil {
@@ -90,7 +90,7 @@ func printSignatures(stdTx auth.StdTx) {
 	return
 }
 
-func readAndUnmarshalStdTx(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {
+func readAndUnmarshalStdTx(cdc codec.Codec, filename string) (stdTx auth.StdTx, err error) {
 	var bytes []byte
 	if bytes, err = ioutil.ReadFile(filename); err != nil {
 		return

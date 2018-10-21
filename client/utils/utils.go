@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
 )
 
@@ -71,7 +70,7 @@ func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name 
 
 // CalculateGas simulates the execution of a transaction and returns
 // both the estimate obtained by the query and the adjusted amount.
-func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *amino.Codec, txBytes []byte, adjustment float64) (estimate, adjusted int64, err error) {
+func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc sdk.Codec, txBytes []byte, adjustment float64) (estimate, adjusted int64, err error) {
 	// run a simulation (via /app/simulate query) to
 	// estimate gas and update TxBuilder accordingly
 	rawRes, err := queryFunc("/app/simulate", txBytes)
@@ -164,7 +163,7 @@ func adjustGasEstimate(estimate int64, adjustment float64) int64 {
 	return int64(adjustment * float64(estimate))
 }
 
-func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (int64, error) {
+func parseQueryResponse(cdc sdk.Codec, rawRes []byte) (int64, error) {
 	var simulationResult sdk.Result
 	if err := cdc.UnmarshalBinary(rawRes, &simulationResult); err != nil {
 		return 0, err

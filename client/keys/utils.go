@@ -12,7 +12,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"net/http"
 )
@@ -235,7 +234,7 @@ func printPubKey(info keys.Info, bechKeyOut bechKeyOutFn) {
 }
 
 // PostProcessResponse performs post process for rest response
-func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent bool) {
+func PostProcessResponse(w http.ResponseWriter, cdc sdk.Codec, response interface{}, indent bool) {
 	var output []byte
 	switch response.(type) {
 	default:

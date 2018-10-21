@@ -31,7 +31,7 @@ type s struct {
 	I int
 }
 
-func createTestCodec() *codec.Codec {
+func createTestCodec() sdk.Codec {
 	cdc := codec.New()
 	sdk.RegisterCodec(cdc)
 	cdc.RegisterConcrete(s{}, "test/s", nil)

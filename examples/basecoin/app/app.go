@@ -34,7 +34,7 @@ var (
 // integral app types.
 type BasecoinApp struct {
 	*bam.BaseApp
-	cdc *codec.Codec
+	cdc sdk.Codec
 
 	// keys to access the multistore
 	keyMain    *sdk.KVStoreKey
@@ -102,7 +102,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 
 // MakeCodec creates a new codec codec and registers all the necessary types
 // with the codec.
-func MakeCodec() *codec.Codec {
+func MakeCodec() sdk.Codec {
 	cdc := codec.New()
 
 	codec.RegisterCrypto(cdc)

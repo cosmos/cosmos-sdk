@@ -13,7 +13,7 @@ func RegisterCodec(cdc *codec.Amino) {
 }
 
 // generic sealed codec to be used throughout module
-var MsgCdc *codec.Amino
+var MsgCdc codec.Codec
 
 func init() {
 	cdc := codec.New()

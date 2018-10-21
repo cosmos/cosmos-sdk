@@ -73,7 +73,7 @@ type validatorValue struct {
 }
 
 // return the redelegation without fields contained within the key for the store
-func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
+func MustMarshalValidator(cdc sdk.Codec, validator Validator) []byte {
 	val := validatorValue{
 		ConsPubKey:         validator.ConsPubKey,
 		Jailed:             validator.Jailed,
@@ -91,7 +91,7 @@ func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 }
 
 // unmarshal a redelegation from a store key and value
-func MustUnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) Validator {
+func MustUnmarshalValidator(cdc sdk.Codec, operatorAddr, value []byte) Validator {
 	validator, err := UnmarshalValidator(cdc, operatorAddr, value)
 	if err != nil {
 		panic(err)
@@ -100,7 +100,7 @@ func MustUnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) Valida
 }
 
 // unmarshal a redelegation from a store key and value
-func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator Validator, err error) {
+func UnmarshalValidator(cdc sdk.Codec, operatorAddr, value []byte) (validator Validator, err error) {
 	if len(operatorAddr) != sdk.AddrLen {
 		err = fmt.Errorf("%v", ErrBadValidatorAddr(DefaultCodespace).Data())
 		return
@@ -315,7 +315,7 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 }
 
 // ABCIValidatorPowerBytes
-func (v Validator) ABCIValidatorPowerBytes(cdc *codec.Codec) []byte {
+func (v Validator) ABCIValidatorPowerBytes(cdc sdk.Codec) []byte {
 	power := v.BondedTokens().RoundInt64()
 	return cdc.MustMarshalBinary(power)
 }

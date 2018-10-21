@@ -5,13 +5,13 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
-	amino "github.com/tendermint/go-amino"
 )
 
 // GetSignCommand returns the sign command
-func GetBroadcastCommand(codec *amino.Codec) *cobra.Command {
+func GetBroadcastCommand(codec codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "broadcast <file>",
 		Short: "Broadcast transactions generated offline",
@@ -38,7 +38,7 @@ in place of an input filename, the command reads from standard input.`,
 	return cmd
 }
 
-func readAndUnmarshalStdTx(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {
+func readAndUnmarshalStdTx(cdc codec.Codec, filename string) (stdTx auth.StdTx, err error) {
 	var bytes []byte
 	if filename == "-" {
 		bytes, err = ioutil.ReadAll(os.Stdin)

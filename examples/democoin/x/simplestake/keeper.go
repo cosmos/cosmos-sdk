@@ -17,7 +17,7 @@ type Keeper struct {
 	ck bank.Keeper
 
 	key       sdk.StoreKey
-	cdc       *codec.Codec
+	cdc       sdk.Codec
 	codespace sdk.CodespaceType
 }
 

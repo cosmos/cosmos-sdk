@@ -1,6 +1,9 @@
 package types
 
-import "github.com/cosmos/cosmos-sdk/codec"
+import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
+)
 
 // reexport
 type Codec = codec.Codec
@@ -9,4 +12,9 @@ type Codec = codec.Codec
 func RegisterCodec(cdc *codec.Amino) {
 	cdc.RegisterInterface((*Msg)(nil), nil)
 	cdc.RegisterInterface((*Tx)(nil), nil)
+}
+
+// Register the go-crypto to the codec
+func RegisterCrypto(cdc *codec.Amino) {
+	cryptoAmino.RegisterAmino(cdc.Codec)
 }

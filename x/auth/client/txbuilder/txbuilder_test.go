@@ -19,7 +19,7 @@ var (
 
 func TestTxBuilderBuild(t *testing.T) {
 	type fields struct {
-		Codec         *codec.Codec
+		Codec         sdk.Codec
 		AccountNumber int64
 		Sequence      int64
 		Gas           int64

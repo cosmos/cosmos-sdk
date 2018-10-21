@@ -58,7 +58,7 @@ var (
 )
 
 // create a codec used only for testing
-func MakeTestCodec() *codec.Codec {
+func MakeTestCodec() sdk.Codec {
 	var cdc = codec.New()
 	bank.RegisterCodec(cdc)
 	stake.RegisterCodec(cdc)

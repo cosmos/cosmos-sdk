@@ -1,7 +1,6 @@
 package app
 
 import (
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -51,12 +50,12 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 }
 
 // Update codec from app2 to register imported modules
-func UpdatedCodec() *codec.Codec {
+func UpdatedCodec() sdk.Codec {
 	cdc := codec.New()
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
 	auth.RegisterCodec(cdc)
-	cryptoAmino.RegisterAmino(cdc)
+	sdk.RegisterCrypto(cdc)
 	return cdc
 }

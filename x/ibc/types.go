@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	msgCdc *codec.Codec
+	msgCdc sdk.Codec
 )
 
 func init() {

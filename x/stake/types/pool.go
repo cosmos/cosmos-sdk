@@ -80,7 +80,7 @@ func (p Pool) HumanReadableString() string {
 }
 
 // unmarshal the current pool value from store key or panics
-func MustUnmarshalPool(cdc *codec.Codec, value []byte) Pool {
+func MustUnmarshalPool(cdc codec.Codec, value []byte) Pool {
 	pool, err := UnmarshalPool(cdc, value)
 	if err != nil {
 		panic(err)
@@ -89,7 +89,7 @@ func MustUnmarshalPool(cdc *codec.Codec, value []byte) Pool {
 }
 
 // unmarshal the current pool value from store key
-func UnmarshalPool(cdc *codec.Codec, value []byte) (pool Pool, err error) {
+func UnmarshalPool(cdc codec.Codec, value []byte) (pool Pool, err error) {
 	err = cdc.UnmarshalBinary(value, &pool)
 	if err != nil {
 		return

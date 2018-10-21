@@ -42,7 +42,7 @@ func (o seqOracle) ValidateBasic() sdk.Error {
 	return nil
 }
 
-func makeCodec() *codec.Codec {
+func makeCodec() sdk.Codec {
 	var cdc = codec.New()
 
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)

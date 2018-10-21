@@ -37,7 +37,7 @@ var (
 // Extended ABCI application
 type DemocoinApp struct {
 	*bam.BaseApp
-	cdc *codec.Codec
+	cdc sdk.Codec
 
 	// keys to access the substores
 	capKeyMainStore    *sdk.KVStoreKey
@@ -110,7 +110,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 }
 
 // custom tx codec
-func MakeCodec() *codec.Codec {
+func MakeCodec() sdk.Codec {
 	var cdc = codec.New()
 	codec.RegisterCrypto(cdc) // Register crypto.
 	sdk.RegisterCodec(cdc)    // Register Msgs

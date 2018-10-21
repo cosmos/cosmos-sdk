@@ -1,12 +1,15 @@
 package lcd
 
 import (
-	amino "github.com/tendermint/go-amino"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var cdc = amino.NewCodec()
+var cdc codec.Codec
 
 func init() {
-	ctypes.RegisterAmino(cdc)
+	aminocdc := codec.New()
+	ctypes.RegisterAmino(aminocdc.Codec)
+	cdc = aminocdc
 }

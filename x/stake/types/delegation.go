@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -49,7 +48,7 @@ type DelegationSummary struct {
 }
 
 // return the delegation without fields contained within the key for the store
-func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
+func MustMarshalDelegation(cdc sdk.Codec, delegation Delegation) []byte {
 	val := delegationValue{
 		delegation.Shares,
 		delegation.Height,
@@ -58,7 +57,7 @@ func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
 }
 
 // return the delegation without fields contained within the key for the store
-func MustUnmarshalDelegation(cdc *codec.Codec, key, value []byte) Delegation {
+func MustUnmarshalDelegation(cdc sdk.Codec, key, value []byte) Delegation {
 	delegation, err := UnmarshalDelegation(cdc, key, value)
 	if err != nil {
 		panic(err)
@@ -67,7 +66,7 @@ func MustUnmarshalDelegation(cdc *codec.Codec, key, value []byte) Delegation {
 }
 
 // return the delegation without fields contained within the key for the store
-func UnmarshalDelegation(cdc *codec.Codec, key, value []byte) (delegation Delegation, err error) {
+func UnmarshalDelegation(cdc sdk.Codec, key, value []byte) (delegation Delegation, err error) {
 	var storeValue delegationValue
 	err = cdc.UnmarshalBinary(value, &storeValue)
 	if err != nil {
@@ -139,7 +138,7 @@ type ubdValue struct {
 }
 
 // return the unbonding delegation without fields contained within the key for the store
-func MustMarshalUBD(cdc *codec.Codec, ubd UnbondingDelegation) []byte {
+func MustMarshalUBD(cdc sdk.Codec, ubd UnbondingDelegation) []byte {
 	val := ubdValue{
 		ubd.CreationHeight,
 		ubd.MinTime,
@@ -150,7 +149,7 @@ func MustMarshalUBD(cdc *codec.Codec, ubd UnbondingDelegation) []byte {
 }
 
 // unmarshal a unbonding delegation from a store key and value
-func MustUnmarshalUBD(cdc *codec.Codec, key, value []byte) UnbondingDelegation {
+func MustUnmarshalUBD(cdc sdk.Codec, key, value []byte) UnbondingDelegation {
 	ubd, err := UnmarshalUBD(cdc, key, value)
 	if err != nil {
 		panic(err)
@@ -159,7 +158,7 @@ func MustUnmarshalUBD(cdc *codec.Codec, key, value []byte) UnbondingDelegation {
 }
 
 // unmarshal a unbonding delegation from a store key and value
-func UnmarshalUBD(cdc *codec.Codec, key, value []byte) (ubd UnbondingDelegation, err error) {
+func UnmarshalUBD(cdc sdk.Codec, key, value []byte) (ubd UnbondingDelegation, err error) {
 	var storeValue ubdValue
 	err = cdc.UnmarshalBinary(value, &storeValue)
 	if err != nil {
@@ -229,7 +228,7 @@ type redValue struct {
 }
 
 // return the redelegation without fields contained within the key for the store
-func MustMarshalRED(cdc *codec.Codec, red Redelegation) []byte {
+func MustMarshalRED(cdc sdk.Codec, red Redelegation) []byte {
 	val := redValue{
 		red.CreationHeight,
 		red.MinTime,
@@ -242,7 +241,7 @@ func MustMarshalRED(cdc *codec.Codec, red Redelegation) []byte {
 }
 
 // unmarshal a redelegation from a store key and value
-func MustUnmarshalRED(cdc *codec.Codec, key, value []byte) Redelegation {
+func MustUnmarshalRED(cdc sdk.Codec, key, value []byte) Redelegation {
 	red, err := UnmarshalRED(cdc, key, value)
 	if err != nil {
 		panic(err)
@@ -251,7 +250,7 @@ func MustUnmarshalRED(cdc *codec.Codec, key, value []byte) Redelegation {
 }
 
 // unmarshal a redelegation from a store key and value
-func UnmarshalRED(cdc *codec.Codec, key, value []byte) (red Redelegation, err error) {
+func UnmarshalRED(cdc sdk.Codec, key, value []byte) (red Redelegation, err error) {
 	var storeValue redValue
 	err = cdc.UnmarshalBinary(value, &storeValue)
 	if err != nil {

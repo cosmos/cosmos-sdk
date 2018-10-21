@@ -126,7 +126,7 @@ var (
 // Extended ABCI application
 type GaiaApp struct {
 	*bam.BaseApp
-	cdc *codec.Codec
+	cdc sdk.Codec
 
 	// keys to access the substores
 	keyMain     *sdk.KVStoreKey
@@ -201,7 +201,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 }
 
 // custom tx codec
-func MakeCodec() *codec.Codec {
+func MakeCodec() sdk.Codec {
 	var cdc = codec.New()
 	bank.RegisterCodec(cdc)
 	stake.RegisterCodec(cdc)

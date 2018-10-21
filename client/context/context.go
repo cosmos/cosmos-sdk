@@ -32,7 +32,7 @@ var (
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec         *codec.Codec
+	Codec         codec.Codec
 	AccDecoder    auth.AccountDecoder
 	Client        rpcclient.Client
 	Output        io.Writer
@@ -165,7 +165,7 @@ func fromFields(from string) (fromAddr types.AccAddress, fromName string) {
 }
 
 // WithCodec returns a copy of the context with an updated codec.
-func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
+func (ctx CLIContext) WithCodec(cdc codec.Codec) CLIContext {
 	ctx.Codec = cdc
 	return ctx
 }

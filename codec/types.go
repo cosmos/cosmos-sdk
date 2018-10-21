@@ -3,11 +3,11 @@ package codec
 import (
 	"bytes"
 	"encoding/json"
-
-	"github.com/tendermint/go-amino"
 )
 
 type Codec interface {
+	Cache(size int) Codec
+
 	MarshalJSON(interface{}) ([]byte, error)
 	MarshalJSONIndent(interface{}, string, string) ([]byte, error)
 	UnmarshalJSON([]byte, interface{}) error
@@ -16,13 +16,11 @@ type Codec interface {
 	UnmarshalBinary([]byte, interface{}) error
 	MustMarshalBinary(interface{}) []byte
 	MustUnmarshalBinary([]byte, interface{})
+
 	MarshalBinaryBare(interface{}) ([]byte, error)
 	UnmarshalBinaryBare([]byte, interface{}) error
-
-	Seal() Codec
-
-	RegisterInterface(interface{}, *amino.InterfaceOptions)
-	RegisterConcrete(interface{}, string, *amino.ConcreteOptions)
+	MustMarshalBinaryBare(interface{}) []byte
+	MustUnmarshalBinaryBare([]byte, interface{})
 }
 
 // attempt to make some pretty json

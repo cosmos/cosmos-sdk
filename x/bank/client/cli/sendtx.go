@@ -3,7 +3,6 @@ package cli
 import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -20,7 +19,7 @@ const (
 )
 
 // SendTxCmd will create a send tx and sign it with the given key.
-func SendTxCmd(cdc *codec.Codec) *cobra.Command {
+func SendTxCmd(cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send",
 		Short: "Create and sign a send tx",

@@ -5,6 +5,6 @@ import (
 )
 
 // Register concrete types on codec codec
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.Amino) {
 	cdc.RegisterConcrete(MsgMine{}, "pow/Mine", nil)
 }

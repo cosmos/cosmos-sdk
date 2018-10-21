@@ -7,7 +7,6 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -25,12 +24,12 @@ var (
 	issuer = ed25519.GenPrivKey().PubKey().Address()
 )
 
-func NewCodec() *codec.Codec {
+func NewCodec() sdk.Codec {
 	cdc := codec.New()
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
-	cryptoAmino.RegisterAmino(cdc)
+	sdk.RegisterCrypto(cdc)
 	return cdc
 }
 
@@ -197,7 +196,7 @@ func (tx app2Tx) GetSignature() []byte {
 }
 
 // Amino decode app2Tx. Capable of decoding both MsgSend and MsgIssue
-func tx2Decoder(cdc *codec.Codec) sdk.TxDecoder {
+func tx2Decoder(cdc sdk.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx app2Tx
 		err := cdc.UnmarshalBinary(txBytes, &tx)

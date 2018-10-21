@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -16,7 +15,7 @@ import (
 )
 
 // GetCmdCreateValidator implements the create validator command handler.
-func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
+func GetCmdCreateValidator(cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
@@ -117,7 +116,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdEditValidator implements the create edit validator command.
-func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
+func GetCmdEditValidator(cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
 		Short: "edit and existing validator account",
@@ -169,7 +168,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdDelegate implements the delegate command.
-func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
+func GetCmdDelegate(cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate",
 		Short: "delegate liquid tokens to an validator",
@@ -211,7 +210,7 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdRedelegate implements the redelegate validator command.
-func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdRedelegate(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate",
 		Short: "redelegate illiquid tokens from one validator to another",
@@ -226,7 +225,7 @@ func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdBeginRedelegate the begin redelegation command.
-func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdBeginRedelegate(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "begin",
 		Short: "begin redelegation",
@@ -281,7 +280,7 @@ func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdUnbond implements the unbond validator command.
-func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdUnbond(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond",
 		Short: "begin or complete unbonding shares from a validator",
@@ -296,7 +295,7 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdBeginUnbonding implements the begin unbonding validator command.
-func GetCmdBeginUnbonding(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdBeginUnbonding(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "begin",
 		Short: "begin unbonding",

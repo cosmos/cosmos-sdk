@@ -2,7 +2,6 @@ package cli
 
 import (
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -11,7 +10,7 @@ import (
 )
 
 func getShares(
-	storeName string, cdc *codec.Codec, sharesAmountStr,
+	storeName string, cdc sdk.Codec, sharesAmountStr,
 	sharesPercentStr string, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 ) (sharesAmount sdk.Dec, err error) {
 

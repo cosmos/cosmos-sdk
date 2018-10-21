@@ -39,7 +39,7 @@ func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
-func registerTestCodec(cdc *codec.Codec) {
+func registerTestCodec(cdc *codec.Amino) {
 	// register Tx, Msg
 	sdk.RegisterCodec(cdc)
 
@@ -352,7 +352,7 @@ func (msg msgCounter2) ValidateBasic() sdk.Error {
 }
 
 // amino decode
-func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+func testTxDecoder(cdc sdk.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx txTest
 		if len(txBytes) == 0 {

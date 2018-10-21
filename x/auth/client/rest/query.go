@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -14,7 +13,7 @@ import (
 )
 
 // register REST routes
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc sdk.Codec, storeName string) {
 	r.HandleFunc(
 		"/auth/accounts/{address}",
 		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
@@ -31,7 +30,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(
-	storeName string, cdc *codec.Codec,
+	storeName string, cdc sdk.Codec,
 	decoder auth.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +68,7 @@ func QueryAccountRequestHandlerFn(
 
 // query accountREST Handler
 func QueryBalancesRequestHandlerFn(
-	storeName string, cdc *codec.Codec,
+	storeName string, cdc sdk.Codec,
 	decoder auth.AccountDecoder, cliCtx context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

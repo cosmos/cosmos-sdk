@@ -53,7 +53,7 @@ func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, ty
 //_______________________________________________________________________________________
 
 // create a codec used only for testing
-func MakeTestCodec() *codec.Codec {
+func MakeTestCodec() sdk.Codec {
 	var cdc = codec.New()
 
 	// Register Msgs

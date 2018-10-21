@@ -10,7 +10,6 @@ import (
 	"github.com/tendermint/tendermint/types"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
@@ -19,7 +18,7 @@ import (
 type AppInit struct {
 	// AppGenState creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.
-	AppGenState func(cdc *codec.Codec, appGenTx []json.RawMessage) (appState json.RawMessage, err error)
+	AppGenState func(cdc sdk.Codec, appGenTx []json.RawMessage) (appState json.RawMessage, err error)
 }
 
 // SimpleGenTx is a simple genesis tx
@@ -35,7 +34,7 @@ var DefaultAppInit = AppInit{
 }
 
 // Generate a genesis transaction
-func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (appGenTx, cliPrint json.RawMessage, validator types.GenesisValidator, err error) {
+func SimpleAppGenTx(cdc sdk.Codec, pk crypto.PubKey) (appGenTx, cliPrint json.RawMessage, validator types.GenesisValidator, err error) {
 	var addr sdk.AccAddress
 	var secret string
 	addr, secret, err = GenerateCoinKey()
@@ -63,7 +62,7 @@ func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (appGenTx, cliPrint json
 }
 
 // create the genesis app state
-func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func SimpleAppGenState(cdc sdk.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 
 	if len(appGenTxs) != 1 {
 		err = errors.New("must provide a single genesis transaction")

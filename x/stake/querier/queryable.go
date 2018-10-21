@@ -22,7 +22,7 @@ const (
 )
 
 // creates a querier for staking REST endpoints
-func NewQuerier(k keep.Keeper, cdc *codec.Codec) sdk.Querier {
+func NewQuerier(k keep.Keeper, cdc sdk.Codec) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
 		case QueryValidators:
@@ -71,7 +71,7 @@ type QueryBondsParams struct {
 	ValidatorAddr sdk.ValAddress
 }
 
-func queryValidators(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryValidators(ctx sdk.Context, cdc sdk.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
 	stakeParams := k.GetParams(ctx)
 	validators := k.GetValidators(ctx, stakeParams.MaxValidators)
 
@@ -82,7 +82,7 @@ func queryValidators(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []by
 	return res, nil
 }
 
-func queryValidator(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryValidator(ctx sdk.Context, cdc sdk.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryValidatorParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -102,7 +102,7 @@ func queryValidator(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k 
 	return res, nil
 }
 
-func queryDelegator(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryDelegator(ctx sdk.Context, cdc sdk.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryDelegatorParams
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
@@ -125,7 +125,7 @@ func queryDelegator(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k 
 	return res, nil
 }
 
-func queryDelegatorValidators(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryDelegatorValidators(ctx sdk.Context, cdc sdk.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryDelegatorParams
 
 	stakeParams := k.GetParams(ctx)
@@ -144,7 +144,7 @@ func queryDelegatorValidators(ctx sdk.Context, cdc *codec.Codec, req abci.Reques
 	return res, nil
 }
 
-func queryDelegatorValidator(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryDelegatorValidator(ctx sdk.Context, cdc sdk.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -164,7 +164,7 @@ func queryDelegatorValidator(ctx sdk.Context, cdc *codec.Codec, req abci.Request
 	return res, nil
 }
 
-func queryDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryDelegation(ctx sdk.Context, cdc sdk.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -184,7 +184,7 @@ func queryDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k
 	return res, nil
 }
 
-func queryUnbondingDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryUnbondingDelegation(ctx sdk.Context, cdc sdk.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryBondsParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -204,7 +204,7 @@ func queryUnbondingDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.Reques
 	return res, nil
 }
 
-func queryPool(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryPool(ctx sdk.Context, cdc sdk.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
 	pool := k.GetPool(ctx)
 
 	res, errRes := codec.MarshalJSONIndent(cdc, pool)
@@ -214,7 +214,7 @@ func queryPool(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, er
 	return res, nil
 }
 
-func queryParameters(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryParameters(ctx sdk.Context, cdc sdk.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
 	params := k.GetParams(ctx)
 
 	res, errRes := codec.MarshalJSONIndent(cdc, params)

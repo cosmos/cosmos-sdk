@@ -55,7 +55,7 @@ type printInfo struct {
 }
 
 // nolint: errcheck
-func displayInfo(cdc *codec.Codec, info printInfo) error {
+func displayInfo(cdc sdk.Codec, info printInfo) error {
 	out, err := codec.MarshalJSONIndent(cdc, info)
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 
 // get cmd to initialize all files for tendermint and application
 // nolint
-func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cobra.Command {
+func InitCmd(ctx *server.Context, cdc sdk.Codec, appInit server.AppInit) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
@@ -151,7 +151,7 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 	return
 }
 
-func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
+func initWithConfig(cdc sdk.Codec, config *cfg.Config, initCfg initConfig) (
 	appMessage json.RawMessage, err error) {
 	genFile := config.GenesisFile()
 	if !initCfg.Overwrite && common.FileExists(genFile) {

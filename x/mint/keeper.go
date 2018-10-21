@@ -1,7 +1,6 @@
 package mint
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
@@ -9,13 +8,13 @@ import (
 // keeper of the stake store
 type Keeper struct {
 	storeKey   sdk.StoreKey
-	cdc        *codec.Codec
+	cdc        sdk.Codec
 	paramSpace params.Subspace
 	sk         StakeKeeper
 	fck        FeeCollectionKeeper
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
+func NewKeeper(cdc sdk.Codec, key sdk.StoreKey,
 	paramSpace params.Subspace, sk StakeKeeper, fck FeeCollectionKeeper) Keeper {
 
 	keeper := Keeper{

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
@@ -31,7 +30,7 @@ func (acc AppAccount) GetName() string      { return acc.Name }
 func (acc *AppAccount) SetName(name string) { acc.Name = name }
 
 // Get the AccountDecoder function for the custom AppAccount
-func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
+func GetAccountDecoder(cdc sdk.Codec) auth.AccountDecoder {
 	return func(accBytes []byte) (res auth.Account, err error) {
 		if len(accBytes) == 0 {
 			return nil, sdk.ErrTxDecode("accBytes are empty")

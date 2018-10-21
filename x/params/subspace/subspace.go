@@ -3,7 +3,6 @@ package subspace
 import (
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,7 +10,7 @@ import (
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not
 type Subspace struct {
-	cdc  *codec.Codec
+	cdc  sdk.Codec
 	key  sdk.StoreKey // []byte -> []byte, stores parameter
 	tkey sdk.StoreKey // []byte -> bool, stores parameter change
 
@@ -21,7 +20,7 @@ type Subspace struct {
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name string) (res Subspace) {
+func NewSubspace(cdc sdk.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name string) (res Subspace) {
 	res = Subspace{
 		cdc:  cdc,
 		key:  key,

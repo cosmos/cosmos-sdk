@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -14,7 +13,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
+func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc sdk.Codec, kb keys.Keybase) {
 	r.HandleFunc(
 		"/slashing/unjail",
 		unjailRequestHandlerFn(cdc, kb, cliCtx),
@@ -27,7 +26,7 @@ type UnjailReq struct {
 	ValidatorAddr string        `json:"validator_addr"`
 }
 
-func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+func unjailRequestHandlerFn(cdc sdk.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req UnjailReq
 		err := utils.ReadRESTReq(w, r, cdc, &req)

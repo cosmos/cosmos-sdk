@@ -38,7 +38,7 @@ func getCoins(ck bank.Keeper, ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, 
 	return coins, err
 }
 
-func makeCodec() *codec.Codec {
+func makeCodec() sdk.Codec {
 	var cdc = codec.New()
 
 	// Register Msgs

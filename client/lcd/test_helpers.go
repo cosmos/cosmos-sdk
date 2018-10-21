@@ -335,7 +335,7 @@ func startTM(
 // startLCD starts the LCD.
 //
 // NOTE: This causes the thread to block.
-func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec) (net.Listener, error) {
+func startLCD(logger log.Logger, listenAddr string, cdc sdk.Codec) (net.Listener, error) {
 	return tmrpc.StartHTTPServer(listenAddr, createHandler(cdc), logger, tmrpc.Config{})
 }
 

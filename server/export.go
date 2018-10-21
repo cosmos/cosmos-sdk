@@ -14,7 +14,7 @@ import (
 )
 
 // ExportCmd dumps app state to JSON.
-func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.Command {
+func ExportCmd(ctx *Context, cdc codec.Codec, appExporter AppExporter) *cobra.Command {
 	return &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",

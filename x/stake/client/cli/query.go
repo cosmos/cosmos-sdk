@@ -15,7 +15,7 @@ import (
 )
 
 // GetCmdQueryValidator implements the validator query command.
-func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidator(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validator [operator-addr]",
 		Short: "Query a validator",
@@ -65,7 +65,7 @@ func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdQueryValidators implements the query all validators command.
-func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidators(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validators",
 		Short: "Query for all validators",
@@ -115,7 +115,7 @@ func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdQueryDelegation the query delegation command.
-func GetCmdQueryDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryDelegation(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegation",
 		Short: "Query a delegation based on address and validator address",
@@ -174,7 +174,7 @@ func GetCmdQueryDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
 
 // GetCmdQueryDelegations implements the command to query all the delegations
 // made from one delegator.
-func GetCmdQueryDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryDelegations(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegations [delegator-addr]",
 		Short: "Query all delegations made from one delegator",
@@ -217,7 +217,7 @@ func GetCmdQueryDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 
 // GetCmdQueryUnbondingDelegation implements the command to query a single
 // unbonding-delegation record.
-func GetCmdQueryUnbondingDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegation(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegation",
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
@@ -273,7 +273,7 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *codec.Codec) *cobra.C
 
 // GetCmdQueryUnbondingDelegations implements the command to query all the
 // unbonding-delegation records for a delegator.
-func GetCmdQueryUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryUnbondingDelegations(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegations [delegator-addr]",
 		Short: "Query all unbonding-delegations records for one delegator",
@@ -316,7 +316,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.
 
 // GetCmdQueryRedelegation implements the command to query a single
 // redelegation record.
-func GetCmdQueryRedelegation(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryRedelegation(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegation",
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
@@ -377,7 +377,7 @@ func GetCmdQueryRedelegation(storeName string, cdc *codec.Codec) *cobra.Command 
 
 // GetCmdQueryRedelegations implements the command to query all the
 // redelegation records for a delegator.
-func GetCmdQueryRedelegations(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryRedelegations(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegations [delegator-addr]",
 		Short: "Query all redelegations records for one delegator",
@@ -419,7 +419,7 @@ func GetCmdQueryRedelegations(storeName string, cdc *codec.Codec) *cobra.Command
 }
 
 // GetCmdQueryPool implements the pool query command.
-func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryPool(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pool",
 		Short: "Query the current staking pool values",
@@ -458,7 +458,7 @@ func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdQueryPool implements the params query command.
-func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryParams(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parameters",
 		Short: "Query the current staking parameters information",

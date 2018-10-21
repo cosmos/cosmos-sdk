@@ -1,12 +1,13 @@
 package rpc
 
 import (
-	amino "github.com/tendermint/go-amino"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var cdc = amino.NewCodec()
+var cdc = codec.New()
 
 func init() {
-	ctypes.RegisterAmino(cdc)
+	ctypes.RegisterAmino(cdc.Codec)
 }

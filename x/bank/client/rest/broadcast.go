@@ -15,7 +15,7 @@ type broadcastBody struct {
 }
 
 // BroadcastTxRequestHandlerFn returns the broadcast tx REST handler
-func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func BroadcastTxRequestHandlerFn(cdc codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m broadcastBody
 		if ok := unmarshalBodyOrReturnBadRequest(cliCtx, w, r, &m); !ok {

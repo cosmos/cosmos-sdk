@@ -39,7 +39,7 @@ const (
 // ServeCommand will generate a long-running rest server
 // (aka Light Client Daemon) that exposes functionality similar
 // to the cli, but over rest
-func ServeCommand(cdc *codec.Codec) *cobra.Command {
+func ServeCommand(cdc codec.Codec) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "rest-server",
@@ -131,7 +131,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func createHandler(cdc *codec.Codec) *mux.Router {
+func createHandler(cdc codec.Codec) *mux.Router {
 	r := mux.NewRouter()
 
 	kb, err := keys.GetKeyBase() //XXX

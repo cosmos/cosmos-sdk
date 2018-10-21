@@ -1,11 +1,11 @@
 package auth
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	codec "github.com/cosmos/cosmos-sdk/codec"
 )
 
 // Register concrete types on codec codec for default AppAccount
-func RegisterCodec(cdc sdk.Codec) {
+func RegisterCodec(cdc *codec.Amino) {
 	cdc.RegisterInterface((*Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "auth/Account", nil)
 	cdc.RegisterConcrete(StdTx{}, "auth/StdTx", nil)

@@ -14,7 +14,7 @@ import (
 )
 
 // GetCmdQuerySigningInfo implements the command to query signing info.
-func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQuerySigningInfo(storeName string, cdc sdk.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "signing-info [validator-pubkey]",
 		Short: "Query a validator's signing information",

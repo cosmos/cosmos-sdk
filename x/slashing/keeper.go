@@ -6,7 +6,6 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -17,7 +16,7 @@ import (
 // Keeper of the slashing store
 type Keeper struct {
 	storeKey     sdk.StoreKey
-	cdc          *codec.Codec
+	cdc          sdk.Codec
 	validatorSet sdk.ValidatorSet
 	paramspace   params.Subspace
 
@@ -26,7 +25,7 @@ type Keeper struct {
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc sdk.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:     key,
 		cdc:          cdc,

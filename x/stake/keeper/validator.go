@@ -242,7 +242,7 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 	maxValidators := k.MaxValidators(ctx)
 	validators = make([]types.Validator, maxValidators)
 
-	iterator := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
+	iterator := sdk.KVStorePrefixIterator(store, LastValidatorKey)
 	defer iterator.Close()
 
 	i := 0
@@ -252,7 +252,7 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 		if i >= int(maxValidators) {
 			panic("more validators than maxValidators found")
 		}
-		address := AddressFromLastValidatorPowerKey(iterator.Key())
+		address := AddressFromLastValidatorKey(iterator.Key())
 		validator := k.mustGetValidator(ctx, address)
 
 		validators[i] = validator

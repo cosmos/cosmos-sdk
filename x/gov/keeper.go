@@ -111,14 +111,14 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) Proposal {
 	return proposal
 }
 
-// Implements sdk.AccountMapper.
+// Implements sdk.AccountKeeper.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinary(proposal)
 	store.Set(KeyProposal(proposal.GetProposalID()), bz)
 }
 
-// Implements sdk.AccountMapper.
+// Implements sdk.AccountKeeper.
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposal Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 	store.Delete(KeyProposal(proposal.GetProposalID()))

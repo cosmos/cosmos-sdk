@@ -10,7 +10,7 @@ var _ auth.Account = (*AppAccount)(nil)
 
 // AppAccount is a custom extension for this application. It is an example of
 // extending auth.BaseAccount with custom fields. It is compatible with the
-// stock auth.AccountMapper, since auth.AccountMapper uses the flexible go-amino
+// stock auth.AccountKeeper, since auth.AccountKeeper uses the flexible go-amino
 // library.
 type AppAccount struct {
 	auth.BaseAccount

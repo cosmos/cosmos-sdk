@@ -29,7 +29,7 @@ func TestCoolKeeper(t *testing.T) {
 	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
-	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
+	am := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
 	ck := bank.NewBaseKeeper(am)
 	keeper := NewKeeper(capKey, ck, DefaultCodespace)

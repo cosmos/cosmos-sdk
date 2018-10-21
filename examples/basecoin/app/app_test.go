@@ -61,7 +61,7 @@ func TestGenesis(t *testing.T) {
 
 	// create a context for the BaseApp
 	ctx := baseApp.BaseApp.NewContext(true, abci.Header{})
-	res := baseApp.accountMapper.GetAccount(ctx, baseAcct.Address)
+	res := baseApp.accountKeeper.GetAccount(ctx, baseAcct.Address)
 	require.Equal(t, appAcct, res)
 
 	// reload app and ensure the account is still there
@@ -76,6 +76,6 @@ func TestGenesis(t *testing.T) {
 	})
 
 	ctx = baseApp.BaseApp.NewContext(true, abci.Header{})
-	res = baseApp.accountMapper.GetAccount(ctx, baseAcct.Address)
+	res = baseApp.accountKeeper.GetAccount(ctx, baseAcct.Address)
 	require.Equal(t, appAcct, res)
 }

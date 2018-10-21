@@ -17,7 +17,7 @@ import (
 
 // SingleInputSendTx tests and runs a single msg send w/ auth, with one input and one output, where both
 // accounts already exist.
-func SingleInputSendTx(mapper auth.AccountMapper) simulation.Operation {
+func SingleInputSendTx(mapper auth.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
 		fromAcc, action, msg, abort := createSingleInputSendMsg(r, ctx, accs, mapper)
 		if abort {
@@ -35,7 +35,7 @@ func SingleInputSendTx(mapper auth.AccountMapper) simulation.Operation {
 
 // SingleInputSendMsg tests and runs a single msg send, with one input and one output, where both
 // accounts already exist.
-func SingleInputSendMsg(mapper auth.AccountMapper, bk bank.Keeper) simulation.Operation {
+func SingleInputSendMsg(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
 	handler := bank.NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
 		fromAcc, action, msg, abort := createSingleInputSendMsg(r, ctx, accs, mapper)
@@ -52,7 +52,7 @@ func SingleInputSendMsg(mapper auth.AccountMapper, bk bank.Keeper) simulation.Op
 	}
 }
 
-func createSingleInputSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper auth.AccountMapper) (fromAcc simulation.Account, action string, msg bank.MsgSend, abort bool) {
+func createSingleInputSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper auth.AccountKeeper) (fromAcc simulation.Account, action string, msg bank.MsgSend, abort bool) {
 	fromAcc = simulation.RandomAcc(r, accs)
 	toAcc := simulation.RandomAcc(r, accs)
 	// Disallow sending money to yourself
@@ -92,7 +92,7 @@ func createSingleInputSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.A
 
 // Sends and verifies the transition of a msg send. This fails if there are repeated inputs or outputs
 // pass in handler as nil to handle txs, otherwise handle msgs
-func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountMapper, msg bank.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
+func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg bank.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
 	AccountNumbers := make([]int64, len(msg.Inputs))

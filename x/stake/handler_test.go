@@ -889,21 +889,21 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 1, len(keeper.GetValidatorsBonded(ctx)))
+	require.Equal(t, 1, len(keeper.GetLastValidators(ctx)))
 
 	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 30)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 2, len(keeper.GetValidatorsBonded(ctx)))
+	require.Equal(t, 2, len(keeper.GetLastValidators(ctx)))
 
 	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr3, keep.PKs[2], 10)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.Equal(t, 2, len(keeper.GetValidatorsBonded(ctx)))
+	require.Equal(t, 2, len(keeper.GetLastValidators(ctx)))
 
 	// unbond the valdator-2
 	msgBeginUnbonding := NewMsgBeginUnbonding(sdk.AccAddress(validatorAddr2), validatorAddr2, sdk.NewDec(30))
@@ -916,7 +916,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	// because there are extra validators waiting to get in, the queued
 	// validator (aka. validator-1) should make it into the bonded group, thus
 	// the total number of validators should stay the same
-	vals := keeper.GetValidatorsBonded(ctx)
+	vals := keeper.GetLastValidators(ctx)
 	require.Equal(t, 2, len(vals), "vals %v", vals)
 	val1, found := keeper.GetValidator(ctx, validatorAddr1)
 	require.True(t, found)

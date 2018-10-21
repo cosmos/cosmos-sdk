@@ -85,6 +85,7 @@ BREAKING CHANGES
     * [x/stake] \#2508 Utilize Tendermint power for validator power key
     * [x/stake] \#2531 Remove all inflation logic
     * [x/mint] \#2531 Add minting module and inflation logic
+    * [x/auth] [\#2540](https://github.com/cosmos/cosmos-sdk/issues/2540) Rename `AccountMapper` to `AccountKeeper`.
 
 * Tendermint
   * Update tendermint version from v0.23.0 to v0.25.0, notable changes

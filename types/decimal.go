@@ -253,25 +253,26 @@ func (d Dec) String() string {
 		return ""
 	}
 	var bzWDec []byte
+	inputSize := len(bz)
 	// TODO: Remove trailing zeros
 	// case 1, purely decimal
-	if len(bz) <= 10 {
+	if inputSize <= 10 {
 		bzWDec = make([]byte, 12)
 		// 0. prefix
 		bzWDec[0] = byte('0')
 		bzWDec[1] = byte('.')
 		// set relevant digits to 0
-		for i := 0; i < 10-len(bz); i++ {
+		for i := 0; i < 10-inputSize; i++ {
 			bzWDec[i+2] = byte('0')
 		}
 		// set last few digits
-		copy(bzWDec[2+(10-len(bz)):], bz)
+		copy(bzWDec[2+(10-inputSize):], bz)
 	} else {
-		// len(bz) + 1 to account for the decimal point that is being added
-		bzWDec = make([]byte, len(bz)+1)
-		copy(bzWDec, bz[:len(bz)-10])
-		bzWDec[len(bz)-10] = byte('.')
-		copy(bzWDec[len(bz)-9:], bz[len(bz)-10:])
+		// inputSize + 1 to account for the decimal point that is being added
+		bzWDec = make([]byte, inputSize+1)
+		copy(bzWDec, bz[:inputSize-10])
+		bzWDec[inputSize-10] = byte('.')
+		copy(bzWDec[inputSize-9:], bz[inputSize-10:])
 	}
 	return string(bzWDec)
 }

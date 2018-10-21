@@ -9,6 +9,13 @@ import (
 	"sync"
 )
 
+/*
+*codec.Cache provides LRU-cached amino codec
+
+It is recommended to use cache when there is a few value unserialized
+frequently. Adjust the cache size to make cache hit rate at least 60%.
+*/
+
 type kvpair struct {
 	key   string
 	value reflect.Value

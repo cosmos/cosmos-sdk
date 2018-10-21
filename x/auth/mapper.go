@@ -1,7 +1,6 @@
 package auth
 
 import (
-	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -19,13 +18,13 @@ type AccountMapper struct {
 	proto func() Account
 
 	// The codec codec for binary encoding/decoding of accounts.
-	cdc *codec.Codec
+	cdc sdk.Codec
 }
 
 // NewAccountMapper returns a new sdk.AccountMapper that
 // uses go-amino to (binary) encode and decode concrete sdk.Accounts.
 // nolint
-func NewAccountMapper(cdc *codec.Codec, key sdk.StoreKey, proto func() Account) AccountMapper {
+func NewAccountMapper(cdc sdk.Codec, key sdk.StoreKey, proto func() Account) AccountMapper {
 	return AccountMapper{
 		key:   key,
 		proto: proto,

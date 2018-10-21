@@ -20,8 +20,13 @@ func RegisterCrypto(cdc *Amino) {
 	cryptoAmino.RegisterAmino(cdc.Codec)
 }
 
-func (cdc *Amino) Cache(size int) *CachePool {
-	return newCachePool(cdc, size)
+func (cdc *Amino) Cache(size int) Codec {
+	return newCache(cdc, size)
+}
+
+func (cdc *Amino) Seal() Codec {
+	cdc.Codec.Seal()
+	return cdc
 }
 
 //__________________________________________________________________

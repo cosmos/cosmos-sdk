@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
-var cdc *codec.Codec
+var cdc *codec.Amino
 
 func init() {
 	cdc = codec.New()

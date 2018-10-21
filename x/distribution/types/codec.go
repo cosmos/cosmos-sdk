@@ -5,7 +5,7 @@ import (
 )
 
 // Register concrete types on codec codec
-func RegisterCodec(cdc *codec.Codec) {
+func RegisterCodec(cdc *codec.Amino) {
 	cdc.RegisterConcrete(MsgWithdrawDelegatorRewardsAll{}, "cosmos-sdk/MsgWithdrawDelegationRewardsAll", nil)
 	cdc.RegisterConcrete(MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
 	cdc.RegisterConcrete(MsgWithdrawValidatorRewardsAll{}, "cosmos-sdk/MsgWithdrawValidatorRewardsAll", nil)
@@ -13,7 +13,7 @@ func RegisterCodec(cdc *codec.Codec) {
 }
 
 // generic sealed codec to be used throughout module
-var MsgCdc *codec.Codec
+var MsgCdc *codec.Amino
 
 func init() {
 	cdc := codec.New()

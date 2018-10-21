@@ -125,7 +125,7 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 // Wire
 
 // Most users shouldn't use this, but this comes in handy for tests.
-func RegisterBaseAccount(cdc *codec.Codec) {
+func RegisterBaseAccount(cdc *codec.Amino) {
 	cdc.RegisterInterface((*Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	codec.RegisterCrypto(cdc)

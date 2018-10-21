@@ -1,7 +1,6 @@
 package store
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,7 +16,7 @@ type Queue struct {
 }
 
 // NewQueue constructs new Queue
-func NewQueue(cdc *codec.Codec, store sdk.KVStore) Queue {
+func NewQueue(cdc sdk.Codec, store sdk.KVStore) Queue {
 	return Queue{NewList(cdc, store)}
 }
 

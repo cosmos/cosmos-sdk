@@ -24,7 +24,7 @@ const chainID = ""
 // capabilities aren't needed for testing.
 type App struct {
 	*bam.BaseApp
-	Cdc        *codec.Codec // Cdc is public since the codec is passed into the module anyways
+	Cdc        sdk.Codec // Cdc is public since the codec is passed into the module anyways
 	KeyMain    *sdk.KVStoreKey
 	KeyAccount *sdk.KVStoreKey
 

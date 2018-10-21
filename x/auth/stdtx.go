@@ -141,7 +141,7 @@ type StdSignature struct {
 }
 
 // logic for standard transaction decoding
-func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
+func DefaultTxDecoder(cdc codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx = StdTx{}
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -21,12 +20,12 @@ func ElemKey(index uint64) []byte {
 // List defines an integer indexable mapper
 // It panics when the element type cannot be (un/)marshalled by the codec
 type List struct {
-	cdc   *codec.Codec
+	cdc   sdk.Codec
 	store sdk.KVStore
 }
 
 // NewList constructs new List
-func NewList(cdc *codec.Codec, store sdk.KVStore) List {
+func NewList(cdc sdk.Codec, store sdk.KVStore) List {
 	return List{
 		cdc:   cdc,
 		store: store,

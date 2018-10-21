@@ -2,8 +2,11 @@ package codec
 
 import (
 	"container/list"
+	"encoding/binary"
+	"errors"
+	"fmt"
 	"reflect"
-	//"sync"
+	"sync"
 )
 
 type kvpair struct {
@@ -17,7 +20,14 @@ type lru struct {
 
 	size int
 
-	//	mtx *sync.Mutex
+	mtx *sync.Mutex
+}
+
+type Cache struct {
+	*Amino
+
+	json *lru
+	bin  *lru
 }
 
 func newLRU(size int) *lru {
@@ -27,24 +37,17 @@ func newLRU(size int) *lru {
 
 		size: size,
 
-		//	mtx: &sync.Mutex{},
+		mtx: &sync.Mutex{},
 	}
 }
 
-type cache struct {
-	cdc Codec
-
-	json *lru
-	bin  *lru
-}
-
-func newCache(cdc Codec, size int) *cache {
+func newCache(cdc *Amino, size int) *Cache {
 	if size < 0 {
 		panic("negative cache size")
 	}
 
-	return &cache{
-		cdc: cdc,
+	return &Cache{
+		Amino: cdc,
 
 		json: newLRU(size),
 		bin:  newLRU(size),
@@ -89,25 +92,21 @@ func (lru *lru) write(bz []byte, ptr interface{}) {
 }
 
 func (lru *lru) lock() {
-	//lru.mtx.Lock()
+	lru.mtx.Lock()
 }
 
 func (lru *lru) unlock() {
-	//lru.mtx.Unlock()
+	lru.mtx.Unlock()
 }
 
-func (c *cache) MarshalJSON(o interface{}) ([]byte, error) {
-	return c.cdc.MarshalJSON(o)
-}
-
-func (c *cache) UnmarshalJSON(bz []byte, ptr interface{}) (err error) {
+func (c *Cache) UnmarshalJSON(bz []byte, ptr interface{}) (err error) {
 	lru := c.json
 	lru.lock()
 	defer lru.unlock()
 	if lru.read(bz, ptr) {
 		return
 	}
-	err = c.cdc.UnmarshalJSON(bz, ptr)
+	err = c.Amino.UnmarshalJSON(bz, ptr)
 	if err != nil {
 		return
 	}
@@ -115,18 +114,52 @@ func (c *cache) UnmarshalJSON(bz []byte, ptr interface{}) (err error) {
 	return
 }
 
-func (c *cache) MarshalBinary(o interface{}) ([]byte, error) {
-	return c.cdc.MarshalBinary(o)
+func bareBytes(bz []byte) ([]byte, error) {
+	// validity checking logic is from go-amino/amino.go/UnmarshalBinary
+	if len(bz) == 0 {
+		return nil, errors.New("UnmarshalBinary cannot decode empty bytes")
+	}
+
+	// Read byte-length prefix
+	u64, n := binary.Uvarint(bz)
+	if n < 0 {
+		return nil, fmt.Errorf("Error reading msg byte-length prefix")
+	}
+	if u64 > uint64(len(bz)-n) {
+		return nil, fmt.Errorf("Not enough bytes to read in UnmarshalBinary, want %v more bytes but only have %v", u64, len(bz)-n)
+	} else if u64 > uint64(len(bz)-n) {
+		return nil, fmt.Errorf("Bytes left over in UnmarshalBinary, should read %v more bytes but only have %v", u64, len(bz)-n)
+	}
+	return bz[n:], nil
 }
 
-func (c *cache) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
+func (c *Cache) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
+	bz, err = bareBytes(bz)
+	if err != nil {
+		return
+	}
+	return c.UnmarshalBinaryBare(bz, ptr)
+}
+
+func (c *Cache) MustUnmarshalBinary(bz []byte, ptr interface{}) {
 	lru := c.bin
 	lru.lock()
 	defer lru.unlock()
 	if lru.read(bz, ptr) {
 		return
 	}
-	err = c.cdc.UnmarshalBinary(bz, ptr)
+	c.Amino.MustUnmarshalBinary(bz, ptr)
+	lru.write(bz, ptr)
+}
+
+func (c *Cache) UnmarshalBinaryBare(bz []byte, ptr interface{}) (err error) {
+	lru := c.bin
+	lru.lock()
+	defer lru.unlock()
+	if lru.read(bz, ptr) {
+		return
+	}
+	err = c.Amino.UnmarshalBinaryBare(bz, ptr)
 	if err != nil {
 		return
 	}
@@ -134,17 +167,7 @@ func (c *cache) UnmarshalBinary(bz []byte, ptr interface{}) (err error) {
 	return
 }
 
-func (c *cache) MustMarshalBinary(o interface{}) []byte {
-	return c.cdc.MustMarshalBinary(o)
-}
-
-func (c *cache) MustUnmarshalBinary(bz []byte, ptr interface{}) {
-	lru := c.bin
-	lru.lock()
-	defer lru.unlock()
-	if lru.read(bz, ptr) {
-		return
-	}
-	c.cdc.MustUnmarshalBinary(bz, ptr)
-	lru.write(bz, ptr)
+func (c *Cache) Seal() Codec {
+	c.Amino.Seal()
+	return c
 }

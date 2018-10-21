@@ -1,7 +1,6 @@
 package auth
 
 import (
-	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -17,10 +16,10 @@ type FeeCollectionKeeper struct {
 	key sdk.StoreKey
 
 	// The codec codec for binary encoding/decoding of accounts.
-	cdc *codec.Codec
+	cdc sdk.Codec
 }
 
-func NewFeeCollectionKeeper(cdc *codec.Codec, key sdk.StoreKey) FeeCollectionKeeper {
+func NewFeeCollectionKeeper(cdc sdk.Codec, key sdk.StoreKey) FeeCollectionKeeper {
 	return FeeCollectionKeeper{
 		key: key,
 		cdc: cdc,

@@ -25,7 +25,7 @@ func TestCacheIdentity(t *testing.T) {
 	}
 }
 
-func benchmarkCache(b *testing.B, cdc *cache, datanum, lambda int) {
+func benchmarkCache(b *testing.B, cdc *Cache, datanum, lambda int) {
 	tcs := randgen(datanum)
 	b.ResetTimer()
 
@@ -49,10 +49,9 @@ func benchmarkCache(b *testing.B, cdc *cache, datanum, lambda int) {
 			chit += hit
 		})
 	}
-	//	b.Logf("Cache hit %.2f%%", float64(chit)/2/float64(b.N)*100)
+	b.Logf("Cache hit %.2f%%", float64(chit)/2/float64(b.N)*100)
 }
 
-/*
 // Size 1000 Lambda 10
 func BenchmarkNoCacheSize1000Lambda10(b *testing.B) {
 	cdc := New()
@@ -280,15 +279,15 @@ func Benchmark5PercentCacheSize10000Lambda100(b *testing.B) {
 	cdc.Seal()
 	benchmarkCache(b, newCache(cdc, 5000), 100000, 100)
 }
-*/
-func (c *cache) logUnmarshalBinary(bz []byte, ptr interface{}) (hit int, err error) {
+
+func (c *Cache) logUnmarshalBinary(bz []byte, ptr interface{}) (hit int, err error) {
 	lru := c.bin
 	lru.lock()
 	defer lru.unlock()
 	if lru.read(bz, ptr) {
 		return 1, nil
 	}
-	err = c.cdc.UnmarshalBinary(bz, ptr)
+	err = c.Amino.UnmarshalBinary(bz, ptr)
 	if err != nil {
 		return
 	}
@@ -296,14 +295,14 @@ func (c *cache) logUnmarshalBinary(bz []byte, ptr interface{}) (hit int, err err
 	return
 }
 
-func (c *cache) logUnmarshalJSON(bz []byte, ptr interface{}) (hit int, err error) {
+func (c *Cache) logUnmarshalJSON(bz []byte, ptr interface{}) (hit int, err error) {
 	lru := c.json
 	lru.lock()
 	defer lru.unlock()
 	if lru.read(bz, ptr) {
 		return 1, nil
 	}
-	err = c.cdc.UnmarshalJSON(bz, ptr)
+	err = c.Amino.UnmarshalJSON(bz, ptr)
 	if err != nil {
 		return
 	}

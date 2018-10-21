@@ -30,11 +30,11 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	keyFees := sdk.NewKVStoreKey("fee") // TODO
 
 	// Set various mappers/keepers to interact easily with underlying stores
-	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountMapper)
+	accountKeeper := auth.NewAccountKeeper(cdc, keyAccount, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
-	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(accountKeeper, feeKeeper))
 
 	// Register message routes.
 	// Note the handler gets access to

@@ -14,7 +14,7 @@ import (
 )
 
 // SimulateMsgCreateValidator
-func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+func SimulateMsgCreateValidator(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -111,7 +111,7 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 }
 
 // SimulateMsgDelegate
-func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+func SimulateMsgDelegate(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -149,7 +149,7 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operat
 }
 
 // SimulateMsgBeginUnbonding
-func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+func SimulateMsgBeginUnbonding(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -187,7 +187,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 }
 
 // SimulateMsgBeginRedelegate
-func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -238,10 +238,10 @@ func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 		params := k.GetParams(ctx)
 		denom := params.BondDenom
 		loose := sdk.ZeroInt()
-		mapp.AccountMapper.IterateAccounts(ctx, func(acc auth.Account) bool {
+		mapp.AccountKeeper.IterateAccounts(ctx, func(acc auth.Account) bool {
 			balance := simulation.RandomAmount(r, sdk.NewInt(1000000))
 			acc.SetCoins(acc.GetCoins().Plus(sdk.Coins{sdk.NewCoin(denom, balance)}))
-			mapp.AccountMapper.SetAccount(ctx, acc)
+			mapp.AccountKeeper.SetAccount(ctx, acc)
 			loose = loose.Add(balance)
 			return false
 		})

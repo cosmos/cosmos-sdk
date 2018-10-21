@@ -16,7 +16,7 @@ func getBenchmarkMockApp() (*mock.App, error) {
 	mapp := mock.NewApp()
 
 	RegisterCodec(mapp.Cdc)
-	bankKeeper := NewBaseKeeper(mapp.AccountMapper)
+	bankKeeper := NewBaseKeeper(mapp.AccountKeeper)
 	mapp.Router().AddRoute("bank", NewHandler(bankKeeper))
 
 	err := mapp.CompleteSetup()

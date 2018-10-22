@@ -20,4 +20,5 @@ var (
 	Delegator    = sdk.TagDelegator
 	Moniker      = "moniker"
 	Identity     = "identity"
+	EndTime      = "end-time"
 )

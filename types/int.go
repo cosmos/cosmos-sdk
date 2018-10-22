@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"testing"
 
 	"math/big"
 	"math/rand"
@@ -524,4 +525,11 @@ func (i *Uint) UnmarshalJSON(bz []byte) error {
 		i.i = new(big.Int)
 	}
 	return unmarshalJSON(i.i, bz)
+}
+
+//__________________________________________________________________________
+
+// intended to be used with require/assert:  require.True(IntEq(...))
+func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }

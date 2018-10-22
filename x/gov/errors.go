@@ -27,11 +27,11 @@ const (
 // Error constructors
 
 func ErrUnknownProposal(codespace sdk.CodespaceType, proposalID int64) sdk.Error {
-	return sdk.NewError(codespace, CodeUnknownProposal, fmt.Sprintf("Unknown proposal - %d", proposalID))
+	return sdk.NewError(codespace, CodeUnknownProposal, fmt.Sprintf("Unknown proposal with id %d", proposalID))
 }
 
 func ErrInactiveProposal(codespace sdk.CodespaceType, proposalID int64) sdk.Error {
-	return sdk.NewError(codespace, CodeInactiveProposal, fmt.Sprintf("Inactive proposal - %d", proposalID))
+	return sdk.NewError(codespace, CodeInactiveProposal, fmt.Sprintf("Inactive proposal with id %d", proposalID))
 }
 
 func ErrAlreadyActiveProposal(codespace sdk.CodespaceType, proposalID int64) sdk.Error {

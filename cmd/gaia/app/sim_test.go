@@ -10,16 +10,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	stake "github.com/cosmos/cosmos-sdk/x/stake"
 	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
@@ -43,42 +44,55 @@ func init() {
 	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
 }
 
-func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
+func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	var genesisAccounts []GenesisAccount
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
 		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(100)}}
 		genesisAccounts = append(genesisAccounts, GenesisAccount{
-			Address: acc,
+			Address: acc.Address,
 			Coins:   coins,
 		})
 	}
-	govGenesis := gov.DefaultGenesisState()
+
 	// Default genesis state
+	govGenesis := gov.DefaultGenesisState()
 	stakeGenesis := stake.DefaultGenesisState()
+	slashingGenesis := slashing.DefaultGenesisState()
 	var validators []stake.Validator
 	var delegations []stake.Delegation
+
 	// XXX Try different numbers of initially bonded validators
 	numInitiallyBonded := int64(50)
+	valAddrs := make([]sdk.ValAddress, numInitiallyBonded)
 	for i := 0; i < int(numInitiallyBonded); i++ {
-		validator := stake.NewValidator(sdk.ValAddress(accs[i]), keys[i].PubKey(), stake.Description{})
+		valAddr := sdk.ValAddress(accs[i].Address)
+		valAddrs[i] = valAddr
+
+		validator := stake.NewValidator(valAddr, accs[i].PubKey, stake.Description{})
 		validator.Tokens = sdk.NewDec(100)
 		validator.DelegatorShares = sdk.NewDec(100)
-		delegation := stake.Delegation{accs[i], sdk.ValAddress(accs[i]), sdk.NewDec(100), 0}
+		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(100), 0}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
 	stakeGenesis.Pool.LooseTokens = sdk.NewDec(int64(100*250) + (numInitiallyBonded * 100))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
+
 	// No inflation, for now
-	stakeGenesis.Params.InflationMax = sdk.NewDec(0)
-	stakeGenesis.Params.InflationMin = sdk.NewDec(0)
+	mintGenesis := mint.DefaultGenesisState()
+	mintGenesis.Params.InflationMax = sdk.NewDec(0)
+	mintGenesis.Params.InflationMin = sdk.NewDec(0)
+
 	genesis := GenesisState{
-		Accounts:  genesisAccounts,
-		StakeData: stakeGenesis,
-		GovData:   govGenesis,
+		Accounts:     genesisAccounts,
+		StakeData:    stakeGenesis,
+		MintData:     mintGenesis,
+		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),
+		SlashingData: slashingGenesis,
+		GovData:      govGenesis,
 	}
 
 	// Marshal genesis
@@ -90,31 +104,26 @@ func appStateFn(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json
 	return appState
 }
 
-func testAndRunTxs(app *GaiaApp) []simulation.Operation {
-	return []simulation.Operation{
-		banksim.SimulateSingleInputMsgSend(app.accountMapper),
-		govsim.SimulateMsgSubmitProposal(app.govKeeper, app.stakeKeeper),
-		govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper),
-		govsim.SimulateMsgVote(app.govKeeper, app.stakeKeeper),
-		stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper),
-		stakesim.SimulateMsgEditValidator(app.stakeKeeper),
-		stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper),
-		stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper),
-		stakesim.SimulateMsgCompleteUnbonding(app.stakeKeeper),
-		stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper),
-		stakesim.SimulateMsgCompleteRedelegate(app.stakeKeeper),
-		slashingsim.SimulateMsgUnjail(app.slashingKeeper),
+func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
+	return []simulation.WeightedOperation{
+		{100, banksim.SingleInputSendMsg(app.accountKeeper, app.bankKeeper)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
+		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgCreateValidator(app.accountKeeper, app.stakeKeeper)},
+		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
+		{100, stakesim.SimulateMsgDelegate(app.accountKeeper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgBeginUnbonding(app.accountKeeper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgBeginRedelegate(app.accountKeeper, app.stakeKeeper)},
+		{100, slashingsim.SimulateMsgUnjail(app.slashingKeeper)},
 	}
 }
 
 func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
-		func(t *testing.T, baseapp *baseapp.BaseApp, log string) {
-			banksim.NonnegativeBalanceInvariant(app.accountMapper)(t, baseapp, log)
-			govsim.AllInvariants()(t, baseapp, log)
-			stakesim.AllInvariants(app.coinKeeper, app.stakeKeeper, app.accountMapper)(t, baseapp, log)
-			slashingsim.AllInvariants()(t, baseapp, log)
-		},
+		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
+		govsim.AllInvariants(),
+		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.accountKeeper),
+		slashingsim.AllInvariants(),
 	}
 }
 
@@ -135,7 +144,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	simulation.SimulateFromSeed(
+	err := simulation.SimulateFromSeed(
 		b, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -144,6 +153,10 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 		blockSize,
 		commit,
 	)
+	if err != nil {
+		fmt.Println(err)
+		b.Fail()
+	}
 	if commit {
 		fmt.Println("GoLevelDB Stats")
 		fmt.Println(db.Stats()["leveldb.stats"])
@@ -168,7 +181,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	simulation.SimulateFromSeed(
+	err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -180,6 +193,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	if commit {
 		fmt.Println("Database Size", db.Stats()["database.size"])
 	}
+	require.Nil(t, err)
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
@@ -208,9 +222,9 @@ func TestAppStateDeterminism(t *testing.T) {
 				[]simulation.Invariant{},
 				50,
 				100,
-				false,
+				true,
 			)
-			app.Commit()
+			//app.Commit()
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
 		}

@@ -2,11 +2,12 @@ package app
 
 import (
 	"encoding/json"
+	"os"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
@@ -21,13 +22,19 @@ const (
 	appName = "BasecoinApp"
 )
 
+// default home directories for expected binaries
+var (
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.basecli")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.basecoind")
+)
+
 // BasecoinApp implements an extended ABCI application. It contains a BaseApp,
 // a codec for serialization, KVStore keys for multistore state management, and
 // various mappers and keepers to manage getting, setting, and serializing the
 // integral app types.
 type BasecoinApp struct {
 	*bam.BaseApp
-	cdc *wire.Codec
+	cdc *codec.Codec
 
 	// keys to access the multistore
 	keyMain    *sdk.KVStoreKey
@@ -35,9 +42,9 @@ type BasecoinApp struct {
 	keyIBC     *sdk.KVStoreKey
 
 	// manage getting and setting accounts
-	accountMapper       auth.AccountMapper
+	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
-	coinKeeper          bank.Keeper
+	bankKeeper          bank.Keeper
 	ibcMapper           ibc.Mapper
 }
 
@@ -60,26 +67,26 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 	}
 
 	// define and attach the mappers and keepers
-	app.accountMapper = auth.NewAccountMapper(
+	app.accountKeeper = auth.NewAccountKeeper(
 		cdc,
 		app.keyAccount, // target store
 		func() auth.Account {
 			return &types.AppAccount{}
 		},
 	)
-	app.coinKeeper = bank.NewKeeper(app.accountMapper)
+	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper))
+		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
+		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.bankKeeper))
 
 	// perform initialization logic
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 
 	// mount the multistore and load the latest state
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC)
@@ -93,16 +100,16 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 	return app
 }
 
-// MakeCodec creates a new wire codec and registers all the necessary types
+// MakeCodec creates a new codec codec and registers all the necessary types
 // with the codec.
-func MakeCodec() *wire.Codec {
-	cdc := wire.NewCodec()
+func MakeCodec() *codec.Codec {
+	cdc := codec.New()
 
-	wire.RegisterCrypto(cdc)
-	sdk.RegisterWire(cdc)
-	bank.RegisterWire(cdc)
-	ibc.RegisterWire(cdc)
-	auth.RegisterWire(cdc)
+	codec.RegisterCrypto(cdc)
+	sdk.RegisterCodec(cdc)
+	bank.RegisterCodec(cdc)
+	ibc.RegisterCodec(cdc)
+	auth.RegisterCodec(cdc)
 
 	// register custom type
 	cdc.RegisterConcrete(&types.AppAccount{}, "basecoin/Account", nil)
@@ -146,8 +153,8 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 			panic(err)
 		}
 
-		acc.AccountNumber = app.accountMapper.GetNextAccountNumber(ctx)
-		app.accountMapper.SetAccount(ctx, acc)
+		acc.AccountNumber = app.accountKeeper.GetNextAccountNumber(ctx)
+		app.accountKeeper.SetAccount(ctx, acc)
 	}
 
 	return abci.ResponseInitChain{}
@@ -170,10 +177,10 @@ func (app *BasecoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 		return false
 	}
 
-	app.accountMapper.IterateAccounts(ctx, appendAccountsFn)
+	app.accountKeeper.IterateAccounts(ctx, appendAccountsFn)
 
 	genState := types.GenesisState{Accounts: accounts}
-	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
+	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {
 		return nil, nil, err
 	}

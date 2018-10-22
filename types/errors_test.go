@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -64,4 +65,29 @@ func TestErrFn(t *testing.T) {
 	}
 
 	require.Equal(t, ABCICodeOK, ToABCICode(CodespaceRoot, CodeOK))
+}
+
+func TestAppendMsgToErr(t *testing.T) {
+	for i, errFn := range errFns {
+		err := errFn("")
+		errMsg := err.Stacktrace().Error()
+		abciLog := err.ABCILog()
+
+		// plain msg error
+		msg := AppendMsgToErr("something unexpected happened", errMsg)
+		require.Equal(t, fmt.Sprintf("something unexpected happened; %s",
+			errMsg),
+			msg,
+			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
+
+		// ABCI Log msg error
+		msg = AppendMsgToErr("something unexpected happened", abciLog)
+		msgIdx := mustGetMsgIndex(abciLog)
+		require.Equal(t, fmt.Sprintf("%s%s; %s}",
+			abciLog[:msgIdx],
+			"something unexpected happened",
+			abciLog[msgIdx:len(abciLog)-1]),
+			msg,
+			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
+	}
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -28,22 +28,22 @@ func NewApp4(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	keyAccount := sdk.NewKVStoreKey("acc")
 
 	// Set various mappers/keepers to interact easily with underlying stores
-	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
-	coinKeeper := bank.NewKeeper(accountMapper)
+	accountKeeper := auth.NewAccountKeeper(cdc, keyAccount, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
 
 	// TODO
 	keyFees := sdk.NewKVStoreKey("fee")
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
-	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(accountKeeper, feeKeeper))
 
 	// Set InitChainer
-	app.SetInitChainer(NewInitChainer(cdc, accountMapper))
+	app.SetInitChainer(NewInitChainer(cdc, accountKeeper))
 
 	// Register message routes.
 	// Note the handler gets access to the account store.
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper))
+		AddRoute("bank", bank.NewHandler(bankKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyFees)
@@ -76,7 +76,7 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount, err error) {
 
 // InitChainer will set initial balances for accounts as well as initial coin metadata
 // MsgIssue can no longer be used to create new coin
-func NewInitChainer(cdc *wire.Codec, accountMapper auth.AccountMapper) sdk.InitChainer {
+func NewInitChainer(cdc *codec.Codec, accountKeeper auth.AccountKeeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes
 
@@ -91,8 +91,8 @@ func NewInitChainer(cdc *wire.Codec, accountMapper auth.AccountMapper) sdk.InitC
 			if err != nil {
 				panic(err)
 			}
-			acc.AccountNumber = accountMapper.GetNextAccountNumber(ctx)
-			accountMapper.SetAccount(ctx, acc)
+			acc.AccountNumber = accountKeeper.GetNextAccountNumber(ctx)
+			accountKeeper.SetAccount(ctx, acc)
 		}
 
 		return abci.ResponseInitChain{}

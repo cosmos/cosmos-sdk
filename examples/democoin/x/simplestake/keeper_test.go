@@ -12,9 +12,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -32,11 +32,11 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
 
 func TestKeeperGetSet(t *testing.T) {
 	ms, authKey, capKey := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
-	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	stakeKeeper := NewKeeper(capKey, bank.NewKeeper(accountMapper), DefaultCodespace)
+	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
+	stakeKeeper := NewKeeper(capKey, bank.NewBaseKeeper(accountKeeper), DefaultCodespace)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	addr := sdk.AccAddress([]byte("some-address"))
 
@@ -60,14 +60,14 @@ func TestKeeperGetSet(t *testing.T) {
 
 func TestBonding(t *testing.T) {
 	ms, authKey, capKey := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 
-	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	coinKeeper := bank.NewKeeper(accountMapper)
-	stakeKeeper := NewKeeper(capKey, coinKeeper, DefaultCodespace)
+	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	stakeKeeper := NewKeeper(capKey, bankKeeper, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()

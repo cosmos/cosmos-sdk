@@ -13,7 +13,7 @@ type validatorGovInfo struct {
 	Vote            VoteOption     // Vote of the validator
 }
 
-func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tallyResults TallyResult, nonVoting []sdk.ValAddress) {
+func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tallyResults TallyResult) {
 	results := make(map[VoteOption]sdk.Dec)
 	results[OptionYes] = sdk.ZeroDec()
 	results[OptionAbstain] = sdk.ZeroDec()
@@ -53,10 +53,10 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 				valAddrStr := delegation.GetValidator().String()
 
 				if val, ok := currValidators[valAddrStr]; ok {
-					val.Minus = val.Minus.Add(delegation.GetBondShares())
+					val.Minus = val.Minus.Add(delegation.GetShares())
 					currValidators[valAddrStr] = val
 
-					delegatorShare := delegation.GetBondShares().Quo(val.DelegatorShares)
+					delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
 					votingPower := val.Power.Mul(delegatorShare)
 
 					results[vote.Option] = results[vote.Option].Add(votingPower)
@@ -70,12 +70,9 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 		keeper.deleteVote(ctx, vote.ProposalID, vote.Voter)
 	}
 
-	// iterate over the validators again to tally their voting power and see
-	// who didn't vote
-	nonVoting = []sdk.ValAddress{}
+	// iterate over the validators again to tally their voting power
 	for _, val := range currValidators {
 		if val.Vote == OptionEmpty {
-			nonVoting = append(nonVoting, val.Address)
 			continue
 		}
 
@@ -98,19 +95,17 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 	// If no one votes, proposal fails
 	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroDec()) {
-		return false, tallyResults, nonVoting
+		return false, tallyResults
 	}
 	// If more than 1/3 of voters veto, proposal fails
 	if results[OptionNoWithVeto].Quo(totalVotingPower).GT(tallyingProcedure.Veto) {
-		return false, tallyResults, nonVoting
+		return false, tallyResults
 	}
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
 	if results[OptionYes].Quo(totalVotingPower.Sub(results[OptionAbstain])).GT(tallyingProcedure.Threshold) {
-		return true, tallyResults, nonVoting
+		return true, tallyResults
 	}
 	// If more than 1/2 of non-abstaining voters vote No, proposal fails
 
-	SortValAddresses(nonVoting)
-
-	return false, tallyResults, nonVoting
+	return false, tallyResults
 }

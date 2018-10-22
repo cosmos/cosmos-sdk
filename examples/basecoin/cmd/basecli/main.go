@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
+	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
@@ -85,7 +84,7 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
+	executor := cli.PrepareMainCmd(rootCmd, "BC", app.DefaultCLIHome)
 	err := executor.Execute()
 	if err != nil {
 		// Note: Handle with #870

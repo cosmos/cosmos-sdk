@@ -1,10 +1,10 @@
 package lcd
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -19,11 +19,11 @@ func NodeVersionRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		version, err := cliCtx.Query("/app/version", nil)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("Could't query version. Error: %s", err.Error())))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(version)
 	}
 }

@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
@@ -19,11 +19,16 @@ import (
 func TestStakeWithRandomMessages(t *testing.T) {
 	mapp := mock.NewApp()
 
-	bank.RegisterWire(mapp.Cdc)
-	mapper := mapp.AccountMapper
-	coinKeeper := bank.NewKeeper(mapper)
+	bank.RegisterCodec(mapp.Cdc)
+	mapper := mapp.AccountKeeper
+	bankKeeper := bank.NewBaseKeeper(mapper)
 	stakeKey := sdk.NewKVStoreKey("stake")
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, coinKeeper, stake.DefaultCodespace)
+	stakeTKey := sdk.NewTransientStoreKey("transient_stake")
+	paramsKey := sdk.NewKVStoreKey("params")
+	paramsTKey := sdk.NewTransientStoreKey("transient_params")
+
+	paramstore := params.NewKeeper(mapp.Cdc, paramsKey, paramsTKey).Subspace(stake.DefaultParamspace)
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, stakeTKey, bankKeeper, paramstore, stake.DefaultCodespace)
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
 	mapp.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		validatorUpdates := stake.EndBlocker(ctx, stakeKeeper)
@@ -32,30 +37,28 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		}
 	})
 
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{stakeKey})
+	err := mapp.CompleteSetup(stakeKey, stakeTKey, paramsKey, paramsTKey)
 	if err != nil {
 		panic(err)
 	}
 
-	appStateFn := func(r *rand.Rand, keys []crypto.PrivKey, accs []sdk.AccAddress) json.RawMessage {
-		mock.RandomSetGenesis(r, mapp, accs, []string{"stake"})
+	appStateFn := func(r *rand.Rand, accs []simulation.Account) json.RawMessage {
+		simulation.RandomSetGenesis(r, mapp, accs, []string{"stake"})
 		return json.RawMessage("{}")
 	}
 
 	simulation.Simulate(
 		t, mapp.BaseApp, appStateFn,
-		[]simulation.Operation{
-			SimulateMsgCreateValidator(mapper, stakeKeeper),
-			SimulateMsgEditValidator(stakeKeeper),
-			SimulateMsgDelegate(mapper, stakeKeeper),
-			SimulateMsgBeginUnbonding(mapper, stakeKeeper),
-			SimulateMsgCompleteUnbonding(stakeKeeper),
-			SimulateMsgBeginRedelegate(mapper, stakeKeeper),
-			SimulateMsgCompleteRedelegate(stakeKeeper),
+		[]simulation.WeightedOperation{
+			{10, SimulateMsgCreateValidator(mapper, stakeKeeper)},
+			{5, SimulateMsgEditValidator(stakeKeeper)},
+			{15, SimulateMsgDelegate(mapper, stakeKeeper)},
+			{10, SimulateMsgBeginUnbonding(mapper, stakeKeeper)},
+			{10, SimulateMsgBeginRedelegate(mapper, stakeKeeper)},
 		}, []simulation.RandSetup{
 			Setup(mapp, stakeKeeper),
 		}, []simulation.Invariant{
-			AllInvariants(coinKeeper, stakeKeeper, mapp.AccountMapper),
+			AllInvariants(bankKeeper, stakeKeeper, mapp.AccountKeeper),
 		}, 10, 100,
 		false,
 	)

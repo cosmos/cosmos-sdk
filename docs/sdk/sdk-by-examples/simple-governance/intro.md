@@ -6,45 +6,43 @@ Before getting in the bulk of the code, we will start by some introductory conte
 
 ## Table of contents:
 
-### Introduction - Prerequsite reading
+### Introduction - Prerequisite reading
 
-- [Intro to Tendermint and Cosmos](../../../introduction/tendermint-cosmos.md)
-- [Tendermint Core and ABCI](../../../introduction/tendermint.md)
-- [Intro to Cosmos-SDK](../../overview.md)
-- [Starting your own project](start.md)
+- [Intro to Tendermint and Cosmos](/introduction/tendermint-cosmos.md)
+- [Tendermint Core and ABCI](/introduction/tendermint.md)
+- [Intro to Cosmos-SDK](/sdk/overview.md)
 
-### Setup and design phase
 
-- [Setup](setup.md)
-- [Application design](app-design.md)
+### [Setup and design](setup-and-design.md)
+
+- [Starting your own project](setup-and-design.md#get-started)
+- [Setup](setup-and-design.md#setup)
+- [Application design](setup-and-design.md#application-design)
 
 ### Implementation of the application
 
 **Important note: All the code for this application can be found [here](https://github.com/cosmos/cosmos-sdk/tree/fedekunze/module_tutorial/examples/simpleGov). Snippets will be provided throughout the tutorial, but please refer to the provided link for the full implementation details**
 
 - [Application initialization](app-init.md)
-- Simple Governance module
-    + [Module initialization](module-init.md)
-    + [Types](module-types.md)
-    + [Keeper](module-keeper.md)
-    + [Handler](module-handler.md)
-    + [Wire](module-wire.md)
-    + [Errors](module-errors.md)
-    + Command-Line Interface and Rest API
-        * [Command-Line Interface](module-cli.md)
-        * [Rest API](module-rest.md)
-- Bridging it all together
-    + [Application structure](app-structure.md)
-    + [Application CLI and Rest Server](app-commands.md)
-        * [Application CLI](app-cli.md)
-        * [Rest Server](app-rest.md)
-    + [Makefile](app-makefile.md)
-    + [Application constructor](app-constructor.md)
-    + [Application codec](app-codec.md)
-- Running the application
-    + [Installation](run-install.md)
-    + [Submit a proposal](submit-proposal.md)
-    + [Cast a vote](cast-vote.md)
+- [Simple Governance module](simple-gov-module.md)
+    + [Module initialization](simple-gov-module.md#module-initialization)
+    + [Types](simple-gov-module.md#types)
+    + [Keeper](simple-gov-module.md#keeper)
+    + [Handler](simple-gov-module.md#handler)
+    + [Wire](simple-gov-module.md#codec)
+    + [Errors](simple-gov-module.md#errors)
+    + [Command-Line Interface](simple-gov-module.md#command-line-interface)
+    + [Rest API](simple-gov-module.md#rest-api)
+- [Bridging it all together](bridging-it-all.md)
+    + [Application structure](bridging-it-all.md#application-structure)
+    + [Application CLI and Rest Server](bridging-it-all.md#cli-and-rest-server)
+    + [Makefile](bridging-it-all.md#makefile)
+    + [Application constructor](bridging-it-all.md#application-constructor)
+    + [Application codec](bridging-it-all.md#application-codec)
+- [Running the application](running-the-application.md)
+    + [Installation](running-the-application.md#installation)
+    + [Submit a proposal](running-the-application.md#submit-a-proposal)
+    + [Cast a vote](running-the-application.md#cast-a-vote)
 
 ## Useful links
 

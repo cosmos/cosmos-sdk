@@ -7,19 +7,18 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// name to idetify transaction types
+// name to identify transaction types
 const MsgType = "stake"
 
 // Verify interface at compile time
 var _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegate{}
-var _, _ sdk.Msg = &MsgBeginUnbonding{}, &MsgCompleteUnbonding{}
-var _, _ sdk.Msg = &MsgBeginRedelegate{}, &MsgCompleteRedelegate{}
 
 //______________________________________________________________________
 
-// MsgCreateValidator - struct for unbonding transactions
+// MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
 	Description
+	Commission    CommissionMsg
 	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	PubKey        crypto.PubKey  `json:"pubkey"`
@@ -28,27 +27,29 @@ type MsgCreateValidator struct {
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
-	selfDelegation sdk.Coin, description Description) MsgCreateValidator {
+	selfDelegation sdk.Coin, description Description, commission CommissionMsg) MsgCreateValidator {
 
 	return NewMsgCreateValidatorOnBehalfOf(
-		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description,
+		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description, commission,
 	)
 }
 
 // Creates validator msg by delegator address on behalf of validator address
 func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	pubkey crypto.PubKey, delegation sdk.Coin, description Description) MsgCreateValidator {
+	pubkey crypto.PubKey, delegation sdk.Coin, description Description, commission CommissionMsg) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:   description,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
 		PubKey:        pubkey,
 		Delegation:    delegation,
+		Commission:    commission,
 	}
 }
 
 //nolint
 func (msg MsgCreateValidator) Type() string { return MsgType }
+func (msg MsgCreateValidator) Name() string { return "create_validator" }
 
 // Return address(es) that must sign over msg.GetSignBytes()
 func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
@@ -94,10 +95,13 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if !(msg.Delegation.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
-	empty := Description{}
-	if msg.Description == empty {
+	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "description must be included")
 	}
+	if msg.Commission == (CommissionMsg{}) {
+		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission must be included")
+	}
+
 	return nil
 }
 
@@ -107,17 +111,26 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 type MsgEditValidator struct {
 	Description
 	ValidatorAddr sdk.ValAddress `json:"address"`
+
+	// We pass a reference to the new commission rate as it's not mandatory to
+	// update. If not updated, the deserialized rate will be zero with no way to
+	// distinguish if an update was intended.
+	//
+	// REF: #2373
+	CommissionRate *sdk.Dec `json:"commission_rate"`
 }
 
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description) MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec) MsgEditValidator {
 	return MsgEditValidator{
-		Description:   description,
-		ValidatorAddr: valAddr,
+		Description:    description,
+		CommissionRate: newRate,
+		ValidatorAddr:  valAddr,
 	}
 }
 
 //nolint
 func (msg MsgEditValidator) Type() string { return MsgType }
+func (msg MsgEditValidator) Name() string { return "edit_validator" }
 func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr)}
 }
@@ -142,10 +155,11 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
 	}
-	empty := Description{}
-	if msg.Description == empty {
+
+	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}
+
 	return nil
 }
 
@@ -168,6 +182,7 @@ func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delegation s
 
 //nolint
 func (msg MsgDelegate) Type() string { return MsgType }
+func (msg MsgDelegate) Name() string { return "delegate" }
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.DelegatorAddr}
 }
@@ -218,6 +233,7 @@ func NewMsgBeginRedelegate(delAddr sdk.AccAddress, valSrcAddr,
 
 //nolint
 func (msg MsgBeginRedelegate) Type() string { return MsgType }
+func (msg MsgBeginRedelegate) Name() string { return "begin_redelegate" }
 func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.DelegatorAddr}
 }
@@ -258,50 +274,6 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// MsgDelegate - struct for bonding transactions
-type MsgCompleteRedelegate struct {
-	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
-	ValidatorSrcAddr sdk.ValAddress `json:"validator_source_addr"`
-	ValidatorDstAddr sdk.ValAddress `json:"validator_destination_addr"`
-}
-
-func NewMsgCompleteRedelegate(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) MsgCompleteRedelegate {
-	return MsgCompleteRedelegate{
-		DelegatorAddr:    delAddr,
-		ValidatorSrcAddr: valSrcAddr,
-		ValidatorDstAddr: valDstAddr,
-	}
-}
-
-//nolint
-func (msg MsgCompleteRedelegate) Type() string { return MsgType }
-func (msg MsgCompleteRedelegate) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.DelegatorAddr}
-}
-
-// get the bytes for the message signer to sign on
-func (msg MsgCompleteRedelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
-
-// quick validity check
-func (msg MsgCompleteRedelegate) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
-		return ErrNilDelegatorAddr(DefaultCodespace)
-	}
-	if msg.ValidatorSrcAddr == nil {
-		return ErrNilValidatorAddr(DefaultCodespace)
-	}
-	if msg.ValidatorDstAddr == nil {
-		return ErrNilValidatorAddr(DefaultCodespace)
-	}
-	return nil
-}
-
 //______________________________________________________________________
 
 // MsgBeginUnbonding - struct for unbonding transactions
@@ -321,6 +293,7 @@ func NewMsgBeginUnbonding(delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares
 
 //nolint
 func (msg MsgBeginUnbonding) Type() string                 { return MsgType }
+func (msg MsgBeginUnbonding) Name() string                 { return "begin_unbonding" }
 func (msg MsgBeginUnbonding) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.DelegatorAddr} }
 
 // get the bytes for the message signer to sign on
@@ -350,45 +323,6 @@ func (msg MsgBeginUnbonding) ValidateBasic() sdk.Error {
 	}
 	if msg.SharesAmount.LTE(sdk.ZeroDec()) {
 		return ErrBadSharesAmount(DefaultCodespace)
-	}
-	return nil
-}
-
-// MsgCompleteUnbonding - struct for unbonding transactions
-type MsgCompleteUnbonding struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
-}
-
-func NewMsgCompleteUnbonding(delAddr sdk.AccAddress, valAddr sdk.ValAddress) MsgCompleteUnbonding {
-	return MsgCompleteUnbonding{
-		DelegatorAddr: delAddr,
-		ValidatorAddr: valAddr,
-	}
-}
-
-//nolint
-func (msg MsgCompleteUnbonding) Type() string { return MsgType }
-func (msg MsgCompleteUnbonding) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.DelegatorAddr}
-}
-
-// get the bytes for the message signer to sign on
-func (msg MsgCompleteUnbonding) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
-
-// quick validity check
-func (msg MsgCompleteUnbonding) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
-		return ErrNilDelegatorAddr(DefaultCodespace)
-	}
-	if msg.ValidatorAddr == nil {
-		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	return nil
 }

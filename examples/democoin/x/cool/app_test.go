@@ -47,15 +47,15 @@ var (
 func getMockApp(t *testing.T) *mock.App {
 	mapp := mock.NewApp()
 
-	RegisterWire(mapp.Cdc)
+	RegisterCodec(mapp.Cdc)
 	keyCool := sdk.NewKVStoreKey("cool")
-	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
-	keeper := NewKeeper(keyCool, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
+	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper)
+	keeper := NewKeeper(keyCool, bankKeeper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("cool", NewHandler(keeper))
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, "ice-cold"))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyCool}))
+	require.NoError(t, mapp.CompleteSetup(keyCool))
 	return mapp
 }
 
@@ -84,7 +84,7 @@ func TestMsgQuiz(t *testing.T) {
 
 	// A checkTx context (true)
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
+	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
 	require.Equal(t, acc1, res1)
 
 	// Set the trend, submit a really cool quiz and check for reward

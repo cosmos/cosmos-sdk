@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestInitGenesis(t *testing.T) {
@@ -42,6 +44,12 @@ func TestInitGenesis(t *testing.T) {
 	vals, err := InitGenesis(ctx, keeper, genesisState)
 	require.NoError(t, err)
 
+	actualGenesis := WriteGenesis(ctx, keeper)
+	require.Equal(t, genesisState.Pool, actualGenesis.Pool)
+	require.Equal(t, genesisState.Params, actualGenesis.Params)
+	require.Equal(t, genesisState.Bonds, actualGenesis.Bonds)
+	require.EqualValues(t, keeper.GetAllValidators(ctx), actualGenesis.Validators)
+
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[0]))
 	require.True(t, found)
@@ -53,9 +61,9 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, sdk.Bonded, resVal.Status)
 	require.Equal(t, int16(1), resVal.BondIntraTxCounter)
 
-	abcivals := make([]abci.Validator, len(vals))
+	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range validators {
-		abcivals[i] = sdk.ABCIValidator(val)
+		abcivals[i] = val.ABCIValidatorUpdate()
 	}
 
 	require.Equal(t, abcivals, vals)
@@ -92,10 +100,56 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	vals, err := InitGenesis(ctx, keeper, genesisState)
 	require.NoError(t, err)
 
-	abcivals := make([]abci.Validator, 100)
+	abcivals := make([]abci.ValidatorUpdate, 100)
 	for i, val := range validators[:100] {
-		abcivals[i] = sdk.ABCIValidator(val)
+		abcivals[i] = val.ABCIValidatorUpdate()
 	}
 
 	require.Equal(t, abcivals, vals)
+}
+
+func TestValidateGenesis(t *testing.T) {
+	genValidators1 := make([]types.Validator, 1, 5)
+	pk := ed25519.GenPrivKey().PubKey()
+	genValidators1[0] = types.NewValidator(sdk.ValAddress(pk.Address()), pk, types.NewDescription("", "", "", ""))
+	genValidators1[0].Tokens = sdk.OneDec()
+	genValidators1[0].DelegatorShares = sdk.OneDec()
+
+	tests := []struct {
+		name    string
+		mutate  func(*types.GenesisState)
+		wantErr bool
+	}{
+		{"default", func(*types.GenesisState) {}, false},
+		// validate genesis validators
+		{"duplicate validator", func(data *types.GenesisState) {
+			(*data).Validators = genValidators1
+			(*data).Validators = append((*data).Validators, genValidators1[0])
+		}, true},
+		{"no pool shares", func(data *types.GenesisState) {
+			(*data).Validators = genValidators1
+			(*data).Validators[0].Tokens = sdk.ZeroDec()
+		}, true},
+		{"no delegator shares", func(data *types.GenesisState) {
+			(*data).Validators = genValidators1
+			(*data).Validators[0].DelegatorShares = sdk.ZeroDec()
+		}, true},
+		{"jailed and bonded validator", func(data *types.GenesisState) {
+			(*data).Validators = genValidators1
+			(*data).Validators[0].Jailed = true
+			(*data).Validators[0].Status = sdk.Bonded
+		}, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			genesisState := types.DefaultGenesisState()
+			tt.mutate(&genesisState)
+			if tt.wantErr {
+				assert.Error(t, ValidateGenesis(genesisState))
+			} else {
+				assert.NoError(t, ValidateGenesis(genesisState))
+			}
+		})
+	}
 }

@@ -23,16 +23,16 @@ var (
 func getMockApp(t *testing.T) *mock.App {
 	mapp := mock.NewApp()
 
-	RegisterWire(mapp.Cdc)
+	RegisterCodec(mapp.Cdc)
 	keyPOW := sdk.NewKVStoreKey("pow")
-	coinKeeper := bank.NewKeeper(mapp.AccountMapper)
+	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper)
 	config := Config{"pow", 1}
-	keeper := NewKeeper(keyPOW, config, coinKeeper, mapp.RegisterCodespace(DefaultCodespace))
+	keeper := NewKeeper(keyPOW, config, bankKeeper, mapp.RegisterCodespace(DefaultCodespace))
 	mapp.Router().AddRoute("pow", keeper.Handler)
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyPOW}))
+	require.NoError(t, mapp.CompleteSetup(keyPOW))
 
 	mapp.Seal()
 
@@ -69,7 +69,7 @@ func TestMsgMine(t *testing.T) {
 
 	// A checkTx context (true)
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
+	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
 	require.Equal(t, acc1, res1)
 
 	// Mine and check for reward

@@ -174,13 +174,15 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 
 //______________________________________________________________________________________________
 //nolint
-func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 } // Is equal to zero
-func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }
+func (d Dec) IsNil() bool       { return d.Int == nil }                 // is decimal nil
+func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 }          // is equal to zero
+func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }     // equal decimals
 func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) > 0 }      // greater than
 func (d Dec) GTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) >= 0 }     // greater than or equal
 func (d Dec) LT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) < 0 }      // less than
 func (d Dec) LTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) <= 0 }     // less than or equal
 func (d Dec) Neg() Dec          { return Dec{new(big.Int).Neg(d.Int)} } // reverse the decimal sign
+func (d Dec) Abs() Dec          { return Dec{new(big.Int).Abs(d.Int)} } // absolute value
 
 // addition
 func (d Dec) Add(d2 Dec) Dec {
@@ -213,6 +215,16 @@ func (d Dec) Mul(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// multiplication
+func (d Dec) MulInt(i Int) Dec {
+	mul := new(big.Int).Mul(d.Int, i.i)
+
+	if mul.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{mul}
+}
+
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {
 
@@ -229,30 +241,40 @@ func (d Dec) Quo(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// quotient
+func (d Dec) QuoInt(i Int) Dec {
+	mul := new(big.Int).Quo(d.Int, i.i)
+	return Dec{mul}
+}
+
 func (d Dec) String() string {
-	str := d.ToLeftPaddedWithDecimals(Precision)
-	placement := len(str) - Precision
-	if placement < 0 {
-		panic("too few decimal digits")
+	bz, err := d.Int.MarshalText()
+	if err != nil {
+		return ""
 	}
-	return str[:placement] + "." + str[placement:]
-}
-
-// TODO panic if negative or if totalDigits < len(initStr)???
-// evaluate as an integer and return left padded string
-func (d Dec) ToLeftPaddedWithDecimals(totalDigits int8) string {
-	intStr := d.Int.String()
-	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
-	return fmt.Sprintf(fcode, intStr)
-}
-
-// TODO panic if negative or if totalDigits < len(initStr)???
-// evaluate as an integer and return left padded string
-func (d Dec) ToLeftPadded(totalDigits int8) string {
-	chopped := chopPrecisionAndRoundNonMutative(d.Int)
-	intStr := chopped.String()
-	fcode := `%0` + strconv.Itoa(int(totalDigits)) + `s`
-	return fmt.Sprintf(fcode, intStr)
+	var bzWDec []byte
+	inputSize := len(bz)
+	// TODO: Remove trailing zeros
+	// case 1, purely decimal
+	if inputSize <= 10 {
+		bzWDec = make([]byte, 12)
+		// 0. prefix
+		bzWDec[0] = byte('0')
+		bzWDec[1] = byte('.')
+		// set relevant digits to 0
+		for i := 0; i < 10-inputSize; i++ {
+			bzWDec[i+2] = byte('0')
+		}
+		// set last few digits
+		copy(bzWDec[2+(10-inputSize):], bz)
+	} else {
+		// inputSize + 1 to account for the decimal point that is being added
+		bzWDec = make([]byte, inputSize+1)
+		copy(bzWDec, bz[:inputSize-10])
+		bzWDec[inputSize-10] = byte('.')
+		copy(bzWDec[inputSize-9:], bz[inputSize-10:])
+	}
+	return string(bzWDec)
 }
 
 //     ____
@@ -323,6 +345,32 @@ func (d Dec) RoundInt() Int {
 
 //___________________________________________________________________________________
 
+// similar to chopPrecisionAndRound, but always rounds down
+func chopPrecisionAndTruncate(d *big.Int) *big.Int {
+	return d.Quo(d, precisionReuse)
+}
+
+func chopPrecisionAndTruncateNonMutative(d *big.Int) *big.Int {
+	tmp := new(big.Int).Set(d)
+	return chopPrecisionAndTruncate(tmp)
+}
+
+// TruncateInt64 truncates the decimals from the number and returns an int64
+func (d Dec) TruncateInt64() int64 {
+	chopped := chopPrecisionAndTruncateNonMutative(d.Int)
+	if !chopped.IsInt64() {
+		panic("Int64() out of bound")
+	}
+	return chopped.Int64()
+}
+
+// TruncateInt truncates the decimals from the number and returns an Int
+func (d Dec) TruncateInt() Int {
+	return NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(d.Int))
+}
+
+//___________________________________________________________________________________
+
 // reuse nil values
 var (
 	nilAmino string
@@ -363,17 +411,13 @@ func (d *Dec) UnmarshalAmino(text string) (err error) {
 	return nil
 }
 
-// MarshalJSON defines custom encoding scheme
+// MarshalJSON marshals the decimal
 func (d Dec) MarshalJSON() ([]byte, error) {
 	if d.Int == nil {
 		return nilJSON, nil
 	}
 
-	bz, err := d.Int.MarshalText()
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(string(bz))
+	return json.Marshal(d.String())
 }
 
 // UnmarshalJSON defines custom decoding scheme
@@ -387,7 +431,13 @@ func (d *Dec) UnmarshalJSON(bz []byte) error {
 	if err != nil {
 		return err
 	}
-	return d.Int.UnmarshalText([]byte(text))
+	// TODO: Reuse dec allocation
+	newDec, err := NewDecFromStr(text)
+	if err != nil {
+		return err
+	}
+	d.Int = newDec.Int
+	return nil
 }
 
 //___________________________________________________________________________________
@@ -424,6 +474,6 @@ func MaxDec(d1, d2 Dec) Dec {
 }
 
 // intended to be used with require/assert:  require.True(DecEq(...))
-func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, Dec, Dec) {
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+func DecEq(t *testing.T, exp, got Dec) (*testing.T, bool, string, string, string) {
+	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }

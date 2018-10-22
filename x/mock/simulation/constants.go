@@ -5,16 +5,16 @@ const (
 	pastEvidenceFraction float64 = 0.5
 
 	// Minimum time per block
-	minTimePerBlock int64 = 86400 / 2
+	minTimePerBlock int64 = 1000 / 2
 
 	// Maximum time per block
-	maxTimePerBlock int64 = 86400
+	maxTimePerBlock int64 = 1000
 
 	// Number of keys
 	numKeys int = 250
 
 	// Chance that double-signing evidence is found on a given block
-	evidenceFraction float64 = 0.01
+	evidenceFraction float64 = 0.5
 
 	// TODO Remove in favor of binary search for invariant violation
 	onOperation bool = false

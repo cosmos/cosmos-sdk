@@ -8,8 +8,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 
 func TestFeeCollectionKeeperGetSet(t *testing.T) {
 	ms, _, capKey2 := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
@@ -39,7 +39,7 @@ func TestFeeCollectionKeeperGetSet(t *testing.T) {
 
 func TestFeeCollectionKeeperAdd(t *testing.T) {
 	ms, _, capKey2 := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
@@ -49,17 +49,17 @@ func TestFeeCollectionKeeperAdd(t *testing.T) {
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
 
 	// add oneCoin and check that pool is now oneCoin
-	fck.addCollectedFees(ctx, oneCoin)
+	fck.AddCollectedFees(ctx, oneCoin)
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(oneCoin))
 
 	// add oneCoin again and check that pool is now twoCoins
-	fck.addCollectedFees(ctx, oneCoin)
+	fck.AddCollectedFees(ctx, oneCoin)
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(twoCoins))
 }
 
 func TestFeeCollectionKeeperClear(t *testing.T) {
 	ms, _, capKey2 := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 
 	// make context and keeper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())

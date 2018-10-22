@@ -8,9 +8,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -26,12 +26,12 @@ func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 
 func TestCoolKeeper(t *testing.T) {
 	ms, capKey := setupMultiStore()
-	cdc := wire.NewCodec()
+	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
-	am := auth.NewAccountMapper(cdc, capKey, auth.ProtoBaseAccount)
+	am := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	ck := bank.NewKeeper(am)
+	ck := bank.NewBaseKeeper(am)
 	keeper := NewKeeper(capKey, ck, DefaultCodespace)
 
 	err := InitGenesis(ctx, keeper, Genesis{"icy"})

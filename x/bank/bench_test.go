@@ -15,11 +15,11 @@ import (
 func getBenchmarkMockApp() (*mock.App, error) {
 	mapp := mock.NewApp()
 
-	RegisterWire(mapp.Cdc)
-	coinKeeper := NewKeeper(mapp.AccountMapper)
-	mapp.Router().AddRoute("bank", NewHandler(coinKeeper))
+	RegisterCodec(mapp.Cdc)
+	bankKeeper := NewBaseKeeper(mapp.AccountKeeper)
+	mapp.Router().AddRoute("bank", NewHandler(bankKeeper))
 
-	err := mapp.CompleteSetup([]*sdk.KVStoreKey{})
+	err := mapp.CompleteSetup()
 	return mapp, err
 }
 

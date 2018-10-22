@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -27,13 +27,13 @@ func setGenesis(bapp *DemocoinApp, trend string, accs ...auth.BaseAccount) error
 		CoolGenesis: cool.Genesis{trend},
 	}
 
-	stateBytes, err := wire.MarshalJSONIndent(bapp.cdc, genesisState)
+	stateBytes, err := codec.MarshalJSONIndent(bapp.cdc, genesisState)
 	if err != nil {
 		return err
 	}
 
 	// Initialize the chain
-	vals := []abci.Validator{}
+	vals := []abci.ValidatorUpdate{}
 	bapp.InitChain(abci.RequestInitChain{Validators: vals, AppStateBytes: stateBytes})
 	bapp.Commit()
 
@@ -60,13 +60,13 @@ func TestGenesis(t *testing.T) {
 	require.Nil(t, err)
 	// A checkTx context
 	ctx := bapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
+	res1 := bapp.accountKeeper.GetAccount(ctx, baseAcc.Address)
 	require.Equal(t, acc, res1)
 
 	// reload app and ensure the account is still there
 	bapp = NewDemocoinApp(logger, db)
 	bapp.InitChain(abci.RequestInitChain{AppStateBytes: []byte("{}")})
 	ctx = bapp.BaseApp.NewContext(true, abci.Header{})
-	res1 = bapp.accountMapper.GetAccount(ctx, baseAcc.Address)
+	res1 = bapp.accountKeeper.GetAccount(ctx, baseAcc.Address)
 	require.Equal(t, acc, res1)
 }

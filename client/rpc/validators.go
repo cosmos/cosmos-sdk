@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,7 +11,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/viper"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -19,14 +22,17 @@ import (
 //ValidatorCommand returns the validator set for a given height
 func ValidatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validator-set [height]",
+		Use:   "tendermint-validator-set [height]",
 		Short: "Get the full tendermint validator set at given height",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  printValidators,
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-	// TODO: change this to false when we can
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
+	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
+	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
 	return cmd
 }
 
@@ -70,6 +76,17 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		return nil, err
 	}
 
+	if !cliCtx.TrustNode {
+		check, err := cliCtx.Verify(validatorsRes.BlockHeight)
+		if err != nil {
+			return nil, err
+		}
+
+		if !bytes.Equal(check.ValidatorsHash, tmtypes.NewValidatorSet(validatorsRes.Validators).Hash()) {
+			return nil, fmt.Errorf("got invalid validatorset")
+		}
+	}
+
 	outputValidatorsRes := ResultValidatorsOutput{
 		BlockHeight: validatorsRes.BlockHeight,
 		Validators:  make([]ValidatorOutput, len(validatorsRes.Validators)),
@@ -82,12 +99,11 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 		}
 	}
 
-	output, err := cdc.MarshalJSON(outputValidatorsRes)
-	if err != nil {
-		return nil, err
+	if cliCtx.Indent {
+		return cdc.MarshalJSONIndent(outputValidatorsRes, "", "  ")
 	}
+	return cdc.MarshalJSON(outputValidatorsRes)
 
-	return output, nil
 }
 
 // CMD
@@ -142,8 +158,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }
 
@@ -163,7 +178,6 @@ func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerF
 			w.Write([]byte(err.Error()))
 			return
 		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

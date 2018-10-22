@@ -3,14 +3,21 @@ package context
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"io"
+	"os"
+	"path/filepath"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/log"
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -18,26 +25,32 @@ import (
 
 const ctxAccStoreName = "acc"
 
+var (
+	verifier tmlite.Verifier
+)
+
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec           *wire.Codec
-	AccDecoder      auth.AccountDecoder
-	Client          rpcclient.Client
-	Logger          io.Writer
-	Height          int64
-	Gas             int64
-	GasAdjustment   float64
-	NodeURI         string
-	FromAddressName string
-	AccountStore    string
-	TrustNode       bool
-	UseLedger       bool
-	Async           bool
-	JSON            bool
-	PrintResponse   bool
-	Certifier       tmlite.Certifier
-	DryRun          bool
+	Codec         *codec.Codec
+	AccDecoder    auth.AccountDecoder
+	Client        rpcclient.Client
+	Output        io.Writer
+	Height        int64
+	NodeURI       string
+	From          string
+	AccountStore  string
+	TrustNode     bool
+	UseLedger     bool
+	Async         bool
+	JSON          bool
+	PrintResponse bool
+	Verifier      tmlite.Verifier
+	DryRun        bool
+	GenerateOnly  bool
+	fromAddress   types.AccAddress
+	fromName      string
+	Indent        bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
@@ -50,56 +63,109 @@ func NewCLIContext() CLIContext {
 		rpc = rpcclient.NewHTTP(nodeURI, "/websocket")
 	}
 
+	from := viper.GetString(client.FlagFrom)
+	fromAddress, fromName := fromFields(from)
+
+	// We need to use a single verifier for all contexts
+	if verifier == nil {
+		verifier = createVerifier()
+	}
+
 	return CLIContext{
-		Client:          rpc,
-		NodeURI:         nodeURI,
-		AccountStore:    ctxAccStoreName,
-		FromAddressName: viper.GetString(client.FlagFrom),
-		Height:          viper.GetInt64(client.FlagHeight),
-		Gas:             viper.GetInt64(client.FlagGas),
-		GasAdjustment:   viper.GetFloat64(client.FlagGasAdjustment),
-		TrustNode:       viper.GetBool(client.FlagTrustNode),
-		UseLedger:       viper.GetBool(client.FlagUseLedger),
-		Async:           viper.GetBool(client.FlagAsync),
-		JSON:            viper.GetBool(client.FlagJson),
-		PrintResponse:   viper.GetBool(client.FlagPrintResponse),
-		Certifier:       createCertifier(),
-		DryRun:          viper.GetBool(client.FlagDryRun),
+		Client:        rpc,
+		Output:        os.Stdout,
+		NodeURI:       nodeURI,
+		AccountStore:  ctxAccStoreName,
+		From:          viper.GetString(client.FlagFrom),
+		Height:        viper.GetInt64(client.FlagHeight),
+		TrustNode:     viper.GetBool(client.FlagTrustNode),
+		UseLedger:     viper.GetBool(client.FlagUseLedger),
+		Async:         viper.GetBool(client.FlagAsync),
+		JSON:          viper.GetBool(client.FlagJson),
+		PrintResponse: viper.GetBool(client.FlagPrintResponse),
+		Verifier:      verifier,
+		DryRun:        viper.GetBool(client.FlagDryRun),
+		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
+		fromAddress:   fromAddress,
+		fromName:      fromName,
+		Indent:        viper.GetBool(client.FlagIndentResponse),
 	}
 }
 
-func createCertifier() tmlite.Certifier {
+func createVerifier() tmlite.Verifier {
+	trustNodeDefined := viper.IsSet(client.FlagTrustNode)
+	if !trustNodeDefined {
+		return nil
+	}
+
 	trustNode := viper.GetBool(client.FlagTrustNode)
 	if trustNode {
 		return nil
 	}
+
 	chainID := viper.GetString(client.FlagChainID)
 	home := viper.GetString(cli.HomeFlag)
 	nodeURI := viper.GetString(client.FlagNode)
 
 	var errMsg bytes.Buffer
 	if chainID == "" {
-		errMsg.WriteString("chain-id ")
+		errMsg.WriteString("--chain-id ")
 	}
 	if home == "" {
-		errMsg.WriteString("home ")
+		errMsg.WriteString("--home ")
 	}
 	if nodeURI == "" {
-		errMsg.WriteString("node ")
+		errMsg.WriteString("--node ")
 	}
-	// errMsg is not empty
 	if errMsg.Len() != 0 {
-		panic(fmt.Errorf("can't create certifier for distrust mode, empty values from these options: %s", errMsg.String()))
+		fmt.Printf("Must specify these options: %s when --trust-node is false\n", errMsg.String())
+		os.Exit(1)
 	}
-	certifier, err := tmliteProxy.GetCertifier(chainID, home, nodeURI)
+	node := rpcclient.NewHTTP(nodeURI, "/websocket")
+	verifier, err := tmliteProxy.NewVerifier(chainID, filepath.Join(home, ".gaialite"), node, log.NewNopLogger())
+
 	if err != nil {
-		panic(err)
+		fmt.Printf("Create verifier failed: %s\n", err.Error())
+		fmt.Printf("Please check network connection and verify the address of the node to connect to\n")
+		os.Exit(1)
 	}
-	return certifier
+
+	return verifier
+}
+
+func fromFields(from string) (fromAddr types.AccAddress, fromName string) {
+	if from == "" {
+		return nil, ""
+	}
+
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		fmt.Println("no keybase found")
+		os.Exit(1)
+	}
+
+	var info cskeys.Info
+	if addr, err := types.AccAddressFromBech32(from); err == nil {
+		info, err = keybase.GetByAddress(addr)
+		if err != nil {
+			fmt.Printf("could not find key %s\n", from)
+			os.Exit(1)
+		}
+	} else {
+		info, err = keybase.Get(from)
+		if err != nil {
+			fmt.Printf("could not find key %s\n", from)
+			os.Exit(1)
+		}
+	}
+
+	fromAddr = info.GetAddress()
+	fromName = info.GetName()
+	return
 }
 
 // WithCodec returns a copy of the context with an updated codec.
-func (ctx CLIContext) WithCodec(cdc *wire.Codec) CLIContext {
+func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	ctx.Codec = cdc
 	return ctx
 }
@@ -111,9 +177,9 @@ func (ctx CLIContext) WithAccountDecoder(decoder auth.AccountDecoder) CLIContext
 	return ctx
 }
 
-// WithLogger returns a copy of the context with an updated logger.
-func (ctx CLIContext) WithLogger(w io.Writer) CLIContext {
-	ctx.Logger = w
+// WithOutput returns a copy of the context with an updated output writer (e.g. stdout).
+func (ctx CLIContext) WithOutput(w io.Writer) CLIContext {
+	ctx.Output = w
 	return ctx
 }
 
@@ -123,10 +189,9 @@ func (ctx CLIContext) WithAccountStore(accountStore string) CLIContext {
 	return ctx
 }
 
-// WithFromAddressName returns a copy of the context with an updated from
-// address.
-func (ctx CLIContext) WithFromAddressName(addrName string) CLIContext {
-	ctx.FromAddressName = addrName
+// WithFrom returns a copy of the context with an updated from address or name.
+func (ctx CLIContext) WithFrom(from string) CLIContext {
+	ctx.From = from
 	return ctx
 }
 
@@ -156,14 +221,8 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 	return ctx
 }
 
-// WithCertifier - return a copy of the context with an updated Certifier
-func (ctx CLIContext) WithCertifier(certifier tmlite.Certifier) CLIContext {
-	ctx.Certifier = certifier
-	return ctx
-}
-
-// WithGasAdjustment returns a copy of the context with an updated GasAdjustment flag.
-func (ctx CLIContext) WithGasAdjustment(adjustment float64) CLIContext {
-	ctx.GasAdjustment = adjustment
+// WithVerifier - return a copy of the context with an updated Verifier
+func (ctx CLIContext) WithVerifier(verifier tmlite.Verifier) CLIContext {
+	ctx.Verifier = verifier
 	return ctx
 }

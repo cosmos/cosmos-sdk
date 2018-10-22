@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,8 +14,8 @@ func newCacheKVStore() CacheKVStore {
 	return NewCacheKVStore(mem)
 }
 
-func keyFmt(i int) []byte { return bz(cmn.Fmt("key%0.8d", i)) }
-func valFmt(i int) []byte { return bz(cmn.Fmt("value%0.8d", i)) }
+func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
+func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
@@ -493,3 +494,25 @@ func (krc *keyRangeCounter) key() int {
 //--------------------------------------------------------
 
 func bz(s string) []byte { return []byte(s) }
+
+func BenchmarkCacheKVStoreGetNoKeyFound(b *testing.B) {
+	st := newCacheKVStore()
+	b.ResetTimer()
+	// assumes b.N < 2**24
+	for i := 0; i < b.N; i++ {
+		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
+	}
+}
+
+func BenchmarkCacheKVStoreGetKeyFound(b *testing.B) {
+	st := newCacheKVStore()
+	for i := 0; i < b.N; i++ {
+		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
+		st.Set(arr, arr)
+	}
+	b.ResetTimer()
+	// assumes b.N < 2**24
+	for i := 0; i < b.N; i++ {
+		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
+	}
+}

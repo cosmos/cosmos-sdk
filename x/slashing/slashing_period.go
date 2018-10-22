@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // Cap an infraction's slash amount by the slashing period in which it was committed
@@ -15,7 +16,7 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ConsAddress, fr
 
 	// Sanity check
 	if slashingPeriod.EndHeight > 0 && slashingPeriod.EndHeight < infractionHeight {
-		panic(fmt.Sprintf("slashing period ended before infraction: infraction height %d, slashing period ended at %d", infractionHeight, slashingPeriod.EndHeight))
+		panic(fmt.Sprintf("slashing period ended before infraction: validator %s, infraction height %d, slashing period ended at %d", address, infractionHeight, slashingPeriod.EndHeight))
 	}
 
 	// Calculate the updated total slash amount
@@ -32,7 +33,7 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ConsAddress, fr
 	return
 }
 
-// Stored by validator Tendermint address (not owner address)
+// Stored by validator Tendermint address (not operator address)
 // This function retrieves the most recent slashing period starting
 // before a particular height - so the slashing period that was "in effect"
 // at the time of an infraction committed at that height.
@@ -43,13 +44,13 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 	end := sdk.PrefixEndBytes(GetValidatorSlashingPeriodKey(address, height))
 	iterator := store.ReverseIterator(start, end)
 	if !iterator.Valid() {
-		panic("expected to find slashing period, but none was found")
+		panic(fmt.Sprintf("expected to find slashing period for validator %s before height %d, but none was found", address, height))
 	}
 	slashingPeriod = k.unmarshalSlashingPeriodKeyValue(iterator.Key(), iterator.Value())
 	return
 }
 
-// Stored by validator Tendermint address (not owner address)
+// Stored by validator Tendermint address (not operator address)
 // This function sets a validator slashing period for a particular validator,
 // start height, end height, and current slashed-so-far total, or updates
 // an existing slashing period for the same validator and start height.
@@ -68,7 +69,7 @@ func (k Keeper) unmarshalSlashingPeriodKeyValue(key []byte, value []byte) Valida
 	var slashingPeriodValue ValidatorSlashingPeriodValue
 	k.cdc.MustUnmarshalBinary(value, &slashingPeriodValue)
 	address := sdk.ConsAddress(key[1 : 1+sdk.AddrLen])
-	startHeight := int64(binary.LittleEndian.Uint64(key[1+sdk.AddrLen : 1+sdk.AddrLen+8]))
+	startHeight := int64(binary.BigEndian.Uint64(key[1+sdk.AddrLen:1+sdk.AddrLen+8]) - uint64(stake.ValidatorUpdateDelay))
 	return ValidatorSlashingPeriod{
 		ValidatorAddr: address,
 		StartHeight:   startHeight,

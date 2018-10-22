@@ -91,13 +91,19 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 
 func printSignatures(stdTx auth.StdTx) {
 	fmt.Println("Signers:")
-	for i, signer := range stdTx.GetSigners() {
+	signers := stdTx.GetSigners()
+	for i, signer := range signers {
 		fmt.Printf(" %v: %v\n", i, signer.String())
 	}
 	fmt.Println("")
 	fmt.Println("Signatures:")
 	for i, sig := range stdTx.GetSignatures() {
-		fmt.Printf(" %v: %v\n", i, sdk.AccAddress(sig.Address()).String())
+		sigAddr := sdk.AccAddress(sig.Address())
+		sigSanity := "OK"
+		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
+			sigSanity = "ERROR"
+		}
+		fmt.Printf(" %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
 	}
 	return
 }

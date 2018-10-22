@@ -27,6 +27,9 @@ type lru struct {
 
 	size int
 
+	resize  bool
+	hitrate float64
+
 	mtx *sync.Mutex
 }
 
@@ -37,27 +40,26 @@ type Cache struct {
 	bin  *lru
 }
 
-func newLRU(size int) *lru {
+func newLRU() *lru {
 	return &lru{
 		m: make(map[string]*list.Element),
 		l: list.New(),
 
-		size: size,
+		size: 1,
+
+		resize:  true,
+		hitrate: 0,
 
 		mtx: &sync.Mutex{},
 	}
 }
 
-func newCache(cdc *Amino, size int) *Cache {
-	if size < 0 {
-		panic("negative cache size")
-	}
-
+func newCache(cdc *Amino) *Cache {
 	return &Cache{
 		Amino: cdc,
 
-		json: newLRU(size),
-		bin:  newLRU(size),
+		json: newLRU(),
+		bin:  newLRU(),
 	}
 }
 
@@ -75,6 +77,10 @@ func deref(rv reflect.Value) reflect.Value {
 func (lru *lru) read(bz []byte, ptr interface{}) (ok bool) {
 	var e *list.Element
 	if e, ok = lru.m[string(bz)]; ok {
+		if lru.resize {
+			lru.hitrate = (lru.hitrate*(window-1) + 1) / window
+		}
+
 		lru.l.MoveToFront(e)
 
 		rv := deref(reflect.ValueOf(ptr))
@@ -83,8 +89,20 @@ func (lru *lru) read(bz []byte, ptr interface{}) (ok bool) {
 	return
 }
 
+const window = float64(10000)
+const inc = 1 / window
+const requirement = 0.6
+
 func (lru *lru) write(bz []byte, ptr interface{}) {
 	if len(lru.m) >= lru.size {
+		if lru.resize {
+			fmt.Println(lru.hitrate)
+			if lru.hitrate < requirement {
+				lru.size *= 2
+			} else {
+				lru.resize = false
+			}
+		}
 		e := lru.l.Back()
 		lru.l.Remove(e)
 		delete(lru.m, e.Value.(*kvpair).key)

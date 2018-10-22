@@ -6,7 +6,7 @@ import (
 )
 
 type Codec interface {
-	Cache(size int) Codec
+	Cache() Codec
 
 	MarshalJSON(interface{}) ([]byte, error)
 	MarshalJSONIndent(interface{}, string, string) ([]byte, error)

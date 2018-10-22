@@ -67,7 +67,7 @@ func NewKeeper(cdc sdk.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, para
 		ck:           ck,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),
-		cdc:          cdc,
+		cdc:          cdc.Cache(),
 		codespace:    codespace,
 	}
 }

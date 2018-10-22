@@ -28,7 +28,7 @@ type Keeper struct {
 func NewKeeper(cdc sdk.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:     key,
-		cdc:          cdc,
+		cdc:          cdc.Cache(),
 		validatorSet: vs,
 		paramspace:   paramspace.WithTypeTable(ParamTypeTable()),
 		codespace:    codespace,

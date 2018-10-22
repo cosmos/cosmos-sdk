@@ -11,7 +11,7 @@ func TestCacheIdentity(t *testing.T) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	cache := newCache(cdc, size)
+	cache := newCache(cdc)
 
 	datanum := size * 10
 	tcs := randgen(datanum)
@@ -50,6 +50,8 @@ func benchmarkCache(b *testing.B, cdc *Cache, datanum, lambda int) {
 		})
 	}
 	b.Logf("Cache hit %.2f%%", float64(chit)/2/float64(b.N)*100)
+	b.Logf("Cache size %d", cdc.bin.size)
+	b.Logf("Cache sizeratio %.2f%%", float64(cdc.bin.size)/float64(datanum)*100)
 }
 
 // Size 1000 Lambda 10
@@ -63,33 +65,33 @@ func BenchmarkP2PercentCacheSize1000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 2), 1000, 10)
-}
+	benchmarkCache(b, newCache(cdc), 1000, 10)
+} /*
 func BenchmarkP5PercentCacheSize1000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 5), 1000, 10)
+	benchmarkCache(b, newCache(cdc), 1000, 10)
 }
 func Benchmark1PercentCacheSize1000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 10), 1000, 10)
+	benchmarkCache(b, newCache(cdc), 1000, 10)
 }
 func Benchmark2PercentCacheSize1000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 20), 1000, 10)
+	benchmarkCache(b, newCache(cdc), 1000, 10)
 }
 func Benchmark5PercentCacheSize1000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 50), 1000, 10)
+	benchmarkCache(b, newCache(cdc), 1000, 10)
 }
-
+*/
 // Size 100000 Lambda 10
 func BenchmarkNoCacheSize10000Lambda10(b *testing.B) {
 	cdc := New()
@@ -101,33 +103,33 @@ func BenchmarkP2PercentCacheSize10000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 200), 100000, 10)
-}
+	benchmarkCache(b, newCache(cdc), 100000, 10)
+} /*
 func BenchmarkP5PercentCacheSize10000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 500), 100000, 10)
+	benchmarkCache(b, newCache(cdc), 100000, 10)
 }
 func Benchmark1PercentCacheSize10000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 1000), 100000, 10)
+	benchmarkCache(b, newCache(cdc), 100000, 10)
 }
 func Benchmark2PercentCacheSize10000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 2000), 100000, 10)
+	benchmarkCache(b, newCache(cdc), 100000, 10)
 }
 func Benchmark5PercentCacheSize10000Lambda10(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 5000), 100000, 10)
+	benchmarkCache(b, newCache(cdc), 100000, 10)
 }
-
+*/
 // Size 1000 Lambda 50
 func BenchmarkNoCacheSize1000Lambda50(b *testing.B) {
 	cdc := New()
@@ -139,33 +141,33 @@ func BenchmarkP2PercentCacheSize1000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 2), 1000, 50)
-}
+	benchmarkCache(b, newCache(cdc), 1000, 50)
+} /*
 func BenchmarkP5PercentCacheSize1000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 5), 1000, 50)
+	benchmarkCache(b, newCache(cdc), 1000, 50)
 }
 func Benchmark1PercentCacheSize1000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 10), 1000, 50)
+	benchmarkCache(b, newCache(cdc), 1000, 50)
 }
 func Benchmark2PercentCacheSize1000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 20), 1000, 50)
+	benchmarkCache(b, newCache(cdc), 1000, 50)
 }
 func Benchmark5PercentCacheSize1000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 50), 1000, 50)
+	benchmarkCache(b, newCache(cdc), 1000, 50)
 }
-
+*/
 // Size 100000 Lambda 50
 func BenchmarkNoCacheSize10000Lambda50(b *testing.B) {
 	cdc := New()
@@ -177,33 +179,33 @@ func BenchmarkP2PercentCacheSize10000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 200), 100000, 50)
-}
+	benchmarkCache(b, newCache(cdc), 100000, 50)
+} /*
 func BenchmarkP5PercentCacheSize10000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 500), 100000, 50)
+	benchmarkCache(b, newCache(cdc), 100000, 50)
 }
 func Benchmark1PercentCacheSize10000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 1000), 100000, 50)
+	benchmarkCache(b, newCache(cdc), 100000, 50)
 }
 func Benchmark2PercentCacheSize10000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 2000), 100000, 50)
+	benchmarkCache(b, newCache(cdc), 100000, 50)
 }
 func Benchmark5PercentCacheSize10000Lambda50(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 5000), 100000, 50)
+	benchmarkCache(b, newCache(cdc), 100000, 50)
 }
-
+*/
 // Size 1000 Lambda 100
 func BenchmarkNoCacheSize1000Lambda100(b *testing.B) {
 	cdc := New()
@@ -215,33 +217,33 @@ func BenchmarkP2PercentCacheSize1000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 2), 1000, 100)
-}
+	benchmarkCache(b, newCache(cdc), 1000, 100)
+} /*
 func BenchmarkP5PercentCacheSize1000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 5), 1000, 100)
+	benchmarkCache(b, newCache(cdc), 1000, 100)
 }
 func Benchmark1PercentCacheSize1000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 10), 1000, 100)
+	benchmarkCache(b, newCache(cdc), 1000, 100)
 }
 func Benchmark2PercentCacheSize1000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 20), 1000, 100)
+	benchmarkCache(b, newCache(cdc), 1000, 100)
 }
 func Benchmark5PercentCacheSize1000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 50), 1000, 100)
+	benchmarkCache(b, newCache(cdc), 1000, 100)
 }
-
+*/
 // Size 100000 Lambda 100
 func BenchmarkNoCacheSize10000Lambda100(b *testing.B) {
 	cdc := New()
@@ -253,33 +255,33 @@ func BenchmarkP2PercentCacheSize10000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 200), 100000, 100)
-}
+	benchmarkCache(b, newCache(cdc), 100000, 100)
+} /*
 func BenchmarkP5PercentCacheSize10000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 500), 100000, 100)
+	benchmarkCache(b, newCache(cdc), 100000, 100)
 }
 func Benchmark1PercentCacheSize10000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 1000), 100000, 100)
+	benchmarkCache(b, newCache(cdc), 100000, 100)
 }
 func Benchmark2PercentCacheSize10000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 2000), 100000, 100)
+	benchmarkCache(b, newCache(cdc), 100000, 100)
 }
 func Benchmark5PercentCacheSize10000Lambda100(b *testing.B) {
 	cdc := New()
 	registerCodec(cdc)
 	cdc.Seal()
-	benchmarkCache(b, newCache(cdc, 5000), 100000, 100)
+	benchmarkCache(b, newCache(cdc), 100000, 100)
 }
-
+*/
 func (c *Cache) logUnmarshalBinary(bz []byte, ptr interface{}) (hit int, err error) {
 	lru := c.bin
 	lru.lock()

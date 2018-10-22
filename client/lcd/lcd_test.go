@@ -345,7 +345,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	var msg auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))
 	require.Equal(t, len(msg.Msgs), 1)
-	require.Equal(t, msg.Msgs[0].Type(), "bank")
+	require.Equal(t, msg.Msgs[0].Route(), "bank")
 	require.Equal(t, msg.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(msg.Signatures))
 	gasEstimate := msg.Fee.Gas

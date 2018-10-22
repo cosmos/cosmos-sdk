@@ -13,7 +13,7 @@ func NewHandler(ibcm Mapper, ck bank.Keeper) sdk.Handler {
 		case IBCReceiveMsg:
 			return handleIBCReceiveMsg(ctx, ibcm, ck, msg)
 		default:
-			errMsg := "Unrecognized IBC Msg type: " + msg.Name()
+			errMsg := "Unrecognized IBC Msg type: " + msg.Type()
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

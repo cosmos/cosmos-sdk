@@ -22,7 +22,7 @@ func TestGovWithRandomMessages(t *testing.T) {
 
 	bank.RegisterCodec(mapp.Cdc)
 	gov.RegisterCodec(mapp.Cdc)
-	mapper := mapp.AccountMapper
+	mapper := mapp.AccountKeeper
 
 	bankKeeper := bank.NewBaseKeeper(mapper)
 	stakeKey := sdk.NewKVStoreKey("stake")

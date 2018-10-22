@@ -29,7 +29,7 @@ func (k Keeper) GetTrend(ctx sdk.Context) string {
 	return string(bz)
 }
 
-// Implements sdk.AccountMapper.
+// Implements sdk.AccountKeeper.
 func (k Keeper) setTrend(ctx sdk.Context, newTrend string) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(trendKey, []byte(newTrend))

@@ -74,7 +74,7 @@ func MakeTestCodec() *codec.Codec {
 }
 
 // hogpodge of all sorts of input required for testing
-func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
+func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
@@ -94,13 +94,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	cdc := MakeTestCodec()
-	accountMapper := auth.NewAccountMapper(
+	accountKeeper := auth.NewAccountKeeper(
 		cdc,                   // amino codec
 		keyAcc,                // target store
 		auth.ProtoBaseAccount, // prototype
 	)
 
-	ck := bank.NewBaseKeeper(accountMapper)
+	ck := bank.NewBaseKeeper(accountKeeper)
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
 	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
@@ -119,7 +119,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		keeper.SetPool(ctx, pool)
 	}
 
-	return ctx, accountMapper, keeper
+	return ctx, accountKeeper, keeper
 }
 
 func NewPubKey(pk string) (res crypto.PubKey) {

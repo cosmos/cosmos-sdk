@@ -106,23 +106,23 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
-		{100, banksim.SingleInputSendMsg(app.accountMapper, app.bankKeeper)},
+		{100, banksim.SingleInputSendMsg(app.accountKeeper, app.bankKeeper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgCreateValidator(app.accountKeeper, app.stakeKeeper)},
 		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
-		{100, stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgDelegate(app.accountKeeper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgBeginUnbonding(app.accountKeeper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgBeginRedelegate(app.accountKeeper, app.stakeKeeper)},
 		{100, slashingsim.SimulateMsgUnjail(app.slashingKeeper)},
 	}
 }
 
 func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
-		banksim.NonnegativeBalanceInvariant(app.accountMapper),
+		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
 		govsim.AllInvariants(),
-		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.accountMapper),
+		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.accountKeeper),
 		slashingsim.AllInvariants(),
 	}
 }

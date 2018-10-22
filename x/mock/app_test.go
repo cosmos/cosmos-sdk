@@ -56,7 +56,7 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 
 	msg := testMsg{signers: []sdk.AccAddress{addrs[0]}, positiveNum: 1}
 
-	acct := mApp.AccountMapper.GetAccount(ctxCheck, addrs[0])
+	acct := mApp.AccountKeeper.GetAccount(ctxCheck, addrs[0])
 	require.Equal(t, accs[0], acct.(*auth.BaseAccount))
 
 	SignCheckDeliver(

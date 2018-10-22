@@ -26,14 +26,15 @@ func NewHandler(keeper Keeper) sdk.Handler {
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
+	proposal, info := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
+	abstract := proposal.GetProposalAbstract()
 
-	err, votingStarted := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)
+	err, votingStarted := keeper.AddDeposit(ctx, abstract.ProposalID, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposal.GetProposalID())
+	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(abstract.ProposalID)
 
 	resTags := sdk.NewTags(
 		tags.Action, tags.ActionSubmitProposal,
@@ -141,6 +142,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 			keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusPassed)
 			action = tags.ActionProposalPassed
+			err := activeProposal.Enact(ctx, keeper)
+			if err != nil {
+				logger.Info(fmt.Sprintf("proposal %d (%s) returned error while being enacted; error msg: %s",
+					activeProposal.GetProposalID(), activeProposal.GetTitle(), err.Error()))
+				action = tags.ActionProposalError
+			}
 		} else {
 			keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusRejected)

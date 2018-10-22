@@ -77,21 +77,27 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, p
 // Proposals
 
 // Creates a NewProposal
-func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind) Proposal {
+func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind) (proposal Proposal, info ProposalInfo) {
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {
-		return nil
+		return
 	}
-	var proposal Proposal = &TextProposal{
-		ProposalID:   proposalID,
-		Title:        title,
-		Description:  description,
+	proposal = TextProposal{
+		Abstract: ProposalAbstract{
+			ProposalID:  proposalID,
+			Title:       title,
+			Description: description,
+		},
+
 		ProposalType: proposalType,
+	}
+	info = ProposalInfo{
 		Status:       StatusDepositPeriod,
 		TallyResult:  EmptyTallyResult(),
 		TotalDeposit: sdk.Coins{},
 		SubmitTime:   ctx.BlockHeader().Time,
 	}
+
 	keeper.SetProposal(ctx, proposal)
 	keeper.InactiveProposalQueuePush(ctx, proposal)
 	return proposal

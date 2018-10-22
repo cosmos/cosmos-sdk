@@ -77,22 +77,18 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
+
+			// set validator power on lookup index.
+			k.SetLastValidatorPower(ctx, operator, sdk.NewDec(newPower))
 		}
 
 		// validator still in the validator set, so delete from the copy
 		delete(last, operatorBytes)
 
-		// set validator power on lookup index.
-		k.SetLastValidatorPower(ctx, operator, sdk.NewDec(newPower))
-
 		// keep count
 		count++
 		totalPower += newPower
-
 	}
-
-	// set total power on lookup index.
-	k.SetLastTotalPower(ctx, sdk.NewDec(totalPower))
 
 	// sort the no-longer-bonded validators
 	noLongerBonded := k.sortNoLongerBonded(last)
@@ -116,7 +112,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// update the validator set
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
+	}
 
+	// set total power on lookup index if there are any updates
+	if len(updates) > 0 {
+		k.SetLastTotalPower(ctx, sdk.NewDec(totalPower))
 	}
 
 	return updates

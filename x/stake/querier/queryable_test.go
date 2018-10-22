@@ -72,8 +72,8 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"parameters"}, query)
 	require.Nil(t, err)
 
-	queryParams := newTestValidatorQuery(addrVal1)
-	bz, errRes := cdc.MarshalJSON(queryParams)
+	queryValParams := newTestValidatorQuery(addrVal1)
+	bz, errRes := cdc.MarshalJSON(queryValParams)
 	require.Nil(t, errRes)
 
 	query.Path = "/custom/stake/validator"
@@ -86,6 +86,25 @@ func TestNewQuerier(t *testing.T) {
 	require.Nil(t, err)
 
 	_, err = querier(ctx, []string{"validatorRedelegations"}, query)
+	require.Nil(t, err)
+
+	queryDelParams := newTestDelegatorQuery(addrAcc2)
+	bz, errRes = cdc.MarshalJSON(queryDelParams)
+	require.Nil(t, errRes)
+
+	query.Path = "/custom/stake/validator"
+	query.Data = bz
+
+	_, err = querier(ctx, []string{"delegatorDelegations"}, query)
+	require.Nil(t, err)
+
+	_, err = querier(ctx, []string{"delegatorUnbondingDelegations"}, query)
+	require.Nil(t, err)
+
+	_, err = querier(ctx, []string{"delegatorRedelegations"}, query)
+	require.Nil(t, err)
+
+	_, err = querier(ctx, []string{"delegatorValidators"}, query)
 	require.Nil(t, err)
 }
 

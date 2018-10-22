@@ -2,9 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
-
 	"github.com/spf13/viper"
+	"io/ioutil"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -13,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/spf13/cobra"
-	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/go-amino"
 )
 
 const (
@@ -53,7 +52,9 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		}
 
 		if viper.GetBool(flagPrintSigs) {
-			printSignatures(stdTx)
+			if !printSignatures(stdTx) {
+				return fmt.Errorf("signatures validation failed")
+			}
 			return nil
 		}
 
@@ -89,23 +90,31 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 	}
 }
 
-func printSignatures(stdTx auth.StdTx) {
+func printSignatures(stdTx auth.StdTx) bool {
 	fmt.Println("Signers:")
 	signers := stdTx.GetSigners()
 	for i, signer := range signers {
 		fmt.Printf(" %v: %v\n", i, signer.String())
 	}
+
+	sigs := stdTx.GetSignatures()
 	fmt.Println("")
 	fmt.Println("Signatures:")
+	success := true
+	if len(sigs) != len(signers) {
+		success = false
+	}
 	for i, sig := range stdTx.GetSignatures() {
 		sigAddr := sdk.AccAddress(sig.Address())
 		sigSanity := "OK"
 		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
-			sigSanity = "ERROR"
+			sigSanity = fmt.Sprintf("ERROR: signature %d does not match its respective signer", i)
+			if success  { success = false }
 		}
 		fmt.Printf(" %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
 	}
-	return
+	fmt.Println("")
+	return success
 }
 
 func readAndUnmarshalStdTx(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {

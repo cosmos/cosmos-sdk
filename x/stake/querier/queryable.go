@@ -63,7 +63,6 @@ func NewQuerier(k keep.Keeper, cdc *codec.Codec) sdk.Querier {
 }
 
 // defines the params for the following queries:
-// - 'custom/stake/delegator'
 // - 'custom/stake/delegatorDelegations'
 // - 'custom/stake/delegatorUnbondingDelegations'
 // - 'custom/stake/delegatorRedelegations'

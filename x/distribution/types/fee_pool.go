@@ -43,10 +43,10 @@ func (ta TotalAccum) UpdateForNewHeight_DEBUG(height int64, accumCreatedPerBlock
 		fmt.Println(
 			cmn.Blue(
 				fmt.Sprintf("FP Add %v * %v = %v, + %v (old) => %v (new)",
-					accumCreatedPerBlock, sdk.NewInt(blocks),
-					accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)),
-					ta.Accum,
-					ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks))),
+					accumCreatedPerBlock.String(), sdk.NewInt(blocks),
+					accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)).String(),
+					ta.Accum.String(),
+					ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks))).String(),
 				),
 			),
 		)

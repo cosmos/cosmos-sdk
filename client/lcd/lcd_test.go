@@ -555,8 +555,6 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
 
 	// testing unbonding
-
-	// create unbond TX
 	resultTx = doBeginUnbonding(t, port, seed, name, password, addr, operAddrs[0], 30)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -578,6 +576,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
+	// query delegations, unbondings and redelegations from validator and delegator
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, "30.0000000000", delegatorDels[0].GetShares().String())
@@ -597,9 +596,6 @@ func TestBonding(t *testing.T) {
 	validatorReds := getValidatorRedelegations(t, port, operAddrs[0])
 	require.Len(t, validatorReds, 1)
 	require.Equal(t, "30", validatorReds[0].Balance.Amount.String())
-
-	bondedValidators = getDelegatorValidators(t, port, addr)
-	require.Len(t, bondedValidators, 1, "There's a delegation as the user only withdraw half of the funds")
 
 	// TODO Undonding status not currently implemented
 	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)

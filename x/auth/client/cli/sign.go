@@ -16,10 +16,10 @@ import (
 )
 
 const (
-	flagAppend    = "append"
-	flagPrintSigs = "print-sigs"
-	flagOffline   = "offline"
-	flagSigOnly   = "print-signature-only"
+	flagAppend       = "append"
+	flagPrintSigs    = "print-sigs"
+	flagOffline      = "offline"
+	flagRawSignature = "raw-signature"
 )
 
 // GetSignCommand returns the sign command
@@ -30,7 +30,7 @@ func GetSignCommand(codec *amino.Codec, decoder auth.AccountDecoder) *cobra.Comm
 		Long: `Sign transactions created with the --generate-only flag.
 Read a transaction from <file>, sign it, and print its JSON encoding.
 
-If the flag --print-signature-only flag is on, it outputs a JSON representation
+If the flag --raw-signature flag is on, it outputs a JSON representation
 of the generated signature only.
 
 The --offline flag makes sure that the client will not reach out to the local cache.
@@ -41,7 +41,7 @@ recommended to set such parameters manually.`,
 	}
 	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
 	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten")
-	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit.")
+	cmd.Flags().Bool(flagRawSignature, false, "Print only the generated signature, then exit.")
 	cmd.Flags().Bool(flagPrintSigs, false, "Print the addresses that must sign the transaction and those who have already signed it, then exit")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
 	return cmd
@@ -66,7 +66,7 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		// if --print-signature-only is on, then override --append
-		generateSignatureOnly := viper.GetBool(flagSigOnly)
+		generateSignatureOnly := viper.GetBool(flagRawSignature)
 		append := viper.GetBool(flagAppend) && !generateSignatureOnly
 		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, append, viper.GetBool(flagOffline))
 		if err != nil {
@@ -112,7 +112,9 @@ func printSignatures(stdTx auth.StdTx) bool {
 		sigSanity := "OK"
 		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
 			sigSanity = fmt.Sprintf("ERROR: signature %d does not match its respective signer", i)
-			if success  { success = false }
+			if success {
+				success = false
+			}
 		}
 		fmt.Printf(" %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
 	}

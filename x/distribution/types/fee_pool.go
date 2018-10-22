@@ -39,15 +39,18 @@ func (ta TotalAccum) UpdateForNewHeight_DEBUG(height int64, accumCreatedPerBlock
 	if blocks < 0 {
 		panic("reverse updated for new height")
 	}
-	fmt.Println(
-		cmn.Blue(
-			fmt.Sprintf("FP Add %v * %v = %v +=> %v",
-				accumCreatedPerBlock, sdk.NewInt(blocks),
-				accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)),
-				ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks))),
+	if !accumCreatedPerBlock.IsZero() && blocks != 0 {
+		fmt.Println(
+			cmn.Blue(
+				fmt.Sprintf("FP Add %v * %v = %v, + %v (old) => %v (new)",
+					accumCreatedPerBlock, sdk.NewInt(blocks),
+					accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)),
+					ta.Accum,
+					ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks))),
+				),
 			),
-		),
-	)
+		)
+	}
 	ta.Accum = ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)))
 	ta.UpdateHeight = height
 	return ta

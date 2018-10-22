@@ -77,21 +77,26 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 
 // TODO make keybase take a database not load from the directory
 
-// initialize a keybase based on the configuration
+// GetKeyBase initializes a keybase based on the configuration.
 func GetKeyBase() (keys.Keybase, error) {
 	rootDir := viper.GetString(cli.HomeFlag)
-	return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
+	return GetKeyBaseFromDir(rootDir)
 }
 
-// initialize a keybase based on the configuration with write permission
+// GetKeyBaseWithWritePerm initialize a keybase based on the configuration with write permissions.
 func GetKeyBaseWithWritePerm() (keys.Keybase, error) {
 	rootDir := viper.GetString(cli.HomeFlag)
 	return GetKeyBaseFromDirWithWritePerm(rootDir)
 }
 
-// initialize a keybase at particular dir with write permission
+// GetKeyBaseFromDirWithWritePerm initializes a keybase at a particular dir with write permissions.
 func GetKeyBaseFromDirWithWritePerm(rootDir string) (keys.Keybase, error) {
-	return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: false})
+	return getKeyBaseFromDirWithOpts(rootDir, nil)
+}
+
+// GetKeyBaseFromDir initializes a read-only keybase at a particular dir.
+func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
+	return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
 }
 
 func getKeyBaseFromDirWithOpts(rootDir string, o *opt.Options) (keys.Keybase, error) {

@@ -14,7 +14,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	// authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distributionsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
@@ -104,19 +104,19 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
-		{5, authsim.SimulateDeductFee(app.accountMapper, app.feeCollectionKeeper)},
+		//{5, authsim.SimulateDeductFee(app.accountMapper, app.feeCollectionKeeper)},
 		{100, banksim.SingleInputSendMsg(app.accountMapper, app.bankKeeper)},
-		{50, distributionsim.SimulateMsgSetWithdrawAddress(app.accountMapper, app.distrKeeper)},
+		// {50, distributionsim.SimulateMsgSetWithdrawAddress(app.accountMapper, app.distrKeeper)},
 		{50, distributionsim.SimulateMsgWithdrawDelegatorRewardsAll(app.accountMapper, app.distrKeeper)},
 		{50, distributionsim.SimulateMsgWithdrawDelegatorReward(app.accountMapper, app.distrKeeper)},
-		{50, distributionsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountMapper, app.distrKeeper)},
-		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
-		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
+		// {50, distributionsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountMapper, app.distrKeeper)},
+		//{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
+		//{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
 		{100, stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper)},
-		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
+		//{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
 		{100, stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper)},
+		//{100, stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper)},
+		//{100, stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper)},
 		{100, slashingsim.SimulateMsgUnjail(app.slashingKeeper)},
 	}
 }

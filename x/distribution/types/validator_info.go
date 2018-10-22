@@ -46,6 +46,15 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk
 func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBonded, vdTokens,
 	commissionRate sdk.Dec) (ValidatorDistInfo, FeePool) {
 
+	if vi.FeePoolWithdrawalHeight != height && !vdTokens.IsZero() {
+		fmt.Println(
+			cmn.Yellow(
+				fmt.Sprintf("TakeFeePoolRewards %v last: %v curr: %v pow: %v",
+					vi.OperatorAddr, vi.FeePoolWithdrawalHeight, height, vdTokens.String()),
+			),
+		)
+	}
+
 	fp = fp.UpdateTotalValAccum(height, totalBonded)
 
 	if fp.TotalValAccum.Accum.IsZero() {

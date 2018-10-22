@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // Apply and return accumulated updates to the bonded validator set. Also,
@@ -28,6 +29,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.GetParams(ctx).MaxValidators
 	totalPower := int64(0)
+
+	fmt.Println(cmn.Cyan(fmt.Sprintf("BLOCK #%v ApplyAndReturnValidatorSetUpdates", ctx.BlockHeight())))
 
 	// Retrieve the last validator set.
 	// The persistent set is updated later in this function.
@@ -80,6 +83,12 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 			// set validator power on lookup index.
 			k.SetLastValidatorPower(ctx, operator, sdk.NewDec(newPower))
+			fmt.Println(
+				cmn.Cyan(
+					fmt.Sprintf("SetLastValidatorPower %v pow: %v",
+						operator, newPower),
+				),
+			)
 		}
 
 		// validator still in the validator set, so delete from the copy
@@ -108,7 +117,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		}
 
 		// delete from the bonded validator index
-		k.DeleteLastValidatorPower(ctx, operator)
+		k.DeleteLastValidatorPower(ctx, sdk.ValAddress(operator))
+		fmt.Println(
+			cmn.Cyan(
+				fmt.Sprintf("SetLastValidatorPower %v pow: 0",
+					sdk.ValAddress(operator)),
+			),
+		)
 
 		// update the validator set
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
@@ -118,6 +133,11 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	if len(updates) > 0 {
 		k.SetLastTotalPower(ctx, sdk.NewDec(totalPower))
 	}
+	fmt.Println(
+		cmn.Cyan(
+			fmt.Sprintf("SetLastTotalPower pow: %v", totalPower),
+		),
+	)
 
 	return updates
 }

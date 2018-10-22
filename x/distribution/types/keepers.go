@@ -10,6 +10,8 @@ type StakeKeeper interface {
 	Validator(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Validator
 	ValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.Validator
 	TotalPower(ctx sdk.Context) sdk.Dec
+	GetLastTotalPower(ctx sdk.Context) sdk.Dec
+	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Dec
 }
 
 // expected coin keeper

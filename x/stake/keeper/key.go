@@ -15,21 +15,27 @@ var (
 	// Keys for store prefixes
 	// TODO DEPRECATED: delete in next release and reorder keys
 	// ParamKey                         = []byte{0x00} // key for parameters relating to staking
-	PoolKey                          = []byte{0x01} // key for the staking pools
-	ValidatorsKey                    = []byte{0x02} // prefix for each key to a validator
-	ValidatorsByConsAddrKey          = []byte{0x03} // prefix for each key to a validator index, by pubkey
-	ValidatorsBondedIndexKey         = []byte{0x04} // prefix for each key to a validator index, for bonded validators
-	ValidatorsByPowerIndexKey        = []byte{0x05} // prefix for each key to a validator index, sorted by power
-	IntraTxCounterKey                = []byte{0x06} // key for intra-block tx index
-	DelegationKey                    = []byte{0x07} // key for a delegation
-	UnbondingDelegationKey           = []byte{0x08} // key for an unbonding-delegation
-	UnbondingDelegationByValIndexKey = []byte{0x09} // prefix for each key for an unbonding-delegation, by validator operator
-	RedelegationKey                  = []byte{0x0A} // key for a redelegation
-	RedelegationByValSrcIndexKey     = []byte{0x0B} // prefix for each key for an redelegation, by source validator operator
-	RedelegationByValDstIndexKey     = []byte{0x0C} // prefix for each key for an redelegation, by destination validator operator
-	UnbondingQueueKey                = []byte{0x0D} // prefix for the timestamps in unbonding queue
-	RedelegationQueueKey             = []byte{0x0E} // prefix for the timestamps in redelegations queue
-	ValidatorQueueKey                = []byte{0x0F} // prefix for the timestamps in validator queue
+	PoolKey           = []byte{0x01} // key for the staking pools
+	IntraTxCounterKey = []byte{0x02} // key for intra-block tx index
+
+	// Last* values are const during a block.
+	LastValidatorPowerKey = []byte{0x11} // prefix for each key to a validator index, for bonded validators
+	LastTotalPowerKey     = []byte{0x12} // prefix for the total power
+
+	ValidatorsKey             = []byte{0x21} // prefix for each key to a validator
+	ValidatorsByConsAddrKey   = []byte{0x22} // prefix for each key to a validator index, by pubkey
+	ValidatorsByPowerIndexKey = []byte{0x23} // prefix for each key to a validator index, sorted by power
+
+	DelegationKey                    = []byte{0x31} // key for a delegation
+	UnbondingDelegationKey           = []byte{0x32} // key for an unbonding-delegation
+	UnbondingDelegationByValIndexKey = []byte{0x33} // prefix for each key for an unbonding-delegation, by validator operator
+	RedelegationKey                  = []byte{0x34} // key for a redelegation
+	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
+	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
+
+	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
+	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
+	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 )
 
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
@@ -46,9 +52,9 @@ func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
 	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
 }
 
-// Get the validator operator address from ValBondedIndexKey
-func GetAddressFromValBondedIndexKey(IndexKey []byte) []byte {
-	return IndexKey[1:] // remove prefix bytes
+// Get the validator operator address from LastValidatorPowerKey
+func AddressFromLastValidatorPowerKey(key []byte) []byte {
+	return key[1:] // remove prefix bytes
 }
 
 // get the validator by power index.
@@ -61,8 +67,8 @@ func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []
 }
 
 // get the bonded validator index key for an operator address
-func GetValidatorsBondedIndexKey(operator sdk.ValAddress) []byte {
-	return append(ValidatorsBondedIndexKey, operator...)
+func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	return append(LastValidatorPowerKey, operator...)
 }
 
 // get the power ranking of a validator

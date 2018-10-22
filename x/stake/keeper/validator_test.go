@@ -49,7 +49,7 @@ func TestSetValidator(t *testing.T) {
 	assert.True(ValEq(t, validator, resVal))
 	require.True(t, found)
 
-	resVals := keeper.GetValidatorsBonded(ctx)
+	resVals := keeper.GetLastValidators(ctx)
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validator, resVals[0]))
 
@@ -191,7 +191,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	require.False(t, found)
 }
 
-// This function tests UpdateValidator, GetValidator, GetValidatorsBonded, RemoveValidator
+// This function tests UpdateValidator, GetValidator, GetLastValidators, RemoveValidator
 func TestValidatorBasics(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 1000)
 	pool := keeper.GetPool(ctx)
@@ -213,7 +213,7 @@ func TestValidatorBasics(t *testing.T) {
 	// check the empty keeper first
 	_, found := keeper.GetValidator(ctx, addrVals[0])
 	require.False(t, found)
-	resVals := keeper.GetValidatorsBonded(ctx)
+	resVals := keeper.GetLastValidators(ctx)
 	require.Zero(t, len(resVals))
 
 	resVals = keeper.GetValidators(ctx, 2)
@@ -237,7 +237,7 @@ func TestValidatorBasics(t *testing.T) {
 	require.True(t, found)
 	assert.True(ValEq(t, validators[0], resVal))
 
-	resVals = keeper.GetValidatorsBonded(ctx)
+	resVals = keeper.GetLastValidators(ctx)
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[0]))
 	assert.Equal(t, sdk.Bonded, validators[0].Status)
@@ -255,7 +255,7 @@ func TestValidatorBasics(t *testing.T) {
 	require.True(t, found)
 	assert.True(ValEq(t, validators[0], resVal))
 
-	resVals = keeper.GetValidatorsBonded(ctx)
+	resVals = keeper.GetLastValidators(ctx)
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[0]))
 
@@ -269,7 +269,7 @@ func TestValidatorBasics(t *testing.T) {
 	require.True(t, found)
 	assert.True(ValEq(t, validators[2], resVal))
 
-	resVals = keeper.GetValidatorsBonded(ctx)
+	resVals = keeper.GetLastValidators(ctx)
 	require.Equal(t, 3, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[0])) // order doesn't matter here
 	assert.True(ValEq(t, validators[1], resVals[1]))

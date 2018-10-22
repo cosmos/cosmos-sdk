@@ -20,6 +20,7 @@ const (
 	flagAppend    = "append"
 	flagPrintSigs = "print-sigs"
 	flagOffline   = "offline"
+	flagSigOnly   = "print-signature-only"
 )
 
 // GetSignCommand returns the sign command
@@ -38,6 +39,7 @@ recommended to set such parameters manually.`,
 	}
 	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
 	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten")
+	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit.")
 	cmd.Flags().Bool(flagPrintSigs, false, "Print the addresses that must sign the transaction and those who have already signed it, then exit")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
 	return cmd
@@ -59,14 +61,24 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(decoder)
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
-		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, viper.GetBool(flagAppend), viper.GetBool(flagOffline))
+		// if --print-signature-only is on, then override --append
+		generateSignatureOnly := viper.GetBool(flagSigOnly)
+		append := viper.GetBool(flagAppend) && !generateSignatureOnly
+		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, append, viper.GetBool(flagOffline))
 		if err != nil {
 			return err
 		}
+
 		var json []byte
-		if cliCtx.Indent {
+
+		switch {
+		case generateSignatureOnly && cliCtx.Indent:
+			json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+		case generateSignatureOnly && !cliCtx.Indent:
+			json, err = cdc.MarshalJSON(newTx.Signatures[0])
+		case !generateSignatureOnly && cliCtx.Indent:
 			json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
-		} else {
+		case !generateSignatureOnly && !cliCtx.Indent:
 			json, err = cdc.MarshalJSON(newTx)
 		}
 		if err != nil {

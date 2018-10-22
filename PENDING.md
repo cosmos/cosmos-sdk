@@ -128,6 +128,7 @@ FEATURES
   * [stake][cli] [\#1672](https://github.com/cosmos/cosmos-sdk/issues/1672) Introduced
   new commission flags for validator commands `create-validator` and `edit-validator`.
   * [stake][cli] [\#1890](https://github.com/cosmos/cosmos-sdk/issues/1890) Add `--genesis-format` flag to `gaiacli tx create-validator` to produce transactions in genesis-friendly format.
+  * [cli][\#2554](https://github.com/cosmos/cosmos-sdk/issues/2554) Make `gaiacli keys show` multisig ready.
 
 * Gaia
   * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`

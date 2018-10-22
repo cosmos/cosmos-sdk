@@ -231,7 +231,8 @@ func (app *GaiaApp) NewAnteHandler() sdk.AnteHandler {
 		if abort {
 			return
 		}
-		return circuitante(newctx, tx, simulate)
+		newctx, _, abort = circuitante(newctx, tx, simulate)
+		return
 	}
 }
 

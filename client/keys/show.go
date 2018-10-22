@@ -6,38 +6,37 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"net/http"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/crypto/multisig"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (
 	// FlagAddress is the flag for the user's address on the command line.
-	FlagAddress            = "address"
+	FlagAddress = "address"
 	// FlagPublicKey represents the user's public key on the command line.
-	FlagPublicKey          = "pubkey"
+	FlagPublicKey = "pubkey"
 	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
-	FlagBechPrefix         = "bech"
+	FlagBechPrefix = "bech"
 
-	flagMultiSigThreshold  = "multisig-threshold"
+	flagMultiSigThreshold = "multisig-threshold"
 )
 
 var _ keys.Info = (keys.Info)(nil)
 
 type multiSigKey struct {
 	name string
-	key crypto.PubKey
+	key  crypto.PubKey
 }
 
 func (m multiSigKey) GetName() string            { return m.name }
 func (m multiSigKey) GetType() keys.KeyType      { return keys.TypeLocal }
 func (m multiSigKey) GetPubKey() crypto.PubKey   { return m.key }
-func (m multiSigKey) GetAddress() sdk.AccAddress { return sdk.AccAddress(m.key.Address())}
-
+func (m multiSigKey) GetAddress() sdk.AccAddress { return sdk.AccAddress(m.key.Address()) }
 
 func showKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -51,7 +50,7 @@ func showKeysCmd() *cobra.Command {
 	cmd.Flags().String(FlagBechPrefix, "acc", "The Bech32 prefix encoding for a key (acc|val|cons)")
 	cmd.Flags().Bool(FlagAddress, false, "output the address only (overrides --output)")
 	cmd.Flags().Bool(FlagPublicKey, false, "output the public key only (overrides --output)")
-	cmd.Flags().UintP(flagMultiSigThreshold,  "m", 1, "K out of N required signatures")
+	cmd.Flags().UintP(flagMultiSigThreshold, "m", 1, "K out of N required signatures")
 
 	return cmd
 }
@@ -76,7 +75,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		multikey := multisig.NewPubKeyMultisigThreshold(viper.GetInt(flagMultiSigThreshold), pks)
 		info = multiSigKey{
 			name: "multi",
-			key: multikey,
+			key:  multikey,
 		}
 	}
 

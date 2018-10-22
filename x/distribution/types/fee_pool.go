@@ -33,21 +33,22 @@ func (ta TotalAccum) UpdateForNewHeight(height int64, accumCreatedPerBlock sdk.D
 
 // global fee pool for distribution
 type FeePool struct {
-	ValAccum      TotalAccum `json:"val_accum"`      // total valdator accum held by validators
+	TotalValAccum TotalAccum `json:"val_accum"`      // total valdator accum held by validators
 	Pool          DecCoins   `json:"pool"`           // funds for all validators which have yet to be withdrawn
 	CommunityPool DecCoins   `json:"community_pool"` // pool for community funds yet to be spent
 }
 
 // update total validator accumulation factor
+// NOTE: Do not call this except from ValidatorDistInfo.TakeFeePoolRewards().
 func (f FeePool) UpdateTotalValAccum(height int64, totalBondedTokens sdk.Dec) FeePool {
-	f.ValAccum = f.ValAccum.UpdateForNewHeight(height, totalBondedTokens)
+	f.TotalValAccum = f.TotalValAccum.UpdateForNewHeight(height, totalBondedTokens)
 	return f
 }
 
 // zero fee pool
 func InitialFeePool() FeePool {
 	return FeePool{
-		ValAccum:      NewTotalAccum(0),
+		TotalValAccum: NewTotalAccum(0),
 		Pool:          DecCoins{},
 		CommunityPool: DecCoins{},
 	}

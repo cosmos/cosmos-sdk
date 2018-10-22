@@ -30,10 +30,10 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 // iterate through the active validator set and perform the provided function
 func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, LastValidatorKey)
+	iterator := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
-		address := AddressFromLastValidatorKey(iterator.Key())
+		address := AddressFromLastValidatorPowerKey(iterator.Key())
 		validator, found := k.GetValidator(ctx, address)
 		if !found {
 			panic(fmt.Sprintf("validator record not found for address: %v\n", address))
@@ -66,7 +66,7 @@ func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) sdk.V
 	return val
 }
 
-// total power from the bond
+// total power from the bond (not last, but current)
 func (k Keeper) TotalPower(ctx sdk.Context) sdk.Dec {
 	pool := k.GetPool(ctx)
 	return pool.BondedTokens

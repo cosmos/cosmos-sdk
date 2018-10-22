@@ -40,7 +40,7 @@ var (
 	GetDelegationsKey            = keeper.GetDelegationsKey
 	PoolKey                      = keeper.PoolKey
 	IntraTxCounterKey            = keeper.IntraTxCounterKey
-	LastValidatorKey             = keeper.LastValidatorKey
+	LastValidatorPowerKey        = keeper.LastValidatorPowerKey
 	LastTotalPowerKey            = keeper.LastTotalPowerKey
 	ValidatorsKey                = keeper.ValidatorsKey
 	ValidatorsByConsAddrKey      = keeper.ValidatorsByConsAddrKey

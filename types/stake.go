@@ -85,9 +85,9 @@ type ValidatorSet interface {
 
 // delegation bond for a delegated proof of stake system
 type Delegation interface {
-	GetDelegator() AccAddress // delegator AccAddress for the bond
-	GetValidator() ValAddress // validator operator address
-	GetShares() Dec           // amount of validator's shares held in this delegation
+	GetDelegatorAddr() AccAddress // delegator AccAddress for the bond
+	GetValidatorAddr() ValAddress // validator operator address
+	GetShares() Dec               // amount of validator's shares held in this delegation
 }
 
 // properties for the set of all delegations for a particular

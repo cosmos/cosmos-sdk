@@ -37,6 +37,7 @@ func (k Keeper) capBySlashingPeriod(ctx sdk.Context, address sdk.ConsAddress, fr
 // This function retrieves the most recent slashing period starting
 // before a particular height - so the slashing period that was "in effect"
 // at the time of an infraction committed at that height.
+// Slashing periods are created upon validator bonding.
 func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk.ConsAddress, height int64) (slashingPeriod ValidatorSlashingPeriod) {
 	store := ctx.KVStore(k.storeKey)
 	// Get the most recent slashing period at or before the infraction height

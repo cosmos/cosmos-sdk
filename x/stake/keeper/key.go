@@ -19,8 +19,8 @@ var (
 	IntraTxCounterKey = []byte{0x02} // key for intra-block tx index
 
 	// Last* values are const during a block.
-	LastValidatorKey  = []byte{0x11} // prefix for each key to a validator index, for bonded validators
-	LastTotalPowerKey = []byte{0x12} // prefix for each key to a validator index, for bonded validators
+	LastValidatorPowerKey = []byte{0x11} // prefix for each key to a validator index, for bonded validators
+	LastTotalPowerKey     = []byte{0x12} // prefix for the total power
 
 	ValidatorsKey             = []byte{0x21} // prefix for each key to a validator
 	ValidatorsByConsAddrKey   = []byte{0x22} // prefix for each key to a validator index, by pubkey
@@ -52,8 +52,8 @@ func GetValidatorByConsAddrKey(addr sdk.ConsAddress) []byte {
 	return append(ValidatorsByConsAddrKey, addr.Bytes()...)
 }
 
-// Get the validator operator address from LastValidatorKey
-func AddressFromLastValidatorKey(key []byte) []byte {
+// Get the validator operator address from LastValidatorPowerKey
+func AddressFromLastValidatorPowerKey(key []byte) []byte {
 	return key[1:] // remove prefix bytes
 }
 
@@ -67,8 +67,8 @@ func GetValidatorsByPowerIndexKey(validator types.Validator, pool types.Pool) []
 }
 
 // get the bonded validator index key for an operator address
-func GetLastValidatorKey(operator sdk.ValAddress) []byte {
-	return append(LastValidatorKey, operator...)
+func GetLastValidatorPowerKey(operator sdk.ValAddress) []byte {
+	return append(LastValidatorPowerKey, operator...)
 }
 
 // get the power ranking of a validator

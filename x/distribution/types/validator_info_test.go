@@ -29,13 +29,13 @@ func TestTakeFeePoolRewards(t *testing.T) {
 	fp.Pool = DecCoins{NewDecCoin("stake", 1000)}
 
 	vi1, fp = vi1.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens1, commissionRate1)
-	require.True(sdk.DecEq(t, sdk.NewDec(900), fp.ValAccum.Accum))
+	require.True(sdk.DecEq(t, sdk.NewDec(900), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(100-2), vi1.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi1.PoolCommission[0].Amount))
 
 	vi2, fp = vi2.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens2, commissionRate2)
-	require.True(sdk.DecEq(t, sdk.NewDec(500), fp.ValAccum.Accum))
+	require.True(sdk.DecEq(t, sdk.NewDec(500), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(500), fp.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(400-12), vi2.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, vi2.PoolCommission[0].Amount, sdk.NewDec(12)))
@@ -45,7 +45,7 @@ func TestTakeFeePoolRewards(t *testing.T) {
 	fp.Pool[0].Amount = fp.Pool[0].Amount.Add(sdk.NewDec(1000))
 
 	vi3, fp = vi3.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens3, commissionRate3)
-	require.True(sdk.DecEq(t, sdk.NewDec(500), fp.ValAccum.Accum))
+	require.True(sdk.DecEq(t, sdk.NewDec(500), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(500), fp.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(1000-40), vi3.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, vi3.PoolCommission[0].Amount, sdk.NewDec(40)))
@@ -67,7 +67,7 @@ func TestWithdrawCommission(t *testing.T) {
 
 	// for a more fun staring condition, have an non-withdraw update
 	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens, commissionRate)
-	require.True(sdk.DecEq(t, sdk.NewDec(900), fp.ValAccum.Accum))
+	require.True(sdk.DecEq(t, sdk.NewDec(900), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(100-2), vi.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi.PoolCommission[0].Amount))
@@ -77,7 +77,7 @@ func TestWithdrawCommission(t *testing.T) {
 	fp.Pool[0].Amount = fp.Pool[0].Amount.Add(sdk.NewDec(1000))
 
 	vi, fp, commissionRecv := vi.WithdrawCommission(fp, height, totalBondedTokens, validatorTokens, commissionRate)
-	require.True(sdk.DecEq(t, sdk.NewDec(1800), fp.ValAccum.Accum))
+	require.True(sdk.DecEq(t, sdk.NewDec(1800), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(200-4), vi.Pool[0].Amount))
 	assert.Zero(t, len(vi.PoolCommission))

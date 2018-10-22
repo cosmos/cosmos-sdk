@@ -344,6 +344,7 @@ func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress) {
 	h.sh.OnValidatorBonded(ctx, addr)
 }
 func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress, operator sdk.ValAddress) {
+	h.dh.OnValidatorBeginUnbonding(ctx, addr, operator)
 	h.sh.OnValidatorBeginUnbonding(ctx, addr, operator)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {

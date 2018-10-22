@@ -35,8 +35,8 @@ func TestKeeperGetSet(t *testing.T) {
 	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
-	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	stakeKeeper := NewKeeper(capKey, bank.NewBaseKeeper(accountMapper), DefaultCodespace)
+	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
+	stakeKeeper := NewKeeper(capKey, bank.NewBaseKeeper(accountKeeper), DefaultCodespace)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	addr := sdk.AccAddress([]byte("some-address"))
 
@@ -65,8 +65,8 @@ func TestBonding(t *testing.T) {
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 
-	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountMapper)
+	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
 	stakeKeeper := NewKeeper(capKey, bankKeeper, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
 	privKey := ed25519.GenPrivKey()

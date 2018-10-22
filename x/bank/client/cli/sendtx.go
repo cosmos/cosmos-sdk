@@ -75,6 +75,8 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 
 	cmd.Flags().String(flagTo, "", "Address to send coins")
 	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
+	cmd.MarkFlagRequired(flagTo)
+	cmd.MarkFlagRequired(flagAmount)
 
 	return cmd
 }

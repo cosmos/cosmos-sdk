@@ -32,7 +32,7 @@ func TestAccountMapperGetSet(t *testing.T) {
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
+	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
 
 	addr := sdk.AccAddress([]byte("some-address"))
 
@@ -68,7 +68,7 @@ func TestAccountMapperRemoveAccount(t *testing.T) {
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
+	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
@@ -106,7 +106,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 
 	// make context and mapper
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	mapper := NewAccountMapper(cdc, capKey, ProtoBaseAccount)
+	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {

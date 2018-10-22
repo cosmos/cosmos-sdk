@@ -45,7 +45,7 @@ type SimpleGovApp struct {
     simpleGovKeeper     simpleGov.Keeper
 
     // Manage getting and setting accounts
-    accountMapper auth.AccountMapper
+    accountKeeper auth.AccountKeeper
 }
 ```
 
@@ -206,7 +206,7 @@ var cdc = MakeCodec()
 - Instantiate the keepers. Note that keepers generally need access to other module's keepers. In this case, make sure you only pass an instance of the keeper for the functionality that is needed. If a keeper only needs to read in another module's store, a read-only keeper should be passed to it.
 
 ```go
-app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
+app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
 app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.bankKeeper,app.RegisterCodespace(simplestake.DefaultCodespace))
 app.simpleGovKeeper = simpleGov.NewKeeper(app.capKeySimpleGovStore, app.bankKeeper, app.stakeKeeper, app.RegisterCodespace(simpleGov.DefaultCodespace))
 ```
@@ -225,7 +225,7 @@ app.Router().
 ```go
 // Initialize BaseApp.
     app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeySimpleGovStore, app.capKeyStakingStore)
-    app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+    app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
     err := app.LoadLatestVersion(app.capKeyMainStore)
     if err != nil {
         cmn.Exit(err.Error())

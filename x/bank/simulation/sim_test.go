@@ -15,7 +15,7 @@ func TestBankWithRandomMessages(t *testing.T) {
 	mapp := mock.NewApp()
 
 	bank.RegisterCodec(mapp.Cdc)
-	mapper := mapp.AccountMapper
+	mapper := mapp.AccountKeeper
 	bankKeeper := bank.NewBaseKeeper(mapper)
 	mapp.Router().AddRoute("bank", bank.NewHandler(bankKeeper))
 

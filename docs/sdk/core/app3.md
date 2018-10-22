@@ -86,7 +86,7 @@ type BaseAccount struct {
 
 It simply contains a field for each of the methods.
 
-### AccountMapper
+### AccountKeeper
 
 In previous apps using our `appAccount`, we handled
 marshaling/unmarshaling the account from the store ourselves, by performing
@@ -95,36 +95,36 @@ to work with in our applications. In the SDK, we use the term `Mapper` to refer
 to an abstaction over a KVStore that handles marshalling and unmarshalling a
 particular data type to and from the underlying store.
 
-The `x/auth` module provides an `AccountMapper` that allows us to get and
+The `x/auth` module provides an `AccountKeeper` that allows us to get and
 set `Account` types to the store. Note the benefit of using the `Account`
 interface here - developers can implement their own account type that extends
 the `BaseAccount` to store additional data without requiring another lookup from
 the store.
 
-Creating an AccountMapper is easy - we just need to specify a codec, a
+Creating an AccountKeeper is easy - we just need to specify a codec, a
 capability key, and a prototype of the object being encoded 
 
 ```go
-accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
+accountKeeper := auth.NewAccountKeeper(cdc, keyAccount, auth.ProtoBaseAccount)
 ```
 
 Then we can get, modify, and set accounts. For instance, we could double the
 amount of coins in an account:
 
 ```go
-acc := accountMapper.GetAccount(ctx, addr)
+acc := accountKeeper.GetAccount(ctx, addr)
 acc.SetCoins(acc.Coins.Plus(acc.Coins))
-accountMapper.SetAccount(ctx, addr)
+accountKeeper.SetAccount(ctx, addr)
 ```
 
-Note that the `AccountMapper` takes a `Context` as the first argument, and will
+Note that the `AccountKeeper` takes a `Context` as the first argument, and will
 load the KVStore from there using the capability key it was granted on creation.
 
 Also note that you must explicitly call `SetAccount` after mutating an account
 for the change to persist!
 
-See the [AccountMapper API
-docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth#AccountMapper) for more information.
+See the [AccountKeeper API
+docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth#AccountKeeper) for more information.
 
 ## StdTx
 
@@ -224,10 +224,10 @@ all the relevant information.
 As we saw in `App2`, we can use an `AnteHandler` to authenticate transactions
 before we handle any of their internal messages. While previously we implemented
 our own simple `AnteHandler`, the `x/auth` module provides a much more advanced
-one that uses `AccountMapper` and works with `StdTx`:
+one that uses `AccountKeeper` and works with `StdTx`:
 
 ```go
-app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
+app.SetAnteHandler(auth.NewAnteHandler(accountKeeper, feeKeeper))
 ```
 
 The AnteHandler provided by `x/auth` enforces the following rules:
@@ -263,7 +263,7 @@ The fee is paid by the first address returned by `msg.GetSigners()` for the firs
 
 ## CoinKeeper
 
-Now that we've seen the `auth.AccountMapper` and how its used to build a
+Now that we've seen the `auth.AccountKeeper` and how its used to build a
 complete AnteHandler, it's time to look at how to build higher-level
 abstractions for taking action on accounts.
 
@@ -274,26 +274,26 @@ which expose only limitted functionality on the underlying types stored by the `
 
 For instance, the `x/bank` module defines the canonical versions of `MsgSend`
 and `MsgIssue` for the SDK, as well as a `Handler` for processing them. However, 
-rather than passing a `KVStore` or even an `AccountMapper` directly to the handler,
+rather than passing a `KVStore` or even an `AccountKeeper` directly to the handler,
 we introduce a `bank.Keeper`, which can only be used to transfer coins in and out of accounts.
 This allows us to determine up front that the only effect the bank module's
 `Handler` can have on the store is to change the amount of coins in an account -
 it can't increment sequence numbers, change PubKeys, or otherwise.
 
 
-A `bank.Keeper` is easily instantiated from an `AccountMapper`:
+A `bank.Keeper` is easily instantiated from an `AccountKeeper`:
 
 ```go
-bankKeeper = bank.NewBaseKeeper(accountMapper)
+bankKeeper = bank.NewBaseKeeper(accountKeeper)
 ```
 
 We can then use it within a handler, instead of working directly with the
-`AccountMapper`. For instance, to add coins to an account:
+`AccountKeeper`. For instance, to add coins to an account:
 
 ```go
-// Finds account with addr in AccountMapper.
+// Finds account with addr in AccountKeeper.
 // Adds coins to account's coin array.
-// Sets updated account in AccountMapper
+// Sets updated account in AccountKeeper
 app.bankKeeper.AddCoins(ctx, addr, coins)
 ```
 
@@ -311,12 +311,12 @@ accounts.
 We use this `Keeper` paradigm extensively in the SDK as the way to define what
 kind of functionality each module gets access to. In particular, we try to
 follow the *principle of least authority*.
-Rather than providing full blown access to the `KVStore` or the `AccountMapper`, 
+Rather than providing full blown access to the `KVStore` or the `AccountKeeper`, 
 we restrict access to a small number of functions that do very specific things.
 
 ## App3
 
-With the `auth.AccountMapper` and `bank.Keeper` in hand, 
+With the `auth.AccountKeeper` and `bank.Keeper` in hand, 
 we're now ready to build `App3`.
 The `x/auth` and `x/bank` modules do all the heavy lifting:
 
@@ -334,11 +334,11 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	keyFees := sdk.NewKVStoreKey("fee")  // TODO
 
 	// Set various mappers/keepers to interact easily with underlying stores
-	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountMapper)
+	accountKeeper := auth.NewAccountKeeper(cdc, keyAccount, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
-	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(accountKeeper, feeKeeper))
 
 	// Register message routes.
 	// Note the handler gets access to

@@ -86,11 +86,13 @@ var (
 const (
 	QueryValidators                    = querier.QueryValidators
 	QueryValidator                     = querier.QueryValidator
+	QueryValidatorUnbondingDelegations = querier.QueryValidatorUnbondingDelegations
+	QueryValidatorRedelegations        = querier.QueryValidatorRedelegations
+	QueryDelegation                    = querier.QueryDelegation
+	QueryUnbondingDelegation           = querier.QueryUnbondingDelegation
 	QueryDelegatorDelegations          = querier.QueryDelegatorDelegations
 	QueryDelegatorUnbondingDelegations = querier.QueryDelegatorUnbondingDelegations
 	QueryDelegatorRedelegations        = querier.QueryDelegatorRedelegations
-	QueryDelegation                    = querier.QueryDelegation
-	QueryUnbondingDelegation           = querier.QueryUnbondingDelegation
 	QueryDelegatorValidators           = querier.QueryDelegatorValidators
 	QueryDelegatorValidator            = querier.QueryDelegatorValidator
 	QueryPool                          = querier.QueryPool

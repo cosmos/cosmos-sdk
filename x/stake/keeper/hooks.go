@@ -11,9 +11,9 @@ func (k Keeper) OnValidatorCreated(ctx sdk.Context, address sdk.ValAddress) {
 		k.hooks.OnValidatorCreated(ctx, address)
 	}
 }
-func (k Keeper) OnValidatorCommissionChange(ctx sdk.Context, address sdk.ValAddress) {
+func (k Keeper) OnValidatorModified(ctx sdk.Context, address sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorCommissionChange(ctx, address)
+		k.hooks.OnValidatorModified(ctx, address)
 	}
 }
 

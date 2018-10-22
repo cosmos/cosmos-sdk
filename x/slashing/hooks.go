@@ -62,7 +62,7 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddres
 
 // nolint - unused hooks
 func (h Hooks) OnValidatorCreated(_ sdk.Context, _ sdk.ValAddress)                           {}
-func (h Hooks) OnValidatorCommissionChange(_ sdk.Context, _ sdk.ValAddress)                  {}
+func (h Hooks) OnValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
 func (h Hooks) OnValidatorRemoved(_ sdk.Context, _ sdk.ValAddress)                           {}
 func (h Hooks) OnDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
 func (h Hooks) OnDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) {}

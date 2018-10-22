@@ -1,7 +1,10 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // distribution info for a particular validator
@@ -61,6 +64,16 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 
 	commission := withdrawalTokens.MulDec(commissionRate)
 	afterCommission := withdrawalTokens.Minus(commission)
+
+	fmt.Println(
+		cmn.Red(
+			fmt.Sprintf("FP Sub %v * %v = %v -=> %v",
+				vdTokens, sdk.NewInt(blocks),
+				accum,
+				fp.TotalValAccum.Accum.Sub(accum),
+			),
+		),
+	)
 
 	fp.TotalValAccum.Accum = fp.TotalValAccum.Accum.Sub(accum)
 	fp.Pool = remainingTokens

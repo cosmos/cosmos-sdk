@@ -99,7 +99,8 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 	}
 
 	keeper.SetProposal(ctx, proposalID, proposal)
-	keeper.InactiveInfoQueuePush(ctx, info)
+	keeper.SetProposalInfo(ctx, info)
+	keeper.InactiveInfoQueuePush(ctx, proposalID)
 	return
 }
 
@@ -132,7 +133,7 @@ func (keeper Keeper) DeleteProposalInfo(ctx sdk.Context, proposalID int64) {
 // Get Proposal from store by ProposalID
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) Proposal {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyInfo(proposalID))
+	bz := store.Get(KeyProposal(proposalID))
 	if bz == nil {
 		return nil
 	}
@@ -147,13 +148,13 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) Proposal {
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposalID int64, proposal Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinary(proposal)
-	store.Set(KeyInfo(proposalID), bz)
+	store.Set(KeyProposal(proposalID), bz)
 }
 
 // Implements sdk.AccountKeeper.
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID int64) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(KeyInfo(proposalID))
+	store.Delete(KeyProposal(proposalID))
 }
 
 // Get Proposal from store by ProposalID
@@ -250,7 +251,7 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, info ProposalInfo) {
 	info.VotingStartTime = ctx.BlockHeader().Time
 	info.Status = StatusVotingPeriod
 	keeper.SetProposalInfo(ctx, info)
-	keeper.ActiveInfoQueuePush(ctx, info)
+	keeper.ActiveInfoQueuePush(ctx, info.ProposalID)
 }
 
 // =====================================================
@@ -498,8 +499,8 @@ func (keeper Keeper) ActiveInfoQueuePop(ctx sdk.Context) ProposalInfo {
 }
 
 // Add a infoID to the back of the InfoQueue
-func (keeper Keeper) ActiveInfoQueuePush(ctx sdk.Context, info ProposalInfo) {
-	infoQueue := append(keeper.getActiveInfoQueue(ctx), info.ProposalID)
+func (keeper Keeper) ActiveInfoQueuePush(ctx sdk.Context, proposalID int64) {
+	infoQueue := append(keeper.getActiveInfoQueue(ctx), proposalID)
 	keeper.setActiveInfoQueue(ctx, infoQueue)
 }
 
@@ -544,7 +545,7 @@ func (keeper Keeper) InactiveInfoQueuePop(ctx sdk.Context) ProposalInfo {
 }
 
 // Add a infoID to the back of the InfoQueue
-func (keeper Keeper) InactiveInfoQueuePush(ctx sdk.Context, info ProposalInfo) {
-	infoQueue := append(keeper.getInactiveInfoQueue(ctx), info.ProposalID)
+func (keeper Keeper) InactiveInfoQueuePush(ctx sdk.Context, proposalID int64) {
+	infoQueue := append(keeper.getInactiveInfoQueue(ctx), proposalID)
 	keeper.setInactiveInfoQueue(ctx, infoQueue)
 }

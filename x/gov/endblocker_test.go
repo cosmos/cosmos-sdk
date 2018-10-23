@@ -43,7 +43,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	require.NotNil(t, keeper.InactiveInfoQueuePeek(ctx))
 	require.True(t, shouldPopInactiveInfoQueue(ctx, keeper))
 	EndBlocker(ctx, keeper)
-	require.Nil(t, keeper.InactiveInfoQueuePeek(ctx))
+	require.True(t, keeper.InactiveInfoQueuePeek(ctx).IsEmpty())
 	require.False(t, shouldPopInactiveInfoQueue(ctx, keeper))
 }
 
@@ -53,7 +53,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
 
-	require.Nil(t, keeper.InactiveInfoQueuePeek(ctx))
+	require.True(t, keeper.InactiveInfoQueuePeek(ctx).IsEmpty())
 	require.False(t, shouldPopInactiveInfoQueue(ctx, keeper))
 
 	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("steak", 5)})
@@ -94,7 +94,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.NotNil(t, keeper.InactiveInfoQueuePeek(ctx))
 	require.True(t, shouldPopInactiveInfoQueue(ctx, keeper))
 	EndBlocker(ctx, keeper)
-	require.Nil(t, keeper.InactiveInfoQueuePeek(ctx))
+	require.True(t, keeper.InactiveInfoQueuePeek(ctx).IsEmpty())
 	require.False(t, shouldPopInactiveInfoQueue(ctx, keeper))
 }
 
@@ -104,9 +104,9 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
 
-	require.Nil(t, keeper.InactiveInfoQueuePeek(ctx))
+	require.True(t, keeper.InactiveInfoQueuePeek(ctx).IsEmpty())
 	require.False(t, shouldPopInactiveInfoQueue(ctx, keeper))
-	require.Nil(t, keeper.ActiveInfoQueuePeek(ctx))
+	require.True(t, keeper.ActiveInfoQueuePeek(ctx).IsEmpty())
 	require.False(t, shouldPopActiveInfoQueue(ctx, keeper))
 
 	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("steak", 5)})
@@ -138,7 +138,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	EndBlocker(ctx, keeper)
 
-	require.Nil(t, keeper.InactiveInfoQueuePeek(ctx))
+	require.True(t, keeper.InactiveInfoQueuePeek(ctx).IsEmpty())
 	require.False(t, shouldPopInactiveInfoQueue(ctx, keeper))
 	require.NotNil(t, keeper.ActiveInfoQueuePeek(ctx))
 	require.False(t, shouldPopActiveInfoQueue(ctx, keeper))
@@ -152,9 +152,9 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	govHandler := NewHandler(keeper)
 
-	require.Nil(t, keeper.InactiveInfoQueuePeek(ctx))
+	require.True(t, keeper.InactiveInfoQueuePeek(ctx).IsEmpty())
 	require.False(t, shouldPopInactiveInfoQueue(ctx, keeper))
-	require.Nil(t, keeper.ActiveInfoQueuePeek(ctx))
+	require.True(t, keeper.ActiveInfoQueuePeek(ctx).IsEmpty())
 	require.False(t, shouldPopActiveInfoQueue(ctx, keeper))
 
 	newProposalMsg := NewMsgSubmitProposal("Test", "test", ProposalTypeText, addrs[0], sdk.Coins{sdk.NewInt64Coin("steak", 5)})
@@ -186,7 +186,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 	EndBlocker(ctx, keeper)
 
-	require.Nil(t, keeper.ActiveInfoQueuePeek(ctx))
+	require.True(t, keeper.ActiveInfoQueuePeek(ctx).IsEmpty())
 	depositsIterator = keeper.GetDeposits(ctx, proposalID)
 	require.False(t, depositsIterator.Valid())
 	depositsIterator.Close()

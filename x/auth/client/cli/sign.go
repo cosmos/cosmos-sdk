@@ -20,7 +20,7 @@ const (
 	flagAppend       = "append"
 	flagPrintSigs    = "validate-signatures"
 	flagOffline      = "offline"
-	flagRawSignature = "sig-only"
+	flagRawSignature = "signature-only"
 )
 
 // GetSignCommand returns the sign command
@@ -31,7 +31,7 @@ func GetSignCommand(codec *amino.Codec, decoder auth.AccountDecoder) *cobra.Comm
 		Long: `Sign transactions created with the --generate-only flag.
 Read a transaction from <file>, sign it, and print its JSON encoding.
 
-If the flag --sig-only flag is on, it outputs a JSON representation
+If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.
 
 The --offline flag makes sure that the client will not reach out to the local cache.
@@ -71,7 +71,7 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(decoder)
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
-		// if --sig-only is on, then override --append
+		// if --signature-only is on, then override --append
 		generateSignatureOnly := viper.GetBool(flagRawSignature)
 		append := viper.GetBool(flagAppend) && !generateSignatureOnly
 		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, append, viper.GetBool(flagOffline))

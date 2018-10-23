@@ -18,9 +18,9 @@ import (
 
 const (
 	flagAppend       = "append"
-	flagPrintSigs    = "print-sigs"
+	flagPrintSigs    = "validate-signatures"
 	flagOffline      = "offline"
-	flagRawSignature = "raw-signature"
+	flagRawSignature = "sig-only"
 )
 
 // GetSignCommand returns the sign command
@@ -31,7 +31,7 @@ func GetSignCommand(codec *amino.Codec, decoder auth.AccountDecoder) *cobra.Comm
 		Long: `Sign transactions created with the --generate-only flag.
 Read a transaction from <file>, sign it, and print its JSON encoding.
 
-If the flag --raw-signature flag is on, it outputs a JSON representation
+If the flag --sig-only flag is on, it outputs a JSON representation
 of the generated signature only.
 
 The --offline flag makes sure that the client will not reach out to the local cache.
@@ -41,9 +41,11 @@ recommended to set such parameters manually.`,
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
-	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten")
+	cmd.Flags().Bool(flagAppend, true,
+		"Append the signature to the existing ones. If disabled, old signatures would be overwritten")
 	cmd.Flags().Bool(flagRawSignature, false, "Print only the generated signature, then exit.")
-	cmd.Flags().Bool(flagPrintSigs, false, "Print the addresses that must sign the transaction and those who have already signed it, then exit")
+	cmd.Flags().Bool(flagPrintSigs, false, "Print the addresses that must sign the transaction, "+
+		"those who have already signed it, and make sure that signatures are in the correct order.")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
 	return cmd
 }
@@ -69,7 +71,7 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(decoder)
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
-		// if --print-signature-only is on, then override --append
+		// if --sig-only is on, then override --append
 		generateSignatureOnly := viper.GetBool(flagRawSignature)
 		append := viper.GetBool(flagAppend) && !generateSignatureOnly
 		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, append, viper.GetBool(flagOffline))

@@ -25,7 +25,7 @@ func deleteKeyCommand() *cobra.Command {
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	kb, err := GetKeyBase()
+	kb, err := GetKeyBaseWithWritePerm()
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kb, err = GetKeyBase()
+	kb, err = GetKeyBaseWithWritePerm()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

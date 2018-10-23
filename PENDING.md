@@ -164,6 +164,8 @@ IMPROVEMENTS
 * Gaia CLI  (`gaiacli`)
     * [cli] #2060 removed `--select` from `block` command
     * [cli] #2128 fixed segfault when exporting directly after `gaiad init`
+    * [cli] [\#1255](https://github.com/cosmos/cosmos-sdk/issues/1255) open KeyBase in read-only mode
+     for query-purpose CLI commands
 
 * Gaia
     * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check.

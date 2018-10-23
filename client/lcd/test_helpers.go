@@ -94,7 +94,7 @@ func GetKeyBase(t *testing.T) crkeys.Keybase {
 
 	viper.Set(cli.HomeFlag, dir)
 
-	keybase, err := keys.GetKeyBase()
+	keybase, err := keys.GetKeyBaseWithWritePerm()
 	require.NoError(t, err)
 
 	return keybase

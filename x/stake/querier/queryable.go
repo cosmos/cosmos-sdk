@@ -14,13 +14,11 @@ const (
 	QueryValidator                     = "validator"
 	QueryDelegatorDelegations          = "delegatorDelegations"
 	QueryDelegatorUnbondingDelegations = "delegatorUnbondingDelegations"
-	QueryDelegatorRedelegations        = "delegatorRedelegations"
+	QueryRedelegations                 = "redelegations"
 	QueryValidatorUnbondingDelegations = "validatorUnbondingDelegations"
-	QueryValidatorRedelegations        = "validatorRedelegations"
 	QueryDelegator                     = "delegator"
 	QueryDelegation                    = "delegation"
 	QueryUnbondingDelegation           = "unbondingDelegation"
-	QueryRedelegation                  = "redelegation"
 	QueryDelegatorValidators           = "delegatorValidators"
 	QueryDelegatorValidator            = "delegatorValidator"
 	QueryPool                          = "pool"
@@ -37,8 +35,6 @@ func NewQuerier(k keep.Keeper, cdc *codec.Codec) sdk.Querier {
 			return queryValidator(ctx, cdc, req, k)
 		case QueryValidatorUnbondingDelegations:
 			return queryValidatorUnbondingDelegations(ctx, cdc, req, k)
-		case QueryValidatorRedelegations:
-			return queryValidatorRedelegations(ctx, cdc, req, k)
 		case QueryDelegation:
 			return queryDelegation(ctx, cdc, req, k)
 		case QueryUnbondingDelegation:
@@ -47,8 +43,8 @@ func NewQuerier(k keep.Keeper, cdc *codec.Codec) sdk.Querier {
 			return queryDelegatorDelegations(ctx, cdc, req, k)
 		case QueryDelegatorUnbondingDelegations:
 			return queryDelegatorUnbondingDelegations(ctx, cdc, req, k)
-		case QueryDelegatorRedelegations:
-			return queryDelegatorRedelegations(ctx, cdc, req, k)
+		case QueryRedelegations:
+			return queryRedelegations(ctx, cdc, req, k)
 		case QueryDelegatorValidators:
 			return queryDelegatorValidators(ctx, cdc, req, k)
 		case QueryDelegatorValidator:
@@ -145,23 +141,6 @@ func queryValidatorUnbondingDelegations(ctx sdk.Context, cdc *codec.Codec, req a
 	return res, nil
 }
 
-func queryValidatorRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryValidatorParams
-
-	errRes := cdc.UnmarshalJSON(req.Data, &params)
-	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
-	}
-
-	redelegations := k.GetRedelegationsFromValidator(ctx, params.ValidatorAddr)
-
-	res, errRes = codec.MarshalJSONIndent(cdc, redelegations)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
-	}
-	return res, nil
-}
-
 func queryDelegatorDelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryDelegatorParams
 
@@ -190,23 +169,6 @@ func queryDelegatorUnbondingDelegations(ctx sdk.Context, cdc *codec.Codec, req a
 	unbondingDelegations := k.GetAllUnbondingDelegations(ctx, params.DelegatorAddr)
 
 	res, errRes = codec.MarshalJSONIndent(cdc, unbondingDelegations)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
-	}
-	return res, nil
-}
-
-func queryDelegatorRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryRedelegationParams
-
-	errRes := cdc.UnmarshalJSON(req.Data, &params)
-	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownAddress("")
-	}
-
-	redelegations := k.GetAllRedelegations(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
-
-	res, errRes = codec.MarshalJSONIndent(cdc, redelegations)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
 	}
@@ -300,18 +262,16 @@ func queryRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery
 		return []byte{}, sdk.ErrUnknownRequest(string(req.Data))
 	}
 
-	if params.DelegatorAddr.Empty() {
-		return []byte{}, types.ErrBadRedelegationAddr(types.DefaultCodespace)
-	}
-
 	var redels []types.Redelegation
 
-	if !params.SrcValidatorAddr.Empty() && !params.DstValidatorAddr.Empty() {
+	if !params.DelegatorAddr.Empty() && !params.SrcValidatorAddr.Empty() && !params.DstValidatorAddr.Empty() {
 		redel, found := k.GetRedelegation(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
 		if !found {
 			return []byte{}, types.ErrNoRedelegation(types.DefaultCodespace)
 		}
 		redels = []types.Redelegation{redel}
+	} else if params.DelegatorAddr.Empty() && !params.SrcValidatorAddr.Empty() && params.DstValidatorAddr.Empty() {
+		redels = k.GetRedelegationsFromValidator(ctx, params.SrcValidatorAddr)
 	} else {
 		redels = k.GetAllRedelegations(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
 	}

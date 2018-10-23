@@ -10,7 +10,7 @@ import (
 
 // AllInvariants runs all invariants of the distribution module.
 // Currently: total supply, positive power
-func AllInvariants(ck bank.Keeper, k distribution.Keeper, am auth.AccountMapper) simulation.Invariant {
+func AllInvariants(ck bank.Keeper, k distribution.Keeper, am auth.AccountKeeper) simulation.Invariant {
 	return func(app *baseapp.BaseApp) error {
 		return nil
 	}

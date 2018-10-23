@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 
 	"github.com/gorilla/mux"
@@ -65,6 +64,18 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 	r.HandleFunc(
 		"/stake/validators/{validatorAddr}",
 		validatorHandlerFn(cliCtx, cdc),
+	).Methods("GET")
+
+	// Get all unbonding delegations from a validator
+	r.HandleFunc(
+		"/stake/validators/{validatorAddr}/unbonding_delegations",
+		validatorUnbondingDelegationsHandlerFn(cliCtx, cdc),
+	).Methods("GET")
+
+	// Get all outgoing redelegations from a validator
+	r.HandleFunc(
+		"/stake/validators/{validatorAddr}/redelegations",
+		validatorRedelegationsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 	// Get the current state of the staking pool
@@ -191,33 +202,17 @@ func validatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handl
 
 // HTTP request handler to query the validator information from a given validator address
 func validatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		bech32validatorAddr := vars["validatorAddr"]
+	return queryValidator(cliCtx, cdc, "custom/stake/validator")
+}
 
-		validatorAddr, err := sdk.ValAddressFromBech32(bech32validatorAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+// HTTP request handler to query all unbonding delegations from a validator
+func validatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+	return queryValidator(cliCtx, cdc, "custom/stake/validatorUnbondingDelegations")
+}
 
-		params := stake.QueryValidatorParams{
-			ValidatorAddr: validatorAddr,
-		}
-
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		res, err := cliCtx.QueryWithData("custom/stake/validator", bz)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
-	}
+// HTTP request handler to query all redelegations from a source validator
+func validatorRedelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+	return queryValidator(cliCtx, cdc, "custom/stake/validatorRedelegations")
 }
 
 // HTTP request handler to query the pool information

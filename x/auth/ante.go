@@ -22,7 +22,7 @@ const (
 // NewAnteHandler returns an AnteHandler that checks
 // and increments sequence numbers, checks signatures & account numbers,
 // and deducts fees from the first signer.
-func NewAnteHandler(am AccountMapper, fck FeeCollectionKeeper) sdk.AnteHandler {
+func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -137,7 +137,7 @@ func validateBasic(tx StdTx) (err sdk.Error) {
 	return nil
 }
 
-func getSignerAccs(ctx sdk.Context, am AccountMapper, addrs []sdk.AccAddress) (accs []Account, res sdk.Result) {
+func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (accs []Account, res sdk.Result) {
 	accs = make([]Account, len(addrs))
 	for i := 0; i < len(accs); i++ {
 		accs[i] = am.GetAccount(ctx, addrs[i])
@@ -257,7 +257,7 @@ func adjustFeesByGas(fees sdk.Coins, gas int64) sdk.Coins {
 }
 
 // Deduct the fee from the account.
-// We could use the CoinKeeper (in addition to the AccountMapper,
+// We could use the CoinKeeper (in addition to the AccountKeeper,
 // because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
 func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 	coins := acc.GetCoins()

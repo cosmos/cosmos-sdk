@@ -72,7 +72,7 @@ func MakeTestCodec() *codec.Codec {
 
 // test input with default values
 func CreateTestInputDefault(t *testing.T, isCheckTx bool, initCoins int64) (
-	sdk.Context, auth.AccountMapper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 	return CreateTestInputAdvanced(t, isCheckTx, initCoins, communityTax)
@@ -81,7 +81,7 @@ func CreateTestInputDefault(t *testing.T, isCheckTx bool, initCoins int64) (
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	communityTax sdk.Dec) (
-	sdk.Context, auth.AccountMapper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
 
 	keyDistr := sdk.NewKVStoreKey("distr")
 	keyStake := sdk.NewKVStoreKey("stake")
@@ -109,8 +109,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
-	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
-	ck := bank.NewBaseKeeper(accountMapper)
+	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, auth.ProtoBaseAccount)
+	ck := bank.NewBaseKeeper(accountKeeper)
 	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	sk.SetPool(ctx, stake.InitialPool())
 	sk.SetParams(ctx, stake.DefaultParams())
@@ -138,7 +138,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	keeper.SetBaseProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
 	keeper.SetBonusProposerReward(ctx, sdk.NewDecWithPrec(4, 2))
 
-	return ctx, accountMapper, keeper, sk, fck
+	return ctx, accountKeeper, keeper, sk, fck
 }
 
 //__________________________________________________________________________________

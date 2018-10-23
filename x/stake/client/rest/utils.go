@@ -111,3 +111,33 @@ func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
+
+func queryValidator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		bech32validatorAddr := vars["validatorAddr"]
+
+		validatorAddr, err := sdk.ValAddressFromBech32(bech32validatorAddr)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		params := stake.QueryValidatorParams{
+			ValidatorAddr: validatorAddr,
+		}
+
+		bz, err := cdc.MarshalJSON(params)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, err := cliCtx.QueryWithData(endpoint, bz)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+	}
+}

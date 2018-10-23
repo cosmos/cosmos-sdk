@@ -13,7 +13,7 @@ import (
 )
 
 // SimulateMsgSetWithdrawAddress
-func SimulateMsgSetWithdrawAddress(m auth.AccountMapper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -41,7 +41,7 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountMapper, k distribution.Keeper) 
 }
 
 // SimulateMsgWithdrawDelegatorRewardsAll
-func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountMapper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -68,7 +68,7 @@ func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountMapper, k distribution
 }
 
 // SimulateMsgWithdrawDelegatorReward
-func SimulateMsgWithdrawDelegatorReward(m auth.AccountMapper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -96,7 +96,7 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountMapper, k distribution.Kee
 }
 
 // SimulateMsgWithdrawValidatorRewardsAll
-func SimulateMsgWithdrawValidatorRewardsAll(m auth.AccountMapper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawValidatorRewardsAll(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (

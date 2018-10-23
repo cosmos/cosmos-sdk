@@ -57,7 +57,7 @@ type GaiaApp struct {
 	tkeyParams       *sdk.TransientStoreKey
 
 	// Manage getting and setting accounts
-	accountMapper       auth.AccountMapper
+	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
 	stakeKeeper         stake.Keeper
@@ -92,15 +92,15 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
 	}
 
-	// define the accountMapper
-	app.accountMapper = auth.NewAccountMapper(
+	// define the accountKeeper
+	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
 		app.keyAccount,        // target store
 		auth.ProtoBaseAccount, // prototype
 	)
 
 	// add handlers
-	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
+	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
 	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
 		app.cdc,
 		app.keyFeeCollection,
@@ -160,7 +160,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 	app.MountStoresTransient(app.tkeyParams, app.tkeyStake, app.tkeyDistr)
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -232,8 +232,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// load the accounts
 	for _, gacc := range genesisState.Accounts {
 		acc := gacc.ToAccount()
-		acc.AccountNumber = app.accountMapper.GetNextAccountNumber(ctx)
-		app.accountMapper.SetAccount(ctx, acc)
+		acc.AccountNumber = app.accountKeeper.GetNextAccountNumber(ctx)
+		app.accountKeeper.SetAccount(ctx, acc)
 	}
 
 	// load the initial stake information
@@ -300,7 +300,7 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 		accounts = append(accounts, account)
 		return false
 	}
-	app.accountMapper.IterateAccounts(ctx, appendAccount)
+	app.accountKeeper.IterateAccounts(ctx, appendAccount)
 	genState := NewGenesisState(
 		accounts,
 		stake.WriteGenesis(ctx, app.stakeKeeper),

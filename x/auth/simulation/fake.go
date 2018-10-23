@@ -13,7 +13,7 @@ import (
 )
 
 // SimulateDeductFee
-func SimulateDeductFee(m auth.AccountMapper, f auth.FeeCollectionKeeper) simulation.Operation {
+func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
 		action string, fOp []simulation.FutureOperation, err error) {

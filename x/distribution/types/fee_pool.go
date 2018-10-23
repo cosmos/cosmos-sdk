@@ -29,18 +29,6 @@ func (ta TotalAccum) UpdateForNewHeight(height int64, accumCreatedPerBlock sdk.D
 	return ta
 }
 
-// update total validator accumulation factor for the new height
-// CONTRACT: height should be greater than the old height
-func (ta TotalAccum) UpdateForNewHeight_DEBUG(height int64, accumCreatedPerBlock sdk.Dec) TotalAccum {
-	blocks := height - ta.UpdateHeight
-	if blocks < 0 {
-		panic("reverse updated for new height")
-	}
-	ta.Accum = ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)))
-	ta.UpdateHeight = height
-	return ta
-}
-
 //___________________________________________________________________________________________
 
 // global fee pool for distribution
@@ -53,7 +41,7 @@ type FeePool struct {
 // update total validator accumulation factor
 // NOTE: Do not call this except from ValidatorDistInfo.TakeFeePoolRewards().
 func (f FeePool) UpdateTotalValAccum(height int64, totalBondedTokens sdk.Dec) FeePool {
-	f.TotalValAccum = f.TotalValAccum.UpdateForNewHeight_DEBUG(height, totalBondedTokens)
+	f.TotalValAccum = f.TotalValAccum.UpdateForNewHeight(height, totalBondedTokens)
 	return f
 }
 

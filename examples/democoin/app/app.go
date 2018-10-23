@@ -55,7 +55,7 @@ type DemocoinApp struct {
 	stakeKeeper         simplestake.Keeper
 
 	// Manage getting and setting accounts
-	accountMapper auth.AccountMapper
+	accountKeeper auth.AccountKeeper
 }
 
 func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
@@ -74,15 +74,15 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
 	}
 
-	// Define the accountMapper.
-	app.accountMapper = auth.NewAccountMapper(
+	// Define the accountKeeper.
+	app.accountKeeper = auth.NewAccountKeeper(
 		cdc,
 		app.capKeyAccountStore, // target store
 		types.ProtoAppAccount,  // prototype
 	)
 
 	// Add handlers.
-	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
+	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
 	app.coolKeeper = cool.NewKeeper(app.capKeyMainStore, app.bankKeeper, app.RegisterCodespace(cool.DefaultCodespace))
 	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), app.bankKeeper, app.RegisterCodespace(pow.DefaultCodespace))
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
@@ -98,7 +98,7 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainerFn(app.coolKeeper, app.powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -148,7 +148,7 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 				panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 				//	return sdk.ErrGenesisParse("").TraceCause(err, "")
 			}
-			app.accountMapper.SetAccount(ctx, acc)
+			app.accountKeeper.SetAccount(ctx, acc)
 		}
 
 		// Application specific genesis handling
@@ -182,7 +182,7 @@ func (app *DemocoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 		accounts = append(accounts, account)
 		return false
 	}
-	app.accountMapper.IterateAccounts(ctx, appendAccount)
+	app.accountKeeper.IterateAccounts(ctx, appendAccount)
 
 	genState := types.GenesisState{
 		Accounts:    accounts,

@@ -104,29 +104,29 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
-		{5, authsim.SimulateDeductFee(app.accountMapper, app.feeCollectionKeeper)},
-		{100, banksim.SingleInputSendMsg(app.accountMapper, app.bankKeeper)},
-		{50, distributionsim.SimulateMsgSetWithdrawAddress(app.accountMapper, app.distrKeeper)},
-		{50, distributionsim.SimulateMsgWithdrawDelegatorRewardsAll(app.accountMapper, app.distrKeeper)},
-		{50, distributionsim.SimulateMsgWithdrawDelegatorReward(app.accountMapper, app.distrKeeper)},
-		{50, distributionsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountMapper, app.distrKeeper)},
+		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
+		{100, banksim.SingleInputSendMsg(app.accountKeeper, app.bankKeeper)},
+		{50, distributionsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
+		{50, distributionsim.SimulateMsgWithdrawDelegatorRewardsAll(app.accountKeeper, app.distrKeeper)},
+		{50, distributionsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
+		{50, distributionsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountKeeper, app.distrKeeper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgCreateValidator(app.accountMapper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgCreateValidator(app.accountKeeper, app.stakeKeeper)},
 		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
-		{100, stakesim.SimulateMsgDelegate(app.accountMapper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgBeginUnbonding(app.accountMapper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgBeginRedelegate(app.accountMapper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgDelegate(app.accountKeeper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgBeginUnbonding(app.accountKeeper, app.stakeKeeper)},
+		{100, stakesim.SimulateMsgBeginRedelegate(app.accountKeeper, app.stakeKeeper)},
 		{100, slashingsim.SimulateMsgUnjail(app.slashingKeeper)},
 	}
 }
 
 func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
-		banksim.NonnegativeBalanceInvariant(app.accountMapper),
-		distributionsim.AllInvariants(app.bankKeeper, app.distrKeeper, app.accountMapper),
+		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
+		distributionsim.AllInvariants(app.bankKeeper, app.distrKeeper, app.accountKeeper),
 		govsim.AllInvariants(),
-		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountMapper),
+		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
 		slashingsim.AllInvariants(),
 	}
 }

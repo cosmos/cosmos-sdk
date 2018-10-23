@@ -292,7 +292,7 @@ func GetCmdQueryDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 
 // GetCmdQueryValidatorDelegations implements the command to query all the
 // delegations to a specific validator.
-func GetCmdQueryValidatorDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegations-to [validator-addr]",
 		Short: "Query all delegations made to one validator",
@@ -314,7 +314,7 @@ func GetCmdQueryValidatorDelegations(storeName string, cdc *codec.Codec) *cobra.
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryWithData("custom/stake/validatorDelegations", bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validatorDelegations", queryRoute), bz)
 			if err != nil {
 				return err
 			}

@@ -84,6 +84,7 @@ func main() {
 		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
 		stakecmd.GetCmdQueryValidator(storeStake, cdc),
 		stakecmd.GetCmdQueryValidators(storeStake, cdc),
+		stakecmd.GetCmdQueryValidatorDelegations(queryRouteStake, cdc),
 		stakecmd.GetCmdQueryValidatorUnbondingDelegations(queryRouteStake, cdc),
 		stakecmd.GetCmdQueryValidatorRedelegations(queryRouteStake, cdc),
 		stakecmd.GetCmdQueryParams(storeStake, cdc),

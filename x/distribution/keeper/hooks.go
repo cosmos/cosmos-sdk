@@ -23,8 +23,10 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 
 // Withdrawal all validator rewards
 func (k Keeper) onValidatorModified(ctx sdk.Context, addr sdk.ValAddress) {
-	if err := k.WithdrawValidatorRewardsAll(ctx, addr); err != nil {
-		panic(err)
+	if ctx.BlockHeight() > 0 {
+		if err := k.WithdrawValidatorRewardsAll(ctx, addr); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -51,6 +53,8 @@ func (k Keeper) onDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
 // Withdrawal all validator rewards
 func (k Keeper) onDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
+
+	fmt.Printf("DELEGATION SHARES MODIFIED %v\n", valAddr)
 
 	if err := k.WithdrawDelegationReward(ctx, delAddr, valAddr); err != nil {
 		panic(err)
@@ -87,9 +91,11 @@ func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
 	h.k.onValidatorRemoved(ctx, addr)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
 	h.k.onDelegationCreated(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
 	h.k.onDelegationSharesModified(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {

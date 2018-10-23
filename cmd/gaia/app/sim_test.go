@@ -49,9 +49,11 @@ func init() {
 func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	var genesisAccounts []GenesisAccount
 
+	amt := int64(10000)
+
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
-		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(10000)}}
+		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(amt)}}
 		genesisAccounts = append(genesisAccounts, GenesisAccount{
 			Address: acc.Address,
 			Coins:   coins,
@@ -73,13 +75,13 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		valAddrs[i] = valAddr
 
 		validator := stake.NewValidator(valAddr, accs[i].PubKey, stake.Description{})
-		validator.Tokens = sdk.NewDec(10000)
-		validator.DelegatorShares = sdk.NewDec(10000)
-		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(10000), 0}
+		validator.Tokens = sdk.NewDec(amt)
+		validator.DelegatorShares = sdk.NewDec(amt)
+		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(amt), 0}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakeGenesis.Pool.LooseTokens = sdk.NewDec(int64(10000*250) + (numInitiallyBonded * 10000))
+	stakeGenesis.Pool.LooseTokens = sdk.NewDec(int64(amt*250) + (numInitiallyBonded * amt))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
 	mintGenesis := mint.DefaultGenesisState()

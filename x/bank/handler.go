@@ -13,7 +13,7 @@ func NewHandler(k Keeper) sdk.Handler {
 		case MsgIssue:
 			return handleMsgIssue(ctx, k, msg)
 		default:
-			errMsg := "Unrecognized bank Msg type: %s" + msg.Name()
+			errMsg := "Unrecognized bank Msg type: %s" + msg.Type()
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

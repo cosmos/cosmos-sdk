@@ -19,7 +19,7 @@ func TestNewMsgMine(t *testing.T) {
 func TestMsgMineType(t *testing.T) {
 	addr := sdk.AccAddress([]byte("sender"))
 	msg := MsgMine{addr, 0, 0, 0, []byte("")}
-	require.Equal(t, msg.Type(), "pow")
+	require.Equal(t, msg.Route(), "pow")
 }
 
 func TestMsgMineValidation(t *testing.T) {

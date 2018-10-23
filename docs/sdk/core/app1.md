@@ -14,10 +14,10 @@ Developers can create messages by implementing the `Msg` interface:
 
 ```go
 type Msg interface {
-    // Return the message type.
+    // Return the message Route.
     // Must be alphanumeric or empty.
     // Must correspond to name of message handler (XXX).
-    Type() string
+    Route() string
 
     // ValidateBasic does a simple validation check that
     // doesn't require access to any other information.
@@ -49,7 +49,7 @@ type MsgSend struct {
 }
 
 // Implements Msg.
-func (msg MsgSend) Type() string { return "send" }
+func (msg MsgSend) Route() string { return "send" }
 ```
 
 It specifies that the message should be JSON marshaled and signed by the sender:

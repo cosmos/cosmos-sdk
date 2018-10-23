@@ -23,7 +23,8 @@ const (
 	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
 	FlagBechPrefix = "bech"
 
-	flagMultiSigThreshold = "multisig-threshold"
+	flagMultiSigThreshold  = "multisig-threshold"
+	defaultMultiSigKeyName = "multi"
 )
 
 var _ keys.Info = (keys.Info)(nil)
@@ -80,7 +81,7 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		}
 		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
 		info = multiSigKey{
-			name: "multi",
+			name: defaultMultiSigKeyName,
 			key:  multikey,
 		}
 	}

@@ -49,9 +49,16 @@ BREAKING CHANGES
       * [x/auth] Simulate random fee payments
       * [cmd/gaia/app] Simulate non-zero inflation
       * [x/stake] Call hooks correctly in several cases related to delegation/validator updates
+      * [x/stake] Check full supply invariants, including yet-to-be-withdrawn fees
+      * [x/stake] Remove no-longer-in-use store key
       * [x/slashing] Call hooks correctly when a validator is slashed
+      * [x/slashing] Truncate withdrawals (unbonding, redelegation) and burn change
       * [x/mock/simulation] Ensure the simulation cannot set a proposer address of nil
+      * [x/mock/simulation] Add more event logs on begin block / end block for clarity
+      * [x/minting] Correctly call stake keeper to track inflated supply
       * [x/distribution] Sanity check for nonexistent rewards
+      * [x/distribution] Truncate withdrawals and return change to the community pool
+      * [x/distribution] Add sanity checks for incorrect accum / total accum relations
       * [x/distribution] Correctly calculate total power using Tendermint updates
       * [x/distribution] Simulate withdrawal transactions
       * [x/distribution] Fix a bug where the fee pool was not correctly tracked on WithdrawDelegatorRewardsAll

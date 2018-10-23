@@ -17,7 +17,7 @@ const (
 	evidenceFraction float64 = 0.5
 
 	// TODO Remove in favor of binary search for invariant violation
-	onOperation bool = true
+	onOperation bool = false
 )
 
 var (

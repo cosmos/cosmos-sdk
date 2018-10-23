@@ -176,6 +176,12 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 			app.Commit()
 		}
 
+		if header.ProposerAddress == nil {
+			fmt.Printf("\nSimulation stopped early as all validators have been unbonded, there is nobody left propose a block!\n")
+			stopEarly = true
+			break
+		}
+
 		// Generate a random RequestBeginBlock with the current validator set for the next block
 		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header)
 

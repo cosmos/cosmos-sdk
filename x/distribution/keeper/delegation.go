@@ -81,7 +81,7 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 
 	// TODO: Reconcile with duplicate code in getDelegatorRewardsAll.
 	height := ctx.BlockHeight()
-	lastTotalPower := k.stakeKeeper.GetLastTotalPower(ctx)
+	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
 	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, valAddr)
 	feePool := k.GetFeePool(ctx)
 	delInfo := k.GetDelegationDistInfo(ctx, delegatorAddr, valAddr)
@@ -126,7 +126,7 @@ func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.
 func (k Keeper) getDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, height int64) types.DecCoins {
 
 	withdraw := types.DecCoins{}
-	lastTotalPower := k.stakeKeeper.GetLastTotalPower(ctx)
+	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
 
 	// iterate over all the delegations
 	// TODO: Reconcile with duplicate code in WithdrawDelegationReward.

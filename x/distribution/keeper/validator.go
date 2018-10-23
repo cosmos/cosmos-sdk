@@ -55,7 +55,7 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	withdraw := k.getDelegatorRewardsAll(ctx, accAddr, height)
 
 	// withdrawal validator commission rewards
-	lastTotalPower := k.stakeKeeper.GetLastTotalPower(ctx)
+	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
 	feePool := k.GetFeePool(ctx)
 	valInfo, feePool, commission := valInfo.WithdrawCommission(feePool, height, lastTotalPower,

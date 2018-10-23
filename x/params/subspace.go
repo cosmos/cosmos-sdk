@@ -17,7 +17,7 @@ type (
 	KeyTable         = subspace.KeyTable
 )
 
-// re-export functions from subspace
+// nolint - re-export functions from subspace
 func NewKeyTable(keytypes ...interface{}) KeyTable {
 	return subspace.NewKeyTable(keytypes...)
 }

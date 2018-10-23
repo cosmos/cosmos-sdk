@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
 
 // SignBody defines the properties of a sign request's body.
@@ -47,10 +48,10 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		}
 
 		signedTx, err := txBldr.SignStdTx(m.LocalAccountName, m.Password, m.Tx, m.AppendSig)
-		if utils.IsKeyNotFoundErr(err, m.LocalAccountName) {
+		if keyerror.IsErrKeyNotFound(err) {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
-		} else if utils.IsWrongKeyPasswordErr(err) {
+		} else if keyerror.IsErrWrongPassword(err) {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		} else if err != nil {

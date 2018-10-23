@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -229,14 +230,14 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 	}
 
 	txBytes, err := txBldr.BuildAndSign(baseReq.Name, baseReq.Password, msgs)
-	if IsKeyNotFoundErr(err, baseReq.Name) {
+	if keyerror.IsErrKeyNotFound(err) {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
-	} else if IsWrongKeyPasswordErr(err) {
+	} else if keyerror.IsErrWrongPassword(err) {
 		WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
 	} else if err != nil {
-		WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -269,20 +270,4 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)
-}
-
-// IsKeyNotFoundErr - check if the error means that the specified key doesn't exist
-func IsKeyNotFoundErr(err error, name string) bool {
-	if err != nil && strings.Contains(err.Error(), fmt.Sprintf("Key %s not found", name)) {
-		return true
-	}
-	return false
-}
-
-// IsWrongKeyPasswordErr - check if the error means that the specified key password is wrong
-func IsWrongKeyPasswordErr(err error) bool {
-	if err != nil && strings.Contains(err.Error(), "Ciphertext decryption failed") {
-		return true
-	}
-	return false
 }

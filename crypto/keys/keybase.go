@@ -19,6 +19,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
 
 var _ Keybase = dbKeybase{}
@@ -217,7 +218,7 @@ func (kb dbKeybase) List() ([]Info, error) {
 func (kb dbKeybase) Get(name string) (Info, error) {
 	bs := kb.db.Get(infoKey(name))
 	if len(bs) == 0 {
-		return nil, fmt.Errorf("Key %s not found", name)
+		return nil, keyerror.NewErrKeyNotFound(name)
 	}
 	return readInfo(bs)
 }

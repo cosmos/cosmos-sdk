@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	keyerror "github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
@@ -81,11 +82,11 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = kb.Delete(name, m.Password)
-	if IsKeyNotFoundErr(err, name) {
+	if keyerror.IsErrKeyNotFound(err) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
 		return
-	} else if IsWrongKeyPasswordErr(err) {
+	} else if keyerror.IsErrWrongPassword(err) {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(err.Error()))
 		return

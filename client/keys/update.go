@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
 
 func updateKeyCommand() *cobra.Command {
@@ -84,11 +85,11 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	getNewpass := func() (string, error) { return m.NewPassword, nil }
 
 	err = kb.Update(name, m.OldPassword, getNewpass)
-	if IsKeyNotFoundErr(err, name) {
+	if keyerror.IsErrKeyNotFound(err) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
 		return
-	} else if IsWrongKeyPasswordErr(err) {
+	} else if keyerror.IsErrWrongPassword(err) {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(err.Error()))
 		return

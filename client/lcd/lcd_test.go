@@ -576,17 +576,14 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
-<<<<<<< HEAD
 	// query delegations, unbondings and redelegations from validator and delegator
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, "30.0000000000", delegatorDels[0].GetShares().String())
-=======
-	redelegation := getRedelegation(t, port, addr, operAddrs[0], operAddrs[1])
-	require.Equal(t, "30", redelegation.Balance.Amount.String())
 
-	summary = getDelegationSummary(t, port, addr)
->>>>>>> LCD route
+	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
+	require.Len(t, redelegation, 1)
+	require.Equal(t, "30", redelegation[0].Balance.Amount.String())
 
 	delegatorUbds := getDelegatorUnbondingDelegations(t, port, addr)
 	require.Len(t, delegatorUbds, 1)
@@ -1000,6 +997,7 @@ func getUndelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, va
 	return unbond
 }
 
+<<<<<<< HEAD
 func getDelegatorDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.Delegation {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -1010,6 +1008,17 @@ func getDelegatorDelegations(t *testing.T, port string, delegatorAddr sdk.AccAdd
 	require.Nil(t, err)
 
 	return dels
+=======
+func getRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, srcValidatorAddr sdk.ValAddress, dstValidatorAddr sdk.ValAddress) []stake.Redelegation {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations?validator_from=%s&validator_to=%s", delegatorAddr, srcValidatorAddr, dstValidatorAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var redels []stake.Redelegation
+	err := cdc.UnmarshalJSON([]byte(body), &redels)
+	require.Nil(t, err)
+
+	return redels
+>>>>>>> use query params
 }
 
 func getDelegatorUnbondingDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.UnbondingDelegation {

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 
 	"github.com/gorilla/mux"
@@ -66,9 +67,9 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 		unbondingDelegationHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
-	// Query all redelegations of delegator between 2 validators
+	// Query all redelegations of delegator
 	r.HandleFunc(
-		"/stake/delegators/{delegatorAddr}/redelegations/validator_from/{validatorSrcAddr}/validator_to/{validatorDstAddr}",
+		"/stake/delegators/{delegatorAddr}/redelegations",
 		redelegationHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
@@ -201,9 +202,56 @@ func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) h
 	return queryBonds(cliCtx, cdc, "custom/stake/unbondingDelegation")
 }
 
-// HTTP request handler to query an unbonding-delegation
+// HTTP request handler to query an redelegation
 func redelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return queryRedelegations(cliCtx, cdc, "custom/stake/redelegation")
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		bech32delegator := vars["delegatorAddr"]
+
+		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		params := stake.QueryRedelegationParams{
+			DelegatorAddr: delegatorAddr,
+		}
+
+		bechSrcVoterAddr := r.URL.Query().Get("validator_from")
+		bechDstVoterAddr := r.URL.Query().Get("validator_to")
+
+		if len(bechSrcVoterAddr) != 0 {
+			srcValidatorAddr, err := sdk.ValAddressFromBech32(bechSrcVoterAddr)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+			params.SrcValidatorAddr = srcValidatorAddr
+		}
+
+		if len(bechDstVoterAddr) != 0 {
+			dstValidatorAddr, err := sdk.ValAddressFromBech32(bechDstVoterAddr)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+			params.DstValidatorAddr = dstValidatorAddr
+		}
+
+		bz, err := cdc.MarshalJSON(params)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, err := cliCtx.QueryWithData("custom/stake/redelegations", bz)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+	}
 }
 
 // HTTP request handler to query a delegation

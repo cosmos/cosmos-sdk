@@ -544,7 +544,7 @@ func TestRedelegation(t *testing.T) {
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resRed))
 
-	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0])
+	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0], nil, nil)
 	require.Equal(t, 1, len(redelegations))
 	require.True(t, redelegations[0].Equal(resRed))
 
@@ -577,7 +577,7 @@ func TestRedelegation(t *testing.T) {
 	redelegations = keeper.GetRedelegations(ctx, addrDels[0], 5)
 	require.Equal(t, 0, len(redelegations))
 
-	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0])
+	redelegations = keeper.GetAllRedelegations(ctx, addrDels[0], nil, nil)
 	require.Equal(t, 0, len(redelegations))
 }
 

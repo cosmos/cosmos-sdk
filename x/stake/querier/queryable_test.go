@@ -360,14 +360,14 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	res, err = queryRedelegation(ctx, cdc, query, keeper)
+	res, err = queryRedelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
-	var redelRes types.Redelegation
+	var redelRes []types.Redelegation
 	errRes = cdc.UnmarshalJSON(res, &redelRes)
 	require.Nil(t, errRes)
 
-	require.Equal(t, redel, redelRes)
+	require.Equal(t, redel, redelRes[0])
 }
 
 func TestQueryRedelegations(t *testing.T) {

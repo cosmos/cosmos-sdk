@@ -292,7 +292,7 @@ func queryUnbondingDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.Reques
 	return res, nil
 }
 
-func queryRedelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
+func queryRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryRedelegationParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
@@ -300,12 +300,23 @@ func queryRedelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery,
 		return []byte{}, sdk.ErrUnknownRequest(string(req.Data))
 	}
 
-	redel, found := k.GetRedelegation(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
-	if !found {
-		return []byte{}, types.ErrNoRedelegation(types.DefaultCodespace)
+	if params.DelegatorAddr.Empty() {
+		return []byte{}, types.ErrBadRedelegationAddr(types.DefaultCodespace)
 	}
 
-	res, errRes = codec.MarshalJSONIndent(cdc, redel)
+	var redels []types.Redelegation
+
+	if !params.SrcValidatorAddr.Empty() && !params.DstValidatorAddr.Empty() {
+		redel, found := k.GetRedelegation(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
+		if !found {
+			return []byte{}, types.ErrNoRedelegation(types.DefaultCodespace)
+		}
+		redels = []types.Redelegation{redel}
+	} else {
+		redels = k.GetAllRedelegations(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
+	}
+
+	res, errRes = codec.MarshalJSONIndent(cdc, redels)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
 	}

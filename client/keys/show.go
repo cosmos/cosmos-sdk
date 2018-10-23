@@ -72,7 +72,13 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 			}
 			pks[i] = info.GetPubKey()
 		}
-		multikey := multisig.NewPubKeyMultisigThreshold(viper.GetInt(flagMultiSigThreshold), pks)
+
+		multisigThreshold := viper.GetInt(flagMultiSigThreshold)
+		err = validateMultisigThreshold(multisigThreshold, len(args))
+		if err != nil {
+			return err
+		}
+		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
 		info = multiSigKey{
 			name: "multi",
 			key:  multikey,
@@ -105,6 +111,17 @@ func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 		printKeyInfo(info, bechKeyOut)
 	}
 
+	return nil
+}
+
+func validateMultisigThreshold(k, nKeys int) error {
+	if k <= 0 {
+		return fmt.Errorf("threshold must be a positive integer")
+	}
+	if nKeys < k {
+		return fmt.Errorf(
+			"threshold k of n multisignature: %d < %d", nKeys, k)
+	}
 	return nil
 }
 

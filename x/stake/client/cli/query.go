@@ -114,6 +114,88 @@ func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
+// GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
+func GetCmdQueryValidatorUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unbonding-delegations-from-validator [operator-addr]",
+		Short: "Query all unbonding delegatations from a validator",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			key := stake.GetUBDsByValIndexKey(valAddr)
+
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			resKVs, err := cliCtx.QuerySubspace(key, storeName)
+			if err != nil {
+				return err
+			}
+
+			var ubds []stake.UnbondingDelegation
+			for _, kv := range resKVs {
+				ubd := types.MustUnmarshalUBD(cdc, kv.Key, kv.Value)
+				ubds = append(ubds, ubd)
+			}
+
+			output, err := codec.MarshalJSONIndent(cdc, ubds)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(output))
+
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// GetCmdQueryValidatorRedelegations implements the query all redelegatations from a validator command.
+func GetCmdQueryValidatorRedelegations(storeName string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "redelegations-from-validator [operator-addr]",
+		Short: "Query all outgoing redelegatations from a validator",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			key := stake.GetREDsFromValSrcIndexKey(valAddr)
+
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			resKVs, err := cliCtx.QuerySubspace(key, storeName)
+			if err != nil {
+				return err
+			}
+
+			var reds []stake.Redelegation
+			for _, kv := range resKVs {
+				red := types.MustUnmarshalRED(cdc, kv.Key, kv.Value)
+				reds = append(reds, red)
+			}
+
+			output, err := codec.MarshalJSONIndent(cdc, reds)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(output))
+
+			return nil
+		},
+	}
+
+	return cmd
+}
+
 // GetCmdQueryDelegation the query delegation command.
 func GetCmdQueryDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
@@ -139,6 +221,7 @@ func GetCmdQueryDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			// parse out the delegation
+
 			delegation, err := types.UnmarshalDelegation(cdc, key, res)
 			if err != nil {
 				return err
@@ -292,7 +375,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.
 				return err
 			}
 
-			// parse out the validators
+			// parse out the unbonding delegations
 			var ubds []stake.UnbondingDelegation
 			for _, kv := range resKVs {
 				ubd := types.MustUnmarshalUBD(cdc, kv.Key, kv.Value)

@@ -78,7 +78,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Dec) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(LastTotalPowerKey)
 	if b == nil {
-		panic("stored last total power should not have been nil")
+		return sdk.ZeroDec()
 	}
 	k.cdc.MustUnmarshalBinary(b, &power)
 	return

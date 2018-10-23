@@ -176,6 +176,12 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 			app.Commit()
 		}
 
+		if header.ProposerAddress == nil {
+			fmt.Printf("\nSimulation stopped early as all validators have been unbonded, there is nobody left propose a block!\n")
+			stopEarly = true
+			break
+		}
+
 		// Generate a random RequestBeginBlock with the current validator set for the next block
 		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header)
 
@@ -227,7 +233,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event f
 					assertAllInvariants(t, app, invariants, fmt.Sprintf("operation: %v", logUpdate), displayLogs)
 				}
 				if opCount%50 == 0 {
-					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d.  ", header.Height, totalNumBlocks, opCount, blocksize)
+					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ", header.Height, totalNumBlocks, opCount, blocksize)
 				}
 			}
 			opCount++

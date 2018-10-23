@@ -341,8 +341,9 @@ func (h Hooks) OnValidatorModified(ctx sdk.Context, addr sdk.ValAddress) {
 func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
 	h.dh.OnValidatorRemoved(ctx, addr)
 }
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress) {
-	h.sh.OnValidatorBonded(ctx, addr)
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress, operator sdk.ValAddress) {
+	h.dh.OnValidatorBonded(ctx, addr, operator)
+	h.sh.OnValidatorBonded(ctx, addr, operator)
 }
 func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress, operator sdk.ValAddress) {
 	h.dh.OnValidatorBeginUnbonding(ctx, addr, operator)

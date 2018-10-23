@@ -126,28 +126,22 @@ func GetCmdQueryValidatorUnbondingDelegations(storeName string, cdc *codec.Codec
 				return err
 			}
 
-			key := stake.GetUBDsByValIndexKey(valAddr)
-
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			params := stake.QueryValidatorParams{
+				ValidatorAddr: valAddr,
+			}
 
-			resKVs, err := cliCtx.QuerySubspace(key, storeName)
+			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			var ubds []stake.UnbondingDelegation
-			for _, kv := range resKVs {
-				ubd := types.MustUnmarshalUBD(cdc, kv.Key, kv.Value)
-				ubds = append(ubds, ubd)
-			}
-
-			output, err := codec.MarshalJSONIndent(cdc, ubds)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validatorUnbondingDelegations", storeName), bz)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(string(output))
-
+			fmt.Println(string(res))
 			return nil
 		},
 	}
@@ -167,28 +161,22 @@ func GetCmdQueryValidatorRedelegations(storeName string, cdc *codec.Codec) *cobr
 				return err
 			}
 
-			key := stake.GetREDsFromValSrcIndexKey(valAddr)
-
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			params := stake.QueryValidatorParams{
+				ValidatorAddr: valAddr,
+			}
 
-			resKVs, err := cliCtx.QuerySubspace(key, storeName)
+			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			var reds []stake.Redelegation
-			for _, kv := range resKVs {
-				red := types.MustUnmarshalRED(cdc, kv.Key, kv.Value)
-				reds = append(reds, red)
-			}
-
-			output, err := codec.MarshalJSONIndent(cdc, reds)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validatorRedelegations", storeName), bz)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(string(output))
-
+			fmt.Println(string(res))
 			return nil
 		},
 	}

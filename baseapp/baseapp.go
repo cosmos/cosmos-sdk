@@ -411,11 +411,6 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
-	fmt.Println(
-		cmn.Cyan(
-			fmt.Sprintf("BEGIN BLOCK #%v", req.Header.Height),
-		),
-	)
 
 	if app.cms.TracingEnabled() {
 		app.cms.ResetTraceContext()
@@ -677,12 +672,6 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	if app.endBlocker != nil {
 		res = app.endBlocker(app.deliverState.ctx, req)
 	}
-
-	fmt.Println(
-		cmn.Cyan(
-			fmt.Sprintf("END BLOCK"),
-		),
-	)
 
 	return
 }

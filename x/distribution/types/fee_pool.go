@@ -1,10 +1,7 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // total accumulation tracker
@@ -38,18 +35,6 @@ func (ta TotalAccum) UpdateForNewHeight_DEBUG(height int64, accumCreatedPerBlock
 	blocks := height - ta.UpdateHeight
 	if blocks < 0 {
 		panic("reverse updated for new height")
-	}
-	if !accumCreatedPerBlock.IsZero() && blocks != 0 {
-		fmt.Println(
-			cmn.Blue(
-				fmt.Sprintf("FP Add %v * %v = %v, + %v (old) => %v (new)",
-					accumCreatedPerBlock.String(), sdk.NewInt(blocks),
-					accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)).String(),
-					ta.Accum.String(),
-					ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks))).String(),
-				),
-			),
-		)
 	}
 	ta.Accum = ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)))
 	ta.UpdateHeight = height

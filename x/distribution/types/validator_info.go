@@ -1,10 +1,7 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // distribution info for a particular validator
@@ -22,9 +19,9 @@ func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) Vali
 	return ValidatorDistInfo{
 		OperatorAddr:            operatorAddr,
 		FeePoolWithdrawalHeight: currentHeight,
-		Pool:           DecCoins{},
-		PoolCommission: DecCoins{},
-		DelAccum:       NewTotalAccum(currentHeight),
+		Pool:                    DecCoins{},
+		PoolCommission:          DecCoins{},
+		DelAccum:                NewTotalAccum(currentHeight),
 	}
 }
 
@@ -46,15 +43,6 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk
 func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBonded, vdTokens,
 	commissionRate sdk.Dec) (ValidatorDistInfo, FeePool) {
 
-	if vi.FeePoolWithdrawalHeight != height && !vdTokens.IsZero() {
-		fmt.Println(
-			cmn.Yellow(
-				fmt.Sprintf("TakeFeePoolRewards %v last: %v curr: %v pow: %v",
-					vi.OperatorAddr, vi.FeePoolWithdrawalHeight, height, vdTokens.String()),
-			),
-		)
-	}
-
 	fp = fp.UpdateTotalValAccum(height, totalBonded)
 
 	if fp.TotalValAccum.Accum.IsZero() {
@@ -65,19 +53,6 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	blocks := height - vi.FeePoolWithdrawalHeight
 	vi.FeePoolWithdrawalHeight = height
 	accum := vdTokens.MulInt(sdk.NewInt(blocks))
-
-	if !accum.IsZero() {
-		fmt.Println(
-			cmn.Red(
-				fmt.Sprintf("FP Sub %v * %v = %v, %v - _ => %v",
-					vdTokens.String(), sdk.NewInt(blocks),
-					accum.String(),
-					fp.TotalValAccum.Accum.String(),
-					fp.TotalValAccum.Accum.Sub(accum).String(),
-				),
-			),
-		)
-	}
 
 	if accum.GT(fp.TotalValAccum.Accum) {
 		panic("individual accum should never be greater than the total")

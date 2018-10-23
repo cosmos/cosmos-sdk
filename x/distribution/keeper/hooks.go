@@ -14,9 +14,9 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 	vdi := types.ValidatorDistInfo{
 		OperatorAddr:            addr,
 		FeePoolWithdrawalHeight: height,
-		Pool:           types.DecCoins{},
-		PoolCommission: types.DecCoins{},
-		DelAccum:       types.NewTotalAccum(height),
+		Pool:                    types.DecCoins{},
+		PoolCommission:          types.DecCoins{},
+		DelAccum:                types.NewTotalAccum(height),
 	}
 	k.SetValidatorDistInfo(ctx, vdi)
 }
@@ -53,8 +53,6 @@ func (k Keeper) onDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
 // Withdrawal all validator rewards
 func (k Keeper) onDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
-
-	fmt.Printf("DELEGATION SHARES MODIFIED %v\n", valAddr)
 
 	if err := k.WithdrawDelegationReward(ctx, delAddr, valAddr); err != nil {
 		panic(err)

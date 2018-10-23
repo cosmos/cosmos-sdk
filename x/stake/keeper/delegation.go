@@ -360,7 +360,6 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	}
 
 	// call the appropriate hook if present
-	//fmt.Printf("DELEGATION SHARES MODIFIED (2) FOUND OR NOT %v found: %v\n", validator.OperatorAddr, found)
 	if found {
 		k.OnDelegationSharesModified(ctx, delAddr, validator.OperatorAddr)
 	} else {

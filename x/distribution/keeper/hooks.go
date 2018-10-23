@@ -105,5 +105,6 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, add
 	h.k.onValidatorModified(ctx, addr)
 }
 
-// nolint - unused hooks for interface
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress) {}
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, addr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, addr)
+}

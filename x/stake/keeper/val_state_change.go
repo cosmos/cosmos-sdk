@@ -116,7 +116,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		validator := k.mustGetValidator(ctx, sdk.ValAddress(operator))
 
 		// bonded to unbonding
+		fmt.Println("!!!!")
 		k.bondedToUnbonding(ctx, validator)
+		fmt.Println("!!!!2")
 
 		// remove validator if it has no more tokens
 		if validator.Tokens.IsZero() {
@@ -224,7 +226,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// call the bond hook if present
 	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress())
+		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
 	}
 
 	return validator

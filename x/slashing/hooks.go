@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
+func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	// Update the signing info start height or create a new signing info
 	_, found := k.getValidatorSigningInfo(ctx, address)
 	if !found {
@@ -51,8 +51,8 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
-	h.k.onValidatorBonded(ctx, address)
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, operator sdk.ValAddress) {
+	h.k.onValidatorBonded(ctx, address, operator)
 }
 
 // Implements sdk.ValidatorHooks

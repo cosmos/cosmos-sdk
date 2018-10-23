@@ -23,9 +23,9 @@ func (k Keeper) OnValidatorRemoved(ctx sdk.Context, address sdk.ValAddress) {
 	}
 }
 
-func (k Keeper) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
+func (k Keeper) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, operator sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, address)
+		k.hooks.OnValidatorBonded(ctx, address, operator)
 	}
 }
 

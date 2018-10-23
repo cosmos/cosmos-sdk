@@ -40,6 +40,7 @@ func (m Minter) ProcessProvisions(params Params, totalSupply, bondedRatio sdk.De
 	m.Inflation = m.NextInflation(params, bondedRatio)
 	provisionsDec := m.Inflation.Mul(totalSupply).Quo(hrsPerYr)
 	provisions = sdk.NewCoin(params.MintDenom, provisionsDec.TruncateInt())
+
 	return m, provisions
 }
 

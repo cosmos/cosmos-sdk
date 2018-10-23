@@ -13,6 +13,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 
 	// get the proposer of this block
 	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposer)
+
 	proposerDist := k.GetValidatorDistInfo(ctx, proposerValidator.GetOperator())
 
 	// get the fees which have been getting collected through all the

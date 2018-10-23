@@ -97,9 +97,9 @@ func (d Delegation) Equal(d2 Delegation) bool {
 var _ sdk.Delegation = Delegation{}
 
 // nolint - for sdk.Delegation
-func (d Delegation) GetDelegator() sdk.AccAddress { return d.DelegatorAddr }
-func (d Delegation) GetValidator() sdk.ValAddress { return d.ValidatorAddr }
-func (d Delegation) GetShares() sdk.Dec           { return d.Shares }
+func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddr }
+func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddr }
+func (d Delegation) GetShares() sdk.Dec               { return d.Shares }
 
 // HumanReadableString returns a human readable string representation of a
 // Delegation. An error is returned if the Delegation's delegator or validator

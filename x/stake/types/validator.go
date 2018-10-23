@@ -314,12 +314,6 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	}
 }
 
-// ABCIValidatorPowerBytes
-func (v Validator) ABCIValidatorPowerBytes(cdc *codec.Codec) []byte {
-	power := v.BondedTokens().RoundInt64()
-	return cdc.MustMarshalBinary(power)
-}
-
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staked validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {

@@ -3,6 +3,10 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"sort"
+
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,9 +23,6 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"io"
-	"os"
-	"sort"
 )
 
 const (
@@ -334,17 +335,19 @@ var _ sdk.StakingHooks = Hooks{}
 func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 	h.dh.OnValidatorCreated(ctx, addr)
 }
-func (h Hooks) OnValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
-	h.dh.OnValidatorCommissionChange(ctx, addr)
+func (h Hooks) OnValidatorModified(ctx sdk.Context, addr sdk.ValAddress) {
+	h.dh.OnValidatorModified(ctx, addr)
 }
 func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
 	h.dh.OnValidatorRemoved(ctx, addr)
 }
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress) {
-	h.sh.OnValidatorBonded(ctx, addr)
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress, operator sdk.ValAddress) {
+	h.dh.OnValidatorBonded(ctx, addr, operator)
+	h.sh.OnValidatorBonded(ctx, addr, operator)
 }
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress) {
-	h.sh.OnValidatorBeginUnbonding(ctx, addr)
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress, operator sdk.ValAddress) {
+	h.dh.OnValidatorBeginUnbonding(ctx, addr, operator)
+	h.sh.OnValidatorBeginUnbonding(ctx, addr, operator)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)

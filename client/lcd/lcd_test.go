@@ -576,10 +576,17 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
+<<<<<<< HEAD
 	// query delegations, unbondings and redelegations from validator and delegator
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, "30.0000000000", delegatorDels[0].GetShares().String())
+=======
+	redelegation := getRedelegation(t, port, addr, operAddrs[0], operAddrs[1])
+	require.Equal(t, "30", redelegation.Balance.Amount.String())
+
+	summary = getDelegationSummary(t, port, addr)
+>>>>>>> LCD route
 
 	delegatorUbds := getDelegatorUnbondingDelegations(t, port, addr)
 	require.Len(t, delegatorUbds, 1)

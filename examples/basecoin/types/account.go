@@ -37,7 +37,7 @@ func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
 		}
 
 		acct := new(AppAccount)
-		err := cdc.UnmarshalBinary(accBytes, &acct)
+		err := cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}

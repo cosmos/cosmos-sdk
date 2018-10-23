@@ -19,7 +19,7 @@ func GetAccountCmdDefault(storeName string, cdc *codec.Codec) *cobra.Command {
 // GetAccountDecoder gets the account decoder for auth.DefaultAccount.
 func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
 	return func(accBytes []byte) (acct auth.Account, err error) {
-		err = cdc.UnmarshalBinary(accBytes, &acct)
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
 			panic(err)
 		}

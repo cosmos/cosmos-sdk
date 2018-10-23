@@ -50,7 +50,7 @@ func showKeysCmd() *cobra.Command {
 	cmd.Flags().String(FlagBechPrefix, "acc", "The Bech32 prefix encoding for a key (acc|val|cons)")
 	cmd.Flags().Bool(FlagAddress, false, "output the address only (overrides --output)")
 	cmd.Flags().Bool(FlagPublicKey, false, "output the public key only (overrides --output)")
-	cmd.Flags().UintP(flagMultiSigThreshold, "m", 1, "K out of N required signatures")
+	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 
 	return cmd
 }

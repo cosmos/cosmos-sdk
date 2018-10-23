@@ -37,7 +37,7 @@ func TestIBCTransferMsg(t *testing.T) {
 	packet := constructIBCPacket(true)
 	msg := IBCTransferMsg{packet}
 
-	require.Equal(t, msg.Type(), "ibc")
+	require.Equal(t, msg.Route(), "ibc")
 }
 
 func TestIBCTransferMsgValidation(t *testing.T) {
@@ -69,7 +69,7 @@ func TestIBCReceiveMsg(t *testing.T) {
 	packet := constructIBCPacket(true)
 	msg := IBCReceiveMsg{packet, sdk.AccAddress([]byte("relayer")), 0}
 
-	require.Equal(t, msg.Type(), "ibc")
+	require.Equal(t, msg.Route(), "ibc")
 }
 
 func TestIBCReceiveMsgValidation(t *testing.T) {

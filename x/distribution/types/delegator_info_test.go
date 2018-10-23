@@ -33,7 +33,7 @@ func TestWithdrawRewards(t *testing.T) {
 		validatorTokens, validatorDelShares, di1Shares, commissionRate)
 
 	assert.Equal(t, height, di1.WithdrawalHeight)
-	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.ValAccum.Accum))
+	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi.PoolCommission[0].Amount))
@@ -48,7 +48,7 @@ func TestWithdrawRewards(t *testing.T) {
 		validatorTokens, validatorDelShares, di2Shares, commissionRate)
 
 	assert.Equal(t, height, di2.WithdrawalHeight)
-	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.ValAccum.Accum))
+	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.Pool[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(4), vi.PoolCommission[0].Amount))

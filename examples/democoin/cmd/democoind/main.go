@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/p2p"
-	"io"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -99,7 +100,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 
 			toPrint := struct {
 				ChainID    string          `json:"chain_id"`
-				NodeID     string          `json:"noide_id"`
+				NodeID     string          `json:"node_id"`
 				AppMessage json.RawMessage `json:"app_message"`
 			}{
 				chainID,

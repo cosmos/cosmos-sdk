@@ -27,11 +27,11 @@ func NewTx(key, value string) kvstoreTx {
 	}
 }
 
-func (tx kvstoreTx) Type() string {
+func (tx kvstoreTx) Route() string {
 	return "kvstore"
 }
 
-func (tx kvstoreTx) Name() string {
+func (tx kvstoreTx) Type() string {
 	return "kvstore_tx"
 }
 

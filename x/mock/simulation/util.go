@@ -102,10 +102,11 @@ func addLogMessage(testingmode bool, blockLogBuilders []*strings.Builder, height
 }
 
 // assertAllInvariants asserts a list of provided invariants against application state
-func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, invariants []Invariant, displayLogs func()) {
+func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, invariants []Invariant, where string, displayLogs func()) {
 	for i := 0; i < len(invariants); i++ {
 		err := invariants[i](app)
 		if err != nil {
+			fmt.Printf("Invariants broken after %s\n", where)
 			fmt.Println(err.Error())
 			displayLogs()
 			t.Fatal()

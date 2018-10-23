@@ -66,7 +66,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	var delegations []stake.Delegation
 
 	// XXX Try different numbers of initially bonded validators
-	numInitiallyBonded := int64(5)
+	numInitiallyBonded := int64(50)
 	valAddrs := make([]sdk.ValAddress, numInitiallyBonded)
 	for i := 0; i < int(numInitiallyBonded); i++ {
 		valAddr := sdk.ValAddress(accs[i].Address)

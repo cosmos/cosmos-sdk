@@ -24,7 +24,7 @@ func (k Keeper) GetDelegation(ctx sdk.Context,
 	return delegation, true
 }
 
-// return all delegations used during genesis dump
+// return all delegations to a specific validator. Useful for querier.
 func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
@@ -33,6 +33,21 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	for ; iterator.Valid(); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
 		delegations = append(delegations, delegation)
+	}
+	return delegations
+}
+
+// return all delegations used during genesis dump
+func (k Keeper) GetAllDelegationsToValidator(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []types.Delegation) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		if delegation.GetValidator().Equals(valAddr) {
+			delegations = append(delegations, delegation)
+		}
 	}
 	return delegations
 }

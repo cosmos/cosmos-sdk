@@ -90,6 +90,9 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"validator"}, query)
 	require.Nil(t, err)
 
+	_, err = querier(ctx, []string{"validatorDelegations"}, query)
+	require.Nil(t, err)
+
 	_, err = querier(ctx, []string{"validatorUnbondingDelegations"}, query)
 	require.Nil(t, err)
 
@@ -301,8 +304,31 @@ func TestQueryDelegation(t *testing.T) {
 	_, err = queryDelegation(ctx, cdc, query, keeper)
 	require.NotNil(t, err)
 
+	// Query validator delegations
+
+	bz, errRes = cdc.MarshalJSON(newTestValidatorQuery(addrVal1))
+	require.Nil(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "custom/stake/validatorDelegations",
+		Data: bz,
+	}
+
+	res, err = queryValidatorDelegations(ctx, cdc, query, keeper)
+	require.Nil(t, err)
+
+	var delegationsRes []types.Delegation
+	errRes = cdc.UnmarshalJSON(res, &delegationsRes)
+	require.Nil(t, errRes)
+
+	require.Equal(t, delegationsRes[0], delegation)
+
 	// Query unbonging delegation
 	keeper.BeginUnbonding(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
+
+	queryBondParams = newTestBondQuery(addrAcc2, addrVal1)
+	bz, errRes = cdc.MarshalJSON(queryBondParams)
+	require.Nil(t, errRes)
 
 	query = abci.RequestQuery{
 		Path: "/custom/stake/unbondingDelegation",

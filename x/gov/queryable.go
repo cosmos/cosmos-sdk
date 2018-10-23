@@ -206,19 +206,19 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err2.Error()))
 	}
 
-	proposal := keeper.GetProposal(ctx, proposalID)
-	if proposal == nil {
+	info := keeper.GetProposalInfo(ctx, proposalID)
+	if info.IsEmpty() {
 		return nil, ErrUnknownProposal(DefaultCodespace, proposalID)
 	}
 
 	var tallyResult TallyResult
 
-	if proposal.GetStatus() == StatusDepositPeriod {
+	if info.Status == StatusDepositPeriod {
 		tallyResult = EmptyTallyResult()
-	} else if proposal.GetStatus() == StatusPassed || proposal.GetStatus() == StatusRejected {
-		tallyResult = proposal.GetTallyResult()
+	} else if info.Status == StatusPassed || info.Status == StatusRejected {
+		tallyResult = info.TallyResult
 	} else {
-		_, tallyResult = tally(ctx, keeper, proposal)
+		_, tallyResult = tally(ctx, keeper, info.ProposalID)
 	}
 
 	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, tallyResult)

@@ -16,12 +16,17 @@ func TestGetSetProposal(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposalID := proposal.GetProposalID()
-	keeper.SetProposal(ctx, proposal)
+	proposalID, err := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	require.NoError(t, err)
+	proposal := keeper.GetProposal(ctx, proposalID)
+	info := keeper.GetProposalInfo(ctx, proposalID)
+	keeper.SetProposal(ctx, proposalID, proposal)
+	keeper.SetProposalInfo(ctx, info)
 
 	gotProposal := keeper.GetProposal(ctx, proposalID)
-	require.True(t, ProposalEqual(proposal, gotProposal))
+	gotInfo := keeper.GetProposalInfo(ctx, proposalID)
+	require.Equal(t, proposal, gotProposal)
+	require.Equal(t, info, gotInfo)
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
@@ -34,9 +39,10 @@ func TestIncrementProposalNumber(t *testing.T) {
 	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposal6 := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	proposal6, err := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
-	require.Equal(t, int64(6), proposal6.GetProposalID())
+	require.NoError(t, err)
+	require.Equal(t, int64(6), proposal6)
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
@@ -44,8 +50,9 @@ func TestActivateVotingPeriod(t *testing.T) {
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
-	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	proposal, err := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
+	require.NoError(t, err)
 	require.True(t, proposal.GetVotingStartTime().Equal(time.Time{}))
 	require.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 

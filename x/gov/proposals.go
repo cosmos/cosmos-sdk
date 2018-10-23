@@ -14,43 +14,30 @@ import (
 // Proposal interface
 type Proposal interface {
 	GetProposalAbstract() ProposalAbstract
-	GetProposalInfo() *ProposalInfo
 	Enact(sdk.Context, Keeper) error
-}
-
-// checks if two proposals are equal
-func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
-	if proposalA.GetProposalID() == proposalB.GetProposalID() &&
-		proposalA.GetTitle() == proposalB.GetTitle() &&
-		proposalA.GetDescription() == proposalB.GetDescription() &&
-		proposalA.GetProposalType() == proposalB.GetProposalType() &&
-		proposalA.GetStatus() == proposalB.GetStatus() &&
-		proposalA.GetTallyResult().Equals(proposalB.GetTallyResult()) &&
-		proposalA.GetSubmitTime().Equal(proposalB.GetSubmitTime()) &&
-		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
-		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime()) {
-		return true
-	}
-	return false
 }
 
 // ProposalAbstract is a human-readable description about a proposal
 type ProposalAbstract struct {
-	Title      string `json:"title"`
-	Descriptor string `json:"descriptor"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
-// ProposalInfo is a status of a proposal set by the keeper
+// ProposalInfo is the status of a proposal managed by the keeper
 type ProposalInfo struct {
-	ProposalID int64 `json:"proposal_id"` //  ID of the proposal
+	ProposalID int64
 
-	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
-	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
+	Status      ProposalStatus //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	TallyResult TallyResult    //  Result of Tallys
 
-	SubmitTime   time.Time `json:"submit_time"`   //  Height of the block where TxGovSubmitProposal was included
-	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitTime   time.Time //  Height of the block where TxGovSubmitProposal was included
+	TotalDeposit sdk.Coins //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_time"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingStartTime time.Time //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+}
+
+func (info ProposalInfo) IsEmpty() bool {
+	return info.ProposalID == 0
 }
 
 //-----------------------------------------------------------
@@ -58,13 +45,10 @@ type ProposalInfo struct {
 type TextProposal struct {
 	Abstract ProposalAbstract `json:"abstract"`
 
-	Info *ProposalInfo `json:"info"`
-
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 }
 
 func (tp TextProposal) GetProposalAbstract() ProposalAbstract { return tp.Abstract }
-func (tp TextProposal) GetProposalInfo() *ProposalInfo        { return tp.Info }
 func (tp TextProposal) Enact(ctx sdk.Context, k Keeper) error { return nil }
 
 // Implements Proposal Interface
@@ -74,14 +58,15 @@ var _ Proposal = TextProposal{}
 // Parameter Change Proposals
 
 type ParameterChangeProposal struct {
+	Abstract ProposalAbstract `json:"abstract"`
+
 	StoreName string      `json:"store_name"`
 	Key       []byte      `json:"key"`
 	Subkey    []byte      `json:"subkey"`
 	Value     interface{} `json:"value"`
 }
 
-func (pcp ParameterChangeProposal) GetProposalType() ProposalKind  { return ProposalTypeParameterChange }
-func (pcp *ParameterChangeProposal) SetProposalType() ProposalKind { panic("Cannot set proposal type") }
+func (pcp ParameterChangeProposal) GetProposalAbstract() ProposalAbstract { return pcp.Abstract }
 func (pcp ParameterChangeProposal) Enact(ctx sdk.Context, k Keeper) error {
 	s, ok := k.paramsKeeper.GetSubspace(pcp.StoreName)
 	if !ok {
@@ -95,9 +80,11 @@ func (pcp ParameterChangeProposal) Enact(ctx sdk.Context, k Keeper) error {
 	return nil
 }
 
+var _ Proposal = ParameterChangeProposal{}
+
 //-----------------------------------------------------------
-// ProposalQueue
-type ProposalQueue []int64
+// InfoQueue
+type InfoQueue []int64
 
 //-----------------------------------------------------------
 // ProposalKind

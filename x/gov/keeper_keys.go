@@ -10,14 +10,19 @@ import (
 
 // Key for getting a the next available proposalID from the store
 var (
-	KeyNextProposalID        = []byte("newProposalID")
-	KeyActiveProposalQueue   = []byte("activeProposalQueue")
-	KeyInactiveProposalQueue = []byte("inactiveProposalQueue")
+	KeyNextProposalID    = []byte("newProposalID")
+	KeyActiveInfoQueue   = []byte("activeInfoQueue")
+	KeyInactiveInfoQueue = []byte("inactiveInfoQueue")
 )
 
 // Key for getting a specific proposal from the store
 func KeyProposal(proposalID int64) []byte {
 	return []byte(fmt.Sprintf("proposals:%d", proposalID))
+}
+
+// Key for getting a specific proposal's info from the store
+func KeyInfo(proposalID int64) []byte {
+	return []byte(fmt.Sprintf("infos:%d", proposalID))
 }
 
 // Key for getting a specific deposit from the store

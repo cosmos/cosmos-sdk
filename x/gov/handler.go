@@ -26,15 +26,17 @@ func NewHandler(keeper Keeper) sdk.Handler {
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
 
-	proposal, info := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
-	abstract := proposal.GetProposalAbstract()
-
-	err, votingStarted := keeper.AddDeposit(ctx, abstract.ProposalID, msg.Proposer, msg.InitialDeposit)
+	id, err := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
 	if err != nil {
-		return err.Result()
+		panic(err)
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(abstract.ProposalID)
+	sdkerr, votingStarted := keeper.AddDeposit(ctx, id, msg.Proposer, msg.InitialDeposit)
+	if sdkerr != nil {
+		return sdkerr.Result()
+	}
+
+	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(id)
 
 	resTags := sdk.NewTags(
 		tags.Action, tags.ActionSubmitProposal,
@@ -104,61 +106,62 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 	resTags = sdk.NewTags()
 
 	// Delete proposals that haven't met minDeposit
-	for shouldPopInactiveProposalQueue(ctx, keeper) {
-		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
-		info := inactiveProposal.GetProposalInfo()
-		if info.Status != StatusDepositPeriod {
+	for shouldPopInactiveInfoQueue(ctx, keeper) {
+		inactiveProposalInfo := keeper.InactiveInfoQueuePop(ctx)
+		if inactiveProposalInfo.Status != StatusDepositPeriod {
 			continue
 		}
 
-		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(info.proposalID)
-		keeper.DeleteProposal(ctx, inactiveProposal)
+		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(inactiveProposalInfo.ProposalID)
+		keeper.DeleteProposalInfo(ctx, inactiveProposalInfo.ProposalID)
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 
 		logger.Info(
-			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %v steak); deleted",
-				inactiveProposal.GetProposalID(),
-				inactiveProposal.GetTitle(),
+			fmt.Sprintf("proposal %d didn't meet minimum deposit of %v steak (had only %v steak); deleted",
+				inactiveProposalInfo.ProposalID,
 				keeper.GetDepositProcedure(ctx).MinDeposit.AmountOf("steak"),
-				inactiveProposal.GetTotalDeposit().AmountOf("steak"),
+				inactiveProposalInfo.TotalDeposit.AmountOf("steak"),
 			),
 		)
 	}
 
 	// Check if earliest Active Proposal ended voting period yet
-	for shouldPopActiveProposalQueue(ctx, keeper) {
-		activeProposal := keeper.ActiveProposalQueuePop(ctx)
+	for shouldPopActiveInfoQueue(ctx, keeper) {
+		activeProposalInfo := keeper.ActiveInfoQueuePop(ctx)
 
-		proposalStartTime := activeProposal.GetVotingStartTime()
+		proposalStartTime := activeProposalInfo.VotingStartTime
 		votingPeriod := keeper.GetVotingProcedure(ctx).VotingPeriod
 		if ctx.BlockHeader().Time.Before(proposalStartTime.Add(votingPeriod)) {
 			continue
 		}
 
-		passes, tallyResults := tally(ctx, keeper, activeProposal)
-		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(activeProposal.GetProposalID())
+		proposalID := activeProposalInfo.ProposalID
+		activeProposal := keeper.GetProposal(ctx, proposalID)
+		abstract := activeProposal.GetProposalAbstract()
+		passes, tallyResults := tally(ctx, keeper, proposalID)
+		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposalID)
 		var action []byte
 		if passes {
-			keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
-			activeProposal.SetStatus(StatusPassed)
+			keeper.RefundDeposits(ctx, proposalID)
+			activeProposalInfo.Status = StatusPassed
 			action = tags.ActionProposalPassed
 			err := activeProposal.Enact(ctx, keeper)
 			if err != nil {
 				logger.Info(fmt.Sprintf("proposal %d (%s) returned error while being enacted; error msg: %s",
-					activeProposal.GetProposalID(), activeProposal.GetTitle(), err.Error()))
+					proposalID, abstract.Title, err.Error()))
 				action = tags.ActionProposalError
 			}
 		} else {
-			keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
-			activeProposal.SetStatus(StatusRejected)
+			keeper.DeleteDeposits(ctx, proposalID)
+			activeProposalInfo.Status = StatusRejected
 			action = tags.ActionProposalRejected
 		}
-		activeProposal.SetTallyResult(tallyResults)
-		keeper.SetProposal(ctx, activeProposal)
+		activeProposalInfo.TallyResult = tallyResults
+		keeper.SetProposalInfo(ctx, activeProposalInfo)
 
 		logger.Info(fmt.Sprintf("proposal %d (%s) tallied; passed: %v",
-			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
+			proposalID, abstract.Title, passes))
 
 		resTags.AppendTag(tags.Action, action)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
@@ -166,27 +169,27 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 	return resTags
 }
-func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
+func shouldPopInactiveInfoQueue(ctx sdk.Context, keeper Keeper) bool {
 	depositProcedure := keeper.GetDepositProcedure(ctx)
-	peekProposal := keeper.InactiveProposalQueuePeek(ctx)
+	peekProposal := keeper.InactiveInfoQueuePeek(ctx)
 
-	if peekProposal == nil {
+	if peekProposal.ProposalID == 0 {
 		return false
-	} else if peekProposal.GetStatus() != StatusDepositPeriod {
+	} else if peekProposal.Status != StatusDepositPeriod {
 		return true
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetSubmitTime().Add(depositProcedure.MaxDepositPeriod)) {
+	} else if !ctx.BlockHeader().Time.Before(peekProposal.SubmitTime.Add(depositProcedure.MaxDepositPeriod)) {
 		return true
 	}
 	return false
 }
 
-func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
+func shouldPopActiveInfoQueue(ctx sdk.Context, keeper Keeper) bool {
 	votingProcedure := keeper.GetVotingProcedure(ctx)
-	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
+	peekProposal := keeper.ActiveInfoQueuePeek(ctx)
 
-	if peekProposal == nil {
+	if peekProposal.ProposalID == 0 {
 		return false
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetVotingStartTime().Add(votingProcedure.VotingPeriod)) {
+	} else if !ctx.BlockHeader().Time.Before(peekProposal.VotingStartTime.Add(votingProcedure.VotingPeriod)) {
 		return true
 	}
 	return false

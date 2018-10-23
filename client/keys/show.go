@@ -27,7 +27,7 @@ const (
 	defaultMultiSigKeyName = "multi"
 )
 
-var _ keys.Info = (keys.Info)(nil)
+var _ keys.Info = (*multiSigKey)(nil)
 
 type multiSigKey struct {
 	name string

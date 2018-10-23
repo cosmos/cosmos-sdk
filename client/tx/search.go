@@ -72,7 +72,7 @@ $ gaiacli tendermint txs --tag test1,test2 --any
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
-	cmd.Flags().Bool(client.FlagTrustNode, false,"Trust connected full node (don't verify proofs for responses)")
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().StringSlice(flagTags, nil, "Comma-separated list of tags that must match")
 	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")
@@ -142,8 +142,8 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 		tag := r.FormValue("tag")
 		if tag == "" {
 			utils.WriteErrorResponse(w, http.StatusBadRequest,
-				"You need to provide at least a tag as a key=value pair to search for. " +
-				"Postfix the key with _bech32 to search bech32-encoded addresses or public keys")
+				"You need to provide at least a tag as a key=value pair to search for. "+
+					"Postfix the key with _bech32 to search bech32-encoded addresses or public keys")
 			return
 		}
 

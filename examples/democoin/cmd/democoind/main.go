@@ -112,7 +112,8 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 				return err
 			}
 			fmt.Fprintf(os.Stderr, "%s\n", string(out))
-			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID, []tmtypes.GenesisValidator{validator}, appStateJSON)
+			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID,
+				[]tmtypes.GenesisValidator{validator}, appStateJSON)
 		},
 	}
 
@@ -128,7 +129,8 @@ func newApp(logger log.Logger, db dbm.DB, _ io.Writer) abci.Application {
 	return app.NewDemocoinApp(logger, db)
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer) (json.RawMessage,
+	[]tmtypes.GenesisValidator, error) {
 	dapp := app.NewDemocoinApp(logger, db)
 	return dapp.ExportAppStateAndValidators()
 }

@@ -16,7 +16,8 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 	if os.Getenv(ledgerEnabledEnv) == "" {
 		t.Skip(fmt.Sprintf("Set '%s' to run code on a real ledger", ledgerEnabledEnv))
 	}
-	msg := []byte("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}")
+	msg := []byte("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\"," +
+		"\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}")
 	path := DerivationPath{44, 60, 0, 0, 0}
 
 	priv, err := NewPrivKeyLedgerSecp256k1(path)

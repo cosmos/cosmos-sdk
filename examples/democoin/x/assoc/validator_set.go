@@ -21,7 +21,8 @@ type ValidatorSet struct {
 var _ sdk.ValidatorSet = ValidatorSet{}
 
 // NewValidatorSet returns new ValidatorSet with underlying ValidatorSet
-func NewValidatorSet(cdc *codec.Codec, store sdk.KVStore, valset sdk.ValidatorSet, maxAssoc int, addrLen int) ValidatorSet {
+func NewValidatorSet(cdc *codec.Codec, store sdk.KVStore, valset sdk.ValidatorSet,
+	maxAssoc int, addrLen int) ValidatorSet {
 	if maxAssoc < 0 || addrLen < 0 {
 		panic("Cannot use negative integer for NewValidatorSet")
 	}

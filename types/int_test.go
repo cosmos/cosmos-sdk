@@ -169,7 +169,8 @@ func TestArithInt(t *testing.T) {
 		}
 
 		for tcnum, tc := range cases {
-			require.Equal(t, tc.nres, tc.ires.Int64(), "Int arithmetic operation does not match with int64 operation. tc #%d", tcnum)
+			require.Equal(t, tc.nres, tc.ires.Int64(),
+				"Int arithmetic operation does not match with int64 operation. tc #%d", tcnum)
 		}
 	}
 
@@ -192,7 +193,8 @@ func TestCompInt(t *testing.T) {
 		}
 
 		for tcnum, tc := range cases {
-			require.Equal(t, tc.nres, tc.ires, "Int comparison operation does not match with int64 operation. tc #%d", tcnum)
+			require.Equal(t, tc.nres, tc.ires,
+				"Int comparison operation does not match with int64 operation. tc #%d", tcnum)
 		}
 	}
 }
@@ -247,7 +249,8 @@ func TestArithUint(t *testing.T) {
 		}
 
 		for tcnum, tc := range cases {
-			require.Equal(t, tc.nres, tc.ires.Uint64(), "Uint arithmetic operation does not match with uint64 operation. tc #%d", tcnum)
+			require.Equal(t, tc.nres, tc.ires.Uint64(),
+				"Uint arithmetic operation does not match with uint64 operation. tc #%d", tcnum)
 		}
 
 		if n2 > n1 {
@@ -263,7 +266,8 @@ func TestArithUint(t *testing.T) {
 		}
 
 		for tcnum, tc := range subs {
-			require.Equal(t, tc.nres, tc.ires.Uint64(), "Uint subtraction does not match with uint64 operation. tc #%d", tcnum)
+			require.Equal(t, tc.nres, tc.ires.Uint64(),
+				"Uint subtraction does not match with uint64 operation. tc #%d", tcnum)
 		}
 	}
 }
@@ -285,7 +289,8 @@ func TestCompUint(t *testing.T) {
 		}
 
 		for tcnum, tc := range cases {
-			require.Equal(t, tc.nres, tc.ires, "Uint comparison operation does not match with uint64 operation. tc #%d", tcnum)
+			require.Equal(t, tc.nres, tc.ires,
+				"Uint comparison operation does not match with uint64 operation. tc #%d", tcnum)
 		}
 	}
 }
@@ -372,9 +377,15 @@ func TestImmutabilityArithInt(t *testing.T) {
 		}
 
 		for j := 0; j < size; j++ {
-			require.Equal(t, 0, bis[j].Cmp(uis[j].BigInt()), "Int is different from *big.Int. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
-			require.Equal(t, NewIntFromBigInt(bis[j]), uis[j], "Int is different from *big.Int. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
-			require.True(t, uis[j].i != bis[j], "Pointer addresses are equal. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
+			require.Equal(t, 0, bis[j].Cmp(uis[j].BigInt()),
+				"Int is different from *big.Int. tc #%d, Int %s, *big.Int %s",
+				j, uis[j].String(), bis[j].String())
+			require.Equal(t, NewIntFromBigInt(bis[j]), uis[j],
+				"Int is different from *big.Int. tc #%d, Int %s, *big.Int %s",
+				j, uis[j].String(), bis[j].String())
+			require.True(t, uis[j].i != bis[j],
+				"Pointer addresses are equal. tc #%d, Int %s, *big.Int %s",
+				j, uis[j].String(), bis[j].String())
 		}
 	}
 }
@@ -470,9 +481,15 @@ func TestImmutabilityArithUint(t *testing.T) {
 		}
 
 		for j := 0; j < size; j++ {
-			require.Equal(t, 0, bis[j].Cmp(uis[j].BigInt()), "Int is different from *big.Int. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
-			require.Equal(t, NewUintFromBigInt(bis[j]), uis[j], "Int is different from *big.Int. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
-			require.True(t, uis[j].i != bis[j], "Pointer addresses are equal. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
+			require.Equal(t, 0, bis[j].Cmp(uis[j].BigInt()),
+				"Int is different from *big.Int. tc #%d, Int %s, *big.Int %s",
+				j, uis[j].String(), bis[j].String())
+			require.Equal(t, NewUintFromBigInt(bis[j]), uis[j],
+				"Int is different from *big.Int. tc #%d, Int %s, *big.Int %s",
+				j, uis[j].String(), bis[j].String())
+			require.True(t, uis[j].i != bis[j],
+				"Pointer addresses are equal. tc #%d, Int %s, *big.Int %s",
+				j, uis[j].String(), bis[j].String())
 		}
 	}
 }
@@ -492,7 +509,9 @@ func TestEncodingRandom(t *testing.T) {
 		err = (&ri).UnmarshalAmino(str)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalAmino * UnmarshalAmino is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
+		require.Equal(t, ni, ri,
+			"MarshalAmino * UnmarshalAmino is not identity. tc #%d, Expected %s, Actual %s",
+			i, ni.String(), ri.String())
 		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
 
 		bz, err := ni.MarshalJSON()
@@ -500,7 +519,9 @@ func TestEncodingRandom(t *testing.T) {
 		err = (&ri).UnmarshalJSON(bz)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalJSON * UnmarshalJSON is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
+		require.Equal(t, ni, ri,
+			"MarshalJSON * UnmarshalJSON is not identity. tc #%d, Expected %s, Actual %s",
+			i, ni.String(), ri.String())
 		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
 	}
 
@@ -514,7 +535,9 @@ func TestEncodingRandom(t *testing.T) {
 		err = (&ri).UnmarshalAmino(str)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalAmino * UnmarshalAmino is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
+		require.Equal(t, ni, ri,
+			"MarshalAmino * UnmarshalAmino is not identity. tc #%d, Expected %s, Actual %s",
+			i, ni.String(), ri.String())
 		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
 
 		bz, err := ni.MarshalJSON()
@@ -522,7 +545,9 @@ func TestEncodingRandom(t *testing.T) {
 		err = (&ri).UnmarshalJSON(bz)
 		require.Nil(t, err)
 
-		require.Equal(t, ni, ri, "MarshalJSON * UnmarshalJSON is not identity. tc #%d, Expected %s, Actual %s", i, ni.String(), ri.String())
+		require.Equal(t, ni, ri,
+			"MarshalJSON * UnmarshalJSON is not identity. tc #%d, Expected %s, Actual %s",
+			i, ni.String(), ri.String())
 		require.True(t, ni.i != ri.i, "Pointer addresses are equal. tc #%d", i)
 	}
 }

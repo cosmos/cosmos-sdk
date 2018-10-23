@@ -105,7 +105,8 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, int
 
 // FOR TESTING PURPOSES -------------------------------------------------
 
-func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
+func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey,
+	stake sdk.Coin) (int64, sdk.Error) {
 	if stake.Denom != stakingToken {
 		return 0, ErrIncorrectStakingToken(k.codespace)
 	}

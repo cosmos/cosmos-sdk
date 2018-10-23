@@ -35,7 +35,8 @@ var DefaultAppInit = AppInit{
 }
 
 // Generate a genesis transaction
-func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (appGenTx, cliPrint json.RawMessage, validator types.GenesisValidator, err error) {
+func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (appGenTx, cliPrint json.RawMessage,
+	validator types.GenesisValidator, err error) {
 	var addr sdk.AccAddress
 	var secret string
 	addr, secret, err = GenerateCoinKey()

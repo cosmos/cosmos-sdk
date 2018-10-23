@@ -115,10 +115,12 @@ func (k Keeper) CheckValid(ctx sdk.Context, difficulty uint64, count uint64) (ui
 	newCount := lastCount + 1
 
 	if count != newCount {
-		return 0, 0, ErrInvalidCount(k.codespace, fmt.Sprintf("invalid count: was %d, should have been %d", count, newCount))
+		return 0, 0, ErrInvalidCount(k.codespace, fmt.Sprintf(
+			"invalid count: was %d, should have been %d", count, newCount))
 	}
 	if difficulty != newDifficulty {
-		return 0, 0, ErrInvalidDifficulty(k.codespace, fmt.Sprintf("invalid difficulty: was %d, should have been %d", difficulty, newDifficulty))
+		return 0, 0, ErrInvalidDifficulty(k.codespace, fmt.Sprintf(
+			"invalid difficulty: was %d, should have been %d", difficulty, newDifficulty))
 	}
 	return newDifficulty, newCount, nil
 }

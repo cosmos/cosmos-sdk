@@ -88,7 +88,8 @@ func New(db dbm.DB) Keybase {
 // It returns an error if it fails to
 // generate a key for the given algo type, or if another key is
 // already stored under the same name.
-func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, mnemonic string, err error) {
+func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info,
+	mnemonic string, err error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
 	}
@@ -117,7 +118,8 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 func (kb dbKeybase) CreateKey(name, mnemonic, passwd string) (info Info, err error) {
 	words := strings.Split(mnemonic, " ")
 	if len(words) != 12 && len(words) != 24 {
-		err = fmt.Errorf("recovering only works with 12 word (fundraiser) or 24 word mnemonics, got: %v words", len(words))
+		err = fmt.Errorf("recovering only works with 12 word (fundraiser) or 24 word mnemonics, got: %v words",
+			len(words))
 		return
 	}
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, defaultBIP39Passphrase)
@@ -145,7 +147,8 @@ func (kb dbKeybase) CreateFundraiserKey(name, mnemonic, passwd string) (info Inf
 	return
 }
 
-func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
+func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info,
+	err error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
 		return

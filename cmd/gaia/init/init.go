@@ -135,8 +135,8 @@ enabled, and the genesis file will not be generated.
 	cmd.Flags().Bool(flagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(flagMoniker, "",
-		"overrides --name flag and set the validator's moniker to a different value; " +
-		"ignored if it runs without the --with-txs flag")
+		"overrides --name flag and set the validator's moniker to a different value; "+
+			"ignored if it runs without the --with-txs flag")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().Bool(flagOverwriteKey, false, "overwrite client's key")
 	cmd.Flags().Bool(flagSkipGenesis, false, "do not create genesis.json")

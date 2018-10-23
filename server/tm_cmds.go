@@ -96,8 +96,9 @@ func printlnJSON(v interface{}) error {
 // UnsafeResetAllCmd - extension of the tendermint command, resets initialization
 func UnsafeResetAllCmd(ctx *Context) *cobra.Command {
 	return &cobra.Command{
-		Use:   "unsafe-reset-all",
-		Short: "Resets the blockchain database, removes address book files, and resets priv_validator.json to the genesis state",
+		Use: "unsafe-reset-all",
+		Short: "Resets the blockchain database, removes address book files, " +
+			"and resets priv_validator.json to the genesis state",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := ctx.Config
 			tcmd.ResetAll(cfg.DBDir(), cfg.P2P.AddrBookFile(), cfg.PrivValidatorFile(), ctx.Logger)

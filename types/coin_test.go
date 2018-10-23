@@ -202,7 +202,8 @@ func TestEqualCoins(t *testing.T) {
 
 	for tcnum, tc := range cases {
 		res := tc.inputOne.IsEqual(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "Equality is differed from expected. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
+		require.Equal(t, tc.expected, res,
+			"Equality is differed from expected. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
 	}
 }
 
@@ -268,11 +269,21 @@ func TestPlusCoins(t *testing.T) {
 		inputTwo Coins
 		expected Coins
 	}{
-		{Coins{{"A", one}, {"B", one}}, Coins{{"A", one}, {"B", one}}, Coins{{"A", two}, {"B", two}}},
-		{Coins{{"A", zero}, {"B", one}}, Coins{{"A", zero}, {"B", zero}}, Coins{{"B", one}}},
-		{Coins{{"A", zero}, {"B", zero}}, Coins{{"A", zero}, {"B", zero}}, Coins(nil)},
-		{Coins{{"A", one}, {"B", zero}}, Coins{{"A", negone}, {"B", zero}}, Coins(nil)},
-		{Coins{{"A", negone}, {"B", zero}}, Coins{{"A", zero}, {"B", zero}}, Coins{{"A", negone}}},
+		{Coins{{"A", one}, {"B", one}},
+		Coins{{"A", one}, {"B", one}},
+		Coins{{"A", two}, {"B", two}}},
+		{Coins{{"A", zero}, {"B", one}},
+		Coins{{"A", zero}, {"B", zero}},
+		Coins{{"B", one}}},
+		{Coins{{"A", zero}, {"B", zero}},
+		Coins{{"A", zero}, {"B", zero}},
+		Coins(nil)},
+		{Coins{{"A", one}, {"B", zero}},
+		Coins{{"A", negone}, {"B", zero}},
+		Coins(nil)},
+		{Coins{{"A", negone}, {"B", zero}},
+		Coins{{"A", zero}, {"B", zero}},
+		Coins{{"A", negone}}},
 	}
 
 	for tcIndex, tc := range cases {
@@ -294,10 +305,14 @@ func TestParse(t *testing.T) {
 		{"", true, nil},
 		{"1foo", true, Coins{{"foo", one}}},
 		{"10bar", true, Coins{{"bar", NewInt(10)}}},
-		{"99bar,1foo", true, Coins{{"bar", NewInt(99)}, {"foo", one}}},
-		{"98 bar , 1 foo  ", true, Coins{{"bar", NewInt(98)}, {"foo", one}}},
-		{"  55\t \t bling\n", true, Coins{{"bling", NewInt(55)}}},
-		{"2foo, 97 bar", true, Coins{{"bar", NewInt(97)}, {"foo", NewInt(2)}}},
+		{"99bar,1foo", true,
+		Coins{{"bar", NewInt(99)}, {"foo", one}}},
+		{"98 bar , 1 foo  ", true,
+		Coins{{"bar", NewInt(98)}, {"foo", one}}},
+		{"  55\t \t bling\n", true,
+		Coins{{"bling", NewInt(55)}}},
+		{"2foo, 97 bar", true,
+		Coins{{"bar", NewInt(97)}, {"foo", NewInt(2)}}},
 		{"5 mycoin,", false, nil},             // no empty coins in a list
 		{"2 3foo, 97 bar", false, nil},        // 3foo is invalid coin name
 		{"11me coin, 12you coin", false, nil}, // no spaces in coin names
@@ -360,9 +375,11 @@ func TestSortCoins(t *testing.T) {
 	}
 
 	for tcIndex, tc := range cases {
-		require.Equal(t, tc.before, tc.coins.IsValid(), "coin validity is incorrect before sorting, tc #%d", tcIndex)
+		require.Equal(t, tc.before, tc.coins.IsValid(),
+			"coin validity is incorrect before sorting, tc #%d", tcIndex)
 		tc.coins.Sort()
-		require.Equal(t, tc.after, tc.coins.IsValid(), "coin validity is incorrect after sorting, tc #%d", tcIndex)
+		require.Equal(t, tc.after, tc.coins.IsValid(),
+			"coin validity is incorrect after sorting, tc #%d", tcIndex)
 	}
 }
 

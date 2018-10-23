@@ -60,7 +60,8 @@ func TestNewDecFromStr(t *testing.T) {
 			require.NotNil(t, err, "error expected, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 		} else {
 			require.Nil(t, err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
-			require.True(t, res.Equal(tc.exp), "equality was incorrect, res %v, exp %v, tc %v", res, tc.exp, tcIndex)
+			require.True(t, res.Equal(tc.exp), "equality was incorrect, res %v, exp %v, tc %v",
+				res, tc.exp, tcIndex)
 		}
 
 		// negative tc
@@ -70,7 +71,8 @@ func TestNewDecFromStr(t *testing.T) {
 		} else {
 			require.Nil(t, err, "unexpected error, decimalStr %v, tc %v", tc.decimalStr, tcIndex)
 			exp := tc.exp.Mul(NewDec(-1))
-			require.True(t, res.Equal(exp), "equality was incorrect, res %v, exp %v, tc %v", res, exp, tcIndex)
+			require.True(t, res.Equal(exp), "equality was incorrect, res %v, exp %v, tc %v",
+				res, exp, tcIndex)
 		}
 	}
 }
@@ -129,8 +131,10 @@ func TestDecsEqual(t *testing.T) {
 	}
 
 	for tcIndex, tc := range tests {
-		require.Equal(t, tc.eq, DecsEqual(tc.d1s, tc.d2s), "equality of decional arrays is incorrect, tc %d", tcIndex)
-		require.Equal(t, tc.eq, DecsEqual(tc.d2s, tc.d1s), "equality of decional arrays is incorrect (converse), tc %d", tcIndex)
+		require.Equal(t, tc.eq, DecsEqual(tc.d1s, tc.d2s),
+			"equality of decional arrays is incorrect, tc %d", tcIndex)
+		require.Equal(t, tc.eq, DecsEqual(tc.d2s, tc.d1s),
+			"equality of decional arrays is incorrect (converse), tc %d", tcIndex)
 	}
 }
 
@@ -140,25 +144,39 @@ func TestArithmetic(t *testing.T) {
 		expMul, expDiv, expAdd, expSub Dec
 	}{
 		// d1          d2            MUL           DIV           ADD           SUB
-		{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
-		{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
-		{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
-		{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
-		{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
+		{NewDec(0), NewDec(0), NewDec(0), NewDec(0),
+		NewDec(0), NewDec(0)},
+		{NewDec(1), NewDec(0), NewDec(0), NewDec(0),
+		NewDec(1), NewDec(1)},
+		{NewDec(0), NewDec(1), NewDec(0), NewDec(0),
+		NewDec(1), NewDec(-1)},
+		{NewDec(0), NewDec(-1), NewDec(0), NewDec(0),
+		NewDec(-1), NewDec(1)},
+		{NewDec(-1), NewDec(0), NewDec(0), NewDec(0),
+		NewDec(-1), NewDec(-1)},
 
-		{NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(2), NewDec(0)},
-		{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1), NewDec(-2), NewDec(0)},
-		{NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(2)},
-		{NewDec(-1), NewDec(1), NewDec(-1), NewDec(-1), NewDec(0), NewDec(-2)},
+		{NewDec(1), NewDec(1), NewDec(1), NewDec(1),
+		NewDec(2), NewDec(0)},
+		{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1),
+		NewDec(-2), NewDec(0)},
+		{NewDec(1), NewDec(-1), NewDec(-1), NewDec(-1),
+		NewDec(0), NewDec(2)},
+		{NewDec(-1), NewDec(1), NewDec(-1), NewDec(-1),
+		NewDec(0), NewDec(-2)},
 
-		{NewDec(3), NewDec(7), NewDec(21), NewDecWithPrec(4285714286, 10), NewDec(10), NewDec(-4)},
-		{NewDec(2), NewDec(4), NewDec(8), NewDecWithPrec(5, 1), NewDec(6), NewDec(-2)},
-		{NewDec(100), NewDec(100), NewDec(10000), NewDec(1), NewDec(200), NewDec(0)},
+		{NewDec(3), NewDec(7), NewDec(21), NewDecWithPrec(4285714286, 10),
+		NewDec(10), NewDec(-4)},
+		{NewDec(2), NewDec(4), NewDec(8), NewDecWithPrec(5, 1),
+		NewDec(6), NewDec(-2)},
+		{NewDec(100), NewDec(100), NewDec(10000), NewDec(1),
+		NewDec(200), NewDec(0)},
 
 		{NewDecWithPrec(15, 1), NewDecWithPrec(15, 1), NewDecWithPrec(225, 2),
 			NewDec(1), NewDec(3), NewDec(0)},
-		{NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4), NewDecWithPrec(1109889, 8),
-			NewDecWithPrec(10009009009, 9), NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1)},
+		{NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4),
+		NewDecWithPrec(1109889, 8),
+			NewDecWithPrec(10009009009, 9), NewDecWithPrec(3666, 4),
+		NewDecWithPrec(3, 1)},
 	}
 
 	for tcIndex, tc := range tests {
@@ -173,7 +191,8 @@ func TestArithmetic(t *testing.T) {
 			require.Panics(t, func() { tc.d1.Quo(tc.d2) })
 		} else {
 			resDiv := tc.d1.Quo(tc.d2)
-			require.True(t, tc.expDiv.Equal(resDiv), "exp %v, res %v, tc %d", tc.expDiv.String(), resDiv.String(), tcIndex)
+			require.True(t, tc.expDiv.Equal(resDiv), "exp %v, res %v, tc %d",
+				tc.expDiv.String(), resDiv.String(), tcIndex)
 		}
 	}
 }

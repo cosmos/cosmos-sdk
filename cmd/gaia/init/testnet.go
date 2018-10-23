@@ -65,7 +65,8 @@ Example:
 		"Home directory of the node's cli configuration")
 
 	cmd.Flags().String(startingIPAddress, "192.168.0.1",
-		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
+		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656,"+
+			"ID1@192.168.0.2:46656...)")
 	return cmd
 }
 

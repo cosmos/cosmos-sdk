@@ -25,7 +25,8 @@ var invalidStrs = []string{
 	types.Bech32PrefixConsPub + "6789",
 }
 
-func testMarshal(t *testing.T, original interface{}, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
+func testMarshal(t *testing.T, original interface{}, res interface{},
+	marshal func() ([]byte, error), unmarshal func([]byte) error) {
 	bz, err := marshal()
 	require.Nil(t, err)
 	err = unmarshal(bz)

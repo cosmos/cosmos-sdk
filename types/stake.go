@@ -71,7 +71,7 @@ type ValidatorSet interface {
 	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
 	TotalPower(Context) Dec                             // total power of the validator set
 
-	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
+	// slash the validator and delegators of the validator, specifying offence height,
 	Slash(Context, ConsAddress, int64, int64, Dec)
 	Jail(Context, ConsAddress)   // jail a validator
 	Unjail(Context, ConsAddress) // unjail a validator
@@ -115,10 +115,15 @@ type StakingHooks interface {
 	OnValidatorModified(ctx Context, address ValAddress) // Must be called when a validator's state changes
 	OnValidatorRemoved(ctx Context, address ValAddress)  // Must be called when a validator is deleted
 
-	OnValidatorBonded(ctx Context, address ConsAddress, operator ValAddress)         // Must be called when a validator is bonded
-	OnValidatorBeginUnbonding(ctx Context, address ConsAddress, operator ValAddress) // Must be called when a validator begins unbonding
+	// Must be called when a validator is bonded
+	OnValidatorBonded(ctx Context, address ConsAddress, operator ValAddress)
+	// Must be called when a validator begins unbonding
+	OnValidatorBeginUnbonding(ctx Context, address ConsAddress, operator ValAddress)
 
-	OnDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is created
-	OnDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified
-	OnDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is removed
+	// Must be called when a delegation is created
+	OnDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)
+	// Must be called when a delegation's shares are modified
+	OnDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress)
+	// Must be called when a delegation is removed
+	OnDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress)
 }

@@ -12,7 +12,8 @@ func NewCodespacer() *Codespacer {
 	}
 }
 
-// RegisterNext reserves and returns the next available codespace, starting from a default, and panics if the maximum codespace is reached
+// RegisterNext reserves and returns the next available codespace, starting from a default,
+// and panics if the maximum codespace is reached
 func (c *Codespacer) RegisterNext(codespace CodespaceType) CodespaceType {
 	for {
 		if !c.reserved[codespace] {

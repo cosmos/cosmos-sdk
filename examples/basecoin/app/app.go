@@ -163,7 +163,9 @@ func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) 
 // ExportAppStateAndValidators implements custom application logic that exposes
 // various parts of the application's state and set of validators. An error is
 // returned if any step getting the state or set of validators fails.
-func (app *BasecoinApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
+func (app *BasecoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
+	validators []tmtypes.GenesisValidator, err error) {
+
 	ctx := app.NewContext(true, abci.Header{})
 	accounts := []*types.GenesisAccount{}
 

@@ -34,7 +34,8 @@ func executeInit(t *testing.T) {
 		chainID string
 		initRes map[string]json.RawMessage
 	)
-	_, stderr := tests.ExecuteT(t, fmt.Sprintf("basecoind --home=%s --home-client=%s init --name=test", basecoindHome, basecliHome), app.DefaultKeyPass)
+	_, stderr := tests.ExecuteT(t, fmt.Sprintf("basecoind --home=%s --home-client=%s init --name=test",
+		basecoindHome, basecliHome), app.DefaultKeyPass)
 	err := json.Unmarshal([]byte(stderr), &initRes)
 	require.NoError(t, err)
 	err = json.Unmarshal(initRes["chain_id"], &chainID)
@@ -42,7 +43,8 @@ func executeInit(t *testing.T) {
 }
 
 func executeStart(t *testing.T, servAddr, port string) {
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("basecoind start --home=%s --rpc.laddr=%v", basecoindHome, servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("basecoind start --home=%s --rpc.laddr=%v",
+		basecoindHome, servAddr))
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
 }

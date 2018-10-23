@@ -19,9 +19,9 @@ func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) Vali
 	return ValidatorDistInfo{
 		OperatorAddr:            operatorAddr,
 		FeePoolWithdrawalHeight: currentHeight,
-		Pool:                    DecCoins{},
-		PoolCommission:          DecCoins{},
-		DelAccum:                NewTotalAccum(currentHeight),
+		Pool:           DecCoins{},
+		PoolCommission: DecCoins{},
+		DelAccum:       NewTotalAccum(currentHeight),
 	}
 }
 
@@ -29,6 +29,12 @@ func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) Vali
 func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk.Dec) ValidatorDistInfo {
 	vi.DelAccum = vi.DelAccum.UpdateForNewHeight(height, totalDelShares)
 	return vi
+}
+
+// Get the calculated accum of this validator at the provided height
+func (vi ValidatorDistInfo) GetAccum(height int64, vdTokens sdk.Dec) sdk.Dec {
+	blocks := height - vi.FeePoolWithdrawalHeight
+	return vdTokens.MulInt(sdk.NewInt(blocks))
 }
 
 // Move any available accumulated fees in the FeePool to the validator's pool
@@ -50,9 +56,8 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	}
 
 	// update the validators pool
-	blocks := height - vi.FeePoolWithdrawalHeight
+	accum := vi.GetAccum(height, vdTokens)
 	vi.FeePoolWithdrawalHeight = height
-	accum := vdTokens.MulInt(sdk.NewInt(blocks))
 
 	if accum.GT(fp.TotalValAccum.Accum) {
 		panic("individual accum should never be greater than the total")

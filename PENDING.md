@@ -55,6 +55,7 @@ BREAKING CHANGES
       * [x/slashing] Truncate withdrawals (unbonding, redelegation) and burn change
       * [x/mock/simulation] Ensure the simulation cannot set a proposer address of nil
       * [x/mock/simulation] Add more event logs on begin block / end block for clarity
+      * [x/mock/simulation] Correctly set validator power in abci.RequestBeginBlock
       * [x/minting] Correctly call stake keeper to track inflated supply
       * [x/distribution] Sanity check for nonexistent rewards
       * [x/distribution] Truncate withdrawals and return change to the community pool

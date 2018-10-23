@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 )
 
@@ -119,12 +118,5 @@ func SimulateMsgWithdrawValidatorRewardsAll(m auth.AccountKeeper, k distribution
 
 		action = fmt.Sprintf("TestMsgWithdrawValidatorRewardsAll: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
-	}
-}
-
-// Setup
-// nolint: errcheck
-func Setup(mapp *mock.App, k distribution.Keeper) simulation.RandSetup {
-	return func(r *rand.Rand, accs []simulation.Account) {
 	}
 }

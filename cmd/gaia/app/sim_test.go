@@ -126,7 +126,6 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
-		distributionsim.AllInvariants(app.bankKeeper, app.distrKeeper, app.accountKeeper),
 		govsim.AllInvariants(),
 		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
 		slashingsim.AllInvariants(),

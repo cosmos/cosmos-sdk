@@ -23,6 +23,7 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 
 // Withdrawal all validator rewards
 func (k Keeper) onValidatorModified(ctx sdk.Context, addr sdk.ValAddress) {
+	// This doesn't need to be run at genesis
 	if ctx.BlockHeight() > 0 {
 		if err := k.WithdrawValidatorRewardsAll(ctx, addr); err != nil {
 			panic(err)

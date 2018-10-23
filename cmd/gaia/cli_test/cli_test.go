@@ -289,7 +289,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 		fmt.Sprintf("gaiacli query unbonding-delegations-from-validator %s --output=json %v",
 			sdk.ValAddress(barAddr), flags))
 	require.Len(t, validatorUbds, 1)
-	require.Equal(t, "1.0000000000", validatorUbds[0].Balance.Amount.String())
+	require.Equal(t, "1", validatorUbds[0].Balance.Amount.String())
 
 	params := executeGetParams(t, fmt.Sprintf("gaiacli query parameters --output=json %v", flags))
 	require.True(t, defaultParams.Equal(params))

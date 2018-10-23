@@ -77,7 +77,7 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 
 // TODO make keybase take a database not load from the directory
 
-// GetKeyBase initializes a keybase based on the configuration.
+// GetKeyBase initializes a read-only KeyBase based on the configuration. 
 func GetKeyBase() (keys.Keybase, error) {
 	rootDir := viper.GetString(cli.HomeFlag)
 	return GetKeyBaseFromDir(rootDir)

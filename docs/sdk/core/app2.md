@@ -28,11 +28,11 @@ type MsgIssue struct {
 }
 
 // Implements Msg.
-func (msg MsgIssue) Type() string { return "issue" }
+func (msg MsgIssue) Route() string { return "issue" }
 ```
 
-Note the `Type()` method returns `"issue"`, so this message is of a different
-type and will be executed by a different handler than `MsgSend`. The other
+Note the `Route()` method returns `"issue"`, so this message is of a different
+route and will be executed by a different handler than `MsgSend`. The other
 methods for `MsgIssue` are similar to `MsgSend`.
 
 ## Handler

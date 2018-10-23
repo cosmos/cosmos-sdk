@@ -426,6 +426,11 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 	}
 }
 
+// CloseDB releases the lock and closes the storage backend.
+func (kb dbKeybase) CloseDB() {
+	kb.db.Close()
+}
+
 func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string) Info {
 	// encrypt private key using passphrase
 	privArmor := mintkey.EncryptArmorPrivKey(priv, passphrase)

@@ -25,7 +25,7 @@ func NewHandler(k Keeper) sdk.Handler {
 		case MsgQuiz:
 			return handleMsgQuiz(ctx, k, msg)
 		default:
-			errMsg := fmt.Sprintf("Unrecognized cool Msg type: %v", msg.Name())
+			errMsg := fmt.Sprintf("Unrecognized cool Msg type: %v", msg.Type())
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

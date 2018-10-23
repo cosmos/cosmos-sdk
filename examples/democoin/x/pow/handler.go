@@ -10,7 +10,7 @@ func (pk Keeper) Handler(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 	case MsgMine:
 		return handleMsgMine(ctx, pk, msg)
 	default:
-		errMsg := "Unrecognized pow Msg type: " + msg.Name()
+		errMsg := "Unrecognized pow Msg type: " + msg.Type()
 		return sdk.ErrUnknownRequest(errMsg).Result()
 	}
 }

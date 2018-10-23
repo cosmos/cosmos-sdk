@@ -26,7 +26,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	buf := client.BufferStdin()
-	kb, err := GetKeyBase()
+	kb, err := GetKeyBaseWithWritePerm()
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kb, err = GetKeyBase()
+	kb, err = GetKeyBaseWithWritePerm()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

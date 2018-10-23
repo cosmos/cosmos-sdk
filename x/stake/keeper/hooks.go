@@ -11,9 +11,9 @@ func (k Keeper) OnValidatorCreated(ctx sdk.Context, address sdk.ValAddress) {
 		k.hooks.OnValidatorCreated(ctx, address)
 	}
 }
-func (k Keeper) OnValidatorCommissionChange(ctx sdk.Context, address sdk.ValAddress) {
+func (k Keeper) OnValidatorModified(ctx sdk.Context, address sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorCommissionChange(ctx, address)
+		k.hooks.OnValidatorModified(ctx, address)
 	}
 }
 
@@ -23,15 +23,15 @@ func (k Keeper) OnValidatorRemoved(ctx sdk.Context, address sdk.ValAddress) {
 	}
 }
 
-func (k Keeper) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
+func (k Keeper) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, operator sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, address)
+		k.hooks.OnValidatorBonded(ctx, address, operator)
 	}
 }
 
-func (k Keeper) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress) {
+func (k Keeper) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress, operator sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorBeginUnbonding(ctx, address)
+		k.hooks.OnValidatorBeginUnbonding(ctx, address, operator)
 	}
 }
 

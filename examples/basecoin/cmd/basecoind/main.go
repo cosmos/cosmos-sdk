@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tendermint/tendermint/p2p"
 	"io"
 	"os"
+
+	"github.com/tendermint/tendermint/p2p"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
@@ -95,7 +96,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 
 			toPrint := struct {
 				ChainID    string          `json:"chain_id"`
-				NodeID     string          `json:"noide_id"`
+				NodeID     string          `json:"node_id"`
 				AppMessage json.RawMessage `json:"app_message"`
 			}{
 				chainID,

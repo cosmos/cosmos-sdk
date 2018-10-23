@@ -117,7 +117,7 @@ func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
 func GetCmdQueryValidatorUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unbonding-delegations-from-validator [operator-addr]",
+		Use:   "unbonding-delegations-from [operator-addr]",
 		Short: "Query all unbonding delegatations from a validator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -152,7 +152,7 @@ func GetCmdQueryValidatorUnbondingDelegations(storeName string, cdc *codec.Codec
 // GetCmdQueryValidatorRedelegations implements the query all redelegatations from a validator command.
 func GetCmdQueryValidatorRedelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "redelegations-from-validator [operator-addr]",
+		Use:   "redelegations-from [operator-addr]",
 		Short: "Query all outgoing redelegatations from a validator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

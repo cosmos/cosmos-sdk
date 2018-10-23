@@ -273,7 +273,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// sanity check
 	if len(req.Validators) > 0 {
 		if len(req.Validators) != len(validators) {
-			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d) ", len(req.Validators), len(validators)))
+			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d) ",
+				len(req.Validators), len(validators)))
 		}
 		sort.Sort(abci.ValidatorUpdates(req.Validators))
 		sort.Sort(abci.ValidatorUpdates(validators))
@@ -290,7 +291,9 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 }
 
 // export the state of gaia for a genesis file
-func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
+func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator,
+	err error) {
+
 	ctx := app.NewContext(true, abci.Header{})
 
 	// iterate to get the accounts

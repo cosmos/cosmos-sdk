@@ -61,7 +61,8 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
+func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
+	name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
 	_, adjusted, err := simulateMsgs(txBldr, cliCtx, name, msgs)
 	if err != nil {
 		return txBldr, err
@@ -71,7 +72,8 @@ func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name 
 
 // CalculateGas simulates the execution of a transaction and returns
 // both the estimate obtained by the query and the adjusted amount.
-func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *amino.Codec, txBytes []byte, adjustment float64) (estimate, adjusted int64, err error) {
+func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *amino.Codec,
+	txBytes []byte, adjustment float64) (estimate, adjusted int64, err error) {
 	// run a simulation (via /app/simulate query) to
 	// estimate gas and update TxBuilder accordingly
 	rawRes, err := queryFunc("/app/simulate", txBytes)
@@ -108,7 +110,9 @@ func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, stdTx auth.StdTx, appendSig bool, offline bool) (auth.StdTx, error) {
+func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, stdTx auth.StdTx,
+	appendSig bool, offline bool) (auth.StdTx, error) {
+
 	var signedStdTx auth.StdTx
 
 	keybase, err := keys.GetKeyBase()
@@ -123,7 +127,8 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 
 	// Check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		fmt.Fprintf(os.Stderr, "WARNING: The generated transaction's intended signer does not match the given signer: '%v'\n", name)
+		fmt.Fprintf(os.Stderr,
+			"WARNING: The generated transaction's intended signer does not match the given signer: '%v'\n", name)
 	}
 
 	if !offline && txBldr.AccountNumber == 0 {
@@ -151,7 +156,8 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 
 // nolint
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted int64, err error) {
+func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
+	msgs []sdk.Msg) (estimated, adjusted int64, err error) {
 	txBytes, err := txBldr.BuildWithPubKey(name, msgs)
 	if err != nil {
 		return
@@ -206,7 +212,8 @@ func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 
 // buildUnsignedStdTx builds a StdTx as per the parameters passed in the
 // contexts. Gas is automatically estimated if gas wanted is set to 0.
-func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
+func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
+	msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	txBldr, err = prepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
 		return
@@ -214,7 +221,8 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	return buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
 }
 
-func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
+func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
+	msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	if txBldr.SimulateGas {
 		var name string
 		name, err = cliCtx.GetFromName()

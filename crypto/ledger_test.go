@@ -11,6 +11,7 @@ import (
 
 var ledgerEnabledEnv = "TEST_WITH_LEDGER"
 
+// nolint: lll
 func TestRealLedgerSecp256k1(t *testing.T) {
 	if os.Getenv(ledgerEnabledEnv) == "" {
 		t.Skip(fmt.Sprintf("Set '%s' to run code on a real ledger", ledgerEnabledEnv))

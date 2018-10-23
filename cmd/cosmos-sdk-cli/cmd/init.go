@@ -24,7 +24,8 @@ var replacer *strings.Replacer
 var remoteProjectPath string
 
 func init() {
-	initCmd.Flags().StringVarP(&remoteProjectPath, "project-path", "p", "", "Remote project path. eg: github.com/your_user_name/project_name")
+	initCmd.Flags().StringVarP(&remoteProjectPath, "project-path", "p", "",
+		"Remote project path. eg: github.com/your_user_name/project_name")
 	rootCmd.AddCommand(initCmd)
 }
 

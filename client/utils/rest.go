@@ -187,7 +187,8 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 //
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
-func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
+func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext,
+	baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
 	simulateGas, gas, err := client.ReadGasFlag(baseReq.Gas)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())

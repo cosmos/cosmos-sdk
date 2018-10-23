@@ -48,7 +48,8 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 		case flagAsync:
 			res, err = cliCtx.BroadcastTxAsync(m.TxBytes)
 		default:
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, "unsupported return type. supported types: block, sync, async")
+			utils.WriteErrorResponse(w, http.StatusInternalServerError,
+				"unsupported return type. supported types: block, sync, async")
 			return
 		}
 		if err != nil {

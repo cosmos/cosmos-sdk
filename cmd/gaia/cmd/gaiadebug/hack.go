@@ -64,10 +64,12 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 	// The following powerKey was there, but the corresponding "trouble" validator did not exist.
 	// So here we do a binary search on the past states to find when the powerKey first showed up ...
 
-	// operator of the validator the bonds, gets jailed, later unbonds, and then later is still found in the bypower store
+	// operator of the validator the bonds, gets jailed, later unbonds,
+	// and then later is still found in the bypower store
 	trouble := hexToBytes("D3DC0FF59F7C3B548B7AFA365561B87FD0208AF8")
 	// this is his "bypower" key
-	powerKey := hexToBytes("05303030303030303030303033FFFFFFFFFFFF4C0C0000FFFED3DC0FF59F7C3B548B7AFA365561B87FD0208AF8")
+	powerKey := hexToBytes(
+		"05303030303030303030303033FFFFFFFFFFFF4C0C0000FFFED3DC0FF59F7C3B548B7AFA365561B87FD0208AF8")
 
 	topHeight := lastBlockHeight
 	bottomHeight := int64(0)
@@ -175,8 +177,10 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace), app.RegisterCodespace(stake.DefaultCodespace))
-	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), app.RegisterCodespace(slashing.DefaultCodespace))
+	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper,
+		app.paramsKeeper.Subspace(stake.DefaultParamspace), app.RegisterCodespace(stake.DefaultCodespace))
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper,
+		app.paramsKeeper.Subspace(slashing.DefaultParamspace), app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes
 	app.Router().
@@ -240,7 +244,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	var genesisState gaia.GenesisState
 	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
 	if err != nil {
-		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
+		// TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
+		panic(err)
 	}
 
 	// load the accounts
@@ -252,7 +257,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// load the initial stake information
 	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 	if err != nil {
-		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
+		// TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
+		panic(err)
 	}
 
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)

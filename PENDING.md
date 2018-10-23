@@ -16,10 +16,13 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+    * [gaia-lite] [\#2182] Added LCD endpoint for querying redelegations
 
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+
+    * [\#2182] [x/stake] Added querier for querying a single redelegation
 
 * SDK
 

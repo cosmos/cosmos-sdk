@@ -23,11 +23,11 @@ func NewDelegationDistInfo(delegatorAddr sdk.AccAddress, valOperatorAddr sdk.Val
 
 // Withdraw rewards from delegator.
 // Among many things, it does:
-// * updates validator info's total del accum.
+// * updates validator info's total del accum
 // * calls vi.TakeFeePoolRewards, which:
-//   * updates validator info's FeePoolWithdrawalHeight, thus setting accum to 0.
-//   * updates fee pool to latest height and total val accum w/ given totalBonded.
-//   (see comment on TakeFeePoolRewards for more info).
+//   * updates validator info's FeePoolWithdrawalHeight, thus setting accum to 0
+//   * updates fee pool to latest height and total val accum w/ given totalBonded
+//   (see comment on TakeFeePoolRewards for more info)
 func (di DelegationDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	height int64, totalBonded, vdTokens, totalDelShares, delegatorShares,
 	commissionRate sdk.Dec) (DelegationDistInfo, ValidatorDistInfo, FeePool, DecCoins) {

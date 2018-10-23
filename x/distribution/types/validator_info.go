@@ -31,15 +31,15 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk
 	return vi
 }
 
-// Move any available accumulated fees in the FeePool to the validator's pool.
-// * updates validator info's FeePoolWithdrawalHeight, thus setting accum to 0.
-// * updates fee pool to latest height and total val accum w/ given totalBonded.
+// Move any available accumulated fees in the FeePool to the validator's pool
+// - updates validator info's FeePoolWithdrawalHeight, thus setting accum to 0
+// - updates fee pool to latest height and total val accum w/ given totalBonded
 // This is the only way to update the FeePool's validator TotalAccum.
 // NOTE: This algorithm works as long as TakeFeePoolRewards is called after every power change.
-// - called in ValidationDistInfo.WithdrawCommission.
-// - called in DelegationDistInfo.WithdrawRewards.
+// - called in ValidationDistInfo.WithdrawCommission
+// - called in DelegationDistInfo.WithdrawRewards
 // NOTE: When a delegator unbonds, say, onDelegationSharesModified ->
-//       WithdrawDelegationReward -> WithdrawRewards.
+//       WithdrawDelegationReward -> WithdrawRewards
 func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBonded, vdTokens,
 	commissionRate sdk.Dec) (ValidatorDistInfo, FeePool) {
 

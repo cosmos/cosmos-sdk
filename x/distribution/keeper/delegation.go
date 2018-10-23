@@ -69,9 +69,9 @@ func (k Keeper) RemoveDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAd
 
 //___________________________________________________________________________________________
 
-// Withdraw all the rewards for a single delegation.
+// Withdraw all the rewards for a single delegation
 // NOTE: This gets called "onDelegationSharesModified",
-// meaning any changes to bonded coins.
+// meaning any changes to bonded coins
 func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) sdk.Error {
 

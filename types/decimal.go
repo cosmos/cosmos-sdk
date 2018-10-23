@@ -247,7 +247,7 @@ func (d Dec) QuoInt(i Int) Dec {
 	return Dec{mul}
 }
 
-// is integer, e.g. decimals are zero.
+// is integer, e.g. decimals are zero
 func (d Dec) IsInteger() bool {
 	return new(big.Int).Rem(d.Int, precisionReuse).Sign() == 0
 }

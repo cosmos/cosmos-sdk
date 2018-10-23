@@ -108,18 +108,13 @@ func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) 
 	return
 }
 
-func (k Keeper) powerToBytes(power sdk.Dec) []byte {
-	bz := k.cdc.MustMarshalBinary(power)
-	return bz
-}
-
 // Set the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power sdk.Dec) {
 	if !power.IsInteger() {
 		panic("input power must be whole integer")
 	}
 	store := ctx.KVStore(k.storeKey)
-	bz := k.powerToBytes(power)
+	bz := k.cdc.MustMarshalBinary(power)
 	store.Set(GetLastValidatorPowerKey(operator), bz)
 }
 

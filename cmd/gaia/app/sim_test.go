@@ -17,7 +17,7 @@ import (
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distributionsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
+	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govsim "github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -108,10 +108,10 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
 		{100, banksim.SingleInputSendMsg(app.accountKeeper, app.bankKeeper)},
-		{50, distributionsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
-		{50, distributionsim.SimulateMsgWithdrawDelegatorRewardsAll(app.accountKeeper, app.distrKeeper)},
-		{50, distributionsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
-		{50, distributionsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountKeeper, app.distrKeeper)},
+		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
+		{50, distrsim.SimulateMsgWithdrawDelegatorRewardsAll(app.accountKeeper, app.distrKeeper)},
+		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
+		{50, distrsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountKeeper, app.distrKeeper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
 		{100, stakesim.SimulateMsgCreateValidator(app.accountKeeper, app.stakeKeeper)},

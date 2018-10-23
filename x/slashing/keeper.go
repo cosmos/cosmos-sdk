@@ -37,8 +37,8 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspa
 	return keeper
 }
 
-// handle a validator signing two blocks at the same height.
-// power: power of the double-signing validator at the height of infraction.
+// handle a validator signing two blocks at the same height
+// power: power of the double-signing validator at the height of infraction
 func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
@@ -71,9 +71,9 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	revisedFraction := k.capBySlashingPeriod(ctx, consAddr, fraction, distributionHeight)
 	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
 
-	// Slash validator.
+	// Slash validator
 	// `power` is the int64 power of the validator as provided to/by
-	// Tendermint.  This value is validator.Tokens as sent to Tendermint via
+	// Tendermint. This value is validator.Tokens as sent to Tendermint via
 	// ABCI, and now received as evidence.
 	// The revisedFraction (which is the new fraction to be slashed) is passed
 	// in separately to separately slash unbonding and rebonding delegations.

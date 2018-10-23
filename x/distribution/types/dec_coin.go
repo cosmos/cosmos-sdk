@@ -165,7 +165,7 @@ func (coins DecCoins) AmountOf(denom string) sdk.Dec {
 		}
 		return sdk.ZeroDec()
 	default:
-		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
+		midIdx := len(coins) / 2 // binary search
 		coin := coins[midIdx]
 		if denom < coin.Denom {
 			return coins[:midIdx].AmountOf(denom)

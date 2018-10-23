@@ -1,4 +1,5 @@
 // +build cli_test
+// nolint: lll
 
 package clitest
 

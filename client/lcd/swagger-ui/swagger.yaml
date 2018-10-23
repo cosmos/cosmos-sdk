@@ -920,6 +920,54 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
+  /stake/validators/{validatorAddr}/unbonding_delegations:
+    parameters:
+    - in: path
+      name: validatorAddr
+      description: Bech32 OperatorAddress of validator
+      required: true
+      type: string
+    get:
+      summary: Get all unbonding delegations from a validator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/UnbondingDelegation"
+        400:
+          description: Invalid validator address
+        500:
+          description: Internal Server Error
+  /stake/validators/{validatorAddr}/redelegations:
+    parameters:
+    - in: path
+      name: validatorAddr
+      description: Bech32 OperatorAddress of validator
+      required: true
+      type: string
+    get:
+      summary: Get all outgoing redelegations from a validator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Redelegation"
+        400:
+          description: Invalid validator address
+        500:
+          description: Internal Server Error
   /stake/pool:
     get:
       summary: Get the current state of the staking pool

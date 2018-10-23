@@ -81,7 +81,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakeGenesis.Pool.LooseTokens = sdk.NewDec(int64(amt*250) + (numInitiallyBonded * amt))
+	stakeGenesis.Pool.LooseTokens = sdk.NewDec(amt*250 + (numInitiallyBonded * amt))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
 	mintGenesis := mint.DefaultGenesisState()

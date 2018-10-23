@@ -21,7 +21,6 @@ const (
 	QueryDelegator                     = "delegator"
 	QueryDelegation                    = "delegation"
 	QueryUnbondingDelegation           = "unbondingDelegation"
-	QueryRedelegation                  = "redelegation"
 	QueryDelegatorValidators           = "delegatorValidators"
 	QueryDelegatorValidator            = "delegatorValidator"
 	QueryPool                          = "pool"
@@ -91,14 +90,6 @@ type QueryValidatorParams struct {
 type QueryBondsParams struct {
 	DelegatorAddr sdk.AccAddress
 	ValidatorAddr sdk.ValAddress
-}
-
-// defines the params for the following queries:
-// - 'custom/stake/redelegation'
-type QueryRedelegationParams struct {
-	DelegatorAddr    sdk.AccAddress
-	SrcValidatorAddr sdk.ValAddress
-	DstValidatorAddr sdk.ValAddress
 }
 
 func queryValidators(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
@@ -307,26 +298,6 @@ func queryUnbondingDelegation(ctx sdk.Context, cdc *codec.Codec, req abci.Reques
 	}
 
 	res, errRes = codec.MarshalJSONIndent(cdc, unbond)
-	if errRes != nil {
-		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
-	}
-	return res, nil
-}
-
-func queryRedelegation(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryRedelegationParams
-
-	errRes := cdc.UnmarshalJSON(req.Data, &params)
-	if errRes != nil {
-		return []byte{}, sdk.ErrUnknownRequest(string(req.Data))
-	}
-
-	redel, found := k.GetRedelegation(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
-	if !found {
-		return []byte{}, types.ErrNoRedelegation(types.DefaultCodespace)
-	}
-
-	res, errRes = codec.MarshalJSONIndent(cdc, redel)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
 	}

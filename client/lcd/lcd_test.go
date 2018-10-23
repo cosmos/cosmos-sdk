@@ -581,7 +581,7 @@ func TestBonding(t *testing.T) {
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, "30.0000000000", delegatorDels[0].GetShares().String())
 
-	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
+	redelegation := getDelegatorRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
 	require.Len(t, redelegation, 1)
 	require.Equal(t, "30", redelegation[0].Balance.Amount.String())
 
@@ -589,7 +589,7 @@ func TestBonding(t *testing.T) {
 	require.Len(t, delegatorUbds, 1)
 	require.Equal(t, "30", delegatorUbds[0].Balance.Amount.String())
 
-	delegatorReds := getDelegatorRedelegations(t, port, addr)
+	delegatorReds := getDelegatorRedelegations(t, port, addr, nil, nil)
 	require.Len(t, delegatorReds, 1)
 	require.Equal(t, "30", delegatorReds[0].Balance.Amount.String())
 
@@ -997,7 +997,6 @@ func getUndelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, va
 	return unbond
 }
 
-<<<<<<< HEAD
 func getDelegatorDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.Delegation {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/delegations", delegatorAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -1008,17 +1007,6 @@ func getDelegatorDelegations(t *testing.T, port string, delegatorAddr sdk.AccAdd
 	require.Nil(t, err)
 
 	return dels
-=======
-func getRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, srcValidatorAddr sdk.ValAddress, dstValidatorAddr sdk.ValAddress) []stake.Redelegation {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations?validator_from=%s&validator_to=%s", delegatorAddr, srcValidatorAddr, dstValidatorAddr), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var redels []stake.Redelegation
-	err := cdc.UnmarshalJSON([]byte(body), &redels)
-	require.Nil(t, err)
-
-	return redels
->>>>>>> use query params
 }
 
 func getDelegatorUnbondingDelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.UnbondingDelegation {
@@ -1033,16 +1021,27 @@ func getDelegatorUnbondingDelegations(t *testing.T, port string, delegatorAddr s
 	return ubds
 }
 
-func getDelegatorRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.Redelegation {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations", delegatorAddr), nil)
+func getDelegatorRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, srcValidatorAddr sdk.ValAddress, dstValidatorAddr sdk.ValAddress) []stake.Redelegation {
+	var res *http.Response
+	var body string
+
+	if srcValidatorAddr.Empty() && dstValidatorAddr.Empty() {
+		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations", delegatorAddr), nil)
+	} else if !srcValidatorAddr.Empty() && dstValidatorAddr.Empty() {
+		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations?validator_from=%s", delegatorAddr, srcValidatorAddr), nil)
+	} else if srcValidatorAddr.Empty() && !dstValidatorAddr.Empty() {
+		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations?validator_to=%s", delegatorAddr, dstValidatorAddr), nil)
+	} else {
+		res, body = Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations?validator_from=%s&validator_to=%s", delegatorAddr, srcValidatorAddr, dstValidatorAddr), nil)
+	}
+
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var reds []stake.Redelegation
-
-	err := cdc.UnmarshalJSON([]byte(body), &reds)
+	var redels []stake.Redelegation
+	err := cdc.UnmarshalJSON([]byte(body), &redels)
 	require.Nil(t, err)
 
-	return reds
+	return redels
 }
 
 func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []tx.Info {

@@ -197,14 +197,14 @@ func queryDelegatorUnbondingDelegations(ctx sdk.Context, cdc *codec.Codec, req a
 }
 
 func queryDelegatorRedelegations(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
-	var params QueryDelegatorParams
+	var params QueryRedelegationParams
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress("")
 	}
 
-	redelegations := k.GetAllRedelegations(ctx, params.DelegatorAddr)
+	redelegations := k.GetAllRedelegations(ctx, params.DelegatorAddr, params.SrcValidatorAddr, params.DstValidatorAddr)
 
 	res, errRes = codec.MarshalJSONIndent(cdc, redelegations)
 	if errRes != nil {

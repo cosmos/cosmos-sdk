@@ -9,32 +9,11 @@ import (
 )
 
 type (
-<<<<<<< HEAD
-	Keeper               = keeper.Keeper
-	Validator            = types.Validator
-	Description          = types.Description
-	Commission           = types.Commission
-	Delegation           = types.Delegation
-	UnbondingDelegation  = types.UnbondingDelegation
-	Redelegation         = types.Redelegation
-	Params               = types.Params
-	Pool                 = types.Pool
-	MsgCreateValidator   = types.MsgCreateValidator
-	MsgEditValidator     = types.MsgEditValidator
-	MsgDelegate          = types.MsgDelegate
-	MsgBeginUnbonding    = types.MsgBeginUnbonding
-	MsgBeginRedelegate   = types.MsgBeginRedelegate
-	GenesisState         = types.GenesisState
-	QueryDelegatorParams = querier.QueryDelegatorParams
-	QueryValidatorParams = querier.QueryValidatorParams
-	QueryBondsParams     = querier.QueryBondsParams
-=======
 	Keeper                  = keeper.Keeper
 	Validator               = types.Validator
 	Description             = types.Description
 	Commission              = types.Commission
 	Delegation              = types.Delegation
-	DelegationSummary       = types.DelegationSummary
 	UnbondingDelegation     = types.UnbondingDelegation
 	Redelegation            = types.Redelegation
 	Params                  = types.Params
@@ -49,7 +28,6 @@ type (
 	QueryValidatorParams    = querier.QueryValidatorParams
 	QueryBondsParams        = querier.QueryBondsParams
 	QueryRedelegationParams = querier.QueryRedelegationParams
->>>>>>> LCD route
 )
 
 var (

@@ -94,6 +94,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// validator still in the validator set, so delete from the copy
 		delete(last, operatorBytes)
 
+		fmt.Println(
+			cmn.Cyan(
+				fmt.Sprintf("TOTAL ADD %v pow: %v",
+					operator, newPower),
+			),
+		)
+
 		// keep count
 		count++
 		totalPower += newPower

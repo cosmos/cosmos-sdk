@@ -107,10 +107,12 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 	}
 }
 
+// GetWithSubkey get parameter with a key and a subkey
 func (s Subspace) GetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, ptr interface{}) {
 	s.Get(ctx, concat(key, subkey), ptr)
 }
 
+// GetWithSubkeyIfExists do not modify ptr if the stored parameter is nil
 func (s Subspace) GetWithSubkeyIfExists(ctx sdk.Context, key []byte, subkey []byte, ptr interface{}) {
 	s.GetIfExists(ctx, concat(key, subkey), ptr)
 }
@@ -168,6 +170,8 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 
 }
 
+// SetWithSubkey set a parameter with a key and subkey
+// Checks parameter type only over the key
 func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, param interface{}) {
 	store := s.kvStore(ctx)
 

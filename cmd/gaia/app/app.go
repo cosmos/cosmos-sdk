@@ -222,6 +222,8 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	}
 }
 
+// antehandler for gaia tx validation
+// checks account validity and circuit breaker validity
 func (app *GaiaApp) NewAnteHandler() sdk.AnteHandler {
 	authante := auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper)
 	circuitante := circuit.NewAnteHandler(app.circuitKeeper)

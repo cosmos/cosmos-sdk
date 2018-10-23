@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"io/ioutil"
 
@@ -62,6 +63,9 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		}
 
 		name := viper.GetString(client.FlagName)
+		if name == "" {
+			return errors.New("required flag \"name\" has not been set")
+		}
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(decoder)
 		txBldr := authtxb.NewTxBuilderFromCLI()
 

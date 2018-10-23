@@ -55,6 +55,17 @@ func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 	store.Set(FeePoolKey, b)
 }
 
+// get the total validator accum for the ctx height
+// in the fee pool
+func (k Keeper) GetFeePoolValAccum(ctx sdk.Context) sdk.Dec {
+
+	// withdraw self-delegation
+	height := ctx.BlockHeight()
+	totalPower := k.stakeKeeper.GetLastTotalPower(ctx)
+	fp := k.GetFeePool(ctx)
+	return fp.GetTotalValAccum(height, totalPower)
+}
+
 //______________________________________________________________________
 
 // set the proposer public key for this block

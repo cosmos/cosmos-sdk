@@ -34,6 +34,12 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk
 	return vi
 }
 
+// Get the calculated accum of this validator at the provided height
+func (vi ValidatorDistInfo) GetAccum(height int64, vdTokens sdk.Dec) sdk.Dec {
+	blocks := height - vi.FeePoolWithdrawalHeight
+	return vdTokens.MulInt(sdk.NewInt(blocks))
+}
+
 // Move any available accumulated fees in the FeePool to the validator's pool.
 // * updates validator info's FeePoolWithdrawalHeight, thus setting accum to 0.
 // * updates fee pool to latest height and total val accum w/ given totalBonded.
@@ -53,17 +59,15 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	}
 
 	// update the validators pool
-	blocks := height - vi.FeePoolWithdrawalHeight
+	accum := vi.GetAccum(height, vdTokens)
 	vi.FeePoolWithdrawalHeight = height
-	accum := vdTokens.MulInt(sdk.NewInt(blocks))
 
 	if !accum.IsZero() {
 		fmt.Println(
 			cmn.Red(
-				fmt.Sprintf("FP Sub %v * %v = %v, %v - _ => %v",
-					vdTokens.String(), sdk.NewInt(blocks),
-					accum.String(),
+				fmt.Sprintf("FP Sub %v - %v => %v",
 					fp.TotalValAccum.Accum.String(),
+					accum.String(),
 					fp.TotalValAccum.Accum.Sub(accum).String(),
 				),
 			),

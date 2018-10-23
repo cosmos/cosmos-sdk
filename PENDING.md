@@ -17,14 +17,17 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+    * [gov] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added query governance procedures rest endpoints
 
 * Gaia CLI  (`gaiacli`)
     * [cli] [\#2569](https://github.com/cosmos/cosmos-sdk/pull/2569) Add commands to query validator unbondings and redelegations
     * [cli] [\#2569](https://github.com/cosmos/cosmos-sdk/pull/2569) Add commands to query validator unbondings and redelegations
     * [cli] [\#2524](https://github.com/cosmos/cosmos-sdk/issues/2524) Add support offline mode to `gaiacli tx sign`. Lookups are not performed if the flag `--offline` is on.
     * [cli] [\#2558](https://github.com/cosmos/cosmos-sdk/issues/2558) Rename --print-sigs to --validate-signatures. It now performs a complete set of sanity checks and reports to the user. Also added --print-signature-only to print the signature only, not the whole transaction.
+    * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Add query governance procedures commands
 
 * Gaia
+    * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479)  Added querier for getting Procedures
 
 * SDK
     * (#1336) Mechanism for SDK Users to configure their own Bech32 prefixes instead of using the default cosmos prefixes.

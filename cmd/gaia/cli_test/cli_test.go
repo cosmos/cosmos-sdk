@@ -309,6 +309,10 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForTMStart(port)
 	tests.WaitForNextNBlocksTM(2, port)
 
+	executeGetDepositProcedure(t, fmt.Sprintf("gaiacli query procedure deposit %v", flags))
+	executeGetVotingProcedure(t, fmt.Sprintf("gaiacli query procedure voting %v", flags))
+	executeGetTallyingProcedure(t, fmt.Sprintf("gaiacli query procedure tallying %v", flags))
+
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
@@ -740,6 +744,33 @@ func executeGetParams(t *testing.T, cmdStr string) stake.Params {
 
 //___________________________________________________________________________________
 // gov
+
+func executeGetDepositProcedure(t *testing.T, cmdStr string) gov.DepositProcedure {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var depositProcedure gov.DepositProcedure
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &depositProcedure)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return depositProcedure
+}
+
+func executeGetVotingProcedure(t *testing.T, cmdStr string) gov.VotingProcedure {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var votingProcedure gov.VotingProcedure
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &votingProcedure)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return votingProcedure
+}
+
+func executeGetTallyingProcedure(t *testing.T, cmdStr string) gov.TallyingProcedure {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var tallyingProcedure gov.TallyingProcedure
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &tallyingProcedure)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return tallyingProcedure
+}
 
 func executeGetProposal(t *testing.T, cmdStr string) gov.Proposal {
 	out, _ := tests.ExecuteT(t, cmdStr, "")

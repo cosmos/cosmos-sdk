@@ -268,6 +268,10 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, validator.OperatorAddr, sdk.ValAddress(barAddr))
 	require.True(sdk.DecEq(t, sdk.NewDec(2), validator.Tokens))
 
+	validatorDelegations := executeGetValidatorDelegations(t, fmt.Sprintf("gaiacli query delegations-to %s --output=json %v", sdk.ValAddress(barAddr), flags))
+	require.Len(t, validatorDelegations, 1)
+	require.NotZero(t, validatorDelegations[0].Shares)
+
 	// unbond a single share
 	unbondStr := fmt.Sprintf("gaiacli tx unbond begin %v", flags)
 	unbondStr += fmt.Sprintf(" --from=%s", "bar")
@@ -718,6 +722,15 @@ func executeGetValidatorRedelegations(t *testing.T, cmdStr string) []stake.Redel
 	err := cdc.UnmarshalJSON([]byte(out), &reds)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return reds
+}
+
+func executeGetValidatorDelegations(t *testing.T, cmdStr string) []stake.Delegation {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var delegations []stake.Delegation
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &delegations)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return delegations
 }
 
 func executeGetPool(t *testing.T, cmdStr string) stake.Pool {

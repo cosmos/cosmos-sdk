@@ -23,6 +23,7 @@ FEATURES
     * [cli] [\#2569](https://github.com/cosmos/cosmos-sdk/pull/2569) Add commands to query validator unbondings and redelegations
     * [cli] [\#2524](https://github.com/cosmos/cosmos-sdk/issues/2524) Add support offline mode to `gaiacli tx sign`. Lookups are not performed if the flag `--offline` is on.
     * [cli] [\#2558](https://github.com/cosmos/cosmos-sdk/issues/2558) Rename --print-sigs to --validate-signatures. It now performs a complete set of sanity checks and reports to the user. Also added --print-signature-only to print the signature only, not the whole transaction.
+    * [stake][cli] [\#2027] Add CLI query command for getting all delegations to a specific validator.
 
 * Gaia
 
@@ -46,6 +47,7 @@ IMPROVEMENTS
  - \#2660 [x/mock/simulation] Staking transactions get tested far more frequently
  - #2610 [x/stake] Block redelegation to and from the same validator
  - #2652 [x/auth] Add benchmark for get and set account
+ - \#2027 [x/stake]  Add `Querier` for getting all delegations to a specific validator.
 
 * Tendermint
 

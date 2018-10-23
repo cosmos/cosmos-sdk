@@ -45,7 +45,16 @@ BREAKING CHANGES
     * [simulation] \#2162 Added back correct supply invariants
     * [x/slashing] \#2430 Simulate more slashes, check if validator is jailed before jailing
     * [x/stake] \#2393 Removed `CompleteUnbonding` and `CompleteRedelegation` Msg types, and instead added unbonding/redelegation queues to endblocker
-    * [x/mock/simulation] \#2501 Simulate transactions & invariants for fee distribution
+    * [x/mock/simulation] \#2501 Simulate transactions & invariants for fee distribution, and fix bugs discovered in the process
+      * [x/auth] Simulate random fee payments
+      * [cmd/gaia/app] Simulate non-zero inflation
+      * [x/stake] Call hooks correctly in several cases related to delegation/validator updates
+      * [x/slashing] Call hooks correctly when a validator is slashed
+      * [x/mock/simulation] Ensure the simulation cannot set a proposer address of nil
+      * [x/distribution] Sanity check for nonexistent rewards
+      * [x/distribution] Correctly calculate total power using Tendermint updates
+      * [x/distribution] Simulate withdrawal transactions
+      * [x/distribution] Fix a bug where the fee pool was not correctly tracked on WithdrawDelegatorRewardsAll
     * [x/stake] \#1673 Validators are no longer deleted until they can no longer possibly be slashed
     * [\#1890](https://github.com/cosmos/cosmos-sdk/issues/1890) Start chain with initial state + sequence of transactions
       * [cli] Rename `gaiad init gentx` to `gaiad gentx`.

@@ -1,7 +1,10 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // total accumulation tracker
@@ -29,25 +32,50 @@ func (ta TotalAccum) UpdateForNewHeight(height int64, accumCreatedPerBlock sdk.D
 	return ta
 }
 
+// update total validator accumulation factor for the new height
+// CONTRACT: height should be greater than the old height
+func (ta TotalAccum) UpdateForNewHeight_DEBUG(height int64, accumCreatedPerBlock sdk.Dec) TotalAccum {
+	blocks := height - ta.UpdateHeight
+	if blocks < 0 {
+		panic("reverse updated for new height")
+	}
+	if !accumCreatedPerBlock.IsZero() && blocks != 0 {
+		fmt.Println(
+			cmn.Blue(
+				fmt.Sprintf("FP Add %v * %v = %v, + %v (old) => %v (new)",
+					accumCreatedPerBlock.String(), sdk.NewInt(blocks),
+					accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)).String(),
+					ta.Accum.String(),
+					ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks))).String(),
+				),
+			),
+		)
+	}
+	ta.Accum = ta.Accum.Add(accumCreatedPerBlock.MulInt(sdk.NewInt(blocks)))
+	ta.UpdateHeight = height
+	return ta
+}
+
 //___________________________________________________________________________________________
 
 // global fee pool for distribution
 type FeePool struct {
-	ValAccum      TotalAccum `json:"val_accum"`      // total valdator accum held by validators
+	TotalValAccum TotalAccum `json:"val_accum"`      // total valdator accum held by validators
 	Pool          DecCoins   `json:"pool"`           // funds for all validators which have yet to be withdrawn
 	CommunityPool DecCoins   `json:"community_pool"` // pool for community funds yet to be spent
 }
 
 // update total validator accumulation factor
+// NOTE: Do not call this except from ValidatorDistInfo.TakeFeePoolRewards().
 func (f FeePool) UpdateTotalValAccum(height int64, totalBondedTokens sdk.Dec) FeePool {
-	f.ValAccum = f.ValAccum.UpdateForNewHeight(height, totalBondedTokens)
+	f.TotalValAccum = f.TotalValAccum.UpdateForNewHeight_DEBUG(height, totalBondedTokens)
 	return f
 }
 
 // zero fee pool
 func InitialFeePool() FeePool {
 	return FeePool{
-		ValAccum:      NewTotalAccum(0),
+		TotalValAccum: NewTotalAccum(0),
 		Pool:          DecCoins{},
 		CommunityPool: DecCoins{},
 	}

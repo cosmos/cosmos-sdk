@@ -1,7 +1,10 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
 // distribution info for a particular validator
@@ -19,9 +22,9 @@ func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) Vali
 	return ValidatorDistInfo{
 		OperatorAddr:            operatorAddr,
 		FeePoolWithdrawalHeight: currentHeight,
-		Pool:                    DecCoins{},
-		PoolCommission:          DecCoins{},
-		DelAccum:                NewTotalAccum(currentHeight),
+		Pool:           DecCoins{},
+		PoolCommission: DecCoins{},
+		DelAccum:       NewTotalAccum(currentHeight),
 	}
 }
 
@@ -31,13 +34,21 @@ func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk
 	return vi
 }
 
-// move any available accumulated fees in the FeePool to the validator's pool
+// Move any available accumulated fees in the FeePool to the validator's pool.
+// * updates validator info's FeePoolWithdrawalHeight, thus setting accum to 0.
+// * updates fee pool to latest height and total val accum w/ given totalBonded.
+// This is the only way to update the FeePool's validator TotalAccum.
+// NOTE: This algorithm works as long as TakeFeePoolRewards is called after every power change.
+// - called in ValidationDistInfo.WithdrawCommission.
+// - called in DelegationDistInfo.WithdrawRewards.
+// NOTE: When a delegator unbonds, say, onDelegationSharesModified ->
+//       WithdrawDelegationReward -> WithdrawRewards.
 func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBonded, vdTokens,
 	commissionRate sdk.Dec) (ValidatorDistInfo, FeePool) {
 
 	fp = fp.UpdateTotalValAccum(height, totalBonded)
 
-	if fp.ValAccum.Accum.IsZero() {
+	if fp.TotalValAccum.Accum.IsZero() {
 		return vi, fp
 	}
 
@@ -45,16 +56,30 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	blocks := height - vi.FeePoolWithdrawalHeight
 	vi.FeePoolWithdrawalHeight = height
 	accum := vdTokens.MulInt(sdk.NewInt(blocks))
-	if accum.GT(fp.ValAccum.Accum) {
+
+	if !accum.IsZero() {
+		fmt.Println(
+			cmn.Red(
+				fmt.Sprintf("FP Sub %v * %v = %v, %v - _ => %v",
+					vdTokens.String(), sdk.NewInt(blocks),
+					accum.String(),
+					fp.TotalValAccum.Accum.String(),
+					fp.TotalValAccum.Accum.Sub(accum).String(),
+				),
+			),
+		)
+	}
+
+	if accum.GT(fp.TotalValAccum.Accum) {
 		panic("individual accum should never be greater than the total")
 	}
-	withdrawalTokens := fp.Pool.MulDec(accum).QuoDec(fp.ValAccum.Accum)
+	withdrawalTokens := fp.Pool.MulDec(accum).QuoDec(fp.TotalValAccum.Accum)
 	remainingTokens := fp.Pool.Minus(withdrawalTokens)
 
 	commission := withdrawalTokens.MulDec(commissionRate)
 	afterCommission := withdrawalTokens.Minus(commission)
 
-	fp.ValAccum.Accum = fp.ValAccum.Accum.Sub(accum)
+	fp.TotalValAccum.Accum = fp.TotalValAccum.Accum.Sub(accum)
 	fp.Pool = remainingTokens
 	vi.PoolCommission = vi.PoolCommission.Plus(commission)
 	vi.Pool = vi.Pool.Plus(afterCommission)

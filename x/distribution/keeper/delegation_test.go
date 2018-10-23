@@ -34,6 +34,8 @@ func TestWithdrawDelegationRewardBasic(t *testing.T) {
 
 	// withdraw delegation
 	ctx = ctx.WithBlockHeight(1)
+	sk.SetLastTotalPower(ctx, sdk.NewDec(10))
+	sk.SetLastValidatorPower(ctx, valOpAddr1, sdk.NewDec(10))
 	keeper.WithdrawDelegationReward(ctx, delAddr1, valOpAddr1)
 	amt = accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
 
@@ -204,8 +206,6 @@ func TestWithdrawDelegationRewardsAll(t *testing.T) {
 	got = stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
-
 	// delegate to all the validators
 	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
 	require.True(t, stakeHandler(ctx, msgDelegate).IsOK())
@@ -213,6 +213,9 @@ func TestWithdrawDelegationRewardsAll(t *testing.T) {
 	require.True(t, stakeHandler(ctx, msgDelegate).IsOK())
 	msgDelegate = stake.NewTestMsgDelegate(delAddr1, valOpAddr3, 30)
 	require.True(t, stakeHandler(ctx, msgDelegate).IsOK())
+
+	// Update sk's LastValidatorPower/LastTotalPowers.
+	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// 40 tokens left after delegating 60 of them
 	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)

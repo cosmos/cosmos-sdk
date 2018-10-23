@@ -39,12 +39,13 @@ var (
 	GetDelegationKey             = keeper.GetDelegationKey
 	GetDelegationsKey            = keeper.GetDelegationsKey
 	PoolKey                      = keeper.PoolKey
+	IntraTxCounterKey            = keeper.IntraTxCounterKey
+	LastValidatorPowerKey        = keeper.LastValidatorPowerKey
+	LastTotalPowerKey            = keeper.LastTotalPowerKey
 	ValidatorsKey                = keeper.ValidatorsKey
 	ValidatorsByConsAddrKey      = keeper.ValidatorsByConsAddrKey
-	ValidatorsBondedIndexKey     = keeper.ValidatorsBondedIndexKey
 	ValidatorsByPowerIndexKey    = keeper.ValidatorsByPowerIndexKey
 	DelegationKey                = keeper.DelegationKey
-	IntraTxCounterKey            = keeper.IntraTxCounterKey
 	GetUBDKey                    = keeper.GetUBDKey
 	GetUBDByValIndexKey          = keeper.GetUBDByValIndexKey
 	GetUBDsKey                   = keeper.GetUBDsKey

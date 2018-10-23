@@ -14,9 +14,9 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 	vdi := types.ValidatorDistInfo{
 		OperatorAddr:            addr,
 		FeePoolWithdrawalHeight: height,
-		Pool:                    types.DecCoins{},
-		PoolCommission:          types.DecCoins{},
-		DelAccum:                types.NewTotalAccum(height),
+		Pool:           types.DecCoins{},
+		PoolCommission: types.DecCoins{},
+		DelAccum:       types.NewTotalAccum(height),
 	}
 	k.SetValidatorDistInfo(ctx, vdi)
 }
@@ -80,7 +80,7 @@ func (k Keeper) Hooks() Hooks { return Hooks{k} }
 func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 	h.k.onValidatorCreated(ctx, addr)
 }
-func (h Hooks) OnValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
+func (h Hooks) OnValidatorModified(ctx sdk.Context, addr sdk.ValAddress) {
 	h.k.onValidatorModified(ctx, addr)
 }
 func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {

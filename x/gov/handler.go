@@ -106,11 +106,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 	// Delete proposals that haven't met minDeposit
 	for shouldPopInactiveProposalQueue(ctx, keeper) {
 		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
-		if inactiveProposal.GetStatus() != StatusDepositPeriod {
+		info := inactiveProposal.GetProposalInfo()
+		if info.Status != StatusDepositPeriod {
 			continue
 		}
 
-		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(inactiveProposal.GetProposalID())
+		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(info.proposalID)
 		keeper.DeleteProposal(ctx, inactiveProposal)
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)

@@ -14,6 +14,7 @@ import (
 // Proposal interface
 type Proposal interface {
 	GetProposalAbstract() ProposalAbstract
+	GetProposalInfo() *ProposalInfo
 	Enact(sdk.Context, Keeper) error
 }
 
@@ -35,14 +36,14 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 
 // ProposalAbstract is a human-readable description about a proposal
 type ProposalAbstract struct {
-	ProposalID int64 `json:"proposal_id"` //  ID of the proposal
-
 	Title      string `json:"title"`
 	Descriptor string `json:"descriptor"`
 }
 
-// ProposalInfo is a status of a proposal, mutated by the keeper
+// ProposalInfo is a status of a proposal set by the keeper
 type ProposalInfo struct {
+	ProposalID int64 `json:"proposal_id"` //  ID of the proposal
+
 	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
 
@@ -55,12 +56,15 @@ type ProposalInfo struct {
 //-----------------------------------------------------------
 // Text Proposals
 type TextProposal struct {
-	Abstract ProposalAbstract `json:"proposal_abstract"`
+	Abstract ProposalAbstract `json:"abstract"`
+
+	Info *ProposalInfo `json:"info"`
 
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 }
 
-func (tp TextProposal) ProposalAbstract() ProposalAbstract    { return tp.Abstract }
+func (tp TextProposal) GetProposalAbstract() ProposalAbstract { return tp.Abstract }
+func (tp TextProposal) GetProposalInfo() *ProposalInfo        { return tp.Info }
 func (tp TextProposal) Enact(ctx sdk.Context, k Keeper) error { return nil }
 
 // Implements Proposal Interface

@@ -364,6 +364,18 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, depositStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
+	// test query deposit
+	deposits := executeGetDeposits(t,
+		fmt.Sprintf("gaiacli query deposits --proposal-id=1 %v", flags))
+	require.Len(t, deposits, 2)
+	require.Equal(t, int64(5), deposits[0].Amount.AmountOf("steak").Int64())
+	require.Equal(t, int64(10), deposits[1].Amount.AmountOf("steak").Int64())
+
+	deposit := executeGetDeposit(t,
+		fmt.Sprintf("gaiacli query deposit --proposal-id=1 --depositer=foo %v",
+			flags))
+	require.Equal(t, int64(5), deposit.Amount.AmountOf("steak").Int64())
+
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak").Int64())
 	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli query proposal --proposal-id=1 --output=json %v", flags))
@@ -723,4 +735,22 @@ func executeGetVotes(t *testing.T, cmdStr string) []gov.Vote {
 	err := cdc.UnmarshalJSON([]byte(out), &votes)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return votes
+}
+
+func executeGetDeposit(t *testing.T, cmdStr string) gov.Deposit {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var deposit gov.Deposit
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &deposit)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return deposit
+}
+
+func executeGetDeposits(t *testing.T, cmdStr string) []gov.Deposit {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var deposits []gov.Deposit
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &deposits)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return deposits
 }

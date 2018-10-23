@@ -346,6 +346,11 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals %v", flags), "")
 	require.Equal(t, "  1 - Test", proposalsQuery)
 
+	deposit := executeGetDeposit(t,
+		fmt.Sprintf("gaiacli query deposit --proposal-id=1 --depositer=foo %v",
+			flags))
+	require.Equal(t, int64(5), deposit.Amount.AmountOf("steak").Int64())
+
 	depositStr := fmt.Sprintf("gaiacli tx deposit %v", flags)
 	depositStr += fmt.Sprintf(" --from=%s", "foo")
 	depositStr += fmt.Sprintf(" --deposit=%s", "10steak")
@@ -367,14 +372,13 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	// test query deposit
 	deposits := executeGetDeposits(t,
 		fmt.Sprintf("gaiacli query deposits --proposal-id=1 %v", flags))
-	require.Len(t, deposits, 2)
-	require.Equal(t, int64(5), deposits[0].Amount.AmountOf("steak").Int64())
-	require.Equal(t, int64(10), deposits[1].Amount.AmountOf("steak").Int64())
+	require.Len(t, deposits, 1)
+	require.Equal(t, int64(15), deposits[0].Amount.AmountOf("steak").Int64())
 
-	deposit := executeGetDeposit(t,
+	deposit = executeGetDeposit(t,
 		fmt.Sprintf("gaiacli query deposit --proposal-id=1 --depositer=foo %v",
 			flags))
-	require.Equal(t, int64(5), deposit.Amount.AmountOf("steak").Int64())
+	require.Equal(t, int64(15), deposit.Amount.AmountOf("steak").Int64())
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak").Int64())

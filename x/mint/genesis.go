@@ -6,7 +6,7 @@ import (
 
 // GenesisState - all distribution state that must be provided at genesis
 type GenesisState struct {
-	Minter Minter `json:"Minter"` // minter object
+	Minter Minter `json:"minter"` // minter object
 	Params Params `json:"params"` // inflation params
 }
 

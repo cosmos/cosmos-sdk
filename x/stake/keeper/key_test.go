@@ -35,10 +35,10 @@ func TestGetValidatorPowerRank(t *testing.T) {
 		validator types.Validator
 		wantHex   string
 	}{
-		{val1, "050000000000000000ffffffffffffffffffff"},
-		{val2, "050000000000000001ffffffffffffffffffff"},
-		{val3, "05000000000000000affffffffffffffffffff"},
-		{val4, "050000010000000000ffffffffffffffffffff"},
+		{val1, "230000000000000000ffffffffffffffffffff"},
+		{val2, "230000000000000001ffffffffffffffffffff"},
+		{val3, "23000000000000000affffffffffffffffffff"},
+		{val4, "230000010000000000ffffffffffffffffffff"},
 	}
 	for i, tt := range tests {
 		got := hex.EncodeToString(getValidatorPowerRank(tt.validator))
@@ -55,11 +55,11 @@ func TestGetREDByValDstIndexKey(t *testing.T) {
 		wantHex    string
 	}{
 		{sdk.AccAddress(addr1), sdk.ValAddress(addr1), sdk.ValAddress(addr1),
-			"0c63d771218209d8bd03c482f69dfba57310f0860963d771218209d8bd03c482f69dfba57310f0860963d771218209d8bd03c482f69dfba57310f08609"},
+			"3663d771218209d8bd03c482f69dfba57310f0860963d771218209d8bd03c482f69dfba57310f0860963d771218209d8bd03c482f69dfba57310f08609"},
 		{sdk.AccAddress(addr1), sdk.ValAddress(addr2), sdk.ValAddress(addr3),
-			"0c3ab62f0d93849be495e21e3e9013a517038f45bd63d771218209d8bd03c482f69dfba57310f086095ef3b5f25c54946d4a89fc0d09d2f126614540f2"},
+			"363ab62f0d93849be495e21e3e9013a517038f45bd63d771218209d8bd03c482f69dfba57310f086095ef3b5f25c54946d4a89fc0d09d2f126614540f2"},
 		{sdk.AccAddress(addr2), sdk.ValAddress(addr1), sdk.ValAddress(addr3),
-			"0c3ab62f0d93849be495e21e3e9013a517038f45bd5ef3b5f25c54946d4a89fc0d09d2f126614540f263d771218209d8bd03c482f69dfba57310f08609"},
+			"363ab62f0d93849be495e21e3e9013a517038f45bd5ef3b5f25c54946d4a89fc0d09d2f126614540f263d771218209d8bd03c482f69dfba57310f08609"},
 	}
 	for i, tt := range tests {
 		got := hex.EncodeToString(GetREDByValDstIndexKey(tt.delAddr, tt.valSrcAddr, tt.valDstAddr))
@@ -76,11 +76,11 @@ func TestGetREDByValSrcIndexKey(t *testing.T) {
 		wantHex    string
 	}{
 		{sdk.AccAddress(addr1), sdk.ValAddress(addr1), sdk.ValAddress(addr1),
-			"0b63d771218209d8bd03c482f69dfba57310f0860963d771218209d8bd03c482f69dfba57310f0860963d771218209d8bd03c482f69dfba57310f08609"},
+			"3563d771218209d8bd03c482f69dfba57310f0860963d771218209d8bd03c482f69dfba57310f0860963d771218209d8bd03c482f69dfba57310f08609"},
 		{sdk.AccAddress(addr1), sdk.ValAddress(addr2), sdk.ValAddress(addr3),
-			"0b5ef3b5f25c54946d4a89fc0d09d2f126614540f263d771218209d8bd03c482f69dfba57310f086093ab62f0d93849be495e21e3e9013a517038f45bd"},
+			"355ef3b5f25c54946d4a89fc0d09d2f126614540f263d771218209d8bd03c482f69dfba57310f086093ab62f0d93849be495e21e3e9013a517038f45bd"},
 		{sdk.AccAddress(addr2), sdk.ValAddress(addr1), sdk.ValAddress(addr3),
-			"0b63d771218209d8bd03c482f69dfba57310f086095ef3b5f25c54946d4a89fc0d09d2f126614540f23ab62f0d93849be495e21e3e9013a517038f45bd"},
+			"3563d771218209d8bd03c482f69dfba57310f086095ef3b5f25c54946d4a89fc0d09d2f126614540f23ab62f0d93849be495e21e3e9013a517038f45bd"},
 	}
 	for i, tt := range tests {
 		got := hex.EncodeToString(GetREDByValSrcIndexKey(tt.delAddr, tt.valSrcAddr, tt.valDstAddr))

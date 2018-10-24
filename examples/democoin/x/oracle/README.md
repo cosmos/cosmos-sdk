@@ -15,7 +15,7 @@ type MyPayload struct {
 }
 ```
 
-When you write a payload, its `.Type()` should return same name with your module is registered on the router. It is because `oracle.Msg` inherits `.Type()` from its embedded payload and it should be handled on the user modules.
+When you write a payload, its `.Route()` should return same route with your module is registered on the router. It is because `oracle.Msg` inherits `.Route()` from its embedded payload and it should be handled on the user modules.
 
 Then route every incoming `oracle.Msg` to `oracle.Keeper.Handler()` with the function that implements `oracle.Handler`.
 

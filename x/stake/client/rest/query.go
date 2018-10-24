@@ -18,10 +18,22 @@ const storeName = "stake"
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 
-	// Get all delegations (delegation, undelegation and redelegation) from a delegator
+	// Get all delegations from a delegator
 	r.HandleFunc(
-		"/stake/delegators/{delegatorAddr}",
-		delegatorHandlerFn(cliCtx, cdc),
+		"/stake/delegators/{delegatorAddr}/delegations",
+		delegatorDelegationsHandlerFn(cliCtx, cdc),
+	).Methods("GET")
+
+	// Get all unbonding delegations from a delegator
+	r.HandleFunc(
+		"/stake/delegators/{delegatorAddr}/unbonding_delegations",
+		delegatorUnbondingDelegationsHandlerFn(cliCtx, cdc),
+	).Methods("GET")
+
+	// Get all redelegations from a delegator
+	r.HandleFunc(
+		"/stake/delegators/{delegatorAddr}/redelegations",
+		delegatorRedelegationsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
 	// Get all staking txs (i.e msgs) from a delegator
@@ -93,8 +105,18 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 }
 
 // HTTP request handler to query a delegator delegations
-func delegatorHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
-	return queryDelegator(cliCtx, cdc, "custom/stake/delegator")
+func delegatorDelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+	return queryDelegator(cliCtx, cdc, "custom/stake/delegatorDelegations")
+}
+
+// HTTP request handler to query a delegator unbonding delegations
+func delegatorUnbondingDelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+	return queryDelegator(cliCtx, cdc, "custom/stake/delegatorUnbondingDelegations")
+}
+
+// HTTP request handler to query a delegator redelegations
+func delegatorRedelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+	return queryDelegator(cliCtx, cdc, "custom/stake/delegatorRedelegations")
 }
 
 // HTTP request handler to query all staking txs (msgs) from a delegator

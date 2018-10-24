@@ -51,6 +51,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	operatorAddress := validator.GetOperator()
+	k.OnValidatorModified(ctx, operatorAddress)
 
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
@@ -97,10 +98,13 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// cannot decrease balance below zero
 	tokensToBurn := sdk.MinDec(remainingSlashAmount, validator.Tokens)
+	tokensToBurn = sdk.MaxDec(tokensToBurn, sdk.ZeroDec()) // defensive.
 
-	// burn validator's tokens and update the validator
+	// Deduct from validator's bonded tokens and update the validator.
+	// The deducted tokens are returned to pool.LooseTokens.
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 	pool := k.GetPool(ctx)
+	// Burn the slashed tokens, which are now loose.
 	pool.LooseTokens = pool.LooseTokens.Sub(tokensToBurn)
 	k.SetPool(ctx, pool)
 

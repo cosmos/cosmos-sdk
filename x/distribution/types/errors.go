@@ -8,8 +8,9 @@ import (
 type CodeType = sdk.CodeType
 
 const (
-	DefaultCodespace sdk.CodespaceType = 6
-	CodeInvalidInput CodeType          = 103
+	DefaultCodespace       sdk.CodespaceType = 6
+	CodeInvalidInput       CodeType          = 103
+	CodeNoDistributionInfo CodeType          = 104
 )
 
 func ErrNilDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {
@@ -20,4 +21,10 @@ func ErrNilWithdrawAddr(codespace sdk.CodespaceType) sdk.Error {
 }
 func ErrNilValidatorAddr(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "validator address is nil")
+}
+func ErrNoDelegationDistInfo(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeNoDistributionInfo, "no delegation distribution info")
+}
+func ErrNoValidatorDistInfo(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeNoDistributionInfo, "no validator distribution info")
 }

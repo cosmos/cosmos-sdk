@@ -710,15 +710,8 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}:
-    parameters:
-    - in: path
-      name: delegatorAddr
-      description: Bech32 AccAddress of Delegator
-      required: true
-      type: string
     get:
-      summary: Get all delegations (delegation, undelegation) from a delegator
+      summary: Get all delegations from a delegator
       tags:
       - ICS21
       produces:
@@ -727,23 +720,60 @@ paths:
         200:
           description: OK
           schema:
-            type: object
-            properties:
-              redelegations:
-                type: array
-                items:
-                  type: object
-                  "$ref": "#/definitions/Redelegation"
-              unbonding_delegations:
-                type: array
-                items:
-                  type: object
-                  "$ref": "#/definitions/UnbondingDelegation"
-              delegations:
-                type: array
-                items:
-                  type: object
-                  "$ref": "#/definitions/Delegation"
+            type: array
+            items:
+              type: object
+              "$ref": "#/definitions/Delegation"
+        400:
+          description: Invalid delegator address
+        500:
+          description: Internal Server Error
+  /stake/delegators/{delegatorAddr}/unbonding_delegations:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Get all unbonding delegations from a delegator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              type: object
+              "$ref": "#/definitions/UnbondingDelegation"
+        400:
+          description: Invalid delegator address
+        500:
+          description: Internal Server Error
+  /stake/delegators/{delegatorAddr}/redelegations:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Get all redelegations from a delegator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              type: object
+              "$ref": "#/definitions/Redelegation"
         400:
           description: Invalid delegator address
         500:

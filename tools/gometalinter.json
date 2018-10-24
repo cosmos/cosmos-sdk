@@ -5,7 +5,7 @@
     "Enable": ["golint", "vet", "ineffassign", "unconvert", "misspell", "lll"],
     "Deadline": "500s",
     "Vendor": true,
-    "LineLength": 120,
+    "LineLength": 100,
     "Cyclo": 11,
     "Exclude": ["/usr/lib/go/src/", "client/lcd/statik/statik.go", "vendor/*"]
 }

@@ -1,9 +1,7 @@
 package keys
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 
 	"github.com/bartekn/go-bip39"
 	"github.com/pkg/errors"
@@ -154,7 +152,7 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 }
 
 func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
-	buf := bufio.NewReader(os.Stdin)
+	buf := client.BufferStdin()
 	bip44Path := path
 
 	// if it wasn't set in the flag, give it a chance to overide interactively

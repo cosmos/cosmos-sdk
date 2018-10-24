@@ -82,7 +82,7 @@ You can generate and print a multisig public key by typing:
 gaiacli show -m K key1 key2...keyK
 ```
 
-`K` is the minimum number of private keys that must have signed the transactions that carry the generated public key.
+`K` is the minimum weight, e.g. minimum number of private keys that must have signed the transactions that carry the generated public key.
 
 ### Account
 

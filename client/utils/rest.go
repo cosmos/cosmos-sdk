@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -229,8 +230,14 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 	}
 
 	txBytes, err := txBldr.BuildAndSign(baseReq.Name, baseReq.Password, msgs)
-	if err != nil {
+	if keyerror.IsErrKeyNotFound(err) {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	} else if keyerror.IsErrWrongPassword(err) {
 		WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	} else if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
 
 const (
@@ -108,10 +109,12 @@ func GetKeyRequestHandler(indent bool) http.HandlerFunc {
 		}
 
 		info, err := GetKeyInfo(name)
-		// TODO: check for the error if key actually does not exist, instead of
-		// assuming this as the reason
-		if err != nil {
+		if keyerror.IsErrKeyNotFound(err) {
 			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(err.Error()))
+			return
+		} else if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}

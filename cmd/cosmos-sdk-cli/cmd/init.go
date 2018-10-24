@@ -71,7 +71,8 @@ func copyBasecoinTemplate(projectName string, projectPath string, remoteProjectP
 				return err
 			}
 			contents := string(data)
-			// Extract relative file path eg: app/app.go instead of /Users/..../github.com/cosmos/...examples/basecoin/app/app.go
+			// Extract relative file path eg: app/app.go instead of
+			// /Users/..../github.com/cosmos/...examples/basecoin/app/app.go
 			relativeFilePath := path[len(basecoinProjectPath)+1:]
 			// Evaluating the filepath in the new project folder
 			projectFilePath := projectPath + string(os.PathSeparator) + relativeFilePath
@@ -105,10 +106,12 @@ func createGopkg(projectPath string) {
 	}
 	contents := ""
 	for dependency, version := range dependencies {
-		contents += "[[constraint]]\n\tname = \"" + dependency + "\"\n\tversion = \"" + version + "\"\n\n"
+		contents += "[[constraint]]\n\tname = \"" + dependency + "\"\n\tversion = \"" +
+			version + "\"\n\n"
 	}
 	for dependency, version := range overrides {
-		contents += "[[override]]\n\tname = \"" + dependency + "\"\n\tversion = \"=" + version + "\"\n\n"
+		contents += "[[override]]\n\tname = \"" + dependency + "\"\n\tversion = \"=" +
+			version + "\"\n\n"
 	}
 	contents += "[prune]\n\tgo-tests = true\n\tunused-packages = true"
 	ioutil.WriteFile(projectPath+"/Gopkg.toml", []byte(contents), os.ModePerm)

@@ -132,7 +132,8 @@ enabled, and the genesis file will not be generated.
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(client.FlagChainID, "",
 		"genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().Bool(flagWithTxs, false, "apply existing genesis transactions from [--home]/config/gentx/")
+	cmd.Flags().Bool(flagWithTxs, false,
+		"apply existing genesis transactions from [--home]/config/gentx/")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(flagMoniker, "",
 		"overrides --name flag and set the validator's moniker to a different value; "+
@@ -144,7 +145,8 @@ enabled, and the genesis file will not be generated.
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
+func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey,
+	err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return
@@ -201,7 +203,8 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 		}
 		memo := fmt.Sprintf("%s@%s:26656", initCfg.NodeID, ip)
 		buf := client.BufferStdin()
-		prompt := fmt.Sprintf("Password for account %q (default: %q):", initCfg.Name, app.DefaultKeyPass)
+		prompt := fmt.Sprintf("Password for account %q (default: %q):", initCfg.Name,
+			app.DefaultKeyPass)
 		keyPass, err = client.GetPassword(prompt, buf)
 		if err != nil && keyPass != "" {
 			// An error was returned that either failed to read the password from
@@ -213,7 +216,8 @@ func initWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig) (
 			keyPass = app.DefaultKeyPass
 		}
 
-		addr, secret, err = server.GenerateSaveCoinKey(initCfg.ClientHome, initCfg.Name, keyPass, initCfg.OverwriteKey)
+		addr, secret, err = server.GenerateSaveCoinKey(initCfg.ClientHome, initCfg.Name, keyPass,
+			initCfg.OverwriteKey)
 		if err != nil {
 			return
 		}

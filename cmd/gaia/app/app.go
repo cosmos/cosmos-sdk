@@ -69,7 +69,8 @@ type GaiaApp struct {
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
-func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
+func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer,
+	baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 	cdc := MakeCodec()
 
 	bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
@@ -135,7 +136,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.govKeeper = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
-		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, app.stakeKeeper,
+		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace),
+		app.bankKeeper, app.stakeKeeper,
 		app.RegisterCodespace(gov.DefaultCodespace),
 	)
 
@@ -187,7 +189,9 @@ func MakeCodec() *codec.Codec {
 }
 
 // application updates every end block
-func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *GaiaApp) BeginBlocker(ctx sdk.Context,
+	req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+
 	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 
 	// distribute rewards from previous block
@@ -291,8 +295,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 }
 
 // export the state of gaia for a genesis file
-func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator,
-	err error) {
+func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage,
+	validators []tmtypes.GenesisValidator, err error) {
 
 	ctx := app.NewContext(true, abci.Header{})
 
@@ -348,16 +352,20 @@ func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress, operator
 	h.dh.OnValidatorBonded(ctx, addr, operator)
 	h.sh.OnValidatorBonded(ctx, addr, operator)
 }
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress, operator sdk.ValAddress) {
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress,
+	operator sdk.ValAddress) {
 	h.dh.OnValidatorBeginUnbonding(ctx, addr, operator)
 	h.sh.OnValidatorBeginUnbonding(ctx, addr, operator)
 }
-func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress) {
 	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)
 }
-func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress) {
 	h.dh.OnDelegationSharesModified(ctx, delAddr, valAddr)
 }
-func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress) {
 	h.dh.OnDelegationRemoved(ctx, delAddr, valAddr)
 }

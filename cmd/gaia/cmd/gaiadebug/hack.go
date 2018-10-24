@@ -180,7 +180,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper,
 		app.paramsKeeper.Subspace(stake.DefaultParamspace), app.RegisterCodespace(stake.DefaultCodespace))
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper,
-		app.paramsKeeper.Subspace(slashing.DefaultParamspace), app.RegisterCodespace(slashing.DefaultCodespace))
+		app.paramsKeeper.Subspace(slashing.DefaultParamspace),
+		app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes
 	app.Router().
@@ -218,7 +219,8 @@ func MakeCodec() *codec.Codec {
 }
 
 // application updates every end block
-func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *GaiaApp) BeginBlocker(ctx sdk.Context,
+	req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 
 	return abci.ResponseBeginBlock{
@@ -244,7 +246,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	var genesisState gaia.GenesisState
 	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
 	if err != nil {
-		// TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
+		// TODO https://github.com/cosmos/cosmos-sdk/issues/468
+		// return sdk.ErrGenesisParse("").TraceCause(err, "")
 		panic(err)
 	}
 
@@ -257,7 +260,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// load the initial stake information
 	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
 	if err != nil {
-		// TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
+		// TODO https://github.com/cosmos/cosmos-sdk/issues/468
+		// return sdk.ErrGenesisParse("").TraceCause(err, "")
 		panic(err)
 	}
 

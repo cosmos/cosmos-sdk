@@ -89,7 +89,9 @@ following delegation and commission default parameters:
 	return cmd
 }
 
-func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip string, valPubKey crypto.PubKey) {
+func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip string,
+	valPubKey crypto.PubKey) {
+
 	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome))     // --home
 	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))   // --from
 	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id

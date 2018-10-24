@@ -47,7 +47,7 @@ type ContinuousVestingAccount struct {
 
 Given a vesting account, we may further define the following:
 
-```go
+```
 OV = OriginalVesting (constant)
 V = Percentage of OV that is still vesting (derived by OV and the start/end times)
 DV = DelegatedVesting (variable)

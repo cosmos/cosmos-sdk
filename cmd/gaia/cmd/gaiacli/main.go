@@ -84,7 +84,7 @@ func main() {
 		govcmd.GetCmdQueryProposals(storeGov, cdc),
 		govcmd.GetCmdQueryVote(storeGov, cdc),
 		govcmd.GetCmdQueryVotes(storeGov, cdc),
-    govcmd.GetCmdQueryDeposit(storeGov, cdc),
+		govcmd.GetCmdQueryDeposit(storeGov, cdc),
 		govcmd.GetCmdQueryDeposits(storeGov, cdc),
 		slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
 	)...)

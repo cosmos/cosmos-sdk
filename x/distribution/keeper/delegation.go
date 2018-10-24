@@ -79,21 +79,12 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 		return types.ErrNoDelegationDistInfo(k.codespace)
 	}
 
-	// TODO: Reconcile with duplicate code in getDelegatorRewardsAll.
-	height := ctx.BlockHeight()
-	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
-	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, valAddr)
-	feePool := k.GetFeePool(ctx)
-	delInfo := k.GetDelegationDistInfo(ctx, delegatorAddr, valAddr)
-	valInfo := k.GetValidatorDistInfo(ctx, valAddr)
-	validator := k.stakeKeeper.Validator(ctx, valAddr)
-	delegation := k.stakeKeeper.Delegation(ctx, delegatorAddr, valAddr)
-
-	delInfo, valInfo, feePool, withdraw := delInfo.WithdrawRewards(feePool, valInfo, height, lastTotalPower,
-		lastValPower, validator.GetDelegatorShares(), delegation.GetShares(), validator.GetCommission())
+	feePool, valInfo, delInfo, withdraw :=
+		withdrawDelegatorReward(ctx, delAddr, height, lastTotalPower)
 
 	k.SetValidatorDistInfo(ctx, valInfo)
 	k.SetDelegationDistInfo(ctx, delInfo)
+
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delegatorAddr)
 	coinsToAdd, change := withdraw.TruncateDecimal()
 	feePool.CommunityPool = feePool.CommunityPool.Plus(change)
@@ -110,10 +101,26 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 // return all rewards for all delegations of a delegator
 func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.AccAddress) {
 	height := ctx.BlockHeight()
-	withdraw := k.getDelegatorRewardsAll(ctx, delegatorAddr, height)
-	feePool := k.GetFeePool(ctx)
+
+	// iterate over all the delegations
+	// TODO: Reconcile with duplicate code in WithdrawDelegationReward.
+	withdraw := types.DecCoins{}
+	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
+	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
+		feePool, valInfo, delInfo, diWithdraw :=
+			withdrawDelegatorReward(ctx, delAddr, height, lastTotalPower)
+
+		withdraw = withdraw.Plus(diWithdraw)
+		k.SetFeePool(ctx, feePool)
+		k.SetValidatorDistInfo(ctx, valInfo)
+		k.SetDelegationDistInfo(ctx, delInfo)
+		return false
+	}
+	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
+
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delegatorAddr)
 	coinsToAdd, change := withdraw.TruncateDecimal()
+	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Plus(change)
 	k.SetFeePool(ctx, feePool)
 	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coinsToAdd)
@@ -123,30 +130,20 @@ func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.
 }
 
 // return all rewards for all delegations of a delegator
-func (k Keeper) getDelegatorRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress, height int64) types.DecCoins {
+func (k Keeper) withdrawDelegatorReward(ctx sdk.Context, delAddr sdk.AccAddress,
+	height int64, lastTotalPower sdk.Dec) (
+	feePool, ValidatorDistInfo, DelegatorDistInfo, types.DecCoins) {
 
-	withdraw := types.DecCoins{}
-	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
+	feePool := k.GetFeePool(ctx)
+	valAddr := del.GetValidatorAddr()
+	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, valAddr)
+	delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
+	valInfo := k.GetValidatorDistInfo(ctx, valAddr)
+	validator := k.stakeKeeper.Validator(ctx, valAddr)
+	delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
 
-	// iterate over all the delegations
-	// TODO: Reconcile with duplicate code in WithdrawDelegationReward.
-	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
-		feePool := k.GetFeePool(ctx)
-		valAddr := del.GetValidatorAddr()
-		lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, valAddr)
-		delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
-		valInfo := k.GetValidatorDistInfo(ctx, valAddr)
-		validator := k.stakeKeeper.Validator(ctx, valAddr)
-		delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
+	delInfo, valInfo, feePool, withdraw := delInfo.WithdrawRewards(feePool, valInfo, height, lastTotalPower,
+		lastValPower, validator.GetDelegatorShares(), delegation.GetShares(), validator.GetCommission())
 
-		delInfo, valInfo, feePool, diWithdraw := delInfo.WithdrawRewards(feePool, valInfo, height, lastTotalPower,
-			lastValPower, validator.GetDelegatorShares(), delegation.GetShares(), validator.GetCommission())
-		withdraw = withdraw.Plus(diWithdraw)
-		k.SetFeePool(ctx, feePool)
-		k.SetValidatorDistInfo(ctx, valInfo)
-		k.SetDelegationDistInfo(ctx, delInfo)
-		return false
-	}
-	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
-	return withdraw
+	return feePool, valInfo, delInfo, withdraw
 }

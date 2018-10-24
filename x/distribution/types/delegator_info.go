@@ -21,6 +21,12 @@ func NewDelegationDistInfo(delegatorAddr sdk.AccAddress, valOperatorAddr sdk.Val
 	}
 }
 
+// Get the calculated accum of this delegator at the provided height
+func (di DelegationDistInfo) GetDelAccum(height int64, delegatorShares sdk.Dec) sdk.Dec {
+	blocks := height - di.WithdrawalHeight
+	return delegatorShares.MulInt(sdk.NewInt(blocks))
+}
+
 // Withdraw rewards from delegator.
 // Among many things, it does:
 // * updates validator info's total del accum
@@ -40,9 +46,8 @@ func (di DelegationDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 
 	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
 
-	blocks := height - di.WithdrawalHeight
+	accum := di.GetDelAccum(height, delegatorShares)
 	di.WithdrawalHeight = height
-	accum := delegatorShares.MulInt(sdk.NewInt(blocks))
 	withdrawalTokens := vi.Pool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
 	remainingTokens := vi.Pool.Minus(withdrawalTokens)
 
@@ -50,4 +55,22 @@ func (di DelegationDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	vi.DelAccum.Accum = vi.DelAccum.Accum.Sub(accum)
 
 	return di, vi, fp, withdrawalTokens
+}
+
+// Estimate the delegators rewards at this current state,
+// the estimated rewards are subject to fluctuation
+func (di DelegationDistInfo) EstimateRewards(fp FeePool, vi ValidatorDistInfo,
+	height int64, totalBonded, vdTokens, totalDelShares, delegatorShares,
+	commissionRate sdk.Dec) DecCoins {
+
+	totalDelAccum = GetTotalDelAccum(height, totalDelShares)
+
+	if vi.DelAccum.Accum.IsZero() {
+		return DecCoins{}
+	}
+
+	rewards = vi.EstimatePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
+	accum := di.GetDelAccum(height, delegatorShares)
+	estimatedTokens := rewards.MulDec(accum).QuoDec(totalDelAccum)
+	return estimatedTokens
 }

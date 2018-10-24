@@ -88,7 +88,8 @@ func New(db dbm.DB) Keybase {
 // It returns an error if it fails to
 // generate a key for the given algo type, or if another key is
 // already stored under the same name.
-func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info,
+func (kb dbKeybase) CreateMnemonic(name string, language Language,
+	passwd string, algo SigningAlgo) (info Info,
 	mnemonic string, err error) {
 	if language != English {
 		return nil, "", ErrUnsupportedLanguage
@@ -118,7 +119,8 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 func (kb dbKeybase) CreateKey(name, mnemonic, passwd string) (info Info, err error) {
 	words := strings.Split(mnemonic, " ")
 	if len(words) != 12 && len(words) != 24 {
-		err = fmt.Errorf("recovering only works with 12 word (fundraiser) or 24 word mnemonics, got: %v words",
+		err = fmt.Errorf(
+			"recovering only works with 12 word (fundraiser) or 24 word mnemonics, got: %v words",
 			len(words))
 		return
 	}
@@ -147,7 +149,8 @@ func (kb dbKeybase) CreateFundraiserKey(name, mnemonic, passwd string) (info Inf
 	return
 }
 
-func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info,
+func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase,
+	encryptPasswd string, params hd.BIP44Params) (info Info,
 	err error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
@@ -160,7 +163,8 @@ func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
-func (kb dbKeybase) CreateLedger(name string, path crypto.DerivationPath, algo SigningAlgo) (Info, error) {
+func (kb dbKeybase) CreateLedger(name string, path crypto.DerivationPath,
+	algo SigningAlgo) (Info, error) {
 	if algo != Secp256k1 {
 		return nil, ErrUnsupportedSigningAlgo
 	}
@@ -178,7 +182,8 @@ func (kb dbKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, error
 	return kb.writeOfflineKey(pub, name), nil
 }
 
-func (kb *dbKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
+func (kb *dbKeybase) persistDerivedKey(seed []byte, passwd, name,
+	fullHdPath string) (info Info, err error) {
 	// create master key and derive first key:
 	masterPriv, ch := hd.ComputeMastersFromSeed(seed)
 	derivedPriv, err := hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
@@ -237,7 +242,8 @@ func (kb dbKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 
 // Sign signs the msg with the named key.
 // It returns an error if the key doesn't exist or the decryption fails.
-func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub tmcrypto.PubKey, err error) {
+func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (
+	sig []byte, pub tmcrypto.PubKey, err error) {
 	info, err := kb.Get(name)
 	if err != nil {
 		return
@@ -287,7 +293,8 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 	return sig, pub, nil
 }
 
-func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcrypto.PrivKey, error) {
+func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (
+	tmcrypto.PrivKey, error) {
 	info, err := kb.Get(name)
 	if err != nil {
 		return nil, err
@@ -445,7 +452,8 @@ func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string
 	return info
 }
 
-func (kb dbKeybase) writeLedgerKey(pub tmcrypto.PubKey, path crypto.DerivationPath, name string) Info {
+func (kb dbKeybase) writeLedgerKey(pub tmcrypto.PubKey, path crypto.DerivationPath,
+	name string) Info {
 	info := newLedgerInfo(name, pub, path)
 	kb.writeInfo(info, name)
 	return info

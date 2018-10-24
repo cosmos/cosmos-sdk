@@ -19,7 +19,8 @@ import (
 type AppInit struct {
 	// AppGenState creates the core parameters initialization. It takes in a
 	// pubkey meant to represent the pubkey of the validator of this machine.
-	AppGenState func(cdc *codec.Codec, appGenTx []json.RawMessage) (appState json.RawMessage, err error)
+	AppGenState func(cdc *codec.Codec, appGenTx []json.RawMessage) (
+		appState json.RawMessage, err error)
 }
 
 // SimpleGenTx is a simple genesis tx
@@ -64,7 +65,8 @@ func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (appGenTx, cliPrint json
 }
 
 // create the genesis app state
-func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func SimpleAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (
+	appState json.RawMessage, err error) {
 
 	if len(appGenTxs) != 1 {
 		err = errors.New("must provide a single genesis transaction")
@@ -103,7 +105,8 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 	)
 
 	// generate a private key, with recovery phrase
-	info, secret, err := keybase.CreateMnemonic("name", keys.English, "pass", keys.Secp256k1)
+	info, secret, err := keybase.CreateMnemonic("name", keys.English,
+		"pass", keys.Secp256k1)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}
@@ -113,7 +116,8 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 
 // GenerateSaveCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
-func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
+func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (
+	sdk.AccAddress, string, error) {
 
 	// get the keystore from the client
 	keybase, err := clkeys.GetKeyBaseFromDirWithWritePerm(clientRoot)

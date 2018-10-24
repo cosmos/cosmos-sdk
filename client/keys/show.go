@@ -2,12 +2,16 @@ package keys
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/tendermint/tendermint/crypto"
 	"net/http"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
@@ -19,30 +23,68 @@ const (
 	FlagPublicKey = "pubkey"
 	// FlagBechPrefix defines a desired Bech32 prefix encoding for a key.
 	FlagBechPrefix = "bech"
+
+	flagMultiSigThreshold  = "multisig-threshold"
+	defaultMultiSigKeyName = "multi"
 )
+
+var _ keys.Info = (*multiSigKey)(nil)
+
+type multiSigKey struct {
+	name string
+	key  crypto.PubKey
+}
+
+func (m multiSigKey) GetName() string            { return m.name }
+func (m multiSigKey) GetType() keys.KeyType      { return keys.TypeLocal }
+func (m multiSigKey) GetPubKey() crypto.PubKey   { return m.key }
+func (m multiSigKey) GetAddress() sdk.AccAddress { return sdk.AccAddress(m.key.Address()) }
 
 func showKeysCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show [name]",
 		Short: "Show key info for the given name",
 		Long:  `Return public details of one local key.`,
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  runShowCmd,
 	}
 
 	cmd.Flags().String(FlagBechPrefix, "acc", "The Bech32 prefix encoding for a key (acc|val|cons)")
 	cmd.Flags().Bool(FlagAddress, false, "output the address only (overrides --output)")
 	cmd.Flags().Bool(FlagPublicKey, false, "output the public key only (overrides --output)")
+	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 
 	return cmd
 }
 
-func runShowCmd(cmd *cobra.Command, args []string) error {
-	name := args[0]
+func runShowCmd(cmd *cobra.Command, args []string) (err error) {
+	var info keys.Info
 
-	info, err := GetKeyInfo(name)
-	if err != nil {
-		return err
+	if len(args) == 1 {
+		info, err = GetKeyInfo(args[0])
+		if err != nil {
+			return err
+		}
+	} else {
+		pks := make([]crypto.PubKey, len(args))
+		for i, keyName := range args {
+			info, err := GetKeyInfo(keyName)
+			if err != nil {
+				return err
+			}
+			pks[i] = info.GetPubKey()
+		}
+
+		multisigThreshold := viper.GetInt(flagMultiSigThreshold)
+		err = validateMultisigThreshold(multisigThreshold, len(args))
+		if err != nil {
+			return err
+		}
+		multikey := multisig.NewPubKeyMultisigThreshold(multisigThreshold, pks)
+		info = multiSigKey{
+			name: defaultMultiSigKeyName,
+			key:  multikey,
+		}
 	}
 
 	isShowAddr := viper.GetBool(FlagAddress)
@@ -71,6 +113,17 @@ func runShowCmd(cmd *cobra.Command, args []string) error {
 		printKeyInfo(info, bechKeyOut)
 	}
 
+	return nil
+}
+
+func validateMultisigThreshold(k, nKeys int) error {
+	if k <= 0 {
+		return fmt.Errorf("threshold must be a positive integer")
+	}
+	if nKeys < k {
+		return fmt.Errorf(
+			"threshold k of n multisignature: %d < %d", nKeys, k)
+	}
 	return nil
 }
 

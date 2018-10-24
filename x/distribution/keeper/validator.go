@@ -50,7 +50,7 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
 	validator := k.stakeKeeper.Validator(ctx, operatorAddr)
-	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, operatorAddr)
+	lastValPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastValidatorPower(ctx, operatorAddr))
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
 	withdraw := k.getDelegatorRewardsAll(ctx, accAddr, height)
 

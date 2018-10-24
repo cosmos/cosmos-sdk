@@ -73,13 +73,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// calculate the new power bytes
 		newPower := validator.BondedTokens().RoundInt64()
-		newPowerBytes := k.cdc.MustMarshalBinary(sdk.NewDec(newPower))
+		newPowerBytes := k.cdc.MustMarshalBinary(sdk.NewInt(newPower))
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
 
 			// set validator power on lookup index.
-			k.SetLastValidatorPower(ctx, operator, sdk.NewDec(newPower))
+			k.SetLastValidatorPower(ctx, operator, sdk.NewInt(newPower))
 		}
 
 		// validator still in the validator set, so delete from the copy

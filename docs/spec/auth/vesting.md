@@ -1,39 +1,47 @@
-## Vesting
+# Vesting
 
-### Intro and Requirements
+## Intro and Requirements
 
-This paper specifies vesting account implementation for the Cosmos Hub. 
-The requirements for this vesting account is that it should be initialized during genesis with
-a starting balance X coins and a vesting endtime T. The owner of this account should be able to delegate to validators 
-and vote with locked coins, however they cannot send locked coins to other accounts until those coins have been unlocked. 
-The vesting account should also be able to spend any coins it receives from other users. 
-Thus, the bank module's `MsgSend` handler should error if a vesting account is trying to send an amount that exceeds their 
+This paper specifies vesting account implementation for the Cosmos Hub.
+The requirements for this vesting account is that it should be initialized
+during genesis with a starting balance `X` coins and a vesting end time `T`.
+
+The owner of this account should be able to delegate to validators
+and vote with locked coins, however they cannot send locked coins to other
+accounts until those coins have been unlocked.
+
+In addition, the vesting account should also be able to spend any coins it
+receives from other users. Thus, the bank module's `MsgSend` handler should
+error if a vesting account is trying to send an amount that exceeds their
 unlocked coin amount.
 
-### Implementation
+## Implementation
 
-##### Vesting Account implementation
+### Vesting Account implementation
 
-NOTE:  `Now = ctx.BlockHeader().Time`
+Given, `Now := ctx.BlockHeader().Time`
 
 ```go
 type VestingAccount interface {
     Account
-    AssertIsVestingAccount() // existence implies that account is vesting.
+    AssertIsVestingAccount() // existence implies that account is vesting
 
-    // Calculates amount of coins that can be sent to other accounts given the current time
+    // Calculates the amount of coins that can be sent to other accounts given
+    // the current time.
     SendableCoins(sdk.Context) sdk.Coins
 }
 
-// Implements Vesting Account
-// Continuously vests by unlocking coins linearly with respect to time
+// ContinuousVestingAccount implements the Vesting Account interface. It
+// continuously vests by unlocking coins linearly with respect to time.
 type ContinuousVestingAccount struct {
     BaseAccount
-    OriginalVestingCoins sdk.Coins // Coins in account on Initialization
-    ReceivedCoins        sdk.Coins // Coins received from other accounts
-    SentCoins            sdk.Coins // Coins sent to other accounts
 
-    // StartTime and EndTime used to calculate how much of OriginalCoins is unlocked at any given point
+    OriginalVesting   sdk.Coins // coins in account upon initialization
+    DelegatedVesting  sdk.Coins // coins that vesting and delegated
+    DelegatedFree     sdk.Coins // coins that are vested and delegated
+
+    // StartTime and EndTime are used to calculate how much of OriginalVesting
+    // is unlocked at any given point.
     StartTime time.Time
     EndTime   time.Time
 }

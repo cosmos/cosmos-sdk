@@ -9,8 +9,8 @@ import (
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
 
-	"github.com/spf13/cobra"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
+	"github.com/spf13/cobra"
 )
 
 func updateKeyCommand() *cobra.Command {

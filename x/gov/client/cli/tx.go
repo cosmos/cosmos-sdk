@@ -15,9 +15,9 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 
 const (

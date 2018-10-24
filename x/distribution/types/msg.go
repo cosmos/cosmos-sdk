@@ -6,7 +6,7 @@ import (
 )
 
 // name to identify transaction types
-const MsgType = "distr"
+const MsgRoute = "distr"
 
 // Verify interface at compile time
 var _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorRewardsAll{}
@@ -27,8 +27,8 @@ func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgSetWithdr
 	}
 }
 
-func (msg MsgSetWithdrawAddress) Type() string { return MsgType }
-func (msg MsgSetWithdrawAddress) Name() string { return "set_withdraw_address" }
+func (msg MsgSetWithdrawAddress) Route() string { return MsgRoute }
+func (msg MsgSetWithdrawAddress) Type() string  { return "set_withdraw_address" }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
@@ -68,8 +68,8 @@ func NewMsgWithdrawDelegatorRewardsAll(delAddr sdk.AccAddress) MsgWithdrawDelega
 	}
 }
 
-func (msg MsgWithdrawDelegatorRewardsAll) Type() string { return MsgType }
-func (msg MsgWithdrawDelegatorRewardsAll) Name() string { return "withdraw_delegation_rewards_all" }
+func (msg MsgWithdrawDelegatorRewardsAll) Route() string { return MsgRoute }
+func (msg MsgWithdrawDelegatorRewardsAll) Type() string  { return "withdraw_delegation_rewards_all" }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawDelegatorRewardsAll) GetSigners() []sdk.AccAddress {
@@ -108,8 +108,8 @@ func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddres
 	}
 }
 
-func (msg MsgWithdrawDelegatorReward) Type() string { return MsgType }
-func (msg MsgWithdrawDelegatorReward) Name() string { return "withdraw_delegation_reward" }
+func (msg MsgWithdrawDelegatorReward) Route() string { return MsgRoute }
+func (msg MsgWithdrawDelegatorReward) Type() string  { return "withdraw_delegation_reward" }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
@@ -149,8 +149,8 @@ func NewMsgWithdrawValidatorRewardsAll(valAddr sdk.ValAddress) MsgWithdrawValida
 	}
 }
 
-func (msg MsgWithdrawValidatorRewardsAll) Type() string { return MsgType }
-func (msg MsgWithdrawValidatorRewardsAll) Name() string { return "withdraw_validator_rewards_all" }
+func (msg MsgWithdrawValidatorRewardsAll) Route() string { return MsgRoute }
+func (msg MsgWithdrawValidatorRewardsAll) Type() string  { return "withdraw_validator_rewards_all" }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawValidatorRewardsAll) GetSigners() []sdk.AccAddress {

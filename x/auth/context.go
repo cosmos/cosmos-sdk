@@ -8,7 +8,7 @@ import (
 
 Usage:
 
-var accounts types.AccountMapper
+var accounts types.AccountKeeper
 
 // Fetch all signer accounts.
 addrs := tx.GetSigners()

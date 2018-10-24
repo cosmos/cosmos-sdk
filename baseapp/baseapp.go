@@ -384,12 +384,12 @@ func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// path[0] should be "custom" because "/custom" prefix is required for keeper queries.
 	// the queryRouter routes using path[1]. For example, in the path "custom/gov/proposal", queryRouter routes using "gov"
-	if path[1] == "" {
-		sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
+	if len(path) < 2 || path[1] == "" {
+		return sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
 	}
 	querier := app.queryRouter.Route(path[1])
 	if querier == nil {
-		sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
+		return sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
 	}
 
 	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger).
@@ -528,10 +528,10 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 	var code sdk.ABCICodeType
 	for msgIdx, msg := range msgs {
 		// Match route.
-		msgType := msg.Type()
-		handler := app.router.Route(msgType)
+		msgRoute := msg.Route()
+		handler := app.router.Route(msgRoute)
 		if handler == nil {
-			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgType).Result()
+			return sdk.ErrUnknownRequest("Unrecognized Msg type: " + msgRoute).Result()
 		}
 
 		var msgResult sdk.Result
@@ -539,7 +539,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		if mode != runTxModeCheck {
 			msgResult = handler(ctx, msg)
 		}
-		msgResult.Tags = append(msgResult.Tags, sdk.MakeTag("action", []byte(msg.Name())))
+		msgResult.Tags = append(msgResult.Tags, sdk.MakeTag("action", []byte(msg.Type())))
 
 		// NOTE: GasWanted is determined by ante handler and
 		// GasUsed by the GasMeter

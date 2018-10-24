@@ -12,22 +12,56 @@ type DelegatorWithdrawInfo struct {
 // GenesisState - all distribution state that must be provided at genesis
 type GenesisState struct {
 	FeePool                FeePool                 `json:"fee_pool"`
+	CommunityTax           sdk.Dec                 `json:"community_tax"`
+	BaseProposerReward     sdk.Dec                 `json:"base_proposer_reward"`
+	BonusProposerReward    sdk.Dec                 `json:"bonus_proposer_reward"`
 	ValidatorDistInfos     []ValidatorDistInfo     `json:"validator_dist_infos"`
-	DelegatorDistInfos     []DelegatorDistInfo     `json:"delegator_dist_infos"`
+	DelegationDistInfos    []DelegationDistInfo    `json:"delegator_dist_infos"`
 	DelegatorWithdrawInfos []DelegatorWithdrawInfo `json:"delegator_withdraw_infos"`
 }
 
-func NewGenesisState(feePool FeePool, vdis []ValidatorDistInfo, ddis []DelegatorDistInfo) GenesisState {
+func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
+	vdis []ValidatorDistInfo, ddis []DelegationDistInfo, dwis []DelegatorWithdrawInfo) GenesisState {
+
 	return GenesisState{
-		FeePool:            feePool,
-		ValidatorDistInfos: vdis,
-		DelegatorDistInfos: ddis,
+		FeePool:                feePool,
+		CommunityTax:           communityTax,
+		BaseProposerReward:     baseProposerReward,
+		BonusProposerReward:    bonusProposerReward,
+		ValidatorDistInfos:     vdis,
+		DelegationDistInfos:    ddis,
+		DelegatorWithdrawInfos: dwis,
 	}
 }
 
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		FeePool: InitialFeePool(),
+		FeePool:             InitialFeePool(),
+		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
+		BaseProposerReward:  sdk.NewDecWithPrec(1, 2), // 1%
+		BonusProposerReward: sdk.NewDecWithPrec(4, 2), // 4%
+	}
+}
+
+// default genesis utility function, initialize for starting validator set
+func DefaultGenesisWithValidators(valAddrs []sdk.ValAddress) GenesisState {
+
+	vdis := make([]ValidatorDistInfo, len(valAddrs))
+	ddis := make([]DelegationDistInfo, len(valAddrs))
+
+	for i, valAddr := range valAddrs {
+		vdis[i] = NewValidatorDistInfo(valAddr, 0)
+		accAddr := sdk.AccAddress(valAddr)
+		ddis[i] = NewDelegationDistInfo(accAddr, valAddr, 0)
+	}
+
+	return GenesisState{
+		FeePool:             InitialFeePool(),
+		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
+		BaseProposerReward:  sdk.NewDecWithPrec(1, 2), // 1%
+		BonusProposerReward: sdk.NewDecWithPrec(4, 2), // 4%
+		ValidatorDistInfos:  vdis,
+		DelegationDistInfos: ddis,
 	}
 }

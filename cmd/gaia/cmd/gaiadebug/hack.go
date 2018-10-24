@@ -135,9 +135,10 @@ type GaiaApp struct {
 	tkeyStake   *sdk.TransientStoreKey
 	keySlashing *sdk.KVStoreKey
 	keyParams   *sdk.KVStoreKey
+	tkeyParams  *sdk.TransientStoreKey
 
 	// Manage getting and setting accounts
-	accountMapper       auth.AccountMapper
+	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
 	stakeKeeper         stake.Keeper
@@ -161,20 +162,21 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 		tkeyStake:   sdk.NewTransientStoreKey("transient_stake"),
 		keySlashing: sdk.NewKVStoreKey("slashing"),
 		keyParams:   sdk.NewKVStoreKey("params"),
+		tkeyParams:  sdk.NewTransientStoreKey("transient_params"),
 	}
 
-	// define the accountMapper
-	app.accountMapper = auth.NewAccountMapper(
+	// define the accountKeeper
+	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
 		app.keyAccount,        // target store
 		auth.ProtoBaseAccount, // prototype
 	)
 
 	// add handlers
-	app.bankKeeper = bank.NewBaseKeeper(app.accountMapper)
-	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams)
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Getter(), app.RegisterCodespace(slashing.DefaultCodespace))
+	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
+	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace), app.RegisterCodespace(stake.DefaultCodespace))
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), app.RegisterCodespace(slashing.DefaultCodespace))
 
 	// register message routes
 	app.Router().
@@ -185,8 +187,9 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keySlashing)
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keySlashing, app.keyParams)
+	app.MountStore(app.tkeyParams, sdk.StoreTypeTransient)
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -243,7 +246,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// load the accounts
 	for _, gacc := range genesisState.Accounts {
 		acc := gacc.ToAccount()
-		app.accountMapper.SetAccount(ctx, acc)
+		app.accountKeeper.SetAccount(ctx, acc)
 	}
 
 	// load the initial stake information
@@ -251,6 +254,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}
+
+	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
 
 	return abci.ResponseInitChain{
 		Validators: validators,

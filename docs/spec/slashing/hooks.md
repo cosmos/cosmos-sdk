@@ -12,6 +12,17 @@ and `SlashedSoFar` of `0`:
 ```
 onValidatorBonded(address sdk.ValAddress)
 
+  signingInfo, found = getValidatorSigningInfo(address)
+  if !found {
+    signingInfo = ValidatorSigningInfo {
+      StartHeight         : CurrentHeight,
+      IndexOffset         : 0,
+      JailedUntil         : time.Unix(0, 0),
+      MissedBloskCounter  : 0
+    }
+    setValidatorSigningInfo(signingInfo)
+  }
+
   slashingPeriod = SlashingPeriod{
       ValidatorAddr : address,
       StartHeight   : CurrentHeight,

@@ -21,7 +21,7 @@ func getMockApp(t *testing.T) *mock.App {
 	RegisterCodec(mapp.Cdc)
 	keyIBC := sdk.NewKVStoreKey("ibc")
 	ibcMapper := NewMapper(mapp.Cdc, keyIBC, mapp.RegisterCodespace(DefaultCodespace))
-	bankKeeper := bank.NewBaseKeeper(mapp.AccountMapper)
+	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper)
 	mapp.Router().AddRoute("ibc", NewHandler(ibcMapper, bankKeeper))
 
 	require.NoError(t, mapp.CompleteSetup(keyIBC))
@@ -49,7 +49,7 @@ func TestIBCMsgs(t *testing.T) {
 
 	// A checkTx context (true)
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
-	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
+	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
 	require.Equal(t, acc, res1)
 
 	packet := IBCPacket{

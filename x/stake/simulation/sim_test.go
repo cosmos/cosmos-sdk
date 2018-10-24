@@ -8,9 +8,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
@@ -19,11 +22,19 @@ func TestStakeWithRandomMessages(t *testing.T) {
 	mapp := mock.NewApp()
 
 	bank.RegisterCodec(mapp.Cdc)
-	mapper := mapp.AccountMapper
+	mapper := mapp.AccountKeeper
 	bankKeeper := bank.NewBaseKeeper(mapper)
+	feeKey := sdk.NewKVStoreKey("fee")
 	stakeKey := sdk.NewKVStoreKey("stake")
 	stakeTKey := sdk.NewTransientStoreKey("transient_stake")
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, stakeTKey, bankKeeper, stake.DefaultCodespace)
+	paramsKey := sdk.NewKVStoreKey("params")
+	paramsTKey := sdk.NewTransientStoreKey("transient_params")
+	distrKey := sdk.NewKVStoreKey("distr")
+
+	feeCollectionKeeper := auth.NewFeeCollectionKeeper(mapp.Cdc, feeKey)
+	paramstore := params.NewKeeper(mapp.Cdc, paramsKey, paramsTKey)
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, stakeKey, stakeTKey, bankKeeper, paramstore.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
+	distrKeeper := distribution.NewKeeper(mapp.Cdc, distrKey, paramstore.Subspace(distribution.DefaultParamspace), bankKeeper, stakeKeeper, feeCollectionKeeper, distribution.DefaultCodespace)
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
 	mapp.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		validatorUpdates := stake.EndBlocker(ctx, stakeKeeper)
@@ -32,7 +43,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		}
 	})
 
-	err := mapp.CompleteSetup(stakeKey, stakeTKey)
+	err := mapp.CompleteSetup(stakeKey, stakeTKey, paramsKey, paramsTKey)
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +64,7 @@ func TestStakeWithRandomMessages(t *testing.T) {
 		}, []simulation.RandSetup{
 			Setup(mapp, stakeKeeper),
 		}, []simulation.Invariant{
-			AllInvariants(bankKeeper, stakeKeeper, mapp.AccountMapper),
+			AllInvariants(bankKeeper, stakeKeeper, feeCollectionKeeper, distrKeeper, mapp.AccountKeeper),
 		}, 10, 100,
 		false,
 	)

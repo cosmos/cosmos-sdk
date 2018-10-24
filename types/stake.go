@@ -44,6 +44,7 @@ type Validator interface {
 	GetConsAddr() ConsAddress     // validation consensus address
 	GetPower() Dec                // validation power
 	GetTokens() Dec               // validation tokens
+	GetCommission() Dec           // validator commission rate
 	GetDelegatorShares() Dec      // Total out standing delegator shares
 	GetBondHeight() int64         // height in which the validator became active
 }
@@ -84,9 +85,9 @@ type ValidatorSet interface {
 
 // delegation bond for a delegated proof of stake system
 type Delegation interface {
-	GetDelegator() AccAddress // delegator AccAddress for the bond
-	GetValidator() ValAddress // validator operator address
-	GetShares() Dec           // amount of validator's shares held in this delegation
+	GetDelegatorAddr() AccAddress // delegator AccAddress for the bond
+	GetValidatorAddr() ValAddress // validator operator address
+	GetShares() Dec               // amount of validator's shares held in this delegation
 }
 
 // properties for the set of all delegations for a particular
@@ -110,12 +111,12 @@ type DelegationSet interface {
 
 // event hooks for staking validator object
 type StakingHooks interface {
-	OnValidatorCreated(ctx Context, address ValAddress)          // Must be called when a validator is created
-	OnValidatorCommissionChange(ctx Context, address ValAddress) // Must be called when a validator's commission is modified
-	OnValidatorRemoved(ctx Context, address ValAddress)          // Must be called when a validator is deleted
+	OnValidatorCreated(ctx Context, address ValAddress)  // Must be called when a validator is created
+	OnValidatorModified(ctx Context, address ValAddress) // Must be called when a validator's state changes
+	OnValidatorRemoved(ctx Context, address ValAddress)  // Must be called when a validator is deleted
 
-	OnValidatorBonded(ctx Context, address ConsAddress)         // Must be called when a validator is bonded
-	OnValidatorBeginUnbonding(ctx Context, address ConsAddress) // Must be called when a validator begins unbonding
+	OnValidatorBonded(ctx Context, address ConsAddress, operator ValAddress)         // Must be called when a validator is bonded
+	OnValidatorBeginUnbonding(ctx Context, address ConsAddress, operator ValAddress) // Must be called when a validator begins unbonding
 
 	OnDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is created
 	OnDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified

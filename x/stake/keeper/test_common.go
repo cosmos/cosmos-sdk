@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -72,58 +73,52 @@ func MakeTestCodec() *codec.Codec {
 	return cdc
 }
 
-// default params without inflation
-func ParamsNoInflation() types.Params {
-	return types.Params{
-		InflationRateChange: sdk.ZeroDec(),
-		InflationMax:        sdk.ZeroDec(),
-		InflationMin:        sdk.ZeroDec(),
-		GoalBonded:          sdk.NewDecWithPrec(67, 2),
-		MaxValidators:       100,
-		BondDenom:           "steak",
-	}
-}
-
 // hogpodge of all sorts of input required for testing
-func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountMapper, Keeper) {
+func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
+	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	cdc := MakeTestCodec()
-	accountMapper := auth.NewAccountMapper(
+	accountKeeper := auth.NewAccountKeeper(
 		cdc,                   // amino codec
 		keyAcc,                // target store
 		auth.ProtoBaseAccount, // prototype
 	)
-	ck := bank.NewBaseKeeper(accountMapper)
-	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, types.DefaultCodespace)
+
+	ck := bank.NewBaseKeeper(accountKeeper)
+
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetParams(ctx, types.DefaultParams())
-	keeper.InitIntraTxCounter(ctx)
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {
 		pool := keeper.GetPool(ctx)
 		_, _, err := ck.AddCoins(ctx, addr, sdk.Coins{
-			{keeper.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
+			{keeper.BondDenom(ctx), sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
 		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(initCoins))
 		keeper.SetPool(ctx, pool)
 	}
 
-	return ctx, accountMapper, keeper
+	return ctx, accountKeeper, keeper
 }
 
 func NewPubKey(pk string) (res crypto.PubKey) {
@@ -203,7 +198,8 @@ func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) b
 	return store.Has(power)
 }
 
-func testingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) types.Validator {
+// update validator for testing
+func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) types.Validator {
 	pool := keeper.GetPool(ctx)
 	keeper.SetValidator(ctx, validator)
 	keeper.SetValidatorByPowerIndex(ctx, validator, pool)

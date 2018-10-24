@@ -7,7 +7,7 @@ import (
 )
 
 // name to idetify transaction types
-const MsgType = "gov"
+const MsgRoute = "gov"
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
@@ -31,9 +31,9 @@ func NewMsgSubmitProposal(title string, description string, proposalType Proposa
 	}
 }
 
-// Implements Msg.
-func (msg MsgSubmitProposal) Type() string { return MsgType }
-func (msg MsgSubmitProposal) Name() string { return "submit_proposal" }
+//nolint
+func (msg MsgSubmitProposal) Route() string { return MsgRoute }
+func (msg MsgSubmitProposal) Type() string  { return "submit_proposal" }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
@@ -84,9 +84,9 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 //-----------------------------------------------------------
 // MsgDeposit
 type MsgDeposit struct {
-	ProposalID int64          `json:"proposalID"` // ID of the proposal
-	Depositer  sdk.AccAddress `json:"depositer"`  // Address of the depositer
-	Amount     sdk.Coins      `json:"amount"`     // Coins to add to the proposal's deposit
+	ProposalID int64          `json:"proposal_id"` // ID of the proposal
+	Depositer  sdk.AccAddress `json:"depositer"`   // Address of the depositer
+	Amount     sdk.Coins      `json:"amount"`      // Coins to add to the proposal's deposit
 }
 
 func NewMsgDeposit(depositer sdk.AccAddress, proposalID int64, amount sdk.Coins) MsgDeposit {
@@ -99,8 +99,8 @@ func NewMsgDeposit(depositer sdk.AccAddress, proposalID int64, amount sdk.Coins)
 
 // Implements Msg.
 // nolint
-func (msg MsgDeposit) Type() string { return MsgType }
-func (msg MsgDeposit) Name() string { return "deposit" }
+func (msg MsgDeposit) Route() string { return MsgRoute }
+func (msg MsgDeposit) Type() string  { return "deposit" }
 
 // Implements Msg.
 func (msg MsgDeposit) ValidateBasic() sdk.Error {
@@ -145,9 +145,9 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 //-----------------------------------------------------------
 // MsgVote
 type MsgVote struct {
-	ProposalID int64          //  proposalID of the proposal
-	Voter      sdk.AccAddress //  address of the voter
-	Option     VoteOption     //  option from OptionSet chosen by the voter
+	ProposalID int64          `json:"proposal_id"` // ID of the proposal
+	Voter      sdk.AccAddress `json:"voter"`       //  address of the voter
+	Option     VoteOption     `json:"option"`      //  option from OptionSet chosen by the voter
 }
 
 func NewMsgVote(voter sdk.AccAddress, proposalID int64, option VoteOption) MsgVote {
@@ -160,8 +160,8 @@ func NewMsgVote(voter sdk.AccAddress, proposalID int64, option VoteOption) MsgVo
 
 // Implements Msg.
 // nolint
-func (msg MsgVote) Type() string { return MsgType }
-func (msg MsgVote) Name() string { return "vote" }
+func (msg MsgVote) Route() string { return MsgRoute }
+func (msg MsgVote) Type() string  { return "vote" }
 
 // Implements Msg.
 func (msg MsgVote) ValidateBasic() sdk.Error {

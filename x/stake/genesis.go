@@ -26,7 +26,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 
 	keeper.SetPool(ctx, data.Pool)
 	keeper.SetParams(ctx, data.Params)
-	keeper.InitIntraTxCounter(ctx)
 
 	for i, validator := range data.Validators {
 		validator.BondIntraTxCounter = int16(i) // set the intra-tx counter to the order the validators are presented
@@ -42,10 +41,12 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
+		keeper.OnValidatorCreated(ctx, validator.OperatorAddr)
 	}
 
-	for _, bond := range data.Bonds {
-		keeper.SetDelegation(ctx, bond)
+	for _, delegation := range data.Bonds {
+		keeper.SetDelegation(ctx, delegation)
+		keeper.OnDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
 	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -100,19 +101,8 @@ func ValidateGenesis(data types.GenesisState) error {
 }
 
 func validateParams(params types.Params) error {
-	if params.GoalBonded.LTE(sdk.ZeroDec()) {
-		bondedPercent := params.GoalBonded.MulInt(sdk.NewInt(100)).String()
-		return fmt.Errorf("staking parameter GoalBonded should be positive, instead got %s percent", bondedPercent)
-	}
-	if params.GoalBonded.GT(sdk.OneDec()) {
-		bondedPercent := params.GoalBonded.MulInt(sdk.NewInt(100)).String()
-		return fmt.Errorf("staking parameter GoalBonded should be less than 100 percent, instead got %s percent", bondedPercent)
-	}
 	if params.BondDenom == "" {
 		return fmt.Errorf("staking parameter BondDenom can't be an empty string")
-	}
-	if params.InflationMax.LT(params.InflationMin) {
-		return fmt.Errorf("staking parameter Max inflation must be greater than or equal to min inflation")
 	}
 	return nil
 }

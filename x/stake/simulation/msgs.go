@@ -14,9 +14,11 @@ import (
 )
 
 // SimulateMsgCreateValidator
-func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+func SimulateMsgCreateValidator(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		description := stake.Description{
@@ -71,7 +73,9 @@ func SimulateMsgCreateValidator(m auth.AccountMapper, k stake.Keeper) simulation
 // SimulateMsgEditValidator
 func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		description := stake.Description{
 			Moniker:  simulation.RandStringOfLength(r, 10),
@@ -107,9 +111,11 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 }
 
 // SimulateMsgDelegate
-func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+func SimulateMsgDelegate(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		validatorAcc := simulation.RandomAcc(r, accs)
@@ -143,9 +149,11 @@ func SimulateMsgDelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operat
 }
 
 // SimulateMsgBeginUnbonding
-func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+func SimulateMsgBeginUnbonding(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		validatorAcc := simulation.RandomAcc(r, accs)
@@ -179,9 +187,11 @@ func SimulateMsgBeginUnbonding(m auth.AccountMapper, k stake.Keeper) simulation.
 }
 
 // SimulateMsgBeginRedelegate
-func SimulateMsgBeginRedelegate(m auth.AccountMapper, k stake.Keeper) simulation.Operation {
+func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simulation.Account, event func(string)) (
+		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
 		sourceValidatorAcc := simulation.RandomAcc(r, accs)
@@ -224,16 +234,14 @@ func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
 	return func(r *rand.Rand, accs []simulation.Account) {
 		ctx := mapp.NewContext(false, abci.Header{})
 		gen := stake.DefaultGenesisState()
-		gen.Params.InflationMax = sdk.NewDec(0)
-		gen.Params.InflationMin = sdk.NewDec(0)
 		stake.InitGenesis(ctx, k, gen)
 		params := k.GetParams(ctx)
 		denom := params.BondDenom
 		loose := sdk.ZeroInt()
-		mapp.AccountMapper.IterateAccounts(ctx, func(acc auth.Account) bool {
+		mapp.AccountKeeper.IterateAccounts(ctx, func(acc auth.Account) bool {
 			balance := simulation.RandomAmount(r, sdk.NewInt(1000000))
 			acc.SetCoins(acc.GetCoins().Plus(sdk.Coins{sdk.NewCoin(denom, balance)}))
-			mapp.AccountMapper.SetAccount(ctx, acc)
+			mapp.AccountKeeper.SetAccount(ctx, acc)
 			loose = loose.Add(balance)
 			return false
 		})

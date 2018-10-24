@@ -11,7 +11,7 @@ import (
 
 func TestNewMsgSend(t *testing.T) {}
 
-func TestMsgSendType(t *testing.T) {
+func TestMsgSendRoute(t *testing.T) {
 	// Construct a MsgSend
 	addr1 := sdk.AccAddress([]byte("input"))
 	addr2 := sdk.AccAddress([]byte("output"))
@@ -22,7 +22,7 @@ func TestMsgSendType(t *testing.T) {
 	}
 
 	// TODO some failures for bad result
-	require.Equal(t, msg.Type(), "bank")
+	require.Equal(t, msg.Route(), "bank")
 }
 
 func TestInputValidation(t *testing.T) {
@@ -231,7 +231,7 @@ func TestNewMsgIssue(t *testing.T) {
 	// TODO
 }
 
-func TestMsgIssueType(t *testing.T) {
+func TestMsgIssueRoute(t *testing.T) {
 	// Construct an MsgIssue
 	addr := sdk.AccAddress([]byte("loan-from-bank"))
 	coins := sdk.Coins{sdk.NewInt64Coin("atom", 10)}
@@ -241,7 +241,7 @@ func TestMsgIssueType(t *testing.T) {
 	}
 
 	// TODO some failures for bad result
-	require.Equal(t, msg.Type(), "bank")
+	require.Equal(t, msg.Route(), "bank")
 }
 
 func TestMsgIssueValidation(t *testing.T) {

@@ -359,6 +359,13 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 		}
 	}
 
+	// call the appropriate hook if present
+	if found {
+		k.OnDelegationSharesModified(ctx, delAddr, validator.OperatorAddr)
+	} else {
+		k.OnDelegationCreated(ctx, delAddr, validator.OperatorAddr)
+	}
+
 	if subtractAccount {
 		// Account new shares, save
 		_, _, err = k.bankKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
@@ -373,6 +380,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	delegation.Shares = delegation.Shares.Add(newShares)
 	delegation.Height = ctx.BlockHeight()
 	k.SetDelegation(ctx, delegation)
+
 	return newShares, nil
 }
 
@@ -380,14 +388,14 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 	shares sdk.Dec) (amount sdk.Dec, err sdk.Error) {
 
-	k.OnDelegationSharesModified(ctx, delAddr, valAddr)
-
 	// check if delegation has any shares in it unbond
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
 		err = types.ErrNoDelegatorForAddress(k.Codespace())
 		return
 	}
+
+	k.OnDelegationSharesModified(ctx, delAddr, valAddr)
 
 	// retrieve the amount to remove
 	if delegation.Shares.LT(shares) {
@@ -425,19 +433,18 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	// remove the coins from the validator
 	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
 
-	if validator.DelegatorShares.IsZero() && validator.Status != sdk.Bonded {
-		// if bonded, we must remove in EndBlocker instead
+	if validator.DelegatorShares.IsZero() && validator.Status == sdk.Unbonded {
+		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 
-	k.OnDelegationSharesModified(ctx, delegation.DelegatorAddr, validator.OperatorAddr)
 	return amount, nil
 }
 
 //______________________________________________________________________________________________________
 
 // get info for begin functions: MinTime and CreationHeight
-func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, valSrcAddr sdk.ValAddress) (
+func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 	minTime time.Time, height int64, completeNow bool) {
 
 	validator, found := k.GetValidator(ctx, valSrcAddr)
@@ -446,11 +453,11 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, params types.Params, valSrcAddr sd
 	case !found || validator.Status == sdk.Bonded:
 
 		// the longest wait - just unbonding period from now
-		minTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
-		height = ctx.BlockHeader().Height
+		minTime = ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
+		height = ctx.BlockHeight()
 		return minTime, height, false
 
-	case validator.IsUnbonded(ctx):
+	case validator.Status == sdk.Unbonded:
 		return minTime, height, true
 
 	case validator.Status == sdk.Unbonding:
@@ -474,15 +481,21 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	}
 
 	// create the unbonding delegation
-	params := k.GetParams(ctx)
-	minTime, height, completeNow := k.getBeginInfo(ctx, params, valAddr)
+	minTime, height, completeNow := k.getBeginInfo(ctx, valAddr)
 
 	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
 	if err != nil {
 		return types.UnbondingDelegation{}, err
 	}
 
-	balance := sdk.NewCoin(params.BondDenom, returnAmount.RoundInt())
+	rounded := returnAmount.TruncateInt()
+	balance := sdk.NewCoin(k.BondDenom(ctx), rounded)
+	change := returnAmount.Sub(sdk.NewDecFromInt(rounded))
+
+	// for now, change is just burned
+	pool := k.GetPool(ctx)
+	pool.LooseTokens = pool.LooseTokens.Sub(change)
+	k.SetPool(ctx, pool)
 
 	// no need to create the ubd object just complete now
 	if completeNow {
@@ -503,6 +516,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	}
 	k.SetUnbondingDelegation(ctx, ubd)
 	k.InsertUnbondingQueue(ctx, ubd)
+
 	return ubd, nil
 }
 
@@ -527,6 +541,13 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec) (types.Redelegation, sdk.Error) {
 
+	// check if there is already a redelgation in progress from src to dst
+	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
+	_, found := k.GetRedelegation(ctx, delAddr, valSrcAddr, valDstAddr)
+	if found {
+		return types.Redelegation{}, types.ErrConflictingRedelegation(k.Codespace())
+	}
+
 	// check if this is a transitive redelegation
 	if k.HasReceivingRedelegation(ctx, delAddr, valSrcAddr) {
 		return types.Redelegation{}, types.ErrTransitiveRedelegation(k.Codespace())
@@ -537,8 +558,15 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return types.Redelegation{}, err
 	}
 
-	params := k.GetParams(ctx)
-	returnCoin := sdk.NewCoin(params.BondDenom, returnAmount.RoundInt())
+	rounded := returnAmount.TruncateInt()
+	returnCoin := sdk.NewCoin(k.BondDenom(ctx), rounded)
+	change := returnAmount.Sub(sdk.NewDecFromInt(rounded))
+
+	// for now, change is just burned
+	pool := k.GetPool(ctx)
+	pool.LooseTokens = pool.LooseTokens.Sub(change)
+	k.SetPool(ctx, pool)
+
 	dstValidator, found := k.GetValidator(ctx, valDstAddr)
 	if !found {
 		return types.Redelegation{}, types.ErrBadRedelegationDst(k.Codespace())
@@ -549,7 +577,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	// create the unbonding delegation
-	minTime, height, completeNow := k.getBeginInfo(ctx, params, valSrcAddr)
+	minTime, height, completeNow := k.getBeginInfo(ctx, valSrcAddr)
 
 	if completeNow { // no need to create the redelegation object
 		return types.Redelegation{MinTime: minTime}, nil

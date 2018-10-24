@@ -2,7 +2,6 @@ package stake
 
 import (
 	"bytes"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
@@ -31,9 +30,11 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-// Called every block, process inflation, update validator set
+// Called every block, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.ValidatorUpdate) {
 	endBlockerTags := sdk.EmptyTags()
+
+	k.UnbondAllMatureValidatorQueue(ctx)
 
 	matureUnbonds := k.DequeueAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvPair := range matureUnbonds {
@@ -60,17 +61,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 			tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
 			tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
 		))
-	}
-
-	pool := k.GetPool(ctx)
-
-	// Process provision inflation
-	blockTime := ctx.BlockHeader().Time
-	if blockTime.Sub(pool.InflationLastTime) >= time.Hour {
-		params := k.GetParams(ctx)
-		pool.InflationLastTime = blockTime
-		pool = pool.ProcessProvisions(params)
-		k.SetPool(ctx, pool)
 	}
 
 	// reset the intra-transaction counter
@@ -104,7 +94,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
 	commission := NewCommissionWithTime(
-		msg.Commission.Rate, msg.Commission.MaxChangeRate,
+		msg.Commission.Rate, msg.Commission.MaxRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
 	)
 	validator, err := validator.SetInitialCommission(commission)
@@ -116,16 +106,14 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	k.SetValidatorByConsAddr(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
+	k.OnValidatorCreated(ctx, validator.OperatorAddr)
+
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
 	_, err = k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
 	if err != nil {
 		return err.Result()
 	}
-
-	k.OnValidatorCreated(ctx, validator.OperatorAddr)
-	accAddr := sdk.AccAddress(validator.OperatorAddr)
-	k.OnDelegationCreated(ctx, accAddr, validator.OperatorAddr)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionCreateValidator,
@@ -160,6 +148,7 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 			return err.Result()
 		}
 		validator.Commission = commission
+		k.OnValidatorModified(ctx, msg.ValidatorAddr)
 	}
 
 	k.SetValidator(ctx, validator)
@@ -194,9 +183,6 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	if err != nil {
 		return err.Result()
 	}
-
-	// call the hook if present
-	k.OnDelegationCreated(ctx, msg.DelegatorAddr, validator.OperatorAddr)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionDelegate,

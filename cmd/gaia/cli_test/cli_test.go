@@ -231,7 +231,6 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	defaultParams := stake.DefaultParams()
 	initialPool := stake.InitialPool()
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100)) // Delegate tx on GaiaAppGenState
-	initialPool = initialPool.ProcessProvisions(defaultParams)               // provisions are added to the pool every hour
 
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli tx create-validator %v", flags)
@@ -290,8 +289,6 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.True(t, defaultParams.Equal(params))
 
 	pool := executeGetPool(t, fmt.Sprintf("gaiacli query pool --output=json %v", flags))
-	require.Equal(t, initialPool.DateLastCommissionReset, pool.DateLastCommissionReset)
-	require.Equal(t, initialPool.PrevBondedShares, pool.PrevBondedShares)
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 }
 
@@ -311,7 +308,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
-	proposalsQuery := tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals %v", flags), "")
+	proposalsQuery, _ := tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals %v", flags), "")
 	require.Equal(t, "No matching proposals found", proposalsQuery)
 
 	// submit a test proposal
@@ -346,8 +343,13 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 
-	proposalsQuery = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals %v", flags), "")
 	require.Equal(t, "  1 - Test", proposalsQuery)
+
+	deposit := executeGetDeposit(t,
+		fmt.Sprintf("gaiacli query deposit --proposal-id=1 --depositer=%s --output=json %v",
+			fooAddr, flags))
+	require.Equal(t, int64(5), deposit.Amount.AmountOf("steak").Int64())
 
 	depositStr := fmt.Sprintf("gaiacli tx deposit %v", flags)
 	depositStr += fmt.Sprintf(" --from=%s", "foo")
@@ -366,6 +368,17 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	executeWrite(t, depositStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
+
+	// test query deposit
+	deposits := executeGetDeposits(t,
+		fmt.Sprintf("gaiacli query deposits --proposal-id=1 --output=json %v", flags))
+	require.Len(t, deposits, 1)
+	require.Equal(t, int64(15), deposits[0].Amount.AmountOf("steak").Int64())
+
+	deposit = executeGetDeposit(t,
+		fmt.Sprintf("gaiacli query deposit --proposal-id=1 --depositer=%s --output=json %v",
+			fooAddr, flags))
+	require.Equal(t, int64(15), deposit.Amount.AmountOf("steak").Int64())
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak").Int64())
@@ -400,10 +413,10 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(1), votes[0].ProposalID)
 	require.Equal(t, gov.OptionYes, votes[0].Option)
 
-	proposalsQuery = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --status=DepositPeriod %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --status=DepositPeriod %v", flags), "")
 	require.Equal(t, "No matching proposals found", proposalsQuery)
 
-	proposalsQuery = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --status=VotingPeriod %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --status=VotingPeriod %v", flags), "")
 	require.Equal(t, "  1 - Test", proposalsQuery)
 
 	// submit a second test proposal
@@ -417,7 +430,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, spStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	proposalsQuery = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --latest=1 %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --latest=1 %v", flags), "")
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 }
 
@@ -628,10 +641,10 @@ func executeWriteRetStdStreams(t *testing.T, cmdStr string, writes ...string) (b
 }
 
 func executeInit(t *testing.T, cmdStr string) (chainID string) {
-	out := tests.ExecuteT(t, cmdStr, app.DefaultKeyPass)
+	_, stderr := tests.ExecuteT(t, cmdStr, app.DefaultKeyPass)
 
 	var initRes map[string]json.RawMessage
-	err := json.Unmarshal([]byte(out), &initRes)
+	err := json.Unmarshal([]byte(stderr), &initRes)
 	require.NoError(t, err)
 
 	err = json.Unmarshal(initRes["chain_id"], &chainID)
@@ -641,7 +654,7 @@ func executeInit(t *testing.T, cmdStr string) (chainID string) {
 }
 
 func executeGetAddrPK(t *testing.T, cmdStr string) (sdk.AccAddress, crypto.PubKey) {
-	out := tests.ExecuteT(t, cmdStr, "")
+	out, _ := tests.ExecuteT(t, cmdStr, "")
 	var ko keys.KeyOutput
 	keys.UnmarshalJSON([]byte(out), &ko)
 
@@ -655,7 +668,7 @@ func executeGetAddrPK(t *testing.T, cmdStr string) (sdk.AccAddress, crypto.PubKe
 }
 
 func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
-	out := tests.ExecuteT(t, cmdStr, "")
+	out, _ := tests.ExecuteT(t, cmdStr, "")
 	var initRes map[string]json.RawMessage
 	err := json.Unmarshal([]byte(out), &initRes)
 	require.NoError(t, err, "out %v, err %v", out, err)
@@ -672,7 +685,7 @@ func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 // stake
 
 func executeGetValidator(t *testing.T, cmdStr string) stake.Validator {
-	out := tests.ExecuteT(t, cmdStr, "")
+	out, _ := tests.ExecuteT(t, cmdStr, "")
 	var validator stake.Validator
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &validator)
@@ -681,7 +694,7 @@ func executeGetValidator(t *testing.T, cmdStr string) stake.Validator {
 }
 
 func executeGetPool(t *testing.T, cmdStr string) stake.Pool {
-	out := tests.ExecuteT(t, cmdStr, "")
+	out, _ := tests.ExecuteT(t, cmdStr, "")
 	var pool stake.Pool
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &pool)
@@ -690,7 +703,7 @@ func executeGetPool(t *testing.T, cmdStr string) stake.Pool {
 }
 
 func executeGetParams(t *testing.T, cmdStr string) stake.Params {
-	out := tests.ExecuteT(t, cmdStr, "")
+	out, _ := tests.ExecuteT(t, cmdStr, "")
 	var params stake.Params
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &params)
@@ -702,7 +715,7 @@ func executeGetParams(t *testing.T, cmdStr string) stake.Params {
 // gov
 
 func executeGetProposal(t *testing.T, cmdStr string) gov.Proposal {
-	out := tests.ExecuteT(t, cmdStr, "")
+	out, _ := tests.ExecuteT(t, cmdStr, "")
 	var proposal gov.Proposal
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &proposal)
@@ -711,7 +724,7 @@ func executeGetProposal(t *testing.T, cmdStr string) gov.Proposal {
 }
 
 func executeGetVote(t *testing.T, cmdStr string) gov.Vote {
-	out := tests.ExecuteT(t, cmdStr, "")
+	out, _ := tests.ExecuteT(t, cmdStr, "")
 	var vote gov.Vote
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &vote)
@@ -720,10 +733,28 @@ func executeGetVote(t *testing.T, cmdStr string) gov.Vote {
 }
 
 func executeGetVotes(t *testing.T, cmdStr string) []gov.Vote {
-	out := tests.ExecuteT(t, cmdStr, "")
+	out, _ := tests.ExecuteT(t, cmdStr, "")
 	var votes []gov.Vote
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &votes)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return votes
+}
+
+func executeGetDeposit(t *testing.T, cmdStr string) gov.Deposit {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var deposit gov.Deposit
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &deposit)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return deposit
+}
+
+func executeGetDeposits(t *testing.T, cmdStr string) []gov.Deposit {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var deposits []gov.Deposit
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &deposits)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return deposits
 }

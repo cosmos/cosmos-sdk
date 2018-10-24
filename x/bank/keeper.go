@@ -29,11 +29,11 @@ var _ Keeper = (*BaseKeeper)(nil)
 // BaseKeeper manages transfers between accounts. It implements the Keeper
 // interface.
 type BaseKeeper struct {
-	am auth.AccountMapper
+	am auth.AccountKeeper
 }
 
 // NewBaseKeeper returns a new BaseKeeper
-func NewBaseKeeper(am auth.AccountMapper) BaseKeeper {
+func NewBaseKeeper(am auth.AccountKeeper) BaseKeeper {
 	return BaseKeeper{am: am}
 }
 
@@ -96,11 +96,11 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 // SendKeeper only allows transfers between accounts without the possibility of
 // creating coins. It implements the SendKeeper interface.
 type BaseSendKeeper struct {
-	am auth.AccountMapper
+	am auth.AccountKeeper
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
-func NewBaseSendKeeper(am auth.AccountMapper) BaseSendKeeper {
+func NewBaseSendKeeper(am auth.AccountKeeper) BaseSendKeeper {
 	return BaseSendKeeper{am: am}
 }
 
@@ -143,11 +143,11 @@ var _ ViewKeeper = (*BaseViewKeeper)(nil)
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	am auth.AccountMapper
+	am auth.AccountKeeper
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(am auth.AccountMapper) BaseViewKeeper {
+func NewBaseViewKeeper(am auth.AccountKeeper) BaseViewKeeper {
 	return BaseViewKeeper{am: am}
 }
 
@@ -163,7 +163,7 @@ func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 
 //______________________________________________________________________________________________
 
-func getCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress) sdk.Coins {
+func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
 	ctx.GasMeter().ConsumeGas(costGetCoins, "getCoins")
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
@@ -172,7 +172,7 @@ func getCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress) sdk.C
 	return acc.GetCoins()
 }
 
-func setCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
 	ctx.GasMeter().ConsumeGas(costSetCoins, "setCoins")
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
@@ -188,13 +188,13 @@ func setCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt s
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
-func hasCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt sdk.Coins) bool {
+func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
 	ctx.GasMeter().ConsumeGas(costHasCoins, "hasCoins")
 	return getCoins(ctx, am, addr).IsGTE(amt)
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
-func subtractCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
+func subtractCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Minus(amt)
@@ -207,7 +207,7 @@ func subtractCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, 
 }
 
 // AddCoins adds amt to the coins at the addr.
-func addCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
+func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costAddCoins, "addCoins")
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Plus(amt)
@@ -221,7 +221,7 @@ func addCoins(ctx sdk.Context, am auth.AccountMapper, addr sdk.AccAddress, amt s
 
 // SendCoins moves coins from one account to another
 // NOTE: Make sure to revert state changes from tx on error
-func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	_, subTags, err := subtractCoins(ctx, am, fromAddr, amt)
 	if err != nil {
 		return nil, err
@@ -237,7 +237,7 @@ func sendCoins(ctx sdk.Context, am auth.AccountMapper, fromAddr sdk.AccAddress, 
 
 // InputOutputCoins handles a list of inputs and outputs
 // NOTE: Make sure to revert state changes from tx on error
-func inputOutputCoins(ctx sdk.Context, am auth.AccountMapper, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
+func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
 	allTags := sdk.EmptyTags()
 
 	for _, in := range inputs {

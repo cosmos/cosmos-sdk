@@ -29,7 +29,7 @@ type App struct {
 	KeyAccount *sdk.KVStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
-	AccountMapper       auth.AccountMapper
+	AccountKeeper       auth.AccountKeeper
 	FeeCollectionKeeper auth.FeeCollectionKeeper
 
 	GenesisAccounts  []auth.Account
@@ -57,8 +57,8 @@ func NewApp() *App {
 		TotalCoinsSupply: sdk.Coins{},
 	}
 
-	// Define the accountMapper
-	app.AccountMapper = auth.NewAccountMapper(
+	// Define the accountKeeper
+	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,
 		auth.ProtoBaseAccount,
@@ -67,7 +67,7 @@ func NewApp() *App {
 	// Initialize the app. The chainers and blockers can be overwritten before
 	// calling complete setup.
 	app.SetInitChainer(app.InitChainer)
-	app.SetAnteHandler(auth.NewAnteHandler(app.AccountMapper, app.FeeCollectionKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.AccountKeeper, app.FeeCollectionKeeper))
 
 	// Not sealing for custom extension
 
@@ -101,9 +101,9 @@ func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
 func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.ResponseInitChain {
 	// Load the genesis accounts
 	for _, genacc := range app.GenesisAccounts {
-		acc := app.AccountMapper.NewAccountWithAddress(ctx, genacc.GetAddress())
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, genacc.GetAddress())
 		acc.SetCoins(genacc.GetCoins())
-		app.AccountMapper.SetAccount(ctx, acc)
+		app.AccountKeeper.SetAccount(ctx, acc)
 	}
 
 	return abci.ResponseInitChain{}
@@ -247,8 +247,8 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 	app.GenesisAccounts = accts
 }
 
-// GetAllAccounts returns all accounts in the accountMapper.
-func GetAllAccounts(mapper auth.AccountMapper, ctx sdk.Context) []auth.Account {
+// GetAllAccounts returns all accounts in the accountKeeper.
+func GetAllAccounts(mapper auth.AccountKeeper, ctx sdk.Context) []auth.Account {
 	accounts := []auth.Account{}
 	appendAccount := func(acc auth.Account) (stop bool) {
 		accounts = append(accounts, acc)

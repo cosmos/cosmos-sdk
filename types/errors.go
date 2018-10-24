@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -286,7 +287,34 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 	}
 }
 
-// nolint
+//----------------------------------------
+// REST error utilities
+
+// appends a message to the head of the given error
+func AppendMsgToErr(msg string, err string) string {
+	msgIdx := strings.Index(err, "message\":\"")
+	if msgIdx != -1 {
+		errMsg := err[msgIdx+len("message\":\"") : len(err)-2]
+		errMsg = fmt.Sprintf("%s; %s", msg, errMsg)
+		return fmt.Sprintf("%s%s%s",
+			err[:msgIdx+len("message\":\"")],
+			errMsg,
+			err[len(err)-2:],
+		)
+	}
+	return fmt.Sprintf("%s; %s", msg, err)
+}
+
+// returns the index of the message in the ABCI Log
+func mustGetMsgIndex(abciLog string) int {
+	msgIdx := strings.Index(abciLog, "message\":\"")
+	if msgIdx == -1 {
+		panic(fmt.Sprintf("invalid error format: %s", abciLog))
+	}
+	return msgIdx + len("message\":\"")
+}
+
+// parses the error into an object-like struct for exporting
 type humanReadableError struct {
 	Codespace CodespaceType `json:"codespace"`
 	Code      CodeType      `json:"code"`

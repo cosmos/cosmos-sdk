@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-// AccountMapper(/Keeper) and IBCMapper should use different StoreKey later
+// AccountKeeper(/Keeper) and IBCMapper should use different StoreKey later
 
 func defaultContext(key sdk.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
@@ -64,7 +64,7 @@ func TestIBC(t *testing.T) {
 	key := sdk.NewKVStoreKey("ibc")
 	ctx := defaultContext(key)
 
-	am := auth.NewAccountMapper(cdc, key, auth.ProtoBaseAccount)
+	am := auth.NewAccountKeeper(cdc, key, auth.ProtoBaseAccount)
 	ck := bank.NewBaseKeeper(am)
 
 	src := newAddress()

@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-const msgType = "testMsg"
+const msgRoute = "testMsg"
 
 var (
 	numAccts                       = 2
@@ -23,8 +23,8 @@ type testMsg struct {
 	positiveNum int64
 }
 
-func (tx testMsg) Type() string                       { return msgType }
-func (tx testMsg) Name() string                       { return "test" }
+func (tx testMsg) Route() string                      { return msgRoute }
+func (tx testMsg) Type() string                       { return "test" }
 func (tx testMsg) GetMsg() sdk.Msg                    { return tx }
 func (tx testMsg) GetMemo() string                    { return "" }
 func (tx testMsg) GetSignBytes() []byte               { return nil }
@@ -41,7 +41,7 @@ func (tx testMsg) ValidateBasic() sdk.Error {
 func getMockApp(t *testing.T) *App {
 	mApp := NewApp()
 
-	mApp.Router().AddRoute(msgType, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+	mApp.Router().AddRoute(msgRoute, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
 	require.NoError(t, mApp.CompleteSetup())
 
 	return mApp
@@ -56,7 +56,7 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 
 	msg := testMsg{signers: []sdk.AccAddress{addrs[0]}, positiveNum: 1}
 
-	acct := mApp.AccountMapper.GetAccount(ctxCheck, addrs[0])
+	acct := mApp.AccountKeeper.GetAccount(ctxCheck, addrs[0])
 	require.Equal(t, accs[0], acct.(*auth.BaseAccount))
 
 	SignCheckDeliver(

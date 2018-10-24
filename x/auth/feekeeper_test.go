@@ -49,11 +49,11 @@ func TestFeeCollectionKeeperAdd(t *testing.T) {
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
 
 	// add oneCoin and check that pool is now oneCoin
-	fck.addCollectedFees(ctx, oneCoin)
+	fck.AddCollectedFees(ctx, oneCoin)
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(oneCoin))
 
 	// add oneCoin again and check that pool is now twoCoins
-	fck.addCollectedFees(ctx, oneCoin)
+	fck.AddCollectedFees(ctx, oneCoin)
 	require.True(t, fck.GetCollectedFees(ctx).IsEqual(twoCoins))
 }
 

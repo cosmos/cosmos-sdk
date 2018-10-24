@@ -46,11 +46,12 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// should not be slashing unbonded
-	if validator.IsUnbonded(ctx) {
+	if validator.Status == sdk.Unbonded {
 		panic(fmt.Sprintf("should not be slashing unbonded validator: %s", validator.GetOperator()))
 	}
 
 	operatorAddress := validator.GetOperator()
+	k.OnValidatorModified(ctx, operatorAddress)
 
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
@@ -97,16 +98,19 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// cannot decrease balance below zero
 	tokensToBurn := sdk.MinDec(remainingSlashAmount, validator.Tokens)
+	tokensToBurn = sdk.MaxDec(tokensToBurn, sdk.ZeroDec()) // defensive.
 
-	// burn validator's tokens and update the validator
+	// Deduct from validator's bonded tokens and update the validator.
+	// The deducted tokens are returned to pool.LooseTokens.
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 	pool := k.GetPool(ctx)
+	// Burn the slashed tokens, which are now loose.
 	pool.LooseTokens = pool.LooseTokens.Sub(tokensToBurn)
 	k.SetPool(ctx, pool)
 
 	// remove validator if it has no more tokens
-	if validator.Tokens.IsZero() && validator.Status != sdk.Bonded {
-		// if bonded, we must remove in ApplyAndReturnValidatorSetUpdates instead
+	if validator.DelegatorShares.IsZero() && validator.Status == sdk.Unbonded {
+		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
 		k.RemoveValidator(ctx, validator.OperatorAddr)
 	}
 

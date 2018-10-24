@@ -102,7 +102,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 
 	ctxCheck := mapp.BaseApp.NewContext(true, abci.Header{})
 
-	res1 := mapp.AccountMapper.GetAccount(ctxCheck, addr1)
+	res1 := mapp.AccountKeeper.GetAccount(ctxCheck, addr1)
 	require.NotNil(t, res1)
 	require.Equal(t, acc, res1.(*auth.BaseAccount))
 
@@ -210,7 +210,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	testCases := []appTestCase{
 		{
 			msgs:       []sdk.Msg{sendMsg3},
-			accNums:    []int64{0, 2},
+			accNums:    []int64{0, 0},
 			accSeqs:    []int64{0, 0},
 			expSimPass: true,
 			expPass:    true,
@@ -258,7 +258,7 @@ func TestMsgSendDependent(t *testing.T) {
 		},
 		{
 			msgs:       []sdk.Msg{sendMsg4},
-			accNums:    []int64{1},
+			accNums:    []int64{0},
 			accSeqs:    []int64{0},
 			expSimPass: true,
 			expPass:    true,

@@ -314,12 +314,6 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	}
 }
 
-// ABCIValidatorPowerBytes
-func (v Validator) ABCIValidatorPowerBytes(cdc *codec.Codec) []byte {
-	power := v.BondedTokens().RoundInt64()
-	return cdc.MustMarshalBinary(power)
-}
-
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staked validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
@@ -433,21 +427,6 @@ func (v Validator) BondedTokens() sdk.Dec {
 		return v.Tokens
 	}
 	return sdk.ZeroDec()
-}
-
-// TODO remove this once the validator queue logic is implemented
-// Returns if the validator should be considered unbonded
-func (v Validator) IsUnbonded(ctx sdk.Context) bool {
-	switch v.Status {
-	case sdk.Unbonded:
-		return true
-	case sdk.Unbonding:
-		ctxTime := ctx.BlockHeader().Time
-		if ctxTime.After(v.UnbondingMinTime) {
-			return true
-		}
-	}
-	return false
 }
 
 //______________________________________________________________________

@@ -4,6 +4,8 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/stretchr/testify/require"
 )
@@ -228,25 +230,45 @@ func TestTruncate(t *testing.T) {
 	}
 }
 
-func TestToLeftPadded(t *testing.T) {
-	tests := []struct {
-		dec    Dec
-		digits int8
-		exp    string
-	}{
-		{mustNewDecFromStr(t, "33.3"), 8, "00000033"},
-		{mustNewDecFromStr(t, "50"), 8, "00000050"},
-		{mustNewDecFromStr(t, "333"), 8, "00000333"},
-		{mustNewDecFromStr(t, "333"), 12, "000000000333"},
-		{mustNewDecFromStr(t, "0.3333"), 8, "00000000"},
+var cdc = codec.New()
+
+func TestDecMarshalJSON(t *testing.T) {
+	decimal := func(i int64) Dec {
+		d := NewDec(0)
+		d.Int = new(big.Int).SetInt64(i)
+		return d
 	}
-	for tcIndex, tc := range tests {
-		res := tc.dec.ToLeftPadded(tc.digits)
-		require.Equal(t, tc.exp, res, "incorrect left padding, tc %d", tcIndex)
+	tests := []struct {
+		name    string
+		d       Dec
+		want    string
+		wantErr bool // if wantErr = false, will also attempt unmarshaling
+	}{
+		{"zero", decimal(0), "\"0.0000000000\"", false},
+		{"one", decimal(1), "\"0.0000000001\"", false},
+		{"ten", decimal(10), "\"0.0000000010\"", false},
+		{"12340", decimal(12340), "\"0.0000012340\"", false},
+		{"zeroInt", NewDec(0), "\"0.0000000000\"", false},
+		{"oneInt", NewDec(1), "\"1.0000000000\"", false},
+		{"tenInt", NewDec(10), "\"10.0000000000\"", false},
+		{"12340Int", NewDec(12340), "\"12340.0000000000\"", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.d.MarshalJSON()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Dec.MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				assert.Equal(t, tt.want, string(got), "incorrect marshalled value")
+				unmarshalledDec := NewDec(0)
+				unmarshalledDec.UnmarshalJSON(got)
+				assert.Equal(t, tt.d, unmarshalledDec, "incorrect unmarshalled value")
+			}
+		})
 	}
 }
-
-var cdc = codec.New()
 
 func TestZeroDeserializationJSON(t *testing.T) {
 	d := Dec{new(big.Int)}

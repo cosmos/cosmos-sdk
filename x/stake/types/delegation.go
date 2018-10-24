@@ -41,13 +41,6 @@ type delegationValue struct {
 	Height int64
 }
 
-// aggregates of all delegations, unbondings and redelegations
-type DelegationSummary struct {
-	Delegations          []Delegation          `json:"delegations"`
-	UnbondingDelegations []UnbondingDelegation `json:"unbonding_delegations"`
-	Redelegations        []Redelegation        `json:"redelegations"`
-}
-
 // return the delegation without fields contained within the key for the store
 func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
 	val := delegationValue{
@@ -104,9 +97,9 @@ func (d Delegation) Equal(d2 Delegation) bool {
 var _ sdk.Delegation = Delegation{}
 
 // nolint - for sdk.Delegation
-func (d Delegation) GetDelegator() sdk.AccAddress { return d.DelegatorAddr }
-func (d Delegation) GetValidator() sdk.ValAddress { return d.ValidatorAddr }
-func (d Delegation) GetShares() sdk.Dec           { return d.Shares }
+func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddr }
+func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddr }
+func (d Delegation) GetShares() sdk.Dec               { return d.Shares }
 
 // HumanReadableString returns a human readable string representation of a
 // Delegation. An error is returned if the Delegation's delegator or validator
@@ -115,7 +108,7 @@ func (d Delegation) HumanReadableString() (string, error) {
 	resp := "Delegation \n"
 	resp += fmt.Sprintf("Delegator: %s\n", d.DelegatorAddr)
 	resp += fmt.Sprintf("Validator: %s\n", d.ValidatorAddr)
-	resp += fmt.Sprintf("Shares: %s", d.Shares.String())
+	resp += fmt.Sprintf("Shares: %s\n", d.Shares.String())
 	resp += fmt.Sprintf("Height: %d", d.Height)
 
 	return resp, nil
@@ -297,7 +290,7 @@ func (d Redelegation) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Destination Validator: %s\n", d.ValidatorDstAddr)
 	resp += fmt.Sprintf("Creation height: %v\n", d.CreationHeight)
 	resp += fmt.Sprintf("Min time to unbond (unix): %v\n", d.MinTime)
-	resp += fmt.Sprintf("Source shares: %s", d.SharesSrc.String())
+	resp += fmt.Sprintf("Source shares: %s\n", d.SharesSrc.String())
 	resp += fmt.Sprintf("Destination shares: %s", d.SharesDst.String())
 
 	return resp, nil

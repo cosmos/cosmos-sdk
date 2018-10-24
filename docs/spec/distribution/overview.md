@@ -40,7 +40,7 @@ to independently and lazily withdraw their rewards.
 
 As a part of the lazy computations, each delegator holds an accumulation term
 specific to each validator which is used to estimate what their approximate
-fair portion of tokens held in the global pool is owed to them. 
+fair portion of tokens held in the global fee pool is owed to them. 
 
 ```
 entitlement = delegator-accumulation / all-delegators-accumulation

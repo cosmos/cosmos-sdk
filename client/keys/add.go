@@ -63,7 +63,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			return errMissingName()
 		}
 		name = args[0]
-		kb, err = GetKeyBase()
+		kb, err = GetKeyBaseWithWritePerm()
 		if err != nil {
 			return err
 		}
@@ -174,7 +174,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		var kb keys.Keybase
 		var m NewKeyBody
 
-		kb, err := GetKeyBase()
+		kb, err := GetKeyBaseWithWritePerm()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -262,6 +262,8 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	algo := keys.SigningAlgo(algoType)
 
 	seed := getSeed(algo)
+
+	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(seed))
 }
 
@@ -309,7 +311,7 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		kb, err := GetKeyBase()
+		kb, err := GetKeyBaseWithWritePerm()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

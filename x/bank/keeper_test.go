@@ -33,16 +33,16 @@ func TestKeeper(t *testing.T) {
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := NewBaseKeeper(accountMapper)
+	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := NewBaseKeeper(accountKeeper)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 	addr3 := sdk.AccAddress([]byte("addr3"))
-	acc := accountMapper.NewAccountWithAddress(ctx, addr)
+	acc := accountKeeper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
-	accountMapper.SetAccount(ctx, acc)
+	accountKeeper.SetAccount(ctx, acc)
 	require.True(t, bankKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{}))
 
 	bankKeeper.SetCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)})
@@ -118,17 +118,17 @@ func TestSendKeeper(t *testing.T) {
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := NewBaseKeeper(accountMapper)
-	sendKeeper := NewBaseSendKeeper(accountMapper)
+	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := NewBaseKeeper(accountKeeper)
+	sendKeeper := NewBaseSendKeeper(accountKeeper)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 	addr3 := sdk.AccAddress([]byte("addr3"))
-	acc := accountMapper.NewAccountWithAddress(ctx, addr)
+	acc := accountKeeper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
-	accountMapper.SetAccount(ctx, acc)
+	accountKeeper.SetAccount(ctx, acc)
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{}))
 
 	bankKeeper.SetCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)})
@@ -187,15 +187,15 @@ func TestViewKeeper(t *testing.T) {
 	auth.RegisterBaseAccount(cdc)
 
 	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	accountMapper := auth.NewAccountMapper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := NewBaseKeeper(accountMapper)
-	viewKeeper := NewBaseViewKeeper(accountMapper)
+	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := NewBaseKeeper(accountKeeper)
+	viewKeeper := NewBaseViewKeeper(accountKeeper)
 
 	addr := sdk.AccAddress([]byte("addr1"))
-	acc := accountMapper.NewAccountWithAddress(ctx, addr)
+	acc := accountKeeper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
-	accountMapper.SetAccount(ctx, acc)
+	accountKeeper.SetAccount(ctx, acc)
 	require.True(t, viewKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{}))
 
 	bankKeeper.SetCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)})

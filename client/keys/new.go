@@ -46,15 +46,15 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-// nolint: gocyclo
 func runNewCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
-	kb, err := GetKeyBase()
+	kb, err := GetKeyBaseWithWritePerm()
 	if err != nil {
 		return err
 	}
 
 	buf := client.BufferStdin()
+
 	_, err = kb.Get(name)
 	if err == nil {
 		// account exists, ask for user confirmation
@@ -73,24 +73,25 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// if we're using ledger, only thing we need is the path.
-	// generate key and we're done.
+	// If we're using ledger, only thing we need is the path. So generate key and
+	// we're done.
 	if viper.GetBool(client.FlagUseLedger) {
-
-		algo := keys.Secp256k1               // SigningAlgo(viper.GetString(flagType))
+		algo := keys.Secp256k1
 		path := bip44Params.DerivationPath() // ccrypto.DerivationPath{44, 118, account, 0, index}
+
 		info, err := kb.CreateLedger(name, path, algo)
 		if err != nil {
 			return err
 		}
+
 		printCreate(info, "")
 		return nil
 	}
 
-	// get the mnemonic
 	var mnemonic string
+
 	if !useDefaults {
-		mnemonic, err = client.GetString("> Enter your bip39 mnemonic, or hit enter to generate one.", buf)
+		mnemonic, err = client.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", buf)
 		if err != nil {
 			return err
 		}
@@ -102,6 +103,7 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
 		mnemonic, err = bip39.NewMnemonic(entropySeed[:])
 		if err != nil {
 			return err
@@ -113,7 +115,8 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	if !useDefaults {
 		printStep()
 		printPrefixed("Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed")
-		bip39Passphrase, err = client.GetString("> Most users should just hit enter to use the default, \"\"", buf)
+
+		bip39Passphrase, err = client.GetString("Most users should just hit enter to use the default, \"\"", buf)
 		if err != nil {
 			return err
 		}
@@ -124,14 +127,16 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
+
 			if bip39Passphrase != p2 {
 				return errors.New("passphrases don't match")
 			}
 		}
 	}
 
-	// get the encryption password
 	printStep()
+
+	// get the encryption password
 	encryptPassword, err := client.GetCheckPassword(
 		"> Enter a passphrase to encrypt your key to disk:",
 		"> Repeat the passphrase:", buf)
@@ -143,8 +148,8 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	_ = info
 
+	_ = info
 	return nil
 }
 
@@ -152,15 +157,17 @@ func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
 	buf := bufio.NewReader(os.Stdin)
 	bip44Path := path
 
-	// if it wasnt set in the flag, give it a chance to overide interactively
+	// if it wasn't set in the flag, give it a chance to overide interactively
 	if !flagSet {
+		var err error
+
 		printStep()
 
-		var err error
-		bip44Path, err = client.GetString(fmt.Sprintf("> Enter your bip44 path. Default is %s\n", path), buf)
+		bip44Path, err = client.GetString(fmt.Sprintf("Enter your bip44 path. Default is %s\n", path), buf)
 		if err != nil {
 			return nil, err
 		}
+
 		if len(bip44Path) == 0 {
 			bip44Path = path
 		}
@@ -170,6 +177,7 @@ func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bip44params, nil
 }
 

@@ -126,7 +126,8 @@ func (am AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64
 	return acc.GetSequence(), nil
 }
 
-func (am AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence int64) sdk.Error {
+func (am AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress,
+	newSequence int64) sdk.Error {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())

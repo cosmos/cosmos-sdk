@@ -37,13 +37,18 @@ recommended to set such parameters manually.`,
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
-	cmd.Flags().Bool(flagAppend, true, "Append the signature to the existing ones. If disabled, old signatures would be overwritten")
-	cmd.Flags().Bool(flagPrintSigs, false, "Print the addresses that must sign the transaction and those who have already signed it, then exit")
+	cmd.Flags().Bool(flagAppend, true,
+		"Append the signature to the existing ones. If disabled, " +
+		"old signatures would be overwritten")
+	cmd.Flags().Bool(flagPrintSigs, false,
+		"Print the addresses that must sign the transaction and those who have already signed" +
+		" it, then exit")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
 	return cmd
 }
 
-func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(
+	cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
 		stdTx, err := readAndUnmarshalStdTx(cdc, args[0])
 		if err != nil {
@@ -59,7 +64,8 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(decoder)
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
-		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, viper.GetBool(flagAppend), viper.GetBool(flagOffline))
+		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, viper.GetBool(flagAppend),
+			viper.GetBool(flagOffline))
 		if err != nil {
 			return err
 		}

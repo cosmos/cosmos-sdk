@@ -33,19 +33,30 @@ type VestingAccount interface {
     SendableCoins(sdk.Context) sdk.Coins
 }
 
-// ContinuousVestingAccount implements the Vesting Account interface. It
+// ContinuousVestingAccount implements the VestingAccount interface. It
 // continuously vests by unlocking coins linearly with respect to time.
 type ContinuousVestingAccount struct {
     BaseAccount
 
-    OriginalVesting   sdk.Coins // coins in account upon initialization
-    DelegatedVesting  sdk.Coins // coins that vesting and delegated
-    DelegatedFree     sdk.Coins // coins that are vested and delegated
+    OriginalVesting  sdk.Coins // coins in account upon initialization
+    DelegatedVesting sdk.Coins // coins that vesting and delegated
+    DelegatedFree    sdk.Coins // coins that are vested and delegated
 
     // StartTime and EndTime are used to calculate how much of OriginalVesting
     // is unlocked at any given point.
     StartTime time.Time
     EndTime   time.Time
+}
+
+// DelayedVestingAccount implements the VestingAccount interface. It vests all
+// coins after a specific time, but non prior. In other words, it keeps them
+// locked until a specified time.
+type DelayedVestingAccount struct {
+    BaseAccount
+
+    OriginalVesting  sdk.Coins // coins in account upon initialization
+
+    EndTime time.Time // when the coins become unlocked
 }
 ```
 

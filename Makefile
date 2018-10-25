@@ -107,7 +107,6 @@ update_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get -u github.com/tendermint/lint/golint
-	go get -u github.com/alessio/lll
 
 get_tools:
 	@echo "--> Installing tools"
@@ -117,7 +116,6 @@ get_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get github.com/tendermint/lint/golint
-	go get github.com/alessio/lll
 
 get_vendor_deps:
 	@echo "--> Generating vendor directory via dep ensure"
@@ -194,6 +192,7 @@ test_cover:
 test_lint:
 	gometalinter --config=tools/gometalinter.json ./...
 	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --line-length=100 --disable-all --enable='lll' --vendor ./... | grep -v "\.*_test.go")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)

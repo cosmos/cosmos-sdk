@@ -22,7 +22,8 @@ import (
 // supplied messages.  Finally, it broadcasts the signed
 // transaction to a node.
 // NOTE: Also see CompleteAndBroadcastTxREST.
-func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
+func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
+	msgs []sdk.Msg) error {
 	txBldr, err := prepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
 		return err
@@ -90,7 +91,8 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 // Don't perform online validation or lookups if offline is true.
-func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
+func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg,
+	offline bool) (err error) {
 	var stdTx auth.StdTx
 	if offline {
 		stdTx, err = buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
@@ -128,7 +130,8 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	// Check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
 		fmt.Fprintf(os.Stderr,
-			"WARNING: The generated transaction's intended signer does not match the given signer: '%v'\n", name)
+			"WARNING: The generated transaction's intended signer " +
+			"does not match the given signer: '%v'\n", name)
 	}
 
 	if !offline && txBldr.AccountNumber == 0 {
@@ -178,7 +181,8 @@ func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (int64, error) {
 	return simulationResult.GasUsed, nil
 }
 
-func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (authtxb.TxBuilder, error) {
+func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (
+	authtxb.TxBuilder, error) {
 	if err := cliCtx.EnsureAccountExists(); err != nil {
 		return txBldr, err
 	}

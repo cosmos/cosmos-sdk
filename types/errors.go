@@ -193,7 +193,9 @@ func newErrorWithRootCodespace(code CodeType, format string, args ...interface{}
 	return newError(CodespaceRoot, code, format, args...)
 }
 
-func newError(codespace CodespaceType, code CodeType, format string, args ...interface{}) *sdkError {
+func newError(codespace CodespaceType, code CodeType,
+	format string, args ...interface{}) *sdkError {
+
 	if format == "" {
 		format = CodeToDefaultMsg(code)
 	}

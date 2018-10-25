@@ -164,7 +164,8 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10)
 	if !ok {
-		return d, ErrUnknownRequest(fmt.Sprintf("bad string to integer conversion, combinedStr: %v", combinedStr))
+		return d, ErrUnknownRequest(fmt.Sprintf(
+			"bad string to integer conversion, combinedStr: %v", combinedStr))
 	}
 	if neg {
 		combined = new(big.Int).Neg(combined)

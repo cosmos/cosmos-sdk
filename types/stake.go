@@ -67,9 +67,12 @@ type ValidatorSet interface {
 	IterateValidatorsBonded(Context,
 		func(index int64, validator Validator) (stop bool))
 
-	Validator(Context, ValAddress) Validator            // get a particular validator by operator address
-	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
-	TotalPower(Context) Dec                             // total power of the validator set
+	// get a particular validator by operator address
+	Validator(Context, ValAddress) Validator
+	// get a particular validator by consensus address
+	ValidatorByConsAddr(Context, ConsAddress) Validator
+	// total power of the validator set
+	TotalPower(Context) Dec
 
 	// slash the validator and delegators of the validator, specifying offence height,
 	Slash(Context, ConsAddress, int64, int64, Dec)
@@ -111,9 +114,12 @@ type DelegationSet interface {
 
 // event hooks for staking validator object
 type StakingHooks interface {
-	OnValidatorCreated(ctx Context, address ValAddress)  // Must be called when a validator is created
-	OnValidatorModified(ctx Context, address ValAddress) // Must be called when a validator's state changes
-	OnValidatorRemoved(ctx Context, address ValAddress)  // Must be called when a validator is deleted
+	// Must be called when a validator is created
+	OnValidatorCreated(ctx Context, address ValAddress)
+	// Must be called when a validator's state changes
+	OnValidatorModified(ctx Context, address ValAddress)
+	// Must be called when a validator is deleted
+	OnValidatorRemoved(ctx Context, address ValAddress)
 
 	// Must be called when a validator is bonded
 	OnValidatorBonded(ctx Context, address ConsAddress, operator ValAddress)

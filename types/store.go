@@ -15,7 +15,8 @@ import (
 type PruningStrategy uint8
 
 const (
-	// PruneSyncable means only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
+	// PruneSyncable means only those states not needed for state syncing will be
+	// deleted (keeps last 100 + every 10000th)
 	PruneSyncable PruningStrategy = iota
 
 	// PruneEverything means all saved states will be deleted, storing only the current state

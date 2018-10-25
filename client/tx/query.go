@@ -47,7 +47,8 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
-	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	cmd.Flags().Bool(client.FlagTrustNode, false,
+		"Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	return cmd
 }

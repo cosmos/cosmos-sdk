@@ -67,7 +67,8 @@ func ParseInt64OrReturnBadRequest(w http.ResponseWriter, s string) (n int64, ok 
 
 // ParseFloat64OrReturnBadRequest converts s to a float64 value. It returns a
 // default value, defaultIfEmpty, if the string is empty.
-func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEmpty float64) (n float64, ok bool) {
+func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string,
+	defaultIfEmpty float64) (n float64, ok bool) {
 	if len(s) == 0 {
 		return defaultIfEmpty, true
 	}
@@ -195,7 +196,8 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		return
 	}
 
-	adjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
+	adjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment,
+		client.DefaultGasAdjustment)
 	if !ok {
 		return
 	}

@@ -2,18 +2,22 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
-	abci "github.com/tendermint/abci/types"
-	"github.com/tendermint/tmlibs/cli"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/cli"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/app"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/wire"
-	"github.com/cosmos/cosmos-sdk/examples/simpleGov/app"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // SimpleGovAppInit initial parameters
@@ -31,11 +35,11 @@ func SimpleGovAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (appStat
 	return
 }
 
-func newApp(logger log.Logger, db dbm.DB) abci.Application {
-	return app.NewSimpleGovApp(logger, db)
+func newApp(logger log.Logger, db dbm.DB, storeTracer io.Writer) abci.Application {
+	return app.NewSimpleGovApp(logger, db, baseapp.SetPruning(viper.GetString("pruning")))
 }
 
-func exportAppState(logger log.Logger, db dbm.DB) (json.RawMessage, error) {
+func exportAppState(logger log.Logger, db dbm.DB, storeTracer io.Writer) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 	dapp := app.NewSimpleGovApp(logger, db)
 	return dapp.ExportAppStateJSON()
 }

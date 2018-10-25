@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/tendermint/tmlibs/cli"
+	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -13,12 +13,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
+	simplegovcmd "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance/client/cli"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
-	simplegovcmd "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance/client/cli"
 
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 )
@@ -64,10 +64,10 @@ func main() {
 			bankcmd.SendTxCmd(cdc),
 			ibccmd.IBCTransferCmd(cdc),
 			ibccmd.IBCRelayCmd(cdc),
-			stakecmd.GetCmdDeclareCandidacy(cdc),
-			stakecmd.GetCmdEditCandidacy(cdc),
+			//stakecmd.GetCmdDeclareCandidacy(cdc),
+			//stakecmd.GetCmdEditCandidacy(cdc),
 			stakecmd.GetCmdDelegate(cdc),
-			stakecmd.GetCmdUnbond(cdc),
+			//stakecmd.GetCmdUnbond(cdc),
 		)...)
 	// and now simplegov specific commands
 	rootCmd.AddCommand(

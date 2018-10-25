@@ -26,11 +26,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:70f6b224a59b2fa453debffa85c77f71063d8754b90c8c4fbad5794e2c382b0f"
+  digest = "1:7736fc6da04620727f8f3aa2ced8d77be8e074a302820937aa5993848c769b27"
   name = "github.com/brejski/hid"
   packages = ["."]
   pruneopts = "UT"
-  revision = "06112dcfcc50a7e0e4fd06e17f9791e788fdaafc"
+  revision = "48b08affede2cea076a3cf13b2e3f72ed262b743"
 
 [[projects]]
   branch = "master"
@@ -403,14 +403,6 @@
   revision = "c4c61651e9e37fa117f53c5a906d3b63090d8445"
 
 [[projects]]
-  digest = "1:8b7ca9e3745cb049a65364d3adbbab63e98d3c43c83cb101cb450c8dac3c3492"
-  name = "github.com/tendermint/abci"
-  packages = ["types"]
-  pruneopts = "UT"
-  revision = "68592f4d8ee34e97db94b7a7976b1309efdb7eb9"
-  version = "v0.10.0"
-
-[[projects]]
   branch = "master"
   digest = "1:087aaa7920e5d0bf79586feb57ce01c35c830396ab4392798112e8aae8c47722"
   name = "github.com/tendermint/ed25519"
@@ -520,10 +512,9 @@
   version = "v0.22.6"
 
 [[projects]]
-  digest = "1:c4485ddd23484784f5ba65299c6d688fa3d18929fef3ede48b386635e5290090"
+  digest = "1:68921ddf468c0db04496dc49cc67948f1727a74520b1f1f06100bce5c65fa08b"
   name = "github.com/tendermint/tmlibs"
   packages = [
-    "cli",
     "common",
     "db",
     "log",
@@ -672,9 +663,7 @@
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
-    "github.com/tendermint/abci/types",
     "github.com/tendermint/go-amino",
-    "github.com/tendermint/go-crypto",
     "github.com/tendermint/go-crypto/keys",
     "github.com/tendermint/iavl",
     "github.com/tendermint/tendermint/abci/server",
@@ -705,10 +694,6 @@
     "github.com/tendermint/tendermint/rpc/lib/server",
     "github.com/tendermint/tendermint/types",
     "github.com/tendermint/tendermint/version",
-    "github.com/tendermint/tmlibs/cli",
-    "github.com/tendermint/tmlibs/common",
-    "github.com/tendermint/tmlibs/db",
-    "github.com/tendermint/tmlibs/log",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/blowfish",
     "golang.org/x/crypto/ripemd160",

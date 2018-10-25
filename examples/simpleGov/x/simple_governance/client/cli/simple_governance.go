@@ -5,10 +5,12 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simpleGovernance"
+	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -35,15 +37,15 @@ func GetCmdQueryProposal(storeName string, cdc *wire.Codec) *cobra.Command {
 		Use:   "proposal [proposal-id]",
 		Short: "Query a proposal",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			proprosalID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCLIContext()
 			key := simpleGovernance.GenerateProposalKey(int64(proprosalID))
-			res, err := ctx.Query(key, storeName)
+			res, err := ctx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -66,18 +68,12 @@ func GetCmdQueryProposals(storeName string, cdc *wire.Codec) *cobra.Command {
 		Use:   "proposals",
 		Short: "Query all proposals",
 		Args:  cobra.ExactArgs(0),
-		Run: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCoreContextFromViper()
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := context.NewCLIContext()
 
-			resKVs, err := ctx.QuerySubspace(cdc, []byte("proposals"), storeName)
+			resKVs, err := ctx.QuerySubspace([]byte("proposals"), storeName)
 			if err != nil {
 				return err
-			}
-
-			if viper.IsSet(FlagActiveProposal) {
-				isActive := viper.GetBool(FlagActiveProposal)
-			} else {
-				isActive := true
 			}
 
 			// parse out the proposals
@@ -85,7 +81,7 @@ func GetCmdQueryProposals(storeName string, cdc *wire.Codec) *cobra.Command {
 			for _, KV := range resKVs {
 				var proposal simpleGovernance.Proposal
 				cdc.MustUnmarshalBinary(KV.Value, &proposal)
-				candidates = append(proposals, proposal)
+				//candidates = append(proposals, proposal)
 			}
 
 			output, err := wire.MarshalJSONIndent(cdc, proposals)
@@ -106,16 +102,16 @@ func GetCmdQueryProposalVotes(storeName string, cdc *wire.Codec) *cobra.Command 
 		Use:   "proposal-votes [proposal-id]",
 		Short: "Query all the votes from a proposal",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 
 			proprosalID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCLIContext()
 			key := simpleGovernance.GenerateProposalVotesKey(int64(proprosalID))
-			resKVs, err := ctx.QuerySubspace(cdc, key, storeName)
+			resKVs, err := ctx.QuerySubspace(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -146,20 +142,20 @@ func GetCmdQueryProposalVote(storeName string, cdc *wire.Codec) *cobra.Command {
 		Use:   "proposal-vote [proposal-id] [voter-addr]",
 		Short: "Query a proposal",
 		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) error {
-			voterAddr, err := sdk.GetAccAddressHex(address)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			voterAddr, err := sdk.AccAddressFromHex(args[1])
 			if err != nil {
 				return err
 			}
-			proprosalID, err := strconv.Atoi(args[1])
+			proprosalID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
-			ctx := context.NewCoreContextFromViper()
+			ctx := context.NewCLIContext()
 
 			key := simpleGovernance.GenerateProposalVoteKey(int64(proprosalID), voterAddr)
 
-			res, err := ctx.Query(key, storeName)
+			res, err := ctx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
@@ -184,8 +180,9 @@ func PostCmdPropose(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "propose",
 		Short: "Submit a new proposal",
-		Run: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			ctx := context.NewCLIContext().WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 			proposer, err := ctx.GetFromAddress()
 			if err != nil {
 				return err
@@ -200,12 +197,7 @@ func PostCmdPropose(cdc *wire.Codec) *cobra.Command {
 			}
 
 			msg := simpleGovernance.NewSubmitProposalMsg(title, description, deposit, proposer)
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.GetFromAddress(), msg, cdc)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
-			return nil
+			return utils.SendTx(txCtx, ctx, []sdk.Msg{msg})
 		},
 	}
 	cmd.Flags().String(FlagTitle, "", "Title of the proposal")
@@ -223,8 +215,9 @@ func PostCmdVote(cdc *wire.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote",
 		Short: "Vote on a existing open proposal",
-		Run: func(cmd *cobra.Command, args []string) error {
-			ctx := context.NewCoreContextFromViper().WithDecoder(authcmd.GetAccountDecoder(cdc))
+		RunE: func(cmd *cobra.Command, args []string) error {
+			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			ctx := context.NewCLIContext().WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 			voter, err := ctx.GetFromAddress()
 			if err != nil {
 				return err
@@ -234,12 +227,7 @@ func PostCmdVote(cdc *wire.Codec) *cobra.Command {
 			proposalID := viper.GetInt64(FlagProposalID)
 
 			msg := simpleGovernance.NewVoteMsg(proposalID, option, voter)
-			res, err := ctx.EnsureSignBuildBroadcast(ctx.GetFromAddress(), msg, cdc)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("Committed at block %d. Hash: %s\n", res.Height, res.Hash.String())
-			return nil
+			return utils.SendTx(txCtx, ctx, []sdk.Msg{msg})
 		},
 	}
 	cmd.Flags().Int(FlagProposalID, 1, "Id of the proposal")

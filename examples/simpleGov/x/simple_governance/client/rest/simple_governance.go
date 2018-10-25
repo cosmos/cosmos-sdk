@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simpleGovernance"
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/gorilla/mux"

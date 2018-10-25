@@ -3,10 +3,10 @@ package app
 import (
 	"encoding/json"
 
-	abci "github.com/tendermint/abci/types"
-	cmn "github.com/tendermint/tmlibs/common"
-	dbm "github.com/tendermint/tmlibs/db"
-	"github.com/tendermint/tmlibs/log"
+	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
@@ -18,7 +18,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/examples/simpleGov/types"
 	simpleGov "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+
+	//"github.com/cosmos/cosmos-sdk/x/stake"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -47,14 +49,14 @@ type SimpleGovApp struct {
 }
 
 // NewSimpleGovApp creates a new SimpleGovApp instance
-func NewSimpleGovApp(logger log.Logger, db dbm.DB) *SimpleGovApp {
+func NewSimpleGovApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseApp)) *SimpleGovApp {
 
 	// Create app-level codec for txs and accounts.
 	var cdc = MakeCodec()
 
 	// Create your application object.
 	var app = &SimpleGovApp{
-		BaseApp:              bam.NewBaseApp(appName, cdc, logger, db),
+		BaseApp:              bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...),
 		cdc:                  cdc,
 		capKeyMainStore:      sdk.NewKVStoreKey("main"),
 		capKeyAccountStore:   sdk.NewKVStoreKey("acc"),
@@ -66,13 +68,13 @@ func NewSimpleGovApp(logger log.Logger, db dbm.DB) *SimpleGovApp {
 	app.accountMapper = auth.NewAccountMapper(
 		cdc,
 		app.capKeyAccountStore, // target store
-		&types.AppAccount{},    // prototype
+		auth.ProtoBaseAccount,  // prototype
 	)
 
 	// Add handlers.
 	app.coinKeeper = bank.NewKeeper(app.accountMapper)
-	app.stakeKeeper = stake.NewKeeper(app.capKeyStakingStore, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
-	app.simpleGovKeeper = simpleGov.NewKeeper(app.capKeySimpleGovStore, app.coinKeeper, app.stakeKeeper, app.RegisterCodespace(simpleGov.DefaultCodespace))
+	app.stakeKeeper = stake.NewKeeper(cdc, app.capKeyStakingStore, app.coinKeeper, app.RegisterCodespace(stake.DefaultCodespace))
+	app.simpleGovKeeper = simpleGov.NewKeeper(cdc, app.capKeySimpleGovStore, app.coinKeeper, app.stakeKeeper, app.RegisterCodespace(simpleGov.DefaultCodespace))
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
@@ -104,7 +106,7 @@ func MakeCodec() *wire.Codec {
 }
 
 // ExportAppStateJSON handles the custom logic for state export
-func (app *SimpleGovApp) ExportAppStateJSON() (appState json.RawMessage, err error) {
+func (app *SimpleGovApp) ExportAppStateJSON() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 	ctx := app.NewContext(true, abci.Header{})
 
 	// iterate to get the accounts
@@ -122,5 +124,10 @@ func (app *SimpleGovApp) ExportAppStateJSON() (appState json.RawMessage, err err
 	genState := types.GenesisState{
 		Accounts: accounts,
 	}
-	return wire.MarshalJSONIndent(app.cdc, genState)
+	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return appState, validators, err
 }

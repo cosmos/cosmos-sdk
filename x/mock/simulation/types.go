@@ -33,7 +33,7 @@ type (
 	// If the invariant has been broken, it should return an error
 	// containing a descriptive message about what happened.
 	// The simulator will then halt and print the logs.
-	Invariant func(app *baseapp.BaseApp) error
+	Invariant func(app *baseapp.BaseApp, header abci.Header) error
 
 	// Account contains a privkey, pubkey, address tuple
 	// eventually more useful data can be placed in here.

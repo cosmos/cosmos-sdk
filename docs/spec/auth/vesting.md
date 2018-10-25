@@ -19,9 +19,11 @@ denominations at the same rate. This may be subject to change.
 __Note__: A vesting account could have some vesting and non-vesting coins at
 genesis, however, the latter is unlikely.
 
-## Vesting Account Definition
+## Vesting Account Types
 
 ```go
+// VestingAccount defines an interface that any vesting account type must
+// implement.
 type VestingAccount interface {
     Account
     AssertIsVestingAccount() // existence implies that account is vesting
@@ -62,15 +64,12 @@ type DelayedVestingAccount struct {
 
 Given a vesting account, we define the following in the proceeding operations:
 
-```
-OV = OriginalVesting (constant)
-V = Number of OV coins that are still vesting (derived by OV and the start/end times)
-DV = DelegatedVesting (variable)
-DF = DelegatedFree (variable)
-BC (BaseAccount.Coins) = OV - transferred (can be negative) - delegated (DV + DF)
-```
-
-__Note__: The above are explicitly stored and modified on the vesting account.
+- `OV`: The original vesting coin amount. It is a constant value.
+- `V`: The number of `OV` coins that are still **vesting**. It is derived by `OV`, `StartTime` and `EndTime`. This value is computed on demand and not on a per-block basis.
+- `V'`: The number of `OV` coins that are **vested** (unlocked). This value is computed on demand and not a per-block basis.
+- `DV`: The number of delegated **vesting** coins. It is a variable value. It is stored and modified directly in the vesting account.
+- `DF`: The number of delegated **vested** coins. It is a variable value. It is stored and modified directly in the vesting account.
+- `BC`: The number of `OV` coins less any coins that are transferred, which can be negative, or delegated (`DV + DF`). It is considered to be balance of the embedded base account. It is stored and modified directly in the vesting account.
 
 ### Operations
 
@@ -90,6 +89,10 @@ calculated on demand and not on a per-block basis.
 #### Transferring/Sending
 
 At any given time, a vesting account may transfer: `min((BC + DV) - V, BC)`.
+
+In other words, a vesting account may transfer the minimum of the base account
+balance and the base account balance plus the number of currently delegated
+vesting coins less the number of coins vested so far.
 
 #### Delegating
 

@@ -61,7 +61,7 @@ func (k Keeper) GetFeePoolValAccum(ctx sdk.Context) sdk.Dec {
 
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
-	totalPower := k.stakeKeeper.GetLastTotalPower(ctx)
+	totalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
 	fp := k.GetFeePool(ctx)
 	return fp.GetTotalValAccum(height, totalPower)
 }

@@ -109,7 +109,7 @@ func (k Keeper) currentDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress,
 // withdraw all rewards for a single delegation
 // NOTE: This gets called "onDelegationSharesModified",
 // meaning any changes to bonded coins
-func (k Keeper) CompleteWithdrawal(ctx sdk.Context, feePool types.FeePool,
+func (k Keeper) WithdrawToDelegator(ctx sdk.Context, feePool types.FeePool,
 	delAddr sdk.AccAddress, amount types.DecCoins) {
 
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, delAddr)
@@ -139,7 +139,7 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress
 
 	k.SetValidatorDistInfo(ctx, valInfo)
 	k.SetDelegationDistInfo(ctx, delInfo)
-	k.CompleteWithdrawal(ctx, feePool, delAddr, withdraw)
+	k.WithdrawToDelegator(ctx, feePool, delAddr, withdraw)
 	return nil
 }
 
@@ -161,7 +161,7 @@ func (k Keeper) CurrentDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress,
 func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delAddr sdk.AccAddress) {
 	withdraw := k.withdrawDelegationRewardsAll(ctx, delAddr)
 	feePool := k.GetFeePool(ctx)
-	k.CompleteWithdrawal(ctx, feePool, delAddr, withdraw)
+	k.WithdrawToDelegator(ctx, feePool, delAddr, withdraw)
 }
 
 func (k Keeper) withdrawDelegationRewardsAll(ctx sdk.Context,
@@ -186,13 +186,10 @@ func (k Keeper) withdrawDelegationRewardsAll(ctx sdk.Context,
 
 // get all rewards for all delegations of a delegator
 func (k Keeper) CurrentDelegationRewardsAll(ctx sdk.Context,
-	delAddr sdk.AccAddress) sdk.Coins {
-
-	height := ctx.BlockHeight()
+	delAddr sdk.AccAddress) types.DecCoins {
 
 	// iterate over all the delegations
 	total := types.DecCoins{}
-	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
 	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
 		valAddr := del.GetValidatorAddr()
 		est := k.currentDelegationReward(ctx, delAddr, valAddr)
@@ -200,6 +197,5 @@ func (k Keeper) CurrentDelegationRewardsAll(ctx sdk.Context,
 		return false
 	}
 	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
-	estCoins, _ := total.TruncateDecimal()
-	return estCoins
+	return total
 }

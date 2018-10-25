@@ -74,15 +74,15 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	withdraw = withdraw.Plus(commission)
 	k.SetValidatorDistInfo(ctx, valInfo)
 
-	k.CompleteWithdrawal(ctx, feePool, accAddr, withdraw)
+	k.WithdrawToDelegator(ctx, feePool, accAddr, withdraw)
 	return nil
 }
 
 // get all the validator rewards including the commission
-func (k Keeper) CurrentValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+func (k Keeper) CurrentValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) (sdk.Coins, sdk.Error) {
 
 	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
-		return types.ErrNoValidatorDistInfo(k.codespace)
+		return sdk.Coins{}, types.ErrNoValidatorDistInfo(k.codespace)
 	}
 
 	// withdraw self-delegation
@@ -96,5 +96,5 @@ func (k Keeper) CurrentValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Val
 	commission := valInfo.CurrentCommissionRewards(wc)
 	withdraw = withdraw.Plus(commission)
 	truncated, _ := withdraw.TruncateDecimal()
-	return truncated
+	return truncated, nil
 }

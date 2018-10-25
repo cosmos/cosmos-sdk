@@ -89,6 +89,23 @@ func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAd
 }
 
 //______________________________________________________________________
+
+// get context required for withdraw operations
+func (k Keeper) GetWithdrawContext(ctx sdk.Context,
+	operatorAddr sdk.ValAddr) types.WithdrawContext {
+
+	feePool := k.GetFeePool(ctx)
+	height := ctx.BlockHeight()
+	validator := k.stakeKeeper.Validator(ctx, operatorAddr)
+	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, operatorAddr)
+	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
+
+	return types.NewWithdrawContext(
+		feePool, height, lastTotalPower, lastValPower,
+		validator.GetCommission())
+}
+
+//______________________________________________________________________
 // PARAM STORE
 
 // Type declaration for parameters

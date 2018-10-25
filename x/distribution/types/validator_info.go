@@ -4,6 +4,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// common parameters used in withdraws from validators
+type WithdrawContext struct {
+	FeePool        FeePool
+	Height         int64   // block height
+	TotalBonded    sdk.Dec // total bonded tokens in the network
+	ValTokens      sdk.Dec // validator's bonded tokens
+	CommissionRate sdk.Dec // validator commission rate
+}
+
+func NewWithdrawContext(feePool FeePool, height int64, totalBonded,
+	valTokens, commissionRate sdk.Dec) WithdrawContext {
+
+	return WithdrawContext{
+		fp:             feePool,
+		height:         height,
+		totalBonded:    totalBonded,
+		vdTokens:       vdTokens,
+		commissionRate: commissionRate,
+	}
+}
+
+//_____________________________________________________________________________
+
 // distribution info for a particular validator
 type ValidatorDistInfo struct {
 	OperatorAddr sdk.ValAddress `json:"operator_addr"`
@@ -51,10 +74,10 @@ func (vi ValidatorDistInfo) GetValAccum(height int64, vdTokens sdk.Dec) sdk.Dec 
 // - called in DelegationDistInfo.WithdrawRewards
 // NOTE: When a delegator unbonds, say, onDelegationSharesModified ->
 //       WithdrawDelegationReward -> WithdrawRewards
-func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBonded, vdTokens,
-	commissionRate sdk.Dec) (ValidatorDistInfo, FeePool) {
+func (vi ValidatorDistInfo) TakeFeePoolRewards(wc WithdrawContext) (
+	ValidatorDistInfo, FeePool) {
 
-	fp = fp.UpdateTotalValAccum(height, totalBonded)
+	fp := wc.FeePool.UpdateTotalValAccum(height, totalBonded)
 
 	if fp.TotalValAccum.Accum.IsZero() {
 		return vi, fp
@@ -64,13 +87,13 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	accum := vi.GetValAccum(height, vdTokens)
 	vi.FeePoolWithdrawalHeight = height
 
-	if accum.GT(fp.TotalValAccum.Accum) {
+	if accum.GT(wc.fp.TotalValAccum.Accum) {
 		panic("individual accum should never be greater than the total")
 	}
 	withdrawalTokens := fp.Pool.MulDec(accum).QuoDec(fp.TotalValAccum.Accum)
 	remainingTokens := fp.Pool.Minus(withdrawalTokens)
 
-	commission := withdrawalTokens.MulDec(commissionRate)
+	commission := withdrawalTokens.MulDec(wc.CommissionRate)
 	afterCommission := withdrawalTokens.Minus(commission)
 
 	fp.TotalValAccum.Accum = fp.TotalValAccum.Accum.Sub(accum)
@@ -82,10 +105,10 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 }
 
 // withdraw commission rewards
-func (vi ValidatorDistInfo) WithdrawCommission(fp FeePool, height int64,
-	totalBonded, vdTokens, commissionRate sdk.Dec) (vio ValidatorDistInfo, fpo FeePool, withdrawn DecCoins) {
+func (vi ValidatorDistInfo) WithdrawCommission(wc WithdrawContext) (
+	vio ValidatorDistInfo, fpo FeePool, withdrawn DecCoins) {
 
-	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
+	vi, fp = vi.TakeFeePoolRewards(wc)
 
 	withdrawalTokens := vi.PoolCommission
 	vi.PoolCommission = DecCoins{} // zero
@@ -95,17 +118,18 @@ func (vi ValidatorDistInfo) WithdrawCommission(fp FeePool, height int64,
 
 // Estimate the validator's pool rewards at this current state,
 // the estimated rewards are subject to fluctuation
-func (vi ValidatorDistInfo) EstimatePoolRewards(fp FeePool, height int64,
-	totalBonded, vdTokens, commissionRate sdk.Dec) sdk.Coins {
+func (vi ValidatorDistInfo) EstimatePoolRewards(
+	wc WithdrawContext) sdk.Coins {
 
-	totalValAccum = fp.GetTotalValAccum(height, totalBonded)
-	valAccum := vi.GetValAccum(height, vdTokens)
+	fp := wc.FeePool
+	totalValAccum = fp.GetTotalValAccum(wc.height, wc.TotalBonded)
+	valAccum := vi.GetValAccum(wc.height, wc.ValTokens)
 
 	if accum.GT(fp.TotalValAccum.Accum) {
 		panic("individual accum should never be greater than the total")
 	}
 	withdrawalTokens := fp.Pool.MulDec(valAccum).QuoDec(totalValAccum)
-	commission := withdrawalTokens.MulDec(commissionRate)
+	commission := withdrawalTokens.MulDec(wc.CommissionRate)
 	afterCommission := withdrawalTokens.Minus(commission)
 	pool := vi.Pool.Plus(afterCommission)
 	return pool
@@ -113,17 +137,18 @@ func (vi ValidatorDistInfo) EstimatePoolRewards(fp FeePool, height int64,
 
 // Estimate the validator's commission pool rewards at this current state,
 // the estimated rewards are subject to fluctuation
-func (vi ValidatorDistInfo) EstimateCommissionRewards(fp FeePool, height int64,
-	totalBonded, vdTokens, commissionRate sdk.Dec) sdk.Coins {
+func (vi ValidatorDistInfo) EstimateCommissionRewards(
+	wc WithdrawContext) sdk.Coins {
 
-	totalValAccum = fp.GetTotalValAccum(height, totalBonded)
-	valAccum := vi.GetValAccum(height, vdTokens)
+	fp := wc.FeePool
+	totalValAccum = fp.GetTotalValAccum(wc.Height, wc.TotalBonded)
+	valAccum := vi.GetValAccum(wc.Height, wc.ValTokens)
 
 	if accum.GT(fp.TotalValAccum.Accum) {
 		panic("individual accum should never be greater than the total")
 	}
-	withdrawalTokens := fp.Pool.MulDec(valAccum).QuoDec(totalValAccum)
-	commission := withdrawalTokens.MulDec(commissionRate)
+	withdrawalTokens := fp.Pool.MulDec(valAccum).QuoDec(wc.TotalValAccum)
+	commission := withdrawalTokens.MulDec(wc.CommissionRate)
 	commissionPool := vi.PoolCommission.Plus(commission)
 	return commissionPool
 }

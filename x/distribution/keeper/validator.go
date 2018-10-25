@@ -62,20 +62,15 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
 		return types.ErrNoValidatorDistInfo(k.codespace)
 	}
+	wc := k.GetWithdrawContext(ctx, operatorAddr)
 
 	// withdraw self-delegation
-	height := ctx.BlockHeight()
-	validator := k.stakeKeeper.Validator(ctx, operatorAddr)
-	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, operatorAddr)
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-	withdraw := k.getDelegatorRewardsAll(ctx, accAddr, height)
+	withdraw := k.withdrawDelegatorRewardsAll(ctx, accAddr, wc.Height)
 
 	// withdrawal validator commission rewards
-	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
-	feePool := k.GetFeePool(ctx)
-	valInfo, feePool, commission := valInfo.WithdrawCommission(feePool, height, lastTotalPower,
-		lastValPower, validator.GetCommission())
+	valInfo, feePool, commission := valInfo.WithdrawCommission(wb)
 	withdraw = withdraw.Plus(commission)
 	k.SetValidatorDistInfo(ctx, valInfo)
 
@@ -91,18 +86,24 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	return nil
 }
 
-// iterate over all the validator distribution infos (inefficient, just used to check invariants)
-func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context, fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
-	defer iter.Close()
-	index := int64(0)
-	for ; iter.Valid(); iter.Next() {
-		var vdi types.ValidatorDistInfo
-		k.cdc.MustUnmarshalBinary(iter.Value(), &vdi)
-		if fn(index, vdi) {
-			return
-		}
-		index++
+// estimate all the validator rewards including the commission
+// note: all estimations are subject to flucuation
+func (k Keeper) EstimateValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+
+	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
+		return types.ErrNoValidatorDistInfo(k.codespace)
 	}
+	wc := k.GetWithdrawContext(ctx, operatorAddr)
+
+	// withdraw self-delegation
+	accAddr := sdk.AccAddress(operatorAddr.Bytes())
+	withdraw := k.EstimateDelegatorRewardsAll(ctx, accAddr, wc.Height)
+
+	// withdrawal validator commission rewards
+	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
+
+	commission := valInfo.EstimateCommission(wc)
+	withdraw = withdraw.Plus(commission)
+	truncated, _ := withdraw.TruncateDecimal()
+	return truncated
 }

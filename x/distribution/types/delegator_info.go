@@ -34,20 +34,21 @@ func (di DelegationDistInfo) GetDelAccum(height int64, delegatorShares sdk.Dec) 
 //   * updates validator info's FeePoolWithdrawalHeight, thus setting accum to 0
 //   * updates fee pool to latest height and total val accum w/ given totalBonded
 //   (see comment on TakeFeePoolRewards for more info)
-func (di DelegationDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
-	height int64, totalBonded, vdTokens, totalDelShares, delegatorShares,
-	commissionRate sdk.Dec) (DelegationDistInfo, ValidatorDistInfo, FeePool, DecCoins) {
+func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDistInfo,
+	totalDelShares, delegatorShares sdk.Dec) (
+	DelegationDistInfo, ValidatorDistInfo, FeePool, DecCoins) {
 
-	vi = vi.UpdateTotalDelAccum(height, totalDelShares)
+	fp := wc.FeePool
+	vi = vi.UpdateTotalDelAccum(wc.Height, totalDelShares)
 
 	if vi.DelAccum.Accum.IsZero() {
 		return di, vi, fp, DecCoins{}
 	}
 
-	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
+	vi, fp = vi.TakeFeePoolRewards(wc)
 
-	accum := di.GetDelAccum(height, delegatorShares)
-	di.WithdrawalHeight = height
+	accum := di.GetDelAccum(wc.Height, delegatorShares)
+	di.WithdrawalHeight = wc.Height
 	withdrawalTokens := vi.Pool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
 	remainingTokens := vi.Pool.Minus(withdrawalTokens)
 
@@ -58,19 +59,18 @@ func (di DelegationDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 }
 
 // Estimate the delegators rewards at this current state,
-// the estimated rewards are subject to fluctuation
-func (di DelegationDistInfo) EstimateRewards(fp FeePool, vi ValidatorDistInfo,
-	height int64, totalBonded, vdTokens, totalDelShares, delegatorShares,
-	commissionRate sdk.Dec) DecCoins {
+// note: all estimations are subject to flucuation
+func (di DelegationDistInfo) EstimateRewards(wc WithdrawContext, vi ValidatorDistInfo,
+	totalDelShares, delegatorShares sdk.Dec) DecCoins {
 
-	totalDelAccum = GetTotalDelAccum(height, totalDelShares)
+	totalDelAccum := vi.GetTotalDelAccum(wc.Height, totalDelShares)
 
 	if vi.DelAccum.Accum.IsZero() {
 		return DecCoins{}
 	}
 
-	rewards = vi.EstimatePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
-	accum := di.GetDelAccum(height, delegatorShares)
+	rewards := vi.EstimatePoolRewards(wc)
+	accum := di.GetDelAccum(wc.Height, delegatorShares)
 	estimatedTokens := rewards.MulDec(accum).QuoDec(totalDelAccum)
 	return estimatedTokens
 }

@@ -69,7 +69,44 @@ func (k Keeper) RemoveDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAd
 
 //___________________________________________________________________________________________
 
-// Withdraw all the rewards for a single delegation
+// return all rewards for a delegation
+func (k Keeper) withdrawDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress,
+	height int64, lastTotalPower sdk.Dec) (
+	feePool, ValidatorDistInfo, DelegatorDistInfo, types.DecCoins) {
+
+	valAddr := del.GetValidatorAddr()
+	wc := k.GetWithdrawContext(ctx, valAddr)
+
+	delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
+	validator := k.stakeKeeper.Validator(ctx, valAddr)
+	delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
+
+	delInfo, valInfo, feePool, withdraw := delInfo.WithdrawRewards(wc,
+		validator.GetDelegatorShares(), delegation.GetShares())
+
+	return feePool, valInfo, delInfo, withdraw
+}
+
+// estimate all rewards for all delegations of a delegator
+func (k Keeper) estimateDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress,
+	height int64, lastTotalPower sdk.Dec) types.DecCoins {
+
+	valAddr := del.GetValidatorAddr()
+	wc := k.GetWithdrawContext(ctx, valAddr)
+
+	delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
+	validator := k.stakeKeeper.Validator(ctx, valAddr)
+	delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
+
+	estimation := delInfo.EstimateRewards(wc,
+		validator.GetDelegatorShares(), delegation.GetShares())
+
+	return estimation
+}
+
+//___________________________________________________________________________________________
+
+// withdraw all rewards for a single delegation
 // NOTE: This gets called "onDelegationSharesModified",
 // meaning any changes to bonded coins
 func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccAddress,
@@ -80,7 +117,7 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 	}
 
 	feePool, valInfo, delInfo, withdraw :=
-		withdrawDelegatorReward(ctx, delAddr, height, lastTotalPower)
+		withdrawDelegationReward(ctx, delAddr, height, lastTotalPower)
 
 	k.SetValidatorDistInfo(ctx, valInfo)
 	k.SetDelegationDistInfo(ctx, delInfo)
@@ -96,6 +133,17 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccA
 	return nil
 }
 
+// estimate rewards for a single delegation
+func (k Keeper) EstimateDelegationReward(ctx sdk.Context, delegatorAddr sdk.AccAddress,
+	valAddr sdk.ValAddress) (sdk.Coins, sdk.Error) {
+
+	if !k.HasDelegationDistInfo(ctx, delegatorAddr, valAddr) {
+		return types.ErrNoDelegationDistInfo(k.codespace)
+	}
+	estCoins := estimateDelegationReward(ctx, delAddr, height, lastTotalPower)
+	return estCoins.TruncateDecimal()
+}
+
 //___________________________________________________________________________________________
 
 // return all rewards for all delegations of a delegator
@@ -103,13 +151,12 @@ func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.
 	height := ctx.BlockHeight()
 
 	// iterate over all the delegations
-	// TODO: Reconcile with duplicate code in WithdrawDelegationReward.
 	withdraw := types.DecCoins{}
 	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
 	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
-		feePool, valInfo, delInfo, diWithdraw :=
-			withdrawDelegatorReward(ctx, delAddr, height, lastTotalPower)
 
+		feePool, valInfo, delInfo, diWithdraw :=
+			withdrawDelegationReward(ctx, delAddr, height, lastTotalPower)
 		withdraw = withdraw.Plus(diWithdraw)
 		k.SetFeePool(ctx, feePool)
 		k.SetValidatorDistInfo(ctx, valInfo)
@@ -129,21 +176,21 @@ func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delegatorAddr sdk.
 	}
 }
 
-// return all rewards for all delegations of a delegator
-func (k Keeper) withdrawDelegatorReward(ctx sdk.Context, delAddr sdk.AccAddress,
-	height int64, lastTotalPower sdk.Dec) (
-	feePool, ValidatorDistInfo, DelegatorDistInfo, types.DecCoins) {
+// estimate all rewards for all delegations of a delegator
+func (k Keeper) EstimateDelegationRewardsAll(ctx sdk.Context,
+	delegatorAddr sdk.AccAddress) sdk.Coins {
 
-	feePool := k.GetFeePool(ctx)
-	valAddr := del.GetValidatorAddr()
-	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, valAddr)
-	delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
-	valInfo := k.GetValidatorDistInfo(ctx, valAddr)
-	validator := k.stakeKeeper.Validator(ctx, valAddr)
-	delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
+	height := ctx.BlockHeight()
 
-	delInfo, valInfo, feePool, withdraw := delInfo.WithdrawRewards(feePool, valInfo, height, lastTotalPower,
-		lastValPower, validator.GetDelegatorShares(), delegation.GetShares(), validator.GetCommission())
-
-	return feePool, valInfo, delInfo, withdraw
+	// iterate over all the delegations
+	total := types.DecCoins{}
+	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
+	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
+		est := estimateDelegationReward(ctx, delAddr, height, lastTotalPower)
+		total = total.Plus(est)
+		return false
+	}
+	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
+	estCoins, _ := total.TruncateDecimal()
+	return estCoins
 }

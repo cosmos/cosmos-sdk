@@ -40,8 +40,8 @@ func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 		lastTotalPower := sdk.NewDecFromInt(sk.GetLastTotalPower(ctx))
 		totalAccum := k.GetFeePool(ctx).GetTotalValAccum(height, lastTotalPower)
 
-		if totalAccum != valAccum {
-			fmt.Errorf("validator accum invariance: \n\tfee pool totalAccum: %v"+
+		if !totalAccum.Equal(valAccum) {
+			return fmt.Errorf("validator accum invariance: \n\tfee pool totalAccum: %v"+
 				"\n\tvalidator accum \t%v\n", totalAccum.String(), valAccum.String())
 		}
 

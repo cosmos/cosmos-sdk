@@ -9,7 +9,8 @@ import (
 // Handler handles payload after it passes voting process
 type Handler func(ctx sdk.Context, p Payload) sdk.Error
 
-func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.ValidatorSet, p Payload, info Info) Info {
+func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.ValidatorSet,
+	p Payload, info Info) Info {
 	info.Power = info.Power.Add(val.GetPower())
 
 	// Return if the voted power is not bigger than required power
@@ -46,7 +47,8 @@ func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.Valid
 }
 
 // Handle is used by other modules to handle Msg
-func (keeper Keeper) Handle(h Handler, ctx sdk.Context, o Msg, codespace sdk.CodespaceType) sdk.Result {
+func (keeper Keeper) Handle(h Handler, ctx sdk.Context, o Msg,
+	codespace sdk.CodespaceType) sdk.Result {
 	valset := keeper.valset
 
 	signer := o.Signer

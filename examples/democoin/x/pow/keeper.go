@@ -32,7 +32,8 @@ func NewConfig(denomination string, reward int64) Config {
 	return Config{denomination, reward}
 }
 
-func NewKeeper(key sdk.StoreKey, config Config, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(key sdk.StoreKey, config Config, ck bank.Keeper,
+	codespace sdk.CodespaceType) Keeper {
 	return Keeper{key, config, ck, codespace}
 }
 
@@ -98,7 +99,8 @@ func (k Keeper) SetLastCount(ctx sdk.Context, count uint64) {
 }
 
 // Is the keeper state valid?
-func (k Keeper) CheckValid(ctx sdk.Context, difficulty uint64, count uint64) (uint64, uint64, sdk.Error) {
+func (k Keeper) CheckValid(ctx sdk.Context, difficulty uint64, count uint64) (uint64,
+	uint64, sdk.Error) {
 
 	lastDifficulty, err := k.GetLastDifficulty(ctx)
 	if err != nil {
@@ -126,8 +128,11 @@ func (k Keeper) CheckValid(ctx sdk.Context, difficulty uint64, count uint64) (ui
 }
 
 // Add some coins for a POW well done
-func (k Keeper) ApplyValid(ctx sdk.Context, sender sdk.AccAddress, newDifficulty uint64, newCount uint64) sdk.Error {
-	_, _, ckErr := k.ck.AddCoins(ctx, sender, []sdk.Coin{sdk.NewInt64Coin(k.config.Denomination, k.config.Reward)})
+func (k Keeper) ApplyValid(ctx sdk.Context, sender sdk.AccAddress, newDifficulty uint64,
+	newCount uint64) sdk.Error {
+
+	_, _, ckErr := k.ck.AddCoins(ctx, sender, []sdk.Coin{sdk.NewInt64Coin(k.config.Denomination,
+		k.config.Reward)})
 	if ckErr != nil {
 		return ckErr
 	}

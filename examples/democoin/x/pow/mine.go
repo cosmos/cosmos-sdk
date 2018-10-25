@@ -24,7 +24,8 @@ func hash(sender sdk.AccAddress, count uint64, nonce uint64) []byte {
 	bytes = append(bytes, nonceBytes...)
 	hash := crypto.Sha256(bytes)
 	// uint64, so we just use the first 8 bytes of the hash
-	// this limits the range of possible difficulty values (as compared to uint256), but fine for proof-of-concept
+	// this limits the range of possible difficulty values (as compared to uint256),
+	// but fine for proof-of-concept
 	ret := make([]byte, hex.EncodedLen(len(hash)))
 	hex.Encode(ret, hash)
 	return ret[:16]

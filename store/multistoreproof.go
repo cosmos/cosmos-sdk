@@ -31,7 +31,8 @@ func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []store
 }
 
 // VerifyMultiStoreCommitInfo verify multiStoreCommitInfo against appHash
-func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo, appHash []byte) ([]byte, error) {
+func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo,
+	appHash []byte) ([]byte, error) {
 	var substoreCommitHash []byte
 	var height int64
 	for _, storeInfo := range storeInfos {
@@ -55,7 +56,8 @@ func VerifyMultiStoreCommitInfo(storeName string, storeInfos []storeInfo, appHas
 }
 
 // VerifyRangeProof verify iavl RangeProof
-func VerifyRangeProof(key, value []byte, substoreCommitHash []byte, rangeProof *iavl.RangeProof) error {
+func VerifyRangeProof(key, value []byte, substoreCommitHash []byte,
+	rangeProof *iavl.RangeProof) error {
 
 	// verify the proof to ensure data integrity.
 	err := rangeProof.Verify(substoreCommitHash)
@@ -83,7 +85,8 @@ func VerifyRangeProof(key, value []byte, substoreCommitHash []byte, rangeProof *
 // RequireProof return whether proof is require for the subpath
 func RequireProof(subpath string) bool {
 	// Currently, only when query subpath is "/store" or "/key", will proof be included in response.
-	// If there are some changes about proof building in iavlstore.go, we must change code here to keep consistency with iavlstore.go:212
+	// If there are some changes about proof building in iavlstore.go,
+	// we must change code here to keep consistency with iavlstore.go:212
 	if subpath == "/store" || subpath == "/key" {
 		return true
 	}

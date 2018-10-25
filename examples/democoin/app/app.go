@@ -87,7 +87,8 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		app.RegisterCodespace(cool.DefaultCodespace))
 	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)),
 		app.bankKeeper, app.RegisterCodespace(pow.DefaultCodespace))
-	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.
+		RegisterCodespace(ibc.DefaultCodespace))
 	app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.bankKeeper,
 		app.RegisterCodespace(simplestake.DefaultCodespace))
 	app.Router().
@@ -135,7 +136,9 @@ func MakeCodec() *codec.Codec {
 
 // custom logic for democoin initialization
 // nolint: unparam
-func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keeper) sdk.InitChainer {
+func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper,
+	powKeeper pow.Keeper) sdk.InitChainer {
+
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes
 

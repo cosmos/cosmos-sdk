@@ -74,7 +74,8 @@ type ValidatorSet struct {
 }
 
 // IterateValidators implements sdk.ValidatorSet
-func (vs *ValidatorSet) IterateValidators(ctx sdk.Context, fn func(index int64, Validator sdk.Validator) bool) {
+func (vs *ValidatorSet) IterateValidators(ctx sdk.Context, fn func(index int64,
+	Validator sdk.Validator) bool) {
 	for i, val := range vs.Validators {
 		if fn(int64(i), val) {
 			break
@@ -83,7 +84,8 @@ func (vs *ValidatorSet) IterateValidators(ctx sdk.Context, fn func(index int64, 
 }
 
 // IterateValidatorsBonded implements sdk.ValidatorSet
-func (vs *ValidatorSet) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, Validator sdk.Validator) bool) {
+func (vs *ValidatorSet) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64,
+	Validator sdk.Validator) bool) {
 	vs.IterateValidators(ctx, fn)
 }
 
@@ -152,6 +154,7 @@ func (vs *ValidatorSet) Unjail(_ sdk.Context, _ sdk.ConsAddress) {
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Delegation(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) sdk.Delegation {
+func (vs *ValidatorSet) Delegation(_ sdk.Context, _ sdk.AccAddress,
+	_ sdk.ValAddress) sdk.Delegation {
 	panic("not implemented")
 }

@@ -47,7 +47,8 @@ func (gs *gasKVStore) Get(key []byte) (value []byte) {
 func (gs *gasKVStore) Set(key []byte, value []byte) {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, sdk.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*sdk.Gas(len(value)), sdk.GasWritePerByteDesc)
+	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*sdk.Gas(len(value)),
+		sdk.GasWritePerByteDesc)
 	gs.parent.Set(key, value)
 }
 
@@ -126,7 +127,8 @@ type gasIterator struct {
 	parent    sdk.Iterator
 }
 
-func newGasIterator(gasMeter sdk.GasMeter, gasConfig sdk.GasConfig, parent sdk.Iterator) sdk.Iterator {
+func newGasIterator(gasMeter sdk.GasMeter, gasConfig sdk.GasConfig,
+	parent sdk.Iterator) sdk.Iterator {
 	return &gasIterator{
 		gasMeter:  gasMeter,
 		gasConfig: gasConfig,

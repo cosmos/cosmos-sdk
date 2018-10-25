@@ -53,14 +53,16 @@ type BasecoinApp struct {
 // In addition, all necessary mappers and keepers are created, routes
 // registered, and finally the stores being mounted along with any necessary
 // chain initialization.
-func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseApp)) *BasecoinApp {
+func NewBasecoinApp(logger log.Logger,
+	db dbm.DB, baseAppOptions ...func(*bam.BaseApp)) *BasecoinApp {
 	// create and register app-level codec for TXs and accounts
 	cdc := MakeCodec()
 
 	// create your application type
 	var app = &BasecoinApp{
 		cdc:        cdc,
-		BaseApp:    bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...),
+		BaseApp:    bam.NewBaseApp(appName, logger, db,
+			auth.DefaultTxDecoder(cdc), baseAppOptions...),
 		keyMain:    sdk.NewKVStoreKey("main"),
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
@@ -121,7 +123,8 @@ func MakeCodec() *codec.Codec {
 
 // BeginBlocker reflects logic to run before any TXs application are processed
 // by the application.
-func (app *BasecoinApp) BeginBlocker(_ sdk.Context, _ abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *BasecoinApp) BeginBlocker(_ sdk.Context,
+	_ abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return abci.ResponseBeginBlock{}
 }
 
@@ -136,7 +139,8 @@ func (app *BasecoinApp) EndBlocker(_ sdk.Context, _ abci.RequestEndBlock) abci.R
 // state provided by 'req' and attempt to deserialize said state. The state
 // should contain all the genesis accounts. These accounts will be added to the
 // application's account mapper.
-func (app *BasecoinApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *BasecoinApp) initChainer(ctx sdk.Context,
+	req abci.RequestInitChain) abci.ResponseInitChain {
 	stateJSON := req.AppStateBytes
 
 	genesisState := new(types.GenesisState)

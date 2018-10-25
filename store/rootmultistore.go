@@ -323,7 +323,8 @@ func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 
 //----------------------------------------
 
-func (rs *rootMultiStore) loadCommitStoreFromParams(key sdk.StoreKey, id CommitID, params storeParams) (store CommitStore, err error) {
+func (rs *rootMultiStore) loadCommitStoreFromParams(key sdk.StoreKey, id CommitID,
+	params storeParams) (store CommitStore, err error) {
 	var db dbm.DB
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))

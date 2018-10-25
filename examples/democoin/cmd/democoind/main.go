@@ -35,7 +35,8 @@ var CoolAppInit = server.AppInit{
 }
 
 // coolGenAppParams sets up the app_state and appends the cool app state
-func CoolAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func CoolAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (
+	appState json.RawMessage, err error) {
 	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
 	if err != nil {
 		return
@@ -119,7 +120,8 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 
 	cmd.Flags().String(cli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
-	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(client.FlagChainID, "",
+		"genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(client.FlagName, "", "validator's moniker")
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd

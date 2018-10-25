@@ -16,5 +16,6 @@ const (
 
 // ErrIncorrectCoolAnswer - Error returned upon an incorrect guess
 func ErrIncorrectCoolAnswer(codespace sdk.CodespaceType, answer string) sdk.Error {
-	return sdk.NewError(codespace, CodeIncorrectCoolAnswer, fmt.Sprintf("incorrect cool answer: %v", answer))
+	return sdk.NewError(codespace, CodeIncorrectCoolAnswer,
+		fmt.Sprintf("incorrect cool answer: %v", answer))
 }

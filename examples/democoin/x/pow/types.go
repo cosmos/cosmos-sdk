@@ -26,7 +26,8 @@ type MsgMine struct {
 var _ sdk.Msg = MsgMine{}
 
 // NewMsgMine - construct mine message
-func NewMsgMine(sender sdk.AccAddress, difficulty uint64, count uint64, nonce uint64, proof []byte) MsgMine {
+func NewMsgMine(sender sdk.AccAddress, difficulty uint64, count uint64, nonce uint64,
+	proof []byte) MsgMine {
 	return MsgMine{sender, difficulty, count, nonce, proof}
 }
 
@@ -55,7 +56,8 @@ func (msg MsgMine) ValidateBasic() sdk.Error {
 	hex.Encode(hashHex, hash)
 	hashHex = hashHex[:16]
 	if !bytes.Equal(hashHex, msg.Proof) {
-		return ErrInvalidProof(DefaultCodespace, fmt.Sprintf("hashHex: %s, proof: %s", hashHex, msg.Proof))
+		return ErrInvalidProof(DefaultCodespace, fmt.Sprintf("hashHex: %s, proof: %s",
+			hashHex, msg.Proof))
 	}
 
 	// check proof below difficulty
@@ -66,7 +68,8 @@ func (msg MsgMine) ValidateBasic() sdk.Error {
 		return ErrInvalidProof(DefaultCodespace, fmt.Sprintf("proof: %s", msg.Proof))
 	}
 	if hashUint >= target {
-		return ErrNotBelowTarget(DefaultCodespace, fmt.Sprintf("hashuint: %d, target: %d", hashUint, target))
+		return ErrNotBelowTarget(DefaultCodespace, fmt.Sprintf("hashuint: %d, target: %d",
+			hashUint, target))
 	}
 
 	return nil

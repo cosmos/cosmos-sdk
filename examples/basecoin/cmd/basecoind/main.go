@@ -108,14 +108,16 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 				return err
 			}
 			fmt.Fprintf(os.Stderr, "%s\n", string(out))
-			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID, []tmtypes.GenesisValidator{validator},
+			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID,
+				[]tmtypes.GenesisValidator{validator},
 				appStateJSON)
 		},
 	}
 
 	cmd.Flags().String(cli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
-	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(client.FlagChainID, "",
+		"genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(client.FlagName, "", "validator's moniker")
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
@@ -125,8 +127,8 @@ func newApp(logger log.Logger, db dbm.DB, storeTracer io.Writer) abci.Applicatio
 	return app.NewBasecoinApp(logger, db, baseapp.SetPruning(viper.GetString("pruning")))
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, storeTracer io.Writer) (json.RawMessage,
-	[]tmtypes.GenesisValidator, error) {
+func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB,
+	storeTracer io.Writer) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 
 	bapp := app.NewBasecoinApp(logger, db)
 	return bapp.ExportAppStateAndValidators()

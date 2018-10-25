@@ -64,7 +64,8 @@ func GetAssocKey(base sdk.ValAddress, assoc sdk.ValAddress) []byte {
 
 // Associate associates new address with validator address
 // nolint: unparam
-func (valset ValidatorSet) Associate(ctx sdk.Context, base sdk.ValAddress, assoc sdk.ValAddress) bool {
+func (valset ValidatorSet) Associate(ctx sdk.Context, base sdk.ValAddress,
+	assoc sdk.ValAddress) bool {
 	if len(base) != valset.addrLen || len(assoc) != valset.addrLen {
 		return false
 	}
@@ -79,7 +80,8 @@ func (valset ValidatorSet) Associate(ctx sdk.Context, base sdk.ValAddress, assoc
 
 // Dissociate removes association between addresses
 // nolint: unparam
-func (valset ValidatorSet) Dissociate(ctx sdk.Context, base sdk.ValAddress, assoc sdk.ValAddress) bool {
+func (valset ValidatorSet) Dissociate(ctx sdk.Context, base sdk.ValAddress,
+	assoc sdk.ValAddress) bool {
 	if len(base) != valset.addrLen || len(assoc) != valset.addrLen {
 		return false
 	}
@@ -94,7 +96,8 @@ func (valset ValidatorSet) Dissociate(ctx sdk.Context, base sdk.ValAddress, asso
 
 // Associations returns all associated addresses with a validator
 // nolint: unparam
-func (valset ValidatorSet) Associations(ctx sdk.Context, base sdk.ValAddress) (res []sdk.ValAddress) {
+func (valset ValidatorSet) Associations(ctx sdk.Context,
+	base sdk.ValAddress) (res []sdk.ValAddress) {
 	res = make([]sdk.ValAddress, valset.maxAssoc)
 	iter := sdk.KVStorePrefixIterator(valset.store, GetAssocPrefix(base))
 	defer iter.Close()

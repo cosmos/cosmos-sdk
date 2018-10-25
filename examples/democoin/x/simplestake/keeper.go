@@ -61,7 +61,9 @@ func (k Keeper) deleteBondInfo(ctx sdk.Context, addr sdk.AccAddress) {
 }
 
 // register a bond with the keeper
-func (k Keeper) Bond(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
+func (k Keeper) Bond(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, stake sdk.Coin) (
+	int64, sdk.Error) {
+
 	if stake.Denom != stakingToken {
 		return 0, ErrIncorrectStakingToken(k.codespace)
 	}
@@ -125,7 +127,9 @@ func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress, pubKey cr
 	return bi.Power, nil
 }
 
-func (k Keeper) unbondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, int64, sdk.Error) {
+func (k Keeper) unbondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey,
+	int64, sdk.Error) {
+
 	bi := k.getBondInfo(ctx, addr)
 	if bi.isEmpty() {
 		return nil, 0, ErrInvalidUnbond(k.codespace)

@@ -134,6 +134,7 @@ func (cms cacheMultiStore) GetKVStore(key StoreKey) KVStore {
 }
 
 // Implements MultiStore.
-func (cms cacheMultiStore) GetKVStoreWithGas(meter sdk.GasMeter, config sdk.GasConfig, key StoreKey) KVStore {
+func (cms cacheMultiStore) GetKVStoreWithGas(meter sdk.GasMeter, config sdk.GasConfig,
+	key StoreKey) KVStore {
 	return NewGasKVStore(meter, config, cms.GetKVStore(key))
 }

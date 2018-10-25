@@ -72,8 +72,8 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, f auth.FeeCollectionKeeper
 
 		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
 		d.IterateValidatorDistInfos(ctx, func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
-			loose = loose.Add(distInfo.Pool.AmountOf("steak"))
-			loose = loose.Add(distInfo.PoolCommission.AmountOf("steak"))
+			loose = loose.Add(distInfo.ValCommission.AmountOf("steak"))
+			loose = loose.Add(distInfo.DelRewards.AmountOf("steak"))
 			return false
 		})
 

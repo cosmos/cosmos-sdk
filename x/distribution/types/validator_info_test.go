@@ -31,14 +31,14 @@ func TestTakeFeePoolRewards(t *testing.T) {
 	vi1, fp = vi1.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens1, commissionRate1)
 	require.True(sdk.DecEq(t, sdk.NewDec(900), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(100-2), vi1.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi1.PoolCommission[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(100-2), vi1.DelRewards[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi1.ValCommission[0].Amount))
 
 	vi2, fp = vi2.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens2, commissionRate2)
 	require.True(sdk.DecEq(t, sdk.NewDec(500), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(500), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(400-12), vi2.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, vi2.PoolCommission[0].Amount, sdk.NewDec(12)))
+	assert.True(sdk.DecEq(t, sdk.NewDec(400-12), vi2.DelRewards[0].Amount))
+	assert.True(sdk.DecEq(t, vi2.ValCommission[0].Amount, sdk.NewDec(12)))
 
 	// add more blocks and inflation
 	height = 20
@@ -47,8 +47,8 @@ func TestTakeFeePoolRewards(t *testing.T) {
 	vi3, fp = vi3.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens3, commissionRate3)
 	require.True(sdk.DecEq(t, sdk.NewDec(500), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(500), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(1000-40), vi3.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, vi3.PoolCommission[0].Amount, sdk.NewDec(40)))
+	assert.True(sdk.DecEq(t, sdk.NewDec(1000-40), vi3.DelRewards[0].Amount))
+	assert.True(sdk.DecEq(t, vi3.ValCommission[0].Amount, sdk.NewDec(40)))
 }
 
 func TestWithdrawCommission(t *testing.T) {
@@ -69,8 +69,8 @@ func TestWithdrawCommission(t *testing.T) {
 	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBondedTokens, validatorTokens, commissionRate)
 	require.True(sdk.DecEq(t, sdk.NewDec(900), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(100-2), vi.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi.PoolCommission[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(100-2), vi.DelRewards[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi.ValCommission[0].Amount))
 
 	// add more blocks and inflation
 	height = 20
@@ -79,7 +79,7 @@ func TestWithdrawCommission(t *testing.T) {
 	vi, fp, commissionRecv := vi.WithdrawCommission(fp, height, totalBondedTokens, validatorTokens, commissionRate)
 	require.True(sdk.DecEq(t, sdk.NewDec(1800), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(200-4), vi.Pool[0].Amount))
-	assert.Zero(t, len(vi.PoolCommission))
+	assert.True(sdk.DecEq(t, sdk.NewDec(200-4), vi.DelRewards[0].Amount))
+	assert.Zero(t, len(vi.ValCommission))
 	assert.True(sdk.DecEq(t, sdk.NewDec(4), commissionRecv[0].Amount))
 }

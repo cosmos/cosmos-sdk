@@ -35,8 +35,8 @@ func TestWithdrawRewards(t *testing.T) {
 	assert.Equal(t, height, di1.WithdrawalHeight)
 	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi.PoolCommission[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.DelRewards[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi.ValCommission[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(49), rewardRecv1[0].Amount))
 
 	// add more blocks and inflation
@@ -50,7 +50,7 @@ func TestWithdrawRewards(t *testing.T) {
 	assert.Equal(t, height, di2.WithdrawalHeight)
 	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.TotalValAccum.Accum))
 	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(4), vi.PoolCommission[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.DelRewards[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(4), vi.ValCommission[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(98), rewardRecv2[0].Amount))
 }

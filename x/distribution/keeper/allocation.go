@@ -27,8 +27,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 	// apply commission
 	commission := proposerReward.MulDec(proposerValidator.GetCommission())
 	remaining := proposerReward.Minus(commission)
-	proposerDist.PoolCommission = proposerDist.PoolCommission.Plus(commission)
-	proposerDist.Pool = proposerDist.Pool.Plus(remaining)
+	proposerDist.ValCommission = proposerDist.ValCommission.Plus(commission)
+	proposerDist.DelRewards = proposerDist.DelRewards.Plus(remaining)
 
 	// allocate community funding
 	communityTax := k.GetCommunityTax(ctx)

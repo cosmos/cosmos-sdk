@@ -12,9 +12,9 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 	vdi := types.ValidatorDistInfo{
 		OperatorAddr:            addr,
 		FeePoolWithdrawalHeight: height,
-		Pool:                    types.DecCoins{},
-		PoolCommission:          types.DecCoins{},
 		DelAccum:                types.NewTotalAccum(height),
+		DelRewards:              types.DecCoins{},
+		ValCommission:           types.DecCoins{},
 	}
 	k.SetValidatorDistInfo(ctx, vdi)
 }

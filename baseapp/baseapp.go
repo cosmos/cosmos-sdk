@@ -85,8 +85,11 @@ var _ abci.Application = (*BaseApp)(nil)
 //
 // NOTE: The db is used to store the version number for now.
 // Accepts a user-defined txDecoder
-// Accepts variable number of option functions, which act on the BaseApp to set configuration choices
-func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
+// Accepts variable number of option functions,
+// which act on the BaseApp to set  configuration choices
+func NewBaseApp(name string, logger log.Logger, db dbm.DB,
+	txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
+
 	app := &BaseApp{
 		Logger:      logger,
 		name:        name,
@@ -197,7 +200,8 @@ func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).WithMinimumFees(app.minimumFees)
+		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).
+			WithMinimumFees(app.minimumFees)
 	}
 	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
 }
@@ -214,8 +218,9 @@ func (st *state) CacheMultiStore() sdk.CacheMultiStore {
 func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinimumFees(app.minimumFees),
+		ms: ms,
+		ctx: sdk.NewContext(ms, header, true, app.Logger).
+			WithMinimumFees(app.minimumFees),
 	}
 }
 
@@ -281,7 +286,8 @@ func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
-// Splits a string path using the delimter '/'.  i.e. "this/is/funny" becomes []string{"this", "is", "funny"}
+// Splits a string path using the delimter '/'.  i.e. "this/is/funny" becomes
+// []string{"this", "is", "funny"}
 func splitPath(requestPath string) (path []string) {
 	path = strings.Split(requestPath, "/")
 	// first element is empty string
@@ -381,21 +387,25 @@ func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 
-func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
-	// path[0] should be "custom" because "/custom" prefix is required for keeper queries.
-	// the queryRouter routes using path[1]. For example, in the path "custom/gov/proposal", queryRouter routes using "gov"
+func handleQueryCustom(app *BaseApp, path []string,
+	req abci.RequestQuery) (res abci.ResponseQuery) {
+	// path[0] should be "custom" because "/custom" prefix is required for keeper queries. The
+	// queryRouter routes using path[1]. For example, in the path "custom/gov/proposal",
+	// queryRouter routes using "gov".
 	if len(path) < 2 || path[1] == "" {
 		return sdk.ErrUnknownRequest("No route for custom query specified").QueryResult()
 	}
 	querier := app.queryRouter.Route(path[1])
 	if querier == nil {
-		return sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
+		return sdk.ErrUnknownRequest(fmt.Sprintf(
+			"no custom querier found for route %s", path[1])).QueryResult()
 	}
 
-	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger).
-		WithMinimumFees(app.minimumFees)
+	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(),
+		true, app.Logger).WithMinimumFees(app.minimumFees)
 	// Passes the rest of the path as an argument to the querier.
-	// For example, in the path "custom/gov/proposal/test", the gov querier gets []string{"proposal", "test"} as the path
+	// For example, in the path "custom/gov/proposal/test", the gov querier gets
+	// []string{"proposal", "test"} as the path
 	resBytes, err := querier(ctx, path[2:], req)
 	if err != nil {
 		return abci.ResponseQuery{
@@ -426,7 +436,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	} else {
 		// In the first block, app.deliverState.ctx will already be initialized
 		// by InitChain. Context is now updated with Header information.
-		app.deliverState.ctx = app.deliverState.ctx.WithBlockHeader(req.Header).WithBlockHeight(req.Header.Height)
+		app.deliverState.ctx = app.deliverState.ctx.WithBlockHeader(req.Header).
+			WithBlockHeight(req.Header.Height)
 	}
 
 	if app.beginBlocker != nil {

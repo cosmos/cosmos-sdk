@@ -48,7 +48,8 @@ func (ctx CLIContext) QueryStore(key cmn.HexBytes, storeName string) (res []byte
 
 // QuerySubspace performs a query from a Tendermint node with the provided
 // store name and subspace.
-func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sdk.KVPair, err error) {
+func (ctx CLIContext) QuerySubspace(subspace []byte,
+	storeName string) (res []sdk.KVPair, err error) {
 	resRaw, err := ctx.queryStore(subspace, storeName, "subspace")
 	if err != nil {
 		return res, err

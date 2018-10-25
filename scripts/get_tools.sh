@@ -47,3 +47,4 @@ installFromGithub golang/dep 22125cfaa6ddc71e145b1535d4b7ee9744fefff2 cmd/dep
 ## gometalinter v2.0.11
 installFromGithub alecthomas/gometalinter 17a7ffa42374937bfecabfb8d2efbd4db0c26741
 installFromGithub rakyll/statik v0.1.5
+installFromGithub walle/lll 8b13b3fbf7312913fcfdbfa78997b9bd1dbb11af

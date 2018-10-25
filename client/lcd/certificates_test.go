@@ -70,7 +70,8 @@ BgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MA8GA1UdEQQIMAaHBH8AAAEwCgYIKoZI
 zj0EAwIDSQAwRgIhAKnwbhX9FrGG1otCVLwhClQ3RaLxnNpCgIGTqSimb34cAiEA
 stMN+IqMCKWlZyGqxGIiyksMLMEU3lRqKNQn2EoAZJY=
 -----END CERTIFICATE-----`
-	wantFingerprint := `SHA256 Fingerprint=0B:ED:9A:AA:A2:D1:7E:B2:53:56:F6:FC:C0:E6:1A:69:70:21:A2:B0:90:FC:AF:BB:EF:AE:2C:78:52:AB:68:40`
+	wantFingerprint := "SHA256 Fingerprint=0B:ED:9A:AA:A2:D1:7E:B2:53:56:F6:FC:C0:" +
+		"E6:1A:69:70:21:A2:B0:90:FC:AF:BB:EF:AE:2C:78:52:AB:68:40"
 	certFile, err := ioutil.TempFile("", "test_cert_")
 	require.Nil(t, err)
 	_, err = certFile.Write([]byte(cert))

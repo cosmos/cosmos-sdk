@@ -22,16 +22,19 @@ func newKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "new",
 		Short: "Interactive command to derive a new private key, encrypt it, and save to disk",
-		Long: `Derive a new private key using an interactive command that will prompt you for each input.
-Optionally specify a bip39 mnemonic, a bip39 passphrase to further secure the mnemonic,
-and a bip32 HD path to derive a specific account. The key will be stored under the given name 
-and encrypted with the given password. The only input that is required is the encryption password.`,
+		Long: `Derive a new private key using an interactive command that will prompt you for
+each input. Optionally specify a bip39 mnemonic, a bip39 passphrase to further secure the mnemonic,
+and a bip32 HD path to derive a specific account. The key will be stored under the given name and 
+encrypted with the given password. The only input that is required is the encryption password.`,
 		Args: cobra.ExactArgs(1),
 		RunE: runNewCmd,
 	}
-	cmd.Flags().Bool(flagNewDefault, false, "Skip the prompts and just use the default values for everything")
-	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
-	cmd.Flags().String(flagBIP44Path, "44'/118'/0'/0/0", "BIP44 path from which to derive a private key")
+	cmd.Flags().Bool(flagNewDefault, false,
+		"Skip the prompts and just use the default values for everything")
+	cmd.Flags().Bool(client.FlagUseLedger, false,
+		"Store a local reference to a private key on a Ledger device")
+	cmd.Flags().String(flagBIP44Path, "44'/118'/0'/0/0",
+		"BIP44 path from which to derive a private key")
 	return cmd
 }
 
@@ -89,7 +92,8 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	var mnemonic string
 
 	if !useDefaults {
-		mnemonic, err = client.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", buf)
+		mnemonic, err = client.GetString(
+			"Enter your bip39 mnemonic, or hit enter to generate one.", buf)
 		if err != nil {
 			return err
 		}
@@ -112,9 +116,10 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	var bip39Passphrase string
 	if !useDefaults {
 		printStep()
-		printPrefixed("Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed")
-
-		bip39Passphrase, err = client.GetString("Most users should just hit enter to use the default, \"\"", buf)
+		printPrefixed("Enter your bip39 passphrase. " +
+			"This is combined with the mnemonic to derive the seed")
+		bip39Passphrase, err = client.GetString(
+			"Most users should just hit enter to use the default, \"\"", buf)
 		if err != nil {
 			return err
 		}
@@ -161,7 +166,8 @@ func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
 
 		printStep()
 
-		bip44Path, err = client.GetString(fmt.Sprintf("Enter your bip44 path. Default is %s\n", path), buf)
+		bip44Path, err = client.GetString(fmt.Sprintf(
+			"Enter your bip44 path. Default is %s\n", path), buf)
 		if err != nil {
 			return nil, err
 		}

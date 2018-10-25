@@ -38,9 +38,10 @@ func generateSelfSignedCert(host string) (certBytes []byte, priv *ecdsa.PrivateK
 		Subject: pkix.Name{
 			Organization: []string{"Gaia Lite"},
 		},
-		NotBefore:             notBefore,
-		NotAfter:              notAfter,
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+		KeyUsage: x509.KeyUsageKeyEncipherment | x509.
+			KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 		IsCA:                  true,
@@ -54,7 +55,8 @@ func generateSelfSignedCert(host string) (certBytes []byte, priv *ecdsa.PrivateK
 		}
 	}
 
-	certBytes, err = x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
+	certBytes, err = x509.CreateCertificate(rand.Reader, &template,
+		&template, &priv.PublicKey, priv)
 	if err != nil {
 		err = fmt.Errorf("couldn't create certificate: %s", err)
 		return
@@ -62,7 +64,8 @@ func generateSelfSignedCert(host string) (certBytes []byte, priv *ecdsa.PrivateK
 	return
 }
 
-func writeCertAndPrivKey(certBytes []byte, priv *ecdsa.PrivateKey) (certFile string, keyFile string, err error) {
+func writeCertAndPrivKey(certBytes []byte, priv *ecdsa.PrivateKey) (certFile string,
+	keyFile string, err error) {
 	if priv == nil {
 		err = errors.New("private key is nil")
 		return
@@ -114,7 +117,8 @@ func pemBlockForKey(priv *ecdsa.PrivateKey) (*pem.Block, error) {
 
 }
 
-func genCertKeyFilesAndReturnFingerprint(sslHosts string) (certFile, keyFile string, fingerprint string, err error) {
+func genCertKeyFilesAndReturnFingerprint(sslHosts string) (certFile, keyFile string,
+	fingerprint string, err error) {
 	certBytes, priv, err := generateSelfSignedCert(sslHosts)
 	if err != nil {
 		return

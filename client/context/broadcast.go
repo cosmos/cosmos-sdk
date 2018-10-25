@@ -43,7 +43,9 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (*ctypes.ResultBroadcastTxComm
 
 // BroadcastTxAndAwaitCommit broadcasts transaction bytes to a Tendermint node
 // and waits for a commit.
-func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
+func (ctx CLIContext) BroadcastTxAndAwaitCommit(
+	tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
+
 	node, err := ctx.GetNode()
 	if err != nil {
 		return nil, err

@@ -123,9 +123,12 @@ type AddrSeed struct {
 	Password string
 }
 
-// CreateAddr adds multiple address to the key store and returns the addresses and associated seeds in lexographical order by address.
+// CreateAddr adds multiple address to the key store and returns the addresses and
+// associated seeds in lexographical order by address.
 // It also requires that the keys could be created.
-func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.AccAddress, seeds, names, passwords []string) {
+func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.AccAddress, seeds,
+	names, passwords []string) {
+
 	var (
 		err  error
 		info crkeys.Info
@@ -139,7 +142,8 @@ func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.Acc
 		password := "1234567890"
 		info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
 		require.NoError(t, err)
-		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
+		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()),
+			Seed: seed, Name: name, Password: password})
 	}
 
 	sort.Sort(addrSeeds)
@@ -236,7 +240,9 @@ func InitializeTestLCD(
 		}
 		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
 		require.Nil(t, err)
-		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{
+			{Signature: sig, PubKey: operPrivKey.PubKey()},
+		}, "")
 		txBytes, err := cdc.MarshalJSON(tx)
 		require.Nil(t, err)
 		genTxs = append(genTxs, txBytes)
@@ -253,7 +259,8 @@ func InitializeTestLCD(
 		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin("steak", 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewDec(100))
+		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.
+			LooseTokens.Add(sdk.NewDec(100))
 	}
 
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)

@@ -13,7 +13,8 @@ import (
 func TestQuery(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context,
+			res sdk.Result, abort bool) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
 			return

@@ -35,10 +35,14 @@ If you select --seed/-s you can recover a key from the seed
 phrase, otherwise, a new key will be generated.`,
 		RunE: runAddCmd,
 	}
-	cmd.Flags().StringP(flagType, "t", "secp256k1", "Type of private key (secp256k1|ed25519)")
-	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
-	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
-	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
+	cmd.Flags().StringP(flagType, "t", "secp256k1",
+		"Type of private key (secp256k1|ed25519)")
+	cmd.Flags().Bool(client.FlagUseLedger, false,
+		"Store a local reference to a private key on a Ledger device")
+	cmd.Flags().Bool(flagRecover, false,
+		"Provide seed phrase to recover existing key instead of creating")
+	cmd.Flags().Bool(flagNoBackup, false,
+		"Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Index number for HD derivation")

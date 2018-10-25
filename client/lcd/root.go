@@ -113,16 +113,22 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
+	cmd.Flags().String(flagListenAddr, "tcp://localhost:1317",
+		"The address for the server to listen on")
 	cmd.Flags().Bool(flagInsecure, false, "Do not set up SSL/TLS layer")
-	cmd.Flags().String(flagSSLHosts, "", "Comma-separated hostnames and IPs to generate a certificate for")
-	cmd.Flags().String(flagSSLCertFile, "", "Path to a SSL certificate file. If not supplied, a self-signed certificate will be generated.")
-	cmd.Flags().String(flagSSLKeyFile, "", "Path to a key file; ignored if a certificate file is not supplied.")
-	cmd.Flags().String(flagCORS, "", "Set the domains that can make CORS requests (* for all)")
+	cmd.Flags().String(flagSSLHosts, "",
+		"Comma-separated hostnames and IPs to generate a certificate for")
+	cmd.Flags().String(flagSSLCertFile, "",
+		"Path to a SSL certificate file. If not supplied, a self-signed certificate will be generated.")
+	cmd.Flags().String(flagSSLKeyFile, "",
+		"Path to a key file; ignored if a certificate file is not supplied.")
+	cmd.Flags().String(flagCORS, "",
+		"Set the domains that can make CORS requests (* for all)")
 	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	cmd.Flags().String(client.FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(flagMaxOpenConnections, 1000, "The number of maximum open connections")
-	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	cmd.Flags().Bool(client.FlagTrustNode, false,
+		"Trust connected full node (don't verify proofs for responses)")
 	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))

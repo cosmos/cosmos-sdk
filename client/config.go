@@ -77,7 +77,8 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 func handleGaiaCLIHome(dir string, stdin *bufio.Reader) (string, error) {
 	dirName := ".gaiacli"
-	home, err := GetString(fmt.Sprintf("Where is your gaiacli home directory? (Default: ~/%s)", dirName), stdin)
+	home, err := GetString(fmt.Sprintf(
+		"Where is your gaiacli home directory? (Default: ~/%s)", dirName), stdin)
 	if err != nil {
 		return "", err
 	}
@@ -91,7 +92,8 @@ func handleGaiaCLIHome(dir string, stdin *bufio.Reader) (string, error) {
 
 func handleNode(stdin *bufio.Reader) (string, error) {
 	defaultNode := "tcp://localhost:26657"
-	node, err := GetString(fmt.Sprintf("Where is your validator node running? (Default: %s)", defaultNode), stdin)
+	node, err := GetString(fmt.Sprintf(
+		"Where is your validator node running? (Default: %s)", defaultNode), stdin)
 	if err != nil {
 		return "", err
 	}

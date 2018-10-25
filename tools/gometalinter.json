@@ -2,9 +2,10 @@
     "Linters": {
         "vet": "go tool vet -composites=false :PATH:LINE:MESSAGE"
    },
-    "Enable": ["golint", "vet", "ineffassign", "unconvert", "misspell"],
+    "Enable": ["golint", "vet", "ineffassign", "unconvert", "misspell", "lll"],
     "Deadline": "500s",
     "Vendor": true,
+    "LineLength": 120,
     "Cyclo": 11,
     "Exclude": ["/usr/lib/go/src/", "client/lcd/statik/statik.go", "vendor/*"]
 }

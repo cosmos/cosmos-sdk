@@ -10,10 +10,16 @@ The owner of this account should be able to delegate to validators
 and vote with locked coins, however they cannot send locked coins to other
 accounts until those coins have been unlocked.
 
+When it comes to governance, it is yet undefined if we want to allow a vesting
+account to be able to deposit vesting coins into proposals.
+
 In addition, the vesting account should also be able to spend any coins it
 receives from other users. Thus, the bank module's `MsgSend` handler should
 error if a vesting account is trying to send an amount that exceeds their
 unlocked coin amount.
+
+__Note__: A vesting account could have some vesting and non-vesting coins at
+genesis, however, the latter is unlikely.
 
 ## Vesting Account Definition
 

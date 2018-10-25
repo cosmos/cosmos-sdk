@@ -13,10 +13,8 @@ accounts until those coins have been unlocked.
 When it comes to governance, it is yet undefined if we want to allow a vesting
 account to be able to deposit vesting coins into proposals.
 
-In addition, the vesting account should also be able to spend any coins it
-receives from other users. Thus, the bank module's `MsgSend` handler should
-error if a vesting account is trying to send an amount that exceeds their
-unlocked coin amount.
+It is also important to note that a vesting account vests all of it's coin
+denominations at the same rate. This may be subject to change.
 
 __Note__: A vesting account could have some vesting and non-vesting coins at
 genesis, however, the latter is unlikely.
@@ -62,27 +60,32 @@ type DelayedVestingAccount struct {
 
 ## Vesting Account Implementation
 
-Given a vesting account, we may further define the following:
+Given a vesting account, we define the following in the proceeding operations:
 
 ```
 OV = OriginalVesting (constant)
-V = Percentage of OV that is still vesting (derived by OV and the start/end times)
+V = Number of OV coins that are still vesting (derived by OV and the start/end times)
 DV = DelegatedVesting (variable)
 DF = DelegatedFree (variable)
 BC (BaseAccount.Coins) = OV - transferred (can be negative) - delegated (DV + DF)
 ```
 
+__Note__: The above are explicitly stored and modified on the vesting account.
+
 ### Operations
 
 #### Determining Vesting Amount
 
-To determine the amount of coins that are vested for a given block `B`, the following is performed:
+To determine the amount of coins that are vested for a given block `B`, the
+following is performed:
 
 1. Compute `X := B.Time - StartTime`
 2. Compute `Y := EndTime - StartTime`
 3. Compute `V' := OV * (X / Y)`
 
-Thus, `V := OV - V'`
+Thus, the number of vested coins is defined by `V'` and as a result the number of
+vesting coins equates to `V := OV - V'`. It is important to note these values are
+calculated on demand and not on a per-block basis.
 
 #### Transferring/Sending
 
@@ -97,7 +100,7 @@ For a vesting account attempting to delegate `D` coins, the following is perform
 3. Compute `Y := D - X` (portion of `D` that is free)
 4. Set `DV += X`
 5. Set `DF += Y`
-6. Set `BC -= (X + Y)`
+6. Set `BC -= D`
 
 #### Undelegating
 
@@ -116,6 +119,11 @@ The `VestingAccount` implementations reside in `x/auth`. However, any keeper in
 a module (e.g. staking in `x/stake`) wishing to potentially utilize any vesting
 coins, must call explicit methods on the `BankKeeper` (e.g. `DelegateCoins`)
 opposed to `SendCoins` and `SubtractCoins`.
+
+In addition, the vesting account should also be able to spend any coins it
+receives from other users. Thus, the bank module's `MsgSend` handler should
+error if a vesting account is trying to send an amount that exceeds their
+unlocked coin amount.
 
 ## Initializing at Genesis
 

@@ -112,10 +112,10 @@ For a vesting account attempting to undelegate `D` coins, the following is perfo
 
 ## Keepers & Handlers
 
-Since a vesting account should be capable of doing everything but sending with
-its locked coins, the restriction should be handled at the `bank.Keeper` level.
-Specifically, in methods that are explicitly used for sending like `sendCoins` and
-`inputOutputCoins`. These methods must check that an account is a vesting account.
+The `VestingAccount` implementations reside in `x/auth`. However, any keeper in
+a module (e.g. staking in `x/stake`) wishing to potentially utilize any vesting
+coins, must call explicit methods on the `BankKeeper` (e.g. `DelegateCoins`)
+opposed to `SendCoins` and `SubtractCoins`.
 
 ## Initializing at Genesis
 

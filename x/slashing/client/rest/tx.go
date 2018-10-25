@@ -23,7 +23,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 
 // Unjail TX body
 type UnjailReq struct {
-	BaseReq       utils.BaseReq `json:"base_req"`
+	BaseReq utils.BaseReq `json:"base_req"`
 }
 
 func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {

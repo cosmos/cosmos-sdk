@@ -42,4 +42,3 @@ func NormalizeProposalStatus(status string) string {
 	}
 	return ""
 }
-

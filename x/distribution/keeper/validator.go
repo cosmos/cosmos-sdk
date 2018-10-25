@@ -62,27 +62,19 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
 		return types.ErrNoValidatorDistInfo(k.codespace)
 	}
-	wc := k.GetWithdrawContext(ctx, operatorAddr)
 
 	// withdraw self-delegation
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-	withdraw := k.withdrawDelegatorRewardsAll(ctx, accAddr, wc.Height)
+	withdraw := k.withdrawDelegationRewardsAll(ctx, accAddr)
 
 	// withdrawal validator commission rewards
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
-	valInfo, feePool, commission := valInfo.WithdrawCommission(wb)
+	wc := k.GetWithdrawContext(ctx, operatorAddr)
+	valInfo, feePool, commission := valInfo.WithdrawCommission(wc)
 	withdraw = withdraw.Plus(commission)
 	k.SetValidatorDistInfo(ctx, valInfo)
 
-	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
-	truncated, change := withdraw.TruncateDecimal()
-	feePool.CommunityPool = feePool.CommunityPool.Plus(change)
-	k.SetFeePool(ctx, feePool)
-	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, truncated)
-	if err != nil {
-		panic(err)
-	}
-
+	k.CompleteWithdrawal(ctx, feePool, accAddr, withdraw)
 	return nil
 }
 

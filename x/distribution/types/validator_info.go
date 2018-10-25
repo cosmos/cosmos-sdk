@@ -8,20 +8,20 @@ import (
 type WithdrawContext struct {
 	FeePool        FeePool
 	Height         int64   // block height
-	TotalBonded    sdk.Dec // total bonded tokens in the network
-	ValTokens      sdk.Dec // validator's bonded tokens
+	TotalPower     sdk.Dec // total bonded tokens in the network
+	ValPower       sdk.Dec // validator's bonded tokens
 	CommissionRate sdk.Dec // validator commission rate
 }
 
-func NewWithdrawContext(feePool FeePool, height int64, totalBonded,
-	valTokens, commissionRate sdk.Dec) WithdrawContext {
+func NewWithdrawContext(feePool FeePool, height int64, totalPower,
+	valPower, commissionRate sdk.Dec) WithdrawContext {
 
 	return WithdrawContext{
-		fp:             feePool,
-		height:         height,
-		totalBonded:    totalBonded,
-		vdTokens:       vdTokens,
-		commissionRate: commissionRate,
+		FeePool:        feePool,
+		Height:         height,
+		TotalPower:     totalPower,
+		ValPower:       valPower,
+		CommissionRate: commissionRate,
 	}
 }
 
@@ -77,17 +77,17 @@ func (vi ValidatorDistInfo) GetValAccum(height int64, vdTokens sdk.Dec) sdk.Dec 
 func (vi ValidatorDistInfo) TakeFeePoolRewards(wc WithdrawContext) (
 	ValidatorDistInfo, FeePool) {
 
-	fp := wc.FeePool.UpdateTotalValAccum(height, totalBonded)
+	fp := wc.FeePool.UpdateTotalValAccum(wc.Height, wc.TotalPower)
 
 	if fp.TotalValAccum.Accum.IsZero() {
 		return vi, fp
 	}
 
 	// update the validators pool
-	accum := vi.GetValAccum(height, vdTokens)
-	vi.FeePoolWithdrawalHeight = height
+	accum := vi.GetValAccum(wc.Height, wc.ValPower)
+	vi.FeePoolWithdrawalHeight = wc.Height
 
-	if accum.GT(wc.fp.TotalValAccum.Accum) {
+	if accum.GT(fp.TotalValAccum.Accum) {
 		panic("individual accum should never be greater than the total")
 	}
 	withdrawalTokens := fp.Pool.MulDec(accum).QuoDec(fp.TotalValAccum.Accum)
@@ -108,7 +108,7 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(wc WithdrawContext) (
 func (vi ValidatorDistInfo) WithdrawCommission(wc WithdrawContext) (
 	vio ValidatorDistInfo, fpo FeePool, withdrawn DecCoins) {
 
-	vi, fp = vi.TakeFeePoolRewards(wc)
+	vi, fp := vi.TakeFeePoolRewards(wc)
 
 	withdrawalTokens := vi.PoolCommission
 	vi.PoolCommission = DecCoins{} // zero
@@ -119,13 +119,13 @@ func (vi ValidatorDistInfo) WithdrawCommission(wc WithdrawContext) (
 // Estimate the validator's pool rewards at this current state,
 // the estimated rewards are subject to fluctuation
 func (vi ValidatorDistInfo) EstimatePoolRewards(
-	wc WithdrawContext) sdk.Coins {
+	wc WithdrawContext) DecCoins {
 
 	fp := wc.FeePool
-	totalValAccum = fp.GetTotalValAccum(wc.height, wc.TotalBonded)
-	valAccum := vi.GetValAccum(wc.height, wc.ValTokens)
+	totalValAccum := fp.GetTotalValAccum(wc.Height, wc.TotalPower)
+	valAccum := vi.GetValAccum(wc.Height, wc.ValPower)
 
-	if accum.GT(fp.TotalValAccum.Accum) {
+	if valAccum.GT(totalValAccum) {
 		panic("individual accum should never be greater than the total")
 	}
 	withdrawalTokens := fp.Pool.MulDec(valAccum).QuoDec(totalValAccum)
@@ -138,16 +138,16 @@ func (vi ValidatorDistInfo) EstimatePoolRewards(
 // Estimate the validator's commission pool rewards at this current state,
 // the estimated rewards are subject to fluctuation
 func (vi ValidatorDistInfo) EstimateCommissionRewards(
-	wc WithdrawContext) sdk.Coins {
+	wc WithdrawContext) DecCoins {
 
 	fp := wc.FeePool
-	totalValAccum = fp.GetTotalValAccum(wc.Height, wc.TotalBonded)
-	valAccum := vi.GetValAccum(wc.Height, wc.ValTokens)
+	totalValAccum := fp.GetTotalValAccum(wc.Height, wc.TotalPower)
+	valAccum := vi.GetValAccum(wc.Height, wc.ValPower)
 
-	if accum.GT(fp.TotalValAccum.Accum) {
+	if valAccum.GT(totalValAccum) {
 		panic("individual accum should never be greater than the total")
 	}
-	withdrawalTokens := fp.Pool.MulDec(valAccum).QuoDec(wc.TotalValAccum)
+	withdrawalTokens := fp.Pool.MulDec(valAccum).QuoDec(totalValAccum)
 	commission := withdrawalTokens.MulDec(wc.CommissionRate)
 	commissionPool := vi.PoolCommission.Plus(commission)
 	return commissionPool

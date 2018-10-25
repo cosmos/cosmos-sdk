@@ -51,7 +51,7 @@ func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) 
 	height := ctx.BlockHeight()
 	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, operatorAddr)
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
-	accum := valInfo.GetAccum(height, lastValPower)
+	accum := valInfo.GetValAccum(height, lastValPower)
 
 	return accum, nil
 }
@@ -78,23 +78,22 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	return nil
 }
 
-// estimate all the validator rewards including the commission
-// note: all estimations are subject to flucuation
-func (k Keeper) EstimateValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+// get all the validator rewards including the commission
+func (k Keeper) CurrentValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
 
 	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
 		return types.ErrNoValidatorDistInfo(k.codespace)
 	}
-	wc := k.GetWithdrawContext(ctx, operatorAddr)
 
 	// withdraw self-delegation
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-	withdraw := k.EstimateDelegatorRewardsAll(ctx, accAddr, wc.Height)
+	withdraw := k.CurrentDelegationRewardsAll(ctx, accAddr)
 
 	// withdrawal validator commission rewards
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
 
-	commission := valInfo.EstimateCommission(wc)
+	wc := k.GetWithdrawContext(ctx, operatorAddr)
+	commission := valInfo.CurrentCommissionRewards(wc)
 	withdraw = withdraw.Plus(commission)
 	truncated, _ := withdraw.TruncateDecimal()
 	return truncated

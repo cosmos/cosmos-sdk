@@ -116,9 +116,8 @@ func (vi ValidatorDistInfo) WithdrawCommission(wc WithdrawContext) (
 	return vi, fp, withdrawalTokens
 }
 
-// Estimate the validator's pool rewards at this current state,
-// the estimated rewards are subject to fluctuation
-func (vi ValidatorDistInfo) EstimatePoolRewards(
+// get the validator's pool rewards at this current state,
+func (vi ValidatorDistInfo) CurrentPoolRewards(
 	wc WithdrawContext) DecCoins {
 
 	fp := wc.FeePool
@@ -135,9 +134,8 @@ func (vi ValidatorDistInfo) EstimatePoolRewards(
 	return pool
 }
 
-// Estimate the validator's commission pool rewards at this current state,
-// the estimated rewards are subject to fluctuation
-func (vi ValidatorDistInfo) EstimateCommissionRewards(
+// get the validator's commission pool rewards at this current state,
+func (vi ValidatorDistInfo) CurrentCommissionRewards(
 	wc WithdrawContext) DecCoins {
 
 	fp := wc.FeePool

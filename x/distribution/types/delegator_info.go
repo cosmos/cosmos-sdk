@@ -58,9 +58,8 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	return di, vi, fp, withdrawalTokens
 }
 
-// Estimate the delegators rewards at this current state,
-// note: all estimations are subject to flucuation
-func (di DelegationDistInfo) EstimateRewards(wc WithdrawContext, vi ValidatorDistInfo,
+// get the delegators rewards at this current state,
+func (di DelegationDistInfo) CurrentRewards(wc WithdrawContext, vi ValidatorDistInfo,
 	totalDelShares, delegatorShares sdk.Dec) DecCoins {
 
 	totalDelAccum := vi.GetTotalDelAccum(wc.Height, totalDelShares)
@@ -69,8 +68,8 @@ func (di DelegationDistInfo) EstimateRewards(wc WithdrawContext, vi ValidatorDis
 		return DecCoins{}
 	}
 
-	rewards := vi.EstimatePoolRewards(wc)
+	rewards := vi.CurrentPoolRewards(wc)
 	accum := di.GetDelAccum(wc.Height, delegatorShares)
-	estimatedTokens := rewards.MulDec(accum).QuoDec(totalDelAccum)
-	return estimatedTokens
+	tokens := rewards.MulDec(accum).QuoDec(totalDelAccum)
+	return tokens
 }

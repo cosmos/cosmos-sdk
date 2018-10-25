@@ -87,8 +87,8 @@ func (k Keeper) withdrawDelegationReward(ctx sdk.Context,
 	return feePool, valInfo, delInfo, withdraw
 }
 
-// estimate all rewards for all delegations of a delegator
-func (k Keeper) estimateDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress,
+// get all rewards for all delegations of a delegator
+func (k Keeper) currentDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) types.DecCoins {
 
 	wc := k.GetWithdrawContext(ctx, valAddr)
@@ -98,7 +98,7 @@ func (k Keeper) estimateDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress
 	validator := k.stakeKeeper.Validator(ctx, valAddr)
 	delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
 
-	estimation := delInfo.EstimateRewards(wc, valInfo,
+	estimation := delInfo.CurrentRewards(wc, valInfo,
 		validator.GetDelegatorShares(), delegation.GetShares())
 
 	return estimation
@@ -143,14 +143,14 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress
 	return nil
 }
 
-// estimate rewards for a single delegation
-func (k Keeper) EstimateDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress,
+// current rewards for a single delegation
+func (k Keeper) CurrentDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) (sdk.Coins, sdk.Error) {
 
 	if !k.HasDelegationDistInfo(ctx, delAddr, valAddr) {
 		return sdk.Coins{}, types.ErrNoDelegationDistInfo(k.codespace)
 	}
-	estCoins := k.estimateDelegationReward(ctx, delAddr, valAddr)
+	estCoins := k.currentDelegationReward(ctx, delAddr, valAddr)
 	trucate, _ := estCoins.TruncateDecimal()
 	return trucate, nil
 }
@@ -184,8 +184,8 @@ func (k Keeper) withdrawDelegationRewardsAll(ctx sdk.Context,
 	return withdraw
 }
 
-// estimate all rewards for all delegations of a delegator
-func (k Keeper) EstimateDelegationRewardsAll(ctx sdk.Context,
+// get all rewards for all delegations of a delegator
+func (k Keeper) CurrentDelegationRewardsAll(ctx sdk.Context,
 	delAddr sdk.AccAddress) sdk.Coins {
 
 	height := ctx.BlockHeight()
@@ -195,7 +195,7 @@ func (k Keeper) EstimateDelegationRewardsAll(ctx sdk.Context,
 	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
 	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
 		valAddr := del.GetValidatorAddr()
-		est := k.estimateDelegationReward(ctx, delAddr, valAddr)
+		est := k.currentDelegationReward(ctx, delAddr, valAddr)
 		total = total.Plus(est)
 		return false
 	}

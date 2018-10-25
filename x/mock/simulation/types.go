@@ -68,13 +68,14 @@ type (
 	}
 )
 
+// TODO remove? not being called anywhere
 // PeriodicInvariant returns an Invariant function closure that asserts
 // a given invariant if the mock application's last block modulo the given
 // period is congruent to the given offset.
 func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
-	return func(app *baseapp.BaseApp) error {
+	return func(app *baseapp.BaseApp, header abci.Header) error {
 		if int(app.LastBlockHeight())%period == offset {
-			return invariant(app)
+			return invariant(app, header)
 		}
 		return nil
 	}

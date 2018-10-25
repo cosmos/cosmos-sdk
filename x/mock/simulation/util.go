@@ -103,7 +103,7 @@ func addLogMessage(testingmode bool, blockLogBuilders []*strings.Builder, height
 }
 
 // assertAllInvariants asserts a list of provided invariants against application state
-func assertAllInvariants(t *testing.T, header abci.Header, app *baseapp.BaseApp,
+func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, header abci.Header,
 	invariants []Invariant, where string, displayLogs func()) {
 
 	for i := 0; i < len(invariants); i++ {

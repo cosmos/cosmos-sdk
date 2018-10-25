@@ -14,7 +14,7 @@ import (
 
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
 func NonnegativeBalanceInvariant(mapper auth.AccountKeeper) simulation.Invariant {
-	return func(app *baseapp.BaseApp) error {
+	return func(app *baseapp.BaseApp, _ abci.Header) error {
 		ctx := app.NewContext(false, abci.Header{})
 		accts := mock.GetAllAccounts(mapper, ctx)
 		for _, acc := range accts {
@@ -32,7 +32,7 @@ func NonnegativeBalanceInvariant(mapper auth.AccountKeeper) simulation.Invariant
 // TotalCoinsInvariant checks that the sum of the coins across all accounts
 // is what is expected
 func TotalCoinsInvariant(mapper auth.AccountKeeper, totalSupplyFn func() sdk.Coins) simulation.Invariant {
-	return func(app *baseapp.BaseApp) error {
+	return func(app *baseapp.BaseApp, _ abci.Header) error {
 		ctx := app.NewContext(false, abci.Header{})
 		totalCoins := sdk.Coins{}
 

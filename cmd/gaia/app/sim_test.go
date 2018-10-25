@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -124,12 +123,13 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	}
 }
 
-func invariants(app *GaiaApp, header abci.Header) []simulation.Invariant {
+func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
 		govsim.AllInvariants(),
-		distrsim.AllInvariants(app.distrKeeper, header),
-		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
+		distrsim.AllInvariants(app.distrKeeper, app.stakeKeeper),
+		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper,
+			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
 		slashingsim.AllInvariants(),
 	}
 }

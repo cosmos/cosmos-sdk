@@ -5,50 +5,44 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // AllInvariants runs all invariants of the distribution module
 // Currently: total supply, positive power
-func AllInvariants(
-	d distribution.Keeper, height int64) simulation.Invariant {
+func AllInvariants(d distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
 
-	return func(app *baseapp.BaseApp) error {
-		err := ValAccumInvariants(ck, k, f, d, am)(app)
+	return func(app *baseapp.BaseApp, header abci.Header) error {
+		err := ValAccumInvariants(d, sk)(app, header)
 		if err != nil {
 			return err
 		}
+		return nil
 	}
 }
 
-// SupplyInvariants checks that the total supply reflects all held loose tokens, bonded tokens, and unbonding delegations
-// nolint: unparam
-func ValAccumInvariants(d distribution.Keeper, header abci.Header) simulation.Invariant {
+// ValAccumInvariants checks that the fee pool accum == sum all validators' accum
+func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
 
-	return func(app *baseapp.BaseApp) error {
+	return func(app *baseapp.BaseApp, header abci.Header) error {
 		ctx := app.NewContext(false, header)
+		height := ctx.BlockHeight()
 
-		valAccum := int64(0)
-		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
-			switch validator.GetStatus() {
-			case sdk.Bonded:
-				bonded = bonded.Add(validator.GetPower())
-			case sdk.Unbonding:
-				loose = loose.Add(validator.GetTokens())
-			case sdk.Unbonded:
-				loose = loose.Add(validator.GetTokens())
-			}
+		valAccum := sdk.ZeroDec()
+		k.IterateValidatorDistInfos(ctx, func(_ int64, vdi distr.ValidatorDistInfo) bool {
+			lastValPower := sk.GetLastValidatorPower(ctx, vdi.OperatorAddr)
+			valAccum = valAccum.Add(vdi.GetValAccum(height, lastValPower))
 			return false
 		})
 
-		//totalBondedTokens :=
-		totalAccum := d.GetFeePool(ctx).GetTotalValAccum(ctx.GetHeight(), totalBondedTokens)
+		lastTotalPower := sdk.NewDecFromInt(sk.GetLastTotalPower(ctx))
+		totalAccum := k.GetFeePool(ctx).GetTotalValAccum(height, lastTotalPower)
 
 		if totalAccum != valAccum {
 			fmt.Errorf("validator accum invariance: \n\tfee pool totalAccum: %v"+
-				"\n\tvalidator accum \t%v\n", totalAccum, valAccum)
+				"\n\tvalidator accum \t%v\n", totalAccum.String(), valAccum.String())
 		}
 
 		return nil

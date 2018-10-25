@@ -60,9 +60,9 @@ func (vi ValidatorDistInfo) GetTotalDelAccum(height int64, totalDelShares sdk.De
 }
 
 // Get the validator accum at the provided height
-func (vi ValidatorDistInfo) GetValAccum(height int64, vdTokens sdk.Dec) sdk.Dec {
+func (vi ValidatorDistInfo) GetValAccum(height int64, valTokens sdk.Dec) sdk.Dec {
 	blocks := height - vi.FeePoolWithdrawalHeight
-	return vdTokens.MulInt(sdk.NewInt(blocks))
+	return valTokens.MulInt(sdk.NewInt(blocks))
 }
 
 // Move any available accumulated fees in the FeePool to the validator's pool

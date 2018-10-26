@@ -127,6 +127,13 @@ is _vesting_.
 
 ```go
 func (cva ContinuousVestingAccount) GetVestedCoins(b Block) Coins {
+    // We must handle the case where the start time for a vesting account has
+    // been set into the future or when the start of the chain is not exactly
+    // known.
+    if b.Time < va.StartTime {
+        return ZeroCoins
+    }
+
     x := b.Time - va.StartTime
     y := cva.EndTime - cva.StartTime
 

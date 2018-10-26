@@ -443,12 +443,14 @@ Same initial starting conditions as the simple example.
     DF = 5 - 2.5 = 2.5
     BC = 0 + 2.5 = 2.5
     ```
-6. Undelegate from validator B (5 coins)
+6. Undelegate from validator B (5 coins). The account at this point can only send 2.5 coins unless it receives more coins or until more coins vest. It can still however, delegate.
     ```
     DV = 5 - 2.5 = 2.5
     DF = 2.5 - 2.5 = 0
     BC = 2.5 + 5 = 7.5
     ```
+
+Notice how we have an excess amount of `DV`.
 
 ## Glossary
 

@@ -101,7 +101,7 @@ func (k Keeper) GetWithdrawContext(ctx sdk.Context,
 	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
 
 	return types.NewWithdrawContext(
-		feePool, height, lastTotalPower, lastValPower,
+		feePool, height, lastTotalPower, sdk.NewDecFromInt(lastValPower),
 		validator.GetCommission())
 }
 

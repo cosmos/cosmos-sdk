@@ -128,10 +128,10 @@ func (vi ValidatorDistInfo) CurrentPoolRewards(
 	if valAccum.GT(totalValAccum) {
 		panic("individual accum should never be greater than the total")
 	}
-	withdrawalTokens := fp.Pool.MulDec(valAccum).QuoDec(totalValAccum)
+	withdrawalTokens := fp.ValPool.MulDec(valAccum).QuoDec(totalValAccum)
 	commission := withdrawalTokens.MulDec(wc.CommissionRate)
 	afterCommission := withdrawalTokens.Minus(commission)
-	pool := vi.Pool.Plus(afterCommission)
+	pool := vi.DelPool.Plus(afterCommission)
 	return pool
 }
 
@@ -146,8 +146,8 @@ func (vi ValidatorDistInfo) CurrentCommissionRewards(
 	if valAccum.GT(totalValAccum) {
 		panic("individual accum should never be greater than the total")
 	}
-	withdrawalTokens := fp.Pool.MulDec(valAccum).QuoDec(totalValAccum)
+	withdrawalTokens := fp.ValPool.MulDec(valAccum).QuoDec(totalValAccum)
 	commission := withdrawalTokens.MulDec(wc.CommissionRate)
-	commissionPool := vi.PoolCommission.Plus(commission)
+	commissionPool := vi.ValCommission.Plus(commission)
 	return commissionPool
 }

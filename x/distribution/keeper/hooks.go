@@ -111,9 +111,6 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, val
 func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.k.onValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, addr sdk.ValAddress) {
-	h.k.onValidatorModified(ctx, addr)
-}
 func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.k.onValidatorPowerDidChange(ctx, valAddr)
 }

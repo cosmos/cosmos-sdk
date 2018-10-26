@@ -51,7 +51,7 @@ func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) 
 	height := ctx.BlockHeight()
 	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, operatorAddr)
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
-	accum := valInfo.GetValAccum(height, lastValPower)
+	accum := valInfo.GetValAccum(height, sdk.NewDecFromInt(lastValPower))
 
 	return accum, nil
 }

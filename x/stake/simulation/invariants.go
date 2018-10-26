@@ -15,25 +15,29 @@ import (
 
 // AllInvariants runs all invariants of the stake module.
 // Currently: total supply, positive power
-func AllInvariants(ck bank.Keeper, k stake.Keeper, f auth.FeeCollectionKeeper, d distribution.Keeper, am auth.AccountKeeper) simulation.Invariant {
-	return func(app *baseapp.BaseApp) error {
-		err := SupplyInvariants(ck, k, f, d, am)(app)
+func AllInvariants(ck bank.Keeper, k stake.Keeper,
+	f auth.FeeCollectionKeeper, d distribution.Keeper,
+	am auth.AccountKeeper) simulation.Invariant {
+
+	return func(app *baseapp.BaseApp, header abci.Header) error {
+		err := SupplyInvariants(ck, k, f, d, am)(app, header)
 		if err != nil {
 			return err
 		}
-		err = PositivePowerInvariant(k)(app)
+		err = PositivePowerInvariant(k)(app, header)
 		if err != nil {
 			return err
 		}
-		err = ValidatorSetInvariant(k)(app)
+		err = ValidatorSetInvariant(k)(app, header)
 		return err
 	}
 }
 
 // SupplyInvariants checks that the total supply reflects all held loose tokens, bonded tokens, and unbonding delegations
 // nolint: unparam
-func SupplyInvariants(ck bank.Keeper, k stake.Keeper, f auth.FeeCollectionKeeper, d distribution.Keeper, am auth.AccountKeeper) simulation.Invariant {
-	return func(app *baseapp.BaseApp) error {
+func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
+	f auth.FeeCollectionKeeper, d distribution.Keeper, am auth.AccountKeeper) simulation.Invariant {
+	return func(app *baseapp.BaseApp, _ abci.Header) error {
 		ctx := app.NewContext(false, abci.Header{})
 		pool := k.GetPool(ctx)
 
@@ -71,20 +75,25 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, f auth.FeeCollectionKeeper
 		loose = loose.Add(feePool.ValPool.AmountOf("steak"))
 
 		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
-		d.IterateValidatorDistInfos(ctx, func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
-			loose = loose.Add(distInfo.ValCommission.AmountOf("steak"))
-			loose = loose.Add(distInfo.DelPool.AmountOf("steak"))
-			return false
-		})
+		d.IterateValidatorDistInfos(ctx,
+			func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
+				loose = loose.Add(distInfo.DelPool.AmountOf("steak"))
+				loose = loose.Add(distInfo.ValCommission.AmountOf("steak"))
+				return false
+			},
+		)
 
-		// Loose tokens should equal coin supply plus unbonding delegations plus tokens on unbonded validators
+		// Loose tokens should equal coin supply plus unbonding delegations
+		// plus tokens on unbonded validators
 		if !pool.LooseTokens.Equal(loose) {
-			return fmt.Errorf("expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v", pool.LooseTokens, loose)
+			return fmt.Errorf("loose token invariance:\n\tpool.LooseTokens: %v"+
+				"\n\tsum of account tokens: %v", pool.LooseTokens, loose)
 		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		if !pool.BondedTokens.Equal(bonded) {
-			return fmt.Errorf("expected bonded tokens to equal total steak held by bonded validators - pool.BondedTokens: %v, sum of bonded validator tokens: %v", pool.BondedTokens, bonded)
+			return fmt.Errorf("bonded token invariance:\n\tpool.BondedTokens: %v"+
+				"\n\tsum of account tokens: %v", pool.BondedTokens, bonded)
 		}
 
 		return nil
@@ -93,7 +102,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, f auth.FeeCollectionKeeper
 
 // PositivePowerInvariant checks that all stored validators have > 0 power
 func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
-	return func(app *baseapp.BaseApp) error {
+	return func(app *baseapp.BaseApp, _ abci.Header) error {
 		ctx := app.NewContext(false, abci.Header{})
 		var err error
 		k.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) bool {
@@ -109,7 +118,7 @@ func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 
 // ValidatorSetInvariant checks equivalence of Tendermint validator set and SDK validator set
 func ValidatorSetInvariant(k stake.Keeper) simulation.Invariant {
-	return func(app *baseapp.BaseApp) error {
+	return func(app *baseapp.BaseApp, _ abci.Header) error {
 		// TODO
 		return nil
 	}

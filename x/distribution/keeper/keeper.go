@@ -55,6 +55,17 @@ func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 	store.Set(FeePoolKey, b)
 }
 
+// get the total validator accum for the ctx height
+// in the fee pool
+func (k Keeper) GetFeePoolValAccum(ctx sdk.Context) sdk.Dec {
+
+	// withdraw self-delegation
+	height := ctx.BlockHeight()
+	totalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
+	fp := k.GetFeePool(ctx)
+	return fp.GetTotalValAccum(height, totalPower)
+}
+
 //______________________________________________________________________
 
 // set the proposer public key for this block
@@ -75,6 +86,23 @@ func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAd
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinary(consAddr)
 	store.Set(ProposerKey, b)
+}
+
+//______________________________________________________________________
+
+// get context required for withdraw operations
+func (k Keeper) GetWithdrawContext(ctx sdk.Context,
+	valOperatorAddr sdk.ValAddress) types.WithdrawContext {
+
+	feePool := k.GetFeePool(ctx)
+	height := ctx.BlockHeight()
+	validator := k.stakeKeeper.Validator(ctx, valOperatorAddr)
+	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, valOperatorAddr)
+	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
+
+	return types.NewWithdrawContext(
+		feePool, height, lastTotalPower, sdk.NewDecFromInt(lastValPower),
+		validator.GetCommission())
 }
 
 //______________________________________________________________________

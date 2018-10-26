@@ -23,6 +23,11 @@ type (
 	MsgWithdrawValidatorRewardsAll = types.MsgWithdrawValidatorRewardsAll
 
 	GenesisState = types.GenesisState
+
+	// expected keepers
+	StakeKeeper         = types.StakeKeeper
+	BankKeeper          = types.BankKeeper
+	FeeCollectionKeeper = types.FeeCollectionKeeper
 )
 
 var (
@@ -62,9 +67,7 @@ var (
 	ErrNilDelegatorAddr = types.ErrNilDelegatorAddr
 	ErrNilWithdrawAddr  = types.ErrNilWithdrawAddr
 	ErrNilValidatorAddr = types.ErrNilValidatorAddr
-)
 
-var (
 	ActionModifyWithdrawAddress       = tags.ActionModifyWithdrawAddress
 	ActionWithdrawDelegatorRewardsAll = tags.ActionWithdrawDelegatorRewardsAll
 	ActionWithdrawDelegatorReward     = tags.ActionWithdrawDelegatorReward

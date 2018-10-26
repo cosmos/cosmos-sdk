@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/circuit"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -37,7 +36,6 @@ type GenesisState struct {
 	DistrData    distr.GenesisState    `json:"distr"`
 	GovData      gov.GenesisState      `json:"gov"`
 	SlashingData slashing.GenesisState `json:"slashing"`
-	CircuitData  circuit.GenesisState  `json:"circuit"`
 	GenTxs       []json.RawMessage     `json:"gentxs"`
 }
 
@@ -102,8 +100,6 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 	stakeData := stake.DefaultGenesisState()
 	slashingData := slashing.DefaultGenesisState()
 
-	circuitData := circuit.DefaultGenesisState()
-
 	// get genesis flag account information
 	genaccs := make([]GenesisAccount, len(appGenTxs))
 
@@ -134,7 +130,6 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 		GovData:      gov.DefaultGenesisState(),
 		SlashingData: slashingData,
 		GenTxs:       appGenTxs,
-		CircuitData:  circuitData,
 	}
 
 	return

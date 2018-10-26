@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/circuit"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -66,7 +65,6 @@ type GaiaApp struct {
 	distrKeeper         distr.Keeper
 	govKeeper           gov.Keeper
 	paramsKeeper        params.Keeper
-	circuitKeeper       circuit.Keeper
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
@@ -143,10 +141,6 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	// register the staking hooks
 	app.stakeKeeper = app.stakeKeeper.WithHooks(
 		NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
-
-	app.circuitKeeper = circuit.NewKeeper(
-		app.paramsKeeper.Subspace(circuit.DefaultParamspace),
-	)
 
 	// register message routes
 	app.Router().
@@ -226,13 +220,8 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 // checks account validity and circuit breaker validity
 func (app *GaiaApp) NewAnteHandler() sdk.AnteHandler {
 	authante := auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper)
-	circuitante := circuit.NewAnteHandler(app.circuitKeeper)
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newctx sdk.Context, res sdk.Result, abort bool) {
 		newctx, res, abort = authante(ctx, tx, simulate)
-		if abort {
-			return
-		}
-		newctx, _, abort = circuitante(newctx, tx, simulate)
 		return
 	}
 }
@@ -303,9 +292,6 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 			}
 		}
 	}
-
-	// load initially circuit breaked msg types
-	circuit.InitGenesis(ctx, app.circuitKeeper, genesisState.CircuitData)
 
 	return abci.ResponseInitChain{
 		Validators: validators,

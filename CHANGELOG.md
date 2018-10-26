@@ -220,6 +220,7 @@ IMPROVEMENTS
     * [types/decimal] [\#2378](https://github.com/cosmos/cosmos-sdk/issues/2378) - Added truncate functionality to decimal
     * [client] [\#1184](https://github.com/cosmos/cosmos-sdk/issues/1184) Remove unused `client/tx/sign.go`.
     * [tools] [\#2464](https://github.com/cosmos/cosmos-sdk/issues/2464) Lock binary dependencies to a specific version
+    * #2573 [x/distribution] add accum invariance
 
 BUG FIXES
 
@@ -240,8 +241,9 @@ BUG FIXES
     * [\#2158](https://github.com/cosmos/cosmos-sdk/issues/2158) Fix non-deterministic ordering of validator iteration when slashing in `gov EndBlocker`
     * [simulation] [\#1924](https://github.com/cosmos/cosmos-sdk/issues/1924) Make simulation stop on SIGTERM
     * [\#2388](https://github.com/cosmos/cosmos-sdk/issues/2388) Remove dependency on deprecated tendermint/tmlibs repository.
-    * [\#2416](https://github.com/cosmos/cosmos-sdk/issues/2416) Refactored
-    `InitializeTestLCD` to properly include proposing validator in genesis state.
+    * [\#2416](https://github.com/cosmos/cosmos-sdk/issues/2416) Refactored `InitializeTestLCD` to properly include proposing validator in genesis state.
+    * #2573 [x/distribution] accum invariance bugfix
+    * #2573 [x/slashing] unbonding-delegation slashing invariance bugfix
 
 ## 0.24.2
 

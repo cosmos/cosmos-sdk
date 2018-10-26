@@ -35,7 +35,6 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
- - #2573 [x/distribution] add accum invariance
 
 * Tendermint
 
@@ -49,7 +48,5 @@ BUG FIXES
 * Gaia
 
 * SDK
- - #2573 [x/distribution] accum invariance bugfix
- - #2573 [x/slashing] unbonding-delegation slashing invariance bugfix
 
 * Tendermint

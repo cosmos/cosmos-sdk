@@ -76,7 +76,7 @@ func (s Subspace) syncStore(ctx sdk.Context) sdk.KVStore {
 	return ctx.TransientStore(s.tkey).Prefix(append(s.name, "/s/"...))
 }
 
-func concat(key []byte, subkey []byte) (res []byte) {
+func concatKeys(key, subkey []byte) (res []byte) {
 	res = make([]byte, len(key)+1+len(subkey))
 	copy(res, key)
 	res[len(key)] = '/'

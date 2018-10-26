@@ -42,13 +42,12 @@ accounts until those coins have been unlocked. When it comes to governance, it
 is yet undefined if we want to allow a vesting account to be able to deposit
 vesting coins into proposals.
 
-In addition, a vesting account vests all of it's coin denominations at the same
+In addition, a vesting account vests all of its coin denominations at the same
 rate. This may be subject to change.
 
-**Note**: A vesting account could have some vesting and non-vesting coins at
-
-required, the `GenesisAccount` type will need to be updated in order to make
-such a distinction.
+**Note**: A vesting account could have some vesting and non-vesting coins. To
+support such a feature, the `GenesisAccount` type will need to be updated in
+order to make such a distinction.
 
 ## Vesting Account Types
 

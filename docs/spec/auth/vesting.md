@@ -188,7 +188,7 @@ has fully vested, it can send any of it's vested coins.
 
 ```go
 func (dva DelayedVestingAccount) SpendableCoins() Coins {
-    bc := cva.GetCoins()
+    bc := dva.GetCoins()
     return bc - dva.GetVestingCoins()
 }
 ```

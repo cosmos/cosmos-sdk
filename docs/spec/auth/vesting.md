@@ -1,5 +1,29 @@
 # Vesting
 
+- [Vesting](#vesting)
+  - [Intro and Requirements](#intro-and-requirements)
+  - [Vesting Account Types](#vesting-account-types)
+  - [Vesting Account Specification](#vesting-account-specification)
+    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts)
+      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
+    - [Transferring/Sending](#transferringsending)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts-1)
+        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-1)
+        - [Keepers/Handlers](#keepershandlers)
+    - [Delegating](#delegating)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts-2)
+        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-2)
+        - [Keepers/Handlers](#keepershandlers-1)
+    - [Undelegating](#undelegating)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts-3)
+        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-3)
+        - [Keepers/Handlers](#keepershandlers-2)
+  - [Keepers & Handlers](#keepers--handlers)
+  - [Initializing at Genesis](#initializing-at-genesis)
+  - [Examples](#examples)
+  - [Glossary](#glossary)
+
 ## Intro and Requirements
 
 This paper specifies vesting account implementation for the Cosmos Hub.
@@ -16,7 +40,33 @@ In addition, a vesting account vests all of it's coin denominations at the same
 rate. This may be subject to change.
 
 **Note**: A vesting account could have some vesting and non-vesting coins at
-genesis, however, the latter is unsupported at the moment. If such a feature is
+<!-- TOC -->
+
+- [Vesting](#vesting)
+  - [Intro and Requirements](#intro-and-requirements)
+  - [Vesting Account Types](#vesting-account-types)
+  - [Vesting Account Specification](#vesting-account-specification)
+    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts)
+      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
+    - [Transferring/Sending](#transferringsending)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts-1)
+        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-1)
+        - [Keepers/Handlers](#keepershandlers)
+    - [Delegating](#delegating)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts-2)
+        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-2)
+        - [Keepers/Handlers](#keepershandlers-1)
+    - [Undelegating](#undelegating)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts-3)
+        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-3)
+        - [Keepers/Handlers](#keepershandlers-2)
+  - [Keepers & Handlers](#keepers--handlers)
+  - [Initializing at Genesis](#initializing-at-genesis)
+  - [Examples](#examples)
+  - [Glossary](#glossary)
+
+<!-- /TOC -->
 required, the `GenesisAccount` type will need to be updated in order to make
 such a distinction.
 

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -21,7 +19,7 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	k.SetValidatorDistInfo(ctx, vdi)
 }
 
-// Withdrawal all validator rewards
+// Withdraw all validator rewards
 func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	// This doesn't need to be run at genesis
 	if ctx.BlockHeight() > 0 {
@@ -35,8 +33,7 @@ func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 func (k Keeper) onValidatorPowerDidChange(ctx sdk.Context, valAddr sdk.ValAddress) {
 	vi := k.GetValidatorDistInfo(ctx, valAddr)
 	if vi.FeePoolWithdrawalHeight != ctx.BlockHeight() {
-		fmt.Println(vi.OperatorAddr.String(), vi.FeePoolWithdrawalHeight, ctx.BlockHeight())
-		panic("DID NOT UPDATE")
+		panic("expected validator dist info FeePoolWithdrawalHeight to be updated, but was not.")
 	}
 }
 

@@ -40,8 +40,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	for ; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 
 		// fetch the validator
-		operator := sdk.ValAddress(iterator.Value())
-		validator := k.mustGetValidator(ctx, operator)
+		valAddr := sdk.ValAddress(iterator.Value())
+		validator := k.mustGetValidator(ctx, valAddr)
 
 		if validator.Jailed {
 			panic("should never retrieve a jailed validator from the power store")
@@ -67,9 +67,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		}
 
 		// fetch the old power bytes
-		var operatorBytes [sdk.AddrLen]byte
-		copy(operatorBytes[:], operator[:])
-		oldPowerBytes, found := last[operatorBytes]
+		var valAddrBytes [sdk.AddrLen]byte
+		copy(valAddrBytes[:], valAddr[:])
+		oldPowerBytes, found := last[valAddrBytes]
 
 		// calculate the new power bytes
 		newPower := validator.BondedTokens().RoundInt64()
@@ -78,12 +78,18 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
 
+			// XXX Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
+			// XXX This hook probably shouldn't exist.  Maybe rethink the hook system.
+			if k.hooks != nil {
+				k.hooks.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
+			}
+
 			// set validator power on lookup index.
-			k.SetLastValidatorPower(ctx, operator, sdk.NewInt(newPower))
+			k.SetLastValidatorPower(ctx, valAddr, sdk.NewInt(newPower))
 		}
 
 		// validator still in the validator set, so delete from the copy
-		delete(last, operatorBytes)
+		delete(last, valAddrBytes)
 
 		// keep count
 		count++
@@ -94,10 +100,10 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	noLongerBonded := k.sortNoLongerBonded(last)
 
 	// iterate through the sorted no-longer-bonded validators
-	for _, operator := range noLongerBonded {
+	for _, valAddrBytes := range noLongerBonded {
 
 		// fetch the validator
-		validator := k.mustGetValidator(ctx, sdk.ValAddress(operator))
+		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
 
 		// bonded to unbonding
 		k.bondedToUnbonding(ctx, validator)
@@ -108,7 +114,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		}
 
 		// delete from the bonded validator index
-		k.DeleteLastValidatorPower(ctx, sdk.ValAddress(operator))
+		k.DeleteLastValidatorPower(ctx, sdk.ValAddress(valAddrBytes))
 
 		// update the validator set
 		updates = append(updates, validator.ABCIValidatorUpdateZero())
@@ -257,11 +263,11 @@ func (k Keeper) getLastValidatorsByAddr(ctx sdk.Context) validatorsByAddr {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
 	for ; iterator.Valid(); iterator.Next() {
-		var operator [sdk.AddrLen]byte
-		copy(operator[:], iterator.Key()[1:])
+		var valAddr [sdk.AddrLen]byte
+		copy(valAddr[:], iterator.Key()[1:])
 		powerBytes := iterator.Value()
-		last[operator] = make([]byte, len(powerBytes))
-		copy(last[operator][:], powerBytes[:])
+		last[valAddr] = make([]byte, len(powerBytes))
+		copy(last[valAddr][:], powerBytes[:])
 	}
 	return last
 }
@@ -272,10 +278,10 @@ func (k Keeper) sortNoLongerBonded(last validatorsByAddr) [][]byte {
 	// sort the map keys for determinism
 	noLongerBonded := make([][]byte, len(last))
 	index := 0
-	for operatorBytes := range last {
-		operator := make([]byte, sdk.AddrLen)
-		copy(operator[:], operatorBytes[:])
-		noLongerBonded[index] = operator
+	for valAddrBytes := range last {
+		valAddr := make([]byte, sdk.AddrLen)
+		copy(valAddr[:], valAddrBytes[:])
+		noLongerBonded[index] = valAddr
 		index++
 	}
 	// sorted by address - order doesn't matter

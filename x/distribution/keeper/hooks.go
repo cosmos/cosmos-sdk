@@ -6,11 +6,11 @@ import (
 )
 
 // Create a new validator distribution record
-func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
+func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 
 	height := ctx.BlockHeight()
 	vdi := types.ValidatorDistInfo{
-		OperatorAddr:            addr,
+		OperatorAddr:            valAddr,
 		FeePoolWithdrawalHeight: height,
 		DelAccum:                types.NewTotalAccum(height),
 		DelPool:                 types.DecCoins{},
@@ -20,18 +20,23 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 }
 
 // Withdrawal all validator rewards
-func (k Keeper) onValidatorModified(ctx sdk.Context, addr sdk.ValAddress) {
+func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	// This doesn't need to be run at genesis
 	if ctx.BlockHeight() > 0 {
-		if err := k.WithdrawValidatorRewardsAll(ctx, addr); err != nil {
+		if err := k.WithdrawValidatorRewardsAll(ctx, valAddr); err != nil {
 			panic(err)
 		}
 	}
 }
 
+// XXX Consider removing this after debugging.
+func (k Keeper) onValidatorPowerDidChange(ctx sdk.Context, valAddr sdk.ValAddress) {
+
+}
+
 // Withdrawal all validator distribution rewards and cleanup the distribution record
-func (k Keeper) onValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
-	k.RemoveValidatorDistInfo(ctx, addr)
+func (k Keeper) onValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
+	k.RemoveValidatorDistInfo(ctx, valAddr)
 }
 
 //_________________________________________________________________________________________
@@ -77,14 +82,14 @@ var _ sdk.StakingHooks = Hooks{}
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
 // nolint
-func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
-	h.k.onValidatorCreated(ctx, addr)
+func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.k.onValidatorCreated(ctx, valAddr)
 }
-func (h Hooks) OnValidatorModified(ctx sdk.Context, addr sdk.ValAddress) {
-	h.k.onValidatorModified(ctx, addr)
+func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
-	h.k.onValidatorRemoved(ctx, addr)
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.k.onValidatorRemoved(ctx, valAddr)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.k.onValidatorModified(ctx, valAddr)
@@ -97,9 +102,12 @@ func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddres
 func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.k.onDelegationRemoved(ctx, delAddr, valAddr)
 }
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, addr sdk.ValAddress) {
-	h.k.onValidatorModified(ctx, addr)
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, addr sdk.ValAddress) {
-	h.k.onValidatorModified(ctx, addr)
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
+}
+func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorPowerDidChange(ctx, valAddr)
 }

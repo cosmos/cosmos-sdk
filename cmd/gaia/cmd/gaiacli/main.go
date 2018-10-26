@@ -28,10 +28,11 @@ import (
 )
 
 const (
-	storeAcc      = "acc"
-	storeGov      = "gov"
-	storeSlashing = "slashing"
-	storeStake    = "stake"
+	storeAcc        = "acc"
+	storeGov        = "gov"
+	storeSlashing   = "slashing"
+	storeStake      = "stake"
+	queryRouteStake = "stake"
 )
 
 // rootCmd is the entry point for this binary
@@ -76,8 +77,8 @@ func main() {
 		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
 		stakecmd.GetCmdQueryValidator(storeStake, cdc),
 		stakecmd.GetCmdQueryValidators(storeStake, cdc),
-		stakecmd.GetCmdQueryValidatorUnbondingDelegations(storeStake, cdc),
-		stakecmd.GetCmdQueryValidatorRedelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryValidatorUnbondingDelegations(queryRouteStake, cdc),
+		stakecmd.GetCmdQueryValidatorRedelegations(queryRouteStake, cdc),
 		stakecmd.GetCmdQueryParams(storeStake, cdc),
 		stakecmd.GetCmdQueryPool(storeStake, cdc),
 		govcmd.GetCmdQueryProposal(storeGov, cdc),

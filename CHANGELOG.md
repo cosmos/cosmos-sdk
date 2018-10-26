@@ -138,7 +138,7 @@ FEATURES
 
 * Gaia CLI  (`gaiacli`)
   * [cli] Cmds to query staking pool and params
-  * [gov][cli] #2062 added `--proposal` flag to `submit-proposal` that allows a JSON file containing a proposal to be passed in
+  * [gov][cli] [\#2062](https://github.com/cosmos/cosmos-sdk/issues/2062) added `--proposal` flag to `submit-proposal` that allows a JSON file containing a proposal to be passed in
   * [\#2040](https://github.com/cosmos/cosmos-sdk/issues/2040) Add `--bech` to `gaiacli keys show` and respective REST endpoint to
   provide desired Bech32 prefix encoding
   * [cli] [\#2047](https://github.com/cosmos/cosmos-sdk/issues/2047) [\#2306](https://github.com/cosmos/cosmos-sdk/pull/2306) Passing --gas=simulate triggers a simulation of the tx before the actual execution.
@@ -156,8 +156,8 @@ FEATURES
   * [cli][\#2554](https://github.com/cosmos/cosmos-sdk/issues/2554) Make `gaiacli keys show` multisig ready.
 
 * Gaia
-  * [cli] #2170 added ability to show the node's address via `gaiad tendermint show-address`
-  * [simulation] #2313 Reworked `make test_sim_gaia_slow` to `make test_sim_gaia_full`, now simulates from multiple starting seeds in parallel
+  * [cli] [\#2170](https://github.com/cosmos/cosmos-sdk/issues/2170) added ability to show the node's address via `gaiad tendermint show-address`
+  * [simulation] [\#2313](https://github.com/cosmos/cosmos-sdk/issues/2313) Reworked `make test_sim_gaia_slow` to `make test_sim_gaia_full`, now simulates from multiple starting seeds in parallel
   * [cli] [\#1921] (https://github.com/cosmos/cosmos-sdk/issues/1921)
     * New configuration file `gaiad.toml` is now created to host Gaia-specific configuration.
     * New --minimum_fees/minimum_fees flag/config option to set a minimum fee.
@@ -184,8 +184,8 @@ IMPROVEMENTS
     * [x/stake] Refactor REST utils
 
 * Gaia CLI  (`gaiacli`)
-    * [cli] #2060 removed `--select` from `block` command
-    * [cli] #2128 fixed segfault when exporting directly after `gaiad init`
+    * [cli] [\#2060](https://github.com/cosmos/cosmos-sdk/issues/2060) removed `--select` from `block` command
+    * [cli] [\#2128](https://github.com/cosmos/cosmos-sdk/issues/2128) fixed segfault when exporting directly after `gaiad init`
     * [cli] [\#1255](https://github.com/cosmos/cosmos-sdk/issues/1255) open KeyBase in read-only mode
      for query-purpose CLI commands
 

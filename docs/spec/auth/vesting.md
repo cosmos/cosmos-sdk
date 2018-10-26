@@ -24,6 +24,8 @@
   - [Keepers & Handlers](#keepers--handlers)
   - [Initializing at Genesis](#initializing-at-genesis)
   - [Examples](#examples)
+    - [Simple](#simple)
+    - [Slashing](#slashing)
   - [Glossary](#glossary)
 
 <!-- /TOC -->
@@ -375,7 +377,48 @@ func initChainer() {
 
 ## Examples
 
-TODO:
+### Simple
+
+Given a continuous vesting account with 10 vesting coins.
+
+```
+OV := 10
+DF := 0
+DV := 0
+BC := 10
+V := 10
+V' := 0
+```
+
+1. Immediately receives 1 coin
+    ```
+    BC := 11
+    ```
+2. Time passes, 2 coins vest
+    ```
+    V := 8
+    V' := 2
+    ```
+3. Delegates 4 coins
+    ```
+    DV := 4
+    BC := 7
+    ```
+4. Sends 3 coins
+    ```
+    BC := 4
+    ```
+5. More time passes, 2 more coins vest
+    ```
+    V := 6
+    V' := 4
+    ```
+6. Sends 2 coins. At this point the account cannot send anymore until further coins vest or it receives additional coins. It can still however, delegate 
+    ```
+    BC := 2
+    ```
+
+### Slashing
 
 ## Glossary
 

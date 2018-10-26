@@ -34,7 +34,7 @@ func (ta TotalAccum) UpdateForNewHeight(height int64, accumCreatedPerBlock sdk.D
 // global fee pool for distribution
 type FeePool struct {
 	TotalValAccum TotalAccum `json:"val_accum"`      // total valdator accum held by validators
-	Pool          DecCoins   `json:"pool"`           // funds for all validators which have yet to be withdrawn
+	ValPool       DecCoins   `json:"val_pool"`       // funds for all validators which have yet to be withdrawn
 	CommunityPool DecCoins   `json:"community_pool"` // pool for community funds yet to be spent
 }
 
@@ -49,7 +49,7 @@ func (f FeePool) UpdateTotalValAccum(height int64, totalBondedTokens sdk.Dec) Fe
 func InitialFeePool() FeePool {
 	return FeePool{
 		TotalValAccum: NewTotalAccum(0),
-		Pool:          DecCoins{},
+		ValPool:       DecCoins{},
 		CommunityPool: DecCoins{},
 	}
 }

@@ -181,7 +181,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 
 		// Burn loose tokens
 		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
-		pool.LooseTokens = pool.LooseTokens.Sub(slashAmount)
+		pool.LooseTokens = pool.LooseTokens.Sub(sdk.NewDecFromInt(unbondingSlashAmount))
 		k.SetPool(ctx, pool)
 	}
 

@@ -26,31 +26,31 @@ func TestWithdrawRewards(t *testing.T) {
 
 	// simulate adding some stake for inflation
 	height = 10
-	fp.Pool = DecCoins{NewDecCoin("stake", 1000)}
+	fp.ValPool = DecCoins{NewDecCoin("stake", 1000)}
 
 	// withdraw rewards
 	di1, vi, fp, rewardRecv1 := di1.WithdrawRewards(fp, vi, height, totalBondedTokens,
 		validatorTokens, validatorDelShares, di1Shares, commissionRate)
 
-	assert.Equal(t, height, di1.WithdrawalHeight)
+	assert.Equal(t, height, di1.DelPoolWithdrawalHeight)
 	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.TotalValAccum.Accum))
-	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi.PoolCommission[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(900), fp.ValPool[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.DelPool[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(2), vi.ValCommission[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(49), rewardRecv1[0].Amount))
 
 	// add more blocks and inflation
 	height = 20
-	fp.Pool[0].Amount = fp.Pool[0].Amount.Add(sdk.NewDec(1000))
+	fp.ValPool[0].Amount = fp.ValPool[0].Amount.Add(sdk.NewDec(1000))
 
 	// withdraw rewards
 	di2, vi, fp, rewardRecv2 := di2.WithdrawRewards(fp, vi, height, totalBondedTokens,
 		validatorTokens, validatorDelShares, di2Shares, commissionRate)
 
-	assert.Equal(t, height, di2.WithdrawalHeight)
+	assert.Equal(t, height, di2.DelPoolWithdrawalHeight)
 	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.TotalValAccum.Accum))
-	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.Pool[0].Amount))
-	assert.True(sdk.DecEq(t, sdk.NewDec(4), vi.PoolCommission[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(1800), fp.ValPool[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(49), vi.DelPool[0].Amount))
+	assert.True(sdk.DecEq(t, sdk.NewDec(4), vi.ValCommission[0].Amount))
 	assert.True(sdk.DecEq(t, sdk.NewDec(98), rewardRecv2[0].Amount))
 }

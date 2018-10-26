@@ -68,12 +68,12 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper, f auth.FeeCollectionKeeper
 		loose = loose.Add(feePool.CommunityPool.AmountOf("steak"))
 
 		// add validator distribution pool
-		loose = loose.Add(feePool.Pool.AmountOf("steak"))
+		loose = loose.Add(feePool.ValPool.AmountOf("steak"))
 
 		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
 		d.IterateValidatorDistInfos(ctx, func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
-			loose = loose.Add(distInfo.Pool.AmountOf("steak"))
-			loose = loose.Add(distInfo.PoolCommission.AmountOf("steak"))
+			loose = loose.Add(distInfo.ValCommission.AmountOf("steak"))
+			loose = loose.Add(distInfo.DelPool.AmountOf("steak"))
 			return false
 		})
 

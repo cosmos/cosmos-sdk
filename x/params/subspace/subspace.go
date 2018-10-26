@@ -65,7 +65,7 @@ func (s Subspace) kvStore(ctx sdk.Context) sdk.KVStore {
 }
 
 // Returns a transient store for modification
-func (s Subspace) modifiedStore(ctx sdk.Context) sdk.KVStore {
+func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
 	return ctx.TransientStore(s.tkey).Prefix(append(s.name, "/m/"...))
@@ -109,13 +109,13 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 
 // GetWithSubkey returns a parameter with a given key and a subkey.
 func (s Subspace) GetWithSubkey(ctx sdk.Context, key, subkey []byte, ptr interface{}) {
-	s.Get(ctx, concat(key, subkey), ptr)
+	s.Get(ctx, concatKeys(key, subkey), ptr)
 }
 
 // GetWithSubkeyIfExists  returns a parameter with a given key and a subkey but does not
 // modify ptr if the stored parameter is nil.
 func (s Subspace) GetWithSubkeyIfExists(ctx sdk.Context, key, subkey []byte, ptr interface{}) {
-	s.GetIfExists(ctx, concat(key, subkey), ptr)
+	s.GetIfExists(ctx, concatKeys(key, subkey), ptr)
 }
 
 // Get raw bytes of parameter from store
@@ -132,7 +132,7 @@ func (s Subspace) Has(ctx sdk.Context, key []byte) bool {
 
 // Returns true if the parameter is set in the block
 func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
-	tstore := s.modifiedStore(ctx)
+	tstore := s.transientStore(ctx)
 	return tstore.Has(key)
 }
 
@@ -166,7 +166,7 @@ func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 	}
 	store.Set(key, bz)
 
-	tstore := s.modifiedStore(ctx)
+	tstore := s.transientStore(ctx)
 	tstore.Set(key, []byte{})
 
 }
@@ -178,7 +178,7 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 
 	s.checkType(store, key, param)
 
-	newkey := concat(key, subkey)
+	newkey := concatKeys(key, subkey)
 
 	bz, err := s.cdc.MarshalJSON(param)
 	if err != nil {
@@ -186,7 +186,7 @@ func (s Subspace) SetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, para
 	}
 	store.Set(newkey, bz)
 
-	tstore := s.modifiedStore(ctx)
+	tstore := s.transientStore(ctx)
 	tstore.Set(newkey, []byte{})
 }
 

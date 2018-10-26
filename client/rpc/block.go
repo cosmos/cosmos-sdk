@@ -115,19 +115,19 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 		vars := mux.Vars(r)
 		height, err := strconv.ParseInt(vars["height"], 10, 64)
 		if err != nil {
-			w.WriteHeader(400)
+			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("ERROR: Couldn't parse block height. Assumed format is '/block/{height}'."))
 			return
 		}
 		chainHeight, err := GetChainHeight(cliCtx)
 		if height > chainHeight {
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("ERROR: Requested block height is bigger then the chain length."))
 			return
 		}
 		output, err := getBlock(cliCtx, &height)
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
@@ -140,13 +140,13 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		height, err := GetChainHeight(cliCtx)
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
 		output, err := getBlock(cliCtx, &height)
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}

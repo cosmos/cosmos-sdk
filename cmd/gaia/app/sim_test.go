@@ -127,7 +127,9 @@ func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
 		govsim.AllInvariants(),
-		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
+		distrsim.AllInvariants(app.distrKeeper, app.stakeKeeper),
+		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper,
+			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
 		slashingsim.AllInvariants(),
 	}
 }

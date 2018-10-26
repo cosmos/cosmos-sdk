@@ -332,22 +332,26 @@ func NewHooks(dh distr.Hooks, sh slashing.Hooks) Hooks {
 var _ sdk.StakingHooks = Hooks{}
 
 // nolint
-func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
-	h.dh.OnValidatorCreated(ctx, addr)
+func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.dh.OnValidatorCreated(ctx, valAddr)
 }
-func (h Hooks) OnValidatorModified(ctx sdk.Context, addr sdk.ValAddress) {
-	h.dh.OnValidatorModified(ctx, addr)
+func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.dh.OnValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
-	h.dh.OnValidatorRemoved(ctx, addr)
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.dh.OnValidatorRemoved(ctx, valAddr)
 }
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress, operator sdk.ValAddress) {
-	h.dh.OnValidatorBonded(ctx, addr, operator)
-	h.sh.OnValidatorBonded(ctx, addr, operator)
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.dh.OnValidatorBonded(ctx, consAddr, valAddr)
+	h.sh.OnValidatorBonded(ctx, consAddr, valAddr)
 }
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress, operator sdk.ValAddress) {
-	h.dh.OnValidatorBeginUnbonding(ctx, addr, operator)
-	h.sh.OnValidatorBeginUnbonding(ctx, addr, operator)
+func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.dh.OnValidatorPowerDidChange(ctx, consAddr, valAddr)
+	h.sh.OnValidatorPowerDidChange(ctx, consAddr, valAddr)
+}
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.dh.OnValidatorBeginUnbonding(ctx, consAddr, valAddr)
+	h.sh.OnValidatorBeginUnbonding(ctx, consAddr, valAddr)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)

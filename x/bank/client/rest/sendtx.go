@@ -56,7 +56,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 
 		info, err := kb.Get(baseReq.Name)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 

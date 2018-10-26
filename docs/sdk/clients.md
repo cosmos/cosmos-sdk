@@ -74,6 +74,16 @@ gaiad tendermint show-validator
 We strongly recommend _NOT_ using the same passphrase for multiple keys. The Tendermint team and the Interchain Foundation will not be responsible for the loss of funds.
 :::
 
+#### Multisig public keys
+
+You can generate and print a multisig public key by typing:
+
+```bash
+gaiacli show -m K key1 key2...keyK
+```
+
+`K` is the minimum weight, e.g. minimum number of private keys that must have signed the transactions that carry the generated public key.
+
 ### Account
 
 #### Get Tokens

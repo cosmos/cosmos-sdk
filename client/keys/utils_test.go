@@ -16,7 +16,7 @@ func TestGetKeyBaseLocks(t *testing.T) {
 	// Acquire db
 	kb, err := GetKeyBaseFromDirWithWritePerm(dir)
 	require.Nil(t, err)
-	_, _,  err = kb.CreateMnemonic("foo", keys.English, "12345678", keys.Secp256k1)
+	_, _, err = kb.CreateMnemonic("foo", keys.English, "12345678", keys.Secp256k1)
 	require.Nil(t, err)
 	// Reset global variable
 	keybase = nil

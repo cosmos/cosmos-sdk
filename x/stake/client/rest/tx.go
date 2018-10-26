@@ -262,12 +262,6 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 			results[i] = res
 		}
 
-		res, err := codec.MarshalJSONIndent(cdc, results[:])
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		utils.PostProcessResponse(w, cdc, results, cliCtx.Indent)
 	}
 }

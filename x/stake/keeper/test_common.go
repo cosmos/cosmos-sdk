@@ -84,11 +84,11 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 
 	db := dbm.NewMemDB()
 	ms := rootmulti.NewStore(db)
-	ms.MountStoreWithDB(tkeyStake, nil)
-	ms.MountStoreWithDB(keyStake, db)
-	ms.MountStoreWithDB(keyAcc, db)
-	ms.MountStoreWithDB(keyParams, db)
-	ms.MountStoreWithDB(tkeyParams, db)
+	ms.MountKVStoreWithDB(tkeyStake, nil)
+	ms.MountKVStoreWithDB(keyStake, db)
+	ms.MountKVStoreWithDB(keyAcc, db)
+	ms.MountKVStoreWithDB(keyParams, db)
+	ms.MountKVStoreWithDB(tkeyParams, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 

@@ -9,7 +9,7 @@ import (
 
 // keeper of the stake store
 type Keeper struct {
-	storeKey            sdk.StoreKey
+	storeKey            sdk.KVStoreKey
 	cdc                 *codec.Codec
 	paramSpace          params.Subspace
 	bankKeeper          types.BankKeeper
@@ -20,7 +20,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
+func NewKeeper(cdc *codec.Codec, key sdk.KVStoreKey, paramSpace params.Subspace, ck types.BankKeeper,
 	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{

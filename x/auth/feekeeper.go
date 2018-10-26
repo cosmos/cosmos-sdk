@@ -14,13 +14,13 @@ var (
 type FeeCollectionKeeper struct {
 
 	// The (unexposed) key used to access the fee store from the Context.
-	key sdk.StoreKey
+	key sdk.KVStoreKey
 
 	// The codec codec for binary encoding/decoding of accounts.
 	cdc *codec.Codec
 }
 
-func NewFeeCollectionKeeper(cdc *codec.Codec, key sdk.StoreKey) FeeCollectionKeeper {
+func NewFeeCollectionKeeper(cdc *codec.Codec, key sdk.KVStoreKey) FeeCollectionKeeper {
 	return FeeCollectionKeeper{
 		key: key,
 		cdc: cdc,

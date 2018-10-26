@@ -46,7 +46,7 @@ type Keeper struct {
 	ds sdk.DelegationSet
 
 	// The (unexposed) keys used to access the stores from the Context.
-	storeKey sdk.StoreKey
+	storeKey sdk.KVStoreKey
 
 	// The codec codec for binary encoding/decoding.
 	cdc *codec.Codec
@@ -60,7 +60,7 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.KVStoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,

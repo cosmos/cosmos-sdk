@@ -14,8 +14,8 @@ import (
 // recording whether the parameter has been changed or not
 type Subspace struct {
 	cdc  *codec.Codec
-	key  sdk.StoreKey // []byte -> []byte, stores parameter
-	tkey sdk.StoreKey // []byte -> bool, stores parameter change
+	key  sdk.KVStoreKey // []byte -> []byte, stores parameter
+	tkey sdk.KVStoreKey // []byte -> bool, stores parameter change
 
 	name []byte
 
@@ -23,7 +23,7 @@ type Subspace struct {
 }
 
 // NewSubspace constructs a store with namestore
-func NewSubspace(cdc *codec.Codec, key sdk.StoreKey, tkey sdk.StoreKey, name string) (res Subspace) {
+func NewSubspace(cdc *codec.Codec, key sdk.KVStoreKey, tkey sdk.KVStoreKey, name string) (res Subspace) {
 	res = Subspace{
 		cdc:  cdc,
 		key:  key,

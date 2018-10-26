@@ -13,7 +13,7 @@ var globalAccountNumberKey = []byte("globalAccountNumber")
 type AccountKeeper struct {
 
 	// The (unexposed) key used to access the store from the Context.
-	key sdk.StoreKey
+	key sdk.KVStoreKey
 
 	// The prototypical Account constructor.
 	proto func() Account
@@ -25,7 +25,7 @@ type AccountKeeper struct {
 // NewAccountKeeper returns a new sdk.AccountKeeper that
 // uses go-amino to (binary) encode and decode concrete sdk.Accounts.
 // nolint
-func NewAccountKeeper(cdc *codec.Codec, key sdk.StoreKey, proto func() Account) AccountKeeper {
+func NewAccountKeeper(cdc *codec.Codec, key sdk.KVStoreKey, proto func() Account) AccountKeeper {
 	return AccountKeeper{
 		key:   key,
 		proto: proto,

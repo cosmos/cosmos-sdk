@@ -124,7 +124,7 @@ func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.Codespace
 }
 
 // Mount IAVL stores to the provided keys in the BaseApp multistore
-func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
+func (app *BaseApp) MountStoresIAVL(keys ...sdk.KVStoreKey) {
 	for _, key := range keys {
 		app.MountStore(key)
 	}
@@ -138,17 +138,17 @@ func (app *BaseApp) MountStoresTransient(keys ...*sdk.TransientStoreKey) {
 }
 
 // Mount a store to the provided key in the BaseApp multistore, using a specified DB
-func (app *BaseApp) MountStoreWithDB(key sdk.StoreKey, db dbm.DB) {
-	app.cms.MountStoreWithDB(key, db)
+func (app *BaseApp) MountStoreWithDB(key sdk.KVStoreKey, db dbm.DB) {
+	app.cms.MountKVStoreWithDB(key, db)
 }
 
 // Mount a store to the provided key in the BaseApp multistore, using the default DB
-func (app *BaseApp) MountStore(key sdk.StoreKey) {
-	app.cms.MountStoreWithDB(key, nil)
+func (app *BaseApp) MountStore(key sdk.KVStoreKey) {
+	app.cms.MountKVStoreWithDB(key, nil)
 }
 
 // load latest application version
-func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
+func (app *BaseApp) LoadLatestVersion(mainKey sdk.KVStoreKey) error {
 	err := app.cms.LoadLatestVersion()
 	if err != nil {
 		return err
@@ -157,7 +157,7 @@ func (app *BaseApp) LoadLatestVersion(mainKey sdk.StoreKey) error {
 }
 
 // load application version
-func (app *BaseApp) LoadVersion(version int64, mainKey sdk.StoreKey) error {
+func (app *BaseApp) LoadVersion(version int64, mainKey sdk.KVStoreKey) error {
 	err := app.cms.LoadMultiStoreVersion(version)
 	if err != nil {
 		return err
@@ -176,7 +176,7 @@ func (app *BaseApp) LastBlockHeight() int64 {
 }
 
 // initializes the remaining logic from app.cms
-func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
+func (app *BaseApp) initFromStore(mainKey sdk.KVStoreKey) error {
 	// main store should exist.
 	// TODO: we don't actually need the main store here
 	main := app.cms.GetKVStore(mainKey)

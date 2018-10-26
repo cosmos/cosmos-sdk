@@ -24,8 +24,8 @@ const chainID = ""
 type App struct {
 	*bam.BaseApp
 	Cdc        *codec.Codec // Cdc is public since the codec is passed into the module anyways
-	KeyMain    *sdk.KVStoreKey
-	KeyAccount *sdk.KVStoreKey
+	KeyMain    sdk.KVStoreKey
+	KeyAccount sdk.KVStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
 	AccountKeeper       auth.AccountKeeper
@@ -75,7 +75,7 @@ func NewApp() *App {
 
 // CompleteSetup completes the application setup after the routes have been
 // registered.
-func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
+func (app *App) CompleteSetup(newKeys ...sdk.KVStoreKey) error {
 	newKeys = append(newKeys, app.KeyMain)
 	newKeys = append(newKeys, app.KeyAccount)
 

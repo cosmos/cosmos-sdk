@@ -8,14 +8,14 @@ import (
 
 // keeper of the stake store
 type Keeper struct {
-	storeKey   sdk.StoreKey
+	storeKey   sdk.KVStoreKey
 	cdc        *codec.Codec
 	paramSpace params.Subspace
 	sk         StakeKeeper
 	fck        FeeCollectionKeeper
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
+func NewKeeper(cdc *codec.Codec, key sdk.KVStoreKey,
 	paramSpace params.Subspace, sk StakeKeeper, fck FeeCollectionKeeper) Keeper {
 
 	keeper := Keeper{

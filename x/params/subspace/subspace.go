@@ -112,7 +112,8 @@ func (s Subspace) GetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, ptr 
 	s.Get(ctx, concat(key, subkey), ptr)
 }
 
-// GetWithSubkeyIfExists do not modify ptr if the stored parameter is nil
+// GetWithSubkeyIfExists  returns a parameter with a given key and a subkey but does not
+// modify ptr if the stored parameter is nil.
 func (s Subspace) GetWithSubkeyIfExists(ctx sdk.Context, key, subkey []byte, ptr interface{}) {
 	s.GetIfExists(ctx, concat(key, subkey), ptr)
 }

@@ -71,11 +71,6 @@ func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 	return ctx.TransientStore(s.tkey).Prefix(append(s.name, "/m/"...))
 }
 
-// Returns a transient store for block-level sync parameter
-func (s Subspace) syncStore(ctx sdk.Context) sdk.KVStore {
-	return ctx.TransientStore(s.tkey).Prefix(append(s.name, "/s/"...))
-}
-
 func concatKeys(key, subkey []byte) (res []byte) {
 	res = make([]byte, len(key)+1+len(subkey))
 	copy(res, key)

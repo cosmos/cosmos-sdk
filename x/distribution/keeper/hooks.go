@@ -22,11 +22,11 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 }
 
 // Reset the height to the current height when bonded
-func (k Keeper) onValidatorBonded(ctx sdk.Context, addr sdk.ValAddress) {
-	vdi := k.GetValidatorDistInfo(ctx, addr)
-	vdi.FeePoolWithdrawalHeight = ctx.BlockHeight()
-	k.SetValidatorDistInfo(ctx, vdi)
-}
+//func (k Keeper) onValidatorBonded(ctx sdk.Context, addr sdk.ValAddress) {
+//vdi := k.GetValidatorDistInfo(ctx, addr)
+//vdi.FeePoolWithdrawalHeight = ctx.BlockHeight()
+//k.SetValidatorDistInfo(ctx, vdi)
+//}
 
 // Withdrawal all validator rewards
 func (k Keeper) onValidatorModified(ctx sdk.Context, addr sdk.ValAddress) {
@@ -111,5 +111,6 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, add
 	h.k.onValidatorModified(ctx, addr)
 }
 func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, addr sdk.ValAddress) {
-	h.k.onValidatorBonded(ctx, addr)
+	//h.k.onValidatorBonded(ctx, addr)
+	h.k.onValidatorModified(ctx, addr)
 }

@@ -80,6 +80,7 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(wc WithdrawContext) (
 	fp := wc.FeePool.UpdateTotalValAccum(wc.Height, wc.TotalPower)
 
 	if fp.TotalValAccum.Accum.IsZero() {
+		vi.FeePoolWithdrawalHeight = wc.Height
 		return vi, fp
 	}
 

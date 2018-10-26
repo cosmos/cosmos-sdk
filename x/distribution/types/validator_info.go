@@ -8,7 +8,7 @@ import (
 type ValidatorDistInfo struct {
 	OperatorAddr sdk.ValAddress `json:"operator_addr"`
 
-	FeePoolWithdrawalHeight int64 `json:"global_withdrawal_height"` // last height this validator withdrew from the global pool
+	FeePoolWithdrawalHeight int64 `json:"fee_pool_withdrawal_height"` // last height this validator withdrew from the global pool
 
 	DelAccum      TotalAccum `json:"del_accum"`      // total accumulation factor held by delegators
 	DelPool       DecCoins   `json:"del_pool"`       // rewards owed to delegators, commission has already been charged (includes proposer reward)

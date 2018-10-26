@@ -13,7 +13,7 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 		OperatorAddr:            addr,
 		FeePoolWithdrawalHeight: height,
 		DelAccum:                types.NewTotalAccum(height),
-		DelPool:              types.DecCoins{},
+		DelPool:                 types.DecCoins{},
 		ValCommission:           types.DecCoins{},
 	}
 	k.SetValidatorDistInfo(ctx, vdi)
@@ -41,9 +41,9 @@ func (k Keeper) onDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
 
 	ddi := types.DelegationDistInfo{
-		DelegatorAddr:    delAddr,
-		ValOperatorAddr:  valAddr,
-		WithdrawalHeight: ctx.BlockHeight(),
+		DelegatorAddr:           delAddr,
+		ValOperatorAddr:         valAddr,
+		DelPoolWithdrawalHeight: ctx.BlockHeight(),
 	}
 	k.SetDelegationDistInfo(ctx, ddi)
 }

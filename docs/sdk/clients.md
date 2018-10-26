@@ -394,7 +394,6 @@ After a proposal's deposit reaches the `MinDeposit` value, the voting period ope
 ```bash
 gaiacli tx vote \
   --proposal-id=<proposal_id> \
-  --voter=<account_cosmos> \
   --option=<Yes/No/NoWithVeto/Abstain> \
   --from=<name> \
   --chain-id=<chain_id>

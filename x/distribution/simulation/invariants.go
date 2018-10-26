@@ -33,7 +33,7 @@ func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 		valAccum := sdk.ZeroDec()
 		k.IterateValidatorDistInfos(ctx, func(_ int64, vdi distr.ValidatorDistInfo) bool {
 			lastValPower := sk.GetLastValidatorPower(ctx, vdi.OperatorAddr)
-			valAccum = valAccum.Add(vdi.GetValAccum(height, lastValPower))
+			valAccum = valAccum.Add(vdi.GetValAccum(height, sdk.NewDecFromInt(lastValPower)))
 			return false
 		})
 

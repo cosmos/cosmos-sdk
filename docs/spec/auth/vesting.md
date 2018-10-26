@@ -134,7 +134,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(b Block) Coins {
         return ZeroCoins
     }
 
-    x := b.Time - va.StartTime
+    x := b.Time - cva.StartTime
     y := cva.EndTime - cva.StartTime
 
     return cva.OriginalVesting * (x / y)

@@ -351,7 +351,6 @@ gaiacli tx submit-proposal \
   --title=<title> \
   --description=<description> \
   --type=<Text/ParameterChange/SoftwareUpgrade> \
-  --proposer=<account_cosmos> \
   --deposit=<40steak> \
   --from=<name> \
   --chain-id=<chain_id>
@@ -381,7 +380,6 @@ In order for a proposal to be broadcasted to the network, the amount deposited m
 ```bash
 gaiacli tx deposit \
   --proposal-id=<proposal_id> \
-  --depositer=<account_cosmos> \
   --deposit=<200steak> \
   --from=<name> \
   --chain-id=<chain_id>
@@ -422,9 +420,6 @@ gaiacli query parameters
 
 With the above command you will get the values for:
 
-- Maximum and minumum Inflation rate
-- Maximum annual change in inflation rate,
-- Goal of bonded tokens (%)
 - Unbonding time
 - Maximum numbers of validators
 - Coin denomination for staking

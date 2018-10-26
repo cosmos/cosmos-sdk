@@ -29,6 +29,15 @@ func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	}
 }
 
+// Withdraw all validator rewards
+func (k Keeper) onValidatorBonded(ctx sdk.Context, valAddr sdk.ValAddress) {
+	lastPower := k.stakeKeeper.GetLastValidatorPower(ctx, valAddr)
+	if !lastPower.Equal(sdk.ZeroInt()) {
+		panic("expected last power to be 0 for validator entering bonded state")
+	}
+	k.onValidatorModified(ctx, valAddr)
+}
+
 // XXX Consider removing this after debugging.
 func (k Keeper) onValidatorPowerDidChange(ctx sdk.Context, valAddr sdk.ValAddress) {
 	vi := k.GetValidatorDistInfo(ctx, valAddr)
@@ -109,7 +118,7 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, val
 	h.k.onValidatorModified(ctx, valAddr)
 }
 func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.k.onValidatorModified(ctx, valAddr)
+	h.k.onValidatorBonded(ctx, valAddr)
 }
 func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.k.onValidatorPowerDidChange(ctx, valAddr)

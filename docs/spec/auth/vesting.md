@@ -8,16 +8,17 @@ during genesis with a starting balance `X` coins and a vesting end time `T`.
 
 The owner of this account should be able to delegate to validators
 and vote with locked coins, however they cannot send locked coins to other
-accounts until those coins have been unlocked.
+accounts until those coins have been unlocked. When it comes to governance, it
+is yet undefined if we want to allow a vesting account to be able to deposit
+vesting coins into proposals.
 
-When it comes to governance, it is yet undefined if we want to allow a vesting
-account to be able to deposit vesting coins into proposals.
+In addition, a vesting account vests all of it's coin denominations at the same
+rate. This may be subject to change.
 
-It is also important to note that a vesting account vests all of it's coin
-denominations at the same rate. This may be subject to change.
-
-__Note__: A vesting account could have some vesting and non-vesting coins at
-genesis, however, the latter is unlikely.
+**Note**: A vesting account could have some vesting and non-vesting coins at
+genesis, however, the latter is unsupported at the moment. If such a feature is
+required, the `GenesisAccount` type will need to be updated in order to make
+such a distinction.
 
 ## Vesting Account Types
 
@@ -30,22 +31,31 @@ type VestingAccount interface {
 
     // Calculates the amount of coins that can be sent to other accounts given
     // the current time.
-    SendableCoins(sdk.Context) sdk.Coins
+    SpendableCoins(Context) Coins
+    // Performs delegation accounting.
+    TrackDelegation(amount)
+    // Performs undelegation accounting.
+    TrackUndelegation(amount)
+}
+
+// BaseVestingAccount implements the VestingAccount interface. It contains all
+// the necessary fields needed for any vesting account implementation.
+type BaseVestingAccount struct {
+    BaseAccount
+
+    OriginalVesting  Coins // coins in account upon initialization
+    DelegatedFree    Coins // coins that are vested and delegated
+    EndTime          Time // when the coins become unlocked
 }
 
 // ContinuousVestingAccount implements the VestingAccount interface. It
 // continuously vests by unlocking coins linearly with respect to time.
 type ContinuousVestingAccount struct {
     BaseAccount
+    BaseVestingAccount
 
-    OriginalVesting  sdk.Coins // coins in account upon initialization
-    DelegatedVesting sdk.Coins // coins that vesting and delegated
-    DelegatedFree    sdk.Coins // coins that are vested and delegated
-
-    // StartTime and EndTime are used to calculate how much of OriginalVesting
-    // is unlocked at any given point.
-    StartTime time.Time
-    EndTime   time.Time
+    DelegatedVesting Coins // coins that vesting and delegated
+    StartTime        Time // when the coins start to vest
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
@@ -53,27 +63,27 @@ type ContinuousVestingAccount struct {
 // locked until a specified time.
 type DelayedVestingAccount struct {
     BaseAccount
-
-    OriginalVesting  sdk.Coins // coins in account upon initialization
-
-    EndTime time.Time // when the coins become unlocked
+    BaseVestingAccount
 }
 ```
 
-## Vesting Account Implementation
+## Vesting Account Specification
 
 Given a vesting account, we define the following in the proceeding operations:
 
 - `OV`: The original vesting coin amount. It is a constant value.
-- `V`: The number of `OV` coins that are still **vesting**. It is derived by `OV`, `StartTime` and `EndTime`. This value is computed on demand and not on a per-block basis.
-- `V'`: The number of `OV` coins that are **vested** (unlocked). This value is computed on demand and not a per-block basis.
-- `DV`: The number of delegated **vesting** coins. It is a variable value. It is stored and modified directly in the vesting account.
-- `DF`: The number of delegated **vested** coins. It is a variable value. It is stored and modified directly in the vesting account.
+- `V`: The number of `OV` coins that are still _vesting_. It is derived by `OV`, `StartTime` and `EndTime`. This value is computed on demand and not on a per-block basis.
+- `V'`: The number of `OV` coins that are _vested_ (unlocked). This value is computed on demand and not a per-block basis.
+- `DV`: The number of delegated _vesting_ coins. It is a variable value. It is stored and modified directly in the vesting account.
+- `DF`: The number of delegated _vested_ (unlocked) coins. It is a variable value. It is stored and modified directly in the vesting account.
 - `BC`: The number of `OV` coins less any coins that are transferred, which can be negative, or delegated (`DV + DF`). It is considered to be balance of the embedded base account. It is stored and modified directly in the vesting account.
 
-### Operations
+### Determining Vesting & Vested Amounts
 
-#### Determining Vesting Amount
+It is important to note that these values are computed on demand and not on a
+mandatory per-block basis.
+
+#### Continuously Vesting Accounts
 
 To determine the amount of coins that are vested for a given block `B`, the
 following is performed:
@@ -81,22 +91,99 @@ following is performed:
 1. Compute `X := B.Time - StartTime`
 2. Compute `Y := EndTime - StartTime`
 3. Compute `V' := OV * (X / Y)`
+4. Compute `V := OV - V'`
 
-Thus, the number of vested coins is defined by `V'` and as a result the number of
-vesting coins equates to `V := OV - V'`. It is important to note these values are
-calculated on demand and not on a per-block basis.
+Thus, the total amount of _vested_ coins is `V'` and the remaining amount, `V`,
+is _vesting_.
 
-#### Transferring/Sending
+```go
+func (cva ContinuousVestingAccount) GetVestedCoins(b Block) Coins {
+    x := b.Time - va.StartTime
+    y := cva.EndTime - cva.StartTime
 
-At any given time, a vesting account may transfer: `min((BC + DV) - V, BC)`.
+    return cva.OriginalVesting * (x / y)
+}
+
+func (cva ContinuousVestingAccount) GetVestingCoins(b Block) Coins {
+    return cva.OriginalVesting - cva.GetVestedCoins(b)
+}
+```
+
+#### Delayed/Discrete Vesting Accounts
+
+Delayed vesting accounts are easier to reason about as they only have the full
+amount vesting up until a certain time, then they all become vested (unlocked).
+
+```go
+func (dva DelayedVestingAccount) GetVestedCoins(b Block) Coins {
+    if b.Time >= dva.EndTime {
+        return dva.OriginalVesting
+    }
+
+    return ZeroCoins
+}
+
+func (dva DelayedVestingAccount) GetVestingCoins(b Block) Coins {
+    return cva.OriginalVesting - cva.GetVestedCoins(b)
+}
+```
+
+### Transferring/Sending
+
+#### Continuously Vesting Accounts
+
+At any given time, a continuous vesting account may transfer: `min((BC + DV) - V, BC)`.
 
 In other words, a vesting account may transfer the minimum of the base account
 balance and the base account balance plus the number of currently delegated
 vesting coins less the number of coins vested so far.
 
-#### Delegating
+```go
+func (cva ContinuousVestingAccount) SpendableCoins() Coins {
+    bc := cva.GetCoins()
+    return min((bc + cva.DelegatedVesting) - cva.GetVestingCoins(), bc)
+}
+```
 
-For a vesting account attempting to delegate `D` coins, the following is performed:
+##### Delayed/Discrete Vesting Accounts
+
+A delayed vesting account may send any coins it has received. In addition, if it
+has fully vested, it can send any of it's vested coins.
+
+```go
+func (dva DelayedVestingAccount) SpendableCoins() Coins {
+    bc := cva.GetCoins()
+    return bc - dva.GetVestingCoins()
+}
+```
+
+##### Keepers/Handlers
+
+The corresponding `x/bank` keeper should appropriately handle sending coins
+based on if the account is a vesting account or not.
+
+```go
+func SendCoins(from Account, to Account amount Coins) {
+    if isVesting(from) {
+        sc := from.SpendableCoins()
+    } else {
+        sc := from.GetCoins()
+    }
+
+    if amount <= sc {
+        from.SetCoins(sc - amount)
+        to.SetCoins(amount)
+        // save accounts...
+    }
+}
+```
+
+### Delegating
+
+#### Continuously Vesting Accounts
+
+For a continuous vesting account attempting to delegate `D` coins, the following
+is performed:
 
 1. Verify `BC >= D > 0`
 2. Compute `X := min(max(V - DV, 0), D)` (portion of `D` that is vesting)
@@ -105,9 +192,58 @@ For a vesting account attempting to delegate `D` coins, the following is perform
 5. Set `DF += Y`
 6. Set `BC -= D`
 
-#### Undelegating
+```go
+func (cva ContinuousVestingAccount) TrackDelegation(amount Coins) {
+    x := min(max(cva.GetVestingCoins() - cva.DelegatedVesting, 0), amount)
+    y := amount - x
 
-For a vesting account attempting to undelegate `D` coins, the following is performed:
+    cva.DelegatedVesting += x
+    cva.DelegatedFree += y
+}
+```
+
+##### Delayed/Discrete Vesting Accounts
+
+For a delayed vesting account, it can only delegate with received coins and
+coins that are fully vested so we only need to update `DF`.
+
+```go
+func (dva DelayedVestingAccount) TrackDelegation(amount Coins) {
+    dva.DelegatedFree += amount
+}
+```
+
+##### Keepers/Handlers
+
+```go
+func DelegateCoins(from Account, amount Coins) {
+    // canDelegate checks different semantics for continuous and delayed vesting
+    // accounts
+    if isVesting(from) && canDelegate(from) {
+        sc := from.GetCoins()
+
+        if amount <= sc {
+            from.TrackDelegation(amount)
+            from.SetCoins(sc - amount)
+            // save account...
+        }
+    } else {
+        sc := from.GetCoins()
+
+        if amount <= sc {
+            from.SetCoins(sc - amount)
+            // save account...
+        }
+    }
+}
+```
+
+### Undelegating
+
+#### Continuously Vesting Accounts
+
+For a continuous vesting account attempting to undelegate `D` coins, the
+following is performed:
 
 1. Verify `(DV + DF) >= D > 0` (this is simply a sanity check)
 2. Compute `Y := min(DF, D)` (portion of `D` that should become free, prioritizing free coins)
@@ -116,17 +252,57 @@ For a vesting account attempting to undelegate `D` coins, the following is perfo
 5. Set `DF -= Y`
 6. Set `BC += D`
 
+```go
+func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
+    y := min(cva.DelegatedFree, amount)
+    x := amount - y
+
+    cva.DelegatedVesting -= x
+    cva.DelegatedFree -= y
+}
+```
+
+##### Delayed/Discrete Vesting Accounts
+
+For a delayed vesting account, it only needs to add back the `DF` amount since
+the account is fully vested.
+
+```go
+func (dva DelayedVestingAccount) TrackUndelegation(amount Coins) {
+    dva.DelegatedFree -= amount
+}
+```
+
+##### Keepers/Handlers
+
+```go
+func UndelegateCoins(to Account, amount Coins) {
+    if isVesting(to) {
+        if to.DelegatedFree + to.DelegatedVesting >= amount {
+            to.TrackUndelegation(amount)
+            AddCoins(to, amount)
+            // save account ...
+        }
+    } else {
+        AddCoins(to, amount)
+        // save account...
+    }
+}
+```
+
 ## Keepers & Handlers
 
 The `VestingAccount` implementations reside in `x/auth`. However, any keeper in
 a module (e.g. staking in `x/stake`) wishing to potentially utilize any vesting
-coins, must call explicit methods on the `BankKeeper` (e.g. `DelegateCoins`)
+coins, must call explicit methods on the `x/bank` keeper (e.g. `DelegateCoins`)
 opposed to `SendCoins` and `SubtractCoins`.
 
 In addition, the vesting account should also be able to spend any coins it
 receives from other users. Thus, the bank module's `MsgSend` handler should
 error if a vesting account is trying to send an amount that exceeds their
 unlocked coin amount.
+
+See the above specification for full implementation details.
 
 ## Initializing at Genesis
 
@@ -164,3 +340,11 @@ func initChainer() {
     }
 }
 ```
+
+## Examples
+
+TODO:
+
+## Glossary
+
+TODO:

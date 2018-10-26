@@ -153,7 +153,7 @@ func (s Subspace) checkType(store sdk.KVStore, key []byte, param interface{}) {
 }
 
 // Set parameter, return error if stored parameter has different type from input
-// Also set to the transient store to record change
+// It also set to the transient store to record change.
 func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 	store := s.kvStore(ctx)
 

@@ -108,7 +108,7 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 }
 
 // GetWithSubkey get parameter with a key and a subkey
-func (s Subspace) GetWithSubkey(ctx sdk.Context, key []byte, subkey []byte, ptr interface{}) {
+func (s Subspace) GetWithSubkey(ctx sdk.Context, key, subkey []byte, ptr interface{}) {
 	s.Get(ctx, concat(key, subkey), ptr)
 }
 

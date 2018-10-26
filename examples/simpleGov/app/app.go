@@ -80,6 +80,11 @@ func NewSimpleGovApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.B
 		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
 		AddRoute("simpleGov", simpleGov.NewHandler(app.simpleGovKeeper))
 
+	// perform initialization logic
+	app.SetInitChainer(app.initChainer)
+	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetEndBlocker(app.EndBlocker)
+
 	// Initialize BaseApp.
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeySimpleGovStore, app.capKeyStakingStore)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
@@ -103,6 +108,47 @@ func MakeCodec() *wire.Codec {
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "simpleGov/Account", nil)
 	return cdc
+}
+
+// BeginBlocker reflects logic to run before any TXs application are processed
+// by the application.
+func (app *SimpleGovApp) BeginBlocker(_ sdk.Context, _ abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	return abci.ResponseBeginBlock{}
+}
+
+// EndBlocker reflects logic to run after all TXs are processed by the
+// application.
+func (app *SimpleGovApp) EndBlocker(_ sdk.Context, _ abci.RequestEndBlock) abci.ResponseEndBlock {
+	return abci.ResponseEndBlock{}
+}
+
+// initChainer implements the custom application logic that the BaseApp will
+// invoke upon initialization. In this case, it will take the application's
+// state provided by 'req' and attempt to deserialize said state. The state
+// should contain all the genesis accounts. These accounts will be added to the
+// application's account mapper.
+func (app *SimpleGovApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	stateJSON := req.AppStateBytes
+
+	genesisState := new(types.GenesisState)
+	err := app.cdc.UnmarshalJSON(stateJSON, genesisState)
+	if err != nil {
+		// TODO: https://github.com/cosmos/cosmos-sdk/issues/468
+		panic(err)
+	}
+
+	for _, gacc := range genesisState.Accounts {
+		acc, err := gacc.ToAppAccount()
+		if err != nil {
+			// TODO: https://github.com/cosmos/cosmos-sdk/issues/468
+			panic(err)
+		}
+
+		acc.AccountNumber = app.accountMapper.GetNextAccountNumber(ctx)
+		app.accountMapper.SetAccount(ctx, acc)
+	}
+
+	return abci.ResponseInitChain{}
 }
 
 // ExportAppStateJSON handles the custom logic for state export

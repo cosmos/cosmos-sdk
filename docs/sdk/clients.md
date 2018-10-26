@@ -79,7 +79,7 @@ We strongly recommend _NOT_ using the same passphrase for multiple keys. The Ten
 You can generate and print a multisig public key by typing:
 
 ```bash
-gaiacli show -m K key1 key2...keyK
+gaiacli show --multisig-threshold K key1 key2...keyK
 ```
 
 `K` is the minimum weight, e.g. minimum number of private keys that must have signed the transactions that carry the generated public key.

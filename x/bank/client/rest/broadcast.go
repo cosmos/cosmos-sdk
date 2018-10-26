@@ -37,7 +37,8 @@ func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) ht
 	}
 }
 
-func unmarshalBodyOrReturnBadRequest(cliCtx context.CLIContext, w http.ResponseWriter, r *http.Request, m *broadcastBody) bool {
+func unmarshalBodyOrReturnBadRequest(cliCtx context.CLIContext, w http.ResponseWriter,
+	r *http.Request, m *broadcastBody) bool {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

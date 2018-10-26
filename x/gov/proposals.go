@@ -60,18 +60,23 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 //-----------------------------------------------------------
 // Text Proposals
 type TextProposal struct {
-	ProposalID   int64        `json:"proposal_id"`   //  ID of the proposal
-	Title        string       `json:"title"`         //  Title of the proposal
-	Description  string       `json:"description"`   //  Description of the proposal
-	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	ProposalID   int64        `json:"proposal_id"`   // ID of the proposal
+	Title        string       `json:"title"`         // Title of the proposal
+	Description  string       `json:"description"`   // Description of the proposal
+	ProposalType ProposalKind `json:"proposal_type"` // Type of proposal. Initial set
+													 // {PlainTextProposal, SoftwareUpgradeProposal}
 
-	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
-	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
+	Status      ProposalStatus `json:"proposal_status"` // Status of the Proposal {Pending,
+														// Active, Passed, Rejected}
+	TallyResult TallyResult    `json:"tally_result"`    // Result of Tallys
 
-	SubmitTime   time.Time `json:"submit_time"`   //  Height of the block where TxGovSubmitProposal was included
-	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitTime   time.Time `json:"submit_time"`   // Height of the block where TxGovSubmitProposal
+												  // was included Current deposit on this proposal.
+	TotalDeposit sdk.Coins `json:"total_deposit"` // Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_time"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingStartTime time.Time `json:"voting_start_time"` // Height of the block where MinDeposit
+														 // was reached. -1 if MinDeposit is not
+														 // reached.
 }
 
 // Implements Proposal Interface
@@ -85,7 +90,9 @@ func (tp *TextProposal) SetTitle(title string)                     { tp.Title = 
 func (tp TextProposal) GetDescription() string                     { return tp.Description }
 func (tp *TextProposal) SetDescription(description string)         { tp.Description = description }
 func (tp TextProposal) GetProposalType() ProposalKind              { return tp.ProposalType }
-func (tp *TextProposal) SetProposalType(proposalType ProposalKind) { tp.ProposalType = proposalType }
+func (tp *TextProposal) SetProposalType(proposalType ProposalKind) {
+	tp.ProposalType = proposalType
+}
 func (tp TextProposal) GetStatus() ProposalStatus                  { return tp.Status }
 func (tp *TextProposal) SetStatus(status ProposalStatus)           { tp.Status = status }
 func (tp TextProposal) GetTallyResult() TallyResult                { return tp.TallyResult }
@@ -93,7 +100,9 @@ func (tp *TextProposal) SetTallyResult(tallyResult TallyResult)    { tp.TallyRes
 func (tp TextProposal) GetSubmitTime() time.Time                   { return tp.SubmitTime }
 func (tp *TextProposal) SetSubmitTime(submitTime time.Time)        { tp.SubmitTime = submitTime }
 func (tp TextProposal) GetTotalDeposit() sdk.Coins                 { return tp.TotalDeposit }
-func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins)    { tp.TotalDeposit = totalDeposit }
+func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins)    {
+	tp.TotalDeposit = totalDeposit
+}
 func (tp TextProposal) GetVotingStartTime() time.Time              { return tp.VotingStartTime }
 func (tp *TextProposal) SetVotingStartTime(votingStartTime time.Time) {
 	tp.VotingStartTime = votingStartTime

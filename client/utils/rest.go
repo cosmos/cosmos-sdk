@@ -254,7 +254,9 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 }
 
 // PostProcessResponse performs post process for rest response
-func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent bool) {
+func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec,
+	response interface{}, indent bool) {
+
 	var output []byte
 	switch response.(type) {
 	default:

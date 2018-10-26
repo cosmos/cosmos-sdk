@@ -8,11 +8,15 @@ import (
 type ValidatorDistInfo struct {
 	OperatorAddr sdk.ValAddress `json:"operator_addr"`
 
-	FeePoolWithdrawalHeight int64    `json:"global_withdrawal_height"` // last height this validator withdrew from the global pool
-	Pool                    DecCoins `json:"pool"`                     // rewards owed to delegators, commission has already been charged (includes proposer reward)
-	PoolCommission          DecCoins `json:"pool_commission"`          // commission collected by this validator (pending withdrawal)
+	// last height this validator withdrew from the global pool
+	FeePoolWithdrawalHeight int64    `json:"global_withdrawal_height"`
+	// rewards owed to delegators, commission has already been charged (includes proposer reward)
+	Pool                    DecCoins `json:"pool"`
+	// commission collected by this validator (pending withdrawal)
+	PoolCommission          DecCoins `json:"pool_commission"`
 
-	DelAccum TotalAccum `json:"del_accum"` // total proposer pool accumulation factor held by delegators
+	// total proposer pool accumulation factor held by delegators
+	DelAccum TotalAccum `json:"del_accum"`
 }
 
 func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) ValidatorDistInfo {
@@ -26,7 +30,8 @@ func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) Vali
 }
 
 // update total delegator accumululation
-func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64, totalDelShares sdk.Dec) ValidatorDistInfo {
+func (vi ValidatorDistInfo) UpdateTotalDelAccum(height int64,
+	totalDelShares sdk.Dec) ValidatorDistInfo {
 	vi.DelAccum = vi.DelAccum.UpdateForNewHeight(height, totalDelShares)
 	return vi
 }
@@ -73,7 +78,8 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 
 // withdraw commission rewards
 func (vi ValidatorDistInfo) WithdrawCommission(fp FeePool, height int64,
-	totalBonded, vdTokens, commissionRate sdk.Dec) (vio ValidatorDistInfo, fpo FeePool, withdrawn DecCoins) {
+	totalBonded, vdTokens, commissionRate sdk.Dec) (vio ValidatorDistInfo,
+	fpo FeePool, withdrawn DecCoins) {
 
 	vi, fp = vi.TakeFeePoolRewards(fp, height, totalBonded, vdTokens, commissionRate)
 

@@ -20,7 +20,8 @@ import (
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
+func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress,
+	[]crypto.PubKey, []crypto.PrivKey) {
 	mapp := mock.NewApp()
 
 	stake.RegisterCodec(mapp.Cdc)
@@ -34,17 +35,21 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 
 	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams, tkeyGlobalParams)
 	ck := bank.NewBaseKeeper(mapp.AccountKeeper)
-	sk := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
+	sk := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace),
+		mapp.RegisterCodespace(stake.DefaultCodespace))
+	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"),
+		ck, sk, DefaultCodespace)
 
 	mapp.Router().AddRoute("gov", NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
-	require.NoError(t, mapp.CompleteSetup(keyStake, tkeyStake, keyGov, keyGlobalParams, tkeyGlobalParams))
+	require.NoError(t, mapp.CompleteSetup(keyStake, tkeyStake, keyGov, keyGlobalParams,
+		tkeyGlobalParams))
 
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin("steak", 42)})
+	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs,
+		sdk.Coins{sdk.NewInt64Coin("steak", 42)})
 
 	mock.SetGenesis(mapp, genAccs)
 

@@ -12,7 +12,9 @@ import (
 )
 
 // SimulateMsgSetWithdrawAddress
-func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper,
+	k distribution.Keeper) simulation.Operation {
+
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -20,10 +22,12 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 
 		accountOrigin := simulation.RandomAcc(r, accs)
 		accountDestination := simulation.RandomAcc(r, accs)
-		msg := distribution.NewMsgSetWithdrawAddress(accountOrigin.Address, accountDestination.Address)
+		msg := distribution.NewMsgSetWithdrawAddress(accountOrigin.Address,
+			accountDestination.Address)
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s",
+				msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -34,13 +38,16 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 
 		event(fmt.Sprintf("distribution/MsgSetWithdrawAddress/%v", result.IsOK()))
 
-		action = fmt.Sprintf("TestMsgSetWithdrawAddress: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgSetWithdrawAddress: ok %v, msg %s",
+			result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
 }
 
 // SimulateMsgWithdrawDelegatorRewardsAll
-func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountKeeper,
+	k distribution.Keeper) simulation.Operation {
+
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -50,7 +57,8 @@ func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountKeeper, k distribution
 		msg := distribution.NewMsgWithdrawDelegatorRewardsAll(account.Address)
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s",
+				msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -61,13 +69,16 @@ func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountKeeper, k distribution
 
 		event(fmt.Sprintf("distribution/MsgWithdrawDelegatorRewardsAll/%v", result.IsOK()))
 
-		action = fmt.Sprintf("TestMsgWithdrawDelegatorRewardsAll: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgWithdrawDelegatorRewardsAll: ok %v, msg %s",
+			result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
 }
 
 // SimulateMsgWithdrawDelegatorReward
-func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper,
+	k distribution.Keeper) simulation.Operation {
+
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -75,10 +86,12 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 
 		delegatorAccount := simulation.RandomAcc(r, accs)
 		validatorAccount := simulation.RandomAcc(r, accs)
-		msg := distribution.NewMsgWithdrawDelegatorReward(delegatorAccount.Address, sdk.ValAddress(validatorAccount.Address))
+		msg := distribution.NewMsgWithdrawDelegatorReward(delegatorAccount.Address,
+			sdk.ValAddress(validatorAccount.Address))
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s",
+				msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -89,13 +102,16 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 
 		event(fmt.Sprintf("distribution/MsgWithdrawDelegatorReward/%v", result.IsOK()))
 
-		action = fmt.Sprintf("TestMsgWithdrawDelegatorReward: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgWithdrawDelegatorReward: ok %v, msg %s",
+			result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
 }
 
 // SimulateMsgWithdrawValidatorRewardsAll
-func SimulateMsgWithdrawValidatorRewardsAll(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
+func SimulateMsgWithdrawValidatorRewardsAll(m auth.AccountKeeper,
+	k distribution.Keeper) simulation.Operation {
+
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -105,7 +121,8 @@ func SimulateMsgWithdrawValidatorRewardsAll(m auth.AccountKeeper, k distribution
 		msg := distribution.NewMsgWithdrawValidatorRewardsAll(sdk.ValAddress(account.Address))
 
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s",
+				msg.GetSignBytes())
 		}
 
 		ctx, write := ctx.CacheContext()
@@ -116,7 +133,8 @@ func SimulateMsgWithdrawValidatorRewardsAll(m auth.AccountKeeper, k distribution
 
 		event(fmt.Sprintf("distribution/MsgWithdrawValidatorRewardsAll/%v", result.IsOK()))
 
-		action = fmt.Sprintf("TestMsgWithdrawValidatorRewardsAll: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
+		action = fmt.Sprintf("TestMsgWithdrawValidatorRewardsAll: ok %v, msg %s",
+			result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
 }

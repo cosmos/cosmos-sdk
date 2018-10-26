@@ -77,7 +77,8 @@ func (keeper BaseKeeper) SendCoins(
 }
 
 // InputOutputCoins handles a list of inputs and outputs
-func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
+func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (
+	sdk.Tags, sdk.Error) {
 	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
 }
 
@@ -87,7 +88,8 @@ func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outpu
 // between accounts without the possibility of creating coins.
 type SendKeeper interface {
 	ViewKeeper
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (
+		sdk.Tags, sdk.Error)
 	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
 }
 
@@ -172,7 +174,8 @@ func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.C
 	return acc.GetCoins()
 }
 
-func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress,
+	amt sdk.Coins) sdk.Error {
 	ctx.GasMeter().ConsumeGas(costSetCoins, "setCoins")
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
@@ -194,7 +197,8 @@ func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
-func subtractCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
+func subtractCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (
+	sdk.Coins, sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Minus(amt)
@@ -207,7 +211,8 @@ func subtractCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, 
 }
 
 // AddCoins adds amt to the coins at the addr.
-func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
+func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (
+	sdk.Coins, sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costAddCoins, "addCoins")
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Plus(amt)
@@ -221,7 +226,8 @@ func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 
 // SendCoins moves coins from one account to another
 // NOTE: Make sure to revert state changes from tx on error
-func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress,
+	toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	_, subTags, err := subtractCoins(ctx, am, fromAddr, amt)
 	if err != nil {
 		return nil, err
@@ -237,7 +243,8 @@ func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, 
 
 // InputOutputCoins handles a list of inputs and outputs
 // NOTE: Make sure to revert state changes from tx on error
-func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
+func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, outputs []Output) (
+	sdk.Tags, sdk.Error) {
 	allTags := sdk.EmptyTags()
 
 	for _, in := range inputs {

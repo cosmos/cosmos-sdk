@@ -14,14 +14,18 @@ var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 //-----------------------------------------------------------
 // MsgSubmitProposal
 type MsgSubmitProposal struct {
-	Title          string         `json:"title"`           //  Title of the proposal
-	Description    string         `json:"description"`     //  Description of the proposal
-	ProposalType   ProposalKind   `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
-	InitialDeposit sdk.Coins      `json:"initial_deposit"` //  Initial deposit paid by sender. Must be strictly positive.
+	Title          string         `json:"title"`           // Title of the proposal
+	Description    string         `json:"description"`     // Description of the proposal
+	ProposalType   ProposalKind   `json:"proposal_type"`   // Type of proposal. Initial set
+														   // {PlainTextProposal,
+														   // SoftwareUpgradeProposal}
+	Proposer       sdk.AccAddress `json:"proposer"`        // Address of the proposer
+	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Initial deposit paid by sender.
+														   // Must be strictly positive.
 }
 
-func NewMsgSubmitProposal(title string, description string, proposalType ProposalKind, proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
+func NewMsgSubmitProposal(title string, description string, proposalType ProposalKind,
+	proposer sdk.AccAddress, initialDeposit sdk.Coins) MsgSubmitProposal {
 	return MsgSubmitProposal{
 		Title:          title,
 		Description:    description,
@@ -59,7 +63,8 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgSubmitProposal) String() string {
-	return fmt.Sprintf("MsgSubmitProposal{%s, %s, %s, %v}", msg.Title, msg.Description, msg.ProposalType, msg.InitialDeposit)
+	return fmt.Sprintf("MsgSubmitProposal{%s, %s, %s, %v}", msg.Title, msg.Description,
+		msg.ProposalType, msg.InitialDeposit)
 }
 
 // Implements Msg.

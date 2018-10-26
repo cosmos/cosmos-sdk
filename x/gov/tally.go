@@ -13,7 +13,9 @@ type validatorGovInfo struct {
 	Vote            VoteOption     // Vote of the validator
 }
 
-func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tallyResults TallyResult) {
+func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (
+	passes bool, tallyResults TallyResult) {
+
 	results := make(map[VoteOption]sdk.Dec)
 	results[OptionYes] = sdk.ZeroDec()
 	results[OptionAbstain] = sdk.ZeroDec()
@@ -49,7 +51,9 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 			currValidators[valAddrStr] = val
 		} else {
 
-			keeper.ds.IterateDelegations(ctx, vote.Voter, func(index int64, delegation sdk.Delegation) (stop bool) {
+			keeper.ds.IterateDelegations(ctx, vote.Voter, func(index int64,
+				delegation sdk.Delegation) (stop bool) {
+
 				valAddrStr := delegation.GetValidatorAddr().String()
 
 				if val, ok := currValidators[valAddrStr]; ok {
@@ -102,7 +106,8 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 		return false, tallyResults
 	}
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
-	if results[OptionYes].Quo(totalVotingPower.Sub(results[OptionAbstain])).GT(tallyingProcedure.Threshold) {
+	if results[OptionYes].Quo(totalVotingPower.Sub(results[OptionAbstain])).
+		GT(tallyingProcedure.Threshold) {
 		return true, tallyResults
 	}
 	// If more than 1/2 of non-abstaining voters vote No, proposal fails

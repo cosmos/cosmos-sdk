@@ -14,7 +14,8 @@ type GenesisState struct {
 	TallyingProcedure  TallyingProcedure `json:"tallying_procedure"`
 }
 
-func NewGenesisState(startingProposalID int64, dp DepositProcedure, vp VotingProcedure, tp TallyingProcedure) GenesisState {
+func NewGenesisState(startingProposalID int64, dp DepositProcedure, vp VotingProcedure,
+	tp TallyingProcedure) GenesisState {
 	return GenesisState{
 		StartingProposalID: startingProposalID,
 		DepositProcedure:   dp,

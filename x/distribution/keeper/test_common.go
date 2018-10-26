@@ -111,7 +111,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, auth.ProtoBaseAccount)
 	ck := bank.NewBaseKeeper(accountKeeper)
-	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
+	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace),
+		stake.DefaultCodespace)
 	sk.SetPool(ctx, stake.InitialPool())
 	sk.SetParams(ctx, stake.DefaultParams())
 
@@ -127,7 +128,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	}
 
 	fck := DummyFeeCollectionKeeper{}
-	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), ck, sk, fck, types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), ck, sk, fck,
+		types.DefaultCodespace)
 
 	// set the distribution hooks on staking
 	sk = sk.WithHooks(keeper.Hooks())

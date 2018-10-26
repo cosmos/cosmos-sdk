@@ -8,7 +8,8 @@ import (
 type DelegationDistInfo struct {
 	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
 	ValOperatorAddr  sdk.ValAddress `json:"val_operator_addr"`
-	WithdrawalHeight int64          `json:"withdrawal_height"` // last time this delegation withdrew rewards
+	// last time this delegation withdrew rewards
+	WithdrawalHeight int64          `json:"withdrawal_height"`
 }
 
 func NewDelegationDistInfo(delegatorAddr sdk.AccAddress, valOperatorAddr sdk.ValAddress,

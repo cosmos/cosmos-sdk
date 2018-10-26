@@ -60,7 +60,10 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper,
+	paramSpace params.Subspace, ck bank.Keeper, ds sdk.DelegationSet,
+	codespace sdk.CodespaceType) Keeper {
+
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
@@ -77,7 +80,9 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, p
 // Proposals
 
 // Creates a NewProposal
-func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string, proposalType ProposalKind) Proposal {
+func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description string,
+	proposalType ProposalKind) Proposal {
+
 	proposalID, err := keeper.getNewProposalID(ctx)
 	if err != nil {
 		return nil
@@ -125,7 +130,8 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposal Proposal) {
 }
 
 // Get Proposal from store by ProposalID
-func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositerAddr sdk.AccAddress, status ProposalStatus, numLatest int64) []Proposal {
+func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress,
+	depositerAddr sdk.AccAddress, status ProposalStatus, numLatest int64) []Proposal {
 
 	maxProposalID, err := keeper.peekCurrentProposalID(ctx)
 	if err != nil {
@@ -195,7 +201,8 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64, err sd
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
+		return -1, ErrInvalidGenesis(keeper.codespace,
+			"InitialProposalID never set")
 	}
 	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
 	bz = keeper.cdc.MustMarshalBinary(proposalID + 1)
@@ -208,7 +215,8 @@ func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID int64, e
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
 	if bz == nil {
-		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
+		return -1, ErrInvalidGenesis(keeper.codespace,
+			"InitialProposalID never set")
 	}
 	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
 	return proposalID, nil
@@ -267,7 +275,8 @@ func (keeper Keeper) setTallyingProcedure(ctx sdk.Context, tallyingProcedure Tal
 // Votes
 
 // Adds a vote on a specific proposal
-func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.AccAddress, option VoteOption) sdk.Error {
+func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.AccAddress,
+	option VoteOption) sdk.Error {
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
 		return ErrUnknownProposal(keeper.codespace, proposalID)
@@ -291,7 +300,9 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Ac
 }
 
 // Gets the vote of a specific voter on a specific proposal
-func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voterAddr sdk.AccAddress) (Vote, bool) {
+func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voterAddr sdk.AccAddress) (
+	Vote, bool) {
+
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyVote(proposalID, voterAddr))
 	if bz == nil {
@@ -302,7 +313,9 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Ac
 	return vote, true
 }
 
-func (keeper Keeper) setVote(ctx sdk.Context, proposalID int64, voterAddr sdk.AccAddress, vote Vote) {
+func (keeper Keeper) setVote(ctx sdk.Context, proposalID int64, voterAddr sdk.AccAddress,
+	vote Vote) {
+
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinary(vote)
 	store.Set(KeyVote(proposalID, voterAddr), bz)
@@ -323,7 +336,9 @@ func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID int64, voterAddr sdk
 // Deposits
 
 // Gets the deposit of a specific depositer on a specific proposal
-func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.AccAddress) (Deposit, bool) {
+func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.AccAddress) (
+	Deposit, bool) {
+
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyDeposit(proposalID, depositerAddr))
 	if bz == nil {
@@ -334,7 +349,9 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	return deposit, true
 }
 
-func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.AccAddress, deposit Deposit) {
+func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.AccAddress,
+	deposit Deposit) {
+
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinary(deposit)
 	store.Set(KeyDeposit(proposalID, depositerAddr), bz)
@@ -342,7 +359,9 @@ func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 
 // Adds or updates a deposit of a specific depositer on a specific proposal
 // Activates voting period when appropriate
-func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.AccAddress, depositAmount sdk.Coins) (sdk.Error, bool) {
+func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.AccAddress,
+	depositAmount sdk.Coins) (sdk.Error, bool) {
+
 	// Checks to see if proposal exists
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
@@ -350,7 +369,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	}
 
 	// Check if proposal is still depositable
-	if (proposal.GetStatus() != StatusDepositPeriod) && (proposal.GetStatus() != StatusVotingPeriod) {
+	if (proposal.GetStatus() != StatusDepositPeriod) &&
+		(proposal.GetStatus() != StatusVotingPeriod) {
 		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
@@ -367,7 +387,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 	// Check if deposit tipped proposal into voting period
 	// Active voting period if so
 	activatedVotingPeriod := false
-	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
+	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().
+		IsGTE(keeper.GetDepositProcedure(ctx).MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
 		activatedVotingPeriod = true
 	}

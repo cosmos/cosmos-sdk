@@ -28,7 +28,8 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
 
-	err, votingStarted := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)
+	err, votingStarted := keeper.AddDeposit(ctx, proposal.GetProposalID(),
+		msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
@@ -114,12 +115,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 
-		logger.Info(
-			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %v steak); deleted",
-				inactiveProposal.GetProposalID(),
-				inactiveProposal.GetTitle(),
-				keeper.GetDepositProcedure(ctx).MinDeposit.AmountOf("steak"),
-				inactiveProposal.GetTotalDeposit().AmountOf("steak"),
+		logger.Info(fmt.Sprintf(
+			"proposal %d (%s) didn't meet minimum deposit of %v steak (had only %v steak); deleted",
+			inactiveProposal.GetProposalID(),
+			inactiveProposal.GetTitle(),
+			keeper.GetDepositProcedure(ctx).MinDeposit.AmountOf("steak"),
+			inactiveProposal.GetTotalDeposit().AmountOf("steak"),
 			),
 		)
 	}
@@ -166,7 +167,8 @@ func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 		return false
 	} else if peekProposal.GetStatus() != StatusDepositPeriod {
 		return true
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetSubmitTime().Add(depositProcedure.MaxDepositPeriod)) {
+	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetSubmitTime().
+		Add(depositProcedure.MaxDepositPeriod)) {
 		return true
 	}
 	return false
@@ -178,7 +180,8 @@ func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
 
 	if peekProposal == nil {
 		return false
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetVotingStartTime().Add(votingProcedure.VotingPeriod)) {
+	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetVotingStartTime().
+		Add(votingProcedure.VotingPeriod)) {
 		return true
 	}
 	return false

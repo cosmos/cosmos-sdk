@@ -41,7 +41,8 @@ func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress)
 }
 
 // withdrawal all the validator rewards including the commission
-func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context,
+	operatorAddr sdk.ValAddress) sdk.Error {
 
 	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
 		return types.ErrNoValidatorDistInfo(k.codespace)
@@ -76,7 +77,8 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 }
 
 // iterate over all the validator distribution infos (inefficient, just used to check invariants)
-func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context, fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
+func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context, fn func(index int64,
+	distInfo types.ValidatorDistInfo) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
 	defer iter.Close()

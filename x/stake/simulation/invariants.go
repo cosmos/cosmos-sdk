@@ -75,20 +75,25 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		loose = loose.Add(feePool.Pool.AmountOf("steak"))
 
 		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
-		d.IterateValidatorDistInfos(ctx, func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
-			loose = loose.Add(distInfo.Pool.AmountOf("steak"))
-			loose = loose.Add(distInfo.PoolCommission.AmountOf("steak"))
-			return false
-		})
+		d.IterateValidatorDistInfos(ctx,
+			func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
+				loose = loose.Add(distInfo.Pool.AmountOf("steak"))
+				loose = loose.Add(distInfo.PoolCommission.AmountOf("steak"))
+				return false
+			},
+		)
 
-		// Loose tokens should equal coin supply plus unbonding delegations plus tokens on unbonded validators
+		// Loose tokens should equal coin supply plus unbonding delegations
+		// plus tokens on unbonded validators
 		if !pool.LooseTokens.Equal(loose) {
-			return fmt.Errorf("expected loose tokens to equal total steak held by accounts - pool.LooseTokens: %v, sum of account tokens: %v", pool.LooseTokens, loose)
+			return fmt.Errorf("loose token invariance:\n\tpool.LooseTokens: %v"+
+				"\n\tsum of account tokens: %v", pool.LooseTokens, loose)
 		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		if !pool.BondedTokens.Equal(bonded) {
-			return fmt.Errorf("expected bonded tokens to equal total steak held by bonded validators - pool.BondedTokens: %v, sum of bonded validator tokens: %v", pool.BondedTokens, bonded)
+			return fmt.Errorf("bonded token invariance:\n\tpool.BondedTokens: %v"+
+				"\n\tsum of account tokens: %v", pool.BondedTokens, bonded)
 		}
 
 		return nil

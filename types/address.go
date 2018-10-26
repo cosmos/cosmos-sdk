@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
@@ -55,6 +56,10 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return AccAddress{}, nil
+	}
+
 	bz, err := GetFromBech32(address, Bech32PrefixAccAddr)
 	if err != nil {
 		return nil, err
@@ -124,6 +129,10 @@ func (aa AccAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (aa AccAddress) String() string {
+	if aa.Empty() {
+		return ""
+	}
+
 	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixAccAddr, aa.Bytes())
 	if err != nil {
 		panic(err)
@@ -169,6 +178,10 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return ValAddress{}, nil
+	}
+
 	bz, err := GetFromBech32(address, Bech32PrefixValAddr)
 	if err != nil {
 		return nil, err
@@ -239,6 +252,10 @@ func (va ValAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (va ValAddress) String() string {
+	if va.Empty() {
+		return ""
+	}
+
 	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixValAddr, va.Bytes())
 	if err != nil {
 		panic(err)
@@ -284,6 +301,10 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return ConsAddress{}, nil
+	}
+
 	bz, err := GetFromBech32(address, Bech32PrefixConsAddr)
 	if err != nil {
 		return nil, err
@@ -359,6 +380,10 @@ func (ca ConsAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (ca ConsAddress) String() string {
+	if ca.Empty() {
+		return ""
+	}
+
 	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixConsAddr, ca.Bytes())
 	if err != nil {
 		panic(err)

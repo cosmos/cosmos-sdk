@@ -10,6 +10,16 @@
 🚧 We are actively working on improving documentation for Gaiacli and Gaiad.
 :::
 
+::: tip Note
+If you receive this error message:
+
+```bash
+Must specify these options: --chain-id  when --trust-node is false
+```
+
+you must choose whether you wish to verify lite client proofs. If you trust the node which you are querying, you can simply pass `--trust-node=true` - otherwise you'll need to specify `--chain-id`.
+:::
+
 `gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets. Here is a list of useful `gaiacli` commands, including usage examples.
 
 ### Keys
@@ -70,6 +80,8 @@ View the validator pubkey for your node by typing:
 gaiad tendermint show-validator
 ```
 
+Note that this is the Tendermint signing key, *not* the operator key you will use in delegation transactions.
+
 ::: danger Warning
 We strongly recommend _NOT_ using the same passphrase for multiple keys. The Tendermint team and the Interchain Foundation will not be responsible for the loss of funds.
 :::
@@ -79,7 +91,7 @@ We strongly recommend _NOT_ using the same passphrase for multiple keys. The Ten
 You can generate and print a multisig public key by typing:
 
 ```bash
-gaiacli show -m K key1 key2...keyK
+gaiacli show --multisig-threshold K name1 name2 name3 [...]
 ```
 
 `K` is the minimum weight, e.g. minimum number of private keys that must have signed the transactions that carry the generated public key.
@@ -95,7 +107,7 @@ The best way to get tokens is from the [Cosmos Testnet Faucet](https://faucetcos
 After receiving tokens to your address, you can view your account's balance by typing:
 
 ```bash
-gaiacli account <account_cosmos>
+gaiacli query account <account_cosmos>
 ```
 
 ::: warning Note
@@ -111,7 +123,7 @@ The following command could be used to send coins from one account to another:
 gaiacli tx send \
   --amount=10faucetToken \
   --chain-id=<chain_id> \
-  --name=<key_name> \
+  --from=<key_name> \
   --to=<destination_cosmos>
 ```
 
@@ -128,14 +140,14 @@ Gas estimate might be inaccurate as state changes could occur in between the end
 Now, view the updated balances of the origin and destination accounts:
 
 ```bash
-gaiacli account <account_cosmos>
-gaiacli account <destination_cosmos>
+gaiacli query account <account_cosmos>
+gaiacli query account <destination_cosmos>
 ```
 
 You can also check your balance at a given block by using the `--block` flag:
 
 ```bash
-gaiacli account <account_cosmos> --block=<block_height>
+gaiacli query account <account_cosmos> --block=<block_height>
 ```
 
 You can simulate a transaction without actually broadcasting it by appending the `--dry-run` flag to the command line:
@@ -144,7 +156,7 @@ You can simulate a transaction without actually broadcasting it by appending the
 gaiacli tx send \
   --amount=10faucetToken \
   --chain-id=<chain_id> \
-  --name=<key_name> \
+  --from=<key_name> \
   --to=<destination_cosmosaccaddr> \
   --dry-run
 ```
@@ -155,7 +167,7 @@ Furthermore, you can build a transaction and print its JSON format to STDOUT by 
 gaiacli tx send \
   --amount=10faucetToken \
   --chain-id=<chain_id> \
-  --name=<key_name> \
+  --from=<key_name> \
   --to=<destination_cosmosaccaddr> \
   --generate-only > unsignedSendTx.json
 ```
@@ -165,7 +177,7 @@ You can now sign the transaction file generated through the `--generate-only` fl
 ```bash
 gaiacli tx sign \
   --chain-id=<chain_id> \
-  --name=<key_name>
+  --from=<key_name>
   unsignedSendTx.json > signedSendTx.json
 ```
 
@@ -206,10 +218,18 @@ On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond t
 ```bash
 gaiacli tx delegate \
   --amount=10steak \
-  --validator=$(gaiad tendermint show-validator) \
-  --name=<key_name> \
+  --validator=<validator> \
+  --from=<key_name> \
   --chain-id=<chain_id>
 ```
+
+`<validator>` is the operator address of the validator to which you intend to delegate. If you are running a local testnet, you can find this with:
+
+```bash
+gaiacli keys show [name] --bech val
+```
+
+where `[name]` is the name of the key you specified when you initialized `gaiad`.
 
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
 
@@ -237,24 +257,17 @@ You can also get previous delegation(s) status by adding the `--height` flag.
 
 #### Unbond Tokens
 
-If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-percent` (eg:`25`) with the corresponding flags.
+If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-fraction` (eg:`0.25`) with the corresponding flags.
 
 ```bash
 gaiacli tx unbond begin \
   --validator=<account_cosmosval> \
-  --shares-percent=100 \
+  --shares-fraction=0.5 \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```
 
-Later you must complete the unbonding process by using the `gaiacli tx unbond complete` command:
-
-```bash
-gaiacli tx unbond complete \
-  --validator=<account_cosmosval> \
-  --from=<key_name> \
-  --chain-id=<chain_id>
-```
+The unbonding will be automatically completed when the unbonding period has passed.
 
 ##### Query Unbonding-Delegations
 
@@ -280,23 +293,16 @@ A redelegation is a type delegation that allows you to bond illiquid tokens from
 
 ```bash
 gaiacli tx redelegate begin \
-  --address-validator-source=<account_cosmosval> \
-  --address-validator-dest=<account_cosmosval> \
-  --shares-percent=50 \
+  --addr-validator-source=<account_cosmosval> \
+  --addr-validator-dest=<account_cosmosval> \
+  --shares-fraction=50 \
   --from=<key_name> \
   --chain-id=<chain_id>
 ```
 
-Here you can also redelegate a specific `shares-amount` or a  `shares-percent` with the corresponding flags.
+Here you can also redelegate a specific `shares-amount` or a  `shares-fraction` with the corresponding flags.
 
-Later you must complete the redelegation process by using the `gaiacli tx redelegate complete` command:
-
-```bash
-gaiacli tx unbond complete \
-  --validator=<account_cosmosval> \
-  --from=<key_name> \
-  --chain-id=<chain_id>
-```
+The redelegation will be automatically completed when the unbonding period has passed.
 
 ##### Query Redelegations
 
@@ -305,8 +311,8 @@ Once you begin an redelegation, you can see it's information by using the follow
 ```bash
 gaiacli query redelegation \
 	--address-delegator=<account_cosmos> \
-	--address-validator-source=<account_cosmosval> \
-	--address-validator-dest=<account_cosmosval> \
+	--addr-validator-source=<account_cosmosval> \
+	--addr-validator-dest=<account_cosmosval> \
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:

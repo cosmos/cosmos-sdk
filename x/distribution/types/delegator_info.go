@@ -43,10 +43,10 @@ func (di DelegationDistInfo) WithdrawRewards(fp FeePool, vi ValidatorDistInfo,
 	blocks := height - di.WithdrawalHeight
 	di.WithdrawalHeight = height
 	accum := delegatorShares.MulInt(sdk.NewInt(blocks))
-	withdrawalTokens := vi.DelRewards.MulDec(accum).QuoDec(vi.DelAccum.Accum)
-	remDelRewards := vi.DelRewards.Minus(withdrawalTokens)
+	withdrawalTokens := vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
+	remDelPool := vi.DelPool.Minus(withdrawalTokens)
 
-	vi.DelRewards = remDelRewards
+	vi.DelPool = remDelPool
 	vi.DelAccum.Accum = vi.DelAccum.Accum.Sub(accum)
 
 	return di, vi, fp, withdrawalTokens

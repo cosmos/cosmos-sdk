@@ -28,7 +28,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 	commission := proposerReward.MulDec(proposerValidator.GetCommission())
 	remaining := proposerReward.Minus(commission)
 	proposerDist.ValCommission = proposerDist.ValCommission.Plus(commission)
-	proposerDist.DelRewards = proposerDist.DelRewards.Plus(remaining)
+	proposerDist.DelPool = proposerDist.DelPool.Plus(remaining)
 
 	// allocate community funding
 	communityTax := k.GetCommunityTax(ctx)
@@ -38,7 +38,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 
 	// set the global pool within the distribution module
 	poolReceived := feesCollectedDec.Minus(proposerReward).Minus(communityFunding)
-	feePool.Pool = feePool.Pool.Plus(poolReceived)
+	feePool.ValPool = feePool.ValPool.Plus(poolReceived)
 
 	k.SetValidatorDistInfo(ctx, proposerDist)
 	k.SetFeePool(ctx, feePool)

@@ -11,7 +11,7 @@ type ValidatorDistInfo struct {
 	FeePoolWithdrawalHeight int64 `json:"global_withdrawal_height"` // last height this validator withdrew from the global pool
 
 	DelAccum      TotalAccum `json:"del_accum"`      // total accumulation factor held by delegators
-	DelRewards    DecCoins   `json:"del_rewards"`    // rewards owed to delegators, commission has already been charged (includes proposer reward)
+	DelPool       DecCoins   `json:"del_pool"`       // rewards owed to delegators, commission has already been charged (includes proposer reward)
 	ValCommission DecCoins   `json:"val_commission"` // commission collected by this validator (pending withdrawal)
 }
 
@@ -19,7 +19,7 @@ func NewValidatorDistInfo(operatorAddr sdk.ValAddress, currentHeight int64) Vali
 	return ValidatorDistInfo{
 		OperatorAddr:            operatorAddr,
 		FeePoolWithdrawalHeight: currentHeight,
-		DelRewards:              DecCoins{},
+		DelPool:                 DecCoins{},
 		DelAccum:                NewTotalAccum(currentHeight),
 		ValCommission:           DecCoins{},
 	}
@@ -57,16 +57,16 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(fp FeePool, height int64, totalBo
 	if accum.GT(fp.TotalValAccum.Accum) {
 		panic("individual accum should never be greater than the total")
 	}
-	withdrawalTokens := fp.Pool.MulDec(accum).QuoDec(fp.TotalValAccum.Accum)
-	remPool := fp.Pool.Minus(withdrawalTokens)
+	withdrawalTokens := fp.ValPool.MulDec(accum).QuoDec(fp.TotalValAccum.Accum)
+	remValPool := fp.ValPool.Minus(withdrawalTokens)
 
 	commission := withdrawalTokens.MulDec(commissionRate)
 	afterCommission := withdrawalTokens.Minus(commission)
 
 	fp.TotalValAccum.Accum = fp.TotalValAccum.Accum.Sub(accum)
-	fp.Pool = remPool
+	fp.ValPool = remValPool
 	vi.ValCommission = vi.ValCommission.Plus(commission)
-	vi.DelRewards = vi.DelRewards.Plus(afterCommission)
+	vi.DelPool = vi.DelPool.Plus(afterCommission)
 
 	return vi, fp
 }

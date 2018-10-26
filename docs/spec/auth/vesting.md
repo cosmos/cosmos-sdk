@@ -290,6 +290,10 @@ func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
 }
 ```
 
+**Note**: If a delegation is slashed, the continuous vesting account will end up
+with excess an `DV` amount, even after all its coins have vested. This is because
+undelegating free coins are prioritized.
+
 ##### Delayed/Discrete Vesting Accounts
 
 For a delayed vesting account, it only needs to add back the `DF` amount since

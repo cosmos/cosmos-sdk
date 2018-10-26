@@ -136,7 +136,9 @@ func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Code
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validatorUnbondingDelegations", queryRoute), bz)
+			res, err := cliCtx.QueryWithData(
+				fmt.Sprintf("custom/%s/validatorUnbondingDelegations", queryRoute),
+				bz)
 			if err != nil {
 				return err
 			}
@@ -171,7 +173,9 @@ func GetCmdQueryValidatorRedelegations(queryRoute string, cdc *codec.Codec) *cob
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validatorRedelegations", queryRoute), bz)
+			res, err := cliCtx.QueryWithData(
+				fmt.Sprintf("custom/%s/validatorRedelegations", queryRoute),
+				bz)
 			if err != nil {
 				return err
 			}

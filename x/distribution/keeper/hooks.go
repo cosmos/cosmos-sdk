@@ -14,10 +14,17 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
 	vdi := types.ValidatorDistInfo{
 		OperatorAddr:            addr,
 		FeePoolWithdrawalHeight: height,
-		Pool:                    types.DecCoins{},
-		PoolCommission:          types.DecCoins{},
-		DelAccum:                types.NewTotalAccum(height),
+		Pool:           types.DecCoins{},
+		PoolCommission: types.DecCoins{},
+		DelAccum:       types.NewTotalAccum(height),
 	}
+	k.SetValidatorDistInfo(ctx, vdi)
+}
+
+// Reset the height to the current height when bonded
+func (k Keeper) onValidatorBonded(ctx sdk.Context, addr sdk.ValAddress) {
+	vdi := k.GetValidatorDistInfo(ctx, addr)
+	vdi.FeePoolWithdrawalHeight = ctx.BlockHeight()
 	k.SetValidatorDistInfo(ctx, vdi)
 }
 
@@ -104,5 +111,5 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, add
 	h.k.onValidatorModified(ctx, addr)
 }
 func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, addr sdk.ValAddress) {
-	h.k.onValidatorModified(ctx, addr)
+	h.k.onValidatorBonded(ctx, addr)
 }

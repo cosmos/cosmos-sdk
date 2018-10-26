@@ -1,45 +1,5 @@
 # Vesting
 
-- [Vesting](#vesting)
-  - [Intro and Requirements](#intro-and-requirements)
-  - [Vesting Account Types](#vesting-account-types)
-  - [Vesting Account Specification](#vesting-account-specification)
-    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts)
-      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
-    - [Transferring/Sending](#transferringsending)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts-1)
-        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-1)
-        - [Keepers/Handlers](#keepershandlers)
-    - [Delegating](#delegating)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts-2)
-        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-2)
-        - [Keepers/Handlers](#keepershandlers-1)
-    - [Undelegating](#undelegating)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts-3)
-        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-3)
-        - [Keepers/Handlers](#keepershandlers-2)
-  - [Keepers & Handlers](#keepers--handlers)
-  - [Initializing at Genesis](#initializing-at-genesis)
-  - [Examples](#examples)
-  - [Glossary](#glossary)
-
-## Intro and Requirements
-
-This paper specifies vesting account implementation for the Cosmos Hub.
-The requirements for this vesting account is that it should be initialized
-during genesis with a starting balance `X` coins and a vesting end time `T`.
-
-The owner of this account should be able to delegate to validators
-and vote with locked coins, however they cannot send locked coins to other
-accounts until those coins have been unlocked. When it comes to governance, it
-is yet undefined if we want to allow a vesting account to be able to deposit
-vesting coins into proposals.
-
-In addition, a vesting account vests all of it's coin denominations at the same
-rate. This may be subject to change.
-
-**Note**: A vesting account could have some vesting and non-vesting coins at
 <!-- TOC -->
 
 - [Vesting](#vesting)
@@ -67,6 +27,24 @@ rate. This may be subject to change.
   - [Glossary](#glossary)
 
 <!-- /TOC -->
+
+## Intro and Requirements
+
+This paper specifies vesting account implementation for the Cosmos Hub.
+The requirements for this vesting account is that it should be initialized
+during genesis with a starting balance `X` coins and a vesting end time `T`.
+
+The owner of this account should be able to delegate to validators
+and vote with locked coins, however they cannot send locked coins to other
+accounts until those coins have been unlocked. When it comes to governance, it
+is yet undefined if we want to allow a vesting account to be able to deposit
+vesting coins into proposals.
+
+In addition, a vesting account vests all of it's coin denominations at the same
+rate. This may be subject to change.
+
+**Note**: A vesting account could have some vesting and non-vesting coins at
+
 required, the `GenesisAccount` type will need to be updated in order to make
 such a distinction.
 

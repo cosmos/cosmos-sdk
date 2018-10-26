@@ -90,20 +90,21 @@ func GaiaAppInit() server.AppInit {
 
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
-func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisState GenesisState, err error) {
-	if len(appGenTxs) == 0 {
-		err = errors.New("must provide at least genesis transaction")
+func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
+	genesisState GenesisState, err error) {
+
+	if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
 		return
 	}
 
-	// start with the default staking genesis state
-	stakeData := stake.DefaultGenesisState()
-	slashingData := slashing.DefaultGenesisState()
+	// if there are no gen txs to be processed, return the default empty state
+	if len(appGenTxs) == 0 {
+		err = errors.New("there must be at least one genesis tx")
+		return
+	}
 
-	// get genesis flag account information
-	genaccs := make([]GenesisAccount, len(appGenTxs))
-
-	for i, genTx := range appGenTxs {
+	stakeData := genesisState.StakeData
+	for _, genTx := range appGenTxs {
 		var tx auth.StdTx
 		err = cdc.UnmarshalJSON(genTx, &tx)
 		if err != nil {
@@ -114,34 +115,34 @@ func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisStat
 			err = errors.New("must provide genesis StdTx with exactly 1 CreateValidator message")
 			return
 		}
-		msg := msgs[0].(stake.MsgCreateValidator)
-
-		// create the genesis account, give'm few steaks and a buncha token with there name
-		genaccs[i] = genesisAccountFromMsgCreateValidator(msg, freeFermionsAcc)
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
+		_ = msgs[0].(stake.MsgCreateValidator)
 	}
 
-	// create the final app state
-	genesisState = GenesisState{
-		Accounts:     genaccs,
-		StakeData:    stakeData,
+	for _, acc := range genesisState.Accounts {
+		// create the genesis account, give'm few steaks and a buncha token with there name
+		for _, coin := range acc.Coins {
+			if coin.Denom == "steak" {
+				stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.
+					Add(sdk.NewDecFromInt(coin.Amount)) // increase the supply
+			}
+		}
+	}
+	genesisState.StakeData = stakeData
+	genesisState.GenTxs = appGenTxs
+	return genesisState, nil
+}
+
+// DefaultGenesisState generates the default state for gaia.
+func DefaultGenesisState() GenesisState {
+	return GenesisState{
+		Accounts:     nil,
+		StakeData:    stake.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
 		GovData:      gov.DefaultGenesisState(),
-		SlashingData: slashingData,
-		GenTxs:       appGenTxs,
+		SlashingData: slashing.DefaultGenesisState(),
+		GenTxs:       nil,
 	}
-
-	return
-}
-
-func genesisAccountFromMsgCreateValidator(msg stake.MsgCreateValidator, amount sdk.Int) GenesisAccount {
-	accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
-	accAuth.Coins = []sdk.Coin{
-		{msg.Description.Moniker + "Token", sdk.NewInt(1000)},
-		{"steak", amount},
-	}
-	return NewGenesisAccount(&accAuth)
 }
 
 // GaiaValidateGenesisState ensures that the genesis state obeys the expected invariants
@@ -175,20 +176,20 @@ func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
 }
 
 // GaiaAppGenState but with JSON
-func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
+func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
+	appState json.RawMessage, err error) {
 	// create the final app state
-	genesisState, err := GaiaAppGenState(cdc, appGenTxs)
+	genesisState, err := GaiaAppGenState(cdc, genDoc, appGenTxs)
 	if err != nil {
 		return nil, err
 	}
-	appState, err = codec.MarshalJSONIndent(cdc, genesisState)
-	return
+	return codec.MarshalJSONIndent(cdc, genesisState)
 }
 
 // CollectStdTxs processes and validates application's genesis StdTxs and returns the list of validators,
 // appGenTxs, and persistent peers required to generate genesis.json.
 func CollectStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
-	validators []tmtypes.GenesisValidator, appGenTxs []auth.StdTx, persistentPeers string, err error) {
+	appGenTxs []auth.StdTx, persistentPeers string, err error) {
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
 	if err != nil {
@@ -230,12 +231,6 @@ func CollectStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
 		// TODO: this could be decoupled from stake.MsgCreateValidator
 		// TODO: and we likely want to do it for real world Gaia
 		msg := msgs[0].(stake.MsgCreateValidator)
-		validators = append(validators, tmtypes.GenesisValidator{
-			PubKey: msg.PubKey,
-			Power:  freeFermionVal,
-			Name:   msg.Description.Moniker,
-		})
-
 		// exclude itself from persistent peers
 		if msg.Description.Moniker != moniker {
 			addresses = append(addresses, nodeAddr)

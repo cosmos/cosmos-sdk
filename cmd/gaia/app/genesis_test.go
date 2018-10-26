@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/stretchr/testify/require"
@@ -27,7 +26,8 @@ var (
 
 func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 	// start with the default staking genesis state
-	stakeData := stake.DefaultGenesisState()
+	appState := DefaultGenesisState()
+	stakeData := appState.StakeData
 	genAccs := make([]GenesisAccount, len(genTxs))
 
 	for i, genTx := range genTxs {
@@ -35,17 +35,15 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 		require.Equal(t, 1, len(msgs))
 		msg := msgs[0].(stake.MsgCreateValidator)
 
-		// get genesis flag account information
-		genAccs[i] = genesisAccountFromMsgCreateValidator(msg, freeFermionsAcc)
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
+		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
+		acc.Coins = sdk.Coins{sdk.NewInt64Coin("steak", 150)}
+		genAccs[i] = NewGenesisAccount(&acc)
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(150)) // increase the supply
 	}
 
 	// create the final app state
-	return GenesisState{
-		Accounts:  genAccs,
-		StakeData: stakeData,
-		GovData:   gov.DefaultGenesisState(),
-	}
+	appState.Accounts = genAccs
+	return appState
 }
 
 func TestToAccount(t *testing.T) {

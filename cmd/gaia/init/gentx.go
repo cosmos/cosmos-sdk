@@ -55,9 +55,12 @@ following delegation and commission default parameters:
 			if err != nil {
 				return err
 			}
-
+			genDoc, err := loadGenesisDoc(cdc, config.GenesisFile())
+			if err != nil {
+				return err
+			}
 			// Run gaiad tx create-validator
-			prepareFlagsForTxCreateValidator(config, nodeID, ip, valPubKey)
+			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey)
 			createValidatorCmd := cli.GetCmdCreateValidator(cdc)
 
 			w, err := ioutil.TempFile("", "gentx")
@@ -82,15 +85,17 @@ following delegation and commission default parameters:
 		},
 	}
 
+	cmd.Flags().String(tmcli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
-	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
 }
 
-func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip string, valPubKey crypto.PubKey) {
-	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome))     // --home
+func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID string,
+	valPubKey crypto.PubKey) {
+	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome)) // --home
+	viper.Set(client.FlagChainID, chainID)
 	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))   // --from
 	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
 	viper.Set(cli.FlagIP, ip)                                      // --ip

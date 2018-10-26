@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -31,7 +33,11 @@ func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 
 // XXX Consider removing this after debugging.
 func (k Keeper) onValidatorPowerDidChange(ctx sdk.Context, valAddr sdk.ValAddress) {
-
+	vi := k.GetValidatorDistInfo(ctx, valAddr)
+	if vi.FeePoolWithdrawalHeight != ctx.BlockHeight() {
+		fmt.Println(vi.OperatorAddr.String(), vi.FeePoolWithdrawalHeight, ctx.BlockHeight())
+		panic("DID NOT UPDATE")
+	}
 }
 
 // Withdrawal all validator distribution rewards and cleanup the distribution record

@@ -75,7 +75,6 @@ func (k Keeper) withdrawDelegationReward(ctx sdk.Context,
 	types.ValidatorDistInfo, types.DelegationDistInfo, types.DecCoins) {
 
 	wc := k.GetWithdrawContext(ctx, valAddr)
-
 	valInfo := k.GetValidatorDistInfo(ctx, valAddr)
 	delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
 	validator := k.stakeKeeper.Validator(ctx, valAddr)

@@ -95,21 +95,18 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 
 // Load the last validator power.
 // Returns zero if the operator was not a validator last block.
-func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power sdk.Dec) {
+func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetLastValidatorPowerKey(operator))
 	if bz == nil {
-		return sdk.ZeroDec()
+		return sdk.ZeroInt()
 	}
 	k.cdc.MustUnmarshalBinary(bz, &power)
 	return
 }
 
 // Set the last validator power.
-func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power sdk.Dec) {
-	if !power.IsInteger() {
-		panic("input power must be whole integer")
-	}
+func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinary(power)
 	store.Set(GetLastValidatorPowerKey(operator), bz)

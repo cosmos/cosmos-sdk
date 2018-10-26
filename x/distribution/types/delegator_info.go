@@ -6,24 +6,24 @@ import (
 
 // distribution info for a delegation - used to determine entitled rewards
 type DelegationDistInfo struct {
-	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
-	ValOperatorAddr  sdk.ValAddress `json:"val_operator_addr"`
-	WithdrawalHeight int64          `json:"withdrawal_height"` // last time this delegation withdrew rewards
+	DelegatorAddr           sdk.AccAddress `json:"delegator_addr"`
+	ValOperatorAddr         sdk.ValAddress `json:"val_operator_addr"`
+	DelPoolWithdrawalHeight int64          `json:"del_pool_withdrawal_height"` // last time this delegation withdrew rewards
 }
 
 func NewDelegationDistInfo(delegatorAddr sdk.AccAddress, valOperatorAddr sdk.ValAddress,
 	currentHeight int64) DelegationDistInfo {
 
 	return DelegationDistInfo{
-		DelegatorAddr:    delegatorAddr,
-		ValOperatorAddr:  valOperatorAddr,
-		WithdrawalHeight: currentHeight,
+		DelegatorAddr:           delegatorAddr,
+		ValOperatorAddr:         valOperatorAddr,
+		DelPoolWithdrawalHeight: currentHeight,
 	}
 }
 
 // Get the calculated accum of this delegator at the provided height
 func (di DelegationDistInfo) GetDelAccum(height int64, delegatorShares sdk.Dec) sdk.Dec {
-	blocks := height - di.WithdrawalHeight
+	blocks := height - di.DelPoolWithdrawalHeight
 	return delegatorShares.MulInt(sdk.NewInt(blocks))
 }
 
@@ -48,11 +48,11 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	vi, fp = vi.TakeFeePoolRewards(wc)
 
 	accum := di.GetDelAccum(wc.Height, delegatorShares)
-	di.WithdrawalHeight = wc.Height
-	withdrawalTokens := vi.Pool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
-	remainingTokens := vi.Pool.Minus(withdrawalTokens)
+	di.DelPoolWithdrawalHeight = wc.Height
+	withdrawalTokens := vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
+	remDelPool := vi.DelPool.Minus(withdrawalTokens)
 
-	vi.Pool = remainingTokens
+	vi.DelPool = remDelPool
 	vi.DelAccum.Accum = vi.DelAccum.Accum.Sub(accum)
 
 	return di, vi, fp, withdrawalTokens

@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
@@ -144,7 +145,9 @@ func decryptPrivKey(saltBytes []byte, encBytes []byte, passphrase string) (privK
 	}
 	key = crypto.Sha256(key) // Get 32 bytes
 	privKeyBytes, err := xsalsa20symmetric.DecryptSymmetric(encBytes, key)
-	if err != nil {
+	if err != nil && err.Error() == "Ciphertext decryption failed" {
+		return privKey, keyerror.NewErrWrongPassword()
+	} else if err != nil {
 		return privKey, err
 	}
 	privKey, err = cryptoAmino.PrivKeyFromBytes(privKeyBytes)

@@ -382,43 +382,73 @@ func initChainer() {
 Given a continuous vesting account with 10 vesting coins.
 
 ```
-OV := 10
-DF := 0
-DV := 0
-BC := 10
-V := 10
-V' := 0
+OV = 10
+DF = 0
+DV = 0
+BC = 10
+V = 10
+V' = 0
 ```
 
 1. Immediately receives 1 coin
     ```
-    BC := 11
+    BC = 11
     ```
 2. Time passes, 2 coins vest
     ```
-    V := 8
-    V' := 2
+    V = 8
+    V' = 2
     ```
-3. Delegates 4 coins
+3. Delegates 4 coins to validator A
     ```
-    DV := 4
-    BC := 7
+    DV = 4
+    BC = 7
     ```
 4. Sends 3 coins
     ```
-    BC := 4
+    BC = 4
     ```
 5. More time passes, 2 more coins vest
     ```
-    V := 6
-    V' := 4
+    V = 6
+    V' = 4
     ```
-6. Sends 2 coins. At this point the account cannot send anymore until further coins vest or it receives additional coins. It can still however, delegate 
+6. Sends 2 coins. At this point the account cannot send anymore until further coins vest or it receives additional coins. It can still however, delegate.
     ```
-    BC := 2
+    BC = 2
     ```
 
 ### Slashing
+
+Same initial starting conditions as the simple example.
+
+1. Time passes, 5 coins vest
+    ```
+    V = 5
+    V' = 5
+    ```
+2. Delegate 5 coins to validator A
+    ```
+    DV = 5
+    BC = 5
+    ```
+3. Delegate 5 coins to validator B
+    ```
+    DF = 5
+    BC = 0
+    ```
+4. Validator A gets slashed by 50%, making the delegation to A now worth 2.5 coins
+5. Undelegate from validator A (2.5 coins)
+    ```
+    DF = 5 - 2.5 = 2.5
+    BC = 0 + 2.5 = 2.5
+    ```
+6. Undelegate from validator B (5 coins)
+    ```
+    DV = 5 - 2.5 = 2.5
+    DF = 2.5 - 2.5 = 0
+    BC = 2.5 + 5 = 7.5
+    ```
 
 ## Glossary
 

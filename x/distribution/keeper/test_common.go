@@ -36,7 +36,8 @@ var (
 	valOpAddr1  = sdk.ValAddress(valOpPk1.Address())
 	valOpAddr2  = sdk.ValAddress(valOpPk2.Address())
 	valOpAddr3  = sdk.ValAddress(valOpPk3.Address())
-	valAccAddr1 = sdk.AccAddress(valOpPk1.Address()) // generate acc addresses for these validator keys too
+	// generate acc addresses for these validator keys too
+	valAccAddr1 = sdk.AccAddress(valOpPk1.Address())
 	valAccAddr2 = sdk.AccAddress(valOpPk2.Address())
 	valAccAddr3 = sdk.AccAddress(valOpPk3.Address())
 

@@ -15,8 +15,8 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// SingleInputSendTx tests and runs a single msg send w/ auth, with one input and one output, where both
-// accounts already exist.
+// SingleInputSendTx tests and runs a single msg send w/ auth, with one input and one output,
+// where both accounts already exist.
 func SingleInputSendTx(mapper auth.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account,
 		event func(string)) (action string, fOps []simulation.FutureOperation, err error) {

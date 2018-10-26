@@ -54,7 +54,8 @@ func GetCmdSubmitProposal(cdc *codec.Codec) *cobra.Command {
 		Use:   "submit-proposal",
 		Short: "Submit a proposal along with an initial deposit",
 		Long: strings.TrimSpace(`
-Submit a proposal along with an initial deposit. Proposal title, description, type and deposit can be given directly or through a proposal JSON file. For example:
+Submit a proposal along with an initial deposit. Proposal title, description, type and deposit can
+be given directly or through a proposal JSON file. For example:
 
 $ gaiacli gov submit-proposal --proposal="path/to/proposal.json"
 
@@ -69,7 +70,8 @@ where proposal.json contains:
 
 is equivalent to
 
-$ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="1000test"
+$ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" \
+        --type ="Text" --deposit="1000test"
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			proposal, err := parseSubmitProposalFlags()
@@ -97,7 +99,8 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, fromAddr, amount)
+			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description,
+				proposalType, fromAddr, amount)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
@@ -116,9 +119,11 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 
 	cmd.Flags().String(flagTitle, "", "title of proposal")
 	cmd.Flags().String(flagDescription, "", "description of proposal")
-	cmd.Flags().String(flagProposalType, "", "proposalType of proposal, types: text/parameter_change/software_upgrade")
+	cmd.Flags().String(flagProposalType, "",
+		"proposalType of proposal, types: text/parameter_change/software_upgrade")
 	cmd.Flags().String(flagDeposit, "", "deposit of proposal")
-	cmd.Flags().String(flagProposal, "", "proposal file path (if this path is given, other proposal flags are ignored)")
+	cmd.Flags().String(flagProposal, "",
+		"proposal file path (if this path is given, other proposal flags are ignored)")
 
 	return cmd
 }
@@ -137,7 +142,8 @@ func parseSubmitProposalFlags() (*proposal, error) {
 
 	for _, flag := range proposalFlags {
 		if viper.GetString(flag) != "" {
-			return nil, fmt.Errorf("--%s flag provided alongside --proposal, which is a noop", flag)
+			return nil, fmt.Errorf(
+				"--%s flag provided alongside --proposal, which is a noop", flag)
 		}
 	}
 
@@ -267,7 +273,8 @@ func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf(
+				"custom/%s/proposal", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -314,7 +321,8 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			if len(strProposalStatus) != 0 {
-				proposalStatus, err := gov.ProposalStatusFromString(client.NormalizeProposalStatus(strProposalStatus))
+				proposalStatus, err := gov.ProposalStatusFromString(
+					client.NormalizeProposalStatus(strProposalStatus))
 				if err != nil {
 					return err
 				}
@@ -328,7 +336,8 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposals", queryRoute), bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf(
+				"custom/%s/proposals", queryRoute), bz)
 			if err != nil {
 				return err
 			}
@@ -352,10 +361,15 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagLatestProposalIDs, "", "(optional) limit to latest [number] proposals. Defaults to all proposals")
-	cmd.Flags().String(flagDepositer, "", "(optional) filter by proposals deposited on by depositer")
-	cmd.Flags().String(flagVoter, "", "(optional) filter by proposals voted on by voted")
-	cmd.Flags().String(flagStatus, "", "(optional) filter proposals by proposal status, status: deposit_period/voting_period/passed/rejected")
+	cmd.Flags().String(flagLatestProposalIDs, "",
+		"(optional) limit to latest [number] proposals. Defaults to all proposals")
+	cmd.Flags().String(flagDepositer, "",
+		"(optional) filter by proposals deposited on by depositer")
+	cmd.Flags().String(flagVoter, "",
+		"(optional) filter by proposals voted on by voted")
+	cmd.Flags().String(flagStatus, "",
+		"(optional) filter proposals by proposal status, status: deposit_" +
+		"period/voting_period/passed/rejected")
 
 	return cmd
 }
@@ -427,7 +441,8 @@ func GetCmdQueryVotes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagProposalID, "", "proposalID of which proposal's votes are being queried")
+	cmd.Flags().String(flagProposalID, "",
+		"proposalID of which proposal's votes are being queried")
 
 	return cmd
 }
@@ -499,7 +514,8 @@ func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagProposalID, "", "proposalID of which proposal's deposits are being queried")
+	cmd.Flags().String(flagProposalID, "",
+		"proposalID of which proposal's deposits are being queried")
 
 	return cmd
 }

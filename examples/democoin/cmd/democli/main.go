@@ -21,6 +21,8 @@ import (
 	coolcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/cool/client/cli"
 	powcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/pow/client/cli"
 	simplestakingcmd "github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake/client/cli"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // rootCmd is the entry point for this binary
@@ -37,6 +39,13 @@ func main() {
 
 	// get the codec
 	cdc := app.MakeCodec()
+
+	// Setup certain SDK config
+	config := sdk.GetConfig()
+	config.WithBech32PrefixForAccount("demoacc", "demopub")
+	config.WithBech32PrefixForValidator("demoval", "demovalpub")
+	config.WithBech32PrefixForConsensusNode("democons", "democonspub")
+	config.Seal()
 
 	// TODO: setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do

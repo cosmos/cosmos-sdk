@@ -9,6 +9,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -176,5 +178,38 @@ func TestConsAddress(t *testing.T) {
 
 		err = (*types.ConsAddress)(nil).UnmarshalJSON([]byte("\"" + str + "\""))
 		require.NotNil(t, err)
+	}
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyz"
+
+func RandString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
+func TestConfiguredPrefix(t *testing.T) {
+	var pub ed25519.PubKeyEd25519
+	for i := 1; i < 10; i++ {
+		rand.Read(pub[:])
+		// Test if randomly generated prefix of a given length works
+		prefix := RandString(i)
+		// Assuming that GetConfig is not sealed.
+		config := types.GetConfig()
+		config.WithBech32PrefixForAccount(prefix+"acc", prefix+"pub")
+		acc := types.AccAddress(pub.Address())
+		require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"))
+
+		config.WithBech32PrefixForValidator(prefix+"valaddr", prefix+"valpub")
+		val := types.ValAddress(pub.Address())
+		require.True(t, strings.HasPrefix(val.String(), prefix+"valaddr"))
+
+		config.WithBech32PrefixForConsensusNode(prefix+"consaddr", prefix+"conspub")
+		cons := types.ConsAddress(pub.Address())
+		require.True(t, strings.HasPrefix(cons.String(), prefix+"consaddr"))
+
 	}
 }

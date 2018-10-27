@@ -9,7 +9,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -19,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/simpleGov/types"
 	simpleGov "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance"
 
-	//"github.com/cosmos/cosmos-sdk/x/stake"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -101,7 +99,6 @@ func MakeCodec() *wire.Codec {
 	wire.RegisterCrypto(cdc) // Register crypto.
 	sdk.RegisterWire(cdc)    // Register Msgs
 	bank.RegisterWire(cdc)
-	simplestake.RegisterWire(cdc)
 	simpleGov.RegisterWire(cdc)
 
 	// Register AppAccount

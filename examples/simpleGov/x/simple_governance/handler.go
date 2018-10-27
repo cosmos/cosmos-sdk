@@ -94,8 +94,8 @@ func handleSubmitProposalMsg(ctx sdk.Context, k Keeper, msg SubmitProposalMsg) s
 		return err.Result()
 	}
 
-	if msg.Deposit.AmountOf("Atom").GT(minDeposit) ||
-		msg.Deposit.AmountOf("Atom").Equal(minDeposit) {
+	if msg.Deposit.AmountOf("mycoin").GT(minDeposit) ||
+		msg.Deposit.AmountOf("mycoin").Equal(minDeposit) {
 		proposal := k.NewProposal(ctx, msg.Title, msg.Description)
 		k.SetProposal(ctx, proposal)
 		return sdk.Result{

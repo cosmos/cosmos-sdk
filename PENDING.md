@@ -22,6 +22,8 @@ FEATURES
 * Gaia
 
 * SDK
+    * Mechanism for SDK Users to configure their own Bech32 prefixes instead of 
+      using the default cosmos prefixes
 
 * Tendermint
 

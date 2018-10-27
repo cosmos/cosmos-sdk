@@ -13,14 +13,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/app"
+	"github.com/cosmos/cosmos-sdk/examples/simpleGov/types"
 	simplegovcmd "github.com/cosmos/cosmos-sdk/examples/simpleGov/x/simple_governance/client/cli"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
-
-	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 )
 
 // rootCmd is the entry point for this binary
@@ -53,7 +53,7 @@ func main() {
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("acc", cdc, authcmd.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
 			stakecmd.GetCmdQueryValidator("stake", cdc),
 			stakecmd.GetCmdQueryValidators("stake", cdc),
 			stakecmd.GetCmdQueryDelegation("stake", cdc),

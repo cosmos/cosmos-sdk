@@ -194,22 +194,30 @@ func RandString(n int) string {
 func TestConfiguredPrefix(t *testing.T) {
 	var pub ed25519.PubKeyEd25519
 	for i := 1; i < 10; i++ {
-		rand.Read(pub[:])
-		// Test if randomly generated prefix of a given length works
-		prefix := RandString(i)
-		// Assuming that GetConfig is not sealed.
-		config := types.GetConfig()
-		config.WithBech32PrefixForAccount(prefix+"acc", prefix+"pub")
-		acc := types.AccAddress(pub.Address())
-		require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"))
+		for j := 1; j < 50; j++ {
+			rand.Read(pub[:])
+			// Test if randomly generated prefix of a given length works
+			prefix := RandString(i)
+			// Assuming that GetConfig is not sealed.
+			config := types.GetConfig()
+			config.WithBech32PrefixForAccount(prefix+"acc", prefix+"pub")
+			acc := types.AccAddress(pub.Address())
+			require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"))
+			bech32Pub := types.MustBech32ifyAccPub(pub)
+			require.True(t, strings.HasPrefix(bech32Pub, prefix+"pub"))
 
-		config.WithBech32PrefixForValidator(prefix+"valaddr", prefix+"valpub")
-		val := types.ValAddress(pub.Address())
-		require.True(t, strings.HasPrefix(val.String(), prefix+"valaddr"))
+			config.WithBech32PrefixForValidator(prefix+"valaddr", prefix+"valpub")
+			val := types.ValAddress(pub.Address())
+			require.True(t, strings.HasPrefix(val.String(), prefix+"valaddr"))
+			bech32ValPub := types.MustBech32ifyValPub(pub)
+			require.True(t, strings.HasPrefix(bech32ValPub, prefix+"valpub"))
 
-		config.WithBech32PrefixForConsensusNode(prefix+"consaddr", prefix+"conspub")
-		cons := types.ConsAddress(pub.Address())
-		require.True(t, strings.HasPrefix(cons.String(), prefix+"consaddr"))
+			config.WithBech32PrefixForConsensusNode(prefix+"consaddr", prefix+"conspub")
+			cons := types.ConsAddress(pub.Address())
+			require.True(t, strings.HasPrefix(cons.String(), prefix+"consaddr"))
+			bech32ConsPub := types.MustBech32ifyConsPub(pub)
+			require.True(t, strings.HasPrefix(bech32ConsPub, prefix+"conspub"))
+		}
 
 	}
 }

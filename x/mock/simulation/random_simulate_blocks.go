@@ -219,6 +219,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event f
 	}
 	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
+		fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ", header.Height, totalNumBlocks, opCount, blocksize)
 		for j := 0; j < blocksize; j++ {
 			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, event)
 			if err != nil {

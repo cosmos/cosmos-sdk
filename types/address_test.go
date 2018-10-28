@@ -193,11 +193,11 @@ func RandString(n int) string {
 
 func TestConfiguredPrefix(t *testing.T) {
 	var pub ed25519.PubKeyEd25519
-	for i := 1; i < 10; i++ {
-		for j := 1; j < 50; j++ {
+	for length := 1; length < 10; length++ {
+		for times := 1; times < 50; times++ {
 			rand.Read(pub[:])
 			// Test if randomly generated prefix of a given length works
-			prefix := RandString(i)
+			prefix := RandString(length)
 			// Assuming that GetConfig is not sealed.
 			config := types.GetConfig()
 			config.WithBech32PrefixForAccount(prefix+"acc", prefix+"pub")

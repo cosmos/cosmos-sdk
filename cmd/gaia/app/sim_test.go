@@ -100,8 +100,8 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			SignedBlocksWindow:       int64(r.Intn(1000)),
 			DowntimeUnbondDuration:   time.Duration(r.Intn(86400)) * time.Second,
 			MinSignedPerWindow:       sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
-			SlashFractionDoubleSign:  sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50)))),
-			SlashFractionDowntime:    sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200)))),
+			SlashFractionDoubleSign:  sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
+			SlashFractionDowntime:    sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
 		},
 	}
 	fmt.Printf("Selected randomly generated slashing parameters: %v\n", slashingGenesis)

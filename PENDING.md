@@ -37,6 +37,9 @@ IMPROVEMENTS
 
 * SDK
  - #2573 [x/distribution] add accum invariance
+ - #2556 [x/mock/simulation] Fix debugging output
+ - #2396 [x/mock/simulation] Change parameters to get more slashes
+ - #2617 [x/mock/simulation] Randomize all genesis parameters
 
 * Tendermint
 

@@ -7,10 +7,10 @@ import (
 
 const (
 	// Minimum time per block
-	minTimePerBlock int64 = 1000 / 2
+	minTimePerBlock int64 = 10000 / 2
 
 	// Maximum time per block
-	maxTimePerBlock int64 = 1000
+	maxTimePerBlock int64 = 10000
 
 	// TODO Remove in favor of binary search for invariant violation
 	onOperation bool = false

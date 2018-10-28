@@ -92,7 +92,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
 		receivedSignal := <-c
-		fmt.Printf("Exiting early due to %s, on block %d, operation %d\n", receivedSignal, header.Height, opCount)
+		fmt.Printf("\nExiting early due to %s, on block %d, operation %d\n", receivedSignal, header.Height, opCount)
 		simError = fmt.Errorf("Exited due to %s", receivedSignal)
 		stopEarly = true
 	}()

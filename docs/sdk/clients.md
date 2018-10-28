@@ -272,7 +272,13 @@ Or if you want to check all your current unbonding-delegations with disctinct va
 gaiacli query unbonding-delegations <account_cosmos>
 ```
 
-You can also get previous unbonding-delegation(s) status by adding the `--height` flag.
+Additionally, as you can get all the unbonding-delegations from a particular validator:
+
+```bash
+  gaiacli query unbonding-delegations-from <account_cosmosval>
+```
+
+To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
 
 #### Redelegate Tokens
 
@@ -315,7 +321,13 @@ Or if you want to check all your current unbonding-delegations with disctinct va
 gaiacli query redelegations <account_cosmos>
 ```
 
-You can also get previous redelegation(s) status by adding the `--height` flag.
+Additionally, as you can get all the outgoing redelegations from a particular validator:
+
+```bash
+  gaiacli query redelegations-from <account_cosmosval>
+```
+
+To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
 
 ### Governance
 

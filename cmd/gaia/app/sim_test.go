@@ -49,11 +49,17 @@ func init() {
 func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	var genesisAccounts []GenesisAccount
 
-	amt := int64(10000)
+	amount := int64(r.Intn(1e6))
+	numInitiallyBonded := int64(r.Intn(250))
+	numAccs := int64(len(accs))
+	if numInitiallyBonded > numAccs {
+		numInitiallyBonded = numAccs
+	}
+	fmt.Printf("Selected randomly generated parameters for simulated genesis: {amount: %v, numInitiallyBonded: %v}\n", amount, numInitiallyBonded)
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
-		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(amt)}}
+		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(amount)}}
 		genesisAccounts = append(genesisAccounts, GenesisAccount{
 			Address: acc.Address,
 			Coins:   coins,
@@ -67,21 +73,19 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	var validators []stake.Validator
 	var delegations []stake.Delegation
 
-	// XXX Try different numbers of initially bonded validators
-	numInitiallyBonded := int64(50)
 	valAddrs := make([]sdk.ValAddress, numInitiallyBonded)
 	for i := 0; i < int(numInitiallyBonded); i++ {
 		valAddr := sdk.ValAddress(accs[i].Address)
 		valAddrs[i] = valAddr
 
 		validator := stake.NewValidator(valAddr, accs[i].PubKey, stake.Description{})
-		validator.Tokens = sdk.NewDec(amt)
-		validator.DelegatorShares = sdk.NewDec(amt)
-		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(amt), 0}
+		validator.Tokens = sdk.NewDec(amount)
+		validator.DelegatorShares = sdk.NewDec(amount)
+		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(amount), 0}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakeGenesis.Pool.LooseTokens = sdk.NewDec(amt*250 + (numInitiallyBonded * amt))
+	stakeGenesis.Pool.LooseTokens = sdk.NewDec((amount * numAccs) + (numInitiallyBonded * amount))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
 	mintGenesis := mint.DefaultGenesisState()

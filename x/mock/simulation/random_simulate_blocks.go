@@ -65,11 +65,13 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	testingMode, t, b := getTestingMode(tb)
 	fmt.Printf("Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 	r := rand.New(rand.NewSource(seed))
+	params := RandomSimulationParams(r)
+	fmt.Printf("Randomized simulation params: %s\n", params)
 	timestamp := randTimestamp(r)
 	fmt.Printf("Starting the simulation from time %v, unixtime %v\n", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
 	timeDiff := maxTimePerBlock - minTimePerBlock
 
-	accs := RandomAccounts(r, numKeys)
+	accs := RandomAccounts(r, params.NumKeys)
 
 	// Setup event stats
 	events := make(map[string]uint)
@@ -98,7 +100,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	var pastTimes []time.Time
 	var pastVoteInfos [][]abci.VoteInfo
 
-	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header)
+	request := RandomRequestBeginBlock(r, params, validators, livenessTransitionMatrix, pastTimes, pastVoteInfos, event, header)
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
 	timeOperationQueue := []FutureOperation{}
@@ -183,7 +185,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
-		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header)
+		request = RandomRequestBeginBlock(r, params, validators, livenessTransitionMatrix, pastTimes, pastVoteInfos, event, header)
 
 		// Update the validator set, which will be reflected in the application on the next block
 		validators = nextValidators
@@ -358,7 +360,7 @@ func randomProposer(r *rand.Rand, validators map[string]mockValidator) common.He
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 // nolint: unparam
-func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
+func RandomRequestBeginBlock(r *rand.Rand, params SimulationParams, validators map[string]mockValidator, livenessTransitions TransitionMatrix,
 	pastTimes []time.Time, pastVoteInfos [][]abci.VoteInfo, event func(string), header abci.Header) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
@@ -401,11 +403,11 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 	evidence := make([]abci.Evidence, 0)
 	// Anything but the first block
 	if len(pastTimes) > 0 {
-		for r.Float64() < evidenceFraction {
+		for r.Float64() < params.EvidenceFraction {
 			height := header.Height
 			time := header.Time
 			vals := voteInfos
-			if r.Float64() < pastEvidenceFraction {
+			if r.Float64() < params.PastEvidenceFraction {
 				height = int64(r.Intn(int(header.Height) - 1))
 				time = pastTimes[height]
 				vals = pastVoteInfos[height]

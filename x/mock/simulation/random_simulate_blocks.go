@@ -32,13 +32,13 @@ func Simulate(t *testing.T, app *baseapp.BaseApp,
 	return SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
 }
 
-func initChain(r *rand.Rand, accounts []Account, setups []RandSetup, app *baseapp.BaseApp,
+func initChain(r *rand.Rand, params Params, accounts []Account, setups []RandSetup, app *baseapp.BaseApp,
 	appStateFn func(r *rand.Rand, accounts []Account) json.RawMessage) (validators map[string]mockValidator) {
 	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, accounts)})
 	validators = make(map[string]mockValidator)
 	for _, validator := range res.Validators {
 		str := fmt.Sprintf("%v", validator.PubKey)
-		validators[str] = mockValidator{validator, GetMemberOfInitialState(r, initialLivenessWeightings)}
+		validators[str] = mockValidator{validator, GetMemberOfInitialState(r, params.InitialLivenessWeightings)}
 	}
 
 	for i := 0; i < len(setups); i++ {
@@ -65,7 +65,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	testingMode, t, b := getTestingMode(tb)
 	fmt.Printf("Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 	r := rand.New(rand.NewSource(seed))
-	params := RandomSimulationParams(r)
+	params := RandomParams(r)
 	fmt.Printf("Randomized simulation params: %s\n", params)
 	timestamp := randTimestamp(r)
 	fmt.Printf("Starting the simulation from time %v, unixtime %v\n", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
@@ -79,7 +79,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		events[what]++
 	}
 
-	validators := initChain(r, accs, setups, app, appStateFn)
+	validators := initChain(r, params, accs, setups, app, appStateFn)
 	// Second variable to keep pending validator set (delayed one block since TM 0.24)
 	// Initially this is the same as the initial validator set
 	nextValidators := validators
@@ -189,7 +189,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		// Update the validator set, which will be reflected in the application on the next block
 		validators = nextValidators
-		nextValidators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
+		nextValidators = updateValidators(tb, r, params, validators, res.ValidatorUpdates, event)
 	}
 	if stopEarly {
 		DisplayEvents(events)
@@ -360,7 +360,7 @@ func randomProposer(r *rand.Rand, validators map[string]mockValidator) common.He
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 // nolint: unparam
-func RandomRequestBeginBlock(r *rand.Rand, params SimulationParams, validators map[string]mockValidator, livenessTransitions TransitionMatrix,
+func RandomRequestBeginBlock(r *rand.Rand, params Params, validators map[string]mockValidator, livenessTransitions TransitionMatrix,
 	pastTimes []time.Time, pastVoteInfos [][]abci.VoteInfo, event func(string), header abci.Header) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
@@ -438,7 +438,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params SimulationParams, validators m
 
 // updateValidators mimicks Tendermint's update logic
 // nolint: unparam
-func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.ValidatorUpdate, event func(string)) map[string]mockValidator {
+func updateValidators(tb testing.TB, r *rand.Rand, params Params, current map[string]mockValidator, updates []abci.ValidatorUpdate, event func(string)) map[string]mockValidator {
 
 	for _, update := range updates {
 		str := fmt.Sprintf("%v", update.PubKey)
@@ -457,7 +457,7 @@ func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValida
 				event("endblock/validatorupdates/updated")
 			} else {
 				// Set this new validator
-				current[str] = mockValidator{update, GetMemberOfInitialState(r, initialLivenessWeightings)}
+				current[str] = mockValidator{update, GetMemberOfInitialState(r, params.InitialLivenessWeightings)}
 				event("endblock/validatorupdates/added")
 			}
 		}

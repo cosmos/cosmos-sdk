@@ -18,7 +18,6 @@ const (
 
 var (
 	// Currently there are 3 different liveness types, fully online, spotty connection, offline.
-	initialLivenessWeightings   = []int{40, 5, 5}
 	livenessTransitionMatrix, _ = CreateTransitionMatrix([][]int{
 		{90, 20, 1},
 		{10, 50, 5},
@@ -26,29 +25,35 @@ var (
 	})
 )
 
-type SimulationParams struct {
-	PastEvidenceFraction float64
-	NumKeys              int
-	EvidenceFraction     float64
+// Simulation parameters
+type Params struct {
+	PastEvidenceFraction      float64
+	NumKeys                   int
+	EvidenceFraction          float64
+	InitialLivenessWeightings []int
 }
 
-func DefaultSimulationParams() SimulationParams {
-	return SimulationParams{
-		PastEvidenceFraction: 0.5,
-		NumKeys:              250,
-		EvidenceFraction:     0.5,
+// Return default simulation parameters
+func DefaultParams() Params {
+	return Params{
+		PastEvidenceFraction:      0.5,
+		NumKeys:                   250,
+		EvidenceFraction:          0.5,
+		InitialLivenessWeightings: []int{40, 5, 5},
 	}
 }
 
-func RandomSimulationParams(r *rand.Rand) SimulationParams {
-	return SimulationParams{
-		PastEvidenceFraction: r.Float64(),
-		NumKeys:              r.Intn(DefaultSimulationParams().NumKeys / 2),
-		EvidenceFraction:     r.Float64(),
+// Return random simulation parameters
+func RandomParams(r *rand.Rand) Params {
+	return Params{
+		PastEvidenceFraction:      r.Float64(),
+		NumKeys:                   r.Intn(250),
+		EvidenceFraction:          r.Float64(),
+		InitialLivenessWeightings: []int{r.Intn(80), r.Intn(10), r.Intn(10)},
 	}
 }
 
-func (params SimulationParams) String() string {
-	return fmt.Sprintf("{pastEvidenceFraction: %v, numKeys: %v, evidenceFraction: %v}",
-		params.PastEvidenceFraction, params.NumKeys, params.EvidenceFraction)
+func (params Params) String() string {
+	return fmt.Sprintf("{pastEvidenceFraction: %v, numKeys: %v, evidenceFraction: %v, initialLivenessWeightings: %v}",
+		params.PastEvidenceFraction, params.NumKeys, params.EvidenceFraction, params.InitialLivenessWeightings)
 }

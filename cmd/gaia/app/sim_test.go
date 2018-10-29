@@ -104,7 +104,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			SlashFractionDowntime:    sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
 		},
 	}
-	fmt.Printf("Selected randomly generated slashing parameters: %v\n", slashingGenesis)
+	fmt.Printf("Selected randomly generated slashing parameters: %+v\n", slashingGenesis)
 	mintGenesis := mint.GenesisState{
 		Minter: mint.Minter{
 			InflationLastTime: time.Unix(0, 0),

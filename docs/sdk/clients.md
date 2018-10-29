@@ -286,8 +286,8 @@ A redelegation is a type delegation that allows you to bond illiquid tokens from
 
 ```bash
 gaiacli tx redelegate begin \
-  --address-validator-source=<account_cosmosval> \
-  --address-validator-dest=<account_cosmosval> \
+  --addr-validator-source=<account_cosmosval> \
+  --addr-validator-dest=<account_cosmosval> \
   --shares-percent=50 \
   --from=<key_name> \
   --chain-id=<chain_id>
@@ -311,8 +311,8 @@ Once you begin an redelegation, you can see it's information by using the follow
 ```bash
 gaiacli query redelegation \
 	--address-delegator=<account_cosmos> \
-	--address-validator-source=<account_cosmosval> \
-	--address-validator-dest=<account_cosmosval> \
+	--addr-validator-source=<account_cosmosval> \
+	--addr-validator-dest=<account_cosmosval> \
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:

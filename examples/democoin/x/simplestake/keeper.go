@@ -16,12 +16,12 @@ const moduleName = "simplestake"
 type Keeper struct {
 	ck bank.Keeper
 
-	key       sdk.StoreKey
+	key       sdk.KVStoreKey
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(key sdk.StoreKey, bankKeeper bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(key sdk.KVStoreKey, bankKeeper bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	cdc := codec.New()
 	codec.RegisterCrypto(cdc)
 	return Keeper{

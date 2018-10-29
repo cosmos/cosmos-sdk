@@ -9,14 +9,14 @@ import (
 
 // IBC Mapper
 type Mapper struct {
-	key       sdk.StoreKey
+	key       sdk.KVStoreKey
 	cdc       *codec.Codec
 	codespace sdk.CodespaceType
 }
 
 // XXX: The Mapper should not take a CoinKeeper. Rather have the CoinKeeper
 // take an Mapper.
-func NewMapper(cdc *codec.Codec, key sdk.StoreKey, codespace sdk.CodespaceType) Mapper {
+func NewMapper(cdc *codec.Codec, key sdk.KVStoreKey, codespace sdk.CodespaceType) Mapper {
 	// XXX: How are these codecs supposed to work?
 	return Mapper{
 		key:       key,

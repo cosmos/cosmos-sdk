@@ -22,10 +22,10 @@ type S struct {
 	B bool
 }
 
-func defaultComponents(key sdk.StoreKey) (sdk.Context, *codec.Codec) {
+func defaultComponents(key sdk.KVStoreKey) (sdk.Context, *codec.Codec) {
 	db := dbm.NewMemDB()
 	cms := rootmulti.NewStore(db)
-	cms.MountStoreWithDB(key, db)
+	cms.MountKVStoreWithDB(key, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	cdc := codec.New()

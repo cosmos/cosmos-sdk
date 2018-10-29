@@ -1,5 +1,6 @@
 package iavlmulti
 
+/*
 import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
@@ -22,4 +23,4 @@ var _ types.CommitMultiStore = (*Store)(nil)
 
 func (store *Store) CacheWrap() types.CacheMultiStore {
 	return cachemulti.NewStore(store.db, store.keysByName, store.iavlstores)
-}
+}*/

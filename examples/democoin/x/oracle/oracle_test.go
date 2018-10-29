@@ -15,11 +15,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func defaultContext(keys ...sdk.StoreKey) sdk.Context {
+func defaultContext(keys ...sdk.KVStoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	for _, key := range keys {
-		cms.MountStoreWithDB(key, db)
+		cms.MountKVStoreWithDB(key, db)
 	}
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, nil)
@@ -56,7 +56,7 @@ func makeCodec() *codec.Codec {
 	return cdc
 }
 
-func seqHandler(ork Keeper, key sdk.StoreKey, codespace sdk.CodespaceType) sdk.Handler {
+func seqHandler(ork Keeper, key sdk.KVStoreKey, codespace sdk.CodespaceType) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg := msg.(type) {
 		case Msg:
@@ -74,7 +74,7 @@ func seqHandler(ork Keeper, key sdk.StoreKey, codespace sdk.CodespaceType) sdk.H
 	}
 }
 
-func getSequence(ctx sdk.Context, key sdk.StoreKey) int {
+func getSequence(ctx sdk.Context, key sdk.KVStoreKey) int {
 	store := ctx.KVStore(key)
 	seqbz := store.Get([]byte("seq"))
 
@@ -88,7 +88,7 @@ func getSequence(ctx sdk.Context, key sdk.StoreKey) int {
 	return seq
 }
 
-func handleSeqOracle(ctx sdk.Context, key sdk.StoreKey, o seqOracle) sdk.Error {
+func handleSeqOracle(ctx sdk.Context, key sdk.KVStoreKey, o seqOracle) sdk.Error {
 	store := ctx.KVStore(key)
 
 	seq := getSequence(ctx, key)

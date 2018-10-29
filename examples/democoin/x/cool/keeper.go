@@ -9,13 +9,13 @@ import (
 type Keeper struct {
 	ck bank.Keeper
 
-	storeKey sdk.StoreKey // The (unexposed) key used to access the store from the Context.
+	storeKey sdk.KVStoreKey // The (unexposed) key used to access the store from the Context.
 
 	codespace sdk.CodespaceType
 }
 
 // NewKeeper - Returns the Keeper
-func NewKeeper(key sdk.StoreKey, bankKeeper bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(key sdk.KVStoreKey, bankKeeper bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	return Keeper{bankKeeper, key, codespace}
 }
 

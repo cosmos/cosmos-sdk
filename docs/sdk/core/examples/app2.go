@@ -122,7 +122,7 @@ func (msg MsgIssue) Tags() sdk.Tags {
 // Handler for the message
 
 // Handle MsgIssue.
-func handleMsgIssue(keyIssue *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handler {
+func handleMsgIssue(keyIssue sdk.KVStoreKey, keyAcc sdk.KVStoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		issueMsg, ok := msg.(MsgIssue)
 		if !ok {

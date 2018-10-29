@@ -17,11 +17,11 @@ import (
 )
 
 // possibly share this kind of setup functionality between module testsuites?
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	capKey := sdk.NewKVStoreKey("capkey")
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(capKey, db)
+	ms.MountKVStoreWithDB(capKey, db)
 	ms.LoadLatestVersion()
 
 	return ms, capKey

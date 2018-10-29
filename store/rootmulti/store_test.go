@@ -17,7 +17,7 @@ const useDebugDB = false
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
 	store := NewStore(db)
-	store.MountStoreWithDB(iavl.NewKey("store1"), db)
+	store.MountKVStoreWithDB(iavl.NewKey("store1"), db)
 }
 
 func TestStoreMount(t *testing.T) {
@@ -28,11 +28,11 @@ func TestStoreMount(t *testing.T) {
 	key2 := iavl.NewKey("store2")
 	dup1 := iavl.NewKey("store1")
 
-	require.NotPanics(t, func() { store.MountStoreWithDB(key1, db) })
-	require.NotPanics(t, func() { store.MountStoreWithDB(key2, db) })
+	require.NotPanics(t, func() { store.MountKVStoreWithDB(key1, db) })
+	require.NotPanics(t, func() { store.MountKVStoreWithDB(key2, db) })
 
-	require.Panics(t, func() { store.MountStoreWithDB(key1, db) })
-	require.Panics(t, func() { store.MountStoreWithDB(dup1, db) })
+	require.Panics(t, func() { store.MountKVStoreWithDB(key1, db) })
+	require.Panics(t, func() { store.MountKVStoreWithDB(dup1, db) })
 }
 
 func TestMultistoreCommitLoad(t *testing.T) {
@@ -191,9 +191,9 @@ func TestMultiStoreQuery(t *testing.T) {
 
 func newMultiStoreWithMounts(db dbm.DB) *Store {
 	store := NewStore(db)
-	store.MountStoreWithDB(iavl.NewKey("store1"), nil)
-	store.MountStoreWithDB(iavl.NewKey("store2"), nil)
-	store.MountStoreWithDB(iavl.NewKey("store3"), nil)
+	store.MountKVStoreWithDB(iavl.NewKey("store1"), nil)
+	store.MountKVStoreWithDB(iavl.NewKey("store2"), nil)
+	store.MountKVStoreWithDB(iavl.NewKey("store3"), nil)
 	return store
 }
 
@@ -206,13 +206,13 @@ func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {
 func getExpectedCommitID(store *Store, ver int64) types.CommitID {
 	return types.CommitID{
 		Version: ver,
-		Hash:    hashStores(store.stores),
+		Hash:    hashStores(store.kvstores),
 	}
 }
 
-func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
-	m := make(map[string]merkle.Hasher, len(stores))
-	for key, store := range stores {
+func hashStores( /*TODO: multistores*/ kvstores map[types.KVStoreKey]types.CommitKVStore) []byte {
+	m := make(map[string]merkle.Hasher, len(kvstores))
+	for key, store := range kvstores {
 		name := key.Name()
 		m[name] = storeInfo{
 			Name: name,

@@ -47,7 +47,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 
 // KVStoreHandler is a simple handler that takes kvstoreTx and writes
 // them to the db
-func KVStoreHandler(storeKey sdk.StoreKey) sdk.Handler {
+func KVStoreHandler(storeKey sdk.KVStoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		dTx, ok := msg.(kvstoreTx)
 		if !ok {
@@ -81,7 +81,7 @@ type GenesisJSON struct {
 
 // InitChainer returns a function that can initialize the chain
 // with key/value pairs
-func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
+func InitChainer(key sdk.KVStoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		stateJSON := req.AppStateBytes
 

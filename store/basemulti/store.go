@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tendermint/tendermint/crypto/merkle"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -35,7 +36,6 @@ func (store *Store) GetCommitKVStore(key types.KVStoreKey) types.CommitKVStore {
 
 func (store *Store) LoadMultiStoreVersion(ver int64) (err error) {
 	// Convert StoreInfos slice to map
-	var lastCommitID types.CommitID
 	infos := make(map[types.KVStoreKey]storeInfo)
 	if ver != 0 {
 		// Get commitInfo
@@ -48,7 +48,7 @@ func (store *Store) LoadMultiStoreVersion(ver int64) (err error) {
 			infos[store.nameToKVKey(sInfo.Name)] = sInfo
 		}
 
-		lastCommitID = cInfo.CommitID()
+		store.lastCommitID = cInfo.CommitID()
 	}
 
 	for _, key := range store.kvkeysByName {
@@ -65,14 +65,17 @@ func (store *Store) LoadMultiStoreVersion(ver int64) (err error) {
 
 		kvstore.SetPruning(store.pruning)
 	}
+
+	return
 }
 
 func (store *Store) nameToKVKey(name string) types.KVStoreKey {
-	for key := range kvstores {
+	for key := range store.kvstores {
 		if key.Name() == name {
 			return key
 		}
 	}
+	return nil
 }
 
 // -------------------------------
@@ -85,6 +88,20 @@ func (store *Store) nameToKVKey(name string) types.KVStoreKey {
 type storeInfo struct {
 	Name string
 	Core storeCore
+}
+
+// Implements merkle.Hasher
+func (si storeInfo) Hash() []byte {
+	// Doesn't write Name, since merkle.SimpleHashFromMap() will
+	// include them via the keys.
+	bz, _ := cdc.MarshalBinary(si.Core) // Does not error
+	hasher := tmhash.New()
+	_, err := hasher.Write(bz)
+	if err != nil {
+		// TODO: handle with #870
+		panic(err)
+	}
+	return hasher.Sum(nil)
 }
 
 type storeCore struct {
@@ -107,8 +124,8 @@ type commitInfo struct {
 // Hash returns the simple merkle root hash of the stores sorted by name.
 func (ci commitInfo) Hash() []byte {
 	// TODO cache to ci.hash []byte
-	m := make(map[string]merkle.Hasher, len(ci.StoreInfos))
-	for _, storeInfo := range ci.StoreInfos {
+	m := make(map[string]merkle.Hasher, len(ci.storeInfos))
+	for _, storeInfo := range ci.storeInfos {
 		m[storeInfo.Name] = storeInfo
 	}
 	return merkle.SimpleHashFromMap(m)

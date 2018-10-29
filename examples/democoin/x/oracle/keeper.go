@@ -8,7 +8,7 @@ import (
 
 // Keeper of the oracle store
 type Keeper struct {
-	key sdk.StoreKey
+	key sdk.KVStoreKey
 	cdc *codec.Codec
 
 	valset sdk.ValidatorSet
@@ -18,7 +18,7 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a new keeper
-func NewKeeper(key sdk.StoreKey, cdc *codec.Codec, valset sdk.ValidatorSet, supermaj sdk.Dec, timeout int64) Keeper {
+func NewKeeper(key sdk.KVStoreKey, cdc *codec.Codec, valset sdk.ValidatorSet, supermaj sdk.Dec, timeout int64) Keeper {
 	if timeout < 0 {
 		panic("Timeout should not be negative")
 	}

@@ -22,7 +22,7 @@ type Genesis struct {
 
 // POW Keeper
 type Keeper struct {
-	key       sdk.StoreKey
+	key       sdk.KVStoreKey
 	config    Config
 	ck        bank.Keeper
 	codespace sdk.CodespaceType
@@ -32,7 +32,7 @@ func NewConfig(denomination string, reward int64) Config {
 	return Config{denomination, reward}
 }
 
-func NewKeeper(key sdk.StoreKey, config Config, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(key sdk.KVStoreKey, config Config, ck bank.Keeper, codespace sdk.CodespaceType) Keeper {
 	return Keeper{key, config, ck, codespace}
 }
 

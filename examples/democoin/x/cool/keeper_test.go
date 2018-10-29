@@ -15,11 +15,11 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	capKey := sdk.NewKVStoreKey("capkey")
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(capKey, db)
+	ms.MountKVStoreWithDB(capKey, db)
 	ms.LoadLatestVersion()
 	return ms, capKey
 }

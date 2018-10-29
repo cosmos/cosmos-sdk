@@ -52,10 +52,10 @@ func TestContextGetOpShouldNeverPanic(t *testing.T) {
 	}
 }
 
-func defaultContext(key types.StoreKey) types.Context {
+func defaultContext(key types.KVStoreKey) types.Context {
 	db := dbm.NewMemDB()
 	cms := rootmulti.NewStore(db)
-	cms.MountStoreWithDB(key, db)
+	cms.MountKVStoreWithDB(key, db)
 	cms.LoadLatestVersion()
 	ctx := types.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx

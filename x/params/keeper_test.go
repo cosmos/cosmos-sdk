@@ -16,11 +16,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func defaultContext(key sdk.StoreKey, tkey sdk.StoreKey) sdk.Context {
+func defaultContext(key sdk.KVStoreKey, tkey sdk.KVStoreKey) sdk.Context {
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, db)
-	cms.MountStoreWithDB(tkey, db)
+	cms.MountKVStoreWithDB(key, db)
+	cms.MountKVStoreWithDB(tkey, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
 	return ctx

@@ -73,8 +73,8 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 
 		// if --signature-only is on, then override --append
 		generateSignatureOnly := viper.GetBool(flagRawSignature)
-		append := viper.GetBool(flagAppend) && !generateSignatureOnly
-		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, append, viper.GetBool(flagOffline))
+		appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
+		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, appendSig, viper.GetBool(flagOffline))
 		if err != nil {
 			return err
 		}

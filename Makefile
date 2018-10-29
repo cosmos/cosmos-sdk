@@ -169,13 +169,13 @@ test_sim_gaia_nondeterminism:
 
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=400 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=9 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=500 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=9 -v -timeout 24h
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 10
+	@bash scripts/multisim.sh 25
 
-SIM_NUM_BLOCKS ?= 210
+SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
 test_sim_gaia_benchmark:

@@ -18,9 +18,9 @@ import (
 
 const (
 	flagAppend       = "append"
-	flagPrintSigs    = "validate-signatures"
+	flagValidateSigs = "validate-signatures"
 	flagOffline      = "offline"
-	flagRawSignature = "signature-only"
+	flagSigOnly      = "signature-only"
 )
 
 // GetSignCommand returns the sign command
@@ -43,8 +43,8 @@ recommended to set such parameters manually.`,
 	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
 	cmd.Flags().Bool(flagAppend, true,
 		"Append the signature to the existing ones. If disabled, old signatures would be overwritten")
-	cmd.Flags().Bool(flagRawSignature, false, "Print only the generated signature, then exit.")
-	cmd.Flags().Bool(flagPrintSigs, false, "Print the addresses that must sign the transaction, "+
+	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit.")
+	cmd.Flags().Bool(flagValidateSigs, false, "Print the addresses that must sign the transaction, "+
 		"those who have already signed it, and make sure that signatures are in the correct order.")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
 	return cmd
@@ -57,7 +57,7 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 			return
 		}
 
-		if viper.GetBool(flagPrintSigs) {
+		if viper.GetBool(flagValidateSigs) {
 			if !printSignatures(stdTx) {
 				return fmt.Errorf("signatures validation failed")
 			}
@@ -72,7 +72,7 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		// if --signature-only is on, then override --append
-		generateSignatureOnly := viper.GetBool(flagRawSignature)
+		generateSignatureOnly := viper.GetBool(flagSigOnly)
 		appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
 		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, appendSig, viper.GetBool(flagOffline))
 		if err != nil {

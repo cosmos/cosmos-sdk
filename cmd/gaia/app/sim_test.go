@@ -92,7 +92,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			BondDenom:     "steak",
 		},
 	}
-	fmt.Printf("Selected randomly generated staking parameters: %v\n", stakeGenesis)
+	fmt.Printf("Selected randomly generated staking parameters: %+v\n", stakeGenesis)
 	slashingGenesis := slashing.GenesisState{
 		Params: slashing.Params{
 			MaxEvidenceAge:           stakeGenesis.Params.UnbondingTime,

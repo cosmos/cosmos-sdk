@@ -118,9 +118,7 @@ func printSignatures(stdTx auth.StdTx) bool {
 		sigSanity := "OK"
 		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
 			sigSanity = fmt.Sprintf("ERROR: signature %d does not match its respective signer", i)
-			if success {
-				success = false
-			}
+			success = false
 		}
 		fmt.Printf(" %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
 	}

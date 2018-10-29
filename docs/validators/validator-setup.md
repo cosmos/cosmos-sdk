@@ -32,7 +32,7 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 gaiacli tx create-validator \
   --amount=5steak \
   --pubkey=$(gaiad tendermint show-validator) \
-  --address-validator=<account_cosmosval>
+  --from=<account_cosmosval>
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
   --name=<key_name> \

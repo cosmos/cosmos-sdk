@@ -108,7 +108,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		blockLogBuilders = make([]*strings.Builder, numBlocks)
 	}
 	displayLogs := logPrinter(testingMode, blockLogBuilders)
-	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, timeOperationQueue, numBlocks, displayLogs)
+	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, timeOperationQueue, numBlocks, blockSize, displayLogs)
 	if !testingMode {
 		b.ResetTimer()
 	} else {
@@ -142,7 +142,6 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		}
 
 		ctx := app.NewContext(false, header)
-		thisBlockSize := getBlockSize(r, blockSize)
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
 		logWriter("Queued operations")
@@ -153,9 +152,8 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 			assertAllInvariants(t, app, header, invariants, "QueuedOperations", displayLogs)
 		}
 
-		thisBlockSize = thisBlockSize - numQueuedOpsRan - numQueuedTimeOpsRan
 		logWriter("Standard operations")
-		operations := blockSimulator(thisBlockSize, r, app, ctx, accs, header, logWriter)
+		operations := blockSimulator(r, app, ctx, accs, header, logWriter)
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 		if testingMode {
 			// Make sure invariants hold at end of block
@@ -200,9 +198,14 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
-func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []WeightedOperation, operationQueue map[int][]Operation, timeOperationQueue []FutureOperation, totalNumBlocks int, displayLogs func()) func(
-	blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
-	totalOpWeight := 0
+func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event func(string), invariants []Invariant, ops []WeightedOperation, operationQueue map[int][]Operation, timeOperationQueue []FutureOperation, totalNumBlocks int, avgBlockSize int, displayLogs func()) func(
+	r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
+	var (
+		lastBlocksizeState = 0 // state for [4 * uniform distribution]
+		totalOpWeight      = 0
+		blocksize          int
+	)
+
 	for i := 0; i < len(ops); i++ {
 		totalOpWeight += ops[i].Weight
 	}
@@ -217,8 +220,10 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, event f
 		// shouldn't happen
 		return ops[0].Op
 	}
-	return func(blocksize int, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
+		lastBlocksizeState, blocksize = getBlockSize(r, lastBlocksizeState, avgBlockSize)
 		for j := 0; j < blocksize; j++ {
 			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, event)
 			if err != nil {
@@ -253,16 +258,18 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 	return
 }
 
-func getBlockSize(r *rand.Rand, blockSize int) int {
-	load := r.Float64()
-	switch {
-	case load < 0.33:
-		return 0
-	case load < 0.66:
-		return r.Intn(blockSize * 2)
-	default:
-		return r.Intn(blockSize * 4)
+func getBlockSize(r *rand.Rand, lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
+	// TODO: Make blockSizeTransitionMatrix non-global
+	// TODO: Make default blocksize transitition matrix actually make the average blocksize equal to avgBlockSize
+	state = blockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
+	if state == 0 {
+		blocksize = r.Intn(avgBlockSize * 4)
+	} else if state == 1 {
+		blocksize = r.Intn(avgBlockSize * 2)
+	} else {
+		blocksize = 0
 	}
+	return
 }
 
 // adds all future operations into the operation queue.

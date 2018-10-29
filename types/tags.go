@@ -17,7 +17,8 @@ func EmptyTags() Tags {
 
 // Append a single tag
 func (t Tags) AppendTag(k string, v []byte) Tags {
-	return append(t, MakeTag(k, v))
+	t = append(t, MakeTag(k, v))
+	return t
 }
 
 // Append two lists of tags

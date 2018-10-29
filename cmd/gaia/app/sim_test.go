@@ -83,7 +83,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
 		},
 	}
-	fmt.Printf("Selected randomly generated governance parameters: %v\n", govGenesis)
+	fmt.Printf("Selected randomly generated governance parameters: %+v\n", govGenesis)
 	stakeGenesis := stake.GenesisState{
 		Pool: stake.InitialPool(),
 		Params: stake.Params{

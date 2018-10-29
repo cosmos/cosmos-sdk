@@ -6,32 +6,38 @@ import (
 )
 
 // Expose the hooks if present
-func (k Keeper) OnValidatorCreated(ctx sdk.Context, address sdk.ValAddress) {
+func (k Keeper) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorCreated(ctx, address)
+		k.hooks.OnValidatorCreated(ctx, valAddr)
 	}
 }
-func (k Keeper) OnValidatorCommissionChange(ctx sdk.Context, address sdk.ValAddress) {
+func (k Keeper) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorCommissionChange(ctx, address)
-	}
-}
-
-func (k Keeper) OnValidatorRemoved(ctx sdk.Context, address sdk.ValAddress) {
-	if k.hooks != nil {
-		k.hooks.OnValidatorRemoved(ctx, address)
+		k.hooks.OnValidatorModified(ctx, valAddr)
 	}
 }
 
-func (k Keeper) OnValidatorBonded(ctx sdk.Context, address sdk.ConsAddress) {
+func (k Keeper) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, address)
+		k.hooks.OnValidatorRemoved(ctx, valAddr)
 	}
 }
 
-func (k Keeper) OnValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress) {
+func (k Keeper) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorBeginUnbonding(ctx, address)
+		k.hooks.OnValidatorBonded(ctx, consAddr, valAddr)
+	}
+}
+
+func (k Keeper) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+	if k.hooks != nil {
+		k.hooks.OnValidatorPowerDidChange(ctx, consAddr, valAddr)
+	}
+}
+
+func (k Keeper) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+	if k.hooks != nil {
+		k.hooks.OnValidatorBeginUnbonding(ctx, consAddr, valAddr)
 	}
 }
 

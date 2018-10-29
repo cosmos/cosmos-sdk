@@ -31,10 +31,10 @@ type seqOracle struct {
 	Nonce int
 }
 
-func (o seqOracle) Type() string {
+func (o seqOracle) Route() string {
 	return "seq"
 }
-func (o seqOracle) Name() string {
+func (o seqOracle) Type() string {
 	return "seq"
 }
 

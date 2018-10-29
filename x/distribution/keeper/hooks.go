@@ -1,34 +1,54 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // Create a new validator distribution record
-func (k Keeper) onValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
+func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 
 	height := ctx.BlockHeight()
 	vdi := types.ValidatorDistInfo{
-		OperatorAddr:            addr,
+		OperatorAddr:            valAddr,
 		FeePoolWithdrawalHeight: height,
-		Pool:                    types.DecCoins{},
-		PoolCommission:          types.DecCoins{},
 		DelAccum:                types.NewTotalAccum(height),
+		DelPool:                 types.DecCoins{},
+		ValCommission:           types.DecCoins{},
 	}
 	k.SetValidatorDistInfo(ctx, vdi)
 }
 
-// Withdrawal all validator rewards
-func (k Keeper) onValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
-	k.WithdrawValidatorRewardsAll(ctx, addr)
+// Withdraw all validator rewards
+func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
+	// This doesn't need to be run at genesis
+	if ctx.BlockHeight() > 0 {
+		if err := k.WithdrawValidatorRewardsAll(ctx, valAddr); err != nil {
+			panic(err)
+		}
+	}
+}
+
+// Withdraw all validator rewards
+func (k Keeper) onValidatorBonded(ctx sdk.Context, valAddr sdk.ValAddress) {
+	lastPower := k.stakeKeeper.GetLastValidatorPower(ctx, valAddr)
+	if !lastPower.Equal(sdk.ZeroInt()) {
+		panic("expected last power to be 0 for validator entering bonded state")
+	}
+	k.onValidatorModified(ctx, valAddr)
+}
+
+// XXX Consider removing this after debugging.
+func (k Keeper) onValidatorPowerDidChange(ctx sdk.Context, valAddr sdk.ValAddress) {
+	vi := k.GetValidatorDistInfo(ctx, valAddr)
+	if vi.FeePoolWithdrawalHeight != ctx.BlockHeight() {
+		panic("expected validator dist info FeePoolWithdrawalHeight to be updated, but was not.")
+	}
 }
 
 // Withdrawal all validator distribution rewards and cleanup the distribution record
-func (k Keeper) onValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
-	k.RemoveValidatorDistInfo(ctx, addr)
+func (k Keeper) onValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
+	k.RemoveValidatorDistInfo(ctx, valAddr)
 }
 
 //_________________________________________________________________________________________
@@ -38,19 +58,20 @@ func (k Keeper) onDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
 
 	ddi := types.DelegationDistInfo{
-		DelegatorAddr:    delAddr,
-		ValOperatorAddr:  valAddr,
-		WithdrawalHeight: ctx.BlockHeight(),
+		DelegatorAddr:           delAddr,
+		ValOperatorAddr:         valAddr,
+		DelPoolWithdrawalHeight: ctx.BlockHeight(),
 	}
 	k.SetDelegationDistInfo(ctx, ddi)
-	ctx.Logger().With("module", "x/distribution").Error(fmt.Sprintf("ddi created: %v", ddi))
 }
 
 // Withdrawal all validator rewards
 func (k Keeper) onDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
 
-	k.WithdrawDelegationReward(ctx, delAddr, valAddr)
+	if err := k.WithdrawDelegationReward(ctx, delAddr, valAddr); err != nil {
+		panic(err)
+	}
 }
 
 // Withdrawal all validator distribution rewards and cleanup the distribution record
@@ -73,25 +94,32 @@ var _ sdk.StakingHooks = Hooks{}
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
 // nolint
-func (h Hooks) OnValidatorCreated(ctx sdk.Context, addr sdk.ValAddress) {
-	h.k.onValidatorCreated(ctx, addr)
+func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.k.onValidatorCreated(ctx, valAddr)
 }
-func (h Hooks) OnValidatorCommissionChange(ctx sdk.Context, addr sdk.ValAddress) {
-	h.k.onValidatorCommissionChange(ctx, addr)
+func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, addr sdk.ValAddress) {
-	h.k.onValidatorRemoved(ctx, addr)
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.k.onValidatorRemoved(ctx, valAddr)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
 	h.k.onDelegationCreated(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
 	h.k.onDelegationSharesModified(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.k.onDelegationRemoved(ctx, delAddr, valAddr)
 }
-
-// nolint - unused hooks for interface
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, addr sdk.ConsAddress)         {}
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, addr sdk.ConsAddress) {}
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
+}
+func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorBonded(ctx, valAddr)
+}
+func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorPowerDidChange(ctx, valAddr)
+}

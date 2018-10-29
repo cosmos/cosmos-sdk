@@ -47,6 +47,9 @@ type Keybase interface {
 
 	// *only* works on locally-stored keys. Temporary method until we redo the exporting API
 	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)
+
+	// Close closes the database.
+	CloseDB()
 }
 
 // KeyType reflects a human-readable type for key listing.

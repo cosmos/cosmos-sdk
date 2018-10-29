@@ -35,7 +35,7 @@ func TestAllocateTokensBasic(t *testing.T) {
 
 	// initial fee pool should be empty
 	feePool := keeper.GetFeePool(ctx)
-	require.Nil(t, feePool.Pool)
+	require.Nil(t, feePool.ValPool)
 
 	// allocate 100 denom of fees
 	feeInputs := sdk.NewInt(100)
@@ -48,8 +48,8 @@ func TestAllocateTokensBasic(t *testing.T) {
 	percentRemaining := sdk.OneDec().Sub(percentProposer)
 	feePool = keeper.GetFeePool(ctx)
 	expRes := sdk.NewDecFromInt(feeInputs).Mul(percentRemaining)
-	require.Equal(t, 1, len(feePool.Pool))
-	require.True(sdk.DecEq(t, expRes, feePool.Pool[0].Amount))
+	require.Equal(t, 1, len(feePool.ValPool))
+	require.True(sdk.DecEq(t, expRes, feePool.ValPool[0].Amount))
 }
 
 func TestAllocateTokensWithCommunityTax(t *testing.T) {
@@ -76,8 +76,8 @@ func TestAllocateTokensWithCommunityTax(t *testing.T) {
 	percentProposer := sdk.NewDecWithPrec(5, 2)
 	percentRemaining := sdk.OneDec().Sub(communityTax.Add(percentProposer))
 	expRes := sdk.NewDecFromInt(feeInputs).Mul(percentRemaining)
-	require.Equal(t, 1, len(feePool.Pool))
-	require.True(sdk.DecEq(t, expRes, feePool.Pool[0].Amount))
+	require.Equal(t, 1, len(feePool.ValPool))
+	require.True(sdk.DecEq(t, expRes, feePool.ValPool[0].Amount))
 }
 
 func TestAllocateTokensWithPartialPrecommitPower(t *testing.T) {
@@ -105,6 +105,6 @@ func TestAllocateTokensWithPartialPrecommitPower(t *testing.T) {
 	percentProposer := sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(4, 2).Mul(percentPrecommitVotes))
 	percentRemaining := sdk.OneDec().Sub(communityTax.Add(percentProposer))
 	expRes := sdk.NewDecFromInt(feeInputs).Mul(percentRemaining)
-	require.Equal(t, 1, len(feePool.Pool))
-	require.True(sdk.DecEq(t, expRes, feePool.Pool[0].Amount))
+	require.Equal(t, 1, len(feePool.ValPool))
+	require.True(sdk.DecEq(t, expRes, feePool.ValPool[0].Amount))
 }

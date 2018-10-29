@@ -5,6 +5,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// check whether a validator has distribution info
+func (k Keeper) HasValidatorDistInfo(ctx sdk.Context,
+	operatorAddr sdk.ValAddress) (exists bool) {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(GetValidatorDistInfoKey(operatorAddr))
+}
+
 // get the validator distribution info
 func (k Keeper) GetValidatorDistInfo(ctx sdk.Context,
 	operatorAddr sdk.ValAddress) (vdi types.ValidatorDistInfo) {
@@ -33,28 +40,61 @@ func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress)
 	store.Delete(GetValidatorDistInfoKey(valAddr))
 }
 
-// withdrawal all the validator rewards including the commission
-func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) {
+// Get the calculated accum of a validator at the current block
+// without affecting the state.
+func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) (sdk.Dec, sdk.Error) {
+	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
+		return sdk.Dec{}, types.ErrNoValidatorDistInfo(k.codespace)
+	}
 
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
-	validator := k.stakeKeeper.Validator(ctx, operatorAddr)
+	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, operatorAddr)
+	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
+	accum := valInfo.GetValAccum(height, sdk.NewDecFromInt(lastValPower))
+
+	return accum, nil
+}
+
+// withdrawal all the validator rewards including the commission
+func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+
+	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
+		return types.ErrNoValidatorDistInfo(k.codespace)
+	}
+
+	// withdraw self-delegation
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-	withdraw := k.getDelegatorRewardsAll(ctx, accAddr, height)
+	withdraw := k.withdrawDelegationRewardsAll(ctx, accAddr)
 
 	// withdrawal validator commission rewards
-	bondedTokens := k.stakeKeeper.TotalPower(ctx)
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
-	feePool := k.GetFeePool(ctx)
-	valInfo, feePool, commission := valInfo.WithdrawCommission(feePool, height, bondedTokens,
-		validator.GetTokens(), validator.GetCommission())
+	wc := k.GetWithdrawContext(ctx, operatorAddr)
+	valInfo, feePool, commission := valInfo.WithdrawCommission(wc)
 	withdraw = withdraw.Plus(commission)
 	k.SetValidatorDistInfo(ctx, valInfo)
-	k.SetFeePool(ctx, feePool)
 
-	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
-	_, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, withdraw.TruncateDecimal())
-	if err != nil {
-		panic(err)
+	k.WithdrawToDelegator(ctx, feePool, accAddr, withdraw)
+	return nil
+}
+
+// get all the validator rewards including the commission
+func (k Keeper) CurrentValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) (sdk.Coins, sdk.Error) {
+
+	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
+		return sdk.Coins{}, types.ErrNoValidatorDistInfo(k.codespace)
 	}
+
+	// withdraw self-delegation
+	accAddr := sdk.AccAddress(operatorAddr.Bytes())
+	withdraw := k.CurrentDelegationRewardsAll(ctx, accAddr)
+
+	// withdrawal validator commission rewards
+	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
+
+	wc := k.GetWithdrawContext(ctx, operatorAddr)
+	commission := valInfo.CurrentCommissionRewards(wc)
+	withdraw = withdraw.Plus(commission)
+	truncated, _ := withdraw.TruncateDecimal()
+	return truncated, nil
 }

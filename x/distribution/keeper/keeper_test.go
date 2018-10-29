@@ -29,9 +29,9 @@ func TestSetGetFeePool(t *testing.T) {
 	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 0)
 
 	fp := types.InitialFeePool()
-	fp.ValAccum.UpdateHeight = 777
+	fp.TotalValAccum.UpdateHeight = 777
 
 	keeper.SetFeePool(ctx, fp)
 	res := keeper.GetFeePool(ctx)
-	require.Equal(t, fp.ValAccum, res.ValAccum)
+	require.Equal(t, fp.TotalValAccum, res.TotalValAccum)
 }

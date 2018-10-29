@@ -235,24 +235,24 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators [
 }
 
 // get the group of the bonded validators
-func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validator) {
+func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)
 
 	// add the actual validator power sorted store
 	maxValidators := k.MaxValidators(ctx)
 	validators = make([]types.Validator, maxValidators)
 
-	iterator := sdk.KVStorePrefixIterator(store, ValidatorsBondedIndexKey)
+	iterator := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
 	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid(); iterator.Next() {
 
 		// sanity check
-		if i > int(maxValidators-1) {
-			panic("maxValidators is less than the number of records in ValidatorsBonded Store, store should have been updated")
+		if i >= int(maxValidators) {
+			panic("more validators than maxValidators found")
 		}
-		address := GetAddressFromValBondedIndexKey(iterator.Key())
+		address := AddressFromLastValidatorPowerKey(iterator.Key())
 		validator := k.mustGetValidator(ctx, address)
 
 		validators[i] = validator
@@ -261,7 +261,7 @@ func (k Keeper) GetValidatorsBonded(ctx sdk.Context) (validators []types.Validat
 	return validators[:i] // trim
 }
 
-// get the group of bonded validators sorted by power-rank
+// get the current group of bonded validators sorted by power-rank
 func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.MaxValidators(ctx)

@@ -1,18 +1,16 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // Allocate fees handles distribution of the collected fees
 func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer sdk.ConsAddress) {
-	ctx.Logger().With("module", "x/distribution").Error(fmt.Sprintf("allocation height: %v", ctx.BlockHeight()))
 
 	// get the proposer of this block
 	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposer)
+
 	proposerDist := k.GetValidatorDistInfo(ctx, proposerValidator.GetOperator())
 
 	// get the fees which have been getting collected through all the
@@ -29,8 +27,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 	// apply commission
 	commission := proposerReward.MulDec(proposerValidator.GetCommission())
 	remaining := proposerReward.Minus(commission)
-	proposerDist.PoolCommission = proposerDist.PoolCommission.Plus(commission)
-	proposerDist.Pool = proposerDist.Pool.Plus(remaining)
+	proposerDist.ValCommission = proposerDist.ValCommission.Plus(commission)
+	proposerDist.DelPool = proposerDist.DelPool.Plus(remaining)
 
 	// allocate community funding
 	communityTax := k.GetCommunityTax(ctx)
@@ -40,7 +38,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 
 	// set the global pool within the distribution module
 	poolReceived := feesCollectedDec.Minus(proposerReward).Minus(communityFunding)
-	feePool.Pool = feePool.Pool.Plus(poolReceived)
+	feePool.ValPool = feePool.ValPool.Plus(poolReceived)
 
 	k.SetValidatorDistInfo(ctx, proposerDist)
 	k.SetFeePool(ctx, feePool)

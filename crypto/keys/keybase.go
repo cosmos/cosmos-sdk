@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -217,7 +218,7 @@ func (kb dbKeybase) List() ([]Info, error) {
 func (kb dbKeybase) Get(name string) (Info, error) {
 	bs := kb.db.Get(infoKey(name))
 	if len(bs) == 0 {
-		return nil, fmt.Errorf("Key %s not found", name)
+		return nil, keyerror.NewErrKeyNotFound(name)
 	}
 	return readInfo(bs)
 }
@@ -424,6 +425,11 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 	default:
 		return fmt.Errorf("locally stored key required")
 	}
+}
+
+// CloseDB releases the lock and closes the storage backend.
+func (kb dbKeybase) CloseDB() {
+	kb.db.Close()
 }
 
 func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string) Info {

@@ -81,15 +81,21 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 
 		var json []byte
 
-		switch {
-		case generateSignatureOnly && cliCtx.Indent:
-			json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
-		case generateSignatureOnly && !cliCtx.Indent:
-			json, err = cdc.MarshalJSON(newTx.Signatures[0])
-		case !generateSignatureOnly && cliCtx.Indent:
-			json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
-		case !generateSignatureOnly && !cliCtx.Indent:
-			json, err = cdc.MarshalJSON(newTx)
+		switch generateSignatureOnly {
+		case true:
+			switch cliCtx.Indent {
+			case true:
+				json, err = cdc.MarshalJSONIndent(newTx.Signatures[0], "", "  ")
+			default:
+				json, err = cdc.MarshalJSON(newTx.Signatures[0])
+			}
+		default:
+			switch cliCtx.Indent {
+			case true:
+				json, err = cdc.MarshalJSONIndent(newTx, "", "  ")
+			default:
+				json, err = cdc.MarshalJSON(newTx)
+			}
 		}
 		if err != nil {
 			return err

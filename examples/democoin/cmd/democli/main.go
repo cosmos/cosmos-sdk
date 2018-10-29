@@ -42,9 +42,9 @@ func main() {
 
 	// Setup certain SDK config
 	config := sdk.GetConfig()
-	config.WithBech32PrefixForAccount("demoacc", "demopub")
-	config.WithBech32PrefixForValidator("demoval", "demovalpub")
-	config.WithBech32PrefixForConsensusNode("democons", "democonspub")
+	config.SetBech32PrefixForAccount("demoacc", "demopub")
+	config.SetBech32PrefixForValidator("demoval", "demovalpub")
+	config.SetBech32PrefixForConsensusNode("democons", "democonspub")
 	config.Seal()
 
 	// TODO: setup keybase, viper object, etc. to be passed into

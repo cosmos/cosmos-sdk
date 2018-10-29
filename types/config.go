@@ -41,31 +41,28 @@ func (config *Config) assertNotSealed() {
 	}
 }
 
-// WithBech32PrefixForAccount builds the Config with Bech32 addressPrefix and publKeyPrefix for accounts
+// SetBech32PrefixForAccount builds the Config with Bech32 addressPrefix and publKeyPrefix for accounts
 // and returns the config instance
-func (config *Config) WithBech32PrefixForAccount(addressPrefix, pubKeyPrefix string) *Config {
+func (config *Config) SetBech32PrefixForAccount(addressPrefix, pubKeyPrefix string) {
 	config.assertNotSealed()
 	config.bech32AddressPrefix["account_addr"] = addressPrefix
 	config.bech32AddressPrefix["account_pub"] = pubKeyPrefix
-	return config
 }
 
-// WithBech32PrefixForValidator builds the Config with Bech32 addressPrefix and publKeyPrefix for validators
+// SetBech32PrefixForValidator builds the Config with Bech32 addressPrefix and publKeyPrefix for validators
 //  and returns the config instance
-func (config *Config) WithBech32PrefixForValidator(addressPrefix, pubKeyPrefix string) *Config {
+func (config *Config) SetBech32PrefixForValidator(addressPrefix, pubKeyPrefix string) {
 	config.assertNotSealed()
 	config.bech32AddressPrefix["validator_addr"] = addressPrefix
 	config.bech32AddressPrefix["validator_pub"] = pubKeyPrefix
-	return config
 }
 
-// WithBech32PrefixForConsensusNode builds the Config with Bech32 addressPrefix and publKeyPrefix for consensus nodes
+// SetBech32PrefixForConsensusNode builds the Config with Bech32 addressPrefix and publKeyPrefix for consensus nodes
 // and returns the config instance
-func (config *Config) WithBech32PrefixForConsensusNode(addressPrefix, pubKeyPrefix string) *Config {
+func (config *Config) SetBech32PrefixForConsensusNode(addressPrefix, pubKeyPrefix string) {
 	config.assertNotSealed()
 	config.bech32AddressPrefix["consensus_addr"] = addressPrefix
 	config.bech32AddressPrefix["consensus_pub"] = pubKeyPrefix
-	return config
 }
 
 // Seal seals the config such that the config state could not be modified further

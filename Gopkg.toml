@@ -49,15 +49,15 @@
 
 [[override]]
   name = "github.com/tendermint/go-amino"
-  version = "=v0.13.0"
+  version = "=v0.14.0"
 
 [[override]]
   name = "github.com/tendermint/iavl"
-  version = "=v0.11.0"
+  version = "=v0.11.1"
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=0.25.1-rc0"
+  version = "=0.26.0-rc0"
 
 ## deps without releases:
 

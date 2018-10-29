@@ -155,6 +155,10 @@ func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "no redelegation found")
 }
 
+func ErrSelfRedelegation(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation, "cannot redelegate to the same validator")
+}
+
 func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation validator not found")
 }

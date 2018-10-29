@@ -69,7 +69,7 @@ func main() {
 }
 
 // KVStore Handler
-func Handler(storeKey sdk.StoreKey) sdk.Handler {
+func Handler(storeKey sdk.KVStoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		dTx, ok := msg.(kvstoreTx)
 		if !ok {

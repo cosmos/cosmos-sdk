@@ -156,8 +156,8 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec) error {
 		accs = append(accs, app.GenesisAccount{
 			Address: addr,
 			Coins: sdk.Coins{
-				sdk.NewInt64Coin("steak", 150),
 				sdk.NewInt64Coin(fmt.Sprintf("%sToken", nodeDirName), 1000),
+				sdk.NewInt64Coin("steak", 150),
 			},
 		})
 

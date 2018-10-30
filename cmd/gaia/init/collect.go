@@ -86,7 +86,8 @@ func genTxsWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig,
 	var genTxs []json.RawMessage
 	var jsonRawTx json.RawMessage
 
-	appGenTxs, persistentPeers, err = app.CollectStdTxs(config.Moniker, initCfg.GenTxsDir, cdc)
+	appGenTxs, persistentPeers, err = app.CollectStdTxs(
+		cdc, config.Moniker, initCfg.GenTxsDir, genDoc)
 	if err != nil {
 		return
 	}

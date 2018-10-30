@@ -186,14 +186,28 @@ func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs 
 	return codec.MarshalJSONIndent(cdc, genesisState)
 }
 
-// CollectStdTxs processes and validates application's genesis StdTxs and returns the list of validators,
-// appGenTxs, and persistent peers required to generate genesis.json.
-func CollectStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
+// CollectStdTxs processes and validates application's genesis StdTxs and returns the list of
+// validators,  appGenTxs, and persistent peers required to generate genesis.json.
+func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tmtypes.GenesisDoc) (
 	appGenTxs []auth.StdTx, persistentPeers string, err error) {
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
 	if err != nil {
 		return
+	}
+
+	// prepare a map of all accounts in genesis state to then validate
+	// against the validators addresses
+	var appState GenesisState
+	err = cdc.UnmarshalJSON(genDoc.AppState, &appState)
+	if err != nil {
+		return
+	}
+	addrMap := make(map[string]GenesisAccount, len(appState.Accounts))
+	for i := 0; i < len(appState.Accounts); i++ {
+		acc := appState.Accounts[i]
+		strAddr := string(acc.Address)
+		addrMap[strAddr] = acc
 	}
 
 	var addresses []string
@@ -222,15 +236,26 @@ func CollectStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
 			return
 		}
 
+		// genesis transactions must be single-message
 		msgs := genStdTx.GetMsgs()
 		if len(msgs) != 1 {
 			err = errors.New("each genesis transaction must provide a single genesis message")
 			return
 		}
 
-		// TODO: this could be decoupled from stake.MsgCreateValidator
-		// TODO: and we likely want to do it for real world Gaia
+		// validate the validator address and funds against the accounts in the state
 		msg := msgs[0].(stake.MsgCreateValidator)
+		addr := string(sdk.AccAddress(msg.ValidatorAddr))
+		acc , ok := addrMap[addr]
+		if !ok {
+			err = fmt.Errorf("account %v not in genesis.json: %+v", addr, addrMap)
+			return
+		}
+		if acc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
+			err = fmt.Errorf("insufficient fund for the delegation: %s < %s",
+				acc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount)
+		}
+
 		// exclude itself from persistent peers
 		if msg.Description.Moniker != moniker {
 			addresses = append(addresses, nodeAddr)

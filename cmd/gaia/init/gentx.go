@@ -88,6 +88,8 @@ following delegation and commission default parameters:
 	cmd.Flags().String(tmcli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
+	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
+	cmd.Flags().AddFlagSet(cli.FsAmount)
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
 }
@@ -100,14 +102,22 @@ func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID st
 	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
 	viper.Set(cli.FlagIP, ip)                                      // --ip
 	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
-	viper.Set(cli.FlagAmount, defaultAmount)                       // --amount
-	viper.Set(cli.FlagCommissionRate, defaultCommissionRate)
-	viper.Set(cli.FlagCommissionMaxRate, defaultCommissionMaxRate)
-	viper.Set(cli.FlagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
 	viper.Set(cli.FlagGenesisFormat, true)     // --genesis-format
 	viper.Set(cli.FlagMoniker, config.Moniker) // --moniker
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))
+	}
+	if viper.GetString(cli.FlagAmount) == "" {
+		viper.Set(cli.FlagAmount, defaultAmount)
+	}
+	if viper.GetString(cli.FlagCommissionRate) == "" {
+		viper.Set(cli.FlagCommissionRate, defaultCommissionRate)
+	}
+	if viper.GetString(cli.FlagCommissionMaxRate) == "" {
+		viper.Set(cli.FlagCommissionMaxRate, defaultCommissionMaxRate)
+	}
+	if viper.GetString(cli.FlagCommissionMaxChangeRate) == "" {
+		viper.Set(cli.FlagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
 	}
 }
 

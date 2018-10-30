@@ -94,7 +94,7 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	var finishTime time.Time
-	types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+	types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
 
@@ -232,7 +232,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.True(t, got.IsOK(), "expected begin unbonding validator msg to be ok, got %v", got)
 
 	var finishTime time.Time
-	types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+	types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
 
@@ -400,7 +400,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 		var finishTime time.Time
-		types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+		types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 		ctx = ctx.WithBlockTime(finishTime)
 		EndBlocker(ctx, keeper)
 
@@ -494,7 +494,7 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 		var finishTime time.Time
-		types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+		types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 		ctx = ctx.WithBlockTime(finishTime)
 		EndBlocker(ctx, keeper)
 
@@ -540,7 +540,7 @@ func TestMultipleMsgDelegate(t *testing.T) {
 		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 		var finishTime time.Time
-		types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+		types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 		ctx = ctx.WithBlockTime(finishTime)
 		EndBlocker(ctx, keeper)
 
@@ -570,7 +570,7 @@ func TestJailValidator(t *testing.T) {
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error: %v", got)
 	var finishTime time.Time
-	types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+	types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
 
@@ -586,7 +586,7 @@ func TestJailValidator(t *testing.T) {
 	msgBeginUnbondingDelegator := NewMsgBeginUnbonding(delegatorAddr, validatorAddr, sdk.NewDec(10))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingDelegator, keeper)
 	require.True(t, got.IsOK(), "expected no error")
-	types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+	types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
 
@@ -621,7 +621,7 @@ func TestValidatorQueue(t *testing.T) {
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbondingValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error: %v", got)
 	var finishTime time.Time
-	types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+	types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 	ctx = ctx.WithBlockTime(finishTime)
 	EndBlocker(ctx, keeper)
 	origHeader := ctx.BlockHeader()
@@ -709,7 +709,7 @@ func TestUnbondingFromUnbondingValidator(t *testing.T) {
 
 	// change the ctx to Block Time one second before the validator would have unbonded
 	var finishTime time.Time
-	types.MsgCdc.MustUnmarshalBinary(got.Data, &finishTime)
+	types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 	ctx = ctx.WithBlockTime(finishTime.Add(time.Second * -1))
 
 	// unbond the delegator from the validator

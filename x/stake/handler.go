@@ -201,7 +201,7 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinary(ubd.MinTime)
+	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(ubd.MinTime)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginUnbonding,
@@ -219,7 +219,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinary(red.MinTime)
+	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(red.MinTime)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginRedelegation,

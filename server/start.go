@@ -1,6 +1,10 @@
 package server
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -136,6 +140,21 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 	}
 
 	// trap signal (run forever)
-	tmNode.RunForever()
+	// Stop upon receiving SIGTERM or CTRL-C
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		for _ = range c {
+			// logger.Error(fmt.Sprintf("captured %v, exiting...", sig))
+			if tmNode.IsRunning() {
+				tmNode.Stop()
+			}
+			os.Exit(1)
+		}
+	}()
+	// Run forever
+	select {}
+
+	// This won't get called.
 	return tmNode, nil
 }

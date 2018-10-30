@@ -126,7 +126,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 	depositsIterator := keeper.GetDeposits(ctx, params.ProposalID)
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		deposit := Deposit{}
-		keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), &deposit)
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 		deposits = append(deposits, deposit)
 	}
 
@@ -155,7 +155,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	votesIterator := keeper.GetVotes(ctx, params.ProposalID)
 	for ; votesIterator.Valid(); votesIterator.Next() {
 		vote := Vote{}
-		keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), &vote)
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
 		votes = append(votes, vote)
 	}
 

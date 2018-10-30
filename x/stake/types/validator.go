@@ -87,7 +87,7 @@ func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 		UnbondingMinTime:   validator.UnbondingMinTime,
 		Commission:         validator.Commission,
 	}
-	return cdc.MustMarshalBinary(val)
+	return cdc.MustMarshalBinaryLengthPrefixed(val)
 }
 
 // unmarshal a redelegation from a store key and value
@@ -106,7 +106,7 @@ func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator
 		return
 	}
 	var storeValue validatorValue
-	err = cdc.UnmarshalBinary(value, &storeValue)
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &storeValue)
 	if err != nil {
 		return
 	}

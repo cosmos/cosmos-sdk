@@ -37,7 +37,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) 
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/deposits", RestProposalID), depositHandlerFn(cdc, cliCtx)).Methods("POST")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}/votes", RestProposalID), voteHandlerFn(cdc, cliCtx)).Methods("POST")
 
-	r.HandleFunc(fmt.Sprintf("/gov/procedure/{%s}", RestProcedureType), queryProcedureHandlerFn(cdc, cliCtx)).Methods("GET")
+	r.HandleFunc(fmt.Sprintf("/gov/procedures/{%s}", RestProcedureType), queryProcedureHandlerFn(cdc, cliCtx)).Methods("GET")
 
 	r.HandleFunc("/gov/proposals", queryProposalsWithParameterFn(cdc, cliCtx)).Methods("GET")
 	r.HandleFunc(fmt.Sprintf("/gov/proposals/{%s}", RestProposalID), queryProposalHandlerFn(cdc, cliCtx)).Methods("GET")
@@ -189,7 +189,7 @@ func queryProcedureHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 		vars := mux.Vars(r)
 		procedureType := vars[RestProcedureType]
 
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/procedure/%s", procedureType), nil)
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/procedures/%s", procedureType), nil)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return

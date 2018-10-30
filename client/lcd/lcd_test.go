@@ -1236,7 +1236,7 @@ func getValidatorRedelegations(t *testing.T, port string, validatorAddr sdk.ValA
 // ============= Governance Module ================
 
 func getDepositProcedure(t *testing.T, port string) gov.DepositProcedure {
-	res, body := Request(t, port, "GET", "/gov/procedure/deposit", nil)
+	res, body := Request(t, port, "GET", "/gov/procedures/deposit", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var depositProcedure gov.DepositProcedure
@@ -1246,7 +1246,7 @@ func getDepositProcedure(t *testing.T, port string) gov.DepositProcedure {
 }
 
 func getVotingProcedure(t *testing.T, port string) gov.VotingProcedure {
-	res, body := Request(t, port, "GET", "/gov/procedure/voting", nil)
+	res, body := Request(t, port, "GET", "/gov/procedures/voting", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var votingProcedure gov.VotingProcedure
@@ -1256,7 +1256,7 @@ func getVotingProcedure(t *testing.T, port string) gov.VotingProcedure {
 }
 
 func getTallyingProcedure(t *testing.T, port string) gov.TallyingProcedure {
-	res, body := Request(t, port, "GET", "/gov/procedure/tallying", nil)
+	res, body := Request(t, port, "GET", "/gov/procedures/tallying", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var tallyingProcedure gov.TallyingProcedure

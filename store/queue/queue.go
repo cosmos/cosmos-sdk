@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
+// Prefix for the PrefixStore of the queue
 func ListKey() []byte {
 	return []byte{0x00}
 }

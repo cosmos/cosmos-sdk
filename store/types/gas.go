@@ -1,3 +1,4 @@
+// nolint
 package types
 
 // Gas consumption descriptors.

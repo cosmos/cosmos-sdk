@@ -1,9 +1,5 @@
 # Clients
 
-::: tip Note
-🚧 We are actively working on documentation for SDK clients.
-:::
-
 ## Gaia CLI
 
 ::: tip Note
@@ -341,6 +337,40 @@ Additionally, as you can get all the outgoing redelegations from a particular va
 
 To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
 
+#### Query Parameters
+
+Parameters define high level settings for staking. You can get its current values by using:
+
+```
+gaiacli query parameters
+```
+
+With the above command you will get the values for:
+
+- Maximum and minumum inflation rate
+- Maximum annual change in inflation rate,
+- Goal of bonded tokens (%)
+- Unbonding time
+- Maximum numbers of validators
+- Coin denomination for staking
+
+All this values can be updated though a `governance` process by submitting a parameter change `proposal`.
+
+#### Query Pool
+
+A staking `Pool` defines the dynamic parameters of the current state. You can query them with the following command:
+
+```
+gaiacli query pool
+```
+
+With the `pool` command you will get the values for:
+
+- Loose and bonded tokens
+- Token supply
+- Current anual inflation and the block in which the last inflation was processed
+- Last recorded bonded shares
+
 ### Governance
 
 Governance is the process from which users in the Cosmos Hub can come to consensus on software upgrades, parameters of the mainnet or on custom text proposals. This is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet.
@@ -354,7 +384,7 @@ Some considerations about the voting process:
 - Voters can choose between options `Yes`, `No`, `NoWithVeto` and `Abstain`
   At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2` and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`. It is rejected otherwise
 
-For more information about the governance process and how it works, please check out the Governance module [specification](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/governance).
+For more information about the governance process and how it works, please check out the Governance module [specification](./../spec/governance).
 
 #### Create a Governance proposal
 
@@ -405,6 +435,23 @@ gaiacli tx deposit \
 
 > _NOTE_: Proposals that don't meet this requirement will be deleted after `MaxDepositPeriod` is reached.
 
+##### Query deposits
+
+Once a new proposal is created, you can query all the deposits submitted to it:
+
+```bash
+gaiacli query deposits \
+  --proposal-id=<proposal_id>
+```
+
+You can also query a deposit submitted by a specific address:
+
+```bash
+gaiacli query deposit \
+  --proposal-id=<proposal_id> \
+  --depositer=<account_cosmos>
+```
+
 #### Vote on a proposal
 
 After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded `Atom` holders can then cast vote on it:
@@ -426,6 +473,7 @@ gaiacli query vote \
   --proposal-id=<proposal_id> \
   --voter=<account_cosmos>
 ```
+<<<<<<< HEAD
 
 #### Query Parameters
 
@@ -464,3 +512,5 @@ With the `pool` command you will get the values for:
 ::: tip Note
 🚧 We are actively working on documentation for Gaia-lite.
 :::
+=======
+>>>>>>> Add commands for deposits and fix links

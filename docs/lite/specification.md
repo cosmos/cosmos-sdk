@@ -12,7 +12,7 @@ we need to extract name, height and store root hash from these substores to buil
 Merkle leaf nodes, then calculate hash from leaf nodes to root. The root hash of the simple Merkle
 tree is the AppHash which will be included in block header.
 
-![Simple Merkle Tree](pics/simpleMerkleTree.png)
+![Simple Merkle Tree](./pics/simpleMerkleTree.png)
 
 As we have discussed in [LCD trust-propagation](https://github.com/irisnet/cosmos-sdk/tree/bianjie/lcd_spec/docs/spec/lcd#trust-propagation),
 the AppHash can be verified by checking voting power against a trusted validator set. Here we just
@@ -65,7 +65,7 @@ type KeyExistsProof struct {
 The data structure of exist proof is shown as above. The process to build and verify existance proof
 is shown as follows:
 
-![Exist Proof](pics/existProof.png)
+![Exist Proof](./pics/existProof.png)
 
 Steps to build proof:
 
@@ -92,12 +92,12 @@ the postition of the target key in the whole key set of this IAVL tree. As shown
 out the left key and the right key. If we can demonstrate that both left key and right key
 definitely exist, and they are adjacent nodes. Thus the target key definitely doesn't exist.
 
-![Absence Proof1](pics/absence1.png)
+![Absence Proof1](./pics/absence1.png)
 
 If the target key is larger than the right most leaf node or less than the left most key, then the
 target key definitely doesn't exist.
 
-![Absence Proof2](pics/absence2.png)![Absence Proof3](pics/absence3.png)
+![Absence Proof2](./pics/absence2.png)![Absence Proof3](./pics/absence3.png)
 
 ```go
 type proofLeafNode struct {
@@ -147,7 +147,7 @@ in commitID equals to proof RootHash. If not, the proof is invalid. Then sort th
 commitInfo array by the hash of substore name. Finally, build the simple Merkle tree with all
 substore commitInfo array and verify if the Merkle root hash equal to appHash.
 
-![substore proof](pics/substoreProof.png)
+![substore proof](./pics/substoreProof.png)
 
 ```go
 func SimpleHashFromTwoHashes(left []byte, right []byte) []byte {
@@ -187,7 +187,7 @@ Above sections refer appHash frequently. But where does the trusted appHash come
 appHash exist in block header, so next we need to verify blocks header at specific height against
 LCD trusted validator set. The validation flow is shown as follows:
 
-![commit verification](pics/commitValidation.png)
+![commit verification](./pics/commitValidation.png)
 
 When the trusted validator set doesn't match the block header, we need to try to update our
 validator set to the height of this block. LCD have a rule that each validator set change should not
@@ -198,7 +198,7 @@ validator set update be accomplished.
 
 For instance:
 
-![Update validator set to height](pics/updateValidatorToHeight.png)
+![Update validator set to height](./pics/updateValidatorToHeight.png)
 
 * Update to 10000, tooMuchChangeErr
 * Update to 5050,  tooMuchChangeErr

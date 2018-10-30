@@ -42,7 +42,8 @@ module.exports = {
           "/sdk/core/app4",
           "/sdk/core/app5",
           // "/sdk/modules",
-          "/sdk/clients"
+          "/sdk/clients",
+          "/sdk/cosmos-sdk-cli"
         ]
       },
       // {

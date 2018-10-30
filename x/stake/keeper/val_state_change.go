@@ -54,6 +54,10 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			break
 		}
 
+		if validator.OperatorAddr.String() == "cosmosvaloper1xrhemcpkjnyzxjpjzpjysucayy62v4gqur9lqz" {
+			fmt.Printf("\nVALSTATE validator: %v\n", validator)
+		}
+
 		// apply the appropriate state change if necessary
 		switch validator.Status {
 		case sdk.Unbonded:
@@ -80,9 +84,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 			// XXX Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
 			// XXX This hook probably shouldn't exist.  Maybe rethink the hook system.
-			if k.hooks != nil {
-				k.hooks.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
-			}
+			k.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
 
 			// set validator power on lookup index.
 			k.SetLastValidatorPower(ctx, valAddr, sdk.NewInt(newPower))
@@ -198,14 +200,9 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// save the now bonded validator record to the three referenced stores
 	k.SetValidator(ctx, validator)
-
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
 
-	// call the bond hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
-	}
-
+	k.OnValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
 	return validator
 }
 
@@ -237,11 +234,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	// Adds to unbonding validator queue
 	k.InsertValidatorQueue(ctx, validator)
 
-	// call the unbond hook if present
-	if k.hooks != nil {
-		k.hooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddr)
-	}
-
+	k.OnValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddr)
 	return validator
 }
 

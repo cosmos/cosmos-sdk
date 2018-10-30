@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -42,7 +44,14 @@ func (k Keeper) onValidatorBonded(ctx sdk.Context, valAddr sdk.ValAddress) {
 func (k Keeper) onValidatorPowerDidChange(ctx sdk.Context, valAddr sdk.ValAddress) {
 	vi := k.GetValidatorDistInfo(ctx, valAddr)
 	if vi.FeePoolWithdrawalHeight != ctx.BlockHeight() {
-		panic("expected validator dist info FeePoolWithdrawalHeight to be updated, but was not.")
+		panic(fmt.Sprintf("validator dist info withdraw height not updated:\n"+
+			"\tOperator Address: \t\t%v\n"+
+			"\tFeePoolWithdrawalHeight: \t%v\n"+
+			"\tBlockHeight: \t\t\t%v\n",
+			vi.OperatorAddr.String(),
+			vi.FeePoolWithdrawalHeight,
+			ctx.BlockHeight(),
+		))
 	}
 }
 

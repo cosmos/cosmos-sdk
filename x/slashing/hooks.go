@@ -61,8 +61,7 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddre
 }
 
 // nolint - unused hooks
-func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-}
+func (h Hooks) OnValidatorPowerDidChange(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) {}
 func (h Hooks) OnValidatorCreated(_ sdk.Context, _ sdk.ValAddress)                           {}
 func (h Hooks) OnValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
 func (h Hooks) OnValidatorRemoved(_ sdk.Context, _ sdk.ValAddress)                           {}

@@ -30,7 +30,7 @@ An application developer that would like to build a third party integration can 
 with the LCD for the Cosmos Hub (or any other zone) and only needs to initialise it. Afterwards his
 application can interact with the zone as if it was running against a full node.
 
-![high-level](pics/high-level.png)
+![high-level](./pics/high-level.png)
 
 An application developer that wants to build an third party application for the Cosmos Hub (or any
 other zone) should build it against it's canonical API. That API is a combination of multiple parts.
@@ -74,7 +74,7 @@ The original trusted validator set should be prepositioned into its trust store,
 validator set comes from genesis file. During runtime, if LCD detects a different validator set,
 it will verify it and save new validated validator set to the trust store.
 
-![validator-set-change](pics/validatorSetChange.png)
+![validator-set-change](./pics/validatorSetChange.png)
 
 ### Trust Propagation
 
@@ -83,7 +83,7 @@ validator set evolution. Validator set is the foundation of trust, and the trust
 other blockchain data, such as block and transaction. The propagate architecture is shown as
 follows:
 
-![change-process](pics/trustPropagate.png)
+![change-process](./pics/trustPropagate.png)
 
 In general, by trusted validator set, LCD can verify each block commit which contains all pre-commit
 data and block header data. Then the block hash, data hash and appHash are trusted. Based on this

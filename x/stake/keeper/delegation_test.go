@@ -581,6 +581,32 @@ func TestRedelegation(t *testing.T) {
 	require.Equal(t, 0, len(redelegations))
 }
 
+func TestRedelegateToSameValidator(t *testing.T) {
+
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+	pool.LooseTokens = sdk.NewDec(30)
+
+	// create a validator with a self-delegation
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validator, pool, issuedShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
+	require.Equal(t, int64(10), issuedShares.RoundInt64())
+	keeper.SetPool(ctx, pool)
+	validator = TestingUpdateValidator(keeper, ctx, validator)
+	pool = keeper.GetPool(ctx)
+	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
+	selfDelegation := types.Delegation{
+		DelegatorAddr: val0AccAddr,
+		ValidatorAddr: addrVals[0],
+		Shares:        issuedShares,
+	}
+	keeper.SetDelegation(ctx, selfDelegation)
+
+	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[0], sdk.NewDec(5))
+	require.Error(t, err)
+
+}
+
 func TestRedelegateSelfDelegation(t *testing.T) {
 
 	ctx, _, keeper := CreateTestInput(t, false, 0)

@@ -38,6 +38,8 @@ IMPROVEMENTS
 * SDK
  - #2573 [x/distribution] add accum invariance
  - \#1924 [simulation] Use a transition matrix for block size
+ - #2610 [x/stake] Block redelegation to and from the same validator
+
 
 * Tendermint
 

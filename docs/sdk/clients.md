@@ -451,7 +451,7 @@ gaiacli tx vote \
   --chain-id=<chain_id>
 ```
 
-##### Query vote
+##### Query votes
 
 Check the vote with the option you just submitted:
 
@@ -459,4 +459,20 @@ Check the vote with the option you just submitted:
 gaiacli query vote \
   --proposal-id=<proposal_id> \
   --voter=<account_cosmos>
+```
+
+You can also get all the previous votes submitted to the proposal by other accounts with:
+
+```bash
+gaiacli query votes \
+  --proposal-id=<proposal_id>
+```
+
+#### Query proposal tally results
+
+Yo check the current tally results of a given proposal ypu can use the `query tally` command:
+
+```bash
+gaiacli query tally \
+  --proposal-id=<proposal_id>
 ```

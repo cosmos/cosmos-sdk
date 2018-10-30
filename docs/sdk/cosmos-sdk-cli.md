@@ -3,7 +3,7 @@
 Create a new application specific blockchain project based on the Cosmos SDK with a single command.
 
 ::: warning
-🚧 cosmos-sdk-cli is an experimental project
+🚧 cosmos-sdk-cli is a work in progress tool to help users scaffold Cosmos SDK applications. It may not be up to date with the latest version and should be considered as experimental.
 :::
 
 ## Installation

@@ -2,6 +2,14 @@
 
 ## 0.25.0
 
+*October 31st, 2018*
+
+BUG FIXES
+* [x/gov] \#2625](https://github.com/cosmos/cosmos-sdk/pull/2625) - fix bug: AppendTag function usage error
+
+
+## 0.25.0
+
 *October 24th, 2018*
 
 BREAKING CHANGES

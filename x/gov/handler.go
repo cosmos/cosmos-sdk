@@ -42,7 +42,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	)
 
 	if votingStarted {
-		resTag = resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
 	}
 
 	return sdk.Result{

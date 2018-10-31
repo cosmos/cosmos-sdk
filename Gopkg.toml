@@ -57,7 +57,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "=v0.26.0-rc0"
+  branch = "jae/generalmerklefix"
 
 ## deps without releases:
 

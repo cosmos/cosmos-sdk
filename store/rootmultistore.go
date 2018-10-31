@@ -300,6 +300,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return sdk.ErrInternal(errMsg.Error()).QueryResult()
 	}
 
+	// Restore origin path and append proof op.
 	res.Proof.Ops = append(res.Proof.Ops, NewMultiStoreProofOp(
 		[]byte(storeName),
 		NewMultiStoreProof(commitInfo.StoreInfos),

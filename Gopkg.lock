@@ -64,13 +64,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:c7644c73a3d23741fdba8a99b1464e021a224b7e205be497271a8003a15ca41b"
-  name = "github.com/ebuchman/fail-test"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "95f809107225be108efcf10a3509e4ea6ceef3c4"
-
-[[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
@@ -441,7 +434,8 @@
   version = "v0.11.1"
 
 [[projects]]
-  digest = "1:6ebe52fa977e5be2afdb8c8303e343b559bec3426b185bacf6d9b371cc1bcc2b"
+  branch = "jae/generalmerklefix"
+  digest = "1:fbc7b3a2fbd5ed000fd0cef6c9a0af9ef2cc1fe8149af5075047c637e328f7d1"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -474,6 +468,7 @@
     "libs/db",
     "libs/errors",
     "libs/events",
+    "libs/fail",
     "libs/flowrate",
     "libs/log",
     "libs/pubsub",
@@ -506,8 +501,7 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "bc0d672b26dbbd6858e97a570c87e3c20cbf199e"
-  version = "v0.26.0-rc0"
+  revision = "8e959589a1b05d620341adab0c571c652421506f"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"

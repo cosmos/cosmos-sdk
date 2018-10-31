@@ -35,7 +35,7 @@ const (
 
 // common flagsets to add to various functions
 var (
-	fsPk                = flag.NewFlagSet("", flag.ContinueOnError)
+	FsPk                = flag.NewFlagSet("", flag.ContinueOnError)
 	FsAmount            = flag.NewFlagSet("", flag.ContinueOnError)
 	fsShares            = flag.NewFlagSet("", flag.ContinueOnError)
 	fsDescriptionCreate = flag.NewFlagSet("", flag.ContinueOnError)
@@ -48,7 +48,7 @@ var (
 )
 
 func init() {
-	fsPk.String(FlagPubKey, "", "Go-Amino encoded hex PubKey of the validator. For Ed25519 the go-amino prepend hex is 1624de6220")
+	FsPk.String(FlagPubKey, "", "Bech32-encoded PubKey of the validator. ")
 	FsAmount.String(FlagAmount, "", "Amount of coins to bond")
 	fsShares.String(FlagSharesAmount, "", "Amount of source-shares to either unbond or redelegate as a positive integer or decimal")
 	fsShares.String(FlagSharesFraction, "", "Fraction of source-shares to either unbond or redelegate as a positive integer or decimal >0 and <=1")

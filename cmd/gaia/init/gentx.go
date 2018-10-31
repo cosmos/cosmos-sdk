@@ -59,6 +59,15 @@ following delegation and commission default parameters:
 			if err != nil {
 				return err
 			}
+
+			// Read --pubkey, if empty take it from priv_validator.json
+			if viper.GetString(cli.FlagPubKey) != "" {
+				valPubKeyString := viper.GetString(cli.FlagPubKey)
+				valPubKey, err = sdk.GetConsPubKeyBech32(valPubKeyString)
+				if err != nil {
+					return err
+				}
+			}
 			// Run gaiad tx create-validator
 			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey)
 			createValidatorCmd := cli.GetCmdCreateValidator(cdc)
@@ -90,6 +99,7 @@ following delegation and commission default parameters:
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
 	cmd.Flags().AddFlagSet(cli.FsAmount)
+	cmd.Flags().AddFlagSet(cli.FsPk)
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
 }

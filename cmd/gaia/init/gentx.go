@@ -112,8 +112,8 @@ func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID st
 	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
 	viper.Set(cli.FlagIP, ip)                                      // --ip
 	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
-	viper.Set(cli.FlagGenesisFormat, true)     // --genesis-format
-	viper.Set(cli.FlagMoniker, config.Moniker) // --moniker
+	viper.Set(cli.FlagGenesisFormat, true)                         // --genesis-format
+	viper.Set(cli.FlagMoniker, config.Moniker)                     // --moniker
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))
 	}

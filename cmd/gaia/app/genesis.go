@@ -246,7 +246,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 		// validate the validator address and funds against the accounts in the state
 		msg := msgs[0].(stake.MsgCreateValidator)
 		addr := string(sdk.AccAddress(msg.ValidatorAddr))
-		acc , ok := addrMap[addr]
+		acc, ok := addrMap[addr]
 		if !ok {
 			err = fmt.Errorf("account %v not in genesis.json: %+v", addr, addrMap)
 			return

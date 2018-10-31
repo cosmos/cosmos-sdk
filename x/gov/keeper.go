@@ -1,6 +1,8 @@
 package gov
 
 import (
+	"time"
+
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -92,8 +94,12 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 		TotalDeposit: sdk.Coins{},
 		SubmitTime:   ctx.BlockHeader().Time,
 	}
+
+	depositPeriod := keeper.GetDepositProcedure(ctx).MaxDepositPeriod
+	proposal.SetDepositEndTime(proposal.GetSubmitTime().Add(depositPeriod))
+
 	keeper.SetProposal(ctx, proposal)
-	keeper.InactiveProposalQueuePush(ctx, proposal)
+	keeper.InsertInactiveProposalQueue(ctx, proposal.GetDepositEndTime(), proposalID)
 	return proposal
 }
 
@@ -119,9 +125,12 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
 }
 
 // Implements sdk.AccountKeeper.
-func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposal Proposal) {
+func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID int64) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Delete(KeyProposal(proposal.GetProposalID()))
+	proposal := keeper.GetProposal(ctx, proposalID)
+	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.GetDepositEndTime(), proposalID)
+	keeper.RemoveFromActiveProposalQueue(ctx, proposal.GetVotingEndTime(), proposalID)
+	store.Delete(KeyProposal(proposalID))
 }
 
 // Get Proposal from store by ProposalID
@@ -216,9 +225,13 @@ func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID int64, e
 
 func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 	proposal.SetVotingStartTime(ctx.BlockHeader().Time)
+	votingPeriod := keeper.GetVotingProcedure(ctx).VotingPeriod
+	proposal.SetVotingEndTime(proposal.GetVotingStartTime().Add(votingPeriod))
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
-	keeper.ActiveProposalQueuePush(ctx, proposal)
+
+	keeper.RemoveFromInactiveProposalQueue(ctx, proposal.GetDepositEndTime(), proposal.GetProposalID())
+	keeper.InsertActiveProposalQueue(ctx, proposal.GetVotingEndTime(), proposal.GetProposalID())
 }
 
 // =====================================================
@@ -426,93 +439,40 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID int64) {
 // =====================================================
 // ProposalQueues
 
-func (keeper Keeper) getActiveProposalQueue(ctx sdk.Context) ProposalQueue {
+// Returns an iterator for all the proposals in the Active Queue that expire by endTime
+func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyActiveProposalQueue)
-	if bz == nil {
-		return nil
-	}
-
-	var proposalQueue ProposalQueue
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue)
-
-	return proposalQueue
+	return store.Iterator(PrefixActiveProposalQueue, sdk.PrefixEndBytes(ActiveProposalQueueTimePrefix(endTime)))
 }
 
-func (keeper Keeper) setActiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
+// Inserts a ProposalID into the active proposal queue at endTime
+func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, endTime time.Time, proposalID int64) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinary(proposalQueue)
-	store.Set(KeyActiveProposalQueue, bz)
+	bz := keeper.cdc.MustMarshalBinary(proposalID)
+	store.Set(ActiveProposalQueueProposalKey(endTime, proposalID), bz)
 }
 
-// Return the Proposal at the front of the ProposalQueue
-func (keeper Keeper) ActiveProposalQueuePeek(ctx sdk.Context) Proposal {
-	proposalQueue := keeper.getActiveProposalQueue(ctx)
-	if len(proposalQueue) == 0 {
-		return nil
-	}
-	return keeper.GetProposal(ctx, proposalQueue[0])
-}
-
-// Remove and return a Proposal from the front of the ProposalQueue
-func (keeper Keeper) ActiveProposalQueuePop(ctx sdk.Context) Proposal {
-	proposalQueue := keeper.getActiveProposalQueue(ctx)
-	if len(proposalQueue) == 0 {
-		return nil
-	}
-	frontElement, proposalQueue := proposalQueue[0], proposalQueue[1:]
-	keeper.setActiveProposalQueue(ctx, proposalQueue)
-	return keeper.GetProposal(ctx, frontElement)
-}
-
-// Add a proposalID to the back of the ProposalQueue
-func (keeper Keeper) ActiveProposalQueuePush(ctx sdk.Context, proposal Proposal) {
-	proposalQueue := append(keeper.getActiveProposalQueue(ctx), proposal.GetProposalID())
-	keeper.setActiveProposalQueue(ctx, proposalQueue)
-}
-
-func (keeper Keeper) getInactiveProposalQueue(ctx sdk.Context) ProposalQueue {
+// removes a proposalID from the Active Proposal Queue
+func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, endTime time.Time, proposalID int64) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyInactiveProposalQueue)
-	if bz == nil {
-		return nil
-	}
-
-	var proposalQueue ProposalQueue
-
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue)
-
-	return proposalQueue
+	store.Set(ActiveProposalQueueProposalKey(endTime, proposalID), nil)
 }
 
-func (keeper Keeper) setInactiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
+// Returns an iterator for all the proposals in the Inactive Queue that expire by endTime
+func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinary(proposalQueue)
-	store.Set(KeyInactiveProposalQueue, bz)
+	return store.Iterator(PrefixInactiveProposalQueue, sdk.PrefixEndBytes(InactiveProposalQueueTimePrefix(endTime)))
 }
 
-// Return the Proposal at the front of the ProposalQueue
-func (keeper Keeper) InactiveProposalQueuePeek(ctx sdk.Context) Proposal {
-	proposalQueue := keeper.getInactiveProposalQueue(ctx)
-	if len(proposalQueue) == 0 {
-		return nil
-	}
-	return keeper.GetProposal(ctx, proposalQueue[0])
+// Inserts a ProposalID into the inactive proposal queue at endTime
+func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, endTime time.Time, proposalID int64) {
+	store := ctx.KVStore(keeper.storeKey)
+	bz := keeper.cdc.MustMarshalBinary(proposalID)
+	store.Set(InactiveProposalQueueProposalKey(endTime, proposalID), bz)
 }
 
-// Remove and return a Proposal from the front of the ProposalQueue
-func (keeper Keeper) InactiveProposalQueuePop(ctx sdk.Context) Proposal {
-	proposalQueue := keeper.getInactiveProposalQueue(ctx)
-	if len(proposalQueue) == 0 {
-		return nil
-	}
-	frontElement, proposalQueue := proposalQueue[0], proposalQueue[1:]
-	keeper.setInactiveProposalQueue(ctx, proposalQueue)
-	return keeper.GetProposal(ctx, frontElement)
-}
-
-// Add a proposalID to the back of the ProposalQueue
-func (keeper Keeper) InactiveProposalQueuePush(ctx sdk.Context, proposal Proposal) {
-	proposalQueue := append(keeper.getInactiveProposalQueue(ctx), proposal.GetProposalID())
-	keeper.setInactiveProposalQueue(ctx, proposalQueue)
+// removes a proposalID from the Inactive Proposal Queue
+func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, endTime time.Time, proposalID int64) {
+	store := ctx.KVStore(keeper.storeKey)
+	store.Set(InactiveProposalQueueProposalKey(endTime, proposalID), nil)
 }

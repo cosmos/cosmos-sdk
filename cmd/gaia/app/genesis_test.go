@@ -1,6 +1,9 @@
 package app
 
 import (
+	"encoding/json"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -66,6 +69,20 @@ func TestGaiaAppGenTx(t *testing.T) {
 func TestGaiaAppGenState(t *testing.T) {
 	cdc := MakeCodec()
 	_ = cdc
+	var genDoc tmtypes.GenesisDoc
+	//var genTxs []json.RawMessage
+
+	// test unmarshalling error
+	_, err := GaiaAppGenState(cdc, genDoc, []json.RawMessage{})
+	require.Error(t, err)
+
+	appState := makeGenesisState(t, []auth.StdTx{})
+	genDoc.AppState, err = json.Marshal(appState)
+	require.NoError(t, err)
+
+	// test validation error
+	_, err = GaiaAppGenState(cdc, genDoc, []json.RawMessage{})
+	require.Error(t, err)
 
 	// TODO test must provide at least genesis transaction
 	// TODO test with both one and two genesis transactions:
@@ -103,4 +120,11 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val2)
 	err = GaiaValidateGenesisState(genesisState)
 	require.NotNil(t, err)
+}
+
+func TestNewDefaultGenesisAccount(t *testing.T) {
+	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
+	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
+	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("fooToken"))
+	require.Equal(t, sdk.NewInt(150), acc.Coins.AmountOf("steak"))
 }

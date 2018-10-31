@@ -134,7 +134,7 @@ func logPrinter(testingmode bool, logs []*strings.Builder) func() {
 			for i := 0; i < len(logs); i++ {
 				// We're passed the last created block
 				if logs[i] == nil {
-					numLoggers = i - 1
+					numLoggers = i
 					break
 				}
 			}

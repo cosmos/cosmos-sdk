@@ -54,9 +54,9 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			break
 		}
 
-		if validator.OperatorAddr.String() == "cosmosvaloper1xrhemcpkjnyzxjpjzpjysucayy62v4gqur9lqz" {
-			fmt.Printf("\nVALSTATE validator: %v\n", validator)
-		}
+		//if validator.OperatorAddr.String() == "cosmosvaloper1xrhemcpkjnyzxjpjzpjysucayy62v4gqur9lqz" {
+		//fmt.Printf("\nVALSTATE validator: %v\n", validator)
+		//}
 
 		// apply the appropriate state change if necessary
 		switch validator.Status {
@@ -82,18 +82,18 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
 
-			if found && validator.OperatorAddr.String() == "cosmosvaloper1xrhemcpkjnyzxjpjzpjysucayy62v4gqur9lqz" {
-				newPowerInt := sdk.NewInt(newPower)
-				var oldPowerInt sdk.Int
-				k.cdc.MustUnmarshalBinary(oldPowerBytes, &oldPowerInt)
-				fmt.Printf("\n\t height %v\n", ctx.BlockHeight())
-				fmt.Printf("\t old power: %v\n\t new power: %v\n", oldPowerInt.String(), newPowerInt.String())
-				fmt.Printf("\t old power bytes: %x\n\t new power bytes: %x\n", oldPowerBytes, newPowerBytes)
-			}
+			//if found && validator.OperatorAddr.String() == "cosmosvaloper1xrhemcpkjnyzxjpjzpjysucayy62v4gqur9lqz" {
+			//newPowerInt := sdk.NewInt(newPower)
+			//var oldPowerInt sdk.Int
+			//k.cdc.MustUnmarshalBinary(oldPowerBytes, &oldPowerInt)
+			//fmt.Printf("\n\t height %v\n", ctx.BlockHeight())
+			//fmt.Printf("\t old power: %v\n\t new power: %v\n", oldPowerInt.String(), newPowerInt.String())
+			//fmt.Printf("\t old power bytes: %x\n\t new power bytes: %x\n", oldPowerBytes, newPowerBytes)
+			//}
 
 			// XXX Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
 			// XXX This hook probably shouldn't exist.  Maybe rethink the hook system.
-			k.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
+			//k.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
 
 			// set validator power on lookup index.
 			k.SetLastValidatorPower(ctx, valAddr, sdk.NewInt(newPower))

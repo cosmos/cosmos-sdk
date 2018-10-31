@@ -445,7 +445,8 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf(
+		"gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -490,11 +491,11 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	unsignedTxFile := writeToNewTempFile(t, stdout)
 	defer os.Remove(unsignedTxFile.Name())
 
-	// Test sign --print-sigs
+	// Test sign --validate-signatures
 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx sign %v --print-sigs %v", flags, unsignedTxFile.Name()))
-	require.True(t, success)
-	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n", fooAddr.String()), stdout)
+		"gaiacli tx sign %v --validate-signatures %v", flags, unsignedTxFile.Name()))
+	require.False(t, success)
+	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
 
 	// Test sign
 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
@@ -511,15 +512,17 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Test sign --print-signatures
 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx sign %v --print-sigs %v", flags, signedTxFile.Name()))
+		"gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()))
 	require.True(t, success)
-	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\n", fooAddr.String(), fooAddr.String()), stdout)
+	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\t[OK]\n\n", fooAddr.String(),
+		fooAddr.String()), stdout)
 
 	// Test broadcast
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
-	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli tx broadcast %v --json %v", flags, signedTxFile.Name()))
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli tx broadcast %v --json %v", flags, signedTxFile.Name()))
 	require.True(t, success)
 	var result struct {
 		Response abci.ResponseDeliverTx

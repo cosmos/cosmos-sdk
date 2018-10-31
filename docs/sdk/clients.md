@@ -181,6 +181,12 @@ gaiacli tx sign \
   unsignedSendTx.json > signedSendTx.json
 ```
 
+You can validate the transaction's signagures by typing the following:
+
+```bash
+gaiacli tx sign --validate-signatures signedSendTx.json
+```
+
 You can broadcast the signed transaction to a node by providing the JSON file to the following command:
 
 ```

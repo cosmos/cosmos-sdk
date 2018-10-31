@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"testing"
@@ -193,7 +194,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 	var logger log.Logger
 	logger = log.NewNopLogger()
 	var db dbm.DB
-	dir := os.TempDir()
+	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
 	db, _ = dbm.NewGoLevelDB("Simulation", dir)
 	defer func() {
 		db.Close()
@@ -235,7 +236,13 @@ func TestFullGaiaSimulation(t *testing.T) {
 	} else {
 		logger = log.NewNopLogger()
 	}
-	db := dbm.NewMemDB()
+	var db dbm.DB
+	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
+	db, _ = dbm.NewGoLevelDB("Simulation", dir)
+	defer func() {
+		db.Close()
+		os.RemoveAll(dir)
+	}()
 	app := NewGaiaApp(logger, db, nil)
 	require.Equal(t, "GaiaApp", app.Name())
 
@@ -250,7 +257,11 @@ func TestFullGaiaSimulation(t *testing.T) {
 		commit,
 	)
 	if commit {
-		fmt.Println("Database Size", db.Stats()["database.size"])
+		// for memdb:
+		// fmt.Println("Database Size", db.Stats()["database.size"])
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 	require.Nil(t, err)
 }

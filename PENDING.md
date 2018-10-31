@@ -40,6 +40,7 @@ IMPROVEMENTS
  - #2556 [x/mock/simulation] Fix debugging output
  - #2396 [x/mock/simulation] Change parameters to get more slashes
  - #2617 [x/mock/simulation] Randomize all genesis parameters
+ - #2610 [x/stake] Block redelegation to and from the same validator
 
 * Tendermint
 
@@ -53,7 +54,5 @@ BUG FIXES
 * Gaia
 
 * SDK
- - #2573 [x/distribution] accum invariance bugfix
- - #2573 [x/slashing] unbonding-delegation slashing invariance bugfix
 
 * Tendermint

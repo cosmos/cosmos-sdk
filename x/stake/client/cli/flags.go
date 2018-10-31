@@ -15,7 +15,7 @@ const (
 	FlagPubKey              = "pubkey"
 	FlagAmount              = "amount"
 	FlagSharesAmount        = "shares-amount"
-	FlagSharesPercent       = "shares-percent"
+	FlagSharesFraction      = "shares-fraction"
 
 	FlagMoniker  = "moniker"
 	FlagIdentity = "identity"
@@ -51,7 +51,7 @@ func init() {
 	fsPk.String(FlagPubKey, "", "Go-Amino encoded hex PubKey of the validator. For Ed25519 the go-amino prepend hex is 1624de6220")
 	fsAmount.String(FlagAmount, "", "Amount of coins to bond")
 	fsShares.String(FlagSharesAmount, "", "Amount of source-shares to either unbond or redelegate as a positive integer or decimal")
-	fsShares.String(FlagSharesPercent, "", "Percent of source-shares to either unbond or redelegate as a positive integer or decimal >0 and <=1")
+	fsShares.String(FlagSharesFraction, "", "Fraction of source-shares to either unbond or redelegate as a positive integer or decimal >0 and <=1")
 	fsDescriptionCreate.String(FlagMoniker, "", "validator name")
 	fsDescriptionCreate.String(FlagIdentity, "", "optional identity signature (ex. UPort or Keybase)")
 	fsDescriptionCreate.String(FlagWebsite, "", "optional website")

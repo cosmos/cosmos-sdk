@@ -36,6 +36,8 @@
 - Tags [#1780](https://github.com/cosmos/cosmos-sdk/issues/1780)
 # Lower priority
 
+- Create some diagrams (see `docs/resources/diagrams/todo.md`) 
+
 ## Governance v2
 
 - Circuit breaker - https://github.com/cosmos/cosmos-sdk/issues/926

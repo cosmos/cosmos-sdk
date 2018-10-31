@@ -1,35 +1,38 @@
 package slashing
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
-var cdc = wire.NewCodec()
+var cdc = codec.New()
 
 // name to identify transaction types
-const MsgType = "slashing"
+const MsgRoute = "slashing"
 
 // verify interface at compile time
-var _ sdk.Msg = &MsgUnrevoke{}
+var _ sdk.Msg = &MsgUnjail{}
 
-// MsgUnrevoke - struct for unrevoking revoked validator
-type MsgUnrevoke struct {
-	ValidatorAddr sdk.AccAddress `json:"address"` // address of the validator owner
+// MsgUnjail - struct for unjailing jailed validator
+type MsgUnjail struct {
+	ValidatorAddr sdk.ValAddress `json:"address"` // address of the validator operator
 }
 
-func NewMsgUnrevoke(validatorAddr sdk.AccAddress) MsgUnrevoke {
-	return MsgUnrevoke{
+func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {
+	return MsgUnjail{
 		ValidatorAddr: validatorAddr,
 	}
 }
 
 //nolint
-func (msg MsgUnrevoke) Type() string                 { return MsgType }
-func (msg MsgUnrevoke) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.ValidatorAddr} }
+func (msg MsgUnjail) Route() string { return MsgRoute }
+func (msg MsgUnjail) Type() string  { return "unjail" }
+func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr)}
+}
 
 // get the bytes for the message signer to sign on
-func (msg MsgUnrevoke) GetSignBytes() []byte {
+func (msg MsgUnjail) GetSignBytes() []byte {
 	b, err := cdc.MarshalJSON(msg)
 	if err != nil {
 		panic(err)
@@ -38,7 +41,7 @@ func (msg MsgUnrevoke) GetSignBytes() []byte {
 }
 
 // quick validity check
-func (msg MsgUnrevoke) ValidateBasic() sdk.Error {
+func (msg MsgUnjail) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrBadValidatorAddr(DefaultCodespace)
 	}

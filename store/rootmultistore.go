@@ -5,10 +5,9 @@ import (
 	"io"
 	"strings"
 
-	"golang.org/x/crypto/ripemd160"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -68,6 +67,9 @@ func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.D
 	if _, ok := rs.storesParams[key]; ok {
 		panic(fmt.Sprintf("rootMultiStore duplicate store key %v", key))
 	}
+	if _, ok := rs.keysByName[key.Name()]; ok {
+		panic(fmt.Sprintf("rootMultiStore duplicate store key name %v", key))
+	}
 	rs.storesParams[key] = storeParams{
 		key: key,
 		typ: typ,
@@ -117,26 +119,26 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 		return err
 	}
 
+	// Convert StoreInfos slice to map
+	infos := make(map[StoreKey]storeInfo)
+	for _, storeInfo := range cInfo.StoreInfos {
+		infos[rs.nameToKey(storeInfo.Name)] = storeInfo
+	}
+
 	// Load each Store
 	var newStores = make(map[StoreKey]CommitStore)
-	for _, storeInfo := range cInfo.StoreInfos {
-		key, commitID := rs.nameToKey(storeInfo.Name), storeInfo.Core.CommitID
-		storeParams := rs.storesParams[key]
-		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
+	for key, storeParams := range rs.storesParams {
+		var id CommitID
+		info, ok := infos[key]
+		if ok {
+			id = info.Core.CommitID
+		}
+
+		store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
 		if err != nil {
 			return fmt.Errorf("failed to load rootMultiStore: %v", err)
 		}
 		newStores[key] = store
-	}
-
-	// TODO: detecting transient is quite adhoc
-	// If any nontransient CommitStoreLoaders were not used, return error.
-	for key, param := range rs.storesParams {
-		if param.typ != sdk.StoreTypeTransient {
-			if _, ok := newStores[key]; !ok {
-				return fmt.Errorf("unused CommitStoreLoader: %v", key)
-			}
-		}
 	}
 
 	// Success.
@@ -288,6 +290,18 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// trim the path and make the query
 	req.Path = subpath
 	res := queryable.Query(req)
+
+	if !req.Prove || !RequireProof(subpath) {
+		return res
+	}
+
+	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
+	if errMsg != nil {
+		return sdk.ErrInternal(errMsg.Error()).QueryResult()
+	}
+
+	res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
+
 	return res
 }
 
@@ -409,7 +423,7 @@ func (si storeInfo) Hash() []byte {
 	// Doesn't write Name, since merkle.SimpleHashFromMap() will
 	// include them via the keys.
 	bz, _ := cdc.MarshalBinary(si.Core) // Does not error
-	hasher := ripemd160.New()
+	hasher := tmhash.New()
 	_, err := hasher.Write(bz)
 	if err != nil {
 		// TODO: Handle with #870

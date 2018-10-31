@@ -7,8 +7,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -30,16 +30,16 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	keyFees := sdk.NewKVStoreKey("fee") // TODO
 
 	// Set various mappers/keepers to interact easily with underlying stores
-	accountMapper := auth.NewAccountMapper(cdc, keyAccount, auth.ProtoBaseAccount)
-	coinKeeper := bank.NewKeeper(accountMapper)
+	accountKeeper := auth.NewAccountKeeper(cdc, keyAccount, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
 	feeKeeper := auth.NewFeeCollectionKeeper(cdc, keyFees)
 
-	app.SetAnteHandler(auth.NewAnteHandler(accountMapper, feeKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(accountKeeper, feeKeeper))
 
 	// Register message routes.
 	// Note the handler gets access to
 	app.Router().
-		AddRoute("bank", bank.NewHandler(coinKeeper))
+		AddRoute("bank", bank.NewHandler(bankKeeper))
 
 	// Mount stores and load the latest state.
 	app.MountStoresIAVL(keyAccount, keyFees)
@@ -51,12 +51,12 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 }
 
 // Update codec from app2 to register imported modules
-func UpdatedCodec() *wire.Codec {
-	cdc := wire.NewCodec()
+func UpdatedCodec() *codec.Codec {
+	cdc := codec.New()
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
-	auth.RegisterWire(cdc)
+	auth.RegisterCodec(cdc)
 	cryptoAmino.RegisterAmino(cdc)
 	return cdc
 }

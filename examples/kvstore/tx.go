@@ -14,6 +14,10 @@ type kvstoreTx struct {
 	bytes []byte
 }
 
+func (tx kvstoreTx) Route() string {
+	return "kvstore"
+}
+
 func (tx kvstoreTx) Type() string {
 	return "kvstore"
 }

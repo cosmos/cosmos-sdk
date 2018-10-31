@@ -1,8 +1,8 @@
 package auth
 
 import (
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 var (
@@ -16,19 +16,18 @@ type FeeCollectionKeeper struct {
 	// The (unexposed) key used to access the fee store from the Context.
 	key sdk.StoreKey
 
-	// The wire codec for binary encoding/decoding of accounts.
-	cdc *wire.Codec
+	// The codec codec for binary encoding/decoding of accounts.
+	cdc *codec.Codec
 }
 
-// NewFeeKeeper returns a new FeeKeeper
-func NewFeeCollectionKeeper(cdc *wire.Codec, key sdk.StoreKey) FeeCollectionKeeper {
+func NewFeeCollectionKeeper(cdc *codec.Codec, key sdk.StoreKey) FeeCollectionKeeper {
 	return FeeCollectionKeeper{
 		key: key,
 		cdc: cdc,
 	}
 }
 
-// Adds to Collected Fee Pool
+// retrieves the collected fee pool
 func (fck FeeCollectionKeeper) GetCollectedFees(ctx sdk.Context) sdk.Coins {
 	store := ctx.KVStore(fck.key)
 	bz := store.Get(collectedFeesKey)
@@ -41,22 +40,21 @@ func (fck FeeCollectionKeeper) GetCollectedFees(ctx sdk.Context) sdk.Coins {
 	return *feePool
 }
 
-// Sets to Collected Fee Pool
 func (fck FeeCollectionKeeper) setCollectedFees(ctx sdk.Context, coins sdk.Coins) {
 	bz := fck.cdc.MustMarshalBinary(coins)
 	store := ctx.KVStore(fck.key)
 	store.Set(collectedFeesKey, bz)
 }
 
-// Adds to Collected Fee Pool
-func (fck FeeCollectionKeeper) addCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
+// add to the fee pool
+func (fck FeeCollectionKeeper) AddCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
 	newCoins := fck.GetCollectedFees(ctx).Plus(coins)
 	fck.setCollectedFees(ctx, newCoins)
 
 	return newCoins
 }
 
-// Clears the collected Fee Pool
+// clear the fee pool
 func (fck FeeCollectionKeeper) ClearCollectedFees(ctx sdk.Context) {
 	fck.setCollectedFees(ctx, sdk.Coins{})
 }

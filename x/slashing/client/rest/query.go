@@ -1,41 +1,45 @@
 package rest
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/gorilla/mux"
 )
 
-func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *wire.Codec) {
+func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 	r.HandleFunc(
-		"/slashing/signing_info/{validator}",
+		"/slashing/validators/{validatorPubKey}/signing_info",
 		signingInfoHandlerFn(cliCtx, "slashing", cdc),
 	).Methods("GET")
 }
 
 // http request handler to query signing info
-func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *wire.Codec) http.HandlerFunc {
+// nolint: unparam
+func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		pk, err := sdk.GetValPubKeyBech32(vars["validator"])
+		pk, err := sdk.GetConsPubKeyBech32(vars["validatorPubKey"])
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		key := slashing.GetValidatorSigningInfoKey(sdk.ValAddress(pk.Address()))
+		key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(pk.Address()))
 
 		res, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't query signing info. Error: %s", err.Error())))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		if len(res) == 0 {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -43,18 +47,10 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *wire
 
 		err = cdc.UnmarshalBinary(res, &signingInfo)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("couldn't decode signing info. Error: %s", err.Error())))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		output, err := cdc.MarshalJSON(signingInfo)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, signingInfo, cliCtx.Indent)
 	}
 }

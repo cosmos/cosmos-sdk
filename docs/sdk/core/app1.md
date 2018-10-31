@@ -14,10 +14,10 @@ Developers can create messages by implementing the `Msg` interface:
 
 ```go
 type Msg interface {
-    // Return the message type.
+    // Return the message Route.
     // Must be alphanumeric or empty.
     // Must correspond to name of message handler (XXX).
-    Type() string
+    Route() string
 
     // ValidateBasic does a simple validation check that
     // doesn't require access to any other information.
@@ -49,7 +49,7 @@ type MsgSend struct {
 }
 
 // Implements Msg.
-func (msg MsgSend) Type() string { return "send" }
+func (msg MsgSend) Route() string { return "send" }
 ```
 
 It specifies that the message should be JSON marshaled and signed by the sender:
@@ -208,7 +208,7 @@ type Result struct {
 	// GasWanted is the maximum units of work we allow this tx to perform.
 	GasWanted int64
 
-	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
+	// GasUsed is the amount of gas actually consumed.
 	GasUsed int64
 
 	// Tx fee amount and denom.
@@ -469,7 +469,7 @@ Tendermint consensus engine. It would be initialized by a Genesis file, and it
 would be driven by blocks of transactions committed by the underlying Tendermint
 consensus. We'll talk more about ABCI and how this all works a bit later, but
 feel free to check the
-[specification](https://github.com/tendermint/tendermint/blob/master/docs/abci-spec.md).
+[specification](https://github.com/tendermint/tendermint/blob/master/docs/app-dev/abci-spec.md).
 We'll also see how to connect our app to a complete suite of components
 for running and using a live blockchain application.
 

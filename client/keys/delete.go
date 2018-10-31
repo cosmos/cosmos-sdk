@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	keyerror "github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
@@ -25,7 +26,7 @@ func deleteKeyCommand() *cobra.Command {
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	kb, err := GetKeyBase()
+	kb, err := GetKeyBaseWithWritePerm()
 	if err != nil {
 		return err
 	}
@@ -68,25 +69,32 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&m)
 	if err != nil {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	kb, err = GetKeyBase()
+	kb, err = GetKeyBaseWithWritePerm()
 	if err != nil {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	// TODO handle error if key is not available or pass is wrong
 	err = kb.Delete(name, m.Password)
-	if err != nil {
-		w.WriteHeader(500)
+	if keyerror.IsErrKeyNotFound(err) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(err.Error()))
+		return
+	} else if keyerror.IsErrWrongPassword(err) {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(err.Error()))
+		return
+	} else if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 }

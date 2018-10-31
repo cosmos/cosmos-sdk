@@ -8,9 +8,9 @@ output "instances" {
   value = ["${aws_instance.node.*.id}"]
 }
 
-output "instances_count" {
-  value = "${length(aws_instance.node.*)}"
-}
+#output "instances_count" {
+#  value = "${length(aws_instance.node.*)}"
+#}
 
 // The list of cluster instance public IPs
 output "public_ips" {

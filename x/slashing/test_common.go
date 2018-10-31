@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -13,9 +14,9 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -30,58 +31,70 @@ var (
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
-	addrs = []sdk.AccAddress{
-		sdk.AccAddress(pks[0].Address()),
-		sdk.AccAddress(pks[1].Address()),
-		sdk.AccAddress(pks[2].Address()),
+	addrs = []sdk.ValAddress{
+		sdk.ValAddress(pks[0].Address()),
+		sdk.ValAddress(pks[1].Address()),
+		sdk.ValAddress(pks[2].Address()),
 	}
 	initCoins = sdk.NewInt(200)
 )
 
-func createTestCodec() *wire.Codec {
-	cdc := wire.NewCodec()
-	sdk.RegisterWire(cdc)
-	auth.RegisterWire(cdc)
-	bank.RegisterWire(cdc)
-	stake.RegisterWire(cdc)
-	wire.RegisterCrypto(cdc)
+func createTestCodec() *codec.Codec {
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	auth.RegisterCodec(cdc)
+	bank.RegisterCodec(cdc)
+	stake.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
 	return cdc
 }
 
-func createTestInput(t *testing.T) (sdk.Context, bank.Keeper, stake.Keeper, params.Setter, Keeper) {
+func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
 	keyStake := sdk.NewKVStoreKey("stake")
+	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
 	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewTMLogger(os.Stdout))
+	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
-	accountMapper := auth.NewAccountMapper(cdc, keyAcc, auth.ProtoBaseAccount)
-	ck := bank.NewKeeper(accountMapper)
-	params := params.NewKeeper(cdc, keyParams)
-	sk := stake.NewKeeper(cdc, keyStake, ck, stake.DefaultCodespace)
+	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, auth.ProtoBaseAccount)
+
+	ck := bank.NewBaseKeeper(accountKeeper)
+	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
+	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 
-	genesis.Pool.LooseTokens = sdk.NewRat(initCoins.MulRaw(int64(len(addrs))).Int64())
+	genesis.Pool.LooseTokens = sdk.NewDec(initCoins.MulRaw(int64(len(addrs))).Int64())
 
 	_, err = stake.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)
 
 	for _, addr := range addrs {
-		_, _, err = ck.AddCoins(ctx, addr, sdk.Coins{
+		_, _, err = ck.AddCoins(ctx, sdk.AccAddress(addr), sdk.Coins{
 			{sk.GetParams(ctx).BondDenom, initCoins},
 		})
 	}
 	require.Nil(t, err)
-	keeper := NewKeeper(cdc, keySlashing, sk, params.Getter(), DefaultCodespace)
-	return ctx, ck, sk, params.Setter(), keeper
+	paramstore := paramsKeeper.Subspace(DefaultParamspace)
+	keeper := NewKeeper(cdc, keySlashing, sk, paramstore, DefaultCodespace)
+	sk = sk.WithHooks(keeper.Hooks())
+
+	require.NotPanics(t, func() {
+		InitGenesis(ctx, keeper, GenesisState{defaults}, genesis)
+	})
+
+	return ctx, ck, sk, paramstore, keeper
 }
 
 func newPubKey(pk string) (res crypto.PubKey) {
@@ -99,12 +112,22 @@ func testAddr(addr string) sdk.AccAddress {
 	return res
 }
 
-func newTestMsgCreateValidator(address sdk.AccAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
+func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
+	commission := stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return stake.MsgCreateValidator{
 		Description:   stake.Description{},
-		DelegatorAddr: address,
+		Commission:    commission,
+		DelegatorAddr: sdk.AccAddress(address),
 		ValidatorAddr: address,
 		PubKey:        pubKey,
-		Delegation:    sdk.Coin{"steak", amt},
+		Delegation:    sdk.NewCoin("steak", amt),
+	}
+}
+
+func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) stake.MsgDelegate {
+	return stake.MsgDelegate{
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
+		Delegation:    sdk.NewCoin("steak", delAmount),
 	}
 }

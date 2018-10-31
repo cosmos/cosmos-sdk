@@ -31,7 +31,8 @@ func NewMsgMine(sender sdk.AccAddress, difficulty uint64, count uint64, nonce ui
 }
 
 // nolint
-func (msg MsgMine) Type() string                 { return "pow" }
+func (msg MsgMine) Route() string                { return "pow" }
+func (msg MsgMine) Type() string                 { return "mine" }
 func (msg MsgMine) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Sender} }
 func (msg MsgMine) String() string {
 	return fmt.Sprintf("MsgMine{Sender: %s, Difficulty: %d, Count: %d, Nonce: %d, Proof: %s}", msg.Sender, msg.Difficulty, msg.Count, msg.Nonce, msg.Proof)

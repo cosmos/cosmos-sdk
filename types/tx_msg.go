@@ -9,6 +9,10 @@ type Msg interface {
 
 	// Return the message type.
 	// Must be alphanumeric or empty.
+	Route() string
+
+	// Returns a human-readable string for the message, intended for utilization
+	// within tags
 	Type() string
 
 	// ValidateBasic does a simple validation check that
@@ -54,7 +58,8 @@ func NewTestMsg(addrs ...AccAddress) *TestMsg {
 }
 
 //nolint
-func (msg *TestMsg) Type() string { return "TestMsg" }
+func (msg *TestMsg) Route() string { return "TestMsg" }
+func (msg *TestMsg) Type() string  { return "Test message" }
 func (msg *TestMsg) GetSignBytes() []byte {
 	bz, err := json.Marshal(msg.signers)
 	if err != nil {

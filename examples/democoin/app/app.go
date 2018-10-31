@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"os"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -10,8 +11,8 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
@@ -27,10 +28,16 @@ const (
 	appName = "DemocoinApp"
 )
 
+// default home directories for expected binaries
+var (
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.democli")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.democoind")
+)
+
 // Extended ABCI application
 type DemocoinApp struct {
 	*bam.BaseApp
-	cdc *wire.Codec
+	cdc *codec.Codec
 
 	// keys to access the substores
 	capKeyMainStore    *sdk.KVStoreKey
@@ -41,14 +48,14 @@ type DemocoinApp struct {
 
 	// keepers
 	feeCollectionKeeper auth.FeeCollectionKeeper
-	coinKeeper          bank.Keeper
+	bankKeeper          bank.Keeper
 	coolKeeper          cool.Keeper
 	powKeeper           pow.Keeper
 	ibcMapper           ibc.Mapper
 	stakeKeeper         simplestake.Keeper
 
 	// Manage getting and setting accounts
-	accountMapper auth.AccountMapper
+	accountKeeper auth.AccountKeeper
 }
 
 func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
@@ -67,31 +74,31 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
 	}
 
-	// Define the accountMapper.
-	app.accountMapper = auth.NewAccountMapper(
+	// Define the accountKeeper.
+	app.accountKeeper = auth.NewAccountKeeper(
 		cdc,
 		app.capKeyAccountStore, // target store
 		types.ProtoAppAccount,  // prototype
 	)
 
 	// Add handlers.
-	app.coinKeeper = bank.NewKeeper(app.accountMapper)
-	app.coolKeeper = cool.NewKeeper(app.capKeyMainStore, app.coinKeeper, app.RegisterCodespace(cool.DefaultCodespace))
-	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), app.coinKeeper, app.RegisterCodespace(pow.DefaultCodespace))
+	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
+	app.coolKeeper = cool.NewKeeper(app.capKeyMainStore, app.bankKeeper, app.RegisterCodespace(cool.DefaultCodespace))
+	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), app.bankKeeper, app.RegisterCodespace(pow.DefaultCodespace))
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, app.RegisterCodespace(ibc.DefaultCodespace))
-	app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.coinKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
+	app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.bankKeeper, app.RegisterCodespace(simplestake.DefaultCodespace))
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.coinKeeper)).
+		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
 		AddRoute("cool", cool.NewHandler(app.coolKeeper)).
 		AddRoute("pow", app.powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
-		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.coinKeeper)).
+		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.bankKeeper)).
 		AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper))
 
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainerFn(app.coolKeeper, app.powKeeper))
 	app.MountStoresIAVL(app.capKeyMainStore, app.capKeyAccountStore, app.capKeyPowStore, app.capKeyIBCStore, app.capKeyStakingStore)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountMapper, app.feeCollectionKeeper))
+	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 	err := app.LoadLatestVersion(app.capKeyMainStore)
 	if err != nil {
 		cmn.Exit(err.Error())
@@ -103,15 +110,15 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 }
 
 // custom tx codec
-func MakeCodec() *wire.Codec {
-	var cdc = wire.NewCodec()
-	wire.RegisterCrypto(cdc) // Register crypto.
-	sdk.RegisterWire(cdc)    // Register Msgs
-	cool.RegisterWire(cdc)
-	pow.RegisterWire(cdc)
-	bank.RegisterWire(cdc)
-	ibc.RegisterWire(cdc)
-	simplestake.RegisterWire(cdc)
+func MakeCodec() *codec.Codec {
+	var cdc = codec.New()
+	codec.RegisterCrypto(cdc) // Register crypto.
+	sdk.RegisterCodec(cdc)    // Register Msgs
+	cool.RegisterCodec(cdc)
+	pow.RegisterCodec(cdc)
+	bank.RegisterCodec(cdc)
+	ibc.RegisterCodec(cdc)
+	simplestake.RegisterCodec(cdc)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)
@@ -141,7 +148,7 @@ func (app *DemocoinApp) initChainerFn(coolKeeper cool.Keeper, powKeeper pow.Keep
 				panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
 				//	return sdk.ErrGenesisParse("").TraceCause(err, "")
 			}
-			app.accountMapper.SetAccount(ctx, acc)
+			app.accountKeeper.SetAccount(ctx, acc)
 		}
 
 		// Application specific genesis handling
@@ -175,14 +182,14 @@ func (app *DemocoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 		accounts = append(accounts, account)
 		return false
 	}
-	app.accountMapper.IterateAccounts(ctx, appendAccount)
+	app.accountKeeper.IterateAccounts(ctx, appendAccount)
 
 	genState := types.GenesisState{
 		Accounts:    accounts,
 		POWGenesis:  pow.WriteGenesis(ctx, app.powKeeper),
 		CoolGenesis: cool.WriteGenesis(ctx, app.coolKeeper),
 	}
-	appState, err = wire.MarshalJSONIndent(app.cdc, genState)
+	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {
 		return nil, nil, err
 	}

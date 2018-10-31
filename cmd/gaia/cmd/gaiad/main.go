@@ -16,6 +16,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
@@ -28,10 +29,13 @@ func main() {
 		Short:             "Gaia Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
+	appInit := app.GaiaAppInit()
+	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc, appInit))
+	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc, appInit))
+	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
 
-	server.AddCommands(ctx, cdc, rootCmd, app.GaiaAppInit(),
-		server.ConstructAppCreator(newApp, "gaia"),
-		server.ConstructAppExporter(exportAppStateAndTMValidators, "gaia"))
+	server.AddCommands(ctx, cdc, rootCmd, appInit,
+		newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
@@ -43,7 +47,10 @@ func main() {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-	return app.NewGaiaApp(logger, db, traceStore, baseapp.SetPruning(viper.GetString("pruning")))
+	return app.NewGaiaApp(logger, db, traceStore,
+		baseapp.SetPruning(viper.GetString("pruning")),
+		baseapp.SetMinimumFees(viper.GetString("minimum_fees")),
+	)
 }
 
 func exportAppStateAndTMValidators(

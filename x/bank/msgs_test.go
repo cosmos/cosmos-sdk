@@ -11,7 +11,7 @@ import (
 
 func TestNewMsgSend(t *testing.T) {}
 
-func TestMsgSendType(t *testing.T) {
+func TestMsgSendRoute(t *testing.T) {
 	// Construct a MsgSend
 	addr1 := sdk.AccAddress([]byte("input"))
 	addr2 := sdk.AccAddress([]byte("output"))
@@ -22,7 +22,7 @@ func TestMsgSendType(t *testing.T) {
 	}
 
 	// TODO some failures for bad result
-	require.Equal(t, msg.Type(), "bank")
+	require.Equal(t, msg.Route(), "bank")
 }
 
 func TestInputValidation(t *testing.T) {
@@ -187,7 +187,7 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}`
+	expected := `{"inputs":[{"address":"cosmos1d9h8qat57ljhcm","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmos1da6hgur4wsmpnjyg","coins":[{"amount":"10","denom":"atom"}]}]}`
 	require.Equal(t, expected, string(res))
 }
 
@@ -231,7 +231,7 @@ func TestNewMsgIssue(t *testing.T) {
 	// TODO
 }
 
-func TestMsgIssueType(t *testing.T) {
+func TestMsgIssueRoute(t *testing.T) {
 	// Construct an MsgIssue
 	addr := sdk.AccAddress([]byte("loan-from-bank"))
 	coins := sdk.Coins{sdk.NewInt64Coin("atom", 10)}
@@ -241,7 +241,7 @@ func TestMsgIssueType(t *testing.T) {
 	}
 
 	// TODO some failures for bad result
-	require.Equal(t, msg.Type(), "bank")
+	require.Equal(t, msg.Route(), "bank")
 }
 
 func TestMsgIssueValidation(t *testing.T) {
@@ -257,7 +257,7 @@ func TestMsgIssueGetSignBytes(t *testing.T) {
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"banker":"cosmosaccaddr1d9h8qat5e4ehc5","outputs":[{"address":"cosmosaccaddr1d3hkzm3dveex7mfdvfsku6cwsauqd","coins":[{"amount":"10","denom":"atom"}]}]}`
+	expected := `{"banker":"cosmos1d9h8qat57ljhcm","outputs":[{"address":"cosmos1d3hkzm3dveex7mfdvfsku6cjngpcj","coins":[{"amount":"10","denom":"atom"}]}]}`
 	require.Equal(t, expected, string(res))
 }
 

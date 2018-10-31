@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
 	"io/ioutil"
 	"net"
 	"os"
@@ -36,12 +37,13 @@ func FreeTCPAddr() (addr, port string, err error) {
 	return
 }
 
-// setupViper creates a homedir to run inside,
+// SetupViper creates a homedir to run inside,
 // and returns a cleanup function to defer
-func setupViper(t *testing.T) func() {
+func SetupViper(t *testing.T) func() {
 	rootDir, err := ioutil.TempDir("", "mock-sdk-cmd")
 	require.Nil(t, err)
 	viper.Set(cli.HomeFlag, rootDir)
+	viper.Set(client.FlagName, "moniker")
 	return func() {
 		err := os.RemoveAll(rootDir)
 		if err != nil {

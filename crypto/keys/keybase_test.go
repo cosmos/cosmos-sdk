@@ -4,24 +4,29 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	"github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 func init() {
-	BcryptSecurityParameter = 1
+	mintkey.BcryptSecurityParameter = 1
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
+	db := dbm.NewMemDB()
 	cstore := New(
-		dbm.NewMemDB(),
+		db,
 	)
 
 	algo := Secp256k1
@@ -50,6 +55,12 @@ func TestKeyManagement(t *testing.T) {
 	i2, err := cstore.Get(n2)
 	require.NoError(t, err)
 	_, err = cstore.Get(n3)
+	require.NotNil(t, err)
+	_, err = cstore.GetByAddress(accAddr(i2))
+	require.NoError(t, err)
+	addr, err := types.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+	require.NoError(t, err)
+	_, err = cstore.GetByAddress(addr)
 	require.NotNil(t, err)
 
 	// list shows them in order
@@ -92,6 +103,11 @@ func TestKeyManagement(t *testing.T) {
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
+
+	// addr cache gets nuked
+	err = cstore.Delete(n2, p2)
+	require.NoError(t, err)
+	require.False(t, db.Has(addrKey(i2.GetAddress())))
 }
 
 // TestSignVerify does some detailed checks on how we sign and validate
@@ -329,7 +345,7 @@ func TestSeedPhrase(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, 0)
-	newInfo, err := cstore.Derive(n2, mnemonic, p2, params)
+	newInfo, err := cstore.Derive(n2, mnemonic, defaultBIP39Passphrase, p2, params)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())
@@ -386,4 +402,8 @@ func ExampleNew() {
 	// Bob
 	// Carl
 	// signed by Bob
+}
+
+func accAddr(info Info) types.AccAddress {
+	return (types.AccAddress)(info.GetPubKey().Address())
 }

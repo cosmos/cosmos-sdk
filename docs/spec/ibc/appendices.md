@@ -8,7 +8,7 @@ The specification has focused on semantics and functionality of the IBC protocol
 
 In defining a standard binary encoding for all the "universal" components, we wish to make use of a standardized library, with efficient serialization and support in multiple languages. We considered two main formats: Ethereum's RLP[[6](./references.md#6)] and Google's Protobuf[[7](./references.md#7)]. We decided for protobuf, as it is more widely supported, is more expressive for different data types, and supports code generation for very efficient (de)serialization codecs. It does have a learning curve and more setup to generate the code from the type specifications, but the ibc data types should not change often and this code generation setup only needs to happen once per language (and can be exposed in a common repo), so this is not a strong counter-argument. Efficiency, expressiveness, and wider support rule in its favor. It is also widely used in gRPC and in many microservice architectures.
 
-The tendermint-specific data structures are encoded with go-wire[[8](./references.md#8)], the native binary encoding used inside of tendermint. Most blockchains define their own formats, and until some universal format for headers and signatures among blockchains emerge, it seems very premature to enforce any encoding here. These are defined as arbitrary byte slices in the protocol, to be parsed in an consensus engine-dependent manner.
+The tendermint-specific data structures are encoded with go-amino[[8](./references.md#8)], the native binary encoding used inside of tendermint. Most blockchains define their own formats, and until some universal format for headers and signatures among blockchains emerge, it seems very premature to enforce any encoding here. These are defined as arbitrary byte slices in the protocol, to be parsed in an consensus engine-dependent manner.
 
 For the following appendixes, the data structure specifications will be in proto3[[9](./references.md#9)] format.
 
@@ -61,7 +61,7 @@ The IBC protocol does not handle these kinds of errors. They must be handled ind
 
 **TODO: clean this all up**
 
-This is a mess now, we need to figure out what formats we use, define go-wire, etc. or just point to the source???? Will do more later, need help here from the tendermint core team.
+This is a mess now, we need to figure out what formats we use, define go-amino, etc. or just point to the source???? Will do more later, need help here from the tendermint core team.
 
 In order to prove a merkle root, we must fully define the headers, signatures, and validator information returned from the Tendermint consensus engine, as well as the rules by which to verify a header. We also define here the messages used for creating and removing connections to other blockchains as well as how to handle forks.
 

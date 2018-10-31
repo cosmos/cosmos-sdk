@@ -1,18 +1,15 @@
 package simulation
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+// TODO Any invariants to check here?
 // AllInvariants tests all slashing invariants
 func AllInvariants() simulation.Invariant {
-	return func(t *testing.T, app *baseapp.BaseApp, log string) {
-		// TODO Any invariants to check here?
-		require.Nil(t, nil)
+	return func(_ *baseapp.BaseApp, _ abci.Header) error {
+		return nil
 	}
 }

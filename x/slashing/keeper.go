@@ -6,9 +6,10 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 )
@@ -16,34 +17,36 @@ import (
 // Keeper of the slashing store
 type Keeper struct {
 	storeKey     sdk.StoreKey
-	cdc          *wire.Codec
+	cdc          *codec.Codec
 	validatorSet sdk.ValidatorSet
-	params       params.Getter
+	paramspace   params.Subspace
+
 	// codespace
 	codespace sdk.CodespaceType
 }
 
 // NewKeeper creates a slashing keeper
-func NewKeeper(cdc *wire.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, params params.Getter, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspace params.Subspace, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:     key,
 		cdc:          cdc,
 		validatorSet: vs,
-		params:       params,
+		paramspace:   paramspace.WithTypeTable(ParamTypeTable()),
 		codespace:    codespace,
 	}
 	return keeper
 }
 
 // handle a validator signing two blocks at the same height
+// power: power of the double-signing validator at the height of infraction
 func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractionHeight int64, timestamp time.Time, power int64) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	time := ctx.BlockHeader().Time
 	age := time.Sub(timestamp)
-	address := sdk.ValAddress(addr)
+	consAddr := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
-		panic(fmt.Sprintf("Validator address %v not found", addr))
+		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
 
 	// Double sign too old
@@ -56,37 +59,56 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
 
+	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
+	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,
+	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
+	// That's fine since this is just used to filter unbonding delegations & redelegations.
+	distributionHeight := infractionHeight - stake.ValidatorUpdateDelay
+
+	// Cap the amount slashed to the penalty for the worst infraction
+	// within the slashing period when this infraction was committed
+	fraction := k.SlashFractionDoubleSign(ctx)
+	revisedFraction := k.capBySlashingPeriod(ctx, consAddr, fraction, distributionHeight)
+	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
+
 	// Slash validator
-	k.validatorSet.Slash(ctx, pubkey, infractionHeight, power, k.SlashFractionDoubleSign(ctx))
+	// `power` is the int64 power of the validator as provided to/by
+	// Tendermint. This value is validator.Tokens as sent to Tendermint via
+	// ABCI, and now received as evidence.
+	// The revisedFraction (which is the new fraction to be slashed) is passed
+	// in separately to separately slash unbonding and rebonding delegations.
+	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, revisedFraction)
 
-	// Revoke validator
-	k.validatorSet.Revoke(ctx, pubkey)
+	// Jail validator if not already jailed
+	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
+	if !validator.GetJailed() {
+		k.validatorSet.Jail(ctx, consAddr)
+	}
 
-	// Jail validator
-	signInfo, found := k.getValidatorSigningInfo(ctx, address)
+	// Set or updated validator jail duration
+	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
 	if !found {
-		panic(fmt.Sprintf("Expected signing info for validator %s but not found", address))
+		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
 	signInfo.JailedUntil = time.Add(k.DoubleSignUnbondDuration(ctx))
-	k.setValidatorSigningInfo(ctx, address, signInfo)
+	k.setValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
 // handle a validator signature, must be called once per validator per block
-// nolint gocyclo
+// TODO refactor to take in a consensus address, additionally should maybe just take in the pubkey too
 func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, power int64, signed bool) {
 	logger := ctx.Logger().With("module", "x/slashing")
 	height := ctx.BlockHeight()
-	address := sdk.ValAddress(addr)
+	consAddr := sdk.ConsAddress(addr)
 	pubkey, err := k.getPubkey(ctx, addr)
 	if err != nil {
-		panic(fmt.Sprintf("Validator address %v not found", addr))
+		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
 	// Local index, so counts blocks validator *should* have signed
 	// Will use the 0-value default signing info if not present, except for start height
-	signInfo, found := k.getValidatorSigningInfo(ctx, address)
+	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
 	if !found {
-		// If this validator has never been seen before, construct a new SigningInfo with the correct start height
-		signInfo = NewValidatorSigningInfo(height, 0, time.Unix(0, 0), 0)
+		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
 	index := signInfo.IndexOffset % k.SignedBlocksWindow(ctx)
 	signInfo.IndexOffset++
@@ -94,45 +116,58 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	// Update signed block bit array & counter
 	// This counter just tracks the sum of the bit array
 	// That way we avoid needing to read/write the whole array each time
-	previous := k.getValidatorSigningBitArray(ctx, address, index)
-	if previous == signed {
+	previous := k.getValidatorMissedBlockBitArray(ctx, consAddr, index)
+	missed := !signed
+	switch {
+	case !previous && missed:
+		// Array value has changed from not missed to missed, increment counter
+		k.setValidatorMissedBlockBitArray(ctx, consAddr, index, true)
+		signInfo.MissedBlocksCounter++
+	case previous && !missed:
+		// Array value has changed from missed to not missed, decrement counter
+		k.setValidatorMissedBlockBitArray(ctx, consAddr, index, false)
+		signInfo.MissedBlocksCounter--
+	default:
 		// Array value at this index has not changed, no need to update counter
-	} else if previous && !signed {
-		// Array value has changed from signed to unsigned, decrement counter
-		k.setValidatorSigningBitArray(ctx, address, index, false)
-		signInfo.SignedBlocksCounter--
-	} else if !previous && signed {
-		// Array value has changed from unsigned to signed, increment counter
-		k.setValidatorSigningBitArray(ctx, address, index, true)
-		signInfo.SignedBlocksCounter++
 	}
 
-	if !signed {
-		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d signed, threshold %d", addr, height, signInfo.SignedBlocksCounter, k.MinSignedPerWindow(ctx)))
+	if missed {
+		logger.Info(fmt.Sprintf("Absent validator %s at height %d, %d missed, threshold %d", addr, height, signInfo.MissedBlocksCounter, k.MinSignedPerWindow(ctx)))
 	}
 	minHeight := signInfo.StartHeight + k.SignedBlocksWindow(ctx)
-	if height > minHeight && signInfo.SignedBlocksCounter < k.MinSignedPerWindow(ctx) {
-		validator := k.validatorSet.ValidatorByPubKey(ctx, pubkey)
-		if validator != nil && !validator.GetRevoked() {
-			// Downtime confirmed, slash, revoke, and jail the validator
+	maxMissed := k.SignedBlocksWindow(ctx) - k.MinSignedPerWindow(ctx)
+	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
+		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
+		if validator != nil && !validator.GetJailed() {
+			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
-			k.validatorSet.Slash(ctx, pubkey, height, power, k.SlashFractionDowntime(ctx))
-			k.validatorSet.Revoke(ctx, pubkey)
+			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
+			// and subtract an additional 1 since this is the LastCommit.
+			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
+			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
+			// That's fine since this is just used to filter unbonding delegations & redelegations.
+			distributionHeight := height - stake.ValidatorUpdateDelay - 1
+			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
+			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
+			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
+			signInfo.MissedBlocksCounter = 0
+			signInfo.IndexOffset = 0
+			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
 		} else {
-			// Validator was (a) not found or (b) already revoked, don't slash
-			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already revoked",
+			// Validator was (a) not found or (b) already jailed, don't slash
+			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed",
 				pubkey.Address()))
 		}
 	}
 
 	// Set the updated signing info
-	k.setValidatorSigningInfo(ctx, address, signInfo)
+	k.setValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
 // AddValidators adds the validators to the keepers validator addr to pubkey mapping.
-func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.Validator) {
+func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.ValidatorUpdate) {
 	for i := 0; i < len(vals); i++ {
 		val := vals[i]
 		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
@@ -168,8 +203,4 @@ func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubk
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(getAddrPubkeyRelationKey(addr))
-}
-
-func getAddrPubkeyRelationKey(address []byte) []byte {
-	return append([]byte{0x03}, address...)
 }

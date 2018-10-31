@@ -14,8 +14,8 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 var (
@@ -34,14 +34,14 @@ func defaultLogger() log.Logger {
 func newBaseApp(name string, options ...func(*BaseApp)) *BaseApp {
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 	return NewBaseApp(name, logger, db, testTxDecoder(codec), options...)
 }
 
-func registerTestCodec(cdc *wire.Codec) {
+func registerTestCodec(cdc *codec.Codec) {
 	// register Tx, Msg
-	sdk.RegisterWire(cdc)
+	sdk.RegisterCodec(cdc)
 
 	// register test types
 	cdc.RegisterConcrete(&txTest{}, "cosmos-sdk/baseapp/txTest", nil)
@@ -290,8 +290,8 @@ type txTest struct {
 func (tx txTest) GetMsgs() []sdk.Msg { return tx.Msgs }
 
 const (
-	typeMsgCounter  = "msgCounter"
-	typeMsgCounter2 = "msgCounter2"
+	routeMsgCounter  = "msgCounter"
+	routeMsgCounter2 = "msgCounter2"
 )
 
 // ValidateBasic() fails on negative counters.
@@ -301,7 +301,8 @@ type msgCounter struct {
 }
 
 // Implements Msg
-func (msg msgCounter) Type() string                 { return typeMsgCounter }
+func (msg msgCounter) Route() string                { return routeMsgCounter }
+func (msg msgCounter) Type() string                 { return "counter1" }
 func (msg msgCounter) GetSignBytes() []byte         { return nil }
 func (msg msgCounter) GetSigners() []sdk.AccAddress { return nil }
 func (msg msgCounter) ValidateBasic() sdk.Error {
@@ -324,14 +325,14 @@ type msgNoRoute struct {
 	msgCounter
 }
 
-func (tx msgNoRoute) Type() string { return "noroute" }
+func (tx msgNoRoute) Route() string { return "noroute" }
 
 // a msg we dont know how to decode
 type msgNoDecode struct {
 	msgCounter
 }
 
-func (tx msgNoDecode) Type() string { return typeMsgCounter }
+func (tx msgNoDecode) Route() string { return routeMsgCounter }
 
 // Another counter msg. Duplicate of msgCounter
 type msgCounter2 struct {
@@ -339,7 +340,8 @@ type msgCounter2 struct {
 }
 
 // Implements Msg
-func (msg msgCounter2) Type() string                 { return typeMsgCounter2 }
+func (msg msgCounter2) Route() string                { return routeMsgCounter2 }
+func (msg msgCounter2) Type() string                 { return "counter2" }
 func (msg msgCounter2) GetSignBytes() []byte         { return nil }
 func (msg msgCounter2) GetSigners() []sdk.AccAddress { return nil }
 func (msg msgCounter2) ValidateBasic() sdk.Error {
@@ -350,7 +352,7 @@ func (msg msgCounter2) ValidateBasic() sdk.Error {
 }
 
 // amino decode
-func testTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
+func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx txTest
 		if len(txBytes) == 0 {
@@ -365,7 +367,7 @@ func testTxDecoder(cdc *wire.Codec) sdk.TxDecoder {
 }
 
 func anteHandlerTxTest(t *testing.T, capKey *sdk.KVStoreKey, storeKey []byte) sdk.AnteHandler {
-	return func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 		store := ctx.KVStore(capKey)
 		msgCounter := tx.(txTest).Counter
 		res = incrementingCounter(t, store, storeKey, msgCounter)
@@ -438,7 +440,7 @@ func TestCheckTx(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
 	routerOpt := func(bapp *BaseApp) {
 		// TODO: can remove this once CheckTx doesnt process msgs.
-		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result { return sdk.Result{} })
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result { return sdk.Result{} })
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -448,7 +450,7 @@ func TestCheckTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 
 	for i := int64(0); i < nTxs; i++ {
@@ -484,12 +486,14 @@ func TestDeliverTx(t *testing.T) {
 
 	// test increments in the handler
 	deliverKey := []byte("deliver-key")
-	routerOpt := func(bapp *BaseApp) { bapp.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey)) }
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 
 	nBlocks := 3
@@ -525,18 +529,18 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 	deliverKey := []byte("deliver-key")
 	deliverKey2 := []byte("deliver-key2")
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(typeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
-		bapp.Router().AddRoute(typeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
+		bapp.Router().AddRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		bapp.Router().AddRoute(routeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
+	codec := codec.New()
 	registerTestCodec(codec)
 
 	// run a multi-msg tx
-	// with all msgs the same type
+	// with all msgs the same route
 	{
 		app.BeginBlock(abci.RequestBeginBlock{})
 		tx := newTxCounter(0, 0, 1, 2)
@@ -595,14 +599,14 @@ func TestSimulateTx(t *testing.T) {
 	gasConsumed := int64(5)
 
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
 			return
 		})
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 			ctx.GasMeter().ConsumeGas(gasConsumed, "test")
 			return sdk.Result{GasUsed: ctx.GasMeter().GasConsumed()}
 		})
@@ -613,8 +617,8 @@ func TestSimulateTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
-	codec := wire.NewCodec()
-	registerTestCodec(codec)
+	cdc := codec.New()
+	registerTestCodec(cdc)
 
 	nBlocks := 3
 	for blockN := 0; blockN < nBlocks; blockN++ {
@@ -626,15 +630,15 @@ func TestSimulateTx(t *testing.T) {
 		// simulate a message, check gas reported
 		result := app.Simulate(tx)
 		require.True(t, result.IsOK(), result.Log)
-		require.Equal(t, int64(gasConsumed), result.GasUsed)
+		require.Equal(t, gasConsumed, result.GasUsed)
 
 		// simulate again, same result
 		result = app.Simulate(tx)
 		require.True(t, result.IsOK(), result.Log)
-		require.Equal(t, int64(gasConsumed), result.GasUsed)
+		require.Equal(t, gasConsumed, result.GasUsed)
 
 		// simulate by calling Query with encoded tx
-		txBytes, err := codec.MarshalBinary(tx)
+		txBytes, err := cdc.MarshalBinary(tx)
 		require.Nil(t, err)
 		query := abci.RequestQuery{
 			Path: "/app/simulate",
@@ -644,7 +648,7 @@ func TestSimulateTx(t *testing.T) {
 		require.True(t, queryResult.IsOK(), queryResult.Log)
 
 		var res sdk.Result
-		wire.Cdc.MustUnmarshalBinary(queryResult.Value, &res)
+		codec.Cdc.MustUnmarshalBinary(queryResult.Value, &res)
 		require.Nil(t, err, "Result unmarshalling failed")
 		require.True(t, res.IsOK(), res.Log)
 		require.Equal(t, gasConsumed, res.GasUsed, res.Log)
@@ -659,10 +663,12 @@ func TestSimulateTx(t *testing.T) {
 
 func TestRunInvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) { return })
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+			return
+		})
 	}
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) (res sdk.Result) { return })
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
@@ -719,7 +725,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 		tx.Msgs = append(tx.Msgs, msgNoDecode{})
 
 		// new codec so we can encode the tx, but we shouldn't be able to decode
-		newCdc := wire.NewCodec()
+		newCdc := codec.New()
 		registerTestCodec(newCdc)
 		newCdc.RegisterConcrete(&msgNoDecode{}, "cosmos-sdk/baseapp/msgNoDecode", nil)
 
@@ -734,7 +740,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 func TestTxGasLimits(t *testing.T) {
 	gasGranted := int64(10)
 	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
 			// NOTE/TODO/XXX:
@@ -767,7 +773,7 @@ func TestTxGasLimits(t *testing.T) {
 	}
 
 	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 			count := msg.(msgCounter).Counter
 			ctx.GasMeter().ConsumeGas(count, "counter-handler")
 			return sdk.Result{}
@@ -816,93 +822,4 @@ func TestTxGasLimits(t *testing.T) {
 			require.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), fmt.Sprintf("%d: %v, %v", i, tc, res))
 		}
 	}
-}
-
-//-------------------------------------------------------------------------------------------
-// Queries
-
-// Test that we can only query from the latest committed state.
-func TestQuery(t *testing.T) {
-	key, value := []byte("hello"), []byte("goodbye")
-	anteOpt := func(bapp *BaseApp) {
-		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx) (newCtx sdk.Context, res sdk.Result, abort bool) {
-			store := ctx.KVStore(capKey1)
-			store.Set(key, value)
-			return
-		})
-	}
-
-	routerOpt := func(bapp *BaseApp) {
-		bapp.Router().AddRoute(typeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
-			store := ctx.KVStore(capKey1)
-			store.Set(key, value)
-			return sdk.Result{}
-		})
-	}
-
-	app := setupBaseApp(t, anteOpt, routerOpt)
-
-	app.InitChain(abci.RequestInitChain{})
-
-	// NOTE: "/store/key1" tells us KVStore
-	// and the final "/key" says to use the data as the
-	// key in the given KVStore ...
-	query := abci.RequestQuery{
-		Path: "/store/key1/key",
-		Data: key,
-	}
-	tx := newTxCounter(0, 0)
-
-	// query is empty before we do anything
-	res := app.Query(query)
-	require.Equal(t, 0, len(res.Value))
-
-	// query is still empty after a CheckTx
-	resTx := app.Check(tx)
-	require.True(t, resTx.IsOK(), fmt.Sprintf("%v", resTx))
-	res = app.Query(query)
-	require.Equal(t, 0, len(res.Value))
-
-	// query is still empty after a DeliverTx before we commit
-	app.BeginBlock(abci.RequestBeginBlock{})
-	resTx = app.Deliver(tx)
-	require.True(t, resTx.IsOK(), fmt.Sprintf("%v", resTx))
-	res = app.Query(query)
-	require.Equal(t, 0, len(res.Value))
-
-	// query returns correct value after Commit
-	app.Commit()
-	res = app.Query(query)
-	require.Equal(t, value, res.Value)
-}
-
-// Test p2p filter queries
-func TestP2PQuery(t *testing.T) {
-	addrPeerFilterOpt := func(bapp *BaseApp) {
-		bapp.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
-			require.Equal(t, "1.1.1.1:8000", addrport)
-			return abci.ResponseQuery{Code: uint32(3)}
-		})
-	}
-
-	pubkeyPeerFilterOpt := func(bapp *BaseApp) {
-		bapp.SetPubKeyPeerFilter(func(pubkey string) abci.ResponseQuery {
-			require.Equal(t, "testpubkey", pubkey)
-			return abci.ResponseQuery{Code: uint32(4)}
-		})
-	}
-
-	app := setupBaseApp(t, addrPeerFilterOpt, pubkeyPeerFilterOpt)
-
-	addrQuery := abci.RequestQuery{
-		Path: "/p2p/filter/addr/1.1.1.1:8000",
-	}
-	res := app.Query(addrQuery)
-	require.Equal(t, uint32(3), res.Code)
-
-	pubkeyQuery := abci.RequestQuery{
-		Path: "/p2p/filter/pubkey/testpubkey",
-	}
-	res = app.Query(pubkeyQuery)
-	require.Equal(t, uint32(4), res.Code)
 }

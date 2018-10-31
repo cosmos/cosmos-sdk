@@ -2,11 +2,15 @@
 .DS_Store
 *.swp
 *.swo
+*.swl
+*.swm
+*.swn
 .vscode
 .idea
 
 # Build
 vendor
+.vendor-new
 build
 tools/bin/*
 examples/build/*
@@ -16,6 +20,7 @@ docs/_build
 examples/basecoin/app/data
 baseapp/data/*
 client/lcd/keys/*
+client/lcd/statik/statik.go
 mytestnet
 
 # Testing
@@ -34,3 +39,8 @@ vagrant
 
 # Graphviz
 dependency-graph.png
+
+# Latex
+*.aux
+*.out
+*.synctex.gz

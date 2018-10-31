@@ -20,7 +20,9 @@ func NewMsgSend(in []Input, out []Output) MsgSend {
 }
 
 // Implements Msg.
-func (msg MsgSend) Type() string { return "bank" } // TODO: "bank/send"
+// nolint
+func (msg MsgSend) Route() string { return "bank" } // TODO: "bank/send"
+func (msg MsgSend) Type() string  { return "send" }
 
 // Implements Msg.
 func (msg MsgSend) ValidateBasic() sdk.Error {
@@ -101,7 +103,9 @@ func NewMsgIssue(banker sdk.AccAddress, out []Output) MsgIssue {
 }
 
 // Implements Msg.
-func (msg MsgIssue) Type() string { return "bank" } // TODO: "bank/issue"
+// nolint
+func (msg MsgIssue) Route() string { return "bank" } // TODO: "bank/issue"
+func (msg MsgIssue) Type() string  { return "issue" }
 
 // Implements Msg.
 func (msg MsgIssue) ValidateBasic() sdk.Error {

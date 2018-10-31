@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.10.3
+    - image: circleci/golang:1.11.1
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -39,14 +39,6 @@ jobs:
           paths:
             - bin
             - profiles
-      - save_cache:
-          key: v1-pkg-cache
-          paths:
-            - /go/pkg
-      - save_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
-          paths:
-            - /go/src/github.com/cosmos/cosmos-sdk
 
   lint:
     <<: *defaults
@@ -54,14 +46,17 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
+            make get_tools
             make get_dev_tools
       - run:
           name: Lint source
@@ -69,21 +64,24 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make test_lint
 
-  test_cli:
+  integration_tests:
     <<: *defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Test cli
           command: |
             export PATH="$GOBIN:$PATH"
             make test_cli
+            make test_examples
 
   test_sim_modules:
     <<: *defaults
@@ -91,10 +89,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Test individual module simulations
           command: |
@@ -107,10 +107,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Test individual module simulations
           command: |
@@ -123,15 +125,35 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: Test full Gaia simulation
           command: |
             export PATH="$GOBIN:$PATH"
             make test_sim_gaia_fast
+
+  test_sim_gaia_multi_seed:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
+      - run:
+          name: Test multi-seed Gaia simulation
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_sim_gaia_multi_seed
 
   test_cover:
     <<: *defaults
@@ -139,16 +161,19 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-pkg-cache
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run: mkdir -p /tmp/logs
       - run:
           name: Run tests
           command: |
             export PATH="$GOBIN:$PATH"
             make install
+            export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
             for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
               id=$(basename "$pkg")
               GOCACHE=off go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
@@ -166,8 +191,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp/workspace
-      - restore_cache:
-          key: v1-tree-{{ .Environment.CIRCLE_SHA1 }}
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
       - run:
           name: gather
           command: |
@@ -196,6 +225,12 @@ jobs:
         - run:
             name: run localnet and exit on failure
             command: |
+              pushd /tmp
+              wget https://dl.google.com/go/go1.11.linux-amd64.tar.gz
+              sudo tar -xvf go1.11.linux-amd64.tar.gz
+              sudo rm -rf /usr/local/go
+              sudo mv go /usr/local
+              popd
               set -x
               make get_tools
               make get_vendor_deps
@@ -212,7 +247,7 @@ workflows:
       - lint:
           requires:
             - setup_dependencies
-      - test_cli:
+      - integration_tests:
           requires:
             - setup_dependencies
       - test_sim_modules:
@@ -222,6 +257,9 @@ workflows:
           requires:
             - setup_dependencies
       - test_sim_gaia_fast:
+          requires:
+            - setup_dependencies
+      - test_sim_gaia_multi_seed:
           requires:
             - setup_dependencies
       - test_cover:

@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
+	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
@@ -14,6 +13,7 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -51,6 +51,13 @@ func main() {
 			stakecmd.GetCmdQueryValidators("stake", cdc),
 			stakecmd.GetCmdQueryDelegation("stake", cdc),
 			stakecmd.GetCmdQueryDelegations("stake", cdc),
+			stakecmd.GetCmdQueryPool("stake", cdc),
+			stakecmd.GetCmdQueryParams("stake", cdc),
+			stakecmd.GetCmdQueryUnbondingDelegation("stake", cdc),
+			stakecmd.GetCmdQueryUnbondingDelegations("stake", cdc),
+			stakecmd.GetCmdQueryRedelegation("stake", cdc),
+			stakecmd.GetCmdQueryRedelegations("stake", cdc),
+			slashingcmd.GetCmdQuerySigningInfo("slashing", cdc),
 			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
 		)...)
 
@@ -63,6 +70,8 @@ func main() {
 			stakecmd.GetCmdEditValidator(cdc),
 			stakecmd.GetCmdDelegate(cdc),
 			stakecmd.GetCmdUnbond("stake", cdc),
+			stakecmd.GetCmdRedelegate("stake", cdc),
+			slashingcmd.GetCmdUnjail(cdc),
 		)...)
 
 	// add proxy, version and key info
@@ -75,7 +84,7 @@ func main() {
 	)
 
 	// prepare and add flags
-	executor := cli.PrepareMainCmd(rootCmd, "BC", os.ExpandEnv("$HOME/.basecli"))
+	executor := cli.PrepareMainCmd(rootCmd, "BC", app.DefaultCLIHome)
 	err := executor.Execute()
 	if err != nil {
 		// Note: Handle with #870

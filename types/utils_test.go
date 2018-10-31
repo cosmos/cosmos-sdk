@@ -2,6 +2,7 @@ package types
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -41,5 +42,25 @@ func TestSortJSON(t *testing.T) {
 		}
 
 		require.Equal(t, string(got), tc.want)
+	}
+}
+
+func TestTimeFormatAndParse(t *testing.T) {
+	cases := []struct {
+		RFC3339NanoStr     string
+		SDKSortableTimeStr string
+		Equal              bool
+	}{
+		{"2009-11-10T23:00:00Z", "2009-11-10T23:00:00.000000000", true},
+		{"2011-01-10T23:10:05.758230235Z", "2011-01-10T23:10:05.758230235", true},
+	}
+	for _, tc := range cases {
+		timeFromRFC, err := time.Parse(time.RFC3339Nano, tc.RFC3339NanoStr)
+		require.Nil(t, err)
+		timeFromSDKFormat, err := time.Parse(SortableTimeFormat, tc.SDKSortableTimeStr)
+		require.Nil(t, err)
+
+		require.True(t, timeFromRFC.Equal(timeFromSDKFormat))
+		require.Equal(t, timeFromRFC.Format(SortableTimeFormat), tc.SDKSortableTimeStr)
 	}
 }

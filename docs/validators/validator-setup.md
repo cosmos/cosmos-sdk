@@ -4,7 +4,7 @@
 The current testnet is `gaia-8000`.
 :::
 
-Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/getting-started/full-node.md) guide.
+Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/docs/getting-started/full-node.md) guide.
 
 ## Running a Validator Node
 
@@ -16,27 +16,33 @@ If you want to become a validator for the Hub's `mainnet`, you should [research 
 
 ### Create Your Validator
 
-Your `cosmosvalpub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
+Your `cosmosvalconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
 
 ```bash
-gaiad tendermint show_validator
+gaiad tendermint show-validator
 ```
 
-Next, craft your `gaiacli stake create-validator` command:
+Next, craft your `gaiacli tx create-validator` command:
 
 ::: warning Note
 Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
 :::
 
 ```bash
-gaiacli stake create-validator \
+gaiacli tx create-validator \
   --amount=5steak \
-  --pubkey=$(gaiad tendermint show_validator) \
-  --address-validator=<account_cosmosaccaddr>
+  --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
-  --name=<key_name>
+  --from=<key_name> \
+  --commission-rate="0.10" \
+  --commission-max-rate="0.20" \
+  --commission-max-change-rate="0.01"
 ```
+
+__Note__: When specifying commission parameters, the `commission-max-change-rate`
+is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is
+a 100% rate increase, but only 1 percentage point.
 
 ### Edit Validator Description
 
@@ -45,24 +51,29 @@ You can edit your validator's public description. This info is to identify your 
 The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
-gaiacli stake edit-validator
-  --address-validator=<account_cosmosaccaddr>
+gaiacli tx edit-validator
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
-  --identity=6A0D65E29A4CBC8E
-  --details="To infinity and beyond!"
+  --identity=6A0D65E29A4CBC8E \
+  --details="To infinity and beyond!" \
   --chain-id=<chain_id> \
-  --name=<key_name>
+  --from=<key_name> \
+  --commission-rate="0.10"
 ```
+
+__Note__: The `commission-rate` value must adhere to the following invariants:
+
+- Must be between 0 and the validator's `commission-max-rate`
+- Must not exceed the validator's `commission-max-change-rate` which is maximum
+  % point change rate **per day**. In other words, a validator can only change
+  its commission once per day and within `commission-max-change-rate` bounds.
 
 ### View Validator Description
 
 View the validator's information with this command:
 
 ```bash
-gaiacli stake validator \
-  --address-validator=<account_cosmosaccaddr> \
-  --chain-id=<chain_id>
+gaiacli query validator <account_cosmos>
 ```
 
 ### Track Validator Signing Information
@@ -70,16 +81,16 @@ gaiacli stake validator \
 In order to keep track of a validator's signatures in the past you can do so by using the `signing-info` command:
 
 ```bash
-gaiacli stake signing-information <validator-pubkey>\
+gaiacli query signing-info <validator-pubkey>\
   --chain-id=<chain_id>
 ```
 
-### Unrevoke Validator
+### Unjail Validator
 
-When a validator is `Revoked` for downtime, you must submit an `Unrevoke` transaction in order to be able to get block proposer rewards again (depends on the zone fee distribution).
+When a validator is "jailed" for downtime, you must submit an `Unjail` transaction from the operator account in order to be able to get block proposer rewards again (depends on the zone fee distribution).
 
 ```bash
-gaiacli stake unrevoke \
+gaiacli tx unjail \
 	--from=<key_name> \
 	--chain-id=<chain_id>
 ```
@@ -89,7 +100,7 @@ gaiacli stake unrevoke \
 Your validator is active if the following command returns anything:
 
 ```bash
-gaiacli advanced tendermint validator-set | grep "$(gaiad tendermint show_validator)"
+gaiacli query tendermint-validator-set | grep "$(gaiad tendermint show-validator)"
 ```
 
 You should also be able to see your validator on the [Explorer](https://explorecosmos.network/validators). You are looking for the `bech32` encoded `address` in the `~/.gaiad/config/priv_validator.json` file.
@@ -110,14 +121,14 @@ Here's how you can return the voting power back to your validator. First, if `ga
 gaiad start
 ```
 
-Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmosaccaddr>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
+Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmos>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli stake unrevoke <cosmosaccaddr> --chain-id=<chain_id> --name=<name>
+gaiacli tx unjail <cosmos> --chain-id=<chain_id> --from=<from>
 ```
 
 ::: danger Warning
-If you don't wait for `gaiad` to sync before running `unrevoke`, you will receive an error message telling you your validator is still jailed.
+If you don't wait for `gaiad` to sync before running `unjail`, you will receive an error message telling you your validator is still jailed.
 :::
 
 Lastly, check your validator again to see if your voting power is back.

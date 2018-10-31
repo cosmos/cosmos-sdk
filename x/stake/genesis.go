@@ -1,6 +1,8 @@
 package stake
 
 import (
+	"fmt"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -15,10 +17,15 @@ import (
 // addition, it also sets any delegations found in data. Finally, it updates
 // the bonded validators.
 // Returns final validator set after applying all declaration and delegations
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.Validator, err error) {
+func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.ValidatorUpdate, err error) {
+
+	// We need to pretend to be "n blocks before genesis", where "n" is the validator update delay,
+	// so that e.g. slashing periods are correctly initialized for the validator set
+	// e.g. with a one-block offset - the first TM block is at height 0, so state updates applied from genesis.json are in block -1.
+	ctx = ctx.WithBlockHeight(-types.ValidatorUpdateDelay)
+
 	keeper.SetPool(ctx, data.Pool)
-	keeper.SetNewParams(ctx, data.Params)
-	keeper.InitIntraTxCounter(ctx)
+	keeper.SetParams(ctx, data.Params)
 
 	for i, validator := range data.Validators {
 		validator.BondIntraTxCounter = int16(i) // set the intra-tx counter to the order the validators are presented
@@ -31,26 +38,18 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 			return res, errors.Errorf("genesis validator cannot have zero delegator shares, validator: %v", validator)
 		}
 
-		// Manually set indexes for the first time
-		keeper.SetValidatorByPubKeyIndex(ctx, validator)
+		// Manually set indices for the first time
+		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
-
-		if validator.Status == sdk.Bonded {
-			keeper.SetValidatorBondedIndex(ctx, validator)
-		}
+		keeper.OnValidatorCreated(ctx, validator.OperatorAddr)
 	}
 
-	for _, bond := range data.Bonds {
-		keeper.SetDelegation(ctx, bond)
+	for _, delegation := range data.Bonds {
+		keeper.SetDelegation(ctx, delegation)
+		keeper.OnDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
-	keeper.UpdateBondedValidatorsFull(ctx)
-
-	vals := keeper.GetValidatorsBonded(ctx)
-	res = make([]abci.Validator, len(vals))
-	for i, val := range vals {
-		res[i] = sdk.ABCIValidator(val)
-	}
+	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	return
 }
 
@@ -75,7 +74,7 @@ func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisValidator) {
 	keeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
-			PubKey: validator.GetPubKey(),
+			PubKey: validator.GetConsPubKey(),
 			Power:  validator.GetPower().RoundInt64(),
 			Name:   validator.GetMoniker(),
 		})
@@ -83,5 +82,49 @@ func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisVali
 		return false
 	})
 
+	return
+}
+
+// ValidateGenesis validates the provided staking genesis state to ensure the
+// expected invariants holds. (i.e. params in correct bounds, no duplicate validators)
+func ValidateGenesis(data types.GenesisState) error {
+	err := validateGenesisStateValidators(data.Validators)
+	if err != nil {
+		return err
+	}
+	err = validateParams(data.Params)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateParams(params types.Params) error {
+	if params.BondDenom == "" {
+		return fmt.Errorf("staking parameter BondDenom can't be an empty string")
+	}
+	return nil
+}
+
+func validateGenesisStateValidators(validators []types.Validator) (err error) {
+	addrMap := make(map[string]bool, len(validators))
+	for i := 0; i < len(validators); i++ {
+		val := validators[i]
+		strKey := string(val.ConsPubKey.Bytes())
+		if _, ok := addrMap[strKey]; ok {
+			return fmt.Errorf("duplicate validator in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
+		}
+		if val.Jailed && val.Status == sdk.Bonded {
+			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
+		}
+		if val.Tokens.IsZero() {
+			return fmt.Errorf("genesis validator cannot have zero pool shares, validator: %v", val)
+		}
+		if val.DelegatorShares.IsZero() {
+			return fmt.Errorf("genesis validator cannot have zero delegator shares, validator: %v", val)
+		}
+		addrMap[strKey] = true
+	}
 	return
 }

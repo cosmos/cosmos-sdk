@@ -1,6 +1,8 @@
 package gov
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,15 +29,15 @@ func DefaultGenesisState() GenesisState {
 		StartingProposalID: 1,
 		DepositProcedure: DepositProcedure{
 			MinDeposit:       sdk.Coins{sdk.NewInt64Coin("steak", 10)},
-			MaxDepositPeriod: 200,
+			MaxDepositPeriod: time.Duration(172800) * time.Second,
 		},
 		VotingProcedure: VotingProcedure{
-			VotingPeriod: 200,
+			VotingPeriod: time.Duration(172800) * time.Second,
 		},
 		TallyingProcedure: TallyingProcedure{
-			Threshold:         sdk.NewRat(1, 2),
-			Veto:              sdk.NewRat(1, 3),
-			GovernancePenalty: sdk.NewRat(1, 100),
+			Threshold:         sdk.NewDecWithPrec(5, 1),
+			Veto:              sdk.NewDecWithPrec(334, 3),
+			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
 		},
 	}
 }

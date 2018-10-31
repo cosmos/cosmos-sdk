@@ -4,27 +4,31 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
+	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
@@ -33,6 +37,7 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	nm "github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
@@ -89,7 +94,7 @@ func GetKeyBase(t *testing.T) crkeys.Keybase {
 
 	viper.Set(cli.HomeFlag, dir)
 
-	keybase, err := keys.GetKeyBase()
+	keybase, err := keys.GetKeyBaseWithWritePerm()
 	require.NoError(t, err)
 
 	return keybase
@@ -110,11 +115,81 @@ func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.Acc
 	return sdk.AccAddress(info.GetPubKey().Address()), seed
 }
 
+// Type that combines an Address with the pnemonic of the private key to that address
+type AddrSeed struct {
+	Address  sdk.AccAddress
+	Seed     string
+	Name     string
+	Password string
+}
+
+// CreateAddr adds multiple address to the key store and returns the addresses and associated seeds in lexographical order by address.
+// It also requires that the keys could be created.
+func CreateAddrs(t *testing.T, kb crkeys.Keybase, numAddrs int) (addrs []sdk.AccAddress, seeds, names, passwords []string) {
+	var (
+		err  error
+		info crkeys.Info
+		seed string
+	)
+
+	addrSeeds := AddrSeedSlice{}
+
+	for i := 0; i < numAddrs; i++ {
+		name := fmt.Sprintf("test%d", i)
+		password := "1234567890"
+		info, seed, err = kb.CreateMnemonic(name, crkeys.English, password, crkeys.Secp256k1)
+		require.NoError(t, err)
+		addrSeeds = append(addrSeeds, AddrSeed{Address: sdk.AccAddress(info.GetPubKey().Address()), Seed: seed, Name: name, Password: password})
+	}
+
+	sort.Sort(addrSeeds)
+
+	for i := range addrSeeds {
+		addrs = append(addrs, addrSeeds[i].Address)
+		seeds = append(seeds, addrSeeds[i].Seed)
+		names = append(names, addrSeeds[i].Name)
+		passwords = append(passwords, addrSeeds[i].Password)
+	}
+
+	return addrs, seeds, names, passwords
+}
+
+// implement `Interface` in sort package.
+type AddrSeedSlice []AddrSeed
+
+func (b AddrSeedSlice) Len() int {
+	return len(b)
+}
+
+// Sorts lexographically by Address
+func (b AddrSeedSlice) Less(i, j int) bool {
+	// bytes package already implements Comparable for []byte.
+	switch bytes.Compare(b[i].Address.Bytes(), b[j].Address.Bytes()) {
+	case -1:
+		return true
+	case 0, 1:
+		return false
+	default:
+		panic("not fail-able with `bytes.Comparable` bounded [-1, 1].")
+	}
+}
+
+func (b AddrSeedSlice) Swap(i, j int) {
+	b[j], b[i] = b[i], b[j]
+}
+
 // InitializeTestLCD starts Tendermint and the LCD in process, listening on
 // their respective sockets where nValidators is the total number of validators
 // and initAddrs are the accounts to initialize with some steak tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.
-func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress) (func(), []crypto.PubKey, string) {
+func InitializeTestLCD(
+	t *testing.T, nValidators int, initAddrs []sdk.AccAddress,
+) (cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
+
+	if nValidators < 1 {
+		panic("InitializeTestLCD must use at least one validator")
+	}
+
 	config := GetConfig()
 	config.Consensus.TimeoutCommit = 100
 	config.Consensus.SkipTimeoutCommit = false
@@ -133,38 +208,43 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 
 	genesisFile := config.GenesisFile()
 	genDoc, err := tmtypes.GenesisDocFromFile(genesisFile)
-	require.NoError(t, err)
+	require.Nil(t, err)
+	genDoc.Validators = nil
+	genDoc.SaveAs(genesisFile)
+	genTxs := []json.RawMessage{}
 
-	if nValidators < 1 {
-		panic("InitializeTestLCD must use at least one validator")
-	}
-
-	for i := 1; i < nValidators; i++ {
-		genDoc.Validators = append(genDoc.Validators,
-			tmtypes.GenesisValidator{
-				PubKey: ed25519.GenPrivKey().PubKey(),
-				Power:  1,
-				Name:   "val",
-			},
+	// append any additional (non-proposing) validators
+	for i := 0; i < nValidators; i++ {
+		operPrivKey := secp256k1.GenPrivKey()
+		operAddr := operPrivKey.PubKey().Address()
+		pubKey := privVal.PubKey
+		delegation := 100
+		if i > 0 {
+			pubKey = ed25519.GenPrivKey().PubKey()
+			delegation = 1
+		}
+		msg := stake.NewMsgCreateValidator(
+			sdk.ValAddress(operAddr),
+			pubKey,
+			sdk.NewCoin("steak", sdk.NewInt(int64(delegation))),
+			stake.Description{Moniker: fmt.Sprintf("validator-%d", i+1)},
+			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
+		stdSignMsg := txbuilder.StdSignMsg{
+			ChainID: genDoc.ChainID,
+			Msgs:    []sdk.Msg{msg},
+		}
+		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
+		require.Nil(t, err)
+		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+		txBytes, err := cdc.MarshalJSON(tx)
+		require.Nil(t, err)
+		genTxs = append(genTxs, txBytes)
+		valConsPubKeys = append(valConsPubKeys, pubKey)
+		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 	}
 
-	var validatorsPKs []crypto.PubKey
-
-	// NOTE: It's bad practice to reuse public key address for the owner
-	// address but doing in the test for simplicity.
-	var appGenTxs []json.RawMessage
-	for _, gdValidator := range genDoc.Validators {
-		pk := gdValidator.PubKey
-		validatorsPKs = append(validatorsPKs, pk)
-
-		appGenTx, _, _, err := gapp.GaiaAppGenTxNF(cdc, pk, sdk.AccAddress(pk.Address()), "test_val1")
-		require.NoError(t, err)
-
-		appGenTxs = append(appGenTxs, appGenTx)
-	}
-
-	genesisState, err := gapp.GaiaAppGenState(cdc, appGenTxs[:])
+	genesisState, err := gapp.GaiaAppGenState(cdc, genTxs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts
@@ -173,10 +253,10 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin("steak", 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewRat(100))
+		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewDec(100))
 	}
 
-	appState, err := wire.MarshalJSONIndent(cdc, genesisState)
+	appState, err := codec.MarshalJSONIndent(cdc, genesisState)
 	require.NoError(t, err)
 	genDoc.AppState = appState
 
@@ -186,24 +266,30 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// XXX: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
+	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
+	viper.Set(client.FlagTrustNode, true)
+	dir, err := ioutil.TempDir("", "lcd_test")
+	require.NoError(t, err)
+	viper.Set(cli.HomeFlag, dir)
 
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)
 
+	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
 	lcd, err := startLCD(logger, listenAddr, cdc)
 	require.NoError(t, err)
 
 	tests.WaitForLCDStart(port)
 	tests.WaitForHeight(1, port)
 
-	cleanup := func() {
+	cleanup = func() {
 		logger.Debug("cleaning up LCD initialization")
 		node.Stop()
 		node.Wait()
 		lcd.Close()
 	}
 
-	return cleanup, validatorsPKs, port
+	return cleanup, valConsPubKeys, valOperAddrs, port
 }
 
 // startTM creates and starts an in-process Tendermint node with memDB and
@@ -217,9 +303,14 @@ func startTM(
 ) (*nm.Node, error) {
 	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
 	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
+	nodeKey, err := p2p.LoadOrGenNodeKey(tmcfg.NodeKeyFile())
+	if err != nil {
+		return nil, err
+	}
 	node, err := nm.NewNode(
 		tmcfg,
 		privVal,
+		nodeKey,
 		proxy.NewLocalClientCreator(app),
 		genDocProvider,
 		dbProvider,
@@ -244,7 +335,7 @@ func startTM(
 // startLCD starts the LCD.
 //
 // NOTE: This causes the thread to block.
-func startLCD(logger log.Logger, listenAddr string, cdc *wire.Codec) (net.Listener, error) {
+func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec) (net.Listener, error) {
 	return tmrpc.StartHTTPServer(listenAddr, createHandler(cdc), logger, tmrpc.Config{})
 }
 

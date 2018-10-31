@@ -27,8 +27,12 @@ func NewTx(key, value string) kvstoreTx {
 	}
 }
 
-func (tx kvstoreTx) Type() string {
+func (tx kvstoreTx) Route() string {
 	return "kvstore"
+}
+
+func (tx kvstoreTx) Type() string {
+	return "kvstore_tx"
 }
 
 func (tx kvstoreTx) GetMsgs() []sdk.Msg {

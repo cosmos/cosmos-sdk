@@ -9,12 +9,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -24,10 +25,23 @@ const (
 )
 
 // default client command to search through tagged transactions
-func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
+func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
-		Short: "Search for all transactions that match the given tags",
+		Short: "Search for all transactions that match the given tags.",
+		Long: strings.TrimSpace(`
+Search for transactions that match the given tags. By default, transactions must match ALL tags
+passed to the --tags option. To match any transaction, use the --any option.
+
+For example:
+
+$ gaiacli tendermint txs --tag test1,test2
+
+will match any transaction tagged with both test1,test2. To match a transaction tagged with either
+test1 or test2, use:
+
+$ gaiacli tendermint txs --tag test1,test2 --any
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tags := viper.GetStringSlice(flagTags)
 
@@ -38,7 +52,13 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 				return err
 			}
 
-			output, err := cdc.MarshalJSON(txs)
+			var output []byte
+			if cliCtx.Indent {
+				output, err = cdc.MarshalJSONIndent(txs, "", "  ")
+			} else {
+				output, err = cdc.MarshalJSON(txs)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -49,15 +69,17 @@ func SearchTxCmd(cdc *wire.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
-
-	// TODO: change this to false once proofs built in
-	cmd.Flags().Bool(client.FlagTrustNode, true, "Don't verify proofs for responses")
-	cmd.Flags().StringSlice(flagTags, nil, "Tags that must match (may provide multiple)")
+	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
+	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
+	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
+	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
+	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
+	cmd.Flags().StringSlice(flagTags, nil, "Comma-separated list of tags that must match")
 	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")
 	return cmd
 }
 
-func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Info, error) {
+func searchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]Info, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
@@ -71,7 +93,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 		return nil, err
 	}
 
-	prove := !viper.GetBool(client.FlagTrustNode)
+	prove := !cliCtx.TrustNode
 
 	// TODO: take these as args
 	page := 0
@@ -79,6 +101,15 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 	res, err := node.TxSearch(query, prove, page, perPage)
 	if err != nil {
 		return nil, err
+	}
+
+	if prove {
+		for _, tx := range res.Txs {
+			err := ValidateTxResult(cliCtx, tx)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	info, err := FormatTxResults(cdc, res.Txs)
@@ -90,7 +121,7 @@ func searchTxs(cliCtx context.CLIContext, cdc *wire.Codec, tags []string) ([]Inf
 }
 
 // parse the indexed txs into an array of Info
-func FormatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]Info, error) {
+func FormatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]Info, error) {
 	var err error
 	out := make([]Info, len(res))
 	for i := range res {
@@ -106,11 +137,11 @@ func FormatTxResults(cdc *wire.Codec, res []*ctypes.ResultTx) ([]Info, error) {
 // REST
 
 // Search Tx REST Handler
-func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.HandlerFunc {
+func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tag := r.FormValue("tag")
 		if tag == "" {
-			w.WriteHeader(400)
+			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("You need to provide at least a tag as a key=value pair to search for. Postfix the key with _bech32 to search bech32-encoded addresses or public keys"))
 			return
 		}
@@ -120,8 +151,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.H
 
 		value, err := url.QueryUnescape(keyValue[1])
 		if err != nil {
-			w.WriteHeader(400)
-			w.Write([]byte("Could not decode address: " + err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not decode address", err.Error()))
 			return
 		}
 
@@ -130,8 +160,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.H
 			prefix := strings.Split(bech32address, "1")[0]
 			bz, err := sdk.GetFromBech32(bech32address, prefix)
 			if err != nil {
-				w.WriteHeader(400)
-				w.Write([]byte(err.Error()))
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
 
@@ -140,8 +169,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.H
 
 		txs, err := searchTxs(cliCtx, cdc, []string{tag})
 		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(err.Error()))
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -150,13 +178,6 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *wire.Codec) http.H
 			return
 		}
 
-		output, err := cdc.MarshalJSON(txs)
-		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(err.Error()))
-			return
-		}
-
-		w.Write(output)
+		utils.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
 	}
 }

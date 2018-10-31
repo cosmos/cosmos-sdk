@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -57,8 +58,36 @@ func TestErrFn(t *testing.T) {
 		err := errFn("")
 		codeType := codeTypes[i]
 		require.Equal(t, err.Code(), codeType, "Err function expected to return proper code. tc #%d", i)
+		require.Equal(t, err.Codespace(), CodespaceRoot, "Err function expected to return proper codespace. tc #%d", i)
 		require.Equal(t, err.Result().Code, ToABCICode(CodespaceRoot, codeType), "Err function expected to return proper ABCICode. tc #%d")
+		require.Equal(t, err.QueryResult().Code, uint32(err.ABCICode()), "Err function expected to return proper ABCICode from QueryResult. tc #%d")
+		require.Equal(t, err.QueryResult().Log, err.ABCILog(), "Err function expected to return proper ABCILog from QueryResult. tc #%d")
 	}
 
 	require.Equal(t, ABCICodeOK, ToABCICode(CodespaceRoot, CodeOK))
+}
+
+func TestAppendMsgToErr(t *testing.T) {
+	for i, errFn := range errFns {
+		err := errFn("")
+		errMsg := err.Stacktrace().Error()
+		abciLog := err.ABCILog()
+
+		// plain msg error
+		msg := AppendMsgToErr("something unexpected happened", errMsg)
+		require.Equal(t, fmt.Sprintf("something unexpected happened; %s",
+			errMsg),
+			msg,
+			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
+
+		// ABCI Log msg error
+		msg = AppendMsgToErr("something unexpected happened", abciLog)
+		msgIdx := mustGetMsgIndex(abciLog)
+		require.Equal(t, fmt.Sprintf("%s%s; %s}",
+			abciLog[:msgIdx],
+			"something unexpected happened",
+			abciLog[msgIdx:len(abciLog)-1]),
+			msg,
+			fmt.Sprintf("Should have formatted the error message of ABCI Log. tc #%d", i))
+	}
 }

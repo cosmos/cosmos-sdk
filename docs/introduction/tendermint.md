@@ -10,7 +10,7 @@ The ability to tolerate machines failing in arbitrary ways, including becoming m
 
 ## Application Blockchain Interface
 
-Tendermint consists of two chief technical components: a blockchain consensus engine and a generic application interface. The consensus engine, called Tendermint Core, ensures that the same transactions are recorded on every machine in the same order. The application interface, called the Application Blockchain Interface (ABCI), enables the transactions to be processed in any programming language. Unlike other blockchain and consensus solutions developers can use Tendermint for BFT state machine replication in any programming language or development environment. Visit the [Tendermint docs](https://tendermint.readthedocs.io/projects/tools/en/master/introduction.html#abci-overview) for a deep dive into the ABCI.
+Tendermint consists of two chief technical components: a blockchain consensus engine and a generic application interface. The consensus engine, called Tendermint Core, ensures that the same transactions are recorded on every machine in the same order. The application interface, called the Application Blockchain Interface (ABCI), enables the transactions to be processed in any programming language. Unlike other blockchain and consensus solutions developers can use Tendermint for BFT state machine replication in any programming language or development environment. Visit the [Tendermint docs](https://tendermint.com/docs/introduction/introduction.html#abci-overview) for a deep dive into the ABCI.
 
 ## Understanding the roles of the different layers
 

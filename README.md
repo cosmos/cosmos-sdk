@@ -22,7 +22,7 @@ breaking changes.
 ## Gaia Testnet
 
 To join the latest testnet, follow 
-[the guide](https://cosmos.network/docs/getting-started/full-node.html#setting-up-a-new-node).
+[the guide](./docs/getting-started/join-testnet.md).
 
 For status updates and genesis files, see the
 [testnets repo](https://github.com/cosmos/testnets).
@@ -30,15 +30,14 @@ For status updates and genesis files, see the
 ## Install
 
 See the 
-[install instructions](https://cosmos.network/docs/getting-started/installation.html).
+[install instructions](./docs/getting-started/installation.md).
 
 ## Quick Start
 
 See the [Cosmos Docs](https://cosmos.network/docs/)
 
-- [Getting started with the SDK](https://cosmos.network/docs/sdk/core/intro.html)
+- [Getting started with the SDK](./docs/sdk/core/intro.md)
 - [SDK Examples](/examples)
-- [Join the testnet](https://cosmos.network/docs/getting-started/full-node.html#run-a-full-node)
 
 ## Disambiguation
 

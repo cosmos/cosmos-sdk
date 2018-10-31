@@ -3,16 +3,16 @@ package ibc
 import (
 	"encoding/json"
 
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 )
 
 var (
-	msgCdc *wire.Codec
+	msgCdc *codec.Codec
 )
 
 func init() {
-	msgCdc = wire.NewCodec()
+	msgCdc = codec.New()
 }
 
 // ------------------------------
@@ -22,11 +22,11 @@ func init() {
 // IBCPacket defines a piece of data that can be send between two separate
 // blockchains.
 type IBCPacket struct {
-	SrcAddr   sdk.AccAddress
-	DestAddr  sdk.AccAddress
-	Coins     sdk.Coins
-	SrcChain  string
-	DestChain string
+	SrcAddr   sdk.AccAddress `json:"src_addr"`
+	DestAddr  sdk.AccAddress `json:"dest_addr"`
+	Coins     sdk.Coins      `json:"coins"`
+	SrcChain  string         `json:"src_chain"`
+	DestChain string         `json:"dest_chain"`
 }
 
 func NewIBCPacket(srcAddr sdk.AccAddress, destAddr sdk.AccAddress, coins sdk.Coins,
@@ -71,7 +71,8 @@ type IBCTransferMsg struct {
 }
 
 // nolint
-func (msg IBCTransferMsg) Type() string { return "ibc" }
+func (msg IBCTransferMsg) Route() string { return "ibc" }
+func (msg IBCTransferMsg) Type() string  { return "transfer" }
 
 // x/bank/tx.go MsgSend.GetSigners()
 func (msg IBCTransferMsg) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.SrcAddr} }
@@ -99,7 +100,8 @@ type IBCReceiveMsg struct {
 }
 
 // nolint
-func (msg IBCReceiveMsg) Type() string             { return "ibc" }
+func (msg IBCReceiveMsg) Route() string            { return "ibc" }
+func (msg IBCReceiveMsg) Type() string             { return "receive" }
 func (msg IBCReceiveMsg) ValidateBasic() sdk.Error { return msg.IBCPacket.ValidateBasic() }
 
 // x/bank/tx.go MsgSend.GetSigners()

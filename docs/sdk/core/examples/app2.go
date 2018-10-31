@@ -13,8 +13,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 )
 
 const (
@@ -25,8 +25,8 @@ var (
 	issuer = ed25519.GenPrivKey().PubKey().Address()
 )
 
-func NewCodec() *wire.Codec {
-	cdc := wire.NewCodec()
+func NewCodec() *codec.Codec {
+	cdc := codec.New()
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(MsgSend{}, "example/MsgSend", nil)
 	cdc.RegisterConcrete(MsgIssue{}, "example/MsgIssue", nil)
@@ -76,7 +76,9 @@ type MsgIssue struct {
 }
 
 // Implements Msg.
-func (msg MsgIssue) Type() string { return "issue" }
+// nolint
+func (msg MsgIssue) Route() string { return "issue" }
+func (msg MsgIssue) Type() string  { return "issue" }
 
 // Implements Msg. Ensures addresses are valid and Coin is positive
 func (msg MsgIssue) ValidateBasic() sdk.Error {
@@ -196,7 +198,7 @@ func (tx app2Tx) GetSignature() []byte {
 }
 
 // Amino decode app2Tx. Capable of decoding both MsgSend and MsgIssue
-func tx2Decoder(cdc *wire.Codec) sdk.TxDecoder {
+func tx2Decoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx app2Tx
 		err := cdc.UnmarshalBinary(txBytes, &tx)
@@ -211,7 +213,7 @@ func tx2Decoder(cdc *wire.Codec) sdk.TxDecoder {
 
 // Simple anteHandler that ensures msg signers have signed.
 // Provides no replay protection.
-func antehandler(ctx sdk.Context, tx sdk.Tx) (_ sdk.Context, _ sdk.Result, abort bool) {
+func antehandler(ctx sdk.Context, tx sdk.Tx, simulate bool) (_ sdk.Context, _ sdk.Result, abort bool) {
 	appTx, ok := tx.(app2Tx)
 	if !ok {
 		// set abort boolean to true so that we don't continue to process failed tx

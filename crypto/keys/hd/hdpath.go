@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
 // BIP44Prefix is the parts of the BIP32 HD path that are fixed by what we used during the fundraiser.
@@ -55,11 +54,97 @@ func NewParams(purpose, coinType, account uint32, change bool, addressIdx uint32
 	}
 }
 
+// Parse the BIP44 path and unmarshal into the struct.
+// nolint: gocyclo
+func NewParamsFromPath(path string) (*BIP44Params, error) {
+	spl := strings.Split(path, "/")
+	if len(spl) != 5 {
+		return nil, fmt.Errorf("path length is wrong. Expected 5, got %d", len(spl))
+	}
+
+	if spl[0] != "44'" {
+		return nil, fmt.Errorf("first field in path must be 44', got %v", spl[0])
+	}
+
+	if !isHardened(spl[1]) || !isHardened(spl[2]) {
+		return nil,
+			fmt.Errorf("second and third field in path must be hardened (ie. contain the suffix ', got %v and %v", spl[1], spl[2])
+	}
+	if isHardened(spl[3]) || isHardened(spl[4]) {
+		return nil,
+			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %v and %v", spl[3], spl[4])
+	}
+
+	purpose, err := hardenedInt(spl[0])
+	if err != nil {
+		return nil, err
+	}
+	coinType, err := hardenedInt(spl[1])
+	if err != nil {
+		return nil, err
+	}
+	account, err := hardenedInt(spl[2])
+	if err != nil {
+		return nil, err
+	}
+	change, err := hardenedInt(spl[3])
+	if err != nil {
+		return nil, err
+	}
+	if !(change == 0 || change == 1) {
+		return nil, fmt.Errorf("change field can only be 0 or 1")
+	}
+
+	addressIdx, err := hardenedInt(spl[4])
+	if err != nil {
+		return nil, err
+	}
+
+	return &BIP44Params{
+		purpose:    purpose,
+		coinType:   coinType,
+		account:    account,
+		change:     change > 0,
+		addressIdx: addressIdx,
+	}, nil
+}
+
+func hardenedInt(field string) (uint32, error) {
+	field = strings.TrimSuffix(field, "'")
+	i, err := strconv.Atoi(field)
+	if err != nil {
+		return 0, err
+	}
+	if i < 0 {
+		return 0, fmt.Errorf("fields must not be negative. got %d", i)
+	}
+	return uint32(i), nil
+}
+
+func isHardened(field string) bool {
+	return strings.HasSuffix(field, "'")
+}
+
 // NewFundraiserParams creates a BIP 44 parameter object from the params:
 // m / 44' / 118' / account' / 0 / address_index
 // The fixed parameters (purpose', coin_type', and change) are determined by what was used in the fundraiser.
 func NewFundraiserParams(account uint32, addressIdx uint32) *BIP44Params {
 	return NewParams(44, 118, account, false, addressIdx)
+}
+
+// Return the BIP44 fields as an array.
+func (p BIP44Params) DerivationPath() []uint32 {
+	change := uint32(0)
+	if p.change {
+		change = 1
+	}
+	return []uint32{
+		p.purpose,
+		p.coinType,
+		p.account,
+		change,
+		p.addressIdx,
+	}
 }
 
 func (p BIP44Params) String() string {
@@ -128,10 +213,15 @@ func derivePrivateKey(privKeyBytes [32]byte, chainCode [32]byte, index uint32, h
 		data = append([]byte{byte(0)}, privKeyBytes[:]...)
 	} else {
 		// this can't return an error:
-		pubkey := secp256k1.PrivKeySecp256k1(privKeyBytes).PubKey()
+		_, ecPub := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes[:])
+		pubkeyBytes := ecPub.SerializeCompressed()
+		data = pubkeyBytes
 
+		/* By using btcec, we can remove the dependency on tendermint/crypto/secp256k1
+		pubkey := secp256k1.PrivKeySecp256k1(privKeyBytes).PubKey()
 		public := pubkey.(secp256k1.PubKeySecp256k1)
 		data = public[:]
+		*/
 	}
 	data = append(data, uint32ToBytes(index)...)
 	data2, chainCode2 := i64(chainCode[:], data)

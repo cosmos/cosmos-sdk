@@ -17,26 +17,30 @@ var (
 
 // test ValidateBasic for MsgCreateValidator
 func TestMsgCreateValidator(t *testing.T) {
+	commission1 := NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	commission2 := NewCommissionMsg(sdk.NewDec(5), sdk.NewDec(5), sdk.NewDec(5))
+
 	tests := []struct {
 		name, moniker, identity, website, details string
-		validatorAddr                             sdk.AccAddress
+		commissionMsg                             CommissionMsg
+		validatorAddr                             sdk.ValAddress
 		pubkey                                    crypto.PubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
-		{"basic good", "a", "b", "c", "d", addr1, pk1, coinPos, true},
-		{"partial description", "", "", "c", "", addr1, pk1, coinPos, true},
-		{"empty description", "", "", "", "", addr1, pk1, coinPos, false},
-		{"empty address", "a", "b", "c", "d", emptyAddr, pk1, coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", addr1, emptyPubkey, coinPos, true},
-		{"empty bond", "a", "b", "c", "d", addr1, pk1, coinZero, false},
-		{"negative bond", "a", "b", "c", "d", addr1, pk1, coinNeg, false},
-		{"negative bond", "a", "b", "c", "d", addr1, pk1, coinNeg, false},
+		{"basic good", "a", "b", "c", "d", commission1, addr1, pk1, coinPos, true},
+		{"partial description", "", "", "c", "", commission1, addr1, pk1, coinPos, true},
+		{"empty description", "", "", "", "", commission2, addr1, pk1, coinPos, false},
+		{"empty address", "a", "b", "c", "d", commission2, emptyAddr, pk1, coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", commission1, addr1, emptyPubkey, coinPos, true},
+		{"empty bond", "a", "b", "c", "d", commission2, addr1, pk1, coinZero, false},
+		{"negative bond", "a", "b", "c", "d", commission2, addr1, pk1, coinNeg, false},
+		{"negative bond", "a", "b", "c", "d", commission1, addr1, pk1, coinNeg, false},
 	}
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description)
+		msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.commissionMsg)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -49,7 +53,7 @@ func TestMsgCreateValidator(t *testing.T) {
 func TestMsgEditValidator(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
-		validatorAddr                             sdk.AccAddress
+		validatorAddr                             sdk.ValAddress
 		expectPass                                bool
 	}{
 		{"basic good", "a", "b", "c", "d", addr1, true},
@@ -60,7 +64,9 @@ func TestMsgEditValidator(t *testing.T) {
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgEditValidator(tc.validatorAddr, description)
+		newRate := sdk.ZeroDec()
+
+		msg := NewMsgEditValidator(tc.validatorAddr, description, &newRate)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -71,28 +77,35 @@ func TestMsgEditValidator(t *testing.T) {
 
 // test ValidateBasic and GetSigners for MsgCreateValidatorOnBehalfOf
 func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
+	commission1 := NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	commission2 := NewCommissionMsg(sdk.NewDec(5), sdk.NewDec(5), sdk.NewDec(5))
+
 	tests := []struct {
 		name, moniker, identity, website, details string
+		commissionMsg                             CommissionMsg
 		delegatorAddr                             sdk.AccAddress
-		validatorAddr                             sdk.AccAddress
+		validatorAddr                             sdk.ValAddress
 		validatorPubKey                           crypto.PubKey
 		bond                                      sdk.Coin
 		expectPass                                bool
 	}{
-		{"basic good", "a", "b", "c", "d", addr1, addr2, pk2, coinPos, true},
-		{"partial description", "", "", "c", "", addr1, addr2, pk2, coinPos, true},
-		{"empty description", "", "", "", "", addr1, addr2, pk2, coinPos, false},
-		{"empty delegator address", "a", "b", "c", "d", emptyAddr, addr2, pk2, coinPos, false},
-		{"empty validator address", "a", "b", "c", "d", addr1, emptyAddr, pk2, coinPos, false},
-		{"empty pubkey", "a", "b", "c", "d", addr1, addr2, emptyPubkey, coinPos, true},
-		{"empty bond", "a", "b", "c", "d", addr1, addr2, pk2, coinZero, false},
-		{"negative bond", "a", "b", "c", "d", addr1, addr2, pk2, coinNeg, false},
-		{"negative bond", "a", "b", "c", "d", addr1, addr2, pk2, coinNeg, false},
+		{"basic good", "a", "b", "c", "d", commission2, sdk.AccAddress(addr1), addr2, pk2, coinPos, true},
+		{"partial description", "", "", "c", "", commission2, sdk.AccAddress(addr1), addr2, pk2, coinPos, true},
+		{"empty description", "", "", "", "", commission1, sdk.AccAddress(addr1), addr2, pk2, coinPos, false},
+		{"empty delegator address", "a", "b", "c", "d", commission1, sdk.AccAddress(emptyAddr), addr2, pk2, coinPos, false},
+		{"empty validator address", "a", "b", "c", "d", commission2, sdk.AccAddress(addr1), emptyAddr, pk2, coinPos, false},
+		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.AccAddress(addr1), addr2, emptyPubkey, coinPos, true},
+		{"empty bond", "a", "b", "c", "d", commission2, sdk.AccAddress(addr1), addr2, pk2, coinZero, false},
+		{"negative bond", "a", "b", "c", "d", commission1, sdk.AccAddress(addr1), addr2, pk2, coinNeg, false},
+		{"negative bond", "a", "b", "c", "d", commission2, sdk.AccAddress(addr1), addr2, pk2, coinNeg, false},
 	}
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgCreateValidatorOnBehalfOf(tc.delegatorAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description)
+		msg := NewMsgCreateValidatorOnBehalfOf(
+			tc.delegatorAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description, tc.commissionMsg,
+		)
+
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -100,13 +113,13 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 		}
 	}
 
-	msg := NewMsgCreateValidator(addr1, pk1, coinPos, Description{})
+	msg := NewMsgCreateValidator(addr1, pk1, coinPos, Description{}, CommissionMsg{})
 	addrs := msg.GetSigners()
-	require.Equal(t, []sdk.AccAddress{addr1}, addrs, "Signers on default msg is wrong")
+	require.Equal(t, []sdk.AccAddress{sdk.AccAddress(addr1)}, addrs, "Signers on default msg is wrong")
 
-	msg = NewMsgCreateValidatorOnBehalfOf(addr2, addr1, pk1, coinPos, Description{})
+	msg = NewMsgCreateValidatorOnBehalfOf(sdk.AccAddress(addr2), addr1, pk1, coinPos, Description{}, CommissionMsg{})
 	addrs = msg.GetSigners()
-	require.Equal(t, []sdk.AccAddress{addr2, addr1}, addrs, "Signers for onbehalfof msg is wrong")
+	require.Equal(t, []sdk.AccAddress{sdk.AccAddress(addr2), sdk.AccAddress(addr1)}, addrs, "Signers for onbehalfof msg is wrong")
 }
 
 // test ValidateBasic for MsgDelegate
@@ -114,16 +127,16 @@ func TestMsgDelegate(t *testing.T) {
 	tests := []struct {
 		name          string
 		delegatorAddr sdk.AccAddress
-		validatorAddr sdk.AccAddress
+		validatorAddr sdk.ValAddress
 		bond          sdk.Coin
 		expectPass    bool
 	}{
-		{"basic good", addr1, addr2, coinPos, true},
-		{"self bond", addr1, addr1, coinPos, true},
-		{"empty delegator", emptyAddr, addr1, coinPos, false},
-		{"empty validator", addr1, emptyAddr, coinPos, false},
-		{"empty bond", addr1, addr2, coinZero, false},
-		{"negative bond", addr1, addr2, coinNeg, false},
+		{"basic good", sdk.AccAddress(addr1), addr2, coinPos, true},
+		{"self bond", sdk.AccAddress(addr1), addr1, coinPos, true},
+		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, coinPos, false},
+		{"empty validator", sdk.AccAddress(addr1), emptyAddr, coinPos, false},
+		{"empty bond", sdk.AccAddress(addr1), addr2, coinZero, false},
+		{"negative bond", sdk.AccAddress(addr1), addr2, coinNeg, false},
 	}
 
 	for _, tc := range tests {
@@ -141,17 +154,17 @@ func TestMsgBeginRedelegate(t *testing.T) {
 	tests := []struct {
 		name             string
 		delegatorAddr    sdk.AccAddress
-		validatorSrcAddr sdk.AccAddress
-		validatorDstAddr sdk.AccAddress
-		sharesAmount     sdk.Rat
+		validatorSrcAddr sdk.ValAddress
+		validatorDstAddr sdk.ValAddress
+		sharesAmount     sdk.Dec
 		expectPass       bool
 	}{
-		{"regular", addr1, addr2, addr3, sdk.NewRat(1, 10), true},
-		{"negative decimal", addr1, addr2, addr3, sdk.NewRat(-1, 10), false},
-		{"zero amount", addr1, addr2, addr3, sdk.ZeroRat(), false},
-		{"empty delegator", emptyAddr, addr1, addr3, sdk.NewRat(1, 10), false},
-		{"empty source validator", addr1, emptyAddr, addr3, sdk.NewRat(1, 10), false},
-		{"empty destination validator", addr1, addr2, emptyAddr, sdk.NewRat(1, 10), false},
+		{"regular", sdk.AccAddress(addr1), addr2, addr3, sdk.NewDecWithPrec(1, 1), true},
+		{"negative decimal", sdk.AccAddress(addr1), addr2, addr3, sdk.NewDecWithPrec(-1, 1), false},
+		{"zero amount", sdk.AccAddress(addr1), addr2, addr3, sdk.ZeroDec(), false},
+		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, addr3, sdk.NewDecWithPrec(1, 1), false},
+		{"empty source validator", sdk.AccAddress(addr1), emptyAddr, addr3, sdk.NewDecWithPrec(1, 1), false},
+		{"empty destination validator", sdk.AccAddress(addr1), addr2, emptyAddr, sdk.NewDecWithPrec(1, 1), false},
 	}
 
 	for _, tc := range tests {
@@ -165,71 +178,23 @@ func TestMsgBeginRedelegate(t *testing.T) {
 }
 
 // test ValidateBasic for MsgUnbond
-func TestMsgCompleteRedelegate(t *testing.T) {
-	tests := []struct {
-		name             string
-		delegatorAddr    sdk.AccAddress
-		validatorSrcAddr sdk.AccAddress
-		validatorDstAddr sdk.AccAddress
-		expectPass       bool
-	}{
-		{"regular", addr1, addr2, addr3, true},
-		{"empty delegator", emptyAddr, addr1, addr3, false},
-		{"empty source validator", addr1, emptyAddr, addr3, false},
-		{"empty destination validator", addr1, addr2, emptyAddr, false},
-	}
-
-	for _, tc := range tests {
-		msg := NewMsgCompleteRedelegate(tc.delegatorAddr, tc.validatorSrcAddr, tc.validatorDstAddr)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
-	}
-}
-
-// test ValidateBasic for MsgUnbond
 func TestMsgBeginUnbonding(t *testing.T) {
 	tests := []struct {
 		name          string
 		delegatorAddr sdk.AccAddress
-		validatorAddr sdk.AccAddress
-		sharesAmount  sdk.Rat
+		validatorAddr sdk.ValAddress
+		sharesAmount  sdk.Dec
 		expectPass    bool
 	}{
-		{"regular", addr1, addr2, sdk.NewRat(1, 10), true},
-		{"negative decimal", addr1, addr2, sdk.NewRat(-1, 10), false},
-		{"zero amount", addr1, addr2, sdk.ZeroRat(), false},
-		{"empty delegator", emptyAddr, addr1, sdk.NewRat(1, 10), false},
-		{"empty validator", addr1, emptyAddr, sdk.NewRat(1, 10), false},
+		{"regular", sdk.AccAddress(addr1), addr2, sdk.NewDecWithPrec(1, 1), true},
+		{"negative decimal", sdk.AccAddress(addr1), addr2, sdk.NewDecWithPrec(-1, 1), false},
+		{"zero amount", sdk.AccAddress(addr1), addr2, sdk.ZeroDec(), false},
+		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, sdk.NewDecWithPrec(1, 1), false},
+		{"empty validator", sdk.AccAddress(addr1), emptyAddr, sdk.NewDecWithPrec(1, 1), false},
 	}
 
 	for _, tc := range tests {
 		msg := NewMsgBeginUnbonding(tc.delegatorAddr, tc.validatorAddr, tc.sharesAmount)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", tc.name)
-		}
-	}
-}
-
-// test ValidateBasic for MsgUnbond
-func TestMsgCompleteUnbonding(t *testing.T) {
-	tests := []struct {
-		name          string
-		delegatorAddr sdk.AccAddress
-		validatorAddr sdk.AccAddress
-		expectPass    bool
-	}{
-		{"regular", addr1, addr2, true},
-		{"empty delegator", emptyAddr, addr1, false},
-		{"empty validator", addr1, emptyAddr, false},
-	}
-
-	for _, tc := range tests {
-		msg := NewMsgCompleteUnbonding(tc.delegatorAddr, tc.validatorAddr)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

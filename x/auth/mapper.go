@@ -1,16 +1,16 @@
 package auth
 
 import (
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/tendermint/tendermint/crypto"
 )
 
 var globalAccountNumberKey = []byte("globalAccountNumber")
 
-// This AccountMapper encodes/decodes accounts using the
+// This AccountKeeper encodes/decodes accounts using the
 // go-amino (binary) encoding/decoding library.
-type AccountMapper struct {
+type AccountKeeper struct {
 
 	// The (unexposed) key used to access the store from the Context.
 	key sdk.StoreKey
@@ -18,23 +18,23 @@ type AccountMapper struct {
 	// The prototypical Account constructor.
 	proto func() Account
 
-	// The wire codec for binary encoding/decoding of accounts.
-	cdc *wire.Codec
+	// The codec codec for binary encoding/decoding of accounts.
+	cdc *codec.Codec
 }
 
-// NewAccountMapper returns a new sdk.AccountMapper that
+// NewAccountKeeper returns a new sdk.AccountKeeper that
 // uses go-amino to (binary) encode and decode concrete sdk.Accounts.
 // nolint
-func NewAccountMapper(cdc *wire.Codec, key sdk.StoreKey, proto func() Account) AccountMapper {
-	return AccountMapper{
+func NewAccountKeeper(cdc *codec.Codec, key sdk.StoreKey, proto func() Account) AccountKeeper {
+	return AccountKeeper{
 		key:   key,
 		proto: proto,
 		cdc:   cdc,
 	}
 }
 
-// Implaements sdk.AccountMapper.
-func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) Account {
+// Implaements sdk.AccountKeeper.
+func (am AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) Account {
 	acc := am.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
@@ -50,7 +50,7 @@ func (am AccountMapper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 }
 
 // New Account
-func (am AccountMapper) NewAccount(ctx sdk.Context, acc Account) Account {
+func (am AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
 	err := acc.SetAccountNumber(am.GetNextAccountNumber(ctx))
 	if err != nil {
 		// TODO: Handle with #870
@@ -64,8 +64,8 @@ func AddressStoreKey(addr sdk.AccAddress) []byte {
 	return append([]byte("account:"), addr.Bytes()...)
 }
 
-// Implements sdk.AccountMapper.
-func (am AccountMapper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account {
+// Implements sdk.AccountKeeper.
+func (am AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account {
 	store := ctx.KVStore(am.key)
 	bz := store.Get(AddressStoreKey(addr))
 	if bz == nil {
@@ -75,18 +75,26 @@ func (am AccountMapper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account
 	return acc
 }
 
-// Implements sdk.AccountMapper.
-func (am AccountMapper) SetAccount(ctx sdk.Context, acc Account) {
+// Implements sdk.AccountKeeper.
+func (am AccountKeeper) SetAccount(ctx sdk.Context, acc Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(am.key)
 	bz := am.encodeAccount(acc)
 	store.Set(AddressStoreKey(addr), bz)
 }
 
-// Implements sdk.AccountMapper.
-func (am AccountMapper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
+// RemoveAccount removes an account for the account mapper store.
+func (am AccountKeeper) RemoveAccount(ctx sdk.Context, acc Account) {
+	addr := acc.GetAddress()
+	store := ctx.KVStore(am.key)
+	store.Delete(AddressStoreKey(addr))
+}
+
+// Implements sdk.AccountKeeper.
+func (am AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(am.key)
 	iter := sdk.KVStorePrefixIterator(store, []byte("account:"))
+	defer iter.Close()
 	for {
 		if !iter.Valid() {
 			return
@@ -101,7 +109,7 @@ func (am AccountMapper) IterateAccounts(ctx sdk.Context, process func(Account) (
 }
 
 // Returns the PubKey of the account at address
-func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, sdk.Error) {
+func (am AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, sdk.Error) {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, sdk.ErrUnknownAddress(addr.String())
@@ -110,7 +118,7 @@ func (am AccountMapper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.
 }
 
 // Returns the Sequence of the account at address
-func (am AccountMapper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64, sdk.Error) {
+func (am AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64, sdk.Error) {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return 0, sdk.ErrUnknownAddress(addr.String())
@@ -118,7 +126,7 @@ func (am AccountMapper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64
 	return acc.GetSequence(), nil
 }
 
-func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence int64) sdk.Error {
+func (am AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence int64) sdk.Error {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())
@@ -133,7 +141,7 @@ func (am AccountMapper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSeq
 }
 
 // Returns and increments the global account number counter
-func (am AccountMapper) GetNextAccountNumber(ctx sdk.Context) int64 {
+func (am AccountKeeper) GetNextAccountNumber(ctx sdk.Context) int64 {
 	var accNumber int64
 	store := ctx.KVStore(am.key)
 	bz := store.Get(globalAccountNumberKey)
@@ -155,7 +163,7 @@ func (am AccountMapper) GetNextAccountNumber(ctx sdk.Context) int64 {
 //----------------------------------------
 // misc.
 
-func (am AccountMapper) encodeAccount(acc Account) []byte {
+func (am AccountKeeper) encodeAccount(acc Account) []byte {
 	bz, err := am.cdc.MarshalBinaryBare(acc)
 	if err != nil {
 		panic(err)
@@ -163,7 +171,7 @@ func (am AccountMapper) encodeAccount(acc Account) []byte {
 	return bz
 }
 
-func (am AccountMapper) decodeAccount(bz []byte) (acc Account) {
+func (am AccountKeeper) decodeAccount(bz []byte) (acc Account) {
 	err := am.cdc.UnmarshalBinaryBare(bz, &acc)
 	if err != nil {
 		panic(err)

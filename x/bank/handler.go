@@ -1,8 +1,6 @@
 package bank
 
 import (
-	"reflect"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,7 +13,7 @@ func NewHandler(k Keeper) sdk.Handler {
 		case MsgIssue:
 			return handleMsgIssue(ctx, k, msg)
 		default:
-			errMsg := "Unrecognized bank Msg type: " + reflect.TypeOf(msg).Name()
+			errMsg := "Unrecognized bank Msg type: %s" + msg.Type()
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

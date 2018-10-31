@@ -1,0 +1,10 @@
+init_config:
+
+instances:
+  - prometheus_url: http://127.0.0.1:26660
+    metrics:
+      - go*
+      - mempool*
+      - p2p*
+      - process*
+      - promhttp*

@@ -1,7 +1,7 @@
 package oracle
 
 import (
-	"github.com/cosmos/cosmos-sdk/wire"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -9,16 +9,16 @@ import (
 // Keeper of the oracle store
 type Keeper struct {
 	key sdk.StoreKey
-	cdc *wire.Codec
+	cdc *codec.Codec
 
 	valset sdk.ValidatorSet
 
-	supermaj sdk.Rat
+	supermaj sdk.Dec
 	timeout  int64
 }
 
 // NewKeeper constructs a new keeper
-func NewKeeper(key sdk.StoreKey, cdc *wire.Codec, valset sdk.ValidatorSet, supermaj sdk.Rat, timeout int64) Keeper {
+func NewKeeper(key sdk.StoreKey, cdc *codec.Codec, valset sdk.ValidatorSet, supermaj sdk.Dec, timeout int64) Keeper {
 	if timeout < 0 {
 		panic("Timeout should not be negative")
 	}
@@ -46,7 +46,7 @@ const (
 
 // Info for each payload
 type Info struct {
-	Power      sdk.Rat
+	Power      sdk.Dec
 	Hash       []byte
 	LastSigned int64
 	Status     InfoStatus
@@ -55,7 +55,7 @@ type Info struct {
 // EmptyInfo construct an empty Info
 func EmptyInfo(ctx sdk.Context) Info {
 	return Info{
-		Power:      sdk.ZeroRat(),
+		Power:      sdk.ZeroDec(),
 		Hash:       ctx.BlockHeader().ValidatorsHash,
 		LastSigned: ctx.BlockHeight(),
 		Status:     Pending,

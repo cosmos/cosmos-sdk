@@ -1,40 +1,39 @@
 package cli
 
 import (
-	"os"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 
 	"github.com/spf13/cobra"
 )
 
-// GetCmdUnrevoke implements the create unrevoke validator command.
-func GetCmdUnrevoke(cdc *wire.Codec) *cobra.Command {
+// GetCmdUnjail implements the create unjail validator command.
+func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unrevoke",
-		Args:  cobra.ExactArgs(0),
-		Short: "unrevoke validator previously revoked for downtime",
+		Use:   "unjail",
+		Args:  cobra.NoArgs,
+		Short: "unjail validator previously jailed for downtime",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txCtx := authctx.NewTxContextFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithLogger(os.Stdout).
 				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
 
-			validatorAddr, err := cliCtx.GetFromAddress()
+			valAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			msg := slashing.NewMsgUnrevoke(validatorAddr)
-
-			return utils.SendTx(txCtx, cliCtx, []sdk.Msg{msg})
+			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
+			}
+			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

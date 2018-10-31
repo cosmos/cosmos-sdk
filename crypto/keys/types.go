@@ -5,14 +5,15 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // Keybase exposes operations on a generic keystore
 type Keybase interface {
-
 	// CRUD on the keystore
 	List() ([]Info, error)
 	Get(name string) (Info, error)
+	GetByAddress(address types.AccAddress) (Info, error)
 	Delete(name, passphrase string) error
 
 	// Sign some bytes, looking up the private key to use
@@ -25,8 +26,12 @@ type Keybase interface {
 	CreateKey(name, mnemonic, passwd string) (info Info, err error)
 	// CreateFundraiserKey takes a mnemonic and derives, a password
 	CreateFundraiserKey(name, mnemonic, passwd string) (info Info, err error)
-	// Derive derives a key from the passed mnemonic using a BIP44 path.
-	Derive(name, mnemonic, passwd string, params hd.BIP44Params) (Info, error)
+	// Compute a BIP39 seed from th mnemonic and bip39Passwd.
+	// Derive private key from the seed using the BIP44 params.
+	// Encrypt the key to disk using encryptPasswd.
+	// See https://github.com/cosmos/cosmos-sdk/issues/2095
+	Derive(name, mnemonic, bip39Passwd,
+		encryptPasswd string, params hd.BIP44Params) (Info, error)
 	// Create, store, and return a new Ledger key reference
 	CreateLedger(name string, path ccrypto.DerivationPath, algo SigningAlgo) (info Info, err error)
 
@@ -42,6 +47,9 @@ type Keybase interface {
 
 	// *only* works on locally-stored keys. Temporary method until we redo the exporting API
 	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)
+
+	// Close closes the database.
+	CloseDB()
 }
 
 // KeyType reflects a human-readable type for key listing.
@@ -73,6 +81,8 @@ type Info interface {
 	GetName() string
 	// Public key
 	GetPubKey() crypto.PubKey
+	// Address
+	GetAddress() types.AccAddress
 }
 
 var _ Info = &localInfo{}
@@ -106,6 +116,10 @@ func (i localInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+func (i localInfo) GetAddress() types.AccAddress {
+	return i.PubKey.Address().Bytes()
+}
+
 // ledgerInfo is the public information about a Ledger key
 type ledgerInfo struct {
 	Name   string                 `json:"name"`
@@ -133,6 +147,10 @@ func (i ledgerInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
 }
 
+func (i ledgerInfo) GetAddress() types.AccAddress {
+	return i.PubKey.Address().Bytes()
+}
+
 // offlineInfo is the public information about an offline key
 type offlineInfo struct {
 	Name   string        `json:"name"`
@@ -156,6 +174,10 @@ func (i offlineInfo) GetName() string {
 
 func (i offlineInfo) GetPubKey() crypto.PubKey {
 	return i.PubKey
+}
+
+func (i offlineInfo) GetAddress() types.AccAddress {
+	return i.PubKey.Address().Bytes()
 }
 
 // encoding info

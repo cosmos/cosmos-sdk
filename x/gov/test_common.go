@@ -23,23 +23,26 @@ import (
 func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
 	mapp := mock.NewApp()
 
-	stake.RegisterWire(mapp.Cdc)
-	RegisterWire(mapp.Cdc)
+	stake.RegisterCodec(mapp.Cdc)
+	RegisterCodec(mapp.Cdc)
 
 	keyGlobalParams := sdk.NewKVStoreKey("params")
+	tkeyGlobalParams := sdk.NewTransientStoreKey("transient_params")
 	keyStake := sdk.NewKVStoreKey("stake")
+	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keyGov := sdk.NewKVStoreKey("gov")
 
-	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams)
-	ck := bank.NewKeeper(mapp.AccountMapper)
-	sk := stake.NewKeeper(mapp.Cdc, keyStake, ck, mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(mapp.Cdc, keyGov, pk.Setter(), ck, sk, DefaultCodespace)
+	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams, tkeyGlobalParams)
+	ck := bank.NewBaseKeeper(mapp.AccountKeeper)
+	sk := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), mapp.RegisterCodespace(stake.DefaultCodespace))
+	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
+
 	mapp.Router().AddRoute("gov", NewHandler(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
-	require.NoError(t, mapp.CompleteSetup([]*sdk.KVStoreKey{keyStake, keyGov, keyGlobalParams}))
+	require.NoError(t, mapp.CompleteSetup(keyStake, tkeyStake, keyGov, keyGlobalParams, tkeyGlobalParams))
 
 	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin("steak", 42)})
 
@@ -64,7 +67,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 		mapp.InitChainer(ctx, req)
 
 		stakeGenesis := stake.DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = sdk.NewRat(100000)
+		stakeGenesis.Pool.LooseTokens = sdk.NewDec(100000)
 
 		validators, err := stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
 		if err != nil {
@@ -74,6 +77,20 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}
+	}
+}
+
+// TODO: Remove once address interface has been implemented (ref: #2186)
+func SortValAddresses(addrs []sdk.ValAddress) {
+	var byteAddrs [][]byte
+	for _, addr := range addrs {
+		byteAddrs = append(byteAddrs, addr.Bytes())
+	}
+
+	SortByteArrays(byteAddrs)
+
+	for i, byteAddr := range byteAddrs {
+		addrs[i] = byteAddr
 	}
 }
 

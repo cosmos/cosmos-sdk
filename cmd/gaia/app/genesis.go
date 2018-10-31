@@ -4,34 +4,52 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-
-	"github.com/spf13/pflag"
-
-	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
-
-// DefaultKeyPass contains the default key password for genesis transactions
-const DefaultKeyPass = "12345678"
 
 var (
 	// bonded tokens given to genesis validators/accounts
 	freeFermionVal  = int64(100)
-	freeFermionsAcc = int64(50)
+	freeFermionsAcc = sdk.NewInt(150)
 )
 
 // State to Unmarshal
 type GenesisState struct {
-	Accounts  []GenesisAccount   `json:"accounts"`
-	StakeData stake.GenesisState `json:"stake"`
+	Accounts     []GenesisAccount      `json:"accounts"`
+	StakeData    stake.GenesisState    `json:"stake"`
+	MintData     mint.GenesisState     `json:"mint"`
+	DistrData    distr.GenesisState    `json:"distr"`
+	GovData      gov.GenesisState      `json:"gov"`
+	SlashingData slashing.GenesisState `json:"slashing"`
+	GenTxs       []json.RawMessage     `json:"gentxs"`
+}
+
+func NewGenesisState(accounts []GenesisAccount, stakeData stake.GenesisState, mintData mint.GenesisState,
+	distrData distr.GenesisState, govData gov.GenesisState, slashingData slashing.GenesisState) GenesisState {
+
+	return GenesisState{
+		Accounts:     accounts,
+		StakeData:    stakeData,
+		MintData:     mintData,
+		DistrData:    distrData,
+		GovData:      govData,
+		SlashingData: slashingData,
+	}
 }
 
 // GenesisAccount doesn't need pubkey or sequence
@@ -64,101 +82,15 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 
 // get app init parameters for server init command
 func GaiaAppInit() server.AppInit {
-	fsAppGenState := pflag.NewFlagSet("", pflag.ContinueOnError)
-
-	fsAppGenTx := pflag.NewFlagSet("", pflag.ContinueOnError)
-	fsAppGenTx.String(server.FlagName, "", "validator moniker, required")
-	fsAppGenTx.String(server.FlagClientHome, DefaultCLIHome,
-		"home directory for the client, used for key generation")
-	fsAppGenTx.Bool(server.FlagOWK, false, "overwrite the accounts created")
 
 	return server.AppInit{
-		FlagsAppGenState: fsAppGenState,
-		FlagsAppGenTx:    fsAppGenTx,
-		AppGenTx:         GaiaAppGenTx,
-		AppGenState:      GaiaAppGenStateJSON,
+		AppGenState: GaiaAppGenStateJSON,
 	}
-}
-
-// simple genesis tx
-type GaiaGenTx struct {
-	Name    string         `json:"name"`
-	Address sdk.AccAddress `json:"address"`
-	PubKey  string         `json:"pub_key"`
-}
-
-// GaiaAppGenTx generates a Gaia genesis transaction.
-func GaiaAppGenTx(
-	cdc *wire.Codec, pk crypto.PubKey, genTxConfig config.GenTx,
-) (appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
-	if genTxConfig.Name == "" {
-		return nil, nil, tmtypes.GenesisValidator{}, errors.New("Must specify --name (validator moniker)")
-	}
-
-	buf := client.BufferStdin()
-	prompt := fmt.Sprintf("Password for account '%s' (default %s):", genTxConfig.Name, DefaultKeyPass)
-
-	keyPass, err := client.GetPassword(prompt, buf)
-	if err != nil && keyPass != "" {
-		// An error was returned that either failed to read the password from
-		// STDIN or the given password is not empty but failed to meet minimum
-		// length requirements.
-		return appGenTx, cliPrint, validator, err
-	}
-
-	if keyPass == "" {
-		keyPass = DefaultKeyPass
-	}
-
-	addr, secret, err := server.GenerateSaveCoinKey(
-		genTxConfig.CliRoot,
-		genTxConfig.Name,
-		keyPass,
-		genTxConfig.Overwrite,
-	)
-	if err != nil {
-		return appGenTx, cliPrint, validator, err
-	}
-
-	mm := map[string]string{"secret": secret}
-	bz, err := cdc.MarshalJSON(mm)
-	if err != nil {
-		return appGenTx, cliPrint, validator, err
-	}
-
-	cliPrint = json.RawMessage(bz)
-	appGenTx, _, validator, err = GaiaAppGenTxNF(cdc, pk, addr, genTxConfig.Name)
-
-	return appGenTx, cliPrint, validator, err
-}
-
-// Generate a gaia genesis transaction without flags
-func GaiaAppGenTxNF(cdc *wire.Codec, pk crypto.PubKey, addr sdk.AccAddress, name string) (
-	appGenTx, cliPrint json.RawMessage, validator tmtypes.GenesisValidator, err error) {
-
-	var bz []byte
-	gaiaGenTx := GaiaGenTx{
-		Name:    name,
-		Address: addr,
-		PubKey:  sdk.MustBech32ifyAccPub(pk),
-	}
-	bz, err = wire.MarshalJSONIndent(cdc, gaiaGenTx)
-	if err != nil {
-		return
-	}
-	appGenTx = json.RawMessage(bz)
-
-	validator = tmtypes.GenesisValidator{
-		PubKey: pk,
-		Power:  freeFermionVal,
-	}
-	return
 }
 
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
-func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState GenesisState, err error) {
-
+func GaiaAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (genesisState GenesisState, err error) {
 	if len(appGenTxs) == 0 {
 		err = errors.New("must provide at least genesis transaction")
 		return
@@ -166,68 +98,161 @@ func GaiaAppGenState(cdc *wire.Codec, appGenTxs []json.RawMessage) (genesisState
 
 	// start with the default staking genesis state
 	stakeData := stake.DefaultGenesisState()
+	slashingData := slashing.DefaultGenesisState()
 
 	// get genesis flag account information
 	genaccs := make([]GenesisAccount, len(appGenTxs))
-	for i, appGenTx := range appGenTxs {
 
-		var genTx GaiaGenTx
-		err = cdc.UnmarshalJSON(appGenTx, &genTx)
+	for i, genTx := range appGenTxs {
+		var tx auth.StdTx
+		err = cdc.UnmarshalJSON(genTx, &tx)
 		if err != nil {
 			return
 		}
+		msgs := tx.GetMsgs()
+		if len(msgs) != 1 {
+			err = errors.New("must provide genesis StdTx with exactly 1 CreateValidator message")
+			return
+		}
+		msg := msgs[0].(stake.MsgCreateValidator)
 
 		// create the genesis account, give'm few steaks and a buncha token with there name
-		accAuth := auth.NewBaseAccountWithAddress(genTx.Address)
-		accAuth.Coins = sdk.Coins{
-			{genTx.Name + "Token", sdk.NewInt(1000)},
-			{"steak", sdk.NewInt(freeFermionsAcc)},
-		}
-		acc := NewGenesisAccount(&accAuth)
-		genaccs[i] = acc
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionsAcc)) // increase the supply
-
-		// add the validator
-		if len(genTx.Name) > 0 {
-			desc := stake.NewDescription(genTx.Name, "", "", "")
-			validator := stake.NewValidator(genTx.Address,
-				sdk.MustGetAccPubKeyBech32(genTx.PubKey), desc)
-
-			stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewRat(freeFermionVal)) // increase the supply
-
-			// add some new shares to the validator
-			var issuedDelShares sdk.Rat
-			validator, stakeData.Pool, issuedDelShares = validator.AddTokensFromDel(stakeData.Pool, freeFermionVal)
-			stakeData.Validators = append(stakeData.Validators, validator)
-
-			// create the self-delegation from the issuedDelShares
-			delegation := stake.Delegation{
-				DelegatorAddr: validator.Owner,
-				ValidatorAddr: validator.Owner,
-				Shares:        issuedDelShares,
-				Height:        0,
-			}
-
-			stakeData.Bonds = append(stakeData.Bonds, delegation)
-		}
+		genaccs[i] = genesisAccountFromMsgCreateValidator(msg, freeFermionsAcc)
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
 	}
 
 	// create the final app state
 	genesisState = GenesisState{
-		Accounts:  genaccs,
-		StakeData: stakeData,
+		Accounts:     genaccs,
+		StakeData:    stakeData,
+		MintData:     mint.DefaultGenesisState(),
+		DistrData:    distr.DefaultGenesisState(),
+		GovData:      gov.DefaultGenesisState(),
+		SlashingData: slashingData,
+		GenTxs:       appGenTxs,
+	}
+
+	return
+}
+
+func genesisAccountFromMsgCreateValidator(msg stake.MsgCreateValidator, amount sdk.Int) GenesisAccount {
+	accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
+	accAuth.Coins = []sdk.Coin{
+		{msg.Description.Moniker + "Token", sdk.NewInt(1000)},
+		{"steak", amount},
+	}
+	return NewGenesisAccount(&accAuth)
+}
+
+// GaiaValidateGenesisState ensures that the genesis state obeys the expected invariants
+// TODO: No validators are both bonded and jailed (#2088)
+// TODO: Error if there is a duplicate validator (#1708)
+// TODO: Ensure all state machine parameters are in genesis (#1704)
+func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
+	err = validateGenesisStateAccounts(genesisState.Accounts)
+	if err != nil {
+		return
+	}
+	// skip stakeData validation as genesis is created from txs
+	if len(genesisState.GenTxs) > 0 {
+		return nil
+	}
+	return stake.ValidateGenesis(genesisState.StakeData)
+}
+
+// Ensures that there are no duplicate accounts in the genesis state,
+func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
+	addrMap := make(map[string]bool, len(accs))
+	for i := 0; i < len(accs); i++ {
+		acc := accs[i]
+		strAddr := string(acc.Address)
+		if _, ok := addrMap[strAddr]; ok {
+			return fmt.Errorf("Duplicate account in genesis state: Address %v", acc.Address)
+		}
+		addrMap[strAddr] = true
 	}
 	return
 }
 
 // GaiaAppGenState but with JSON
-func GaiaAppGenStateJSON(cdc *wire.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
-
+func GaiaAppGenStateJSON(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
 	// create the final app state
 	genesisState, err := GaiaAppGenState(cdc, appGenTxs)
 	if err != nil {
 		return nil, err
 	}
-	appState, err = wire.MarshalJSONIndent(cdc, genesisState)
+	appState, err = codec.MarshalJSONIndent(cdc, genesisState)
 	return
+}
+
+// CollectStdTxs processes and validates application's genesis StdTxs and returns the list of validators,
+// appGenTxs, and persistent peers required to generate genesis.json.
+func CollectStdTxs(moniker string, genTxsDir string, cdc *codec.Codec) (
+	validators []tmtypes.GenesisValidator, appGenTxs []auth.StdTx, persistentPeers string, err error) {
+	var fos []os.FileInfo
+	fos, err = ioutil.ReadDir(genTxsDir)
+	if err != nil {
+		return
+	}
+
+	var addresses []string
+	for _, fo := range fos {
+		filename := filepath.Join(genTxsDir, fo.Name())
+		if !fo.IsDir() && (filepath.Ext(filename) != ".json") {
+			continue
+		}
+
+		// get the genStdTx
+		var jsonRawTx []byte
+		jsonRawTx, err = ioutil.ReadFile(filename)
+		if err != nil {
+			return
+		}
+		var genStdTx auth.StdTx
+		err = cdc.UnmarshalJSON(jsonRawTx, &genStdTx)
+		if err != nil {
+			return
+		}
+		appGenTxs = append(appGenTxs, genStdTx)
+
+		nodeAddr := genStdTx.GetMemo()
+		if len(nodeAddr) == 0 {
+			err = fmt.Errorf("couldn't find node's address in %s", fo.Name())
+			return
+		}
+
+		msgs := genStdTx.GetMsgs()
+		if len(msgs) != 1 {
+			err = errors.New("each genesis transaction must provide a single genesis message")
+			return
+		}
+
+		// TODO: this could be decoupled from stake.MsgCreateValidator
+		// TODO: and we likely want to do it for real world Gaia
+		msg := msgs[0].(stake.MsgCreateValidator)
+		validators = append(validators, tmtypes.GenesisValidator{
+			PubKey: msg.PubKey,
+			Power:  freeFermionVal,
+			Name:   msg.Description.Moniker,
+		})
+
+		// exclude itself from persistent peers
+		if msg.Description.Moniker != moniker {
+			addresses = append(addresses, nodeAddr)
+		}
+	}
+
+	sort.Strings(addresses)
+	persistentPeers = strings.Join(addresses, ",")
+
+	return
+}
+
+func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
+	accAuth := auth.NewBaseAccountWithAddress(addr)
+	accAuth.Coins = []sdk.Coin{
+		{"fooToken", sdk.NewInt(1000)},
+		{"steak", freeFermionsAcc},
+	}
+	return NewGenesisAccount(&accAuth)
 }

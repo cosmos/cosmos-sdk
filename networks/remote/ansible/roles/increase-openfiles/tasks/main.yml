@@ -1,0 +1,22 @@
+---
+# Based on: https://stackoverflow.com/questions/38155108/how-to-increase-limit-for-open-processes-and-files-using-ansible
+
+- name: Set sysctl File Limits
+  copy:
+    src: 50-fs.conf
+    dest: /etc/sysctl.d
+
+- name: Set Shell File Limits
+  copy:
+    src: 91-nofiles.conf
+    dest: /etc/security/limits.d
+
+- name: Set gaia filehandle Limits
+  copy:
+    src: limits.conf
+    dest: "/lib/systemd/system/{{item}}.service.d"
+  notify: reload systemctl
+  with_items:
+    - gaiad
+    - gaiacli
+

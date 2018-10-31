@@ -23,11 +23,12 @@ func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.Valid
 	// and recalculate voted power
 	hash := ctx.BlockHeader().ValidatorsHash
 	if !bytes.Equal(hash, info.Hash) {
-		info.Power = sdk.ZeroRat()
+		info.Power = sdk.ZeroDec()
 		info.Hash = hash
 		prefix := GetSignPrefix(p, keeper.cdc)
 		store := ctx.KVStore(keeper.key)
 		iter := sdk.KVStorePrefixIterator(store, prefix)
+		defer iter.Close()
 		for ; iter.Valid(); iter.Next() {
 			if valset.Validator(ctx, iter.Value()) != nil {
 				store.Delete(iter.Key())
@@ -67,8 +68,8 @@ func (keeper Keeper) Handle(h Handler, ctx sdk.Context, o Msg, codespace sdk.Cod
 	}
 	info.LastSigned = ctx.BlockHeight()
 
-	// Check the signer is a validater
-	val := valset.Validator(ctx, signer)
+	// check the signer is a validator
+	val := valset.Validator(ctx, sdk.ValAddress(signer))
 	if val == nil {
 		return ErrNotValidator(codespace, signer).Result()
 	}

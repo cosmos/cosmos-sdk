@@ -3,11 +3,6 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
-	"testing"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,20 +10,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
-// SimulateMsgUnrevoke
-func SimulateMsgUnrevoke(k slashing.Keeper) simulation.TestAndRunTx {
-	return func(t *testing.T, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, keys []crypto.PrivKey, log string, event func(string)) (action string, err sdk.Error) {
-		key := simulation.RandomKey(r, keys)
-		address := sdk.AccAddress(key.PubKey().Address())
-		msg := slashing.NewMsgUnrevoke(address)
-		require.Nil(t, msg.ValidateBasic(), "expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+// SimulateMsgUnjail
+func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+		acc := simulation.RandomAcc(r, accs)
+		address := sdk.ValAddress(acc.Address)
+		msg := slashing.NewMsgUnjail(address)
+		if msg.ValidateBasic() != nil {
+			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+		}
 		ctx, write := ctx.CacheContext()
 		result := slashing.NewHandler(k)(ctx, msg)
 		if result.IsOK() {
 			write()
 		}
-		event(fmt.Sprintf("slashing/MsgUnrevoke/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgUnrevoke: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
-		return action, nil
+		event(fmt.Sprintf("slashing/MsgUnjail/%v", result.IsOK()))
+		action = fmt.Sprintf("TestMsgUnjail: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
+		return action, nil, nil
 	}
 }

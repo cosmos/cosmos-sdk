@@ -2,7 +2,9 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -54,6 +56,7 @@ const (
 	CodeInvalidCoins      CodeType = 11
 	CodeOutOfGas          CodeType = 12
 	CodeMemoTooLarge      CodeType = 13
+	CodeInsufficientFee   CodeType = 14
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -70,7 +73,6 @@ func unknownCodeMsg(code CodeType) string {
 }
 
 // NOTE: Don't stringer this, we'll put better messages in later.
-// nolint: gocyclo
 func CodeToDefaultMsg(code CodeType) string {
 	switch code {
 	case CodeInternal:
@@ -99,6 +101,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "out of gas"
 	case CodeMemoTooLarge:
 		return "memo too large"
+	case CodeInsufficientFee:
+		return "insufficient fee"
 	default:
 		return unknownCodeMsg(code)
 	}
@@ -147,6 +151,9 @@ func ErrOutOfGas(msg string) Error {
 }
 func ErrMemoTooLarge(msg string) Error {
 	return newErrorWithRootCodespace(CodeMemoTooLarge, msg)
+}
+func ErrInsufficientFee(msg string) Error {
+	return newErrorWithRootCodespace(CodeInsufficientFee, msg)
 }
 
 //----------------------------------------
@@ -217,15 +224,19 @@ func (err *sdkError) WithDefaultCodespace(cs CodespaceType) Error {
 }
 
 // Implements ABCIError.
+// nolint: errcheck
 func (err *sdkError) TraceSDK(format string, args ...interface{}) Error {
 	err.Trace(1, format, args...)
 	return err
 }
 
 // Implements ABCIError.
-// Overrides err.Error.Error().
 func (err *sdkError) Error() string {
-	return fmt.Sprintf("Error{%d:%d,%#v}", err.codespace, err.code, err.cmnError)
+	return fmt.Sprintf(`ERROR:
+Codespace: %d
+Code: %d
+Message: %#v
+`, err.codespace, err.code, err.cmnError.Error())
 }
 
 // Implements ABCIError.
@@ -245,13 +256,20 @@ func (err *sdkError) Code() CodeType {
 
 // Implements ABCIError.
 func (err *sdkError) ABCILog() string {
-	return fmt.Sprintf(`=== ABCI Log ===
-Codespace: %v
-Code:      %v
-ABCICode:  %v
-Error:     %#v
-=== /ABCI Log ===
-`, err.codespace, err.code, err.ABCICode(), err.cmnError)
+	cdc := codec.New()
+	errMsg := err.cmnError.Error()
+	jsonErr := humanReadableError{
+		Codespace: err.codespace,
+		Code:      err.code,
+		ABCICode:  err.ABCICode(),
+		Message:   errMsg,
+	}
+	bz, er := cdc.MarshalJSON(jsonErr)
+	if er != nil {
+		panic(er)
+	}
+	stringifiedJSON := string(bz)
+	return stringifiedJSON
 }
 
 func (err *sdkError) Result() Result {
@@ -267,4 +285,39 @@ func (err *sdkError) QueryResult() abci.ResponseQuery {
 		Code: uint32(err.ABCICode()),
 		Log:  err.ABCILog(),
 	}
+}
+
+//----------------------------------------
+// REST error utilities
+
+// appends a message to the head of the given error
+func AppendMsgToErr(msg string, err string) string {
+	msgIdx := strings.Index(err, "message\":\"")
+	if msgIdx != -1 {
+		errMsg := err[msgIdx+len("message\":\"") : len(err)-2]
+		errMsg = fmt.Sprintf("%s; %s", msg, errMsg)
+		return fmt.Sprintf("%s%s%s",
+			err[:msgIdx+len("message\":\"")],
+			errMsg,
+			err[len(err)-2:],
+		)
+	}
+	return fmt.Sprintf("%s; %s", msg, err)
+}
+
+// returns the index of the message in the ABCI Log
+func mustGetMsgIndex(abciLog string) int {
+	msgIdx := strings.Index(abciLog, "message\":\"")
+	if msgIdx == -1 {
+		panic(fmt.Sprintf("invalid error format: %s", abciLog))
+	}
+	return msgIdx + len("message\":\"")
+}
+
+// parses the error into an object-like struct for exporting
+type humanReadableError struct {
+	Codespace CodespaceType `json:"codespace"`
+	Code      CodeType      `json:"code"`
+	ABCICode  ABCICodeType  `json:"abci_code"`
+	Message   string        `json:"message"`
 }

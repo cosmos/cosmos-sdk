@@ -3,7 +3,6 @@ package types
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // status of a validator
@@ -37,53 +36,58 @@ func (b BondStatus) Equal(b2 BondStatus) bool {
 
 // validator for a delegated proof of stake system
 type Validator interface {
-	GetRevoked() bool         // whether the validator is revoked
-	GetMoniker() string       // moniker of the validator
-	GetStatus() BondStatus    // status of the validator
-	GetOwner() AccAddress     // owner AccAddress to receive/return validators coins
-	GetPubKey() crypto.PubKey // validation pubkey
-	GetPower() Rat            // validation power
-	GetTokens() Rat           // validation tokens
-	GetDelegatorShares() Rat  // Total out standing delegator shares
-	GetBondHeight() int64     // height in which the validator became active
+	GetJailed() bool              // whether the validator is jailed
+	GetMoniker() string           // moniker of the validator
+	GetStatus() BondStatus        // status of the validator
+	GetOperator() ValAddress      // operator address to receive/return validators coins
+	GetConsPubKey() crypto.PubKey // validation consensus pubkey
+	GetConsAddr() ConsAddress     // validation consensus address
+	GetPower() Dec                // validation power
+	GetTokens() Dec               // validation tokens
+	GetCommission() Dec           // validator commission rate
+	GetDelegatorShares() Dec      // Total out standing delegator shares
+	GetBondHeight() int64         // height in which the validator became active
 }
 
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
-		PubKey:  tmtypes.TM2PB.PubKey(v.GetPubKey()),
-		Address: v.GetPubKey().Address(),
+		Address: v.GetConsPubKey().Address(),
 		Power:   v.GetPower().RoundInt64(),
 	}
 }
 
 // properties for the set of all validators
 type ValidatorSet interface {
-	// iterate through validator by owner-AccAddress, execute func for each validator
+	// iterate through validators by operator address, execute func for each validator
 	IterateValidators(Context,
 		func(index int64, validator Validator) (stop bool))
 
-	// iterate through bonded validator by pubkey-AccAddress, execute func for each validator
+	// iterate through bonded validators by operator address, execute func for each validator
 	IterateValidatorsBonded(Context,
 		func(index int64, validator Validator) (stop bool))
 
-	Validator(Context, AccAddress) Validator            // get a particular validator by owner AccAddress
-	ValidatorByPubKey(Context, crypto.PubKey) Validator // get a particular validator by signing PubKey
-	TotalPower(Context) Rat                             // total power of the validator set
+	Validator(Context, ValAddress) Validator            // get a particular validator by operator address
+	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
+	TotalPower(Context) Dec                             // total power of the validator set
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
-	Slash(Context, crypto.PubKey, int64, int64, Rat)
-	Revoke(Context, crypto.PubKey)   // revoke a validator
-	Unrevoke(Context, crypto.PubKey) // unrevoke a validator
+	Slash(Context, ConsAddress, int64, int64, Dec)
+	Jail(Context, ConsAddress)   // jail a validator
+	Unjail(Context, ConsAddress) // unjail a validator
+
+	// Delegation allows for getting a particular delegation for a given validator
+	// and delegator outside the scope of the staking module.
+	Delegation(Context, AccAddress, ValAddress) Delegation
 }
 
 //_______________________________________________________________________________
 
 // delegation bond for a delegated proof of stake system
 type Delegation interface {
-	GetDelegator() AccAddress // delegator AccAddress for the bond
-	GetValidator() AccAddress // validator owner AccAddress for the bond
-	GetBondShares() Rat       // amount of validator's shares
+	GetDelegatorAddr() AccAddress // delegator AccAddress for the bond
+	GetValidatorAddr() ValAddress // validator operator address
+	GetShares() Dec               // amount of validator's shares held in this delegation
 }
 
 // properties for the set of all delegations for a particular
@@ -94,4 +98,28 @@ type DelegationSet interface {
 	//   execute func for each validator
 	IterateDelegations(ctx Context, delegator AccAddress,
 		fn func(index int64, delegation Delegation) (stop bool))
+}
+
+//_______________________________________________________________________________
+// Event Hooks
+// These can be utilized to communicate between a staking keeper and another
+// keeper which must take particular actions when validators/delegators change
+// state. The second keeper must implement this interface, which then the
+// staking keeper can call.
+
+// TODO refactor event hooks out to the receiver modules
+
+// event hooks for staking validator object
+type StakingHooks interface {
+	OnValidatorCreated(ctx Context, valAddr ValAddress)  // Must be called when a validator is created
+	OnValidatorModified(ctx Context, valAddr ValAddress) // Must be called when a validator's state changes
+	OnValidatorRemoved(ctx Context, valAddr ValAddress)  // Must be called when a validator is deleted
+
+	OnValidatorBonded(ctx Context, consAddr ConsAddress, valAddr ValAddress)         // Must be called when a validator is bonded
+	OnValidatorBeginUnbonding(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Must be called when a validator begins unbonding
+	OnValidatorPowerDidChange(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Called at EndBlock when a validator's power did change
+
+	OnDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is created
+	OnDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified
+	OnDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is removed
 }

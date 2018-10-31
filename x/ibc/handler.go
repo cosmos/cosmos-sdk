@@ -1,8 +1,6 @@
 package ibc
 
 import (
-	"reflect"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
@@ -15,7 +13,7 @@ func NewHandler(ibcm Mapper, ck bank.Keeper) sdk.Handler {
 		case IBCReceiveMsg:
 			return handleIBCReceiveMsg(ctx, ibcm, ck, msg)
 		default:
-			errMsg := "Unrecognized IBC Msg type: " + reflect.TypeOf(msg).Name()
+			errMsg := "Unrecognized IBC Msg type: " + msg.Type()
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}

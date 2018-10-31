@@ -7,7 +7,6 @@ BREAKING CHANGES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
-    * Make the transient store key use a distinct store key. [#2013](https://github.com/cosmos/cosmos-sdk/pull/2013)
 
 * SDK
 

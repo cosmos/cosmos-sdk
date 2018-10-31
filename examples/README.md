@@ -103,10 +103,10 @@ basecli keys list
 You should now see alice, bob and charlie's account all show up.
 
 ```
-NAME: 	ADDRESS:					                PUBKEY:
-alice   90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD	1624DE62201D47E63694448665F5D0217EA8458177728C91C373047A42BD3C0FB78BD0BFA7
-bob     29D721F054537C91F618A0FDBF770DA51EF8C48D	1624DE6220F54B2A2CA9EB4EE30DE23A73D15902E087C09CC5616456DDDD3814769E2E0A16
-charlie 2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E	1624DE6220F8C9FB8B07855FD94126F88A155BD6EB973509AE5595EFDE1AF05B4964836A53
+NAME: 	ADDRESS:                                        PUBKEY:
+alice   cosmos1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f	cosmospub1addwnpepq0w037u5g7y7lvdvsred2dehg90j84k0weyss5ynysf0nnnax74agrsxns6
+bob     cosmos18se8tz6kwwfga6k2yjsu7n64e9z52nen29rhzz	cosmospub1addwnpepqwe97n8lryxrzvamrvjfj24jys3uzf8wndfvqa2l7mh5nsv4jrvdznvyeg6
+charlie cosmos13wq5mklhn03ljpd4dkph5rflk5a3ssma2ag07q	cosmospub1addwnpepqdmtxv35rrmv2dvcr3yhfyxj7dzrd4z4rnhmclksq4g55a4wpl54clvx33l
 ```
 
 
@@ -115,15 +115,15 @@ charlie 2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E	1624DE6220F8C9FB8B07855FD94126F
 Lets send bob and charlie some tokens. First, lets query alice's account so we can see what kind of tokens she has:
 
 ```
-basecli account 90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD
+basecli account cosmos1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f
 ```
 
-Where `90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD` is alice's address we got from running `basecli keys list`. You should see a large amount of "mycoin" there. If you search for bob's or charlie's address, the command will fail, because they haven't been added into the blockchain database yet since they have no coins. We need to send them some!
+Where `cosmos1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f` is alice's address we got from running `basecli keys list`. You should see a large amount of "mycoin" there. If you search for bob's or charlie's address, the command will fail, because they haven't been added into the blockchain database yet since they have no coins. We need to send them some!
 
 The following command will send coins from alice, to bob:
 
 ```
-basecli send --from=alice --amount=10000mycoin --to=29D721F054537C91F618A0FDBF770DA51EF8C48D
+basecli send --from=alice --amount=10000mycoin --to=cosmos18se8tz6kwwfga6k2yjsu7n64e9z52nen29rhzz
 --sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
@@ -136,13 +136,13 @@ Flag Descriptions:
 Now if we check bobs account, it should have `10000 mycoin`. You can do so by running :
 
 ```
-basecli account 29D721F054537C91F618A0FDBF770DA51EF8C48D
+basecli account cosmos18se8tz6kwwfga6k2yjsu7n64e9z52nen29rhzz
 ```
 
 Now lets send some from bob to charlie. Make sure you send less than bob has, otherwise the transaction will fail:
 
 ```
-basecli send --from=bob --amount=5000mycoin --to=2E8E13EEB8E3F0411ACCBC9BE0384732C24FBD5E
+basecli send --from=bob --amount=5000mycoin --to=cosmos13wq5mklhn03ljpd4dkph5rflk5a3ssma2ag07q
 --sequence=0 --chain-id=test-chain-AE4XQo
 ```
 
@@ -151,7 +151,7 @@ Note how we use the ``--from`` flag to select a different account to send from.
 Lets now try to send from bob back to alice:
 
 ```
-basecli send --from=bob --amount=3000mycoin --to=90B0B9BE0914ECEE0B6DB74E67B07A00056B9BBD
+basecli send --from=bob --amount=3000mycoin --to=cosmos1khygs0qh7gz3p4m39u00mjhvgvc2dcpxhsuh5f
 --sequence=1 --chain-id=test-chain-AE4XQo
 ```
 
@@ -179,7 +179,7 @@ starting this tutorial again or trying something new), the following
 commands are run:
 
 ```
-basecoind unsafe_reset_all
+basecoind unsafe-reset-all
 rm -rf ~/.basecoind
 rm -rf ~/.basecli
 ```
@@ -253,7 +253,7 @@ first time.
 
 Accounts are serialized and stored in a Merkle tree under the key
 ``base/a/<address>``, where ``<address>`` is the address of the account.
-Typically, the address of the account is the 20-byte ``RIPEMD160`` hash
+Typically, the address of the account is the first 20-bytes of the ``sha256`` hash
 of the public key, but other formats are acceptable as well, as defined
 in the `Tendermint crypto
 library <https://github.com/tendermint/tendermint/tree/master/crypto>`__. The Merkle tree

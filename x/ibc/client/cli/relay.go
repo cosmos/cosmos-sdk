@@ -6,11 +6,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wire "github.com/cosmos/cosmos-sdk/wire"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	authctx "github.com/cosmos/cosmos-sdk/x/auth/client/context"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/spf13/cobra"
@@ -28,7 +28,7 @@ const (
 )
 
 type relayCommander struct {
-	cdc       *wire.Codec
+	cdc       *codec.Codec
 	address   sdk.AccAddress
 	decoder   auth.AccountDecoder
 	mainStore string
@@ -39,7 +39,7 @@ type relayCommander struct {
 }
 
 // IBCRelayCmd implements the IBC relay command.
-func IBCRelayCmd(cdc *wire.Codec) *cobra.Command {
+func IBCRelayCmd(cdc *codec.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
 		decoder:   authcmd.GetAccountDecoder(cdc),
@@ -91,11 +91,14 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 }
 
 // This is nolinted as someone is in the process of refactoring this to remove the goto
-// nolint: gocyclo
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
 	cliCtx := context.NewCLIContext()
 
-	passphrase, err := keys.ReadPassphraseFromStdin(cliCtx.FromAddressName)
+	name, err := cliCtx.GetFromName()
+	if err != nil {
+		panic(err)
+	}
+	passphrase, err := keys.ReadPassphraseFromStdin(name)
 	if err != nil {
 		panic(err)
 	}
@@ -163,6 +166,7 @@ func query(node string, key []byte, storeName string) (res []byte, err error) {
 	return context.NewCLIContext().WithNodeURI(node).QueryStore(key, storeName)
 }
 
+// nolint: unparam
 func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
 	_, err := context.NewCLIContext().WithNodeURI(node).BroadcastTx(tx)
 	return err
@@ -198,10 +202,15 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 		Sequence:  sequence,
 	}
 
-	txCtx := authctx.NewTxContextFromCLI().WithSequence(sequence).WithCodec(c.cdc)
+	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
 	cliCtx := context.NewCLIContext()
 
-	res, err := txCtx.BuildAndSign(cliCtx.FromAddressName, passphrase, []sdk.Msg{msg})
+	name, err := cliCtx.GetFromName()
+	if err != nil {
+		panic(err)
+	}
+
+	res, err := txBldr.BuildAndSign(name, passphrase, []sdk.Msg{msg})
 	if err != nil {
 		panic(err)
 	}

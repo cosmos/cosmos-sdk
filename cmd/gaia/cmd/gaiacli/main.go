@@ -28,10 +28,11 @@ import (
 )
 
 const (
-	storeAcc      = "acc"
-	storeGov      = "gov"
-	storeSlashing = "slashing"
-	storeStake    = "stake"
+	storeAcc        = "acc"
+	storeGov        = "gov"
+	storeSlashing   = "slashing"
+	storeStake      = "stake"
+	queryRouteStake = "stake"
 )
 
 // rootCmd is the entry point for this binary
@@ -70,21 +71,23 @@ func main() {
 		authcmd.GetAccountCmd(storeAcc, cdc, authcmd.GetAccountDecoder(cdc)),
 		stakecmd.GetCmdQueryDelegation(storeStake, cdc),
 		stakecmd.GetCmdQueryDelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryUnbondingDelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryUnbondingDelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryRedelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryValidator(storeStake, cdc),
+		stakecmd.GetCmdQueryValidators(storeStake, cdc),
+		stakecmd.GetCmdQueryValidatorUnbondingDelegations(queryRouteStake, cdc),
+		stakecmd.GetCmdQueryValidatorRedelegations(queryRouteStake, cdc),
 		stakecmd.GetCmdQueryParams(storeStake, cdc),
 		stakecmd.GetCmdQueryPool(storeStake, cdc),
 		govcmd.GetCmdQueryProposal(storeGov, cdc),
 		govcmd.GetCmdQueryProposals(storeGov, cdc),
-		govcmd.GetCmdQueryDeposit(storeGov, cdc),
-		govcmd.GetCmdQueryDeposits(storeGov, cdc),
-		stakecmd.GetCmdQueryRedelegation(storeStake, cdc),
-		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
-		slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
-		stakecmd.GetCmdQueryUnbondingDelegation(storeStake, cdc),
-		stakecmd.GetCmdQueryUnbondingDelegations(storeStake, cdc),
-		stakecmd.GetCmdQueryValidator(storeStake, cdc),
-		stakecmd.GetCmdQueryValidators(storeStake, cdc),
 		govcmd.GetCmdQueryVote(storeGov, cdc),
 		govcmd.GetCmdQueryVotes(storeGov, cdc),
+		govcmd.GetCmdQueryDeposit(storeGov, cdc),
+		govcmd.GetCmdQueryDeposits(storeGov, cdc),
+		slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
 	)...)
 
 	//Add query commands

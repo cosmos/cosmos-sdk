@@ -285,6 +285,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli query validator %s --output=json %v", sdk.ValAddress(barAddr), flags))
 	require.Equal(t, "1.0000000000", validator.Tokens.String())
 
+	validatorUbds := executeGetValidatorUnbondingDelegations(t,
+		fmt.Sprintf("gaiacli query unbonding-delegations-from %s --output=json %v",
+			sdk.ValAddress(barAddr), flags))
+	require.Len(t, validatorUbds, 1)
+	require.Equal(t, "1", validatorUbds[0].Balance.Amount.String())
+
 	params := executeGetParams(t, fmt.Sprintf("gaiacli query parameters --output=json %v", flags))
 	require.True(t, defaultParams.Equal(params))
 
@@ -691,6 +697,24 @@ func executeGetValidator(t *testing.T, cmdStr string) stake.Validator {
 	err := cdc.UnmarshalJSON([]byte(out), &validator)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return validator
+}
+
+func executeGetValidatorUnbondingDelegations(t *testing.T, cmdStr string) []stake.UnbondingDelegation {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var ubds []stake.UnbondingDelegation
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &ubds)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return ubds
+}
+
+func executeGetValidatorRedelegations(t *testing.T, cmdStr string) []stake.Redelegation {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var reds []stake.Redelegation
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &reds)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return reds
 }
 
 func executeGetPool(t *testing.T, cmdStr string) stake.Pool {

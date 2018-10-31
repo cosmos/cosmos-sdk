@@ -22,6 +22,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+type blockSimFn func(
+	r *rand.Rand,
+	app *baseapp.BaseApp, ctx sdk.Context,
+	accounts []Account, header abci.Header, logWriter func(string),
+) (opCount int)
+
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
 	appStateFn func(r *rand.Rand, accs []Account) json.RawMessage,
@@ -201,10 +207,8 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T,
 	event func(string), invariants []Invariant,
 	ops []WeightedOperation, operationQueue map[int][]Operation, timeOperationQueue []FutureOperation,
-	totalNumBlocks int, avgBlockSize int, displayLogs func()) func(
-	r *rand.Rand,
-	app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
+	totalNumBlocks int, avgBlockSize int, displayLogs func()) blockSimFn {
+
 	var (
 		lastBlocksizeState = 0 // state for [4 * uniform distribution]
 		totalOpWeight      = 0
@@ -263,15 +267,16 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 	return
 }
 
-/** getBlockSize returns a block size as determined from the transition matrix.
-It targets making average block size the provided parameter.
-The three states it moves between are:
-* "over stuffed" blocks with average size of 2 * avgblocksize,
-* normal sized blocks, hitting avgBlocksize on average,
-* and empty blocks, with no txs / only txs scheduled from the past. */
+// getBlockSize returns a block size as determined from the transition matrix.
+// It targets making average block size the provided parameter. The three
+// states it moves between are:
+// "over stuffed" blocks with average size of 2 * avgblocksize,
+// normal sized blocks, hitting avgBlocksize on average,
+// and empty blocks, with no txs / only txs scheduled from the past.
 func getBlockSize(r *rand.Rand, lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
 	// TODO: Make blockSizeTransitionMatrix non-global
-	// TODO: Make default blocksize transitition matrix actually make the average blocksize equal to avgBlockSize
+	// TODO: Make default blocksize transition matrix actually make the average
+	// blocksize equal to avgBlockSize.
 	state = blockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
 	if state == 0 {
 		blocksize = r.Intn(avgBlockSize * 4)

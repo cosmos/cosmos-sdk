@@ -32,10 +32,9 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 gaiacli tx create-validator \
   --amount=5steak \
   --pubkey=$(gaiad tendermint show-validator) \
-  --address-validator=<account_cosmosval>
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
-  --name=<key_name> \
+  --from=<key_name> \
   --commission-rate="0.10" \
   --commission-max-rate="0.20" \
   --commission-max-change-rate="0.01"
@@ -53,13 +52,12 @@ The `--identity` can be used as to verify identity with systems like Keybase or 
 
 ```bash
 gaiacli tx edit-validator
-  --validator=<account_cosmos>
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
-  --identity=6A0D65E29A4CBC8E
-  --details="To infinity and beyond!"
+  --identity=6A0D65E29A4CBC8E \
+  --details="To infinity and beyond!" \
   --chain-id=<chain_id> \
-  --name=<key_name> \
+  --from=<key_name> \
   --commission-rate="0.10"
 ```
 
@@ -83,20 +81,18 @@ gaiacli query validator <account_cosmos>
 In order to keep track of a validator's signatures in the past you can do so by using the `signing-info` command:
 
 ```bash
-gaiacli query signing-information <validator-pubkey>\
+gaiacli query signing-info <validator-pubkey>\
   --chain-id=<chain_id>
 ```
 
 ### Unjail Validator
 
-When a validator is "jailed" for downtime, you must submit an `Unjail` transaction in order to be able to get block proposer rewards again (depends on the zone fee distribution).
+When a validator is "jailed" for downtime, you must submit an `Unjail` transaction from the operator account in order to be able to get block proposer rewards again (depends on the zone fee distribution).
 
 ```bash
 gaiacli tx unjail \
 	--from=<key_name> \
 	--chain-id=<chain_id>
-  --validator=<account_cosmosval> \
-  --chain-id=gaia-6002
 ```
 
 ### Confirm Your Validator is Running
@@ -128,7 +124,7 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmos>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli tx unjail <cosmos> --chain-id=<chain_id> --name=<name>
+gaiacli tx unjail <cosmos> --chain-id=<chain_id> --from=<from>
 ```
 
 ::: danger Warning

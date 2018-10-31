@@ -255,9 +255,9 @@ func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 
 			// get the shares amount
 			sharesAmountStr := viper.GetString(FlagSharesAmount)
-			sharesPercentStr := viper.GetString(FlagSharesPercent)
+			sharesFractionStr := viper.GetString(FlagSharesFraction)
 			sharesAmount, err := getShares(
-				storeName, cdc, sharesAmountStr, sharesPercentStr,
+				storeName, cdc, sharesAmountStr, sharesFractionStr,
 				delAddr, valSrcAddr,
 			)
 			if err != nil {
@@ -318,9 +318,9 @@ func GetCmdBeginUnbonding(storeName string, cdc *codec.Codec) *cobra.Command {
 
 			// get the shares amount
 			sharesAmountStr := viper.GetString(FlagSharesAmount)
-			sharesPercentStr := viper.GetString(FlagSharesPercent)
+			sharesFractionStr := viper.GetString(FlagSharesFraction)
 			sharesAmount, err := getShares(
-				storeName, cdc, sharesAmountStr, sharesPercentStr,
+				storeName, cdc, sharesAmountStr, sharesFractionStr,
 				delAddr, valAddr,
 			)
 			if err != nil {

@@ -22,12 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type blockSimFn func(
-	r *rand.Rand,
-	app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []Account, header abci.Header, logWriter func(string),
-) (opCount int)
-
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
 	appStateFn func(r *rand.Rand, accs []Account) json.RawMessage,
@@ -201,6 +195,11 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	DisplayEvents(events)
 	return nil
 }
+
+type blockSimFn func(
+	r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+	accounts []Account, header abci.Header, logWriter func(string),
+) (opCount int)
 
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead

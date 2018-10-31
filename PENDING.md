@@ -18,7 +18,8 @@ FEATURES
 * Gaia REST API (`gaiacli advanced rest-server`)
 
 * Gaia CLI  (`gaiacli`)
-    * [cli] [\#2569](https://github.com/cosmos/cosmos-sdk/pull/2569) Add commands to query validator unbondings and redelegations
+  * [cli] [\#2524](https://github.com/cosmos/cosmos-sdk/issues/2524) Add support offline mode to `gaiacli tx sign`. Lookups are not performed if the flag `--offline` is on.
+  * [cli] [\#2558](https://github.com/cosmos/cosmos-sdk/issues/2558) Improve --print-sigs mode. It now performs a complete set of sanity checks and reports to the user. Also added --raw-signature to print the signature only, not the whole transaction.
 
 * Gaia
 

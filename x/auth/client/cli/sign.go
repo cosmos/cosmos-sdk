@@ -34,6 +34,10 @@ Read a transaction from <file>, sign it, and print its JSON encoding.
 If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.
 
+If the flag --validate-signatures is on, then the command would check whether all required
+signers have signed the transactions and whether the signatures were collected in the right
+order.
+
 The --offline flag makes sure that the client will not reach out to the local cache.
 Thus account number or sequence number lookups will not be performed and it is
 recommended to set such parameters manually.`,

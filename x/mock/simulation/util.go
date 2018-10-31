@@ -146,7 +146,7 @@ func logPrinter(testingmode bool, logs []*strings.Builder) func() {
 			}
 			for i := 0; i < numLoggers; i++ {
 				if f != nil {
-					_, err := f.WriteString(fmt.Sprintf("Begin block %d\n", i))
+					_, err := f.WriteString(fmt.Sprintf("Begin block %d\n", i+1))
 					if err != nil {
 						panic("Failed to write logs to file")
 					}
@@ -155,7 +155,7 @@ func logPrinter(testingmode bool, logs []*strings.Builder) func() {
 						panic("Failed to write logs to file")
 					}
 				} else {
-					fmt.Printf("Begin block %d\n", i)
+					fmt.Printf("Begin block %d\n", i+1)
 					fmt.Println((*logs[i]).String())
 				}
 			}

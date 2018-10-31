@@ -34,11 +34,17 @@ type Proposal interface {
 	GetSubmitTime() time.Time
 	SetSubmitTime(time.Time)
 
+	GetDepositEndTime() time.Time
+	SetDepositEndTime(time.Time)
+
 	GetTotalDeposit() sdk.Coins
 	SetTotalDeposit(sdk.Coins)
 
 	GetVotingStartTime() time.Time
 	SetVotingStartTime(time.Time)
+
+	GetVotingEndTime() time.Time
+	SetVotingEndTime(time.Time)
 }
 
 // checks if two proposals are equal
@@ -68,10 +74,12 @@ type TextProposal struct {
 	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
 
-	SubmitTime   time.Time `json:"submit_time"`   //  Height of the block where TxGovSubmitProposal was included
-	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitTime     time.Time `json:"submit_time"`      //  Time of the block where TxGovSubmitProposal was included
+	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
+	TotalDeposit   sdk.Coins `json:"total_deposit"`    //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_time"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingStartTime time.Time `json:"voting_start_time"` //  Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
 // Implements Proposal Interface
@@ -92,11 +100,19 @@ func (tp TextProposal) GetTallyResult() TallyResult                { return tp.T
 func (tp *TextProposal) SetTallyResult(tallyResult TallyResult)    { tp.TallyResult = tallyResult }
 func (tp TextProposal) GetSubmitTime() time.Time                   { return tp.SubmitTime }
 func (tp *TextProposal) SetSubmitTime(submitTime time.Time)        { tp.SubmitTime = submitTime }
-func (tp TextProposal) GetTotalDeposit() sdk.Coins                 { return tp.TotalDeposit }
-func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins)    { tp.TotalDeposit = totalDeposit }
-func (tp TextProposal) GetVotingStartTime() time.Time              { return tp.VotingStartTime }
+func (tp TextProposal) GetDepositEndTime() time.Time               { return tp.DepositEndTime }
+func (tp *TextProposal) SetDepositEndTime(depositEndTime time.Time) {
+	tp.DepositEndTime = depositEndTime
+}
+func (tp TextProposal) GetTotalDeposit() sdk.Coins              { return tp.TotalDeposit }
+func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins) { tp.TotalDeposit = totalDeposit }
+func (tp TextProposal) GetVotingStartTime() time.Time           { return tp.VotingStartTime }
 func (tp *TextProposal) SetVotingStartTime(votingStartTime time.Time) {
 	tp.VotingStartTime = votingStartTime
+}
+func (tp TextProposal) GetVotingEndTime() time.Time { return tp.VotingEndTime }
+func (tp *TextProposal) SetVotingEndTime(votingEndTime time.Time) {
+	tp.VotingEndTime = votingEndTime
 }
 
 //-----------------------------------------------------------

@@ -40,6 +40,7 @@ IMPROVEMENTS
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+ - #2637 [x/gov] Switched inactive and active proposal queues to an iterator based queue
 
 * SDK
  - \#2573 [x/distribution] add accum invariance

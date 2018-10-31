@@ -19,7 +19,8 @@ FEATURES
 
 * Gaia CLI  (`gaiacli`)
   * [cli] [\#2524](https://github.com/cosmos/cosmos-sdk/issues/2524) Add support offline mode to `gaiacli tx sign`. Lookups are not performed if the flag `--offline` is on.
-  * [cli] [\#2558](https://github.com/cosmos/cosmos-sdk/issues/2558) Improve --print-sigs mode. It now performs a complete set of sanity checks and reports to the user. Also added --raw-signature to print the signature only, not the whole transaction.
+  * [cli] [\#2558](https://github.com/cosmos/cosmos-sdk/issues/2558) Rename --print-sigs to --validate-signatures. It now performs a complete set of sanity checks and reports to the user. Also added --print-signature-only to print the signature only, not the whole transaction.
+  * [cli] [\#2554](https://github.com/cosmos/cosmos-sdk/issues/2554) Make `gaiacli keys show` multisig ready.
 
 * Gaia
 

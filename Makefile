@@ -36,7 +36,7 @@ TMP_BUILD_TAGS := $(BUILD_TAGS)
 BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
 endif
 
-build: check-ledger update_gaia_lite_docs
+build: check-ledger
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli

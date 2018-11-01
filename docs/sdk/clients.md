@@ -394,8 +394,7 @@ gaiacli tx submit-proposal \
 Once created, you can now query information of the proposal:
 
 ```bash
-gaiacli query proposal \
-  --proposal-id=<proposal_id>
+gaiacli query proposal --proposal-id=<proposal_id>
 ```
 
 Or query all available proposals:
@@ -426,8 +425,7 @@ gaiacli tx deposit \
 Once a new proposal is created, you can query all the deposits submitted to it:
 
 ```bash
-gaiacli query deposits \
-  --proposal-id=<proposal_id>
+gaiacli query deposits --proposal-id=<proposal_id>
 ```
 
 You can also query a deposit submitted by a specific address:
@@ -464,8 +462,7 @@ gaiacli query vote \
 You can also get all the previous votes submitted to the proposal by other accounts with:
 
 ```bash
-gaiacli query votes \
-  --proposal-id=<proposal_id>
+gaiacli query votes --proposal-id=<proposal_id>
 ```
 
 #### Query proposal tally results
@@ -473,6 +470,5 @@ gaiacli query votes \
 To check the current tally results of a given proposal you can use the `tally` command:
 
 ```bash
-gaiacli query tally \
-  --proposal-id=<proposal_id>
+gaiacli query tally --proposal-id=<proposal_id>
 ```

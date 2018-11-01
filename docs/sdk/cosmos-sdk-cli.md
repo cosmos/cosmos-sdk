@@ -1,4 +1,4 @@
-# cosmos-sdk-cli
+# Cosmos SDK CLI
 
 Create a new application specific blockchain project based on the Cosmos SDK with a single command.
 

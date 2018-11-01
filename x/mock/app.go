@@ -24,8 +24,8 @@ const chainID = ""
 type App struct {
 	*bam.BaseApp
 	Cdc        *codec.Codec // Cdc is public since the codec is passed into the module anyways
-	KeyMain    sdk.KVStoreKey
-	KeyAccount sdk.KVStoreKey
+	KeyMain    *sdk.IAVLStoreKey
+	KeyAccount *sdk.IAVLStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
 	AccountKeeper       auth.AccountKeeper

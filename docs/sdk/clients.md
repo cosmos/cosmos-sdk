@@ -338,7 +338,7 @@ With the above command you will get the values for:
 - Maximum numbers of validators
 - Coin denomination for staking
 
-All this values can be updated though a `governance` process by submitting a parameter change `proposal`.
+All this values can be updated though a `governance` process by submitting a `ParameterChange` proposal.
 
 #### Query Pool
 

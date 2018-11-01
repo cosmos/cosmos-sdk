@@ -66,7 +66,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	fmt.Printf("Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 	r := rand.New(rand.NewSource(seed))
 	params := RandomParams(r)
-	fmt.Printf("Randomized simulation params: %s\n", params)
+	fmt.Printf("Randomized simulation params: %+v\n", params)
 	timestamp := randTimestamp(r)
 	fmt.Printf("Starting the simulation from time %v, unixtime %v\n", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
 	timeDiff := maxTimePerBlock - minTimePerBlock
@@ -233,11 +233,8 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T,
 
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
-<<<<<<< HEAD
 		fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ", header.Height, totalNumBlocks, opCount, blocksize)
-=======
 		lastBlocksizeState, blocksize = getBlockSize(r, lastBlocksizeState, avgBlockSize)
->>>>>>> develop
 		for j := 0; j < blocksize; j++ {
 			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, event)
 			logWriter(logUpdate)

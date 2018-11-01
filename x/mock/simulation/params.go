@@ -1,7 +1,6 @@
 package simulation
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -58,9 +57,4 @@ func RandomParams(r *rand.Rand) Params {
 		EvidenceFraction:          r.Float64(),
 		InitialLivenessWeightings: []int{r.Intn(80), r.Intn(10), r.Intn(10)},
 	}
-}
-
-func (params Params) String() string {
-	return fmt.Sprintf("{pastEvidenceFraction: %v, numKeys: %v, evidenceFraction: %v, initialLivenessWeightings: %v}",
-		params.PastEvidenceFraction, params.NumKeys, params.EvidenceFraction, params.InitialLivenessWeightings)
 }

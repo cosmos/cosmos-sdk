@@ -93,15 +93,6 @@ func (pb *ProposalBase) SetVotingStartTime(votingStartTime time.Time) {
 	pb.VotingStartTime = votingStartTime
 }
 
-//----------------------------------------------------------
-// Internal proposal information
-type ProposalInfo struct {
-}
-
-func (pi *ProposalInfo) Info() *ProposalInfo {
-	return pi
-}
-
 //-----------------------------------------------------------
 // Text Proposals
 type TextProposal struct {
@@ -110,10 +101,12 @@ type TextProposal struct {
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 }
 
+// Implements Proposal
 func (tp TextProposal) GetProposalType() ProposalKind {
 	return tp.ProposalType
 }
 
+// Implements Proposal
 func (tp TextProposal) Enact(ctx sdk.Context, k Keeper) error {
 	// TextProposal do nothing
 	return nil

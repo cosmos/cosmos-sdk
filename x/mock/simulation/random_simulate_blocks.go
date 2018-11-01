@@ -100,7 +100,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	var pastTimes []time.Time
 	var pastVoteInfos [][]abci.VoteInfo
 
-	request := RandomRequestBeginBlock(r, params, validators, livenessTransitionMatrix, pastTimes, pastVoteInfos, event, header)
+	request := RandomRequestBeginBlock(r, params, validators, pastTimes, pastVoteInfos, event, header)
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
 	timeOperationQueue := []FutureOperation{}
@@ -110,7 +110,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		blockLogBuilders = make([]*strings.Builder, numBlocks)
 	}
 	displayLogs := logPrinter(testingMode, blockLogBuilders)
-	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, timeOperationQueue, numBlocks, blockSize, displayLogs)
+	blockSimulator := createBlockSimulator(testingMode, tb, t, params, event, invariants, ops, operationQueue, timeOperationQueue, numBlocks, blockSize, displayLogs)
 	if !testingMode {
 		b.ResetTimer()
 	} else {
@@ -183,7 +183,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
-		request = RandomRequestBeginBlock(r, params, validators, livenessTransitionMatrix, pastTimes, pastVoteInfos, event, header)
+		request = RandomRequestBeginBlock(r, params, validators, pastTimes, pastVoteInfos, event, header)
 
 		// Update the validator set, which will be reflected in the application on the next block
 		validators = nextValidators
@@ -205,7 +205,7 @@ type blockSimFn func(
 
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
-func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T,
+func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params Params,
 	event func(string), invariants []Invariant,
 	ops []WeightedOperation, operationQueue map[int][]Operation, timeOperationQueue []FutureOperation,
 	totalNumBlocks int, avgBlockSize int, displayLogs func()) blockSimFn {
@@ -234,7 +234,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T,
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
 		fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ", header.Height, totalNumBlocks, opCount, blocksize)
-		lastBlocksizeState, blocksize = getBlockSize(r, lastBlocksizeState, avgBlockSize)
+		lastBlocksizeState, blocksize = getBlockSize(r, params, lastBlocksizeState, avgBlockSize)
 		for j := 0; j < blocksize; j++ {
 			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, event)
 			logWriter(logUpdate)
@@ -275,11 +275,10 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 // "over stuffed" blocks with average size of 2 * avgblocksize,
 // normal sized blocks, hitting avgBlocksize on average,
 // and empty blocks, with no txs / only txs scheduled from the past.
-func getBlockSize(r *rand.Rand, lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
-	// TODO: Make blockSizeTransitionMatrix non-global
+func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
 	// TODO: Make default blocksize transition matrix actually make the average
 	// blocksize equal to avgBlockSize.
-	state = blockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
+	state = params.BlockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
 	if state == 0 {
 		blocksize = r.Intn(avgBlockSize * 4)
 	} else if state == 1 {
@@ -382,7 +381,7 @@ func randomProposer(r *rand.Rand, validators map[string]mockValidator) common.He
 
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 // nolint: unparam
-func RandomRequestBeginBlock(r *rand.Rand, params Params, validators map[string]mockValidator, livenessTransitions TransitionMatrix,
+func RandomRequestBeginBlock(r *rand.Rand, params Params, validators map[string]mockValidator,
 	pastTimes []time.Time, pastVoteInfos [][]abci.VoteInfo, event func(string), header abci.Header) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
@@ -391,7 +390,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params, validators map[string]
 	i := 0
 	for _, key := range getKeys(validators) {
 		mVal := validators[key]
-		mVal.livenessState = livenessTransitions.NextState(r, mVal.livenessState)
+		mVal.livenessState = params.LivenessTransitionMatrix.NextState(r, mVal.livenessState)
 		signed := true
 
 		if mVal.livenessState == 1 {

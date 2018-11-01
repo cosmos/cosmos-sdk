@@ -50,7 +50,7 @@ func runNewCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer kb.CloseDB()
+	defer CloseKeybase()
 
 	buf := client.BufferStdin()
 

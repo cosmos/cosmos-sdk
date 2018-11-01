@@ -31,7 +31,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer kb.CloseDB()
+	defer CloseKeybase()
 
 	oldpass, err := client.GetPassword(
 		"Enter the current passphrase:", buf)
@@ -83,7 +83,7 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	defer kb.CloseDB()
+	defer CloseKeybase()
 
 	getNewpass := func() (string, error) { return m.NewPassword, nil }
 

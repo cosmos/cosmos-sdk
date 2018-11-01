@@ -188,6 +188,11 @@ func Bech32ValKeyOutput(keyInfo keys.Info) (KeyOutput, error) {
 	}, nil
 }
 
+func CloseKeybase() {
+	keybase.CloseDB()
+	keybase = nil
+}
+
 func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 	ko, err := bechKeyOut(keyInfo)
 	if err != nil {

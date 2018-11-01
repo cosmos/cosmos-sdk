@@ -140,6 +140,10 @@ func createHandler(cdc *codec.Codec) *mux.Router {
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")
 
+	_, err := keys.GetKeyBaseWithWritePerm()
+	if err != nil {
+		panic(err)
+	}
 	acquireKeybase := func() (crkeys.Keybase, error) {
 		return keys.GetKeyBase()
 	}

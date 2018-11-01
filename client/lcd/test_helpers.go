@@ -89,11 +89,6 @@ func GetConfig() *tmcfg.Config {
 // NOTE: memDB cannot be used because the request is expecting to interact with
 // the default location.
 func GetKeyBase(t *testing.T) crkeys.Keybase {
-	dir, err := ioutil.TempDir("", "lcd_test")
-	require.NoError(t, err)
-
-	viper.Set(cli.HomeFlag, dir)
-
 	keybase, err := keys.GetKeyBaseWithWritePerm()
 	require.NoError(t, err)
 
@@ -268,9 +263,6 @@ func InitializeTestLCD(
 	viper.Set(client.FlagChainID, genDoc.ChainID)
 	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
 	viper.Set(client.FlagTrustNode, true)
-	dir, err := ioutil.TempDir("", "lcd_test")
-	require.NoError(t, err)
-	viper.Set(cli.HomeFlag, dir)
 
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)
@@ -290,6 +282,12 @@ func InitializeTestLCD(
 	}
 
 	return cleanup, valConsPubKeys, valOperAddrs, port
+}
+
+func setHomeFlag(t *testing.T) {
+	dir, err := ioutil.TempDir("", "lcd_test")
+	require.NoError(t, err)
+	viper.Set(cli.HomeFlag, dir)
 }
 
 // startTM creates and starts an in-process Tendermint node with memDB and

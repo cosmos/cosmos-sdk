@@ -67,7 +67,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		defer kb.CloseDB()
+		defer CloseKeybase()
 
 		_, err := kb.Get(name)
 		if err == nil {
@@ -181,7 +181,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		defer kb.CloseDB()
+		defer CloseKeybase()
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -319,7 +319,7 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		defer kb.CloseDB()
+		defer CloseKeybase()
 
 		// check if already exists
 		infos, err := kb.List()

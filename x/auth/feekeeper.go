@@ -20,7 +20,7 @@ type FeeCollectionKeeper struct {
 	cdc *codec.Codec
 }
 
-func NewFeeCollectionKeeper(cdc *codec.Codec, key sdk.KVStoreKey) FeeCollectionKeeper {
+func NewFeeCollectionKeeper(cdc *codec.Codec, key *sdk.IAVLStoreKey) FeeCollectionKeeper {
 	return FeeCollectionKeeper{
 		key: key,
 		cdc: cdc,

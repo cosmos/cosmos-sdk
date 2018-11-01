@@ -17,7 +17,7 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a params keeper
-func NewKeeper(cdc *codec.Codec, key sdk.KVStoreKey, tkey *sdk.TransientStoreKey) (k Keeper) {
+func NewKeeper(cdc *codec.Codec, key *sdk.IAVLStoreKey, tkey *sdk.TransientStoreKey) (k Keeper) {
 	k = Keeper{
 		cdc:  cdc,
 		key:  key,

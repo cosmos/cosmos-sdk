@@ -25,7 +25,7 @@ type AccountKeeper struct {
 // NewAccountKeeper returns a new sdk.AccountKeeper that
 // uses go-amino to (binary) encode and decode concrete sdk.Accounts.
 // nolint
-func NewAccountKeeper(cdc *codec.Codec, key sdk.KVStoreKey, proto func() Account) AccountKeeper {
+func NewAccountKeeper(cdc *codec.Codec, key *sdk.IAVLStoreKey, proto func() Account) AccountKeeper {
 	return AccountKeeper{
 		key:   key,
 		proto: proto,

@@ -15,7 +15,7 @@ type Keeper struct {
 	fck        FeeCollectionKeeper
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.KVStoreKey,
+func NewKeeper(cdc *codec.Codec, key *sdk.IAVLStoreKey,
 	paramSpace params.Subspace, sk StakeKeeper, fck FeeCollectionKeeper) Keeper {
 
 	keeper := Keeper{

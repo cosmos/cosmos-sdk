@@ -60,7 +60,7 @@ type Keeper struct {
 // - depositing funds into proposals, and activating upon sufficient funds being deposited
 // - users voting on proposals, with weight proportional to stake in the system
 // - and tallying the result of the vote.
-func NewKeeper(cdc *codec.Codec, key sdk.KVStoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key *sdk.IAVLStoreKey, paramsKeeper params.Keeper, paramSpace params.Subspace, ck bank.Keeper, ds sdk.DelegationSet, codespace sdk.CodespaceType) Keeper {
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,

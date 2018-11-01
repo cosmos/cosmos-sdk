@@ -20,7 +20,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.KVStoreKey, paramSpace params.Subspace, ck types.BankKeeper,
+func NewKeeper(cdc *codec.Codec, key *sdk.IAVLStoreKey, paramSpace params.Subspace, ck types.BankKeeper,
 	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{

@@ -72,8 +72,8 @@ module.exports = {
         title: "Light Client",
         collapsable: false,
         children: [
-	  "/light/",
-	  "/light/getting_started"
+	  "/lite/",
+	  "/lite/getting_started"
 	]
       },
       {

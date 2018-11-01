@@ -83,14 +83,16 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 		return nil
 	}
 	var proposal Proposal = &TextProposal{
-		ProposalID:   proposalID,
-		Title:        title,
-		Description:  description,
+		ProposalBase: &ProposalBase{
+			ProposalID:   proposalID,
+			Title:        title,
+			Description:  description,
+			Status:       StatusDepositPeriod,
+			TallyResult:  EmptyTallyResult(),
+			TotalDeposit: sdk.Coins{},
+			SubmitTime:   ctx.BlockHeader().Time,
+		},
 		ProposalType: proposalType,
-		Status:       StatusDepositPeriod,
-		TallyResult:  EmptyTallyResult(),
-		TotalDeposit: sdk.Coins{},
-		SubmitTime:   ctx.BlockHeader().Time,
 	}
 	keeper.SetProposal(ctx, proposal)
 	keeper.InactiveProposalQueuePush(ctx, proposal)

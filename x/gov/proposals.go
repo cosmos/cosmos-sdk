@@ -13,17 +13,15 @@ import (
 //-----------------------------------------------------------
 // Proposal interface
 type Proposal interface {
+	GetProposalType() ProposalKind
+
 	GetProposalID() int64
-	SetProposalID(int64)
 
 	GetTitle() string
 	SetTitle(string)
 
 	GetDescription() string
 	SetDescription(string)
-
-	GetProposalType() ProposalKind
-	SetProposalType(ProposalKind)
 
 	GetStatus() ProposalStatus
 	SetStatus(ProposalStatus)
@@ -39,6 +37,8 @@ type Proposal interface {
 
 	GetVotingStartTime() time.Time
 	SetVotingStartTime(time.Time)
+
+	Enact(ctx sdk.Context, k Keeper) error
 }
 
 // checks if two proposals are equal
@@ -57,13 +57,13 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 	return false
 }
 
-//-----------------------------------------------------------
-// Text Proposals
-type TextProposal struct {
-	ProposalID   int64        `json:"proposal_id"`   //  ID of the proposal
-	Title        string       `json:"title"`         //  Title of the proposal
-	Description  string       `json:"description"`   //  Description of the proposal
-	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+// --------------------------------------------------------
+// Base struct for proposal types
+type ProposalBase struct {
+	Title       string `json:"title"`       //  Title of the proposal
+	Description string `json:"description"` //  Description of the proposal
+
+	ProposalID int64 `json:"proposal_id"` //  ID of the proposal
 
 	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
@@ -74,30 +74,53 @@ type TextProposal struct {
 	VotingStartTime time.Time `json:"voting_start_time"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
 }
 
+// nolint
+func (pb ProposalBase) GetTitle() string                        { return pb.Title }
+func (pb *ProposalBase) SetTitle(title string)                  { pb.Title = title }
+func (pb ProposalBase) GetDescription() string                  { return pb.Description }
+func (pb *ProposalBase) SetDescription(description string)      { pb.Description = description }
+func (pb ProposalBase) GetProposalID() int64                    { return pb.ProposalID }
+func (pb ProposalBase) GetStatus() ProposalStatus               { return pb.Status }
+func (pb *ProposalBase) SetStatus(status ProposalStatus)        { pb.Status = status }
+func (pb ProposalBase) GetTallyResult() TallyResult             { return pb.TallyResult }
+func (pb *ProposalBase) SetTallyResult(tallyResult TallyResult) { pb.TallyResult = tallyResult }
+func (pb ProposalBase) GetSubmitTime() time.Time                { return pb.SubmitTime }
+func (pb *ProposalBase) SetSubmitTime(submitTime time.Time)     { pb.SubmitTime = submitTime }
+func (pb ProposalBase) GetTotalDeposit() sdk.Coins              { return pb.TotalDeposit }
+func (pb *ProposalBase) SetTotalDeposit(totalDeposit sdk.Coins) { pb.TotalDeposit = totalDeposit }
+func (pb ProposalBase) GetVotingStartTime() time.Time           { return pb.VotingStartTime }
+func (pb *ProposalBase) SetVotingStartTime(votingStartTime time.Time) {
+	pb.VotingStartTime = votingStartTime
+}
+
+//----------------------------------------------------------
+// Internal proposal information
+type ProposalInfo struct {
+}
+
+func (pi *ProposalInfo) Info() *ProposalInfo {
+	return pi
+}
+
+//-----------------------------------------------------------
+// Text Proposals
+type TextProposal struct {
+	*ProposalBase
+
+	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+}
+
+func (tp TextProposal) GetProposalType() ProposalKind {
+	return tp.ProposalType
+}
+
+func (tp TextProposal) Enact(ctx sdk.Context, k Keeper) error {
+	// TextProposal do nothing
+	return nil
+}
+
 // Implements Proposal Interface
 var _ Proposal = (*TextProposal)(nil)
-
-// nolint
-func (tp TextProposal) GetProposalID() int64                       { return tp.ProposalID }
-func (tp *TextProposal) SetProposalID(proposalID int64)            { tp.ProposalID = proposalID }
-func (tp TextProposal) GetTitle() string                           { return tp.Title }
-func (tp *TextProposal) SetTitle(title string)                     { tp.Title = title }
-func (tp TextProposal) GetDescription() string                     { return tp.Description }
-func (tp *TextProposal) SetDescription(description string)         { tp.Description = description }
-func (tp TextProposal) GetProposalType() ProposalKind              { return tp.ProposalType }
-func (tp *TextProposal) SetProposalType(proposalType ProposalKind) { tp.ProposalType = proposalType }
-func (tp TextProposal) GetStatus() ProposalStatus                  { return tp.Status }
-func (tp *TextProposal) SetStatus(status ProposalStatus)           { tp.Status = status }
-func (tp TextProposal) GetTallyResult() TallyResult                { return tp.TallyResult }
-func (tp *TextProposal) SetTallyResult(tallyResult TallyResult)    { tp.TallyResult = tallyResult }
-func (tp TextProposal) GetSubmitTime() time.Time                   { return tp.SubmitTime }
-func (tp *TextProposal) SetSubmitTime(submitTime time.Time)        { tp.SubmitTime = submitTime }
-func (tp TextProposal) GetTotalDeposit() sdk.Coins                 { return tp.TotalDeposit }
-func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins)    { tp.TotalDeposit = totalDeposit }
-func (tp TextProposal) GetVotingStartTime() time.Time              { return tp.VotingStartTime }
-func (tp *TextProposal) SetVotingStartTime(votingStartTime time.Time) {
-	tp.VotingStartTime = votingStartTime
-}
 
 //-----------------------------------------------------------
 // ProposalQueue

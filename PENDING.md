@@ -51,6 +51,7 @@ IMPROVEMENTS
 BUG FIXES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+ * [\#2655](https://github.com/cosmos/cosmos-sdk/pull/2655) Fix keybase lock issues
 
 * Gaia CLI  (`gaiacli`)
 

@@ -22,6 +22,7 @@ func runListCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer kb.CloseDB()
 
 	infos, err := kb.List()
 	if err == nil {
@@ -42,6 +43,8 @@ func QueryKeysRequestHandler(indent bool) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
+		defer kb.CloseDB()
+
 		infos, err := kb.List()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

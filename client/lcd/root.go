@@ -140,13 +140,17 @@ func createHandler(cdc *codec.Codec) *mux.Router {
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")
 
+	acquireKeybase := func() (crkeys.Keybase, error) {
+		return keys.GetKeyBase()
+	}
+
 	keys.RegisterRoutes(r, cliCtx.Indent)
 	rpc.RegisterRoutes(cliCtx, r)
 	tx.RegisterRoutes(cliCtx, r, cdc)
 	auth.RegisterRoutes(cliCtx, r, cdc, "acc")
-	bank.RegisterRoutes(cliCtx, r, cdc, func() (crkeys.Keybase, error) { return keys.GetKeyBase() })
-	stake.RegisterRoutes(cliCtx, r, cdc, func() (crkeys.Keybase, error) { return keys.GetKeyBase() })
-	slashing.RegisterRoutes(cliCtx, r, cdc, func() (crkeys.Keybase, error) { return keys.GetKeyBase() })
+	bank.RegisterRoutes(cliCtx, r, cdc, acquireKeybase)
+	stake.RegisterRoutes(cliCtx, r, cdc, acquireKeybase)
+	slashing.RegisterRoutes(cliCtx, r, cdc, acquireKeybase)
 	gov.RegisterRoutes(cliCtx, r, cdc)
 
 	return r

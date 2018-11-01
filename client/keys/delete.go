@@ -30,6 +30,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer kb.CloseDB()
 
 	_, err = kb.Get(name)
 	if err != nil {
@@ -80,6 +81,7 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
+	defer kb.CloseDB()
 
 	err = kb.Delete(name, m.Password)
 	if keyerror.IsErrKeyNotFound(err) {

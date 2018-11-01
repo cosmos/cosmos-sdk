@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"fmt"
+	"math/big"
 	"math/rand"
 	"os"
 	"sort"
@@ -69,6 +70,12 @@ func RandomAcc(r *rand.Rand, accs []Account) Account {
 // Generate a random amount
 func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 	return sdk.NewInt(int64(r.Intn(int(max.Int64()))))
+}
+
+// RandomDecAmount generates a random decimal amount
+func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
+	randInt := big.NewInt(0).Rand(r, max.Int)
+	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 
 // RandomAccounts generates n random accounts

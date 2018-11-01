@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -135,6 +136,14 @@ func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer) (j
 
 func main() {
 	cdc := app.MakeCodec()
+
+	// Setup certain SDK config
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("demoacc", "demopub")
+	config.SetBech32PrefixForValidator("demoval", "demovalpub")
+	config.SetBech32PrefixForConsensusNode("democons", "democonspub")
+	config.Seal()
+
 	ctx := server.NewDefaultContext()
 
 	rootCmd := &cobra.Command{

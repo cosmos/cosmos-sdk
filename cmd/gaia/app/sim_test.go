@@ -57,7 +57,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs
 	}
-	fmt.Printf("Selected randomly generated parameters for simulated genesis: {amount: %v, numInitiallyBonded: %v}\n", amount, numInitiallyBonded)
+	fmt.Printf("Selected randomly generated parameters for simulated genesis: {amount of steak per account: %v, initially bonded validators: %v}\n", amount, numInitiallyBonded)
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {

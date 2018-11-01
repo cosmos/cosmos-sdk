@@ -140,7 +140,14 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusPassed)
-			action = tags.ActionProposalPassed
+			err := activeProposal.Enact(ctx, keeper)
+			if err != nil {
+				logger.Info(fmt.Sprintf("proposal %d (%s) enacted but error: %v",
+					activeProposal.GetProposalID(), activeProposal.GetTitle(), err))
+				action = tags.ActionProposalError
+			} else {
+				action = tags.ActionProposalPassed
+			}
 		} else {
 			keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusRejected)

@@ -11,6 +11,7 @@ var (
 	ActionVote             = []byte("vote")
 	ActionProposalDropped  = []byte("proposal-dropped")
 	ActionProposalPassed   = []byte("proposal-passed")
+	ActionProposalError    = []byte("proposal-error")
 	ActionProposalRejected = []byte("proposal-rejected")
 
 	Action            = sdk.TagAction

@@ -28,4 +28,10 @@ var (
 		{10, 50, 5},
 		{0, 10, 1000},
 	})
+	// 3 states: rand in range [0, 4*provided blocksize], rand in range [0, 2 * provided blocksize], 0
+	blockSizeTransitionMatrix, _ = CreateTransitionMatrix([][]int{
+		{85, 5, 0},
+		{15, 92, 1},
+		{0, 3, 99},
+	})
 )

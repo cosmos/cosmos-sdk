@@ -9,7 +9,7 @@ import (
 )
 
 // RegisterRoutes registers staking-related REST handlers to a router
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kbInit func() (keys.Keybase, error)) {
 	registerQueryRoutes(cliCtx, r, cdc)
-	registerTxRoutes(cliCtx, r, cdc, kb)
+	registerTxRoutes(cliCtx, r, cdc, kbInit)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
@@ -133,12 +134,6 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 
 func createHandler(cdc *codec.Codec) *mux.Router {
 	r := mux.NewRouter()
-
-	kb, err := keys.GetKeyBase() //XXX
-	if err != nil {
-		panic(err)
-	}
-
 	cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 	// TODO: make more functional? aka r = keys.RegisterRoutes(r)
@@ -149,9 +144,9 @@ func createHandler(cdc *codec.Codec) *mux.Router {
 	rpc.RegisterRoutes(cliCtx, r)
 	tx.RegisterRoutes(cliCtx, r, cdc)
 	auth.RegisterRoutes(cliCtx, r, cdc, "acc")
-	bank.RegisterRoutes(cliCtx, r, cdc, kb)
-	stake.RegisterRoutes(cliCtx, r, cdc, kb)
-	slashing.RegisterRoutes(cliCtx, r, cdc, kb)
+	bank.RegisterRoutes(cliCtx, r, cdc, func() (crkeys.Keybase, error) { return keys.GetKeyBase() })
+	stake.RegisterRoutes(cliCtx, r, cdc, func() (crkeys.Keybase, error) { return keys.GetKeyBase() })
+	slashing.RegisterRoutes(cliCtx, r, cdc, func() (crkeys.Keybase, error) { return keys.GetKeyBase() })
 	gov.RegisterRoutes(cliCtx, r, cdc)
 
 	return r

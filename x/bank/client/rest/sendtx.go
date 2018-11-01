@@ -15,8 +15,10 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
-	r.HandleFunc("/bank/accounts/{address}/transfers", SendRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec,
+	kbInit func() (keys.Keybase, error)) {
+	r.HandleFunc("/bank/accounts/{address}/transfers", SendRequestHandlerFn(cdc, kbInit,
+		cliCtx)).Methods("POST")
 	r.HandleFunc("/tx/broadcast", BroadcastTxRequestHandlerFn(cdc, cliCtx)).Methods("POST")
 }
 
@@ -32,8 +34,12 @@ func init() {
 }
 
 // SendRequestHandlerFn - http request handler to send coins to a address.
-func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+func SendRequestHandlerFn(cdc *codec.Codec, kbInit func() (keys.Keybase, error), cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		kb, err := kbInit()
+		if err != nil {
+			panic(err)
+		}
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]
 

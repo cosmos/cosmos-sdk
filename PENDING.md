@@ -57,5 +57,7 @@ BUG FIXES
 * Gaia
 
 * SDK
+ - #2625 [x/gov] fix AppendTag function usage error
+
 
 * Tendermint

@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func setupMultiStore() (sdk.MultiStore, sdk.KVStoreKey, sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.IAVLStoreKey, *sdk.IAVLStoreKey) {
 	db := dbm.NewMemDB()
 	capKey := sdk.NewKVStoreKey("capkey")
 	capKey2 := sdk.NewKVStoreKey("capkey2")

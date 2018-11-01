@@ -17,7 +17,7 @@ import (
 )
 
 // possibly share this kind of setup functionality between module testsuites?
-func setupMultiStore() (sdk.MultiStore, sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.IAVLStoreKey) {
 	db := dbm.NewMemDB()
 	capKey := sdk.NewKVStoreKey("capkey")
 	ms := store.NewCommitMultiStore(db)

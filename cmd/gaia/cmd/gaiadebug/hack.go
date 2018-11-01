@@ -129,12 +129,12 @@ type GaiaApp struct {
 	cdc *codec.Codec
 
 	// keys to access the substores
-	keyMain     sdk.KVStoreKey
-	keyAccount  sdk.KVStoreKey
-	keyStake    sdk.KVStoreKey
+	keyMain     *sdk.IAVLStoreKey
+	keyAccount  *sdk.IAVLStoreKey
+	keyStake    *sdk.IAVLStoreKey
 	tkeyStake   *sdk.TransientStoreKey
-	keySlashing sdk.KVStoreKey
-	keyParams   sdk.KVStoreKey
+	keySlashing *sdk.IAVLStoreKey
+	keyParams   *sdk.IAVLStoreKey
 	tkeyParams  *sdk.TransientStoreKey
 
 	// Manage getting and setting accounts

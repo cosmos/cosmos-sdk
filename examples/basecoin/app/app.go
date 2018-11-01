@@ -37,9 +37,9 @@ type BasecoinApp struct {
 	cdc *codec.Codec
 
 	// keys to access the multistore
-	keyMain    sdk.KVStoreKey
-	keyAccount sdk.KVStoreKey
-	keyIBC     sdk.KVStoreKey
+	keyMain    *sdk.IAVLStoreKey
+	keyAccount *sdk.IAVLStoreKey
+	keyIBC     *sdk.IAVLStoreKey
 
 	// manage getting and setting accounts
 	accountKeeper       auth.AccountKeeper

@@ -40,11 +40,11 @@ type DemocoinApp struct {
 	cdc *codec.Codec
 
 	// keys to access the substores
-	capKeyMainStore    sdk.KVStoreKey
-	capKeyAccountStore sdk.KVStoreKey
-	capKeyPowStore     sdk.KVStoreKey
-	capKeyIBCStore     sdk.KVStoreKey
-	capKeyStakingStore sdk.KVStoreKey
+	capKeyMainStore    *sdk.IAVLStoreKey
+	capKeyAccountStore *sdk.IAVLStoreKey
+	capKeyPowStore     *sdk.IAVLStoreKey
+	capKeyIBCStore     *sdk.IAVLStoreKey
+	capKeyStakingStore *sdk.IAVLStoreKey
 
 	// keepers
 	feeCollectionKeeper auth.FeeCollectionKeeper

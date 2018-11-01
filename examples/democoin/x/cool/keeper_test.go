@@ -15,7 +15,7 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-func setupMultiStore() (sdk.MultiStore, sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.IAVLStoreKey) {
 	db := dbm.NewMemDB()
 	capKey := sdk.NewKVStoreKey("capkey")
 	ms := store.NewCommitMultiStore(db)

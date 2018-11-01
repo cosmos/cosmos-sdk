@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-func setupMultiStore() (sdk.MultiStore, sdk.KVStoreKey) {
+func setupMultiStore() (sdk.MultiStore, *sdk.IAVLStoreKey) {
 	db := dbm.NewMemDB()
 	authKey := sdk.NewKVStoreKey("authkey")
 	ms := store.NewCommitMultiStore(db)

@@ -42,7 +42,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	)
 
 	if votingStarted {
-		resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
 	}
 
 	return sdk.Result{
@@ -68,7 +68,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	)
 
 	if votingStarted {
-		resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
 	}
 
 	return sdk.Result{
@@ -111,8 +111,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(inactiveProposal.GetProposalID())
 		keeper.DeleteProposal(ctx, inactiveProposal)
-		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
-		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
+		resTags = resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %v steak); deleted",
@@ -152,8 +152,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		logger.Info(fmt.Sprintf("proposal %d (%s) tallied; passed: %v",
 			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
 
-		resTags.AppendTag(tags.Action, action)
-		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.Action, action)
+		resTags = resTags.AppendTag(tags.ProposalID, proposalIDBytes)
 	}
 
 	return resTags

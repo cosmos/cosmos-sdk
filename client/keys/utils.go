@@ -91,7 +91,7 @@ func GetKeyBaseWithWritePerm() (keys.Keybase, error) {
 
 // GetKeyBaseFromDirWithWritePerm initializes a keybase at a particular dir with write permissions.
 func GetKeyBaseFromDirWithWritePerm(rootDir string) (keys.Keybase, error) {
-	return getKeyBaseFromDirWithOpts(rootDir, nil)
+	return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: false})
 }
 
 // GetKeyBaseFromDir initializes a read-only keybase at a particular dir.

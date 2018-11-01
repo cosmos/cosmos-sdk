@@ -93,7 +93,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 			// XXX Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
 			// XXX This hook probably shouldn't exist.  Maybe rethink the hook system.
-			//k.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
+			k.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
 
 			// set validator power on lookup index.
 			k.SetLastValidatorPower(ctx, valAddr, sdk.NewInt(newPower))

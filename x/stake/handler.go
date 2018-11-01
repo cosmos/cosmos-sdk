@@ -211,10 +211,9 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 
 	// defensive check
 	validator, found := k.GetValidator(ctx, msg.ValidatorAddr)
-	if !found {
-		panic("validator is no longer found")
+	if found {
+		k.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), validator.OperatorAddr)
 	}
-	k.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), validator.OperatorAddr)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginUnbonding,
@@ -236,10 +235,9 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 
 	// defensive checks
 	validatorSrc, found := k.GetValidator(ctx, msg.ValidatorSrcAddr)
-	if !found {
-		panic("src validator is no longer found")
+	if found {
+		k.OnValidatorPowerDidChange(ctx, validatorSrc.ConsAddress(), validatorSrc.OperatorAddr)
 	}
-	k.OnValidatorPowerDidChange(ctx, validatorSrc.ConsAddress(), validatorSrc.OperatorAddr)
 	validatorDst, found := k.GetValidator(ctx, msg.ValidatorDstAddr)
 	if !found {
 		panic("dst validator is no longer found")

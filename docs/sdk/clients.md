@@ -335,7 +335,7 @@ To get previous redelegation(s) status on past blocks, try adding the `--height`
 
 #### Query Parameters
 
-Parameters define high level settings for staking. You can get its current values by using:
+Parameters define high level settings for staking. You can get the current values by using:
 
 ```
 gaiacli query parameters
@@ -347,7 +347,7 @@ With the above command you will get the values for:
 - Maximum numbers of validators
 - Coin denomination for staking
 
-All this values can be updated though a `governance` process by submitting a `ParameterChange` proposal.
+All these values will be subject to updates though a `governance` process by `ParameterChange` proposals.
 
 #### Query Pool
 
@@ -465,7 +465,7 @@ gaiacli query vote \
   --voter=<account_cosmos>
 ```
 
-You can also get all the previous votes submitted to the proposal by other accounts with:
+You can also get all the previous votes submitted to the proposal with:
 
 ```bash
 gaiacli query votes --proposal-id=<proposal_id>

@@ -16,28 +16,24 @@ maintaining any full blockchain nodes.
 
 ### What is a lite Client
 
-The LCD is split into two separate components. The first component is generic for any Tendermint
+The Light Client Daemon (LCD) is split into two separate components. The first component is generic for any Tendermint
 based application. It handles the security and connectivity aspects of following the header chain
 and verify proofs from full nodes against locally trusted validator set. Furthermore it exposes
 exactly the same API as any Tendermint Core node. The second component is specific for the Cosmos
-Hub (Gaiad). It works as a query endpoint and exposes the application specific functionality, which
+Hub (`gaiad`). It works as a query endpoint and exposes the application specific functionality, which
 can be arbitrary. All queries against the application state have to go through the query endpoint.
 The advantage of the query endpoint is that it can verify the proofs that the application returns.
 
 ### High-Level Architecture
 
-An application developer that would like to build a third party integration can ship his application
-with the LCD for the Cosmos Hub (or any other zone) and only needs to initialise it. Afterwards his
-application can interact with the zone as if it was running against a full node.
-
-![high-level](./pics/high-level.png)
-
-An application developer that wants to build an third party application for the Cosmos Hub (or any
-other zone) should build it against it's canonical API. That API is a combination of multiple parts.
+An application developer that wants to build a third party client application for the Cosmos Hub (or any
+other zone) should build it against its canonical API. That API is a combination of multiple parts.
 All zones have to expose ICS0 (TendermintAPI). Beyond that any zone is free to choose any
 combination of module APIs, depending on which modules the state machine uses. The Cosmos Hub will
-initially support ICS0 (TendermintAPI), ICS1 (KeyAPI), ICS20 (TokenAPI), ICS21 (StakingAPI) and
-ICS22 (GovernanceAPI).
+initially support [ICS0](https://cosmos.network/rpc/#/ICS0) (TendermintAPI), [ICS1](https://cosmos.network/rpc/#/ICS1) (KeyAPI), [ICS20](https://cosmos.network/rpc/#/ICS20) (TokenAPI), [ICS21](https://cosmos.network/rpc/#/ICS21) (StakingAPI),
+[ICS22](https://cosmos.network/rpc/#/ICS22) (GovernanceAPI) and [ICS23](https://cosmos.network/rpc/#/ICS23) (SlashingAPI).
+
+![high-level](./pics/high-level.png)
 
 All applications are expected to only run against the LCD. The LCD is the only piece of software
 that offers stability guarantees around the zone API.

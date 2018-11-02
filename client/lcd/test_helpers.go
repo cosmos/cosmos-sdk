@@ -249,7 +249,7 @@ func InitializeTestLCD(
 		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
 	}
 
-	appGenState := gapp.DefaultGenesisState()
+	appGenState := gapp.NewDefaultGenesisState()
 	appGenState.Accounts = accs
 	genDoc.AppState, err = cdc.MarshalJSON(appGenState)
 	require.NoError(t, err)

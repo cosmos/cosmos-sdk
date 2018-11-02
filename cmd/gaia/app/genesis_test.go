@@ -29,7 +29,7 @@ var (
 
 func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 	// start with the default staking genesis state
-	appState := DefaultGenesisState()
+	appState := NewDefaultGenesisState()
 	stakeData := appState.StakeData
 	genAccs := make([]GenesisAccount, len(genTxs))
 

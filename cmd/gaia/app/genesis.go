@@ -134,8 +134,8 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 	return genesisState, nil
 }
 
-// DefaultGenesisState generates the default state for gaia.
-func DefaultGenesisState() GenesisState {
+// NewDefaultGenesisState generates the default state for gaia.
+func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
 		StakeData:    stake.DefaultGenesisState(),

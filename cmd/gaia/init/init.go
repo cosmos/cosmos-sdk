@@ -146,5 +146,5 @@ func initializeEmptyGenesis(cdc *codec.Codec, genFile string, chainID string,
 		return
 	}
 
-	return codec.MarshalJSONIndent(cdc, app.DefaultGenesisState())
+	return codec.MarshalJSONIndent(cdc, app.NewDefaultGenesisState())
 }

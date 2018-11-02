@@ -191,7 +191,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec) error {
 	}
 
 	// Generate empty genesis.json
-	appGenState := app.DefaultGenesisState()
+	appGenState := app.NewDefaultGenesisState()
 	appGenState.Accounts = accs
 	appGenStateJSON, err := codec.MarshalJSONIndent(cdc, appGenState)
 	if err != nil {

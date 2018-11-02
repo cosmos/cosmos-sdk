@@ -24,6 +24,8 @@ import (
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
 	logger := ctx.Logger().With("module", "x/stake")
 
+	fmt.Printf("debug slashing consAddr: %v\n", consAddr.String())
+
 	if slashFactor.LT(sdk.ZeroDec()) {
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
 	}

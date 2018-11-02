@@ -136,6 +136,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		// Run the BeginBlock handler
 		logWriter("BeginBlock")
+		fmt.Printf("BeginBlock: %v\n", i+1)
 		app.BeginBlock(request)
 
 		if testingMode {
@@ -167,6 +168,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
 		header.ProposerAddress = randomProposer(r, validators)
 		logWriter("EndBlock")
+		fmt.Printf("EndBlock: %v\n", i+1)
 
 		if testingMode {
 			// Make sure invariants hold at end of block
@@ -237,7 +239,8 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 		lastBlocksizeState, blocksize = getBlockSize(r, params, lastBlocksizeState, avgBlockSize)
 		for j := 0; j < blocksize; j++ {
 			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, event)
-			//logWriter(logUpdate)
+			//fmt.Printf("\t\t\t%v\n", logUpdate)
+			logWriter(logUpdate)
 			if err != nil {
 				displayLogs()
 				tb.Fatalf("error on operation %d within block %d, %v", header.Height, opCount, err)
@@ -258,6 +261,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 	}
 }
 
+// TODO annotate of remove this function
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
 	testingMode = false
 	if _t, ok := tb.(*testing.T); ok {

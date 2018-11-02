@@ -40,8 +40,11 @@ func init() {
 
 func TestKeys(t *testing.T) {
 	setHomeFlag(t)
+	kb, err := keys.GetKeyBaseWithWritePerm()
+	require.NoError(t, err)
 	name, password := "test", "1234567890"
-	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
+	addr, seed := CreateAddr(t, "test", password, kb)
+	keys.CloseKeybase()
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -75,7 +78,10 @@ func TestKeys(t *testing.T) {
 	require.NoError(t, err, "Failed to return a correct bech32 address")
 
 	// test if created account is the correct account
-	expectedInfo, _ := GetKeyBase(t).CreateKey(newName, seed, newPassword)
+	kb, err = keys.GetKeyBaseWithWritePerm()
+	require.NoError(t, err)
+	expectedInfo, _ := kb.CreateKey(newName, seed, newPassword)
+	keys.CloseKeybase()
 	expectedAccount := sdk.AccAddress(expectedInfo.GetPubKey().Address().Bytes())
 	require.Equal(t, expectedAccount.String(), addr2Bech32)
 

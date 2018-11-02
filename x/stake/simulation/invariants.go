@@ -128,7 +128,7 @@ func PowerStoreInvariant(k stake.Keeper) simulation.Invariant {
 	}
 }
 
-// ValidatorSetInvariZant checks equivalence of Tendermint validator set and SDK validator set
+// ValidatorSetInvariant checks equivalence of Tendermint validator set and SDK validator set
 func ValidatorSetInvariant(k stake.Keeper) simulation.Invariant {
 	return func(app *baseapp.BaseApp, _ abci.Header) error {
 		// TODO

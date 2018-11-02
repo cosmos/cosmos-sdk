@@ -28,7 +28,7 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 }
 
 // iterate through the active validator set and perform the provided function
-func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
+func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.MaxValidators(ctx)
 
@@ -51,7 +51,7 @@ func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, va
 }
 
 // iterate through the active validator set and perform the provided function
-func (k Keeper) IterateLastBlockConsValidators(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
+func (k Keeper) IterateLastValidators(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	iterator := k.LastValidatorsIterator(ctx)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {

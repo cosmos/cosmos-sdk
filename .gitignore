@@ -20,7 +20,6 @@ docs/_build
 examples/basecoin/app/data
 baseapp/data/*
 client/lcd/keys/*
-client/lcd/statik/statik.go
 mytestnet
 
 # Testing

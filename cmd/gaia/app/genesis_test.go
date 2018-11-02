@@ -70,7 +70,6 @@ func TestGaiaAppGenState(t *testing.T) {
 	cdc := MakeCodec()
 	_ = cdc
 	var genDoc tmtypes.GenesisDoc
-	//var genTxs []json.RawMessage
 
 	// test unmarshalling error
 	_, err := GaiaAppGenState(cdc, genDoc, []json.RawMessage{})

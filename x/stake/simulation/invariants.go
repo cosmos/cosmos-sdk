@@ -19,16 +19,16 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 	f auth.FeeCollectionKeeper, d distribution.Keeper,
 	am auth.AccountKeeper) simulation.Invariant {
 
-	return func(app *baseapp.BaseApp, header abci.Header) error {
-		err := SupplyInvariants(ck, k, f, d, am)(app, header)
+	return func(app *baseapp.BaseApp) error {
+		err := SupplyInvariants(ck, k, f, d, am)(app)
 		if err != nil {
 			return err
 		}
-		err = PositivePowerInvariant(k)(app, header)
+		err = PositivePowerInvariant(k)(app)
 		if err != nil {
 			return err
 		}
-		err = ValidatorSetInvariant(k)(app, header)
+		err = ValidatorSetInvariant(k)(app)
 		return err
 	}
 }
@@ -37,7 +37,7 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 // nolint: unparam
 func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 	f auth.FeeCollectionKeeper, d distribution.Keeper, am auth.AccountKeeper) simulation.Invariant {
-	return func(app *baseapp.BaseApp, _ abci.Header) error {
+	return func(app *baseapp.BaseApp) error {
 		ctx := app.NewContext(false, abci.Header{})
 		pool := k.GetPool(ctx)
 
@@ -102,7 +102,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 
 // PositivePowerInvariant checks that all stored validators have > 0 power
 func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
-	return func(app *baseapp.BaseApp, _ abci.Header) error {
+	return func(app *baseapp.BaseApp) error {
 		ctx := app.NewContext(false, abci.Header{})
 		var err error
 		k.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) bool {
@@ -118,7 +118,7 @@ func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 
 // ValidatorSetInvariant checks equivalence of Tendermint validator set and SDK validator set
 func ValidatorSetInvariant(k stake.Keeper) simulation.Invariant {
-	return func(app *baseapp.BaseApp, _ abci.Header) error {
+	return func(app *baseapp.BaseApp) error {
 		// TODO
 		return nil
 	}

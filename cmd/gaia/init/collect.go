@@ -72,7 +72,6 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(cli.HomeFlag, app.DefaultNodeHome, "node's home directory")
-	//cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	return cmd
 }
 

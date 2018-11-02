@@ -104,7 +104,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 	}
 
 	stakeData := genesisState.StakeData
-	for _, genTx := range appGenTxs {
+	for i, genTx := range appGenTxs {
 		var tx auth.StdTx
 		err = cdc.UnmarshalJSON(genTx, &tx)
 		if err != nil {
@@ -115,7 +115,11 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 			err = errors.New("must provide genesis StdTx with exactly 1 CreateValidator message")
 			return
 		}
-		_ = msgs[0].(stake.MsgCreateValidator)
+		_, ok := msgs[0].(stake.MsgCreateValidator)
+		if !ok {
+			err = fmt.Errorf("Genesis transaction %v does not contain a MsgCreateValidator", i)
+			return
+		}
 	}
 
 	for _, acc := range genesisState.Accounts {

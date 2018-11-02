@@ -61,8 +61,7 @@ following delegation and commission default parameters:
 			}
 
 			// Read --pubkey, if empty take it from priv_validator.json
-			if viper.GetString(cli.FlagPubKey) != "" {
-				valPubKeyString := viper.GetString(cli.FlagPubKey)
+			if valPubKeyString := viper.GetString(cli.FlagPubKey); valPubKeyString != "" {
 				valPubKey, err = sdk.GetConsPubKeyBech32(valPubKeyString)
 				if err != nil {
 					return err

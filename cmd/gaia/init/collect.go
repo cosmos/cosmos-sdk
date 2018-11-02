@@ -32,7 +32,6 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs",
 		Short: "Collect genesis txs and output a genesis.json file",
-		Args:  cobra.MaximumNArgs(1),
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))

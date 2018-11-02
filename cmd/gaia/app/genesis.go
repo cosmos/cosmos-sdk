@@ -26,6 +26,7 @@ var (
 	// bonded tokens given to genesis validators/accounts
 	freeFermionVal  = int64(100)
 	freeFermionsAcc = sdk.NewInt(150)
+	bondDenom       = "steak"
 )
 
 // State to Unmarshal
@@ -125,7 +126,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 	for _, acc := range genesisState.Accounts {
 		// create the genesis account, give'm few steaks and a buncha token with there name
 		for _, coin := range acc.Coins {
-			if coin.Denom == "steak" {
+			if coin.Denom == bondDenom {
 				stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.
 					Add(sdk.NewDecFromInt(coin.Amount)) // increase the supply
 			}

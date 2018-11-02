@@ -188,7 +188,7 @@ func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs 
 
 // CollectStdTxs processes and validates application's genesis StdTxs and returns the list of
 // validators,  appGenTxs, and persistent peers required to generate genesis.json.
-func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tmtypes.GenesisDoc) (
+func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string, genDoc tmtypes.GenesisDoc) (
 	appGenTxs []auth.StdTx, persistentPeers string, err error) {
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
@@ -210,7 +210,9 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 		addrMap[strAddr] = acc
 	}
 
-	var addresses []string
+	// addresses and IPs (and port) validator server info
+	var addressesIPs []string
+
 	for _, fo := range fos {
 		filename := filepath.Join(genTxsDir, fo.Name())
 		if !fo.IsDir() && (filepath.Ext(filename) != ".json") {
@@ -230,8 +232,11 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 		}
 		appGenTxs = append(appGenTxs, genStdTx)
 
-		nodeAddr := genStdTx.GetMemo()
-		if len(nodeAddr) == 0 {
+		// the memo flag is used to store
+		// the ip and node-id, for example this may be:
+		// "528fd3df22b31f4969b05652bfe8f0fe921321d5@192.168.2.37:26656"
+		nodeAddrIP := genStdTx.GetMemo()
+		if len(nodeAddrIP) == 0 {
 			err = fmt.Errorf("couldn't find node's address in %s", fo.Name())
 			return
 		}
@@ -258,12 +263,12 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 		// exclude itself from persistent peers
 		if msg.Description.Moniker != moniker {
-			addresses = append(addresses, nodeAddr)
+			addressesIPs = append(addressesIPs, nodeAddrIP)
 		}
 	}
 
-	sort.Strings(addresses)
-	persistentPeers = strings.Join(addresses, ",")
+	sort.Strings(addressesIPs)
+	persistentPeers = strings.Join(addressesIPs, ",")
 
 	return
 }

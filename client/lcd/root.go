@@ -2,18 +2,13 @@ package lcd
 
 import (
 	"errors"
-	"net"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
@@ -25,6 +20,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
 	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
+	"net"
+	"net/http"
+	"os"
 )
 
 const (
@@ -59,23 +57,11 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 			var listener net.Listener
 			var fingerprint string
 
-			sigs := make(chan os.Signal, 1)
-			signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 			closeListener := func() {
 				err := listener.Close()
 				logger.Error("error closing listener", "err", err)
 			}
-			go func() {
-				sig := <-sigs
-				switch sig {
-				case syscall.SIGTERM:
-					defer closeListener()
-					os.Exit(128 + int(syscall.SIGTERM))
-				case syscall.SIGINT:
-					defer closeListener()
-					os.Exit(128 + int(syscall.SIGINT))
-				}
-			}()
+			server.TrapSignal(closeListener)
 
 			if viper.GetBool(flagInsecure) {
 				listener, err = tmserver.StartHTTPServer(

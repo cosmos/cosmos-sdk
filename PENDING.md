@@ -9,6 +9,7 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
+  * [simulation] \#2665 only argument to simulation.Invariant is now app
 
 * Tendermint
 

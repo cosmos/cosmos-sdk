@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
@@ -103,11 +102,11 @@ func addLogMessage(testingmode bool, blockLogBuilders []*strings.Builder, height
 }
 
 // assertAllInvariants asserts a list of provided invariants against application state
-func assertAllInvariants(t *testing.T, app *baseapp.BaseApp, header abci.Header,
+func assertAllInvariants(t *testing.T, app *baseapp.BaseApp,
 	invariants []Invariant, where string, displayLogs func()) {
 
 	for i := 0; i < len(invariants); i++ {
-		err := invariants[i](app, header)
+		err := invariants[i](app)
 		if err != nil {
 			fmt.Printf("Invariants broken after %s\n", where)
 			fmt.Println(err.Error())

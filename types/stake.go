@@ -67,6 +67,10 @@ type ValidatorSet interface {
 	IterateValidatorsBonded(Context,
 		func(index int64, validator Validator) (stop bool))
 
+	// iterate through the consensus validator set of the last block by operator address, execute func for each validator
+	IterateLastBlockConsValidators(Context,
+		func(index int64, validator Validator) (stop bool))
+
 	Validator(Context, ValAddress) Validator            // get a particular validator by operator address
 	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
 	TotalPower(Context) Dec                             // total power of the validator set

@@ -186,9 +186,9 @@ func GaiaAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs 
 	return codec.MarshalJSONIndent(cdc, genesisState)
 }
 
-// CollectStdTxs processes and validates application's genesis StdTxs and returns the list of
-// validators,  appGenTxs, and persistent peers required to generate genesis.json.
-func CollectStdTxs(cdc *codec.Codec, moniker, genTxsDir string, genDoc tmtypes.GenesisDoc) (
+// CollectStdTxs processes and validates application's genesis StdTxs and returns
+// the list of appGenTxs, and persistent peers required to generate genesis.json.
+func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tmtypes.GenesisDoc) (
 	appGenTxs []auth.StdTx, persistentPeers string, err error) {
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)

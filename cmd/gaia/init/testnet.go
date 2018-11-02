@@ -147,7 +147,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec) error {
 		if err != nil {
 			return err
 		}
-		// Save private key seed words
+		// save private key seed words
 		err = writeFile(fmt.Sprintf("%v.json", "key_seed"), clientDir, cliPrint)
 		if err != nil {
 			return err

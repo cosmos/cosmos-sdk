@@ -60,7 +60,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				NodeID:    nodeID,
 				ValPubKey: valPubKey,
 			}
-			appMessage, err := genTxsWithConfig(cdc, config, initCfg, genDoc)
+			appMessage, err := genAppStateFromConfig(cdc, config, initCfg, genDoc)
 			if err != nil {
 				return err
 			}
@@ -75,7 +75,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func genTxsWithConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig,
+func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig,
 	genDoc types.GenesisDoc) (appState json.RawMessage, err error) {
 
 	genFile := config.GenesisFile()

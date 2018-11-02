@@ -232,7 +232,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec) error {
 		if err != nil {
 			return err
 		}
-		if _, err := genTxsWithConfig(cdc, config, initCfg, genDoc); err != nil {
+		if _, err := genAppStateFromConfig(cdc, config, initCfg, genDoc); err != nil {
 			return err
 		}
 	}

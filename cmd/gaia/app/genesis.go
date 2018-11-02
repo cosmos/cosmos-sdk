@@ -116,8 +116,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 			err = errors.New("must provide genesis StdTx with exactly 1 CreateValidator message")
 			return
 		}
-		_, ok := msgs[0].(stake.MsgCreateValidator)
-		if !ok {
+		if _, ok := msgs[0].(stake.MsgCreateValidator); !ok {
 			err = fmt.Errorf("Genesis transaction %v does not contain a MsgCreateValidator", i)
 			return
 		}

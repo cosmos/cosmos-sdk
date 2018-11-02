@@ -52,17 +52,16 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 			sslHosts := viper.GetString(flagSSLHosts)
 			certFile := viper.GetString(flagSSLCertFile)
 			keyFile := viper.GetString(flagSSLKeyFile)
-			cleanupFunc := func() {}
 
 			var listener net.Listener
 			var fingerprint string
 
-			closeListener := func() {
+			server.TrapSignal(func() {
 				err := listener.Close()
 				logger.Error("error closing listener", "err", err)
-			}
-			server.TrapSignal(closeListener)
+			})
 
+			var cleanupFunc func()
 			if viper.GetBool(flagInsecure) {
 				listener, err = tmserver.StartHTTPServer(
 					listenAddr, handler, logger,

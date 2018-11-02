@@ -467,7 +467,7 @@ gaiacli query votes --proposal-id=<proposal_id>
 
 #### Query proposal tally results
 
-To check the current tally results of a given proposal you can use the `tally` command:
+To check the current tally of a given proposal you can use the `tally` command:
 
 ```bash
 gaiacli query tally --proposal-id=<proposal_id>

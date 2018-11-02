@@ -196,15 +196,14 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	var fos []os.FileInfo
 	fos, err = ioutil.ReadDir(genTxsDir)
 	if err != nil {
-		return
+		return appGenTxs, persistentPeers, err
 	}
 
 	// prepare a map of all accounts in genesis state to then validate
 	// against the validators addresses
 	var appState GenesisState
-	err = cdc.UnmarshalJSON(genDoc.AppState, &appState)
-	if err != nil {
-		return
+	if err := cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
+		return appGenTxs, persistentPeers, err
 	}
 	addrMap := make(map[string]GenesisAccount, len(appState.Accounts))
 	for i := 0; i < len(appState.Accounts); i++ {
@@ -224,14 +223,12 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 		// get the genStdTx
 		var jsonRawTx []byte
-		jsonRawTx, err = ioutil.ReadFile(filename)
-		if err != nil {
-			return
+		if jsonRawTx, err = ioutil.ReadFile(filename); err != nil {
+			return appGenTxs, persistentPeers, err
 		}
 		var genStdTx auth.StdTx
-		err = cdc.UnmarshalJSON(jsonRawTx, &genStdTx)
-		if err != nil {
-			return
+		if err = cdc.UnmarshalJSON(jsonRawTx, &genStdTx); err != nil {
+			return appGenTxs, persistentPeers, err
 		}
 		appGenTxs = append(appGenTxs, genStdTx)
 
@@ -240,15 +237,16 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 		// "528fd3df22b31f4969b05652bfe8f0fe921321d5@192.168.2.37:26656"
 		nodeAddrIP := genStdTx.GetMemo()
 		if len(nodeAddrIP) == 0 {
-			err = fmt.Errorf("couldn't find node's address in %s", fo.Name())
-			return
+			return appGenTxs, persistentPeers, fmt.Errorf(
+				"couldn't find node's address and IP in %s", fo.Name())
 		}
 
 		// genesis transactions must be single-message
 		msgs := genStdTx.GetMsgs()
 		if len(msgs) != 1 {
-			err = errors.New("each genesis transaction must provide a single genesis message")
-			return
+
+			return appGenTxs, persistentPeers, errors.New(
+				"each genesis transaction must provide a single genesis message")
 		}
 
 		// validate the validator address and funds against the accounts in the state
@@ -256,8 +254,8 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 		addr := string(sdk.AccAddress(msg.ValidatorAddr))
 		acc, ok := addrMap[addr]
 		if !ok {
-			err = fmt.Errorf("account %v not in genesis.json: %+v", addr, addrMap)
-			return
+			return appGenTxs, persistentPeers, fmt.Errorf(
+				"account %v not in genesis.json: %+v", addr, addrMap)
 		}
 		if acc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
 			err = fmt.Errorf("insufficient fund for the delegation: %s < %s",
@@ -273,7 +271,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	sort.Strings(addressesIPs)
 	persistentPeers = strings.Join(addressesIPs, ",")
 
-	return
+	return appGenTxs, persistentPeers, nil
 }
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {

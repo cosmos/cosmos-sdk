@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"net"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -201,6 +203,23 @@ func ExternalIP() (string, error) {
 		}
 	}
 	return "", errors.New("are you connected to the network?")
+}
+
+// TrapSignal traps SIGINT and SIGTERM and terminates the server correctly.
+func TrapSignal(cleanupFunc func()) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigs
+		switch sig {
+		case syscall.SIGTERM:
+			defer cleanupFunc()
+			os.Exit(128 + int(syscall.SIGTERM))
+		case syscall.SIGINT:
+			defer cleanupFunc()
+			os.Exit(128 + int(syscall.SIGINT))
+		}
+	}()
 }
 
 func skipInterface(iface net.Interface) bool {

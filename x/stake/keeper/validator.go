@@ -261,6 +261,13 @@ func (k Keeper) GetLastValidators(ctx sdk.Context) (validators []types.Validator
 	return validators[:i] // trim
 }
 
+// returns an iterator for the consensus validators in the last block
+func (k Keeper) LastValidatorsIterator(ctx sdk.Context) (iterator sdk.Iterator) {
+	store := ctx.KVStore(k.storeKey)
+	iterator = sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
+	return iterator
+}
+
 // get the current group of bonded validators sorted by power-rank
 func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 	store := ctx.KVStore(k.storeKey)
@@ -281,6 +288,13 @@ func (k Keeper) GetBondedValidatorsByPower(ctx sdk.Context) []types.Validator {
 		}
 	}
 	return validators[:i] // trim
+}
+
+// returns an iterator for the current validator power store
+func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) (iterator sdk.Iterator) {
+	store := ctx.KVStore(k.storeKey)
+	iterator = sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
+	return iterator
 }
 
 // gets a specific validator queue timeslice. A timeslice is a slice of ValAddresses corresponding to unbonding validators

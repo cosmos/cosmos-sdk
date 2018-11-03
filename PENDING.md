@@ -46,6 +46,7 @@ IMPROVEMENTS
  - #2617 [x/mock/simulation] Randomize all genesis parameters
  - \#1924 [simulation] Use a transition matrix for block size
  - #2610 [x/stake] Block redelegation to and from the same validator
+ - #2669 [x/stake] Added invarant check to make sure validator's power aligns with its spot in the power store.
 
 
 * Tendermint
@@ -58,6 +59,7 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+ - #2670 [x/stake] fixed incorrent `IterateBondedValidators` and split into two functions: `IterateBondedValidators` and `IterateLastBlockConsValidators`
 
 * SDK
  - #2625 [x/gov] fix AppendTag function usage error

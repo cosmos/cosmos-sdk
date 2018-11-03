@@ -102,7 +102,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 	}
 }
 
-// PositivePowerInvariant checks that all stored validators have > 0 power
+// PowerStoreInvariant checks that a validator's power aligns with its key in the power store
 func PowerStoreInvariant(k stake.Keeper) simulation.Invariant {
 	return func(app *baseapp.BaseApp, _ abci.Header) error {
 		ctx := app.NewContext(false, abci.Header{})

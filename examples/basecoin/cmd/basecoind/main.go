@@ -39,10 +39,9 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	appInit := server.DefaultAppInit
-	rootCmd.AddCommand(InitCmd(ctx, cdc, appInit))
+	rootCmd.AddCommand(InitCmd(ctx, cdc))
 
-	server.AddCommands(ctx, cdc, rootCmd, appInit,
+	server.AddCommands(ctx, cdc, rootCmd,
 		newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
@@ -58,7 +57,7 @@ func main() {
 
 // get cmd to initialize all files for tendermint and application
 // nolint: errcheck
-func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cobra.Command {
+func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize genesis config, priv-validator file, and p2p-node file",
@@ -78,38 +77,46 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 			}
 			nodeID := string(nodeKey.ID())
 
+			// XXX gaiaInit -> server
 			pk := gaiaInit.ReadOrCreatePrivValidator(config.PrivValidatorFile())
-			genTx, appMessage, validator, err := server.SimpleAppGenTx(cdc, pk)
-			if err != nil {
-				return err
+			validator := tmtypes.GenesisValidator{
+				PubKey: pk,
+				Power:  10,
 			}
 
-			appState, err := appInit.AppGenState(
-				cdc, tmtypes.GenesisDoc{}, []json.RawMessage{genTx})
+			addr, secret, err := server.GenerateAccountKeyAndSecret()
 			if err != nil {
 				return err
 			}
-			appStateJSON, err := cdc.MarshalJSON(appState)
-			if err != nil {
-				return err
-			}
+			appStateJSON := (fmt.Sprintf(`{
+  "accounts": [{
+    "address": "%s",
+    "coins": [
+      {
+        "denom": "mycoin",
+        "amount": "9007199254740992"
+      }
+    ]
+  }]
+}`, addr))
 
 			toPrint := struct {
-				ChainID    string          `json:"chain_id"`
-				NodeID     string          `json:"node_id"`
-				AppMessage json.RawMessage `json:"app_message"`
+				ChainID string `json:"chain_id"`
+				NodeID  string `json:"node_id"`
+				Message string `json:"message"`
 			}{
 				chainID,
 				nodeID,
-				appMessage,
+				fmt.Sprintf("Secret: %v", secret),
 			}
 			out, err := codec.MarshalJSONIndent(cdc, toPrint)
 			if err != nil {
 				return err
 			}
 			fmt.Fprintf(os.Stderr, "%s\n", string(out))
+			// XXX gaiaInit -> server
 			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID,
-				[]tmtypes.GenesisValidator{validator}, appStateJSON)
+				[]tmtypes.GenesisValidator{validator}, []byte(appStateJSON))
 		},
 	}
 

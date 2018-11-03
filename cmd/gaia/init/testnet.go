@@ -36,8 +36,7 @@ var (
 const nodeDirPerm = 0755
 
 // get cmd to initialize all files for tendermint testnet and application
-func TestnetFilesCmd(ctx *server.Context, cdc *codec.Codec,
-	appInit server.AppInit) *cobra.Command {
+func TestnetFilesCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "testnet",
@@ -137,7 +136,7 @@ func testnetWithConfig(config *cfg.Config, cdc *codec.Codec) error {
 			keyPass = app.DefaultKeyPass
 		}
 
-		addr, secret, err := server.GenerateSaveCoinKey(clientDir, nodeDirName, keyPass, true)
+		addr, secret, err := server.GenerateSaveAccountKeyAndSecret(clientDir, nodeDirName, keyPass, true)
 		if err != nil {
 			_ = os.RemoveAll(outDir)
 			return err

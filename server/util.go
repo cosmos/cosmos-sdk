@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net"
 	"os"
 	"os/signal"
@@ -128,7 +127,7 @@ func validateConfig(conf *cfg.Config) error {
 // add server commands
 func AddCommands(
 	ctx *Context, cdc *codec.Codec,
-	rootCmd *cobra.Command, appInit AppInit,
+	rootCmd *cobra.Command,
 	appCreator AppCreator, appExport AppExporter) {
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
@@ -155,25 +154,7 @@ func AddCommands(
 	)
 }
 
-//___________________________________________________________________________________
-
-// InsertKeyJSON inserts a new JSON field/key with a given value to an existing
-// JSON message. An error is returned if any serialization operation fails.
-//
-// NOTE: The ordering of the keys returned as the resulting JSON message is
-// non-deterministic, so the client should not rely on key ordering.
-func InsertKeyJSON(cdc *codec.Codec, baseJSON []byte, key string, value json.RawMessage) ([]byte, error) {
-	var jsonMap map[string]json.RawMessage
-
-	if err := cdc.UnmarshalJSON(baseJSON, &jsonMap); err != nil {
-		return nil, err
-	}
-
-	jsonMap[key] = value
-	bz, err := codec.MarshalJSONIndent(cdc, jsonMap)
-
-	return json.RawMessage(bz), err
-}
+//----------------------------------------
 
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
 // TODO there must be a better way to get external IP

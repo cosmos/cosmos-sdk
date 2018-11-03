@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -78,14 +77,6 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	return &auth.BaseAccount{
 		Address: ga.Address,
 		Coins:   ga.Coins.Sort(),
-	}
-}
-
-// get app init parameters for server init command
-func GaiaAppInit() server.AppInit {
-
-	return server.AppInit{
-		AppGenState: GaiaAppGenStateJSON,
 	}
 }
 

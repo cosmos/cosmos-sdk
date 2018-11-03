@@ -97,6 +97,8 @@ To interact with our application, let us add the commands from the `simple_gover
 The `simplegovd` command will run the daemon server as a background process. First, let us create some `utils` functions:
 
 ```go
+// NOTE: This is outdated, AppInit has been removed.
+// XXX: Update tutorial.
 //  cmd/simplegovd/main.go
 // SimpleGovAppInit initial parameters
 var SimpleGovAppInit = server.AppInit{
@@ -137,7 +139,7 @@ func main() {
         PersistentPreRunE: server.PersistentPreRunEFn(ctx),
     }
 
-    server.AddCommands(ctx, cdc, rootCmd, SimpleGovAppInit,
+    server.AddCommands(ctx, cdc, rootCmd,
         server.ConstructAppCreator(newApp, "simplegov"),
         server.ConstructAppExporter(exportAppState, "simplegov"))
 

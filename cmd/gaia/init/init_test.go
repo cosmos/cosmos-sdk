@@ -30,10 +30,7 @@ func TestInitCmd(t *testing.T) {
 	require.Nil(t, err)
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	appInit := server.AppInit{
-		AppGenState: mock.AppGenState,
-	}
-	cmd := InitCmd(ctx, cdc, appInit)
+	cmd := InitCmd(ctx, cdc)
 	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
 }
@@ -58,10 +55,7 @@ func TestEmptyState(t *testing.T) {
 	require.Nil(t, err)
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	appInit := server.AppInit{
-		AppGenState: mock.AppGenStateEmpty,
-	}
-	cmd := InitCmd(ctx, cdc, appInit)
+	cmd := InitCmd(ctx, cdc)
 	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
 
@@ -105,10 +99,7 @@ func TestStartStandAlone(t *testing.T) {
 	require.Nil(t, err)
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	appInit := server.AppInit{
-		AppGenState: mock.AppGenState,
-	}
-	initCmd := InitCmd(ctx, cdc, appInit)
+	initCmd := InitCmd(ctx, cdc)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 

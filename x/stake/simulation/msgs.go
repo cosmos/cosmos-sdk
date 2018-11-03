@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -87,8 +88,8 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 		maxCommission := sdk.NewInt(10)
 		newCommissionRate := sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1)
 
-		acc := simulation.RandomAcc(r, accs)
-		address := sdk.ValAddress(acc.Address)
+		val := keeper.RandomValidator(r, k, ctx)
+		address := val.GetOperator()
 		msg := stake.MsgEditValidator{
 			Description:    description,
 			ValidatorAddr:  address,
@@ -118,8 +119,8 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k stake.Keeper) simulation.Operat
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
-		validatorAcc := simulation.RandomAcc(r, accs)
-		validatorAddress := sdk.ValAddress(validatorAcc.Address)
+		val := keeper.RandomValidator(r, k, ctx)
+		validatorAddress := val.GetOperator()
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
 		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
@@ -155,25 +156,26 @@ func SimulateMsgBeginUnbonding(m auth.AccountKeeper, k stake.Keeper) simulation.
 		accs []simulation.Account, event func(string)) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
-		denom := k.GetParams(ctx).BondDenom
-		validatorAcc := simulation.RandomAcc(r, accs)
-		validatorAddress := sdk.ValAddress(validatorAcc.Address)
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
-		amount := m.GetAccount(ctx, delegatorAddress).GetCoins().AmountOf(denom)
-		if amount.GT(sdk.ZeroInt()) {
-			amount = simulation.RandomAmount(r, amount)
+		delegations := k.GetAllDelegatorDelegations(ctx, delegatorAddress)
+		if len(delegations) == 0 {
+			return "no-operation", nil, nil
 		}
-		if amount.Equal(sdk.ZeroInt()) {
+		delegation := delegations[r.Intn(len(delegations))]
+
+		numShares := simulation.RandomDecAmount(r, delegation.Shares)
+		if numShares.Equal(sdk.ZeroDec()) {
 			return "no-operation", nil, nil
 		}
 		msg := stake.MsgBeginUnbonding{
 			DelegatorAddr: delegatorAddress,
-			ValidatorAddr: validatorAddress,
-			SharesAmount:  sdk.NewDecFromInt(amount),
+			ValidatorAddr: delegation.ValidatorAddr,
+			SharesAmount:  numShares,
 		}
 		if msg.ValidateBasic() != nil {
-			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
+			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s, got error %v",
+				msg.GetSignBytes(), msg.ValidateBasic())
 		}
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
@@ -194,10 +196,10 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k stake.Keeper) simulation
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
-		sourceValidatorAcc := simulation.RandomAcc(r, accs)
-		sourceValidatorAddress := sdk.ValAddress(sourceValidatorAcc.Address)
-		destValidatorAcc := simulation.RandomAcc(r, accs)
-		destValidatorAddress := sdk.ValAddress(destValidatorAcc.Address)
+		srcVal := keeper.RandomValidator(r, k, ctx)
+		srcValidatorAddress := srcVal.GetOperator()
+		destVal := keeper.RandomValidator(r, k, ctx)
+		destValidatorAddress := destVal.GetOperator()
 		delegatorAcc := simulation.RandomAcc(r, accs)
 		delegatorAddress := delegatorAcc.Address
 		// TODO
@@ -210,7 +212,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k stake.Keeper) simulation
 		}
 		msg := stake.MsgBeginRedelegate{
 			DelegatorAddr:    delegatorAddress,
-			ValidatorSrcAddr: sourceValidatorAddress,
+			ValidatorSrcAddr: srcValidatorAddress,
 			ValidatorDstAddr: destValidatorAddress,
 			SharesAmount:     sdk.NewDecFromInt(amount),
 		}

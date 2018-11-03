@@ -38,6 +38,7 @@ func generateSelfSignedCert(host string) (certBytes []byte, priv *ecdsa.PrivateK
 		Subject: pkix.Name{
 			Organization: []string{"Gaia Lite"},
 		},
+		DNSNames:              []string{"localhost"},
 		NotBefore:             notBefore,
 		NotAfter:              notAfter,
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,

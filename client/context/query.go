@@ -220,7 +220,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 
 	kp := new(merkle.KeyPath)
 	kp.AppendKey([]byte(storeName), merkle.KeyEncodingURL)
-	kp.AppendKey([]byte(resp.Key), merkle.KeyEncodingURL)
+	kp.AppendKey(resp.Key, merkle.KeyEncodingURL)
 
 	err = prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value)
 	if err != nil {

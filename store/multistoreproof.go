@@ -18,6 +18,7 @@ func NewMultiStoreProof(storeInfos []storeInfo) *MultiStoreProof {
 	return &MultiStoreProof{StoreInfos: storeInfos}
 }
 
+// ComputeRootHash returns the root hash for a given multi-store proof.
 func (proof *MultiStoreProof) ComputeRootHash() []byte {
 	ci := commitInfo{
 		Version:    -1, // TODO: Not needed; improve code.
@@ -43,8 +44,10 @@ func RequireProof(subpath string) bool {
 
 var _ merkle.ProofOperator = MultiStoreProofOp{}
 
+// the multi-store proof operation constant value
 const ProofOpMultiStore = "multistore"
 
+// TODO: document
 type MultiStoreProofOp struct {
 	// Encoded in ProofOp.Key
 	key []byte
@@ -60,6 +63,8 @@ func NewMultiStoreProofOp(key []byte, proof *MultiStoreProof) MultiStoreProofOp 
 	}
 }
 
+// MultiStoreProofOpDecoder returns a multi-store merkle proof operator from a
+// given proof operation.
 func MultiStoreProofOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) {
 	if pop.Type != ProofOpMultiStore {
 		return nil, cmn.NewError("unexpected ProofOp.Type; got %v, want %v", pop.Type, ProofOpMultiStore)
@@ -76,6 +81,8 @@ func MultiStoreProofOpDecoder(pop merkle.ProofOp) (merkle.ProofOperator, error) 
 	return NewMultiStoreProofOp(pop.Key, op.Proof), nil
 }
 
+// ProofOp return a merkle proof operation from a given multi-store proof
+// operation.
 func (op MultiStoreProofOp) ProofOp() merkle.ProofOp {
 	bz := cdc.MustMarshalBinaryLengthPrefixed(op)
 	return merkle.ProofOp{
@@ -85,14 +92,19 @@ func (op MultiStoreProofOp) ProofOp() merkle.ProofOp {
 	}
 }
 
+// String implements the Stringer interface for a mult-store proof operation.
 func (op MultiStoreProofOp) String() string {
 	return fmt.Sprintf("MultiStoreProofOp{%v}", op.GetKey())
 }
 
+// GetKey returns the key for a multi-store proof operation.
 func (op MultiStoreProofOp) GetKey() []byte {
 	return op.key
 }
 
+// Run executes a multi-store proof operation for a given value. It returns
+// the root hash if the value matches all the store's commitID's hash or an
+// error otherwise.
 func (op MultiStoreProofOp) Run(args [][]byte) ([][]byte, error) {
 	if len(args) != 1 {
 		return nil, cmn.NewError("Value size is not 1")
@@ -103,7 +115,6 @@ func (op MultiStoreProofOp) Run(args [][]byte) ([][]byte, error) {
 
 	for _, si := range op.Proof.StoreInfos {
 		if si.Name == string(op.key) {
-
 			if bytes.Equal(value, si.Core.CommitID.Hash) {
 				return [][]byte{root}, nil
 			}

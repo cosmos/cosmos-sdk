@@ -11,7 +11,7 @@ type (
 	// Commission defines a commission parameters for a given validator.
 	Commission struct {
 		Rate          sdk.Dec   `json:"rate"`            // the commission rate charged to delegators
-		MaxRate       sdk.Dec   `json:"max_rate"`        // maximum commission rate which validator can ever charge
+		MaxRate       sdk.Dec   `json:"max_rate"`        // maximum commission rate which this validator can ever charge
 		MaxChangeRate sdk.Dec   `json:"max_change_rate"` // maximum daily increase of the validator commission
 		UpdateTime    time.Time `json:"update_time"`     // the last time the commission rate was changed
 	}

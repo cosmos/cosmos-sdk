@@ -78,8 +78,8 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
 
-			// XXX Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
-			// XXX This hook probably shouldn't exist.  Maybe rethink the hook system.
+			// Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
+			// This hook is extremely useful, otherwise lazy accum bugs will be difficult to solve.
 			if k.hooks != nil {
 				k.hooks.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
 			}
@@ -107,11 +107,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// bonded to unbonding
 		k.bondedToUnbonding(ctx, validator)
-
-		// remove validator if it has no more tokens
-		if validator.Tokens.IsZero() {
-			k.RemoveValidator(ctx, validator.OperatorAddr)
-		}
 
 		// delete from the bonded validator index
 		k.DeleteLastValidatorPower(ctx, sdk.ValAddress(valAddrBytes))

@@ -108,12 +108,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	pool.LooseTokens = pool.LooseTokens.Sub(tokensToBurn)
 	k.SetPool(ctx, pool)
 
-	// remove validator if it has no more tokens
-	if validator.DelegatorShares.IsZero() && validator.Status == sdk.Unbonded {
-		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
-		k.RemoveValidator(ctx, validator.OperatorAddr)
-	}
-
 	// Log that a slash occurred!
 	logger.Info(fmt.Sprintf(
 		"validator %s slashed by slash factor of %s; burned %v tokens",
@@ -236,6 +230,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		if sharesToUnbond.GT(delegation.Shares) {
 			sharesToUnbond = delegation.Shares
 		}
+
 		tokensToBurn, err := k.unbond(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr, sharesToUnbond)
 		if err != nil {
 			panic(fmt.Errorf("error unbonding delegator: %v", err))

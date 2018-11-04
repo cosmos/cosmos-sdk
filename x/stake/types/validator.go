@@ -392,6 +392,9 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 		pool = pool.looseTokensToBonded(amountDec)
 	}
 
+	if exRate.IsZero() {
+		panic("zero exRate should not happen")
+	}
 	v.Tokens = v.Tokens.Add(amountDec)
 	issuedShares := amountDec.Quo(exRate)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)

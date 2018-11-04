@@ -300,7 +300,7 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// 	return sdk.ErrInternal(errMsg.Error()).QueryResult()
 	// }
 
-	// TODO: Set proof in another PR
+	// TODO: handle in another TM v0.26 update PR
 	// res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
 	return res
 }

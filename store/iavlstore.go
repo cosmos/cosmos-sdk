@@ -234,7 +234,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			// 	break
 			// }
 
-			// TODO: Set proof in another PR
+			// TODO: handle in another TM v0.26 update PR
 			// res.Proof = p
 		} else {
 			_, res.Value = tree.GetVersioned(key, res.Height)

@@ -202,7 +202,7 @@ func (ctx CLIContext) verifyProof(_ string, resp abci.ResponseQuery) error {
 		return fmt.Errorf("missing valid certifier to verify data from distrusted node")
 	}
 
-	// TODO: Handle in another PR
+	// TODO: handle in another TM v0.26 update PR
 	// // the AppHash for height H is in header H+1
 	// commit, err := ctx.Verify(resp.Height + 1)
 	// if err != nil {

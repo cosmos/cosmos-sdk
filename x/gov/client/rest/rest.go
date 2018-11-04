@@ -18,12 +18,8 @@ import (
 // REST Variable names
 // nolint
 const (
-<<<<<<< HEAD
-	RestProposalID     = "proposalId"
-=======
 	RestProcedureType  = "procedure-type"
 	RestProposalID     = "proposal-id"
->>>>>>> gov query procedures
 	RestDepositer      = "depositer"
 	RestVoter          = "voter"
 	RestProposalStatus = "status"

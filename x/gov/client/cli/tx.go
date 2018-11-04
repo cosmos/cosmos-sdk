@@ -253,7 +253,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 func GetCmdQueryProcedure(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "procedure [procedure-type]",
-		Short: "Query the procedure parameters of a certain part of the governance process",
+		Short: "Query the procedure parameters of the governance process",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			procedureType := args[0]

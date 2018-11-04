@@ -60,14 +60,14 @@ func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 	if b == nil {
 		panic("stored pool should not have been nil")
 	}
-	k.cdc.MustUnmarshalBinary(b, &pool)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &pool)
 	return
 }
 
 // set the pool
 func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(pool)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(pool)
 	store.Set(PoolKey, b)
 }
 
@@ -80,14 +80,14 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {
 	if b == nil {
 		return sdk.ZeroInt()
 	}
-	k.cdc.MustUnmarshalBinary(b, &power)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &power)
 	return
 }
 
 // Set the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(power)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(power)
 	store.Set(LastTotalPowerKey, b)
 }
 
@@ -101,14 +101,14 @@ func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) 
 	if bz == nil {
 		return sdk.ZeroInt()
 	}
-	k.cdc.MustUnmarshalBinary(bz, &power)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &power)
 	return
 }
 
 // Set the last validator power.
 func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(power)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(power)
 	store.Set(GetLastValidatorPowerKey(operator), bz)
 }
 
@@ -128,13 +128,13 @@ func (k Keeper) GetIntraTxCounter(ctx sdk.Context) int16 {
 		return 0
 	}
 	var counter int16
-	k.cdc.MustUnmarshalBinary(b, &counter)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &counter)
 	return counter
 }
 
 // set the current in-block validator operation counter
 func (k Keeper) SetIntraTxCounter(ctx sdk.Context, counter int16) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(counter)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(counter)
 	store.Set(IntraTxCounterKey, bz)
 }

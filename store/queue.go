@@ -27,12 +27,12 @@ func (m Queue) getTop() (res uint64) {
 		return 0
 	}
 
-	m.List.cdc.MustUnmarshalBinary(bz, &res)
+	m.List.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
 func (m Queue) setTop(top uint64) {
-	bz := m.List.cdc.MustMarshalBinary(top)
+	bz := m.List.cdc.MustMarshalBinaryLengthPrefixed(top)
 	m.List.store.Set(TopKey(), bz)
 }
 

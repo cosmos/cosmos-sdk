@@ -337,7 +337,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		}
 
 		// Encode with json
-		value := codec.Cdc.MustMarshalBinary(result)
+		value := codec.Cdc.MustMarshalBinaryLengthPrefixed(result)
 		return abci.ResponseQuery{
 			Code:  uint32(sdk.ABCICodeOK),
 			Value: value,

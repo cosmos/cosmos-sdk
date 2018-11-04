@@ -47,7 +47,7 @@ func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
 		delegation.Shares,
 		delegation.Height,
 	}
-	return cdc.MustMarshalBinary(val)
+	return cdc.MustMarshalBinaryLengthPrefixed(val)
 }
 
 // return the delegation without fields contained within the key for the store
@@ -62,7 +62,7 @@ func MustUnmarshalDelegation(cdc *codec.Codec, key, value []byte) Delegation {
 // return the delegation without fields contained within the key for the store
 func UnmarshalDelegation(cdc *codec.Codec, key, value []byte) (delegation Delegation, err error) {
 	var storeValue delegationValue
-	err = cdc.UnmarshalBinary(value, &storeValue)
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &storeValue)
 	if err != nil {
 		err = fmt.Errorf("%v: %v", ErrNoDelegation(DefaultCodespace).Data(), err)
 		return
@@ -139,7 +139,7 @@ func MustMarshalUBD(cdc *codec.Codec, ubd UnbondingDelegation) []byte {
 		ubd.InitialBalance,
 		ubd.Balance,
 	}
-	return cdc.MustMarshalBinary(val)
+	return cdc.MustMarshalBinaryLengthPrefixed(val)
 }
 
 // unmarshal a unbonding delegation from a store key and value
@@ -154,7 +154,7 @@ func MustUnmarshalUBD(cdc *codec.Codec, key, value []byte) UnbondingDelegation {
 // unmarshal a unbonding delegation from a store key and value
 func UnmarshalUBD(cdc *codec.Codec, key, value []byte) (ubd UnbondingDelegation, err error) {
 	var storeValue ubdValue
-	err = cdc.UnmarshalBinary(value, &storeValue)
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &storeValue)
 	if err != nil {
 		return
 	}
@@ -179,8 +179,8 @@ func UnmarshalUBD(cdc *codec.Codec, key, value []byte) (ubd UnbondingDelegation,
 
 // nolint
 func (d UnbondingDelegation) Equal(d2 UnbondingDelegation) bool {
-	bz1 := MsgCdc.MustMarshalBinary(&d)
-	bz2 := MsgCdc.MustMarshalBinary(&d2)
+	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d)
+	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d2)
 	return bytes.Equal(bz1, bz2)
 }
 
@@ -231,7 +231,7 @@ func MustMarshalRED(cdc *codec.Codec, red Redelegation) []byte {
 		red.SharesSrc,
 		red.SharesDst,
 	}
-	return cdc.MustMarshalBinary(val)
+	return cdc.MustMarshalBinaryLengthPrefixed(val)
 }
 
 // unmarshal a redelegation from a store key and value
@@ -246,7 +246,7 @@ func MustUnmarshalRED(cdc *codec.Codec, key, value []byte) Redelegation {
 // unmarshal a redelegation from a store key and value
 func UnmarshalRED(cdc *codec.Codec, key, value []byte) (red Redelegation, err error) {
 	var storeValue redValue
-	err = cdc.UnmarshalBinary(value, &storeValue)
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &storeValue)
 	if err != nil {
 		return
 	}
@@ -275,8 +275,8 @@ func UnmarshalRED(cdc *codec.Codec, key, value []byte) (red Redelegation, err er
 
 // nolint
 func (d Redelegation) Equal(d2 Redelegation) bool {
-	bz1 := MsgCdc.MustMarshalBinary(&d)
-	bz2 := MsgCdc.MustMarshalBinary(&d2)
+	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d)
+	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d2)
 	return bytes.Equal(bz1, bz2)
 }
 

@@ -6,20 +6,18 @@ import (
 	"io"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/p2p"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/democoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -52,8 +50,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			}
 			nodeID := string(nodeKey.ID())
 
-			// XXX gaiaInit -> server
-			pk := gaiaInit.ReadOrCreatePrivValidator(config.PrivValidatorFile())
+			pk := server.ReadOrCreatePrivValidator(config.PrivValidatorFile())
 			validator := tmtypes.GenesisValidator{
 				PubKey: pk,
 				Power:  10,
@@ -96,7 +93,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 			fmt.Fprintf(os.Stderr, "%s\n", string(out))
-			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID,
+			return server.WriteGenesisFile(config.GenesisFile(), chainID,
 				[]tmtypes.GenesisValidator{validator}, []byte(appStateJSON))
 		},
 	}
@@ -139,8 +136,6 @@ func main() {
 	}
 
 	rootCmd.AddCommand(InitCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
-
 	server.AddCommands(ctx, cdc, rootCmd,
 		newApp, exportAppStateAndTMValidators)
 

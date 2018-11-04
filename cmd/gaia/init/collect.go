@@ -64,7 +64,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			toPrint.AppMessage = appMessage
+			toPrint.Message = appMessage
 			// print out some key information
 			return displayInfo(cdc, toPrint)
 		},
@@ -105,7 +105,7 @@ func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config, initCfg initCon
 		return
 	}
 
-	err = WriteGenesisFile(genFile, initCfg.ChainID, nil, appState)
+	err = server.WriteGenesisFile(genFile, initCfg.ChainID, nil, appState)
 	return
 }
 

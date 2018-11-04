@@ -1,10 +1,12 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/types"
 
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,4 +56,21 @@ func GenerateSaveAccountKeyAndSecret(clientRoot, keyName, keyPass string, overwr
 	}
 	addr := info.GetPubKey().Address()
 	return sdk.AccAddress(addr), secret, nil
+}
+
+// WriteGenesisFile creates and writes the genesis configuration to disk. An
+// error is returned if building or writing the configuration to file fails.
+// nolint: unparam
+func WriteGenesisFile(genesisFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage) error {
+	genDoc := types.GenesisDoc{
+		ChainID:    chainID,
+		Validators: validators,
+		AppState:   appState,
+	}
+
+	if err := genDoc.ValidateAndComplete(); err != nil {
+		return err
+	}
+
+	return genDoc.SaveAs(genesisFile)
 }

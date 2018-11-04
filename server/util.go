@@ -15,11 +15,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/version"
+	common "github.com/tendermint/go-common"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
+	crypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/privval"
 )
 
 // server context
@@ -222,4 +225,17 @@ func addrToIP(addr net.Addr) net.IP {
 		ip = v.IP
 	}
 	return ip
+}
+
+// read of create the private key file for this config
+func ReadOrCreatePrivValidator(privValFile string) crypto.PubKey {
+	// private validator
+	var privValidator *privval.FilePV
+	if common.FileExists(privValFile) {
+		privValidator = privval.LoadFilePV(privValFile)
+	} else {
+		privValidator = privval.GenFilePV(privValFile)
+		privValidator.Save()
+	}
+	return privValidator.GetPubKey()
 }

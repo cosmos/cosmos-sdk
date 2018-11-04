@@ -3,7 +3,6 @@ package init
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tendermint/tendermint/privval"
 	"os"
 	"path/filepath"
 
@@ -18,7 +17,6 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/p2p"
-	"github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -28,10 +26,10 @@ const (
 )
 
 type printInfo struct {
-	Moniker    string          `json:"moniker"`
-	ChainID    string          `json:"chain_id"`
-	NodeID     string          `json:"node_id"`
-	AppMessage json.RawMessage `json:"app_message"`
+	Moniker string          `json:"moniker"`
+	ChainID string          `json:"chain_id"`
+	NodeID  string          `json:"node_id"`
+	Message json.RawMessage `json:"message"`
 }
 
 // nolint: errcheck
@@ -74,15 +72,15 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				viper.GetBool(flagOverwrite)); err != nil {
 				return err
 			}
-			if err = WriteGenesisFile(genFile, chainID, nil, appState); err != nil {
+			if err = server.WriteGenesisFile(genFile, chainID, nil, appState); err != nil {
 				return err
 			}
 
 			toPrint := printInfo{
-				ChainID:    chainID,
-				Moniker:    config.Moniker,
-				NodeID:     nodeID,
-				AppMessage: appState,
+				ChainID: chainID,
+				Moniker: config.Moniker,
+				NodeID:  nodeID,
+				Message: appState,
 			}
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
@@ -105,38 +103,8 @@ func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey 
 		return
 	}
 	nodeID = string(nodeKey.ID())
-	valPubKey = ReadOrCreatePrivValidator(config.PrivValidatorFile())
+	valPubKey = server.ReadOrCreatePrivValidator(config.PrivValidatorFile())
 	return
-}
-
-// WriteGenesisFile creates and writes the genesis configuration to disk. An
-// error is returned if building or writing the configuration to file fails.
-// nolint: unparam
-func WriteGenesisFile(genesisFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage) error {
-	genDoc := types.GenesisDoc{
-		ChainID:    chainID,
-		Validators: validators,
-		AppState:   appState,
-	}
-
-	if err := genDoc.ValidateAndComplete(); err != nil {
-		return err
-	}
-
-	return genDoc.SaveAs(genesisFile)
-}
-
-// read of create the private key file for this config
-func ReadOrCreatePrivValidator(privValFile string) crypto.PubKey {
-	// private validator
-	var privValidator *privval.FilePV
-	if common.FileExists(privValFile) {
-		privValidator = privval.LoadFilePV(privValFile)
-	} else {
-		privValidator = privval.GenFilePV(privValFile)
-		privValidator.Save()
-	}
-	return privValidator.GetPubKey()
 }
 
 func initializeEmptyGenesis(cdc *codec.Codec, genFile string, chainID string,

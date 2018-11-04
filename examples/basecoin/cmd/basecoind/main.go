@@ -9,8 +9,6 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/app"
@@ -77,8 +75,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			}
 			nodeID := string(nodeKey.ID())
 
-			// XXX gaiaInit -> server
-			pk := gaiaInit.ReadOrCreatePrivValidator(config.PrivValidatorFile())
+			pk := server.ReadOrCreatePrivValidator(config.PrivValidatorFile())
 			validator := tmtypes.GenesisValidator{
 				PubKey: pk,
 				Power:  10,
@@ -114,8 +111,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 			fmt.Fprintf(os.Stderr, "%s\n", string(out))
-			// XXX gaiaInit -> server
-			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID,
+			return server.WriteGenesisFile(config.GenesisFile(), chainID,
 				[]tmtypes.GenesisValidator{validator}, []byte(appStateJSON))
 		},
 	}

@@ -108,11 +108,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// bonded to unbonding
 		k.bondedToUnbonding(ctx, validator)
 
-		// remove validator if it has no more tokens
-		if validator.Tokens.IsZero() {
-			k.RemoveValidator(ctx, validator.OperatorAddr)
-		}
-
 		// delete from the bonded validator index
 		k.DeleteLastValidatorPower(ctx, sdk.ValAddress(valAddrBytes))
 

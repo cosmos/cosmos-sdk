@@ -34,8 +34,16 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.ValidatorUpdate) {
 	endBlockerTags := sdk.EmptyTags()
 
+	// reset the intra-transaction counter
+	k.SetIntraTxCounter(ctx, 0)
+
+	// calculate validator set changes
+	ValidatorUpdates = k.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	// Unbond all mature validators from the unbonding queue
 	k.UnbondAllMatureValidatorQueue(ctx)
 
+	// Remove all mature unbonding delegations from the ubd queue
 	matureUnbonds := k.DequeueAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvPair := range matureUnbonds {
 		err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddr, dvPair.ValidatorAddr)
@@ -49,6 +57,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 		))
 	}
 
+	// Remove all mature redelegations from the red queue
 	matureRedelegations := k.DequeueAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvvTriplet := range matureRedelegations {
 		err := k.CompleteRedelegation(ctx, dvvTriplet.DelegatorAddr, dvvTriplet.ValidatorSrcAddr, dvvTriplet.ValidatorDstAddr)
@@ -63,11 +72,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 		))
 	}
 
-	// reset the intra-transaction counter
-	k.SetIntraTxCounter(ctx, 0)
-
-	// calculate validator set changes
-	ValidatorUpdates = k.ApplyAndReturnValidatorSetUpdates(ctx)
 	return
 }
 

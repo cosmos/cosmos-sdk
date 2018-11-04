@@ -186,9 +186,9 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	keeper.Slash(ctx, consAddr0, 0, 100, sdk.OneDec())
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	// validator should have been deleted
-	_, found := keeper.GetValidator(ctx, addrVals[0])
-	require.False(t, found)
+	// validator should have be unbonding
+	validator, _ = keeper.GetValidator(ctx, addrVals[0])
+	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
 }
 
 // This function tests UpdateValidator, GetValidator, GetLastValidators, RemoveValidator

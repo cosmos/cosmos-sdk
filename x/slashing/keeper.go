@@ -49,6 +49,15 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
 
+	// Get validator.
+	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
+	if validator == nil || validator.GetStatus() == sdk.Unbonded {
+		// Defensive.
+		// Simulation doesn't take unbonding periods into account, and
+		// Tendermint might break this assumption at some point.
+		return
+	}
+
 	// Double sign too old
 	maxEvidenceAge := k.MaxEvidenceAge(ctx)
 	if age > maxEvidenceAge {
@@ -80,7 +89,6 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, revisedFraction)
 
 	// Jail validator if not already jailed
-	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 	if !validator.GetJailed() {
 		k.validatorSet.Jail(ctx, consAddr)
 	}
@@ -187,7 +195,7 @@ func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
 func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
 	store := ctx.KVStore(k.storeKey)
 	var pubkey crypto.PubKey
-	err := k.cdc.UnmarshalBinary(store.Get(getAddrPubkeyRelationKey(address)), &pubkey)
+	err := k.cdc.UnmarshalBinaryLengthPrefixed(store.Get(getAddrPubkeyRelationKey(address)), &pubkey)
 	if err != nil {
 		return nil, fmt.Errorf("address %v not found", address)
 	}
@@ -196,7 +204,7 @@ func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKe
 
 func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey crypto.PubKey) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(pubkey)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(pubkey)
 	store.Set(getAddrPubkeyRelationKey(addr), bz)
 }
 

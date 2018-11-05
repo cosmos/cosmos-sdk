@@ -13,7 +13,7 @@ func (k Keeper) GetAllValidatorDistInfos(ctx sdk.Context) (vdis []types.Validato
 
 	for ; iterator.Valid(); iterator.Next() {
 		var vdi types.ValidatorDistInfo
-		k.cdc.MustUnmarshalBinary(iterator.Value(), &vdi)
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &vdi)
 		vdis = append(vdis, vdi)
 	}
 	return vdis
@@ -27,7 +27,7 @@ func (k Keeper) GetAllDelegationDistInfos(ctx sdk.Context) (ddis []types.Delegat
 
 	for ; iterator.Valid(); iterator.Next() {
 		var ddi types.DelegationDistInfo
-		k.cdc.MustUnmarshalBinary(iterator.Value(), &ddi)
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iterator.Value(), &ddi)
 		ddis = append(ddis, ddi)
 	}
 	return ddis

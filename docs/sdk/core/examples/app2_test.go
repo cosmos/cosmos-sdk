@@ -39,7 +39,7 @@ func TestEncoding(t *testing.T) {
 	cdc := NewCodec()
 	testTxDecoder := tx2Decoder(cdc)
 
-	encodedSendTx, err := cdc.MarshalBinary(sendTxBefore)
+	encodedSendTx, err := cdc.MarshalBinaryLengthPrefixed(sendTxBefore)
 
 	require.Nil(t, err, "Error encoding sendTx")
 
@@ -69,7 +69,7 @@ func TestEncoding(t *testing.T) {
 		Signature: sig,
 	}
 
-	encodedIssueTx, err2 := cdc.MarshalBinary(issueTxBefore)
+	encodedIssueTx, err2 := cdc.MarshalBinaryLengthPrefixed(issueTxBefore)
 
 	require.Nil(t, err2, "Error encoding issueTx")
 

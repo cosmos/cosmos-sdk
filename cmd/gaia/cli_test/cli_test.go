@@ -5,9 +5,11 @@ package clitest
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/tendermint/tendermint/types"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -207,7 +209,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 
 func TestGaiaCLICreateValidator(t *testing.T) {
 	chainID, servAddr, port := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+	flags := fmt.Sprintf("--home=%s --chain-id=%v --node=%s", gaiacliHome, chainID, servAddr)
 
 	// start gaiad server
 	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
@@ -548,7 +550,7 @@ func TestGaiaCLIConfig(t *testing.T) {
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 	node := fmt.Sprintf("%s:%s", servAddr, port)
-	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
+	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
 	executeWrite(t, fmt.Sprintf("gaiacli --home=%s config", gaiadHome), gaiacliHome, node, "y")
 	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)
@@ -598,12 +600,27 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-
-	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf(
+		"gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
+	genFile := filepath.Join(gaiadHome, "config", "genesis.json")
+	genDoc := readGenesisFile(t, genFile)
+	var appState app.GenesisState
+	err := codec.Cdc.UnmarshalJSON(genDoc.AppState, &appState)
+	require.NoError(t, err)
+	appState.Accounts = []app.GenesisAccount{app.NewDefaultGenesisAccount(fooAddr)}
+	appStateJSON, err := codec.Cdc.MarshalJSON(appState)
+	require.NoError(t, err)
+	genDoc.AppState = appStateJSON
+	genDoc.SaveAs(genFile)
+	executeWrite(t, fmt.Sprintf(
+		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome),
+		app.DefaultKeyPass)
+	executeWrite(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
 	// get a free port, also setup some common flags
-	servAddr, port, err := server.FreeTCPAddr()
+	servAddr, port, err = server.FreeTCPAddr()
 	require.NoError(t, err)
 	return
 }
@@ -620,6 +637,18 @@ func writeToNewTempFile(t *testing.T, s string) *os.File {
 	_, err = fp.WriteString(s)
 	require.Nil(t, err)
 	return fp
+}
+
+func readGenesisFile(t *testing.T, genFile string) types.GenesisDoc {
+	var genDoc types.GenesisDoc
+	fp, err := os.Open(genFile)
+	require.NoError(t, err)
+	fileContents, err := ioutil.ReadAll(fp)
+	require.NoError(t, err)
+	defer fp.Close()
+	err = codec.Cdc.UnmarshalJSON(fileContents, &genDoc)
+	require.NoError(t, err)
+	return genDoc
 }
 
 //___________________________________________________________________________________

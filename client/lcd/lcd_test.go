@@ -158,11 +158,11 @@ func TestNodeStatus(t *testing.T) {
 	res, body := Request(t, port, "GET", "/node_info", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var nodeInfo p2p.NodeInfo
+	var nodeInfo p2p.DefaultNodeInfo
 	err := cdc.UnmarshalJSON([]byte(body), &nodeInfo)
 	require.Nil(t, err, "Couldn't parse node info")
 
-	require.NotEqual(t, p2p.NodeInfo{}, nodeInfo, "res: %v", res)
+	require.NotEqual(t, p2p.DefaultNodeInfo{}, nodeInfo, "res: %v", res)
 
 	// syncing
 	res, body = Request(t, port, "GET", "/syncing", nil)

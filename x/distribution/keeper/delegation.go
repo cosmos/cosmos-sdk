@@ -23,14 +23,14 @@ func (k Keeper) GetDelegationDistInfo(ctx sdk.Context, delAddr sdk.AccAddress,
 		panic("Stored delegation-distribution info should not have been nil")
 	}
 
-	k.cdc.MustUnmarshalBinary(b, &ddi)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &ddi)
 	return
 }
 
 // set the delegator distribution info
 func (k Keeper) SetDelegationDistInfo(ctx sdk.Context, ddi types.DelegationDistInfo) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(ddi)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(ddi)
 	store.Set(GetDelegationDistInfoKey(ddi.DelegatorAddr, ddi.ValOperatorAddr), b)
 }
 

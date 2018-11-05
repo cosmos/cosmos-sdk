@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -50,42 +51,93 @@ func init() {
 func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	var genesisAccounts []GenesisAccount
 
-	amt := int64(10000)
+	amount := int64(r.Intn(1e6))
+	numInitiallyBonded := int64(r.Intn(250))
+	numAccs := int64(len(accs))
+	if numInitiallyBonded > numAccs {
+		numInitiallyBonded = numAccs
+	}
+	fmt.Printf("Selected randomly generated parameters for simulated genesis: {amount of steak per account: %v, initially bonded validators: %v}\n", amount, numInitiallyBonded)
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
-		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(amt)}}
+		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(amount)}}
 		genesisAccounts = append(genesisAccounts, GenesisAccount{
 			Address: acc.Address,
 			Coins:   coins,
 		})
 	}
 
-	// Default genesis state
-	govGenesis := gov.DefaultGenesisState()
-	stakeGenesis := stake.DefaultGenesisState()
-	slashingGenesis := slashing.DefaultGenesisState()
+	// Random genesis states
+	govGenesis := gov.GenesisState{
+		StartingProposalID: int64(r.Intn(100)),
+		DepositProcedure: gov.DepositProcedure{
+			MinDeposit:       sdk.Coins{sdk.NewInt64Coin("steak", int64(r.Intn(1e3)))},
+			MaxDepositPeriod: time.Duration(r.Intn(2*172800)) * time.Second,
+		},
+		VotingProcedure: gov.VotingProcedure{
+			VotingPeriod: time.Duration(r.Intn(2*172800)) * time.Second,
+		},
+		TallyingProcedure: gov.TallyingProcedure{
+			Threshold:         sdk.NewDecWithPrec(5, 1),
+			Veto:              sdk.NewDecWithPrec(334, 3),
+			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
+		},
+	}
+	fmt.Printf("Selected randomly generated governance parameters: %+v\n", govGenesis)
+	stakeGenesis := stake.GenesisState{
+		Pool: stake.InitialPool(),
+		Params: stake.Params{
+			UnbondingTime: time.Duration(r.Intn(60*60*24*3*2)) * time.Second,
+			MaxValidators: uint16(r.Intn(250)),
+			BondDenom:     "steak",
+		},
+	}
+	fmt.Printf("Selected randomly generated staking parameters: %+v\n", stakeGenesis)
+	slashingGenesis := slashing.GenesisState{
+		Params: slashing.Params{
+			MaxEvidenceAge:           stakeGenesis.Params.UnbondingTime,
+			DoubleSignUnbondDuration: time.Duration(r.Intn(60*60*24)) * time.Second,
+			SignedBlocksWindow:       int64(r.Intn(1000)),
+			DowntimeUnbondDuration:   time.Duration(r.Intn(86400)) * time.Second,
+			MinSignedPerWindow:       sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
+			SlashFractionDoubleSign:  sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
+			SlashFractionDowntime:    sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
+		},
+	}
+	fmt.Printf("Selected randomly generated slashing parameters: %+v\n", slashingGenesis)
+	mintGenesis := mint.GenesisState{
+		Minter: mint.Minter{
+			InflationLastTime: time.Unix(0, 0),
+			Inflation:         sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
+		},
+		Params: mint.Params{
+			MintDenom:           "steak",
+			InflationRateChange: sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
+			InflationMax:        sdk.NewDecWithPrec(20, 2),
+			InflationMin:        sdk.NewDecWithPrec(7, 2),
+			GoalBonded:          sdk.NewDecWithPrec(67, 2),
+		},
+	}
+	fmt.Printf("Selected randomly generated minting parameters: %v\n", mintGenesis)
 	var validators []stake.Validator
 	var delegations []stake.Delegation
 
-	// XXX Try different numbers of initially bonded validators
-	numInitiallyBonded := int64(50)
 	valAddrs := make([]sdk.ValAddress, numInitiallyBonded)
 	for i := 0; i < int(numInitiallyBonded); i++ {
 		valAddr := sdk.ValAddress(accs[i].Address)
 		valAddrs[i] = valAddr
 
 		validator := stake.NewValidator(valAddr, accs[i].PubKey, stake.Description{})
-		validator.Tokens = sdk.NewDec(amt)
-		validator.DelegatorShares = sdk.NewDec(amt)
-		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(amt), 0}
+		validator.Tokens = sdk.NewDec(amount)
+		validator.DelegatorShares = sdk.NewDec(amount)
+		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(amount), 0}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakeGenesis.Pool.LooseTokens = sdk.NewDec(amt*250 + (numInitiallyBonded * amt))
+	stakeGenesis.Pool.LooseTokens = sdk.NewDec((amount * numAccs) + (numInitiallyBonded * amount))
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
-	mintGenesis := mint.DefaultGenesisState()
 
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,

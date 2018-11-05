@@ -31,10 +31,22 @@ type Account interface {
 	SetCoins(sdk.Coins) error
 }
 
+// VestingAccount defines an account type that vests coins via a vesting schedule.
+type VestingAccount interface {
+	Account
+
+	// Calculates the amount of coins that can be sent to other accounts given
+	// the current time.
+	SpendableCoins(ctx sdk.Context) sdk.Coins
+
+	TrackDelegation(amount sdk.Coins)   // Performs delegation accounting.
+	TrackUndelegation(amount sdk.Coins) // Performs undelegation accounting.
+}
+
 // AccountDecoder unmarshals account bytes
 type AccountDecoder func(accountBytes []byte) (Account, error)
 
-//-----------------------------------------------------------
+//-----------------------------------------------------------------------------
 // BaseAccount
 
 var _ Account = (*BaseAccount)(nil)
@@ -121,8 +133,8 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 	return nil
 }
 
-//----------------------------------------
-// Wire
+//-----------------------------------------------------------------------------
+// Codec
 
 // Most users shouldn't use this, but this comes in handy for tests.
 func RegisterBaseAccount(cdc *codec.Codec) {

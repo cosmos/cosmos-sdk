@@ -349,6 +349,13 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Coin,
 	validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err sdk.Error) {
 
+	// In some situations, the exchange rate becomes invalid, e.g. if
+	// validator loses all tokens due to slashing.  In this case,
+	// make all future delegations invalid.
+	if validator.DelegatorShareExRate().IsZero() {
+		return sdk.ZeroDec(), types.ErrDelegatorShareExRateInvalid(k.Codespace())
+	}
+
 	// Get or create the delegator delegation
 	delegation, found := k.GetDelegation(ctx, delAddr, validator.OperatorAddr)
 	if !found {

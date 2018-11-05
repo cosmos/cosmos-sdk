@@ -49,6 +49,15 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
 
+	// Get validator.
+	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
+	if validator == nil || validator.GetStatus() == sdk.Unbonded {
+		// Defensive.
+		// Simulation doesn't take unbonding periods into account, and
+		// Tendermint might break this assumption at some point.
+		return
+	}
+
 	// Double sign too old
 	maxEvidenceAge := k.MaxEvidenceAge(ctx)
 	if age > maxEvidenceAge {
@@ -80,7 +89,6 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, revisedFraction)
 
 	// Jail validator if not already jailed
-	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 	if !validator.GetJailed() {
 		k.validatorSet.Jail(ctx, consAddr)
 	}

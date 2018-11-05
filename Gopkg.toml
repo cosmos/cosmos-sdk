@@ -36,7 +36,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "v0.26.0"
+  revision = "ebee4377b15f2958b08994485375dd2ee8a649ac" # TODO replace w/ 0.26.1
 
 ## deps without releases:
 

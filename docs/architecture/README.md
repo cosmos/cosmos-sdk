@@ -1,8 +1,8 @@
 # Architecture Decision Records (ADR)
 
-This is a location to record all high-level architecture decisions in the cosmos-sdk project.
+This is a location to record all high-level architecture decisions in the Cosmos SDK project.
 
-You can read more about the ADR concept in this [blog post](https://product.reverb.com/documenting-architecture-decisions-the-reverb-way-a3563bb24bd0#.78xhdix6t).
+You can read more about the ADR concept in this [blog post](https://product.reverb.com/documenting-architecture-decisions-the-reverb-way-a3563bb24bd0#.78xhdix6t). See the [tendermint ADRs](https://github.com/tendermint/tendermint/tree/master/docs/architecture) for examples.
 
 An ADR should provide:
 

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -134,11 +135,52 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 }
 
 //-----------------------------------------------------------------------------
+// Vesting Accounts
+
+var (
+	_ VestingAccount = (*ContinuousVestingAccount)(nil)
+	_ VestingAccount = (*DelayedVestingAccount)(nil)
+)
+
+type (
+	// BaseVestingAccount implements the VestingAccount interface. It contains all
+	// the necessary fields needed for any vesting account implementation.
+	BaseVestingAccount struct {
+		BaseAccount
+
+		OriginalVesting sdk.Coins // coins in account upon initialization
+		DelegatedFree   sdk.Coins // coins that are vested and delegated
+		EndTime         time.Time // when the coins become unlocked
+	}
+
+	// ContinuousVestingAccount implements the VestingAccount interface. It
+	// continuously vests by unlocking coins linearly with respect to time.
+	ContinuousVestingAccount struct {
+		BaseAccount
+		BaseVestingAccount
+
+		DelegatedVesting sdk.Coins // coins that vesting and delegated
+		StartTime        time.Time // when the coins start to vest
+	}
+
+	// DelayedVestingAccount implements the VestingAccount interface. It vests all
+	// coins after a specific time, but non prior. In other words, it keeps them
+	// locked until a specified time.
+	DelayedVestingAccount struct {
+		BaseAccount
+		BaseVestingAccount
+	}
+)
+
+//-----------------------------------------------------------------------------
 // Codec
 
 // Most users shouldn't use this, but this comes in handy for tests.
 func RegisterBaseAccount(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Account)(nil), nil)
+	cdc.RegisterInterface((*VestingAccount)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
+	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
+	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
 	codec.RegisterCrypto(cdc)
 }

@@ -82,7 +82,7 @@ func getSequence(ctx sdk.Context, key sdk.StoreKey) int {
 	if seqbz == nil {
 		seq = 0
 	} else {
-		codec.New().MustUnmarshalBinary(seqbz, &seq)
+		codec.New().MustUnmarshalBinaryLengthPrefixed(seqbz, &seq)
 	}
 
 	return seq
@@ -96,7 +96,7 @@ func handleSeqOracle(ctx sdk.Context, key sdk.StoreKey, o seqOracle) sdk.Error {
 		return sdk.NewError(sdk.CodespaceRoot, 1, "")
 	}
 
-	bz := codec.New().MustMarshalBinary(seq + 1)
+	bz := codec.New().MustMarshalBinaryLengthPrefixed(seq + 1)
 	store.Set([]byte("seq"), bz)
 
 	return nil

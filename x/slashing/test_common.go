@@ -87,8 +87,8 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	}
 	require.Nil(t, err)
 	paramstore := paramsKeeper.Subspace(DefaultParamspace)
-	keeper := NewKeeper(cdc, keySlashing, sk, paramstore, DefaultCodespace)
-	sk = sk.WithHooks(keeper.Hooks())
+	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, DefaultCodespace)
+	sk.SetHooks(keeper.Hooks())
 
 	require.NotPanics(t, func() {
 		InitGenesis(ctx, keeper, GenesisState{defaults}, genesis)

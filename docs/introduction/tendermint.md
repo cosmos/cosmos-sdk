@@ -42,6 +42,6 @@ Let us give a high-level overview of  how the *Consensus Engine* and the *Applic
 
 Even if Tendermint makes it easy for developers to build their own blockchain by enabling them to focus on the *Application* layer of their blockchain, building an *Application* can be a challenging task in itself. This is why *Application Frameworks* exist. They provide developers with a secure and features-heavy environment to develop Tendermint-based applications. Here are some examples of *Application Frameworks* :
 
-- The [Cosmos SDK](/sdk/overview.md) is an ABCI framework written in Go. 
-- [Lotion JS](/lotion/overview.md) is an ABCI framework written in JavaScript.
+- The [Cosmos SDK](../README.md) is an ABCI framework written in Go. 
+- [Lotion JS](https://lotionjs.com) is an ABCI framework written in JavaScript.
 

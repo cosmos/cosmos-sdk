@@ -53,6 +53,7 @@ func NewGenesisState(accounts []GenesisAccount, stakeData stake.GenesisState, mi
 	}
 }
 
+// nolint
 type GenesisAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`

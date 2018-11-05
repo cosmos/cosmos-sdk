@@ -57,7 +57,7 @@ func ActiveProposalQueueProposalKey(endTime time.Time, proposalID int64) []byte 
 	return bytes.Join([][]byte{
 		PrefixActiveProposalQueue,
 		sdk.FormatTimeBytes(endTime),
-		sdk.Int64ToBigEndian(proposalID),
+		sdk.Uint64ToBigEndian(uint64(proposalID)),
 	}, KeyDelimiter)
 }
 
@@ -74,6 +74,6 @@ func InactiveProposalQueueProposalKey(endTime time.Time, proposalID int64) []byt
 	return bytes.Join([][]byte{
 		PrefixInactiveProposalQueue,
 		sdk.FormatTimeBytes(endTime),
-		sdk.Int64ToBigEndian(proposalID),
+		sdk.Uint64ToBigEndian(uint64(proposalID)),
 	}, KeyDelimiter)
 }

@@ -37,10 +37,10 @@ func MustSortJSON(toSortJSON []byte) []byte {
 	return js
 }
 
-// Int64ToBigEndian - marshals int64 to a bigendian byte slice so it can be sorted
-func Int64ToBigEndian(i int64) []byte {
+// Uint64ToBigEndian - marshals uint64 to a bigendian byte slice so it can be sorted
+func Uint64ToBigEndian(i uint64) []byte {
 	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, uint64(i))
+	binary.BigEndian.PutUint64(b, i)
 	return b
 }
 

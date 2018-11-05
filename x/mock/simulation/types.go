@@ -23,7 +23,7 @@ type (
 	// Operations can optionally provide a list of "FutureOperations" to run later
 	// These will be ran at the beginning of the corresponding block.
 	Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accounts []Account, event func(string),
+		accounts []Account, event EventFn,
 	) (action string, futureOperations []FutureOperation, err error)
 
 	// RandSetup performs the random setup the mock module needs.
@@ -66,9 +66,17 @@ type (
 		Weight int
 		Op     Operation
 	}
+
+	// EventFn are used to collect statistics about what operations were ran.
+	// TODO: Give a more complete explanation
+	EventFn func(identifier string, success bool)
+
+	event struct {
+		identifer string
+		success   bool
+	}
 )
 
-// TODO remove? not being called anywhere
 // PeriodicInvariant returns an Invariant function closure that asserts
 // a given invariant if the mock application's last block modulo the given
 // period is congruent to the given offset.

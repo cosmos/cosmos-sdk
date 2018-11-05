@@ -2,7 +2,6 @@ package simulation
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 	"math/rand"
 
@@ -15,7 +14,7 @@ import (
 // SimulateDeductFee
 func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		account := simulation.RandomAcc(r, accs)
@@ -23,14 +22,14 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		initCoins := stored.GetCoins()
 
 		if len(initCoins) == 0 {
-			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
+			event("auth/SimulateDeductFee", false)
 			return action, nil, nil
 		}
 
 		denomIndex := r.Intn(len(initCoins))
 		amt, err := randPositiveInt(r, initCoins[denomIndex].Amount)
 		if err != nil {
-			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
+			event("auth/SimulateDeductFee", false)
 			return action, nil, nil
 		}
 
@@ -46,7 +45,7 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 
 		f.AddCollectedFees(ctx, coins)
 
-		event(fmt.Sprintf("auth/SimulateDeductFee/true"))
+		event("auth/SimulateDeductFee", true)
 
 		action = "TestDeductFee"
 		return action, nil, nil

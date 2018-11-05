@@ -18,7 +18,7 @@ import (
 func SimulateMsgCreateValidator(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
@@ -63,7 +63,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k stake.Keeper) simulation
 			write()
 		}
 
-		event(fmt.Sprintf("stake/MsgCreateValidator/%v", result.IsOK()))
+		event("stake/MsgCreateValidator", result.IsOK())
 
 		// require.True(t, result.IsOK(), "expected OK result but instead got %v", result)
 		action = fmt.Sprintf("TestMsgCreateValidator: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
@@ -75,7 +75,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k stake.Keeper) simulation
 func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		description := stake.Description{
@@ -105,7 +105,7 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 		if result.IsOK() {
 			write()
 		}
-		event(fmt.Sprintf("stake/MsgEditValidator/%v", result.IsOK()))
+		event("stake/MsgEditValidator", result.IsOK())
 		action = fmt.Sprintf("TestMsgEditValidator: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
@@ -115,7 +115,7 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 func SimulateMsgDelegate(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
@@ -143,7 +143,7 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k stake.Keeper) simulation.Operat
 		if result.IsOK() {
 			write()
 		}
-		event(fmt.Sprintf("stake/MsgDelegate/%v", result.IsOK()))
+		event("stake/MsgDelegate", result.IsOK())
 		action = fmt.Sprintf("TestMsgDelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
@@ -153,7 +153,7 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k stake.Keeper) simulation.Operat
 func SimulateMsgBeginUnbonding(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		delegatorAcc := simulation.RandomAcc(r, accs)
@@ -182,7 +182,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountKeeper, k stake.Keeper) simulation.
 		if result.IsOK() {
 			write()
 		}
-		event(fmt.Sprintf("stake/MsgBeginUnbonding/%v", result.IsOK()))
+		event("stake/MsgBeginUnbonding", result.IsOK())
 		action = fmt.Sprintf("TestMsgBeginUnbonding: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
@@ -192,7 +192,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountKeeper, k stake.Keeper) simulation.
 func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k stake.Keeper) simulation.Operation {
 	handler := stake.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		denom := k.GetParams(ctx).BondDenom
@@ -224,7 +224,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k stake.Keeper) simulation
 		if result.IsOK() {
 			write()
 		}
-		event(fmt.Sprintf("stake/MsgBeginRedelegate/%v", result.IsOK()))
+		event("stake/MsgBeginRedelegate", result.IsOK())
 		action = fmt.Sprintf("TestMsgBeginRedelegate: %s", msg.GetSignBytes())
 		return action, nil, nil
 	}

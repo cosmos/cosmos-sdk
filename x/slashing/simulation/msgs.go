@@ -12,7 +12,7 @@ import (
 
 // SimulateMsgUnjail
 func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event simulation.EventFn) (action string, fOp []simulation.FutureOperation, err error) {
 		acc := simulation.RandomAcc(r, accs)
 		address := sdk.ValAddress(acc.Address)
 		msg := slashing.NewMsgUnjail(address)
@@ -24,7 +24,7 @@ func SimulateMsgUnjail(k slashing.Keeper) simulation.Operation {
 		if result.IsOK() {
 			write()
 		}
-		event(fmt.Sprintf("slashing/MsgUnjail/%v", result.IsOK()))
+		event("slashing/MsgUnjail", result.IsOK())
 		action = fmt.Sprintf("TestMsgUnjail: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}

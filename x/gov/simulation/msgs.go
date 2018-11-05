@@ -43,7 +43,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 	})
 	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
 	curNumVotesState := 1
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event simulation.EventFn) (action string, fOps []simulation.FutureOperation, err error) {
 		// 1) submit proposal now
 		sender := simulation.RandomAcc(r, accs)
 		msg, err := simulationCreateMsgSubmitProposal(r, sender)
@@ -82,7 +82,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 // Note: Currently doesn't ensure that the proposal txt is in JSON form
 func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 	handler := gov.NewHandler(k)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event simulation.EventFn) (action string, fOps []simulation.FutureOperation, err error) {
 		sender := simulation.RandomAcc(r, accs)
 		msg, err := simulationCreateMsgSubmitProposal(r, sender)
 		if err != nil {
@@ -93,7 +93,7 @@ func SimulateMsgSubmitProposal(k gov.Keeper, sk stake.Keeper) simulation.Operati
 	}
 }
 
-func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, sk stake.Keeper, handler sdk.Handler, ctx sdk.Context, event func(string)) (action string, ok bool) {
+func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, sk stake.Keeper, handler sdk.Handler, ctx sdk.Context, event simulation.EventFn) (action string, ok bool) {
 	ctx, write := ctx.CacheContext()
 	result := handler(ctx, msg)
 	ok = result.IsOK()
@@ -104,7 +104,7 @@ func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, sk stake.Keeper,
 		sk.SetPool(ctx, pool)
 		write()
 	}
-	event(fmt.Sprintf("gov/MsgSubmitProposal/%v", ok))
+	event("gov/MsgSubmitProposal", ok)
 	action = fmt.Sprintf("TestMsgSubmitProposal: ok %v, msg %s", ok, msg.GetSignBytes())
 	return
 }
@@ -126,7 +126,7 @@ func simulationCreateMsgSubmitProposal(r *rand.Rand, sender simulation.Account) 
 
 // SimulateMsgDeposit
 func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event simulation.EventFn) (action string, fOp []simulation.FutureOperation, err error) {
 		acc := simulation.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx)
 		if !ok {
@@ -146,7 +146,7 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 			sk.SetPool(ctx, pool)
 			write()
 		}
-		event(fmt.Sprintf("gov/MsgDeposit/%v", result.IsOK()))
+		event("gov/MsgDeposit", result.IsOK())
 		action = fmt.Sprintf("TestMsgDeposit: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
@@ -160,7 +160,7 @@ func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 
 // nolint: unparam
 func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, acc simulation.Account, proposalID int64) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event simulation.EventFn) (action string, fOp []simulation.FutureOperation, err error) {
 		if acc.Equals(simulation.Account{}) {
 			acc = simulation.RandomAcc(r, accs)
 		}
@@ -186,7 +186,7 @@ func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, acc simulation.Acco
 			write()
 		}
 
-		event(fmt.Sprintf("gov/MsgVote/%v", result.IsOK()))
+		event("gov/MsgVote", result.IsOK())
 		action = fmt.Sprintf("TestMsgVote: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}

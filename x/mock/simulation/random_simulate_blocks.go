@@ -72,9 +72,9 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	accs := RandomAccounts(r, numKeys)
 
 	// Setup event stats
-	events := make(map[string]uint)
-	event := func(what string) {
-		events[what]++
+	events := make(map[event]uint)
+	eventFn := func(what string, success bool) {
+		events[event{what, success}]++
 	}
 
 	validators := initChain(r, accs, setups, app, appStateFn)
@@ -98,7 +98,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	var pastTimes []time.Time
 	var pastVoteInfos [][]abci.VoteInfo
 
-	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header)
+	request := RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, eventFn, header)
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
 	timeOperationQueue := []FutureOperation{}
@@ -108,7 +108,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		blockLogBuilders = make([]*strings.Builder, numBlocks)
 	}
 	displayLogs := logPrinter(testingMode, blockLogBuilders)
-	blockSimulator := createBlockSimulator(testingMode, tb, t, event, invariants, ops, operationQueue, timeOperationQueue, numBlocks, blockSize, displayLogs)
+	blockSimulator := createBlockSimulator(testingMode, tb, t, eventFn, invariants, ops, operationQueue, timeOperationQueue, numBlocks, blockSize, displayLogs)
 	if !testingMode {
 		b.ResetTimer()
 	} else {
@@ -145,8 +145,8 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
 		logWriter("Queued operations")
-		numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, accs, logWriter, displayLogs, event)
-		numQueuedTimeOpsRan := runQueuedTimeOperations(timeOperationQueue, header.Time, tb, r, app, ctx, accs, logWriter, displayLogs, event)
+		numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, accs, logWriter, displayLogs, eventFn)
+		numQueuedTimeOpsRan := runQueuedTimeOperations(timeOperationQueue, header.Time, tb, r, app, ctx, accs, logWriter, displayLogs, eventFn)
 		if testingMode && onOperation {
 			// Make sure invariants hold at end of queued operations
 			assertAllInvariants(t, app, invariants, "QueuedOperations", displayLogs)
@@ -181,11 +181,11 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		}
 
 		// Generate a random RequestBeginBlock with the current validator set for the next block
-		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, event, header)
+		request = RandomRequestBeginBlock(r, validators, livenessTransitionMatrix, evidenceFraction, pastTimes, pastVoteInfos, eventFn, header)
 
 		// Update the validator set, which will be reflected in the application on the next block
 		validators = nextValidators
-		nextValidators = updateValidators(tb, r, validators, res.ValidatorUpdates, event)
+		nextValidators = updateValidators(tb, r, validators, res.ValidatorUpdates, eventFn)
 	}
 	if stopEarly {
 		DisplayEvents(events)
@@ -204,7 +204,7 @@ type blockSimFn func(
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T,
-	event func(string), invariants []Invariant,
+	eventFn EventFn, invariants []Invariant,
 	ops []WeightedOperation, operationQueue map[int][]Operation, timeOperationQueue []FutureOperation,
 	totalNumBlocks int, avgBlockSize int, displayLogs func()) blockSimFn {
 
@@ -233,7 +233,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T,
 		accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
 		lastBlocksizeState, blocksize = getBlockSize(r, lastBlocksizeState, avgBlockSize)
 		for j := 0; j < blocksize; j++ {
-			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, event)
+			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, eventFn)
 			logWriter(logUpdate)
 			if err != nil {
 				displayLogs()
@@ -311,7 +311,7 @@ func queueOperations(queuedOperations map[int][]Operation, queuedTimeOperations 
 
 // nolint: errcheck
 func runQueuedOperations(queueOperations map[int][]Operation, height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []Account, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
+	accounts []Account, logWriter func(string), displayLogs func(), event func(string, bool)) (numOpsRan int) {
 	if queuedOps, ok := queueOperations[height]; ok {
 		numOps := len(queuedOps)
 		for i := 0; i < numOps; i++ {
@@ -332,7 +332,7 @@ func runQueuedOperations(queueOperations map[int][]Operation, height int, tb tes
 }
 
 func runQueuedTimeOperations(queueOperations []FutureOperation, currentTime time.Time, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []Account, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
+	accounts []Account, logWriter func(string), displayLogs func(), event EventFn) (numOpsRan int) {
 
 	numOpsRan = 0
 	for len(queueOperations) > 0 && currentTime.After(queueOperations[0].BlockTime) {
@@ -380,7 +380,7 @@ func randomProposer(r *rand.Rand, validators map[string]mockValidator) common.He
 // RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
 // nolint: unparam
 func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, livenessTransitions TransitionMatrix, evidenceFraction float64,
-	pastTimes []time.Time, pastVoteInfos [][]abci.VoteInfo, event func(string), header abci.Header) abci.RequestBeginBlock {
+	pastTimes []time.Time, pastVoteInfos [][]abci.VoteInfo, eventFn EventFn, header abci.Header) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
 	}
@@ -399,11 +399,6 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 		} else if mVal.livenessState == 2 {
 			// offline
 			signed = false
-		}
-		if signed {
-			event("beginblock/signing/signed")
-		} else {
-			event("beginblock/signing/missed")
 		}
 		pubkey, err := tmtypes.PB2TM.PubKey(mVal.val.PubKey)
 		if err != nil {
@@ -443,7 +438,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 				Time:             time,
 				TotalVotingPower: totalVotingPower,
 			})
-			event("beginblock/evidence")
+			eventFn("beginblock/evidence", true)
 		}
 	}
 	return abci.RequestBeginBlock{
@@ -457,7 +452,7 @@ func RandomRequestBeginBlock(r *rand.Rand, validators map[string]mockValidator, 
 
 // updateValidators mimicks Tendermint's update logic
 // nolint: unparam
-func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.ValidatorUpdate, event func(string)) map[string]mockValidator {
+func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValidator, updates []abci.ValidatorUpdate, eventFn EventFn) map[string]mockValidator {
 
 	for _, update := range updates {
 		str := fmt.Sprintf("%v", update.PubKey)
@@ -467,17 +462,17 @@ func updateValidators(tb testing.TB, r *rand.Rand, current map[string]mockValida
 				tb.Fatalf("tried to delete a nonexistent validator")
 			}
 
-			event("endblock/validatorupdates/kicked")
+			eventFn("endblock/validatorupdates/kicked", true)
 			delete(current, str)
 		default:
 			// Does validator already exist?
 			if mVal, ok := current[str]; ok {
 				mVal.val = update
-				event("endblock/validatorupdates/updated")
+				eventFn("endblock/validatorupdates/updated", true)
 			} else {
 				// Set this new validator
 				current[str] = mockValidator{update, GetMemberOfInitialState(r, initialLivenessWeightings)}
-				event("endblock/validatorupdates/added")
+				eventFn("endblock/validatorupdates/added", true)
 			}
 		}
 	}

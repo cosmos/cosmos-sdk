@@ -46,17 +46,24 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 	return string(b)
 }
 
-// Pretty-print events as a table
-func DisplayEvents(events map[string]uint) {
-	var keys []string
+// DisplayEvents prints events as a table
+func DisplayEvents(events map[event]uint) {
+	var numRan uint
+	var keys []event
 	for key := range events {
 		keys = append(keys, key)
 	}
-	sort.Strings(keys)
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].identifer < keys[j].identifer
+	})
 	fmt.Printf("Event statistics: \n")
 	for _, key := range keys {
-		fmt.Printf("  % 60s => %d\n", key, events[key])
+		if key.success {
+			numRan += events[key]
+		}
+		fmt.Printf("  % 60s/%v => %d\n", key.identifer, key.success, events[key])
 	}
+	fmt.Printf("%v operations actually ran\n", numRan)
 }
 
 // RandomAcc pick a random account from an array

@@ -15,7 +15,7 @@ import (
 func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		accountOrigin := simulation.RandomAcc(r, accs)
@@ -32,7 +32,7 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgSetWithdrawAddress/%v", result.IsOK()))
+		event("distribution/MsgSetWithdrawAddress", result.IsOK())
 
 		action = fmt.Sprintf("TestMsgSetWithdrawAddress: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
@@ -43,7 +43,7 @@ func SimulateMsgSetWithdrawAddress(m auth.AccountKeeper, k distribution.Keeper) 
 func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		account := simulation.RandomAcc(r, accs)
@@ -59,7 +59,7 @@ func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountKeeper, k distribution
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgWithdrawDelegatorRewardsAll/%v", result.IsOK()))
+		event("distribution/MsgWithdrawDelegatorRewardsAll", result.IsOK())
 
 		action = fmt.Sprintf("TestMsgWithdrawDelegatorRewardsAll: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
@@ -70,7 +70,7 @@ func SimulateMsgWithdrawDelegatorRewardsAll(m auth.AccountKeeper, k distribution
 func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		delegatorAccount := simulation.RandomAcc(r, accs)
@@ -87,7 +87,7 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgWithdrawDelegatorReward/%v", result.IsOK()))
+		event("distribution/MsgWithdrawDelegatorReward", result.IsOK())
 
 		action = fmt.Sprintf("TestMsgWithdrawDelegatorReward: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
@@ -98,7 +98,7 @@ func SimulateMsgWithdrawDelegatorReward(m auth.AccountKeeper, k distribution.Kee
 func SimulateMsgWithdrawValidatorRewardsAll(m auth.AccountKeeper, k distribution.Keeper) simulation.Operation {
 	handler := distribution.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simulation.Account, event func(string)) (
+		accs []simulation.Account, event simulation.EventFn) (
 		action string, fOp []simulation.FutureOperation, err error) {
 
 		account := simulation.RandomAcc(r, accs)
@@ -114,7 +114,7 @@ func SimulateMsgWithdrawValidatorRewardsAll(m auth.AccountKeeper, k distribution
 			write()
 		}
 
-		event(fmt.Sprintf("distribution/MsgWithdrawValidatorRewardsAll/%v", result.IsOK()))
+		event("distribution/MsgWithdrawValidatorRewardsAll/", result.IsOK())
 
 		action = fmt.Sprintf("TestMsgWithdrawValidatorRewardsAll: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil

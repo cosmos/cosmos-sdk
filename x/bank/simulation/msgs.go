@@ -18,7 +18,7 @@ import (
 // SingleInputSendTx tests and runs a single msg send w/ auth, with one input and one output, where both
 // accounts already exist.
 func SingleInputSendTx(mapper auth.AccountKeeper) simulation.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event simulation.EventFn) (action string, fOps []simulation.FutureOperation, err error) {
 		fromAcc, action, msg, abort := createSingleInputSendMsg(r, ctx, accs, mapper)
 		if abort {
 			return action, nil, nil
@@ -27,7 +27,7 @@ func SingleInputSendTx(mapper auth.AccountKeeper) simulation.Operation {
 		if err != nil {
 			return "", nil, err
 		}
-		event("bank/sendAndVerifyTxSend/ok")
+		event("bank/sendAndVerifyTxSend", true)
 
 		return action, nil, nil
 	}
@@ -37,7 +37,7 @@ func SingleInputSendTx(mapper auth.AccountKeeper) simulation.Operation {
 // accounts already exist.
 func SingleInputSendMsg(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
 	handler := bank.NewHandler(bk)
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event simulation.EventFn) (action string, fOps []simulation.FutureOperation, err error) {
 		fromAcc, action, msg, abort := createSingleInputSendMsg(r, ctx, accs, mapper)
 		if abort {
 			return action, nil, nil
@@ -46,7 +46,7 @@ func SingleInputSendMsg(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Op
 		if err != nil {
 			return "", nil, err
 		}
-		event("bank/sendAndVerifyMsgSend/ok")
+		event("bank/sendAndVerifyMsgSend", true)
 
 		return action, nil, nil
 	}

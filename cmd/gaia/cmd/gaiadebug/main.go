@@ -220,7 +220,7 @@ func runTxCmd(cmd *cobra.Command, args []string) error {
 	var tx = auth.StdTx{}
 	cdc := gaia.MakeCodec()
 
-	err = cdc.UnmarshalBinary(txBytes, &tx)
+	err = cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 	if err != nil {
 		return err
 	}

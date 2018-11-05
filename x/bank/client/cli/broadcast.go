@@ -25,7 +25,8 @@ in place of an input filename, the command reads from standard input.`,
 			if err != nil {
 				return
 			}
-			txBytes, err := cliCtx.Codec.MarshalBinary(stdTx)
+
+			txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(stdTx)
 			if err != nil {
 				return
 			}

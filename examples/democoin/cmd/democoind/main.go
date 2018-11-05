@@ -36,8 +36,9 @@ var CoolAppInit = server.AppInit{
 }
 
 // coolGenAppParams sets up the app_state and appends the cool app state
-func CoolAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
-	appState, err = server.SimpleAppGenState(cdc, appGenTxs)
+func CoolAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
+	appState json.RawMessage, err error) {
+	appState, err = server.SimpleAppGenState(cdc, tmtypes.GenesisDoc{}, appGenTxs)
 	if err != nil {
 		return
 	}
@@ -90,7 +91,8 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 				return err
 			}
 
-			appState, err := appInit.AppGenState(cdc, []json.RawMessage{genTx})
+			appState, err := appInit.AppGenState(cdc, tmtypes.GenesisDoc{},
+				[]json.RawMessage{genTx})
 			if err != nil {
 				return err
 			}
@@ -113,13 +115,15 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 				return err
 			}
 			fmt.Fprintf(os.Stderr, "%s\n", string(out))
-			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID, []tmtypes.GenesisValidator{validator}, appStateJSON)
+			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID,
+				[]tmtypes.GenesisValidator{validator}, appStateJSON)
 		},
 	}
 
 	cmd.Flags().String(cli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
-	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(client.FlagChainID, "",
+		"genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(client.FlagName, "", "validator's moniker")
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
@@ -129,7 +133,8 @@ func newApp(logger log.Logger, db dbm.DB, _ io.Writer) abci.Application {
 	return app.NewDemocoinApp(logger, db)
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer) (
+	json.RawMessage, []tmtypes.GenesisValidator, error) {
 	dapp := app.NewDemocoinApp(logger, db)
 	return dapp.ExportAppStateAndValidators()
 }

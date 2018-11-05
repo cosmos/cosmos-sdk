@@ -56,8 +56,10 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 		proposalA.GetStatus() == proposalB.GetStatus() &&
 		proposalA.GetTallyResult().Equals(proposalB.GetTallyResult()) &&
 		proposalA.GetSubmitTime().Equal(proposalB.GetSubmitTime()) &&
+		proposalA.GetDepositEndTime().Equal(proposalB.GetDepositEndTime() &&)
 		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
-		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime()) {
+		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime()) &&
+		proposalA.GetVotingEndTime().Equal(proposalB.GetVotingEndTime()) {
 		return true
 	}
 	return false

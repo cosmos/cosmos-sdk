@@ -18,7 +18,7 @@ type MultiStoreProof struct {
 // buildMultiStoreProof build MultiStoreProof based on iavl proof and storeInfos
 func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []storeInfo) []byte {
 	var rangeProof iavl.RangeProof
-	cdc.MustUnmarshalBinary(iavlProof, &rangeProof)
+	cdc.MustUnmarshalBinaryLengthPrefixed(iavlProof, &rangeProof)
 
 	msp := MultiStoreProof{
 		StoreInfos: storeInfos,
@@ -26,7 +26,7 @@ func buildMultiStoreProof(iavlProof []byte, storeName string, storeInfos []store
 		RangeProof: rangeProof,
 	}
 
-	proof := cdc.MustMarshalBinary(msp)
+	proof := cdc.MustMarshalBinaryLengthPrefixed(msp)
 	return proof
 }
 

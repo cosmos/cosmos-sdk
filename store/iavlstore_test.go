@@ -394,9 +394,9 @@ func TestIAVLStoreQuery(t *testing.T) {
 		{Key: k1, Value: v3},
 		{Key: k2, Value: v2},
 	}
-	valExpSubEmpty := cdc.MustMarshalBinary(KVs0)
-	valExpSub1 := cdc.MustMarshalBinary(KVs1)
-	valExpSub2 := cdc.MustMarshalBinary(KVs2)
+	valExpSubEmpty := cdc.MustMarshalBinaryLengthPrefixed(KVs0)
+	valExpSub1 := cdc.MustMarshalBinaryLengthPrefixed(KVs1)
+	valExpSub2 := cdc.MustMarshalBinaryLengthPrefixed(KVs2)
 
 	cid := iavlStore.Commit()
 	ver := cid.Version
@@ -459,7 +459,7 @@ func TestIAVLStoreQuery(t *testing.T) {
 	require.Equal(t, valExpSub2, qres.Value)
 
 	// default (height 0) will show latest -1
-	query0 := abci.RequestQuery{Path: "/store", Data: k1}
+	query0 := abci.RequestQuery{Path: "/key", Data: k1}
 	qres = iavlStore.Query(query0)
 	require.Equal(t, uint32(sdk.CodeOK), qres.Code)
 	require.Equal(t, v1, qres.Value)

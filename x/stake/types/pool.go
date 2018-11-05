@@ -16,8 +16,8 @@ type Pool struct {
 
 // nolint
 func (p Pool) Equal(p2 Pool) bool {
-	bz1 := MsgCdc.MustMarshalBinary(&p)
-	bz2 := MsgCdc.MustMarshalBinary(&p2)
+	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p)
+	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 
@@ -90,7 +90,7 @@ func MustUnmarshalPool(cdc *codec.Codec, value []byte) Pool {
 
 // unmarshal the current pool value from store key
 func UnmarshalPool(cdc *codec.Codec, value []byte) (pool Pool, err error) {
-	err = cdc.UnmarshalBinary(value, &pool)
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &pool)
 	if err != nil {
 		return
 	}

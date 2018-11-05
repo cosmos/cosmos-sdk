@@ -125,7 +125,7 @@ type Info struct {
 func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 	var tx auth.StdTx
 
-	err := cdc.UnmarshalBinary(txBytes, &tx)
+	err := cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 	if err != nil {
 		return nil, err
 	}

@@ -5,7 +5,6 @@ import (
 	"io"
 	"sync"
 
-	"github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -210,44 +209,56 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	res.Height = getHeight(tree, req)
 
 	switch req.Path {
-	case "/store", "/key": // Get by key
+	case "/key":
 		key := req.Data // Data holds the key bytes
+
 		res.Key = key
 		if !st.VersionExists(res.Height) {
 			res.Log = cmn.ErrorWrap(iavl.ErrVersionDoesNotExist, "").Error()
 			break
 		}
+
 		if req.Prove {
-			value, proof, err := tree.GetVersionedWithProof(key, res.Height)
+			value, _, err := tree.GetVersionedWithProof(key, res.Height)
 			if err != nil {
 				res.Log = err.Error()
 				break
 			}
+
 			res.Value = value
-			cdc := amino.NewCodec()
-			p, err := cdc.MarshalBinary(proof)
-			if err != nil {
-				res.Log = err.Error()
-				break
-			}
-			res.Proof = p
+			// cdc := amino.NewCodec()
+
+			// p, err := cdc.MarshalBinaryLengthPrefixed(proof)
+			// if err != nil {
+			// 	res.Log = err.Error()
+			// 	break
+			// }
+
+			// TODO: handle in another TM v0.26 update PR
+			// res.Proof = p
 		} else {
 			_, res.Value = tree.GetVersioned(key, res.Height)
 		}
+
 	case "/subspace":
+		var KVs []KVPair
+
 		subspace := req.Data
 		res.Key = subspace
-		var KVs []KVPair
+
 		iterator := sdk.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
 			KVs = append(KVs, KVPair{Key: iterator.Key(), Value: iterator.Value()})
 		}
+
 		iterator.Close()
-		res.Value = cdc.MustMarshalBinary(KVs)
+		res.Value = cdc.MustMarshalBinaryLengthPrefixed(KVs)
+
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
 		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
+
 	return
 }
 

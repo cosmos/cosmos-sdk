@@ -10,7 +10,6 @@ import (
 
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -54,7 +53,7 @@ func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sd
 		return res, err
 	}
 
-	ctx.Codec.MustUnmarshalBinary(resRaw, &res)
+	ctx.Codec.MustUnmarshalBinaryLengthPrefixed(resRaw, &res)
 	return
 }
 
@@ -157,8 +156,8 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 	}
 
 	opts := rpcclient.ABCIQueryOptions{
-		Height:  ctx.Height,
-		Trusted: ctx.TrustNode,
+		Height: ctx.Height,
+		Prove:  !ctx.TrustNode,
 	}
 
 	result, err := node.ABCIQueryWithOptions(path, key, opts)
@@ -203,32 +202,33 @@ func (ctx CLIContext) verifyProof(_ string, resp abci.ResponseQuery) error {
 		return fmt.Errorf("missing valid certifier to verify data from distrusted node")
 	}
 
-	// the AppHash for height H is in header H+1
-	commit, err := ctx.Verify(resp.Height + 1)
-	if err != nil {
-		return err
-	}
+	// TODO: handle in another TM v0.26 update PR
+	// // the AppHash for height H is in header H+1
+	// commit, err := ctx.Verify(resp.Height + 1)
+	// if err != nil {
+	// 	return err
+	// }
 
-	var multiStoreProof store.MultiStoreProof
-	cdc := codec.New()
+	// var multiStoreProof store.MultiStoreProof
+	// cdc := codec.New()
 
-	err = cdc.UnmarshalBinary(resp.Proof, &multiStoreProof)
-	if err != nil {
-		return errors.Wrap(err, "failed to unmarshalBinary rangeProof")
-	}
+	// err = cdc.UnmarshalBinaryLengthPrefixed(resp.Proof, &multiStoreProof)
+	// if err != nil {
+	// 	return errors.Wrap(err, "failed to unmarshalBinary rangeProof")
+	// }
 
-	// verify the substore commit hash against trusted appHash
-	substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(
-		multiStoreProof.StoreName, multiStoreProof.StoreInfos, commit.Header.AppHash,
-	)
-	if err != nil {
-		return errors.Wrap(err, "failed in verifying the proof against appHash")
-	}
+	// // verify the substore commit hash against trusted appHash
+	// substoreCommitHash, err := store.VerifyMultiStoreCommitInfo(
+	// 	multiStoreProof.StoreName, multiStoreProof.StoreInfos, commit.Header.AppHash,
+	// )
+	// if err != nil {
+	// 	return errors.Wrap(err, "failed in verifying the proof against appHash")
+	// }
 
-	err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
-	if err != nil {
-		return errors.Wrap(err, "failed in the range proof verification")
-	}
+	// err = store.VerifyRangeProof(resp.Key, resp.Value, substoreCommitHash, &multiStoreProof.RangeProof)
+	// if err != nil {
+	// 	return errors.Wrap(err, "failed in the range proof verification")
+	// }
 
 	return nil
 }

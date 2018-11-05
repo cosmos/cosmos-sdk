@@ -209,23 +209,26 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 		}
 	}
 
-	if err := initGenFiles(cdc, chainID, accs, genFiles); err != nil {
+	if err := initGenFiles(cdc, chainID, accs, genFiles, numValidators); err != nil {
 		return err
 	}
 
-	if err := collectGenFiles(cdc, config, chainID, monikers, nodeIDs, valPubKeys); err != nil {
+	err := collectGenFiles(
+		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators, outputDir,
+	)
+	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Successfully initialized %v node directories\n", viper.GetInt(nValidators))
+	fmt.Printf("Successfully initialized %d node directories\n", numValidators)
 	return nil
 }
 
 func initGenFiles(
-	cdc *codec.Codec, chainID string, accs []app.GenesisAccount, genFiles []string,
+	cdc *codec.Codec, chainID string, accs []app.GenesisAccount,
+	genFiles []string, numValidators int,
 ) error {
 
-	numValidators := viper.GetInt(nValidators)
 	appGenState := app.NewDefaultGenesisState()
 	appGenState.Accounts = accs
 
@@ -253,10 +256,8 @@ func initGenFiles(
 func collectGenFiles(
 	cdc *codec.Codec, config *cfg.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
+	numValidators int, outputDir string,
 ) error {
-
-	outDir := viper.GetString(outputDir)
-	numValidators := viper.GetInt(nValidators)
 
 	var appState json.RawMessage
 	genTime := tmtime.Now()
@@ -264,8 +265,8 @@ func collectGenFiles(
 	for i := 0; i < numValidators; i++ {
 		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
 		nodeDaemonHomeName := viper.GetString(nodeDaemonHome)
-		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
-		gentxsDir := filepath.Join(outDir, "gentxs")
+		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHomeName)
+		gentxsDir := filepath.Join(outputDir, "gentxs")
 		moniker := monikers[i]
 		config.Moniker = nodeDirName
 

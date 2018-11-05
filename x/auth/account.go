@@ -156,7 +156,6 @@ type (
 	// ContinuousVestingAccount implements the VestingAccount interface. It
 	// continuously vests by unlocking coins linearly with respect to time.
 	ContinuousVestingAccount struct {
-		BaseAccount
 		BaseVestingAccount
 
 		DelegatedVesting sdk.Coins // coins that vesting and delegated
@@ -167,10 +166,54 @@ type (
 	// coins after a specific time, but non prior. In other words, it keeps them
 	// locked until a specified time.
 	DelayedVestingAccount struct {
-		BaseAccount
 		BaseVestingAccount
 	}
 )
+
+func NewContinuousVestingAccount(
+	addr sdk.AccAddress, origCoins sdk.Coins, startTime, endTime time.Time,
+) ContinuousVestingAccount {
+
+	baseAcc := NewBaseAccountWithAddress(addr)
+	baseVestingAcc := BaseVestingAccount{
+		BaseAccount:     baseAcc,
+		OriginalVesting: origCoins,
+		EndTime:         endTime,
+	}
+	return ContinuousVestingAccount{BaseVestingAccount: baseVestingAcc, StartTime: startTime}
+}
+
+// GetVestedCoins returns the total number of vested coins. If no coins are vested,
+// nil is returned.
+func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
+	var vestedCoins sdk.Coins
+
+	// We must handle the case where the start time for a vesting account has
+	// been set into the future or when the start of the chain is not exactly
+	// known.
+	if blockTime.Unix() <= cva.StartTime.Unix() {
+		return vestedCoins
+	}
+
+	// calculate the vesting scalar
+	x := blockTime.Unix() - cva.StartTime.Unix()
+	y := cva.EndTime.Unix() - cva.StartTime.Unix()
+	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
+
+	for _, ovc := range cva.OriginalVesting {
+		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
+		vestedCoin := sdk.NewCoin(ovc.Denom, vestedAmt)
+		vestedCoins = vestedCoins.Plus(sdk.Coins{vestedCoin})
+	}
+
+	return vestedCoins
+}
+
+// GetVestingCoins returns the total number of vesting coins. If no coins are
+// vesting, nil is returned.
+func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
+	return cva.OriginalVesting.Minus(cva.GetVestedCoins(blockTime))
+}
 
 //-----------------------------------------------------------------------------
 // Codec

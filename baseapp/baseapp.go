@@ -47,7 +47,6 @@ type BaseApp struct {
 	cms         sdk.CommitMultiStore // Main (uncached) state
 	router      Router               // handle any kind of message
 	queryRouter QueryRouter          // router for redirecting query calls
-	codespacer  *sdk.Codespacer      // handle module codespacing
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
@@ -94,13 +93,9 @@ func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecod
 		cms:         store.NewCommitMultiStore(db),
 		router:      NewRouter(),
 		queryRouter: NewQueryRouter(),
-		codespacer:  sdk.NewCodespacer(),
 		txDecoder:   txDecoder,
 	}
 
-	// Register the undefined & root codespaces, which should not be used by
-	// any modules.
-	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
 	for _, option := range options {
 		option(app)
 	}
@@ -116,11 +111,6 @@ func (app *BaseApp) Name() string {
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.WithTracer(w)
-}
-
-// Register the next available codespace through the baseapp's codespacer, starting from a default
-func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.CodespaceType {
-	return app.codespacer.RegisterNext(codespace)
 }
 
 // Mount IAVL stores to the provided keys in the BaseApp multistore
@@ -500,7 +490,6 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 		// Validate the Msg.
 		err := msg.ValidateBasic()
 		if err != nil {
-			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
 			return err
 		}
 	}

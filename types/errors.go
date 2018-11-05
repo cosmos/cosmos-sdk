@@ -17,7 +17,7 @@ type ABCICodeType uint32
 type CodeType uint16
 
 // CodespaceType - codespace identifier
-type CodespaceType uint16
+type CodespaceType string
 
 // IsOK - is everything okay?
 func (code ABCICodeType) IsOK() bool {
@@ -61,11 +61,8 @@ const (
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
 	// Error.WithDefaultCodespace().
-	CodespaceUndefined CodespaceType = 0
-	CodespaceRoot      CodespaceType = 1
-
-	// Maximum reservable codespace (2^16 - 1)
-	MaximumCodespace CodespaceType = 65535
+	CodespaceUndefined CodespaceType = ""
+	CodespaceRoot      CodespaceType = "sdk"
 )
 
 func unknownCodeMsg(code CodeType) string {

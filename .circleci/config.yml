@@ -137,6 +137,24 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make test_sim_gaia_fast
 
+  test_sim_gaia_import_export:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
+      - run:
+          name: Test Gaia import/export simulation
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_sim_gaia_import_export
+
   test_sim_gaia_multi_seed:
     <<: *defaults
     parallelism: 1
@@ -257,6 +275,9 @@ workflows:
           requires:
             - setup_dependencies
       - test_sim_gaia_fast:
+          requires:
+            - setup_dependencies
+      - test_sim_gaia_import_export:
           requires:
             - setup_dependencies
       - test_sim_gaia_multi_seed:

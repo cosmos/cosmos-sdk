@@ -56,7 +56,7 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 // Stop if the provided handler function returns true
 func (k Keeper) iterateValidatorSlashingPeriods(ctx sdk.Context, handler func(slashingPeriod ValidatorSlashingPeriod) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, ValidatorSigningInfoKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorSlashingPeriodKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		slashingPeriod := k.unmarshalSlashingPeriodKeyValue(iter.Key(), iter.Value())

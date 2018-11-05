@@ -31,11 +31,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		validator.BondIntraTxCounter = int16(i) // set the intra-tx counter to the order the validators are presented
 		keeper.SetValidator(ctx, validator)
 
-		if validator.Tokens.IsZero() {
-			return res, errors.Errorf("genesis validator cannot have zero pool shares, validator: %v", validator)
+		if validator.Tokens.IsZero() && validator.Status != sdk.Unbonding {
+			return res, errors.Errorf("bonded/unbonded genesis validator cannot have zero pool shares, validator: %v", validator)
 		}
-		if validator.DelegatorShares.IsZero() {
-			return res, errors.Errorf("genesis validator cannot have zero delegator shares, validator: %v", validator)
+		if validator.DelegatorShares.IsZero() && validator.Status != sdk.Unbonding {
+			return res, errors.Errorf("bonded/unbonded genesis validator cannot have zero delegator shares, validator: %v", validator)
 		}
 
 		// Manually set indices for the first time
@@ -118,11 +118,11 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 		if val.Jailed && val.Status == sdk.Bonded {
 			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
 		}
-		if val.Tokens.IsZero() {
-			return fmt.Errorf("genesis validator cannot have zero pool shares, validator: %v", val)
+		if val.Tokens.IsZero() && val.Status != sdk.Unbonding {
+			return fmt.Errorf("bonded/unbonded genesis validator cannot have zero pool shares, validator: %v", val)
 		}
-		if val.DelegatorShares.IsZero() {
-			return fmt.Errorf("genesis validator cannot have zero delegator shares, validator: %v", val)
+		if val.DelegatorShares.IsZero() && val.Status != sdk.Unbonding {
+			return fmt.Errorf("bonded/unbonded genesis validator cannot have zero delegator shares, validator: %v", val)
 		}
 		addrMap[strKey] = true
 	}

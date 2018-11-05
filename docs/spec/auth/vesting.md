@@ -56,15 +56,14 @@ order to make such a distinction.
 // implement.
 type VestingAccount interface {
     Account
-    AssertIsVestingAccount() // existence implies that account is vesting
 
     // Calculates the amount of coins that can be sent to other accounts given
     // the current time.
     SpendableCoins(Context) Coins
     // Performs delegation accounting.
-    TrackDelegation(amount)
+    TrackDelegation(Time, Coins)
     // Performs undelegation accounting.
-    TrackUndelegation(amount)
+    TrackUndelegation(Coins)
 }
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all
@@ -112,10 +111,10 @@ mandatory per-block basis.
 
 #### Continuously Vesting Accounts
 
-To determine the amount of coins that are vested for a given block `B`, the
+To determine the amount of coins that are vested for a given block time `T`, the
 following is performed:
 
-1. Compute `X := B.Time - StartTime`
+1. Compute `X := T - StartTime`
 2. Compute `Y := EndTime - StartTime`
 3. Compute `V' := OV * (X / Y)`
 4. Compute `V := OV - V'`
@@ -124,22 +123,22 @@ Thus, the total amount of _vested_ coins is `V'` and the remaining amount, `V`,
 is _vesting_.
 
 ```go
-func (cva ContinuousVestingAccount) GetVestedCoins(b Block) Coins {
+func (cva ContinuousVestingAccount) GetVestedCoins(t Time) Coins {
     // We must handle the case where the start time for a vesting account has
     // been set into the future or when the start of the chain is not exactly
     // known.
-    if b.Time <= va.StartTime {
+    if t <= va.StartTime {
         return ZeroCoins
     }
 
-    x := b.Time - cva.StartTime
+    x := t - cva.StartTime
     y := cva.EndTime - cva.StartTime
 
     return cva.OriginalVesting * (x / y)
 }
 
-func (cva ContinuousVestingAccount) GetVestingCoins(b Block) Coins {
-    return cva.OriginalVesting - cva.GetVestedCoins(b)
+func (cva ContinuousVestingAccount) GetVestingCoins(t Time) Coins {
+    return cva.OriginalVesting - cva.GetVestedCoins(t)
 }
 ```
 
@@ -149,16 +148,16 @@ Delayed vesting accounts are easier to reason about as they only have the full
 amount vesting up until a certain time, then they all become vested (unlocked).
 
 ```go
-func (dva DelayedVestingAccount) GetVestedCoins(b Block) Coins {
-    if b.Time >= dva.EndTime {
+func (dva DelayedVestingAccount) GetVestedCoins(t Time) Coins {
+    if t >= dva.EndTime {
         return dva.OriginalVesting
     }
 
     return ZeroCoins
 }
 
-func (dva DelayedVestingAccount) GetVestingCoins(b Block) Coins {
-    return cva.OriginalVesting - cva.GetVestedCoins(b)
+func (dva DelayedVestingAccount) GetVestingCoins(t Time) Coins {
+    return cva.OriginalVesting - cva.GetVestedCoins(t)
 }
 ```
 
@@ -173,9 +172,9 @@ balance and the base account balance plus the number of currently delegated
 vesting coins less the number of coins vested so far.
 
 ```go
-func (cva ContinuousVestingAccount) SpendableCoins(b Block) Coins {
+func (cva ContinuousVestingAccount) SpendableCoins(t Time) Coins {
     bc := cva.GetCoins()
-    return min((bc + cva.DelegatedVesting) - cva.GetVestingCoins(b), bc)
+    return min((bc + cva.DelegatedVesting) - cva.GetVestingCoins(t), bc)
 }
 ```
 
@@ -185,9 +184,9 @@ A delayed vesting account may send any coins it has received. In addition, if it
 has fully vested, it can send any of it's vested coins.
 
 ```go
-func (dva DelayedVestingAccount) SpendableCoins(b Block) Coins {
+func (dva DelayedVestingAccount) SpendableCoins(t Time) Coins {
     bc := dva.GetCoins()
-    return bc - dva.GetVestingCoins(b)
+    return bc - dva.GetVestingCoins(t)
 }
 ```
 
@@ -197,9 +196,9 @@ The corresponding `x/bank` keeper should appropriately handle sending coins
 based on if the account is a vesting account or not.
 
 ```go
-func SendCoins(from Account, to Account amount Coins) {
+func SendCoins(t Time, from Account, to Account, amount Coins) {
     if isVesting(from) {
-        sc := from.SpendableCoins()
+        sc := from.SpendableCoins(t)
     } else {
         sc := from.GetCoins()
     }
@@ -227,8 +226,8 @@ is performed:
 6. Set `BC -= D`
 
 ```go
-func (cva ContinuousVestingAccount) TrackDelegation(amount Coins) {
-    x := min(max(cva.GetVestingCoins() - cva.DelegatedVesting, 0), amount)
+func (cva ContinuousVestingAccount) TrackDelegation(t Time, amount Coins) {
+    x := min(max(cva.GetVestingCoins(t) - cva.DelegatedVesting, 0), amount)
     y := amount - x
 
     cva.DelegatedVesting += x
@@ -242,7 +241,7 @@ For a delayed vesting account, it can only delegate with received coins and
 coins that are fully vested so we only need to update `DF`.
 
 ```go
-func (dva DelayedVestingAccount) TrackDelegation(amount Coins) {
+func (dva DelayedVestingAccount) TrackDelegation(t Time, amount Coins) {
     dva.DelegatedFree += amount
 }
 ```
@@ -250,14 +249,14 @@ func (dva DelayedVestingAccount) TrackDelegation(amount Coins) {
 ##### Keepers/Handlers
 
 ```go
-func DelegateCoins(from Account, amount Coins) {
+func DelegateCoins(t Time, from Account, amount Coins) {
     // canDelegate checks different semantics for continuous and delayed vesting
     // accounts
     if isVesting(from) && canDelegate(from) {
         sc := from.GetCoins()
 
         if amount <= sc {
-            from.TrackDelegation(amount)
+            from.TrackDelegation(t, amount)
             from.SetCoins(sc - amount)
             // save account...
         }

@@ -52,7 +52,10 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Get validator.
 	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 	if validator == nil || validator.GetStatus() == sdk.Unbonded {
-		return // defensive
+		// Defensive.
+		// Simulation doesn't take unbonding periods into account, and
+		// Tendermint might break this assumption at some point.
+		return
 	}
 
 	// Double sign too old

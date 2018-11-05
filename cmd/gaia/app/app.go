@@ -142,7 +142,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	// register the staking hooks
 	// NOTE: stakeKeeper above are passed by reference,
 	// so that it can be modified like below:
-	app.stakeKeeper = *stakeKeeper.WithHooks(
+	app.stakeKeeper = *stakeKeeper.SetHooks(
 		NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
 
 	// register message routes

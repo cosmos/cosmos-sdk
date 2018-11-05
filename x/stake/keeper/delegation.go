@@ -353,7 +353,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	// validator loses all tokens due to slashing.  In this case,
 	// make all future delegations invalid.
 	if validator.DelegatorShareExRate().IsZero() {
-		return sdk.ZeroDec(), sdk.ErrInsufficientCoins("cannot delegate to validators with zero tokens or ex-rate")
+		return sdk.ZeroDec(), types.ErrDelegatorShareExRateInvalid(k.Codespace())
 	}
 
 	// Get or create the delegator delegation

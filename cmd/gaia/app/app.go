@@ -310,7 +310,7 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 		mint.WriteGenesis(ctx, app.mintKeeper),
 		distr.WriteGenesis(ctx, app.distrKeeper),
 		gov.WriteGenesis(ctx, app.govKeeper),
-		slashing.GenesisState{}, // TODO create write methods
+		slashing.WriteGenesis(ctx, app.slashingKeeper),
 	)
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {

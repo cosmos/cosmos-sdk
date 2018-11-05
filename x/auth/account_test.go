@@ -2,14 +2,20 @@ package auth
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	testDenom = "steak"
 )
 
 func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
@@ -147,4 +153,42 @@ func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 	// require 50% of coins vesting
 	vestingCoins = cva.GetVestingCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, vestingCoins)
+}
+
+func TestSpendableCoinsContVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	_, _, addr := keyPubAddr()
+	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
+
+	// require that there exist no spendable coins in the beginning of the
+	// vesting schedule
+	spendableCoins := cva.SpendableCoins(now)
+	require.Nil(t, spendableCoins)
+
+	// require that all original coins are spendable at the end of the vesting
+	// schedule
+	spendableCoins = cva.SpendableCoins(endTime)
+	require.Equal(t, origCoins, spendableCoins)
+
+	// require that all vested coins (50%) are spendable
+	spendableCoins = cva.SpendableCoins(now.Add(12 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, spendableCoins)
+
+	// receive some coins
+	recvAmt := sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}
+	cva.SetCoins(cva.GetCoins().Plus(recvAmt))
+
+	// require that all vested coins (50%) are spendable plus any received
+	spendableCoins = cva.SpendableCoins(now.Add(12 * time.Hour))
+	require.Equal(t, origCoins, spendableCoins)
+
+	// spend all spendable coins
+	cva.SetCoins(cva.GetCoins().Minus(spendableCoins))
+
+	// require that no more coins are spendable
+	spendableCoins = cva.SpendableCoins(now.Add(12 * time.Hour))
+	require.Nil(t, spendableCoins)
 }

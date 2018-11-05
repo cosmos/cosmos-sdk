@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -137,10 +138,11 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 //-----------------------------------------------------------------------------
 // Vesting Accounts
 
-var (
-	_ VestingAccount = (*ContinuousVestingAccount)(nil)
-	_ VestingAccount = (*DelayedVestingAccount)(nil)
-)
+// TODO: uncomment once implemented
+// var (
+// 	_ VestingAccount = (*ContinuousVestingAccount)(nil)
+// 	_ VestingAccount = (*DelayedVestingAccount)(nil)
+// )
 
 type (
 	// BaseVestingAccount implements the VestingAccount interface. It contains all
@@ -175,12 +177,18 @@ func NewContinuousVestingAccount(
 ) ContinuousVestingAccount {
 
 	baseAcc := NewBaseAccountWithAddress(addr)
+	baseAcc.SetCoins(origCoins)
+
 	baseVestingAcc := BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		OriginalVesting: origCoins,
 		EndTime:         endTime,
 	}
-	return ContinuousVestingAccount{BaseVestingAccount: baseVestingAcc, StartTime: startTime}
+
+	return ContinuousVestingAccount{
+		StartTime:          startTime,
+		BaseVestingAccount: baseVestingAcc,
+	}
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,
@@ -213,6 +221,41 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 // vesting, nil is returned.
 func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
 	return cva.OriginalVesting.Minus(cva.GetVestedCoins(blockTime))
+}
+
+// SpendableCoins returns the total number of spendable coins per denom for a
+// continuous vesting account.
+func (cva ContinuousVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
+	var spendableCoins sdk.Coins
+
+	bc := cva.GetCoins()
+	v := cva.GetVestingCoins(blockTime)
+
+	for _, coin := range bc {
+		baseAmt := coin.Amount
+		delVestingAmt := cva.DelegatedVesting.AmountOf(coin.Denom)
+		vestingAmt := v.AmountOf(coin.Denom)
+
+		a := baseAmt.Add(delVestingAmt)
+		a = a.Sub(vestingAmt)
+
+		var spendableCoin sdk.Coin
+
+		// compute the min((baseAmt + delVestingAmt) - vestingAmt, baseAmt)
+		fmt.Println(a)
+		fmt.Println(baseAmt)
+		if a.LT(baseAmt) {
+			spendableCoin = sdk.NewCoin(coin.Denom, a)
+		} else {
+			spendableCoin = sdk.NewCoin(coin.Denom, baseAmt)
+		}
+
+		if !spendableCoin.IsZero() {
+			spendableCoins = spendableCoins.Plus(sdk.Coins{spendableCoin})
+		}
+	}
+
+	return spendableCoins
 }
 
 //-----------------------------------------------------------------------------

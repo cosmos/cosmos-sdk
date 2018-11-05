@@ -57,6 +57,24 @@ func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 }
 
 // Stored by *validator* address (not operator address)
+func (k Keeper) iterateValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	index := int64(0)
+	for {
+		var missed bool
+		bz := store.Get(GetValidatorMissedBlockBitArrayKey(address, index))
+		if bz == nil {
+			break
+		}
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
+		if handler(index, missed) {
+			break
+		}
+		index++
+	}
+}
+
+// Stored by *validator* address (not operator address)
 func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(missed)

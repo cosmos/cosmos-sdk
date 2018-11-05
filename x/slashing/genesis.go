@@ -9,6 +9,7 @@ import (
 type GenesisState struct {
 	Params          Params
 	SigningInfos    map[string]ValidatorSigningInfo
+	MissedBlocks    map[string][]bool
 	SlashingPeriods []ValidatorSlashingPeriod
 }
 
@@ -17,6 +18,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Params:          DefaultParams(),
 		SigningInfos:    make(map[string]ValidatorSigningInfo),
+		MissedBlocks:    make(map[string][]bool),
 		SlashingPeriods: []ValidatorSlashingPeriod{},
 	}
 }
@@ -36,6 +38,16 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 		keeper.setValidatorSigningInfo(ctx, address, info)
 	}
 
+	for addr, array := range data.MissedBlocks {
+		address, err := sdk.ConsAddressFromBech32(addr)
+		if err != nil {
+			panic(err)
+		}
+		for index, missed := range array {
+			keeper.setValidatorMissedBlockBitArray(ctx, address, int64(index), missed)
+		}
+	}
+
 	for _, slashingPeriod := range data.SlashingPeriods {
 		keeper.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
 	}
@@ -43,13 +55,29 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 	keeper.paramspace.SetParamSet(ctx, &data.Params)
 }
 
+// WriteGenesis writes the current store values
+// to a genesis file, which can be imported again
+// with InitGenesis
 func WriteGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 	var params Params
 	keeper.paramspace.GetParamSet(ctx, &params)
 
 	signingInfos := make(map[string]ValidatorSigningInfo)
+	missedBlocks := make(map[string][]bool)
 	keeper.iterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool) {
-		signingInfos[address.String()] = info
+		bechAddr := address.String()
+		signingInfos[bechAddr] = info
+		array := make([]bool, 0)
+
+		keeper.iterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
+			if index != int64(len(array)) {
+				panic("invalid index")
+			}
+			array = append(array, missed)
+			return false
+		})
+		missedBlocks[bechAddr] = array
+
 		return false
 	})
 
@@ -62,6 +90,7 @@ func WriteGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 	return GenesisState{
 		Params:          params,
 		SigningInfos:    signingInfos,
+		MissedBlocks:    missedBlocks,
 		SlashingPeriods: slashingPeriods,
 	}
 }

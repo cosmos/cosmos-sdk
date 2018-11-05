@@ -49,11 +49,12 @@ The files in each sub-folders do not matter and will likely change. What matters
 - `gaia`: Contains all docs related to the `gaia` application. Will later be renamed to `cosmos-hub` or `chub` and probably moved to its own repository.
 - `reference`: Contains high-level explanations of the abstractions of the SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`. 
 - `examples`: Contain a couple examples of sdk application like `basecoin` and `democoin`. Developers need to maintain them up-to-date and make sure they compile as the SDK gets upgraded.
-- `clients`: Contains specs and infos about the various SDK clients.
+- `clients`: Contains specs and info about the various SDK clients.
 - `modules`: Contains specs of modules.
 - `architecture`: Contains architecture-related docs like the present one.
 
-Website docs will only include the following sections:
+Website docs sidebar will only include the following sections:
+
 - Intro (`README`)
 - `gaia`
 - `reference`
@@ -78,9 +79,10 @@ Proposed
 
 ### Neutral
 
-- We need to move a bunch of deprecated stuff to `/attic` folder. 
-- We need to port most of the content in `docs/sdk/docs/core` in `reference`.
+- We need to move a bunch of deprecated stuff to `/_attic` folder. 
+- We need to integrate content in `docs/sdk/docs/core` in `reference`.
 - We need to move all the content that currently lives in `docs` and does not fit in new structure (like `lotion`, intro material, whitepaper) to the website repository.
+- Update `DOCS_README.md`
 
 ## References
 

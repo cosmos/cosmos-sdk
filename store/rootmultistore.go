@@ -295,10 +295,16 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return res
 	}
 
-	// commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
-	// if errMsg != nil {
-	// 	return sdk.ErrInternal(errMsg.Error()).QueryResult()
-	// }
+	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
+	if errMsg != nil {
+		return sdk.ErrInternal(errMsg.Error()).QueryResult()
+	}
+
+	// Restore origin path and append proof op.
+	res.Proof.Ops = append(res.Proof.Ops, NewMultiStoreProofOp(
+		[]byte(storeName),
+		NewMultiStoreProof(commitInfo.StoreInfos),
+	).ProofOp())
 
 	// TODO: handle in another TM v0.26 update PR
 	// res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
@@ -313,11 +319,14 @@ func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 		err = sdk.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
 		return
 	}
+
 	paths := strings.SplitN(path[1:], "/", 2)
 	storeName = paths[0]
+
 	if len(paths) == 2 {
 		subpath = "/" + paths[1]
 	}
+
 	return
 }
 

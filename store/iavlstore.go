@@ -7,6 +7,7 @@ import (
 
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
@@ -209,8 +210,8 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	res.Height = getHeight(tree, req)
 
 	switch req.Path {
-	case "/key":
-		key := req.Data // Data holds the key bytes
+	case "/key": // get by key
+		key := req.Data // data holds the key bytes
 
 		res.Key = key
 		if !st.VersionExists(res.Height) {
@@ -224,18 +225,8 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				res.Log = err.Error()
 				break
 			}
-
 			res.Value = value
-			// cdc := amino.NewCodec()
-
-			// p, err := cdc.MarshalBinaryLengthPrefixed(proof)
-			// if err != nil {
-			// 	res.Log = err.Error()
-			// 	break
-			// }
-
-			// TODO: handle in another TM v0.26 update PR
-			// res.Proof = p
+			res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLValueOp(key, proof).ProofOp()}}
 		} else {
 			_, res.Value = tree.GetVersioned(key, res.Height)
 		}

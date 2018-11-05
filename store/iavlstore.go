@@ -220,12 +220,11 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		}
 
 		if req.Prove {
-			value, proof, err := tree.GetVersionedWithProof(key, res.Height)
+			value, _, err := tree.GetVersionedWithProof(key, res.Height)
 			if err != nil {
 				res.Log = err.Error()
 				break
 			}
-
 			res.Value = value
 			res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLValueOp(key, proof).ProofOp()}}
 		} else {

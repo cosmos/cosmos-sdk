@@ -306,6 +306,8 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		NewMultiStoreProof(commitInfo.StoreInfos),
 	).ProofOp())
 
+	// TODO: handle in another TM v0.26 update PR
+	// res.Proof = buildMultiStoreProof(res.Proof, storeName, commitInfo.StoreInfos)
 	return res
 }
 

@@ -1,14 +1,6 @@
 # Clients
 
-::: tip Note
-🚧 We are actively working on documentation for SDK clients.
-:::
-
 ## Gaia CLI
-
-::: tip Note
-🚧 We are actively working on improving documentation for Gaiacli and Gaiad.
-:::
 
 ::: tip Note
 If you receive this error message:

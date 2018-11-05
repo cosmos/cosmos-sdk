@@ -225,8 +225,21 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				res.Log = err.Error()
 				break
 			}
-			res.Value = value
-			res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLValueOp(key, proof).ProofOp()}}
+			if proof == nil {
+				// Proof == nil implies that the store is empty.
+				if value != nil {
+					panic("should not happen")
+				}
+			}
+			if value != nil {
+				// Value was found
+				res.Value = value
+				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLValueOp(key, proof).ProofOp()}}
+			} else {
+				// Value wasn't found
+				res.Value = nil
+				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLAbsenceOp(key, proof).ProofOp()}}
+			}
 		} else {
 			_, res.Value = tree.GetVersioned(key, res.Height)
 		}

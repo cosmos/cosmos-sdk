@@ -14,8 +14,8 @@ Re-structure the `/docs` folder of the SDK github repo as follows:
 
 ```
 docs/
-├── README/
-├── /gaia
+├── README
+├── gaia/
 │   ├── overview.md
 │   ├── install.md
 │   ├── join-testnet.md
@@ -36,7 +36,7 @@ docs/
 ├── examples/
 │   ├── basecoin/
 │   └── democoin/
-├── clients
+├── clients/
 │   ├── lite/
 │   ├── service-providers
 ├── modules/

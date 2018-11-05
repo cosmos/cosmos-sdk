@@ -109,7 +109,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		app.cdc,
 		app.keyParams, app.tkeyParams,
 	)
-	app.stakeKeeper = stake.NewKeeper(
+	stakeKeeper := stake.NewKeeper(
 		app.cdc,
 		app.keyStake, app.tkeyStake,
 		app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace),
@@ -117,30 +117,32 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	)
 	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint,
 		app.paramsKeeper.Subspace(mint.DefaultParamspace),
-		app.stakeKeeper, app.feeCollectionKeeper,
+		&stakeKeeper, app.feeCollectionKeeper,
 	)
 	app.distrKeeper = distr.NewKeeper(
 		app.cdc,
 		app.keyDistr,
 		app.paramsKeeper.Subspace(distr.DefaultParamspace),
-		app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper,
+		app.bankKeeper, &stakeKeeper, app.feeCollectionKeeper,
 		app.RegisterCodespace(stake.DefaultCodespace),
 	)
 	app.slashingKeeper = slashing.NewKeeper(
 		app.cdc,
 		app.keySlashing,
-		app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
+		&stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
 		app.RegisterCodespace(slashing.DefaultCodespace),
 	)
 	app.govKeeper = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
-		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, app.stakeKeeper,
+		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakeKeeper,
 		app.RegisterCodespace(gov.DefaultCodespace),
 	)
 
 	// register the staking hooks
-	app.stakeKeeper = app.stakeKeeper.WithHooks(
+	// NOTE: stakeKeeper above are passed by reference,
+	// so that it can be modified like below:
+	app.stakeKeeper = *stakeKeeper.SetHooks(
 		NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
 
 	// register message routes

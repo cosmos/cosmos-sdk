@@ -494,11 +494,12 @@ func TestMultipleMsgCreateValidator(t *testing.T) {
 		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 		var finishTime time.Time
+		// Jump to finishTime for unbonding period and remove from unbonding queue
 		types.MsgCdc.MustUnmarshalBinaryLengthPrefixed(got.Data, &finishTime)
 		ctx = ctx.WithBlockTime(finishTime)
 		EndBlocker(ctx, keeper)
 
-		//Check that the account is unbonded
+		// Check that the validator is deleted from state
 		validators := keeper.GetValidators(ctx, 100)
 		require.Equal(t, len(validatorAddrs)-(i+1), len(validators),
 			"expected %d validators got %d", len(validatorAddrs)-(i+1), len(validators))
@@ -1013,7 +1014,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	EndBlocker(ctx, keeper)
 
 	// validator power should have been reduced to zero
-	// ergo validator should have been removed from the store
-	_, found = keeper.GetValidator(ctx, valA)
-	require.False(t, found)
+	// validator should be in unbonding state
+	validator, _ = keeper.GetValidator(ctx, valA)
+	require.Equal(t, validator.GetStatus(), sdk.Unbonding)
 }

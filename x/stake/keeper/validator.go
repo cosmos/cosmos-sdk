@@ -155,6 +155,7 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokens(ctx sdk.Context, validator types.Validator, tokensToRemove sdk.Dec) types.Validator {
+
 	pool := k.GetPool(ctx)
 	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
 	validator, pool = validator.RemoveTokens(pool, tokensToRemove)
@@ -188,6 +189,9 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	validator, found := k.GetValidator(ctx, address)
 	if !found {
 		return
+	}
+	if validator.Status != sdk.Unbonded {
+		panic("Cannot call RemoveValidator on bonded or unbonding validators")
 	}
 
 	// delete the old validator record
@@ -357,10 +361,9 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 			if !found || val.GetStatus() != sdk.Unbonding {
 				continue
 			}
+			k.unbondingToUnbonded(ctx, val)
 			if val.GetDelegatorShares().IsZero() {
 				k.RemoveValidator(ctx, val.OperatorAddr)
-			} else {
-				k.unbondingToUnbonded(ctx, val)
 			}
 		}
 		store.Delete(validatorTimesliceIterator.Key())

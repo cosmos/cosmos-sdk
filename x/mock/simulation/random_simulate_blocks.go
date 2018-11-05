@@ -14,7 +14,7 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	common "github.com/tendermint/tendermint/libs/common"
+	cmn "github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -65,7 +65,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	testingMode, t, b := getTestingMode(tb)
 	fmt.Printf("Starting SimulateFromSeed with randomness created with seed %d\n", int(seed))
 	r := rand.New(rand.NewSource(seed))
-	params := RandomParams(r)
+	params := RandomParams(r) // := DefaultParams()
 	fmt.Printf("Randomized simulation params: %+v\n", params)
 	timestamp := randTimestamp(r)
 	fmt.Printf("Starting the simulation from time %v, unixtime %v\n", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
@@ -365,7 +365,7 @@ func getKeys(validators map[string]mockValidator) []string {
 }
 
 // randomProposer picks a random proposer from the current validator set
-func randomProposer(r *rand.Rand, validators map[string]mockValidator) common.HexBytes {
+func randomProposer(r *rand.Rand, validators map[string]mockValidator) cmn.HexBytes {
 	keys := getKeys(validators)
 	if len(keys) == 0 {
 		return nil

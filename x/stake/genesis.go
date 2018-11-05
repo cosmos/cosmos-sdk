@@ -26,9 +26,13 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 
 	keeper.SetPool(ctx, data.Pool)
 	keeper.SetParams(ctx, data.Params)
+	keeper.SetIntraTxCounter(ctx, data.IntraTxCounter)
+	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
 	for i, validator := range data.Validators {
-		validator.BondIntraTxCounter = int16(i) // set the intra-tx counter to the order the validators are presented
+		if validator.BondIntraTxCounter == 0 {
+			validator.BondIntraTxCounter = int16(i) // set the intra-tx counter to the order the validators are presented
+		}
 		keeper.SetValidator(ctx, validator)
 
 		if validator.Tokens.IsZero() && validator.Status != sdk.Unbonding {
@@ -59,14 +63,18 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
+	intraTxCounter := keeper.GetIntraTxCounter(ctx)
+	lastTotalPower := keeper.GetLastTotalPower(ctx)
 	validators := keeper.GetAllValidators(ctx)
 	bonds := keeper.GetAllDelegations(ctx)
 
 	return types.GenesisState{
-		Pool:       pool,
-		Params:     params,
-		Validators: validators,
-		Bonds:      bonds,
+		Pool:           pool,
+		Params:         params,
+		IntraTxCounter: intraTxCounter,
+		LastTotalPower: lastTotalPower,
+		Validators:     validators,
+		Bonds:          bonds,
 	}
 }
 

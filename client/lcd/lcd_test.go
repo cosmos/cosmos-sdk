@@ -629,7 +629,7 @@ func TestSubmitProposal(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.MustUnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -651,7 +651,7 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.MustUnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -685,7 +685,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.MustUnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -733,17 +733,17 @@ func TestProposalsQuery(t *testing.T) {
 	// Addr1 proposes (and deposits) proposals #1 and #2
 	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
 	var proposalID1 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID1)
+	cdc.MustUnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
 	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
 	var proposalID2 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID2)
+	cdc.MustUnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
 	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], 5)
 	var proposalID3 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID3)
+	cdc.MustUnmarshalBinary(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3

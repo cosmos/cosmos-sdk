@@ -32,12 +32,18 @@ type Proposal interface {
 	GetSubmitTime() time.Time
 	SetSubmitTime(time.Time)
 
+	GetDepositEndTime() time.Time
+	SetDepositEndTime(time.Time)
+
 	GetTotalDeposit() sdk.Coins
 	SetTotalDeposit(sdk.Coins)
 
 	GetVotingStartTime() time.Time
 	SetVotingStartTime(time.Time)
-
+  
+	GetVotingEndTime() time.Time
+	SetVotingEndTime(time.Time)
+ 
 	Enact(ctx sdk.Context, k Keeper) error
 }
 
@@ -51,7 +57,8 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 		proposalA.GetTallyResult().Equals(proposalB.GetTallyResult()) &&
 		proposalA.GetSubmitTime().Equal(proposalB.GetSubmitTime()) &&
 		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
-		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime()) {
+		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime())
+    proposalA.GetVotingEndTime().Equal(proposalB.GetVotingEndTime()) {
 		return true
 	}
 	return false
@@ -68,10 +75,12 @@ type ProposalBase struct {
 	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
 
-	SubmitTime   time.Time `json:"submit_time"`   //  Height of the block where TxGovSubmitProposal was included
-	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitTime     time.Time `json:"submit_time"`      //  Time of the block where TxGovSubmitProposal was included
+	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
+	TotalDeposit   sdk.Coins `json:"total_deposit"`    //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_time"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingStartTime time.Time `json:"voting_start_time"` //  Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
 // nolint
@@ -92,6 +101,10 @@ func (pb ProposalBase) GetVotingStartTime() time.Time           { return pb.Voti
 func (pb *ProposalBase) SetVotingStartTime(votingStartTime time.Time) {
 	pb.VotingStartTime = votingStartTime
 }
+func (pb ProposalBase) GetVotingEndTime() time.Time { return pb.VotingEndTime }
+func (pb *ProposalBase) SetVotingEndTime(votingEndTime time.Time) {
+	pb.VotingEndTime = votingEndTime
+}
 
 //-----------------------------------------------------------
 // Text Proposals
@@ -110,7 +123,9 @@ func (tp TextProposal) GetProposalType() ProposalKind {
 func (tp TextProposal) Enact(ctx sdk.Context, k Keeper) error {
 	// TextProposal do nothing
 	return nil
+
 }
+
 
 // Implements Proposal Interface
 var _ Proposal = (*TextProposal)(nil)

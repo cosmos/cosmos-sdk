@@ -3,7 +3,6 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -49,7 +48,8 @@ func initChain(r *rand.Rand, accounts []Account, setups []RandSetup, app *baseap
 }
 
 func randTimestamp(r *rand.Rand) time.Time {
-	unixTime := r.Int63n(int64(math.Pow(2, 40)))
+	// json.Marshal breaks for timestamps greater with year greater than 9999
+	unixTime := r.Int63n(253373529600)
 	return time.Unix(unixTime, 0)
 }
 
@@ -138,7 +138,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		if testingMode {
 			// Make sure invariants hold at beginning of block
-			assertAllInvariants(t, app, header, invariants, "BeginBlock", displayLogs)
+			assertAllInvariants(t, app, invariants, "BeginBlock", displayLogs)
 		}
 
 		ctx := app.NewContext(false, header)
@@ -149,7 +149,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		numQueuedTimeOpsRan := runQueuedTimeOperations(timeOperationQueue, header.Time, tb, r, app, ctx, accs, logWriter, displayLogs, event)
 		if testingMode && onOperation {
 			// Make sure invariants hold at end of queued operations
-			assertAllInvariants(t, app, header, invariants, "QueuedOperations", displayLogs)
+			assertAllInvariants(t, app, invariants, "QueuedOperations", displayLogs)
 		}
 
 		logWriter("Standard operations")
@@ -157,7 +157,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 		if testingMode {
 			// Make sure invariants hold at end of block
-			assertAllInvariants(t, app, header, invariants, "StandardOperations", displayLogs)
+			assertAllInvariants(t, app, invariants, "StandardOperations", displayLogs)
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
@@ -168,7 +168,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		if testingMode {
 			// Make sure invariants hold at end of block
-			assertAllInvariants(t, app, header, invariants, "EndBlock", displayLogs)
+			assertAllInvariants(t, app, invariants, "EndBlock", displayLogs)
 		}
 		if commit {
 			app.Commit()
@@ -243,7 +243,7 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T,
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
 			if testingMode {
 				if onOperation {
-					assertAllInvariants(t, app, header, invariants, fmt.Sprintf("operation: %v", logUpdate), displayLogs)
+					assertAllInvariants(t, app, invariants, fmt.Sprintf("operation: %v", logUpdate), displayLogs)
 				}
 				if opCount%50 == 0 {
 					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ", header.Height, totalNumBlocks, opCount, blocksize)

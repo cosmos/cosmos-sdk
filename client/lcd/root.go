@@ -2,16 +2,13 @@ package lcd
 
 import (
 	"errors"
-	"net"
-	"net/http"
-	"os"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
@@ -21,9 +18,11 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
 	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
+	"net"
+	"net/http"
+	"os"
 )
 
 const (
@@ -53,10 +52,16 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 			sslHosts := viper.GetString(flagSSLHosts)
 			certFile := viper.GetString(flagSSLCertFile)
 			keyFile := viper.GetString(flagSSLKeyFile)
-			cleanupFunc := func() {}
 
 			var listener net.Listener
 			var fingerprint string
+
+			server.TrapSignal(func() {
+				err := listener.Close()
+				logger.Error("error closing listener", "err", err)
+			})
+
+			var cleanupFunc func()
 			if viper.GetBool(flagInsecure) {
 				listener, err = tmserver.StartHTTPServer(
 					listenAddr, handler, logger,
@@ -89,6 +94,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 					}
 					defer cleanupFunc()
 				}
+
 				listener, err = tmserver.StartHTTPAndTLSServer(
 					listenAddr, handler,
 					certFile, keyFile,
@@ -101,13 +107,6 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 				logger.Info(fingerprint)
 			}
 			logger.Info("REST server started")
-
-			// wait forever and cleanup
-			cmn.TrapSignal(func() {
-				defer cleanupFunc()
-				err := listener.Close()
-				logger.Error("error closing listener", "err", err)
-			})
 
 			return nil
 		},

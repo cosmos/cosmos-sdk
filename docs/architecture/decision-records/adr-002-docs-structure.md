@@ -70,7 +70,7 @@ Proposed
 ### Positive
 
 - Much clearer organisation of the SDK docs. 
-- The `/docs` folder now only contains SDK and gaia related material. Later, it will only contain SDk related material.
+- The `/docs` folder now only contains SDK and gaia related material. Later, it will only contain SDK related material.
 - Developers only have to update `/docs` folder when they open a PR (and not `/examples` for example). 
 - Easier for developers to find what they need to update in the docs thanks to reworked architecture.
 - Cleaner vuepress build for website docs. 

@@ -106,3 +106,45 @@ func TestBaseAccountMarshal(t *testing.T) {
 	err = cdc.UnmarshalBinaryLengthPrefixed(b[:len(b)/2], &acc2)
 	require.NotNil(t, err)
 }
+
+func TestGetVestedCoinsContVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	_, _, addr := keyPubAddr()
+	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
+
+	// require no coins vested in the very begining of the vesting schedule
+	vestedCoins := cva.GetVestedCoins(now)
+	require.Nil(t, vestedCoins)
+
+	// require all coins vested at the end of the vesting schedule
+	vestedCoins = cva.GetVestedCoins(endTime)
+	require.Equal(t, origCoins, vestedCoins)
+
+	// require 50% of coins vested
+	vestedCoins = cva.GetVestedCoins(now.Add(12 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, vestedCoins)
+}
+
+func TestGetVestingCoinsContVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	_, _, addr := keyPubAddr()
+	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
+
+	// require all coins vesting in the begining of the vesting schedule
+	vestingCoins := cva.GetVestingCoins(now)
+	require.Equal(t, origCoins, vestingCoins)
+
+	// require no coins vesting at the end of the vesting schedule
+	vestingCoins = cva.GetVestingCoins(endTime)
+	require.Nil(t, vestingCoins)
+
+	// require 50% of coins vesting
+	vestingCoins = cva.GetVestingCoins(now.Add(12 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, vestingCoins)
+}

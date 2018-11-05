@@ -329,19 +329,23 @@ func TestGaiaImportExport(t *testing.T) {
 		AppStateBytes: appState,
 	}
 	newApp.InitChain(request)
+	newApp.Commit()
 
 	fmt.Printf("Comparing stores...\n")
 	ctxA := app.NewContext(true, abci.Header{})
 	ctxB := newApp.NewContext(true, abci.Header{})
-	storeKeysA := []sdk.StoreKey{app.keyMain, app.keyAccount}
-	storeKeysB := []sdk.StoreKey{newApp.keyMain, newApp.keyAccount}
+	storeKeysA := []sdk.StoreKey{app.keyMain, app.keyAccount, app.keyStake, app.keySlashing,
+		app.keyMint, app.keyDistr, app.keyGov, app.keyFeeCollection, app.keyParams}
+	storeKeysB := []sdk.StoreKey{newApp.keyMain, newApp.keyAccount, newApp.keyStake, newApp.keySlashing,
+		newApp.keyMint, newApp.keyDistr, newApp.keyGov, newApp.keyFeeCollection, newApp.keyParams}
+	require.Equal(t, len(storeKeysA), len(storeKeysB))
 	for index, storeKeyA := range storeKeysA {
 		storeKeyB := storeKeysB[index]
 		storeA := ctxA.KVStore(storeKeyA)
 		storeB := ctxB.KVStore(storeKeyB)
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
-		require.True(t, equal, "unequal stores: %s / %s:\nstore A %v => %v\nstore B %v => %v", storeKeyA, storeKeyB, kvA.Key, kvA.Value, kvB.Key, kvB.Value)
+		require.True(t, equal, "unequal stores: %s / %s:\nstore A %s => %s\nstore B %s => %s", storeKeyA, storeKeyB, kvA.Key, kvA.Value, kvB.Key, kvB.Value)
 	}
 
 }

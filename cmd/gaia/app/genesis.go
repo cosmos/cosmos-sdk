@@ -53,31 +53,38 @@ func NewGenesisState(accounts []GenesisAccount, stakeData stake.GenesisState, mi
 	}
 }
 
-// GenesisAccount doesn't need pubkey or sequence
 type GenesisAccount struct {
-	Address sdk.AccAddress `json:"address"`
-	Coins   sdk.Coins      `json:"coins"`
+	Address       sdk.AccAddress `json:"address"`
+	Coins         sdk.Coins      `json:"coins"`
+	Sequence      int64          `json:"sequence_number"`
+	AccountNumber int64          `json:"account_number"`
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	return GenesisAccount{
-		Address: acc.Address,
-		Coins:   acc.Coins,
+		Address:       acc.Address,
+		Coins:         acc.Coins,
+		AccountNumber: acc.AccountNumber,
+		Sequence:      acc.Sequence,
 	}
 }
 
 func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	return GenesisAccount{
-		Address: acc.GetAddress(),
-		Coins:   acc.GetCoins(),
+		Address:       acc.GetAddress(),
+		Coins:         acc.GetCoins(),
+		AccountNumber: acc.GetAccountNumber(),
+		Sequence:      acc.GetSequence(),
 	}
 }
 
 // convert GenesisAccount to auth.BaseAccount
 func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	return &auth.BaseAccount{
-		Address: ga.Address,
-		Coins:   ga.Coins.Sort(),
+		Address:       ga.Address,
+		Coins:         ga.Coins.Sort(),
+		AccountNumber: ga.AccountNumber,
+		Sequence:      ga.Sequence,
 	}
 }
 

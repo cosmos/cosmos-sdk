@@ -60,6 +60,7 @@ BUG FIXES
 
 * SDK
  - #2625 [x/gov] fix AppendTag function usage error
+ - #2674 [types] Fix coins.IsLT() impl
 
 
 * Tendermint

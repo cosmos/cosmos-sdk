@@ -7,6 +7,7 @@ BREAKING CHANGES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [gaiad init] \#2602 New genesis workflow
 
 * SDK
   * [simulation] \#2665 only argument to simulation.Invariant is now app

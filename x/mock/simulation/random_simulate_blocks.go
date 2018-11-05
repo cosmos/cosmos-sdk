@@ -402,6 +402,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params, validators map[string]
 			// offline
 			signed = false
 		}
+		eventFn("beginblock/signing/signed", signed)
 		pubkey, err := tmtypes.PB2TM.PubKey(mVal.val.PubKey)
 		if err != nil {
 			panic(err)

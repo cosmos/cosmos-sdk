@@ -80,7 +80,6 @@ type BaseVestingAccount struct {
 // ContinuousVestingAccount implements the VestingAccount interface. It
 // continuously vests by unlocking coins linearly with respect to time.
 type ContinuousVestingAccount struct {
-    BaseAccount
     BaseVestingAccount
 
     DelegatedVesting Coins // coins that vesting and delegated
@@ -91,7 +90,6 @@ type ContinuousVestingAccount struct {
 // coins after a specific time, but non prior. In other words, it keeps them
 // locked until a specified time.
 type DelayedVestingAccount struct {
-    BaseAccount
     BaseVestingAccount
 }
 ```
@@ -130,7 +128,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(b Block) Coins {
     // We must handle the case where the start time for a vesting account has
     // been set into the future or when the start of the chain is not exactly
     // known.
-    if b.Time < va.StartTime {
+    if b.Time <= va.StartTime {
         return ZeroCoins
     }
 
@@ -175,9 +173,9 @@ balance and the base account balance plus the number of currently delegated
 vesting coins less the number of coins vested so far.
 
 ```go
-func (cva ContinuousVestingAccount) SpendableCoins() Coins {
+func (cva ContinuousVestingAccount) SpendableCoins(b Block) Coins {
     bc := cva.GetCoins()
-    return min((bc + cva.DelegatedVesting) - cva.GetVestingCoins(), bc)
+    return min((bc + cva.DelegatedVesting) - cva.GetVestingCoins(b), bc)
 }
 ```
 
@@ -187,9 +185,9 @@ A delayed vesting account may send any coins it has received. In addition, if it
 has fully vested, it can send any of it's vested coins.
 
 ```go
-func (dva DelayedVestingAccount) SpendableCoins() Coins {
+func (dva DelayedVestingAccount) SpendableCoins(b Block) Coins {
     bc := dva.GetCoins()
-    return bc - dva.GetVestingCoins()
+    return bc - dva.GetVestingCoins(b)
 }
 ```
 

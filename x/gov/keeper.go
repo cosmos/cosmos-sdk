@@ -106,7 +106,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) Proposal {
 	}
 
 	var proposal Proposal
-	keeper.cdc.MustUnmarshalBinary(bz, &proposal)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposal)
 
 	return proposal
 }
@@ -114,7 +114,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID int64) Proposal {
 // Implements sdk.AccountKeeper.
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal Proposal) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinary(proposal)
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal)
 	store.Set(KeyProposal(proposal.GetProposalID()), bz)
 }
 
@@ -175,7 +175,7 @@ func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID int64) sdk
 	if bz != nil {
 		return ErrInvalidGenesis(keeper.codespace, "Initial ProposalID already set")
 	}
-	bz = keeper.cdc.MustMarshalBinary(proposalID)
+	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
 	store.Set(KeyNextProposalID, bz)
 	return nil
 }
@@ -197,8 +197,8 @@ func (keeper Keeper) getNewProposalID(ctx sdk.Context) (proposalID int64, err sd
 	if bz == nil {
 		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
-	bz = keeper.cdc.MustMarshalBinary(proposalID + 1)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
+	bz = keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID + 1)
 	store.Set(KeyNextProposalID, bz)
 	return proposalID, nil
 }
@@ -210,7 +210,7 @@ func (keeper Keeper) peekCurrentProposalID(ctx sdk.Context) (proposalID int64, e
 	if bz == nil {
 		return -1, ErrInvalidGenesis(keeper.codespace, "InitialProposalID never set")
 	}
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalID)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalID)
 	return proposalID, nil
 }
 
@@ -298,13 +298,13 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID int64, voterAddr sdk.Ac
 		return Vote{}, false
 	}
 	var vote Vote
-	keeper.cdc.MustUnmarshalBinary(bz, &vote)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &vote)
 	return vote, true
 }
 
 func (keeper Keeper) setVote(ctx sdk.Context, proposalID int64, voterAddr sdk.AccAddress, vote Vote) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinary(vote)
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(vote)
 	store.Set(KeyVote(proposalID, voterAddr), bz)
 }
 
@@ -330,13 +330,13 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID int64, depositerAddr
 		return Deposit{}, false
 	}
 	var deposit Deposit
-	keeper.cdc.MustUnmarshalBinary(bz, &deposit)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &deposit)
 	return deposit, true
 }
 
 func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID int64, depositerAddr sdk.AccAddress, deposit Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinary(deposit)
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(deposit)
 	store.Set(KeyDeposit(proposalID, depositerAddr), bz)
 }
 
@@ -398,7 +398,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID int64) {
 
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		deposit := &Deposit{}
-		keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), deposit)
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
 		_, _, err := keeper.ck.AddCoins(ctx, deposit.Depositer, deposit.Amount)
 		if err != nil {
@@ -434,14 +434,14 @@ func (keeper Keeper) getActiveProposalQueue(ctx sdk.Context) ProposalQueue {
 	}
 
 	var proposalQueue ProposalQueue
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalQueue)
 
 	return proposalQueue
 }
 
 func (keeper Keeper) setActiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinary(proposalQueue)
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalQueue)
 	store.Set(KeyActiveProposalQueue, bz)
 }
 
@@ -480,14 +480,14 @@ func (keeper Keeper) getInactiveProposalQueue(ctx sdk.Context) ProposalQueue {
 
 	var proposalQueue ProposalQueue
 
-	keeper.cdc.MustUnmarshalBinary(bz, &proposalQueue)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposalQueue)
 
 	return proposalQueue
 }
 
 func (keeper Keeper) setInactiveProposalQueue(ctx sdk.Context, proposalQueue ProposalQueue) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := keeper.cdc.MustMarshalBinary(proposalQueue)
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalQueue)
 	store.Set(KeyInactiveProposalQueue, bz)
 }
 

@@ -172,7 +172,7 @@ func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context,
 	index := int64(0)
 	for ; iter.Valid(); iter.Next() {
 		var vdi types.ValidatorDistInfo
-		k.cdc.MustUnmarshalBinary(iter.Value(), &vdi)
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &vdi)
 		if fn(index, vdi) {
 			return
 		}

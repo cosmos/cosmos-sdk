@@ -39,7 +39,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	defer votesIterator.Close()
 	for ; votesIterator.Valid(); votesIterator.Next() {
 		vote := &Vote{}
-		keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), vote)
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), vote)
 
 		// if validator, just record it in the map
 		// if delegator tally voting power

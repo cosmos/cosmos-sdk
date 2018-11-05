@@ -261,7 +261,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 			if err != nil {
 				panic(err)
 			}
-			bz := app.cdc.MustMarshalBinary(tx)
+			bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
 			res := app.BaseApp.DeliverTx(bz)
 			if !res.IsOK() {
 				panic(res.Log)
@@ -275,7 +275,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	// sanity check
 	if len(req.Validators) > 0 {
 		if len(req.Validators) != len(validators) {
-			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d) ", len(req.Validators), len(validators)))
+			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d)",
+				len(req.Validators), len(validators)))
 		}
 		sort.Sort(abci.ValidatorUpdates(req.Validators))
 		sort.Sort(abci.ValidatorUpdates(validators))

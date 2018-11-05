@@ -173,6 +173,11 @@ func ErrConflictingRedelegation(codespace sdk.CodespaceType) sdk.Error {
 		"conflicting redelegation from this source validator to this dest validator already exists, you must wait for it to finish")
 }
 
+func ErrDelegatorShareExRateInvalid(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation,
+		"cannot delegate to validators with invalid (zero) ex-rate")
+}
+
 func ErrBothShareMsgsGiven(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "both shares amount and shares percent provided")
 }

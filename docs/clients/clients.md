@@ -2,6 +2,16 @@
 
 ## Gaia CLI
 
+::: tip Note
+If you receive this error message:
+
+```bash
+Must specify these options: --chain-id  when --trust-node is false
+```
+
+you must choose whether you wish to verify lite client proofs. If you trust the node which you are querying, you can simply pass `--trust-node=true` - otherwise you'll need to specify `--chain-id`.
+:::
+
 `gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets. Here is a list of useful `gaiacli` commands, including usage examples.
 
 ### Keys

@@ -165,13 +165,12 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
+  digest = "1:ea40c24cdbacd054a6ae9de03e62c5f252479b96c716375aace5c120d68647c8"
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -392,7 +391,7 @@
   version = "v1.2.1"
 
 [[projects]]
-  digest = "1:b3cfb8d82b1601a846417c3f31c03a7961862cb2c98dcf0959c473843e6d9a2b"
+  digest = "1:9ff9e1808adfc43f788f1c1e9fd2660c285b522243da985a4c043ec6f2a2d736"
   name = "github.com/syndtr/goleveldb"
   packages = [
     "leveldb",
@@ -409,7 +408,7 @@
     "leveldb/util",
   ]
   pruneopts = "UT"
-  revision = "c4c61651e9e37fa117f53c5a906d3b63090d8445"
+  revision = "f9080354173f192dfc8821931eacf9cfd6819253"
 
 [[projects]]
   digest = "1:605b6546f3f43745695298ec2d342d3e952b6d91cdf9f349bea9315f677d759f"

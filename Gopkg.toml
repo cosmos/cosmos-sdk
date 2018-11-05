@@ -71,7 +71,7 @@
 
 [[override]]
   name = "github.com/syndtr/goleveldb"
-  revision = "c4c61651e9e37fa117f53c5a906d3b63090d8445"
+  revision = "f9080354173f192dfc8821931eacf9cfd6819253"
 
 [[override]]
   name = "golang.org/x/sys"

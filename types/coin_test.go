@@ -257,6 +257,60 @@ func TestCoins(t *testing.T) {
 
 }
 
+func TestCoinsGT(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.False(t, Coins{}.IsGT(Coins{}))
+	assert.True(t, Coins{{"A", one}}.IsGT(Coins{}))
+	assert.False(t, Coins{{"A", one}}.IsGT(Coins{{"A", one}}))
+	assert.False(t, Coins{{"A", one}}.IsGT(Coins{{"B", one}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsGT(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsGT(Coins{{"B", two}}))
+}
+
+func TestCoinsGTE(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.True(t, Coins{}.IsGTE(Coins{}))
+	assert.True(t, Coins{{"A", one}}.IsGTE(Coins{}))
+	assert.True(t, Coins{{"A", one}}.IsGTE(Coins{{"A", one}}))
+	assert.False(t, Coins{{"A", one}}.IsGTE(Coins{{"B", one}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsGTE(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsGTE(Coins{{"B", two}}))
+}
+
+func TestCoinsLT(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.False(t, Coins{}.IsLT(Coins{}))
+	assert.False(t, Coins{{"A", one}}.IsLT(Coins{}))
+	assert.False(t, Coins{{"A", one}}.IsLT(Coins{{"A", one}}))
+	assert.False(t, Coins{{"A", one}}.IsLT(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsLT(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsLT(Coins{{"B", two}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsLT(Coins{{"A", one}, {"B", one}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsLT(Coins{{"A", one}, {"B", two}}))
+	assert.True(t, Coins{}.IsLT(Coins{{"A", one}}))
+}
+
+func TestCoinsLTE(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.True(t, Coins{}.IsLTE(Coins{}))
+	assert.False(t, Coins{{"A", one}}.IsLTE(Coins{}))
+	assert.True(t, Coins{{"A", one}}.IsLTE(Coins{{"A", one}}))
+	assert.False(t, Coins{{"A", one}}.IsLTE(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsLTE(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsLTE(Coins{{"B", two}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsLTE(Coins{{"A", one}, {"B", one}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsLTE(Coins{{"A", one}, {"B", two}}))
+	assert.True(t, Coins{}.IsLTE(Coins{{"A", one}}))
+}
+
 func TestPlusCoins(t *testing.T) {
 	one := NewInt(1)
 	zero := NewInt(0)

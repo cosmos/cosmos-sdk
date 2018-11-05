@@ -100,8 +100,8 @@ func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	// in the instance of when ReadOnly is set to true.
 	//
 	// ref: syndtr/goleveldb#240
-	// return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
-	return getKeyBaseFromDirWithOpts(rootDir, nil)
+	return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
+	//return getKeyBaseFromDirWithOpts(rootDir, nil)
 }
 
 func getKeyBaseFromDirWithOpts(rootDir string, o *opt.Options) (keys.Keybase, error) {

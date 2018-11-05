@@ -26,13 +26,12 @@ import (
 )
 
 var (
-	nodeDirPrefix  = "node-dir-prefix"
-	nValidators    = "v"
-	outputDir      = "output-dir"
-	nodeDaemonHome = "node-daemon-home"
-	nodeCliHome    = "node-cli-home"
-
-	startingIPAddress = "starting-ip-address"
+	flagNodeDirPrefix     = "node-dir-prefix"
+	flagNumValidators     = "v"
+	flagOutputDir         = "output-dir"
+	flagNodeDaemonHome    = "node-daemon-home"
+	flagNodeCliHome       = "node-cli-home"
+	flagStartingIPAddress = "starting-ip-address"
 )
 
 const nodeDirPerm = 0755
@@ -58,30 +57,30 @@ Example:
 		},
 	}
 
-	cmd.Flags().Int(nValidators, 4,
+	cmd.Flags().Int(flagNumValidators, 4,
 		"Number of validators to initialize the testnet with",
 	)
-	cmd.Flags().StringP(outputDir, "o", "./mytestnet",
+	cmd.Flags().StringP(flagOutputDir, "o", "./mytestnet",
 		"Directory to store initialization data for the testnet",
 	)
-	cmd.Flags().String(nodeDirPrefix, "node",
+	cmd.Flags().String(flagNodeDirPrefix, "node",
 		"Prefix the directory name for each node with (node results in node0, node1, ...)",
 	)
-	cmd.Flags().String(nodeDaemonHome, "gaiad",
+	cmd.Flags().String(flagNodeDaemonHome, "gaiad",
 		"Home directory of the node's daemon configuration",
 	)
-	cmd.Flags().String(nodeCliHome, "gaiacli",
+	cmd.Flags().String(flagNodeCliHome, "gaiacli",
 		"Home directory of the node's cli configuration",
 	)
-	cmd.Flags().String(startingIPAddress, "192.168.0.1",
+	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1",
 		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 
 	return cmd
 }
 
 func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
-	outDir := viper.GetString(outputDir)
-	numValidators := viper.GetInt(nValidators)
+	outDir := viper.GetString(flagOutputDir)
+	numValidators := viper.GetInt(flagNumValidators)
 
 	chainID := "chain-" + cmn.RandStr(6)
 
@@ -96,9 +95,9 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < numValidators; i++ {
-		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
-		nodeDaemonHomeName := viper.GetString(nodeDaemonHome)
-		nodeCliHomeName := viper.GetString(nodeCliHome)
+		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(flagNodeDirPrefix), i)
+		nodeDaemonHomeName := viper.GetString(flagNodeDaemonHome)
+		nodeCliHomeName := viper.GetString(flagNodeCliHome)
 		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
 		clientDir := filepath.Join(outDir, nodeDirName, nodeCliHomeName)
 		gentxsDir := filepath.Join(outDir, "gentxs")
@@ -209,14 +208,11 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 		}
 	}
 
-	if err := initGenFiles(cdc, chainID, accs, genFiles, numValidators); err != nil {
+	if err := initGenFiles(cdc, chainID, accs, genFiles); err != nil {
 		return err
 	}
 
-	err := collectGenFiles(
-		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators, outputDir,
-	)
-	if err != nil {
+	if err := collectGenFiles(cdc, config, chainID, monikers, nodeIDs, valPubKeys); err != nil {
 		return err
 	}
 
@@ -225,10 +221,10 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 }
 
 func initGenFiles(
-	cdc *codec.Codec, chainID string, accs []app.GenesisAccount,
-	genFiles []string, numValidators int,
+	cdc *codec.Codec, chainID string, accs []app.GenesisAccount, genFiles []string,
 ) error {
 
+	numValidators := viper.GetInt(flagNumValidators)
 	appGenState := app.NewDefaultGenesisState()
 	appGenState.Accounts = accs
 
@@ -256,17 +252,19 @@ func initGenFiles(
 func collectGenFiles(
 	cdc *codec.Codec, config *cfg.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
-	numValidators int, outputDir string,
 ) error {
+
+	outDir := viper.GetString(flagOutputDir)
+	numValidators := viper.GetInt(flagNumValidators)
 
 	var appState json.RawMessage
 	genTime := tmtime.Now()
 
 	for i := 0; i < numValidators; i++ {
-		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(nodeDirPrefix), i)
-		nodeDaemonHomeName := viper.GetString(nodeDaemonHome)
-		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHomeName)
-		gentxsDir := filepath.Join(outputDir, "gentxs")
+		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(flagNodeDirPrefix), i)
+		nodeDaemonHomeName := viper.GetString(flagNodeDaemonHome)
+		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
+		gentxsDir := filepath.Join(outDir, "gentxs")
 		moniker := monikers[i]
 		config.Moniker = nodeDirName
 
@@ -309,7 +307,7 @@ func collectGenFiles(
 }
 
 func getIP(i int) (ip string, err error) {
-	ip = viper.GetString(startingIPAddress)
+	ip = viper.GetString(flagStartingIPAddress)
 
 	if len(ip) == 0 {
 		ip, err = server.ExternalIP()

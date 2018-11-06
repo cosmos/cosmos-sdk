@@ -91,15 +91,15 @@ func (k Keeper) GetAllRedelegations(ctx sdk.Context, delegator sdk.AccAddress, s
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 	defer iterator.Close()
 
-	srcValFilter := srcValAddress.Empty() || srcValAddress == nil
-	dstValFilter := dstValAddress.Empty() || dstValAddress == nil
+	srcValFilter := !(srcValAddress.Empty() || srcValAddress == nil)
+	dstValFilter := !(dstValAddress.Empty() || dstValAddress == nil)
 
 	for ; iterator.Valid(); iterator.Next() {
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
-		if !srcValFilter && !(srcValAddress.Equals(redelegation.ValidatorSrcAddr)) {
+		if srcValFilter && !(srcValAddress.Equals(redelegation.ValidatorSrcAddr)) {
 			continue
 		}
-		if !dstValFilter && !(dstValAddress.Equals(redelegation.ValidatorDstAddr)) {
+		if dstValFilter && !(dstValAddress.Equals(redelegation.ValidatorDstAddr)) {
 			continue
 		}
 		redelegations = append(redelegations, redelegation)

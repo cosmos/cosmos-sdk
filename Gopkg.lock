@@ -501,6 +501,7 @@
   ]
   pruneopts = "UT"
   revision = "ebee4377b15f2958b08994485375dd2ee8a649ac"
+  source = "https://github.com/tendermint/tendermint"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"

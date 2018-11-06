@@ -29,9 +29,18 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	keeper.SetIntraTxCounter(ctx, data.IntraTxCounter)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
+	// We only need to set this if we're starting from a list of validators, not a state export
+	setBondIntraTxCounter := true
+	for _, validator := range data.Validators {
+		if validator.BondIntraTxCounter != 0 {
+			setBondIntraTxCounter = false
+		}
+	}
+
 	for i, validator := range data.Validators {
-		if validator.BondIntraTxCounter == 0 {
-			validator.BondIntraTxCounter = int16(i) // set the intra-tx counter to the order the validators are presented
+		// set the intra-tx counter to the order the validators are presented, if necessary
+		if setBondIntraTxCounter {
+			validator.BondIntraTxCounter = int16(i)
 		}
 		keeper.SetValidator(ctx, validator)
 

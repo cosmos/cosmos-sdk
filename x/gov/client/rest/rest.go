@@ -292,7 +292,7 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		var deposit gov.Deposit
 		cdc.UnmarshalJSON(res, &deposit)
 		if deposit.Empty() {
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinary(gov.QueryProposalParams{params.ProposalID}))
+			res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinaryLengthPrefixed(gov.QueryProposalParams{params.ProposalID}))
 			if err != nil || len(res) == 0 {
 				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
 				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())

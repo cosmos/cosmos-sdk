@@ -15,7 +15,7 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 		found = false
 		return
 	}
-	k.cdc.MustUnmarshalBinary(bz, &info)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &info)
 	found = true
 	return
 }
@@ -23,7 +23,7 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 // Stored by *validator* address (not operator address)
 func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(info)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(info)
 	store.Set(GetValidatorSigningInfoKey(address), bz)
 }
 
@@ -36,14 +36,14 @@ func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 		missed = false
 		return
 	}
-	k.cdc.MustUnmarshalBinary(bz, &missed)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
 	return
 }
 
 // Stored by *validator* address (not operator address)
 func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(missed)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(missed)
 	store.Set(GetValidatorMissedBlockBitArrayKey(address, index), bz)
 }
 

@@ -130,7 +130,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), ck, sk, fck, types.DefaultCodespace)
 
 	// set the distribution hooks on staking
-	sk = sk.WithHooks(keeper.Hooks())
+	sk.SetHooks(keeper.Hooks())
 
 	// set genesis items required for distribution
 	keeper.SetFeePool(ctx, types.InitialFeePool())
@@ -172,7 +172,7 @@ func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context,
 	index := int64(0)
 	for ; iter.Valid(); iter.Next() {
 		var vdi types.ValidatorDistInfo
-		k.cdc.MustUnmarshalBinary(iter.Value(), &vdi)
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &vdi)
 		if fn(index, vdi) {
 			return
 		}

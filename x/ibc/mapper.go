@@ -33,13 +33,13 @@ func (ibcm Mapper) PostIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error {
 	// write everything into the state
 	store := ctx.KVStore(ibcm.key)
 	index := ibcm.getEgressLength(store, packet.DestChain)
-	bz, err := ibcm.cdc.MarshalBinary(packet)
+	bz, err := ibcm.cdc.MarshalBinaryLengthPrefixed(packet)
 	if err != nil {
 		panic(err)
 	}
 
 	store.Set(EgressKey(packet.DestChain, index), bz)
-	bz, err = ibcm.cdc.MarshalBinary(index + 1)
+	bz, err = ibcm.cdc.MarshalBinaryLengthPrefixed(index + 1)
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +61,7 @@ func (ibcm Mapper) ReceiveIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error
 // Functions for accessing the underlying KVStore.
 
 func marshalBinaryPanic(cdc *codec.Codec, value interface{}) []byte {
-	res, err := cdc.MarshalBinary(value)
+	res, err := cdc.MarshalBinaryLengthPrefixed(value)
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +69,7 @@ func marshalBinaryPanic(cdc *codec.Codec, value interface{}) []byte {
 }
 
 func unmarshalBinaryPanic(cdc *codec.Codec, bz []byte, ptr interface{}) {
-	err := cdc.UnmarshalBinary(bz, ptr)
+	err := cdc.UnmarshalBinaryLengthPrefixed(bz, ptr)
 	if err != nil {
 		panic(err)
 	}

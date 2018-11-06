@@ -31,11 +31,27 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 // Called every block, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.ValidatorUpdate) {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) (validatorUpdates []abci.ValidatorUpdate) {
 	endBlockerTags := sdk.EmptyTags()
 
+	// Reset the intra-transaction counter.
+	k.SetIntraTxCounter(ctx, 0)
+
+	// Calculate validator set changes.
+	//
+	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
+	// UnbondAllMatureValidatorQueue.
+	// This fixes a bug when the unbonding period is instant (is the case in
+	// some of the tests). The test expected the validator to be completely
+	// unbonded after the Endblocker (go from Bonded -> Unbonding during
+	// ApplyAndReturnValidatorSetUpdates and then Unbonding -> Unbonded during
+	// UnbondAllMatureValidatorQueue).
+	validatorUpdates = k.ApplyAndReturnValidatorSetUpdates(ctx)
+
+	// Unbond all mature validators from the unbonding queue.
 	k.UnbondAllMatureValidatorQueue(ctx)
 
+	// Remove all mature unbonding delegations from the ubd queue.
 	matureUnbonds := k.DequeueAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvPair := range matureUnbonds {
 		err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddr, dvPair.ValidatorAddr)
@@ -49,6 +65,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 		))
 	}
 
+	// Remove all mature redelegations from the red queue.
 	matureRedelegations := k.DequeueAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvvTriplet := range matureRedelegations {
 		err := k.CompleteRedelegation(ctx, dvvTriplet.DelegatorAddr, dvvTriplet.ValidatorSrcAddr, dvvTriplet.ValidatorDstAddr)
@@ -62,12 +79,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (ValidatorUpdates []abci.Valid
 			tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
 		))
 	}
-
-	// reset the intra-transaction counter
-	k.SetIntraTxCounter(ctx, 0)
-
-	// calculate validator set changes
-	ValidatorUpdates = k.ApplyAndReturnValidatorSetUpdates(ctx)
 	return
 }
 
@@ -201,7 +212,7 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinary(ubd.MinTime)
+	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(ubd.MinTime)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginUnbonding,
@@ -219,7 +230,7 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinary(red.MinTime)
+	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(red.MinTime)
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionBeginRedelegation,

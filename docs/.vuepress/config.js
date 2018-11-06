@@ -78,13 +78,6 @@ module.exports = {
 	]
       },
       {
-        title: "Lotion JS",
-        collapsable: false,
-        children: [
-	  ["/lotion/overview", "Overview"]
-	]
-      },
-      {
         title: "Validators",
         collapsable: false,
         children: [

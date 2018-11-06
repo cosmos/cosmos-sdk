@@ -38,7 +38,7 @@ type VestingAccount interface {
 
 	// Calculates the amount of coins that can be sent to other accounts given
 	// the current time.
-	SpendableCoins(ctx sdk.Context) sdk.Coins
+	SpendableCoins(blockTime time.Time) sdk.Coins
 
 	TrackDelegation(blockTime time.Time, amount sdk.Coins) // Performs delegation accounting.
 	TrackUndelegation(amount sdk.Coins)                    // Performs undelegation accounting.
@@ -137,11 +137,11 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 //-----------------------------------------------------------------------------
 // Vesting Accounts
 
-// TODO: uncomment once implemented
-// var (
-// 	_ VestingAccount = (*ContinuousVestingAccount)(nil)
-// 	_ VestingAccount = (*DelayedVestingAccount)(nil)
-// )
+var (
+	_ VestingAccount = (*ContinuousVestingAccount)(nil)
+	// TODO: uncomment once implemented
+	// _ VestingAccount = (*DelayedVestingAccount)(nil)
+)
 
 type (
 	// BaseVestingAccount implements the VestingAccount interface. It contains all

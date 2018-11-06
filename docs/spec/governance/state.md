@@ -98,11 +98,11 @@ type Proposal struct {
   Deposits              []Deposit           //  List of deposits on the proposal
   SubmitTime            time.Time           //  Time of the block where TxGovSubmitProposal was included
   DepositEndTime        time.Time           //  Time that the DepositPeriod of a proposal would expire
-  Submitter             sdk.Address         //  Address of the submitter
+  Submitter             sdk.AccAddress      //  Address of the submitter
   
-  VotingStartTime      time.Time               //  Time of the block where MinDeposit was reached. time.Time{} if MinDeposit is not reached
-  VotingEndTime        time.Time               //  Time of the block that the VotingPeriod for a proposal will end.
-  CurrentStatus         ProposalStatus         //  Current status of the proposal
+  VotingStartTime       time.Time           //  Time of the block where MinDeposit was reached. time.Time{} if MinDeposit is not reached
+  VotingEndTime         time.Time           //  Time of the block that the VotingPeriod for a proposal will end.
+  CurrentStatus         ProposalStatus      //  Current status of the proposal
 
   YesVotes              sdk.Dec
   NoVotes               sdk.Dec
@@ -146,18 +146,16 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
 ```go
   in EndBlock do 
-
-    votingProcedure = load(GlobalParams, 'VotingProcedure')
     
     for finishedProposalID in GetAllFinishedProposalIDs(block.Time)
       proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
 
       validators = Keeper.getAllValidators()
-      tmpValMap := map(sdk.Address)ValidatorGovInfo
+      tmpValMap := map(sdk.AccAddress)ValidatorGovInfo
 
-      // Initiate mapping at 0. Validators that remain at 0 at the end of tally will be punished
+      // Initiate mapping at 0. This is the amount of shares of the validator's vote that will be overridden by their delegator's votes
       for each validator in validators
-        tmpValMap(validator).Minus = 0
+        tmpValMap(validator.OperatorAddr).Minus = 0
 
       // Tally
       voterIterator = rangeQuery(Governance, <proposalID|'addresses'>) //return all the addresses that voted on the proposal

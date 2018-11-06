@@ -12,7 +12,7 @@ import (
 
 // Key for getting a the next available proposalID from the store
 var (
-	KeyDelimiter = []byte("/")
+	KeyDelimiter = []byte(":")
 
 	KeyNextProposalID           = []byte("newProposalID")
 	PrefixActiveProposalQueue   = []byte("activeProposalQueue")

@@ -333,6 +333,37 @@ Additionally, as you can get all the outgoing redelegations from a particular va
 
 To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
 
+#### Query Parameters
+
+Parameters define high level settings for staking. You can get the current values by using:
+
+```
+gaiacli query parameters
+```
+
+With the above command you will get the values for:
+
+- Unbonding time
+- Maximum numbers of validators
+- Coin denomination for staking
+
+All these values will be subject to updates though a `governance` process by `ParameterChange` proposals.
+
+#### Query Pool
+
+A staking `Pool` defines the dynamic parameters of the current state. You can query them with the following command:
+
+```
+gaiacli query pool
+```
+
+With the `pool` command you will get the values for:
+
+- Loose and bonded tokens
+- Token supply
+- Current anual inflation and the block in which the last inflation was processed
+- Last recorded bonded shares
+
 ### Governance
 
 Governance is the process from which users in the Cosmos Hub can come to consensus on software upgrades, parameters of the mainnet or on custom text proposals. This is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet.
@@ -346,7 +377,7 @@ Some considerations about the voting process:
 - Voters can choose between options `Yes`, `No`, `NoWithVeto` and `Abstain`
   At the end of the voting period, a proposal is accepted if `(YesVotes/(YesVotes+NoVotes+NoWithVetoVotes))>1/2` and `(NoWithVetoVotes/(YesVotes+NoVotes+NoWithVetoVotes))<1/3`. It is rejected otherwise
 
-For more information about the governance process and how it works, please check out the Governance module [specification](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/governance).
+For more information about the governance process and how it works, please check out the Governance module [specification](./../spec/governance).
 
 #### Create a Governance proposal
 
@@ -371,8 +402,7 @@ gaiacli tx submit-proposal \
 Once created, you can now query information of the proposal:
 
 ```bash
-gaiacli query proposal \
-  --proposal-id=<proposal_id>
+gaiacli query proposal --proposal-id=<proposal_id>
 ```
 
 Or query all available proposals:
@@ -397,6 +427,22 @@ gaiacli tx deposit \
 
 > _NOTE_: Proposals that don't meet this requirement will be deleted after `MaxDepositPeriod` is reached.
 
+##### Query deposits
+
+Once a new proposal is created, you can query all the deposits submitted to it:
+
+```bash
+gaiacli query deposits --proposal-id=<proposal_id>
+```
+
+You can also query a deposit submitted by a specific address:
+
+```bash
+gaiacli query deposit \
+  --proposal-id=<proposal_id> \
+  --depositer=<account_cosmos>
+```
+
 #### Vote on a proposal
 
 After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded `Atom` holders can then cast vote on it:
@@ -409,7 +455,7 @@ gaiacli tx vote \
   --chain-id=<chain_id>
 ```
 
-##### Query vote
+##### Query votes
 
 Check the vote with the option you just submitted:
 
@@ -419,40 +465,16 @@ gaiacli query vote \
   --voter=<account_cosmos>
 ```
 
-#### Query Parameters
+You can also get all the previous votes submitted to the proposal with:
 
-You can get the current parameters that define high level settings for staking:
-
-```
-gaiacli query parameters
+```bash
+gaiacli query votes --proposal-id=<proposal_id>
 ```
 
-With the above command you will get the values for:
+#### Query proposal tally results
 
-- Unbonding time
-- Maximum numbers of validators
-- Coin denomination for staking
+To check the current tally of a given proposal you can use the `tally` command:
 
-All this values can be updated though a `governance` process by submitting a parameter change `proposal`.
-
-#### Query Pool
-
-A staking `Pool` defines the dynamic parameters of the current state. You can query them with the following command:
-
+```bash
+gaiacli query tally --proposal-id=<proposal_id>
 ```
-gaiacli query pool
-```
-
-With the `pool` command you will get the values for:
-
-- Loose and bonded tokens
-- Token supply
-- Current anual inflation and the block in which the last inflation was processed
-- Last recorded bonded shares
-
-
-## Gaia-Lite
-
-::: tip Note
-🚧 We are actively working on documentation for Gaia-lite.
-:::

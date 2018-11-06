@@ -1,6 +1,6 @@
 # Welcome to the Cosmos Docs!
 
-![cosmonaut reading the cosmos docs in space](./graphics/cosmos-docs.jpg)
+![cosmonaut reading the cosmos docs in space](./cosmos-docs.jpg)
 
 Cosmos is a decentralized network of independent parallel blockchains, each powered by classical BFT consensus algorithms like Tendermint.
 

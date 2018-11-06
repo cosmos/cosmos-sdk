@@ -56,8 +56,9 @@ make build-linux localnet-stop localnet-start
 
 ### Configuration
 
-The `make localnet-start` creates files for a 4-node testnet in `./build` by calling the `gaiad testnet` command.
-This outputs a handful of files in the `./build` directory:
+The `make localnet-start` creates files for a 4-node testnet in `./build` by
+calling the `gaiad testnet` command. This outputs a handful of files in the
+`./build` directory:
 
 ```tree -L 2 build/
 build/
@@ -103,11 +104,37 @@ Each `./build/nodeN` directory is mounted to the `/gaiad` directory in each cont
 
 ### Logging
 
-Logs are saved under each `./build/nodeN/gaiad/gaia.log`. Watch them stream in with, for example:
+Logs are saved under each `./build/nodeN/gaiad/gaia.log`. You can also watch logs
+directly via Docker, for example:
 
 ```
-tail -f build/node0/gaiad/gaia.log
+docker logs -f gaiadnode0
 ```
+
+### Keys & Accounts
+
+Each node's directory by default will not contain any keys or accounts. Each
+node's seed is located at `./build/<nodeN>/gaiacli/key_seed.json`. To interact 
+with `gaiacli` and start querying or creating txs, you can add (recover) any given
+node's key, for example:
+
+```shell
+cat ./build/node0/gaiacli/key_seed.json
+> {"secret":"few burger flag such ..."}
+
+gaiacli keys add node0 --recover --home ./build/node0
+> input your desired passphrase
+> input seed from above
+```
+
+Then, you can list your keys as such:
+
+```shell
+gaiacli keys list --home --home ./build/node0
+```
+
+Now that an account exists, you may create new accounts and send those accounts
+funds!
 
 ### Special binaries
 

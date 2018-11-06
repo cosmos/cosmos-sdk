@@ -10,17 +10,11 @@
       - [Continuously Vesting Accounts](#continuously-vesting-accounts)
       - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
     - [Transferring/Sending](#transferringsending)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts-1)
-        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-1)
-        - [Keepers/Handlers](#keepershandlers)
+      - [Keepers/Handlers](#keepershandlers)
     - [Delegating](#delegating)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts-2)
-        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-2)
-        - [Keepers/Handlers](#keepershandlers-1)
+      - [Keepers/Handlers](#keepershandlers-1)
     - [Undelegating](#undelegating)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts-3)
-        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-3)
-        - [Keepers/Handlers](#keepershandlers-2)
+      - [Keepers/Handlers](#keepershandlers-2)
   - [Keepers & Handlers](#keepers--handlers)
   - [Initializing at Genesis](#initializing-at-genesis)
   - [Examples](#examples)
@@ -145,7 +139,7 @@ func (cva ContinuousVestingAccount) GetVestingCoins(t Time) Coins {
 #### Delayed/Discrete Vesting Accounts
 
 Delayed vesting accounts are easier to reason about as they only have the full
-amount vesting up until a certain time, then they all become vested (unlocked).
+amount vesting up until a certain time, then all the coins become vested (unlocked).
 
 ```go
 func (dva DelayedVestingAccount) GetVestedCoins(t Time) Coins {
@@ -157,40 +151,26 @@ func (dva DelayedVestingAccount) GetVestedCoins(t Time) Coins {
 }
 
 func (dva DelayedVestingAccount) GetVestingCoins(t Time) Coins {
-    return cva.OriginalVesting - cva.GetVestedCoins(t)
+    return dva.OriginalVesting - dva.GetVestedCoins(t)
 }
 ```
 
 ### Transferring/Sending
 
-#### Continuously Vesting Accounts
-
-At any given time, a continuous vesting account may transfer: `min((BC + DV) - V, BC)`.
+At any given time, a vesting account may transfer: `min((BC + DV) - V, BC)`.
 
 In other words, a vesting account may transfer the minimum of the base account
 balance and the base account balance plus the number of currently delegated
 vesting coins less the number of coins vested so far.
 
 ```go
-func (cva ContinuousVestingAccount) SpendableCoins(t Time) Coins {
-    bc := cva.GetCoins()
-    return min((bc + cva.DelegatedVesting) - cva.GetVestingCoins(t), bc)
+func (va VestingAccount) SpendableCoins(t Time) Coins {
+    bc := va.GetCoins()
+    return min((bc + va.DelegatedVesting) - va.GetVestingCoins(t), bc)
 }
 ```
 
-##### Delayed/Discrete Vesting Accounts
-
-A delayed vesting account may send any coins it has received. In addition, if it
-has fully vested, it can send any of it's vested coins.
-
-```go
-func (dva DelayedVestingAccount) SpendableCoins(t Time) Coins {
-    bc := dva.GetCoins()
-    return bc - dva.GetVestingCoins(t)
-}
-```
-
-##### Keepers/Handlers
+#### Keepers/Handlers
 
 The corresponding `x/bank` keeper should appropriately handle sending coins
 based on if the account is a vesting account or not.
@@ -213,10 +193,7 @@ func SendCoins(t Time, from Account, to Account, amount Coins) {
 
 ### Delegating
 
-#### Continuously Vesting Accounts
-
-For a continuous vesting account attempting to delegate `D` coins, the following
-is performed:
+For a vesting account attempting to delegate `D` coins, the following is performed:
 
 1. Verify `BC >= D > 0`
 2. Compute `X := min(max(V - DV, 0), D)` (portion of `D` that is vesting)
@@ -226,35 +203,21 @@ is performed:
 6. Set `BC -= D`
 
 ```go
-func (cva ContinuousVestingAccount) TrackDelegation(t Time, amount Coins) {
-    x := min(max(cva.GetVestingCoins(t) - cva.DelegatedVesting, 0), amount)
+func (va VestingAccount) TrackDelegation(t Time, amount Coins) {
+    x := min(max(va.GetVestingCoins(t) - va.DelegatedVesting, 0), amount)
     y := amount - x
 
-    cva.DelegatedVesting += x
-    cva.DelegatedFree += y
-    cva.SetCoins(cva.GetCoins() - amount)
+    va.DelegatedVesting += x
+    va.DelegatedFree += y
+    va.SetCoins(va.GetCoins() - amount)
 }
 ```
 
-##### Delayed/Discrete Vesting Accounts
-
-For a delayed vesting account, it can only delegate with received coins and
-coins that are fully vested so we only need to update `DF` and `BC`.
-
-```go
-func (dva DelayedVestingAccount) TrackDelegation(t Time, amount Coins) {
-    dva.DelegatedFree += amount
-    dva.SetCoins(dva.GetCoins() - amount)
-}
-```
-
-##### Keepers/Handlers
+#### Keepers/Handlers
 
 ```go
 func DelegateCoins(t Time, from Account, amount Coins) {
-    // canDelegate checks different semantics for continuous and delayed vesting
-    // accounts
-    if isVesting(from) && canDelegate(from) {
+    if isVesting(from) {
         sc := from.GetCoins()
 
         if amount <= sc {
@@ -274,10 +237,7 @@ func DelegateCoins(t Time, from Account, amount Coins) {
 
 ### Undelegating
 
-#### Continuously Vesting Accounts
-
-For a continuous vesting account attempting to undelegate `D` coins, the
-following is performed:
+For a vesting account attempting to undelegate `D` coins, the following is performed:
 
 1. Verify `(DV + DF) >= D > 0` (this is simply a sanity check)
 2. Compute `X := min(DF, D)` (portion of `D` that should become free, prioritizing free coins)
@@ -301,19 +261,7 @@ func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
 with excess an `DV` amount, even after all its coins have vested. This is because
 undelegating free coins are prioritized.
 
-##### Delayed/Discrete Vesting Accounts
-
-For a delayed vesting account, it only needs to add back the `DF` and `BC` amounts
-since the account is fully vested.
-
-```go
-func (dva DelayedVestingAccount) TrackUndelegation(amount Coins) {
-    dva.DelegatedFree -= amount
-    dva.SetCoins(dva.GetCoins() + amount)
-}
-```
-
-##### Keepers/Handlers
+#### Keepers/Handlers
 
 ```go
 func UndelegateCoins(to Account, amount Coins) {
@@ -352,9 +300,10 @@ BaseAccounts and VestingAccounts as appropriate.
 
 ```go
 type GenesisAccount struct {
-    Address        sdk.AccAddress
-    GenesisCoins   sdk.Coins
-    EndTime        int64
+    Address       sdk.AccAddress
+    GenesisCoins  sdk.Coins
+    EndTime       int64
+    StartTime     int64
 }
 
 func initChainer() {
@@ -364,11 +313,20 @@ func initChainer() {
             Coins:   genAcc.GenesisCoins,
         }
 
-        if genAcc.EndTime != 0 {
+        if genAcc.StartTime != 0 && genAcc.EndTime != 0 {
             vestingAccount := ContinuousVestingAccount{
                 BaseAccount:      baseAccount,
                 OriginalVesting:  genAcc.GenesisCoins,
                 StartTime:        RequestInitChain.Time,
+                StartTime:        genAcc.StartTime,
+                EndTime:          genAcc.EndTime,
+            }
+
+            AddAccountToState(vestingAccount)
+        } else if genAcc.EndTime != 0 {
+            vestingAccount := DelayedVestingAccount{
+                BaseAccount:      baseAccount,
+                OriginalVesting:  genAcc.GenesisCoins,
                 EndTime:          genAcc.EndTime,
             }
 

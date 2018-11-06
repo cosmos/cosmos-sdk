@@ -104,7 +104,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -143,7 +143,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -188,7 +188,7 @@ func queryProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -218,7 +218,7 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -255,7 +255,7 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -319,7 +319,7 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -386,7 +386,7 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -447,7 +447,7 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			params.ProposalStatus = proposalStatus
 		}
 		if len(strNumLatest) != 0 {
-			numLatest, ok := utils.ParseInt64OrReturnBadRequest(w, strNumLatest)
+			numLatest, ok := utils.ParseUint64OrReturnBadRequest(w, strNumLatest)
 			if !ok {
 				return
 			}
@@ -484,7 +484,7 @@ func queryTallyOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}

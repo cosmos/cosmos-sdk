@@ -70,7 +70,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 	// Random genesis states
 	govGenesis := gov.GenesisState{
-		StartingProposalID: int64(r.Intn(100)),
+		StartingProposalID: uint64(r.Intn(100)),
 		DepositProcedure: gov.DepositProcedure{
 			MinDeposit:       sdk.Coins{sdk.NewInt64Coin("steak", int64(r.Intn(1e3)))},
 			MaxDepositPeriod: time.Duration(r.Intn(2*172800)) * time.Second,

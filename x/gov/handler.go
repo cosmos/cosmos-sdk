@@ -104,7 +104,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; inactiveIterator.Valid(); inactiveIterator.Next() {
-		var proposalID int64
+		var proposalID uint64
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
 		inactiveProposal := keeper.GetProposal(ctx, proposalID)
 		keeper.RefundDeposits(ctx, proposalID)
@@ -126,7 +126,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 	activeIterator := keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; activeIterator.Valid(); activeIterator.Next() {
-		var proposalID int64
+		var proposalID uint64
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
 		activeProposal := keeper.GetProposal(ctx, proposalID)
 		passes, tallyResults := tally(ctx, keeper, activeProposal)

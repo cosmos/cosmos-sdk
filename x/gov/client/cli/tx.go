@@ -170,7 +170,7 @@ func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			proposalID := viper.GetInt64(flagProposalID)
+			proposalID := uint64(viper.GetInt64(flagProposalID))
 
 			amount, err := sdk.ParseCoins(viper.GetString(flagDeposit))
 			if err != nil {
@@ -215,7 +215,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			proposalID := viper.GetInt64(flagProposalID)
+			proposalID := uint64(viper.GetInt64(flagProposalID))
 			option := viper.GetString(flagOption)
 
 			byteVoteOption, err := gov.VoteOptionFromString(client.NormalizeVoteOption(option))
@@ -256,7 +256,7 @@ func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query details of a single proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			proposalID := viper.GetInt64(flagProposalID)
+			proposalID := uint64(viper.GetInt64(flagProposalID))
 
 			params := gov.QueryProposalParams{
 				ProposalID: proposalID,
@@ -291,7 +291,7 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			bechDepositerAddr := viper.GetString(flagDepositer)
 			bechVoterAddr := viper.GetString(flagVoter)
 			strProposalStatus := viper.GetString(flagStatus)
-			latestProposalsIDs := viper.GetInt64(flagLatestProposalIDs)
+			latestProposalsIDs := uint64(viper.GetInt64(flagLatestProposalIDs))
 
 			params := gov.QueryProposalsParams{
 				NumLatestProposals: latestProposalsIDs,
@@ -368,7 +368,7 @@ func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query details of a single vote",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			proposalID := viper.GetInt64(flagProposalID)
+			proposalID := uint64(viper.GetInt64(flagProposalID))
 
 			voterAddr, err := sdk.AccAddressFromBech32(viper.GetString(flagVoter))
 			if err != nil {
@@ -407,7 +407,7 @@ func GetCmdQueryVotes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query votes on a proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			proposalID := viper.GetInt64(flagProposalID)
+			proposalID := uint64(viper.GetInt64(flagProposalID))
 
 			params := gov.QueryVotesParams{
 				ProposalID: proposalID,
@@ -440,7 +440,7 @@ func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query details of a deposit",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			proposalID := viper.GetInt64(flagProposalID)
+			proposalID := uint64(viper.GetInt64(flagProposalID))
 
 			depositerAddr, err := sdk.AccAddressFromBech32(viper.GetString(flagDepositer))
 			if err != nil {
@@ -479,7 +479,7 @@ func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query deposits on a proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			proposalID := viper.GetInt64(flagProposalID)
+			proposalID := uint64(viper.GetInt64(flagProposalID))
 
 			params := gov.QueryDepositsParams{
 				ProposalID: proposalID,
@@ -511,7 +511,7 @@ func GetCmdQueryTally(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Get the tally of a proposal vote",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			proposalID := viper.GetInt64(flagProposalID)
+			proposalID := uint64(viper.GetInt64(flagProposalID))
 
 			params := gov.QueryTallyParams{
 				ProposalID: proposalID,

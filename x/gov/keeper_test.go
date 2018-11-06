@@ -36,7 +36,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposal6 := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
-	require.Equal(t, int64(6), proposal6.GetProposalID())
+	require.Equal(t, uint64(6), proposal6.GetProposalID())
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
@@ -54,7 +54,7 @@ func TestActivateVotingPeriod(t *testing.T) {
 
 	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.GetVotingEndTime())
 	require.True(t, activeIterator.Valid())
-	var proposalID int64
+	var proposalID uint64
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
 	require.Equal(t, proposalID, proposal.GetProposalID())
 	activeIterator.Close()
@@ -214,7 +214,7 @@ func TestProposalQueues(t *testing.T) {
 
 	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, proposal.GetDepositEndTime())
 	require.True(t, inactiveIterator.Valid())
-	var proposalID int64
+	var proposalID uint64
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
 	require.Equal(t, proposalID, proposal.GetProposalID())
 	inactiveIterator.Close()

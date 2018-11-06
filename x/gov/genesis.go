@@ -8,13 +8,13 @@ import (
 
 // GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
-	StartingProposalID int64             `json:"starting_proposalID"`
+	StartingProposalID uint64            `json:"starting_proposalID"`
 	DepositProcedure   DepositProcedure  `json:"deposit_period"`
 	VotingProcedure    VotingProcedure   `json:"voting_period"`
 	TallyingProcedure  TallyingProcedure `json:"tallying_procedure"`
 }
 
-func NewGenesisState(startingProposalID int64, dp DepositProcedure, vp VotingProcedure, tp TallyingProcedure) GenesisState {
+func NewGenesisState(startingProposalID uint64, dp DepositProcedure, vp VotingProcedure, tp TallyingProcedure) GenesisState {
 	return GenesisState{
 		StartingProposalID: startingProposalID,
 		DepositProcedure:   dp,

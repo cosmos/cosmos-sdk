@@ -155,11 +155,11 @@ func SimulateMsgDeposit(k gov.Keeper, sk stake.Keeper) simulation.Operation {
 // SimulateMsgVote
 // nolint: unparam
 func SimulateMsgVote(k gov.Keeper, sk stake.Keeper) simulation.Operation {
-	return operationSimulateMsgVote(k, sk, simulation.Account{}, -1)
+	return operationSimulateMsgVote(k, sk, simulation.Account{}, 0)
 }
 
 // nolint: unparam
-func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, acc simulation.Account, proposalID int64) simulation.Operation {
+func operationSimulateMsgVote(k gov.Keeper, sk stake.Keeper, acc simulation.Account, proposalID uint64) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOp []simulation.FutureOperation, err error) {
 		if acc.Equals(simulation.Account{}) {
 			acc = simulation.RandomAcc(r, accs)
@@ -200,12 +200,12 @@ func randomDeposit(r *rand.Rand) sdk.Coins {
 }
 
 // Pick a random proposal ID
-func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID int64, ok bool) {
+func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID uint64, ok bool) {
 	lastProposalID := k.GetLastProposalID(ctx)
 	if lastProposalID < 1 {
 		return 0, false
 	}
-	proposalID = int64(r.Intn(int(lastProposalID)))
+	proposalID = uint64(r.Intn(int(lastProposalID)))
 	return proposalID, true
 }
 

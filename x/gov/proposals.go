@@ -13,8 +13,8 @@ import (
 //-----------------------------------------------------------
 // Proposal interface
 type Proposal interface {
-	GetProposalID() int64
-	SetProposalID(int64)
+	GetProposalID() uint64
+	SetProposalID(uint64)
 
 	GetTitle() string
 	SetTitle(string)
@@ -68,7 +68,7 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 //-----------------------------------------------------------
 // Text Proposals
 type TextProposal struct {
-	ProposalID   int64        `json:"proposal_id"`   //  ID of the proposal
+	ProposalID   uint64       `json:"proposal_id"`   //  ID of the proposal
 	Title        string       `json:"title"`         //  Title of the proposal
 	Description  string       `json:"description"`   //  Description of the proposal
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
@@ -88,8 +88,8 @@ type TextProposal struct {
 var _ Proposal = (*TextProposal)(nil)
 
 // nolint
-func (tp TextProposal) GetProposalID() int64                       { return tp.ProposalID }
-func (tp *TextProposal) SetProposalID(proposalID int64)            { tp.ProposalID = proposalID }
+func (tp TextProposal) GetProposalID() uint64                      { return tp.ProposalID }
+func (tp *TextProposal) SetProposalID(proposalID uint64)           { tp.ProposalID = proposalID }
 func (tp TextProposal) GetTitle() string                           { return tp.Title }
 func (tp *TextProposal) SetTitle(title string)                     { tp.Title = title }
 func (tp TextProposal) GetDescription() string                     { return tp.Description }
@@ -119,7 +119,7 @@ func (tp *TextProposal) SetVotingEndTime(votingEndTime time.Time) {
 
 //-----------------------------------------------------------
 // ProposalQueue
-type ProposalQueue []int64
+type ProposalQueue []uint64
 
 //-----------------------------------------------------------
 // ProposalKind

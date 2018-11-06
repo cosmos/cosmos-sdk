@@ -20,27 +20,27 @@ var (
 )
 
 // Key for getting a specific proposal from the store
-func KeyProposal(proposalID int64) []byte {
+func KeyProposal(proposalID uint64) []byte {
 	return []byte(fmt.Sprintf("proposals:%d", proposalID))
 }
 
 // Key for getting a specific deposit from the store
-func KeyDeposit(proposalID int64, depositerAddr sdk.AccAddress) []byte {
+func KeyDeposit(proposalID uint64, depositerAddr sdk.AccAddress) []byte {
 	return []byte(fmt.Sprintf("deposits:%d:%d", proposalID, depositerAddr))
 }
 
 // Key for getting a specific vote from the store
-func KeyVote(proposalID int64, voterAddr sdk.AccAddress) []byte {
+func KeyVote(proposalID uint64, voterAddr sdk.AccAddress) []byte {
 	return []byte(fmt.Sprintf("votes:%d:%d", proposalID, voterAddr))
 }
 
 // Key for getting all deposits on a proposal from the store
-func KeyDepositsSubspace(proposalID int64) []byte {
+func KeyDepositsSubspace(proposalID uint64) []byte {
 	return []byte(fmt.Sprintf("deposits:%d:", proposalID))
 }
 
 // Key for getting all votes on a proposal from the store
-func KeyVotesSubspace(proposalID int64) []byte {
+func KeyVotesSubspace(proposalID uint64) []byte {
 	return []byte(fmt.Sprintf("votes:%d:", proposalID))
 }
 
@@ -53,11 +53,11 @@ func ActiveProposalQueueTimePrefix(endTime time.Time) []byte {
 }
 
 // Returns the key for a proposalID in the activeProposalQueue
-func ActiveProposalQueueProposalKey(endTime time.Time, proposalID int64) []byte {
+func ActiveProposalQueueProposalKey(endTime time.Time, proposalID uint64) []byte {
 	return bytes.Join([][]byte{
 		PrefixActiveProposalQueue,
 		sdk.FormatTimeBytes(endTime),
-		sdk.Uint64ToBigEndian(uint64(proposalID)),
+		sdk.Uint64ToBigEndian(proposalID),
 	}, KeyDelimiter)
 }
 
@@ -70,10 +70,10 @@ func InactiveProposalQueueTimePrefix(endTime time.Time) []byte {
 }
 
 // Returns the key for a proposalID in the activeProposalQueue
-func InactiveProposalQueueProposalKey(endTime time.Time, proposalID int64) []byte {
+func InactiveProposalQueueProposalKey(endTime time.Time, proposalID uint64) []byte {
 	return bytes.Join([][]byte{
 		PrefixInactiveProposalQueue,
 		sdk.FormatTimeBytes(endTime),
-		sdk.Uint64ToBigEndian(uint64(proposalID)),
+		sdk.Uint64ToBigEndian(proposalID),
 	}, KeyDelimiter)
 }

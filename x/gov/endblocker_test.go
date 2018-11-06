@@ -125,7 +125,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
-	var proposalID int64
+	var proposalID uint64
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
 
 	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -167,7 +167,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 	res := govHandler(ctx, newProposalMsg)
 	require.True(t, res.IsOK())
-	var proposalID int64
+	var proposalID uint64
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(res.Data, &proposalID)
 
 	newHeader := ctx.BlockHeader()
@@ -188,7 +188,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 
 	activeQueue = keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	require.True(t, activeQueue.Valid())
-	var activeProposalID int64
+	var activeProposalID uint64
 	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeQueue.Value(), &activeProposalID)
 	require.Equal(t, StatusVotingPeriod, keeper.GetProposal(ctx, activeProposalID).GetStatus())
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)

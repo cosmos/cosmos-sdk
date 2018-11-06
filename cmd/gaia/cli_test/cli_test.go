@@ -5,12 +5,13 @@ package clitest
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tendermint/tendermint/types"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"testing"
+
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -348,7 +349,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli query proposal --proposal-id=1 --output=json %v", flags))
-	require.Equal(t, int64(1), proposal1.GetProposalID())
+	require.Equal(t, uint64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 
 	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals %v", flags), "")
@@ -391,7 +392,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak").Int64())
 	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli query proposal --proposal-id=1 --output=json %v", flags))
-	require.Equal(t, int64(1), proposal1.GetProposalID())
+	require.Equal(t, uint64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
 
 	voteStr := fmt.Sprintf("gaiacli tx vote %v", flags)

@@ -166,7 +166,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountKeeper, app.distrKeeper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
-		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
+		{100, govsim.SimulateMsgDeposit(app.govKeeper)},
 		{100, stakesim.SimulateMsgCreateValidator(app.accountKeeper, app.stakeKeeper)},
 		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
 		{100, stakesim.SimulateMsgDelegate(app.accountKeeper, app.stakeKeeper)},

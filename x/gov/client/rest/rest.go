@@ -22,7 +22,7 @@ const (
 	RestDepositer      = "depositer"
 	RestVoter          = "voter"
 	RestProposalStatus = "status"
-	RestNumLatest      = "latest"
+	RestNumLimit       = "limit"
 	storeName          = "gov"
 )
 
@@ -416,7 +416,7 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		bechVoterAddr := r.URL.Query().Get(RestVoter)
 		bechDepositerAddr := r.URL.Query().Get(RestDepositer)
 		strProposalStatus := r.URL.Query().Get(RestProposalStatus)
-		strNumLatest := r.URL.Query().Get(RestNumLatest)
+		strNumLimit := r.URL.Query().Get(RestNumLimit)
 
 		params := gov.QueryProposalsParams{}
 
@@ -446,12 +446,12 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			}
 			params.ProposalStatus = proposalStatus
 		}
-		if len(strNumLatest) != 0 {
-			numLatest, ok := utils.ParseUint64OrReturnBadRequest(w, strNumLatest)
+		if len(strNumLimit) != 0 {
+			numLimit, ok := utils.ParseUint64OrReturnBadRequest(w, strNumLimit)
 			if !ok {
 				return
 			}
-			params.NumLatestProposals = numLatest
+			params.Limit = numLimit
 		}
 
 		bz, err := cdc.MarshalJSON(params)

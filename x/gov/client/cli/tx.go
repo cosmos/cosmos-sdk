@@ -21,17 +21,17 @@ import (
 )
 
 const (
-	flagProposalID        = "proposal-id"
-	flagTitle             = "title"
-	flagDescription       = "description"
-	flagProposalType      = "type"
-	flagDeposit           = "deposit"
-	flagVoter             = "voter"
-	flagOption            = "option"
-	flagDepositer         = "depositer"
-	flagStatus            = "status"
-	flagLatestProposalIDs = "latest"
-	flagProposal          = "proposal"
+	flagProposalID   = "proposal-id"
+	flagTitle        = "title"
+	flagDescription  = "description"
+	flagProposalType = "type"
+	flagDeposit      = "deposit"
+	flagVoter        = "voter"
+	flagOption       = "option"
+	flagDepositer    = "depositer"
+	flagStatus       = "status"
+	flagNumLimit     = "limit"
+	flagProposal     = "proposal"
 )
 
 type proposal struct {
@@ -291,10 +291,10 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			bechDepositerAddr := viper.GetString(flagDepositer)
 			bechVoterAddr := viper.GetString(flagVoter)
 			strProposalStatus := viper.GetString(flagStatus)
-			latestProposalsIDs := uint64(viper.GetInt64(flagLatestProposalIDs))
+			numLimit := uint64(viper.GetInt64(flagNumLimit))
 
 			params := gov.QueryProposalsParams{
-				NumLatestProposals: latestProposalsIDs,
+				Limit: numLimit,
 			}
 
 			if len(bechDepositerAddr) != 0 {
@@ -352,7 +352,7 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagLatestProposalIDs, "", "(optional) limit to latest [number] proposals. Defaults to all proposals")
+	cmd.Flags().String(flagNumLimit, "", "(optional) limit to latest [number] proposals. Defaults to all proposals")
 	cmd.Flags().String(flagDepositer, "", "(optional) filter by proposals deposited on by depositer")
 	cmd.Flags().String(flagVoter, "", "(optional) filter by proposals voted on by voted")
 	cmd.Flags().String(flagStatus, "", "(optional) filter proposals by proposal status, status: deposit_period/voting_period/passed/rejected")

@@ -168,10 +168,10 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 // Params for query 'custom/gov/proposals'
 type QueryProposalsParams struct {
-	Voter              sdk.AccAddress
-	Depositer          sdk.AccAddress
-	ProposalStatus     ProposalStatus
-	NumLatestProposals uint64
+	Voter          sdk.AccAddress
+	Depositer      sdk.AccAddress
+	ProposalStatus ProposalStatus
+	Limit          uint64
 }
 
 // nolint: unparam
@@ -182,7 +182,7 @@ func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err2.Error()))
 	}
 
-	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositer, params.ProposalStatus, params.NumLatestProposals)
+	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositer, params.ProposalStatus, params.Limit)
 
 	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, proposals)
 	if err2 != nil {

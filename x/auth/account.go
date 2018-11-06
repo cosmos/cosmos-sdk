@@ -320,6 +320,38 @@ func (cva *ContinuousVestingAccount) TrackUndelegation(amount sdk.Coins) {
 	}
 }
 
+func NewDelayedVestingAccount(
+	addr sdk.AccAddress, origCoins sdk.Coins, endTime time.Time,
+) *DelayedVestingAccount {
+
+	baseAcc := BaseAccount{
+		Address: addr,
+		Coins:   origCoins,
+	}
+
+	baseVestingAcc := BaseVestingAccount{
+		BaseAccount:     baseAcc,
+		originalVesting: origCoins,
+		endTime:         endTime,
+	}
+
+	return &DelayedVestingAccount{baseVestingAcc}
+}
+
+// GetVestedCoins returns the total amount of vested coins for a delayed vesting
+// account. All coins are only vested once the schedule has elapsed.
+func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
+	if blockTime.Unix() >= dva.endTime.Unix() {
+		return dva.originalVesting
+	}
+
+	return nil
+}
+
+// func (dva DelayedVestingAccount) GetVestingCoins(t Time) Coins {
+// 	return cva.OriginalVesting - cva.GetVestedCoins(t)
+// }
+
 //-----------------------------------------------------------------------------
 // Codec
 

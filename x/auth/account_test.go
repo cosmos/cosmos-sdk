@@ -276,3 +276,21 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 25)}, cva.delegatedVesting)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 75)}, cva.GetCoins())
 }
+
+func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	_, _, addr := keyPubAddr()
+	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+
+	// require no coins are vested until schedule maturation
+	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	vestedCoins := dva.GetVestedCoins(now)
+	require.Nil(t, vestedCoins)
+
+	// require all coins be vested at schedule maturation
+	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	vestedCoins = dva.GetVestedCoins(endTime)
+	require.Equal(t, origCoins, vestedCoins)
+}

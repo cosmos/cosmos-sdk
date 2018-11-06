@@ -59,7 +59,7 @@ type VestingAccount interface {
 
     // Calculates the amount of coins that can be sent to other accounts given
     // the current time.
-    SpendableCoins(Context) Coins
+    SpendableCoins(Time) Coins
     // Performs delegation accounting.
     TrackDelegation(Time, Coins)
     // Performs undelegation accounting.

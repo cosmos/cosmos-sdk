@@ -55,6 +55,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
 		keeper.OnValidatorCreated(ctx, validator.OperatorAddr)
+
+		// Set timeslice if necessary
+		if validator.Status == sdk.Unbonding {
+			keeper.InsertValidatorQueue(ctx, validator)
+		}
 	}
 
 	for _, delegation := range data.Bonds {

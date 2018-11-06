@@ -148,7 +148,7 @@ OUTER:
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 
-			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
+			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, seq, passphrase))
 
 			seq++
 
@@ -173,7 +173,7 @@ func (c relayCommander) broadcastTx(seq int64, node string, tx []byte) error {
 }
 
 func (c relayCommander) getSequence(node string) int64 {
-	res, err := query(node, c.address, c.accStore)
+	res, err := query(node, auth.AddressStoreKey(c.address), c.accStore)
 	if err != nil {
 		panic(err)
 	}
@@ -190,7 +190,7 @@ func (c relayCommander) getSequence(node string) int64 {
 	return 0
 }
 
-func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []byte {
+func (c relayCommander) refine(bz []byte, ibcPacketSeq int64, txSeq int64, passphrase string) []byte {
 	var packet ibc.IBCPacket
 	if err := c.cdc.UnmarshalBinary(bz, &packet); err != nil {
 		panic(err)
@@ -199,10 +199,10 @@ func (c relayCommander) refine(bz []byte, sequence int64, passphrase string) []b
 	msg := ibc.IBCReceiveMsg{
 		IBCPacket: packet,
 		Relayer:   c.address,
-		Sequence:  sequence,
+		Sequence:  ibcPacketSeq,
 	}
 
-	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
+	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(txSeq).WithCodec(c.cdc)
 	cliCtx := context.NewCLIContext()
 
 	name, err := cliCtx.GetFromName()

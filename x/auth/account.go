@@ -175,8 +175,10 @@ func NewContinuousVestingAccount(
 	addr sdk.AccAddress, origCoins sdk.Coins, startTime, endTime time.Time,
 ) *ContinuousVestingAccount {
 
-	baseAcc := NewBaseAccountWithAddress(addr)
-	baseAcc.SetCoins(origCoins)
+	baseAcc := BaseAccount{
+		Address: addr,
+		Coins:   origCoins,
+	}
 
 	baseVestingAcc := BaseVestingAccount{
 		BaseAccount:     baseAcc,
@@ -280,7 +282,7 @@ func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount
 			cva.delegatedFree = cva.delegatedFree.Plus(sdk.Coins{yCoin})
 		}
 
-		cva.SetCoins(bc.Minus(sdk.Coins{coin}))
+		cva.Coins = bc.Minus(sdk.Coins{coin})
 	}
 }
 
@@ -314,7 +316,7 @@ func (cva *ContinuousVestingAccount) TrackUndelegation(amount sdk.Coins) {
 			cva.delegatedVesting = cva.delegatedVesting.Minus(sdk.Coins{yCoin})
 		}
 
-		cva.SetCoins(bc.Plus(sdk.Coins{coin}))
+		cva.Coins = bc.Plus(sdk.Coins{coin})
 	}
 }
 

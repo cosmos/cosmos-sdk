@@ -121,7 +121,7 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
 	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
 
-	// require no coins vested in the very begining of the vesting schedule
+	// require no coins vested in the very beginning of the vesting schedule
 	vestedCoins := cva.GetVestedCoins(now)
 	require.Nil(t, vestedCoins)
 
@@ -142,7 +142,7 @@ func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
 	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
 
-	// require all coins vesting in the begining of the vesting schedule
+	// require all coins vesting in the beginning of the vesting schedule
 	vestingCoins := cva.GetVestingCoins(now)
 	require.Equal(t, origCoins, vestingCoins)
 

@@ -349,3 +349,40 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	spendableCoins = dva.SpendableCoins(now.Add(12 * time.Hour))
 	require.Nil(t, spendableCoins)
 }
+
+func TestTrackDelegationDelVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	_, _, addr := keyPubAddr()
+	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+
+	// require the ability to delegate all vesting coins
+	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva.TrackDelegation(now, origCoins)
+	require.Equal(t, origCoins, dva.delegatedVesting)
+	require.Nil(t, dva.delegatedFree)
+	require.Nil(t, dva.GetCoins())
+
+	// require the ability to delegate all vested coins
+	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva.TrackDelegation(endTime, origCoins)
+	require.Nil(t, dva.delegatedVesting)
+	require.Equal(t, origCoins, dva.delegatedFree)
+	require.Nil(t, dva.GetCoins())
+
+	// require the ability to delegate all coins half way through the vesting
+	// schedule
+	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva.TrackDelegation(now.Add(12*time.Hour), origCoins)
+	require.Equal(t, origCoins, dva.delegatedVesting)
+	require.Nil(t, dva.delegatedFree)
+	require.Nil(t, dva.GetCoins())
+
+	// require no modifications when delegation amount is zero or not enough funds
+	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva.TrackDelegation(endTime, sdk.Coins{sdk.NewInt64Coin(testDenom, 1000000)})
+	require.Nil(t, dva.delegatedVesting)
+	require.Nil(t, dva.delegatedFree)
+	require.Equal(t, origCoins, dva.GetCoins())
+}

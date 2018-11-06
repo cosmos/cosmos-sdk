@@ -40,6 +40,9 @@ type VestingAccount interface {
 	// the current time.
 	SpendableCoins(blockTime time.Time) sdk.Coins
 
+	GetVestedCoins(blockTime time.Time) sdk.Coins
+	GetVestingCoins(blockTime time.Time) sdk.Coins
+
 	TrackDelegation(blockTime time.Time, amount sdk.Coins) // Performs delegation accounting.
 	TrackUndelegation(amount sdk.Coins)                    // Performs undelegation accounting.
 }
@@ -135,52 +138,132 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 }
 
 //-----------------------------------------------------------------------------
-// Vesting Accounts
+// Base Vesting Account
 
-var (
-	_ VestingAccount = (*ContinuousVestingAccount)(nil)
-	// TODO: uncomment once implemented
-	// _ VestingAccount = (*DelayedVestingAccount)(nil)
-)
+// BaseVestingAccount implements the VestingAccount interface. It contains all
+// the necessary fields needed for any vesting account implementation.
+type BaseVestingAccount struct {
+	*BaseAccount
 
-type (
-	// BaseVestingAccount implements the VestingAccount interface. It contains all
-	// the necessary fields needed for any vesting account implementation.
-	BaseVestingAccount struct {
-		BaseAccount
+	originalVesting  sdk.Coins // coins in account upon initialization
+	delegatedFree    sdk.Coins // coins that are vested and delegated
+	delegatedVesting sdk.Coins // coins that vesting and delegated
 
-		originalVesting sdk.Coins // coins in account upon initialization
-		delegatedFree   sdk.Coins // coins that are vested and delegated
-		endTime         time.Time // when the coins become unlocked
+	endTime time.Time // when the coins become unlocked
+}
+
+func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
+	var spendableCoins sdk.Coins
+
+	bc := bva.GetCoins()
+
+	for _, coin := range bc {
+		baseAmt := coin.Amount
+		delVestingAmt := bva.delegatedVesting.AmountOf(coin.Denom)
+		vestingAmt := vestingCoins.AmountOf(coin.Denom)
+
+		// compute min((BC + DV) - V, BC) per the specification
+		min := sdk.MinInt(baseAmt.Add(delVestingAmt).Sub(vestingAmt), baseAmt)
+		spendableCoin := sdk.NewCoin(coin.Denom, min)
+
+		if !spendableCoin.IsZero() {
+			spendableCoins = spendableCoins.Plus(sdk.Coins{spendableCoin})
+		}
 	}
 
-	// ContinuousVestingAccount implements the VestingAccount interface. It
-	// continuously vests by unlocking coins linearly with respect to time.
-	ContinuousVestingAccount struct {
-		BaseVestingAccount
+	return spendableCoins
+}
 
-		delegatedVesting sdk.Coins // coins that vesting and delegated
-		startTime        time.Time // when the coins start to vest
-	}
+func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
+	bc := bva.GetCoins()
 
-	// DelayedVestingAccount implements the VestingAccount interface. It vests all
-	// coins after a specific time, but non prior. In other words, it keeps them
-	// locked until a specified time.
-	DelayedVestingAccount struct {
-		BaseVestingAccount
+	for _, coin := range amount {
+		// Skip if the delegation amount is zero or if the base coins does not
+		// exceed the desired delegation amount.
+		if coin.Amount.IsZero() || bc.AmountOf(coin.Denom).LT(coin.Amount) {
+			continue
+		}
+
+		vestingAmt := vestingCoins.AmountOf(coin.Denom)
+		delVestingAmt := bva.delegatedVesting.AmountOf(coin.Denom)
+
+		// compute x and y per the specification, where:
+		// X := min(max(V - DV, 0), D)
+		// Y := D - X
+		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), sdk.ZeroInt()), coin.Amount)
+		y := coin.Amount.Sub(x)
+
+		if !x.IsZero() {
+			xCoin := sdk.NewCoin(coin.Denom, x)
+			bva.delegatedVesting = bva.delegatedVesting.Plus(sdk.Coins{xCoin})
+		}
+
+		if !y.IsZero() {
+			yCoin := sdk.NewCoin(coin.Denom, y)
+			bva.delegatedFree = bva.delegatedFree.Plus(sdk.Coins{yCoin})
+		}
+
+		bva.Coins = bc.Minus(sdk.Coins{coin})
 	}
-)
+}
+
+// TrackUndelegation tracks an undelegation amount by setting the necessary
+// values by which delegated vesting and delegated vesting need to decrease and
+// by which amount the base coins need to increase.
+func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
+	bc := bva.GetCoins()
+
+	for _, coin := range amount {
+		// skip if the undelegation amount is zero
+		if coin.Amount.IsZero() {
+			continue
+		}
+
+		delegatedFree := bva.delegatedFree.AmountOf(coin.Denom)
+
+		// compute x and y per the specification, where:
+		// X := min(DF, D)
+		// Y := D - X
+		x := sdk.MinInt(delegatedFree, coin.Amount)
+		y := coin.Amount.Sub(x)
+
+		if !x.IsZero() {
+			xCoin := sdk.NewCoin(coin.Denom, x)
+			bva.delegatedFree = bva.delegatedFree.Minus(sdk.Coins{xCoin})
+		}
+
+		if !y.IsZero() {
+			yCoin := sdk.NewCoin(coin.Denom, y)
+			bva.delegatedVesting = bva.delegatedVesting.Minus(sdk.Coins{yCoin})
+		}
+
+		bva.Coins = bc.Plus(sdk.Coins{coin})
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Continuous Vesting Account
+
+var _ VestingAccount = (*ContinuousVestingAccount)(nil)
+
+// ContinuousVestingAccount implements the VestingAccount interface. It
+// continuously vests by unlocking coins linearly with respect to time.
+type ContinuousVestingAccount struct {
+	*BaseVestingAccount
+
+	startTime time.Time // when the coins start to vest
+}
 
 func NewContinuousVestingAccount(
 	addr sdk.AccAddress, origCoins sdk.Coins, startTime, endTime time.Time,
 ) *ContinuousVestingAccount {
 
-	baseAcc := BaseAccount{
+	baseAcc := &BaseAccount{
 		Address: addr,
 		Coins:   origCoins,
 	}
 
-	baseVestingAcc := BaseVestingAccount{
+	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		originalVesting: origCoins,
 		endTime:         endTime,
@@ -227,109 +310,38 @@ func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coi
 // SpendableCoins returns the total number of spendable coins per denom for a
 // continuous vesting account.
 func (cva ContinuousVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
-	var spendableCoins sdk.Coins
-
-	bc := cva.GetCoins()
-	v := cva.GetVestingCoins(blockTime)
-
-	for _, coin := range bc {
-		baseAmt := coin.Amount
-		delVestingAmt := cva.delegatedVesting.AmountOf(coin.Denom)
-		vestingAmt := v.AmountOf(coin.Denom)
-
-		// compute min((BC + DV) - V, BC) per the specification
-		min := sdk.MinInt(baseAmt.Add(delVestingAmt).Sub(vestingAmt), baseAmt)
-		spendableCoin := sdk.NewCoin(coin.Denom, min)
-
-		if !spendableCoin.IsZero() {
-			spendableCoins = spendableCoins.Plus(sdk.Coins{spendableCoin})
-		}
-	}
-
-	return spendableCoins
+	return cva.spendableCoins(cva.GetVestingCoins(blockTime))
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
 func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
-	bc := cva.GetCoins()
-	v := cva.GetVestingCoins(blockTime)
-
-	for _, coin := range amount {
-		// Skip if the delegation amount is zero or if the base coins does not
-		// exceed the desired delegation amount.
-		if coin.Amount.IsZero() || bc.AmountOf(coin.Denom).LT(coin.Amount) {
-			continue
-		}
-
-		vestingAmt := v.AmountOf(coin.Denom)
-		delVestingAmt := cva.delegatedVesting.AmountOf(coin.Denom)
-
-		// compute x and y per the specification, where:
-		// X := min(max(V - DV, 0), D)
-		// Y := D - X
-		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), sdk.ZeroInt()), coin.Amount)
-		y := coin.Amount.Sub(x)
-
-		if !x.IsZero() {
-			xCoin := sdk.NewCoin(coin.Denom, x)
-			cva.delegatedVesting = cva.delegatedVesting.Plus(sdk.Coins{xCoin})
-		}
-
-		if !y.IsZero() {
-			yCoin := sdk.NewCoin(coin.Denom, y)
-			cva.delegatedFree = cva.delegatedFree.Plus(sdk.Coins{yCoin})
-		}
-
-		cva.Coins = bc.Minus(sdk.Coins{coin})
-	}
+	cva.trackDelegation(cva.GetVestingCoins(blockTime), amount)
 }
 
-// TrackUndelegation tracks an undelegation amount by setting the necessary
-// values by which delegated vesting and delegated vesting need to decrease and
-// by which amount the base coins need to increase.
-func (cva *ContinuousVestingAccount) TrackUndelegation(amount sdk.Coins) {
-	bc := cva.GetCoins()
+//-----------------------------------------------------------------------------
+// Delayed Vesting Account
 
-	for _, coin := range amount {
-		// skip if the undelegation amount is zero
-		if coin.Amount.IsZero() {
-			continue
-		}
+var _ VestingAccount = (*DelayedVestingAccount)(nil)
 
-		delegatedFree := cva.delegatedFree.AmountOf(coin.Denom)
-
-		// compute x and y per the specification, where:
-		// X := min(DF, D)
-		// Y := D - X
-		x := sdk.MinInt(delegatedFree, coin.Amount)
-		y := coin.Amount.Sub(x)
-
-		if !x.IsZero() {
-			xCoin := sdk.NewCoin(coin.Denom, x)
-			cva.delegatedFree = cva.delegatedFree.Minus(sdk.Coins{xCoin})
-		}
-
-		if !y.IsZero() {
-			yCoin := sdk.NewCoin(coin.Denom, y)
-			cva.delegatedVesting = cva.delegatedVesting.Minus(sdk.Coins{yCoin})
-		}
-
-		cva.Coins = bc.Plus(sdk.Coins{coin})
-	}
+// DelayedVestingAccount implements the VestingAccount interface. It vests all
+// coins after a specific time, but non prior. In other words, it keeps them
+// locked until a specified time.
+type DelayedVestingAccount struct {
+	*BaseVestingAccount
 }
 
 func NewDelayedVestingAccount(
 	addr sdk.AccAddress, origCoins sdk.Coins, endTime time.Time,
 ) *DelayedVestingAccount {
 
-	baseAcc := BaseAccount{
+	baseAcc := &BaseAccount{
 		Address: addr,
 		Coins:   origCoins,
 	}
 
-	baseVestingAcc := BaseVestingAccount{
+	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
 		originalVesting: origCoins,
 		endTime:         endTime,
@@ -357,7 +369,14 @@ func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins 
 // SpendableCoins returns the total number of spendable coins for a delayed
 // vesting account.
 func (dva DelayedVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
-	return dva.GetCoins().Minus(dva.GetVestingCoins(blockTime))
+	return dva.spendableCoins(dva.GetVestingCoins(blockTime))
+}
+
+// TrackDelegation tracks a desired delegation amount by setting the appropriate
+// values for the amount of delegated vesting, delegated free, and reducing the
+// overall amount of base coins.
+func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
+	dva.trackDelegation(dva.GetVestingCoins(blockTime), amount)
 }
 
 //-----------------------------------------------------------------------------

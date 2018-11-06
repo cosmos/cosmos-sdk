@@ -247,6 +247,9 @@ func (cva ContinuousVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coin
 	return spendableCoins
 }
 
+// TrackDelegation tracks a desired delegation amount by setting the appropriate
+// values for the amount of delegated vesting, delegated free, and reducing the
+// overall amount of base coins.
 func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
 	bc := cva.GetCoins()
 	v := cva.GetVestingCoins(blockTime)
@@ -262,8 +265,8 @@ func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount
 		delVestingAmt := cva.delegatedVesting.AmountOf(coin.Denom)
 
 		// compute x and y per the specification, where:
-		// x := min(max(V - DV, 0), D)
-		// y := D - X
+		// X := min(max(V - DV, 0), D)
+		// Y := D - X
 		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), sdk.ZeroInt()), coin.Amount)
 		y := coin.Amount.Sub(x)
 

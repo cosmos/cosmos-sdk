@@ -19,7 +19,7 @@ This will install a binary `cosmos-sdk-cli`
 ## Creating a new project
 
 ```shell
-$ cosmos-sdk-cli init <your_proyect_name>
+$ cosmos-sdk-cli init <your_project_name>
 ```
 
 This will initialize a project, the dependencies, directory structures with the specified project name.

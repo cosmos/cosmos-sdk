@@ -78,32 +78,34 @@ func InitializeNodeValidatorFiles(
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
-		return
+		return nodeID, valPubKey, err
 	}
 
 	nodeID = string(nodeKey.ID())
 	valPubKey = ReadOrCreatePrivValidator(config.PrivValidatorFile())
 
-	return
+	return nodeID, valPubKey, nil
 }
 
 func loadGenesisDoc(cdc *amino.Codec, genFile string) (genDoc types.GenesisDoc, err error) {
 	genContents, err := ioutil.ReadFile(genFile)
 	if err != nil {
-		return
+		return genDoc, err
 	}
 
-	err = cdc.UnmarshalJSON(genContents, &genDoc)
-	return
+	if err := cdc.UnmarshalJSON(genContents, &genDoc); err != nil {
+		return genDoc, err
+	}
+
+	return genDoc, err
 }
 
 func initializeEmptyGenesis(
-	cdc *codec.Codec, genFile string, chainID string, overwrite bool,
+	cdc *codec.Codec, genFile, chainID string, overwrite bool,
 ) (appState json.RawMessage, err error) {
 
 	if !overwrite && common.FileExists(genFile) {
-		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
-		return
+		return nil, fmt.Errorf("genesis.json file already exists: %v", genFile)
 	}
 
 	return codec.MarshalJSONIndent(cdc, app.NewDefaultGenesisState())

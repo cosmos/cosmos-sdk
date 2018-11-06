@@ -38,7 +38,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 	inactiveQueue.Close()
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositParams(ctx).MaxDepositPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -84,7 +84,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 	require.True(t, res.IsOK())
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
+	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(time.Duration(-1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
@@ -179,7 +179,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.True(t, res.IsOK())
 
 	newHeader = ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositProcedure(ctx).MaxDepositPeriod).Add(keeper.GetVotingProcedure(ctx).VotingPeriod)
+	newHeader.Time = ctx.BlockHeader().Time.Add(keeper.GetDepositParams(ctx).MaxDepositPeriod).Add(keeper.GetVotingParams(ctx).VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	inactiveQueue = keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)

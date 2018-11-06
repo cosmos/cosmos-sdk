@@ -117,7 +117,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
 				inactiveProposal.GetProposalID(),
 				inactiveProposal.GetTitle(),
-				keeper.GetDepositProcedure(ctx).MinDeposit,
+				keeper.GetDepositParams(ctx).MinDeposit,
 				inactiveProposal.GetTotalDeposit(),
 			),
 		)

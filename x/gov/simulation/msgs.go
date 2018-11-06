@@ -64,7 +64,7 @@ func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keepe
 		whoVotes := r.Perm(len(accs))
 		// didntVote := whoVotes[numVotes:]
 		whoVotes = whoVotes[:numVotes]
-		votingPeriod := k.GetVotingProcedure(ctx).VotingPeriod
+		votingPeriod := k.GetVotingParams(ctx).VotingPeriod
 		fops := make([]simulation.FutureOperation, numVotes+1)
 		for i := 0; i < numVotes; i++ {
 			whenVote := ctx.BlockHeader().Time.Add(time.Duration(r.Int63n(int64(votingPeriod.Seconds()))) * time.Second)

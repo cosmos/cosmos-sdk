@@ -21,6 +21,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	for _, dw := range data.DelegatorWithdrawInfos {
 		keeper.SetDelegatorWithdrawAddr(ctx, dw.DelegatorAddr, dw.WithdrawAddr)
 	}
+	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
 }
 
 // WriteGenesis returns a GenesisState for a given context and keeper. The
@@ -33,6 +34,7 @@ func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	vdis := keeper.GetAllValidatorDistInfos(ctx)
 	ddis := keeper.GetAllDelegationDistInfos(ctx)
 	dwis := keeper.GetAllDelegatorWithdrawInfos(ctx)
+	pp := keeper.GetPreviousProposerConsAddr(ctx)
 	return NewGenesisState(feePool, communityTax, baseProposerRewards,
-		bonusProposerRewards, vdis, ddis, dwis)
+		bonusProposerRewards, vdis, ddis, dwis, pp)
 }

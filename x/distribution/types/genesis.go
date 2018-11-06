@@ -18,10 +18,11 @@ type GenesisState struct {
 	ValidatorDistInfos     []ValidatorDistInfo     `json:"validator_dist_infos"`
 	DelegationDistInfos    []DelegationDistInfo    `json:"delegator_dist_infos"`
 	DelegatorWithdrawInfos []DelegatorWithdrawInfo `json:"delegator_withdraw_infos"`
+	PreviousProposer       sdk.ConsAddress         `json:"previous_proposer"`
 }
 
 func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
-	vdis []ValidatorDistInfo, ddis []DelegationDistInfo, dwis []DelegatorWithdrawInfo) GenesisState {
+	vdis []ValidatorDistInfo, ddis []DelegationDistInfo, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress) GenesisState {
 
 	return GenesisState{
 		FeePool:                feePool,
@@ -31,6 +32,7 @@ func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusPro
 		ValidatorDistInfos:     vdis,
 		DelegationDistInfos:    ddis,
 		DelegatorWithdrawInfos: dwis,
+		PreviousProposer:       pp,
 	}
 }
 

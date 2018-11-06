@@ -54,10 +54,12 @@ type VestingAccount interface {
     // Calculates the amount of coins that can be sent to other accounts given
     // the current time.
     SpendableCoins(Time) Coins
-    // Performs delegation accounting.
-    TrackDelegation(Time, Coins)
-    // Performs undelegation accounting.
-    TrackUndelegation(Coins)
+
+    GetVestedCoins(Time) Coins
+    GetVestingCoins(Time) Coins
+
+    TrackDelegation(Time, Coins) // Performs delegation accounting.
+    TrackUndelegation(Coins) // Performs undelegation accounting.
 }
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all
@@ -67,7 +69,9 @@ type BaseVestingAccount struct {
 
     OriginalVesting  Coins // coins in account upon initialization
     DelegatedFree    Coins // coins that are vested and delegated
-    EndTime          Time // when the coins become unlocked
+    DelegatedVesting Coins // coins that vesting and delegated
+
+    EndTime  Time // when the coins become unlocked
 }
 
 // ContinuousVestingAccount implements the VestingAccount interface. It
@@ -75,8 +79,7 @@ type BaseVestingAccount struct {
 type ContinuousVestingAccount struct {
     BaseVestingAccount
 
-    DelegatedVesting Coins // coins that vesting and delegated
-    StartTime        Time // when the coins start to vest
+    StartTime  Time // when the coins start to vest
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all

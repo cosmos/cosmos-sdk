@@ -348,9 +348,11 @@ func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
 	return nil
 }
 
-// func (dva DelayedVestingAccount) GetVestingCoins(t Time) Coins {
-// 	return cva.OriginalVesting - cva.GetVestedCoins(t)
-// }
+// GetVestingCoins returns the total number of vesting coins for a delayed
+// vesting account.
+func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
+	return dva.originalVesting.Minus(dva.GetVestedCoins(blockTime))
+}
 
 //-----------------------------------------------------------------------------
 // Codec

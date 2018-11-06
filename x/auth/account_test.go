@@ -294,3 +294,21 @@ func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
 	vestedCoins = dva.GetVestedCoins(endTime)
 	require.Equal(t, origCoins, vestedCoins)
 }
+
+func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	_, _, addr := keyPubAddr()
+	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+
+	// require all coins vesting at the beginning of the schedule
+	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	vestingCoins := dva.GetVestingCoins(now)
+	require.Equal(t, origCoins, vestingCoins)
+
+	// require no coins vesting at schedule maturation
+	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	vestingCoins = dva.GetVestingCoins(endTime)
+	require.Nil(t, vestingCoins)
+}

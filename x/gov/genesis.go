@@ -17,11 +17,13 @@ type GenesisState struct {
 	TallyingProcedure  TallyingProcedure     `json:"tallying_procedure"`
 }
 
+// DepositWithMetadata (just for genesis)
 type DepositWithMetadata struct {
 	ProposalID int64   `json:"proposal_id"`
 	Deposit    Deposit `json:"deposit"`
 }
 
+// VoteWithMetadata (just for genesis)
 type VoteWithMetadata struct {
 	ProposalID int64 `json:"proposal_id"`
 	Vote       Vote  `json:"vote"`

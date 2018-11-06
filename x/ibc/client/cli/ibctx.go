@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"encoding/hex"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -64,11 +62,10 @@ func buildMsg(from sdk.AccAddress) (sdk.Msg, error) {
 	}
 
 	dest := viper.GetString(flagTo)
-	bz, err := hex.DecodeString(dest)
+	to, err := sdk.AccAddressFromBech32(dest)
 	if err != nil {
 		return nil, err
 	}
-	to := sdk.AccAddress(bz)
 
 	packet := ibc.NewIBCPacket(from, to, coins, viper.GetString(client.FlagChainID),
 		viper.GetString(flagChain))

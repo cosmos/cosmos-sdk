@@ -78,7 +78,7 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 		validatorHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
-	// Get all delegations to a  validator
+	// Get all delegations to a validator
 	r.HandleFunc(
 		"/stake/validators/{validatorAddr}/delegations",
 		validatorDelegationsHandlerFn(cliCtx, cdc),

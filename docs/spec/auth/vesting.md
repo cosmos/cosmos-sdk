@@ -232,17 +232,19 @@ func (cva ContinuousVestingAccount) TrackDelegation(t Time, amount Coins) {
 
     cva.DelegatedVesting += x
     cva.DelegatedFree += y
+    cva.SetCoins(cva.GetCoins() - amount)
 }
 ```
 
 ##### Delayed/Discrete Vesting Accounts
 
 For a delayed vesting account, it can only delegate with received coins and
-coins that are fully vested so we only need to update `DF`.
+coins that are fully vested so we only need to update `DF` and `BC`.
 
 ```go
 func (dva DelayedVestingAccount) TrackDelegation(t Time, amount Coins) {
     dva.DelegatedFree += amount
+    dva.SetCoins(dva.GetCoins() - amount)
 }
 ```
 
@@ -257,7 +259,6 @@ func DelegateCoins(t Time, from Account, amount Coins) {
 
         if amount <= sc {
             from.TrackDelegation(t, amount)
-            from.SetCoins(sc - amount)
             // save account...
         }
     } else {
@@ -279,19 +280,20 @@ For a continuous vesting account attempting to undelegate `D` coins, the
 following is performed:
 
 1. Verify `(DV + DF) >= D > 0` (this is simply a sanity check)
-2. Compute `Y := min(DF, D)` (portion of `D` that should become free, prioritizing free coins)
-3. Compute `X := D - Y` (portion of `D` that should remain vesting)
-4. Set `DV -= X`
-5. Set `DF -= Y`
+2. Compute `X := min(DF, D)` (portion of `D` that should become free, prioritizing free coins)
+3. Compute `Y := D - X` (portion of `D` that should remain vesting)
+4. Set `DF -= X`
+5. Set `DV -= Y`
 6. Set `BC += D`
 
 ```go
 func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
-    y := min(cva.DelegatedFree, amount)
-    x := amount - y
+    x := min(cva.DelegatedFree, amount)
+    y := amount - x
 
-    cva.DelegatedVesting -= x
-    cva.DelegatedFree -= y
+    cva.DelegatedFree -= x
+    cva.DelegatedVesting -= y
+    cva.SetCoins(cva.GetCoins() + amount)
 }
 ```
 
@@ -301,12 +303,13 @@ undelegating free coins are prioritized.
 
 ##### Delayed/Discrete Vesting Accounts
 
-For a delayed vesting account, it only needs to add back the `DF` amount since
-the account is fully vested.
+For a delayed vesting account, it only needs to add back the `DF` and `BC` amounts
+since the account is fully vested.
 
 ```go
 func (dva DelayedVestingAccount) TrackUndelegation(amount Coins) {
     dva.DelegatedFree -= amount
+    dva.SetCoins(dva.GetCoins() + amount)
 }
 ```
 
@@ -317,7 +320,6 @@ func UndelegateCoins(to Account, amount Coins) {
     if isVesting(to) {
         if to.DelegatedFree + to.DelegatedVesting >= amount {
             to.TrackUndelegation(amount)
-            AddCoins(to, amount)
             // save account ...
         }
     } else {

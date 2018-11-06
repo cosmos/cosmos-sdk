@@ -96,13 +96,6 @@ func TestDelegation(t *testing.T) {
 	resVals = keeper.GetDelegatorValidators(ctx, addrDels[1], 4)
 	require.Equal(t, 3, len(resVals))
 
-	resDels := keeper.GetValidatorDelegations(ctx, addrVals[0])
-	require.Len(t, resDels, 2)
-	resDels = keeper.GetValidatorDelegations(ctx, addrVals[1])
-	require.Len(t, resDels, 2)
-	resDels = keeper.GetValidatorDelegations(ctx, addrVals[2])
-	require.Len(t, resDels, 2)
-
 	for i := 0; i < 3; i++ {
 
 		resVal, err := keeper.GetDelegatorValidator(ctx, addrDels[0], addrVals[i])
@@ -112,6 +105,9 @@ func TestDelegation(t *testing.T) {
 		resVal, err = keeper.GetDelegatorValidator(ctx, addrDels[1], addrVals[i])
 		require.Nil(t, err)
 		require.Equal(t, addrVals[i], resVal.GetOperator())
+
+		resDels := keeper.GetValidatorDelegations(ctx, addrVals[i])
+		require.Len(t, resDels, 2)
 	}
 
 	// delete a record

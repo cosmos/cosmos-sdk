@@ -1,6 +1,8 @@
 package slashing
 
 import (
+	// "fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -9,8 +11,14 @@ import (
 type GenesisState struct {
 	Params          Params
 	SigningInfos    map[string]ValidatorSigningInfo
-	MissedBlocks    map[string][]bool
+	MissedBlocks    map[string][]MissedBlock
 	SlashingPeriods []ValidatorSlashingPeriod
+}
+
+// MissedBlock
+type MissedBlock struct {
+	Index  int64 `json:"index"`
+	Missed bool  `json:"missed"`
 }
 
 // HubDefaultGenesisState - default GenesisState used by Cosmos Hub
@@ -18,7 +26,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		Params:          DefaultParams(),
 		SigningInfos:    make(map[string]ValidatorSigningInfo),
-		MissedBlocks:    make(map[string][]bool),
+		MissedBlocks:    make(map[string][]MissedBlock),
 		SlashingPeriods: []ValidatorSlashingPeriod{},
 	}
 }
@@ -43,8 +51,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 		if err != nil {
 			panic(err)
 		}
-		for index, missed := range array {
-			keeper.setValidatorMissedBlockBitArray(ctx, address, int64(index), missed)
+		for _, missed := range array {
+			keeper.setValidatorMissedBlockBitArray(ctx, address, missed.Index, missed.Missed)
 		}
 	}
 
@@ -63,17 +71,14 @@ func WriteGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 	keeper.paramspace.GetParamSet(ctx, &params)
 
 	signingInfos := make(map[string]ValidatorSigningInfo)
-	missedBlocks := make(map[string][]bool)
+	missedBlocks := make(map[string][]MissedBlock)
 	keeper.iterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool) {
 		bechAddr := address.String()
 		signingInfos[bechAddr] = info
-		array := make([]bool, 0)
+		array := []MissedBlock{}
 
 		keeper.iterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
-			if index != int64(len(array)) {
-				panic("invalid index")
-			}
-			array = append(array, missed)
+			array = append(array, MissedBlock{index, missed})
 			return false
 		})
 		missedBlocks[bechAddr] = array

@@ -27,7 +27,8 @@ func (k Keeper) iterateValidatorSigningInfos(ctx sdk.Context, handler func(addre
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var address sdk.ConsAddress
-		copy(address, iter.Key()[1:sdk.AddrLen+1])
+		address = make([]byte, sdk.AddrLen)
+		copy(address[:], iter.Key()[1:sdk.AddrLen+1])
 		var info ValidatorSigningInfo
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &info)
 		if handler(address, info) {
@@ -60,17 +61,17 @@ func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 func (k Keeper) iterateValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	index := int64(0)
-	for {
+	// Array may be sparse
+	for ; index < k.SignedBlocksWindow(ctx); index++ {
 		var missed bool
 		bz := store.Get(GetValidatorMissedBlockBitArrayKey(address, index))
 		if bz == nil {
-			break
+			continue
 		}
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
 		if handler(index, missed) {
 			break
 		}
-		index++
 	}
 }
 

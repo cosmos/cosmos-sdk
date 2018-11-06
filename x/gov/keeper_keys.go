@@ -45,7 +45,7 @@ func KeyVotesSubspace(proposalID uint64) []byte {
 }
 
 // Returns the key for a proposalID in the activeProposalQueue
-func ActiveProposalQueueTimePrefix(endTime time.Time) []byte {
+func PrefixActiveProposalQueueTime(endTime time.Time) []byte {
 	return bytes.Join([][]byte{
 		PrefixActiveProposalQueue,
 		sdk.FormatTimeBytes(endTime),
@@ -53,7 +53,7 @@ func ActiveProposalQueueTimePrefix(endTime time.Time) []byte {
 }
 
 // Returns the key for a proposalID in the activeProposalQueue
-func ActiveProposalQueueProposalKey(endTime time.Time, proposalID uint64) []byte {
+func KeyActiveProposalQueueProposal(endTime time.Time, proposalID uint64) []byte {
 	return bytes.Join([][]byte{
 		PrefixActiveProposalQueue,
 		sdk.FormatTimeBytes(endTime),
@@ -62,7 +62,7 @@ func ActiveProposalQueueProposalKey(endTime time.Time, proposalID uint64) []byte
 }
 
 // Returns the key for a proposalID in the activeProposalQueue
-func InactiveProposalQueueTimePrefix(endTime time.Time) []byte {
+func PrefixInactiveProposalQueueTime(endTime time.Time) []byte {
 	return bytes.Join([][]byte{
 		PrefixInactiveProposalQueue,
 		sdk.FormatTimeBytes(endTime),
@@ -70,7 +70,7 @@ func InactiveProposalQueueTimePrefix(endTime time.Time) []byte {
 }
 
 // Returns the key for a proposalID in the activeProposalQueue
-func InactiveProposalQueueProposalKey(endTime time.Time, proposalID uint64) []byte {
+func KeyInactiveProposalQueueProposal(endTime time.Time, proposalID uint64) []byte {
 	return bytes.Join([][]byte{
 		PrefixInactiveProposalQueue,
 		sdk.FormatTimeBytes(endTime),

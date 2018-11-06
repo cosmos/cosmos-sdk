@@ -442,37 +442,37 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 // Returns an iterator for all the proposals in the Active Queue that expire by endTime
 func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	return store.Iterator(PrefixActiveProposalQueue, sdk.PrefixEndBytes(ActiveProposalQueueTimePrefix(endTime)))
+	return store.Iterator(PrefixActiveProposalQueue, sdk.PrefixEndBytes(PrefixActiveProposalQueueTime(endTime)))
 }
 
 // Inserts a ProposalID into the active proposal queue at endTime
 func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, endTime time.Time, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
-	store.Set(ActiveProposalQueueProposalKey(endTime, proposalID), bz)
+	store.Set(KeyActiveProposalQueueProposal(endTime, proposalID), bz)
 }
 
 // removes a proposalID from the Active Proposal Queue
 func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, endTime time.Time, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Set(ActiveProposalQueueProposalKey(endTime, proposalID), nil)
+	store.Set(KeyActiveProposalQueueProposal(endTime, proposalID), nil)
 }
 
 // Returns an iterator for all the proposals in the Inactive Queue that expire by endTime
 func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
-	return store.Iterator(PrefixInactiveProposalQueue, sdk.PrefixEndBytes(InactiveProposalQueueTimePrefix(endTime)))
+	return store.Iterator(PrefixInactiveProposalQueue, sdk.PrefixEndBytes(PrefixInactiveProposalQueueTime(endTime)))
 }
 
 // Inserts a ProposalID into the inactive proposal queue at endTime
 func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, endTime time.Time, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID)
-	store.Set(InactiveProposalQueueProposalKey(endTime, proposalID), bz)
+	store.Set(KeyInactiveProposalQueueProposal(endTime, proposalID), bz)
 }
 
 // removes a proposalID from the Inactive Proposal Queue
 func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, endTime time.Time, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
-	store.Set(InactiveProposalQueueProposalKey(endTime, proposalID), nil)
+	store.Set(KeyInactiveProposalQueueProposal(endTime, proposalID), nil)
 }

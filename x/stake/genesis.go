@@ -2,6 +2,7 @@ package stake
 
 import (
 	"fmt"
+	"sort"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -67,6 +68,22 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.OnDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
+	sort.SliceStable(data.UnbondingDelegations[:], func(i, j int) bool {
+		return data.UnbondingDelegations[i].CreationHeight < data.UnbondingDelegations[j].CreationHeight
+	})
+	for _, ubd := range data.UnbondingDelegations {
+		keeper.SetUnbondingDelegation(ctx, ubd)
+		keeper.InsertUnbondingQueue(ctx, ubd)
+	}
+
+	sort.SliceStable(data.Redelegations[:], func(i, j int) bool {
+		return data.Redelegations[i].CreationHeight < data.Redelegations[j].CreationHeight
+	})
+	for _, red := range data.Redelegations {
+		keeper.SetRedelegation(ctx, red)
+		keeper.InsertRedelegationQueue(ctx, red)
+	}
+
 	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	return
 }
@@ -81,14 +98,26 @@ func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	lastTotalPower := keeper.GetLastTotalPower(ctx)
 	validators := keeper.GetAllValidators(ctx)
 	bonds := keeper.GetAllDelegations(ctx)
+	var unbondingDelegations []types.UnbondingDelegation
+	keeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
+		unbondingDelegations = append(unbondingDelegations, ubd)
+		return false
+	})
+	var redelegations []types.Redelegation
+	keeper.IterateRedelegations(ctx, func(_ int64, red types.Redelegation) (stop bool) {
+		redelegations = append(redelegations, red)
+		return false
+	})
 
 	return types.GenesisState{
-		Pool:           pool,
-		Params:         params,
-		IntraTxCounter: intraTxCounter,
-		LastTotalPower: lastTotalPower,
-		Validators:     validators,
-		Bonds:          bonds,
+		Pool:                 pool,
+		Params:               params,
+		IntraTxCounter:       intraTxCounter,
+		LastTotalPower:       lastTotalPower,
+		Validators:           validators,
+		Bonds:                bonds,
+		UnbondingDelegations: unbondingDelegations,
+		Redelegations:        redelegations,
 	}
 }
 

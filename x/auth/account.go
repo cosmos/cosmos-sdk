@@ -284,6 +284,40 @@ func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount
 	}
 }
 
+// TrackUndelegation tracks an undelegation amount by setting the necessary
+// values by which delegated vesting and delegated vesting need to decrease and
+// by which amount the base coins need to increase.
+func (cva *ContinuousVestingAccount) TrackUndelegation(amount sdk.Coins) {
+	bc := cva.GetCoins()
+
+	for _, coin := range amount {
+		// skip if the undelegation amount is zero
+		if coin.Amount.IsZero() {
+			continue
+		}
+
+		delegatedFree := cva.delegatedFree.AmountOf(coin.Denom)
+
+		// compute x and y per the specification, where:
+		// X := min(DF, D)
+		// Y := D - X
+		x := sdk.MinInt(delegatedFree, coin.Amount)
+		y := coin.Amount.Sub(x)
+
+		if !x.IsZero() {
+			xCoin := sdk.NewCoin(coin.Denom, x)
+			cva.delegatedFree = cva.delegatedFree.Minus(sdk.Coins{xCoin})
+		}
+
+		if !y.IsZero() {
+			yCoin := sdk.NewCoin(coin.Denom, y)
+			cva.delegatedVesting = cva.delegatedVesting.Minus(sdk.Coins{yCoin})
+		}
+
+		cva.SetCoins(bc.Plus(sdk.Coins{coin}))
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Codec
 

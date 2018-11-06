@@ -228,3 +228,51 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 	require.Nil(t, cva.delegatedFree)
 	require.Equal(t, origCoins, cva.GetCoins())
 }
+
+func TestTrackUndelegationContVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	_, _, addr := keyPubAddr()
+	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+
+	// require the ability to undelegate all vesting coins
+	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	cva.TrackDelegation(now, origCoins)
+	cva.TrackUndelegation(origCoins)
+	require.Nil(t, cva.delegatedFree)
+	require.Nil(t, cva.delegatedVesting)
+	require.Equal(t, origCoins, cva.GetCoins())
+
+	// require the ability to undelegate all vested coins
+	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	cva.TrackDelegation(endTime, origCoins)
+	cva.TrackUndelegation(origCoins)
+	require.Nil(t, cva.delegatedFree)
+	require.Nil(t, cva.delegatedVesting)
+	require.Equal(t, origCoins, cva.GetCoins())
+
+	// require no modifications when the undelegation amount is zero
+	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 0)})
+	require.Nil(t, cva.delegatedFree)
+	require.Nil(t, cva.delegatedVesting)
+	require.Equal(t, origCoins, cva.GetCoins())
+
+	// vest 50% and delegate to two validators
+	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	cva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
+	cva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
+
+	// undelegate from one validator that got slashed 50%
+	cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 25)})
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 25)}, cva.delegatedFree)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, cva.delegatedVesting)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 25)}, cva.GetCoins())
+
+	// undelegate from the other validator that did not get slashed
+	cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
+	require.Nil(t, cva.delegatedFree)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 25)}, cva.delegatedVesting)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 75)}, cva.GetCoins())
+}

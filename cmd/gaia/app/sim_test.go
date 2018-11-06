@@ -335,9 +335,9 @@ func TestGaiaImportExport(t *testing.T) {
 	ctxA := app.NewContext(true, abci.Header{})
 	ctxB := newApp.NewContext(true, abci.Header{})
 	storeKeysA := []sdk.StoreKey{app.keyMain, app.keyAccount, app.keyStake, app.keySlashing,
-		app.keyMint, app.keyDistr, app.keyGov, app.keyFeeCollection, app.keyParams}
+		app.keyMint, app.keyDistr, app.keyFeeCollection, app.keyParams, app.keyGov}
 	storeKeysB := []sdk.StoreKey{newApp.keyMain, newApp.keyAccount, newApp.keyStake, newApp.keySlashing,
-		newApp.keyMint, newApp.keyDistr, newApp.keyGov, newApp.keyFeeCollection, newApp.keyParams}
+		newApp.keyMint, newApp.keyDistr, newApp.keyFeeCollection, newApp.keyParams, newApp.keyGov}
 	require.Equal(t, len(storeKeysA), len(storeKeysB))
 	for index, storeKeyA := range storeKeysA {
 		storeKeyB := storeKeysB[index]

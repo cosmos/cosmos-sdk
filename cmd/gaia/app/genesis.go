@@ -32,6 +32,7 @@ var (
 // State to Unmarshal
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`
+	AuthData     auth.GenesisState     `json:"auth"`
 	StakeData    stake.GenesisState    `json:"stake"`
 	MintData     mint.GenesisState     `json:"mint"`
 	DistrData    distr.GenesisState    `json:"distr"`
@@ -40,11 +41,12 @@ type GenesisState struct {
 	GenTxs       []json.RawMessage     `json:"gentxs"`
 }
 
-func NewGenesisState(accounts []GenesisAccount, stakeData stake.GenesisState, mintData mint.GenesisState,
+func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState, stakeData stake.GenesisState, mintData mint.GenesisState,
 	distrData distr.GenesisState, govData gov.GenesisState, slashingData slashing.GenesisState) GenesisState {
 
 	return GenesisState{
 		Accounts:     accounts,
+		AuthData:     authData,
 		StakeData:    stakeData,
 		MintData:     mintData,
 		DistrData:    distrData,

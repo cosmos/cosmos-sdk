@@ -249,6 +249,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	}
 
 	// load the address to pubkey map
+	auth.InitGenesis(ctx, app.feeCollectionKeeper, genesisState.AuthData)
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
@@ -310,6 +311,7 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	app.accountKeeper.IterateAccounts(ctx, appendAccount)
 	genState := NewGenesisState(
 		accounts,
+		auth.WriteGenesis(ctx, app.feeCollectionKeeper),
 		stake.WriteGenesis(ctx, app.stakeKeeper),
 		mint.WriteGenesis(ctx, app.mintKeeper),
 		distr.WriteGenesis(ctx, app.distrKeeper),

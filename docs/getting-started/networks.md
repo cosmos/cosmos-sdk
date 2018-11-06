@@ -130,7 +130,7 @@ gaiacli keys add node0 --recover --home ./build/node0
 Then, you can list your keys as such:
 
 ```shell
-gaiacli keys list --home --home ./build/node0
+gaiacli keys list --home ./build/node0
 ```
 
 Now that an account exists, you may create new accounts and send those accounts

@@ -37,7 +37,6 @@
 [[override]]
   name = "github.com/tendermint/tendermint"
   revision = "ebee4377b15f2958b08994485375dd2ee8a649ac" # TODO: replace w/ tagged v0.26.1
-  source = "https://github.com/tendermint/tendermint" # TODO: Remove once CI 'setup_dependencies' is fixed
 
 ## deps without releases:
 

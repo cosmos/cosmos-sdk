@@ -113,28 +113,17 @@ docker logs -f gaiadnode0
 
 ### Keys & Accounts
 
-Each node's directory by default will not contain any keys or accounts. Each
-node's seed is located at `./build/<nodeN>/gaiacli/key_seed.json`. To interact
-with `gaiacli` and start querying state or creating txs, you can add (recover)
-any given node's key, for example:
+To interact with `gaiacli` and start querying state or creating txs, you use the
+`gaiacli` directory of any given node as your `home`, for example:
 
 ```shell
-cat ./build/node0/gaiacli/key_seed.json
-> {"secret":"few burger flag such ..."}
-
-gaiacli keys add node0 --recover --home ./build/node0
-> input your desired passphrase
-> input seed from above
+gaiacli keys list --home ./build/node0/gaiacli
 ```
 
-Then, you can list your keys as such:
-
-```shell
-gaiacli keys list --home ./build/node0
-```
-
-Now that an account exists, you may create new accounts and send those accounts
+Now that accounts exists, you may create new accounts and send those accounts
 funds!
+
+**Note**: Each node's seed is located at `./build/<nodeN>/gaiacli/key_seed.json`.
 
 ### Special binaries
 

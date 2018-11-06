@@ -119,7 +119,7 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 		monikers = append(monikers, nodeDirName)
 		config.Moniker = nodeDirName
 
-		ip, err := getIP(i)
+		ip, err := getIP(i, viper.GetString(flagStartingIPAddress))
 		if err != nil {
 			_ = os.RemoveAll(outDir)
 			return err
@@ -208,11 +208,15 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 		}
 	}
 
-	if err := initGenFiles(cdc, chainID, accs, genFiles); err != nil {
+	if err := initGenFiles(cdc, chainID, accs, genFiles, numValidators); err != nil {
 		return err
 	}
 
-	if err := collectGenFiles(cdc, config, chainID, monikers, nodeIDs, valPubKeys); err != nil {
+	err := collectGenFiles(
+		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators,
+		outDir, viper.GetString(flagNodeDirPrefix), viper.GetString(flagNodeDaemonHome),
+	)
+	if err != nil {
 		return err
 	}
 
@@ -221,10 +225,10 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 }
 
 func initGenFiles(
-	cdc *codec.Codec, chainID string, accs []app.GenesisAccount, genFiles []string,
+	cdc *codec.Codec, chainID string, accs []app.GenesisAccount,
+	genFiles []string, numValidators int,
 ) error {
 
-	numValidators := viper.GetInt(flagNumValidators)
 	appGenState := app.NewDefaultGenesisState()
 	appGenState.Accounts = accs
 
@@ -252,17 +256,14 @@ func initGenFiles(
 func collectGenFiles(
 	cdc *codec.Codec, config *cfg.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
+	numValidators int, outDir, nodeDirPrefix, nodeDaemonHomeName string,
 ) error {
-
-	outDir := viper.GetString(flagOutputDir)
-	numValidators := viper.GetInt(flagNumValidators)
 
 	var appState json.RawMessage
 	genTime := tmtime.Now()
 
 	for i := 0; i < numValidators; i++ {
-		nodeDirName := fmt.Sprintf("%s%d", viper.GetString(flagNodeDirPrefix), i)
-		nodeDaemonHomeName := viper.GetString(flagNodeDaemonHome)
+		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
 		nodeDir := filepath.Join(outDir, nodeDirName, nodeDaemonHomeName)
 		gentxsDir := filepath.Join(outDir, "gentxs")
 		moniker := monikers[i]
@@ -306,16 +307,19 @@ func collectGenFiles(
 	return nil
 }
 
-func getIP(i int) (ip string, err error) {
-	ip = viper.GetString(flagStartingIPAddress)
+func getIP(i int, startingIPAddr string) (string, error) {
+	var (
+		ip  string
+		err error
+	)
 
-	if len(ip) == 0 {
+	if len(startingIPAddr) == 0 {
 		ip, err = server.ExternalIP()
 		if err != nil {
 			return "", err
 		}
 	} else {
-		ip, err = calculateIP(ip, i)
+		ip, err = calculateIP(startingIPAddr, i)
 		if err != nil {
 			return "", err
 		}

@@ -8,10 +8,23 @@ import (
 
 // GenesisState - all staking state that must be provided at genesis
 type GenesisState struct {
-	StartingProposalID int64             `json:"starting_proposalID"`
-	DepositProcedure   DepositProcedure  `json:"deposit_period"`
-	VotingProcedure    VotingProcedure   `json:"voting_period"`
-	TallyingProcedure  TallyingProcedure `json:"tallying_procedure"`
+	StartingProposalID int64                 `json:"starting_proposal_id"`
+	Deposits           []DepositWithMetadata `json:"deposits"`
+	Votes              []VoteWithMetadata    `json:"votes"`
+	Proposals          []Proposal            `json:"proposals"`
+	DepositProcedure   DepositProcedure      `json:"deposit_period"`
+	VotingProcedure    VotingProcedure       `json:"voting_period"`
+	TallyingProcedure  TallyingProcedure     `json:"tallying_procedure"`
+}
+
+type DepositWithMetadata struct {
+	ProposalID int64   `json:"proposal_id"`
+	Deposit    Deposit `json:"deposit"`
+}
+
+type VoteWithMetadata struct {
+	ProposalID int64 `json:"proposal_id"`
+	Vote       Vote  `json:"vote"`
 }
 
 func NewGenesisState(startingProposalID int64, dp DepositProcedure, vp VotingProcedure, tp TallyingProcedure) GenesisState {
@@ -52,6 +65,15 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.setDepositProcedure(ctx, data.DepositProcedure)
 	k.setVotingProcedure(ctx, data.VotingProcedure)
 	k.setTallyingProcedure(ctx, data.TallyingProcedure)
+	for _, deposit := range data.Deposits {
+		k.setDeposit(ctx, deposit.ProposalID, deposit.Deposit.Depositer, deposit.Deposit)
+	}
+	for _, vote := range data.Votes {
+		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)
+	}
+	for _, proposal := range data.Proposals {
+		k.SetProposal(ctx, proposal)
+	}
 }
 
 // WriteGenesis - output genesis parameters
@@ -60,9 +82,30 @@ func WriteGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	depositProcedure := k.GetDepositProcedure(ctx)
 	votingProcedure := k.GetVotingProcedure(ctx)
 	tallyingProcedure := k.GetTallyingProcedure(ctx)
+	var deposits []DepositWithMetadata
+	var votes []VoteWithMetadata
+	proposals := k.GetProposalsFiltered(ctx, nil, nil, StatusNil, 0)
+	for _, proposal := range proposals {
+		proposalID := proposal.GetProposalID()
+		depositsIterator := k.GetDeposits(ctx, proposalID)
+		for ; depositsIterator.Valid(); depositsIterator.Next() {
+			var deposit Deposit
+			k.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
+			deposits = append(deposits, DepositWithMetadata{proposalID, deposit})
+		}
+		votesIterator := k.GetVotes(ctx, proposalID)
+		for ; votesIterator.Valid(); votesIterator.Next() {
+			var vote Vote
+			k.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
+			votes = append(votes, VoteWithMetadata{proposalID, vote})
+		}
+	}
 
 	return GenesisState{
 		StartingProposalID: startingProposalID,
+		Deposits:           deposits,
+		Votes:              votes,
+		Proposals:          proposals,
 		DepositProcedure:   depositProcedure,
 		VotingProcedure:    votingProcedure,
 		TallyingProcedure:  tallyingProcedure,

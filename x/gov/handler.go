@@ -109,10 +109,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 			continue
 		}
 
-		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(inactiveProposal.GetProposalID())
+		proposalID := inactiveProposal.GetProposalID()
+		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposalID)
 		keeper.DeleteProposal(ctx, inactiveProposal)
 		resTags = resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags = resTags.AppendTag(tags.ProposalID, proposalIDBytes)
+		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
 
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %v steak); deleted",

@@ -290,7 +290,6 @@ func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
 	require.Nil(t, vestedCoins)
 
 	// require all coins be vested at schedule maturation
-	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
 	vestedCoins = dva.GetVestedCoins(endTime)
 	require.Equal(t, origCoins, vestedCoins)
 }
@@ -308,7 +307,45 @@ func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, vestingCoins)
 
 	// require no coins vesting at schedule maturation
-	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
 	vestingCoins = dva.GetVestingCoins(endTime)
 	require.Nil(t, vestingCoins)
+}
+
+func TestSpendableCoinsDelVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	_, _, addr := keyPubAddr()
+	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+
+	// require that no coins are spendable in the beginning of the vesting
+	// schedule
+	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	spendableCoins := dva.SpendableCoins(now)
+	require.Nil(t, spendableCoins)
+
+	// require that all coins are spendable after the maturation of the vesting
+	// schedule
+	spendableCoins = dva.SpendableCoins(endTime)
+	require.Equal(t, origCoins, spendableCoins)
+
+	// require that all coins are still vesting after some time
+	spendableCoins = dva.SpendableCoins(now.Add(12 * time.Hour))
+	require.Nil(t, spendableCoins)
+
+	// receive some coins
+	recvAmt := sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}
+	dva.SetCoins(dva.GetCoins().Plus(recvAmt))
+
+	// require that only received coins are spendable since the account is still
+	// vesting
+	spendableCoins = dva.SpendableCoins(now.Add(12 * time.Hour))
+	require.Equal(t, recvAmt, spendableCoins)
+
+	// spend all spendable coins
+	dva.SetCoins(dva.GetCoins().Minus(spendableCoins))
+
+	// require that no more coins are spendable
+	spendableCoins = dva.SpendableCoins(now.Add(12 * time.Hour))
+	require.Nil(t, spendableCoins)
 }

@@ -354,6 +354,12 @@ func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins 
 	return dva.originalVesting.Minus(dva.GetVestedCoins(blockTime))
 }
 
+// SpendableCoins returns the total number of spendable coins for a delayed
+// vesting account.
+func (dva DelayedVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
+	return dva.GetCoins().Minus(dva.GetVestingCoins(blockTime))
+}
+
 //-----------------------------------------------------------------------------
 // Codec
 

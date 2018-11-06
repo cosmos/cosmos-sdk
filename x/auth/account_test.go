@@ -386,3 +386,52 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 	require.Nil(t, dva.delegatedFree)
 	require.Equal(t, origCoins, dva.GetCoins())
 }
+
+func TestTrackUndelegationDelVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	_, _, addr := keyPubAddr()
+	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+
+	// require the ability to undelegate all vesting coins
+	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva.TrackDelegation(now, origCoins)
+	dva.TrackUndelegation(origCoins)
+	require.Nil(t, dva.delegatedFree)
+	require.Nil(t, dva.delegatedVesting)
+	require.Equal(t, origCoins, dva.GetCoins())
+
+	// require the ability to undelegate all vested coins
+	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva.TrackDelegation(endTime, origCoins)
+	dva.TrackUndelegation(origCoins)
+	require.Nil(t, dva.delegatedFree)
+	require.Nil(t, dva.delegatedVesting)
+	require.Equal(t, origCoins, dva.GetCoins())
+
+	// require no modifications when the undelegation amount is zero
+	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 0)})
+	require.Nil(t, dva.delegatedFree)
+	require.Nil(t, dva.delegatedVesting)
+	require.Equal(t, origCoins, dva.GetCoins())
+
+	// vest 50% and delegate to two validators
+	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
+	dva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
+
+	// undelegate from one validator that got slashed 50%
+	dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 25)})
+
+	require.Nil(t, dva.delegatedFree)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 75)}, dva.delegatedVesting)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 25)}, dva.GetCoins())
+
+	// undelegate from the other validator that did not get slashed
+	dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
+	require.Nil(t, dva.delegatedFree)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 25)}, dva.delegatedVesting)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 75)}, dva.GetCoins())
+}

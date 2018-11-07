@@ -186,7 +186,6 @@ func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.ValidatorUpdate) {
 	}
 }
 
-// TODO: Make a method to remove the pubkey from the map when a validator is unbonded.
 func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
 	addr := pubkey.Address()
 	k.setAddrPubkeyRelation(ctx, addr, pubkey)

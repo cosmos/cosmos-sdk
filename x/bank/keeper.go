@@ -194,32 +194,50 @@ func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
-func subtractCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
+func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
-	oldCoins := getCoins(ctx, am, addr)
+
+	oldCoins := getCoins(ctx, ak, addr)
+
+	va, ok := ak.GetAccount(ctx, addr).(auth.VestingAccount)
+	if ok {
+		blockTime := ctx.BlockHeader().Time
+		spendableCoins := va.SpendableCoins(blockTime)
+
+		if !spendableCoins.Minus(amt).IsNotNegative() {
+			return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+		}
+	}
+
 	newCoins := oldCoins.Minus(amt)
 	if !newCoins.IsNotNegative() {
 		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
-	err := setCoins(ctx, am, addr, newCoins)
+
+	err := setCoins(ctx, ak, addr, newCoins)
 	tags := sdk.NewTags("sender", []byte(addr.String()))
+
 	return newCoins, tags, err
 }
 
 // AddCoins adds amt to the coins at the addr.
 func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costAddCoins, "addCoins")
+
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Plus(amt)
+
 	if !newCoins.IsNotNegative() {
 		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
+
 	err := setCoins(ctx, am, addr, newCoins)
 	tags := sdk.NewTags("recipient", []byte(addr.String()))
+
 	return newCoins, tags, err
 }
 
-// SendCoins moves coins from one account to another
+// SendCoins moves coins from one account to another.
 // NOTE: Make sure to revert state changes from tx on error
 func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	_, subTags, err := subtractCoins(ctx, am, fromAddr, amt)

@@ -2,6 +2,7 @@ package bank
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -9,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -206,4 +208,41 @@ func TestViewKeeper(t *testing.T) {
 	require.True(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
 	require.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 15)}))
 	require.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("barcoin", 5)}))
+}
+
+func TestVestingAccountSend(t *testing.T) {
+	ms, authKey := setupMultiStore()
+
+	cdc := codec.New()
+	auth.RegisterBaseAccount(cdc)
+
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+	ctx := sdk.NewContext(ms, abci.Header{Time: now}, false, log.NewNopLogger())
+
+	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
+	sendCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
+
+	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := NewBaseKeeper(accountKeeper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	accountKeeper.SetAccount(ctx, vacc)
+
+	// require that no coins be sendable at the beginning of the vesting schedule
+	_, err := bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
+	require.Error(t, err)
+
+	// receive some coins
+	vacc.SetCoins(origCoins.Plus(sendCoins))
+	accountKeeper.SetAccount(ctx, vacc)
+
+	// require that all vested coins are spendable plus any received
+	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+	_, err = bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
+	vacc = accountKeeper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.NoError(t, err)
+	require.Equal(t, origCoins, vacc.GetCoins())
 }

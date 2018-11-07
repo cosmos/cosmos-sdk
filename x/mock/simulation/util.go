@@ -21,8 +21,8 @@ import (
 // shamelessly copied from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang#31832326
 // TODO we should probably move this to tendermint/libs/common/random.go
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const (
+	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	letterIdxBits = 6                    // 6 bits to represent a letter index
 	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
@@ -108,7 +108,8 @@ func addLogMessage(testingmode bool, blockLogBuilders []*strings.Builder, height
 	return func(x string) {}
 }
 
-// assertAllInvariants asserts a list of provided invariants against application state
+// assertAllInvariants asserts a list of provided invariants against
+// application state
 func assertAllInvariants(t *testing.T, app *baseapp.BaseApp,
 	invariants []Invariant, where string, displayLogs func()) {
 
@@ -146,7 +147,10 @@ func logPrinter(testingmode bool, logs []*strings.Builder) func() {
 			}
 			var f *os.File
 			if numLoggers > 10 {
-				fileName := fmt.Sprintf("simulation_log_%s.txt", time.Now().Format("2006-01-02 15:04:05"))
+
+				fileName := fmt.Sprintf("simulation_log_%s.txt",
+					time.Now().Format("2006-01-02 15:04:05"))
+
 				fmt.Printf("Too many logs to display, instead writing to %s\n", fileName)
 				f, _ = os.Create(fileName)
 			}

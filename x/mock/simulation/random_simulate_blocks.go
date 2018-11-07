@@ -31,8 +31,11 @@ func Simulate(t *testing.T, app *baseapp.BaseApp,
 	return SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
 }
 
-func initChain(r *rand.Rand, params Params, accounts []Account, setups []RandSetup, app *baseapp.BaseApp,
-	appStateFn func(r *rand.Rand, accounts []Account) json.RawMessage) (validators map[string]mockValidator) {
+func initChain(r *rand.Rand, params Params,
+	accounts []Account, setups []RandSetup, app *baseapp.BaseApp,
+	appStateFn func(r *rand.Rand, accounts []Account) json.RawMessage) (
+	validators map[string]mockValidator) {
+
 	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, accounts)})
 	validators = make(map[string]mockValidator)
 	for _, validator := range res.Validators {
@@ -101,6 +104,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	var pastVoteInfos [][]abci.VoteInfo
 
 	request := RandomRequestBeginBlock(r, params, validators, pastTimes, pastVoteInfos, event, header)
+
 	// These are operations which have been queued by previous operations
 	operationQueue := make(map[int][]Operation)
 	timeOperationQueue := []FutureOperation{}
@@ -110,7 +114,11 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		blockLogBuilders = make([]*strings.Builder, numBlocks)
 	}
 	displayLogs := logPrinter(testingMode, blockLogBuilders)
-	blockSimulator := createBlockSimulator(testingMode, tb, t, params, event, invariants, ops, operationQueue, timeOperationQueue, numBlocks, blockSize, displayLogs)
+	blockSimulator := createBlockSimulator(
+		testingMode, tb, t, params, event, invariants,
+		ops, operationQueue, timeOperationQueue,
+		numBlocks, blockSize, displayLogs)
+
 	if !testingMode {
 		b.ResetTimer()
 	} else {
@@ -147,8 +155,14 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		// Run queued operations. Ignores blocksize if blocksize is too small
 		logWriter("Queued operations")
-		numQueuedOpsRan := runQueuedOperations(operationQueue, int(header.Height), tb, r, app, ctx, accs, logWriter, displayLogs, event)
-		numQueuedTimeOpsRan := runQueuedTimeOperations(timeOperationQueue, header.Time, tb, r, app, ctx, accs, logWriter, displayLogs, event)
+		numQueuedOpsRan := runQueuedOperations(
+			operationQueue, int(header.Height),
+			tb, r, app, ctx, accs, logWriter,
+			displayLogs, event)
+		numQueuedTimeOpsRan := runQueuedTimeOperations(
+			timeOperationQueue, header.Time,
+			tb, r, app, ctx, accs,
+			logWriter, displayLogs, event)
 		if testingMode && onOperation {
 			// Make sure invariants hold at end of queued operations
 			assertAllInvariants(t, app, invariants, "QueuedOperations", displayLogs)
@@ -164,7 +178,10 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		res := app.EndBlock(abci.RequestEndBlock{})
 		header.Height++
-		header.Time = header.Time.Add(time.Duration(minTimePerBlock) * time.Second).Add(time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
+		header.Time = header.Time.Add(
+			time.Duration(minTimePerBlock) * time.Second)
+		header.Time = header.Time.Add(
+			time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
 		header.ProposerAddress = randomProposer(r, validators)
 		logWriter("EndBlock")
 
@@ -198,16 +215,14 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	return nil
 }
 
-type blockSimFn func(
-	r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []Account, header abci.Header, logWriter func(string),
-) (opCount int)
+type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+	accounts []Account, header abci.Header, logWriter func(string)) (opCount int)
 
 // Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
 // memory overhead
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params Params,
-	event func(string), invariants []Invariant,
-	ops []WeightedOperation, operationQueue map[int][]Operation, timeOperationQueue []FutureOperation,
+	event func(string), invariants []Invariant, ops []WeightedOperation,
+	operationQueue map[int][]Operation, timeOperationQueue []FutureOperation,
 	totalNumBlocks int, avgBlockSize int, displayLogs func()) blockSimFn {
 
 	var (
@@ -233,23 +248,29 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
-		fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ", header.Height, totalNumBlocks, opCount, blocksize)
+
+		fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ",
+			header.Height, totalNumBlocks, opCount, blocksize)
 		lastBlocksizeState, blocksize = getBlockSize(r, params, lastBlocksizeState, avgBlockSize)
+
 		for j := 0; j < blocksize; j++ {
 			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, event)
 			logWriter(logUpdate)
 			if err != nil {
 				displayLogs()
-				tb.Fatalf("error on operation %d within block %d, %v", header.Height, opCount, err)
+				tb.Fatalf("error on operation %d within block %d, %v",
+					header.Height, opCount, err)
 			}
 
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
 			if testingMode {
 				if onOperation {
-					assertAllInvariants(t, app, invariants, fmt.Sprintf("operation: %v", logUpdate), displayLogs)
+					assertAllInvariants(t, app, invariants,
+						fmt.Sprintf("operation: %v", logUpdate), displayLogs)
 				}
 				if opCount%50 == 0 {
-					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ", header.Height, totalNumBlocks, opCount, blocksize)
+					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ",
+						header.Height, totalNumBlocks, opCount, blocksize)
 				}
 			}
 			opCount++
@@ -272,10 +293,11 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 // getBlockSize returns a block size as determined from the transition matrix.
 // It targets making average block size the provided parameter. The three
 // states it moves between are:
-// "over stuffed" blocks with average size of 2 * avgblocksize,
-// normal sized blocks, hitting avgBlocksize on average,
-// and empty blocks, with no txs / only txs scheduled from the past.
-func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
+//  - "over stuffed" blocks with average size of 2 * avgblocksize,
+//  - normal sized blocks, hitting avgBlocksize on average,
+//  - and empty blocks, with no txs / only txs scheduled from the past.
+func getBlockSize(r *rand.Rand, params Params,
+	lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
 	// TODO: Make default blocksize transition matrix actually make the average
 	// blocksize equal to avgBlockSize.
 	state = params.BlockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
@@ -290,7 +312,10 @@ func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize 
 }
 
 // adds all future operations into the operation queue.
-func queueOperations(queuedOperations map[int][]Operation, queuedTimeOperations []FutureOperation, futureOperations []FutureOperation) {
+func queueOperations(queuedOperations map[int][]Operation,
+	queuedTimeOperations []FutureOperation,
+	futureOperations []FutureOperation) {
+
 	if futureOperations == nil {
 		return
 	}
@@ -312,8 +337,11 @@ func queueOperations(queuedOperations map[int][]Operation, queuedTimeOperations 
 }
 
 // nolint: errcheck
-func runQueuedOperations(queueOperations map[int][]Operation, height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []Account, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
+func runQueuedOperations(queueOperations map[int][]Operation,
+	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+	accounts []Account, logWriter func(string),
+	displayLogs func(), event func(string)) (numOpsRan int) {
+
 	if queuedOps, ok := queueOperations[height]; ok {
 		numOps := len(queuedOps)
 		for i := 0; i < numOps; i++ {
@@ -333,8 +361,10 @@ func runQueuedOperations(queueOperations map[int][]Operation, height int, tb tes
 	return 0
 }
 
-func runQueuedTimeOperations(queueOperations []FutureOperation, currentTime time.Time, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []Account, logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
+func runQueuedTimeOperations(queueOperations []FutureOperation,
+	currentTime time.Time, tb testing.TB, r *rand.Rand,
+	app *baseapp.BaseApp, ctx sdk.Context, accounts []Account,
+	logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
 
 	numOpsRan = 0
 	for len(queueOperations) > 0 && currentTime.After(queueOperations[0].BlockTime) {
@@ -379,10 +409,13 @@ func randomProposer(r *rand.Rand, validators map[string]mockValidator) cmn.HexBy
 	return pk.Address()
 }
 
-// RandomRequestBeginBlock generates a list of signing validators according to the provided list of validators, signing fraction, and evidence fraction
-// nolint: unparam
-func RandomRequestBeginBlock(r *rand.Rand, params Params, validators map[string]mockValidator,
-	pastTimes []time.Time, pastVoteInfos [][]abci.VoteInfo, event func(string), header abci.Header) abci.RequestBeginBlock {
+// RandomRequestBeginBlock generates a list of signing validators according to
+// the provided list of validators, signing fraction, and evidence fraction
+func RandomRequestBeginBlock(r *rand.Rand, params Params,
+	validators map[string]mockValidator, pastTimes []time.Time,
+	pastVoteInfos [][]abci.VoteInfo,
+	event func(string), header abci.Header) abci.RequestBeginBlock {
+
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{Header: header}
 	}
@@ -459,7 +492,9 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params, validators map[string]
 
 // updateValidators mimicks Tendermint's update logic
 // nolint: unparam
-func updateValidators(tb testing.TB, r *rand.Rand, params Params, current map[string]mockValidator, updates []abci.ValidatorUpdate, event func(string)) map[string]mockValidator {
+func updateValidators(tb testing.TB, r *rand.Rand, params Params,
+	current map[string]mockValidator, updates []abci.ValidatorUpdate,
+	event func(string)) map[string]mockValidator {
 
 	for _, update := range updates {
 		str := fmt.Sprintf("%v", update.PubKey)
@@ -478,7 +513,10 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params, current map[st
 				event("endblock/validatorupdates/updated")
 			} else {
 				// Set this new validator
-				current[str] = mockValidator{update, GetMemberOfInitialState(r, params.InitialLivenessWeightings)}
+				current[str] = mockValidator{
+					update,
+					GetMemberOfInitialState(r, params.InitialLivenessWeightings),
+				}
 				event("endblock/validatorupdates/added")
 			}
 		}

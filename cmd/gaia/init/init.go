@@ -3,7 +3,6 @@ package init
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tendermint/tendermint/privval"
 	"os"
 	"path/filepath"
 
@@ -14,11 +13,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/p2p"
-	"github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -96,55 +92,4 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(flagMoniker, "", "set the validator's moniker")
 	return cmd
-}
-
-// InitializeNodeValidatorFiles creates private validator and p2p configuration files.
-func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error) {
-	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
-	if err != nil {
-		return
-	}
-	nodeID = string(nodeKey.ID())
-	valPubKey = ReadOrCreatePrivValidator(config.PrivValidatorFile())
-	return
-}
-
-// WriteGenesisFile creates and writes the genesis configuration to disk. An
-// error is returned if building or writing the configuration to file fails.
-// nolint: unparam
-func WriteGenesisFile(genesisFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage) error {
-	genDoc := types.GenesisDoc{
-		ChainID:    chainID,
-		Validators: validators,
-		AppState:   appState,
-	}
-
-	if err := genDoc.ValidateAndComplete(); err != nil {
-		return err
-	}
-
-	return genDoc.SaveAs(genesisFile)
-}
-
-// read of create the private key file for this config
-func ReadOrCreatePrivValidator(privValFile string) crypto.PubKey {
-	// private validator
-	var privValidator *privval.FilePV
-	if common.FileExists(privValFile) {
-		privValidator = privval.LoadFilePV(privValFile)
-	} else {
-		privValidator = privval.GenFilePV(privValFile)
-		privValidator.Save()
-	}
-	return privValidator.GetPubKey()
-}
-
-func initializeEmptyGenesis(cdc *codec.Codec, genFile string, chainID string,
-	overwrite bool) (appState json.RawMessage, err error) {
-	if !overwrite && common.FileExists(genFile) {
-		err = fmt.Errorf("genesis.json file already exists: %v", genFile)
-		return
-	}
-
-	return codec.MarshalJSONIndent(cdc, app.NewDefaultGenesisState())
 }

@@ -70,15 +70,15 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 	// Random genesis states
 	govGenesis := gov.GenesisState{
-		StartingProposalID: int64(r.Intn(100)),
-		DepositProcedure: gov.DepositProcedure{
+		StartingProposalID: uint64(r.Intn(100)),
+		DepositParams: gov.DepositParams{
 			MinDeposit:       sdk.Coins{sdk.NewInt64Coin("steak", int64(r.Intn(1e3)))},
 			MaxDepositPeriod: time.Duration(r.Intn(2*172800)) * time.Second,
 		},
-		VotingProcedure: gov.VotingProcedure{
+		VotingParams: gov.VotingParams{
 			VotingPeriod: time.Duration(r.Intn(2*172800)) * time.Second,
 		},
-		TallyingProcedure: gov.TallyingProcedure{
+		TallyParams: gov.TallyParams{
 			Threshold:         sdk.NewDecWithPrec(5, 1),
 			Veto:              sdk.NewDecWithPrec(334, 3),
 			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
@@ -166,7 +166,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountKeeper, app.distrKeeper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
-		{100, govsim.SimulateMsgDeposit(app.govKeeper, app.stakeKeeper)},
+		{100, govsim.SimulateMsgDeposit(app.govKeeper)},
 		{100, stakesim.SimulateMsgCreateValidator(app.accountKeeper, app.stakeKeeper)},
 		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
 		{100, stakesim.SimulateMsgDelegate(app.accountKeeper, app.stakeKeeper)},

@@ -16,7 +16,7 @@ If you like to learn by doing, you can follow the **[SDK application tutorial](h
 
 ## Use the SDK
 
-The sections in this documentation contain the information you need if you want to build a fully-fonctional SDK-based blockchain. Next is a description of what each section is about:
+The following sections contain the information you need if you want to build a fully-fonctional SDK-based blockchain:
 
 >*NOTE*: We are currently working on improving the docs. Some info might be missing. 
 

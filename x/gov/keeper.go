@@ -22,7 +22,8 @@ var (
 	ParamStoreKeyVotingParams  = []byte("votingparams")
 	ParamStoreKeyTallyParams   = []byte("tallyparams")
 
-	DepositedCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
+	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
+	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
 
 // Type declaration for parameters
@@ -434,6 +435,14 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
+		deposit := &Deposit{}
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
+
+		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
+		if err != nil {
+			panic("should not happen")
+		}
+
 		store.Delete(depositsIterator.Key())
 	}
 

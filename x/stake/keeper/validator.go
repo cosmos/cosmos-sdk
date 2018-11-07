@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"container/list"
 	"fmt"
 	"time"
@@ -329,6 +330,18 @@ func (k Keeper) InsertValidatorQueue(ctx sdk.Context, val types.Validator) {
 		timeSlice = append(timeSlice, val.OperatorAddr)
 		k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, timeSlice)
 	}
+}
+
+// Delete a validator address from the validator queue
+func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
+	timeSlice := k.GetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime)
+	newTimeSlice := make([]sdk.ValAddress, len(timeSlice))
+	for _, addr := range timeSlice {
+		if !bytes.Equal(addr, val.OperatorAddr) {
+			newTimeSlice = append(newTimeSlice, addr)
+		}
+	}
+	k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, newTimeSlice)
 }
 
 // Returns all the validator queue timeslices from time 0 until endTime

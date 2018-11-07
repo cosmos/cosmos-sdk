@@ -212,7 +212,6 @@ func TestViewKeeper(t *testing.T) {
 
 func TestVestingAccountSend(t *testing.T) {
 	ms, authKey := setupMultiStore()
-
 	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
@@ -245,4 +244,40 @@ func TestVestingAccountSend(t *testing.T) {
 	vacc = accountKeeper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
 	require.NoError(t, err)
 	require.Equal(t, origCoins, vacc.GetCoins())
+}
+
+func TestVestingAccountReceive(t *testing.T) {
+	ms, authKey := setupMultiStore()
+	cdc := codec.New()
+	auth.RegisterBaseAccount(cdc)
+
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+	ctx := sdk.NewContext(ms, abci.Header{Time: now}, false, log.NewNopLogger())
+
+	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
+	sendCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
+
+	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
+	bankKeeper := NewBaseKeeper(accountKeeper)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	acc := accountKeeper.NewAccountWithAddress(ctx, addr2)
+	accountKeeper.SetAccount(ctx, vacc)
+	accountKeeper.SetAccount(ctx, acc)
+	bankKeeper.SetCoins(ctx, addr2, origCoins)
+
+	// send some coins to the vesting account
+	bankKeeper.SendCoins(ctx, addr2, addr1, sendCoins)
+
+	// require the coins are spendable
+	vacc = accountKeeper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.Equal(t, origCoins.Plus(sendCoins), vacc.GetCoins())
+	require.Equal(t, vacc.SpendableCoins(now), sendCoins)
+
+	// require coins are spendable plus any that have vested
+	require.Equal(t, vacc.SpendableCoins(now.Add(12*time.Hour)), origCoins)
 }

@@ -46,7 +46,6 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
- - Temporarily disable insecure mode for Gaia Lite
 
 * SDK
 

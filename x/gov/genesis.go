@@ -80,7 +80,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 
 // WriteGenesis - output genesis parameters
 func WriteGenesis(ctx sdk.Context, k Keeper) GenesisState {
-	startingProposalID, _ := k.getNewProposalID(ctx)
+	startingProposalID, _ := k.peekCurrentProposalID(ctx)
 	depositParams := k.GetDepositParams(ctx)
 	votingParams := k.GetVotingParams(ctx)
 	tallyParams := k.GetTallyParams(ctx)

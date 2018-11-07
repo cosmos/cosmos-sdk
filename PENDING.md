@@ -46,8 +46,6 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
- - \#2670 [x/stake] fixed incorrect `IterateBondedValidators` and split into two functions: `IterateBondedValidators` and `IterateLastBlockConsValidators`
- - \#2691 Fix local testnet creation by using a single canonical genesis time
  - Temporarily disable insecure mode for Gaia Lite
 
 * SDK

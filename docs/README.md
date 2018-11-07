@@ -20,11 +20,15 @@ The sections in this documentation contain the information you need if you want 
 
 >*NOTE*: We are currently working on improving the docs. Some info might be missing. 
 
-- [Gaia](./gaia/README.md): Contains all documentation related to the gaia application (current name for the Cosmos-Hub). This is where you will find information on how to [join the testnet] and [running a validator].
+- [Gaia](./gaia/README.md): Contains all documentation related to the gaia application (current name for the Cosmos-Hub). 
 - [Reference](./reference/README.md): Explains the high-level concepts of the SDK (e.g. storage, gas, abstractions, ...)
 - [Clients](./clients/README.md): Documentation about SDK clients like the SDK Command-Line interface and the SDK Light-client.
 - [Modules](./modules/README.md): Contains specification of SDK modules.
 - [Specifications](./spec/README.md): All specifications non-related to SDK modules (e.g. interchain standards, bech32, ...)
+
+## Join the public testnet for the Cosmos Hub
+
+To install the latest version of the `gaia` application and join the public testnet, **click [here](./gaia/README.md#join-the-cosmos-hub-public-testnet)**
 
 ## Edit the Documentation
 

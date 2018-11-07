@@ -71,7 +71,7 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 		tx.SearchTxCmd(cdc),
 		tx.QueryTxCmd(cdc),
 		client.LineBreak,
-		authcmd.GetAccountCmd(storeAcc, cdc, authcmd.GetAccountDecoder(cdc)),
+		client.GetCommands(authcmd.GetAccountCmd(storeAcc, cdc, authcmd.GetAccountDecoder(cdc)))[0],
 		stakeQueryCmd,
 		govQueryCmd,
 		slashingQueryCmd,

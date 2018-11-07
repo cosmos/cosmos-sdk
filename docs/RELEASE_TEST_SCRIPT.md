@@ -1,6 +1,6 @@
 This document should contain plain english instructions for testing functionality on `gaiad`. This “Script” is supposed to be run by 2 people who will each spin up a `gaiad` node and run the series of prompts below.
 
-- [Create a network of 2 nodes](getting-started/create-testnet.md)
+- [Create a network of 4 nodes](getting-started/networks.md)
 - [Generate an account](sdk/clients.md)
 - [Send funds from one account to the other](sdk/clients.md)
 - [Create a validator](validators/validator-setup.md)

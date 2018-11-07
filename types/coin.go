@@ -49,7 +49,7 @@ func (coin Coin) IsGTE(other Coin) bool {
 // IsLT returns true if they are the same type and the receiver is
 // a smaller value
 func (coin Coin) IsLT(other Coin) bool {
-	return !coin.IsGTE(other)
+	return coin.SameDenomAs(other) && coin.Amount.LT(other.Amount)
 }
 
 // IsEqual returns true if the two sets of Coins have the same value
@@ -184,9 +184,9 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 	return coins.Plus(coinsB.Negative())
 }
 
-// IsGTE returns True iff for every denom in coins, the denom is present at a
+// IsAllGT returns True iff for every denom in coins, the denom is present at a
 // greater amount in coinsB.
-func (coins Coins) IsGT(coinsB Coins) bool {
+func (coins Coins) IsAllGT(coinsB Coins) bool {
 	diff := coins.Minus(coinsB)
 	if len(diff) == 0 {
 		return false
@@ -194,9 +194,9 @@ func (coins Coins) IsGT(coinsB Coins) bool {
 	return diff.IsPositive()
 }
 
-// IsGTE returns True iff for every denom in coins, the denom is present at an
+// IsAllGTE returns True iff for every denom in coins, the denom is present at an
 // equal or greater amount in coinsB.
-func (coins Coins) IsGTE(coinsB Coins) bool {
+func (coins Coins) IsAllGTE(coinsB Coins) bool {
 	diff := coins.Minus(coinsB)
 	if len(diff) == 0 {
 		return true
@@ -204,9 +204,9 @@ func (coins Coins) IsGTE(coinsB Coins) bool {
 	return diff.IsNotNegative()
 }
 
-// IsLT returns True iff for every denom in coins, the denom is present at
+// IsAllLT returns True iff for every denom in coins, the denom is present at
 // a smaller amount in coinsB.
-func (coins Coins) IsLT(coinsB Coins) bool {
+func (coins Coins) IsAllLT(coinsB Coins) bool {
 	diff := coinsB.Minus(coins)
 	if len(diff) == 0 {
 		return false
@@ -214,9 +214,9 @@ func (coins Coins) IsLT(coinsB Coins) bool {
 	return diff.IsPositive()
 }
 
-// IsLTE returns True iff for every denom in coins, the denom is present at
+// IsAllLTE returns True iff for every denom in coins, the denom is present at
 // a smaller or equal amount in coinsB.
-func (coins Coins) IsLTE(coinsB Coins) bool {
+func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	diff := coinsB.Minus(coins)
 	if len(diff) == 0 {
 		return true

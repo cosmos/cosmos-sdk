@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/pkg/errors"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper and
@@ -44,13 +43,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 			validator.BondIntraTxCounter = int16(i)
 		}
 		keeper.SetValidator(ctx, validator)
-
-		if validator.Tokens.IsZero() && validator.Status != sdk.Unbonding {
-			return res, errors.Errorf("bonded/unbonded genesis validator cannot have zero pool shares, validator: %v", validator)
-		}
-		if validator.DelegatorShares.IsZero() && validator.Status != sdk.Unbonding {
-			return res, errors.Errorf("bonded/unbonded genesis validator cannot have zero delegator shares, validator: %v", validator)
-		}
 
 		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
@@ -168,9 +160,6 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 		}
 		if val.Jailed && val.Status == sdk.Bonded {
 			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
-		}
-		if val.Tokens.IsZero() && val.Status != sdk.Unbonding {
-			return fmt.Errorf("bonded/unbonded genesis validator cannot have zero pool shares, validator: %v", val)
 		}
 		if val.DelegatorShares.IsZero() && val.Status != sdk.Unbonding {
 			return fmt.Errorf("bonded/unbonded genesis validator cannot have zero delegator shares, validator: %v", val)

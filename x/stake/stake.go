@@ -57,6 +57,9 @@ var (
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 	TestingUpdateValidator       = keeper.TestingUpdateValidator
+	UnbondingQueueKey            = keeper.UnbondingQueueKey
+	RedelegationQueueKey         = keeper.RedelegationQueueKey
+	ValidatorQueueKey            = keeper.ValidatorQueueKey
 
 	DefaultParamspace = keeper.DefaultParamspace
 	KeyUnbondingTime  = types.KeyUnbondingTime

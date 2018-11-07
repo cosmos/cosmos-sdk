@@ -334,16 +334,29 @@ func TestGaiaImportExport(t *testing.T) {
 	fmt.Printf("Comparing stores...\n")
 	ctxA := app.NewContext(true, abci.Header{})
 	ctxB := newApp.NewContext(true, abci.Header{})
-	storeKeysA := []sdk.StoreKey{app.keyMain, app.keyAccount, app.keyStake, app.keySlashing,
-		app.keyMint, app.keyDistr, app.keyFeeCollection, app.keyParams, app.keyGov}
-	storeKeysB := []sdk.StoreKey{newApp.keyMain, newApp.keyAccount, newApp.keyStake, newApp.keySlashing,
-		newApp.keyMint, newApp.keyDistr, newApp.keyFeeCollection, newApp.keyParams, newApp.keyGov}
-	require.Equal(t, len(storeKeysA), len(storeKeysB))
-	for index, storeKeyA := range storeKeysA {
-		storeKeyB := storeKeysB[index]
+	type StoreKeysPrefixes struct {
+		A        sdk.StoreKey
+		B        sdk.StoreKey
+		Prefixes [][]byte
+	}
+	storeKeysPrefixes := []StoreKeysPrefixes{
+		{app.keyMain, newApp.keyMain, [][]byte{}},
+		{app.keyAccount, newApp.keyAccount, [][]byte{}},
+		{app.keyStake, newApp.keyStake, [][]byte{stake.UnbondingQueueKey, stake.RedelegationQueueKey, stake.ValidatorQueueKey}}, // ordering may change but it doesn't matter
+		{app.keySlashing, newApp.keySlashing, [][]byte{}},
+		{app.keyMint, newApp.keyMint, [][]byte{}},
+		{app.keyDistr, newApp.keyDistr, [][]byte{}},
+		{app.keyFeeCollection, newApp.keyFeeCollection, [][]byte{}},
+		{app.keyParams, newApp.keyParams, [][]byte{}},
+		{app.keyGov, newApp.keyGov, [][]byte{}},
+	}
+	for _, storeKeysPrefix := range storeKeysPrefixes {
+		storeKeyA := storeKeysPrefix.A
+		storeKeyB := storeKeysPrefix.B
+		prefixes := storeKeysPrefix.Prefixes
 		storeA := ctxA.KVStore(storeKeyA)
 		storeB := ctxB.KVStore(storeKeyB)
-		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB)
+		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
 		require.True(t, equal, "unequal stores: %s / %s:\nstore A %s (%X) => %s (%X)\nstore B %s (%X) => %s (%X)",
 			storeKeyA, storeKeyB, kvA.Key, kvA.Key, kvA.Value, kvA.Value, kvB.Key, kvB.Key, kvB.Value, kvB.Value)

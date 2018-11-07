@@ -179,7 +179,7 @@ func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 
 // Compare two KVstores, return either the first key/value pair
 // at which they differ and whether or not they are equal
-func DiffKVStores(a KVStore, b KVStore) (kvA cmn.KVPair, kvB cmn.KVPair, count int64, equal bool) {
+func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvA cmn.KVPair, kvB cmn.KVPair, count int64, equal bool) {
 	iterA := a.Iterator(nil, nil)
 	iterB := b.Iterator(nil, nil)
 	count = int64(0)
@@ -190,15 +190,25 @@ func DiffKVStores(a KVStore, b KVStore) (kvA cmn.KVPair, kvB cmn.KVPair, count i
 		var kvA, kvB cmn.KVPair
 		if iterA.Valid() {
 			kvA = cmn.KVPair{Key: iterA.Key(), Value: iterA.Value()}
+			iterA.Next()
 		}
 		if iterB.Valid() {
 			kvB = cmn.KVPair{Key: iterB.Key(), Value: iterB.Value()}
+			iterB.Next()
 		}
-		if !bytes.Equal(kvA.Key, kvB.Key) || !bytes.Equal(kvA.Value, kvB.Value) {
+		compareValue := true
+		for _, prefix := range prefixesToSkip {
+			if bytes.Equal(kvA.Key[:len(prefix)], prefix) {
+				compareValue = false
+			}
+		}
+		// TODO
+		if compareValue && !bytes.Equal(kvA.Key, kvB.Key) {
 			return kvA, kvB, count, false
 		}
-		iterA.Next()
-		iterB.Next()
+		if compareValue && !bytes.Equal(kvA.Value, kvB.Value) {
+			return kvA, kvB, count, false
+		}
 		count++
 	}
 	return cmn.KVPair{}, cmn.KVPair{}, count, true

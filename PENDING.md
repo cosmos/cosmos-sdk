@@ -40,6 +40,7 @@ IMPROVEMENTS
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+ - #2637 [x/gov] Switched inactive and active proposal queues to an iterator based queue
 
 * SDK
  - \#2573 [x/distribution] add accum invariance
@@ -51,6 +52,8 @@ IMPROVEMENTS
  - \#2660 [x/mock/simulation] Staking transactions get tested far more frequently
  - \#2610 [x/stake] Block redelegation to and from the same validator
  - \#2652 [x/auth] Add benchmark for get and set account
+ - \#2685 [store] Add general merkle absence proof (also for empty substores)
+ - \#2708 [store] Disallow setting nil values
 
 * Tendermint
 
@@ -64,9 +67,12 @@ BUG FIXES
 * Gaia
  - \#2670 [x/stake] fixed incorrent `IterateBondedValidators` and split into two functions: `IterateBondedValidators` and `IterateLastBlockConsValidators`
  - \#2648 [gaiad] Fix `gaiad export` / `gaiad import` consistency, test in CI
+ - \#2691 Fix local testnet creation by using a single canonical genesis time
 
 * SDK
  - \#2625 [x/gov] fix AppendTag function usage error
  - \#2677 [x/stake, x/distribution] various staking/distribution fixes as found by the simulator
+ - \#2674 [types] Fix coin.IsLT() impl, coins.IsLT() impl, and renamed coins.Is\* to coins.IsAll\* (see \#2686)
+ - \#2711 [x/stake] Add commission data to `MsgCreateValidator` signature bytes.
 
 * Tendermint

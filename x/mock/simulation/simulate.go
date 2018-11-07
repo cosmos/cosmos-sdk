@@ -331,47 +331,47 @@ func queueOperations(queuedOperations map[int][]Operation,
 }
 
 // nolint: errcheck
-func runQueuedOperations(queueOperations map[int][]Operation,
+func runQueuedOperations(queueOps map[int][]Operation,
 	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	accounts []Account, logWriter func(string),
 	displayLogs func(), event func(string)) (numOpsRan int) {
 
-	if queuedOps, ok := queueOperations[height]; ok {
-		numOps := len(queuedOps)
+	if queuedOp, ok := queueOps[height]; ok {
+		numOps := len(queuedOp)
 		for i := 0; i < numOps; i++ {
 			// For now, queued operations cannot queue more operations.
 			// If a need arises for us to support queued messages to queue more messages, this can
 			// be changed.
-			logUpdate, _, err := queuedOps[i](r, app, ctx, accounts, event)
+			logUpdate, _, err := queuedOp[i](r, app, ctx, accounts, event)
 			logWriter(logUpdate)
 			if err != nil {
 				displayLogs()
 				tb.FailNow()
 			}
 		}
-		delete(queueOperations, height)
+		delete(queueOps, height)
 		return numOps
 	}
 	return 0
 }
 
-func runQueuedTimeOperations(queueOperations []FutureOperation,
+func runQueuedTimeOperations(queueOps []FutureOperation,
 	currentTime time.Time, tb testing.TB, r *rand.Rand,
 	app *baseapp.BaseApp, ctx sdk.Context, accounts []Account,
 	logWriter func(string), displayLogs func(), event func(string)) (numOpsRan int) {
 
 	numOpsRan = 0
-	for len(queueOperations) > 0 && currentTime.After(queueOperations[0].BlockTime) {
+	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
-		logUpdate, _, err := queueOperations[0].Op(r, app, ctx, accounts, event)
+		logUpdate, _, err := queueOps[0].Op(r, app, ctx, accounts, event)
 		logWriter(logUpdate)
 		if err != nil {
 			displayLogs()
 			tb.FailNow()
 		}
-		queueOperations = queueOperations[1:]
+		queueOps = queueOps[1:]
 		numOpsRan++
 	}
 	return numOpsRan

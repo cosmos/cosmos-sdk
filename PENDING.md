@@ -52,7 +52,8 @@ IMPROVEMENTS
  - \#2660 [x/mock/simulation] Staking transactions get tested far more frequently
  - \#2610 [x/stake] Block redelegation to and from the same validator
  - \#2652 [x/auth] Add benchmark for get and set account
- - \#2685 [x/store] Add general merkle absence proof (also for empty substores)
+ - \#2685 [store] Add general merkle absence proof (also for empty substores)
+ - \#2708 [store] Disallow setting nil values
 
 * Tendermint
 

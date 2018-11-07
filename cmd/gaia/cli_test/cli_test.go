@@ -414,12 +414,12 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForNextNBlocksTM(2, port)
 
 	vote := executeGetVote(t, fmt.Sprintf("gaiacli query vote --proposal-id=1 --voter=%s --output=json %v", fooAddr, flags))
-	require.Equal(t, int64(1), vote.ProposalID)
+	require.Equal(t, uint64(1), vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
 
 	votes := executeGetVotes(t, fmt.Sprintf("gaiacli query votes --proposal-id=1 --output=json %v", flags))
 	require.Len(t, votes, 1)
-	require.Equal(t, int64(1), votes[0].ProposalID)
+	require.Equal(t, uint64(1), votes[0].ProposalID)
 	require.Equal(t, gov.OptionYes, votes[0].Option)
 
 	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --status=DepositPeriod %v", flags), "")
@@ -439,7 +439,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, spStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --latest=1 %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --limit=1 %v", flags), "")
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 }
 

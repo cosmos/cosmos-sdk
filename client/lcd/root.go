@@ -2,6 +2,10 @@ package lcd
 
 import (
 	"errors"
+	"net"
+	"net/http"
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -20,9 +24,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
 	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
-	"net"
-	"net/http"
-	"os"
 )
 
 const (
@@ -46,7 +47,9 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			listenAddr := viper.GetString(flagListenAddr)
 			handler := createHandler(cdc)
+
 			registerSwaggerUI(handler)
+
 			logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 			maxOpen := viper.GetInt(flagMaxOpenConnections)
 			sslHosts := viper.GetString(flagSSLHosts)
@@ -62,14 +65,16 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 			})
 
 			var cleanupFunc func()
+
+			// TODO: re-enable insecure mode once #2715 has been addressed
 			if viper.GetBool(flagInsecure) {
-				listener, err = tmserver.StartHTTPServer(
-					listenAddr, handler, logger,
-					tmserver.Config{MaxOpenConnections: maxOpen},
-				)
-				if err != nil {
-					return
-				}
+				// listener, err = tmserver.StartHTTPServer(
+				// 	listenAddr, handler, logger,
+				// 	tmserver.Config{MaxOpenConnections: maxOpen},
+				// )
+				// if err != nil {
+				// 	return
+				// }
 			} else {
 				if certFile != "" {
 					// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
@@ -77,6 +82,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 					if err != nil {
 						return err
 					}
+
 					//  cert/key pair is provided, read the fingerprint
 					fingerprint, err = fingerprintFromFile(certFile)
 					if err != nil {
@@ -88,10 +94,12 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 					if err != nil {
 						return err
 					}
+
 					cleanupFunc = func() {
 						os.Remove(certFile)
 						os.Remove(keyFile)
 					}
+
 					defer cleanupFunc()
 				}
 
@@ -104,16 +112,20 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 				if err != nil {
 					return
 				}
+
 				logger.Info(fingerprint)
 			}
+
 			logger.Info("REST server started")
 
 			return nil
 		},
 	}
 
+	// TODO: re-enable insecure mode once #2715 has been addressed
+	// cmd.Flags().Bool(flagInsecure, false, "Do not set up SSL/TLS layer")
+
 	cmd.Flags().String(flagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
-	cmd.Flags().Bool(flagInsecure, false, "Do not set up SSL/TLS layer")
 	cmd.Flags().String(flagSSLHosts, "", "Comma-separated hostnames and IPs to generate a certificate for")
 	cmd.Flags().String(flagSSLCertFile, "", "Path to a SSL certificate file. If not supplied, a self-signed certificate will be generated.")
 	cmd.Flags().String(flagSSLKeyFile, "", "Path to a key file; ignored if a certificate file is not supplied.")
@@ -123,6 +135,7 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().Int(flagMaxOpenConnections, 1000, "The number of maximum open connections")
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	cmd.Flags().Bool(client.FlagIndentResponse, false, "Add indent to JSON response")
+
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))

@@ -33,7 +33,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposal.GetProposalID())
+	proposalIDBytes := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal.GetProposalID())
 
 	resTags := sdk.NewTags(
 		tags.Action, tags.ActionSubmitProposal,
@@ -102,40 +102,35 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 	resTags = sdk.NewTags()
 
-	// Delete proposals that haven't met minDeposit
-	for shouldPopInactiveProposalQueue(ctx, keeper) {
-		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
-		if inactiveProposal.GetStatus() != StatusDepositPeriod {
-			continue
-		}
+	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	for ; inactiveIterator.Valid(); inactiveIterator.Next() {
+		var proposalID uint64
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
+		inactiveProposal := keeper.GetProposal(ctx, proposalID)
+		keeper.RefundDeposits(ctx, proposalID)
+		keeper.DeleteProposal(ctx, proposalID)
 
-		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(inactiveProposal.GetProposalID())
-		keeper.DeleteProposal(ctx, inactiveProposal)
 		resTags = resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
-		resTags = resTags.AppendTag(tags.ProposalID, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.ProposalID, []byte(string(proposalID)))
 
 		logger.Info(
-			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %v steak); deleted",
+			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
 				inactiveProposal.GetProposalID(),
 				inactiveProposal.GetTitle(),
-				keeper.GetDepositProcedure(ctx).MinDeposit.AmountOf("steak"),
-				inactiveProposal.GetTotalDeposit().AmountOf("steak"),
+				keeper.GetDepositParams(ctx).MinDeposit,
+				inactiveProposal.GetTotalDeposit(),
 			),
 		)
 	}
+	inactiveIterator.Close()
 
-	// Check if earliest Active Proposal ended voting period yet
-	for shouldPopActiveProposalQueue(ctx, keeper) {
-		activeProposal := keeper.ActiveProposalQueuePop(ctx)
-
-		proposalStartTime := activeProposal.GetVotingStartTime()
-		votingPeriod := keeper.GetVotingProcedure(ctx).VotingPeriod
-		if ctx.BlockHeader().Time.Before(proposalStartTime.Add(votingPeriod)) {
-			continue
-		}
-
+	activeIterator := keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	for ; activeIterator.Valid(); activeIterator.Next() {
+		var proposalID uint64
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
+		activeProposal := keeper.GetProposal(ctx, proposalID)
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
-		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(activeProposal.GetProposalID())
+
 		var action []byte
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
@@ -149,37 +144,15 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
 
+		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.GetVotingEndTime(), activeProposal.GetProposalID())
+
 		logger.Info(fmt.Sprintf("proposal %d (%s) tallied; passed: %v",
 			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
 
 		resTags = resTags.AppendTag(tags.Action, action)
-		resTags = resTags.AppendTag(tags.ProposalID, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.ProposalID, []byte(string(proposalID)))
 	}
+	activeIterator.Close()
 
 	return resTags
-}
-func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	depositProcedure := keeper.GetDepositProcedure(ctx)
-	peekProposal := keeper.InactiveProposalQueuePeek(ctx)
-
-	if peekProposal == nil {
-		return false
-	} else if peekProposal.GetStatus() != StatusDepositPeriod {
-		return true
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetSubmitTime().Add(depositProcedure.MaxDepositPeriod)) {
-		return true
-	}
-	return false
-}
-
-func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	votingProcedure := keeper.GetVotingProcedure(ctx)
-	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
-
-	if peekProposal == nil {
-		return false
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetVotingStartTime().Add(votingProcedure.VotingPeriod)) {
-		return true
-	}
-	return false
 }

@@ -65,6 +65,20 @@ func ParseInt64OrReturnBadRequest(w http.ResponseWriter, s string) (n int64, ok 
 	return n, true
 }
 
+// ParseUint64OrReturnBadRequest converts s to a uint64 value.
+func ParseUint64OrReturnBadRequest(w http.ResponseWriter, s string) (n uint64, ok bool) {
+	var err error
+
+	n, err = strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		err := fmt.Errorf("'%s' is not a valid uint64", s)
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return n, false
+	}
+
+	return n, true
+}
+
 // ParseFloat64OrReturnBadRequest converts s to a float64 value. It returns a
 // default value, defaultIfEmpty, if the string is empty.
 func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEmpty float64) (n float64, ok bool) {

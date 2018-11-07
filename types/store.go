@@ -127,7 +127,7 @@ type KVStore interface {
 	// Has checks if a key exists. Panics on nil key.
 	Has(key []byte) bool
 
-	// Set sets the key. Panics on nil key.
+	// Set sets the key. Panics on nil key or value.
 	Set(key, value []byte)
 
 	// Delete deletes the key. Panics on nil key.

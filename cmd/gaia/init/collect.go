@@ -2,7 +2,6 @@ package init
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -12,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/go-amino"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -35,12 +33,13 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 		RunE: func(_ *cobra.Command, _ []string) error {
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
-
 			name := viper.GetString(client.FlagName)
+
 			nodeID, valPubKey, err := InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return err
 			}
+
 			genDoc, err := loadGenesisDoc(cdc, config.GenesisFile())
 			if err != nil {
 				return err
@@ -59,12 +58,14 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				NodeID:    nodeID,
 				ValPubKey: valPubKey,
 			}
+
 			appMessage, err := genAppStateFromConfig(cdc, config, initCfg, genDoc)
 			if err != nil {
 				return err
 			}
 
 			toPrint.AppMessage = appMessage
+
 			// print out some key information
 			return displayInfo(cdc, toPrint)
 		},
@@ -74,23 +75,29 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config, initCfg initConfig,
-	genDoc types.GenesisDoc) (appState json.RawMessage, err error) {
+func genAppStateFromConfig(
+	cdc *codec.Codec, config *cfg.Config, initCfg initConfig, genDoc types.GenesisDoc,
+) (appState json.RawMessage, err error) {
 
 	genFile := config.GenesisFile()
-	// process genesis transactions, else create default genesis.json
-	var appGenTxs []auth.StdTx
-	var persistentPeers string
-	var genTxs []json.RawMessage
-	var jsonRawTx json.RawMessage
+	var (
+		appGenTxs       []auth.StdTx
+		persistentPeers string
+		genTxs          []json.RawMessage
+		jsonRawTx       json.RawMessage
+	)
 
+	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err = app.CollectStdTxs(
-		cdc, config.Moniker, initCfg.GenTxsDir, genDoc)
+		cdc, config.Moniker, initCfg.GenTxsDir, genDoc,
+	)
 	if err != nil {
 		return
 	}
+
 	genTxs = make([]json.RawMessage, len(appGenTxs))
 	config.P2P.PersistentPeers = persistentPeers
+
 	for i, stdTx := range appGenTxs {
 		jsonRawTx, err = cdc.MarshalJSON(stdTx)
 		if err != nil {
@@ -100,20 +107,12 @@ func genAppStateFromConfig(cdc *codec.Codec, config *cfg.Config, initCfg initCon
 	}
 
 	cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+
 	appState, err = app.GaiaAppGenStateJSON(cdc, genDoc, genTxs)
 	if err != nil {
 		return
 	}
 
 	err = WriteGenesisFile(genFile, initCfg.ChainID, nil, appState)
-	return
-}
-
-func loadGenesisDoc(cdc *amino.Codec, genFile string) (genDoc types.GenesisDoc, err error) {
-	genContents, err := ioutil.ReadFile(genFile)
-	if err != nil {
-		return
-	}
-	err = cdc.UnmarshalJSON(genContents, &genDoc)
 	return
 }

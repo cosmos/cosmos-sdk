@@ -222,21 +222,16 @@ func (va VestingAccount) TrackDelegation(t Time, amount Coins) {
 
 ```go
 func DelegateCoins(t Time, from Account, amount Coins) {
+    bc := from.GetCoins()
+    assert(amount <= bc)
+
     if isVesting(from) {
-        sc := from.GetCoins()
-
-        if amount <= sc {
-            from.TrackDelegation(t, amount)
-            // save account...
-        }
+        from.TrackDelegation(t, amount)
     } else {
-        sc := from.GetCoins()
-
-        if amount <= sc {
-            from.SetCoins(sc - amount)
-            // save account...
-        }
+        from.SetCoins(sc - amount)
     }
+
+    // save account...
 }
 ```
 

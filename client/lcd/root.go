@@ -2,6 +2,7 @@ package lcd
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -68,6 +69,10 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 
 			// TODO: re-enable insecure mode once #2715 has been addressed
 			if viper.GetBool(flagInsecure) {
+				fmt.Println(
+					"Insecure mode is temporarily disabled, please locally generate an " +
+						"SSL certificate to test. Support will be re-enabled soon!",
+				)
 				// listener, err = tmserver.StartHTTPServer(
 				// 	listenAddr, handler, logger,
 				// 	tmserver.Config{MaxOpenConnections: maxOpen},
@@ -114,18 +119,17 @@ func ServeCommand(cdc *codec.Codec) *cobra.Command {
 				}
 
 				logger.Info(fingerprint)
+				logger.Info("REST server started")
 			}
 
-			logger.Info("REST server started")
+			// logger.Info("REST server started")
 
 			return nil
 		},
 	}
 
-	// TODO: re-enable insecure mode once #2715 has been addressed
-	// cmd.Flags().Bool(flagInsecure, false, "Do not set up SSL/TLS layer")
-
 	cmd.Flags().String(flagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
+	cmd.Flags().Bool(flagInsecure, false, "Do not set up SSL/TLS layer")
 	cmd.Flags().String(flagSSLHosts, "", "Comma-separated hostnames and IPs to generate a certificate for")
 	cmd.Flags().String(flagSSLCertFile, "", "Path to a SSL certificate file. If not supplied, a self-signed certificate will be generated.")
 	cmd.Flags().String(flagSSLKeyFile, "", "Path to a key file; ignored if a certificate file is not supplied.")

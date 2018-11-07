@@ -1,11 +1,9 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-VERSION := $(shell git describe --tags --long | sed 's/v\(.*\)/\1/')
-BUILD_TAGS = netgo ledger
+VERSION := $(subst v,,$(shell git describe --tags --long))
+BUILD_TAGS = netgo
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION}"
-GCC := $(shell command -v gcc 2> /dev/null)
 LEDGER_ENABLED ?= true
-UNAME_S := $(shell uname -s)
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
 	github.com/alecthomas/gometalinter \
@@ -20,23 +18,31 @@ ci: get_tools get_vendor_deps install test_cover test_lint test
 ########################################
 ### Build/Install
 
-check-ledger:
+# Add ledger support - Makefile variable changes are out of a target's scope. There is no point in putting this into a target.
 ifeq ($(LEDGER_ENABLED),true)
-   	ifeq ($(UNAME_S),OpenBSD)
-   		$(info "OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988)")
-TMP_BUILD_TAGS := $(BUILD_TAGS)
-BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
-   	else
-   	   	ifndef GCC
-   	   	   $(error "gcc not installed for ledger support, please install or set LEDGER_ENABLED to false in the Makefile")
-   	   	endif
-   	endif
-else
-TMP_BUILD_TAGS := $(BUILD_TAGS)
-BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
+  ifeq ($(OS),Windows_NT)
+    GCCEXE = $(shell where gcc.exe 2> NUL)
+    ifeq ($(GCCEXE),)
+      $(error gcc.exe not installed for ledger support, please install or set LEDGER_ENABLED=false)
+    else
+      BUILD_TAGS += ledger
+    endif
+  else
+    UNAME_S = $(shell uname -s)
+    ifeq ($(UNAME_S),OpenBSD)
+      $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
+    else
+      GCC = $(shell command -v gcc 2> /dev/null)
+      ifeq ($(GCC),)
+        $(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
+      else
+        BUILD_TAGS += ledger
+      endif
+    endif
+  endif
 endif
 
-build: check-ledger update_gaia_lite_docs
+build:
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli

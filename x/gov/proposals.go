@@ -13,8 +13,8 @@ import (
 //-----------------------------------------------------------
 // Proposal interface
 type Proposal interface {
-	GetProposalID() int64
-	SetProposalID(int64)
+	GetProposalID() uint64
+	SetProposalID(uint64)
 
 	GetTitle() string
 	SetTitle(string)
@@ -34,11 +34,17 @@ type Proposal interface {
 	GetSubmitTime() time.Time
 	SetSubmitTime(time.Time)
 
+	GetDepositEndTime() time.Time
+	SetDepositEndTime(time.Time)
+
 	GetTotalDeposit() sdk.Coins
 	SetTotalDeposit(sdk.Coins)
 
 	GetVotingStartTime() time.Time
 	SetVotingStartTime(time.Time)
+
+	GetVotingEndTime() time.Time
+	SetVotingEndTime(time.Time)
 }
 
 // checks if two proposals are equal
@@ -50,8 +56,10 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 		proposalA.GetStatus() == proposalB.GetStatus() &&
 		proposalA.GetTallyResult().Equals(proposalB.GetTallyResult()) &&
 		proposalA.GetSubmitTime().Equal(proposalB.GetSubmitTime()) &&
+		proposalA.GetDepositEndTime().Equal(proposalB.GetDepositEndTime()) &&
 		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
-		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime()) {
+		proposalA.GetVotingStartTime().Equal(proposalB.GetVotingStartTime()) &&
+		proposalA.GetVotingEndTime().Equal(proposalB.GetVotingEndTime()) {
 		return true
 	}
 	return false
@@ -60,7 +68,7 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 //-----------------------------------------------------------
 // Text Proposals
 type TextProposal struct {
-	ProposalID   int64        `json:"proposal_id"`   //  ID of the proposal
+	ProposalID   uint64       `json:"proposal_id"`   //  ID of the proposal
 	Title        string       `json:"title"`         //  Title of the proposal
 	Description  string       `json:"description"`   //  Description of the proposal
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
@@ -68,18 +76,20 @@ type TextProposal struct {
 	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
 	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
 
-	SubmitTime   time.Time `json:"submit_time"`   //  Height of the block where TxGovSubmitProposal was included
-	TotalDeposit sdk.Coins `json:"total_deposit"` //  Current deposit on this proposal. Initial value is set at InitialDeposit
+	SubmitTime     time.Time `json:"submit_time"`      //  Time of the block where TxGovSubmitProposal was included
+	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
+	TotalDeposit   sdk.Coins `json:"total_deposit"`    //  Current deposit on this proposal. Initial value is set at InitialDeposit
 
-	VotingStartTime time.Time `json:"voting_start_time"` //  Height of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingStartTime time.Time `json:"voting_start_time"` //  Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+	VotingEndTime   time.Time `json:"voting_end_time"`   // Time that the VotingPeriod for this proposal will end and votes will be tallied
 }
 
 // Implements Proposal Interface
 var _ Proposal = (*TextProposal)(nil)
 
 // nolint
-func (tp TextProposal) GetProposalID() int64                       { return tp.ProposalID }
-func (tp *TextProposal) SetProposalID(proposalID int64)            { tp.ProposalID = proposalID }
+func (tp TextProposal) GetProposalID() uint64                      { return tp.ProposalID }
+func (tp *TextProposal) SetProposalID(proposalID uint64)           { tp.ProposalID = proposalID }
 func (tp TextProposal) GetTitle() string                           { return tp.Title }
 func (tp *TextProposal) SetTitle(title string)                     { tp.Title = title }
 func (tp TextProposal) GetDescription() string                     { return tp.Description }
@@ -92,16 +102,24 @@ func (tp TextProposal) GetTallyResult() TallyResult                { return tp.T
 func (tp *TextProposal) SetTallyResult(tallyResult TallyResult)    { tp.TallyResult = tallyResult }
 func (tp TextProposal) GetSubmitTime() time.Time                   { return tp.SubmitTime }
 func (tp *TextProposal) SetSubmitTime(submitTime time.Time)        { tp.SubmitTime = submitTime }
-func (tp TextProposal) GetTotalDeposit() sdk.Coins                 { return tp.TotalDeposit }
-func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins)    { tp.TotalDeposit = totalDeposit }
-func (tp TextProposal) GetVotingStartTime() time.Time              { return tp.VotingStartTime }
+func (tp TextProposal) GetDepositEndTime() time.Time               { return tp.DepositEndTime }
+func (tp *TextProposal) SetDepositEndTime(depositEndTime time.Time) {
+	tp.DepositEndTime = depositEndTime
+}
+func (tp TextProposal) GetTotalDeposit() sdk.Coins              { return tp.TotalDeposit }
+func (tp *TextProposal) SetTotalDeposit(totalDeposit sdk.Coins) { tp.TotalDeposit = totalDeposit }
+func (tp TextProposal) GetVotingStartTime() time.Time           { return tp.VotingStartTime }
 func (tp *TextProposal) SetVotingStartTime(votingStartTime time.Time) {
 	tp.VotingStartTime = votingStartTime
+}
+func (tp TextProposal) GetVotingEndTime() time.Time { return tp.VotingEndTime }
+func (tp *TextProposal) SetVotingEndTime(votingEndTime time.Time) {
+	tp.VotingEndTime = votingEndTime
 }
 
 //-----------------------------------------------------------
 // ProposalQueue
-type ProposalQueue []int64
+type ProposalQueue []uint64
 
 //-----------------------------------------------------------
 // ProposalKind

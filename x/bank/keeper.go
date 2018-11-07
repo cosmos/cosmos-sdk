@@ -24,6 +24,7 @@ var _ Keeper = (*BaseKeeper)(nil)
 // between accounts.
 type Keeper interface {
 	SendKeeper
+
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
@@ -39,7 +40,10 @@ type BaseKeeper struct {
 
 // NewBaseKeeper returns a new BaseKeeper
 func NewBaseKeeper(ak auth.AccountKeeper) BaseKeeper {
-	return BaseKeeper{BaseSendKeeper: NewBaseSendKeeper(ak), ak: ak}
+	return BaseKeeper{
+		BaseSendKeeper: NewBaseSendKeeper(ak),
+		ak:             ak,
+	}
 }
 
 // SetCoins sets the coins at the addr.
@@ -87,7 +91,10 @@ type BaseSendKeeper struct {
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
 func NewBaseSendKeeper(ak auth.AccountKeeper) BaseSendKeeper {
-	return BaseSendKeeper{BaseViewKeeper: NewBaseViewKeeper(ak), ak: ak}
+	return BaseSendKeeper{
+		BaseViewKeeper: NewBaseViewKeeper(ak),
+		ak:             ak,
+	}
 }
 
 // SendCoins moves coins from one account to another
@@ -125,7 +132,9 @@ type BaseViewKeeper struct {
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
 func NewBaseViewKeeper(ak auth.AccountKeeper) BaseViewKeeper {
-	return BaseViewKeeper{ak: ak}
+	return BaseViewKeeper{
+		ak: ak,
+	}
 }
 
 // GetCoins returns the coins at the addr.

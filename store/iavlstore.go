@@ -232,7 +232,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 				}
 			}
 			if value != nil {
-				// Value was found
+				// value was found
 				res.Value = value
 				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLValueOp(key, proof).ProofOp()}}
 			} else {

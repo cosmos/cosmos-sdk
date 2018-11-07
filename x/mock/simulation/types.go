@@ -6,8 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // Operation runs a state machine transition,
@@ -27,31 +25,6 @@ type Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 
 // RandSetup performs the random setup the mock module needs.
 type RandSetup func(r *rand.Rand, accounts []Account)
-
-// An Invariant is a function which tests a particular invariant.
-// If the invariant has been broken, it should return an error
-// containing a descriptive message about what happened.
-// The simulator will then halt and print the logs.
-type Invariant func(app *baseapp.BaseApp) error
-
-// Account contains a privkey, pubkey, address tuple
-// eventually more useful data can be placed in here.
-// (e.g. number of coins)
-type Account struct {
-	PrivKey crypto.PrivKey
-	PubKey  crypto.PubKey
-	Address sdk.AccAddress
-}
-
-// are two accounts equal
-func (acc Account) Equals(acc2 Account) bool {
-	return acc.Address.Equals(acc2.Address)
-}
-
-type mockValidator struct {
-	val           abci.ValidatorUpdate
-	livenessState int
-}
 
 // FutureOperation is an operation which will be ran at the
 // beginning of the provided BlockHeight.

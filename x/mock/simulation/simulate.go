@@ -14,7 +14,6 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -188,7 +187,8 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		}
 
 		if header.ProposerAddress == nil {
-			fmt.Printf("\nSimulation stopped early as all validators have been unbonded, there is nobody left propose a block!\n")
+			fmt.Printf("\nSimulation stopped early as all validators " +
+				"have been unbonded, there is nobody left propose a block!\n")
 			stopEarly = true
 			break
 		}
@@ -204,10 +204,15 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 		DisplayEvents(events)
 		return
 	}
-	fmt.Printf("\nSimulation complete. Final height (blocks): %d, final time (seconds), : %v, operations ran %d\n", header.Height, header.Time, opCount)
+	fmt.Printf("\nSimulation complete. Final height (blocks): %d, "+
+		"final time (seconds), : %v, operations ran %d\n",
+		header.Height, header.Time, opCount)
+
 	DisplayEvents(events)
 	return nil
 }
+
+//______________________________________________________________________________
 
 type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	accounts []Account, header abci.Header, logWriter func(string)) (opCount int)
@@ -302,7 +307,7 @@ func getBlockSize(r *rand.Rand, params Params,
 	} else {
 		blocksize = 0
 	}
-	return
+	return state, blocksize
 }
 
 // adds all future operations into the operation queue.
@@ -313,6 +318,7 @@ func queueOperations(queuedOperations map[int][]Operation,
 	if futureOperations == nil {
 		return
 	}
+
 	for _, futureOp := range futureOperations {
 		if futureOp.BlockHeight != 0 {
 			if val, ok := queuedOperations[futureOp.BlockHeight]; ok {
@@ -322,7 +328,12 @@ func queueOperations(queuedOperations map[int][]Operation,
 			}
 		} else {
 			// TODO: Replace with proper sorted data structure, so don't have the copy entire slice
-			index := sort.Search(len(queuedTimeOperations), func(i int) bool { return queuedTimeOperations[i].BlockTime.After(futureOp.BlockTime) })
+			index := sort.Search(
+				len(queuedTimeOperations),
+				func(i int) bool {
+					return queuedTimeOperations[i].BlockTime.After(futureOp.BlockTime)
+				},
+			)
 			queuedTimeOperations = append(queuedTimeOperations, FutureOperation{})
 			copy(queuedTimeOperations[index+1:], queuedTimeOperations[index:])
 			queuedTimeOperations[index] = futureOp
@@ -375,32 +386,6 @@ func runQueuedTimeOperations(queueOperations []FutureOperation,
 		numOpsRan++
 	}
 	return numOpsRan
-}
-
-func getKeys(validators map[string]mockValidator) []string {
-	keys := make([]string, len(validators))
-	i := 0
-	for key := range validators {
-		keys[i] = key
-		i++
-	}
-	sort.Strings(keys)
-	return keys
-}
-
-// randomProposer picks a random proposer from the current validator set
-func randomProposer(r *rand.Rand, validators map[string]mockValidator) cmn.HexBytes {
-	keys := getKeys(validators)
-	if len(keys) == 0 {
-		return nil
-	}
-	key := keys[r.Intn(len(keys))]
-	proposer := validators[key].val
-	pk, err := tmtypes.PB2TM.PubKey(proposer.PubKey)
-	if err != nil {
-		panic(err)
-	}
-	return pk.Address()
 }
 
 // RandomRequestBeginBlock generates a list of signing validators according to
@@ -482,39 +467,4 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		},
 		ByzantineValidators: evidence,
 	}
-}
-
-// updateValidators mimicks Tendermint's update logic
-// nolint: unparam
-func updateValidators(tb testing.TB, r *rand.Rand, params Params,
-	current map[string]mockValidator, updates []abci.ValidatorUpdate,
-	event func(string)) map[string]mockValidator {
-
-	for _, update := range updates {
-		str := fmt.Sprintf("%v", update.PubKey)
-		switch {
-		case update.Power == 0:
-			if _, ok := current[str]; !ok {
-				tb.Fatalf("tried to delete a nonexistent validator")
-			}
-
-			event("endblock/validatorupdates/kicked")
-			delete(current, str)
-		default:
-			// Does validator already exist?
-			if mVal, ok := current[str]; ok {
-				mVal.val = update
-				event("endblock/validatorupdates/updated")
-			} else {
-				// Set this new validator
-				current[str] = mockValidator{
-					update,
-					GetMemberOfInitialState(r, params.InitialLivenessWeightings),
-				}
-				event("endblock/validatorupdates/added")
-			}
-		}
-	}
-
-	return current
 }

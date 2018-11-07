@@ -5,9 +5,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 )
@@ -39,13 +36,6 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 	return string(b)
 }
 
-// RandomAcc pick a random account from an array
-func RandomAcc(r *rand.Rand, accs []Account) Account {
-	return accs[r.Intn(
-		len(accs),
-	)]
-}
-
 // Generate a random amount
 func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 	return sdk.NewInt(int64(r.Intn(int(max.Int64()))))
@@ -55,25 +45,6 @@ func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	randInt := big.NewInt(0).Rand(r, max.Int)
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
-}
-
-// RandomAccounts generates n random accounts
-func RandomAccounts(r *rand.Rand, n int) []Account {
-	accs := make([]Account, n)
-	for i := 0; i < n; i++ {
-		// don't need that much entropy for simulation
-		privkeySeed := make([]byte, 15)
-		r.Read(privkeySeed)
-		useSecp := r.Int63()%2 == 0
-		if useSecp {
-			accs[i].PrivKey = secp256k1.GenPrivKeySecp256k1(privkeySeed)
-		} else {
-			accs[i].PrivKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
-		}
-		accs[i].PubKey = accs[i].PrivKey.PubKey()
-		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
-	}
-	return accs
 }
 
 // RandomSetGenesis wraps mock.RandomSetGenesis, but using simulation accounts

@@ -2,49 +2,14 @@ package simulation
 
 import (
 	"fmt"
-	"math/big"
-	"math/rand"
 	"os"
 	"sort"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/mock"
 )
-
-// shamelessly copied from https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang#31832326
-// TODO we should probably move this to tendermint/libs/common/random.go
-
-const (
-	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	letterIdxBits = 6                    // 6 bits to represent a letter index
-	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
-	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
-)
-
-// Generate a random string of a particular length
-func RandStringOfLength(r *rand.Rand, n int) string {
-	b := make([]byte, n)
-	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
-	for i, cache, remain := n-1, r.Int63(), letterIdxMax; i >= 0; {
-		if remain == 0 {
-			cache, remain = r.Int63(), letterIdxMax
-		}
-		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
-			b[i] = letterBytes[idx]
-			i--
-		}
-		cache >>= letterIdxBits
-		remain--
-	}
-	return string(b)
-}
 
 // Pretty-print events as a table
 func DisplayEvents(events map[string]uint) {
@@ -57,43 +22,6 @@ func DisplayEvents(events map[string]uint) {
 	for _, key := range keys {
 		fmt.Printf("  % 60s => %d\n", key, events[key])
 	}
-}
-
-// RandomAcc pick a random account from an array
-func RandomAcc(r *rand.Rand, accs []Account) Account {
-	return accs[r.Intn(
-		len(accs),
-	)]
-}
-
-// Generate a random amount
-func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
-	return sdk.NewInt(int64(r.Intn(int(max.Int64()))))
-}
-
-// RandomDecAmount generates a random decimal amount
-func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
-	randInt := big.NewInt(0).Rand(r, max.Int)
-	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
-}
-
-// RandomAccounts generates n random accounts
-func RandomAccounts(r *rand.Rand, n int) []Account {
-	accs := make([]Account, n)
-	for i := 0; i < n; i++ {
-		// don't need that much entropy for simulation
-		privkeySeed := make([]byte, 15)
-		r.Read(privkeySeed)
-		useSecp := r.Int63()%2 == 0
-		if useSecp {
-			accs[i].PrivKey = secp256k1.GenPrivKeySecp256k1(privkeySeed)
-		} else {
-			accs[i].PrivKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
-		}
-		accs[i].PubKey = accs[i].PrivKey.PubKey()
-		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
-	}
-	return accs
 }
 
 // Builds a function to add logs for this particular block
@@ -122,15 +50,6 @@ func assertAllInvariants(t *testing.T, app *baseapp.BaseApp,
 			t.Fatal()
 		}
 	}
-}
-
-// RandomSetGenesis wraps mock.RandomSetGenesis, but using simulation accounts
-func RandomSetGenesis(r *rand.Rand, app *mock.App, accs []Account, denoms []string) {
-	addrs := make([]sdk.AccAddress, len(accs))
-	for i := 0; i < len(accs); i++ {
-		addrs[i] = accs[i].Address
-	}
-	mock.RandomSetGenesis(r, app, addrs, denoms)
 }
 
 // Creates a function to print out the logs

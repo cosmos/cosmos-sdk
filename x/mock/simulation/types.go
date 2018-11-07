@@ -70,16 +70,3 @@ type WeightedOperation struct {
 	Weight int
 	Op     Operation
 }
-
-// TODO remove? not being called anywhere
-// PeriodicInvariant returns an Invariant function closure that asserts a given
-// invariant if the mock application's last block modulo the given period is
-// congruent to the given offset.
-func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
-	return func(app *baseapp.BaseApp) error {
-		if int(app.LastBlockHeight())%period == offset {
-			return invariant(app)
-		}
-		return nil
-	}
-}

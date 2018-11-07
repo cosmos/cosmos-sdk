@@ -50,12 +50,6 @@ func initChain(r *rand.Rand, params Params,
 	return
 }
 
-func randTimestamp(r *rand.Rand) time.Time {
-	// json.Marshal breaks for timestamps greater with year greater than 9999
-	unixTime := r.Int63n(253373529600)
-	return time.Unix(unixTime, 0)
-}
-
 // SimulateFromSeed tests an application by running the provided
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
@@ -70,7 +64,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	r := rand.New(rand.NewSource(seed))
 	params := RandomParams(r) // := DefaultParams()
 	fmt.Printf("Randomized simulation params: %+v\n", params)
-	timestamp := randTimestamp(r)
+	timestamp := RandTimestamp(r)
 	fmt.Printf("Starting the simulation from time %v, unixtime %v\n", timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
 	timeDiff := maxTimePerBlock - minTimePerBlock
 

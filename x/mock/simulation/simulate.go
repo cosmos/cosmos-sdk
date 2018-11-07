@@ -289,29 +289,6 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 	}
 }
 
-// getBlockSize returns a block size as determined from the transition matrix.
-// It targets making average block size the provided parameter. The three
-// states it moves between are:
-//  - "over stuffed" blocks with average size of 2 * avgblocksize,
-//  - normal sized blocks, hitting avgBlocksize on average,
-//  - and empty blocks, with no txs / only txs scheduled from the past.
-func getBlockSize(r *rand.Rand, params Params,
-	lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
-
-	// TODO: Make default blocksize transition matrix actually make the average
-	// blocksize equal to avgBlockSize.
-	state = params.BlockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
-	switch state {
-	case 0:
-		blocksize = r.Intn(avgBlockSize * 4)
-	case 1:
-		blocksize = r.Intn(avgBlockSize * 2)
-	default:
-		blocksize = 0
-	}
-	return state, blocksize
-}
-
 // adds all future operations into the operation queue.
 func queueOperations(queuedOperations map[int][]Operation,
 	queuedTimeOperations []FutureOperation,

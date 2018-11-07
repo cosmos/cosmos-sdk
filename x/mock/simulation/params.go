@@ -52,14 +52,16 @@ type Params struct {
 //  - and empty blocks, with no txs / only txs scheduled from the past.
 func getBlockSize(r *rand.Rand, params Params,
 	lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
+
 	// TODO: Make default blocksize transition matrix actually make the average
 	// blocksize equal to avgBlockSize.
 	state = params.BlockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
-	if state == 0 {
+	switch state {
+	case 0:
 		blocksize = r.Intn(avgBlockSize * 4)
-	} else if state == 1 {
+	case 1:
 		blocksize = r.Intn(avgBlockSize * 2)
-	} else {
+	default:
 		blocksize = 0
 	}
 	return state, blocksize

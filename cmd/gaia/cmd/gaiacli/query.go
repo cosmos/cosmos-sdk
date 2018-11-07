@@ -64,7 +64,7 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 	slashingQueryCmd.AddCommand(client.GetCommands(
 		slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc))...)
 
-	// Query commcmmand sturcture
+	// Query commcmmand structure
 	queryCmd.AddCommand(
 		rpc.BlockCommand(),
 		rpc.ValidatorCommand(),

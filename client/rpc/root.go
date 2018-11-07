@@ -22,6 +22,7 @@ func todoNotImplemented(_ *cobra.Command, _ []string) error {
 	return errors.New("todo: Command not yet implemented")
 }
 
+// InitClientCommand initializes client commands
 func InitClientCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",

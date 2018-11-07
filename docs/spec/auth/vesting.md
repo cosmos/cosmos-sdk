@@ -180,17 +180,19 @@ based on if the account is a vesting account or not.
 
 ```go
 func SendCoins(t Time, from Account, to Account, amount Coins) {
+    bc := from.GetCoins()
+
     if isVesting(from) {
         sc := from.SpendableCoins(t)
-    } else {
-        sc := from.GetCoins()
+        assert(amount <= sc)
     }
 
-    if amount <= sc {
-        from.SetCoins(sc - amount)
-        to.SetCoins(amount)
-        // save accounts...
-    }
+    newCoins := bc - amount
+    assert(newCoins >= 0)
+
+    from.SetCoins(bc - amount)
+    to.SetCoins(amount)
+    // save accounts...
 }
 ```
 

@@ -228,7 +228,7 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 			if proof == nil {
 				// Proof == nil implies that the store is empty.
 				if value != nil {
-					panic("should not happen")
+					panic("unexpected value for an empty proof")
 				}
 			}
 			if value != nil {

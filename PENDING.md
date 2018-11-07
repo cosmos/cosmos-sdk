@@ -64,7 +64,8 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
- - \#2670 [x/stake] fixed incorrent `IterateBondedValidators` and split into two functions: `IterateBondedValidators` and `IterateLastBlockConsValidators`
+ - \#2670 [x/stake] fixed incorrect `IterateBondedValidators` and split into two functions: `IterateBondedValidators` and `IterateLastBlockConsValidators`
+ - \#2691 Fix local testnet creation by using a single canonical genesis time
 
 * SDK
  - \#2625 [x/gov] fix AppendTag function usage error

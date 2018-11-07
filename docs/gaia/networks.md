@@ -56,8 +56,9 @@ make build-linux localnet-stop localnet-start
 
 ### Configuration
 
-The `make localnet-start` creates files for a 4-node testnet in `./build` by calling the `gaiad testnet` command.
-This outputs a handful of files in the `./build` directory:
+The `make localnet-start` creates files for a 4-node testnet in `./build` by
+calling the `gaiad testnet` command. This outputs a handful of files in the
+`./build` directory:
 
 ```tree -L 2 build/
 build/
@@ -103,11 +104,26 @@ Each `./build/nodeN` directory is mounted to the `/gaiad` directory in each cont
 
 ### Logging
 
-Logs are saved under each `./build/nodeN/gaiad/gaia.log`. Watch them stream in with, for example:
+Logs are saved under each `./build/nodeN/gaiad/gaia.log`. You can also watch logs
+directly via Docker, for example:
 
 ```
-tail -f build/node0/gaiad/gaia.log
+docker logs -f gaiadnode0
 ```
+
+### Keys & Accounts
+
+To interact with `gaiacli` and start querying state or creating txs, you use the
+`gaiacli` directory of any given node as your `home`, for example:
+
+```shell
+gaiacli keys list --home ./build/node0/gaiacli
+```
+
+Now that accounts exists, you may create new accounts and send those accounts
+funds!
+
+**Note**: Each node's seed is located at `./build/nodeN/gaiacli/key_seed.json`.
 
 ### Special binaries
 

@@ -16,6 +16,7 @@ type mockValidator struct {
 	livenessState int
 }
 
+// TODO describe usage
 func getKeys(validators map[string]mockValidator) []string {
 	keys := make([]string, len(validators))
 	i := 0
@@ -50,27 +51,24 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 
 	for _, update := range updates {
 		str := fmt.Sprintf("%v", update.PubKey)
-		switch {
-		case update.Power == 0:
+		if update.Power == 0 {
 			if _, ok := current[str]; !ok {
 				tb.Fatalf("tried to delete a nonexistent validator")
 			}
-
 			event("endblock/validatorupdates/kicked")
 			delete(current, str)
-		default:
-			// Does validator already exist?
-			if mVal, ok := current[str]; ok {
-				mVal.val = update
-				event("endblock/validatorupdates/updated")
-			} else {
-				// Set this new validator
-				current[str] = mockValidator{
-					update,
-					GetMemberOfInitialState(r, params.InitialLivenessWeightings),
-				}
-				event("endblock/validatorupdates/added")
+
+		} else if mVal, ok := current[str]; ok {
+			// validator already exists
+			mVal.val = update
+			event("endblock/validatorupdates/updated")
+		} else {
+			// Set this new validator
+			current[str] = mockValidator{
+				update,
+				GetMemberOfInitialState(r, params.InitialLivenessWeightings),
 			}
+			event("endblock/validatorupdates/added")
 		}
 	}
 

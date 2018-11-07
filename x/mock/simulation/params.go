@@ -44,6 +44,27 @@ type Params struct {
 	BlockSizeTransitionMatrix TransitionMatrix
 }
 
+// getBlockSize returns a block size as determined from the transition matrix.
+// It targets making average block size the provided parameter. The three
+// states it moves between are:
+//  - "over stuffed" blocks with average size of 2 * avgblocksize,
+//  - normal sized blocks, hitting avgBlocksize on average,
+//  - and empty blocks, with no txs / only txs scheduled from the past.
+func getBlockSize(r *rand.Rand, params Params,
+	lastBlockSizeState, avgBlockSize int) (state, blocksize int) {
+	// TODO: Make default blocksize transition matrix actually make the average
+	// blocksize equal to avgBlockSize.
+	state = params.BlockSizeTransitionMatrix.NextState(r, lastBlockSizeState)
+	if state == 0 {
+		blocksize = r.Intn(avgBlockSize * 4)
+	} else if state == 1 {
+		blocksize = r.Intn(avgBlockSize * 2)
+	} else {
+		blocksize = 0
+	}
+	return state, blocksize
+}
+
 // Return default simulation parameters
 func DefaultParams() Params {
 	return Params{

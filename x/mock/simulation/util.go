@@ -7,9 +7,18 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 )
+
+func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
+	testingMode = false
+	if _t, ok := tb.(*testing.T); ok {
+		t = _t
+		testingMode = true
+	} else {
+		b = tb.(*testing.B)
+	}
+	return
+}
 
 // Pretty-print events as a table
 func DisplayEvents(events map[string]uint) {
@@ -34,22 +43,6 @@ func addLogMessage(testingmode bool, blockLogBuilders []*strings.Builder, height
 		}
 	}
 	return func(x string) {}
-}
-
-// assertAllInvariants asserts a list of provided invariants against
-// application state
-func assertAllInvariants(t *testing.T, app *baseapp.BaseApp,
-	invariants []Invariant, where string, displayLogs func()) {
-
-	for i := 0; i < len(invariants); i++ {
-		err := invariants[i](app)
-		if err != nil {
-			fmt.Printf("Invariants broken after %s\n", where)
-			fmt.Println(err.Error())
-			displayLogs()
-			t.Fatal()
-		}
-	}
 }
 
 // Creates a function to print out the logs

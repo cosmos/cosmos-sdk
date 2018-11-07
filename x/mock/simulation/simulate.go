@@ -278,17 +278,6 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 	}
 }
 
-func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
-	testingMode = false
-	if _t, ok := tb.(*testing.T); ok {
-		t = _t
-		testingMode = true
-	} else {
-		b = tb.(*testing.B)
-	}
-	return
-}
-
 // getBlockSize returns a block size as determined from the transition matrix.
 // It targets making average block size the provided parameter. The three
 // states it moves between are:

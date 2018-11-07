@@ -69,5 +69,6 @@ BUG FIXES
 * SDK
  - \#2625 [x/gov] fix AppendTag function usage error
  - \#2677 [x/stake, x/distribution] various staking/distribution fixes as found by the simulator
+ - \#2674 [types] Fix coin.IsLT() impl, coins.IsLT() impl, and renamed coins.Is\* to coins.IsAll\* (see \#2686)
 
 * Tendermint

@@ -26,8 +26,8 @@ func InitGenesis(ctx sdk.Context, keeper FeeCollectionKeeper, data GenesisState)
 	keeper.setCollectedFees(ctx, data.CollectedFees)
 }
 
-// WriteGenesis returns a GenesisState for a given context and keeper
-func WriteGenesis(ctx sdk.Context, keeper FeeCollectionKeeper) GenesisState {
+// ExportGenesis returns a GenesisState for a given context and keeper
+func ExportGenesis(ctx sdk.Context, keeper FeeCollectionKeeper) GenesisState {
 	collectedFees := keeper.GetCollectedFees(ctx)
 	return NewGenesisState(collectedFees)
 }

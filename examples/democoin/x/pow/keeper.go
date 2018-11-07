@@ -43,8 +43,8 @@ func InitGenesis(ctx sdk.Context, k Keeper, genesis Genesis) error {
 	return nil
 }
 
-// WriteGenesis for the PoW module
-func WriteGenesis(ctx sdk.Context, k Keeper) Genesis {
+// ExportGenesis for the PoW module
+func ExportGenesis(ctx sdk.Context, k Keeper) Genesis {
 	difficulty, err := k.GetLastDifficulty(ctx)
 	if err != nil {
 		panic(err)

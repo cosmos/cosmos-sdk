@@ -70,7 +70,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 				viper.GetBool(flagOverwrite)); err != nil {
 				return err
 			}
-			if err = WriteGenesisFile(genFile, chainID, nil, appState); err != nil {
+			if err = ExportGenesisFile(genFile, chainID, nil, appState); err != nil {
 				return err
 			}
 

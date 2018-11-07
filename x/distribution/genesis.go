@@ -24,9 +24,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
 }
 
-// WriteGenesis returns a GenesisState for a given context and keeper. The
+// ExportGenesis returns a GenesisState for a given context and keeper. The
 // GenesisState will contain the pool, and validator/delegator distribution info's
-func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	feePool := keeper.GetFeePool(ctx)
 	communityTax := keeper.GetCommunityTax(ctx)
 	baseProposerRewards := keeper.GetBaseProposerReward(ctx)

@@ -63,10 +63,10 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 	keeper.paramspace.SetParamSet(ctx, &data.Params)
 }
 
-// WriteGenesis writes the current store values
+// ExportGenesis writes the current store values
 // to a genesis file, which can be imported again
 // with InitGenesis
-func WriteGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
+func ExportGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 	var params Params
 	keeper.paramspace.GetParamSet(ctx, &params)
 

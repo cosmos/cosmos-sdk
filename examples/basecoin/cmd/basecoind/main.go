@@ -108,7 +108,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 				return err
 			}
 			fmt.Fprintf(os.Stderr, "%s\n", string(out))
-			return gaiaInit.WriteGenesisFile(config.GenesisFile(), chainID,
+			return gaiaInit.ExportGenesisFile(config.GenesisFile(), chainID,
 				[]tmtypes.GenesisValidator{validator}, appStateJSON)
 		},
 	}

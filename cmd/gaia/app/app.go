@@ -311,12 +311,12 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	app.accountKeeper.IterateAccounts(ctx, appendAccount)
 	genState := NewGenesisState(
 		accounts,
-		auth.WriteGenesis(ctx, app.feeCollectionKeeper),
-		stake.WriteGenesis(ctx, app.stakeKeeper),
-		mint.WriteGenesis(ctx, app.mintKeeper),
-		distr.WriteGenesis(ctx, app.distrKeeper),
-		gov.WriteGenesis(ctx, app.govKeeper),
-		slashing.WriteGenesis(ctx, app.slashingKeeper),
+		auth.ExportGenesis(ctx, app.feeCollectionKeeper),
+		stake.ExportGenesis(ctx, app.stakeKeeper),
+		mint.ExportGenesis(ctx, app.mintKeeper),
+		distr.ExportGenesis(ctx, app.distrKeeper),
+		gov.ExportGenesis(ctx, app.govKeeper),
+		slashing.ExportGenesis(ctx, app.slashingKeeper),
 	)
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {

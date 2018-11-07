@@ -44,7 +44,7 @@ func TestInitGenesis(t *testing.T) {
 	vals, err := InitGenesis(ctx, keeper, genesisState)
 	require.NoError(t, err)
 
-	actualGenesis := WriteGenesis(ctx, keeper)
+	actualGenesis := ExportGenesis(ctx, keeper)
 	require.Equal(t, genesisState.Pool, actualGenesis.Pool)
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
 	require.Equal(t, genesisState.Bonds, actualGenesis.Bonds)

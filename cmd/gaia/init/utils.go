@@ -17,9 +17,9 @@ import (
 	"github.com/tendermint/tendermint/types"
 )
 
-// WriteGenesisFile creates and writes the genesis configuration to disk. An
+// ExportGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
-func WriteGenesisFile(
+func ExportGenesisFile(
 	genFile, chainID string, validators []types.GenesisValidator, appState json.RawMessage,
 ) error {
 
@@ -36,9 +36,9 @@ func WriteGenesisFile(
 	return genDoc.SaveAs(genFile)
 }
 
-// WriteGenesisFileWithTime creates and writes the genesis configuration to disk.
+// ExportGenesisFileWithTime creates and writes the genesis configuration to disk.
 // An error is returned if building or writing the configuration to file fails.
-func WriteGenesisFileWithTime(
+func ExportGenesisFileWithTime(
 	genFile, chainID string, validators []types.GenesisValidator,
 	appState json.RawMessage, genTime time.Time,
 ) error {

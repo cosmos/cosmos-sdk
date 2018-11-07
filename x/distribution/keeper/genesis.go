@@ -41,7 +41,7 @@ func (k Keeper) GetAllDelegatorWithdrawInfos(ctx sdk.Context) (dwis []types.Dele
 
 	for ; iterator.Valid(); iterator.Next() {
 		dw := types.DelegatorWithdrawInfo{
-			DelegatorAddr: sdk.AccAddress(iterator.Key()[1:]),
+			DelegatorAddr: GetDelegatorWithdrawInfoAddress(iterator.Key()),
 			WithdrawAddr:  sdk.AccAddress(iterator.Value()),
 		}
 		dwis = append(dwis, dw)

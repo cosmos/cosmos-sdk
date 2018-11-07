@@ -26,9 +26,7 @@ func (k Keeper) iterateValidatorSigningInfos(ctx sdk.Context, handler func(addre
 	iter := sdk.KVStorePrefixIterator(store, ValidatorSigningInfoKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		var address sdk.ConsAddress
-		address = make([]byte, sdk.AddrLen)
-		copy(address[:], iter.Key()[1:sdk.AddrLen+1])
+		address := GetValidatorSigningInfoAddress(iter.Key())
 		var info ValidatorSigningInfo
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &info)
 		if handler(address, info) {

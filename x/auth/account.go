@@ -145,11 +145,11 @@ func (acc *BaseAccount) SetSequence(seq int64) error {
 type BaseVestingAccount struct {
 	*BaseAccount
 
-	originalVesting  sdk.Coins // coins in account upon initialization
-	delegatedFree    sdk.Coins // coins that are vested and delegated
-	delegatedVesting sdk.Coins // coins that vesting and delegated
+	OriginalVesting  sdk.Coins // coins in account upon initialization
+	DelegatedFree    sdk.Coins // coins that are vested and delegated
+	DelegatedVesting sdk.Coins // coins that vesting and delegated
 
-	endTime time.Time // when the coins become unlocked
+	EndTime time.Time // when the coins become unlocked
 }
 
 func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
@@ -159,7 +159,7 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 
 	for _, coin := range bc {
 		baseAmt := coin.Amount
-		delVestingAmt := bva.delegatedVesting.AmountOf(coin.Denom)
+		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
 		vestingAmt := vestingCoins.AmountOf(coin.Denom)
 
 		// compute min((BC + DV) - V, BC) per the specification
@@ -185,7 +185,7 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 		}
 
 		vestingAmt := vestingCoins.AmountOf(coin.Denom)
-		delVestingAmt := bva.delegatedVesting.AmountOf(coin.Denom)
+		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
 
 		// compute x and y per the specification, where:
 		// X := min(max(V - DV, 0), D)
@@ -195,12 +195,12 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.delegatedVesting = bva.delegatedVesting.Plus(sdk.Coins{xCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Plus(sdk.Coins{xCoin})
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.delegatedFree = bva.delegatedFree.Plus(sdk.Coins{yCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Plus(sdk.Coins{yCoin})
 		}
 
 		bva.Coins = bc.Minus(sdk.Coins{coin})
@@ -219,22 +219,22 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 			continue
 		}
 
-		delegatedFree := bva.delegatedFree.AmountOf(coin.Denom)
+		DelegatedFree := bva.DelegatedFree.AmountOf(coin.Denom)
 
 		// compute x and y per the specification, where:
 		// X := min(DF, D)
 		// Y := D - X
-		x := sdk.MinInt(delegatedFree, coin.Amount)
+		x := sdk.MinInt(DelegatedFree, coin.Amount)
 		y := coin.Amount.Sub(x)
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.delegatedFree = bva.delegatedFree.Minus(sdk.Coins{xCoin})
+			bva.DelegatedFree = bva.DelegatedFree.Minus(sdk.Coins{xCoin})
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.delegatedVesting = bva.delegatedVesting.Minus(sdk.Coins{yCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.Minus(sdk.Coins{yCoin})
 		}
 
 		bva.Coins = bc.Plus(sdk.Coins{coin})
@@ -251,11 +251,11 @@ var _ VestingAccount = (*ContinuousVestingAccount)(nil)
 type ContinuousVestingAccount struct {
 	*BaseVestingAccount
 
-	startTime time.Time // when the coins start to vest
+	StartTime time.Time // when the coins start to vest
 }
 
 func NewContinuousVestingAccount(
-	addr sdk.AccAddress, origCoins sdk.Coins, startTime, endTime time.Time,
+	addr sdk.AccAddress, origCoins sdk.Coins, StartTime, EndTime time.Time,
 ) *ContinuousVestingAccount {
 
 	baseAcc := &BaseAccount{
@@ -265,12 +265,12 @@ func NewContinuousVestingAccount(
 
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
-		originalVesting: origCoins,
-		endTime:         endTime,
+		OriginalVesting: origCoins,
+		EndTime:         EndTime,
 	}
 
 	return &ContinuousVestingAccount{
-		startTime:          startTime,
+		StartTime:          StartTime,
 		BaseVestingAccount: baseVestingAcc,
 	}
 }
@@ -283,16 +283,16 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	// We must handle the case where the start time for a vesting account has
 	// been set into the future or when the start of the chain is not exactly
 	// known.
-	if blockTime.Unix() <= cva.startTime.Unix() {
+	if blockTime.Unix() <= cva.StartTime.Unix() {
 		return vestedCoins
 	}
 
 	// calculate the vesting scalar
-	x := blockTime.Unix() - cva.startTime.Unix()
-	y := cva.endTime.Unix() - cva.startTime.Unix()
+	x := blockTime.Unix() - cva.StartTime.Unix()
+	y := cva.EndTime.Unix() - cva.StartTime.Unix()
 	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
 
-	for _, ovc := range cva.originalVesting {
+	for _, ovc := range cva.OriginalVesting {
 		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
 		vestedCoin := sdk.NewCoin(ovc.Denom, vestedAmt)
 		vestedCoins = vestedCoins.Plus(sdk.Coins{vestedCoin})
@@ -304,7 +304,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 // GetVestingCoins returns the total number of vesting coins. If no coins are
 // vesting, nil is returned.
 func (cva ContinuousVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return cva.originalVesting.Minus(cva.GetVestedCoins(blockTime))
+	return cva.OriginalVesting.Minus(cva.GetVestedCoins(blockTime))
 }
 
 // SpendableCoins returns the total number of spendable coins per denom for a
@@ -333,7 +333,7 @@ type DelayedVestingAccount struct {
 }
 
 func NewDelayedVestingAccount(
-	addr sdk.AccAddress, origCoins sdk.Coins, endTime time.Time,
+	addr sdk.AccAddress, origCoins sdk.Coins, EndTime time.Time,
 ) *DelayedVestingAccount {
 
 	baseAcc := &BaseAccount{
@@ -343,8 +343,8 @@ func NewDelayedVestingAccount(
 
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
-		originalVesting: origCoins,
-		endTime:         endTime,
+		OriginalVesting: origCoins,
+		EndTime:         EndTime,
 	}
 
 	return &DelayedVestingAccount{baseVestingAcc}
@@ -353,8 +353,8 @@ func NewDelayedVestingAccount(
 // GetVestedCoins returns the total amount of vested coins for a delayed vesting
 // account. All coins are only vested once the schedule has elapsed.
 func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
-	if blockTime.Unix() >= dva.endTime.Unix() {
-		return dva.originalVesting
+	if blockTime.Unix() >= dva.EndTime.Unix() {
+		return dva.OriginalVesting
 	}
 
 	return nil
@@ -363,7 +363,7 @@ func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
 // GetVestingCoins returns the total number of vesting coins for a delayed
 // vesting account.
 func (dva DelayedVestingAccount) GetVestingCoins(blockTime time.Time) sdk.Coins {
-	return dva.originalVesting.Minus(dva.GetVestedCoins(blockTime))
+	return dva.OriginalVesting.Minus(dva.GetVestedCoins(blockTime))
 }
 
 // SpendableCoins returns the total number of spendable coins for a delayed
@@ -387,6 +387,7 @@ func RegisterBaseAccount(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Account)(nil), nil)
 	cdc.RegisterInterface((*VestingAccount)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
+	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
 	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
 	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
 	codec.RegisterCrypto(cdc)

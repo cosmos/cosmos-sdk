@@ -107,7 +107,7 @@ check_tools:
 
 update_tools:
 	@echo "--> Updating tools to correct version"
-	./scripts/get_tools.sh
+	$(MAKE) -C scripts get_tools
 
 update_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
@@ -116,7 +116,7 @@ update_dev_tools:
 
 get_tools:
 	@echo "--> Installing tools"
-	./scripts/get_tools.sh
+	$(MAKE) -C scripts get_tools
 
 get_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"

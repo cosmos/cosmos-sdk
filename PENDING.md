@@ -41,7 +41,7 @@ IMPROVEMENTS
 
 * Gaia
  - #2637 [x/gov] Switched inactive and active proposal queues to an iterator based queue
- - #2672 [Makefile] Updated for better Windows compatibility and ledger support logic
+ - #2672 [Makefile] Updated for better Windows compatibility and ledger support logic, get_tools was rewritten as a cross-compatible Makefile.
 
 * SDK
  - \#2573 [x/distribution] add accum invariance

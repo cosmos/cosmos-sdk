@@ -569,6 +569,7 @@ trust_node = true
 	executeWrite(t, "gaiacli config", gaiacliHome, node, "y")
 
 	// ensure it works without an initialized gaiad state
+	expectedConfig = fmt.Sprintf(`chain_id = ""
 home = "%s"
 node = "%s"
 output = "text"

@@ -18,7 +18,6 @@ ci: get_tools get_vendor_deps install test_cover test_lint test
 ########################################
 ### Build/Install
 
-# Add ledger support - Makefile variable changes are out of a target's scope. There is no point in putting this into a target.
 ifeq ($(LEDGER_ENABLED),true)
   ifeq ($(OS),Windows_NT)
     GCCEXE = $(shell where gcc.exe 2> NUL)

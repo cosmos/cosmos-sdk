@@ -26,7 +26,6 @@ type Keeper interface {
 
 	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	// DeductFees(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -86,7 +85,7 @@ func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outpu
 	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
 }
 
-// DelegateCoins performs delegation by debiting amt coins from an account with
+// DelegateCoins performs delegation by deducting amt coins from an account with
 // address addr. For vesting accounts, delegations amounts are tracked for both
 // vesting and vested coins.
 func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
@@ -99,10 +98,6 @@ func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt
 func (keeper BaseKeeper) UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	return undelegateCoins(ctx, keeper.am, addr, amt)
 }
-
-// func (keeper BaseKeeper) DeductFees(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
-
-// }
 
 //______________________________________________________________________________________________
 
@@ -223,7 +218,13 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 
 	oldCoins := getCoins(ctx, ak, addr)
+	newCoins := oldCoins.Minus(amt)
 
+	if !newCoins.IsNotNegative() {
+		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+	}
+
+	// for vesting accounts, only 'spendable' coins can be spent
 	va, ok := ak.GetAccount(ctx, addr).(auth.VestingAccount)
 	if ok {
 		blockTime := ctx.BlockHeader().Time
@@ -232,11 +233,6 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 		if !spendableCoins.Minus(amt).IsNotNegative() {
 			return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", spendableCoins, amt))
 		}
-	}
-
-	newCoins := oldCoins.Minus(amt)
-	if !newCoins.IsNotNegative() {
-		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
 
 	err := setCoins(ctx, ak, addr, newCoins)

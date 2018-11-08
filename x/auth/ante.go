@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -85,13 +86,13 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, res, true
 		}
 
-		// first sig pays the fees
+		// first signer pays the fees
 		if !stdTx.Fee.Amount.IsZero() {
-			// signerAccs[0] is the fee payer
-			signerAccs[0], res = deductFees(signerAccs[0], stdTx.Fee)
+			signerAccs[0], res = deductFees(ctx, signerAccs[0], stdTx.Fee.Amount)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
+
 			fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
 		}
 
@@ -259,20 +260,32 @@ func adjustFeesByGas(fees sdk.Coins, gas int64) sdk.Coins {
 // Deduct the fee from the account.
 // We could use the CoinKeeper (in addition to the AccountKeeper,
 // because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
-	coins := acc.GetCoins()
-	feeAmount := fee.Amount
+func deductFees(ctx sdk.Context, acc Account, fee sdk.Coins) (Account, sdk.Result) {
+	// TODO: Do we need charge gas for fee deduction
 
-	newCoins := coins.Minus(feeAmount)
+	oldCoins := acc.GetCoins()
+	newCoins := oldCoins.Minus(fee)
+
 	if !newCoins.IsNotNegative() {
-		errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
-		return nil, sdk.ErrInsufficientFunds(errMsg).Result()
+		return nil, sdk.ErrInsufficientFunds(fmt.Sprintf("%s < %s", oldCoins, fee)).Result()
 	}
-	err := acc.SetCoins(newCoins)
-	if err != nil {
+
+	// for vesting accounts, only 'spendable' coins can be used to pay fees
+	va, ok := acc.(VestingAccount)
+	if ok {
+		blockTime := ctx.BlockHeader().Time
+		spendableCoins := va.SpendableCoins(blockTime)
+
+		if !spendableCoins.Minus(fee).IsNotNegative() {
+			return nil, sdk.ErrInsufficientFunds(fmt.Sprintf("%s < %s", spendableCoins, fee)).Result()
+		}
+	}
+
+	if err := acc.SetCoins(newCoins); err != nil {
 		// Handle w/ #870
 		panic(err)
 	}
+
 	return acc, sdk.Result{}
 }
 

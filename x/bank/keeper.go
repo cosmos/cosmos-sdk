@@ -19,9 +19,14 @@ const (
 // between accounts.
 type Keeper interface {
 	SendKeeper
+
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
+
+	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	// UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	// DeductFees(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -80,6 +85,21 @@ func (keeper BaseKeeper) SendCoins(
 func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
 	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
 }
+
+// DelegateCoins performs delegation by deducting amt coins from an account with
+// address addr. For vesting accounts, delegations amounts are tracked for both
+// vesting and vested coins.
+func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+	return delegateCoins(ctx, keeper.am, addr, amt)
+}
+
+// func (keeper Keeper) UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+
+// }
+
+// func (keeper BaseKeeper) DeductFees(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+
+// }
 
 //______________________________________________________________________________________________
 
@@ -193,7 +213,9 @@ func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 	return getCoins(ctx, am, addr).IsAllGTE(amt)
 }
 
-// SubtractCoins subtracts amt from the coins at the addr.
+// subtractCoins subtracts amt coins from an account with the given address addr.
+//
+// CONTRACT: If the account is a vesting account, the amount has to be spendable.
 func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 
@@ -205,7 +227,7 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 		spendableCoins := va.SpendableCoins(blockTime)
 
 		if !spendableCoins.Minus(amt).IsNotNegative() {
-			return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+			return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", spendableCoins, amt))
 		}
 	}
 
@@ -275,4 +297,28 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, ou
 	}
 
 	return allTags, nil
+}
+
+func delegateCoins(
+	ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
+) (sdk.Tags, sdk.Error) {
+
+	ctx.GasMeter().ConsumeGas(costSubtractCoins, "delegateCoins")
+
+	oldCoins := getCoins(ctx, ak, addr)
+	newCoins := oldCoins.Minus(amt)
+
+	if !newCoins.IsNotNegative() {
+		return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+	}
+
+	va, ok := ak.GetAccount(ctx, addr).(auth.VestingAccount)
+	if ok {
+		blockTime := ctx.BlockHeader().Time
+		va.TrackDelegation(blockTime, amt)
+	} else {
+		setCoins(ctx, ak, addr, newCoins)
+	}
+
+	return sdk.NewTags("sender", []byte(addr.String())), nil
 }

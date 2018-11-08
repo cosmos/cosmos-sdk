@@ -74,9 +74,8 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddre
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, _ sdk.ValAddress) {
-	// TODO
-	h.k.onValidatorRemoved(ctx, sdk.ConsAddress{})
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) {
+	h.k.onValidatorRemoved(ctx, consAddr)
 }
 
 // Implements sdk.ValidatorHooks

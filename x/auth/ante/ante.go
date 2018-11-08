@@ -33,7 +33,7 @@ func init() {
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first signer.
-func NewAnteHandler(am auth.AccountKeeper, fck auth.FeeCollectionKeeper) sdk.AnteHandler {
+func NewAnteHandler(ak auth.AccountKeeper, bk bank.Keeper, fck auth.FeeCollectionKeeper) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -89,7 +89,7 @@ func NewAnteHandler(am auth.AccountKeeper, fck auth.FeeCollectionKeeper) sdk.Ant
 
 		// create the list of all sign bytes
 		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, stdSigs)
-		signerAccs, res := getSignerAccs(newCtx, am, signerAddrs)
+		signerAccs, res := getSignerAccs(newCtx, ak, signerAddrs)
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
@@ -101,8 +101,7 @@ func NewAnteHandler(am auth.AccountKeeper, fck auth.FeeCollectionKeeper) sdk.Ant
 
 		// first sig pays the fees
 		if !stdTx.Fee.Amount.IsZero() {
-			// signerAccs[0] is the fee payer
-			signerAccs[0], res = deductFees(signerAccs[0], stdTx.Fee)
+			signerAccs[0], res = deductFees(ctx, bk, ak, signerAccs[0].GetAddress(), stdTx.Fee.Amount)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -117,7 +116,7 @@ func NewAnteHandler(am auth.AccountKeeper, fck auth.FeeCollectionKeeper) sdk.Ant
 				return newCtx, res, true
 			}
 
-			am.SetAccount(newCtx, signerAccs[i])
+			ak.SetAccount(newCtx, signerAccs[i])
 		}
 
 		// cache the signer accounts in the context
@@ -275,10 +274,10 @@ func adjustFeesByGas(fees sdk.Coins, gas int64) sdk.Coins {
 // deductFees attempts to deduct fees from a given address. Upon success the
 // updated account and a result is returned.
 func deductFees(
-	ctx sdk.Context, bk bank.Keeper, ak auth.AccountKeeper, feePayer sdk.AccAddress, fee auth.StdFee,
+	ctx sdk.Context, bk bank.Keeper, ak auth.AccountKeeper, feePayer sdk.AccAddress, fee sdk.Coins,
 ) (auth.Account, sdk.Result) {
 
-	_, _, err := bk.SubtractCoins(ctx, feePayer, fee.Amount)
+	_, _, err := bk.SubtractCoins(ctx, feePayer, fee)
 	if err != nil {
 		return nil, err.Result()
 	}

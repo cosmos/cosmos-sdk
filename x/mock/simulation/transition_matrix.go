@@ -51,7 +51,7 @@ func (t TransitionMatrix) NextState(r *rand.Rand, i int) int {
 }
 
 // GetMemberOfInitialState takes an initial array of weights, of size n.
-// It returns a weighted random number in [0,n].
+// It returns a weighted random number in [0,n).
 func GetMemberOfInitialState(r *rand.Rand, weights []int) int {
 	n := len(weights)
 	total := 0

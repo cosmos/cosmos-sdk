@@ -50,7 +50,7 @@ func main() {
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
 
-	// Consturct Root Command
+	// Construct Root Command
 	rootCmd.AddCommand(
 		rpc.InitClientCommand(),
 		rpc.StatusCommand(),

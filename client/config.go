@@ -57,7 +57,6 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// var chainID string
 	chainID, err := types.DefaultChainID()
 
 	if err != nil {

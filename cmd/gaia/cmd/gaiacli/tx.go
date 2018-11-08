@@ -22,7 +22,7 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 
 	stakeTxCmd := &cobra.Command{
 		Use:   "stake",
-		Short: "Stake Transactions subcommands",
+		Short: "Staking transaction subcommands",
 	}
 
 	stakeTxCmd.AddCommand(client.PostCommands(
@@ -35,7 +35,7 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 
 	distTxCmd := &cobra.Command{
 		Use:   "dist",
-		Short: "Distribution Transactions subcommands",
+		Short: "Distribution transactions subcommands",
 	}
 
 	distTxCmd.AddCommand(client.PostCommands(
@@ -45,7 +45,7 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 
 	govTxCmd := &cobra.Command{
 		Use:   "gov",
-		Short: "Governance Transactions subcommands",
+		Short: "Governance transactions subcommands",
 	}
 
 	govTxCmd.AddCommand(client.PostCommands(
@@ -56,7 +56,7 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 
 	slashingTxCmd := &cobra.Command{
 		Use:   "slashing",
-		Short: "Slashing Transactions subcommands",
+		Short: "Slashing transactions subcommands",
 	}
 
 	slashingTxCmd.AddCommand(client.PostCommands(

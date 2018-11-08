@@ -24,7 +24,7 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 	// Group staking queries under a subcommand
 	stakeQueryCmd := &cobra.Command{
 		Use:   "stake",
-		Short: "Querying commands for staking module",
+		Short: "Querying commands for the staking module",
 	}
 
 	stakeQueryCmd.AddCommand(client.GetCommands(
@@ -44,7 +44,7 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 	// Group gov queries under a subcommand
 	govQueryCmd := &cobra.Command{
 		Use:   "gov",
-		Short: "Querying commands for gov module",
+		Short: "Querying commands for the governance module",
 	}
 
 	govQueryCmd.AddCommand(client.GetCommands(
@@ -58,7 +58,7 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 	// Group slashing queries under a subcommand
 	slashingQueryCmd := &cobra.Command{
 		Use:   "slashing",
-		Short: "Querying commands for slashing module",
+		Short: "Querying commands for the slashing module",
 	}
 
 	slashingQueryCmd.AddCommand(client.GetCommands(

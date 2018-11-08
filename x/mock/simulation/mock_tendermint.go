@@ -20,9 +20,10 @@ type mockValidator struct {
 type mockValidators map[string]mockValidator
 
 // get mockValidators from abci validators
-func newMockValidators(abciVals abci.ValidatorUpdate) mockValidators {
+func newMockValidators(r *rand.Rand, abciVals []abci.ValidatorUpdate,
+	params Params) mockValidators {
 
-	validators = make(mockValidators)
+	validators := make(mockValidators)
 	for _, validator := range abciVals {
 		str := fmt.Sprintf("%v", validator.PubKey)
 		liveliness := GetMemberOfInitialState(r,
@@ -39,9 +40,9 @@ func newMockValidators(abciVals abci.ValidatorUpdate) mockValidators {
 
 // TODO describe usage
 func (vals mockValidators) getKeys() []string {
-	keys := make([]string, len(validators))
+	keys := make([]string, len(vals))
 	i := 0
-	for key := range validators {
+	for key := range vals {
 		keys[i] = key
 		i++
 	}
@@ -52,13 +53,13 @@ func (vals mockValidators) getKeys() []string {
 //_________________________________________________________________________________
 
 // randomProposer picks a random proposer from the current validator set
-func randomProposer(r *rand.Rand, validators map[string]mockValidator) cmn.HexBytes {
-	keys := validators.getKeys()
+func (vals mockValidators) randomProposer(r *rand.Rand) cmn.HexBytes {
+	keys := vals.getKeys()
 	if len(keys) == 0 {
 		return nil
 	}
 	key := keys[r.Intn(len(keys))]
-	proposer := validators[key].val
+	proposer := vals[key].val
 	pk, err := tmtypes.PB2TM.PubKey(proposer.PubKey)
 	if err != nil {
 		panic(err)

@@ -86,17 +86,17 @@ type WeightedOperation struct {
 // WeightedOperations is the group of all weighted operations to simulate.
 type WeightedOperations []WeightedOperation
 
-func (w WeightedOperations) totalWeight() int {
+func (ops WeightedOperations) totalWeight() int {
 	totalOpWeight := 0
-	for i := 0; i < len(w); i++ {
-		totalOpWeight += w[i].Weight
+	for _, op := range ops {
+		totalOpWeight += op.Weight
 	}
 	return totalOpWeight
 }
 
 type selectOpFn func(r *rand.Rand) Operation
 
-func (w WeightedOperations) getSelectOpFn() selectOpFn {
+func (ops WeightedOperations) getSelectOpFn() selectOpFn {
 	totalOpWeight := ops.totalWeight()
 	return func(r *rand.Rand) Operation {
 		x := r.Intn(totalOpWeight)

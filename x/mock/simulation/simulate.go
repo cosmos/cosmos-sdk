@@ -43,7 +43,7 @@ func initChain(r *rand.Rand, params Params, accounts []Account,
 		AppStateBytes: appStateFn(r, accounts),
 	}
 	res := app.InitChain(req)
-	validators = newMockValidators(res.Validators)
+	validators := newMockValidators(r, res.Validators, params)
 
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, accounts)
@@ -76,16 +76,16 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := RandomAccounts(r, params.NumKeys)
 	eventStats := newEventStats()
-	validators := initChain(r, params, accs, setups, app, appStateFn)
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	nextValidators := validators()
+	validators := initChain(r, params, accs, setups, app, appStateFn)
+	nextValidators := validators
 
 	header := abci.Header{
 		Height:          1,
 		Time:            timestamp,
-		ProposerAddress: randomProposer(r, validators),
+		ProposerAddress: validators.randomProposer(r),
 	}
 	opCount := 0
 
@@ -186,7 +186,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 			time.Duration(minTimePerBlock) * time.Second)
 		header.Time = header.Time.Add(
 			time.Duration(int64(r.Intn(int(timeDiff)))) * time.Second)
-		header.ProposerAddress = randomProposer(r, validators)
+		header.ProposerAddress = validators.randomProposer(r)
 		logWriter("EndBlock")
 
 		if testingMode {

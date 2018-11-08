@@ -10,12 +10,9 @@ type eventStats map[string]uint
 func newEventStats() eventStats {
 	events := make(map[string]uint)
 	return events
-	event := func(what string) {
-		events[what]++
-	}
 }
 
-func (es *eventStats) tally(eventDesc string) {
+func (es eventStats) tally(eventDesc string) {
 	es[eventDesc]++
 }
 

@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime/debug"
-	"sort"
 	"strings"
 	"syscall"
 	"testing"
@@ -27,7 +26,7 @@ type RandSetup func(r *rand.Rand, accounts []Account)
 func Simulate(t *testing.T, app *baseapp.BaseApp,
 	appStateFn func(r *rand.Rand, accs []Account) json.RawMessage,
 	ops []WeightedOperation, setups []RandSetup,
-	invariants []Invariant, numBlocks int, blockSize int, commit bool) error {
+	invariants Invariants, numBlocks int, blockSize int, commit bool) error {
 
 	time := time.Now().UnixNano()
 	return SimulateFromSeed(t, app, appStateFn, time, ops,
@@ -55,7 +54,7 @@ func initChain(r *rand.Rand, params Params,
 // operations, testing the provided invariants, but using the provided seed.
 func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	appStateFn func(r *rand.Rand, accs []Account) json.RawMessage,
-	seed int64, ops []WeightedOperation, setups []RandSetup, invariants []Invariant,
+	seed int64, ops WeightedOperations, setups []RandSetup, invariants Invariants,
 	numBlocks int, blockSize int, commit bool) (simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -154,7 +153,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		if testingMode {
 			// Make sure invariants hold at beginning of block
-			assertAllInvariants(t, app, invariants, "BeginBlock", displayLogs)
+			invariants.assertAll(t, app, "BeginBlock", displayLogs)
 		}
 
 		ctx := app.NewContext(false, header)
@@ -171,15 +170,15 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 			logWriter, displayLogs, event)
 		if testingMode && onOperation {
 			// Make sure invariants hold at end of queued operations
-			assertAllInvariants(t, app, invariants, "QueuedOperations", displayLogs)
+			invariants.assertAll(t, app, "QueuedOperations", displayLogs)
 		}
 
 		logWriter("Standard operations")
 		operations := blockSimulator(r, app, ctx, accs, header, logWriter)
 		opCount += operations + numQueuedOpsRan + numQueuedTimeOpsRan
 		if testingMode {
-			// Make sure invariants hold at end of block
-			assertAllInvariants(t, app, invariants, "StandardOperations", displayLogs)
+			// Make sure invariants hold at the operation
+			invariants.assertAll(t, app, "StandardOperations", displayLogs)
 		}
 
 		res := app.EndBlock(abci.RequestEndBlock{})
@@ -193,7 +192,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 		if testingMode {
 			// Make sure invariants hold at end of block
-			assertAllInvariants(t, app, invariants, "EndBlock", displayLogs)
+			invariants.assertAll(t, app, "EndBlock", displayLogs)
 		}
 		if commit {
 			app.Commit()
@@ -235,7 +234,7 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 // Returns a function to simulate blocks. Written like this to avoid constant
 // parameters being passed everytime, to minimize memory overhead
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params Params,
-	event func(string), invariants []Invariant, ops WeightedOperations,
+	event func(string), invariants Invariants, ops WeightedOperations,
 	operationQueue map[int][]Operation, timeOperationQueue []FutureOperation,
 	totalNumBlocks int, avgBlockSize int, displayLogs func()) blockSimFn {
 
@@ -262,8 +261,8 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			queueOperations(operationQueue, timeOperationQueue, futureOps)
 			if testingMode {
 				if onOperation {
-					assertAllInvariants(t, app, invariants,
-						fmt.Sprintf("operation: %v", logUpdate), displayLogs)
+					eventStr := fmt.Sprintf("operation: %v", logUpdate)
+					invariants.assertAll(t, app, eventStr, displayLogs)
 				}
 				if opCount%50 == 0 {
 					fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ",
@@ -273,37 +272,6 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			opCount++
 		}
 		return opCount
-	}
-}
-
-// adds all future operations into the operation queue.
-func queueOperations(queuedOperations map[int][]Operation,
-	queuedTimeOperations []FutureOperation,
-	futureOperations []FutureOperation) {
-
-	if futureOperations == nil {
-		return
-	}
-
-	for _, futureOp := range futureOperations {
-		if futureOp.BlockHeight != 0 {
-			if val, ok := queuedOperations[futureOp.BlockHeight]; ok {
-				queuedOperations[futureOp.BlockHeight] = append(val, futureOp.Op)
-			} else {
-				queuedOperations[futureOp.BlockHeight] = []Operation{futureOp.Op}
-			}
-		} else {
-			// TODO: Replace with proper sorted data structure, so don't have the copy entire slice
-			index := sort.Search(
-				len(queuedTimeOperations),
-				func(i int) bool {
-					return queuedTimeOperations[i].BlockTime.After(futureOp.BlockTime)
-				},
-			)
-			queuedTimeOperations = append(queuedTimeOperations, FutureOperation{})
-			copy(queuedTimeOperations[index+1:], queuedTimeOperations[index:])
-			queuedTimeOperations[index] = futureOp
-		}
 	}
 }
 
@@ -318,8 +286,8 @@ func runQueuedOperations(queueOps map[int][]Operation,
 		return 0
 	}
 
-	numOps := len(queuedOp)
-	for i := 0; i < numOps; i++ {
+	numOpsRan = len(queuedOp)
+	for i := 0; i < numOpsRan; i++ {
 		// For now, queued operations cannot queue more operations.
 		// If a need arises for us to support queued messages to queue more messages, this can
 		// be changed.
@@ -331,7 +299,7 @@ func runQueuedOperations(queueOps map[int][]Operation,
 		}
 	}
 	delete(queueOps, height)
-	return numOps
+	return numOpsRan
 }
 
 func runQueuedTimeOperations(queueOps []FutureOperation,

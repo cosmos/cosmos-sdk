@@ -2,6 +2,7 @@ package simulation
 
 import (
 	"math/rand"
+	"sort"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -24,6 +25,41 @@ type Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 // queue of operations
 type OperationQueue map[int][]Operation
 
+// adds all future operations into the operation queue.
+func queueOperations(queuedOps OperationQueue,
+	queuedTimeOps []FutureOperation,
+	futureOps []FutureOperation) {
+
+	if futureOps == nil {
+		return
+	}
+
+	for _, futureOp := range futureOps {
+		if futureOp.BlockHeight != 0 {
+			if val, ok := queuedOps[futureOp.BlockHeight]; ok {
+				queuedOps[futureOp.BlockHeight] = append(val, futureOp.Op)
+			} else {
+				queuedOps[futureOp.BlockHeight] = []Operation{futureOp.Op}
+			}
+			continue
+		}
+
+		// TODO: Replace with proper sorted data structure, so don't have the
+		// copy entire slice
+		index := sort.Search(
+			len(queuedTimeOps),
+			func(i int) bool {
+				return queuedTimeOps[i].BlockTime.After(futureOp.BlockTime)
+			},
+		)
+		queuedTimeOps = append(queuedTimeOps, FutureOperation{})
+		copy(queuedTimeOps[index+1:], queuedTimeOps[index:])
+		queuedTimeOps[index] = futureOp
+	}
+}
+
+//________________________________________________________________________
+
 // FutureOperation is an operation which will be ran at the beginning of the
 // provided BlockHeight. If both a BlockHeight and BlockTime are specified, it
 // will use the BlockHeight. In the (likely) event that multiple operations
@@ -33,6 +69,8 @@ type FutureOperation struct {
 	BlockTime   time.Time
 	Op          Operation
 }
+
+//________________________________________________________________________
 
 // WeightedOperation is an operation with associated weight.
 // This is used to bias the selection operation within the simulator.

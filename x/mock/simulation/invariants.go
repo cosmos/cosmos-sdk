@@ -13,16 +13,16 @@ import (
 // The simulator will then halt and print the logs.
 type Invariant func(app *baseapp.BaseApp) error
 
-// assertAllInvariants asserts a list of provided invariants against
-// application state
-func assertAllInvariants(t *testing.T, app *baseapp.BaseApp,
-	invariants []Invariant, where string, displayLogs func()) {
+// group of Invarient
+type Invariants []Invariant
 
-	for i := 0; i < len(invariants); i++ {
-		err := invariants[i](app)
-		if err != nil {
-			fmt.Printf("Invariants broken after %s\n", where)
-			fmt.Println(err.Error())
+// assertAll asserts the all invariants against application state
+func (invs Invariants) assertAll(t *testing.T, app *baseapp.BaseApp,
+	event string, displayLogs func()) {
+
+	for i := 0; i < len(invs); i++ {
+		if err := invs[i](app); err != nil {
+			fmt.Printf("Invariants broken after %s\n%s\n", event, err.Error())
 			displayLogs()
 			t.Fatal()
 		}

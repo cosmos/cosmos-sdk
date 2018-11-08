@@ -18,17 +18,21 @@ import (
 //
 // Operations can optionally provide a list of "FutureOperations" to run later
 // These will be ran at the beginning of the corresponding block.
-type Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-	accounts []Account, event func(string)) (
-	action string, futureOperations []FutureOperation, err error)
+type Operation func(r *rand.Rand, app *baseapp.BaseApp,
+	ctx sdk.Context, accounts []Account, event func(string)) (
+	action string, futureOps []FutureOperation, err error)
 
 // queue of operations
 type OperationQueue map[int][]Operation
 
+func newOperationQueue() OperationQueue {
+	operationQueue := make(OperationQueue)
+	return operationQueue
+}
+
 // adds all future operations into the operation queue.
 func queueOperations(queuedOps OperationQueue,
-	queuedTimeOps []FutureOperation,
-	futureOps []FutureOperation) {
+	queuedTimeOps []FutureOperation, futureOps []FutureOperation) {
 
 	if futureOps == nil {
 		return

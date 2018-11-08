@@ -3,7 +3,6 @@ package simulation
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -18,19 +17,6 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 		b = tb.(*testing.B)
 	}
 	return
-}
-
-// Pretty-print events as a table
-func DisplayEvents(events map[string]uint) {
-	var keys []string
-	for key := range events {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	fmt.Printf("Event statistics: \n")
-	for _, key := range keys {
-		fmt.Printf("  % 60s => %d\n", key, events[key])
-	}
 }
 
 // Builds a function to add logs for this particular block

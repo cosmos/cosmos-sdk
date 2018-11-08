@@ -318,7 +318,9 @@ func delegateCoins(
 	va, ok := ak.GetAccount(ctx, addr).(auth.VestingAccount)
 	if ok {
 		blockTime := ctx.BlockHeader().Time
+
 		va.TrackDelegation(blockTime, amt)
+		ak.SetAccount(ctx, va)
 	} else {
 		setCoins(ctx, ak, addr, newCoins)
 	}
@@ -341,6 +343,7 @@ func undelegateCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress
 	va, ok := ak.GetAccount(ctx, addr).(auth.VestingAccount)
 	if ok {
 		va.TrackUndelegation(amt)
+		ak.SetAccount(ctx, va)
 	} else {
 		setCoins(ctx, ak, addr, newCoins)
 	}

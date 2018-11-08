@@ -318,7 +318,7 @@ func TestDelegateCoins(t *testing.T) {
 	_, err = bankKeeper.DelegateCoins(ctx, addr1, delCoins)
 	vacc = accountKeeper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
 	require.NoError(t, err)
-	require.Equal(t, delCoins, acc.GetCoins())
+	require.Equal(t, delCoins, vacc.GetCoins())
 }
 
 func TestUndelegateCoins(t *testing.T) {
@@ -362,6 +362,6 @@ func TestUndelegateCoins(t *testing.T) {
 
 	_, err = bankKeeper.UndelegateCoins(ctx, addr1, delCoins)
 	require.NoError(t, err)
-	acc = accountKeeper.GetAccount(ctx, addr1)
-	require.Equal(t, origCoins, acc.GetCoins())
+	vacc = accountKeeper.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.Equal(t, origCoins, vacc.GetCoins())
 }

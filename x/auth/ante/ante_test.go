@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/bank"
+
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -14,12 +17,14 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 )
 
+var emptyCoins = sdk.Coins{}
+
 func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 	return sdk.NewTestMsg(addrs...)
 }
 
-func newStdFee() StdFee {
-	return NewStdFee(5000,
+func newStdFee() auth.StdFee {
+	return auth.NewStdFee(5000,
 		sdk.NewInt64Coin("atom", 150),
 	)
 }
@@ -54,7 +59,7 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 		fmt.Sprintf("Expected %v, got %v", sdk.ToABCICode(sdk.CodespaceRoot, code), result))
 
 	if code == sdk.CodeOutOfGas {
-		stdTx, ok := tx.(StdTx)
+		stdTx, ok := tx.(auth.StdTx)
 		require.True(t, ok, "tx must be in form auth.StdTx")
 		// GasWanted set correctly
 		require.Equal(t, stdTx.Fee.Gas, result.GasWanted, "Gas wanted not set correctly")
@@ -64,45 +69,45 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 	}
 }
 
-func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee) sdk.Tx {
-	sigs := make([]StdSignature, len(privs))
+func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee auth.StdFee) sdk.Tx {
+	sigs := make([]auth.StdSignature, len(privs))
 	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
+		signBytes := auth.StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = auth.StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
-	tx := NewStdTx(msgs, fee, sigs, "")
+	tx := auth.NewStdTx(msgs, fee, sigs, "")
 	return tx
 }
 
-func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, memo string) sdk.Tx {
-	sigs := make([]StdSignature, len(privs))
+func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee auth.StdFee, memo string) sdk.Tx {
+	sigs := make([]auth.StdSignature, len(privs))
 	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo)
+		signBytes := auth.StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo)
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = auth.StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
-	tx := NewStdTx(msgs, fee, sigs, memo)
+	tx := auth.NewStdTx(msgs, fee, sigs, memo)
 	return tx
 }
 
 // All signers sign over the same StdSignDoc. Should always create invalid signatures
-func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee StdFee, signBytes []byte, memo string) sdk.Tx {
-	sigs := make([]StdSignature, len(privs))
+func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []int64, seqs []int64, fee auth.StdFee, signBytes []byte, memo string) sdk.Tx {
+	sigs := make([]auth.StdSignature, len(privs))
 	for i, priv := range privs {
 		sig, err := priv.Sign(signBytes)
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = auth.StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
 	}
-	tx := NewStdTx(msgs, fee, sigs, memo)
+	tx := auth.NewStdTx(msgs, fee, sigs, memo)
 	return tx
 }
 
@@ -111,10 +116,11 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
-	anteHandler := NewAnteHandler(mapper, feeCollector)
+	auth.RegisterBaseAccount(cdc)
+	accountKeeper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	feeCollector := auth.NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(accountKeeper, bankKeeper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
@@ -136,7 +142,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 	// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
 	expectedSigners := []sdk.AccAddress{addr1, addr2, addr3}
-	stdTx := tx.(StdTx)
+	stdTx := tx.(auth.StdTx)
 	require.Equal(t, expectedSigners, stdTx.GetSigners())
 
 	// Check no signatures fails
@@ -153,9 +159,9 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnknownAddress)
 
 	// save the first account, but second is still unrecognized
-	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(fee.Amount)
-	mapper.SetAccount(ctx, acc1)
+	accountKeeper.SetAccount(ctx, acc1)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnknownAddress)
 }
 
@@ -164,10 +170,11 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
-	anteHandler := NewAnteHandler(mapper, feeCollector)
+	auth.RegisterBaseAccount(cdc)
+	accountKeeper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	feeCollector := auth.NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(accountKeeper, bankKeeper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	ctx = ctx.WithBlockHeight(1)
 
@@ -176,12 +183,13 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	priv2, addr2 := privAndAddr()
 
 	// set the accounts
-	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc1)
-	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	accountKeeper.SetAccount(ctx, acc1)
+
+	acc2 := accountKeeper.NewAccountWithAddress(ctx, addr2)
 	acc2.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc2)
+	accountKeeper.SetAccount(ctx, acc2)
 
 	// msg and signatures
 	var tx sdk.Tx
@@ -224,10 +232,11 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
-	anteHandler := NewAnteHandler(mapper, feeCollector)
+	auth.RegisterBaseAccount(cdc)
+	accountKeeper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	feeCollector := auth.NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(accountKeeper, bankKeeper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	ctx = ctx.WithBlockHeight(0)
 
@@ -236,12 +245,13 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	priv2, addr2 := privAndAddr()
 
 	// set the accounts
-	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc1)
-	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	accountKeeper.SetAccount(ctx, acc1)
+
+	acc2 := accountKeeper.NewAccountWithAddress(ctx, addr2)
 	acc2.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc2)
+	accountKeeper.SetAccount(ctx, acc2)
 
 	// msg and signatures
 	var tx sdk.Tx
@@ -284,10 +294,11 @@ func TestAnteHandlerSequences(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
-	anteHandler := NewAnteHandler(mapper, feeCollector)
+	auth.RegisterBaseAccount(cdc)
+	accountKeeper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	feeCollector := auth.NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(accountKeeper, bankKeeper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	ctx = ctx.WithBlockHeight(1)
 
@@ -297,15 +308,17 @@ func TestAnteHandlerSequences(t *testing.T) {
 	priv3, addr3 := privAndAddr()
 
 	// set the accounts
-	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc1)
-	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	accountKeeper.SetAccount(ctx, acc1)
+
+	acc2 := accountKeeper.NewAccountWithAddress(ctx, addr2)
 	acc2.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc2)
-	acc3 := mapper.NewAccountWithAddress(ctx, addr3)
+	accountKeeper.SetAccount(ctx, acc2)
+
+	acc3 := accountKeeper.NewAccountWithAddress(ctx, addr3)
 	acc3.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc3)
+	accountKeeper.SetAccount(ctx, acc3)
 
 	// msg and signatures
 	var tx sdk.Tx
@@ -363,18 +376,19 @@ func TestAnteHandlerFees(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
-	anteHandler := NewAnteHandler(mapper, feeCollector)
+	auth.RegisterBaseAccount(cdc)
+	accountKeeper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	feeCollector := auth.NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(accountKeeper, bankKeeper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
 
 	// set the accounts
-	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
-	mapper.SetAccount(ctx, acc1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr1)
+	accountKeeper.SetAccount(ctx, acc1)
 
 	// msg and signatures
 	var tx sdk.Tx
@@ -385,16 +399,16 @@ func TestAnteHandlerFees(t *testing.T) {
 
 	// signer does not have enough funds to pay the fee
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientFunds)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientCoins)
 
 	acc1.SetCoins(sdk.Coins{sdk.NewInt64Coin("atom", 149)})
-	mapper.SetAccount(ctx, acc1)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientFunds)
+	accountKeeper.SetAccount(ctx, acc1)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientCoins)
 
 	require.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(emptyCoins))
 
 	acc1.SetCoins(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
-	mapper.SetAccount(ctx, acc1)
+	accountKeeper.SetAccount(ctx, acc1)
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	require.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewInt64Coin("atom", 150)}))
@@ -405,10 +419,11 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
-	anteHandler := NewAnteHandler(mapper, feeCollector)
+	auth.RegisterBaseAccount(cdc)
+	accountKeeper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	feeCollector := auth.NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(accountKeeper, bankKeeper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	ctx = ctx.WithBlockHeight(1)
 
@@ -416,31 +431,31 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	priv1, addr1 := privAndAddr()
 
 	// set the accounts
-	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
-	mapper.SetAccount(ctx, acc1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr1)
+	accountKeeper.SetAccount(ctx, acc1)
 
 	// msg and signatures
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []int64{0}, []int64{0}
-	fee := NewStdFee(0, sdk.NewInt64Coin("atom", 0))
+	fee := auth.NewStdFee(0, sdk.NewInt64Coin("atom", 0))
 
 	// tx does not have enough gas
 	tx = newTestTx(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// tx with memo doesn't have enough gas
-	fee = NewStdFee(801, sdk.NewInt64Coin("atom", 0))
+	fee = auth.NewStdFee(801, sdk.NewInt64Coin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = NewStdFee(2001, sdk.NewInt64Coin("atom", 0))
+	fee = auth.NewStdFee(2001, sdk.NewInt64Coin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = NewStdFee(1100, sdk.NewInt64Coin("atom", 0))
+	fee = auth.NewStdFee(1100, sdk.NewInt64Coin("atom", 0))
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkValidTx(t, anteHandler, ctx, tx, false)
 }
@@ -449,10 +464,11 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
-	anteHandler := NewAnteHandler(mapper, feeCollector)
+	auth.RegisterBaseAccount(cdc)
+	accountKeeper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	feeCollector := auth.NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(accountKeeper, bankKeeper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	ctx = ctx.WithBlockHeight(1)
 
@@ -462,15 +478,17 @@ func TestAnteHandlerMultiSigner(t *testing.T) {
 	priv3, addr3 := privAndAddr()
 
 	// set the accounts
-	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc1)
-	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	accountKeeper.SetAccount(ctx, acc1)
+
+	acc2 := accountKeeper.NewAccountWithAddress(ctx, addr2)
 	acc2.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc2)
-	acc3 := mapper.NewAccountWithAddress(ctx, addr3)
+	accountKeeper.SetAccount(ctx, acc2)
+
+	acc3 := accountKeeper.NewAccountWithAddress(ctx, addr3)
 	acc3.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc3)
+	accountKeeper.SetAccount(ctx, acc3)
 
 	// set up msgs and fee
 	var tx sdk.Tx
@@ -501,10 +519,11 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
-	anteHandler := NewAnteHandler(mapper, feeCollector)
+	auth.RegisterBaseAccount(cdc)
+	accountKeeper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	feeCollector := auth.NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(accountKeeper, bankKeeper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	ctx = ctx.WithBlockHeight(1)
 
@@ -513,12 +532,13 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 	priv2, addr2 := privAndAddr()
 
 	// set the accounts
-	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc1)
-	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	accountKeeper.SetAccount(ctx, acc1)
+
+	acc2 := accountKeeper.NewAccountWithAddress(ctx, addr2)
 	acc2.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc2)
+	accountKeeper.SetAccount(ctx, acc2)
 
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
@@ -542,7 +562,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 		chainID string
 		accnum  int64
 		seq     int64
-		fee     StdFee
+		fee     auth.StdFee
 		msgs    []sdk.Msg
 		code    sdk.CodeType
 	}{
@@ -559,7 +579,7 @@ func TestAnteHandlerBadSignBytes(t *testing.T) {
 		tx := newTestTxWithSignBytes(
 
 			msgs, privs, accnums, seqs, fee,
-			StdSignBytes(cs.chainID, cs.accnum, cs.seq, cs.fee, cs.msgs, ""),
+			auth.StdSignBytes(cs.chainID, cs.accnum, cs.seq, cs.fee, cs.msgs, ""),
 			"",
 		)
 		checkInvalidTx(t, anteHandler, ctx, tx, false, cs.code)
@@ -583,10 +603,11 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	// setup
 	ms, capKey, capKey2 := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
-	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
-	anteHandler := NewAnteHandler(mapper, feeCollector)
+	auth.RegisterBaseAccount(cdc)
+	accountKeeper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	bankKeeper := bank.NewBaseKeeper(accountKeeper)
+	feeCollector := auth.NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(accountKeeper, bankKeeper, feeCollector)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	ctx = ctx.WithBlockHeight(1)
 
@@ -595,12 +616,12 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	_, addr2 := privAndAddr()
 
 	// set the accounts
-	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr1)
 	acc1.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc1)
-	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	accountKeeper.SetAccount(ctx, acc1)
+	acc2 := accountKeeper.NewAccountWithAddress(ctx, addr2)
 	acc2.SetCoins(newCoins())
-	mapper.SetAccount(ctx, acc2)
+	accountKeeper.SetAccount(ctx, acc2)
 
 	var tx sdk.Tx
 
@@ -612,41 +633,41 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
-	acc1 = mapper.GetAccount(ctx, addr1)
+	acc1 = accountKeeper.GetAccount(ctx, addr1)
 	require.Equal(t, acc1.GetPubKey(), priv1.PubKey())
 
 	// test public key not found
 	msg = newTestMsg(addr2)
 	msgs = []sdk.Msg{msg}
 	tx = newTestTx(ctx, msgs, privs, []int64{1}, seqs, fee)
-	sigs := tx.(StdTx).GetSignatures()
+	sigs := tx.(auth.StdTx).GetSignatures()
 	sigs[0].PubKey = nil
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
-	acc2 = mapper.GetAccount(ctx, addr2)
+	acc2 = accountKeeper.GetAccount(ctx, addr2)
 	require.Nil(t, acc2.GetPubKey())
 
 	// test invalid signature and public key
 	tx = newTestTx(ctx, msgs, privs, []int64{1}, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
-	acc2 = mapper.GetAccount(ctx, addr2)
+	acc2 = accountKeeper.GetAccount(ctx, addr2)
 	require.Nil(t, acc2.GetPubKey())
 }
 
 func TestProcessPubKey(t *testing.T) {
 	ms, capKey, _ := setupMultiStore()
 	cdc := codec.New()
-	RegisterBaseAccount(cdc)
-	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
+	auth.RegisterBaseAccount(cdc)
+	mapper := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	// keys
 	_, addr1 := privAndAddr()
 	priv2, _ := privAndAddr()
 	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
 	type args struct {
-		acc      Account
-		sig      StdSignature
+		acc      auth.Account
+		sig      auth.StdSignature
 		simulate bool
 	}
 	tests := []struct {
@@ -654,10 +675,10 @@ func TestProcessPubKey(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"no sigs, simulate off", args{acc1, StdSignature{}, false}, true},
-		{"no sigs, simulate on", args{acc1, StdSignature{}, true}, false},
-		{"pubkey doesn't match addr, simulate off", args{acc1, StdSignature{PubKey: priv2.PubKey()}, false}, true},
-		{"pubkey doesn't match addr, simulate on", args{acc1, StdSignature{PubKey: priv2.PubKey()}, true}, false},
+		{"no sigs, simulate off", args{acc1, auth.StdSignature{}, false}, true},
+		{"no sigs, simulate on", args{acc1, auth.StdSignature{}, true}, false},
+		{"pubkey doesn't match addr, simulate off", args{acc1, auth.StdSignature{PubKey: priv2.PubKey()}, false}, true},
+		{"pubkey doesn't match addr, simulate on", args{acc1, auth.StdSignature{PubKey: priv2.PubKey()}, true}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

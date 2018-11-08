@@ -74,6 +74,7 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 
 	for _, update := range updates {
 		str := fmt.Sprintf("%v", update.PubKey)
+
 		if update.Power == 0 {
 			if _, ok := current[str]; !ok {
 				tb.Fatalf("tried to delete a nonexistent validator")
@@ -85,6 +86,7 @@ func updateValidators(tb testing.TB, r *rand.Rand, params Params,
 			// validator already exists
 			mVal.val = update
 			event("endblock/validatorupdates/updated")
+
 		} else {
 			// Set this new validator
 			current[str] = mockValidator{

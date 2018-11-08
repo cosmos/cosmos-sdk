@@ -374,10 +374,9 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	}
 
 	if subtractAccount {
-		// Account new shares, save
-		_, _, err = k.bankKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
+		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
 		if err != nil {
-			return
+			return newShares, err
 		}
 	}
 
@@ -506,10 +505,11 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 
 	// no need to create the ubd object just complete now
 	if completeNow {
-		_, _, err := k.bankKeeper.AddCoins(ctx, delAddr, sdk.Coins{balance})
+		_, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance})
 		if err != nil {
 			return types.UnbondingDelegation{}, err
 		}
+
 		return types.UnbondingDelegation{MinTime: minTime}, nil
 	}
 

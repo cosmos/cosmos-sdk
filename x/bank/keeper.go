@@ -322,7 +322,9 @@ func delegateCoins(
 		va.TrackDelegation(blockTime, amt)
 		ak.SetAccount(ctx, va)
 	} else {
-		setCoins(ctx, ak, addr, newCoins)
+		if err := setCoins(ctx, ak, addr, newCoins); err != nil {
+			return nil, err
+		}
 	}
 
 	return sdk.NewTags("sender", []byte(addr.String())), nil
@@ -345,7 +347,9 @@ func undelegateCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress
 		va.TrackUndelegation(amt)
 		ak.SetAccount(ctx, va)
 	} else {
-		setCoins(ctx, ak, addr, newCoins)
+		if err := setCoins(ctx, ak, addr, newCoins); err != nil {
+			return nil, err
+		}
 	}
 
 	return sdk.NewTags("recipient", []byte(addr.String())), nil

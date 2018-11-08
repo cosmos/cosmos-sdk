@@ -257,12 +257,10 @@ func adjustFeesByGas(fees sdk.Coins, gas int64) sdk.Coins {
 	return fees.Plus(gasFees)
 }
 
-// Deduct the fee from the account.
-// We could use the CoinKeeper (in addition to the AccountKeeper,
-// because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
+// deductFees attempts to deduct fees from a given address. Upon success the
+// updated account and a result is returned.
 func deductFees(ctx sdk.Context, acc Account, fee sdk.Coins) (Account, sdk.Result) {
-	// TODO: Do we need charge gas for fee deduction
-
+	// TODO: Do we need charge gas for fee deduction?
 	oldCoins := acc.GetCoins()
 	newCoins := oldCoins.Minus(fee)
 

@@ -25,7 +25,7 @@ type Keeper interface {
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
 
 	DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	// UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 	// DeductFees(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
@@ -86,16 +86,19 @@ func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outpu
 	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
 }
 
-// DelegateCoins performs delegation by deducting amt coins from an account with
+// DelegateCoins performs delegation by debiting amt coins from an account with
 // address addr. For vesting accounts, delegations amounts are tracked for both
 // vesting and vested coins.
 func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	return delegateCoins(ctx, keeper.am, addr, amt)
 }
 
-// func (keeper Keeper) UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
-
-// }
+// UndelegateCoins performs undelegation by crediting amt coins to an account with
+// address addr. For vesting accounts, undelegation amounts are tracked for both
+// vesting and vested coins.
+func (keeper BaseKeeper) UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+	return undelegateCoins(ctx, keeper.am, addr, amt)
+}
 
 // func (keeper BaseKeeper) DeductFees(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 
@@ -321,4 +324,26 @@ func delegateCoins(
 	}
 
 	return sdk.NewTags("sender", []byte(addr.String())), nil
+}
+
+func undelegateCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
+) (sdk.Tags, sdk.Error) {
+
+	ctx.GasMeter().ConsumeGas(costAddCoins, "undelegateCoins")
+
+	oldCoins := getCoins(ctx, ak, addr)
+	newCoins := oldCoins.Plus(amt)
+
+	if !newCoins.IsNotNegative() {
+		return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+	}
+
+	va, ok := ak.GetAccount(ctx, addr).(auth.VestingAccount)
+	if ok {
+		va.TrackUndelegation(amt)
+	} else {
+		setCoins(ctx, ak, addr, newCoins)
+	}
+
+	return sdk.NewTags("recipient", []byte(addr.String())), nil
 }

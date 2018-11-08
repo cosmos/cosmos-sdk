@@ -210,9 +210,6 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 
-	// Add these new validators to the addr -> pubkey map.
-	app.slashingKeeper.AddValidators(ctx, validatorUpdates)
-
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
@@ -275,7 +272,6 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 
 		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	}
-	app.slashingKeeper.AddValidators(ctx, validators)
 
 	// sanity check
 	if len(req.Validators) > 0 {
@@ -343,12 +339,15 @@ var _ sdk.StakingHooks = Hooks{}
 // nolint
 func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorCreated(ctx, valAddr)
+	h.sh.OnValidatorCreated(ctx, valAddr)
 }
 func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorModified(ctx, valAddr)
+	h.sh.OnValidatorModified(ctx, valAddr)
 }
 func (h Hooks) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorRemoved(ctx, valAddr)
+	h.sh.OnValidatorRemoved(ctx, valAddr)
 }
 func (h Hooks) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorBonded(ctx, consAddr, valAddr)
@@ -364,10 +363,13 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddre
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)
+	h.sh.OnDelegationCreated(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationSharesModified(ctx, delAddr, valAddr)
+	h.sh.OnDelegationSharesModified(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationRemoved(ctx, delAddr, valAddr)
+	h.sh.OnDelegationRemoved(ctx, delAddr, valAddr)
 }

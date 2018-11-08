@@ -38,6 +38,12 @@ func (k Keeper) onValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddre
 	k.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
 }
 
+// When a validator is created, add the address-pubkey relation.
+func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+	validator := k.validatorSet.Validator(ctx, valAddr)
+	k.addPubkey(ctx, validator.GetConsPubKey())
+}
+
 // When a validator is removed, delete the address-pubkey relation.
 func (k Keeper) onValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) {
 	k.deleteAddrPubkeyRelation(ctx, crypto.Address(address))
@@ -73,10 +79,14 @@ func (h Hooks) OnValidatorRemoved(ctx sdk.Context, _ sdk.ValAddress) {
 	h.k.onValidatorRemoved(ctx, sdk.ConsAddress{})
 }
 
+// Implements sdk.ValidatorHooks
+func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.k.onValidatorCreated(ctx, valAddr)
+}
+
 // nolint - unused hooks
 func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
-func (h Hooks) OnValidatorCreated(_ sdk.Context, _ sdk.ValAddress)                           {}
 func (h Hooks) OnValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
 func (h Hooks) OnDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
 func (h Hooks) OnDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) {}

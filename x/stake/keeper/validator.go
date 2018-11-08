@@ -321,6 +321,12 @@ func (k Keeper) SetValidatorQueueTimeSlice(ctx sdk.Context, timestamp time.Time,
 	store.Set(GetValidatorQueueTimeKey(timestamp), bz)
 }
 
+// Deletes a specific validator queue timeslice.
+func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, timestamp time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetValidatorQueueTimeKey(timestamp))
+}
+
 // Insert an validator address to the appropriate timeslice in the validator queue
 func (k Keeper) InsertValidatorQueue(ctx sdk.Context, val types.Validator) {
 	timeSlice := k.GetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime)
@@ -335,13 +341,17 @@ func (k Keeper) InsertValidatorQueue(ctx sdk.Context, val types.Validator) {
 // Delete a validator address from the validator queue
 func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 	timeSlice := k.GetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime)
-	newTimeSlice := make([]sdk.ValAddress, len(timeSlice))
+	newTimeSlice := []sdk.ValAddress{}
 	for _, addr := range timeSlice {
 		if !bytes.Equal(addr, val.OperatorAddr) {
 			newTimeSlice = append(newTimeSlice, addr)
 		}
 	}
-	k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, newTimeSlice)
+	if len(newTimeSlice) == 0 {
+		k.DeleteValidatorQueueTimeSlice(ctx, val.UnbondingMinTime)
+	} else {
+		k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, newTimeSlice)
+	}
 }
 
 // Returns all the validator queue timeslices from time 0 until endTime
@@ -371,8 +381,11 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(validatorTimesliceIterator.Value(), &timeslice)
 		for _, valAddr := range timeslice {
 			val, found := k.GetValidator(ctx, valAddr)
-			if !found || val.GetStatus() != sdk.Unbonding {
+			if !found {
 				continue
+			}
+			if val.GetStatus() != sdk.Unbonding {
+				panic("unexpected validator in unbonding queue, status was not unbonding")
 			}
 			k.unbondingToUnbonded(ctx, val)
 			if val.GetDelegatorShares().IsZero() {

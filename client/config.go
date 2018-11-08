@@ -3,20 +3,20 @@ package client
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
-	"path"
 )
 
 type cliConfig struct {
 	Home      string `toml:"home"`
 	ChainID   string `toml:"chain_id"`
 	TrustNode bool   `toml:"trust_node"`
-	Encoding  string `toml:"encoding"`
 	Output    string `toml:"output"`
 	Node      string `toml:"node"`
 	Trace     bool   `toml:"trace"`
@@ -41,23 +41,25 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	stdin := BufferStdin()
+
 	gaiaCLIHome, err := handleGaiaCLIHome(home, stdin)
 	if err != nil {
 		return err
 	}
+
 	node, err := handleNode(stdin)
 	if err != nil {
 		return err
 	}
+
 	trustNode, err := handleTrustNode(stdin)
 	if err != nil {
 		return err
 	}
 
-	encoding := "btc"
-	output := "text"
-	var chainID string
-	chainID, err = types.DefaultChainID()
+	// var chainID string
+	chainID, err := types.DefaultChainID()
+
 	if err != nil {
 		fmt.Println("Couldn't populate ChainID, so using an empty one.")
 	}
@@ -66,8 +68,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		Home:      gaiaCLIHome,
 		ChainID:   chainID,
 		TrustNode: trustNode,
-		Encoding:  encoding,
-		Output:    output,
+		Output:    "text",
 		Node:      node,
 		Trace:     false,
 	}

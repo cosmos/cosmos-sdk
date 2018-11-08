@@ -16,6 +16,26 @@ type mockValidator struct {
 	livenessState int
 }
 
+type mockValidators map[string]mockValidator
+
+// get mockValidators from abci validators
+func newMockValidators(abciVals abci.ValidatorUpdate) mockValidators {
+
+	validators = make(mockValidators)
+	for _, validator := range abciVals {
+		str := fmt.Sprintf("%v", validator.PubKey)
+		liveliness := GetMemberOfInitialState(r,
+			params.InitialLivenessWeightings)
+
+		validators[str] = mockValidator{
+			val:           validator,
+			livenessState: liveliness,
+		}
+	}
+
+	return validators
+}
+
 // TODO describe usage
 func getKeys(validators map[string]mockValidator) []string {
 	keys := make([]string, len(validators))

@@ -20,6 +20,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// RandSetup performs the random setup the mock module needs.
+type RandSetup func(r *rand.Rand, accounts []Account)
+
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
 	appStateFn func(r *rand.Rand, accs []Account) json.RawMessage,
@@ -27,26 +30,25 @@ func Simulate(t *testing.T, app *baseapp.BaseApp,
 	invariants []Invariant, numBlocks int, blockSize int, commit bool) error {
 
 	time := time.Now().UnixNano()
-	return SimulateFromSeed(t, app, appStateFn, time, ops, setups, invariants, numBlocks, blockSize, commit)
+	return SimulateFromSeed(t, app, appStateFn, time, ops,
+		setups, invariants, numBlocks, blockSize, commit)
 }
 
+// initialize the chain for the simulation
 func initChain(r *rand.Rand, params Params,
 	accounts []Account, setups []RandSetup, app *baseapp.BaseApp,
-	appStateFn func(r *rand.Rand, accounts []Account) json.RawMessage) (
-	validators map[string]mockValidator) {
+	appStateFn func(r *rand.Rand, accounts []Account) json.RawMessage) mockValidators {
 
-	res := app.InitChain(abci.RequestInitChain{AppStateBytes: appStateFn(r, accounts)})
-	validators = make(map[string]mockValidator)
-	for _, validator := range res.Validators {
-		str := fmt.Sprintf("%v", validator.PubKey)
-		validators[str] = mockValidator{validator, GetMemberOfInitialState(r, params.InitialLivenessWeightings)}
+	req := abci.RequestInitChain{
+		AppStateBytes: appStateFn(r, accounts),
 	}
+	res := app.InitChain(req)
+	validators = newMockValidators(res.Validators)
 
 	for i := 0; i < len(setups); i++ {
 		setups[i](r, accounts)
 	}
-
-	return
+	return validators
 }
 
 // SimulateFromSeed tests an application by running the provided
@@ -230,31 +232,16 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	accounts []Account, header abci.Header, logWriter func(string)) (opCount int)
 
-// Returns a function to simulate blocks. Written like this to avoid constant parameters being passed everytime, to minimize
-// memory overhead
+// Returns a function to simulate blocks. Written like this to avoid constant
+// parameters being passed everytime, to minimize memory overhead
 func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params Params,
-	event func(string), invariants []Invariant, ops []WeightedOperation,
+	event func(string), invariants []Invariant, ops WeightedOperations,
 	operationQueue map[int][]Operation, timeOperationQueue []FutureOperation,
 	totalNumBlocks int, avgBlockSize int, displayLogs func()) blockSimFn {
 
 	var lastBlocksizeState = 0 // state for [4 * uniform distribution]
-	var totalOpWeight = 0
 	var blocksize int
-
-	for i := 0; i < len(ops); i++ {
-		totalOpWeight += ops[i].Weight
-	}
-	selectOp := func(r *rand.Rand) Operation {
-		x := r.Intn(totalOpWeight)
-		for i := 0; i < len(ops); i++ {
-			if x <= ops[i].Weight {
-				return ops[i].Op
-			}
-			x -= ops[i].Weight
-		}
-		// shouldn't happen
-		return ops[0].Op
-	}
+	selectOp := ops.getSelectOpFn()
 
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {

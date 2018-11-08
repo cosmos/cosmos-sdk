@@ -8,9 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// RandSetup performs the random setup the mock module needs.
-type RandSetup func(r *rand.Rand, accounts []Account)
-
 // Operation runs a state machine transition, and ensures the transition
 // happened as expected.  The operation could be running and testing a fuzzed
 // transaction, or doing the same for a message.
@@ -23,6 +20,9 @@ type RandSetup func(r *rand.Rand, accounts []Account)
 type Operation func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 	accounts []Account, event func(string)) (
 	action string, futureOperations []FutureOperation, err error)
+
+// queue of operations
+type OperationQueue map[int][]Operation
 
 // FutureOperation is an operation which will be ran at the beginning of the
 // provided BlockHeight. If both a BlockHeight and BlockTime are specified, it
@@ -39,4 +39,32 @@ type FutureOperation struct {
 type WeightedOperation struct {
 	Weight int
 	Op     Operation
+}
+
+// WeightedOperations is the group of all weighted operations to simulate.
+type WeightedOperations []WeightedOperation
+
+func (w WeightedOperations) totalWeight() int {
+	totalOpWeight := 0
+	for i := 0; i < len(w); i++ {
+		totalOpWeight += w[i].Weight
+	}
+	return totalOpWeight
+}
+
+type selectOpFn func(r *rand.Rand) Operation
+
+func (w WeightedOperations) getSelectOpFn() selectOpFn {
+	totalOpWeight := ops.totalWeight()
+	return func(r *rand.Rand) Operation {
+		x := r.Intn(totalOpWeight)
+		for i := 0; i < len(ops); i++ {
+			if x <= ops[i].Weight {
+				return ops[i].Op
+			}
+			x -= ops[i].Weight
+		}
+		// shouldn't happen
+		return ops[0].Op
+	}
 }

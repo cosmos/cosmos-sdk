@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/examples/basecoin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -86,7 +87,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
-	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
+	app.SetAnteHandler(ante.NewAnteHandler(app.accountKeeper, app.bankKeeper, app.feeCollectionKeeper))
 
 	// mount the multistore and load the latest state
 	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC)

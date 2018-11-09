@@ -46,6 +46,7 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * \#2723 Use `cosmosvalcons` Bech32 prefix in `tendermint show-address`
 
 * SDK
 

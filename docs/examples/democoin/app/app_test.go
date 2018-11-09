@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"

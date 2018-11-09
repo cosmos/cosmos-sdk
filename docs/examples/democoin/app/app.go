@@ -17,11 +17,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
-	"github.com/cosmos/cosmos-sdk/examples/democoin/types"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/cool"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/pow"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/simplestake"
-	"github.com/cosmos/cosmos-sdk/examples/democoin/x/sketchy"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/sketchy"
 )
 
 const (

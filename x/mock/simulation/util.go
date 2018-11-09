@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
@@ -101,4 +103,20 @@ func getBlockSize(r *rand.Rand, params Params,
 		blocksize = 0
 	}
 	return state, blocksize
+}
+
+// PeriodicInvariant returns an Invariant function closure that asserts a given
+// invariant if the mock application's last block modulo the given period is
+// congruent to the given offset.
+//
+// NOTE this function is intended to be used manually used while running
+// computationally heavy simulations.
+// TODO reference this function in the codebase probably through use of a switch
+func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
+	return func(app *baseapp.BaseApp) error {
+		if int(app.LastBlockHeight())%period == offset {
+			return invariant(app)
+		}
+		return nil
+	}
 }

@@ -1,14 +1,14 @@
 # Validator Setup
 
 ::: warning Current Testnet
-The current testnet is `gaia-8000`.
+The current testnet is `gaia-8001`.
 :::
 
 Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/docs/getting-started/full-node.md) guide.
 
 ## Running a Validator Node
 
-[Validators](/validators/overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable, double sign a transaction, or don't cast their votes. Please read about [Sentry Node Architecture](/validators/validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
+[Validators](/validators/overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](/validators/validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
 
 ::: danger Warning
 If you want to become a validator for the Hub's `mainnet`, you should [research security](/validators/security.md).
@@ -43,6 +43,10 @@ gaiacli tx create-validator \
 __Note__: When specifying commission parameters, the `commission-max-change-rate`
 is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is
 a 100% rate increase, but only 1 percentage point.
+
+::: tip
+Use `gaiacli tx create-validator -h` to get a list of all the available flags.
+:::
 
 ### Edit Validator Description
 

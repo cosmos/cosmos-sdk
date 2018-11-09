@@ -6,7 +6,9 @@ information on the latest testnet, including the correct version
 of the Cosmos-SDK to use and details about the genesis file.
 :::
 
-Please ensure you have the [Cosmos SDK](/getting-started/installation.md) installed. If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
+**Please ensure you have the [gaia binaries](/getting-started/installation.md) installed.**
+
+If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
 
 ## Setting Up a New Node
 
@@ -75,6 +77,8 @@ git fetch --all && git checkout master
 make update_tools && make get_vendor_deps && make install
 ```
 
+> *NOTE*: If you have issues at this step, please check that you have the latest stable version of GO installed. 
+
 Note we use `master` here since it contains the latest stable release.
 See the [testnet repo](https://github.com/cosmos/testnets) 
 for details on which version is needed for which testnet, 
@@ -95,8 +99,7 @@ curl https://raw.githubusercontent.com/cosmos/testnets/master/latest/genesis.jso
 ```
 
 Note we use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets) 
-which contains details for the latest testnet. If you are connecting to a different testnet, ensure you
-get the right files.
+which contains details for the latest testnet. If you are connecting to a different testnet, ensure you get the right files.
 
 ### Add Seed Nodes
 
@@ -108,6 +111,8 @@ seeds = "718145d422a823fd2a4e1e36e91b92bb0c4ddf8e@gaia-testnet.coinculture.net:2
 ```
 
 If those seeds aren't working, you can find more seeds and persistent peers on the [Cosmos Explorer](https://explorecosmos.network/nodes). Open the the `Full Nodes` pane and select nodes that do not have private (`10.x.x.x`) or [local IP addresses](https://en.wikipedia.org/wiki/Private_network). The `Persistent Peer` field contains the connection string. For best results use 4-6.
+
+You can also ask for peers on the [Validators Riot Room](https://riot.im/app/#/room/#cosmos-validators:matrix.org)
 
 For more information on seeds and peers, you can [read this](https://github.com/tendermint/tendermint/blob/develop/docs/using-tendermint.md#peers).
 

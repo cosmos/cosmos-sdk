@@ -49,6 +49,8 @@ func main() {
 		client.GetCommands(
 			stakecmd.GetCmdQueryValidator("stake", cdc),
 			stakecmd.GetCmdQueryValidators("stake", cdc),
+			stakecmd.GetCmdQueryValidatorUnbondingDelegations("stake", cdc),
+			stakecmd.GetCmdQueryValidatorRedelegations("stake", cdc),
 			stakecmd.GetCmdQueryDelegation("stake", cdc),
 			stakecmd.GetCmdQueryDelegations("stake", cdc),
 			stakecmd.GetCmdQueryPool("stake", cdc),

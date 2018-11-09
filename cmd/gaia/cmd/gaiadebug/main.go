@@ -19,6 +19,13 @@ import (
 )
 
 func init() {
+
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
+	config.Seal()
+
 	rootCmd.AddCommand(txCmd)
 	rootCmd.AddCommand(pubkeyCmd)
 	rootCmd.AddCommand(addrCmd)
@@ -213,7 +220,7 @@ func runTxCmd(cmd *cobra.Command, args []string) error {
 	var tx = auth.StdTx{}
 	cdc := gaia.MakeCodec()
 
-	err = cdc.UnmarshalBinary(txBytes, &tx)
+	err = cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 	if err != nil {
 		return err
 	}

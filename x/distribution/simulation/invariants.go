@@ -13,9 +13,8 @@ import (
 // AllInvariants runs all invariants of the distribution module
 // Currently: total supply, positive power
 func AllInvariants(d distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
-
-	return func(app *baseapp.BaseApp, header abci.Header) error {
-		err := ValAccumInvariants(d, sk)(app, header)
+	return func(app *baseapp.BaseApp) error {
+		err := ValAccumInvariants(d, sk)(app)
 		if err != nil {
 			return err
 		}
@@ -26,8 +25,9 @@ func AllInvariants(d distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
 // ValAccumInvariants checks that the fee pool accum == sum all validators' accum
 func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
 
-	return func(app *baseapp.BaseApp, header abci.Header) error {
-		ctx := app.NewContext(false, header)
+	return func(app *baseapp.BaseApp) error {
+		mockHeader := abci.Header{Height: app.LastBlockHeight() + 1}
+		ctx := app.NewContext(false, mockHeader)
 		height := ctx.BlockHeight()
 
 		valAccum := sdk.ZeroDec()

@@ -53,13 +53,12 @@ func TestMsgSubmitProposal(t *testing.T) {
 func TestMsgDeposit(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
-		proposalID    int64
+		proposalID    uint64
 		depositerAddr sdk.AccAddress
 		depositAmount sdk.Coins
 		expectPass    bool
 	}{
 		{0, addrs[0], coinsPos, true},
-		{-1, addrs[0], coinsPos, false},
 		{1, sdk.AccAddress{}, coinsPos, false},
 		{1, addrs[0], coinsZero, true},
 		{1, addrs[0], coinsNeg, false},
@@ -80,13 +79,12 @@ func TestMsgDeposit(t *testing.T) {
 func TestMsgVote(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
-		proposalID int64
+		proposalID uint64
 		voterAddr  sdk.AccAddress
 		option     VoteOption
 		expectPass bool
 	}{
 		{0, addrs[0], OptionYes, true},
-		{-1, addrs[0], OptionYes, false},
 		{0, sdk.AccAddress{}, OptionYes, false},
 		{0, addrs[0], OptionNo, true},
 		{0, addrs[0], OptionNoWithVeto, true},

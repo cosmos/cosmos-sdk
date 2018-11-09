@@ -8,7 +8,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
+
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/stretchr/testify/require"
 
@@ -207,7 +210,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 
 func TestGaiaCLICreateValidator(t *testing.T) {
 	chainID, servAddr, port := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+	flags := fmt.Sprintf("--home=%s --chain-id=%v --node=%s", gaiacliHome, chainID, servAddr)
 
 	// start gaiad server
 	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
@@ -285,6 +288,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli query validator %s --output=json %v", sdk.ValAddress(barAddr), flags))
 	require.Equal(t, "1.0000000000", validator.Tokens.String())
 
+	validatorUbds := executeGetValidatorUnbondingDelegations(t,
+		fmt.Sprintf("gaiacli query unbonding-delegations-from %s --output=json %v",
+			sdk.ValAddress(barAddr), flags))
+	require.Len(t, validatorUbds, 1)
+	require.Equal(t, "1", validatorUbds[0].Balance.Amount.String())
+
 	params := executeGetParams(t, fmt.Sprintf("gaiacli query parameters --output=json %v", flags))
 	require.True(t, defaultParams.Equal(params))
 
@@ -340,7 +349,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf("steak").Int64())
 
 	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli query proposal --proposal-id=1 --output=json %v", flags))
-	require.Equal(t, int64(1), proposal1.GetProposalID())
+	require.Equal(t, uint64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 
 	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals %v", flags), "")
@@ -383,7 +392,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf("steak").Int64())
 	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli query proposal --proposal-id=1 --output=json %v", flags))
-	require.Equal(t, int64(1), proposal1.GetProposalID())
+	require.Equal(t, uint64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
 
 	voteStr := fmt.Sprintf("gaiacli tx vote %v", flags)
@@ -405,12 +414,12 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForNextNBlocksTM(2, port)
 
 	vote := executeGetVote(t, fmt.Sprintf("gaiacli query vote --proposal-id=1 --voter=%s --output=json %v", fooAddr, flags))
-	require.Equal(t, int64(1), vote.ProposalID)
+	require.Equal(t, uint64(1), vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
 
 	votes := executeGetVotes(t, fmt.Sprintf("gaiacli query votes --proposal-id=1 --output=json %v", flags))
 	require.Len(t, votes, 1)
-	require.Equal(t, int64(1), votes[0].ProposalID)
+	require.Equal(t, uint64(1), votes[0].ProposalID)
 	require.Equal(t, gov.OptionYes, votes[0].Option)
 
 	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --status=DepositPeriod %v", flags), "")
@@ -430,7 +439,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, spStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --latest=1 %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --limit=1 %v", flags), "")
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 }
 
@@ -439,7 +448,8 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf(
+		"gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -484,11 +494,11 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	unsignedTxFile := writeToNewTempFile(t, stdout)
 	defer os.Remove(unsignedTxFile.Name())
 
-	// Test sign --print-sigs
+	// Test sign --validate-signatures
 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx sign %v --print-sigs %v", flags, unsignedTxFile.Name()))
-	require.True(t, success)
-	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n", fooAddr.String()), stdout)
+		"gaiacli tx sign %v --validate-signatures %v", flags, unsignedTxFile.Name()))
+	require.False(t, success)
+	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
 
 	// Test sign
 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
@@ -505,15 +515,17 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Test sign --print-signatures
 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx sign %v --print-sigs %v", flags, signedTxFile.Name()))
+		"gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()))
 	require.True(t, success)
-	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\n", fooAddr.String(), fooAddr.String()), stdout)
+	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\t[OK]\n\n", fooAddr.String(),
+		fooAddr.String()), stdout)
 
 	// Test broadcast
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf("steak").Int64())
 
-	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli tx broadcast %v --json %v", flags, signedTxFile.Name()))
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli tx broadcast %v --json %v", flags, signedTxFile.Name()))
 	require.True(t, success)
 	var result struct {
 		Response abci.ResponseDeliverTx
@@ -535,7 +547,7 @@ func TestGaiaCLIConfig(t *testing.T) {
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 	node := fmt.Sprintf("%s:%s", servAddr, port)
-	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
+	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
 	executeWrite(t, fmt.Sprintf("gaiacli --home=%s config", gaiadHome), gaiacliHome, node, "y")
 	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)
@@ -585,12 +597,27 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-
-	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf(
+		"gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
+	genFile := filepath.Join(gaiadHome, "config", "genesis.json")
+	genDoc := readGenesisFile(t, genFile)
+	var appState app.GenesisState
+	err := codec.Cdc.UnmarshalJSON(genDoc.AppState, &appState)
+	require.NoError(t, err)
+	appState.Accounts = []app.GenesisAccount{app.NewDefaultGenesisAccount(fooAddr)}
+	appStateJSON, err := codec.Cdc.MarshalJSON(appState)
+	require.NoError(t, err)
+	genDoc.AppState = appStateJSON
+	genDoc.SaveAs(genFile)
+	executeWrite(t, fmt.Sprintf(
+		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome),
+		app.DefaultKeyPass)
+	executeWrite(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
 	// get a free port, also setup some common flags
-	servAddr, port, err := server.FreeTCPAddr()
+	servAddr, port, err = server.FreeTCPAddr()
 	require.NoError(t, err)
 	return
 }
@@ -607,6 +634,18 @@ func writeToNewTempFile(t *testing.T, s string) *os.File {
 	_, err = fp.WriteString(s)
 	require.Nil(t, err)
 	return fp
+}
+
+func readGenesisFile(t *testing.T, genFile string) types.GenesisDoc {
+	var genDoc types.GenesisDoc
+	fp, err := os.Open(genFile)
+	require.NoError(t, err)
+	fileContents, err := ioutil.ReadAll(fp)
+	require.NoError(t, err)
+	defer fp.Close()
+	err = codec.Cdc.UnmarshalJSON(fileContents, &genDoc)
+	require.NoError(t, err)
+	return genDoc
 }
 
 //___________________________________________________________________________________
@@ -691,6 +730,24 @@ func executeGetValidator(t *testing.T, cmdStr string) stake.Validator {
 	err := cdc.UnmarshalJSON([]byte(out), &validator)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return validator
+}
+
+func executeGetValidatorUnbondingDelegations(t *testing.T, cmdStr string) []stake.UnbondingDelegation {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var ubds []stake.UnbondingDelegation
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &ubds)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return ubds
+}
+
+func executeGetValidatorRedelegations(t *testing.T, cmdStr string) []stake.Redelegation {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var reds []stake.Redelegation
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &reds)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return reds
 }
 
 func executeGetPool(t *testing.T, cmdStr string) stake.Pool {

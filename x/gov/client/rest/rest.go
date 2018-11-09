@@ -22,7 +22,7 @@ const (
 	RestDepositer      = "depositer"
 	RestVoter          = "voter"
 	RestProposalStatus = "status"
-	RestNumLatest      = "latest"
+	RestNumLimit       = "limit"
 	storeName          = "gov"
 )
 
@@ -104,7 +104,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -143,7 +143,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -188,7 +188,7 @@ func queryProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -218,7 +218,7 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		vars := mux.Vars(r)
 		strProposalID := vars[RestProposalID]
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -255,7 +255,7 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -292,7 +292,7 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		var deposit gov.Deposit
 		cdc.UnmarshalJSON(res, &deposit)
 		if deposit.Empty() {
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinary(gov.QueryProposalParams{params.ProposalID}))
+			res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinaryLengthPrefixed(gov.QueryProposalParams{params.ProposalID}))
 			if err != nil || len(res) == 0 {
 				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
 				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
@@ -319,7 +319,7 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -386,7 +386,7 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}
@@ -416,7 +416,7 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		bechVoterAddr := r.URL.Query().Get(RestVoter)
 		bechDepositerAddr := r.URL.Query().Get(RestDepositer)
 		strProposalStatus := r.URL.Query().Get(RestProposalStatus)
-		strNumLatest := r.URL.Query().Get(RestNumLatest)
+		strNumLimit := r.URL.Query().Get(RestNumLimit)
 
 		params := gov.QueryProposalsParams{}
 
@@ -446,12 +446,12 @@ func queryProposalsWithParameterFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			}
 			params.ProposalStatus = proposalStatus
 		}
-		if len(strNumLatest) != 0 {
-			numLatest, ok := utils.ParseInt64OrReturnBadRequest(w, strNumLatest)
+		if len(strNumLimit) != 0 {
+			numLimit, ok := utils.ParseUint64OrReturnBadRequest(w, strNumLimit)
 			if !ok {
 				return
 			}
-			params.NumLatestProposals = numLatest
+			params.Limit = numLimit
 		}
 
 		bz, err := cdc.MarshalJSON(params)
@@ -484,7 +484,7 @@ func queryTallyOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			return
 		}
 
-		proposalID, ok := utils.ParseInt64OrReturnBadRequest(w, strProposalID)
+		proposalID, ok := utils.ParseUint64OrReturnBadRequest(w, strProposalID)
 		if !ok {
 			return
 		}

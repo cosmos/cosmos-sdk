@@ -158,11 +158,11 @@ func TestNodeStatus(t *testing.T) {
 	res, body := Request(t, port, "GET", "/node_info", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var nodeInfo p2p.NodeInfo
+	var nodeInfo p2p.DefaultNodeInfo
 	err := cdc.UnmarshalJSON([]byte(body), &nodeInfo)
 	require.Nil(t, err, "Couldn't parse node info")
 
-	require.NotEqual(t, p2p.NodeInfo{}, nodeInfo, "res: %v", res)
+	require.NotEqual(t, p2p.DefaultNodeInfo{}, nodeInfo, "res: %v", res)
 
 	// syncing
 	res, body = Request(t, port, "GET", "/syncing", nil)
@@ -628,8 +628,8 @@ func TestSubmitProposal(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
-	var proposalID int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	var proposalID uint64
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -650,8 +650,8 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
-	var proposalID int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	var proposalID uint64
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -684,8 +684,8 @@ func TestVote(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
-	var proposalID int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	var proposalID uint64
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -732,18 +732,18 @@ func TestProposalsQuery(t *testing.T) {
 
 	// Addr1 proposes (and deposits) proposals #1 and #2
 	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
-	var proposalID1 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID1)
+	var proposalID1 uint64
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
 	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
-	var proposalID2 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID2)
+	var proposalID2 uint64
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
 	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], 5)
-	var proposalID3 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID3)
+	var proposalID3 uint64
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
@@ -1230,7 +1230,7 @@ func getValidatorRedelegations(t *testing.T, port string, validatorAddr sdk.ValA
 
 // ============= Governance Module ================
 
-func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
+func getProposal(t *testing.T, port string, proposalID uint64) gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var proposal gov.Proposal
@@ -1239,7 +1239,7 @@ func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
 	return proposal
 }
 
-func getDeposits(t *testing.T, port string, proposalID int64) []gov.Deposit {
+func getDeposits(t *testing.T, port string, proposalID uint64) []gov.Deposit {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/deposits", proposalID), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var deposits []gov.Deposit
@@ -1248,7 +1248,7 @@ func getDeposits(t *testing.T, port string, proposalID int64) []gov.Deposit {
 	return deposits
 }
 
-func getDeposit(t *testing.T, port string, proposalID int64, depositerAddr sdk.AccAddress) gov.Deposit {
+func getDeposit(t *testing.T, port string, proposalID uint64, depositerAddr sdk.AccAddress) gov.Deposit {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/deposits/%s", proposalID, depositerAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var deposit gov.Deposit
@@ -1257,7 +1257,7 @@ func getDeposit(t *testing.T, port string, proposalID int64, depositerAddr sdk.A
 	return deposit
 }
 
-func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.AccAddress) gov.Vote {
+func getVote(t *testing.T, port string, proposalID uint64, voterAddr sdk.AccAddress) gov.Vote {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/votes/%s", proposalID, voterAddr), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var vote gov.Vote
@@ -1266,7 +1266,7 @@ func getVote(t *testing.T, port string, proposalID int64, voterAddr sdk.AccAddre
 	return vote
 }
 
-func getVotes(t *testing.T, port string, proposalID int64) []gov.Vote {
+func getVotes(t *testing.T, port string, proposalID uint64) []gov.Vote {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var votes []gov.Vote
@@ -1358,7 +1358,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	return results
 }
 
-func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID int64, amount int64) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, amount int64) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
@@ -1388,7 +1388,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	return results
 }
 
-func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID int64) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()

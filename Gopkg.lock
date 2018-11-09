@@ -10,6 +10,7 @@
   revision = "48b08affede2cea076a3cf13b2e3f72ed262b743"
 
 [[projects]]
+  branch = "master"
   digest = "1:09a7f74eb6bb3c0f14d8926610c87f569c5cff68e978d30e9a3540aeb626fdf0"
   name = "github.com/bartekn/go-bip39"
   packages = ["."]
@@ -38,7 +39,7 @@
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "UT"
-  revision = "2a560b2036bee5e3679ec2133eb6520b2f195213"
+  revision = "67e573d211ace594f1366b4ce9d39726c4b19bd0"
 
 [[projects]]
   digest = "1:386de157f7d19259a7f9c81f26ce011223ce0f090353c1152ffdf730d7d10ac2"
@@ -61,13 +62,6 @@
   pruneopts = "UT"
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
-
-[[projects]]
-  digest = "1:c7644c73a3d23741fdba8a99b1464e021a224b7e205be497271a8003a15ca41b"
-  name = "github.com/ebuchman/fail-test"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "95f809107225be108efcf10a3509e4ea6ceef3c4"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -245,12 +239,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:e32dfc6abff6a3633ef4d9a1022fd707c8ef26f1e1e8f855dc58dc415ce7c8f3"
+  digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "UT"
-  revision = "fe40af7a9c397fa3ddba203c38a5042c5d0475ad"
-  version = "v1.1.1"
+  revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
+  version = "v1.1.2"
 
 [[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
@@ -296,7 +290,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:63b68062b8968092eb86bedc4e68894bd096ea6b24920faca8b9dcf451f54bb5"
+  digest = "1:db712fde5d12d6cdbdf14b777f0c230f4ff5ab0be8e35b239fc319953ed577a4"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
@@ -304,11 +298,11 @@
     "model",
   ]
   pruneopts = "UT"
-  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
+  revision = "7e9e6cabbd393fc208072eedef99188d0ce788b6"
 
 [[projects]]
   branch = "master"
-  digest = "1:ef1dd9945e58ee9b635273d28c0ef3fa3742a7dedc038ebe207fd63e6ce000ef"
+  digest = "1:ef74914912f99c79434d9c09658274678bc85080ebe3ab32bec3940ebce5e1fc"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -317,7 +311,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "418d78d0b9a7b7de3a6bbc8a23def624cc977bb2"
+  revision = "185b4288413d2a0dd0806f78c90dde719829e5ae"
 
 [[projects]]
   digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
@@ -346,12 +340,12 @@
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:516e71bed754268937f57d4ecb190e01958452336fa73dbac880894164e91c1f"
+  digest = "1:08d65904057412fc0270fc4812a1c90c594186819243160dc779a402d4b6d0bc"
   name = "github.com/spf13/cast"
   packages = ["."]
   pruneopts = "UT"
-  revision = "8965335b8c7107321228e3e3702cab9832751bac"
-  version = "v1.2.0"
+  revision = "8c9545af88b134710ab1cd196795e7f2388358d7"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:7ffc0983035bc7e297da3688d9fe19d60a420e9c38bef23f845c53788ed6a05e"
@@ -370,12 +364,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:dab83a1bbc7ad3d7a6ba1a1cc1760f25ac38cdf7d96a5cdd55cd915a4f5ceaf9"
+  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = "UT"
-  revision = "9a97c102cda95a86cec2345a6f09f55a939babf5"
-  version = "v1.0.2"
+  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
+  version = "v1.0.3"
 
 [[projects]]
   digest = "1:f8e1a678a2571e265f4bf91a3e5e32aa6b1474a55cb0ea849750cc177b664d96"
@@ -424,35 +418,23 @@
   revision = "e5840949ff4fff0c56f9b6a541e22b63581ea9df"
 
 [[projects]]
-  branch = "master"
-  digest = "1:087aaa7920e5d0bf79586feb57ce01c35c830396ab4392798112e8aae8c47722"
-  name = "github.com/tendermint/ed25519"
-  packages = [
-    ".",
-    "edwards25519",
-    "extra25519",
-  ]
-  pruneopts = "UT"
-  revision = "d8387025d2b9d158cf4efb07e7ebf814bcce2057"
-
-[[projects]]
-  digest = "1:2c971a45c89ca2ccc735af50919cdee05fbdc54d4bf50625073693300e31ead8"
+  digest = "1:10b3a599325740c84a7c81f3f3cb2e1fdb70b3ea01b7fa28495567a2519df431"
   name = "github.com/tendermint/go-amino"
   packages = ["."]
   pruneopts = "UT"
-  revision = "faa6e731944e2b7b6a46ad202902851e8ce85bee"
-  version = "v0.12.0"
+  revision = "6dcc6ddc143e116455c94b25c1004c99e0d0ca12"
+  version = "v0.14.0"
 
 [[projects]]
-  digest = "1:53397098d6acb7613358683cc84ae59281a60c6033f0bff62fa8d3f279c6c430"
+  digest = "1:9f8c4c93658315a795ffd3e0c943d39f78067dd8382b8d7bcfaf6686b92f3978"
   name = "github.com/tendermint/iavl"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3acc91fb8811db2c5409a855ae1f8e441fe98e2d"
-  version = "v0.11.0"
+  revision = "fa74114f764f9827c4ad5573f990ed25bf8c4bac"
+  version = "v0.11.1"
 
 [[projects]]
-  digest = "1:f9c7a1f3ee087476f4883c33cc7c1bdbe56b9670b2fb27855ea2f386393272f5"
+  digest = "1:395820b381043b9d2204e181ddf0f9147397c4a7b8f5dc3162de4cfcddf4589a"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -485,6 +467,7 @@
     "libs/db",
     "libs/errors",
     "libs/events",
+    "libs/fail",
     "libs/flowrate",
     "libs/log",
     "libs/pubsub",
@@ -505,7 +488,6 @@
     "rpc/core",
     "rpc/core/types",
     "rpc/grpc",
-    "rpc/lib",
     "rpc/lib/client",
     "rpc/lib/server",
     "rpc/lib/types",
@@ -518,8 +500,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "90eda9bfb6e6daeed1c8015df41cb36772d91778"
-  version = "v0.25.1-rc0"
+  revision = "03e42d2e3866f01a00625f608e3bbfaeb30690de"
+  version = "v0.26.1-rc0"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
@@ -530,13 +512,15 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:aaff04fa01d9b824fde6799759cc597b3ac3671b9ad31924c28b6557d0ee5284"
+  digest = "1:6f6dc6060c4e9ba73cf28aa88f12a69a030d3d19d518ef8e931879eaa099628d"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
     "blowfish",
     "chacha20poly1305",
     "curve25519",
+    "ed25519",
+    "ed25519/internal/edwards25519",
     "hkdf",
     "internal/chacha20",
     "internal/subtle",
@@ -705,6 +689,7 @@
     "github.com/tendermint/tendermint/rpc/lib/client",
     "github.com/tendermint/tendermint/rpc/lib/server",
     "github.com/tendermint/tendermint/types",
+    "github.com/tendermint/tendermint/types/time",
     "github.com/tendermint/tendermint/version",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/bcrypt",

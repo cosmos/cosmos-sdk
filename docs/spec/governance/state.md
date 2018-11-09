@@ -96,10 +96,12 @@ type Proposal struct {
   Type                  ProposalType        //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
   TotalDeposit          sdk.Coins           //  Current deposit on this proposal. Initial value is set at InitialDeposit
   Deposits              []Deposit           //  List of deposits on the proposal
-  SubmitTime           time.Time               //  Time of the block where TxGovSubmitProposal was included
-  Submitter             sdk.Address      //  Address of the submitter
+  SubmitTime            time.Time           //  Time of the block where TxGovSubmitProposal was included
+  DepositEndTime        time.Time           //  Time that the DepositPeriod of a proposal would expire
+  Submitter             sdk.AccAddress      //  Address of the submitter
   
-  VotingStartTime      time.Time               //  Time of the block where MinDeposit was reached. time.Time{} if MinDeposit is not reached
+  VotingStartTime       time.Time           //  Time of the block where MinDeposit was reached. time.Time{} if MinDeposit is not reached
+  VotingEndTime         time.Time           //  Time of the block that the VotingPeriod for a proposal will end.
   CurrentStatus         ProposalStatus      //  Current status of the proposal
 
   YesVotes              sdk.Dec
@@ -134,46 +136,26 @@ For pseudocode purposes, here are the two function we will use to read or write 
 
 **Store:**
 * `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the 
-  `ProposalIDs` of proposals that reached `MinDeposit`. Each round, the oldest 
-  element of `ProposalProcessingQueue` is checked during `BeginBlock` to see if
-  `CurrentTime == VotingStartTime + activeProcedure.VotingPeriod`. If it is, 
-  then the application tallies the votes, compute the votes of each validator and checks if every validator in the valdiator set have voted
-  and, if not, applies `GovernancePenalty`. If the proposal is accepted, deposits are refunded.
-  After that proposal is ejected from `ProposalProcessingQueue` and the next element of the queue is evaluated. 
+  `ProposalIDs` of proposals that reached `MinDeposit`. Each `EndBlock`, all the proposals
+  that have reached the end of their voting period are processed.
+  To process a finished proposal, the application tallies the votes, compute the votes of
+  each validator and checks if every validator in the valdiator set have voted.
+  If the proposal is accepted, deposits are refunded.
 
 And the pseudocode for the `ProposalProcessingQueue`:
 
 ```go
   in EndBlock do 
     
-    checkProposal()  // First call of the recursive function 
-    
-    
-  // Recursive function. First call in BeginBlock
-  func checkProposal()  
-    proposalID = ProposalProcessingQueue.Peek()
-    if (proposalID == nil)
-      return
+    for finishedProposalID in GetAllFinishedProposalIDs(block.Time)
+      proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
 
-    proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
-    votingProcedure = load(GlobalParams, 'VotingProcedure')
+      validators = Keeper.getAllValidators()
+      tmpValMap := map(sdk.AccAddress)ValidatorGovInfo
 
-    if (CurrentTime == proposal.VotingStartTime + votingProcedure.VotingPeriod && proposal.CurrentStatus == ProposalStatusActive)
-
-    // End of voting period, tally
-
-      ProposalProcessingQueue.pop()
-      validators = 
-
-
-      Keeper.getAllValidators()
-      tmpValMap := map(sdk.Address)ValidatorGovInfo
-
-      // Initiate mapping at 0. Validators that remain at 0 at the end of tally will be punished
+      // Initiate mapping at 0. This is the amount of shares of the validator's vote that will be overridden by their delegator's votes
       for each validator in validators
-        tmpValMap(validator).Minus = 0
-
-
+        tmpValMap(validator.OperatorAddr).Minus = 0
 
       // Tally
       voterIterator = rangeQuery(Governance, <proposalID|'addresses'>) //return all the addresses that voted on the proposal
@@ -212,5 +194,4 @@ And the pseudocode for the `ProposalProcessingQueue`:
         proposal.CurrentStatus = ProposalStatusRejected
 
       store(Governance, <proposalID|'proposal'>, proposal)
-      checkProposal()        
 ```

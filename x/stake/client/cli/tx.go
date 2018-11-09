@@ -103,10 +103,10 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsPk)
-	cmd.Flags().AddFlagSet(fsAmount)
+	cmd.Flags().AddFlagSet(FsPk)
+	cmd.Flags().AddFlagSet(FsAmount)
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
-	cmd.Flags().AddFlagSet(fsCommissionCreate)
+	cmd.Flags().AddFlagSet(FsCommissionCreate)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	cmd.Flags().Bool(FlagGenesisFormat, false, "Export the transaction in gen-tx format; it implies --generate-only")
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("Node's public IP. It takes effect only when used in combination with --%s", FlagGenesisFormat))
@@ -204,7 +204,7 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsAmount)
+	cmd.Flags().AddFlagSet(FsAmount)
 	cmd.Flags().AddFlagSet(fsValidator)
 
 	return cmd

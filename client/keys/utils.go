@@ -96,7 +96,12 @@ func GetKeyBaseFromDirWithWritePerm(rootDir string) (keys.Keybase, error) {
 
 // GetKeyBaseFromDir initializes a read-only keybase at a particular dir.
 func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
+	// Disabled because of the inability to create a new keys database directory
+	// in the instance of when ReadOnly is set to true.
+	//
+	// ref: syndtr/goleveldb#240
+	// return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
+	return getKeyBaseFromDirWithOpts(rootDir, nil)
 }
 
 func getKeyBaseFromDirWithOpts(rootDir string, o *opt.Options) (keys.Keybase, error) {

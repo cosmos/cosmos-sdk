@@ -39,7 +39,7 @@ func (k Keeper) getBondInfo(ctx sdk.Context, addr sdk.AccAddress) bondInfo {
 		return bondInfo{}
 	}
 	var bi bondInfo
-	err := k.cdc.UnmarshalBinary(bz, &bi)
+	err := k.cdc.UnmarshalBinaryLengthPrefixed(bz, &bi)
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +48,7 @@ func (k Keeper) getBondInfo(ctx sdk.Context, addr sdk.AccAddress) bondInfo {
 
 func (k Keeper) setBondInfo(ctx sdk.Context, addr sdk.AccAddress, bi bondInfo) {
 	store := ctx.KVStore(k.key)
-	bz, err := k.cdc.MarshalBinary(bi)
+	bz, err := k.cdc.MarshalBinaryLengthPrefixed(bi)
 	if err != nil {
 		panic(err)
 	}

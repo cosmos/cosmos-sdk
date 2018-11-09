@@ -214,6 +214,7 @@ func InitializeTestLCD(
 	genTxs := []json.RawMessage{}
 
 	// append any additional (non-proposing) validators
+	var accs []gapp.GenesisAccount
 	for i := 0; i < nValidators; i++ {
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
@@ -242,9 +243,17 @@ func InitializeTestLCD(
 		genTxs = append(genTxs, txBytes)
 		valConsPubKeys = append(valConsPubKeys, pubKey)
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
+
+		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
+		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin("steak", 150)}
+		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
 	}
 
-	genesisState, err := gapp.GaiaAppGenState(cdc, genTxs)
+	appGenState := gapp.NewDefaultGenesisState()
+	appGenState.Accounts = accs
+	genDoc.AppState, err = cdc.MarshalJSON(appGenState)
+	require.NoError(t, err)
+	genesisState, err := gapp.GaiaAppGenState(cdc, *genDoc, genTxs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts

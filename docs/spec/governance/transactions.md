@@ -45,6 +45,8 @@ upon receiving txGovSubmitProposal from sender do
   if (txGovSubmitProposal.Type != ProposalTypePlainText) OR (txGovSubmitProposal.Type != ProposalTypeSoftwareUpgrade)
   
   sender.AtomBalance -= initialDeposit.Atoms
+
+  depositProcedure = load(GlobalParams, 'DepositProcedure')
   
   proposalID = generate new proposalID
   proposal = NewProposal()
@@ -53,27 +55,15 @@ upon receiving txGovSubmitProposal from sender do
   proposal.Description = txGovSubmitProposal.Description
   proposal.Type = txGovSubmitProposal.Type
   proposal.TotalDeposit = initialDeposit
-  proposal.SubmitBlock = CurrentBlock
+  proposal.SubmitTime = <CurrentTime>
+  proposal.DepositEndTime = <CurrentTime>.Add(depositProcedure.MaxDepositPeriod)
   proposal.Deposits.append({initialDeposit, sender})
   proposal.Submitter = sender
   proposal.YesVotes = 0
   proposal.NoVotes = 0
   proposal.NoWithVetoVotes = 0
   proposal.AbstainVotes = 0
-  
-  depositProcedure = load(GlobalParams, 'DepositProcedure')
-  
-  if (initialDeposit < depositProcedure.MinDeposit)  
-    // MinDeposit is not reached
-    
-    proposal.CurrentStatus = ProposalStatusOpen
-  
-  else  
-    // MinDeposit is reached
-    
-    proposal.CurrentStatus = ProposalStatusActive
-    proposal.VotingStartBlock = CurrentBlock
-    ProposalProcessingQueue.push(proposalID)
+  proposal.CurrentStatus = ProposalStatusOpen
   
   store(Proposals, <proposalID|'proposal'>, proposal) // Store proposal in Proposals mapping
   return proposalID

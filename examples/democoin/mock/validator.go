@@ -82,8 +82,13 @@ func (vs *ValidatorSet) IterateValidators(ctx sdk.Context, fn func(index int64, 
 	}
 }
 
-// IterateValidatorsBonded implements sdk.ValidatorSet
-func (vs *ValidatorSet) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, Validator sdk.Validator) bool) {
+// IterateBondedValidatorsByPower implements sdk.ValidatorSet
+func (vs *ValidatorSet) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index int64, Validator sdk.Validator) bool) {
+	vs.IterateValidators(ctx, fn)
+}
+
+// IterateLastValidators implements sdk.ValidatorSet
+func (vs *ValidatorSet) IterateLastValidators(ctx sdk.Context, fn func(index int64, Validator sdk.Validator) bool) {
 	vs.IterateValidators(ctx, fn)
 }
 

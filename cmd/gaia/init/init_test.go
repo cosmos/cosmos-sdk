@@ -42,7 +42,6 @@ func setupClientHome(t *testing.T) func() {
 	clientDir, err := ioutil.TempDir("", "mock-sdk-cmd")
 	require.Nil(t, err)
 	viper.Set(flagClientHome, clientDir)
-	viper.Set(flagOverwriteKey, true)
 	return func() {
 		if err := os.RemoveAll(clientDir); err != nil {
 			// TODO: Handle with #870

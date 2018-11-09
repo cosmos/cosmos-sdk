@@ -5,9 +5,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/tendermint/go-amino"
 	"github.com/tendermint/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
@@ -210,44 +210,59 @@ func (st *iavlStore) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	res.Height = getHeight(tree, req)
 
 	switch req.Path {
-	case "/store", "/key": // Get by key
-		key := req.Data // Data holds the key bytes
+	case "/key": // get by key
+		key := req.Data // data holds the key bytes
+
 		res.Key = key
 		if !st.VersionExists(res.Height) {
 			res.Log = cmn.ErrorWrap(iavl.ErrVersionDoesNotExist, "").Error()
 			break
 		}
+
 		if req.Prove {
 			value, proof, err := tree.GetVersionedWithProof(key, res.Height)
 			if err != nil {
 				res.Log = err.Error()
 				break
 			}
-			res.Value = value
-			cdc := amino.NewCodec()
-			p, err := cdc.MarshalBinary(proof)
-			if err != nil {
-				res.Log = err.Error()
-				break
+			if proof == nil {
+				// Proof == nil implies that the store is empty.
+				if value != nil {
+					panic("unexpected value for an empty proof")
+				}
 			}
-			res.Proof = p
+			if value != nil {
+				// value was found
+				res.Value = value
+				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLValueOp(key, proof).ProofOp()}}
+			} else {
+				// value wasn't found
+				res.Value = nil
+				res.Proof = &merkle.Proof{Ops: []merkle.ProofOp{iavl.NewIAVLAbsenceOp(key, proof).ProofOp()}}
+			}
 		} else {
 			_, res.Value = tree.GetVersioned(key, res.Height)
 		}
+
 	case "/subspace":
+		var KVs []KVPair
+
 		subspace := req.Data
 		res.Key = subspace
-		var KVs []KVPair
+
 		iterator := sdk.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
 			KVs = append(KVs, KVPair{Key: iterator.Key(), Value: iterator.Value()})
 		}
+
 		iterator.Close()
-		res.Value = cdc.MustMarshalBinary(KVs)
+		res.Value = cdc.MustMarshalBinaryLengthPrefixed(KVs)
+
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
 		return sdk.ErrUnknownRequest(msg).QueryResult()
 	}
+
 	return
 }
 

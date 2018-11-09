@@ -34,7 +34,7 @@ func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			signingInfo := new(slashing.ValidatorSigningInfo)
-			cdc.MustUnmarshalBinary(res, signingInfo)
+			cdc.MustUnmarshalBinaryLengthPrefixed(res, signingInfo)
 
 			switch viper.Get(cli.OutputFlag) {
 

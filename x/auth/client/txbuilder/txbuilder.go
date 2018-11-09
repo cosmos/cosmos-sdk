@@ -125,7 +125,8 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 	if err != nil {
 		return nil, err
 	}
-	return bldr.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo))
+
+	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -166,7 +167,7 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 		PubKey:        info.GetPubKey(),
 	}}
 
-	return bldr.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If append

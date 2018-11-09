@@ -42,21 +42,22 @@ func (m List) Len() (res uint64) {
 	if bz == nil {
 		return 0
 	}
-	m.cdc.MustUnmarshalBinary(bz, &res)
+
+	m.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 	return
 }
 
 // Get() returns the element by its index
 func (m List) Get(index uint64, ptr interface{}) error {
 	bz := m.store.Get(ElemKey(index))
-	return m.cdc.UnmarshalBinary(bz, ptr)
+	return m.cdc.UnmarshalBinaryLengthPrefixed(bz, ptr)
 }
 
 // Set() stores the element to the given position
 // Setting element out of range will break length counting
 // Use Push() instead of Set() to append a new element
 func (m List) Set(index uint64, value interface{}) {
-	bz := m.cdc.MustMarshalBinary(value)
+	bz := m.cdc.MustMarshalBinaryLengthPrefixed(value)
 	m.store.Set(ElemKey(index), bz)
 }
 
@@ -72,7 +73,7 @@ func (m List) Delete(index uint64) {
 func (m List) Push(value interface{}) {
 	length := m.Len()
 	m.Set(length, value)
-	m.store.Set(LengthKey(), m.cdc.MustMarshalBinary(length+1))
+	m.store.Set(LengthKey(), m.cdc.MustMarshalBinaryLengthPrefixed(length+1))
 }
 
 // Iterate() is used to iterate over all existing elements in the list
@@ -85,13 +86,16 @@ func (m List) Iterate(ptr interface{}, fn func(uint64) bool) {
 	iter := sdk.KVStorePrefixIterator(m.store, []byte{0x01})
 	for ; iter.Valid(); iter.Next() {
 		v := iter.Value()
-		m.cdc.MustUnmarshalBinary(v, ptr)
+		m.cdc.MustUnmarshalBinaryLengthPrefixed(v, ptr)
+
 		k := iter.Key()
 		s := string(k[len(k)-20:])
+
 		index, err := strconv.ParseUint(s, 10, 64)
 		if err != nil {
 			panic(err)
 		}
+
 		if fn(index) {
 			break
 		}

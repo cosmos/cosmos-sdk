@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -38,11 +40,12 @@ func (k Keeper) onValidatorBonded(ctx sdk.Context, valAddr sdk.ValAddress) {
 	k.onValidatorModified(ctx, valAddr)
 }
 
-// XXX Consider removing this after debugging.
+// Sanity check, very useful!
 func (k Keeper) onValidatorPowerDidChange(ctx sdk.Context, valAddr sdk.ValAddress) {
 	vi := k.GetValidatorDistInfo(ctx, valAddr)
 	if vi.FeePoolWithdrawalHeight != ctx.BlockHeight() {
-		panic("expected validator dist info FeePoolWithdrawalHeight to be updated, but was not.")
+		panic(fmt.Sprintf("expected validator (%v) dist info FeePoolWithdrawalHeight to be updated to %v, but was %v.",
+			valAddr.String(), ctx.BlockHeight(), vi.FeePoolWithdrawalHeight))
 	}
 }
 
@@ -100,7 +103,7 @@ func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.k.onValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.k.onValidatorRemoved(ctx, valAddr)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {

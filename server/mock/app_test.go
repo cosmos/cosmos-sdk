@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"github.com/tendermint/tendermint/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,7 @@ func TestInitApp(t *testing.T) {
 	require.NoError(t, err)
 
 	// initialize it future-way
-	appState, err := AppGenState(nil, nil)
+	appState, err := AppGenState(nil, types.GenesisDoc{}, nil)
 	require.NoError(t, err)
 
 	//TODO test validators in the init chain?

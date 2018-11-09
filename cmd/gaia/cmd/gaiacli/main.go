@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -28,10 +29,11 @@ import (
 )
 
 const (
-	storeAcc      = "acc"
-	storeGov      = "gov"
-	storeSlashing = "slashing"
-	storeStake    = "stake"
+	storeAcc        = "acc"
+	storeGov        = "gov"
+	storeSlashing   = "slashing"
+	storeStake      = "stake"
+	queryRouteStake = "stake"
 )
 
 // rootCmd is the entry point for this binary
@@ -45,6 +47,12 @@ var (
 func main() {
 	cobra.EnableCommandSorting = false
 	cdc := app.MakeCodec()
+
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
+	config.Seal()
 
 	// TODO: setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
@@ -70,21 +78,23 @@ func main() {
 		authcmd.GetAccountCmd(storeAcc, cdc, authcmd.GetAccountDecoder(cdc)),
 		stakecmd.GetCmdQueryDelegation(storeStake, cdc),
 		stakecmd.GetCmdQueryDelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryUnbondingDelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryUnbondingDelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryRedelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryValidator(storeStake, cdc),
+		stakecmd.GetCmdQueryValidators(storeStake, cdc),
+		stakecmd.GetCmdQueryValidatorUnbondingDelegations(queryRouteStake, cdc),
+		stakecmd.GetCmdQueryValidatorRedelegations(queryRouteStake, cdc),
 		stakecmd.GetCmdQueryParams(storeStake, cdc),
 		stakecmd.GetCmdQueryPool(storeStake, cdc),
 		govcmd.GetCmdQueryProposal(storeGov, cdc),
 		govcmd.GetCmdQueryProposals(storeGov, cdc),
-		govcmd.GetCmdQueryDeposit(storeGov, cdc),
-		govcmd.GetCmdQueryDeposits(storeGov, cdc),
-		stakecmd.GetCmdQueryRedelegation(storeStake, cdc),
-		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
-		slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
-		stakecmd.GetCmdQueryUnbondingDelegation(storeStake, cdc),
-		stakecmd.GetCmdQueryUnbondingDelegations(storeStake, cdc),
-		stakecmd.GetCmdQueryValidator(storeStake, cdc),
-		stakecmd.GetCmdQueryValidators(storeStake, cdc),
 		govcmd.GetCmdQueryVote(storeGov, cdc),
 		govcmd.GetCmdQueryVotes(storeGov, cdc),
+		govcmd.GetCmdQueryDeposit(storeGov, cdc),
+		govcmd.GetCmdQueryDeposits(storeGov, cdc),
+		slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
 	)...)
 
 	//Add query commands

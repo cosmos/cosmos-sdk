@@ -36,7 +36,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 	keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposal6 := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
-	require.Equal(t, int64(6), proposal6.GetProposalID())
+	require.Equal(t, uint64(6), proposal6.GetProposalID())
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
@@ -47,12 +47,17 @@ func TestActivateVotingPeriod(t *testing.T) {
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 
 	require.True(t, proposal.GetVotingStartTime().Equal(time.Time{}))
-	require.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 
 	keeper.activateVotingPeriod(ctx, proposal)
 
 	require.True(t, proposal.GetVotingStartTime().Equal(ctx.BlockHeader().Time))
-	require.Equal(t, proposal.GetProposalID(), keeper.ActiveProposalQueuePeek(ctx).GetProposalID())
+
+	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.GetVotingEndTime())
+	require.True(t, activeIterator.Valid())
+	var proposalID uint64
+	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
+	require.Equal(t, proposalID, proposal.GetProposalID())
+	activeIterator.Close()
 }
 
 func TestDeposits(t *testing.T) {
@@ -79,7 +84,6 @@ func TestDeposits(t *testing.T) {
 	deposit, found := keeper.GetDeposit(ctx, proposalID, addrs[1])
 	require.False(t, found)
 	require.True(t, keeper.GetProposal(ctx, proposalID).GetVotingStartTime().Equal(time.Time{}))
-	require.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
 
 	// Check first deposit
 	err, votingStarted := keeper.AddDeposit(ctx, proposalID, addrs[0], fourSteak)
@@ -116,17 +120,15 @@ func TestDeposits(t *testing.T) {
 
 	// Check that proposal moved to voting period
 	require.True(t, keeper.GetProposal(ctx, proposalID).GetVotingStartTime().Equal(ctx.BlockHeader().Time))
-	require.NotNil(t, keeper.ActiveProposalQueuePeek(ctx))
-	require.Equal(t, proposalID, keeper.ActiveProposalQueuePeek(ctx).GetProposalID())
 
 	// Test deposit iterator
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
-	keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), &deposit)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 	require.Equal(t, addrs[0], deposit.Depositer)
 	require.Equal(t, fourSteak.Plus(fiveSteak), deposit.Amount)
 	depositsIterator.Next()
-	keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), &deposit)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 	require.Equal(t, addrs[1], deposit.Depositer)
 	require.Equal(t, fourSteak, deposit.Amount)
 	depositsIterator.Next()
@@ -184,14 +186,14 @@ func TestVotes(t *testing.T) {
 	// Test vote iterator
 	votesIterator := keeper.GetVotes(ctx, proposalID)
 	require.True(t, votesIterator.Valid())
-	keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), &vote)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
 	require.True(t, votesIterator.Valid())
 	require.Equal(t, addrs[0], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
 	require.Equal(t, OptionYes, vote.Option)
 	votesIterator.Next()
 	require.True(t, votesIterator.Valid())
-	keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), &vote)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
 	require.True(t, votesIterator.Valid())
 	require.Equal(t, addrs[1], vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalID)
@@ -207,44 +209,21 @@ func TestProposalQueues(t *testing.T) {
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	mapp.InitChainer(ctx, abci.RequestInitChain{})
 
-	require.Nil(t, keeper.InactiveProposalQueuePeek(ctx))
-	require.Nil(t, keeper.ActiveProposalQueuePeek(ctx))
-
 	// create test proposals
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
-	proposal2 := keeper.NewTextProposal(ctx, "Test2", "description", ProposalTypeText)
-	proposal3 := keeper.NewTextProposal(ctx, "Test3", "description", ProposalTypeText)
-	proposal4 := keeper.NewTextProposal(ctx, "Test4", "description", ProposalTypeText)
 
-	// test pushing to inactive proposal queue
-	keeper.InactiveProposalQueuePush(ctx, proposal)
-	keeper.InactiveProposalQueuePush(ctx, proposal2)
-	keeper.InactiveProposalQueuePush(ctx, proposal3)
-	keeper.InactiveProposalQueuePush(ctx, proposal4)
+	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, proposal.GetDepositEndTime())
+	require.True(t, inactiveIterator.Valid())
+	var proposalID uint64
+	keeper.cdc.UnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
+	require.Equal(t, proposalID, proposal.GetProposalID())
+	inactiveIterator.Close()
 
-	// test peeking and popping from inactive proposal queue
-	require.Equal(t, keeper.InactiveProposalQueuePeek(ctx).GetProposalID(), proposal.GetProposalID())
-	require.Equal(t, keeper.InactiveProposalQueuePop(ctx).GetProposalID(), proposal.GetProposalID())
-	require.Equal(t, keeper.InactiveProposalQueuePeek(ctx).GetProposalID(), proposal2.GetProposalID())
-	require.Equal(t, keeper.InactiveProposalQueuePop(ctx).GetProposalID(), proposal2.GetProposalID())
-	require.Equal(t, keeper.InactiveProposalQueuePeek(ctx).GetProposalID(), proposal3.GetProposalID())
-	require.Equal(t, keeper.InactiveProposalQueuePop(ctx).GetProposalID(), proposal3.GetProposalID())
-	require.Equal(t, keeper.InactiveProposalQueuePeek(ctx).GetProposalID(), proposal4.GetProposalID())
-	require.Equal(t, keeper.InactiveProposalQueuePop(ctx).GetProposalID(), proposal4.GetProposalID())
+	keeper.activateVotingPeriod(ctx, proposal)
 
-	// test pushing to active proposal queue
-	keeper.ActiveProposalQueuePush(ctx, proposal)
-	keeper.ActiveProposalQueuePush(ctx, proposal2)
-	keeper.ActiveProposalQueuePush(ctx, proposal3)
-	keeper.ActiveProposalQueuePush(ctx, proposal4)
-
-	// test peeking and popping from active proposal queue
-	require.Equal(t, keeper.ActiveProposalQueuePeek(ctx).GetProposalID(), proposal.GetProposalID())
-	require.Equal(t, keeper.ActiveProposalQueuePop(ctx).GetProposalID(), proposal.GetProposalID())
-	require.Equal(t, keeper.ActiveProposalQueuePeek(ctx).GetProposalID(), proposal2.GetProposalID())
-	require.Equal(t, keeper.ActiveProposalQueuePop(ctx).GetProposalID(), proposal2.GetProposalID())
-	require.Equal(t, keeper.ActiveProposalQueuePeek(ctx).GetProposalID(), proposal3.GetProposalID())
-	require.Equal(t, keeper.ActiveProposalQueuePop(ctx).GetProposalID(), proposal3.GetProposalID())
-	require.Equal(t, keeper.ActiveProposalQueuePeek(ctx).GetProposalID(), proposal4.GetProposalID())
-	require.Equal(t, keeper.ActiveProposalQueuePop(ctx).GetProposalID(), proposal4.GetProposalID())
+	activeIterator := keeper.ActiveProposalQueueIterator(ctx, proposal.GetVotingEndTime())
+	require.True(t, activeIterator.Valid())
+	keeper.cdc.UnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
+	require.Equal(t, proposalID, proposal.GetProposalID())
+	activeIterator.Close()
 }

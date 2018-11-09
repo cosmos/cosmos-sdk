@@ -231,7 +231,7 @@ func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 
 // Implements MultiStore.
 func (rs *rootMultiStore) GetStore(key StoreKey) Store {
-	return rs.stores[key]
+	return rs.getStoreByName(key.Name())
 }
 
 // GetKVStore implements the MultiStore interface. If tracing is enabled on the
@@ -474,29 +474,58 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 
 // Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
-	storeInfos := make([]storeInfo, 0, len(storeMap))
-
+	storemap := make(map[string]CommitStore)
 	for key, store := range storeMap {
-		// Commit
-		commitID := store.Commit()
-
-		if store.GetStoreType() == sdk.StoreTypeTransient {
-			continue
+		storemap[key.Name()] = store
+	}
+	upgrade := storemap["upgrade"]
+	if upgrade != nil {
+		upgradeStore := upgrade.(KVStore)
+		bz := upgradeStore.Get([]byte("k/")) //CurrentStoreKey
+		storekeys := string(bz)              //splitby":"
+		storekeyslist := strings.Split(storekeys, ":")
+		storeInfos := make([]storeInfo, 0, len(storekeyslist))
+		for _, key := range storekeyslist {
+			if store, ok := storemap[key]; ok {
+				// Commit
+				commitID := store.Commit()
+				if store.GetStoreType() == sdk.StoreTypeTransient {
+					continue
+				}
+				// Record CommitID
+				si := storeInfo{}
+				si.Name = key
+				si.Core.CommitID = commitID
+				// si.Core.StoreType = store.GetStoreType()
+				storeInfos = append(storeInfos, si)
+			}
 		}
-
-		// Record CommitID
-		si := storeInfo{}
-		si.Name = key.Name()
-		si.Core.CommitID = commitID
-		// si.Core.StoreType = store.GetStoreType()
-		storeInfos = append(storeInfos, si)
+		ci := commitInfo{
+			Version:    version,
+			StoreInfos: storeInfos,
+		}
+		return ci
+	} else {
+		storeInfos := make([]storeInfo, 0, len(storeMap))
+		for key, store := range storeMap {
+			// Commit
+			commitID := store.Commit()
+			if store.GetStoreType() == sdk.StoreTypeTransient {
+				continue
+			}
+			// Record CommitID
+			si := storeInfo{}
+			si.Name = key.Name()
+			si.Core.CommitID = commitID
+			// si.Core.StoreType = store.GetStoreType()
+			storeInfos = append(storeInfos, si)
+		}
+		ci := commitInfo{
+			Version:    version,
+			StoreInfos: storeInfos,
+		}
+		return ci
 	}
-
-	ci := commitInfo{
-		Version:    version,
-		StoreInfos: storeInfos,
-	}
-	return ci
 }
 
 // Gets commitInfo from disk.

@@ -310,7 +310,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Power:  v.BondedTokens().RoundInt64(),
+		Power:  v.GetPower().RoundInt64(),
 	}
 }
 
@@ -444,7 +444,14 @@ func (v Validator) GetStatus() sdk.BondStatus    { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress  { return v.OperatorAddr }
 func (v Validator) GetConsPubKey() crypto.PubKey { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress { return sdk.ConsAddress(v.ConsPubKey.Address()) }
-func (v Validator) GetPower() sdk.Dec            { return v.BondedTokens() }
+func (v Validator) GetPower() sdk.Dec           {
+	tokenPrecision := sdk.NewIntWithDecimal(1, 18)
+	return v.BondedTokens().QuoInt(tokenPrecision)
+}
+func (v Validator) GetPotentialPower() sdk.Dec           {
+	tokenPrecision := sdk.NewIntWithDecimal(1, 18)
+	return v.Tokens.QuoInt(tokenPrecision)
+}
 func (v Validator) GetTokens() sdk.Dec           { return v.Tokens }
 func (v Validator) GetCommission() sdk.Dec       { return v.Commission.Rate }
 func (v Validator) GetDelegatorShares() sdk.Dec  { return v.DelegatorShares }

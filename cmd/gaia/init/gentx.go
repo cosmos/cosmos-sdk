@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	defaultAmount                  = "100steak"
+	defaultAmount                  = "100stake"
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"

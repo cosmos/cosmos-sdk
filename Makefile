@@ -8,6 +8,7 @@ GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
 	github.com/alecthomas/gometalinter \
 	github.com/rakyll/statik
+GOBIN ?= $(GOPATH)/bin
 all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
 
 ########################################
@@ -76,11 +77,11 @@ else
 	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
 endif
 
-install: check-ledger update_gaia_lite_docs
+install: build check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
-install_examples:
+install_examples: build_examples
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
 	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
 	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
@@ -117,22 +118,22 @@ get_tools:
 	@echo "--> Installing tools"
 	$(MAKE) -C scripts get_tools
 
-get_dev_tools:
+get_dev_tools: get_tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get github.com/tendermint/lint/golint
 
-get_vendor_deps:
+get_vendor_deps: get_tools
 	@echo "--> Generating vendor directory via dep ensure"
 	@rm -rf .vendor-new
 	@dep ensure -v -vendor-only
 
-update_vendor_deps:
+update_vendor_deps: get_tools
 	@echo "--> Running dep ensure"
 	@rm -rf .vendor-new
 	@dep ensure -v
 
-draw_deps:
+draw_deps: get_tools
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
@@ -203,7 +204,7 @@ test_sim_gaia_profile:
 test_cover:
 	@export VERSION=$(VERSION); bash tests/test_cover.sh
 
-test_lint:
+test_lint: get_dev_tools
 	gometalinter --config=tools/gometalinter.json ./...
 	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s

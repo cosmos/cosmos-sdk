@@ -31,6 +31,7 @@ IMPROVEMENTS
 * Gaia REST API (`gaiacli advanced rest-server`)
 
 * Gaia CLI  (`gaiacli`)
+  * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet
 
 * Gaia
 

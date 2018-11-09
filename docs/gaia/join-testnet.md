@@ -98,7 +98,7 @@ Note we use the `latest` directory in the [testnets repo](https://github.com/cos
 which contains details for the latest testnet. If you are connecting to a different testnet, ensure you
 get the right files.
 
-You need to generate a `genesis tx` to generate a self-delegation:
+You now need to generate a `genesis tx` to generate a self-delegation:
 
 ```bash
 gaiad gentx \
@@ -107,7 +107,7 @@ gaiad gentx \
     --commission-max-rate <commission_max_rate> \
     --commission-max-change-rate <commission_max_change_rate> \
     --pubkey <consensus_pubkey> \
-    --name <key_nam>
+    --name <key_name>
 ```
 
 If unspecified, `consensus_pubkey` will default to the output of `gaiad tendermint show-validator`.
@@ -115,7 +115,7 @@ If unspecified, `consensus_pubkey` will default to the output of `gaiad tendermi
 
 Consult `gaiad gentx --help` for more information on the flags defaults.
 
-Once you've collected all genesis transactions `~/.gaiad/config/gentx`, you can run:
+Once you've collected all genesis transactions in `~/.gaiad/config/gentx`, you can run:
 
 ```bash
 gaiad collect-gentxs

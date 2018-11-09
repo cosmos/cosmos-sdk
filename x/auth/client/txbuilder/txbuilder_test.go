@@ -46,7 +46,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				SimulateGas:   false,
 				ChainID:       "test-chain",
 				Memo:          "hello",
-				Fee:           "1steak",
+				Fee:           "1stake",
 			},
 			defaultMsg,
 			StdSignMsg{

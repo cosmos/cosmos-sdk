@@ -48,5 +48,7 @@ BUG FIXES
 * Gaia
 
 * SDK
+  
+  - \#2733 [x/gov, x/mock/simulation] Fix governance simulation, update x/gov import/export
 
 * Tendermint

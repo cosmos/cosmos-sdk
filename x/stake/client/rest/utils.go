@@ -57,6 +57,10 @@ func queryRedelegations(cliCtx context.CLIContext, cdc *codec.Codec, endpoint st
 		bech32dstValidator := vars["dstValidatorAddr"]
 
 		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		srcValidatorAddr, err := sdk.ValAddressFromBech32(bech32srcValidator)
 		dstValidatorAddr, err := sdk.ValAddressFromBech32(bech32dstValidator)
 		if err != nil {

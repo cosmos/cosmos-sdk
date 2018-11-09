@@ -49,8 +49,8 @@ func InitGenesis(ctx sdk.Context, k Keeper, data Genesis) error {
 	return nil
 }
 
-// WriteGenesis - output the genesis trend
-func WriteGenesis(ctx sdk.Context, k Keeper) Genesis {
+// ExportGenesis - output the genesis trend
+func ExportGenesis(ctx sdk.Context, k Keeper) Genesis {
 	trend := k.GetTrend(ctx)
 	return Genesis{trend}
 }

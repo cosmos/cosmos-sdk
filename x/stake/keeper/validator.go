@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"container/list"
 	"fmt"
 	"time"
@@ -201,6 +202,11 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
 	store.Delete(GetValidatorsByPowerIndexKey(validator, pool))
 
+	// call hook if present
+	if k.hooks != nil {
+		k.hooks.OnValidatorRemoved(ctx, validator.ConsAddress(), validator.OperatorAddr)
+	}
+
 }
 
 //___________________________________________________________________________
@@ -320,6 +326,12 @@ func (k Keeper) SetValidatorQueueTimeSlice(ctx sdk.Context, timestamp time.Time,
 	store.Set(GetValidatorQueueTimeKey(timestamp), bz)
 }
 
+// Deletes a specific validator queue timeslice.
+func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, timestamp time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetValidatorQueueTimeKey(timestamp))
+}
+
 // Insert an validator address to the appropriate timeslice in the validator queue
 func (k Keeper) InsertValidatorQueue(ctx sdk.Context, val types.Validator) {
 	timeSlice := k.GetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime)
@@ -328,6 +340,22 @@ func (k Keeper) InsertValidatorQueue(ctx sdk.Context, val types.Validator) {
 	} else {
 		timeSlice = append(timeSlice, val.OperatorAddr)
 		k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, timeSlice)
+	}
+}
+
+// Delete a validator address from the validator queue
+func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
+	timeSlice := k.GetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime)
+	newTimeSlice := []sdk.ValAddress{}
+	for _, addr := range timeSlice {
+		if !bytes.Equal(addr, val.OperatorAddr) {
+			newTimeSlice = append(newTimeSlice, addr)
+		}
+	}
+	if len(newTimeSlice) == 0 {
+		k.DeleteValidatorQueueTimeSlice(ctx, val.UnbondingMinTime)
+	} else {
+		k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, newTimeSlice)
 	}
 }
 
@@ -358,8 +386,11 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(validatorTimesliceIterator.Value(), &timeslice)
 		for _, valAddr := range timeslice {
 			val, found := k.GetValidator(ctx, valAddr)
-			if !found || val.GetStatus() != sdk.Unbonding {
+			if !found {
 				continue
+			}
+			if val.GetStatus() != sdk.Unbonding {
+				panic("unexpected validator in unbonding queue, status was not unbonding")
 			}
 			k.unbondingToUnbonded(ctx, val)
 			if val.GetDelegatorShares().IsZero() {

@@ -44,3 +44,12 @@ func GetDelegationDistInfosKey(delAddr sdk.AccAddress) []byte {
 func GetDelegatorWithdrawAddrKey(delAddr sdk.AccAddress) []byte {
 	return append(DelegatorWithdrawInfoKey, delAddr.Bytes()...)
 }
+
+// gets an address from a delegator's withdraw info key
+func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	return sdk.AccAddress(addr)
+}

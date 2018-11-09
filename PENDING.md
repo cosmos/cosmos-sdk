@@ -36,6 +36,7 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
+ - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
 
 * Tendermint
 

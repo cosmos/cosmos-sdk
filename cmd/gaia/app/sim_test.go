@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -264,6 +265,103 @@ func TestFullGaiaSimulation(t *testing.T) {
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 	require.Nil(t, err)
+}
+
+func TestGaiaImportExport(t *testing.T) {
+	if !enabled {
+		t.Skip("Skipping Gaia import/export simulation")
+	}
+
+	// Setup Gaia application
+	var logger log.Logger
+	if verbose {
+		logger = log.TestingLogger()
+	} else {
+		logger = log.NewNopLogger()
+	}
+	var db dbm.DB
+	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
+	db, _ = dbm.NewGoLevelDB("Simulation", dir)
+	defer func() {
+		db.Close()
+		os.RemoveAll(dir)
+	}()
+	app := NewGaiaApp(logger, db, nil)
+	require.Equal(t, "GaiaApp", app.Name())
+
+	// Run randomized simulation
+	err := simulation.SimulateFromSeed(
+		t, app.BaseApp, appStateFn, seed,
+		testAndRunTxs(app),
+		[]simulation.RandSetup{},
+		invariants(app),
+		numBlocks,
+		blockSize,
+		commit,
+	)
+	if commit {
+		// for memdb:
+		// fmt.Println("Database Size", db.Stats()["database.size"])
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	}
+	require.Nil(t, err)
+
+	fmt.Printf("Exporting genesis...\n")
+
+	appState, _, err := app.ExportAppStateAndValidators()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Importing genesis...\n")
+
+	newDir, _ := ioutil.TempDir("", "goleveldb-gaia-sim-2")
+	newDB, _ := dbm.NewGoLevelDB("Simulation-2", dir)
+	defer func() {
+		newDB.Close()
+		os.RemoveAll(newDir)
+	}()
+	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil)
+	require.Equal(t, "GaiaApp", newApp.Name())
+	request := abci.RequestInitChain{
+		AppStateBytes: appState,
+	}
+	newApp.InitChain(request)
+	newApp.Commit()
+
+	fmt.Printf("Comparing stores...\n")
+	ctxA := app.NewContext(true, abci.Header{})
+	ctxB := newApp.NewContext(true, abci.Header{})
+	type StoreKeysPrefixes struct {
+		A        sdk.StoreKey
+		B        sdk.StoreKey
+		Prefixes [][]byte
+	}
+	storeKeysPrefixes := []StoreKeysPrefixes{
+		{app.keyMain, newApp.keyMain, [][]byte{}},
+		{app.keyAccount, newApp.keyAccount, [][]byte{}},
+		{app.keyStake, newApp.keyStake, [][]byte{stake.UnbondingQueueKey, stake.RedelegationQueueKey, stake.ValidatorQueueKey}}, // ordering may change but it doesn't matter
+		{app.keySlashing, newApp.keySlashing, [][]byte{}},
+		{app.keyMint, newApp.keyMint, [][]byte{}},
+		{app.keyDistr, newApp.keyDistr, [][]byte{}},
+		{app.keyFeeCollection, newApp.keyFeeCollection, [][]byte{}},
+		{app.keyParams, newApp.keyParams, [][]byte{}},
+		{app.keyGov, newApp.keyGov, [][]byte{}},
+	}
+	for _, storeKeysPrefix := range storeKeysPrefixes {
+		storeKeyA := storeKeysPrefix.A
+		storeKeyB := storeKeysPrefix.B
+		prefixes := storeKeysPrefix.Prefixes
+		storeA := ctxA.KVStore(storeKeyA)
+		storeB := ctxB.KVStore(storeKeyB)
+		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
+		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
+		require.True(t, equal, "unequal stores: %s / %s:\nstore A %s (%X) => %s (%X)\nstore B %s (%X) => %s (%X)",
+			storeKeyA, storeKeyB, kvA.Key, kvA.Key, kvA.Value, kvA.Value, kvB.Key, kvB.Key, kvB.Value, kvB.Value)
+	}
+
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs

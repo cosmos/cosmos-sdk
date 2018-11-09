@@ -106,7 +106,7 @@ gaiad gentx \
     --commission-rate <commission_rate> \
     --commission-max-rate <commission_max_rate> \
     --commission-max-change-rate <commission_max_change_rate> \
-    --pubkey <consensus_pubkey>
+    --pubkey <consensus_pubkey> \
     --name <key_nam>
 ```
 

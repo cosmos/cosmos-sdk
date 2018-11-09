@@ -47,13 +47,14 @@ BUG FIXES
 * Gaia
  * [\#2670](https://github.com/cosmos/cosmos-sdk/issues/2670) [x/stake] fixed incorrect `IterateBondedValidators` and split into two functions: `IterateBondedValidators` and `IterateLastBlockConsValidators`
  * [\#2691](https://github.com/cosmos/cosmos-sdk/issues/2691) Fix local testnet creation by using a single canonical genesis time
+ * [\#2648](https://github.com/cosmos/cosmos-sdk/issues/2648) [gaiad] Fix `gaiad export` / `gaiad import` consistency, test in CI
 
 * SDK
  * [\#2625](https://github.com/cosmos/cosmos-sdk/issues/2625) [x/gov] fix AppendTag function usage error
  * [\#2677](https://github.com/cosmos/cosmos-sdk/issues/2677) [x/stake, x/distribution] various staking/distribution fixes as found by the simulator
  * [\#2674](https://github.com/cosmos/cosmos-sdk/issues/2674) [types] Fix coin.IsLT() impl, coins.IsLT() impl, and renamed coins.Is\* to coins.IsAll\* (see [\#2686](https://github.com/cosmos/cosmos-sdk/issues/2686))
  * [\#2711](https://github.com/cosmos/cosmos-sdk/issues/2711) [x/stake] Add commission data to `MsgCreateValidator` signature bytes.
-
+ * Temporarily disable insecure mode for Gaia Lite
 
 ## 0.25.0
 

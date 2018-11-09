@@ -1,4 +1,4 @@
-# Clients
+# Gaia client
 
 ## Gaia CLI
 

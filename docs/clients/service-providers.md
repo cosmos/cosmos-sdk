@@ -83,7 +83,7 @@ It will display all the available commands. For each command, you can use the `-
 
 ## Setting up the Rest Server
 
-The Rest Server acts as an intermediary between the front-end and the full-node. You don't need to run the Rest Server on the same machine as the full-node. If you intend to run the Rest Server on another machine, you need to go through the [Installation and configuration](#installation-and-configuration) again on this machine.
+The Rest Server acts as an intermediary between the front-end and the full-node. You don't need to run the Rest Server on the same machine as the full-node. 
 
 To start the Rest server: 
 
@@ -109,4 +109,6 @@ The Rest API documents all the available endpoints that you can use to interract
 
 The API is divided into ICS standards for each category of endpoints. For example, the [ICS20](https://cosmos.network/rpc/#/ICS20/) describes the API to interact with tokens. 
 
-To give more flexibility to implementers, we have separated the different steps that are involved in the process of sending transactions. You will be able to generate unsigned transactions (example with [coin transfer](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)), [sign](https://cosmos.network/rpc/#/ICS20/post_tx_sign) and [broadcast](https://cosmos.network/rpc/#/ICS20/post_tx_broadcast) them with different API endpoints. This allows service providers to use their own signing mechanism for instance. 
+To give more flexibility to implementers, we have included the ability to generate unsigned transactions, [sign](https://cosmos.network/rpc/#/ICS20/post_tx_sign) and [broadcast](https://cosmos.network/rpc/#/ICS20/post_tx_broadcast) them with different API endpoints. This allows service providers to use their own signing mechanism for instance. 
+
+In order to generate an unsigned transaction (example with [coin transfer](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)), you need to use the flag `?generate_only`.

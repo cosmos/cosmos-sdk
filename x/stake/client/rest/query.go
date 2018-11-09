@@ -31,12 +31,6 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Co
 		delegatorUnbondingDelegationsHandlerFn(cliCtx, cdc),
 	).Methods("GET")
 
-	// Get all redelegations from a delegator
-	r.HandleFunc(
-		"/stake/redelegations",
-		redelegationsHandlerFn(cliCtx, cdc),
-	).Methods("GET")
-
 	// Get all staking txs (i.e msgs) from a delegator
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/txs",

@@ -98,7 +98,7 @@ Note we use the `latest` directory in the [testnets repo](https://github.com/cos
 which contains details for the latest testnet. If you are connecting to a different testnet, ensure you
 get the right files.
 
-You now need to generate a `genesis tx` to generate a self-delegation:
+You now need to generate a `genesis tx` to generate a signed self-delegation:
 
 ```bash
 gaiad gentx \

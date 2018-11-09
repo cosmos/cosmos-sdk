@@ -55,7 +55,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello",
 				Msgs:          defaultMsg,
-				Fee:           auth.NewStdFee(100, sdk.NewCoin("steak", sdk.NewInt(1))),
+				Fee:           auth.NewStdFee(100, sdk.NewCoin("stake", sdk.NewInt(1))),
 			},
 			false,
 		},

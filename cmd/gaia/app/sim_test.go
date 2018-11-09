@@ -62,7 +62,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
-		coins := sdk.Coins{sdk.Coin{"steak", sdk.NewInt(amount)}}
+		coins := sdk.Coins{sdk.Coin{"stake", sdk.NewInt(amount)}}
 		genesisAccounts = append(genesisAccounts, GenesisAccount{
 			Address: acc.Address,
 			Coins:   coins,
@@ -73,7 +73,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	govGenesis := gov.GenesisState{
 		StartingProposalID: uint64(r.Intn(100)),
 		DepositParams: gov.DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin("steak", int64(r.Intn(1e3)))},
+			MinDeposit:       sdk.Coins{sdk.NewInt64Coin("stake", int64(r.Intn(1e3)))},
 			MaxDepositPeriod: time.Duration(r.Intn(2*172800)) * time.Second,
 		},
 		VotingParams: gov.VotingParams{
@@ -91,7 +91,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		Params: stake.Params{
 			UnbondingTime: time.Duration(r.Intn(60*60*24*3*2)) * time.Second,
 			MaxValidators: uint16(r.Intn(250)),
-			BondDenom:     "steak",
+			BondDenom:     "stake",
 		},
 	}
 	fmt.Printf("Selected randomly generated staking parameters: %+v\n", stakeGenesis)
@@ -113,7 +113,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			Inflation:         sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
 		},
 		Params: mint.Params{
-			MintDenom:           "steak",
+			MintDenom:           "stake",
 			InflationRateChange: sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
 			InflationMax:        sdk.NewDecWithPrec(20, 2),
 			InflationMin:        sdk.NewDecWithPrec(7, 2),

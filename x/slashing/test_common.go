@@ -120,7 +120,7 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 		DelegatorAddr: sdk.AccAddress(address),
 		ValidatorAddr: address,
 		PubKey:        pubKey,
-		Delegation:    sdk.NewCoin("steak", amt),
+		Delegation:    sdk.NewCoin("stake", amt),
 	}
 }
 
@@ -128,6 +128,6 @@ func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmoun
 	return stake.MsgDelegate{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewCoin("steak", delAmount),
+		Delegation:    sdk.NewCoin("stake", delAmount),
 	}
 }

@@ -75,14 +75,20 @@ Example:
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1",
 		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 
+	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+
 	return cmd
 }
 
 func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
+	var chainID string
 	outDir := viper.GetString(flagOutputDir)
 	numValidators := viper.GetInt(flagNumValidators)
 
-	chainID := "chain-" + cmn.RandStr(6)
+	chainID = viper.GetString(client.FlagChainID)
+	if chainID == "" {
+		chainID = "chain-" + cmn.RandStr(6)
+	}
 
 	monikers := make([]string, numValidators)
 	nodeIDs := make([]string, numValidators)

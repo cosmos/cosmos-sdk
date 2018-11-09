@@ -31,10 +31,12 @@ IMPROVEMENTS
 * Gaia REST API (`gaiacli advanced rest-server`)
 
 * Gaia CLI  (`gaiacli`)
+  * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet
 
 * Gaia
 
 * SDK
+ - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
 
 * Tendermint
 

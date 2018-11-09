@@ -13,7 +13,7 @@ To start a REST server, we need to specify the following parameters:
 For example::
 
 ```bash
-gaiacli rest-server --chain-id=test \
+gaiacli advanced rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
     --node tcp://localhost:26657 \
     --trust-node=false
@@ -22,7 +22,7 @@ gaiacli rest-server --chain-id=test \
 The server listens on HTTPS by default. You can set the SSL certificate to be used by the server with these additional flags:
 
 ```bash
-gaiacli rest-server --chain-id=test \
+gaiacli advanced rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
     --node tcp://localhost:26657 \
     --trust-node=false \

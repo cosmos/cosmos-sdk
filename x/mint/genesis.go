@@ -31,9 +31,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState) {
 	keeper.SetParams(ctx, data.Params)
 }
 
-// WriteGenesis returns a GenesisState for a given context and keeper. The
+// ExportGenesis returns a GenesisState for a given context and keeper. The
 // GenesisState will contain the pool, and validator/delegator distribution info's
-func WriteGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
+func ExportGenesis(ctx sdk.Context, keeper Keeper) GenesisState {
 
 	minter := keeper.GetMinter(ctx)
 	params := keeper.GetParams(ctx)

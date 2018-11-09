@@ -86,7 +86,10 @@ func TestIsLTCoin(t *testing.T) {
 		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), false},
 		{NewInt64Coin("A", 2), NewInt64Coin("A", 1), false},
 		{NewInt64Coin("A", -1), NewInt64Coin("A", 5), true},
-		{NewInt64Coin("a", 0), NewInt64Coin("b", 1), true},
+		{NewInt64Coin("a", 0), NewInt64Coin("b", 1), false},
+		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
+		{NewInt64Coin("a", 1), NewInt64Coin("a", 1), false},
+		{NewInt64Coin("a", 1), NewInt64Coin("a", 2), true},
 	}
 
 	for tcIndex, tc := range cases {
@@ -245,9 +248,9 @@ func TestCoins(t *testing.T) {
 	assert.True(t, good.IsValid(), "Coins are valid")
 	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
 	assert.False(t, null.IsPositive(), "Expected coins to not be positive: %v", null)
-	assert.True(t, good.IsGTE(empty), "Expected %v to be >= %v", good, empty)
-	assert.False(t, good.IsLT(empty), "Expected %v to be < %v", good, empty)
-	assert.True(t, empty.IsLT(good), "Expected %v to be < %v", empty, good)
+	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
+	assert.False(t, good.IsAllLT(empty), "Expected %v to be < %v", good, empty)
+	assert.True(t, empty.IsAllLT(good), "Expected %v to be < %v", empty, good)
 	assert.False(t, neg.IsPositive(), "Expected neg coins to not be positive: %v", neg)
 	assert.Zero(t, len(sum), "Expected 0 coins")
 	assert.False(t, badSort1.IsValid(), "Coins are not sorted")
@@ -255,6 +258,60 @@ func TestCoins(t *testing.T) {
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
 	assert.False(t, dup.IsValid(), "Duplicate coin")
 
+}
+
+func TestCoinsGT(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.False(t, Coins{}.IsAllGT(Coins{}))
+	assert.True(t, Coins{{"A", one}}.IsAllGT(Coins{}))
+	assert.False(t, Coins{{"A", one}}.IsAllGT(Coins{{"A", one}}))
+	assert.False(t, Coins{{"A", one}}.IsAllGT(Coins{{"B", one}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsAllGT(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsAllGT(Coins{{"B", two}}))
+}
+
+func TestCoinsGTE(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.True(t, Coins{}.IsAllGTE(Coins{}))
+	assert.True(t, Coins{{"A", one}}.IsAllGTE(Coins{}))
+	assert.True(t, Coins{{"A", one}}.IsAllGTE(Coins{{"A", one}}))
+	assert.False(t, Coins{{"A", one}}.IsAllGTE(Coins{{"B", one}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsAllGTE(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsAllGTE(Coins{{"B", two}}))
+}
+
+func TestCoinsLT(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.False(t, Coins{}.IsAllLT(Coins{}))
+	assert.False(t, Coins{{"A", one}}.IsAllLT(Coins{}))
+	assert.False(t, Coins{{"A", one}}.IsAllLT(Coins{{"A", one}}))
+	assert.False(t, Coins{{"A", one}}.IsAllLT(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsAllLT(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsAllLT(Coins{{"B", two}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsAllLT(Coins{{"A", one}, {"B", one}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsAllLT(Coins{{"A", one}, {"B", two}}))
+	assert.True(t, Coins{}.IsAllLT(Coins{{"A", one}}))
+}
+
+func TestCoinsLTE(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+
+	assert.True(t, Coins{}.IsAllLTE(Coins{}))
+	assert.False(t, Coins{{"A", one}}.IsAllLTE(Coins{}))
+	assert.True(t, Coins{{"A", one}}.IsAllLTE(Coins{{"A", one}}))
+	assert.False(t, Coins{{"A", one}}.IsAllLTE(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsAllLTE(Coins{{"B", one}}))
+	assert.False(t, Coins{{"A", one}, {"B", one}}.IsAllLTE(Coins{{"B", two}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsAllLTE(Coins{{"A", one}, {"B", one}}))
+	assert.True(t, Coins{{"A", one}, {"B", one}}.IsAllLTE(Coins{{"A", one}, {"B", two}}))
+	assert.True(t, Coins{}.IsAllLTE(Coins{{"A", one}}))
 }
 
 func TestPlusCoins(t *testing.T) {

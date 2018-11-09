@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"time"
 
@@ -34,6 +35,13 @@ func MustSortJSON(toSortJSON []byte) []byte {
 		panic(err)
 	}
 	return js
+}
+
+// Uint64ToBigEndian - marshals uint64 to a bigendian byte slice so it can be sorted
+func Uint64ToBigEndian(i uint64) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, i)
+	return b
 }
 
 // Slight modification of the RFC3339Nano but it right pads all zeros and drops the time zone info

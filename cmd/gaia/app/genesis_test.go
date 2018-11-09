@@ -2,9 +2,10 @@ package app
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -91,8 +92,10 @@ func TestGaiaAppGenState(t *testing.T) {
 func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
 	desc := stake.NewDescription(name, "", "", "")
 	comm := stakeTypes.CommissionMsg{}
-	msg := stake.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin(bondDenom,
-		50),	desc, comm)
+	msg := stake.NewMsgCreateValidator(
+		sdk.ValAddress(pk.Address()), pk,
+		sdk.NewInt64Coin(bondDenom, 50), desc, comm,
+	)
 	return auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
 }
 

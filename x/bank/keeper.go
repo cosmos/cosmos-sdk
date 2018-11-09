@@ -190,7 +190,7 @@ func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 // HasCoins returns whether or not an account has at least amt coins.
 func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
 	ctx.GasMeter().ConsumeGas(costHasCoins, "hasCoins")
-	return getCoins(ctx, am, addr).IsGTE(amt)
+	return getCoins(ctx, am, addr).IsAllGTE(amt)
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.

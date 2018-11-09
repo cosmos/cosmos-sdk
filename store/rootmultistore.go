@@ -295,6 +295,10 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 		return res
 	}
 
+	if res.Proof == nil || len(res.Proof.Ops) == 0 {
+		return sdk.ErrInternal("substore proof was nil/empty when it should never be").QueryResult()
+	}
+
 	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
 	if errMsg != nil {
 		return sdk.ErrInternal(errMsg.Error()).QueryResult()

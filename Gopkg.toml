@@ -36,7 +36,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  revision = "ebee4377b15f2958b08994485375dd2ee8a649ac" # TODO replace w/ 0.26.1
+  version = "v0.26.1-rc0" # TODO replace w/ 0.26.1
 
 ## deps without releases:
 
@@ -84,4 +84,3 @@
 [prune]
   go-tests = true
   unused-packages = true
-

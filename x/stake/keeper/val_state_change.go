@@ -191,10 +191,12 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	k.SetPool(ctx, pool)
 
-	// save the now bonded validator record to the three referenced stores
+	// save the now bonded validator record to the two referenced stores
 	k.SetValidator(ctx, validator)
-
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
+
+	// delete from queue if present
+	k.DeleteValidatorQueue(ctx, validator)
 
 	// call the bond hook if present
 	if k.hooks != nil {
@@ -224,9 +226,8 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	validator.UnbondingMinTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
 	validator.UnbondingHeight = ctx.BlockHeader().Height
 
-	// save the now unbonded validator record
+	// save the now unbonded validator record and power index
 	k.SetValidator(ctx, validator)
-
 	k.SetValidatorByPowerIndex(ctx, validator, pool)
 
 	// Adds to unbonding validator queue

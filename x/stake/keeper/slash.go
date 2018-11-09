@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // Slash a validator for an infraction committed at a known height
@@ -32,6 +32,9 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	slashAmount := sdk.NewDec(power).Mul(slashFactor)
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1471
+	//Multiply 1*10^18 to calculate equivalent iris-atto amount
+	tokenPrecision := sdk.NewIntWithDecimal(1, 18)
+	slashAmount = slashAmount.MulInt(tokenPrecision)
 
 	validator, found := k.GetValidatorByConsAddr(ctx, consAddr)
 	if !found {

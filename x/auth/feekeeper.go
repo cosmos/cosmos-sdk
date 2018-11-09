@@ -54,6 +54,18 @@ func (fck FeeCollectionKeeper) AddCollectedFees(ctx sdk.Context, coins sdk.Coins
 	return newCoins
 }
 
+////////////////////  iris/cosmos-sdk begin///////////////////////////
+// RefundCollectedFees deducts fees from fee collector
+func (fck FeeCollectionKeeper) RefundCollectedFees(ctx sdk.Context, coins sdk.Coins) sdk.Coins {
+	newCoins := fck.GetCollectedFees(ctx).Minus(coins)
+	if !newCoins.IsNotNegative() {
+		panic("fee collector contains negative coins")
+	}
+	fck.setCollectedFees(ctx, newCoins)
+	return newCoins
+}
+////////////////////  iris/cosmos-sdk end///////////////////////////
+
 // clear the fee pool
 func (fck FeeCollectionKeeper) ClearCollectedFees(ctx sdk.Context) {
 	fck.setCollectedFees(ctx, sdk.Coins{})

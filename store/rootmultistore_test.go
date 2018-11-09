@@ -99,6 +99,52 @@ func TestMultistoreCommitLoad(t *testing.T) {
 	checkStore(t, store, commitID, commitID)
 }
 
+////////////////////  iris/cosmos-sdk begin ///////////////////////////
+func TestCommitStoreLoadersNotUsed(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	if useDebugDB {
+		db = dbm.NewDebugDB("CMS", db)
+	}
+	store := newMultiStoreWithMounts(db)
+	err := store.LoadLatestVersion()
+	require.Nil(t, err)
+	// New store has empty last commit.
+	commitID := CommitID{}
+	checkStore(t, store, commitID, commitID)
+	// Make sure we can get stores by name.
+	s1 := store.getStoreByName("store1")
+	require.NotNil(t, s1)
+	s3 := store.getStoreByName("store3")
+	require.NotNil(t, s3)
+	s5 := store.getStoreByName("store5")
+	require.Nil(t, s5)
+	store = newMultiStoreWithMountsNewVersion(db)
+	err = store.LoadLatestVersion()
+	require.Nil(t, err)
+	// Make sure we can get stores by name.
+	s1 = store.getStoreByName("store1")
+	require.NotNil(t, s1)
+	s3 = store.getStoreByName("store3")
+	require.NotNil(t, s3)
+	s5 = store.getStoreByName("store5")
+	require.NotNil(t, s5)
+}
+func newMultiStoreWithMountsNewVersion(db dbm.DB) *rootMultiStore {
+	store := NewCommitMultiStore(db)
+	store.MountStoreWithDB(
+		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, db)
+	store.MountStoreWithDB(
+		sdk.NewKVStoreKey("store2"), sdk.StoreTypeIAVL, db)
+	store.MountStoreWithDB(
+		sdk.NewKVStoreKey("store3"), sdk.StoreTypeIAVL, db)
+	store.MountStoreWithDB(
+		sdk.NewKVStoreKey("store4"), sdk.StoreTypeIAVL, db)
+	store.MountStoreWithDB(
+		sdk.NewKVStoreKey("store5"), sdk.StoreTypeIAVL, db)
+	return store
+}
+////////////////////  iris/cosmos-sdk end ///////////////////////////
+
 func TestParsePath(t *testing.T) {
 	_, _, err := parsePath("foo")
 	require.Error(t, err)

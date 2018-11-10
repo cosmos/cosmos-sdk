@@ -48,7 +48,8 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
-
+  * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override 
+  
 * SDK
 
 * Tendermint

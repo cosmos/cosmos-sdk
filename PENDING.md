@@ -53,3 +53,4 @@ BUG FIXES
 * SDK
 
 * Tendermint
+  * [\#2797](https://github.com/tendermint/tendermint/pull/2797) AddressBook requires addresses to have IDs; Do not crap out immediately after sending pex addrs in seed mode

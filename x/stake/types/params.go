@@ -69,7 +69,7 @@ func (p Params) HumanReadableString() string {
 
 	resp := "Params \n"
 	resp += fmt.Sprintf("Unbonding Time: %s\n", p.UnbondingTime)
-	resp += fmt.Sprintf("Max Validators: %d: \n", p.MaxValidators)
+	resp += fmt.Sprintf("Max Validators: %d\n", p.MaxValidators)
 	resp += fmt.Sprintf("Bonded Coin Denomination: %s\n", p.BondDenom)
 	return resp
 }

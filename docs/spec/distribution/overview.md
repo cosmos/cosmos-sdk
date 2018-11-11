@@ -54,7 +54,7 @@ However, this is unrealistic so deviations from the active distribution will
 occur based on fluctuations of incoming reward tokens as well as timing of
 reward withdrawal by other delegators.
 
-If you happen to know that incoming rewards are about significantly move up,
+If you happen to know that incoming rewards are about significantly go up,
 you are incentivized to not withdraw until after this event, increasing the
 worth of your existing _accum_.
 
@@ -62,12 +62,12 @@ worth of your existing _accum_.
 
 Charging commission on Atom provisions while also allowing for Atom-provisions
 to be auto-bonded (distributed directly to the validators bonded stake) is
-problematic within DPoS. Fundamentally these two mechanisms are mutually
+problematic within DPoS. Fundamentally, these two mechanisms are mutually
 exclusive. If there are Atom commissions and auto-bonding Atoms, the portion
-of Atoms the reward distribution calculation would become very large as the Atom
+of Atoms in the reward distribution calculation would become very large as the Atom
 portion for each delegator would change each block making a withdrawal of rewards
 for a delegator require a calculation for every single block since the last
 withdrawal. In conclusion, we can only have Atom commission and unbonded atoms
 provisions or bonded atom provisions with no Atom commission, and we elect to
 implement the former. Stakeholders wishing to rebond their provisions may elect
-to set up a script to periodically withdraw and rebond rewards. 
+to set up a script to periodically withdraw and rebond rewards.

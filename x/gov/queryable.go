@@ -57,23 +57,21 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
 		}
 		return bz, nil
-
 	case ParamVoting:
 		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetVotingParams(ctx))
 		if err2 != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
 		}
 		return bz, nil
-
 	case ParamTallying:
 		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetTallyParams(ctx))
 		if err2 != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
 		}
 		return bz, nil
+	default:
+		return res, sdk.ErrUnknownRequest(fmt.Sprintf("%s is not a valid query request path", req.Path))
 	}
-
-	return res, sdk.ErrUnknownRequest(fmt.Sprintf("%s is not a valid query request path", req.Path))
 }
 
 // Params for query 'custom/gov/proposal'

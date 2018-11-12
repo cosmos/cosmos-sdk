@@ -11,18 +11,18 @@ import (
 // Coin hold some amount of one currency
 type Coin struct {
 	Denom  string `json:"denom"`
-	Amount Int    `json:"amount"`
+	Amount Uint   `json:"amount"`
 }
 
-func NewCoin(denom string, amount Int) Coin {
+func NewCoin(denom string, amount Uint) Coin {
 	return Coin{
 		Denom:  denom,
 		Amount: amount,
 	}
 }
 
-func NewInt64Coin(denom string, amount int64) Coin {
-	return NewCoin(denom, NewInt(amount))
+func NewUInt64Coin(denom string, amount uint64) Coin {
+	return NewCoin(denom, NewUint(amount))
 }
 
 // String provides a human-readable representation of a coin
@@ -276,19 +276,22 @@ func (coins Coins) IsNotNegative() bool {
 }
 
 // Returns the amount of a denom from coins
-func (coins Coins) AmountOf(denom string) Int {
+func (coins Coins) AmountOf(denom string) Uint {
 	switch len(coins) {
 	case 0:
-		return ZeroInt()
+		return ZeroUint()
+
 	case 1:
 		coin := coins[0]
 		if coin.Denom == denom {
 			return coin.Amount
 		}
-		return ZeroInt()
+		return ZeroUint()
+
 	default:
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]
+
 		if denom < coin.Denom {
 			return coins[:midIdx].AmountOf(denom)
 		} else if denom == coin.Denom {
@@ -343,7 +346,7 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 		return
 	}
 
-	return Coin{denomStr, NewInt(int64(amount))}, nil
+	return Coin{denomStr, NewUint(uint64(amount))}, nil
 }
 
 // ParseCoins will parse out a list of coins separated by commas.

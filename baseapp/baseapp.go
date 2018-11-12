@@ -598,7 +598,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
 	var gasWanted int64
-	var msCache sdk.CacheMultiStore
+
 	ctx := app.getContextForAnte(mode, txBytes)
 	ctx = app.initializeContext(ctx, mode)
 
@@ -623,17 +623,37 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		return err.Result()
 	}
 
-	// run the ante handler
+	// Keep the state in a transient CacheWrap in case executing the ante handler
+	// or processing the messages fails.
+	msCache := getState(app, mode).CacheMultiStore()
+	if msCache.TracingEnabled() {
+		msCache = msCache.WithTracingContext(
+			sdk.TraceContext(
+				map[string]interface{}{
+					"txHash": cmn.HexBytes(tmhash.Sum(txBytes)).String(),
+				},
+			),
+		).(sdk.CacheMultiStore)
+	}
+
+	// create a new context with the transient CacheWrap multi-store
+	ctx = ctx.WithMultiStore(msCache)
+
+	// Execute the ante handler. If the ante handler fails and thus needs to abort,
+	// state modifications will not be persisted due to the transient CacheWrap
+	// multi-store.
 	if app.anteHandler != nil {
 		newCtx, result, abort := app.anteHandler(ctx, tx, (mode == runTxModeSimulate))
 		if abort {
 			return result
 		}
+
 		if !newCtx.IsZero() {
 			ctx = newCtx
 		}
 
 		gasWanted = result.GasWanted
+		msCache.Write() // persist state changes upon successful ante handler execution
 	}
 
 	if mode == runTxModeSimulate {
@@ -642,16 +662,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		return
 	}
 
-	// Keep the state in a transient CacheWrap in case processing the messages
-	// fails.
-	msCache = getState(app, mode).CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.WithTracingContext(sdk.TraceContext(
-			map[string]interface{}{"txHash": cmn.HexBytes(tmhash.Sum(txBytes)).String()},
-		)).(sdk.CacheMultiStore)
-	}
-
-	ctx = ctx.WithMultiStore(msCache)
 	result = app.runMsgs(ctx, msgs, mode)
 	result.GasWanted = gasWanted
 

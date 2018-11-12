@@ -32,10 +32,11 @@ For status updates and genesis files, see the
 
 ## Quick Start
 
-See the [Cosmos Docs](https://cosmos.network/docs/)
+To learn how the SDK works from a high-level perspective, go to the [SDK Intro](./docs/intro/README.md).
 
-- Read the [SDK overview](./docs/sdk/overview/README.md)
-- Follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial). You can fork the tutorial's repo to get started building your own Cosmos SDK application. 
+If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial). You can also fork the tutorial's repo to get started building your own Cosmos SDK application.
+
+For more, please go to the [Cosmos SDK Docs](./docs/README.md)
 
 ## Disambiguation
 

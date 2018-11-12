@@ -1,7 +1,7 @@
 # Validator Setup
 
-::: warning Current Testnet
-The current testnet is `gaia-8001`.
+::: 
+The current testnet is `gaia-9001`.
 :::
 
 Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/docs/getting-started/full-node.md) guide.

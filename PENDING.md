@@ -9,6 +9,7 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
+  * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.
 
 * Tendermint
 

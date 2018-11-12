@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/stake/client/cli"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
@@ -21,7 +22,7 @@ import (
 )
 
 const (
-	defaultAmount                  = "100steak"
+	defaultAmount                  = "100" + stakeTypes.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"

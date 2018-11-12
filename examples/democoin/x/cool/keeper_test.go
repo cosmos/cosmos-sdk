@@ -37,7 +37,7 @@ func TestCoolKeeper(t *testing.T) {
 	err := InitGenesis(ctx, keeper, Genesis{"icy"})
 	require.Nil(t, err)
 
-	genesis := WriteGenesis(ctx, keeper)
+	genesis := ExportGenesis(ctx, keeper)
 	require.Nil(t, err)
 	require.Equal(t, genesis, Genesis{"icy"})
 

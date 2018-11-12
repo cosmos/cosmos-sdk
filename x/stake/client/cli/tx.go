@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -284,22 +285,7 @@ func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond",
-		Short: "begin or complete unbonding shares from a validator",
-	}
-
-	cmd.AddCommand(
-		client.PostCommands(
-			GetCmdBeginUnbonding(storeName, cdc),
-		)...)
-
-	return cmd
-}
-
-// GetCmdBeginUnbonding implements the begin unbonding validator command.
-func GetCmdBeginUnbonding(storeName string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "begin",
-		Short: "begin unbonding",
+		Short: "unbond shares from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().

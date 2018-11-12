@@ -3,7 +3,7 @@
 If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in `/docs`. 
 
 - If your change relates to the core SDK (`baseapp`, `store`, ...), please update the `docs/gaia` folder, the `docs/examples` folder and possibly the `docs/spec` folder.
-- If your changes relate specifically to the `gaia` application, please modify the `docs/gaia` folder. 
+- If your changes relate specifically to the `gaia` application (not including modules), please modify the `docs/gaia` folder. 
 - If your changes relate to a module, please update the module's spec in `docs/spec`. If the module is used by `gaia` and/or `basecoin`, you might also need to modify `docs/gaia` and/or `docs/examples`.
 - If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the `docs/clients` folder.
 

@@ -34,6 +34,8 @@ IMPROVEMENTS
   * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet
 
 * Gaia
+  * \#2772 Update BaseApp to not persist state when the ante handler fails on
+  DeliverTx.
 
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization

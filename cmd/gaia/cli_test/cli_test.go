@@ -775,27 +775,27 @@ func executeGetParams(t *testing.T, cmdStr string) stake.Params {
 //___________________________________________________________________________________
 // gov
 
-func executeGetDepositProcedure(t *testing.T, cmdStr string) gov.DepositProcedure {
+func executeGetDepositProcedure(t *testing.T, cmdStr string) gov.DepositParams {
 	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var depositProcedure gov.DepositProcedure
+	var depositProcedure gov.DepositParams
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &depositProcedure)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return depositProcedure
 }
 
-func executeGetVotingProcedure(t *testing.T, cmdStr string) gov.VotingProcedure {
+func executeGetVotingProcedure(t *testing.T, cmdStr string) gov.VotingParams {
 	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var votingProcedure gov.VotingProcedure
+	var votingProcedure gov.VotingParams
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &votingProcedure)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return votingProcedure
 }
 
-func executeGetTallyingProcedure(t *testing.T, cmdStr string) gov.TallyingProcedure {
+func executeGetTallyingProcedure(t *testing.T, cmdStr string) gov.TallyParams {
 	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var tallyingProcedure gov.TallyingProcedure
+	var tallyingProcedure gov.TallyParams
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &tallyingProcedure)
 	require.NoError(t, err, "out %v\n, err %v", out, err)

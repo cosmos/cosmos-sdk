@@ -15,15 +15,18 @@ const (
 	onOperation bool = false
 )
 
+// TODO explain transitional matrix usage
 var (
-	// Currently there are 3 different liveness types, fully online, spotty connection, offline.
+	// Currently there are 3 different liveness types,
+	// fully online, spotty connection, offline.
 	defaultLivenessTransitionMatrix, _ = CreateTransitionMatrix([][]int{
 		{90, 20, 1},
 		{10, 50, 5},
 		{0, 10, 1000},
 	})
 
-	// 3 states: rand in range [0, 4*provided blocksize], rand in range [0, 2 * provided blocksize], 0
+	// 3 states: rand in range [0, 4*provided blocksize],
+	// rand in range [0, 2 * provided blocksize], 0
 	defaultBlockSizeTransitionMatrix, _ = CreateTransitionMatrix([][]int{
 		{85, 5, 0},
 		{15, 92, 1},

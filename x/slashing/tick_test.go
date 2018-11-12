@@ -19,8 +19,7 @@ func TestBeginBlocker(t *testing.T) {
 	// bond the validator
 	got := stake.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
-	validatorUpdates := stake.EndBlocker(ctx, sk)
-	keeper.AddValidators(ctx, validatorUpdates)
+	stake.EndBlocker(ctx, sk)
 	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
 	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 

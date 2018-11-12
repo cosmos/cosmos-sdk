@@ -1,8 +1,9 @@
 # Welcome to the SDK Docs!
 
-![cosmonaut reading the cosmos docs in space](./cosmos-docs.jpg)
+Welcome to the SDK docs!
 
-This is the place to learn more about the Cosmos SDK! 
+
+![cosmonaut reading the cosmos docs in space](./cosmos-docs.jpg)
 
 ## Learn the SDK
 

@@ -192,13 +192,13 @@ On the upcoming mainnet, you can delegate `atom` to a validator. These [delegato
 You can query the list of all validators of a specific chain:
 
 ```bash
-gaiacli query validators
+gaiacli query stake validators
 ```
 
 If you want to get the information of a single validator you can check it with:
 
 ```bash
-gaiacli query validator <account_cosmosval>
+gaiacli query stake validator <account_cosmosval>
 ```
 
 #### Bond Tokens
@@ -206,7 +206,7 @@ gaiacli query validator <account_cosmosval>
 On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond tokens to a testnet validator (*i.e.* delegate):
 
 ```bash
-gaiacli tx delegate \
+gaiacli tx stake delegate \
   --amount=10steak \
   --validator=$(gaiad tendermint show-validator) \
   --name=<key_name> \
@@ -224,7 +224,7 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 Once submitted a delegation to a validator, you can see it's information by using the following command:
 
 ```bash
-gaiacli query delegation \
+gaiacli query stake delegation \
 	--address-delegator=<account_cosmos> \
 	--validator=<account_cosmosval>
 ```
@@ -232,7 +232,7 @@ gaiacli query delegation \
 Or if you want to check all your current delegations with disctinct validators:
 
 ```bash
-gaiacli query delegations <account_cosmos>
+gaiacli query stake delegations <account_cosmos>
 ```
 
 You can also get previous delegation(s) status by adding the `--height` flag.
@@ -242,7 +242,7 @@ You can also get previous delegation(s) status by adding the `--height` flag.
 If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-percent` (eg:`25`) with the corresponding flags.
 
 ```bash
-gaiacli tx unbond begin \
+gaiacli tx stake unbond \
   --validator=<account_cosmosval> \
   --shares-percent=100 \
   --from=<key_name> \
@@ -263,7 +263,7 @@ gaiacli tx unbond complete \
 Once you begin an unbonding-delegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query unbonding-delegation \
+gaiacli query stake unbonding-delegation \
 	--address-delegator=<account_cosmos> \
 	--validator=<account_cosmosval> \
 ```
@@ -271,13 +271,13 @@ gaiacli query unbonding-delegation \
 Or if you want to check all your current unbonding-delegations with disctinct validators:
 
 ```bash
-gaiacli query unbonding-delegations <account_cosmos>
+gaiacli query stake unbonding-delegations <account_cosmos>
 ```
 
 Additionally, as you can get all the unbonding-delegations from a particular validator:
 
 ```bash
-  gaiacli query unbonding-delegations-from <account_cosmosval>
+  gaiacli query stake unbonding-delegations-from <account_cosmosval>
 ```
 
 To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
@@ -287,7 +287,7 @@ To get previous unbonding-delegation(s) status on past blocks, try adding the `-
 A redelegation is a type delegation that allows you to bond illiquid tokens from one validator to another:
 
 ```bash
-gaiacli tx redelegate begin \
+gaiacli tx stake redelegate \
   --addr-validator-source=<account_cosmosval> \
   --addr-validator-dest=<account_cosmosval> \
   --shares-percent=50 \
@@ -311,7 +311,7 @@ gaiacli tx unbond complete \
 Once you begin an redelegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query redelegation \
+gaiacli query stake redelegation \
 	--address-delegator=<account_cosmos> \
 	--addr-validator-source=<account_cosmosval> \
 	--addr-validator-dest=<account_cosmosval> \
@@ -320,13 +320,13 @@ gaiacli query redelegation \
 Or if you want to check all your current unbonding-delegations with disctinct validators:
 
 ```bash
-gaiacli query redelegations <account_cosmos>
+gaiacli query stake redelegations <account_cosmos>
 ```
 
 Additionally, as you can get all the outgoing redelegations from a particular validator:
 
 ```bash
-  gaiacli query redelegations-from <account_cosmosval>
+  gaiacli query stake redelegations-from <account_cosmosval>
 ```
 
 To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
@@ -335,8 +335,8 @@ To get previous redelegation(s) status on past blocks, try adding the `--height`
 
 Parameters define high level settings for staking. You can get the current values by using:
 
-```
-gaiacli query parameters
+```bash
+gaiacli query stake parameters
 ```
 
 With the above command you will get the values for:
@@ -354,8 +354,8 @@ All these values will be subject to updates though a `governance` process by `Pa
 
 A staking `Pool` defines the dynamic parameters of the current state. You can query them with the following command:
 
-```
-gaiacli query pool
+```bash
+gaiacli query stake pool
 ```
 
 With the `pool` command you will get the values for:
@@ -389,7 +389,7 @@ In order to create a governance proposal, you must submit an initial deposit alo
 - `type`: Type of proposal. Must be of value _Text_ (types _SoftwareUpgrade_ and _ParameterChange_ not supported yet).
 
 ```bash
-gaiacli tx submit-proposal \
+gaiacli tx gov submit-proposal \
   --title=<title> \
   --description=<description> \
   --type=<Text/ParameterChange/SoftwareUpgrade> \
@@ -404,13 +404,13 @@ gaiacli tx submit-proposal \
 Once created, you can now query information of the proposal:
 
 ```bash
-gaiacli query proposal --proposal-id=<proposal_id>
+gaiacli query gov proposal --proposal-id=<proposal_id>
 ```
 
 Or query all available proposals:
 
 ```bash
-gaiacli query proposals
+gaiacli query gov proposals
 ```
 
 You can also query proposals filtered by `voter` or `depositer` by using the corresponding flags.
@@ -420,7 +420,7 @@ You can also query proposals filtered by `voter` or `depositer` by using the cor
 In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
 ```bash
-gaiacli tx deposit \
+gaiacli tx gov deposit \
   --proposal-id=<proposal_id> \
   --depositer=<account_cosmos> \
   --deposit=<200steak> \
@@ -435,13 +435,13 @@ gaiacli tx deposit \
 Once a new proposal is created, you can query all the deposits submitted to it:
 
 ```bash
-gaiacli query deposits --proposal-id=<proposal_id>
+gaiacli query gov deposits --proposal-id=<proposal_id>
 ```
 
 You can also query a deposit submitted by a specific address:
 
 ```bash
-gaiacli query deposit \
+gaiacli query gov deposit \
   --proposal-id=<proposal_id> \
   --depositer=<account_cosmos>
 ```
@@ -451,7 +451,7 @@ gaiacli query deposit \
 After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded `Atom` holders can then cast vote on it:
 
 ```bash
-gaiacli tx vote \
+gaiacli tx gov vote \
   --proposal-id=<proposal_id> \
   --voter=<account_cosmos> \
   --option=<Yes/No/NoWithVeto/Abstain> \
@@ -464,7 +464,7 @@ gaiacli tx vote \
 Check the vote with the option you just submitted:
 
 ```bash
-gaiacli query vote \
+gaiacli query gov vote \
   --proposal-id=<proposal_id> \
   --voter=<account_cosmos>
 ```
@@ -472,7 +472,7 @@ gaiacli query vote \
 You can also get all the previous votes submitted to the proposal with:
 
 ```bash
-gaiacli query votes --proposal-id=<proposal_id>
+gaiacli query gov votes --proposal-id=<proposal_id>
 ```
 
 #### Query proposal tally results
@@ -480,5 +480,5 @@ gaiacli query votes --proposal-id=<proposal_id>
 To check the current tally of a given proposal you can use the `tally` command:
 
 ```bash
-gaiacli query tally --proposal-id=<proposal_id>
+gaiacli query gov tally --proposal-id=<proposal_id>
 ```

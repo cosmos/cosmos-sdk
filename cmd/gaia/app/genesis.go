@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -26,7 +27,7 @@ var (
 	// bonded tokens given to genesis validators/accounts
 	freeFermionVal  = int64(100)
 	freeFermionsAcc = sdk.NewInt(150)
-	bondDenom       = "steak"
+	bondDenom       = stakeTypes.DefaultBondDenom
 )
 
 // State to Unmarshal
@@ -286,9 +287,11 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
-	accAuth.Coins = []sdk.Coin{
+	coins :=sdk.Coins{
 		{"fooToken", sdk.NewInt(1000)},
-		{"steak", freeFermionsAcc},
+		{bondDenom, freeFermionsAcc},
 	}
+	coins.Sort()
+	accAuth.Coins = coins
 	return NewGenesisAccount(&accAuth)
 }

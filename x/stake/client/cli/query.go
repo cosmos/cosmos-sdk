@@ -127,9 +127,7 @@ func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Code
 			}
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			params := stake.QueryValidatorParams{
-				ValidatorAddr: valAddr,
-			}
+			params := stake.NewQueryValidatorParams(valAddr)
 
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
@@ -164,9 +162,7 @@ func GetCmdQueryValidatorRedelegations(queryRoute string, cdc *codec.Codec) *cob
 			}
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			params := stake.QueryValidatorParams{
-				ValidatorAddr: valAddr,
-			}
+			params := stake.NewQueryValidatorParams(valAddr)
 
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
@@ -303,9 +299,7 @@ func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra
 				return err
 			}
 
-			params := stake.QueryValidatorParams{
-				ValidatorAddr: validatorAddr,
-			}
+			params := stake.NewQueryValidatorParams(validatorAddr)
 
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {

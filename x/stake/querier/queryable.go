@@ -92,6 +92,28 @@ type QueryBondsParams struct {
 	ValidatorAddr sdk.ValAddress
 }
 
+// creates a new QueryDelegatorParams
+func NewQueryDelegatorParams(delegatorAddr sdk.AccAddress) QueryDelegatorParams {
+	return QueryDelegatorParams{
+		DelegatorAddr: delegatorAddr,
+	}
+}
+
+// creates a new QueryValidatorParams
+func NewQueryValidatorParams(validatorAddr sdk.ValAddress) QueryValidatorParams {
+	return QueryValidatorParams{
+		ValidatorAddr: validatorAddr,
+	}
+}
+
+// creates a new QueryBondsParams
+func NewQueryBondsParams(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) QueryBondsParams {
+	return QueryBondsParams{
+		DelegatorAddr: delegatorAddr,
+		ValidatorAddr: validatorAddr,
+	}
+}
+
 func queryValidators(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
 	stakeParams := k.GetParams(ctx)
 	validators := k.GetValidators(ctx, stakeParams.MaxValidators)

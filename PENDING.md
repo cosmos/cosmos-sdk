@@ -5,10 +5,12 @@ BREAKING CHANGES
 * Gaia REST API (`gaiacli advanced rest-server`)
 
 * Gaia CLI  (`gaiacli`)
+  * [cli] [\#2727](https://github.com/cosmos/cosmos-sdk/pull/2727) Fix unbonding command flow
 
 * Gaia
 
 * SDK
+  * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.
 
 * Tendermint
 
@@ -22,6 +24,7 @@ FEATURES
 * Gaia
 
 * SDK
+    * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
 
 * Tendermint
 
@@ -35,6 +38,7 @@ IMPROVEMENTS
 
 * Gaia
   * Require moniker to be provided on `gaiad init`.
+ - #2672 [Makefile] Updated for better Windows compatibility and ledger support logic, get_tools was rewritten as a cross-compatible Makefile.
 
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization

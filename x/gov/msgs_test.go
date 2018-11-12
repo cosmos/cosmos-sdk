@@ -7,15 +7,20 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 var (
-	coinsPos         = sdk.Coins{sdk.NewInt64Coin("steak", 1000)}
+	coinsPos         = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000)}
 	coinsZero        = sdk.Coins{}
-	coinsNeg         = sdk.Coins{sdk.NewInt64Coin("steak", -10000)}
+	coinsNeg         = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, -10000)}
 	coinsPosNotAtoms = sdk.Coins{sdk.NewInt64Coin("foo", 10000)}
-	coinsMulti       = sdk.Coins{sdk.NewInt64Coin("foo", 10000), sdk.NewInt64Coin("steak", 1000)}
+	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
 )
+
+func init() {
+	coinsMulti.Sort()
+}
 
 // test ValidateBasic for MsgCreateValidator
 func TestMsgSubmitProposal(t *testing.T) {
@@ -42,9 +47,9 @@ func TestMsgSubmitProposal(t *testing.T) {
 	for i, tc := range tests {
 		msg := NewMsgSubmitProposal(tc.title, tc.description, tc.proposalType, tc.proposerAddr, tc.initialDeposit)
 		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
+			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", i)
+			require.Error(t, msg.ValidateBasic(), "test: %v", i)
 		}
 	}
 }
@@ -68,9 +73,9 @@ func TestMsgDeposit(t *testing.T) {
 	for i, tc := range tests {
 		msg := NewMsgDeposit(tc.depositerAddr, tc.proposalID, tc.depositAmount)
 		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test: %v", i)
+			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test: %v", i)
+			require.Error(t, msg.ValidateBasic(), "test: %v", i)
 		}
 	}
 }

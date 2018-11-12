@@ -20,6 +20,15 @@ func GetValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 	return append(ValidatorSigningInfoKey, v.Bytes()...)
 }
 
+// extract the address from a validator signing info key
+func GetValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	return sdk.ConsAddress(addr)
+}
+
 // stored by *Tendermint* address (not operator address)
 func GetValidatorMissedBlockBitArrayPrefixKey(v sdk.ConsAddress) []byte {
 	return append(ValidatorMissedBlockBitArrayKey, v.Bytes()...)

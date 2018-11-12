@@ -186,8 +186,8 @@ func (app *DemocoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 
 	genState := types.GenesisState{
 		Accounts:    accounts,
-		POWGenesis:  pow.WriteGenesis(ctx, app.powKeeper),
-		CoolGenesis: cool.WriteGenesis(ctx, app.coolKeeper),
+		POWGenesis:  pow.ExportGenesis(ctx, app.powKeeper),
+		CoolGenesis: cool.ExportGenesis(ctx, app.coolKeeper),
 	}
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {

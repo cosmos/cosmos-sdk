@@ -107,8 +107,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		var proposalID uint64
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
 		inactiveProposal := keeper.GetProposal(ctx, proposalID)
-		keeper.RefundDeposits(ctx, proposalID)
 		keeper.DeleteProposal(ctx, proposalID)
+		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
 
 		resTags = resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags = resTags.AppendTag(tags.ProposalID, []byte(string(proposalID)))

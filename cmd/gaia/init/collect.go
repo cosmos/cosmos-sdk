@@ -113,6 +113,6 @@ func genAppStateFromConfig(
 		return
 	}
 
-	err = WriteGenesisFile(genFile, initCfg.ChainID, nil, appState)
+	err = ExportGenesisFile(genFile, initCfg.ChainID, nil, appState)
 	return
 }

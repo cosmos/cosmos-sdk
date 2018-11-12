@@ -24,6 +24,7 @@ FEATURES
 
 * SDK
   * [\#1336](https://github.com/cosmos/cosmos-sdk/issues/1336) Mechanism for SDK Users to configure their own Bech32 prefixes instead of using the default cosmos prefixes.
+  * [\#2766](https://github.com/cosmos/cosmos-sdk/issues/2766) Add goimports tool in makefile and format project
 
 IMPROVEMENTS
 

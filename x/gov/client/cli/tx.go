@@ -250,17 +250,17 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdQueryProposal implements the query proposal command.
-func GetCmdQueryParam(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "procedure [procedure-type]",
-		Short: "Query the procedure parameters of the governance process",
+		Use:   "param [param-type]",
+		Short: "Query the parameters of the governance process",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			procedureType := args[0]
+			paramType := args[0]
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/procedure/%s", queryRoute, procedureType), nil)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/%s", queryRoute, paramType), nil)
 			if err != nil {
 				return err
 			}

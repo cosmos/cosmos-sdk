@@ -186,9 +186,9 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		procedureType := vars[RestParamsType]
+		paramType := vars[RestParamsType]
 
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", gov.QueryParams, procedureType), nil)
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/gov/%s/%s", gov.QueryParams, paramType), nil)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return

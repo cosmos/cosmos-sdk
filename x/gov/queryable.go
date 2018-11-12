@@ -10,14 +10,14 @@ import (
 
 // query endpoints supported by the governance Querier
 const (
-	QueryProcedures = "procedures"
-	QueryProposals  = "proposals"
-	QueryProposal   = "proposal"
-	QueryDeposits   = "deposits"
-	QueryDeposit    = "deposit"
-	QueryVotes      = "votes"
-	QueryVote       = "vote"
-	QueryTally      = "tally"
+	QueryParams    = "params"
+	QueryProposals = "proposals"
+	QueryProposal  = "proposal"
+	QueryDeposits  = "deposits"
+	QueryDeposit   = "deposit"
+	QueryVotes     = "votes"
+	QueryVote      = "vote"
+	QueryTally     = "tally"
 
 	ProcedureDeposit  = "deposit"
 	ProcedureVoting   = "voting"
@@ -27,8 +27,8 @@ const (
 func NewQuerier(keeper Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
-		case QueryProcedures:
-			return queryProcedures(ctx, path[1:], req, keeper)
+		case QueryParams:
+			return queryParams(ctx, path[1:], req, keeper)
 		case QueryProposals:
 			return queryProposals(ctx, path[1:], req, keeper)
 		case QueryProposal:
@@ -49,22 +49,24 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 	}
 }
 
-func queryProcedures(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
+func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	switch path[0] {
 	case ProcedureDeposit:
-		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetDepositProcedure(ctx))
+		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetDepositParams(ctx))
 		if err2 != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
 		}
 		return bz, nil
+
 	case ProcedureVoting:
-		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetVotingProcedure(ctx))
+		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetVotingParams(ctx))
 		if err2 != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
 		}
 		return bz, nil
+
 	case ProcedureTallying:
-		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetTallyingProcedure(ctx))
+		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetTallyParams(ctx))
 		if err2 != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
 		}

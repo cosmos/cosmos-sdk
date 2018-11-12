@@ -737,23 +737,25 @@ func TestProposalsQuery(t *testing.T) {
 
 	// Addr1 proposes (and deposits) proposals #1 and #2
 	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit)
-	var proposalID1 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID1)
+	var proposalID1 uint64
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
+
 	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit)
-	var proposalID2 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID2)
+	var proposalID2 uint64
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
 	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], halfMinDeposit)
-	var proposalID3 int64
-	cdc.UnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID3)
+	var proposalID3 uint64
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
 	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID2, halfMinDeposit)
 	tests.WaitForHeight(resultTx.Height+1, port)
+
 	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, halfMinDeposit)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -1235,37 +1237,37 @@ func getValidatorRedelegations(t *testing.T, port string, validatorAddr sdk.ValA
 
 // ============= Governance Module ================
 
-func getDepositProcedure(t *testing.T, port string) gov.DepositProcedure {
-	res, body := Request(t, port, "GET", "/gov/procedures/deposit", nil)
+func getDepositProcedure(t *testing.T, port string) gov.DepositParams {
+	res, body := Request(t, port, "GET", "/gov/params/deposit", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var depositProcedure gov.DepositProcedure
-	err := cdc.UnmarshalJSON([]byte(body), &depositProcedure)
+	var depositParams gov.DepositParams
+	err := cdc.UnmarshalJSON([]byte(body), &depositParams)
 	require.Nil(t, err)
-	return depositProcedure
+	return depositParams
 }
 
-func getVotingProcedure(t *testing.T, port string) gov.VotingProcedure {
-	res, body := Request(t, port, "GET", "/gov/procedures/voting", nil)
+func getVotingProcedure(t *testing.T, port string) gov.VotingParams {
+	res, body := Request(t, port, "GET", "/gov/params/voting", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var votingProcedure gov.VotingProcedure
-	err := cdc.UnmarshalJSON([]byte(body), &votingProcedure)
+	var votingParams gov.VotingParams
+	err := cdc.UnmarshalJSON([]byte(body), &votingParams)
 	require.Nil(t, err)
-	return votingProcedure
+	return votingParams
 }
 
-func getTallyingProcedure(t *testing.T, port string) gov.TallyingProcedure {
-	res, body := Request(t, port, "GET", "/gov/procedures/tallying", nil)
+func getTallyingProcedure(t *testing.T, port string) gov.TallyParams {
+	res, body := Request(t, port, "GET", "/gov/params/tallying", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var tallyingProcedure gov.TallyingProcedure
-	err := cdc.UnmarshalJSON([]byte(body), &tallyingProcedure)
+	var tallyParams gov.TallyParams
+	err := cdc.UnmarshalJSON([]byte(body), &tallyParams)
 	require.Nil(t, err)
-	return tallyingProcedure
+	return tallyParams
 }
 
-func getProposal(t *testing.T, port string, proposalID int64) gov.Proposal {
+func getProposal(t *testing.T, port string, proposalID uint64) gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var proposal gov.Proposal

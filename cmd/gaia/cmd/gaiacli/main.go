@@ -88,7 +88,7 @@ func main() {
 		stakecmd.GetCmdQueryValidatorRedelegations(queryRouteStake, cdc),
 		stakecmd.GetCmdQueryParams(storeStake, cdc),
 		stakecmd.GetCmdQueryPool(storeStake, cdc),
-		govcmd.GetCmdQueryProcedure(storeGov, cdc),
+		govcmd.GetCmdQueryParam(storeGov, cdc),
 		govcmd.GetCmdQueryProposal(storeGov, cdc),
 		govcmd.GetCmdQueryProposals(storeGov, cdc),
 		govcmd.GetCmdQueryVote(storeGov, cdc),

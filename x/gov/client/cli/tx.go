@@ -250,7 +250,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdQueryProposal implements the query proposal command.
-func GetCmdQueryProcedure(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryParam(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "procedure [procedure-type]",
 		Short: "Query the procedure parameters of the governance process",

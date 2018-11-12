@@ -730,10 +730,10 @@ func TestProposalsQuery(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addrs[0], addrs[1]})
 	defer cleanup()
 
-	depositProcedure := getDepositProcedure(t, port)
-	halfMinDeposit := depositProcedure.MinDeposit.AmountOf("steak").Int64() / 2
-	getVotingProcedure(t, port)
-	getTallyingProcedure(t, port)
+	depositParam := getDepositParam(t, port)
+	halfMinDeposit := depositParam.MinDeposit.AmountOf("steak").Int64() / 2
+	getVotingParam(t, port)
+	getTallyingParam(t, port)
 
 	// Addr1 proposes (and deposits) proposals #1 and #2
 	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit)
@@ -1237,7 +1237,7 @@ func getValidatorRedelegations(t *testing.T, port string, validatorAddr sdk.ValA
 
 // ============= Governance Module ================
 
-func getDepositProcedure(t *testing.T, port string) gov.DepositParams {
+func getDepositParam(t *testing.T, port string) gov.DepositParams {
 	res, body := Request(t, port, "GET", "/gov/parameters/deposit", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -1247,7 +1247,7 @@ func getDepositProcedure(t *testing.T, port string) gov.DepositParams {
 	return depositParams
 }
 
-func getVotingProcedure(t *testing.T, port string) gov.VotingParams {
+func getVotingParam(t *testing.T, port string) gov.VotingParams {
 	res, body := Request(t, port, "GET", "/gov/parameters/voting", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -1257,7 +1257,7 @@ func getVotingProcedure(t *testing.T, port string) gov.VotingParams {
 	return votingParams
 }
 
-func getTallyingProcedure(t *testing.T, port string) gov.TallyParams {
+func getTallyingParam(t *testing.T, port string) gov.TallyParams {
 	res, body := Request(t, port, "GET", "/gov/parameters/tallying", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

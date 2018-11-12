@@ -11,7 +11,7 @@ parameter set has to be created and the previous one rendered inactive.
 
 ```go
 type DepositParams struct {
-  MinDeposit        sdk.Coins  //  Minimum deposit for a proposal to enter voting period. 
+  MinDeposit        sdk.Coins  //  Minimum deposit for a proposal to enter voting period.
   MaxDepositPeriod  time.Time  //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
 }
 ```
@@ -60,7 +60,7 @@ const (
     ProposalStatusActive    = 0x2   // MinDeposit is reachhed, participants can vote
     ProposalStatusAccepted  = 0x3   // Proposal has been accepted
     ProposalStatusRejected  = 0x4   // Proposal has been rejected
-    ProposalStatusClosed.   = 0x5   // Proposal never reached MinDeposit 
+    ProposalStatusClosed.   = 0x5   // Proposal never reached MinDeposit
 )
 ```
 
@@ -75,7 +75,7 @@ const (
 
 ### ValidatorGovInfo
 
-This type is used in a temp map when tallying 
+This type is used in a temp map when tallying
 
 ```go
   type ValidatorGovInfo struct {
@@ -86,7 +86,7 @@ This type is used in a temp map when tallying
 
 ### Proposals
 
-`Proposals` are an item to be voted on. 
+`Proposals` are an item to be voted on.
 
 ```go
 type Proposal struct {
@@ -98,7 +98,7 @@ type Proposal struct {
   SubmitTime            time.Time           //  Time of the block where TxGovSubmitProposal was included
   DepositEndTime        time.Time           //  Time that the DepositPeriod of a proposal would expire
   Submitter             sdk.AccAddress      //  Address of the submitter
-  
+
   VotingStartTime       time.Time           //  Time of the block where MinDeposit was reached. time.Time{} if MinDeposit is not reached
   VotingEndTime         time.Time           //  Time of the block that the VotingPeriod for a proposal will end.
   CurrentStatus         ProposalStatus      //  Current status of the proposal
@@ -134,7 +134,7 @@ For pseudocode purposes, here are the two function we will use to read or write 
 ### Proposal Processing Queue
 
 **Store:**
-* `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the 
+* `ProposalProcessingQueue`: A queue `queue[proposalID]` containing all the
   `ProposalIDs` of proposals that reached `MinDeposit`. Each `EndBlock`, all the proposals
   that have reached the end of their voting period are processed.
   To process a finished proposal, the application tallies the votes, compute the votes of
@@ -144,8 +144,8 @@ For pseudocode purposes, here are the two function we will use to read or write 
 And the pseudocode for the `ProposalProcessingQueue`:
 
 ```go
-  in EndBlock do 
-    
+  in EndBlock do
+
     for finishedProposalID in GetAllFinishedProposalIDs(block.Time)
       proposal = load(Governance, <proposalID|'proposal'>) // proposal is a const key
 
@@ -170,7 +170,7 @@ And the pseudocode for the `ProposalProcessingQueue`:
         if (isVal)
           tmpValMap(voterAddress).Vote = vote
 
-      tallyingProcedure = load(GlobalParams, 'TallyingProcedure')
+      tallyingParam = load(GlobalParams, 'TallyingParam')
 
       // Update tally if validator voted they voted
       for each validator in validators
@@ -181,14 +181,14 @@ And the pseudocode for the `ProposalProcessingQueue`:
 
       // Check if proposal is accepted or rejected
       totalNonAbstain := proposal.YesVotes + proposal.NoVotes + proposal.NoWithVetoVotes
-      if (proposal.Votes.YesVotes/totalNonAbstain > tallyingProcedure.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < tallyingProcedure.Veto)
+      if (proposal.Votes.YesVotes/totalNonAbstain > tallyingParam.Threshold AND proposal.Votes.NoWithVetoVotes/totalNonAbstain  < tallyingParam.Veto)
         //  proposal was accepted at the end of the voting period
         //  refund deposits (non-voters already punished)
         proposal.CurrentStatus = ProposalStatusAccepted
         for each (amount, depositer) in proposal.Deposits
           depositer.AtomBalance += amount
 
-      else 
+      else
         // proposal was rejected
         proposal.CurrentStatus = ProposalStatusRejected
 

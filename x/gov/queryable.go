@@ -19,9 +19,9 @@ const (
 	QueryVote      = "vote"
 	QueryTally     = "tally"
 
-	ProcedureDeposit  = "deposit"
-	ProcedureVoting   = "voting"
-	ProcedureTallying = "tallying"
+	ParamDeposit  = "deposit"
+	ParamVoting   = "voting"
+	ParamTallying = "tallying"
 )
 
 func NewQuerier(keeper Keeper) sdk.Querier {
@@ -51,21 +51,21 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 
 func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	switch path[0] {
-	case ProcedureDeposit:
+	case ParamDeposit:
 		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetDepositParams(ctx))
 		if err2 != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
 		}
 		return bz, nil
 
-	case ProcedureVoting:
+	case ParamVoting:
 		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetVotingParams(ctx))
 		if err2 != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
 		}
 		return bz, nil
 
-	case ProcedureTallying:
+	case ParamTallying:
 		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetTallyParams(ctx))
 		if err2 != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))

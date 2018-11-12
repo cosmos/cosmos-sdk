@@ -12,6 +12,15 @@ module.exports = {
     nav: [{ text: "Back to Cosmos", link: "https://cosmos.network" }],
     sidebar: [
       {
+        title: "Overview",
+        collapsable: false,
+        children: [
+          "/intro/README",
+          "/intro/sdk-app-architecture",
+          "/intro/ocap"
+        ]
+      },
+      {
         title: "Gaia",
         collapsable: false,
         children: [

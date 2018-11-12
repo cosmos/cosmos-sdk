@@ -20,8 +20,8 @@ The following sections contain the information you need if you want to build a f
 
 >*NOTE*: We are currently working on improving the docs. Some info might be missing. 
 
+- [Introduction](./intro/README.md): Contains introductory high-level material on the Cosmos SDK.
 - [Gaia](./gaia/README.md): Contains all documentation related to the gaia application (current name for the Cosmos-Hub). 
-- [Reference](./reference/README.md): Explains the high-level concepts of the SDK (e.g. storage, gas, abstractions, ...)
 - [Clients](./clients/README.md): Documentation about SDK clients like the SDK Command-Line interface and the SDK Light-client.
 - [Specifications](./spec/README.md): Contains SDK and modules specifications.
 

@@ -5,13 +5,13 @@ import (
 	"go/build"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
-	"path/filepath"
-
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 	tmversion "github.com/tendermint/tendermint/version"
+
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var remoteBasecoinPath = "github.com/cosmos/cosmos-sdk/docs/examples/basecoin"

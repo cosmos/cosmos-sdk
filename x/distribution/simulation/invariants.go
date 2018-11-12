@@ -3,11 +3,12 @@ package simulation
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // AllInvariants runs all invariants of the distribution module

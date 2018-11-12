@@ -4,10 +4,10 @@ import (
 	"crypto/sha256"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	bip39 "github.com/bartekn/go-bip39"
 	"github.com/spf13/cobra"
 
-	bip39 "github.com/bartekn/go-bip39"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 const (

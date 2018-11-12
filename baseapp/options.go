@@ -4,9 +4,10 @@ package baseapp
 import (
 	"fmt"
 
+	dbm "github.com/tendermint/tendermint/libs/db"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 // File for storing in-package BaseApp optional functions,

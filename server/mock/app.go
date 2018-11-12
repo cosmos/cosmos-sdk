@@ -3,12 +3,12 @@ package mock
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tendermint/tendermint/types"
 	"path/filepath"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

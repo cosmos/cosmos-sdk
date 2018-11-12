@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/viper"
-
 	"github.com/tendermint/tendermint/abci/server"
 	"github.com/tendermint/tendermint/libs/cli"
 	cmn "github.com/tendermint/tendermint/libs/common"

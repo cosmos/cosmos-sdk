@@ -3,12 +3,12 @@ package gov
 import (
 	"time"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // Parameter store default namestore

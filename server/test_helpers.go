@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"io/ioutil"
 	"net"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // Get a free address for a test tendermint server

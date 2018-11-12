@@ -1,8 +1,9 @@
 package context
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ErrInvalidAccount returns a standardized error reflecting that a given

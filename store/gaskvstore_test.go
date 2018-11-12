@@ -3,11 +3,10 @@ package store
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/stretchr/testify/require"
 )
 
 func newGasKVStore() KVStore {

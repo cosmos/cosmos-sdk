@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/cosmos/go-bip39"
+	"github.com/stretchr/testify/assert"
 )
 
 var defaultBIP39Passphrase = ""

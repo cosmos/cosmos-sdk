@@ -1,12 +1,11 @@
 package mock
 
 import (
-	"github.com/tendermint/tendermint/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 // TestInitApp makes sure we can initialize this thing without an error

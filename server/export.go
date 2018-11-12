@@ -2,15 +2,15 @@ package server
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"io/ioutil"
-	"path"
 )
 
 const (

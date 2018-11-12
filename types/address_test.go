@@ -3,13 +3,11 @@ package types_test
 import (
 	"encoding/hex"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tendermint/tendermint/crypto/ed25519"
-
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
 )

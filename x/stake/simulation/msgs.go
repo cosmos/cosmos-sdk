@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -11,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // SimulateMsgCreateValidator

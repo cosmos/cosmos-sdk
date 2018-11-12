@@ -3,8 +3,9 @@ package store
 import (
 	"io"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Wrapper type for dbm.Db with implementation of KVStore

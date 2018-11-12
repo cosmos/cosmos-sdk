@@ -4,12 +4,13 @@ import (
 	"errors"
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances

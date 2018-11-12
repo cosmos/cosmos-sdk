@@ -15,7 +15,7 @@ var (
 	coinsZero        = sdk.Coins{}
 	coinsNeg         = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, -10000)}
 	coinsPosNotAtoms = sdk.Coins{sdk.NewInt64Coin("foo", 10000)}
-	coinsMulti       = sdk.Coins{sdk.NewInt64Coin("foo", 10000), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000)}
+	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
 )
 
 // test ValidateBasic for MsgCreateValidator

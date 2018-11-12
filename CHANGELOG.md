@@ -24,7 +24,6 @@ FEATURES
 
 * SDK
   * [\#1336](https://github.com/cosmos/cosmos-sdk/issues/1336) Mechanism for SDK Users to configure their own Bech32 prefixes instead of using the default cosmos prefixes.
-  * [\#2766](https://github.com/cosmos/cosmos-sdk/issues/2766) Add goimports tool in makefile and format project
 
 IMPROVEMENTS
 
@@ -32,7 +31,7 @@ IMPROVEMENTS
  * [\#2637](https://github.com/cosmos/cosmos-sdk/issues/2637) [x/gov] Switched inactive and active proposal queues to an iterator based queue
 
 * SDK
- * [\#2573](https://github.com/cosmos/cosmos-sdk/issues/2573) [x/distribution] add accum invariance
+ * [\#2573](https://github.cgstom/cosmos/cosmos-sdk/issues/2573) [x/distribution] add accum invariance
  * [\#2556](https://github.com/cosmos/cosmos-sdk/issues/2556) [x/mock/simulation] Fix debugging output
  * [\#2396](https://github.com/cosmos/cosmos-sdk/issues/2396) [x/mock/simulation] Change parameters to get more slashes
  * [\#2617](https://github.com/cosmos/cosmos-sdk/issues/2617) [x/mock/simulation] Randomize all genesis parameters

@@ -44,6 +44,7 @@ FEATURES
 
 * SDK
     * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
+    * [\#2766](https://github.com/cosmos/cosmos-sdk/issues/2766) Add goimports tool in makefile and format project
 
 * Tendermint
 

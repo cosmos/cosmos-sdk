@@ -48,6 +48,7 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [\#2723] Use `cosmosvalcons` Bech32 prefix in `tendermint show-address`
   * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override 
   
 * SDK

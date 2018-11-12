@@ -652,8 +652,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			ctx = newCtx
 		}
 
+		// if during deliverTx the ante handler execution was successful, persist state
+		if mode == runTxModeDeliver {
+			msCache.Write()
+		}
+
 		gasWanted = result.GasWanted
-		msCache.Write() // persist state changes upon successful ante handler execution
 	}
 
 	if mode == runTxModeSimulate {

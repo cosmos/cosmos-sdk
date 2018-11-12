@@ -26,11 +26,11 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k stake.Keeper) simulation
 			Moniker: simulation.RandStringOfLength(r, 10),
 		}
 
-		maxCommission := sdk.NewInt(10)
+		maxCommission := sdk.NewDecWithPrec(r.Int63n(1000), 3)
 		commission := stake.NewCommissionMsg(
-			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
-			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
-			sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1),
+			simulation.RandomDecAmount(r, maxCommission),
+			maxCommission,
+			simulation.RandomDecAmount(r, maxCommission),
 		)
 
 		acc := simulation.RandomAcc(r, accs)
@@ -85,11 +85,10 @@ func SimulateMsgEditValidator(k stake.Keeper) simulation.Operation {
 			Details:  simulation.RandStringOfLength(r, 10),
 		}
 
-		maxCommission := sdk.NewInt(10)
-		newCommissionRate := sdk.NewDecWithPrec(simulation.RandomAmount(r, maxCommission).Int64(), 1)
-
 		val := keeper.RandomValidator(r, k, ctx)
 		address := val.GetOperator()
+		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
+
 		msg := stake.MsgEditValidator{
 			Description:    description,
 			ValidatorAddr:  address,

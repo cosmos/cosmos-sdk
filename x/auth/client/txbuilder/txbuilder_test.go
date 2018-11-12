@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 var (
@@ -46,7 +47,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				SimulateGas:   false,
 				ChainID:       "test-chain",
 				Memo:          "hello",
-				Fee:           "1steak",
+				Fee:           "1" + stakeTypes.DefaultBondDenom,
 			},
 			defaultMsg,
 			StdSignMsg{
@@ -55,7 +56,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello",
 				Msgs:          defaultMsg,
-				Fee:           auth.NewStdFee(100, sdk.NewCoin("steak", sdk.NewInt(1))),
+				Fee:           auth.NewStdFee(100, sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))),
 			},
 			false,
 		},

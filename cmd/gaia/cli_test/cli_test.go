@@ -312,9 +312,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForTMStart(port)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	executeGetDepositProcedure(t, fmt.Sprintf("gaiacli query procedure deposit %v", flags))
-	executeGetVotingProcedure(t, fmt.Sprintf("gaiacli query procedure voting %v", flags))
-	executeGetTallyingProcedure(t, fmt.Sprintf("gaiacli query procedure tallying %v", flags))
+	executeGetDepositParam(t, fmt.Sprintf("gaiacli query procedure deposit %v", flags))
+	executeGetVotingParam(t, fmt.Sprintf("gaiacli query procedure voting %v", flags))
+	executeGetTallyingParam(t, fmt.Sprintf("gaiacli query procedure tallying %v", flags))
 
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 
@@ -775,31 +775,31 @@ func executeGetParams(t *testing.T, cmdStr string) stake.Params {
 //___________________________________________________________________________________
 // gov
 
-func executeGetDepositProcedure(t *testing.T, cmdStr string) gov.DepositParams {
+func executeGetDepositParam(t *testing.T, cmdStr string) gov.DepositParams {
 	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var depositProcedure gov.DepositParams
+	var depositParam gov.DepositParams
 	cdc := app.MakeCodec()
-	err := cdc.UnmarshalJSON([]byte(out), &depositProcedure)
+	err := cdc.UnmarshalJSON([]byte(out), &depositParam)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
-	return depositProcedure
+	return depositParam
 }
 
-func executeGetVotingProcedure(t *testing.T, cmdStr string) gov.VotingParams {
+func executeGetVotingParam(t *testing.T, cmdStr string) gov.VotingParams {
 	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var votingProcedure gov.VotingParams
+	var votingParam gov.VotingParams
 	cdc := app.MakeCodec()
-	err := cdc.UnmarshalJSON([]byte(out), &votingProcedure)
+	err := cdc.UnmarshalJSON([]byte(out), &votingParam)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
-	return votingProcedure
+	return votingParam
 }
 
-func executeGetTallyingProcedure(t *testing.T, cmdStr string) gov.TallyParams {
+func executeGetTallyingParam(t *testing.T, cmdStr string) gov.TallyParams {
 	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var tallyingProcedure gov.TallyParams
+	var tallyingParam gov.TallyParams
 	cdc := app.MakeCodec()
-	err := cdc.UnmarshalJSON([]byte(out), &tallyingProcedure)
+	err := cdc.UnmarshalJSON([]byte(out), &tallyingParam)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
-	return tallyingProcedure
+	return tallyingParam
 }
 
 func executeGetProposal(t *testing.T, cmdStr string) gov.Proposal {

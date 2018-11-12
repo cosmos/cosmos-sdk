@@ -49,8 +49,8 @@ func TestSameDenomAsCoin(t *testing.T) {
 		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), true},
 		{NewInt64Coin("A", 1), NewInt64Coin("a", 1), false},
 		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
-		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), true},
-		{NewInt64Coin("steak", -11), NewInt64Coin("steak", 10), true},
+		{NewInt64Coin("stake", 1), NewInt64Coin("stake", 10), true},
+		{NewInt64Coin("stake", -11), NewInt64Coin("stake", 10), true},
 	}
 
 	for tcIndex, tc := range cases {
@@ -107,8 +107,8 @@ func TestIsEqualCoin(t *testing.T) {
 		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), true},
 		{NewInt64Coin("A", 1), NewInt64Coin("a", 1), false},
 		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
-		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), false},
-		{NewInt64Coin("steak", -11), NewInt64Coin("steak", 10), false},
+		{NewInt64Coin("stake", 1), NewInt64Coin("stake", 10), false},
+		{NewInt64Coin("stake", -11), NewInt64Coin("stake", 10), false},
 	}
 
 	for tcIndex, tc := range cases {

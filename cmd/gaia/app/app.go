@@ -210,9 +210,6 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 
-	// Add these new validators to the addr -> pubkey map.
-	app.slashingKeeper.AddValidators(ctx, validatorUpdates)
-
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
@@ -231,6 +228,10 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}
 
+	// sort by account number to maintain consistency
+	sort.Slice(genesisState.Accounts, func(i, j int) bool {
+		return genesisState.Accounts[i].AccountNumber < genesisState.Accounts[j].AccountNumber
+	})
 	// load the accounts
 	for _, gacc := range genesisState.Accounts {
 		acc := gacc.ToAccount()
@@ -244,7 +245,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		panic(err) // TODO find a way to do this w/o panics
 	}
 
-	// load the address to pubkey map
+	// initialize module-specific stores
+	auth.InitGenesis(ctx, app.feeCollectionKeeper, genesisState.AuthData)
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
@@ -270,7 +272,6 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 
 		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	}
-	app.slashingKeeper.AddValidators(ctx, validators)
 
 	// sanity check
 	if len(req.Validators) > 0 {
@@ -306,11 +307,12 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	app.accountKeeper.IterateAccounts(ctx, appendAccount)
 	genState := NewGenesisState(
 		accounts,
-		stake.WriteGenesis(ctx, app.stakeKeeper),
-		mint.WriteGenesis(ctx, app.mintKeeper),
-		distr.WriteGenesis(ctx, app.distrKeeper),
-		gov.WriteGenesis(ctx, app.govKeeper),
-		slashing.GenesisState{}, // TODO create write methods
+		auth.ExportGenesis(ctx, app.feeCollectionKeeper),
+		stake.ExportGenesis(ctx, app.stakeKeeper),
+		mint.ExportGenesis(ctx, app.mintKeeper),
+		distr.ExportGenesis(ctx, app.distrKeeper),
+		gov.ExportGenesis(ctx, app.govKeeper),
+		slashing.ExportGenesis(ctx, app.slashingKeeper),
 	)
 	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
 	if err != nil {
@@ -337,12 +339,15 @@ var _ sdk.StakingHooks = Hooks{}
 // nolint
 func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorCreated(ctx, valAddr)
+	h.sh.OnValidatorCreated(ctx, valAddr)
 }
 func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorModified(ctx, valAddr)
+	h.sh.OnValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
-	h.dh.OnValidatorRemoved(ctx, valAddr)
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.dh.OnValidatorRemoved(ctx, consAddr, valAddr)
+	h.sh.OnValidatorRemoved(ctx, consAddr, valAddr)
 }
 func (h Hooks) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorBonded(ctx, consAddr, valAddr)
@@ -358,10 +363,13 @@ func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddre
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)
+	h.sh.OnDelegationCreated(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationSharesModified(ctx, delAddr, valAddr)
+	h.sh.OnDelegationSharesModified(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationRemoved(ctx, delAddr, valAddr)
+	h.sh.OnDelegationRemoved(ctx, delAddr, valAddr)
 }

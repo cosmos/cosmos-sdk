@@ -211,26 +211,11 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// GetCmdRedelegate implements the redelegate validator command.
+// GetCmdRedelegate the begin redelegation command.
 func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate",
 		Short: "redelegate illiquid tokens from one validator to another",
-	}
-
-	cmd.AddCommand(
-		client.PostCommands(
-			GetCmdBeginRedelegate(storeName, cdc),
-		)...)
-
-	return cmd
-}
-
-// GetCmdBeginRedelegate the begin redelegation command.
-func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "begin",
-		Short: "begin redelegation",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().

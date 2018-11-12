@@ -2,12 +2,12 @@
 
 ## State
 
-### Procedures and base types
+### Parameters and base types
 
-`Procedures` define the rule according to which votes are run. There can only 
-be one active procedure at any given time. If governance wants to change a 
-procedure, either to modify a value or add/remove a parameter, a new procedure 
-has to be created and the previous one rendered inactive.
+`Parameters` define the rules according to which votes are run. There can only
+be one active parameter set at any given time. If governance wants to change a
+parameter set, either to modify a value or add/remove a parameter field, a new
+parameter set has to be created and the previous one rendered inactive.
 
 ```go
 type DepositParams struct {
@@ -30,7 +30,7 @@ type TallyParams struct {
 }
 ```
 
-Procedures are stored in a global `GlobalParams` KVStore.
+Parameters are stored in a global `GlobalParams` KVStore.
 
 Additionally, we introduce some basic types:
 

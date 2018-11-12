@@ -9,25 +9,24 @@ be one active procedure at any given time. If governance wants to change a
 procedure, either to modify a value or add/remove a parameter, a new procedure 
 has to be created and the previous one rendered inactive.
 
-
 ```go
-type DepositProcedure struct {
-  MinDeposit        sdk.Coins           //  Minimum deposit for a proposal to enter voting period. 
-  MaxDepositPeriod  time.Time               //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
+type DepositParams struct {
+  MinDeposit        sdk.Coins  //  Minimum deposit for a proposal to enter voting period. 
+  MaxDepositPeriod  time.Time  //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
 }
 ```
 
 ```go
-type VotingProcedure struct {
-  VotingPeriod      time.Time               //  Length of the voting period. Initial value: 2 weeks
+type VotingParams struct {
+  VotingPeriod      time.Time  //  Length of the voting period. Initial value: 2 weeks
 }
 ```
 
 ```go
-type TallyingProcedure struct {
-  Threshold         sdk.Dec   //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
-  Veto              sdk.Dec   //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
-  GovernancePenalty sdk.Dec             //  Penalty if validator does not vote
+type TallyParams struct {
+  Threshold         sdk.Dec  //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5
+  Veto              sdk.Dec  //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
+  GovernancePenalty sdk.Dec  //  Penalty if validator does not vote
 }
 ```
 

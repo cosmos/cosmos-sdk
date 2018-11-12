@@ -60,7 +60,7 @@ const (
     ProposalStatusActive    = 0x2   // MinDeposit is reachhed, participants can vote
     ProposalStatusAccepted  = 0x3   // Proposal has been accepted
     ProposalStatusRejected  = 0x4   // Proposal has been rejected
-    ProposalStatusClosed.   = 0x5   // Proposal never reached MinDeposit
+    ProposalStatusClosed   = 0x5   // Proposal never reached MinDeposit
 )
 ```
 

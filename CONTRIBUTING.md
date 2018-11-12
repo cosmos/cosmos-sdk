@@ -55,6 +55,16 @@ All PRs require 2 Reviews before merge. When reviewing PRs please use the follow
 - `LGTM` without an explicit approval means that the changes look good, but you haven't pulled down the code, run tests locally and thoroughly reviewed it.
 - `Approval` through the GH UI means that you understand the code, documentation/spec is updated in the right places, you have pulled down and tested the code locally.
 
+### A note on Documentation updates
+
+
+If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in /docs.
+
+* If your change relates to the core SDK (baseapp, store, ...), please update the docs/gaia folder, the docs/examples folder and possibly the docs/spec folder.
+* If your changes relate specifically to the gaia application (not including modules), please modify the docs/gaia folder.
+* If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia and/or basecoin, you might also need to modify docs/gaia and/or docs/examples.
+* If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the docs/clients folder.
+
 ## Forking
 
 Please note that Go requires code to live under absolute paths, which complicates forking.

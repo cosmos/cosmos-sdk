@@ -76,7 +76,7 @@ func queryProcedures(ctx sdk.Context, path []string, req abci.RequestQuery, keep
 
 // Params for query 'custom/gov/proposal'
 type QueryProposalParams struct {
-	ProposalID int64
+	ProposalID uint64
 }
 
 // nolint: unparam
@@ -101,7 +101,7 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 
 // Params for query 'custom/gov/deposit'
 type QueryDepositParams struct {
-	ProposalID int64
+	ProposalID uint64
 	Depositer  sdk.AccAddress
 }
 
@@ -123,7 +123,7 @@ func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 
 // Params for query 'custom/gov/vote'
 type QueryVoteParams struct {
-	ProposalID int64
+	ProposalID uint64
 	Voter      sdk.AccAddress
 }
 
@@ -145,7 +145,7 @@ func queryVote(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Kee
 
 // Params for query 'custom/gov/deposits'
 type QueryDepositsParams struct {
-	ProposalID int64
+	ProposalID uint64
 }
 
 // nolint: unparam
@@ -160,7 +160,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 	depositsIterator := keeper.GetDeposits(ctx, params.ProposalID)
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		deposit := Deposit{}
-		keeper.cdc.MustUnmarshalBinary(depositsIterator.Value(), &deposit)
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 		deposits = append(deposits, deposit)
 	}
 
@@ -173,7 +173,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 
 // Params for query 'custom/gov/votes'
 type QueryVotesParams struct {
-	ProposalID int64
+	ProposalID uint64
 }
 
 // nolint: unparam
@@ -189,7 +189,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	votesIterator := keeper.GetVotes(ctx, params.ProposalID)
 	for ; votesIterator.Valid(); votesIterator.Next() {
 		vote := Vote{}
-		keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), &vote)
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)
 		votes = append(votes, vote)
 	}
 
@@ -202,10 +202,10 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 
 // Params for query 'custom/gov/proposals'
 type QueryProposalsParams struct {
-	Voter              sdk.AccAddress
-	Depositer          sdk.AccAddress
-	ProposalStatus     ProposalStatus
-	NumLatestProposals int64
+	Voter          sdk.AccAddress
+	Depositer      sdk.AccAddress
+	ProposalStatus ProposalStatus
+	Limit          uint64
 }
 
 // nolint: unparam
@@ -216,7 +216,7 @@ func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err2.Error()))
 	}
 
-	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositer, params.ProposalStatus, params.NumLatestProposals)
+	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositer, params.ProposalStatus, params.Limit)
 
 	bz, err2 := codec.MarshalJSONIndent(keeper.cdc, proposals)
 	if err2 != nil {
@@ -227,18 +227,20 @@ func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 
 // Params for query 'custom/gov/tally'
 type QueryTallyParams struct {
-	ProposalID int64
+	ProposalID uint64
 }
 
 // nolint: unparam
 func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
 	// TODO: Dependant on #1914
 
-	var proposalID int64
-	err2 := keeper.cdc.UnmarshalJSON(req.Data, proposalID)
+	var params QueryTallyParams
+	err2 := keeper.cdc.UnmarshalJSON(req.Data, &params)
 	if err2 != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err2.Error()))
 	}
+
+	proposalID := params.ProposalID
 
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {

@@ -1,11 +1,14 @@
 package app
 
 import (
+	"encoding/json"
 	"testing"
+
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/stretchr/testify/require"
@@ -27,7 +30,8 @@ var (
 
 func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 	// start with the default staking genesis state
-	stakeData := stake.DefaultGenesisState()
+	appState := NewDefaultGenesisState()
+	stakeData := appState.StakeData
 	genAccs := make([]GenesisAccount, len(genTxs))
 
 	for i, genTx := range genTxs {
@@ -35,17 +39,15 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 		require.Equal(t, 1, len(msgs))
 		msg := msgs[0].(stake.MsgCreateValidator)
 
-		// get genesis flag account information
-		genAccs[i] = genesisAccountFromMsgCreateValidator(msg, freeFermionsAcc)
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDecFromInt(freeFermionsAcc)) // increase the supply
+		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
+		acc.Coins = sdk.Coins{sdk.NewInt64Coin(bondDenom, 150)}
+		genAccs[i] = NewGenesisAccount(&acc)
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(150)) // increase the supply
 	}
 
 	// create the final app state
-	return GenesisState{
-		Accounts:  genAccs,
-		StakeData: stakeData,
-		GovData:   gov.DefaultGenesisState(),
-	}
+	appState.Accounts = genAccs
+	return appState
 }
 
 func TestToAccount(t *testing.T) {
@@ -68,6 +70,19 @@ func TestGaiaAppGenTx(t *testing.T) {
 func TestGaiaAppGenState(t *testing.T) {
 	cdc := MakeCodec()
 	_ = cdc
+	var genDoc tmtypes.GenesisDoc
+
+	// test unmarshalling error
+	_, err := GaiaAppGenState(cdc, genDoc, []json.RawMessage{})
+	require.Error(t, err)
+
+	appState := makeGenesisState(t, []auth.StdTx{})
+	genDoc.AppState, err = json.Marshal(appState)
+	require.NoError(t, err)
+
+	// test validation error
+	_, err = GaiaAppGenState(cdc, genDoc, []json.RawMessage{})
+	require.Error(t, err)
 
 	// TODO test must provide at least genesis transaction
 	// TODO test with both one and two genesis transactions:
@@ -77,7 +92,10 @@ func TestGaiaAppGenState(t *testing.T) {
 func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
 	desc := stake.NewDescription(name, "", "", "")
 	comm := stakeTypes.CommissionMsg{}
-	msg := stake.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin("steak", 50), desc, comm)
+	msg := stake.NewMsgCreateValidator(
+		sdk.ValAddress(pk.Address()), pk,
+		sdk.NewInt64Coin(bondDenom, 50), desc, comm,
+	)
 	return auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
 }
 
@@ -105,4 +123,11 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val2)
 	err = GaiaValidateGenesisState(genesisState)
 	require.NotNil(t, err)
+}
+
+func TestNewDefaultGenesisAccount(t *testing.T) {
+	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
+	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
+	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("fooToken"))
+	require.Equal(t, sdk.NewInt(150), acc.Coins.AmountOf(bondDenom))
 }

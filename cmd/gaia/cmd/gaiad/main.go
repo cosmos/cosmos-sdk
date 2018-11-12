@@ -39,8 +39,10 @@ func main() {
 	}
 	appInit := app.GaiaAppInit()
 	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc, appInit))
-	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc, appInit))
+	rootCmd.AddCommand(gaiaInit.CollectGenTxsCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc, server.AppInit{}))
 	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.AddGenesisAccountCmd(ctx, cdc))
 
 	server.AddCommands(ctx, cdc, rootCmd, appInit,
 		newApp, exportAppStateAndTMValidators)

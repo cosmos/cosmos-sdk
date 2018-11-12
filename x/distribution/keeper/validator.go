@@ -23,14 +23,14 @@ func (k Keeper) GetValidatorDistInfo(ctx sdk.Context,
 		panic("Stored validator-distribution info should not have been nil")
 	}
 
-	k.cdc.MustUnmarshalBinary(b, &vdi)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &vdi)
 	return
 }
 
 // set the validator distribution info
 func (k Keeper) SetValidatorDistInfo(ctx sdk.Context, vdi types.ValidatorDistInfo) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinary(vdi)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(vdi)
 	store.Set(GetValidatorDistInfoKey(vdi.OperatorAddr), b)
 }
 

@@ -12,7 +12,7 @@ import (
 
 func TestParseQueryResponse(t *testing.T) {
 	cdc := app.MakeCodec()
-	sdkResBytes := cdc.MustMarshalBinary(sdk.Result{GasUsed: 10})
+	sdkResBytes := cdc.MustMarshalBinaryLengthPrefixed(sdk.Result{GasUsed: 10})
 	gas, err := parseQueryResponse(cdc, sdkResBytes)
 	assert.Equal(t, gas, int64(10))
 	assert.Nil(t, err)
@@ -28,7 +28,7 @@ func TestCalculateGas(t *testing.T) {
 			if wantErr {
 				return nil, errors.New("")
 			}
-			return cdc.MustMarshalBinary(sdk.Result{GasUsed: gasUsed}), nil
+			return cdc.MustMarshalBinaryLengthPrefixed(sdk.Result{GasUsed: gasUsed}), nil
 		}
 	}
 	type args struct {

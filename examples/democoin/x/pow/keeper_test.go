@@ -41,7 +41,7 @@ func TestPowKeeperGetSet(t *testing.T) {
 	err := InitGenesis(ctx, keeper, Genesis{uint64(1), uint64(0)})
 	require.Nil(t, err)
 
-	genesis := WriteGenesis(ctx, keeper)
+	genesis := ExportGenesis(ctx, keeper)
 	require.Nil(t, err)
 	require.Equal(t, genesis, Genesis{uint64(1), uint64(0)})
 

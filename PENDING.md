@@ -9,7 +9,6 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
-  * [simulation] \#2665 only argument to simulation.Invariant is now app
 
 * Tendermint
 
@@ -17,20 +16,22 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-    * [gov] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added query governance procedures rest endpoints
+  * [gov] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance parameter
+    query REST endpoints.
 
 * Gaia CLI  (`gaiacli`)
     * [cli] [\#2569](https://github.com/cosmos/cosmos-sdk/pull/2569) Add commands to query validator unbondings and redelegations
     * [cli] [\#2569](https://github.com/cosmos/cosmos-sdk/pull/2569) Add commands to query validator unbondings and redelegations
     * [cli] [\#2524](https://github.com/cosmos/cosmos-sdk/issues/2524) Add support offline mode to `gaiacli tx sign`. Lookups are not performed if the flag `--offline` is on.
     * [cli] [\#2558](https://github.com/cosmos/cosmos-sdk/issues/2558) Rename --print-sigs to --validate-signatures. It now performs a complete set of sanity checks and reports to the user. Also added --print-signature-only to print the signature only, not the whole transaction.
-    * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Add query governance procedures commands
+    * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Add governance
+    parameter query commands.
 
 * Gaia
-    * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479)  Added querier for getting Procedures
+  * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added querier for getting
+    governance parameters.
 
 * SDK
-    * (#1336) Mechanism for SDK Users to configure their own Bech32 prefixes instead of using the default cosmos prefixes.
 
 * Tendermint
 
@@ -40,15 +41,12 @@ IMPROVEMENTS
 * Gaia REST API (`gaiacli advanced rest-server`)
 
 * Gaia CLI  (`gaiacli`)
+  * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet
 
 * Gaia
 
 * SDK
- - #2573 [x/distribution] add accum invariance
- - \#1924 [x/mock/simulation] Use a transition matrix for block size
- - \#2660 [x/mock/simulation] Staking transactions get tested far more frequently
- - #2610 [x/stake] Block redelegation to and from the same validator
- - #2652 [x/auth] Add benchmark for get and set account
+ - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
 
 * Tendermint
 
@@ -60,9 +58,10 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
-
+  * [\#2723] Use `cosmosvalcons` Bech32 prefix in `tendermint show-address`
+  * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override 
+  
 * SDK
- - #2625 [x/gov] fix AppendTag function usage error
-
 
 * Tendermint
+  * [\#2797](https://github.com/tendermint/tendermint/pull/2797) AddressBook requires addresses to have IDs; Do not crap out immediately after sending pex addrs in seed mode

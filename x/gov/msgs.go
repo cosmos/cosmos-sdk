@@ -84,12 +84,12 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 //-----------------------------------------------------------
 // MsgDeposit
 type MsgDeposit struct {
-	ProposalID int64          `json:"proposal_id"` // ID of the proposal
+	ProposalID uint64         `json:"proposal_id"` // ID of the proposal
 	Depositer  sdk.AccAddress `json:"depositer"`   // Address of the depositer
 	Amount     sdk.Coins      `json:"amount"`      // Coins to add to the proposal's deposit
 }
 
-func NewMsgDeposit(depositer sdk.AccAddress, proposalID int64, amount sdk.Coins) MsgDeposit {
+func NewMsgDeposit(depositer sdk.AccAddress, proposalID uint64, amount sdk.Coins) MsgDeposit {
 	return MsgDeposit{
 		ProposalID: proposalID,
 		Depositer:  depositer,
@@ -145,12 +145,12 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 //-----------------------------------------------------------
 // MsgVote
 type MsgVote struct {
-	ProposalID int64          `json:"proposal_id"` // ID of the proposal
+	ProposalID uint64         `json:"proposal_id"` // ID of the proposal
 	Voter      sdk.AccAddress `json:"voter"`       //  address of the voter
 	Option     VoteOption     `json:"option"`      //  option from OptionSet chosen by the voter
 }
 
-func NewMsgVote(voter sdk.AccAddress, proposalID int64, option VoteOption) MsgVote {
+func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) MsgVote {
 	return MsgVote{
 		ProposalID: proposalID,
 		Voter:      voter,

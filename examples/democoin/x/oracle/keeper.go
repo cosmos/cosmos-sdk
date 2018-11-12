@@ -71,7 +71,7 @@ func (keeper Keeper) Info(ctx sdk.Context, p Payload) (res Info) {
 	if bz == nil {
 		return EmptyInfo(ctx)
 	}
-	keeper.cdc.MustUnmarshalBinary(bz, &res)
+	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &res)
 
 	return
 }
@@ -80,7 +80,7 @@ func (keeper Keeper) setInfo(ctx sdk.Context, p Payload, info Info) {
 	store := ctx.KVStore(keeper.key)
 
 	key := GetInfoKey(p, keeper.cdc)
-	bz := keeper.cdc.MustMarshalBinary(info)
+	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(info)
 	store.Set(key, bz)
 }
 

@@ -64,7 +64,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 
 			moniker := viper.GetString(flagMoniker)
 			if moniker == "" {
-				moniker = fmt.Sprintf("gaianode-%v", common.RandStr(6))
+				return fmt.Errorf("required flag \"%s\" has not been set", flagMoniker)
 			}
 
 			config.Moniker = moniker

@@ -34,7 +34,7 @@ IMPROVEMENTS
   * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet
 
 * Gaia
-  * Generate a random moniker on `gaiad init` if one was not provided.
+  * Require moniker to be provided on `gaiad init`.
 
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization

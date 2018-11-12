@@ -2,12 +2,12 @@
 
 ## Intro
 
-When thinking about security, it's good to start with a specific threat
+When thinking about security, it is good to start with a specific threat
 model. Our threat model is the following:
 
 > We assume that a thriving ecosystem of Cosmos-SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
-The Cosmos-SDK is designed to address this threat by being the
+The Cosmos SDK is designed to address this threat by being the
 foundation of an object capability system.
 
 > The structural properties of object capability systems favor
@@ -36,13 +36,13 @@ foundation of an object capability system.
 >     to another object only through a preexisting chain of references.
 >     In short, "Only connectivity begets connectivity."
 
-For an introduction to object-capabilities, see this [article](http://habitatchronicles.com/2017/05/what-are-capabilities/).
+For an introduction to object-capabilities, see [this article](http://habitatchronicles.com/2017/05/what-are-capabilities/).
 
 Strictly speaking, Golang does not implement object capabilities
 completely, because of several issues:
 
 - pervasive ability to import primitive modules (e.g. "unsafe", "os")
-- pervasive ability to override module vars <https://github.com/golang/go/issues/23161>
+- pervasive ability to [override module vars](https://github.com/golang/go/issues/23161)
 - data-race vulnerability where 2+ goroutines can create illegal interface values
 
 The first is easy to catch by auditing imports and using a proper
@@ -52,9 +52,9 @@ unfortunate but it can be audited with some cost.
 Perhaps [Go2 will implement the object capability
 model](https://github.com/golang/go/issues/23157).
 
-## What does it look like?
+## Ocaps in practice
 
-Only reveal what is necessary to get the work done.
+The idea is to only reveal what is necessary to get the work done.
 
 For example, the following code snippet violates the object capabilities
 principle:
@@ -77,7 +77,7 @@ var sumValue := externalModule.ComputeSumValue(*account)
 ```
 
 In the Cosmos SDK, you can see the application of this principle in the
-basecoin examples folder.
+[basecoin examples folder](../examples/basecoin).
 
 ```go
 // File: cosmos-sdk/examples/basecoin/app/init_handlers.go

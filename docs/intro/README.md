@@ -23,6 +23,19 @@ To create a new project, you can either:
 - Copy the `docs/examples/basecoin` directory. 
 - Use community tools! More info to come.
 
+## SDK Directory Structure
+
+The SDK is laid out in the following directories:
+
+- `baseapp`: Defines the template for a basic [ABCI](https://github.com/tendermint/tendermint/tree/master/abci) application so that your Cosmos-SDK application can communicate with the underlying Tendermint node.
+- `client`: CLI and REST server tooling for interacting with SDK application.
+- `examples`: Examples of how to build working standalone applications.
+- `server`: The full node server for running an SDK application on top of
+  Tendermint.
+- `store`: The database of the SDK - a Merkle multistore supporting multiple types of underling Merkle key-value stores.
+- `types`: Common types in SDK applications.
+- `x`: Extensions to the core, where all messages and handlers are defined.
+
 ## Languages
 
 The Cosmos-SDK is currently written in [Golang](https://golang.org/), though the

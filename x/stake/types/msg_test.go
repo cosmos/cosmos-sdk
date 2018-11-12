@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	coinPos  = sdk.NewInt64Coin("stake", 1000)
-	coinZero = sdk.NewInt64Coin("stake", 0)
-	coinNeg  = sdk.NewInt64Coin("stake", -10000)
+	coinPos  = sdk.NewInt64Coin(DefaultBondDenom, 1000)
+	coinZero = sdk.NewInt64Coin(DefaultBondDenom, 0)
+	coinNeg  = sdk.NewInt64Coin(DefaultBondDenom, -10000)
 )
 
 // test ValidateBasic for MsgCreateValidator

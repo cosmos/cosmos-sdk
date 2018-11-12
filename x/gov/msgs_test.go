@@ -18,6 +18,10 @@ var (
 	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
 )
 
+func init() {
+	coinsMulti.Sort()
+}
+
 // test ValidateBasic for MsgCreateValidator
 func TestMsgSubmitProposal(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})

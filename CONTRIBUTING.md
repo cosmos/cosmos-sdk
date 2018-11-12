@@ -55,7 +55,7 @@ All PRs require two reviews before merge. When reviewing PRs please use the foll
 - `LGTM` without an explicit approval means that the changes look good, but you haven't pulled down the code, run tests locally and thoroughly reviewed it.
 - `Approval` through the GH UI means that you understand the code, documentation/spec is updated in the right places, you have pulled down and tested the code locally.
 
-### A note on Documentation updates
+### A Note on Documentation Updates
 
 
 If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in /docs.

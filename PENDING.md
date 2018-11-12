@@ -20,12 +20,12 @@ FEATURES
     query REST endpoints.
 
 * Gaia CLI  (`gaiacli`)
-    * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Add governance
+  * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance
     parameter query commands.
 
 * Gaia
-  * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added querier for getting
-    governance parameters.
+  * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Implemented querier
+  for getting governance parameters.
 
 * SDK
 

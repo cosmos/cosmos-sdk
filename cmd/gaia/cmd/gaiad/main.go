@@ -68,7 +68,10 @@ func exportAppStateAndTMValidators(
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 	gApp := app.NewGaiaApp(logger, db, traceStore)
 	if height != -1 {
-		gApp.LoadHeight(height)
+		err := gApp.LoadHeight(height)
+		if err != nil {
+			return err
+		}
 	}
 	return gApp.ExportAppStateAndValidators()
 }

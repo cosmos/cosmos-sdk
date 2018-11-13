@@ -613,8 +613,9 @@ func (app *BaseApp) cacheTxContext(
 }
 
 // runTx processes a transaction. The transactions is proccessed via an
-// anteHandler. txBytes may be nil in some cases, eg. in tests. Also, in the
-// future we may support "internal" transactions.
+// anteHandler. The provided txBytes may be nil in some cases, eg. in tests.
+// Also, in the future we may support "internal" transactions. For further
+// details on transaction execution, reference the BaseApp SDK documentation.
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas

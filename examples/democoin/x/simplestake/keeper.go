@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
-const stakingToken = "steak"
+const stakingToken = "stake"
 
 const moduleName = "simplestake"
 

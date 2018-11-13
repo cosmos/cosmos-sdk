@@ -37,6 +37,21 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	return delegations
 }
 
+// return all delegations to a specific validator. Useful for querier.
+func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []types.Delegation) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		if delegation.GetValidatorAddr().Equals(valAddr) {
+			delegations = append(delegations, delegation)
+		}
+	}
+	return delegations
+}
+
 // return a given amount of all the delegations from a delegator
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve uint16) (delegations []types.Delegation) {

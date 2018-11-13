@@ -950,6 +950,30 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
+  /stake/validators/{validatorAddr}/delegations:
+    parameters:
+    - in: path
+      name: validatorAddr
+      description: Bech32 OperatorAddress of validator
+      required: true
+      type: string
+    get:
+      summary: Get all delegations from a validator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Delegation"
+        400:
+          description: Invalid validator address
+        500:
+          description: Internal Server Error
   /stake/validators/{validatorAddr}/unbonding_delegations:
     parameters:
     - in: path

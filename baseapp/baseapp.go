@@ -71,7 +71,6 @@ type BaseApp struct {
 	// spam prevention
 	minimumFees     sdk.Coins
 	maximumBlockGas int64
-	deliverGas
 
 	// flag for sealing
 	sealed bool
@@ -604,13 +603,6 @@ func (app *BaseApp) initializeContext(ctx sdk.Context, mode runTxMode) sdk.Conte
 // anteHandler. txBytes may be nil in some cases, eg. in tests. Also, in the
 // future we may support "internal" transactions.
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
-
-	// only run the tx if there is block gas remaining
-	if ctx.BlockGasMeter.PastLimit() {
-		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
-		return
-	}
-
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
@@ -618,6 +610,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	var msCache sdk.CacheMultiStore
 	ctx := app.getContextForAnte(mode, txBytes)
 	ctx = app.initializeContext(ctx, mode)
+
+	// only run the tx if there is block gas remaining
+	if ctx.BlockGasMeter().PastLimit() {
+		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
+		return
+	}
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -673,7 +671,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	result.GasWanted = gasWanted
 
 	// consume block gas
-	ctx.BlockGasMeter.ConsumeGas(
+	ctx.BlockGasMeter().ConsumeGas(
 		ctx.GasMeter().GasConsumed(), "block gas meter")
 
 	// only update state if all messages pass

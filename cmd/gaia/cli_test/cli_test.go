@@ -317,9 +317,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForTMStart(port)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	executeGetDepositParam(t, fmt.Sprintf("gaiacli query param deposit %v", flags))
-	executeGetVotingParam(t, fmt.Sprintf("gaiacli query param voting %v", flags))
-	executeGetTallyingParam(t, fmt.Sprintf("gaiacli query param tallying %v", flags))
+	executeGetDepositParam(t, fmt.Sprintf("gaiacli query gov param deposit %v", flags))
+	executeGetVotingParam(t, fmt.Sprintf("gaiacli query gov param voting %v", flags))
+	executeGetTallyingParam(t, fmt.Sprintf("gaiacli query gov param tallying %v", flags))
 
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 

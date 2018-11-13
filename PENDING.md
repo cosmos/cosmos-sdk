@@ -27,10 +27,11 @@ FEATURES
   * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance
     parameter query commands.
   * [stake][cli] [\#2027] Add CLI query command for getting all delegations to a specific validator.
-    
+
 * Gaia
   * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Implemented querier
   for getting governance parameters.
+  * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
 
 * SDK
     * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
@@ -67,7 +68,7 @@ BUG FIXES
   * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override
 
 * SDK
-  
+
   - \#2733 [x/gov, x/mock/simulation] Fix governance simulation, update x/gov import/export
 
 * Tendermint

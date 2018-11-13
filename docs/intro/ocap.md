@@ -80,7 +80,7 @@ In the Cosmos SDK, you can see the application of this principle in the
 [basecoin examples folder](../examples/basecoin).
 
 ```go
-// File: cosmos-sdk/examples/basecoin/app/init_handlers.go
+// File: cosmos-sdk/docs/examples/basecoin/app/init_handlers.go
 package app
 
 import (

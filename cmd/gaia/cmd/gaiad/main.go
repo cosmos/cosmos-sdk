@@ -70,7 +70,7 @@ func exportAppStateAndTMValidators(
 	if height != -1 {
 		err := gApp.LoadHeight(height)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 	}
 	return gApp.ExportAppStateAndValidators()

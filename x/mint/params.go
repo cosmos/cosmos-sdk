@@ -2,9 +2,9 @@ package mint
 
 import (
 	"fmt"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // mint parameters

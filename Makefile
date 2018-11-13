@@ -117,6 +117,7 @@ update_dev_tools:
 get_tools: $(GOBIN)/dep $(GOBIN)/gometalinter $(GOBIN)/statik
 	@echo "--> Installing tools"
 	$(MAKE) -C scripts get_tools
+	go get -u golang.org/x/tools/cmd/goimports
 
 $(GOBIN)/%:
 	$(MAKE) -C scripts $(subst $(GOBIN)/,,$(@))

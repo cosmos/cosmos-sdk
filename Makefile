@@ -118,6 +118,9 @@ get_tools: $(GOBIN)/dep $(GOBIN)/gometalinter $(GOBIN)/statik
 	@echo "--> Installing tools"
 	$(MAKE) -C scripts get_tools
 
+$(GOBIN)/%:
+	$(MAKE) -C scripts $(subst $(GOBIN)/,,$(@))
+
 get_dev_tools: get_tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)

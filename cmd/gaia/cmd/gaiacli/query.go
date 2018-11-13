@@ -36,6 +36,7 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
 		stakecmd.GetCmdQueryValidator(storeStake, cdc),
 		stakecmd.GetCmdQueryValidators(storeStake, cdc),
+		stakecmd.GetCmdQueryValidatorDelegations(storeStake, cdc),
 		stakecmd.GetCmdQueryValidatorUnbondingDelegations(queryRouteStake, cdc),
 		stakecmd.GetCmdQueryValidatorRedelegations(queryRouteStake, cdc),
 		stakecmd.GetCmdQueryParams(storeStake, cdc),

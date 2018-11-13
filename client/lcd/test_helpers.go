@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -14,6 +12,9 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"

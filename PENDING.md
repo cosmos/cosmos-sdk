@@ -5,10 +5,13 @@ BREAKING CHANGES
 * Gaia REST API (`gaiacli advanced rest-server`)
 
 * Gaia CLI  (`gaiacli`)
+  * [cli] [\#2727](https://github.com/cosmos/cosmos-sdk/pull/2727) Fix unbonding command flow
+  * [cli] [\#2786](https://github.com/cosmos/cosmos-sdk/pull/2786) Fix redelegation command flow
 
 * Gaia
 
 * SDK
+  * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.
 
 * Tendermint
 
@@ -22,6 +25,7 @@ FEATURES
 * Gaia
 
 * SDK
+    * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
 
 * Tendermint
 
@@ -34,6 +38,8 @@ IMPROVEMENTS
   * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet
 
 * Gaia
+ - #2773 Require moniker to be provided on `gaiad init`.
+ - #2672 [Makefile] Updated for better Windows compatibility and ledger support logic, get_tools was rewritten as a cross-compatible Makefile.
 
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
@@ -49,8 +55,8 @@ BUG FIXES
 
 * Gaia
   * [\#2723] Use `cosmosvalcons` Bech32 prefix in `tendermint show-address`
-  * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override 
-  
+  * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override
+
 * SDK
   
   - \#2733 [x/gov, x/mock/simulation] Fix governance simulation, update x/gov import/export

@@ -272,7 +272,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, validator.OperatorAddr, sdk.ValAddress(barAddr))
 	require.True(sdk.DecEq(t, sdk.NewDec(2), validator.Tokens))
 
-	validatorDelegations := executeGetValidatorDelegations(t, fmt.Sprintf("gaiacli query delegations-to %s --output=json %v", sdk.ValAddress(barAddr), flags))
+	validatorDelegations := executeGetValidatorDelegations(t, fmt.Sprintf("gaiacli query stake delegations-to %s --output=json %v", sdk.ValAddress(barAddr), flags))
 	require.Len(t, validatorDelegations, 1)
 	require.NotZero(t, validatorDelegations[0].Shares)
 

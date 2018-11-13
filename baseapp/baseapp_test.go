@@ -872,19 +872,20 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	app.SetMaximumBlockGas(100)
 
 	testCases := []struct {
-		tx           *txTest
-		numDelivers  int
-		blockGasUsed int64
-		fail         bool
+		tx                *txTest
+		numDelivers       int
+		gasUsedPerDeliver int64
+		fail              bool
+		failAfterDeliver  int
 	}{
-		{newTxCounter(0, 0), 0, 0, false},
-		{newTxCounter(9, 1), 2, 20, false},
-		{newTxCounter(10, 0), 3, 30, false},
-		{newTxCounter(10, 0), 10, 100, false},
-		{newTxCounter(2, 7), 11, 99, false},
+		{newTxCounter(0, 0), 0, 0, false, 0},
+		{newTxCounter(9, 1), 2, 10, false, 0},
+		{newTxCounter(10, 0), 3, 10, false, 0},
+		{newTxCounter(10, 0), 10, 10, false, 0},
+		{newTxCounter(2, 7), 11, 9, false, 0},
 
-		{newTxCounter(2, 7), 12, 108, true},
-		{newTxCounter(10, 0), 11, 110, true},
+		{newTxCounter(10, 0), 11, 10, true, 10},
+		{newTxCounter(10, 0), 15, 10, true, 10},
 	}
 
 	for i, tc := range testCases {
@@ -894,25 +895,27 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		app.BeginBlock(abci.RequestBeginBlock{})
 
 		// execute the transaction multiple times
-		for j := 0; j < numDelivers; j++ {
+		for j := 0; j < tc.numDelivers; j++ {
 			res := app.Deliver(tx)
-		}
 
-		ctx := app.getContextForAnte(runTxModeDeliver, tx)
-		ctx = app.initializeContext(ctx, runTxModeDeliver)
-		blockGasUsed := ctx.BlockGasMeter().ConsumedGas()
+			ctx := app.getContextForAnte(runTxModeDeliver, nil)
+			ctx = app.initializeContext(ctx, runTxModeDeliver)
+			blockGasUsed := ctx.BlockGasMeter().GasConsumed()
 
-		// check gas used and wanted
-		require.Equal(t, tc.blockGasUsed, blockGasUsed,
-			fmt.Sprintf("%d: %v, %v, %v", i, tc, blockGasUsed, res))
+			// check for failed transactions
+			if tc.fail && (j+1) > tc.failAfterDeliver {
+				require.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), fmt.Sprintf("%d: %v, %v", i, tc, res))
+				require.True(t, ctx.BlockGasMeter().PastLimit())
+			} else {
 
-		// check for out of gas
-		if !tc.fail {
-			require.True(t, res.IsOK(), fmt.Sprintf("%d: %v, %v", i, tc, res))
-			require.False(t, ctx.BlockGasMeter().PastLimit())
-		} else {
-			require.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), fmt.Sprintf("%d: %v, %v", i, tc, res))
-			require.True(t, ctx.BlockGasMeter().PastLimit())
+				// check gas used and wanted
+				expBlockGasUsed := tc.gasUsedPerDeliver * int64(j+1)
+				require.Equal(t, expBlockGasUsed, blockGasUsed,
+					fmt.Sprintf("%d,%d: %v, %v, %v, %v", i, j, tc, expBlockGasUsed, blockGasUsed, res))
+
+				require.True(t, res.IsOK(), fmt.Sprintf("%d,%d: %v, %v", i, j, tc, res))
+				require.False(t, ctx.BlockGasMeter().PastLimit())
+			}
 		}
 	}
 }

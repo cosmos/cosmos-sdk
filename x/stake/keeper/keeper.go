@@ -127,16 +127,6 @@ func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operato
 	}
 }
 
-// Clear last validator powers.
-func (k Keeper) ClearLastValidatorPowers(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
-	}
-}
-
 // Delete the last validator power.
 func (k Keeper) DeleteLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) {
 	store := ctx.KVStore(k.storeKey)

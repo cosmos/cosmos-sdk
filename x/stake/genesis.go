@@ -68,15 +68,13 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.InsertRedelegationQueue(ctx, red)
 	}
 
-	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-
 	// overwrite the pool since we exported
 	if data.Exported {
-		keeper.SetPool(ctx, data.Pool)
-		keeper.ClearLastValidatorPowers(ctx)
 		for _, lv := range data.LastValidatorPowers {
 			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)
 		}
+	} else {
+		res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	}
 
 	return

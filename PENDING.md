@@ -47,6 +47,7 @@ IMPROVEMENTS
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
 
 * Tendermint
+ - #2796 Update to go-amino 0.14.1
 
 
 BUG FIXES

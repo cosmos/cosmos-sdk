@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/common"
+	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 
 	"github.com/spf13/cobra"
@@ -129,7 +130,9 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	return cmd
 }
 
-func newApp(logger log.Logger, db dbm.DB, _ io.Writer) abci.Application {
+func newApp(logger log.Logger, db dbm.DB, _ io.Writer,
+	_ node.GenesisDocProvider) abci.Application {
+
 	return app.NewDemocoinApp(logger, db)
 }
 

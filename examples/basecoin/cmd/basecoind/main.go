@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -122,7 +123,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 	return cmd
 }
 
-func newApp(logger log.Logger, db dbm.DB, storeTracer io.Writer) abci.Application {
+func newApp(logger log.Logger, db dbm.DB, storeTracer io.Writer, _ node.GenesisDocProvider) abci.Application {
 	return app.NewBasecoinApp(logger, db, baseapp.SetPruning(viper.GetString("pruning")))
 }
 

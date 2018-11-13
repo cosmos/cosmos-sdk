@@ -1,21 +1,23 @@
 # Join the Testnet
 
 ::: tip Current Testnet
-See the [testnet repo](https://github.com/cosmos/testnets) for 
+See the [testnet repo](https://github.com/cosmos/testnets) for
 information on the latest testnet, including the correct version
 of the Cosmos-SDK to use and details about the genesis file.
 :::
 
-Please ensure you have the [Cosmos SDK](/getting-started/installation.md) installed. If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
+**Please ensure you have the [gaia binaries](.//installation.md) installed.**
+
+If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
 
 ## Setting Up a New Node
 
-These instructions are for setting up a brand new full node from scratch. 
+These instructions are for setting up a brand new full node from scratch.
 
 First, initialize the node and create the necessary config files:
 
 ```bash
-gaiad init --skip-genesis --name <your_custom_name>
+gaiad init
 ```
 
 ::: warning Note
@@ -75,10 +77,12 @@ git fetch --all && git checkout master
 make update_tools && make get_vendor_deps && make install
 ```
 
+> *NOTE*: If you have issues at this step, please check that you have the latest stable version of GO installed.
+
 Note we use `master` here since it contains the latest stable release.
-See the [testnet repo](https://github.com/cosmos/testnets) 
-for details on which version is needed for which testnet, 
-and the [SDK release page](https://github.com/cosmos/cosmos-sdk/releases) 
+See the [testnet repo](https://github.com/cosmos/testnets)
+for details on which version is needed for which testnet,
+and the [SDK release page](https://github.com/cosmos/cosmos-sdk/releases)
 for details on each release.
 
 Your full node has been cleanly upgraded!
@@ -94,20 +98,16 @@ mkdir -p $HOME/.gaiad/config
 curl https://raw.githubusercontent.com/cosmos/testnets/master/latest/genesis.json > $HOME/.gaiad/config/genesis.json
 ```
 
-Note we use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets) 
-which contains details for the latest testnet. If you are connecting to a different testnet, ensure you
-get the right files.
+Note we use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets)
+which contains details for the latest testnet. If you are connecting to a different testnet, ensure you get the right files.
 
 ### Add Seed Nodes
 
-Your node needs to know how to find peers. You'll need to add healthy seed nodes to `$HOME/.gaiad/config/config.toml`. Here are some seed nodes you can use:
+Your node needs to know how to find peers. You'll need to add healthy seed nodes to `$HOME/.gaiad/config/config.toml`. The `testnets` repo contains links to the seed nodes for each testnet. If you are looking to join the running testnet please [check the repository for details](https://github.com/cosmos/testnets) on which nodes to use.
 
-```toml
-# Comma separated list of seed nodes to connect to
-seeds = "718145d422a823fd2a4e1e36e91b92bb0c4ddf8e@gaia-testnet.coinculture.net:26656,5922bf29b48a18c2300b85cc53f424fce23927ab@67.207.73.206:26656,7c8b8fd03577cd4817f5be1f03d506f879df98d8@gaia-7000-seed1.interblock.io:26656,a28737ff02391a6e00a1d3b79befd57e68e8264c@gaia-7000-seed2.interblock.io:26656,987ffd26640cd03d08ed7e53b24dfaa7956e612d@gaia-7000-seed3.interblock.io:26656"
-```
+If those seeds aren't working, you can find more seeds and persistent peers on the [Cosmos Explorer](https://explorer.cosmos.network/nodes). Open the the `Full Nodes` pane and select nodes that do not have private (`10.x.x.x`) or [local IP addresses](https://en.wikipedia.org/wiki/Private_network). The `Persistent Peer` field contains the connection string. For best results use 4-6.
 
-If those seeds aren't working, you can find more seeds and persistent peers on the [Cosmos Explorer](https://explorecosmos.network/nodes). Open the the `Full Nodes` pane and select nodes that do not have private (`10.x.x.x`) or [local IP addresses](https://en.wikipedia.org/wiki/Private_network). The `Persistent Peer` field contains the connection string. For best results use 4-6.
+You can also ask for peers on the [Validators Riot Room](https://riot.im/app/#/room/#cosmos-validators:matrix.org)
 
 For more information on seeds and peers, you can [read this](https://github.com/tendermint/tendermint/blob/develop/docs/using-tendermint.md#peers).
 
@@ -130,4 +130,4 @@ View the status of the network with the [Cosmos Explorer](https://explorecosmos.
 
 ## Upgrade to Validator Node
 
-You now have an active full node. What's the next step? You can upgrade your full node to become a Cosmos Validator. The top 100 validators have the ability to propose new blocks to the Cosmos Hub. Continue onto [the Validator Setup](../validators/validator-setup.md).
+You now have an active full node. What's the next step? You can upgrade your full node to become a Cosmos Validator. The top 100 validators have the ability to propose new blocks to the Cosmos Hub. Continue onto [the Validator Setup](./validators/validator-setup.md).

@@ -1,14 +1,14 @@
 # Validator Setup
 
-::: warning Current Testnet
-The current testnet is `gaia-8000`.
+:::
+Information on how to join the current testnet (`genesis.json` file and seeds) is held [in our `testnet` repo](https://github.com/cosmos/testnets/tree/master/latest). Please check there if you are looking to join our latest testnet. 
 :::
 
 Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/docs/getting-started/full-node.md) guide.
 
 ## Running a Validator Node
 
-[Validators](/validators/overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable, double sign a transaction, or don't cast their votes. Please read about [Sentry Node Architecture](/validators/validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
+[Validators](/validators/overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](/validators/validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
 
 ::: danger Warning
 If you want to become a validator for the Hub's `mainnet`, you should [research security](/validators/security.md).
@@ -22,14 +22,14 @@ Your `cosmosvalconspub` can be used to create a new validator by staking tokens.
 gaiad tendermint show-validator
 ```
 
-Next, craft your `gaiacli tx create-validator` command:
+Next, craft your `gaiacli tx stake create-validator` command:
 
 ::: warning Note
 Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
 :::
 
 ```bash
-gaiacli tx create-validator \
+gaiacli tx stake create-validator \
   --amount=5steak \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
@@ -44,6 +44,10 @@ __Note__: When specifying commission parameters, the `commission-max-change-rate
 is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is
 a 100% rate increase, but only 1 percentage point.
 
+::: tip
+Use `gaiacli tx stake create-validator -h` to get a list of all the available flags.
+:::
+
 ### Edit Validator Description
 
 You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
@@ -51,7 +55,7 @@ You can edit your validator's public description. This info is to identify your 
 The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
-gaiacli tx edit-validator
+gaiacli tx stake edit-validator
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E \
@@ -73,7 +77,7 @@ __Note__: The `commission-rate` value must adhere to the following invariants:
 View the validator's information with this command:
 
 ```bash
-gaiacli query validator <account_cosmos>
+gaiacli query stake validator <account_cosmos>
 ```
 
 ### Track Validator Signing Information
@@ -81,7 +85,7 @@ gaiacli query validator <account_cosmos>
 In order to keep track of a validator's signatures in the past you can do so by using the `signing-info` command:
 
 ```bash
-gaiacli query signing-info <validator-pubkey>\
+gaiacli query slashing signing-info <validator-pubkey>\
   --chain-id=<chain_id>
 ```
 
@@ -90,7 +94,7 @@ gaiacli query signing-info <validator-pubkey>\
 When a validator is "jailed" for downtime, you must submit an `Unjail` transaction from the operator account in order to be able to get block proposer rewards again (depends on the zone fee distribution).
 
 ```bash
-gaiacli tx unjail \
+gaiacli tx slashing unjail \
 	--from=<key_name> \
 	--chain-id=<chain_id>
 ```
@@ -124,7 +128,7 @@ gaiad start
 Wait for your full node to catch up to the latest block. Next, run the following command. Note that `<cosmos>` is the address of your validator account, and `<name>` is the name of the validator account. You can find this info by running `gaiacli keys list`.
 
 ```bash
-gaiacli tx unjail <cosmos> --chain-id=<chain_id> --from=<from>
+gaiacli tx slashing unjail <cosmos> --chain-id=<chain_id> --from=<from>
 ```
 
 ::: danger Warning

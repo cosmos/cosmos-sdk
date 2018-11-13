@@ -12,6 +12,15 @@ module.exports = {
     nav: [{ text: "Back to Cosmos", link: "https://cosmos.network" }],
     sidebar: [
       {
+        title: "Overview",
+        collapsable: false,
+        children: [
+          "/intro/README",
+          "/intro/sdk-app-architecture",
+          "/intro/ocap"
+        ]
+      },
+      {
         title: "Gaia",
         collapsable: false,
         children: [
@@ -21,23 +30,21 @@ module.exports = {
           "/gaia/validators/overview",
           "/gaia/validators/security",
           "/gaia/validators/validator-faq",
-          "/gaia/validators/validator-setup"
+          "/gaia/validators/validator-setup",
+          "/gaia/ledger"
         ]
       },
       {
         title: "Clients",
         collapsable: false,
         children: [
-	  "/clients/clients",
-	  "/clients/cli",
-	  "/clients/keys",
-	  "/clients/ledger",
-	  "/clients/node",
-	  "/clients/service-providers",
-	  "/lite/", // this renders the readme
-	  "/lite/getting_started",
-	  "/lite/specification"
-	]
+      	  "/clients/README",
+      	  "/lite/", // this renders the readme
+      	  "/lite/getting_started",
+      	  "/lite/specification",
+          "/clients/cli",
+          "/clients/service-providers"
+      	]
       }
     ]
   }

@@ -1,4 +1,8 @@
-# Docs Build Workflow
+## Updating the docs
+
+If you want to open a PR on the Cosmos SDK to update the documentation, please follow the guidelines in the [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md)
+
+## Docs Build Workflow
 
 The documentation for the Cosmos SDK is hosted at:
 
@@ -15,34 +19,34 @@ Besides, gaia-lite API docs are also provided by gaia-lite. The default API docs
 https://localhost:1317/swagger-ui/
 ```
 
-## How It Works
+### How It Works
 
 There is a Jenkins job listening for changes in the `/docs` directory, on both
 the  `master` and `develop` branches. Any updates to files in this directory
 on those branches will automatically trigger a website deployment. Under the hood,
 a private website repository has make targets consumed by a standard Jenkins task.
 
-## README
+### README
 
 The [README.md](./README.md) is also the landing page for the documentation
 on the website. During the Jenkins build, the current commit is added to the bottom
 of the README.
 
-## Config.js
+### Config.js
 
 The [config.js](./.vuepress/config.js) generates the sidebar and Table of Contents
 on the website docs. Note the use of relative links and the omission of
 file extensions. Additional features are available to improve the look
 of the sidebar.
 
-## Links
+### Links
 
 **NOTE:** Strongly consider the existing links - both within this directory
 and to the website docs - when moving or deleting files.
 
 Relative links should be used nearly everywhere, having discovered and weighed the following:
 
-### Relative
+#### Relative
 
 Where is the other file, relative to the current one?
 
@@ -50,7 +54,7 @@ Where is the other file, relative to the current one?
 - confusing / annoying to have things like: `../../../../myfile.md`
 - requires more updates when files are re-shuffled
 
-### Absolute
+#### Absolute
 
 Where is the other file, given the root of the repo?
 
@@ -58,12 +62,12 @@ Where is the other file, given the root of the repo?
 - this is much nicer: `/docs/hereitis/myfile.md`
 - if you move that file around, the links inside it are preserved (but not to it, of course)
 
-### Full
+#### Full
 
 The full GitHub URL to a file or directory. Used occasionally when it makes sense
 to send users to the GitHub.
 
-## Building Locally
+### Building Locally
 
 To build and serve the documentation locally, run:
 
@@ -94,12 +98,12 @@ python -m SimpleHTTPServer 8080
 
 then navigate to localhost:8080 in your browser.
 
-## Consistency
+### Consistency
 
 Because the build processes are identical (as is the information contained herein), this file should be kept in sync as
 much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/develop/docs/DOCS_README.md).
 
-## Update and Build the RPC docs
+### Update and Build the RPC docs
 
 1. Execute the following command at the root directory to install the swagger-ui generate tool.
     ```

@@ -17,27 +17,26 @@ It is being used to build `Gaia`, the first implementation of the [Cosmos Hub](h
 **WARNING**: The SDK has mostly stabilized, but we are still making some
 breaking changes.
 
-**Note**: Requires [Go 1.10+](https://golang.org/dl/)
+**Note**: Requires [Go 1.11+](https://golang.org/dl/)
 
 ## Gaia Testnet
 
+To install the binaries, read the [install instructions](./docs/gaia/installation.md)
+
 To join the latest testnet, follow 
-[the guide](./docs/getting-started/join-testnet.md).
+[the guide](./docs/gaia/join-testnet.md).
 
 For status updates and genesis files, see the
 [testnets repo](https://github.com/cosmos/testnets).
 
-## Install
-
-See the 
-[install instructions](./docs/getting-started/installation.md).
 
 ## Quick Start
 
-See the [Cosmos Docs](https://cosmos.network/docs/)
+To learn how the SDK works from a high-level perspective, go to the [SDK Intro](./docs/intro/README.md).
 
-- [Getting started with the SDK](./docs/sdk/core/intro.md)
-- [SDK Examples](/examples)
+If you want to get started quickly and learn how to build on top of the SDK, please follow the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial). You can also fork the tutorial's repo to get started building your own Cosmos SDK application.
+
+For more, please go to the [Cosmos SDK Docs](./docs/README.md)
 
 ## Disambiguation
 

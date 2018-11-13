@@ -3,7 +3,7 @@
 ## Overview
 
 This _simple_ distribution mechanism describes a functional way to passively
-distribute rewards between validators and delegators. Note, that this mechanism does
+distribute rewards between validators and delegators. Note that this mechanism does
 not distribute funds in as precisely as active reward distribution mechanisms and
 will therefore be upgraded in the future.
 
@@ -16,7 +16,7 @@ whenever changes to parameters which affect the rate of reward distribution
 occurs, withdrawal of rewards must also occur.
 
 - Whenever withdrawing, one must withdraw the maximum amount they are entitled
-   too, leaving nothing in the pool.
+   to, leaving nothing in the pool.
 - Whenever bonding, unbonding, or re-delegating tokens to an existing account, a
    full withdrawal of the rewards must occur (as the rules for lazy accounting
    change).
@@ -54,20 +54,21 @@ However, this is unrealistic so deviations from the active distribution will
 occur based on fluctuations of incoming reward tokens as well as timing of
 reward withdrawal by other delegators.
 
-If you happen to know that incoming rewards are about significantly go up,
+If you happen to know that incoming rewards are about to significantly go up,
 you are incentivized to not withdraw until after this event, increasing the
-worth of your existing _accum_.
+worth of your existing _accum_. See [#2764](https://github.com/cosmos/cosmos-sdk/issues/2764)
+for further details.
 
 ## Affect on Staking
 
 Charging commission on Atom provisions while also allowing for Atom-provisions
 to be auto-bonded (distributed directly to the validators bonded stake) is
-problematic within DPoS. Fundamentally, these two mechanisms are mutually
-exclusive. If there are Atom commissions and auto-bonding Atoms, the portion
-of Atoms in the reward distribution calculation would become very large as the Atom
-portion for each delegator would change each block making a withdrawal of rewards
-for a delegator require a calculation for every single block since the last
-withdrawal. In conclusion, we can only have Atom commission and unbonded atoms
+problematic within BPoS. Fundamentally, these two mechanisms are mutually
+exclusive. If there are both commissions and auto-bonding on the staking token,
+the amount of staking tokens each validator and delegator has would change each
+block, so we would have to iterate through all of them.
+
+In conclusion, we can only have Atom commission and unbonded atoms
 provisions or bonded atom provisions with no Atom commission, and we elect to
 implement the former. Stakeholders wishing to rebond their provisions may elect
 to set up a script to periodically withdraw and rebond rewards.

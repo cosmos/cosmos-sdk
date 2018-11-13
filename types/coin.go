@@ -124,60 +124,75 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
-// Plus combines two sets of coins
+// Plus adds two sets of coins.
 // CONTRACT: Plus will never return Coins where one Coin has a 0 amount.
 func (coins Coins) Plus(coinsB Coins) Coins {
 	sum := ([]Coin)(nil)
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
+
 	for {
 		if indexA == lenA {
 			if indexB == lenB {
+				// return nil coins if both sets are empty
 				return sum
 			}
+
+			// return set B if set A is empty
 			return append(sum, coinsB[indexB:]...)
 		} else if indexB == lenB {
+			// return set A if set B is empty
 			return append(sum, coins[indexA:]...)
 		}
+
 		coinA, coinB := coins[indexA], coinsB[indexB]
+
 		switch strings.Compare(coinA.Denom, coinB.Denom) {
 		case -1:
+			// coin A denom < coin B denom
 			if coinA.IsZero() {
 				// ignore 0 sum coin type
 			} else {
 				sum = append(sum, coinA)
 			}
+
 			indexA++
+
 		case 0:
+			// coin A denom == coin B denom
 			if coinA.Amount.Add(coinB.Amount).IsZero() {
 				// ignore 0 sum coin type
 			} else {
 				sum = append(sum, coinA.Plus(coinB))
 			}
+
 			indexA++
 			indexB++
+
 		case 1:
+			// coin A denom > coin B denom
 			if coinB.IsZero() {
 				// ignore 0 sum coin type
 			} else {
 				sum = append(sum, coinB)
 			}
+
 			indexB++
 		}
 	}
 }
 
-// Negative returns a set of coins with all amount negative
-func (coins Coins) Negative() Coins {
-	res := make([]Coin, 0, len(coins))
-	for _, coin := range coins {
-		res = append(res, Coin{
-			Denom:  coin.Denom,
-			Amount: coin.Amount.Neg(),
-		})
-	}
-	return res
-}
+// // Negative returns a set of coins with all amount negative
+// func (coins Coins) Negative() Coins {
+// 	res := make([]Coin, 0, len(coins))
+// 	for _, coin := range coins {
+// 		res = append(res, Coin{
+// 			Denom:  coin.Denom,
+// 			Amount: coin.Amount.Neg(),
+// 		})
+// 	}
+// 	return res
+// }
 
 // Minus subtracts a set of coins from another (adds the inverse)
 func (coins Coins) Minus(coinsB Coins) Coins {

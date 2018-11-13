@@ -71,6 +71,9 @@ type BaseApp struct {
 	// minimum fees for spam prevention
 	minimumFees sdk.Coins
 
+	// tx sigs limit for spam prevention
+	txSigLimit int
+
 	// flag for sealing
 	sealed bool
 }
@@ -197,9 +200,12 @@ func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).WithMinimumFees(app.minimumFees)
+		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).
+			WithMinimumFees(app.minimumFees).
+			WithTxSigLimit(app.txSigLimit)
 	}
-	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
+	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger).
+		WithTxSigLimit(app.txSigLimit)
 }
 
 type state struct {

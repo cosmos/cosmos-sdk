@@ -325,8 +325,8 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 }
 
 // load a particular height
-func (app *GaiaApp) LoadHeight(height int64) {
-	app.LoadVersion(height, app.keyMain)
+func (app *GaiaApp) LoadHeight(height int64) error {
+	return app.LoadVersion(height, app.keyMain)
 }
 
 //______________________________________________________________________________________________

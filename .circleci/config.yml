@@ -7,6 +7,13 @@ defaults: &defaults
   environment:
     GOBIN: /tmp/workspace/bin
 
+docs_update: &docs_deploy
+  working_directory: ~/repo
+  docker:
+    - image: tendermint/docs_deployment
+  environment:
+    AWS_REGION: us-east-1
+
 jobs:
 
   setup_dependencies:
@@ -255,12 +262,26 @@ jobs:
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
-
+  deploy_docs:
+    <<: *docs_deploy
+    steps:
+      - checkout
+      - run:
+          name: Trigger website build
+          command: |
+            export LAST_COMMIT=`git rev-parse HEAD`
+            export DOCS_COMMIT=`git log -1 --format=format:%H --full-diff docs`
+            if [[ $DOCS_COMMIT == $LAST_COMMIT ]]; then
+              chamber exec cosmos-sdk -- start_website_build
+            else
+              echo "No changes to docs detected"
+            fi
 
 workflows:
   version: 2
   test-suite:
     jobs:
+      - deploy_docs
       - setup_dependencies
       - lint:
           requires:

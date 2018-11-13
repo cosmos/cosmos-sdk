@@ -113,3 +113,5 @@ much as possible with its [counterpart in the Tendermint Core repo](https://gith
     ```
     make install
     ```
+    
+Testing 

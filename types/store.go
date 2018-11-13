@@ -200,14 +200,14 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvA cmn.KVPair
 		if !bytes.Equal(kvA.Key, kvB.Key) {
 			return kvA, kvB, count, false
 		}
+		compareValue := true
 		for _, prefix := range prefixesToSkip {
 			// Skip value comparison if we matched a prefix
 			if bytes.Equal(kvA.Key[:len(prefix)], prefix) {
-				count++
-				continue
+				compareValue = false
 			}
 		}
-		if !bytes.Equal(kvA.Value, kvB.Value) {
+		if compareValue && !bytes.Equal(kvA.Value, kvB.Value) {
 			return kvA, kvB, count, false
 		}
 		count++

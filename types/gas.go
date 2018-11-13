@@ -29,6 +29,7 @@ type ErrorOutOfGas struct {
 type GasMeter interface {
 	GasConsumed() Gas
 	ConsumeGas(amount Gas, descriptor string)
+	PastLimit() bool
 }
 
 type basicGasMeter struct {
@@ -55,6 +56,10 @@ func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	}
 }
 
+func (g *basicGasMeter) PastLimit() bool {
+	return g.consumed > g.limit
+}
+
 type infiniteGasMeter struct {
 	consumed Gas
 }
@@ -72,6 +77,10 @@ func (g *infiniteGasMeter) GasConsumed() Gas {
 
 func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	g.consumed += amount
+}
+
+func (g *infiniteGasMeter) PastLimit() bool {
+	return false
 }
 
 // GasConfig defines gas cost for each operation on KVStores

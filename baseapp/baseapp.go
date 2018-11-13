@@ -427,20 +427,17 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	// Initialize the DeliverTx state. If this is the first block, it should
 	// already be initialized in InitChain. Otherwise app.deliverState will be
 	// nil, since it is reset on Commit.
-	blockGasMeter := sdk.NewGasMeter(app.maximumBlockGas)
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockGasMeter(blockGasMeter)
-
 	} else {
 		// In the first block, app.deliverState.ctx will already be initialized
 		// by InitChain. Context is now updated with Header information.
 		app.deliverState.ctx = app.deliverState.ctx.
 			WithBlockHeader(req.Header).
-			WithBlockHeight(req.Header.Height).
-			WithBlockGasMeter(blockGasMeter)
+			WithBlockHeight(req.Header.Height)
 	}
+	app.deliverState.ctx = app.deliverState.ctx.
+		WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
 
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)
@@ -607,6 +604,13 @@ func (app *BaseApp) initializeContext(ctx sdk.Context, mode runTxMode) sdk.Conte
 // anteHandler. txBytes may be nil in some cases, eg. in tests. Also, in the
 // future we may support "internal" transactions.
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+
+	// only run the tx if there is block gas remaining
+	if ctx.BlockGasMeter.PastLimit() {
+		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
+		return
+	}
+
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.

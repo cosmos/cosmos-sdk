@@ -53,6 +53,7 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 		govcmd.GetCmdQueryProposals(storeGov, cdc),
 		govcmd.GetCmdQueryVote(storeGov, cdc),
 		govcmd.GetCmdQueryVotes(storeGov, cdc),
+		govcmd.GetCmdQueryParams(storeGov, cdc),
 		govcmd.GetCmdQueryDeposit(storeGov, cdc),
 		govcmd.GetCmdQueryDeposits(storeGov, cdc))...)
 

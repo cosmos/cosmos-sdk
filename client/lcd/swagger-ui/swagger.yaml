@@ -1451,7 +1451,7 @@ paths:
   /gov/proposals/{proposalId}/votes/{voter}:
     get:
       summary: Query vote
-      description: Query vote information by proposalId and voter address
+      description: Query vote information by proposal Id and voter address
       produces:
       - application/json
       tags:
@@ -1476,6 +1476,83 @@ paths:
           description: Invalid proposal id or voter address
         404:
           description: Found no vote
+        500:
+          description: Internal Server Error
+  /gov/parameters/deposit:
+    get:
+      summary: Query governance deposit parameters
+      description: Query governance deposit parameters. The max_deposit_period units are in nanoseconds.
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              min_deposit:
+                type: array
+                items:
+                  $ref: "#/definitions/Coin"
+              max_deposit_period:
+                type: string
+                example: "86400000000000"
+        400:
+          description: <other_path> is not a valid query request path
+        404:
+          description: Found no deposit parameters
+        500:
+          description: Internal Server Error
+  /gov/parameters/tallying:
+    get:
+      summary: Query governance tally parameters
+      description: Query governance tally parameters
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      responses:
+        200:
+          description: OK
+          schema:
+            properties:
+              threshold:
+                type: string
+                example: "0.5000000000"
+              veto:
+                type: string
+                example: "0.3340000000"
+              governance_penalty:
+                type: string
+                example: "0.0100000000"
+        400:
+          description: <other_path> is not a valid query request path
+        404:
+          description: Found no tally parameters
+        500:
+          description: Internal Server Error
+  /gov/parameters/voting:
+    get:
+      summary: Query governance voting parameters
+      description: Query governance voting parameters. The voting_period units are in nanoseconds.
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      responses:
+        200:
+          description: OK
+          schema:
+            properties:
+              voting_period:
+                type: string
+                example: "86400000000000"
+        400:
+          description: <other_path> is not a valid query request path
+        404:
+          description: Found no voting parameters
         500:
           description: Internal Server Error
 

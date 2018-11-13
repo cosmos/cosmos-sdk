@@ -20,11 +20,17 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [gov] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance parameter
+    query REST endpoints.
 
 * Gaia CLI  (`gaiacli`)
-    * [stake][cli] [\#2027] Add CLI query command for getting all delegations to a specific validator.
+  * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance
+    parameter query commands.
+  * [stake][cli] [\#2027] Add CLI query command for getting all delegations to a specific validator.
     
 * Gaia
+  * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Implemented querier
+  for getting governance parameters.
 
 * SDK
     * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time

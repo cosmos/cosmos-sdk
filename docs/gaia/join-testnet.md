@@ -6,7 +6,7 @@ information on the latest testnet, including the correct version
 of the Cosmos-SDK to use and details about the genesis file.
 :::
 
-**Please ensure you have the [gaia binaries](/gaia/installation.md) installed.**
+**Please ensure you have the [gaia binaries](.//installation.md) installed.**
 
 If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
 

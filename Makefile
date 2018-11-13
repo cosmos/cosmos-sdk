@@ -108,6 +108,7 @@ check_tools:
 update_tools:
 	@echo "--> Updating tools to correct version"
 	$(MAKE) -C scripts get_tools
+	go get -u golang.org/x/tools/cmd/goimports
 
 update_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"

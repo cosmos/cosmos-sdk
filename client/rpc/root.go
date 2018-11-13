@@ -22,15 +22,8 @@ func todoNotImplemented(_ *cobra.Command, _ []string) error {
 	return errors.New("todo: Command not yet implemented")
 }
 
-// AddCommands adds a number of rpc-related subcommands
-func AddCommands(cmd *cobra.Command) {
-	cmd.AddCommand(
-		initClientCommand(),
-		statusCommand(),
-	)
-}
-
-func initClientCommand() *cobra.Command {
+// InitClientCommand initializes client commands
+func InitClientCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize light client",

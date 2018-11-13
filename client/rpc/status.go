@@ -14,7 +14,8 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-func statusCommand() *cobra.Command {
+// StatusCommand returns the status of the network
+func StatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Query remote node for status",

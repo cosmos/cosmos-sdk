@@ -237,7 +237,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100)) // Delegate tx on GaiaAppGenState
 
 	// create validator
-	cvStr := fmt.Sprintf("gaiacli tx create-validator %v", flags)
+	cvStr := fmt.Sprintf("gaiacli tx stake create-validator %v", flags)
 	cvStr += fmt.Sprintf(" --from=%s", "bar")
 	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
 	cvStr += fmt.Sprintf(" --amount=%v", fmt.Sprintf("2%s", stakeTypes.DefaultBondDenom))
@@ -268,12 +268,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
 	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64(), "%v", barAcc)
 
-	validator := executeGetValidator(t, fmt.Sprintf("gaiacli query validator %s --output=json %v", sdk.ValAddress(barAddr), flags))
+	validator := executeGetValidator(t, fmt.Sprintf("gaiacli query stake validator %s --output=json %v", sdk.ValAddress(barAddr), flags))
 	require.Equal(t, validator.OperatorAddr, sdk.ValAddress(barAddr))
 	require.True(sdk.DecEq(t, sdk.NewDec(2), validator.Tokens))
 
 	// unbond a single share
-	unbondStr := fmt.Sprintf("gaiacli tx unbond begin %v", flags)
+	unbondStr := fmt.Sprintf("gaiacli tx stake unbond begin %v", flags)
 	unbondStr += fmt.Sprintf(" --from=%s", "bar")
 	unbondStr += fmt.Sprintf(" --validator=%s", sdk.ValAddress(barAddr))
 	unbondStr += fmt.Sprintf(" --shares-amount=%v", "1")
@@ -286,19 +286,19 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %v %v", barCech, flags))
 	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64(), "%v", barAcc)
 	*/
-	validator = executeGetValidator(t, fmt.Sprintf("gaiacli query validator %s --output=json %v", sdk.ValAddress(barAddr), flags))
+	validator = executeGetValidator(t, fmt.Sprintf("gaiacli query stake validator %s --output=json %v", sdk.ValAddress(barAddr), flags))
 	require.Equal(t, "1.0000000000", validator.Tokens.String())
 
 	validatorUbds := executeGetValidatorUnbondingDelegations(t,
-		fmt.Sprintf("gaiacli query unbonding-delegations-from %s --output=json %v",
+		fmt.Sprintf("gaiacli query stake unbonding-delegations-from %s --output=json %v",
 			sdk.ValAddress(barAddr), flags))
 	require.Len(t, validatorUbds, 1)
 	require.Equal(t, "1", validatorUbds[0].Balance.Amount.String())
 
-	params := executeGetParams(t, fmt.Sprintf("gaiacli query parameters --output=json %v", flags))
+	params := executeGetParams(t, fmt.Sprintf("gaiacli query stake parameters --output=json %v", flags))
 	require.True(t, defaultParams.Equal(params))
 
-	pool := executeGetPool(t, fmt.Sprintf("gaiacli query pool --output=json %v", flags))
+	pool := executeGetPool(t, fmt.Sprintf("gaiacli query stake pool --output=json %v", flags))
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 }
 
@@ -318,11 +318,11 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
-	proposalsQuery, _ := tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals %v", flags), "")
+	proposalsQuery, _ := tests.ExecuteT(t, fmt.Sprintf("gaiacli query gov proposals %v", flags), "")
 	require.Equal(t, "No matching proposals found", proposalsQuery)
 
 	// submit a test proposal
-	spStr := fmt.Sprintf("gaiacli tx submit-proposal %v", flags)
+	spStr := fmt.Sprintf("gaiacli tx gov submit-proposal %v", flags)
 	spStr += fmt.Sprintf(" --from=%s", "foo")
 	spStr += fmt.Sprintf(" --deposit=%s", fmt.Sprintf("5%s", stakeTypes.DefaultBondDenom))
 	spStr += fmt.Sprintf(" --type=%s", "Text")
@@ -349,19 +349,19 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
-	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli query proposal --proposal-id=1 --output=json %v", flags))
+	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli query gov proposal --proposal-id=1 --output=json %v", flags))
 	require.Equal(t, uint64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 
-	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query gov proposals %v", flags), "")
 	require.Equal(t, "  1 - Test", proposalsQuery)
 
 	deposit := executeGetDeposit(t,
-		fmt.Sprintf("gaiacli query deposit --proposal-id=1 --depositer=%s --output=json %v",
+		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositer=%s --output=json %v",
 			fooAddr, flags))
 	require.Equal(t, int64(5), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
-	depositStr := fmt.Sprintf("gaiacli tx deposit %v", flags)
+	depositStr := fmt.Sprintf("gaiacli tx gov deposit %v", flags)
 	depositStr += fmt.Sprintf(" --from=%s", "foo")
 	depositStr += fmt.Sprintf(" --deposit=%s", fmt.Sprintf("10%s", stakeTypes.DefaultBondDenom))
 	depositStr += fmt.Sprintf(" --proposal-id=%s", "1")
@@ -381,22 +381,23 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// test query deposit
 	deposits := executeGetDeposits(t,
-		fmt.Sprintf("gaiacli query deposits --proposal-id=1 --output=json %v", flags))
+		fmt.Sprintf("gaiacli query gov deposits --proposal-id=1 --output=json %v", flags))
 	require.Len(t, deposits, 1)
 	require.Equal(t, int64(15), deposits[0].Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
 	deposit = executeGetDeposit(t,
-		fmt.Sprintf("gaiacli query deposit --proposal-id=1 --depositer=%s --output=json %v",
+		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositer=%s --output=json %v",
 			fooAddr, flags))
 	require.Equal(t, int64(15), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
+
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli query proposal --proposal-id=1 --output=json %v", flags))
+	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli query gov proposal --proposal-id=1 --output=json %v", flags))
 	require.Equal(t, uint64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
 
-	voteStr := fmt.Sprintf("gaiacli tx vote %v", flags)
+	voteStr := fmt.Sprintf("gaiacli tx gov vote %v", flags)
 	voteStr += fmt.Sprintf(" --from=%s", "foo")
 	voteStr += fmt.Sprintf(" --proposal-id=%s", "1")
 	voteStr += fmt.Sprintf(" --option=%s", "Yes")
@@ -414,23 +415,23 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, voteStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	vote := executeGetVote(t, fmt.Sprintf("gaiacli query vote --proposal-id=1 --voter=%s --output=json %v", fooAddr, flags))
+	vote := executeGetVote(t, fmt.Sprintf("gaiacli query gov vote --proposal-id=1 --voter=%s --output=json %v", fooAddr, flags))
 	require.Equal(t, uint64(1), vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
 
-	votes := executeGetVotes(t, fmt.Sprintf("gaiacli query votes --proposal-id=1 --output=json %v", flags))
+	votes := executeGetVotes(t, fmt.Sprintf("gaiacli query gov votes --proposal-id=1 --output=json %v", flags))
 	require.Len(t, votes, 1)
 	require.Equal(t, uint64(1), votes[0].ProposalID)
 	require.Equal(t, gov.OptionYes, votes[0].Option)
 
-	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --status=DepositPeriod %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query gov proposals --status=DepositPeriod %v", flags), "")
 	require.Equal(t, "No matching proposals found", proposalsQuery)
 
-	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --status=VotingPeriod %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query gov proposals --status=VotingPeriod %v", flags), "")
 	require.Equal(t, "  1 - Test", proposalsQuery)
 
 	// submit a second test proposal
-	spStr = fmt.Sprintf("gaiacli tx submit-proposal %v", flags)
+	spStr = fmt.Sprintf("gaiacli tx gov submit-proposal %v", flags)
 	spStr += fmt.Sprintf(" --from=%s", "foo")
 	spStr += fmt.Sprintf(" --deposit=%s", fmt.Sprintf("5%s", stakeTypes.DefaultBondDenom))
 	spStr += fmt.Sprintf(" --type=%s", "Text")
@@ -440,7 +441,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, spStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query proposals --limit=1 %v", flags), "")
+	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query gov proposals --limit=1 %v", flags), "")
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 }
 
@@ -553,7 +554,6 @@ func TestGaiaCLIConfig(t *testing.T) {
 	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)
 	expectedConfig := fmt.Sprintf(`chain_id = "%s"
-encoding = "btc"
 home = "%s"
 node = "%s"
 output = "text"
@@ -572,7 +572,6 @@ trust_node = true
 
 	// ensure it works without an initialized gaiad state
 	expectedConfig = fmt.Sprintf(`chain_id = ""
-encoding = "btc"
 home = "%s"
 node = "%s"
 output = "text"

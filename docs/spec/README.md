@@ -1,8 +1,8 @@
 # Specifications
 
-This directory contains specifications for the modules of the Cosmos SDK as well as Interchain Standards (ICS) and other specifications.. 
+This directory contains specifications for the modules of the Cosmos SDK as well as Interchain Standards (ICS) and other specifications..
 
-SDK applications hold thri state in a Merkle store. Updates to
+SDK applications hold this state in a Merkle store. Updates to
 the store may be made during transactions and at the beginning and end of every
 block.
 
@@ -25,8 +25,7 @@ block.
 ### Interchain standards
 
 - [ICS30](./ics/ics-030-signed-messages.md) - Signed messages standard.
-- 
+-
 
 For details on the underlying blockchain and p2p protocols, see
 the [Tendermint specification](https://github.com/tendermint/tendermint/tree/develop/docs/spec).
-

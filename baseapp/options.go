@@ -39,6 +39,11 @@ func SetMinimumFees(minFees string) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.SetMinimumFees(fees) }
 }
 
+// SetMinimumFees returns an option that sets the minimum fees on the app.
+func SetMaximumBlockGas(gas int64) func(*BaseApp) {
+	return func(bap *BaseApp) { bap.SetMaximumBlockGas(gas) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")

@@ -68,7 +68,9 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 		return err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter)
+	cfg := ctx.Config
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+	app := appCreator(ctx.Logger, db, traceWriter, genDocProvider)
 
 	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
@@ -107,7 +109,8 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		return nil, err
 	}
 
-	app := appCreator(ctx.Logger, db, traceWriter)
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cfg)
+	app := appCreator(ctx.Logger, db, traceWriter, genDocProvider)
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
@@ -120,7 +123,7 @@ func startInProcess(ctx *Context, appCreator AppCreator) (*node.Node, error) {
 		pvm.LoadOrGenFilePV(cfg.PrivValidatorFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(app),
-		node.DefaultGenesisDocProviderFunc(cfg),
+		genDocProvider,
 		node.DefaultDBProvider,
 		node.DefaultMetricsProvider(cfg.Instrumentation),
 		ctx.Logger.With("module", "node"),

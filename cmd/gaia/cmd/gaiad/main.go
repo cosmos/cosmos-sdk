@@ -13,6 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/node"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -56,16 +57,27 @@ func main() {
 	}
 }
 
-func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
+func newApp(logger log.Logger, db dbm.DB,
+	traceStore io.Writer, genDocProvider node.GenesisDocProvider) abci.Application {
+
+	// get the maximum gas from tendermint genesis parameters
+	genDoc, err := genDocProvider()
+	if err != nil {
+		panic(err)
+	}
+	maxBlockGas := genDoc.ConsensusParams.BlockSize.MaxGas
+
 	return app.NewGaiaApp(logger, db, traceStore,
 		baseapp.SetPruning(viper.GetString("pruning")),
 		baseapp.SetMinimumFees(viper.GetString("minimum_fees")),
+		baseapp.SetMaximumBlockGas(maxBlockGas),
 	)
 }
 
 func exportAppStateAndTMValidators(
-	logger log.Logger, db dbm.DB, traceStore io.Writer,
-) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+	logger log.Logger, db dbm.DB, traceStore io.Writer) (
+	json.RawMessage, []tmtypes.GenesisValidator, error) {
+
 	gApp := app.NewGaiaApp(logger, db, traceStore)
 	return gApp.ExportAppStateAndValidators()
 }

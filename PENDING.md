@@ -23,6 +23,7 @@ FEATURES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
 
 * SDK
     * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time

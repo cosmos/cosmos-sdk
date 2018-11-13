@@ -86,8 +86,17 @@ func (coin Coin) Minus(coinB Coin) Coin {
 //----------------------------------------
 // Coins
 
-// Coins is a set of Coin, one per currency
-type Coins []Coin
+type (
+	coinSumOp int
+
+	// Coins is a set of Coin, one per currency
+	Coins []Coin
+)
+
+const (
+	coinSumOpAdd coinSumOp = iota
+	coinSumOpSub
+)
 
 func (coins Coins) String() string {
 	if len(coins) == 0 {
@@ -127,76 +136,16 @@ func (coins Coins) IsValid() bool {
 // Plus adds two sets of coins.
 // CONTRACT: Plus will never return Coins where one Coin has a 0 amount.
 func (coins Coins) Plus(coinsB Coins) Coins {
-	sum := ([]Coin)(nil)
-	indexA, indexB := 0, 0
-	lenA, lenB := len(coins), len(coinsB)
-
-	for {
-		if indexA == lenA {
-			if indexB == lenB {
-				// return nil coins if both sets are empty
-				return sum
-			}
-
-			// return set B if set A is empty
-			return append(sum, coinsB[indexB:]...)
-		} else if indexB == lenB {
-			// return set A if set B is empty
-			return append(sum, coins[indexA:]...)
-		}
-
-		coinA, coinB := coins[indexA], coinsB[indexB]
-
-		switch strings.Compare(coinA.Denom, coinB.Denom) {
-		case -1:
-			// coin A denom < coin B denom
-			if coinA.IsZero() {
-				// ignore 0 sum coin type
-			} else {
-				sum = append(sum, coinA)
-			}
-
-			indexA++
-
-		case 0:
-			// coin A denom == coin B denom
-			if coinA.Amount.Add(coinB.Amount).IsZero() {
-				// ignore 0 sum coin type
-			} else {
-				sum = append(sum, coinA.Plus(coinB))
-			}
-
-			indexA++
-			indexB++
-
-		case 1:
-			// coin A denom > coin B denom
-			if coinB.IsZero() {
-				// ignore 0 sum coin type
-			} else {
-				sum = append(sum, coinB)
-			}
-
-			indexB++
-		}
-	}
+	return sumCoins(coins, coinsB, coinSumOpAdd)
 }
 
-// // Negative returns a set of coins with all amount negative
-// func (coins Coins) Negative() Coins {
-// 	res := make([]Coin, 0, len(coins))
-// 	for _, coin := range coins {
-// 		res = append(res, Coin{
-// 			Denom:  coin.Denom,
-// 			Amount: coin.Amount.Neg(),
-// 		})
-// 	}
-// 	return res
-// }
-
-// Minus subtracts a set of coins from another (adds the inverse)
+// Minus subtracts a set of coins from another.
+//
+// CONTRACT
+// - Minus will never return Coins where one Coin has a 0 amount.
+// - Minus will panic on unsigned integer overflow
 func (coins Coins) Minus(coinsB Coins) Coins {
-	return coins.Plus(coinsB.Negative())
+	return sumCoins(coins, coinsB, coinSumOpSub)
 }
 
 // IsAllGT returns True iff for every denom in coins, the denom is present at a
@@ -313,6 +262,68 @@ func (coins Coins) AmountOf(denom string) Uint {
 			return coin.Amount
 		} else {
 			return coins[midIdx+1:].AmountOf(denom)
+		}
+	}
+}
+
+func sumCoins(coinsA, coinsB Coins, op coinSumOp) Coins {
+	sum := ([]Coin)(nil)
+	indexA, indexB := 0, 0
+	lenA, lenB := len(coinsA), len(coinsB)
+
+	for {
+		if indexA == lenA {
+			if indexB == lenB {
+				// return nil coins if both sets are empty
+				return sum
+			}
+
+			// return set B if set A is empty
+			return append(sum, coinsB[indexB:]...)
+		} else if indexB == lenB {
+			// return set A if set B is empty
+			return append(sum, coinsA[indexA:]...)
+		}
+
+		coinA, coinB := coinsA[indexA], coinsB[indexB]
+
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // coin A denom < coin B denom
+			if coinA.IsZero() {
+				// ignore 0 sum coin
+			} else {
+				sum = append(sum, coinA)
+			}
+
+			indexA++
+
+		case 0: // coin A denom == coin B denom
+			var res Coin
+
+			if op == coinSumOpAdd {
+				res = coinA.Plus(coinB)
+			} else if op == coinSumOpSub {
+				// will panic on overflow
+				res = coinA.Minus(coinB)
+			}
+
+			if res.IsZero() {
+				// ignore 0 sum coin
+			} else {
+				sum = append(sum, res)
+			}
+
+			indexA++
+			indexB++
+
+		case 1: // coin A denom > coin B denom
+			if coinB.IsZero() {
+				// ignore 0 sum coin
+			} else {
+				sum = append(sum, coinB)
+			}
+
+			indexB++
 		}
 	}
 }

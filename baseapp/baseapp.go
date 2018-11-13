@@ -68,8 +68,10 @@ type BaseApp struct {
 	deliverState *state          // for DeliverTx
 	voteInfos    []abci.VoteInfo // absent validators from begin block
 
-	// minimum fees for spam prevention
-	minimumFees sdk.Coins
+	// spam prevention
+	minimumFees     sdk.Coins
+	maximumBlockGas int64
+	deliverGas
 
 	// flag for sealing
 	sealed bool
@@ -193,6 +195,9 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 
 // SetMinimumFees sets the minimum fees.
 func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
+
+// SetMaximumBlockGas sets the maximum gas allowable per block.
+func (app *BaseApp) SetMaximumBlockGas(gas int64) { app.maximumBlockGas = gas }
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
@@ -422,12 +427,19 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	// Initialize the DeliverTx state. If this is the first block, it should
 	// already be initialized in InitChain. Otherwise app.deliverState will be
 	// nil, since it is reset on Commit.
+	blockGasMeter := sdk.NewGasMeter(app.maximumBlockGas)
 	if app.deliverState == nil {
 		app.setDeliverState(req.Header)
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockGasMeter(blockGasMeter)
+
 	} else {
 		// In the first block, app.deliverState.ctx will already be initialized
 		// by InitChain. Context is now updated with Header information.
-		app.deliverState.ctx = app.deliverState.ctx.WithBlockHeader(req.Header).WithBlockHeight(req.Header.Height)
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockHeader(req.Header).
+			WithBlockHeight(req.Header.Height).
+			WithBlockGasMeter(blockGasMeter)
 	}
 
 	if app.beginBlocker != nil {
@@ -467,9 +479,10 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 
 // Implements ABCI
 func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
+
 	// Decode the Tx.
-	var result sdk.Result
 	var tx, err = app.txDecoder(txBytes)
+	var result sdk.Result
 	if err != nil {
 		result = err.Result()
 	} else {
@@ -654,6 +667,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	ctx = ctx.WithMultiStore(msCache)
 	result = app.runMsgs(ctx, msgs, mode)
 	result.GasWanted = gasWanted
+
+	// consume block gas
+	ctx.BlockGasMeter.ConsumeGas(
+		ctx.GasMeter().GasConsumed(), "block gas meter")
 
 	// only update state if all messages pass
 	if result.IsOK() {

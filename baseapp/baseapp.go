@@ -435,8 +435,15 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			WithBlockHeader(req.Header).
 			WithBlockHeight(req.Header.Height)
 	}
-	app.deliverState.ctx = app.deliverState.ctx.
-		WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
+
+	// add block gas meter
+	if app.maximumBlockGas > 0 {
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
+	} else {
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	}
 
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)

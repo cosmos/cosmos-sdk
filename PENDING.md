@@ -6,6 +6,7 @@ BREAKING CHANGES
 
 * Gaia CLI  (`gaiacli`)
   * [cli] [\#2727](https://github.com/cosmos/cosmos-sdk/pull/2727) Fix unbonding command flow
+  * [cli] [\#2786](https://github.com/cosmos/cosmos-sdk/pull/2786) Fix redelegation command flow
 
 * Gaia
 
@@ -37,9 +38,10 @@ IMPROVEMENTS
   * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet
 
 * Gaia
-  * \#2772 Update BaseApp to not persist state when the ante handler fails on
+  * #2772 Update BaseApp to not persist state when the ante handler fails on
   DeliverTx.
   * #2672 [Makefile] Updated for better Windows compatibility and ledger support logic, get_tools was rewritten as a cross-compatible Makefile.
+  * #2773 Require moniker to be provided on `gaiad init`.
 
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
@@ -55,8 +57,8 @@ BUG FIXES
 
 * Gaia
   * [\#2723] Use `cosmosvalcons` Bech32 prefix in `tendermint show-address`
-  * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override 
-  
+  * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override
+
 * SDK
 
 * Tendermint

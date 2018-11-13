@@ -68,7 +68,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.InsertRedelegationQueue(ctx, red)
 	}
 
-	// overwrite the pool since we exported
+	// don't need to run Tendermint updates if we exported
 	if data.Exported {
 		for _, lv := range data.LastValidatorPowers {
 			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)

@@ -539,13 +539,17 @@ func TestBonding(t *testing.T) {
 
 	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
 
-	// query validator
+	// query delegation
 	bond := getDelegation(t, port, addr, operAddrs[0])
 	require.Equal(t, amt, bond.Shares)
 
 	delegatorDels := getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, amt, delegatorDels[0].Shares)
+
+	// query all delegations to validator
+	bonds := getValidatorDelegations(t, port, operAddrs[0])
+	require.Len(t, bonds, 2)
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
@@ -1205,6 +1209,17 @@ func getValidator(t *testing.T, port string, validatorAddr sdk.ValAddress) stake
 	require.Nil(t, err)
 
 	return validator
+}
+
+func getValidatorDelegations(t *testing.T, port string, validatorAddr sdk.ValAddress) []stake.Delegation {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s/delegations", validatorAddr.String()), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var delegations []stake.Delegation
+	err := cdc.UnmarshalJSON([]byte(body), &delegations)
+	require.Nil(t, err)
+
+	return delegations
 }
 
 func getValidatorUnbondingDelegations(t *testing.T, port string, validatorAddr sdk.ValAddress) []stake.UnbondingDelegation {

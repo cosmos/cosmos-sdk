@@ -67,7 +67,7 @@ func TestBaseAccountSequence(t *testing.T) {
 	_, _, addr := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
-	seq := int64(7)
+	seq := uint64(7)
 
 	err := acc.SetSequence(seq)
 	require.Nil(t, err)
@@ -79,7 +79,7 @@ func TestBaseAccountMarshal(t *testing.T) {
 	acc := NewBaseAccountWithAddress(addr)
 
 	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
-	seq := int64(7)
+	seq := uint64(7)
 
 	// set everything on the account
 	err := acc.SetPubKey(pub)

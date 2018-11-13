@@ -13,6 +13,7 @@ BREAKING CHANGES
 
 * SDK
   * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.
+  * [\#2701](https://github.com/cosmos/cosmos-sdk/issues/2701) Account numbers and sequence numbers in `auth` are now `uint64` instead of `int64`
 
 * Tendermint
 

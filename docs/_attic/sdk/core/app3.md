@@ -52,11 +52,11 @@ type Account interface {
 	GetPubKey() crypto.PubKey // can return nil.
 	SetPubKey(crypto.PubKey) error
 
-	GetAccountNumber() int64
-	SetAccountNumber(int64) error
+	GetAccountNumber() uint64
+	SetAccountNumber(uint64) error
 
-	GetSequence() int64
-	SetSequence(int64) error
+	GetSequence() uint64
+	SetSequence(uint64) error
 
 	GetCoins() sdk.Coins
 	SetCoins(sdk.Coins) error
@@ -79,8 +79,8 @@ type BaseAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`
 	PubKey        crypto.PubKey  `json:"public_key"`
-	AccountNumber int64          `json:"account_number"`
-	Sequence      int64          `json:"sequence"`
+	AccountNumber uint64          `json:"account_number"`
+	Sequence      uint64          `json:"sequence"`
 }
 ```
 
@@ -161,8 +161,8 @@ The standard form for signatures is `StdSignature`:
 type StdSignature struct {
 	crypto.PubKey    `json:"pub_key"` // optional
 	[]byte `json:"signature"`
-	AccountNumber    int64 `json:"account_number"`
-	Sequence         int64 `json:"sequence"`
+	AccountNumber    uint64 `json:"account_number"`
+	Sequence         uint64 `json:"sequence"`
 }
 ```
 

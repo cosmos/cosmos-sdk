@@ -96,7 +96,7 @@ func (msg IBCTransferMsg) ValidateBasic() sdk.Error {
 type IBCReceiveMsg struct {
 	IBCPacket
 	Relayer  sdk.AccAddress
-	Sequence int64
+	Sequence uint64
 }
 
 // nolint
@@ -112,7 +112,7 @@ func (msg IBCReceiveMsg) GetSignBytes() []byte {
 	b, err := msgCdc.MarshalJSON(struct {
 		IBCPacket json.RawMessage
 		Relayer   sdk.AccAddress
-		Sequence  int64
+		Sequence  uint64
 	}{
 		IBCPacket: json.RawMessage(msg.IBCPacket.GetSignBytes()),
 		Relayer:   msg.Relayer,

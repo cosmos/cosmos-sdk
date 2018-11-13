@@ -124,8 +124,8 @@ type BaseReq struct {
 	Name          string `json:"name"`
 	Password      string `json:"password"`
 	ChainID       string `json:"chain_id"`
-	AccountNumber int64  `json:"account_number"`
-	Sequence      int64  `json:"sequence"`
+	AccountNumber uint64 `json:"account_number"`
+	Sequence      uint64 `json:"sequence"`
 	Gas           string `json:"gas"`
 	GasAdjustment string `json:"gas_adjustment"`
 }

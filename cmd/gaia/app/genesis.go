@@ -60,8 +60,8 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState, stak
 type GenesisAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`
-	Sequence      int64          `json:"sequence_number"`
-	AccountNumber int64          `json:"account_number"`
+	Sequence      uint64         `json:"sequence_number"`
+	AccountNumber uint64         `json:"account_number"`
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
@@ -287,7 +287,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
-	coins :=sdk.Coins{
+	coins := sdk.Coins{
 		{"fooToken", sdk.NewInt(1000)},
 		{bondDenom, freeFermionsAcc},
 	}

@@ -30,8 +30,8 @@ func TestStdTx(t *testing.T) {
 func TestStdSignBytes(t *testing.T) {
 	type args struct {
 		chainID  string
-		accnum   int64
-		sequence int64
+		accnum   uint64
+		sequence uint64
 		fee      StdFee
 		msgs     []sdk.Msg
 		memo     string

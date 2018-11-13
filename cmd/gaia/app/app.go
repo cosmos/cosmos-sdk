@@ -322,6 +322,11 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	return appState, validators, nil
 }
 
+// load a particular height
+func (app *GaiaApp) LoadHeight(height int64) {
+	app.LoadVersion(height, app.keyMain)
+}
+
 //______________________________________________________________________________________________
 
 // Combined Staking Hooks

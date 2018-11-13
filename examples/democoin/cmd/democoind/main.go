@@ -133,7 +133,7 @@ func newApp(logger log.Logger, db dbm.DB, _ io.Writer) abci.Application {
 	return app.NewDemocoinApp(logger, db)
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer) (
+func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer, _ int64) (
 	json.RawMessage, []tmtypes.GenesisValidator, error) {
 	dapp := app.NewDemocoinApp(logger, db)
 	return dapp.ExportAppStateAndValidators()

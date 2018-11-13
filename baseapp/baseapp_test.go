@@ -823,3 +823,96 @@ func TestTxGasLimits(t *testing.T) {
 		}
 	}
 }
+
+// Test that transactions exceeding gas limits fail
+func TestMaxBlockGasLimits(t *testing.T) {
+	gasGranted := int64(10)
+	anteOpt := func(bapp *BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+
+			// NOTE/TODO/XXX:
+			// AnteHandlers must have their own defer/recover in order
+			// for the BaseApp to know how much gas was used used!
+			// This is because the GasMeter is created in the AnteHandler,
+			// but if it panics the context won't be set properly in runTx's recover ...
+			defer func() {
+				if r := recover(); r != nil {
+					switch rType := r.(type) {
+					case sdk.ErrorOutOfGas:
+						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+						res = sdk.ErrOutOfGas(log).Result()
+						res.GasWanted = gasGranted
+						res.GasUsed = newCtx.GasMeter().GasConsumed()
+					default:
+						panic(r)
+					}
+				}
+			}()
+
+			count := tx.(*txTest).Counter
+			newCtx.GasMeter().ConsumeGas(count, "counter-ante")
+			res = sdk.Result{
+				GasWanted: gasGranted,
+			}
+			return
+		})
+
+	}
+
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+			count := msg.(msgCounter).Counter
+			ctx.GasMeter().ConsumeGas(count, "counter-handler")
+			return sdk.Result{}
+		})
+	}
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
+	app.SetMaximumBlockGas(100)
+
+	testCases := []struct {
+		tx           *txTest
+		numDelivers  int
+		blockGasUsed int64
+		fail         bool
+	}{
+		{newTxCounter(0, 0), 0, 0, false},
+		{newTxCounter(9, 1), 2, 20, false},
+		{newTxCounter(10, 0), 3, 30, false},
+		{newTxCounter(10, 0), 10, 100, false},
+		{newTxCounter(2, 7), 11, 99, false},
+
+		{newTxCounter(2, 7), 12, 108, true},
+		{newTxCounter(10, 0), 11, 110, true},
+	}
+
+	for i, tc := range testCases {
+		tx := tc.tx
+
+		// reset the block gas
+		app.BeginBlock(abci.RequestBeginBlock{})
+
+		// execute the transaction multiple times
+		for j := 0; j < numDelivers; j++ {
+			res := app.Deliver(tx)
+		}
+
+		ctx := app.getContextForAnte(runTxModeDeliver, tx)
+		ctx = app.initializeContext(ctx, runTxModeDeliver)
+		blockGasUsed := ctx.BlockGasMeter().ConsumedGas()
+
+		// check gas used and wanted
+		require.Equal(t, tc.blockGasUsed, blockGasUsed,
+			fmt.Sprintf("%d: %v, %v, %v", i, tc, blockGasUsed, res))
+
+		// check for out of gas
+		if !tc.fail {
+			require.True(t, res.IsOK(), fmt.Sprintf("%d: %v, %v", i, tc, res))
+			require.False(t, ctx.BlockGasMeter().PastLimit())
+		} else {
+			require.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), fmt.Sprintf("%d: %v, %v", i, tc, res))
+			require.True(t, ctx.BlockGasMeter().PastLimit())
+		}
+	}
+}

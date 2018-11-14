@@ -1,0 +1,94 @@
+# ADR 002: SDK Documentation Structure
+
+## Context
+
+There is a need for a scalable structure of the SDK documentation. Current documentation includes a lot of non-related SDK material, is difficult to maintain and hard to follow as a user. 
+
+Ideally, we would have:
+- All docs related to dev frameworks or tools live in their respective github repos (sdk repo would contain sdk docs, hub repo would contain hub docs, lotion repo would contain lotion docs, etc.)
+- All other docs (faqs, whitepaper, high-level material about Cosmos) would live on the website.
+
+## Decision
+
+Re-structure the `/docs` folder of the SDK github repo as follows:
+
+```
+docs/
+├── README
+├── intro/
+├── gaia/
+│   ├── overview.md
+│   ├── install.md
+│   ├── join-testnet.md
+│   ├── validator-node.md
+│   ├── validator-faq.md
+│   └── delegator-faq.md    
+├── reference/
+│   ├── baseapp
+│   ├── types
+│   ├── store
+│   ├── server
+│   ├── modules/
+│   │   ├── keeper
+│   │   ├── handler
+│   │   ├── cli
+│   ├── gas
+│   └── commands
+├── examples/
+│   ├── basecoin/
+│   └── democoin/
+├── clients/
+│   ├── lite/
+│   ├── service-providers
+├── spec/
+└── architecture/
+```
+
+The files in each sub-folders do not matter and will likely change. What matters is the sectioning:
+
+- `README`: Landing page of the docs. 
+- `into`: Introductory material. Goal is to have a short explainer of the SDK and then channel people to the resource they need. The [sdk-tutorial](https://github.com/cosmos/sdk-application-tutorial/) will be highlighted, as well as the `godocs`.
+- `gaia`: Contains all docs related to the `gaia` application. Will later be renamed to `cosmos-hub` or `chub` and probably moved to its own repository.
+- `reference`: Contains high-level explanations of the abstractions of the SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`. 
+- `examples`: Contain a couple examples of sdk application like `basecoin` and `democoin`. Developers need to maintain them up-to-date and make sure they compile as the SDK gets upgraded.
+- `clients`: Contains specs and info about the various SDK clients.
+- `spec`: Contains specs of modules, and others.
+- `architecture`: Contains architecture-related docs like the present one.
+
+Website docs sidebar will only include the following sections:
+
+- `README`
+- `intro`
+- `gaia`
+- `reference`
+- `clients`
+
+`architecture` and `examples` need not be displayed on the website. As for `modules`, we might need to think about creating a modules manager, but this is out of scope for this document.
+
+## Status
+
+Proposed
+
+## Consequences
+
+### Positive
+
+- Much clearer organisation of the SDK docs. 
+- The `/docs` folder now only contains SDK and gaia related material. Later, it will only contain SDK related material.
+- Developers only have to update `/docs` folder when they open a PR (and not `/examples` for example). 
+- Easier for developers to find what they need to update in the docs thanks to reworked architecture.
+- Cleaner vuepress build for website docs. 
+- Will help build an executable doc (cf https://github.com/cosmos/cosmos-sdk/issues/2611)
+
+### Neutral
+
+- We need to move a bunch of deprecated stuff to `/_attic` folder. 
+- We need to integrate content in `docs/sdk/docs/core` in `reference`.
+- We need to move all the content that currently lives in `docs` and does not fit in new structure (like `lotion`, intro material, whitepaper) to the website repository.
+- Update `DOCS_README.md`
+
+## References
+
+- https://github.com/cosmos/cosmos-sdk/issues/1460
+- https://github.com/cosmos/cosmos-sdk/pull/2695
+- https://github.com/cosmos/cosmos-sdk/issues/2611

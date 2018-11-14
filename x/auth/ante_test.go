@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"testing"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
@@ -711,6 +712,39 @@ func TestAdjustFeesByGas(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			require.True(t, tt.want.IsEqual(adjustFeesByGas(tt.args.fee, tt.args.gas)))
+		})
+	}
+}
+
+func TestCountSubkeys(t *testing.T) {
+	genPubKeys := func(n int) []crypto.PubKey {
+		var ret []crypto.PubKey
+		for i := 0; i < n; i++ {
+			ret = append(ret, secp256k1.GenPrivKey().PubKey())
+		}
+		return ret
+	}
+	genMultiKey := func(n, k int, keysGen func(n int) []crypto.PubKey) crypto.PubKey {
+		return multisig.NewPubKeyMultisigThreshold(k, keysGen(n))
+	}
+	type args struct {
+		pub crypto.PubKey
+	}
+	mkey := genMultiKey(5, 4, genPubKeys)
+	mkeyType := mkey.(*multisig.PubKeyMultisigThreshold)
+	mkeyType.PubKeys = append(mkeyType.PubKeys, genMultiKey(6, 5, genPubKeys))
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"single key", args{secp256k1.GenPrivKey().PubKey()}, 1},
+		{"multi sig key", args{genMultiKey(5, 4, genPubKeys)}, 5},
+		{"multi multi sig", args{mkey}, 11},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(T *testing.T) {
+			require.Equal(t, tt.want, countSubKeys(tt.args.pub))
 		})
 	}
 }

@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
@@ -315,4 +316,16 @@ func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (sign
 			stdTx.Fee, stdTx.Msgs, stdTx.Memo)
 	}
 	return
+}
+
+func countSubKeys(pub crypto.PubKey) int {
+	switch v := pub.(type) {
+	case *multisig.PubKeyMultisigThreshold:
+		nkeys := 0
+		for _, subkey := range v.PubKeys {
+			nkeys += countSubKeys(subkey)
+		}
+		return nkeys
+	}
+	return 1
 }

@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -15,6 +13,9 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -25,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"

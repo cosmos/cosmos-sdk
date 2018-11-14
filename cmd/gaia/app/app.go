@@ -251,6 +251,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
 	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
+
+	// validate genesis state
 	err = GaiaValidateGenesisState(genesisState)
 	if err != nil {
 		panic(err) // TODO find a way to do this w/o panics

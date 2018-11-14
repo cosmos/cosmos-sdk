@@ -250,6 +250,30 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdQueryProposal implements the query proposal command.
+func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "param [param-type]",
+		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			paramType := args[0]
+
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/%s", queryRoute, paramType), nil)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(res))
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// GetCmdQueryProposal implements the query proposal command.
 func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proposal",
@@ -504,7 +528,7 @@ func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryDeposits implements the command to query for proposal deposits.
+// GetCmdQueryTally implements the command to query for proposal tally result.
 func GetCmdQueryTally(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tally",

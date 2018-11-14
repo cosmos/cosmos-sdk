@@ -250,7 +250,7 @@ func (keeper Keeper) GetDepositParams(ctx sdk.Context) DepositParams {
 	return depositParams
 }
 
-// Returns the current Voting Procedure from the global param store
+// Returns the current VotingParams from the global param store
 // nolint: errcheck
 func (keeper Keeper) GetVotingParams(ctx sdk.Context) VotingParams {
 	var votingParams VotingParams
@@ -258,7 +258,7 @@ func (keeper Keeper) GetVotingParams(ctx sdk.Context) VotingParams {
 	return votingParams
 }
 
-// Returns the current Tallying Procedure from the global param store
+// Returns the current TallyParam from the global param store
 // nolint: errcheck
 func (keeper Keeper) GetTallyParams(ctx sdk.Context) TallyParams {
 	var tallyParams TallyParams

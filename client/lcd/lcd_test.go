@@ -31,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 func init() {
@@ -265,7 +266,7 @@ func TestCoinSend(t *testing.T) {
 	coins := acc.GetCoins()
 	mycoins := coins[0]
 
-	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, stakeTypes.DefaultBondDenom, mycoins.Denom)
 	require.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
 
 	// query receiver
@@ -273,7 +274,7 @@ func TestCoinSend(t *testing.T) {
 	coins = acc.GetCoins()
 	mycoins = coins[0]
 
-	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, stakeTypes.DefaultBondDenom, mycoins.Denom)
 	require.Equal(t, int64(1), mycoins.Amount.Int64())
 
 	// test failure with too little gas
@@ -326,7 +327,7 @@ func DisabledTestIBCTransfer(t *testing.T) {
 	coins := acc.GetCoins()
 	mycoins := coins[0]
 
-	require.Equal(t, "steak", mycoins.Denom)
+	require.Equal(t, stakeTypes.DefaultBondDenom, mycoins.Denom)
 	require.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
 
 	// TODO: query ibc egress packet state
@@ -514,7 +515,7 @@ func TestValidatorQuery(t *testing.T) {
 }
 
 func TestBonding(t *testing.T) {
-	name, password, denom := "test", "1234567890", "steak"
+	name, password, denom := "test", "1234567890", stakeTypes.DefaultBondDenom
 	addr, seed := CreateAddr(t, name, password, GetKeyBase(t))
 
 	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 2, []sdk.AccAddress{addr})
@@ -538,13 +539,17 @@ func TestBonding(t *testing.T) {
 
 	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
 
-	// query validator
+	// query delegation
 	bond := getDelegation(t, port, addr, operAddrs[0])
 	require.Equal(t, amt, bond.Shares)
 
 	delegatorDels := getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, amt, delegatorDels[0].Shares)
+
+	// query all delegations to validator
+	bonds := getValidatorDelegations(t, port, operAddrs[0])
+	require.Len(t, bonds, 2)
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
@@ -564,7 +569,7 @@ func TestBonding(t *testing.T) {
 	// sender should have not received any coins as the unbonding has only just begun
 	acc = getAccount(t, port, addr)
 	coins = acc.GetCoins()
-	require.Equal(t, int64(40), coins.AmountOf("steak").Int64())
+	require.Equal(t, int64(40), coins.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
 	unbonding := getUndelegation(t, port, addr, operAddrs[0])
 	require.Equal(t, "30", unbonding.Balance.Amount.String())
@@ -663,11 +668,11 @@ func TestDeposit(t *testing.T) {
 
 	// query proposal
 	proposal = getProposal(t, port, proposalID)
-	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{sdk.NewInt64Coin("steak", 10)}))
+	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10)}))
 
 	// query deposit
 	deposit := getDeposit(t, port, proposalID, addr)
-	require.True(t, deposit.Amount.IsEqual(sdk.Coins{sdk.NewInt64Coin("steak", 10)}))
+	require.True(t, deposit.Amount.IsEqual(sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10)}))
 }
 
 func TestVote(t *testing.T) {
@@ -730,26 +735,33 @@ func TestProposalsQuery(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addrs[0], addrs[1]})
 	defer cleanup()
 
+	depositParam := getDepositParam(t, port)
+	halfMinDeposit := depositParam.MinDeposit.AmountOf(stakeTypes.DefaultBondDenom).Int64() / 2
+	getVotingParam(t, port)
+	getTallyingParam(t, port)
+
 	// Addr1 proposes (and deposits) proposals #1 and #2
-	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
+	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit)
 	var proposalID1 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
+
+	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit)
 	var proposalID2 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
-	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], 5)
+	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], halfMinDeposit)
 	var proposalID3 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
-	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID2, 5)
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID2, halfMinDeposit)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, 5)
+
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, halfMinDeposit)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check deposits match proposal and individual deposits
@@ -861,7 +873,7 @@ func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.Acc
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
 	// send
-	coinbz, err := cdc.MarshalJSON(sdk.NewInt64Coin("steak", 1))
+	coinbz, err := cdc.MarshalJSON(sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1))
 	if err != nil {
 		panic(err)
 	}
@@ -947,7 +959,7 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 			"account_number":"%d",
 			"sequence":"%d"
 		}
-	}`, "steak", name, password, chainID, accnum, sequence))
+	}`, stakeTypes.DefaultBondDenom, name, password, chainID, accnum, sequence))
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/ibc/testchain/%s/send", receiveAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -1096,7 +1108,7 @@ func doDelegate(t *testing.T, port, seed, name, password string,
 			"account_number":"%d",
 			"sequence":"%d"
 		}
-	}`, delAddr, valAddr, "steak", amount, name, password, chainID, accnum, sequence))
+	}`, delAddr, valAddr, stakeTypes.DefaultBondDenom, amount, name, password, chainID, accnum, sequence))
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -1206,6 +1218,17 @@ func getValidator(t *testing.T, port string, validatorAddr sdk.ValAddress) stake
 	return validator
 }
 
+func getValidatorDelegations(t *testing.T, port string, validatorAddr sdk.ValAddress) []stake.Delegation {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s/delegations", validatorAddr.String()), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var delegations []stake.Delegation
+	err := cdc.UnmarshalJSON([]byte(body), &delegations)
+	require.Nil(t, err)
+
+	return delegations
+}
+
 func getValidatorUnbondingDelegations(t *testing.T, port string, validatorAddr sdk.ValAddress) []stake.UnbondingDelegation {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s/unbonding_delegations", validatorAddr.String()), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -1229,6 +1252,36 @@ func getValidatorRedelegations(t *testing.T, port string, validatorAddr sdk.ValA
 }
 
 // ============= Governance Module ================
+
+func getDepositParam(t *testing.T, port string) gov.DepositParams {
+	res, body := Request(t, port, "GET", "/gov/parameters/deposit", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var depositParams gov.DepositParams
+	err := cdc.UnmarshalJSON([]byte(body), &depositParams)
+	require.Nil(t, err)
+	return depositParams
+}
+
+func getVotingParam(t *testing.T, port string) gov.VotingParams {
+	res, body := Request(t, port, "GET", "/gov/parameters/voting", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var votingParams gov.VotingParams
+	err := cdc.UnmarshalJSON([]byte(body), &votingParams)
+	require.Nil(t, err)
+	return votingParams
+}
+
+func getTallyingParam(t *testing.T, port string) gov.TallyParams {
+	res, body := Request(t, port, "GET", "/gov/parameters/tallying", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var tallyParams gov.TallyParams
+	err := cdc.UnmarshalJSON([]byte(body), &tallyParams)
+	require.Nil(t, err)
+	return tallyParams
+}
 
 func getProposal(t *testing.T, port string, proposalID uint64) gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)
@@ -1339,7 +1392,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 		"description": "test",
 		"proposal_type": "Text",
 		"proposer": "%s",
-		"initial_deposit": [{ "denom": "steak", "amount": "%d" }],
+		"initial_deposit": [{ "denom": "%s", "amount": "%d" }],
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
@@ -1347,7 +1400,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 			"account_number":"%d",
 			"sequence":"%d"
 		}
-	}`, proposerAddr, amount, name, password, chainID, accnum, sequence))
+	}`, proposerAddr, stakeTypes.DefaultBondDenom, amount, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", "/gov/proposals", jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -1369,7 +1422,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	// deposit on proposal
 	jsonStr := []byte(fmt.Sprintf(`{
 		"depositer": "%s",
-		"amount": [{ "denom": "steak", "amount": "%d" }],
+		"amount": [{ "denom": "%s", "amount": "%d" }],
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
@@ -1377,7 +1430,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 			"account_number":"%d",
 			"sequence": "%d"
 		}
-	}`, proposerAddr, amount, name, password, chainID, accnum, sequence))
+	}`, proposerAddr, stakeTypes.DefaultBondDenom, amount, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/deposits", proposalID), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

@@ -1,6 +1,8 @@
 package gov
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -8,6 +10,7 @@ import (
 
 // query endpoints supported by the governance Querier
 const (
+	QueryParams    = "params"
 	QueryProposals = "proposals"
 	QueryProposal  = "proposal"
 	QueryDeposits  = "deposits"
@@ -15,11 +18,17 @@ const (
 	QueryVotes     = "votes"
 	QueryVote      = "vote"
 	QueryTally     = "tally"
+
+	ParamDeposit  = "deposit"
+	ParamVoting   = "voting"
+	ParamTallying = "tallying"
 )
 
 func NewQuerier(keeper Keeper) sdk.Querier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) (res []byte, err sdk.Error) {
 		switch path[0] {
+		case QueryParams:
+			return queryParams(ctx, path[1:], req, keeper)
 		case QueryProposals:
 			return queryProposals(ctx, path[1:], req, keeper)
 		case QueryProposal:
@@ -37,6 +46,31 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown gov query endpoint")
 		}
+	}
+}
+
+func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) (res []byte, err sdk.Error) {
+	switch path[0] {
+	case ParamDeposit:
+		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetDepositParams(ctx))
+		if err2 != nil {
+			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
+		}
+		return bz, nil
+	case ParamVoting:
+		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetVotingParams(ctx))
+		if err2 != nil {
+			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
+		}
+		return bz, nil
+	case ParamTallying:
+		bz, err2 := codec.MarshalJSONIndent(keeper.cdc, keeper.GetTallyParams(ctx))
+		if err2 != nil {
+			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err2.Error()))
+		}
+		return bz, nil
+	default:
+		return res, sdk.ErrUnknownRequest(fmt.Sprintf("%s is not a valid query request path", req.Path))
 	}
 }
 

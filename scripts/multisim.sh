@@ -17,7 +17,7 @@ echo "Using temporary log directory: $tmpdir"
 sim() {
   seed=$1
 	echo "Running full Gaia simulation with seed $seed. This may take awhile!"
-  file="$tmpdir/gaia-simulation-seed-$seed-date-$(date -Iseconds -u).stdout"
+  file="$tmpdir/gaia-simulation-seed-$seed-date-$(date -u +"%Y-%m-%dT%H:%M:%S+00:00").stdout"
   echo "Writing stdout to $file..."
 	go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=$blocks \
     -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=$seed -v -timeout 24h > $file

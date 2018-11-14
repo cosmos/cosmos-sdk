@@ -1,11 +1,9 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-VERSION := $(shell git describe --tags --long | sed 's/v\(.*\)/\1/')
-BUILD_TAGS = netgo ledger
+VERSION := $(subst v,,$(shell git describe --tags --long))
+BUILD_TAGS = netgo
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION}"
-GCC := $(shell command -v gcc 2> /dev/null)
 LEDGER_ENABLED ?= true
-UNAME_S := $(shell uname -s)
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
 	github.com/alecthomas/gometalinter \
@@ -20,23 +18,30 @@ ci: get_tools get_vendor_deps install test_cover test_lint test
 ########################################
 ### Build/Install
 
-check-ledger:
 ifeq ($(LEDGER_ENABLED),true)
-   	ifeq ($(UNAME_S),OpenBSD)
-   		$(info "OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988)")
-TMP_BUILD_TAGS := $(BUILD_TAGS)
-BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
-   	else
-   	   	ifndef GCC
-   	   	   $(error "gcc not installed for ledger support, please install or set LEDGER_ENABLED to false in the Makefile")
-   	   	endif
-   	endif
-else
-TMP_BUILD_TAGS := $(BUILD_TAGS)
-BUILD_TAGS = $(filter-out ledger, $(TMP_BUILD_TAGS))
+  ifeq ($(OS),Windows_NT)
+    GCCEXE = $(shell where gcc.exe 2> NUL)
+    ifeq ($(GCCEXE),)
+      $(error gcc.exe not installed for ledger support, please install or set LEDGER_ENABLED=false)
+    else
+      BUILD_TAGS += ledger
+    endif
+  else
+    UNAME_S = $(shell uname -s)
+    ifeq ($(UNAME_S),OpenBSD)
+      $(warning OpenBSD detected, disabling ledger support (https://github.com/cosmos/cosmos-sdk/issues/1988))
+    else
+      GCC = $(shell command -v gcc 2> /dev/null)
+      ifeq ($(GCC),)
+        $(error gcc not installed for ledger support, please install or set LEDGER_ENABLED=false)
+      else
+        BUILD_TAGS += ledger
+      endif
+    endif
+  endif
 endif
 
-build: check-ledger update_gaia_lite_docs
+build:
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
@@ -101,7 +106,7 @@ check_tools:
 
 update_tools:
 	@echo "--> Updating tools to correct version"
-	./scripts/get_tools.sh
+	$(MAKE) -C scripts get_tools
 
 update_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
@@ -110,7 +115,7 @@ update_dev_tools:
 
 get_tools:
 	@echo "--> Installing tools"
-	./scripts/get_tools.sh
+	$(MAKE) -C scripts get_tools
 
 get_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
@@ -170,6 +175,15 @@ test_sim_gaia_nondeterminism:
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
 	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=500 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=10 -v -timeout 24h
+
+test_sim_gaia_import_export:
+	@echo "Running Gaia import/export simulation. This may take several minutes..."
+	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=4 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=11 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=12 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=13 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=414 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=4142 -v -timeout 24h
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
@@ -250,4 +264,5 @@ localnet-stop:
 check_tools check_dev_tools get_tools get_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
-format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast test_sim_gaia_multi_seed update_tools update_dev_tools
+format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
+test_sim_gaia_multi_seed test_sim_gaia_import_export update_tools update_dev_tools

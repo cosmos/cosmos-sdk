@@ -37,6 +37,21 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	return delegations
 }
 
+// return all delegations to a specific validator. Useful for querier.
+func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []types.Delegation) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		if delegation.GetValidatorAddr().Equals(valAddr) {
+			delegations = append(delegations, delegation)
+		}
+	}
+	return delegations
+}
+
 // return a given amount of all the delegations from a delegator
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve uint16) (delegations []types.Delegation) {
@@ -281,6 +296,21 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Set(key, bz)
 	store.Set(GetREDByValSrcIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})
 	store.Set(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})
+}
+
+// iterate through all redelegations
+func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red types.Redelegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, RedelegationKey)
+	defer iterator.Close()
+
+	for i := int64(0); iterator.Valid(); iterator.Next() {
+		red := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
+		if stop := fn(i, red); stop {
+			break
+		}
+		i++
+	}
 }
 
 // remove a redelegation object and associated index

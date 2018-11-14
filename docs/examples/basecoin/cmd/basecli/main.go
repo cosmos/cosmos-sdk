@@ -39,10 +39,14 @@ func main() {
 	// with the cdc.
 
 	// add standard rpc, and tx commands
-	rpc.AddCommands(rootCmd)
-	rootCmd.AddCommand(client.LineBreak)
-	tx.AddCommands(rootCmd, cdc)
-	rootCmd.AddCommand(client.LineBreak)
+	rootCmd.AddCommand(
+		rpc.InitClientCommand(),
+		rpc.StatusCommand(),
+		client.LineBreak,
+		tx.SearchTxCmd(cdc),
+		tx.QueryTxCmd(cdc),
+		client.LineBreak,
+	)
 
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(

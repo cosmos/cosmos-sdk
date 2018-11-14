@@ -285,7 +285,16 @@ type txTest struct {
 	Msgs     []sdk.Msg
 	Counter  int64
 	AnteFail bool
-	MsgFail  bool
+}
+
+func (tx *txTest) setAnteFail(anteFail bool) {
+	tx.AnteFail = anteFail
+}
+
+func (tx *txTest) setMsgFail(msgFail bool) {
+	for i, msg := range tx.Msgs {
+		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, msgFail}
+	}
 }
 
 // Implements Tx
@@ -300,6 +309,7 @@ const (
 // Otherwise it's up to the handlers
 type msgCounter struct {
 	Counter int64
+	MsgFail bool
 }
 
 // Implements Msg
@@ -317,9 +327,9 @@ func (msg msgCounter) ValidateBasic() sdk.Error {
 func newTxCounter(txInt int64, msgInts ...int64) *txTest {
 	var msgs []sdk.Msg
 	for _, msgInt := range msgInts {
-		msgs = append(msgs, msgCounter{msgInt})
+		msgs = append(msgs, msgCounter{msgInt, false})
 	}
-	return &txTest{msgs, txInt, false, false}
+	return &txTest{msgs, txInt, false}
 }
 
 // a msg we dont know how to route
@@ -388,6 +398,10 @@ func handlerMsgCounter(t *testing.T, capKey *sdk.KVStoreKey, deliverKey []byte) 
 		var msgCount int64
 		switch m := msg.(type) {
 		case *msgCounter:
+			if m.MsgFail {
+				return sdk.ErrInternal("message handler failure").Result()
+			}
+
 			msgCount = m.Counter
 		case *msgCounter2:
 			msgCount = m.Counter
@@ -718,11 +732,11 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 	// Transaction with no known route
 	{
-		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false, false}
+		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false}
 		err := app.Deliver(unknownRouteTx)
 		require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), err.Code)
 
-		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false, false}
+		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false}
 		err = app.Deliver(unknownRouteTx)
 		require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), err.Code)
 	}
@@ -855,7 +869,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	// NOTE: No state should be persisted here which will be implicitly checked by
 	// the next test.
 	tx := newTxCounter(0, 0)
-	tx.AnteFail = true
+	tx.setAnteFail(true)
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 	res := app.DeliverTx(txBytes)
@@ -863,16 +877,15 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	// execute at tx that will fail message execution (state should mutate)
 	tx = newTxCounter(0, 0)
-	tx.MsgFail = true
+	tx.setMsgFail(true)
 	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 	res = app.DeliverTx(txBytes)
-	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 	// execute a successful ante handler and message execution where state is
 	// implicitly checked by previous tx executions
-	tx = newTxCounter(1, 1)
-	tx.MsgFail = true
+	tx = newTxCounter(1, 0)
 	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 	res = app.DeliverTx(txBytes)

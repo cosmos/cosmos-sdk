@@ -1,5 +1,5 @@
 # Cosmos SDK
-![banner](docs/graphics/cosmos-sdk-image.png)
+![banner](docs/cosmos-sdk-image.png)
 
 [![version](https://img.shields.io/github/tag/cosmos/cosmos-sdk.svg)](https://github.com/cosmos/cosmos-sdk/releases/latest)
 [![CircleCI](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master.svg?style=shield)](https://circleci.com/gh/cosmos/cosmos-sdk/tree/master)

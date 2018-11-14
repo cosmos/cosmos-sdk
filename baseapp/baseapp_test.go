@@ -491,6 +491,7 @@ func TestDeliverTx(t *testing.T) {
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
+	app.InitChain(abci.RequestInitChain{})
 
 	// Create same codec used in txDecoder
 	codec := codec.New()

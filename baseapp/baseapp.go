@@ -264,15 +264,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 	res = app.initChainer(app.deliverState.ctx, req)
 
-	// add block gas meter
-	if app.maximumBlockGas > 0 {
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
-	} else {
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockGasMeter(sdk.NewInfiniteGasMeter())
-	}
-
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
 	return
@@ -443,15 +434,15 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		app.deliverState.ctx = app.deliverState.ctx.
 			WithBlockHeader(req.Header).
 			WithBlockHeight(req.Header.Height)
+	}
 
-		// add block gas meter
-		if app.maximumBlockGas > 0 {
-			app.deliverState.ctx = app.deliverState.ctx.
-				WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
-		} else {
-			app.deliverState.ctx = app.deliverState.ctx.
-				WithBlockGasMeter(sdk.NewInfiniteGasMeter())
-		}
+	// add block gas meter
+	if app.maximumBlockGas > 0 {
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
+	} else {
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 	}
 
 	if app.beginBlocker != nil {

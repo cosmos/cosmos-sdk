@@ -63,7 +63,7 @@ All PRs require two Reviews before merge (except docs changes, or variable name-
 - If you sat down with the PR submitter and did a pairing review please note that in the `Approval`, or your PR comments.
 - If you are only making "surface level" reviews, submit any notes as `Comments` without adding a review.
 
-### Updating docs
+### Updating Documentation
 
 If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in /docs.
 

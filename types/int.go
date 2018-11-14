@@ -428,6 +428,17 @@ func (i Uint) Sub(i2 Uint) (res Uint) {
 	return
 }
 
+// SafeSub attempts to subtract one Uint from another. A boolean is also returned
+// indicating if the result contains integer overflow.
+func (i Uint) SafeSub(i2 Uint) (Uint, bool) {
+	res := Uint{sub(i.i, i2.i)}
+	if UintOverflow(res) {
+		return res, true
+	}
+
+	return res, false
+}
+
 // SubRaw subtracts uint64 from Uint
 func (i Uint) SubRaw(i2 uint64) Uint {
 	return i.Sub(NewUint(i2))

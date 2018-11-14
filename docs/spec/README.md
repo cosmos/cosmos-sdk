@@ -1,6 +1,6 @@
 # Specifications
 
-This directory contains specifications for the modules of the Cosmos SDK as well as Interchain Standards (ICS) and other specifications..
+This directory contains specifications for the modules of the Cosmos SDK as well as Interchain Standards (ICS) and other specifications.
 
 SDK applications hold this state in a Merkle store. Updates to
 the store may be made during transactions and at the beginning and end of every

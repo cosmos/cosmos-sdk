@@ -264,6 +264,15 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 	res = app.initChainer(app.deliverState.ctx, req)
 
+	// add block gas meter
+	if app.maximumBlockGas > 0 {
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
+	} else {
+		app.deliverState.ctx = app.deliverState.ctx.
+			WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	}
+
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
 	return
@@ -434,15 +443,15 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		app.deliverState.ctx = app.deliverState.ctx.
 			WithBlockHeader(req.Header).
 			WithBlockHeight(req.Header.Height)
-	}
 
-	// add block gas meter
-	if app.maximumBlockGas > 0 {
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
-	} else {
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+		// add block gas meter
+		if app.maximumBlockGas > 0 {
+			app.deliverState.ctx = app.deliverState.ctx.
+				WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
+		} else {
+			app.deliverState.ctx = app.deliverState.ctx.
+				WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+		}
 	}
 
 	if app.beginBlocker != nil {
@@ -619,7 +628,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	ctx = app.initializeContext(ctx, mode)
 
 	// only run the tx if there is block gas remaining
-	if ctx.BlockGasMeter().PastLimit() {
+	if mode == runTxModeDeliver && ctx.BlockGasMeter().PastLimit() {
 		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
 		return
 	}
@@ -678,8 +687,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	result.GasWanted = gasWanted
 
 	// consume block gas
-	ctx.BlockGasMeter().ConsumeGas(
-		ctx.GasMeter().GasConsumed(), "block gas meter")
+	if mode == runTxModeDeliver {
+		ctx.BlockGasMeter().ConsumeGas(
+			ctx.GasMeter().GasConsumed(), "block gas meter")
+	}
 
 	// only update state if all messages pass
 	if result.IsOK() {

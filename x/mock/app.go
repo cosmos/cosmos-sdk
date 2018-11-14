@@ -1,9 +1,11 @@
 package mock
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand"
 	"os"
+	"sort"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -109,23 +111,64 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 	return abci.ResponseInitChain{}
 }
 
+// Type that combines an Address with the privKey and pubKey to that address
+type AddrKeys struct {
+	Address sdk.AccAddress
+	PubKey  crypto.PubKey
+	PrivKey crypto.PrivKey
+}
+
+// implement `Interface` in sort package.
+type AddrKeysSlice []AddrKeys
+
+func (b AddrKeysSlice) Len() int {
+	return len(b)
+}
+
+// Sorts lexographically by Address
+func (b AddrKeysSlice) Less(i, j int) bool {
+	// bytes package already implements Comparable for []byte.
+	switch bytes.Compare(b[i].Address.Bytes(), b[j].Address.Bytes()) {
+	case -1:
+		return true
+	case 0, 1:
+		return false
+	default:
+		panic("not fail-able with `bytes.Comparable` bounded [-1, 1].")
+	}
+}
+
+func (b AddrKeysSlice) Swap(i, j int) {
+	b[j], b[i] = b[i], b[j]
+}
+
 // CreateGenAccounts generates genesis accounts loaded with coins, and returns
 // their addresses, pubkeys, and privkeys.
 func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+	addrKeysSlice := AddrKeysSlice{}
+
 	for i := 0; i < numAccs; i++ {
 		privKey := ed25519.GenPrivKey()
 		pubKey := privKey.PubKey()
 		addr := sdk.AccAddress(pubKey.Address())
 
-		genAcc := &auth.BaseAccount{
+		addrKeysSlice = append(addrKeysSlice, AddrKeys{
 			Address: addr,
-			Coins:   genCoins,
-		}
+			PubKey:  pubKey,
+			PrivKey: privKey,
+		})
+	}
 
-		genAccs = append(genAccs, genAcc)
-		privKeys = append(privKeys, privKey)
-		pubKeys = append(pubKeys, pubKey)
-		addrs = append(addrs, addr)
+	sort.Sort(addrKeysSlice)
+
+	for i := range addrKeysSlice {
+		addrs = append(addrs, addrKeysSlice[i].Address)
+		pubKeys = append(pubKeys, addrKeysSlice[i].PubKey)
+		privKeys = append(privKeys, addrKeysSlice[i].PrivKey)
+		genAccs = append(genAccs, &auth.BaseAccount{
+			Address: addrKeysSlice[i].Address,
+			Coins:   genCoins,
+		})
 	}
 
 	return

@@ -19,6 +19,9 @@ const (
 	// if this is 1, the validator set at the end of a block will sign the block after the next.
 	// Constant as this should not change without a hard fork.
 	ValidatorUpdateDelay int64 = 1
+
+	// Default bondable coin denomination
+	DefaultBondDenom = "STAKE"
 )
 
 // nolint - Keys for parameter access
@@ -59,7 +62,7 @@ func DefaultParams() Params {
 	return Params{
 		UnbondingTime: defaultUnbondingTime,
 		MaxValidators: 100,
-		BondDenom:     "steak",
+		BondDenom:     DefaultBondDenom,
 	}
 }
 
@@ -69,7 +72,7 @@ func (p Params) HumanReadableString() string {
 
 	resp := "Params \n"
 	resp += fmt.Sprintf("Unbonding Time: %s\n", p.UnbondingTime)
-	resp += fmt.Sprintf("Max Validators: %d: \n", p.MaxValidators)
+	resp += fmt.Sprintf("Max Validators: %d\n", p.MaxValidators)
 	resp += fmt.Sprintf("Bonded Coin Denomination: %s\n", p.BondDenom)
 	return resp
 }

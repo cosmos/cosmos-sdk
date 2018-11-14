@@ -418,12 +418,12 @@
   revision = "e5840949ff4fff0c56f9b6a541e22b63581ea9df"
 
 [[projects]]
-  digest = "1:10b3a599325740c84a7c81f3f3cb2e1fdb70b3ea01b7fa28495567a2519df431"
+  digest = "1:ad9c4c1a4e7875330b1f62906f2830f043a23edb5db997e3a5ac5d3e6eadf80a"
   name = "github.com/tendermint/go-amino"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6dcc6ddc143e116455c94b25c1004c99e0d0ca12"
-  version = "v0.14.0"
+  revision = "dc14acf9ef15f85828bfbc561ed9dd9d2a284885"
+  version = "v0.14.1"
 
 [[projects]]
   digest = "1:9f8c4c93658315a795ffd3e0c943d39f78067dd8382b8d7bcfaf6686b92f3978"
@@ -434,7 +434,7 @@
   version = "v0.11.1"
 
 [[projects]]
-  digest = "1:5b1373b03f39e6f6061cd91f3829100527ebb5f94240c092bf9e5d314b153501"
+  digest = "1:ba2ba7d6a0853472bdb7a64c4f9c1d5f9cba0eb7aac0b024654104387bf5eb57"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -500,8 +500,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "48ab899923c564bbf2fa2f1244c11cb930e28132"
-  version = "v0.26.1-rc3"
+  revision = "80d0a362500fea2dd089258319075a54e5d40a2d"
+  version = "v0.26.1"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"

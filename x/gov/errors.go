@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultCodespace sdk.CodespaceType = 5
+	DefaultCodespace sdk.CodespaceType = MsgRoute
 
 	CodeUnknownProposal         sdk.CodeType = 1
 	CodeInactiveProposal        sdk.CodeType = 2

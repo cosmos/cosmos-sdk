@@ -107,7 +107,7 @@ func handleMsgSend(key *sdk.KVStoreKey) sdk.Handler {
 		if !ok {
 			// Create custom error message and return result
 			// Note: Using unreserved error codespace
-			return sdk.NewError(2, 1, "MsgSend is malformed").Result()
+			return sdk.NewError("bank", 1, "MsgSend is malformed").Result()
 		}
 
 		// Load the store.
@@ -137,7 +137,7 @@ func handleFrom(store sdk.KVStore, from sdk.AccAddress, amt sdk.Coins) sdk.Resul
 	accBytes := store.Get(from)
 	if accBytes == nil {
 		// Account was not added to store. Return the result of the error.
-		return sdk.NewError(2, 101, "Account not added to store").Result()
+		return sdk.NewError("bank", 101, "Account not added to store").Result()
 	}
 
 	// Unmarshal the JSON account bytes.

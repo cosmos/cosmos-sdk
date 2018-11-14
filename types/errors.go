@@ -10,37 +10,22 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// ABCICodeType - combined codetype / codespace
-type ABCICodeType uint32
-
-// CodeType - code identifier within codespace
-type CodeType uint16
+// CodeType - ABCI code identifier within codespace
+type CodeType uint32
 
 // CodespaceType - codespace identifier
 type CodespaceType string
 
 // IsOK - is everything okay?
-func (code ABCICodeType) IsOK() bool {
-	if code == ABCICodeOK {
+func (code CodeType) IsOK() bool {
+	if code == CodeOK {
 		return true
 	}
 	return false
 }
 
-// get the abci code from the local code and codespace
-func ToABCICode(space CodespaceType, code CodeType) ABCICodeType {
-	// TODO: Make Tendermint more aware of codespaces.
-	if space == CodespaceRoot && code == CodeOK {
-		return ABCICodeOK
-	}
-	return ABCICodeType((uint32(space) << 16) | uint32(code))
-}
-
 // SDK error codes
 const (
-	// ABCI error codes
-	ABCICodeOK ABCICodeType = 0
-
 	// Base error codes
 	CodeOK                CodeType = 0
 	CodeInternal          CodeType = 1
@@ -176,7 +161,6 @@ type Error interface {
 	Code() CodeType
 	Codespace() CodespaceType
 	ABCILog() string
-	ABCICode() ABCICodeType
 	Result() Result
 	QueryResult() abci.ResponseQuery
 }
@@ -230,15 +214,10 @@ func (err *sdkError) TraceSDK(format string, args ...interface{}) Error {
 // Implements ABCIError.
 func (err *sdkError) Error() string {
 	return fmt.Sprintf(`ERROR:
-Codespace: %d
+Codespace: %s
 Code: %d
 Message: %#v
 `, err.codespace, err.code, err.cmnError.Error())
-}
-
-// Implements ABCIError.
-func (err *sdkError) ABCICode() ABCICodeType {
-	return ToABCICode(err.codespace, err.code)
 }
 
 // Implements Error.
@@ -258,7 +237,6 @@ func (err *sdkError) ABCILog() string {
 	jsonErr := humanReadableError{
 		Codespace: err.codespace,
 		Code:      err.code,
-		ABCICode:  err.ABCICode(),
 		Message:   errMsg,
 	}
 	bz, er := cdc.MarshalJSON(jsonErr)
@@ -271,16 +249,18 @@ func (err *sdkError) ABCILog() string {
 
 func (err *sdkError) Result() Result {
 	return Result{
-		Code: err.ABCICode(),
-		Log:  err.ABCILog(),
+		Code:      err.Code(),
+		Codespace: err.Codespace(),
+		Log:       err.ABCILog(),
 	}
 }
 
 // QueryResult allows us to return sdk.Error.QueryResult() in query responses
 func (err *sdkError) QueryResult() abci.ResponseQuery {
 	return abci.ResponseQuery{
-		Code: uint32(err.ABCICode()),
-		Log:  err.ABCILog(),
+		Code:      uint32(err.Code()),
+		Codespace: string(err.Codespace()),
+		Log:       err.ABCILog(),
 	}
 }
 
@@ -315,6 +295,5 @@ func mustGetMsgIndex(abciLog string) int {
 type humanReadableError struct {
 	Codespace CodespaceType `json:"codespace"`
 	Code      CodeType      `json:"code"`
-	ABCICode  ABCICodeType  `json:"abci_code"`
 	Message   string        `json:"message"`
 }

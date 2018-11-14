@@ -95,7 +95,7 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
 		}
 
-		for i := 0; i < len(stdSigs) && i < ctx.TxSigLimit(); i++ {
+		for i := 0; i < len(stdSigs); i++ {
 			// check signature, return account with incremented nonce
 			signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytesList[i], simulate)
 			if !res.IsOK() {

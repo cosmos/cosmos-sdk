@@ -1,4 +1,4 @@
-# Overview
+# Lite Client Overview
 
 **See the Cosmos SDK lite Client RPC documentation [here](https://cosmos.network/rpc/)**
 

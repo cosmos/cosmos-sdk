@@ -32,7 +32,11 @@ If you are reading this on the Cosmos Website, please know that you can find mor
 
 To install the latest version of the `gaia` application and join the public testnet, **click [here](./gaia/README.md#join-the-cosmos-hub-public-testnet)**
 
-## Edit the Documentation
+## Contribute
 
 See [this file](./DOCS_README.md) for details of the build process and
 considerations when making changes.
+
+## Version
+
+This documentation is built from the following commit:

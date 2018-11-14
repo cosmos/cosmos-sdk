@@ -4,7 +4,7 @@
 # a fresh Digital Ocean droplet with Ubuntu
 
 # change this to a specific release or branch
-BRANCH=v0.26.0
+BRANCH=master
 
 sudo apt-get update -y
 sudo apt-get upgrade -y

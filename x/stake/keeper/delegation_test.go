@@ -105,6 +105,9 @@ func TestDelegation(t *testing.T) {
 		resVal, err = keeper.GetDelegatorValidator(ctx, addrDels[1], addrVals[i])
 		require.Nil(t, err)
 		require.Equal(t, addrVals[i], resVal.GetOperator())
+
+		resDels := keeper.GetValidatorDelegations(ctx, addrVals[i])
+		require.Len(t, resDels, 2)
 	}
 
 	// delete a record

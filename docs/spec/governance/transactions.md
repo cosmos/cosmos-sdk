@@ -4,7 +4,7 @@
 
 ### Proposal Submission
 
-Proposals can be submitted by any Atom holder via a `TxGovSubmitProposal` 
+Proposals can be submitted by any Atom holder via a `TxGovSubmitProposal`
 transaction.
 
 ```go
@@ -24,7 +24,7 @@ type TxGovSubmitProposal struct {
 * If `MinDeposit` is reached:
   * Push `proposalID` in  `ProposalProcessingQueue`
 
-A `TxGovSubmitProposal` transaction can be handled according to the following 
+A `TxGovSubmitProposal` transaction can be handled according to the following
 pseudocode.
 
 ```go
@@ -32,31 +32,31 @@ pseudocode.
 // Check if TxGovSubmitProposal is valid. If it is, create proposal //
 
 upon receiving txGovSubmitProposal from sender do
-  
-  if !correctlyFormatted(txGovSubmitProposal)  
+
+  if !correctlyFormatted(txGovSubmitProposal)
     // check if proposal is correctly formatted. Includes fee payment.
     throw
-  
-  initialDeposit = txGovSubmitProposal.InitialDeposit 
-  if (initialDeposit.Atoms <= 0) OR (sender.AtomBalance < initialDeposit.Atoms)  
+
+  initialDeposit = txGovSubmitProposal.InitialDeposit
+  if (initialDeposit.Atoms <= 0) OR (sender.AtomBalance < initialDeposit.Atoms)
     // InitialDeposit is negative or null OR sender has insufficient funds
     throw
 
   if (txGovSubmitProposal.Type != ProposalTypePlainText) OR (txGovSubmitProposal.Type != ProposalTypeSoftwareUpgrade)
-  
+
   sender.AtomBalance -= initialDeposit.Atoms
 
-  depositProcedure = load(GlobalParams, 'DepositProcedure')
-  
+  depositParam = load(GlobalParams, 'DepositParam')
+
   proposalID = generate new proposalID
   proposal = NewProposal()
-  
+
   proposal.Title = txGovSubmitProposal.Title
   proposal.Description = txGovSubmitProposal.Description
   proposal.Type = txGovSubmitProposal.Type
   proposal.TotalDeposit = initialDeposit
   proposal.SubmitTime = <CurrentTime>
-  proposal.DepositEndTime = <CurrentTime>.Add(depositProcedure.MaxDepositPeriod)
+  proposal.DepositEndTime = <CurrentTime>.Add(depositParam.MaxDepositPeriod)
   proposal.Deposits.append({initialDeposit, sender})
   proposal.Submitter = sender
   proposal.YesVotes = 0
@@ -64,15 +64,15 @@ upon receiving txGovSubmitProposal from sender do
   proposal.NoWithVetoVotes = 0
   proposal.AbstainVotes = 0
   proposal.CurrentStatus = ProposalStatusOpen
-  
+
   store(Proposals, <proposalID|'proposal'>, proposal) // Store proposal in Proposals mapping
   return proposalID
 ```
 
 ### Deposit
 
-Once a proposal is submitted, if 
-`Proposal.TotalDeposit < ActiveProcedure.MinDeposit`, Atom holders can send 
+Once a proposal is submitted, if
+`Proposal.TotalDeposit < ActiveParam.MinDeposit`, Atom holders can send
 `TxGovDeposit` transactions to increase the proposal's deposit.
 
 ```go
@@ -89,7 +89,7 @@ type TxGovDeposit struct {
 * If `MinDeposit` is reached:
   * Push `proposalID` in  `ProposalProcessingQueueEnd`
 
-A `TxGovDeposit` transaction has to go through a number of checks to be valid. 
+A `TxGovDeposit` transaction has to go through a number of checks to be valid.
 These checks are outlined in the following pseudocode.
 
 ```go
@@ -98,27 +98,27 @@ These checks are outlined in the following pseudocode.
 
 upon receiving txGovDeposit from sender do
   // check if proposal is correctly formatted. Includes fee payment.
-  
-  if !correctlyFormatted(txGovDeposit) 
+
+  if !correctlyFormatted(txGovDeposit)
     throw
-  
+
   proposal = load(Proposals, <txGovDeposit.ProposalID|'proposal'>) // proposal is a const key, proposalID is variable
 
-  if (proposal == nil) 
+  if (proposal == nil)
     // There is no proposal for this proposalID
     throw
-  
+
   if (txGovDeposit.Deposit.Atoms <= 0) OR (sender.AtomBalance < txGovDeposit.Deposit.Atoms) OR (proposal.CurrentStatus != ProposalStatusOpen)
 
-    // deposit is negative or null 
+    // deposit is negative or null
     // OR sender has insufficient funds
     // OR proposal is not open for deposit anymore
 
     throw
 
-  depositProcedure = load(GlobalParams, 'DepositProcedure')
+  depositParam = load(GlobalParams, 'DepositParam')
 
-  if (CurrentBlock >= proposal.SubmitBlock + depositProcedure.MaxDepositPeriod)
+  if (CurrentBlock >= proposal.SubmitBlock + depositParam.MaxDepositPeriod)
     proposal.CurrentStatus = ProposalStatusClosed
 
   else
@@ -127,21 +127,21 @@ upon receiving txGovDeposit from sender do
 
     proposal.Deposits.append({txGovVote.Deposit, sender})
     proposal.TotalDeposit.Plus(txGovDeposit.Deposit)
-    
-    if (proposal.TotalDeposit >= depositProcedure.MinDeposit)   
+
+    if (proposal.TotalDeposit >= depositParam.MinDeposit)
       // MinDeposit is reached, vote opens
-      
+
       proposal.VotingStartBlock = CurrentBlock
       proposal.CurrentStatus = ProposalStatusActive
-      ProposalProcessingQueue.push(txGovDeposit.ProposalID)  
+      ProposalProcessingQueue.push(txGovDeposit.ProposalID)
 
   store(Proposals, <txGovVote.ProposalID|'proposal'>, proposal)
 ```
 
 ### Vote
 
-Once `ActiveProcedure.MinDeposit` is reached, voting period starts. From there,
-bonded Atom holders are able to send `TxGovVote` transactions to cast their 
+Once `ActiveParam.MinDeposit` is reached, voting period starts. From there,
+bonded Atom holders are able to send `TxGovVote` transactions to cast their
 vote on the proposal.
 
 ```go
@@ -157,25 +157,25 @@ vote on the proposal.
 *Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker*
 
 
-Next is a pseudocode proposal of the way `TxGovVote` transactions are 
+Next is a pseudocode proposal of the way `TxGovVote` transactions are
 handled:
 
 ```go
   // PSEUDOCODE //
   // Check if TxGovVote is valid. If it is, count vote//
-  
+
   upon receiving txGovVote from sender do
-    // check if proposal is correctly formatted. Includes fee payment.    
-    
-    if !correctlyFormatted(txGovDeposit)   
+    // check if proposal is correctly formatted. Includes fee payment.
+
+    if !correctlyFormatted(txGovDeposit)
       throw
-    
+
     proposal = load(Proposals, <txGovDeposit.ProposalID|'proposal'>)
 
-    if (proposal == nil)   
+    if (proposal == nil)
       // There is no proposal for this proposalID
       throw
-    
+
 
     if  (proposal.CurrentStatus == ProposalStatusActive)
 

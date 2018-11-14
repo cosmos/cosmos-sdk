@@ -539,13 +539,17 @@ func TestBonding(t *testing.T) {
 
 	require.Equal(t, int64(40), coins.AmountOf(denom).Int64())
 
-	// query validator
+	// query delegation
 	bond := getDelegation(t, port, addr, operAddrs[0])
 	require.Equal(t, amt, bond.Shares)
 
 	delegatorDels := getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, amt, delegatorDels[0].Shares)
+
+	// query all delegations to validator
+	bonds := getValidatorDelegations(t, port, operAddrs[0])
+	require.Len(t, bonds, 2)
 
 	bondedValidators := getDelegatorValidators(t, port, addr)
 	require.Len(t, bondedValidators, 1)
@@ -731,26 +735,33 @@ func TestProposalsQuery(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addrs[0], addrs[1]})
 	defer cleanup()
 
+	depositParam := getDepositParam(t, port)
+	halfMinDeposit := depositParam.MinDeposit.AmountOf(stakeTypes.DefaultBondDenom).Int64() / 2
+	getVotingParam(t, port)
+	getTallyingParam(t, port)
+
 	// Addr1 proposes (and deposits) proposals #1 and #2
-	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
+	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit)
 	var proposalID1 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], 5)
+
+	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit)
 	var proposalID2 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
-	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], 5)
+	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], halfMinDeposit)
 	var proposalID3 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
-	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID2, 5)
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID2, halfMinDeposit)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, 5)
+
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, halfMinDeposit)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check deposits match proposal and individual deposits
@@ -1207,6 +1218,17 @@ func getValidator(t *testing.T, port string, validatorAddr sdk.ValAddress) stake
 	return validator
 }
 
+func getValidatorDelegations(t *testing.T, port string, validatorAddr sdk.ValAddress) []stake.Delegation {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s/delegations", validatorAddr.String()), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var delegations []stake.Delegation
+	err := cdc.UnmarshalJSON([]byte(body), &delegations)
+	require.Nil(t, err)
+
+	return delegations
+}
+
 func getValidatorUnbondingDelegations(t *testing.T, port string, validatorAddr sdk.ValAddress) []stake.UnbondingDelegation {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s/unbonding_delegations", validatorAddr.String()), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -1230,6 +1252,36 @@ func getValidatorRedelegations(t *testing.T, port string, validatorAddr sdk.ValA
 }
 
 // ============= Governance Module ================
+
+func getDepositParam(t *testing.T, port string) gov.DepositParams {
+	res, body := Request(t, port, "GET", "/gov/parameters/deposit", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var depositParams gov.DepositParams
+	err := cdc.UnmarshalJSON([]byte(body), &depositParams)
+	require.Nil(t, err)
+	return depositParams
+}
+
+func getVotingParam(t *testing.T, port string) gov.VotingParams {
+	res, body := Request(t, port, "GET", "/gov/parameters/voting", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var votingParams gov.VotingParams
+	err := cdc.UnmarshalJSON([]byte(body), &votingParams)
+	require.Nil(t, err)
+	return votingParams
+}
+
+func getTallyingParam(t *testing.T, port string) gov.TallyParams {
+	res, body := Request(t, port, "GET", "/gov/parameters/tallying", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var tallyParams gov.TallyParams
+	err := cdc.UnmarshalJSON([]byte(body), &tallyParams)
+	require.Nil(t, err)
+	return tallyParams
+}
 
 func getProposal(t *testing.T, port string, proposalID uint64) gov.Proposal {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d", proposalID), nil)

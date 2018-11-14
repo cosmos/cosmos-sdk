@@ -84,10 +84,10 @@ func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, GetValidatorMissedBlockBitArrayPrefixKey(address))
+	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		store.Delete(iter.Key())
 	}
-	iter.Close()
 }
 
 // Construct a new `ValidatorSigningInfo` struct

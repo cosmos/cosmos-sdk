@@ -96,7 +96,8 @@ func SimulateMsgSubmitProposal(k gov.Keeper) simulation.Operation {
 
 func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context, event func(string)) (action string, ok bool) {
 	ctx, _ = ctx.CacheContext()
-	handler(ctx, msg)
+	result := handler(ctx, msg)
+	ok = result.IsOK()
 	event(fmt.Sprintf("gov/MsgSubmitProposal/%v", ok))
 	action = fmt.Sprintf("TestMsgSubmitProposal: ok %v, msg %s", ok, msg.GetSignBytes())
 	return

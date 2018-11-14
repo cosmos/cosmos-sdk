@@ -48,12 +48,15 @@ To accommodate review process we suggest that PRs are categorically broken up.
 Ideally each PR addresses only a single issue. Additionally, as much as possible
 code refactoring and cleanup should be submitted as a separate PRs from bugfixes/feature-additions.
 
-### Process for Reviewing PRs
+### Process for reviewing PRs
 
 All PRs require 2 Reviews before merge. When reviewing PRs please use the following review explanations:
 
 - `LGTM` without an explicit approval means that the changes look good, but you haven't pulled down the code, run tests locally and thoroughly reviewed it.
-- `Approval` through the GH UI means that you understand the code, documentation/spec is updated in the right places, you have pulled down and tested the code locally.
+- `Approval` through the GH UI means that you understand the code, documentation/spec is updated in the right places, you have pulled down and tested the code locally. In addition:
+  - You must also think through anything which ought to be included but is not
+  - You must think through whether any added code could be partially combined (DRYed) with existing code
+  - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
 - If you sat down with the PR submitter and did a pairing review please note that in the `Approval`, or your PR comments.
 - If you are only making "surface level" reviews, submit any notes as `Comments` without adding a review.
 

@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This paper specifies the Governance module of the Cosmos-SDK, which was first described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper) in June 2016. 
+This paper specifies the Governance module of the Cosmos-SDK, which was first described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper) in June 2016.
 
 The module enables Cosmos-SDK based blockchain to support an on-chain governance system. In this system, holders of the native staking token of the chain can vote on proposals on a 1 token 1 vote basis. Next is a list of features the module currently supports:
 
@@ -24,7 +24,7 @@ The following specification uses *Atom* as the native staking token. The module 
 1.  **[Design overview](overview.md)**
 2.  **Implementation**
     1. **[State](state.md)**
-        1.  Procedures
+        1.  Parameters
         2.  Proposals
         3.  Proposal Processing Queue
     2. **[Transactions](transactions.md)**

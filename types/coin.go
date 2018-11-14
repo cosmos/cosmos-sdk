@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+//-----------------------------------------------------------------------------
+// Coin
+
 // Coin hold some amount of one currency.
 //
 // CONTRACT: A coin will never hold a negative amount of any denomination.
@@ -75,7 +78,7 @@ func (coin Coin) Minus(coinB Coin) Coin {
 	return Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 }
 
-//----------------------------------------
+//-----------------------------------------------------------------------------
 // Coins
 
 type (
@@ -102,7 +105,7 @@ func (coins Coins) String() string {
 	return out[:len(out)-1]
 }
 
-// IsValid asserts the Coins are sorted, and don't have 0 amounts
+// IsValid asserts the Coins are sorted, and don't have 0 amounts.
 func (coins Coins) IsValid() bool {
 	switch len(coins) {
 	case 0:
@@ -126,12 +129,22 @@ func (coins Coins) IsValid() bool {
 }
 
 // Plus adds two sets of coins.
+//
+// e.g.
+// {2A} + {A, 2B} = {3A, 2B}
+// {2A} + {0B} = {2A}
+//
 // CONTRACT: Plus will never return Coins where one Coin has a 0 amount.
 func (coins Coins) Plus(coinsB Coins) Coins {
 	return sumCoins(coins, coinsB, coinSumOpAdd)
 }
 
 // Minus subtracts a set of coins from another.
+//
+// e.g.
+// {2A} - {A, 2B} = {A, 2B}
+// {2A} - {0B} = {2A}
+// {A, B} - {A} = {B}
 //
 // CONTRACT
 // - Minus will never return Coins where one Coin has a 0 amount.

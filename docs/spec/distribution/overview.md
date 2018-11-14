@@ -64,9 +64,11 @@ for further details.
 Charging commission on Atom provisions while also allowing for Atom-provisions
 to be auto-bonded (distributed directly to the validators bonded stake) is
 problematic within BPoS. Fundamentally, these two mechanisms are mutually
-exclusive. If there are both commissions and auto-bonding on the staking token,
-the amount of staking tokens each validator and delegator has would change each
-block, so we would have to iterate through all of them.
+exclusive. If both commission and auto-bonding mechanisms are simultaneously
+applied to the staking-token then the distribution of staking-tokens between
+any validator and its delegators will change with each block. This then
+necessitates a calculation for each delegation records for each block -
+which is considered computationally expensive.
 
 In conclusion, we can only have Atom commission and unbonded atoms
 provisions or bonded atom provisions with no Atom commission, and we elect to

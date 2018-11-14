@@ -207,7 +207,7 @@ test_sim_gaia_profile:
 test_cover:
 	@export VERSION=$(VERSION); bash tests/test_cover.sh
 
-test_lint: get_dev_tools
+test_lint:
 	gometalinter --config=tools/gometalinter.json ./...
 	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s

@@ -25,7 +25,7 @@ occurs, withdrawal of rewards must also occur.
 
 The above scenarios are covered in `hooks.md`.
 
-The distribution mechanism outlines herein are used to lazily distribute the
+The distribution mechanism outlined herein is used to lazily distribute the
 following rewards between validators and associated delegators:
 
 - multi-token fees to be socially distributed

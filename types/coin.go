@@ -265,11 +265,11 @@ func sumCoins(coinsA, coinsB Coins, op coinSumOp) Coins {
 				return sum
 			}
 
-			// return set B if set A is empty
-			return append(sum, coinsB[indexB:]...)
+			// return set B (excluding zero coins) if set A is empty
+			return append(sum, filterZeroCoins(coinsB[indexB:])...)
 		} else if indexB == lenB {
-			// return set A if set B is empty
-			return append(sum, coinsA[indexA:]...)
+			// return set A (excluding zero coins) if set B is empty
+			return append(sum, filterZeroCoins(coinsA[indexA:])...)
 		}
 
 		coinA, coinB := coinsA[indexA], coinsB[indexB]
@@ -315,7 +315,20 @@ func sumCoins(coinsA, coinsB Coins, op coinSumOp) Coins {
 	}
 }
 
-//----------------------------------------
+// filterZeroCoins removes all zero coins from the given coin set.
+func filterZeroCoins(coins Coins) Coins {
+	var res Coins
+
+	for _, coin := range coins {
+		if !coin.IsZero() {
+			res = append(res, coin)
+		}
+	}
+
+	return res
+}
+
+//-----------------------------------------------------------------------------
 // Sort interface
 
 //nolint
@@ -331,7 +344,7 @@ func (coins Coins) Sort() Coins {
 	return coins
 }
 
-//----------------------------------------
+//-----------------------------------------------------------------------------
 // Parsing
 
 var (

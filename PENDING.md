@@ -31,6 +31,7 @@ FEATURES
 * Gaia
   * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Implemented querier
   for getting governance parameters.
+  * [app] \#2663 - Runtime-assertable invariants
 
 * SDK
     * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time

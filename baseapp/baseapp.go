@@ -668,7 +668,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			ctx = newCtx
 		}
 
-		if mode == runTxModeDeliver && msCache != nil {
+		if mode == runTxModeDeliver {
 			msCache.Write()
 		}
 

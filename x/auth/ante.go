@@ -17,6 +17,8 @@ const (
 	maxMemoCharacters           = 100
 	// how much gas = 1 atom
 	gasPerUnitCost = 1000
+	// max total number of sigs per tx
+	txSigLimit = 7
 )
 
 // NewAnteHandler returns an AnteHandler that checks
@@ -73,6 +75,12 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// stdSigs contains the sequence number, account number, and signatures
 		stdSigs := stdTx.GetSignatures() // When simulating, this would just be a 0-length slice.
 		signerAddrs := stdTx.GetSigners()
+
+		if len(stdSigs) > txSigLimit {
+			return newCtx, sdk.ErrTooManySignatures(fmt.Sprintf(
+				"signatures: %d, limit: %d", len(stdSigs), txSigLimit),
+				).Result(), true
+		}
 
 		// create the list of all sign bytes
 		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, stdSigs)

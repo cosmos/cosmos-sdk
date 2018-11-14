@@ -147,7 +147,7 @@ func (coins Coins) IsValid() bool {
 //
 // CONTRACT: Plus will never return Coins where one Coin has a 0 amount.
 func (coins Coins) Plus(coinsB Coins) Coins {
-	res, _ := sumCoins(coins, coinsB, coinSumOpAdd) // should not panic
+	res, _ := sumCoins(coins, coinsB, coinSumOpAdd) // should never overflow
 	return res
 }
 
@@ -265,7 +265,17 @@ func (coins Coins) AmountOf(denom string) Uint {
 	}
 }
 
-func sumCoins(coinsA, coinsB Coins, op coinSumOp) Coins {
+// sumCoins performs the additive or additive inverse operation on two sets of
+// coins. If both coin sets are empty an empty set is returned. If only a single
+// set is empty, the other set is returned. Otherwise, the coins are compared
+// in order of their denomination and the operation only occurs when the
+// denominations match, otherwise the coin is simply added to the sum assuming
+// it's not zero. During the additive inverse operation, if overflow occurs, a
+// boolean is returned indicating as such.
+//
+// NOTE: sumCoins makes no assumptions about the order or unique contents of
+// each set.
+func sumCoins(coinsA, coinsB Coins, op coinSumOp) (Coins, bool) {
 	sum := ([]Coin)(nil)
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coinsA), len(coinsB)
@@ -274,14 +284,14 @@ func sumCoins(coinsA, coinsB Coins, op coinSumOp) Coins {
 		if indexA == lenA {
 			if indexB == lenB {
 				// return nil coins if both sets are empty
-				return sum
+				return sum, false
 			}
 
 			// return set B (excluding zero coins) if set A is empty
-			return append(sum, filterZeroCoins(coinsB[indexB:])...)
+			return append(sum, filterZeroCoins(coinsB[indexB:])...), false
 		} else if indexB == lenB {
 			// return set A (excluding zero coins) if set B is empty
-			return append(sum, filterZeroCoins(coinsA[indexA:])...)
+			return append(sum, filterZeroCoins(coinsA[indexA:])...), false
 		}
 
 		coinA, coinB := coinsA[indexA], coinsB[indexB]
@@ -297,13 +307,18 @@ func sumCoins(coinsA, coinsB Coins, op coinSumOp) Coins {
 			indexA++
 
 		case 0: // coin A denom == coin B denom
-			var res Coin
+			var (
+				res      Coin
+				overflow bool
+			)
 
 			if op == coinSumOpAdd {
 				res = coinA.Plus(coinB)
 			} else if op == coinSumOpSub {
-				// will panic on overflow
-				res = coinA.Minus(coinB)
+				res, overflow = coinA.SafeMinus(coinB)
+				if overflow {
+					return sum, true
+				}
 			}
 
 			if res.IsZero() {

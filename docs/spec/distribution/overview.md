@@ -54,7 +54,7 @@ However, this is unrealistic so deviations from the active distribution will
 occur based on fluctuations of incoming reward tokens as well as timing of
 reward withdrawal by other delegators.
 
-If you happen to know that incoming rewards are about to significantly go up,
+If you happen to know that incoming rewards are about to significantly increase,
 you are incentivized to not withdraw until after this event, increasing the
 worth of your existing _accum_. See [#2764](https://github.com/cosmos/cosmos-sdk/issues/2764)
 for further details.

@@ -15,7 +15,7 @@ module.exports = {
         title: "Overview",
         collapsable: false,
         children: [
-          "/intro/README",
+          "/intro/",
           "/intro/sdk-app-architecture",
           "/intro/ocap"
         ]
@@ -38,12 +38,12 @@ module.exports = {
         title: "Clients",
         collapsable: false,
         children: [
-      	  "/clients/README",
-      	  "/lite/", // this renders the readme
-      	  "/lite/getting_started",
-      	  "/lite/specification",
+      	  "/clients/",
           "/clients/cli",
-          "/clients/service-providers"
+          "/clients/service-providers",
+      	  "/clients/lite/", // this renders the readme
+      	  "/clients/lite/getting_started",
+      	  "/clients/lite/specification"
       	]
       }
     ]

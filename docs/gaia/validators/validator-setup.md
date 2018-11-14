@@ -1,6 +1,6 @@
 # Validator Setup
 
-:::
+::: tip
 Information on how to join the current testnet (`genesis.json` file and seeds) is held [in our `testnet` repo](https://github.com/cosmos/testnets/tree/master/latest). Please check there if you are looking to join our latest testnet. 
 :::
 

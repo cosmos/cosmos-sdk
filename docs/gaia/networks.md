@@ -123,7 +123,9 @@ gaiacli keys list --home ./build/node0/gaiacli
 Now that accounts exists, you may create new accounts and send those accounts
 funds!
 
+::: tip
 **Note**: Each node's seed is located at `./build/nodeN/gaiacli/key_seed.json`.
+:::
 
 ### Special binaries
 

@@ -77,7 +77,9 @@ git fetch --all && git checkout master
 make update_tools && make get_vendor_deps && make install
 ```
 
-> *NOTE*: If you have issues at this step, please check that you have the latest stable version of GO installed.
+::: tip
+*NOTE*: If you have issues at this step, please check that you have the latest stable version of GO installed.
+:::
 
 Note we use `master` here since it contains the latest stable release.
 See the [testnet repo](https://github.com/cosmos/testnets)

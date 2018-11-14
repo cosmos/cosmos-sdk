@@ -47,7 +47,7 @@ fair portion of tokens held in the global fee pool is owed to them.
 entitlement = delegator-accumulation / all-delegators-accumulation
 ```
 
-Under the circumstance that there were constant and equal flows of incoming
+Under the circumstance that there was constant and equal flow of incoming
 reward tokens every block, this distribution mechanism would be equal to the
 active distribution (distribute individually to all delegators each block).
 However, this is unrealistic so deviations from the active distribution will

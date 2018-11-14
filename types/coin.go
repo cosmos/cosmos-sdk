@@ -8,7 +8,9 @@ import (
 	"strings"
 )
 
-// Coin hold some amount of one currency
+// Coin hold some amount of one currency.
+//
+// CONTRACT: A coin will never hold a negative amount of any denomination.
 type Coin struct {
 	Denom  string `json:"denom"`
 	Amount Uint   `json:"amount"`
@@ -55,16 +57,6 @@ func (coin Coin) IsLT(other Coin) bool {
 // IsEqual returns true if the two sets of Coins have the same value
 func (coin Coin) IsEqual(other Coin) bool {
 	return coin.SameDenomAs(other) && (coin.Amount.Equal(other.Amount))
-}
-
-// IsPositive returns true if coin amount is positive
-func (coin Coin) IsPositive() bool {
-	return (coin.Amount.Sign() == 1)
-}
-
-// IsNotNegative returns true if coin amount is not negative
-func (coin Coin) IsNotNegative() bool {
-	return (coin.Amount.Sign() != -1)
 }
 
 // Adds amounts of two coins with same denom
@@ -211,32 +203,9 @@ func (coins Coins) IsEqual(coinsB Coins) bool {
 	return true
 }
 
-// IsPositive returns true if there is at least one coin, and all
-// currencies have a positive value
-func (coins Coins) IsPositive() bool {
-	if len(coins) == 0 {
-		return false
-	}
-	for _, coin := range coins {
-		if !coin.IsPositive() {
-			return false
-		}
-	}
-	return true
-}
-
-// IsNotNegative returns true if there is no currency with a negative value
-// (even no coins is true here)
-func (coins Coins) IsNotNegative() bool {
-	if len(coins) == 0 {
-		return true
-	}
-	for _, coin := range coins {
-		if !coin.IsNotNegative() {
-			return false
-		}
-	}
-	return true
+// Empty returns true if there are no coins and false otherwise.
+func (coins Coins) Empty() bool {
+	return len(coins) == 0
 }
 
 // Returns the amount of a denom from coins

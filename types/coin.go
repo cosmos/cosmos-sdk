@@ -70,12 +70,23 @@ func (coin Coin) Plus(coinB Coin) Coin {
 	return Coin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
-// Subtracts amounts of two coins with same denom
+// Subtracts amounts of two coins with same denom.
 func (coin Coin) Minus(coinB Coin) Coin {
 	if !coin.SameDenomAs(coinB) {
 		return coin
 	}
 	return Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
+}
+
+// SafeMinus subtracts coinB from coin. In addition, a boolean is returned
+// indicating if integer overflow occurred.
+func (coin Coin) SafeMinus(coinB Coin) (Coin, bool) {
+	if !coin.SameDenomAs(coinB) {
+		return coin, false
+	}
+
+	res, overflow := coin.Amount.SafeSub(coinB.Amount)
+	return Coin{coin.Denom, res}, overflow
 }
 
 //-----------------------------------------------------------------------------
@@ -136,7 +147,8 @@ func (coins Coins) IsValid() bool {
 //
 // CONTRACT: Plus will never return Coins where one Coin has a 0 amount.
 func (coins Coins) Plus(coinsB Coins) Coins {
-	return sumCoins(coins, coinsB, coinSumOpAdd)
+	res, _ := sumCoins(coins, coinsB, coinSumOpAdd) // should not panic
+	return res
 }
 
 // Minus subtracts a set of coins from another.

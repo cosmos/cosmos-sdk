@@ -245,6 +245,7 @@ IMPROVEMENTS
     * [cli] [\#2128](https://github.com/cosmos/cosmos-sdk/issues/2128) fixed segfault when exporting directly after `gaiad init`
     * [cli] [\#1255](https://github.com/cosmos/cosmos-sdk/issues/1255) open KeyBase in read-only mode
      for query-purpose CLI commands
+    * [docs] Added commands for querying governance deposits, votes and tally
 
 * Gaia
     * [x/stake] [#2023](https://github.com/cosmos/cosmos-sdk/pull/2023) Terminate iteration loop in `UpdateBondedValidators` and `UpdateBondedValidatorsFull` when the first revoked validator is encountered and perform a sanity check.
@@ -289,6 +290,7 @@ BUG FIXES
 * Gaia
   * [x/stake] Return correct Tendermint validator update set on `EndBlocker` by not
   including non previously bonded validators that have zero power. [#2189](https://github.com/cosmos/cosmos-sdk/issues/2189)
+  * [docs] Fixed light client section links
 
 * SDK
     * [\#1988](https://github.com/cosmos/cosmos-sdk/issues/1988) Make us compile on OpenBSD (disable ledger) [#1988] (https://github.com/cosmos/cosmos-sdk/issues/1988)

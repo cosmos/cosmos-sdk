@@ -13,9 +13,8 @@ func TestIsPositiveCoin(t *testing.T) {
 		inputOne Coin
 		expected bool
 	}{
-		{NewInt64Coin("A", 1), true},
-		{NewInt64Coin("A", 0), false},
-		{NewInt64Coin("a", -1), false},
+		{NewUInt64Coin("A", 1), true},
+		{NewUInt64Coin("A", 0), false},
 	}
 
 	for tcIndex, tc := range cases {
@@ -29,9 +28,8 @@ func TestIsNotNegativeCoin(t *testing.T) {
 		inputOne Coin
 		expected bool
 	}{
-		{NewInt64Coin("A", 1), true},
-		{NewInt64Coin("A", 0), true},
-		{NewInt64Coin("a", -1), false},
+		{NewUInt64Coin("A", 1), true},
+		{NewUInt64Coin("A", 0), true},
 	}
 
 	for tcIndex, tc := range cases {
@@ -46,11 +44,10 @@ func TestSameDenomAsCoin(t *testing.T) {
 		inputTwo Coin
 		expected bool
 	}{
-		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), true},
-		{NewInt64Coin("A", 1), NewInt64Coin("a", 1), false},
-		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
-		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), true},
-		{NewInt64Coin("steak", -11), NewInt64Coin("steak", 10), true},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("A", 1), true},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("a", 1), false},
+		{NewUInt64Coin("a", 1), NewUInt64Coin("b", 1), false},
+		{NewUInt64Coin("steak", 1), NewUInt64Coin("steak", 10), true},
 	}
 
 	for tcIndex, tc := range cases {
@@ -65,10 +62,9 @@ func TestIsGTECoin(t *testing.T) {
 		inputTwo Coin
 		expected bool
 	}{
-		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), true},
-		{NewInt64Coin("A", 2), NewInt64Coin("A", 1), true},
-		{NewInt64Coin("A", -1), NewInt64Coin("A", 5), false},
-		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("A", 1), true},
+		{NewUInt64Coin("A", 2), NewUInt64Coin("A", 1), true},
+		{NewUInt64Coin("a", 1), NewUInt64Coin("b", 1), false},
 	}
 
 	for tcIndex, tc := range cases {
@@ -83,13 +79,12 @@ func TestIsLTCoin(t *testing.T) {
 		inputTwo Coin
 		expected bool
 	}{
-		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), false},
-		{NewInt64Coin("A", 2), NewInt64Coin("A", 1), false},
-		{NewInt64Coin("A", -1), NewInt64Coin("A", 5), true},
-		{NewInt64Coin("a", 0), NewInt64Coin("b", 1), false},
-		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
-		{NewInt64Coin("a", 1), NewInt64Coin("a", 1), false},
-		{NewInt64Coin("a", 1), NewInt64Coin("a", 2), true},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("A", 1), false},
+		{NewUInt64Coin("A", 2), NewUInt64Coin("A", 1), false},
+		{NewUInt64Coin("a", 0), NewUInt64Coin("b", 1), false},
+		{NewUInt64Coin("a", 1), NewUInt64Coin("b", 1), false},
+		{NewUInt64Coin("a", 1), NewUInt64Coin("a", 1), false},
+		{NewUInt64Coin("a", 1), NewUInt64Coin("a", 2), true},
 	}
 
 	for tcIndex, tc := range cases {
@@ -104,11 +99,10 @@ func TestIsEqualCoin(t *testing.T) {
 		inputTwo Coin
 		expected bool
 	}{
-		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), true},
-		{NewInt64Coin("A", 1), NewInt64Coin("a", 1), false},
-		{NewInt64Coin("a", 1), NewInt64Coin("b", 1), false},
-		{NewInt64Coin("steak", 1), NewInt64Coin("steak", 10), false},
-		{NewInt64Coin("steak", -11), NewInt64Coin("steak", 10), false},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("A", 1), true},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("a", 1), false},
+		{NewUInt64Coin("a", 1), NewUInt64Coin("b", 1), false},
+		{NewUInt64Coin("steak", 1), NewUInt64Coin("steak", 10), false},
 	}
 
 	for tcIndex, tc := range cases {
@@ -123,50 +117,45 @@ func TestPlusCoin(t *testing.T) {
 		inputTwo Coin
 		expected Coin
 	}{
-		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), NewInt64Coin("A", 2)},
-		{NewInt64Coin("A", 1), NewInt64Coin("B", 1), NewInt64Coin("A", 1)},
-		{NewInt64Coin("asdf", -4), NewInt64Coin("asdf", 5), NewInt64Coin("asdf", 1)},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("A", 1), NewUInt64Coin("A", 2)},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("B", 1), NewUInt64Coin("A", 1)},
 	}
 
 	for tcIndex, tc := range cases {
 		res := tc.inputOne.Plus(tc.inputTwo)
 		require.Equal(t, tc.expected, res, "sum of coins is incorrect, tc #%d", tcIndex)
 	}
-
-	tc := struct {
-		inputOne Coin
-		inputTwo Coin
-		expected int64
-	}{NewInt64Coin("asdf", -1), NewInt64Coin("asdf", 1), 0}
-	res := tc.inputOne.Plus(tc.inputTwo)
-	require.Equal(t, tc.expected, res.Amount.Int64())
 }
 
 func TestMinusCoin(t *testing.T) {
 	cases := []struct {
-		inputOne Coin
-		inputTwo Coin
-		expected Coin
+		inputOne    Coin
+		inputTwo    Coin
+		expected    Coin
+		shouldPanic bool
 	}{
-
-		{NewInt64Coin("A", 1), NewInt64Coin("B", 1), NewInt64Coin("A", 1)},
-		{NewInt64Coin("asdf", -4), NewInt64Coin("asdf", 5), NewInt64Coin("asdf", -9)},
-		{NewInt64Coin("asdf", 10), NewInt64Coin("asdf", 1), NewInt64Coin("asdf", 9)},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("B", 1), NewUInt64Coin("A", 1), false},
+		{NewUInt64Coin("A", 10), NewUInt64Coin("A", 1), NewUInt64Coin("A", 9), false},
+		{NewUInt64Coin("A", 5), NewUInt64Coin("A", 3), NewUInt64Coin("A", 2), false},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("A", 5), Coin{}, true},
 	}
 
 	for tcIndex, tc := range cases {
-		res := tc.inputOne.Minus(tc.inputTwo)
-		require.Equal(t, tc.expected, res, "difference of coins is incorrect, tc #%d", tcIndex)
+		if tc.shouldPanic {
+			require.Panics(t, func() { tc.inputOne.Minus(tc.inputTwo) })
+		} else {
+			res := tc.inputOne.Minus(tc.inputTwo)
+			require.Equal(t, tc.expected, res, "difference of coins is incorrect, tc #%d", tcIndex)
+		}
 	}
 
 	tc := struct {
 		inputOne Coin
 		inputTwo Coin
-		expected int64
-	}{NewInt64Coin("A", 1), NewInt64Coin("A", 1), 0}
+		expected uint64
+	}{NewUInt64Coin("A", 1), NewUInt64Coin("A", 1), 0}
 	res := tc.inputOne.Minus(tc.inputTwo)
-	require.Equal(t, tc.expected, res.Amount.Int64())
-
+	require.Equal(t, tc.expected, res.Amount.Uint64())
 }
 
 func TestIsZeroCoins(t *testing.T) {
@@ -175,10 +164,10 @@ func TestIsZeroCoins(t *testing.T) {
 		expected bool
 	}{
 		{Coins{}, true},
-		{Coins{NewInt64Coin("A", 0)}, true},
-		{Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 0)}, true},
-		{Coins{NewInt64Coin("A", 1)}, false},
-		{Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, false},
+		{Coins{NewUInt64Coin("A", 0)}, true},
+		{Coins{NewUInt64Coin("A", 0), NewUInt64Coin("B", 0)}, true},
+		{Coins{NewUInt64Coin("A", 1)}, false},
+		{Coins{NewUInt64Coin("A", 0), NewUInt64Coin("B", 1)}, false},
 	}
 
 	for _, tc := range cases {
@@ -194,13 +183,13 @@ func TestEqualCoins(t *testing.T) {
 		expected bool
 	}{
 		{Coins{}, Coins{}, true},
-		{Coins{NewInt64Coin("A", 0)}, Coins{NewInt64Coin("A", 0)}, true},
-		{Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, true},
-		{Coins{NewInt64Coin("A", 0)}, Coins{NewInt64Coin("B", 0)}, false},
-		{Coins{NewInt64Coin("A", 0)}, Coins{NewInt64Coin("A", 1)}, false},
-		{Coins{NewInt64Coin("A", 0)}, Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, false},
+		{Coins{NewUInt64Coin("A", 0)}, Coins{NewUInt64Coin("A", 0)}, true},
+		{Coins{NewUInt64Coin("A", 0), NewUInt64Coin("B", 1)}, Coins{NewUInt64Coin("A", 0), NewUInt64Coin("B", 1)}, true},
+		{Coins{NewUInt64Coin("A", 0)}, Coins{NewUInt64Coin("B", 0)}, false},
+		{Coins{NewUInt64Coin("A", 0)}, Coins{NewUInt64Coin("A", 1)}, false},
+		{Coins{NewUInt64Coin("A", 0)}, Coins{NewUInt64Coin("A", 0), NewUInt64Coin("B", 1)}, false},
 		// TODO: is it expected behaviour? shouldn't we sort the coins before comparing them?
-		{Coins{NewInt64Coin("A", 0), NewInt64Coin("B", 1)}, Coins{NewInt64Coin("B", 1), NewInt64Coin("A", 0)}, false},
+		{Coins{NewUInt64Coin("A", 0), NewUInt64Coin("B", 1)}, Coins{NewUInt64Coin("B", 1), NewUInt64Coin("A", 0)}, false},
 	}
 
 	for tcnum, tc := range cases {

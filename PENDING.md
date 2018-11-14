@@ -33,7 +33,8 @@ FEATURES
   for getting governance parameters.
 
 * SDK
-    * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
+  * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
+  * [core] \#2775 Add deliverTx maximum block gas limit
 
 * Tendermint
 

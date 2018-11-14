@@ -67,6 +67,8 @@ BUG FIXES
   * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override
 
 * SDK
+  
+  - \#2733 [x/gov, x/mock/simulation] Fix governance simulation, update x/gov import/export
 
 * Tendermint
   * [\#2797](https://github.com/tendermint/tendermint/pull/2797) AddressBook requires addresses to have IDs; Do not crap out immediately after sending pex addrs in seed mode

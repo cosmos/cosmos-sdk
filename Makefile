@@ -182,12 +182,7 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=4 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=11 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=12 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=13 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=414 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=4142 -v -timeout 24h
+	@bash scripts/import-export-sim.sh 50
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"

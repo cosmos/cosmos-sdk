@@ -5,14 +5,17 @@
 
 # change this to a specific release or branch
 BRANCH=master
+REPO=github.com/cosmos/cosmos-sdk
+
+GO_VERSION=1.11.2
 
 sudo apt-get update -y
 sudo apt-get upgrade -y
 sudo apt-get install -y make
 
 # get and unpack golang
-curl -O https://dl.google.com/go/go1.11.2.linux-amd64.tar.gz
-tar -xvf go1.11.2.linux-amd64.tar.gz
+curl -O https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
+tar -xvf go$GO_VERSION.linux-amd64.tar.gz
 
 # move go binary and add to path
 mv go /usr/local
@@ -26,7 +29,6 @@ echo "export PATH=\$PATH:\$GOPATH/bin" >> ~/.profile
 source ~/.profile
 
 # get the code and move into repo
-REPO=github.com/cosmos/cosmos-sdk
 go get $REPO
 cd $GOPATH/src/$REPO
 

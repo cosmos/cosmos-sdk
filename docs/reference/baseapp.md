@@ -41,30 +41,30 @@ proposing validator and is used for the Tendermint mempool. Notably, both
 where the AnteHandler is responsible for pre-message validation checks such as
 account and signature validation as well as fee deduction and collection. It is
 important to note that the AnteHandler does, and is expected to, perform various
-state transitions such as nonce incrimination and fee deduction.
+state transitions such as incrementing nonces and deducting fees.
 
 ### CheckTx
 
-During the execution of `CheckTx`, first the AnteHandler is executed. If the
-AnteHandler fails or panics then the transaction fails. After the successful
-execution of theAnteHandler, the messages are executed. If all the messages
-successfully executed, then the state transitions as a result of executing the
-messages are persisted.
+During the execution of `CheckTx`, only the AnteHandler is executed. If the
+AnteHandler fails or panics then the transaction fails.
 
 It is important to note that the state transitions due to the AnteHandler are
 persisted between subsequent calls of `CheckTx`. Also, currently the AnteHandler
-also handles making sure the sender has included enough fees as these mechanics
-differ per validator, it must be checked in `CheckTx` as to not cause conflicting
-state transitions during consensus.
+also handles making sure the sender has included enough fees as validators
+(and non-validator nodes) can set their own gas-price for validating transactions.
+This must be checked in `CheckTx` as to not cause conflicting state transitions
+during consensus.
 
 ### DeliverTx
 
 The transaction execution during `DeliverTx` operates in a similar fashion to
 `CheckTx`. However, state transitions caused by the AnteHandler are persisted
-unless the transaction fails.
+unless the transaction fails in addition to the messages being executed. 
 
 It is possible that a malicious proposer may send a transaction that would fail
 `CheckTx` but send it anyway causing other full nodes to execute it during
-`DeliverTx`. Because of this, we do not want to brake the invariant that state
-transitions cannot occur for transactions that would otherwise fail `CheckTx`,
-hence we do not persist state in such cases.
+`DeliverTx`.
+
+Because of this, we do not want to brake the invariant that state transitions
+cannot occur for transactions that would otherwise fail `CheckTx`, hence we do
+not persist state in such cases.

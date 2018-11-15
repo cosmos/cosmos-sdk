@@ -73,5 +73,5 @@ func exportAppStateAndTMValidators(
 			return nil, nil, err
 		}
 	}
-	return gApp.ExportAppStateAndValidators()
+	return gApp.ExportAppStateAndValidators(forZeroHeight)
 }

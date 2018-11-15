@@ -40,6 +40,16 @@ func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress)
 	store.Delete(GetValidatorDistInfoKey(valAddr))
 }
 
+// remove all validator distribution infos
+func (k Keeper) RemoveValidatorDistInfos(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
+}
+
 // Get the calculated accum of a validator at the current block
 // without affecting the state.
 func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) (sdk.Dec, sdk.Error) {

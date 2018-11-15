@@ -42,6 +42,16 @@ func (k Keeper) RemoveDelegationDistInfo(ctx sdk.Context, delAddr sdk.AccAddress
 	store.Delete(GetDelegationDistInfoKey(delAddr, valOperatorAddr))
 }
 
+// remove all delegation distribution infos
+func (k Keeper) RemoveDelegationDistInfos(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, DelegationDistInfoKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
+}
+
 //___________________________________________________________________________________________
 
 // get the delegator withdraw address, return the delegator address if not set

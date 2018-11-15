@@ -73,13 +73,13 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 	keeper.iterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool) {
 		bechAddr := address.String()
 		signingInfos[bechAddr] = info
-		array := []MissedBlock{}
+		localMissedBlocks := []MissedBlock{}
 
 		keeper.iterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
-			array = append(array, MissedBlock{index, missed})
+			localMissedBlocks = append(localMissedBlocks, MissedBlock{index, missed})
 			return false
 		})
-		missedBlocks[bechAddr] = array
+		missedBlocks[bechAddr] = localMissedBlocks
 
 		return false
 	})

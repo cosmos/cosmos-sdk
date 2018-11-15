@@ -105,6 +105,9 @@ func TestDelegation(t *testing.T) {
 		resVal, err = keeper.GetDelegatorValidator(ctx, addrDels[1], addrVals[i])
 		require.Nil(t, err)
 		require.Equal(t, addrVals[i], resVal.GetOperator())
+
+		resDels := keeper.GetValidatorDelegations(ctx, addrVals[i])
+		require.Len(t, resDels, 2)
 	}
 
 	// delete a record
@@ -139,7 +142,7 @@ func TestUnbondingDelegation(t *testing.T) {
 		ValidatorAddr:  addrVals[0],
 		CreationHeight: 0,
 		MinTime:        time.Unix(0, 0),
-		Balance:        sdk.NewInt64Coin("steak", 5),
+		Balance:        sdk.NewInt64Coin(types.DefaultBondDenom, 5),
 	}
 
 	// set and retrieve a record
@@ -149,7 +152,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.True(t, ubd.Equal(resUnbond))
 
 	// modify a records, save, and retrieve
-	ubd.Balance = sdk.NewInt64Coin("steak", 21)
+	ubd.Balance = sdk.NewInt64Coin(types.DefaultBondDenom, 21)
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
 	resUnbonds := keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)

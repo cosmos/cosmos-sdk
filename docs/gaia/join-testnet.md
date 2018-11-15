@@ -129,6 +129,21 @@ gaiacli status
 
 View the status of the network with the [Cosmos Explorer](https://explorecosmos.network). Once your full node syncs up to the current block height, you should see it appear on the [list of full nodes](https://explorecosmos.network/validators). If it doesn't show up, that's ok--the Explorer does not connect to every node.
 
+## Export State
+
+Gaia can dump the entire application state to a JSON file, which could be useful for manual analysis and can also be used as the genesis file of a new network.
+
+Export state with:
+
+```bash
+gaiad export > [filename].json
+```
+
+You can also export state from a particular height (at the end of processing the block of that height):
+
+```bash
+gaiad export --height=[height] > [filename].json
+```
 
 ## Upgrade to Validator Node
 

@@ -113,7 +113,7 @@ func (coins Coins) String() string {
 	return out[:len(out)-1]
 }
 
-// IsValid asserts the Coins are sorted, and don't have 0 amounts.
+// IsValid asserts the Coins are sorted and have positive amounts.
 func (coins Coins) IsValid() bool {
 	switch len(coins) {
 	case 0:
@@ -127,7 +127,7 @@ func (coins Coins) IsValid() bool {
 			if coin.Denom <= lowDenom {
 				return false
 			}
-			if coin.IsZero() {
+			if !coin.isPositive() {
 				return false
 			}
 

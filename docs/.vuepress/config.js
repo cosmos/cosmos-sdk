@@ -26,12 +26,13 @@ module.exports = {
         children: [
           "/gaia/installation",
           "/gaia/join-testnet",
+          "/gaia/validators/validator-setup",
           "/gaia/networks",
           "/gaia/validators/overview",
           "/gaia/validators/security",
           "/gaia/validators/validator-faq",
-          "/gaia/validators/validator-setup",
           "/gaia/ledger"
+          "/gaia/gaiacli"
         ]
       },
       {

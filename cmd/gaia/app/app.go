@@ -216,18 +216,8 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	}
 }
 
-// custom logic for gaia initialization
-func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	stateJSON := req.AppStateBytes
-	// TODO is this now the whole genesis file?
-
-	var genesisState GenesisState
-	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
-	if err != nil {
-		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-		// return sdk.ErrGenesisParse("").TraceCause(err, "")
-	}
-
+// initialize store from a genesis state
+func (app *GaiaApp) initGenesis(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
 	// sort by account number to maintain consistency
 	sort.Slice(genesisState.Accounts, func(i, j int) bool {
 		return genesisState.Accounts[i].AccountNumber < genesisState.Accounts[j].AccountNumber
@@ -274,6 +264,22 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 
 		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	}
+	return validators
+}
+
+// custom logic for gaia initialization
+func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	stateJSON := req.AppStateBytes
+	// TODO is this now the whole genesis file?
+
+	var genesisState GenesisState
+	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
+	if err != nil {
+		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
+		// return sdk.ErrGenesisParse("").TraceCause(err, "")
+	}
+
+	validators := app.initGenesis(ctx, genesisState)
 
 	// sanity check
 	if len(req.Validators) > 0 {

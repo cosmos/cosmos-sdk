@@ -326,15 +326,16 @@ func TestGaiaImportExport(t *testing.T) {
 	}()
 	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil)
 	require.Equal(t, "GaiaApp", newApp.Name())
-	request := abci.RequestInitChain{
-		AppStateBytes: appState,
+	var genesisState GenesisState
+	err = app.cdc.UnmarshalJSON(appState, &genesisState)
+	if err != nil {
+		panic(err)
 	}
-	newApp.InitChain(request)
-	newApp.Commit()
+	ctxB := newApp.NewContext(true, abci.Header{})
+	newApp.initGenesis(ctxB, genesisState)
 
 	fmt.Printf("Comparing stores...\n")
 	ctxA := app.NewContext(true, abci.Header{})
-	ctxB := newApp.NewContext(true, abci.Header{})
 	type StoreKeysPrefixes struct {
 		A        sdk.StoreKey
 		B        sdk.StoreKey

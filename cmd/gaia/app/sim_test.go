@@ -366,6 +366,82 @@ func TestGaiaImportExport(t *testing.T) {
 
 }
 
+func TestGaiaSimulationAfterImport(t *testing.T) {
+	if !enabled {
+		t.Skip("Skipping Gaia simulation after import")
+	}
+
+	// Setup Gaia application
+	var logger log.Logger
+	if verbose {
+		logger = log.TestingLogger()
+	} else {
+		logger = log.NewNopLogger()
+	}
+	var db dbm.DB
+	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
+	db, _ = dbm.NewGoLevelDB("Simulation", dir)
+	defer func() {
+		db.Close()
+		os.RemoveAll(dir)
+	}()
+	app := NewGaiaApp(logger, db, nil)
+	require.Equal(t, "GaiaApp", app.Name())
+
+	// Run randomized simulation
+	err := simulation.SimulateFromSeed(
+		t, app.BaseApp, appStateFn, seed,
+		testAndRunTxs(app),
+		[]simulation.RandSetup{},
+		invariants(app),
+		numBlocks,
+		blockSize,
+		commit,
+	)
+	if commit {
+		// for memdb:
+		// fmt.Println("Database Size", db.Stats()["database.size"])
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	}
+	require.Nil(t, err)
+
+	fmt.Printf("Exporting genesis...\n")
+
+	appState, _, err := app.ExportAppStateAndValidators(true)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Importing genesis...\n")
+
+	newDir, _ := ioutil.TempDir("", "goleveldb-gaia-sim-2")
+	newDB, _ := dbm.NewGoLevelDB("Simulation-2", dir)
+	defer func() {
+		newDB.Close()
+		os.RemoveAll(newDir)
+	}()
+	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil)
+	require.Equal(t, "GaiaApp", newApp.Name())
+	newApp.InitChain(abci.RequestInitChain{
+		AppStateBytes: appState,
+	})
+
+	// Run randomized simulation on imported app
+	err = simulation.SimulateFromSeed(
+		t, newApp.BaseApp, appStateFn, seed,
+		testAndRunTxs(newApp),
+		[]simulation.RandSetup{},
+		invariants(newApp),
+		numBlocks,
+		blockSize,
+		commit,
+	)
+	require.Nil(t, err)
+
+}
+
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
 // and doesn't depend on gaia
 func TestAppStateDeterminism(t *testing.T) {

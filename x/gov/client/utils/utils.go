@@ -1,4 +1,4 @@
-package client
+package utils
 
 // NormalizeVoteOption - normalize user specified vote option
 func NormalizeVoteOption(option string) string {

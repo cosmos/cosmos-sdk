@@ -14,8 +14,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -46,22 +45,6 @@ var proposalFlags = []string{
 	flagDescription,
 	flagProposalType,
 	flagDeposit,
-}
-
-// GetTxCmd returns the transaction commands for this module
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	govTxCmd := &cobra.Command{
-		Use:   "gov",
-		Short: "Governance transactions subcommands",
-	}
-
-	govTxCmd.AddCommand(client.PostCommands(
-		GetCmdDeposit(cdc),
-		GetCmdVote(cdc),
-		GetCmdSubmitProposal(cdc),
-	)...)
-
-	return govTxCmd
 }
 
 // GetCmdSubmitProposal implements submitting a proposal transaction command.
@@ -146,7 +129,7 @@ func parseSubmitProposalFlags() (*proposal, error) {
 	if proposalFile == "" {
 		proposal.Title = viper.GetString(flagTitle)
 		proposal.Description = viper.GetString(flagDescription)
-		proposal.Type = govClient.NormalizeProposalType(viper.GetString(flagProposalType))
+		proposal.Type = govClientUtils.NormalizeProposalType(viper.GetString(flagProposalType))
 		proposal.Deposit = viper.GetString(flagDeposit)
 		return proposal, nil
 	}
@@ -234,7 +217,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 			proposalID := uint64(viper.GetInt64(flagProposalID))
 			option := viper.GetString(flagOption)
 
-			byteVoteOption, err := gov.VoteOptionFromString(govClient.NormalizeVoteOption(option))
+			byteVoteOption, err := gov.VoteOptionFromString(govClientUtils.NormalizeVoteOption(option))
 			if err != nil {
 				return err
 			}

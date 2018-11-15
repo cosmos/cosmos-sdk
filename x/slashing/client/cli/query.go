@@ -7,26 +7,11 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec" // XXX fix
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
-
-// GetQueryCmd returns the query commands for this module
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	// Group slashing queries under a subcommand
-	slashingQueryCmd := &cobra.Command{
-		Use:   "slashing",
-		Short: "Querying commands for the slashing module",
-	}
-
-	slashingQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQuerySigningInfo(storeKey, cdc))...)
-
-	return slashingQueryCmd
-}
 
 // GetCmdQuerySigningInfo implements the command to query signing info.
 func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {

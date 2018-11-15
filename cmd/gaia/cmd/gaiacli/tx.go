@@ -6,14 +6,20 @@ import (
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	distrcmd "github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	govcmd "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
-	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
+	distClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
+	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	slashingClient "github.com/cosmos/cosmos-sdk/x/slashing/client"
+	stakeClient "github.com/cosmos/cosmos-sdk/x/stake/client"
 	amino "github.com/tendermint/go-amino"
 )
 
 func txCmd(cdc *amino.Codec) *cobra.Command {
+
+	gmc := govClient.NewModuleClient()
+	dmc := distClient.NewModuleClient()
+	smc := stakeClient.NewModuleClient()
+	slmc := slashingClient.NewModuleClient()
+
 	//Add transaction generation commands
 	txCmd := &cobra.Command{
 		Use:   "tx",
@@ -21,19 +27,15 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		//Add auth and bank commands
-		client.PostCommands(
-			bankcmd.SendTxCmd(cdc),
-			bankcmd.GetBroadcastCommand(cdc),
-			authcmd.GetSignCommand(cdc, authcmd.GetAccountDecoder(cdc)),
-		)...)
-
-	txCmd.AddCommand(
+		bankcmd.SendTxCmd(cdc),
 		client.LineBreak,
-		stakecmd.GetTxCmd(storeStake, cdc),
-		distrcmd.GetTxCmd("", cdc),
-		govcmd.GetTxCmd("", cdc),
-		slashingcmd.GetTxCmd("", cdc),
+		authcmd.GetSignCommand(cdc),
+		bankcmd.GetBroadcastCommand(cdc),
+		client.LineBreak,
+		smc.GetTxCmd(storeStake, cdc),
+		dmc.GetTxCmd("", cdc),
+		gmc.GetTxCmd("", cdc),
+		slmc.GetTxCmd("", cdc),
 	)
 
 	return txCmd

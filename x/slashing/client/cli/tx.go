@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,20 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 )
-
-// GetTxCmd returns the transaction commands for this module
-func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	slashingTxCmd := &cobra.Command{
-		Use:   "slashing",
-		Short: "Slashing transactions subcommands",
-	}
-
-	slashingTxCmd.AddCommand(client.PostCommands(
-		GetCmdUnjail(cdc),
-	)...)
-
-	return slashingTxCmd
-}
 
 // GetCmdUnjail implements the create unjail validator command.
 func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {

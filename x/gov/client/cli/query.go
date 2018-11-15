@@ -3,36 +3,14 @@ package cli
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-// GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	// Group gov queries under a subcommand
-	govQueryCmd := &cobra.Command{
-		Use:   "gov",
-		Short: "Querying commands for the governance module",
-	}
-
-	govQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQueryProposal(storeKey, cdc),
-		GetCmdQueryProposals(storeKey, cdc),
-		GetCmdQueryVote(storeKey, cdc),
-		GetCmdQueryVotes(storeKey, cdc),
-		GetCmdQueryParams(storeKey, cdc),
-		GetCmdQueryDeposit(storeKey, cdc),
-		GetCmdQueryDeposits(storeKey, cdc),
-		GetCmdQueryTally(storeKey, cdc))...)
-
-	return govQueryCmd
-}
 
 // GetCmdQueryProposal implements the query proposal command.
 func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
@@ -99,7 +77,7 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			if len(strProposalStatus) != 0 {
-				proposalStatus, err := gov.ProposalStatusFromString(govClient.NormalizeProposalStatus(strProposalStatus))
+				proposalStatus, err := gov.ProposalStatusFromString(govClientUtils.NormalizeProposalStatus(strProposalStatus))
 				if err != nil {
 					return err
 				}

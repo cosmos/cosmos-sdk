@@ -1,12 +1,13 @@
 package cli
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/bank/client"
+	bankClient "github.com/cosmos/cosmos-sdk/x/bank/client"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -63,7 +64,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := client.CreateMsg(from, to, coins)
+			msg := bankClient.CreateMsg(from, to, coins)
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
@@ -77,5 +78,5 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd.MarkFlagRequired(flagTo)
 	cmd.MarkFlagRequired(flagAmount)
 
-	return cmd
+	return client.PostCommands(cmd)[0]
 }

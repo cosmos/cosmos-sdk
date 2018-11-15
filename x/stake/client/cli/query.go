@@ -7,37 +7,12 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
-
-// GetQueryCmd returns the query commands for this module
-func GetQueryCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
-	stakeQueryCmd := &cobra.Command{
-		Use:   "stake",
-		Short: "Querying commands for the staking module",
-	}
-	stakeQueryCmd.AddCommand(client.GetCommands(
-		GetCmdQueryDelegation(storeKey, cdc),
-		GetCmdQueryDelegations(storeKey, cdc),
-		GetCmdQueryUnbondingDelegation(storeKey, cdc),
-		GetCmdQueryUnbondingDelegations(storeKey, cdc),
-		GetCmdQueryRedelegation(storeKey, cdc),
-		GetCmdQueryRedelegations(storeKey, cdc),
-		GetCmdQueryValidator(storeKey, cdc),
-		GetCmdQueryValidators(storeKey, cdc),
-		GetCmdQueryValidatorDelegations(storeKey, cdc),
-		GetCmdQueryValidatorUnbondingDelegations(storeKey, cdc),
-		GetCmdQueryValidatorRedelegations(storeKey, cdc),
-		GetCmdQueryParams(storeKey, cdc),
-		GetCmdQueryPool(storeKey, cdc))...)
-
-	return stakeQueryCmd
-}
 
 // GetCmdQueryValidator implements the validator query command.
 func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {

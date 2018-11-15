@@ -25,7 +25,7 @@ const (
 )
 
 // GetSignCommand returns the sign command
-func GetSignCommand(codec *amino.Codec, decoder auth.AccountDecoder) *cobra.Command {
+func GetSignCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sign <file>",
 		Short: "Sign transactions generated offline",
@@ -42,7 +42,7 @@ order.
 The --offline flag makes sure that the client will not reach out to the local cache.
 Thus account number or sequence number lookups will not be performed and it is
 recommended to set such parameters manually.`,
-		RunE: makeSignCmd(codec, decoder),
+		RunE: makeSignCmd(codec),
 		Args: cobra.ExactArgs(1),
 	}
 	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
@@ -52,10 +52,10 @@ recommended to set such parameters manually.`,
 	cmd.Flags().Bool(flagValidateSigs, false, "Print the addresses that must sign the transaction, "+
 		"those who have already signed it, and make sure that signatures are in the correct order.")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
-	return cmd
+	return client.PostCommands(cmd)[0]
 }
 
-func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.Command, args []string) error {
+func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
 		stdTx, err := readAndUnmarshalStdTx(cdc, args[0])
 		if err != nil {

@@ -7,13 +7,18 @@ import (
 	"github.com/spf13/cobra"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	govcmd "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
-	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
+	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	slashingClient "github.com/cosmos/cosmos-sdk/x/slashing/client"
+	stakeClient "github.com/cosmos/cosmos-sdk/x/stake/client"
 	amino "github.com/tendermint/go-amino"
 )
 
 func queryCmd(cdc *amino.Codec) *cobra.Command {
+
+	gmc := govClient.NewModuleClient()
+	smc := stakeClient.NewModuleClient()
+	slmc := slashingClient.NewModuleClient()
+
 	//Add query commands
 	queryCmd := &cobra.Command{
 		Use:     "query",
@@ -29,9 +34,9 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 		tx.QueryTxCmd(cdc),
 		client.LineBreak,
 		authcmd.GetAccountCmd(storeAcc, cdc),
-		stakecmd.GetQueryCmd(storeStake, cdc),
-		govcmd.GetQueryCmd(storeGov, cdc),
-		slashingcmd.GetQueryCmd(storeSlashing, cdc),
+		smc.GetQueryCmd(storeStake, cdc),
+		gmc.GetQueryCmd(storeGov, cdc),
+		slmc.GetQueryCmd(storeSlashing, cdc),
 	)
 
 	return queryCmd

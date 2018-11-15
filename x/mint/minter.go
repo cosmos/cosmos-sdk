@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// current inflation state
+// Minter represents the minting state
 type Minter struct {
 	LastInflation       time.Time `json:"last_inflation"`        // time of the last inflation
 	LastInflationChange time.Time `json:"last_inflation_change"` // time which the last inflation rate change
@@ -15,14 +15,33 @@ type Minter struct {
 	HourlyProvisions    sdk.Int   `json:"hourly_provisions"`     // current hourly provisions rate
 }
 
-// minter object for a new minter
-func InitialMinter() Minter {
+// Create a new minter object
+func NewMinter(lastInflation, lastInflationChange time.Time,
+	inflation sdk.Dec, hourlyProvisions sdk.Int) Minter {
+
 	return Minter{
-		LastInflation:       time.Unix(0, 0),
-		LastInflationChange: time.Unix(0, 0),
-		Inflation:           sdk.NewDecWithPrec(13, 2),
-		HourlyProvisions:    sdk.NewInt(0),
+		LastInflation:       lastInflation,
+		LastInflationChange: lastInflationChange,
+		Inflation:           inflation,
+		HourlyProvisions:    hourlyProvisions,
 	}
+}
+
+// minter object for a new chain
+func InitialMinter(inflation sdk.Dec) Minter {
+	return NewMinter(
+		time.Unix(0, 0),
+		time.Unix(0, 0),
+		sdk.NewDecWithPrec(13, 2),
+		sdk.NewInt(0),
+	)
+}
+
+// default initial minter object for a new chain
+func DefaultInitialMinter() Minter {
+	return InitialMinter(
+		sdk.NewDecWithPrec(13, 2),
+	)
 }
 
 func validateMinter(minter Minter) error {
@@ -38,10 +57,9 @@ func validateMinter(minter Minter) error {
 var hrsPerYr = sdk.NewDec(8766) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
-// NOTE if ProcessProvisions is called for the first time
-//      from an InitialMinter, ProcessProvisions will
-//      effectively only set the blocktime as the default
-//      HourlyProvisions is 0.
+// NOTE if ProcessProvisions is called for the first time from an
+//      InitialMinter, ProcessProvisions will effectively only set
+//      the blocktime as the default HourlyProvisions is 0.
 func (m Minter) ProcessProvisions(params Params, blockTime time.Time) (
 	minter Minter, provisions sdk.Coin) {
 

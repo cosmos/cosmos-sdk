@@ -9,7 +9,7 @@ import (
 )
 
 func TestNextInflation(t *testing.T) {
-	minter := InitialMinter()
+	minter := DefaultInitialMinter()
 	params := DefaultParams()
 
 	// Governing Mechanism:
@@ -51,3 +51,25 @@ func TestNextInflation(t *testing.T) {
 			"Test Index: %v\nDiff:  %v\nExpected: %v\n", i, diffInflation, tc.expChange)
 	}
 }
+
+//func TestProcessProvisions(t *testing.T) {
+
+//minter := InitialMinter()
+//params := DefaultParams()
+
+//// Governing Mechanism:
+////    inflationRateChangePerYear = (1- BondedRatio/ GoalBonded) * MaxInflationRateChange
+
+//tests := []struct {
+//bondedRatio, setInflation, expChange sdk.Dec
+//}{}
+//for i, tc := range tests {
+//minter.Inflation = tc.setInflation
+
+//inflation := minter.NextInflation(params, tc.bondedRatio)
+//diffInflation := inflation.Sub(tc.setInflation)
+
+//require.True(t, diffInflation.Equal(tc.expChange),
+//"Test Index: %v\nDiff:  %v\nExpected: %v\n", i, diffInflation, tc.expChange)
+//}
+//}

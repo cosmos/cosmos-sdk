@@ -109,17 +109,14 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	}
 	fmt.Printf("Selected randomly generated slashing parameters: %+v\n", slashingGenesis)
 	mintGenesis := mint.GenesisState{
-		Minter: mint.Minter{
-			InflationLastTime: time.Unix(0, 0),
-			Inflation:         sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
-		},
-		Params: mint.Params{
-			MintDenom:           stakeTypes.DefaultBondDenom,
-			InflationRateChange: sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
-			InflationMax:        sdk.NewDecWithPrec(20, 2),
-			InflationMin:        sdk.NewDecWithPrec(7, 2),
-			GoalBonded:          sdk.NewDecWithPrec(67, 2),
-		},
+		Minter: mint.InitialMinter(
+			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
+		Params: mint.NewParams(
+			stakeTypes.DefaultBondDenom,
+			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
+			sdk.NewDecWithPrec(20, 2),
+			sdk.NewDecWithPrec(7, 2),
+			sdk.NewDecWithPrec(67, 2)),
 	}
 	fmt.Printf("Selected randomly generated minting parameters: %v\n", mintGenesis)
 	var validators []stake.Validator

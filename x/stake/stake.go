@@ -57,6 +57,9 @@ var (
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 	TestingUpdateValidator       = keeper.TestingUpdateValidator
+	UnbondingQueueKey            = keeper.UnbondingQueueKey
+	RedelegationQueueKey         = keeper.RedelegationQueueKey
+	ValidatorQueueKey            = keeper.ValidatorQueueKey
 
 	DefaultParamspace = keeper.DefaultParamspace
 	KeyUnbondingTime  = types.KeyUnbondingTime
@@ -81,7 +84,10 @@ var (
 	NewMsgBeginUnbonding            = types.NewMsgBeginUnbonding
 	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
 
-	NewQuerier = querier.NewQuerier
+	NewQuerier              = querier.NewQuerier
+	NewQueryDelegatorParams = querier.NewQueryDelegatorParams
+	NewQueryValidatorParams = querier.NewQueryValidatorParams
+	NewQueryBondsParams     = querier.NewQueryBondsParams
 )
 
 const (

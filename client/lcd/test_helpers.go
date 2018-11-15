@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
+
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -14,6 +13,9 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -24,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -214,6 +217,7 @@ func InitializeTestLCD(
 	genTxs := []json.RawMessage{}
 
 	// append any additional (non-proposing) validators
+	var accs []gapp.GenesisAccount
 	for i := 0; i < nValidators; i++ {
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
@@ -226,7 +230,7 @@ func InitializeTestLCD(
 		msg := stake.NewMsgCreateValidator(
 			sdk.ValAddress(operAddr),
 			pubKey,
-			sdk.NewCoin("steak", sdk.NewInt(int64(delegation))),
+			sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(int64(delegation))),
 			stake.Description{Moniker: fmt.Sprintf("validator-%d", i+1)},
 			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
@@ -242,15 +246,23 @@ func InitializeTestLCD(
 		genTxs = append(genTxs, txBytes)
 		valConsPubKeys = append(valConsPubKeys, pubKey)
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
+
+		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
+		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 150)}
+		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
 	}
 
-	genesisState, err := gapp.GaiaAppGenState(cdc, genTxs)
+	appGenState := gapp.NewDefaultGenesisState()
+	appGenState.Accounts = accs
+	genDoc.AppState, err = cdc.MarshalJSON(appGenState)
+	require.NoError(t, err)
+	genesisState, err := gapp.GaiaAppGenState(cdc, *genDoc, genTxs)
 	require.NoError(t, err)
 
 	// add some tokens to init accounts
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin("steak", 100)}
+		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
 		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewDec(100))

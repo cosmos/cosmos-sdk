@@ -14,7 +14,7 @@ import (
 	tmversion "github.com/tendermint/tendermint/version"
 )
 
-var remoteBasecoinPath = "github.com/cosmos/cosmos-sdk/examples/basecoin"
+var remoteBasecoinPath = "github.com/cosmos/cosmos-sdk/docs/examples/basecoin"
 
 // Replacer to replace all instances of basecoin/basecli/BasecoinApp to project specific names
 // Gets initialized when initCmd is executing after getting the project name from user

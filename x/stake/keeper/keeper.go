@@ -36,7 +36,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramst
 }
 
 // Set the validator hooks
-func (k Keeper) WithHooks(sh sdk.StakingHooks) Keeper {
+func (k *Keeper) SetHooks(sh sdk.StakingHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")
 	}
@@ -110,6 +110,21 @@ func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, 
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(power)
 	store.Set(GetLastValidatorPowerKey(operator), bz)
+}
+
+// Iterate over last validator powers.
+func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operator sdk.ValAddress, power sdk.Int) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		addr := sdk.ValAddress(iter.Key()[len(LastValidatorPowerKey):])
+		var power sdk.Int
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &power)
+		if handler(addr, power) {
+			break
+		}
+	}
 }
 
 // Delete the last validator power.

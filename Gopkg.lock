@@ -299,7 +299,7 @@
     "model",
   ]
   pruneopts = "UT"
-  revision = "7e9e6cabbd393fc208072eedef99188d0ce788b6"
+  revision = "0b1957f9d949dfa3084171a6ec5642b38055276a"
 
 [[projects]]
   branch = "master"
@@ -419,12 +419,12 @@
   revision = "e5840949ff4fff0c56f9b6a541e22b63581ea9df"
 
 [[projects]]
-  digest = "1:10b3a599325740c84a7c81f3f3cb2e1fdb70b3ea01b7fa28495567a2519df431"
+  digest = "1:ad9c4c1a4e7875330b1f62906f2830f043a23edb5db997e3a5ac5d3e6eadf80a"
   name = "github.com/tendermint/go-amino"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6dcc6ddc143e116455c94b25c1004c99e0d0ca12"
-  version = "v0.14.0"
+  revision = "dc14acf9ef15f85828bfbc561ed9dd9d2a284885"
+  version = "v0.14.1"
 
 [[projects]]
   digest = "1:9f8c4c93658315a795ffd3e0c943d39f78067dd8382b8d7bcfaf6686b92f3978"
@@ -435,7 +435,7 @@
   version = "v0.11.1"
 
 [[projects]]
-  digest = "1:aeef94796024739a6d2fb3df26450a1e3d9dbaeee0e7d896b180b1ae6a7e342e"
+  digest = "1:ba2ba7d6a0853472bdb7a64c4f9c1d5f9cba0eb7aac0b024654104387bf5eb57"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -501,8 +501,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "c086d0a34102bd42873d20445673ea1d18a539cd"
-  version = "v0.26.0"
+  revision = "80d0a362500fea2dd089258319075a54e5d40a2d"
+  version = "v0.26.1"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
@@ -690,6 +690,7 @@
     "github.com/tendermint/tendermint/rpc/lib/client",
     "github.com/tendermint/tendermint/rpc/lib/server",
     "github.com/tendermint/tendermint/types",
+    "github.com/tendermint/tendermint/types/time",
     "github.com/tendermint/tendermint/version",
     "github.com/zondax/ledger-goclient",
     "golang.org/x/crypto/bcrypt",

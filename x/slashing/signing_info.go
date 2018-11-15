@@ -21,6 +21,21 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 }
 
 // Stored by *validator* address (not operator address)
+func (k Keeper) iterateValidatorSigningInfos(ctx sdk.Context, handler func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorSigningInfoKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		address := GetValidatorSigningInfoAddress(iter.Key())
+		var info ValidatorSigningInfo
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &info)
+		if handler(address, info) {
+			break
+		}
+	}
+}
+
+// Stored by *validator* address (not operator address)
 func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(info)
@@ -41,6 +56,24 @@ func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 }
 
 // Stored by *validator* address (not operator address)
+func (k Keeper) iterateValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	index := int64(0)
+	// Array may be sparse
+	for ; index < k.SignedBlocksWindow(ctx); index++ {
+		var missed bool
+		bz := store.Get(GetValidatorMissedBlockBitArrayKey(address, index))
+		if bz == nil {
+			continue
+		}
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &missed)
+		if handler(index, missed) {
+			break
+		}
+	}
+}
+
+// Stored by *validator* address (not operator address)
 func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, index int64, missed bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(missed)
@@ -51,10 +84,10 @@ func (k Keeper) setValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, GetValidatorMissedBlockBitArrayPrefixKey(address))
+	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		store.Delete(iter.Key())
 	}
-	iter.Close()
 }
 
 // Construct a new `ValidatorSigningInfo` struct

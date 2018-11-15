@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -10,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -24,10 +27,12 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 		if err != nil {
 			return err
 		}
+
 		err = PositivePowerInvariant(k)(app)
 		if err != nil {
 			return err
 		}
+
 		err = ValidatorSetInvariant(k)(app)
 		return err
 	}
@@ -44,7 +49,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		loose := sdk.ZeroDec()
 		bonded := sdk.ZeroDec()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf("steak")))
+			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom)))
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) bool {
@@ -66,19 +71,19 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		feePool := d.GetFeePool(ctx)
 
 		// add outstanding fees
-		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf("steak")))
+		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(stakeTypes.DefaultBondDenom)))
 
 		// add community pool
-		loose = loose.Add(feePool.CommunityPool.AmountOf("steak"))
+		loose = loose.Add(feePool.CommunityPool.AmountOf(stakeTypes.DefaultBondDenom))
 
 		// add validator distribution pool
-		loose = loose.Add(feePool.ValPool.AmountOf("steak"))
+		loose = loose.Add(feePool.ValPool.AmountOf(stakeTypes.DefaultBondDenom))
 
 		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
 		d.IterateValidatorDistInfos(ctx,
 			func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
-				loose = loose.Add(distInfo.DelPool.AmountOf("steak"))
-				loose = loose.Add(distInfo.ValCommission.AmountOf("steak"))
+				loose = loose.Add(distInfo.DelPool.AmountOf(stakeTypes.DefaultBondDenom))
+				loose = loose.Add(distInfo.ValCommission.AmountOf(stakeTypes.DefaultBondDenom))
 				return false
 			},
 		)
@@ -100,19 +105,29 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 	}
 }
 
-// PositivePowerInvariant checks that all stored validators have > 0 power
+// PositivePowerInvariant checks that all stored validators have > 0 power.
 func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 	return func(app *baseapp.BaseApp) error {
 		ctx := app.NewContext(false, abci.Header{})
-		var err error
-		k.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) bool {
-			if !validator.GetPower().GT(sdk.ZeroDec()) {
-				err = fmt.Errorf("validator with non-positive power stored. (pubkey %v)", validator.GetConsPubKey())
-				return true
+
+		iterator := k.ValidatorsPowerStoreIterator(ctx)
+		pool := k.GetPool(ctx)
+
+		for ; iterator.Valid(); iterator.Next() {
+			validator, found := k.GetValidator(ctx, iterator.Value())
+			if !found {
+				panic(fmt.Sprintf("validator record not found for address: %X\n", iterator.Value()))
 			}
-			return false
-		})
-		return err
+
+			powerKey := keeper.GetValidatorsByPowerIndexKey(validator, pool)
+
+			if !bytes.Equal(iterator.Key(), powerKey) {
+				return fmt.Errorf("power store invariance:\n\tvalidator.Power: %v"+
+					"\n\tkey should be: %v\n\tkey in store: %v", validator.GetPower(), powerKey, iterator.Key())
+			}
+		}
+		iterator.Close()
+		return nil
 	}
 }
 

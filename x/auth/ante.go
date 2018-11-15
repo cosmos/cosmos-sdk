@@ -282,7 +282,8 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	// TODO: Make the gasPrice not a constant, and account for tx size.
 	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
 
-	if !ctx.MinimumFees().IsZero() && stdTx.Fee.Amount.IsLT(requiredFees) {
+	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
+	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {
 		// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
 		return sdk.ErrInsufficientFee(fmt.Sprintf(
 			"insufficient fee, got: %q required: %q", stdTx.Fee.Amount, requiredFees)).Result()

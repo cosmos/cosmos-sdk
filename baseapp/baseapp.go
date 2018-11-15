@@ -386,6 +386,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 
 	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger).
 		WithMinimumFees(app.minimumFees)
+
 	// Passes the rest of the path as an argument to the querier.
 	// For example, in the path "custom/gov/proposal/test", the gov querier gets []string{"proposal", "test"} as the path
 	resBytes, err := querier(ctx, path[2:], req)
@@ -474,6 +475,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseDeliverTx{
 		Code:      uint32(result.Code),
+		Codespace: string(result.Codespace),
 		Data:      result.Data,
 		Log:       result.Log,
 		GasWanted: result.GasWanted,

@@ -206,7 +206,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	err := simulation.SimulateFromSeed(
+	_, err := simulation.SimulateFromSeed(
 		b, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -249,7 +249,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	err := simulation.SimulateFromSeed(
+	_, err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -291,7 +291,7 @@ func TestGaiaImportExport(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	err := simulation.SimulateFromSeed(
+	_, err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -389,7 +389,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	err := simulation.SimulateFromSeed(
+	stopEarly, err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -406,6 +406,12 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
 	require.Nil(t, err)
+
+	if stopEarly {
+		// we can't export or import a zero-validator genesis
+		fmt.Printf("We can't export or import a zero-validator genesis, exiting test...\n")
+		return
+	}
 
 	fmt.Printf("Exporting genesis...\n")
 
@@ -429,7 +435,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	})
 
 	// Run randomized simulation on imported app
-	err = simulation.SimulateFromSeed(
+	_, err = simulation.SimulateFromSeed(
 		t, newApp.BaseApp, appStateFn, seed,
 		testAndRunTxs(newApp),
 		[]simulation.RandSetup{},

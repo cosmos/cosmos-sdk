@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +43,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 		}
 		bondDenom := app.stakeKeeper.GetParams(ctx).BondDenom
 		if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
-			panic("unexpected leftover validator pool coins")
+			panic(fmt.Sprintf("unexpected leftover validator pool coins: %v", feePool.ValPool.AmountOf(bondDenom)))
 		}
 
 		// reset fee pool height, save fee pool

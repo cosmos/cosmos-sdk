@@ -282,18 +282,18 @@ func TestInitChainer(t *testing.T) {
 
 // Simple tx with a list of Msgs.
 type txTest struct {
-	Msgs     []sdk.Msg
-	Counter  int64
-	AnteFail bool
+	Msgs       []sdk.Msg
+	Counter    int64
+	FailOnAnte bool
 }
 
-func (tx *txTest) setAnteFail(anteFail bool) {
-	tx.AnteFail = anteFail
+func (tx *txTest) setFailOnAnte(fail bool) {
+	tx.FailOnAnte = fail
 }
 
-func (tx *txTest) setMsgFail(msgFail bool) {
+func (tx *txTest) setFailOnHandler(fail bool) {
 	for i, msg := range tx.Msgs {
-		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, msgFail}
+		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, fail}
 	}
 }
 
@@ -308,8 +308,8 @@ const (
 // ValidateBasic() fails on negative counters.
 // Otherwise it's up to the handlers
 type msgCounter struct {
-	Counter int64
-	MsgFail bool
+	Counter       int64
+	FailOnHandler bool
 }
 
 // Implements Msg
@@ -381,13 +381,13 @@ func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 func anteHandlerTxTest(t *testing.T, capKey *sdk.KVStoreKey, storeKey []byte) sdk.AnteHandler {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 		store := ctx.KVStore(capKey)
-		counterTx := tx.(txTest)
+		txTest := tx.(txTest)
 
-		if counterTx.AnteFail {
+		if txTest.FailOnAnte {
 			return newCtx, sdk.ErrInternal("ante handler failure").Result(), true
 		}
 
-		res = incrementingCounter(t, store, storeKey, counterTx.Counter)
+		res = incrementingCounter(t, store, storeKey, txTest.Counter)
 		return
 	}
 }
@@ -398,7 +398,7 @@ func handlerMsgCounter(t *testing.T, capKey *sdk.KVStoreKey, deliverKey []byte) 
 		var msgCount int64
 		switch m := msg.(type) {
 		case *msgCounter:
-			if m.MsgFail {
+			if m.FailOnHandler {
 				return sdk.ErrInternal("message handler failure").Result()
 			}
 
@@ -869,7 +869,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	// NOTE: No state should be persisted here which will be implicitly checked by
 	// the next test.
 	tx := newTxCounter(0, 0)
-	tx.setAnteFail(true)
+	tx.setFailOnAnte(true)
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 	res := app.DeliverTx(txBytes)
@@ -877,7 +877,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	// execute at tx that will fail message execution (state should mutate)
 	tx = newTxCounter(0, 0)
-	tx.setMsgFail(true)
+	tx.setFailOnHandler(true)
 	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
 	res = app.DeliverTx(txBytes)

@@ -21,19 +21,10 @@ import (
 )
 
 const (
-	storeAcc        = "acc"
-	storeGov        = "gov"
-	storeSlashing   = "slashing"
-	storeStake      = "stake"
-	queryRouteStake = "stake"
-)
-
-// rootCmd is the entry point for this binary
-var (
-	rootCmd = &cobra.Command{
-		Use:   "gaiacli",
-		Short: "Command line interface for interacting with gaiad",
-	}
+	storeAcc      = "acc"
+	storeGov      = "gov"
+	storeSlashing = "slashing"
+	storeStake    = "stake"
 )
 
 func main() {
@@ -49,6 +40,11 @@ func main() {
 	// TODO: setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
+
+	rootCmd = &cobra.Command{
+		Use:   "gaiacli",
+		Short: "Command line interface for interacting with gaiad",
+	}
 
 	// Construct Root Command
 	rootCmd.AddCommand(

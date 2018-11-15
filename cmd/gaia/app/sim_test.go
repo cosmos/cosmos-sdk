@@ -311,7 +311,7 @@ func TestGaiaImportExport(t *testing.T) {
 
 	fmt.Printf("Exporting genesis...\n")
 
-	appState, _, err := app.ExportAppStateAndValidators()
+	appState, _, err := app.ExportAppStateAndValidators(false)
 	if err != nil {
 		panic(err)
 	}

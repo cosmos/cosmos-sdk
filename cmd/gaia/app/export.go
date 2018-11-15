@@ -27,7 +27,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 		// withdraw all delegator & validator rewards
 		app.accountKeeper.IterateAccounts(ctx, func(acc auth.Account) (stop bool) {
 			app.distrKeeper.WithdrawDelegationRewardsAll(ctx, acc.GetAddress())
-			app.distrKeeper.WithdrawValidatorRewardsAll(ctx, sdk.ValAddress(acc.GetAddress()))
+			_ = app.distrKeeper.WithdrawValidatorRewardsAll(ctx, sdk.ValAddress(acc.GetAddress()))
 			return false
 		})
 

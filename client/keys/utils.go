@@ -2,8 +2,9 @@ package keys
 
 import (
 	"fmt"
-	"github.com/syndtr/goleveldb/leveldb/opt"
 	"path/filepath"
+
+	"github.com/syndtr/goleveldb/leveldb/opt"
 
 	"github.com/spf13/viper"
 
@@ -13,9 +14,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
+	"net/http"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"net/http"
 )
 
 // KeyDBName is the directory under root where we store the keys

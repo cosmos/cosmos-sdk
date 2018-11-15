@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"io/ioutil"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"io/ioutil"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -72,7 +73,7 @@ func makeSignCmd(cdc *amino.Codec, decoder auth.AccountDecoder) func(cmd *cobra.
 		if name == "" {
 			return errors.New("required flag \"name\" has not been set")
 		}
-		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(decoder)
+		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		// if --signature-only is on, then override --append

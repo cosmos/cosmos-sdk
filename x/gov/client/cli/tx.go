@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
@@ -97,7 +96,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+				WithAccountDecoder(cdc)
 
 			fromAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
@@ -180,7 +179,7 @@ func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+				WithAccountDecoder(cdc)
 
 			depositerAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
@@ -225,7 +224,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+				WithAccountDecoder(cdc)
 
 			voterAddr, err := cliCtx.GetFromAddress()
 			if err != nil {

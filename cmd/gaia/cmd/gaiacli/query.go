@@ -23,12 +23,12 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 
 	// Query commcmmand structure
 	queryCmd.AddCommand(
-		rpc.BlockCommand(),
 		rpc.ValidatorCommand(),
+		rpc.BlockCommand(),
 		tx.SearchTxCmd(cdc),
 		tx.QueryTxCmd(cdc),
 		client.LineBreak,
-		client.GetCommands(authcmd.GetAccountCmd(storeAcc, cdc, authcmd.GetAccountDecoder(cdc)))[0],
+		authcmd.GetAccountCmd(storeAcc, cdc),
 		stakecmd.GetQueryCmd(storeStake, cdc),
 		govcmd.GetQueryCmd(storeGov, cdc),
 		slashingcmd.GetQueryCmd(storeSlashing, cdc),

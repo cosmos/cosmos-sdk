@@ -2,7 +2,12 @@ package init
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -16,9 +21,6 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 const (
@@ -85,7 +87,7 @@ following delegation and commission default parameters:
 			w.Close()
 
 			prepareFlagsForTxSign()
-			signCmd := authcmd.GetSignCommand(cdc, authcmd.GetAccountDecoder(cdc))
+			signCmd := authcmd.GetSignCommand(cdc, context.GetAccountDecoder(cdc))
 			if w, err = prepareOutputFile(config.RootDir, nodeID); err != nil {
 				return err
 			}

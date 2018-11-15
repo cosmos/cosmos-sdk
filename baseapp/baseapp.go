@@ -253,7 +253,7 @@ func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOp
 }
 
 // Implements ABCI
-// InitChain runs the initialization logic directly on the CommitMultiStore and commits it.
+// InitChain runs the initialization logic directly on the CommitMultiStore.
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// Initialize the deliver state and check state with ChainID and run initChain
 	app.setDeliverState(abci.Header{ChainID: req.ChainId})
@@ -442,13 +442,13 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	// add block gas meter
+	var gasMeter sdk.GasMeter
 	if app.maximumBlockGas > 0 {
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockGasMeter(sdk.NewGasMeter(app.maximumBlockGas))
+		gasMeter = sdk.NewGasMeter(app.maximumBlockGas)
 	} else {
-		app.deliverState.ctx = app.deliverState.ctx.
-			WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+		gasMeter = sdk.NewInfiniteGasMeter()
 	}
+	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
 
 	if app.beginBlocker != nil {
 		res = app.beginBlocker(app.deliverState.ctx, req)

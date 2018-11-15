@@ -14,9 +14,9 @@ The `BaseApp` struct fulfills the tendermint-abci `Application` interface.
 TODO pseudo code 
 
 During chain initialization InitChain runs the initialization logic directly on
-the CommitMultiStore and commits it. The deliver and check states are
-initialized with the ChainID. Additionally the Block gas meter is initialized
-with an infinite amount of gas to run any genesis transactions.
+the CommitMultiStore. The deliver and check states are initialized with the
+ChainID. Additionally the block gas meter is initialized with an infinite
+amount of gas to run any genesis transactions.
 
 Note that we do not `Commit` during `InitChain` however BeginBlock for block 1
 starts from this deliverState.

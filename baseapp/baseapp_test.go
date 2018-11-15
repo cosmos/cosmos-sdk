@@ -866,8 +866,8 @@ func TestBaseAppAnteHandler(t *testing.T) {
 
 	// execute a tx that will fail ante handler execution
 	//
-	// NOTE: No state should be persisted here which will be implicitly checked by
-	// the next test.
+	// NOTE: State should not be mutated here. This will be implicitly checked by
+	// the next txs ante handler execution (anteHandlerTxTest).
 	tx := newTxCounter(0, 0)
 	tx.setFailOnAnte(true)
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
@@ -875,21 +875,40 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	res := app.DeliverTx(txBytes)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	// execute at tx that will fail message execution (state should mutate)
+	ctx := app.getState(runTxModeDeliver).ctx
+	store := ctx.KVStore(capKey1)
+	require.Equal(t, int64(0), getIntFromStore(store, anteKey))
+
+	// execute at tx that will pass the ante handler (the checkTx state should
+	// mutate) but will fail the message handler
 	tx = newTxCounter(0, 0)
 	tx.setFailOnHandler(true)
+
 	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
+
 	res = app.DeliverTx(txBytes)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	ctx = app.getState(runTxModeDeliver).ctx
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(1), getIntFromStore(store, anteKey))
+	require.Equal(t, int64(0), getIntFromStore(store, deliverKey))
 
 	// execute a successful ante handler and message execution where state is
 	// implicitly checked by previous tx executions
 	tx = newTxCounter(1, 0)
+
 	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
 	require.NoError(t, err)
+
 	res = app.DeliverTx(txBytes)
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	ctx = app.getState(runTxModeDeliver).ctx
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(2), getIntFromStore(store, anteKey))
+	require.Equal(t, int64(1), getIntFromStore(store, deliverKey))
 
 	// commit
 	app.EndBlock(abci.RequestEndBlock{})

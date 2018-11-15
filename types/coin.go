@@ -98,17 +98,8 @@ func (coin Coin) isNotNegative() bool {
 //-----------------------------------------------------------------------------
 // Coins
 
-type (
-	coinSumOp int
-
-	// Coins is a set of Coin, one per currency
-	Coins []Coin
-)
-
-const (
-	coinSumOpAdd coinSumOp = iota
-	coinSumOpSub
-)
+// Coins is a set of Coin, one per currency
+type Coins []Coin
 
 func (coins Coins) String() string {
 	if len(coins) == 0 {

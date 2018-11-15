@@ -18,12 +18,12 @@ curl -O https://dl.google.com/go/go$GO_VERSION.linux-armv6l.tar.gz
 tar -xvf go$GO_VERSION.linux-armv6l.tar.gz
 
 # move go binary and add to path
-mv go /usr/local
+sudo mv go /usr/local
 echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.profile
 
 # create the go directory, set GOPATH, and put it on PATH
 mkdir go
-echo "export GOPATH=/root/go" >> ~/.profile
+echo "export GOPATH=$HOME/go" >> ~/.profile
 echo "export PATH=\$PATH:\$GOPATH/bin" >> ~/.profile
 
 source ~/.profile

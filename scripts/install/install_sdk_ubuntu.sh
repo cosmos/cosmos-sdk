@@ -23,7 +23,7 @@ echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.profile
 
 # create the go directory, set GOPATH, and put it on PATH
 mkdir go
-echo "export GOPATH=/root/go" >> ~/.profile
+echo "export GOPATH=$HOME/go" >> ~/.profile
 echo "export PATH=\$PATH:\$GOPATH/bin" >> ~/.profile
 
 source ~/.profile

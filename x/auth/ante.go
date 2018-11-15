@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -77,10 +78,14 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		stdSigs := stdTx.GetSignatures() // When simulating, this would just be a 0-length slice.
 		signerAddrs := stdTx.GetSigners()
 
-		if len(stdSigs) > txSigLimit {
-			return newCtx, sdk.ErrTooManySignatures(fmt.Sprintf(
-				"signatures: %d, limit: %d", len(stdSigs), txSigLimit),
+		sigCount := 0
+		for i := 0; i < len(stdSigs); i++ {
+			sigCount += countSubKeys(stdSigs[i].PubKey)
+			if sigCount > txSigLimit {
+				return newCtx, sdk.ErrTooManySignatures(fmt.Sprintf(
+					"signatures: %d, limit: %d", sigCount, txSigLimit),
 				).Result(), true
+			}
 		}
 
 		// create the list of all sign bytes

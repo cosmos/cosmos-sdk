@@ -148,8 +148,7 @@ func (coins Coins) IsValid() bool {
 // {2A} + {A, 2B} = {3A, 2B}
 // {2A} + {0B} = {2A}
 //
-// NOTE: Plus makes no assumptions about the order or unique contents of each
-// coin set.
+// NOTE: Plus uses the invariant that coins are sorted by denominations.
 //
 // CONTRACT: Plus will never return Coins where one Coin has a negative amount.
 func (coins Coins) Plus(coinsB Coins) Coins {

@@ -324,13 +324,13 @@ func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (sign
 }
 
 func countSubKeys(pub crypto.PubKey) int {
-	switch v := pub.(type) {
-	case *multisig.PubKeyMultisigThreshold:
-		nkeys := 0
-		for _, subkey := range v.PubKeys {
-			nkeys += countSubKeys(subkey)
-		}
-		return nkeys
+	v, ok := pub.(*multisig.PubKeyMultisigThreshold)
+	if !ok {
+		return 1
 	}
-	return 1
+	nkeys := 0
+	for _, subkey := range v.PubKeys {
+		nkeys += countSubKeys(subkey)
+	}
+	return nkeys
 }

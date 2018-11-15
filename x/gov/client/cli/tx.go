@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -146,7 +147,7 @@ func parseSubmitProposalFlags() (*proposal, error) {
 	if proposalFile == "" {
 		proposal.Title = viper.GetString(flagTitle)
 		proposal.Description = viper.GetString(flagDescription)
-		proposal.Type = govgovClient.NormalizeProposalType(viper.GetString(flagProposalType))
+		proposal.Type = govClient.NormalizeProposalType(viper.GetString(flagProposalType))
 		proposal.Deposit = viper.GetString(flagDeposit)
 		return proposal, nil
 	}
@@ -234,7 +235,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 			proposalID := uint64(viper.GetInt64(flagProposalID))
 			option := viper.GetString(flagOption)
 
-			byteVoteOption, err := gov.VoteOptionFromString(govgovClient.NormalizeVoteOption(option))
+			byteVoteOption, err := gov.VoteOptionFromString(govClient.NormalizeVoteOption(option))
 			if err != nil {
 				return err
 			}

@@ -41,7 +41,7 @@ func main() {
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
 
-	rootCmd = &cobra.Command{
+	rootCmd := &cobra.Command{
 		Use:   "gaiacli",
 		Short: "Command line interface for interacting with gaiad",
 	}

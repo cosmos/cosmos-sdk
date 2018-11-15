@@ -29,6 +29,7 @@ FEATURES
   * [stake][cli] [\#2027] Add CLI query command for getting all delegations to a specific validator.
 
 * Gaia
+  * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
   * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Implemented querier
   for getting governance parameters.
   * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.

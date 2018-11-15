@@ -2,7 +2,6 @@ package auth
 
 import (
 	"fmt"
-	"github.com/tendermint/tendermint/crypto/multisig"
 	"testing"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
@@ -11,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -747,4 +747,45 @@ func TestCountSubkeys(t *testing.T) {
 			require.Equal(t, tt.want, countSubKeys(tt.args.pub))
 		})
 	}
+}
+
+func TestAnteHandlerSigLimitExceeded(t *testing.T) {
+	// setup
+	ms, capKey, capKey2 := setupMultiStore()
+	cdc := codec.New()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(mapper, feeCollector)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	ctx = ctx.WithBlockHeight(1)
+
+	// keys and addresses
+	priv1, addr1 := privAndAddr()
+	priv2, addr2 := privAndAddr()
+	priv3, addr3 := privAndAddr()
+	priv4, addr4 := privAndAddr()
+	priv5, addr5 := privAndAddr()
+	priv6, addr6 := privAndAddr()
+	priv7, addr7 := privAndAddr()
+	priv8, addr8 := privAndAddr()
+
+	// set the accounts
+	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1.SetCoins(newCoins())
+	mapper.SetAccount(ctx, acc1)
+	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	acc2.SetCoins(newCoins())
+	mapper.SetAccount(ctx, acc2)
+
+	var tx sdk.Tx
+	msg := newTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
+	msgs := []sdk.Msg{msg}
+	fee := newStdFee()
+
+	// test rejection logic
+	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8},
+		[]int64{0, 0, 0, 0, 0, 0, 0, 0}, []int64{0, 0, 0, 0, 0, 0, 0, 0}
+	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
 }

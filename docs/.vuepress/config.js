@@ -27,10 +27,10 @@ module.exports = {
           "/gaia/installation",
           "/gaia/join-testnet",
           "/gaia/validators/validator-setup",
-          "/gaia/networks",
           "/gaia/validators/overview",
           "/gaia/validators/security",
           "/gaia/validators/validator-faq",
+          "/gaia/networks",
           "/gaia/ledger",
           "/gaia/gaiacli"
         ]

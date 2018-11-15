@@ -61,6 +61,7 @@ func (ci *cacheKVStore) Set(key []byte, value []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
 	ci.assertValidKey(key)
+	ci.assertValidValue(value)
 
 	ci.setCacheValue(key, value, false, true)
 }
@@ -193,6 +194,12 @@ func (ci *cacheKVStore) dirtyItems(ascending bool) []cmn.KVPair {
 func (ci *cacheKVStore) assertValidKey(key []byte) {
 	if key == nil {
 		panic("key is nil")
+	}
+}
+
+func (ci *cacheKVStore) assertValidValue(value []byte) {
+	if value == nil {
+		panic("value is nil")
 	}
 }
 

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -103,10 +104,10 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsPk)
-	cmd.Flags().AddFlagSet(fsAmount)
+	cmd.Flags().AddFlagSet(FsPk)
+	cmd.Flags().AddFlagSet(FsAmount)
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
-	cmd.Flags().AddFlagSet(fsCommissionCreate)
+	cmd.Flags().AddFlagSet(FsCommissionCreate)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	cmd.Flags().Bool(FlagGenesisFormat, false, "Export the transaction in gen-tx format; it implies --generate-only")
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("Node's public IP. It takes effect only when used in combination with --%s", FlagGenesisFormat))
@@ -204,32 +205,17 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsAmount)
+	cmd.Flags().AddFlagSet(FsAmount)
 	cmd.Flags().AddFlagSet(fsValidator)
 
 	return cmd
 }
 
-// GetCmdRedelegate implements the redelegate validator command.
+// GetCmdRedelegate the begin redelegation command.
 func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegate",
 		Short: "redelegate illiquid tokens from one validator to another",
-	}
-
-	cmd.AddCommand(
-		client.PostCommands(
-			GetCmdBeginRedelegate(storeName, cdc),
-		)...)
-
-	return cmd
-}
-
-// GetCmdBeginRedelegate the begin redelegation command.
-func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "begin",
-		Short: "begin redelegation",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
@@ -255,9 +241,9 @@ func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 
 			// get the shares amount
 			sharesAmountStr := viper.GetString(FlagSharesAmount)
-			sharesPercentStr := viper.GetString(FlagSharesPercent)
+			sharesFractionStr := viper.GetString(FlagSharesFraction)
 			sharesAmount, err := getShares(
-				storeName, cdc, sharesAmountStr, sharesPercentStr,
+				storeName, cdc, sharesAmountStr, sharesFractionStr,
 				delAddr, valSrcAddr,
 			)
 			if err != nil {
@@ -284,22 +270,7 @@ func GetCmdBeginRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbond",
-		Short: "begin or complete unbonding shares from a validator",
-	}
-
-	cmd.AddCommand(
-		client.PostCommands(
-			GetCmdBeginUnbonding(storeName, cdc),
-		)...)
-
-	return cmd
-}
-
-// GetCmdBeginUnbonding implements the begin unbonding validator command.
-func GetCmdBeginUnbonding(storeName string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "begin",
-		Short: "begin unbonding",
+		Short: "unbond shares from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
@@ -318,9 +289,9 @@ func GetCmdBeginUnbonding(storeName string, cdc *codec.Codec) *cobra.Command {
 
 			// get the shares amount
 			sharesAmountStr := viper.GetString(FlagSharesAmount)
-			sharesPercentStr := viper.GetString(FlagSharesPercent)
+			sharesFractionStr := viper.GetString(FlagSharesFraction)
 			sharesAmount, err := getShares(
-				storeName, cdc, sharesAmountStr, sharesPercentStr,
+				storeName, cdc, sharesAmountStr, sharesFractionStr,
 				delAddr, valAddr,
 			)
 			if err != nil {

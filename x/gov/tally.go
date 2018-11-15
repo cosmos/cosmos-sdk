@@ -23,7 +23,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	totalVotingPower := sdk.ZeroDec()
 	currValidators := make(map[string]validatorGovInfo)
 
-	keeper.vs.IterateValidatorsBonded(ctx, func(index int64, validator sdk.Validator) (stop bool) {
+	keeper.vs.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.Validator) (stop bool) {
 		currValidators[validator.GetOperator().String()] = validatorGovInfo{
 			Address:         validator.GetOperator(),
 			Power:           validator.GetPower(),
@@ -39,7 +39,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	defer votesIterator.Close()
 	for ; votesIterator.Valid(); votesIterator.Next() {
 		vote := &Vote{}
-		keeper.cdc.MustUnmarshalBinary(votesIterator.Value(), vote)
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), vote)
 
 		// if validator, just record it in the map
 		// if delegator tally voting power
@@ -84,7 +84,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
-	tallyingProcedure := keeper.GetTallyingProcedure(ctx)
+	tallyParams := keeper.GetTallyParams(ctx)
 
 	tallyResults = TallyResult{
 		Yes:        results[OptionYes],
@@ -98,11 +98,11 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 		return false, tallyResults
 	}
 	// If more than 1/3 of voters veto, proposal fails
-	if results[OptionNoWithVeto].Quo(totalVotingPower).GT(tallyingProcedure.Veto) {
+	if results[OptionNoWithVeto].Quo(totalVotingPower).GT(tallyParams.Veto) {
 		return false, tallyResults
 	}
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
-	if results[OptionYes].Quo(totalVotingPower.Sub(results[OptionAbstain])).GT(tallyingProcedure.Threshold) {
+	if results[OptionYes].Quo(totalVotingPower.Sub(results[OptionAbstain])).GT(tallyParams.Threshold) {
 		return true, tallyResults
 	}
 	// If more than 1/2 of non-abstaining voters vote No, proposal fails

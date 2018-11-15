@@ -123,7 +123,8 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 
 	// Check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		fmt.Fprintf(os.Stderr, "WARNING: The generated transaction's intended signer does not match the given signer: '%v'\n", name)
+		return signedStdTx, fmt.Errorf(
+			"The generated transaction's intended signer does not match the given signer: %q", name)
 	}
 
 	if !offline && txBldr.AccountNumber == 0 {
@@ -166,7 +167,7 @@ func adjustGasEstimate(estimate int64, adjustment float64) int64 {
 
 func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (int64, error) {
 	var simulationResult sdk.Result
-	if err := cdc.UnmarshalBinary(rawRes, &simulationResult); err != nil {
+	if err := cdc.UnmarshalBinaryLengthPrefixed(rawRes, &simulationResult); err != nil {
 		return 0, err
 	}
 	return simulationResult.GasUsed, nil

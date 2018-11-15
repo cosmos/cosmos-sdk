@@ -51,6 +51,21 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 	return
 }
 
+// Iterate over all slashing periods in the store, calling on each
+// decode slashing period a provided handler function
+// Stop if the provided handler function returns true
+func (k Keeper) iterateValidatorSlashingPeriods(ctx sdk.Context, handler func(slashingPeriod ValidatorSlashingPeriod) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorSlashingPeriodKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		slashingPeriod := k.unmarshalSlashingPeriodKeyValue(iter.Key(), iter.Value())
+		if handler(slashingPeriod) {
+			break
+		}
+	}
+}
+
 // Stored by validator Tendermint address (not operator address)
 // This function sets a validator slashing period for a particular validator,
 // start height, end height, and current slashed-so-far total, or updates
@@ -61,14 +76,14 @@ func (k Keeper) addOrUpdateValidatorSlashingPeriod(ctx sdk.Context, slashingPeri
 		SlashedSoFar: slashingPeriod.SlashedSoFar,
 	}
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(slashingPeriodValue)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(slashingPeriodValue)
 	store.Set(GetValidatorSlashingPeriodKey(slashingPeriod.ValidatorAddr, slashingPeriod.StartHeight), bz)
 }
 
 // Unmarshal key/value into a ValidatorSlashingPeriod
 func (k Keeper) unmarshalSlashingPeriodKeyValue(key []byte, value []byte) ValidatorSlashingPeriod {
 	var slashingPeriodValue ValidatorSlashingPeriodValue
-	k.cdc.MustUnmarshalBinary(value, &slashingPeriodValue)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(value, &slashingPeriodValue)
 	address := sdk.ConsAddress(key[1 : 1+sdk.AddrLen])
 	startHeight := int64(binary.BigEndian.Uint64(key[1+sdk.AddrLen:1+sdk.AddrLen+8]) - uint64(stake.ValidatorUpdateDelay))
 	return ValidatorSlashingPeriod{

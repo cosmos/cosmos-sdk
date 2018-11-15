@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"encoding/hex"
+	"math/rand"
 	"strconv"
 	"testing"
 
@@ -214,4 +215,18 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(power)
+}
+
+// RandomValidator returns a random validator given access to the keeper and ctx
+func RandomValidator(r *rand.Rand, keeper Keeper, ctx sdk.Context) types.Validator {
+	vals := keeper.GetAllValidators(ctx)
+	i := r.Intn(len(vals))
+	return vals[i]
+}
+
+// RandomBondedValidator returns a random bonded validator given access to the keeper and ctx
+func RandomBondedValidator(r *rand.Rand, keeper Keeper, ctx sdk.Context) types.Validator {
+	vals := keeper.GetBondedValidatorsByPower(ctx)
+	i := r.Intn(len(vals))
+	return vals[i]
 }

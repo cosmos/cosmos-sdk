@@ -37,6 +37,21 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	return delegations
 }
 
+// return all delegations to a specific validator. Useful for querier.
+func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []types.Delegation) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		if delegation.GetValidatorAddr().Equals(valAddr) {
+			delegations = append(delegations, delegation)
+		}
+	}
+	return delegations
+}
+
 // return a given amount of all the delegations from a delegator
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve uint16) (delegations []types.Delegation) {
@@ -163,14 +178,14 @@ func (k Keeper) GetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time)
 	if bz == nil {
 		return []types.DVPair{}
 	}
-	k.cdc.MustUnmarshalBinary(bz, &dvPairs)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &dvPairs)
 	return dvPairs
 }
 
 // Sets a specific unbonding queue timeslice.
 func (k Keeper) SetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(keys)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(keys)
 	store.Set(GetUnbondingDelegationTimeKey(timestamp), bz)
 }
 
@@ -199,7 +214,7 @@ func (k Keeper) DequeueAllMatureUnbondingQueue(ctx sdk.Context, currTime time.Ti
 	unbondingTimesliceIterator := k.UnbondingQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
 		timeslice := []types.DVPair{}
-		k.cdc.MustUnmarshalBinary(unbondingTimesliceIterator.Value(), &timeslice)
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(unbondingTimesliceIterator.Value(), &timeslice)
 		matureUnbonds = append(matureUnbonds, timeslice...)
 		store.Delete(unbondingTimesliceIterator.Key())
 	}
@@ -283,6 +298,21 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Set(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})
 }
 
+// iterate through all redelegations
+func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red types.Redelegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, RedelegationKey)
+	defer iterator.Close()
+
+	for i := int64(0); iterator.Valid(); iterator.Next() {
+		red := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
+		if stop := fn(i, red); stop {
+			break
+		}
+		i++
+	}
+}
+
 // remove a redelegation object and associated index
 func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
@@ -300,14 +330,14 @@ func (k Keeper) GetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Ti
 	if bz == nil {
 		return []types.DVVTriplet{}
 	}
-	k.cdc.MustUnmarshalBinary(bz, &dvvTriplets)
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &dvvTriplets)
 	return dvvTriplets
 }
 
 // Sets a specific redelegation queue timeslice.
 func (k Keeper) SetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinary(keys)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(keys)
 	store.Set(GetRedelegationTimeKey(timestamp), bz)
 }
 
@@ -336,7 +366,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 	redelegationTimesliceIterator := k.RedelegationQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
 		timeslice := []types.DVVTriplet{}
-		k.cdc.MustUnmarshalBinary(redelegationTimesliceIterator.Value(), &timeslice)
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(redelegationTimesliceIterator.Value(), &timeslice)
 		matureRedelegations = append(matureRedelegations, timeslice...)
 		store.Delete(redelegationTimesliceIterator.Key())
 	}
@@ -348,6 +378,13 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 // Perform a delegation, set/update everything necessary within the store.
 func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Coin,
 	validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err sdk.Error) {
+
+	// In some situations, the exchange rate becomes invalid, e.g. if
+	// validator loses all tokens due to slashing.  In this case,
+	// make all future delegations invalid.
+	if validator.DelegatorShareExRate().IsZero() {
+		return sdk.ZeroDec(), types.ErrDelegatorShareExRateInvalid(k.Codespace())
+	}
 
 	// Get or create the delegator delegation
 	delegation, found := k.GetDelegation(ctx, delAddr, validator.OperatorAddr)
@@ -540,6 +577,10 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 // complete unbonding an unbonding record
 func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec) (types.Redelegation, sdk.Error) {
+
+	if bytes.Equal(valSrcAddr, valDstAddr) {
+		return types.Redelegation{}, types.ErrSelfRedelegation(k.Codespace())
+	}
 
 	// check if there is already a redelgation in progress from src to dst
 	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402

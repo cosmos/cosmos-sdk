@@ -99,6 +99,9 @@ func (coin Coin) isNotNegative() bool {
 // Coins
 
 // Coins is a set of Coin, one per currency
+//
+// TODO: Support a deterministic map instead of a slice and use unsigned
+// integers.
 type Coins []Coin
 
 func (coins Coins) String() string {

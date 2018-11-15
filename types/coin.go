@@ -13,6 +13,8 @@ import (
 // Coin hold some amount of one currency.
 //
 // CONTRACT: A coin will never hold a negative amount of any denomination.
+//
+// TODO: Make field members private for further safety.
 type Coin struct {
 	Denom string `json:"denom"`
 	// Amount is an integer type to allow intermediate negative values. Resulting

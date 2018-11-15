@@ -249,16 +249,17 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 	return res
 }
 
-// safeMinus performs the same arithmetic as Minus but returns a boolean if any
+// SafeMinus performs the same arithmetic as Minus but returns a boolean if any
 // negative coin amount was returned.
-func (coins Coins) safeMinus(coinsB Coins) (Coins, bool) {
-	return coins.safePlus(coinsB.negative())
+func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
+	diff, ok := coins.safePlus(coinsB.negative())
+	return diff, ok || !diff.isNotNegative()
 }
 
 // IsAllGT returns true iff for every denom in coins, the denom is present at a
 // greater amount in coinsB.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
-	diff, ok := coins.safeMinus(coinsB)
+	diff, ok := coins.SafeMinus(coinsB)
 	if len(diff) == 0 || ok {
 		return false
 	}
@@ -269,7 +270,7 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 // IsAllGTE returns true iff for every denom in coins, the denom is present at
 // an equal or greater amount in coinsB.
 func (coins Coins) IsAllGTE(coinsB Coins) bool {
-	diff, ok := coins.safeMinus(coinsB)
+	diff, ok := coins.SafeMinus(coinsB)
 	if ok {
 		return false // negative amount resulted due to addition
 	}
@@ -283,7 +284,7 @@ func (coins Coins) IsAllGTE(coinsB Coins) bool {
 // IsAllLT returns True iff for every denom in coins, the denom is present at
 // a smaller amount in coinsB.
 func (coins Coins) IsAllLT(coinsB Coins) bool {
-	diff, ok := coinsB.safeMinus(coins)
+	diff, ok := coinsB.SafeMinus(coins)
 	if len(diff) == 0 || ok {
 		return false
 	}
@@ -294,7 +295,7 @@ func (coins Coins) IsAllLT(coinsB Coins) bool {
 // IsAllLTE returns true iff for every denom in coins, the denom is present at
 // a smaller or equal amount in coinsB.
 func (coins Coins) IsAllLTE(coinsB Coins) bool {
-	diff, ok := coinsB.safeMinus(coins)
+	diff, ok := coinsB.SafeMinus(coins)
 	if ok {
 		return false // negative amount resulted due to addition
 	}

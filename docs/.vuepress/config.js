@@ -31,7 +31,7 @@ module.exports = {
           "/gaia/validators/overview",
           "/gaia/validators/security",
           "/gaia/validators/validator-faq",
-          "/gaia/ledger"
+          "/gaia/ledger",
           "/gaia/gaiacli"
         ]
       },

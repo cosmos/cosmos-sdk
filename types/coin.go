@@ -208,6 +208,7 @@ func (coins Coins) safePlus(coinsB Coins) (Coins, bool) {
 				// ignore 0 sum coin type
 			case !res.isNotNegative():
 				// do not allow final negative coin amounts
+				sum = append(sum, res)
 				return sum, true
 			default:
 				sum = append(sum, res)
@@ -252,18 +253,17 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 	return res
 }
 
-// safeMinus performs the same arithmetic as Minus but does not panic on
-// negative coin amounts.
-func (coins Coins) safeMinus(coinsB Coins) Coins {
-	return coins.Plus(coinsB.negative())
+// safeMinus performs the same arithmetic as Minus but returns a boolean if any
+// negative coin amount was returned.
+func (coins Coins) safeMinus(coinsB Coins) (Coins, bool) {
+	return coins.safePlus(coinsB.negative())
 }
 
 // IsAllGT returns true iff for every denom in coins, the denom is present at a
 // greater amount in coinsB.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
-	diff := coins.safeMinus(coinsB)
-	fmt.Println(diff)
-	if len(diff) == 0 {
+	diff, ok := coins.safeMinus(coinsB)
+	if len(diff) == 0 || ok {
 		return false
 	}
 
@@ -273,7 +273,10 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 // IsAllGTE returns true iff for every denom in coins, the denom is present at
 // an equal or greater amount in coinsB.
 func (coins Coins) IsAllGTE(coinsB Coins) bool {
-	diff := coins.safeMinus(coinsB)
+	diff, ok := coins.safeMinus(coinsB)
+	if ok {
+		return false // a negative amount was computed
+	}
 	if len(diff) == 0 {
 		return true
 	}
@@ -284,23 +287,27 @@ func (coins Coins) IsAllGTE(coinsB Coins) bool {
 // IsAllLT returns True iff for every denom in coins, the denom is present at
 // a smaller amount in coinsB.
 func (coins Coins) IsAllLT(coinsB Coins) bool {
-	diff := coinsB.safeMinus(coins)
-	if len(diff) == 0 {
+	diff, ok := coinsB.safeMinus(coins)
+	if len(diff) == 0 || ok {
 		return false
 	}
 
 	return diff.isPositive()
 }
 
-// // IsAllLTE returns true iff for every denom in coins, the denom is present at
-// // a smaller or equal amount in coinsB.
-// func (coins Coins) IsAllLTE(coinsB Coins) bool {
-// 	diff := coinsB.Minus(coins)
-// 	if len(diff) == 0 {
-// 		return true
-// 	}
-// 	return diff.isNotNegative()
-// }
+// IsAllLTE returns true iff for every denom in coins, the denom is present at
+// a smaller or equal amount in coinsB.
+func (coins Coins) IsAllLTE(coinsB Coins) bool {
+	diff, ok := coinsB.safeMinus(coins)
+	if ok {
+		return false // a negative amount was computed
+	}
+	if len(diff) == 0 {
+		return true
+	}
+
+	return diff.isNotNegative()
+}
 
 // IsZero returns true if there are no coins or all coins are zero.
 func (coins Coins) IsZero() bool {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -15,14 +14,16 @@ import (
 //
 // CONTRACT: A coin will never hold a negative amount of any denomination.
 type Coin struct {
-	Denom  string `json:"denom"`
-	Amount Uint   `json:"amount"`
+	Denom string `json:"denom"`
+	// Amount is an integer type to allow intermediate negative values. Resulting
+	// values must always be non-negative.
+	Amount Int `json:"amount"`
 }
 
 func NewCoin(denom string, amount Uint) Coin {
 	return Coin{
 		Denom:  denom,
-		Amount: amount,
+		Amount: NewIntFromBigInt(amount.BigInt()),
 	}
 }
 
@@ -75,18 +76,23 @@ func (coin Coin) Minus(coinB Coin) Coin {
 	if !coin.SameDenomAs(coinB) {
 		return coin
 	}
-	return Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
-}
 
-// SafeMinus subtracts coinB from coin. In addition, a boolean is returned
-// indicating if integer overflow occurred.
-func (coin Coin) SafeMinus(coinB Coin) (Coin, bool) {
-	if !coin.SameDenomAs(coinB) {
-		return coin, false
+	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
+	if !res.isNotNegative() {
+		panic("negative count amount")
 	}
 
-	res, overflow := coin.Amount.SafeSub(coinB.Amount)
-	return Coin{coin.Denom, res}, overflow
+	return res
+}
+
+// isPositive returns true if coin amount is positive.
+func (coin Coin) isPositive() bool {
+	return (coin.Amount.Sign() == 1)
+}
+
+// isNotNegative returns true if coin amount is not negative and false otherwise.
+func (coin Coin) isNotNegative() bool {
+	return (coin.Amount.Sign() != -1)
 }
 
 //-----------------------------------------------------------------------------
@@ -125,6 +131,7 @@ func (coins Coins) IsValid() bool {
 		return !coins[0].IsZero()
 	default:
 		lowDenom := coins[0].Denom
+
 		for _, coin := range coins[1:] {
 			if coin.Denom <= lowDenom {
 				return false
@@ -132,9 +139,11 @@ func (coins Coins) IsValid() bool {
 			if coin.IsZero() {
 				return false
 			}
+
 			// we compare each coin against the last denom
 			lowDenom = coin.Denom
 		}
+
 		return true
 	}
 }
@@ -145,65 +154,153 @@ func (coins Coins) IsValid() bool {
 // {2A} + {A, 2B} = {3A, 2B}
 // {2A} + {0B} = {2A}
 //
+// NOTE: Plus makes no assumptions about the order or unique contents of each
+// coin set.
+//
 // CONTRACT: Plus will never return Coins where one Coin has a 0 amount.
 func (coins Coins) Plus(coinsB Coins) Coins {
-	res, _ := sumCoins(coins, coinsB, coinSumOpAdd) // should never overflow
+	res, _ := coins.safePlus(coinsB) // should never contain negative amounts
 	return res
+}
+
+// safePlus will perform addition of two coins sets. If both coin sets are
+// empty, then an empty set is returned. If only a single set is empty, the
+// other set is returned. Otherwise, the coins are compared in order of their
+// denomination and addition only occurs when the denominations match, otherwise
+// the coin is simply added to the sum assuming it's not zero. If addition
+// results in a negative amount, true will also be returned.
+func (coins Coins) safePlus(coinsB Coins) (Coins, bool) {
+	sum := ([]Coin)(nil)
+	indexA, indexB := 0, 0
+	lenA, lenB := len(coins), len(coinsB)
+
+	for {
+		if indexA == lenA {
+			if indexB == lenB {
+				// return nil coins if both sets are empty
+				return sum, false
+			}
+
+			// return set B (excluding zero coins) if set A is empty
+			return append(sum, removeZeroCoins(coinsB[indexB:])...), false
+		} else if indexB == lenB {
+			// return set A (excluding zero coins) if set B is empty
+			return append(sum, removeZeroCoins(coins[indexA:])...), false
+		}
+
+		coinA, coinB := coins[indexA], coinsB[indexB]
+
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // coin A denom < coin B denom
+			if coins.IsZero() {
+				// ignore 0 sum coin
+			} else {
+				sum = append(sum, coinA)
+			}
+
+			indexA++
+
+		case 0: // coin A denom == coin B denom
+			res := coinA.Plus(coinB)
+
+			switch {
+			case res.IsZero():
+				// ignore 0 sum coin type
+			case !res.isNotNegative():
+				// do not allow final negative coin amounts
+				return sum, true
+			default:
+				sum = append(sum, res)
+			}
+
+			indexA++
+			indexB++
+
+		case 1: // coin A denom > coin B denom
+			if coinB.IsZero() {
+				// ignore 0 sum coin
+			} else {
+				sum = append(sum, coinB)
+			}
+
+			indexB++
+		}
+	}
 }
 
 // Minus subtracts a set of coins from another.
 //
 // e.g.
-// {2A} - {A, 2B} = {A, 2B}
+// {2A, 3B} - {A} = {A, 3B}
 // {2A} - {0B} = {2A}
 // {A, B} - {A} = {B}
 //
 // CONTRACT
 // - Minus will never return Coins where one Coin has a 0 amount.
-// - Minus will panic on unsigned integer overflow
+// - Minus will panic on a negative amount of any coin.
 func (coins Coins) Minus(coinsB Coins) Coins {
-	return sumCoins(coins, coinsB, coinSumOpSub)
+	res, ok := coins.safePlus(coinsB.negative())
+	if ok {
+		panic("negative count amount")
+	}
+
+	// validate there exists no negative coins
+	if ok := res.isNotNegative(); !ok {
+		panic("negative count amount")
+	}
+
+	return res
 }
 
-// IsAllGT returns True iff for every denom in coins, the denom is present at a
+// safeMinus performs the same arithmetic as Minus but does not panic on
+// negative coin amounts.
+func (coins Coins) safeMinus(coinsB Coins) Coins {
+	return coins.Plus(coinsB.negative())
+}
+
+// IsAllGT returns true iff for every denom in coins, the denom is present at a
 // greater amount in coinsB.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
-	diff := coins.Minus(coinsB)
+	diff := coins.safeMinus(coinsB)
+	fmt.Println(diff)
 	if len(diff) == 0 {
 		return false
 	}
-	return diff.IsPositive()
+
+	return diff.isPositive()
 }
 
-// IsAllGTE returns True iff for every denom in coins, the denom is present at an
-// equal or greater amount in coinsB.
+// IsAllGTE returns true iff for every denom in coins, the denom is present at
+// an equal or greater amount in coinsB.
 func (coins Coins) IsAllGTE(coinsB Coins) bool {
-	diff := coins.Minus(coinsB)
+	diff := coins.safeMinus(coinsB)
 	if len(diff) == 0 {
 		return true
 	}
-	return diff.IsNotNegative()
+
+	return diff.isNotNegative()
 }
 
 // IsAllLT returns True iff for every denom in coins, the denom is present at
 // a smaller amount in coinsB.
 func (coins Coins) IsAllLT(coinsB Coins) bool {
-	diff := coinsB.Minus(coins)
+	diff := coinsB.safeMinus(coins)
 	if len(diff) == 0 {
 		return false
 	}
-	return diff.IsPositive()
+
+	return diff.isPositive()
 }
 
-// IsAllLTE returns True iff for every denom in coins, the denom is present at
-// a smaller or equal amount in coinsB.
-func (coins Coins) IsAllLTE(coinsB Coins) bool {
-	diff := coinsB.Minus(coins)
-	if len(diff) == 0 {
-		return true
-	}
-	return diff.IsNotNegative()
-}
+// // IsAllLTE returns true iff for every denom in coins, the denom is present at
+// // a smaller or equal amount in coinsB.
+// func (coins Coins) IsAllLTE(coinsB Coins) bool {
+// 	diff := coinsB.Minus(coins)
+// 	if len(diff) == 0 {
+// 		return true
+// 	}
+// 	return diff.isNotNegative()
+// }
 
 // IsZero returns true if there are no coins or all coins are zero.
 func (coins Coins) IsZero() bool {
@@ -247,7 +344,7 @@ func (coins Coins) AmountOf(denom string) Uint {
 	case 1:
 		coin := coins[0]
 		if coin.Denom == denom {
-			return coin.Amount
+			return NewUintFromBigInt(coin.Amount.BigInt())
 		}
 		return ZeroUint()
 
@@ -258,92 +355,61 @@ func (coins Coins) AmountOf(denom string) Uint {
 		if denom < coin.Denom {
 			return coins[:midIdx].AmountOf(denom)
 		} else if denom == coin.Denom {
-			return coin.Amount
+			return NewUintFromBigInt(coin.Amount.BigInt())
 		} else {
 			return coins[midIdx+1:].AmountOf(denom)
 		}
 	}
 }
 
-// sumCoins performs the additive or additive inverse operation on two sets of
-// coins. If both coin sets are empty an empty set is returned. If only a single
-// set is empty, the other set is returned. Otherwise, the coins are compared
-// in order of their denomination and the operation only occurs when the
-// denominations match, otherwise the coin is simply added to the sum assuming
-// it's not zero. During the additive inverse operation, if overflow occurs, a
-// boolean is returned indicating as such.
-//
-// NOTE: sumCoins makes no assumptions about the order or unique contents of
-// each set.
-func sumCoins(coinsA, coinsB Coins, op coinSumOp) (Coins, bool) {
-	sum := ([]Coin)(nil)
-	indexA, indexB := 0, 0
-	lenA, lenB := len(coinsA), len(coinsB)
+// negative returns a set of coins with all amount negative.
+func (coins Coins) negative() Coins {
+	res := make([]Coin, 0, len(coins))
 
-	for {
-		if indexA == lenA {
-			if indexB == lenB {
-				// return nil coins if both sets are empty
-				return sum, false
-			}
-
-			// return set B (excluding zero coins) if set A is empty
-			return append(sum, filterZeroCoins(coinsB[indexB:])...), false
-		} else if indexB == lenB {
-			// return set A (excluding zero coins) if set B is empty
-			return append(sum, filterZeroCoins(coinsA[indexA:])...), false
-		}
-
-		coinA, coinB := coinsA[indexA], coinsB[indexB]
-
-		switch strings.Compare(coinA.Denom, coinB.Denom) {
-		case -1: // coin A denom < coin B denom
-			if coinA.IsZero() {
-				// ignore 0 sum coin
-			} else {
-				sum = append(sum, coinA)
-			}
-
-			indexA++
-
-		case 0: // coin A denom == coin B denom
-			var (
-				res      Coin
-				overflow bool
-			)
-
-			if op == coinSumOpAdd {
-				res = coinA.Plus(coinB)
-			} else if op == coinSumOpSub {
-				res, overflow = coinA.SafeMinus(coinB)
-				if overflow {
-					return sum, true
-				}
-			}
-
-			if res.IsZero() {
-				// ignore 0 sum coin
-			} else {
-				sum = append(sum, res)
-			}
-
-			indexA++
-			indexB++
-
-		case 1: // coin A denom > coin B denom
-			if coinB.IsZero() {
-				// ignore 0 sum coin
-			} else {
-				sum = append(sum, coinB)
-			}
-
-			indexB++
-		}
+	for _, coin := range coins {
+		res = append(res, Coin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.Neg(),
+		})
 	}
+
+	return res
 }
 
-// filterZeroCoins removes all zero coins from the given coin set.
-func filterZeroCoins(coins Coins) Coins {
+// isPositive returns true if there is at least one coin and all currencies
+// have a positive value.
+func (coins Coins) isPositive() bool {
+	if len(coins) == 0 {
+		return false
+	}
+
+	for _, coin := range coins {
+		if !coin.isPositive() {
+			return false
+		}
+	}
+
+	return true
+}
+
+// isNotNegative returns true if there is no coin amount with a negative value
+// (even no coins is true here).
+func (coins Coins) isNotNegative() bool {
+	if len(coins) == 0 {
+		return true
+	}
+
+	for _, coin := range coins {
+		if !coin.isNotNegative() {
+			return false
+		}
+	}
+
+	return true
+}
+
+// removeZeroCoins removes all zero coins from the given coin set.
+func removeZeroCoins(coins Coins) Coins {
 	var res Coins
 
 	for _, coin := range coins {
@@ -389,17 +455,17 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 
 	matches := reCoin.FindStringSubmatch(coinStr)
 	if matches == nil {
-		err = fmt.Errorf("invalid coin expression: %s", coinStr)
-		return
+		return Coin{}, fmt.Errorf("invalid coin expression: %s", coinStr)
 	}
+
 	denomStr, amountStr := matches[2], matches[1]
 
-	amount, err := strconv.Atoi(amountStr)
-	if err != nil {
-		return
+	amount, ok := NewIntFromString(amountStr)
+	if !ok {
+		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
 	}
 
-	return Coin{denomStr, NewUint(uint64(amount))}, nil
+	return Coin{denomStr, amount}, nil
 }
 
 // ParseCoins will parse out a list of coins separated by commas.

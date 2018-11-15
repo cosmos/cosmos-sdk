@@ -18,8 +18,10 @@ type Minter struct {
 // minter object for a new minter
 func InitialMinter() Minter {
 	return Minter{
-		InflationLastTime: time.Unix(0, 0),
-		Inflation:         sdk.NewDecWithPrec(13, 2),
+		LastInflation:       time.Unix(0, 0),
+		LastInflationChange: time.Unix(0, 0),
+		Inflation:           sdk.NewDecWithPrec(13, 2),
+		HourlyProvisions:    sdk.NewInt(0),
 	}
 }
 
@@ -36,6 +38,10 @@ func validateMinter(minter Minter) error {
 var hrsPerYr = sdk.NewDec(8766) // as defined by a julian year of 365.25 days
 
 // process provisions for an hour period
+// NOTE if ProcessProvisions is called for the first time
+//      from an InitialMinter, ProcessProvisions will
+//      effectively only set the blocktime as the default
+//      HourlyProvisions is 0.
 func (m Minter) ProcessProvisions(params Params, blockTime time.Time) (
 	minter Minter, provisions sdk.Coin) {
 

@@ -142,7 +142,13 @@ gaiad export > [filename].json
 You can also export state from a particular height (at the end of processing the block of that height):
 
 ```bash
-gaiad export --height=[height] > [filename].json
+gaiad export --height [height] > [filename].json
+```
+
+If you plan to start a new network from the exported state, export with the `--for-zero-height` flag:
+
+```bash
+gaiad export --height [height] --for-zero-height > [filename].json
 ```
 
 ## Upgrade to Validator Node

@@ -13,13 +13,9 @@ import (
 	"path"
 )
 
-const (
-	flagHeight = "height"
-)
-
 // ExportCmd dumps app state to JSON.
 func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -49,8 +45,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 			if err != nil {
 				return err
 			}
-			height := viper.GetInt64(flagHeight)
-			appState, validators, err := appExporter(ctx.Logger, db, traceWriter, height)
+			appState, validators, err := appExporter(ctx.Logger, db, traceWriter)
 			if err != nil {
 				return errors.Errorf("error exporting state: %v\n", err)
 			}
@@ -72,8 +67,6 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 			return nil
 		},
 	}
-	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
-	return cmd
 }
 
 func isEmptyState(home string) (bool, error) {

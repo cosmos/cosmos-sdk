@@ -148,7 +148,7 @@ func (coins Coins) IsValid() bool {
 // NOTE: Plus makes no assumptions about the order or unique contents of each
 // coin set.
 //
-// CONTRACT: Plus will never return Coins where one Coin has a 0 amount.
+// CONTRACT: Plus will never return Coins where one Coin has a negative amount.
 func (coins Coins) Plus(coinsB Coins) Coins {
 	res, _ := coins.safePlus(coinsB) // should never contain negative amounts
 	return res
@@ -158,8 +158,11 @@ func (coins Coins) Plus(coinsB Coins) Coins {
 // empty, then an empty set is returned. If only a single set is empty, the
 // other set is returned. Otherwise, the coins are compared in order of their
 // denomination and addition only occurs when the denominations match, otherwise
-// the coin is simply added to the sum assuming it's not zero. If addition
-// results in a negative amount, true will also be returned.
+// the coin is simply added to the sum assuming it's not zero.
+//
+// If addition results in a negative amount, the result will be added to sum and
+// true will be returned indicating as such. In addition, potentially negative
+// amount can be added to sum from coinsB and those must be checked for upstream.
 func (coins Coins) safePlus(coinsB Coins) (Coins, bool) {
 	sum := ([]Coin)(nil)
 	indexA, indexB := 0, 0
@@ -227,16 +230,15 @@ func (coins Coins) safePlus(coinsB Coins) (Coins, bool) {
 // {2A} - {0B} = {2A}
 // {A, B} - {A} = {B}
 //
-// CONTRACT
-// - Minus will never return Coins where one Coin has a 0 amount.
-// - Minus will panic on a negative amount of any coin.
+// CONTRACT: Minus will never return Coins where one Coin has a negative amount.
 func (coins Coins) Minus(coinsB Coins) Coins {
 	res, ok := coins.safePlus(coinsB.negative())
 	if ok {
+		// negative amount resulted due to addition
 		panic("negative count amount")
 	}
 
-	// validate there exists no negative coins
+	// validate there exists no remaining negative coins
 	if ok := res.isNotNegative(); !ok {
 		panic("negative count amount")
 	}
@@ -266,7 +268,7 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 func (coins Coins) IsAllGTE(coinsB Coins) bool {
 	diff, ok := coins.safeMinus(coinsB)
 	if ok {
-		return false // a negative amount was computed
+		return false // negative amount resulted due to addition
 	}
 	if len(diff) == 0 {
 		return true
@@ -291,7 +293,7 @@ func (coins Coins) IsAllLT(coinsB Coins) bool {
 func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	diff, ok := coinsB.safeMinus(coins)
 	if ok {
-		return false // a negative amount was computed
+		return false // negative amount resulted due to addition
 	}
 	if len(diff) == 0 {
 		return true

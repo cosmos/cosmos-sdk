@@ -70,10 +70,10 @@ func (tx StdTx) GetSignatures() []StdSignature { return tx.Signatures }
 // which must be above some miminum to be accepted into the mempool.
 type StdFee struct {
 	Amount sdk.Coins `json:"amount"`
-	Gas    int64     `json:"gas"`
+	Gas    uint64    `json:"gas"`
 }
 
-func NewStdFee(gas int64, amount ...sdk.Coin) StdFee {
+func NewStdFee(gas uint64, amount ...sdk.Coin) StdFee {
 	return StdFee{
 		Amount: amount,
 		Gas:    gas,

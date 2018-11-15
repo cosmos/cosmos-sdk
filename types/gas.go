@@ -18,7 +18,7 @@ var (
 )
 
 // Gas measured by the SDK
-type Gas = int64
+type Gas = uint64
 
 // ErrorOutOfGas defines an error thrown when an action results in out of gas.
 type ErrorOutOfGas struct {

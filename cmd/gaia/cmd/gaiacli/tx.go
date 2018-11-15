@@ -20,49 +20,6 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 		Short: "Transactions subcommands",
 	}
 
-	stakeTxCmd := &cobra.Command{
-		Use:   "stake",
-		Short: "Staking transaction subcommands",
-	}
-
-	stakeTxCmd.AddCommand(client.PostCommands(
-		stakecmd.GetCmdCreateValidator(cdc),
-		stakecmd.GetCmdEditValidator(cdc),
-		stakecmd.GetCmdDelegate(cdc),
-		stakecmd.GetCmdRedelegate(storeStake, cdc),
-		stakecmd.GetCmdUnbond(storeStake, cdc),
-	)...)
-
-	distTxCmd := &cobra.Command{
-		Use:   "dist",
-		Short: "Distribution transactions subcommands",
-	}
-
-	distTxCmd.AddCommand(client.PostCommands(
-		distrcmd.GetCmdWithdrawRewards(cdc),
-		distrcmd.GetCmdSetWithdrawAddr(cdc),
-	)...)
-
-	govTxCmd := &cobra.Command{
-		Use:   "gov",
-		Short: "Governance transactions subcommands",
-	}
-
-	govTxCmd.AddCommand(client.PostCommands(
-		govcmd.GetCmdDeposit(cdc),
-		govcmd.GetCmdVote(cdc),
-		govcmd.GetCmdSubmitProposal(cdc),
-	)...)
-
-	slashingTxCmd := &cobra.Command{
-		Use:   "slashing",
-		Short: "Slashing transactions subcommands",
-	}
-
-	slashingTxCmd.AddCommand(client.PostCommands(
-		slashingcmd.GetCmdUnjail(cdc),
-	)...)
-
 	txCmd.AddCommand(
 		//Add auth and bank commands
 		client.PostCommands(
@@ -73,10 +30,10 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 
 	txCmd.AddCommand(
 		client.LineBreak,
-		stakeTxCmd,
-		distTxCmd,
-		govTxCmd,
-		slashingTxCmd,
+		stakecmd.GetTxCmd(storeStake, cdc),
+		distrcmd.GetTxCmd("", cdc),
+		govcmd.GetTxCmd("", cdc),
+		slashingcmd.GetTxCmd("", cdc),
 	)
 
 	return txCmd

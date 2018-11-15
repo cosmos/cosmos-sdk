@@ -6,7 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	amino "github.com/tendermint/go-amino"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,6 +23,21 @@ var (
 	flagOnlyFromValidator = "only-from-validator"
 	flagIsValidator       = "is-validator"
 )
+
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+	distTxCmd := &cobra.Command{
+		Use:   "dist",
+		Short: "Distribution transactions subcommands",
+	}
+
+	distTxCmd.AddCommand(client.PostCommands(
+		GetCmdWithdrawRewards(cdc),
+		GetCmdSetWithdrawAddr(cdc),
+	)...)
+
+	return distTxCmd
+}
 
 // command to withdraw rewards
 func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {

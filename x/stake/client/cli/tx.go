@@ -16,6 +16,24 @@ import (
 	"github.com/spf13/viper"
 )
 
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd(storeKey string, cdc *codec.Codec) *cobra.Command {
+	stakeTxCmd := &cobra.Command{
+		Use:   "stake",
+		Short: "Staking transaction subcommands",
+	}
+
+	stakeTxCmd.AddCommand(client.PostCommands(
+		GetCmdCreateValidator(cdc),
+		GetCmdEditValidator(cdc),
+		GetCmdDelegate(cdc),
+		GetCmdRedelegate(storeKey, cdc),
+		GetCmdUnbond(storeKey, cdc),
+	)...)
+
+	return stakeTxCmd
+}
+
 // GetCmdCreateValidator implements the create validator command handler.
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{

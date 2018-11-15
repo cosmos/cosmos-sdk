@@ -30,10 +30,6 @@ const (
 	flagClientHome = "home-client"
 )
 
-// init parameters
-var CoolAppInit = server.AppInit{
-	AppGenState: CoolAppGenState,
-}
 
 // coolGenAppParams sets up the app_state and appends the cool app state
 func CoolAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
@@ -65,7 +61,7 @@ func CoolAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 
 // get cmd to initialize all files for tendermint and application
 // nolint: errcheck
-func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cobra.Command {
+func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize genesis config, priv-validator file, and p2p-node file",
@@ -91,7 +87,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cob
 				return err
 			}
 
-			appState, err := appInit.AppGenState(cdc, tmtypes.GenesisDoc{},
+			appState, err := CoolAppGenState(cdc, tmtypes.GenesisDoc{},
 				[]json.RawMessage{genTx})
 			if err != nil {
 				return err
@@ -157,11 +153,10 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	rootCmd.AddCommand(InitCmd(ctx, cdc, CoolAppInit))
-	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc, CoolAppInit))
+	rootCmd.AddCommand(InitCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
 
-	server.AddCommands(ctx, cdc, rootCmd, CoolAppInit,
-		newApp, exportAppStateAndTMValidators)
+	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
 	rootDir := os.ExpandEnv("$HOME/.democoind")

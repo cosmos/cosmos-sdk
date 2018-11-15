@@ -8,6 +8,7 @@ GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
 	github.com/alecthomas/gometalinter \
 	github.com/rakyll/statik
+GOBIN ?= $(GOPATH)/bin
 all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
 
 ########################################
@@ -65,15 +66,15 @@ endif
 
 build_examples:
 ifeq ($(OS),Windows_NT)
-	go build $(BUILD_FLAGS) -o build/basecoind.exe ./examples/basecoin/cmd/basecoind
-	go build $(BUILD_FLAGS) -o build/basecli.exe ./examples/basecoin/cmd/basecli
-	go build $(BUILD_FLAGS) -o build/democoind.exe ./examples/democoin/cmd/democoind
-	go build $(BUILD_FLAGS) -o build/democli.exe ./examples/democoin/cmd/democli
+	go build $(BUILD_FLAGS) -o build/basecoind.exe ./docs/examples/basecoin/cmd/basecoind
+	go build $(BUILD_FLAGS) -o build/basecli.exe ./docs/examples/basecoin/cmd/basecli
+	go build $(BUILD_FLAGS) -o build/democoind.exe ./docs/examples/democoin/cmd/democoind
+	go build $(BUILD_FLAGS) -o build/democli.exe ./docs/examples/democoin/cmd/democli
 else
-	go build $(BUILD_FLAGS) -o build/basecoind ./examples/basecoin/cmd/basecoind
-	go build $(BUILD_FLAGS) -o build/basecli ./examples/basecoin/cmd/basecli
-	go build $(BUILD_FLAGS) -o build/democoind ./examples/democoin/cmd/democoind
-	go build $(BUILD_FLAGS) -o build/democli ./examples/democoin/cmd/democli
+	go build $(BUILD_FLAGS) -o build/basecoind ./docs/examples/basecoin/cmd/basecoind
+	go build $(BUILD_FLAGS) -o build/basecli ./docs/examples/basecoin/cmd/basecli
+	go build $(BUILD_FLAGS) -o build/democoind ./docs/examples/democoin/cmd/democoind
+	go build $(BUILD_FLAGS) -o build/democli ./docs/examples/democoin/cmd/democli
 endif
 
 install: check-ledger update_gaia_lite_docs
@@ -81,10 +82,10 @@ install: check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 
 install_examples:
-	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecoind
-	go install $(BUILD_FLAGS) ./examples/basecoin/cmd/basecli
-	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democoind
-	go install $(BUILD_FLAGS) ./examples/democoin/cmd/democli
+	go install $(BUILD_FLAGS) ./docs/examples/basecoin/cmd/basecoind
+	go install $(BUILD_FLAGS) ./docs/examples/basecoin/cmd/basecli
+	go install $(BUILD_FLAGS) ./docs/examples/democoin/cmd/democoind
+	go install $(BUILD_FLAGS) ./docs/examples/democoin/cmd/democli
 
 install_cosmos-sdk-cli:
 	go install $(BUILD_FLAGS) ./cmd/cosmos-sdk-cli
@@ -113,26 +114,29 @@ update_dev_tools:
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get -u github.com/tendermint/lint/golint
 
-get_tools:
+get_tools: $(GOBIN)/dep $(GOBIN)/gometalinter $(GOBIN)/statik
 	@echo "--> Installing tools"
 	$(MAKE) -C scripts get_tools
 
-get_dev_tools:
+$(GOBIN)/%:
+	$(MAKE) -C scripts $(subst $(GOBIN)/,,$(@))
+
+get_dev_tools: get_tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get github.com/tendermint/lint/golint
 
-get_vendor_deps:
+get_vendor_deps: get_tools
 	@echo "--> Generating vendor directory via dep ensure"
 	@rm -rf .vendor-new
 	@dep ensure -v -vendor-only
 
-update_vendor_deps:
+update_vendor_deps: get_tools
 	@echo "--> Running dep ensure"
 	@rm -rf .vendor-new
 	@dep ensure -v
 
-draw_deps:
+draw_deps: get_tools
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
@@ -155,8 +159,8 @@ test_cli:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
 
 test_examples:
-	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/examples/basecoin/cli_test` -tags=cli_test
-	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/examples/democoin/cli_test` -tags=cli_test
+	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/docs/examples/basecoin/cli_test` -tags=cli_test
+	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/docs/examples/democoin/cli_test` -tags=cli_test
 
 test_unit:
 	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION)
@@ -178,12 +182,7 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=4 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=11 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=12 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=13 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=414 -v -timeout 24h
-	@go test ./cmd/gaia/app -run TestGaiaImportExport -SimulationEnabled=true -SimulationNumBlocks=50 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=4142 -v -timeout 24h
+	@bash scripts/import-export-sim.sh 50
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
@@ -261,7 +260,7 @@ localnet-stop:
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build build_cosmos-sdk-cli build_examples install install_examples install_cosmos-sdk-cli install_debug dist \
-check_tools check_dev_tools get_tools get_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
+check_tools check_dev_tools get_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \

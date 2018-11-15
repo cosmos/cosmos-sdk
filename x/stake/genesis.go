@@ -29,17 +29,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	keeper.SetIntraTxCounter(ctx, data.IntraTxCounter)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
-	// We only need to set this if we're starting from a list of validators, not a state export
-	setBondIntraTxCounter := true
-	for _, validator := range data.Validators {
-		if validator.BondIntraTxCounter != 0 {
-			setBondIntraTxCounter = false
-		}
-	}
-
 	for i, validator := range data.Validators {
 		// set the intra-tx counter to the order the validators are presented, if necessary
-		if setBondIntraTxCounter {
+		if !data.Exported {
 			validator.BondIntraTxCounter = int16(i)
 		}
 		keeper.SetValidator(ctx, validator)
@@ -76,7 +68,15 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.InsertRedelegationQueue(ctx, red)
 	}
 
-	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	// don't need to run Tendermint updates if we exported
+	if data.Exported {
+		for _, lv := range data.LastValidatorPowers {
+			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)
+		}
+	} else {
+		res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	}
+
 	return
 }
 
@@ -100,16 +100,23 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 		redelegations = append(redelegations, red)
 		return false
 	})
+	var lastValidatorPowers []types.LastValidatorPower
+	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power sdk.Int) (stop bool) {
+		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{addr, power})
+		return false
+	})
 
 	return types.GenesisState{
 		Pool:                 pool,
 		Params:               params,
 		IntraTxCounter:       intraTxCounter,
 		LastTotalPower:       lastTotalPower,
+		LastValidatorPowers:  lastValidatorPowers,
 		Validators:           validators,
 		Bonds:                bonds,
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
+		Exported:             true,
 	}
 }
 

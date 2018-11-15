@@ -152,8 +152,7 @@ func (coins Coins) IsValid() bool {
 //
 // CONTRACT: Plus will never return Coins where one Coin has a negative amount.
 func (coins Coins) Plus(coinsB Coins) Coins {
-	res, _ := coins.safePlus(coinsB) // should never contain negative amounts
-	return res
+	return coins.safePlus(coinsB)
 }
 
 // safePlus will perform addition of two coins sets. If both coin sets are
@@ -161,11 +160,7 @@ func (coins Coins) Plus(coinsB Coins) Coins {
 // other set is returned. Otherwise, the coins are compared in order of their
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
-//
-// If addition results in a negative amount, the result will be added to sum and
-// true will be returned indicating as such. In addition, potentially negative
-// amount can be added to sum from coinsB and those must be checked for upstream.
-func (coins Coins) safePlus(coinsB Coins) (Coins, bool) {
+func (coins Coins) safePlus(coinsB Coins) Coins {
 	sum := ([]Coin)(nil)
 	indexA, indexB := 0, 0
 	lenA, lenB := len(coins), len(coinsB)
@@ -174,14 +169,14 @@ func (coins Coins) safePlus(coinsB Coins) (Coins, bool) {
 		if indexA == lenA {
 			if indexB == lenB {
 				// return nil coins if both sets are empty
-				return sum, false
+				return sum
 			}
 
 			// return set B (excluding zero coins) if set A is empty
-			return append(sum, removeZeroCoins(coinsB[indexB:])...), false
+			return append(sum, removeZeroCoins(coinsB[indexB:])...)
 		} else if indexB == lenB {
 			// return set A (excluding zero coins) if set B is empty
-			return append(sum, removeZeroCoins(coins[indexA:])...), false
+			return append(sum, removeZeroCoins(coins[indexA:])...)
 		}
 
 		coinA, coinB := coins[indexA], coinsB[indexB]
@@ -198,15 +193,9 @@ func (coins Coins) safePlus(coinsB Coins) (Coins, bool) {
 
 		case 0: // coin A denom == coin B denom
 			res := coinA.Plus(coinB)
-
-			switch {
-			case res.IsZero():
+			if res.IsZero() {
 				// ignore 0 sum coin type
-			case !res.isNotNegative():
-				// do not allow final negative coin amounts
-				sum = append(sum, res)
-				return sum, true
-			default:
+			} else {
 				sum = append(sum, res)
 			}
 
@@ -234,11 +223,7 @@ func (coins Coins) safePlus(coinsB Coins) (Coins, bool) {
 //
 // CONTRACT: Minus will never return Coins where one Coin has a negative amount.
 func (coins Coins) Minus(coinsB Coins) Coins {
-	res, ok := coins.safePlus(coinsB.negative())
-	if ok {
-		// negative amount resulted due to addition
-		panic("negative count amount")
-	}
+	res := coins.safePlus(coinsB.negative())
 
 	// validate there exists no remaining negative coins
 	if ok := res.isNotNegative(); !ok {
@@ -251,8 +236,8 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 // SafeMinus performs the same arithmetic as Minus but returns a boolean if any
 // negative coin amount was returned.
 func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
-	diff, ok := coins.safePlus(coinsB.negative())
-	return diff, ok || !diff.isNotNegative()
+	diff := coins.safePlus(coinsB.negative())
+	return diff, !diff.isNotNegative()
 }
 
 // IsAllGT returns true iff for every denom in coins, the denom is present at a

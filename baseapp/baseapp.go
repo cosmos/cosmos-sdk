@@ -10,7 +10,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -592,8 +591,7 @@ func (app *BaseApp) initializeContext(ctx sdk.Context, mode runTxMode) sdk.Conte
 
 // cacheTxContext returns a new context based off of the provided context with a
 // cache wrapped multi-store and the store itself to allow the caller to write
-// changes from the cached multi-store. If cached multi-store will also have
-// tracing if enabled.
+// changes from the cached multi-store.
 func (app *BaseApp) cacheTxContext(
 	ctx sdk.Context, txBytes []byte, mode runTxMode,
 ) (sdk.Context, sdk.CacheMultiStore) {
@@ -603,7 +601,7 @@ func (app *BaseApp) cacheTxContext(
 		msCache = msCache.WithTracingContext(
 			sdk.TraceContext(
 				map[string]interface{}{
-					"txHash": cmn.HexBytes(tmhash.Sum(txBytes)).String(),
+					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
 				},
 			),
 		).(sdk.CacheMultiStore)
@@ -682,7 +680,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	}
 
 	// Create a new context based off of the existing context with a cache wrapped
-	// multi-store.
+	// multi-store in case message processing fails.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes, mode)
 	result = app.runMsgs(runMsgCtx, msgs, mode)
 	result.GasWanted = gasWanted

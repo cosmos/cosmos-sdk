@@ -55,6 +55,7 @@ IMPROVEMENTS
  - [#110](https://github.com/tendermint/devops/issues/110) Updated CircleCI job to trigger website build when cosmos docs are updated.
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
+ - #2815 Gas unit fields changed from `int64` to `uint64`.
 
 * Tendermint
  - #2796 Update to go-amino 0.14.1

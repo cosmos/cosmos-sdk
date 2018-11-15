@@ -183,7 +183,7 @@ func (coins Coins) safePlus(coinsB Coins) (Coins, bool) {
 
 		switch strings.Compare(coinA.Denom, coinB.Denom) {
 		case -1: // coin A denom < coin B denom
-			if coins.IsZero() {
+			if coinA.IsZero() {
 				// ignore 0 sum coin
 			} else {
 				sum = append(sum, coinA)

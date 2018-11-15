@@ -34,6 +34,7 @@ FEATURES
   * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
   * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Implemented querier
   for getting governance parameters.
+  * [app] \#2663 - Runtime-assertable invariants
   * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
 
 * SDK

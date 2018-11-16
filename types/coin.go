@@ -231,7 +231,13 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 // CONTRACT: Minus will never return Coins where one Coin has a non-positive
 // amount. In otherwords, IsValid will always return true.
 func (coins Coins) Minus(coinsB Coins) Coins {
-	res := coins.safePlus(coinsB.negative())
+	// negate the coins in coinsB
+	for i, c := range coinsB {
+		c.Amount = c.Amount.Neg()
+		coinsB[i] = c
+	}
+
+	res := coins.safePlus(coinsB)
 
 	// validate there exists no remaining negative coins
 	if ok := res.isNotNegative(); !ok {

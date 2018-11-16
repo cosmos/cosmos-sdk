@@ -153,9 +153,11 @@ func (coins Coins) IsValid() bool {
 // {2A} + {A, 2B} = {3A, 2B}
 // {2A} + {0B} = {2A}
 //
-// NOTE: Plus uses the invariant that coins are sorted by denominations.
+// NOTE: Plus operates under the invariant that coins are sorted by
+// denominations.
 //
-// CONTRACT: Plus will never return Coins where one Coin has a negative amount.
+// CONTRACT: Plus will never return Coins where one Coin has a non-positive
+// amount. In otherwords, IsValid will always return true.
 func (coins Coins) Plus(coinsB Coins) Coins {
 	return coins.safePlus(coinsB)
 }

@@ -14,6 +14,41 @@ Before setting up your validator node, make sure you've already gone through the
 If you want to become a validator for the Hub's `mainnet`, you should [research security](/validators/security.md).
 :::
 
+### Setting Up a New Node
+
+These instructions are for setting up a brand new full node from scratch.
+
+First, initialize the node and create the necessary config files:
+
+```bash
+gaiad init --moniker=<your_custom_name>
+```
+
+::: warning Note
+Only ASCII characters are supported for the `--moniker`. Using Unicode characters will render your node unreachable.
+:::
+
+You can edit this `moniker` later, in the `~/.gaiad/config/config.toml` file:
+
+```toml
+# A custom human readable name for this node
+moniker = "<your_custom_name>"
+```
+
+You can edit the `~/.gaiad/config/gaiad.toml` file in order to enable the anti spam mechanism and reject incoming transactions with less than a minimum fee:
+
+```
+# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+##### main base config options #####
+
+# Validators reject any tx from the mempool with less than the minimum fee per gas.
+minimum_fees = ""
+```
+
+Your full node has been initialized.
+
 ### Create Your Validator
 
 Your `cosmosvalconspub` can be used to create a new validator by staking tokens. You can find your validator pubkey by running:
@@ -48,6 +83,32 @@ __Note__: If unspecified, `consensus_pubkey` will default to the output of `gaia
 ::: tip
 Consult `gaiad gentx --help` for more information on the flags defaults.
 :::
+
+### Copy the Genesis File and Collect Genesis Transactions
+
+Fetch the `genesis.json` file into `gaiad`'s config directory.
+
+```bash
+mkdir -p $HOME/.gaiad/config
+curl https://raw.githubusercontent.com/cosmos/testnets/master/latest/genesis.json > $HOME/.gaiad/config/genesis.json
+```
+
+Note we use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets)
+which contains details for the latest testnet. If you are connecting to a different testnet, ensure you get the right files.
+
+Once you've collected all genesis transactions in `~/.gaiad/config/gentx`, you can run:
+
+```bash
+gaiad collect-gentxs
+```
+
+The previous command will collect all genesis transactions and modify `genesis.json` accordingly.
+
+To verify the correctness of the configuration run:
+
+```bash
+gaiad start
+```
 
 ### Edit Validator Description
 

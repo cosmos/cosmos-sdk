@@ -282,8 +282,19 @@ func TestInitChainer(t *testing.T) {
 
 // Simple tx with a list of Msgs.
 type txTest struct {
-	Msgs    []sdk.Msg
-	Counter int64
+	Msgs       []sdk.Msg
+	Counter    int64
+	FailOnAnte bool
+}
+
+func (tx *txTest) setFailOnAnte(fail bool) {
+	tx.FailOnAnte = fail
+}
+
+func (tx *txTest) setFailOnHandler(fail bool) {
+	for i, msg := range tx.Msgs {
+		tx.Msgs[i] = msgCounter{msg.(msgCounter).Counter, fail}
+	}
 }
 
 // Implements Tx
@@ -297,7 +308,8 @@ const (
 // ValidateBasic() fails on negative counters.
 // Otherwise it's up to the handlers
 type msgCounter struct {
-	Counter int64
+	Counter       int64
+	FailOnHandler bool
 }
 
 // Implements Msg
@@ -315,9 +327,9 @@ func (msg msgCounter) ValidateBasic() sdk.Error {
 func newTxCounter(txInt int64, msgInts ...int64) *txTest {
 	var msgs []sdk.Msg
 	for _, msgInt := range msgInts {
-		msgs = append(msgs, msgCounter{msgInt})
+		msgs = append(msgs, msgCounter{msgInt, false})
 	}
-	return &txTest{msgs, txInt}
+	return &txTest{msgs, txInt, false}
 }
 
 // a msg we dont know how to route
@@ -369,8 +381,13 @@ func testTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 func anteHandlerTxTest(t *testing.T, capKey *sdk.KVStoreKey, storeKey []byte) sdk.AnteHandler {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 		store := ctx.KVStore(capKey)
-		msgCounter := tx.(txTest).Counter
-		res = incrementingCounter(t, store, storeKey, msgCounter)
+		txTest := tx.(txTest)
+
+		if txTest.FailOnAnte {
+			return newCtx, sdk.ErrInternal("ante handler failure").Result(), true
+		}
+
+		res = incrementingCounter(t, store, storeKey, txTest.Counter)
 		return
 	}
 }
@@ -381,10 +398,15 @@ func handlerMsgCounter(t *testing.T, capKey *sdk.KVStoreKey, deliverKey []byte) 
 		var msgCount int64
 		switch m := msg.(type) {
 		case *msgCounter:
+			if m.FailOnHandler {
+				return sdk.ErrInternal("message handler failure").Result()
+			}
+
 			msgCount = m.Counter
 		case *msgCounter2:
 			msgCount = m.Counter
 		}
+
 		return incrementingCounter(t, store, deliverKey, msgCount)
 	}
 }
@@ -712,12 +734,12 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 	// Transaction with no known route
 	{
-		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0}
+		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0, false}
 		err := app.Deliver(unknownRouteTx)
 		require.EqualValues(t, sdk.CodeUnknownRequest, err.Code)
 		require.EqualValues(t, sdk.CodespaceRoot, err.Codespace)
 
-		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0}
+		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0, false}
 		err = app.Deliver(unknownRouteTx)
 		require.EqualValues(t, sdk.CodeUnknownRequest, err.Code)
 		require.EqualValues(t, sdk.CodespaceRoot, err.Codespace)
@@ -828,4 +850,73 @@ func TestTxGasLimits(t *testing.T) {
 			require.Equal(t, sdk.CodespaceRoot, res.Codespace)
 		}
 	}
+}
+
+func TestBaseAppAnteHandler(t *testing.T) {
+	anteKey := []byte("ante-key")
+	anteOpt := func(bapp *BaseApp) {
+		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+	}
+
+	deliverKey := []byte("deliver-key")
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+	}
+
+	cdc := codec.New()
+	app := setupBaseApp(t, anteOpt, routerOpt)
+
+	app.InitChain(abci.RequestInitChain{})
+	registerTestCodec(cdc)
+	app.BeginBlock(abci.RequestBeginBlock{})
+
+	// execute a tx that will fail ante handler execution
+	//
+	// NOTE: State should not be mutated here. This will be implicitly checked by
+	// the next txs ante handler execution (anteHandlerTxTest).
+	tx := newTxCounter(0, 0)
+	tx.setFailOnAnte(true)
+	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
+	require.NoError(t, err)
+	res := app.DeliverTx(txBytes)
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	ctx := app.getState(runTxModeDeliver).ctx
+	store := ctx.KVStore(capKey1)
+	require.Equal(t, int64(0), getIntFromStore(store, anteKey))
+
+	// execute at tx that will pass the ante handler (the checkTx state should
+	// mutate) but will fail the message handler
+	tx = newTxCounter(0, 0)
+	tx.setFailOnHandler(true)
+
+	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
+	require.NoError(t, err)
+
+	res = app.DeliverTx(txBytes)
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	ctx = app.getState(runTxModeDeliver).ctx
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(1), getIntFromStore(store, anteKey))
+	require.Equal(t, int64(0), getIntFromStore(store, deliverKey))
+
+	// execute a successful ante handler and message execution where state is
+	// implicitly checked by previous tx executions
+	tx = newTxCounter(1, 0)
+
+	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
+	require.NoError(t, err)
+
+	res = app.DeliverTx(txBytes)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	ctx = app.getState(runTxModeDeliver).ctx
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(2), getIntFromStore(store, anteKey))
+	require.Equal(t, int64(1), getIntFromStore(store, deliverKey))
+
+	// commit
+	app.EndBlock(abci.RequestEndBlock{})
+	app.Commit()
 }

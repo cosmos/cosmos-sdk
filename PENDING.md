@@ -52,8 +52,11 @@ IMPROVEMENTS
  - #2773 Require moniker to be provided on `gaiad init`.
  - #2672 [Makefile] Updated for better Windows compatibility and ledger support logic, get_tools was rewritten as a cross-compatible Makefile.
  - [#110](https://github.com/tendermint/devops/issues/110) Updated CircleCI job to trigger website build when cosmos docs are updated.
+
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
+ - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions
+ and methods will panic when a negative amount is discovered.
 
 * Tendermint
  - #2796 Update to go-amino 0.14.1

@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -92,13 +91,6 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	}
 }
 
-// get app init parameters for server init command
-func GaiaAppInit() server.AppInit {
-
-	return server.AppInit{
-		AppGenState: GaiaAppGenStateJSON,
-	}
-}
 
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey

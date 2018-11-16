@@ -210,31 +210,29 @@ func RandString(n int) string {
 
 func TestConfiguredPrefix(t *testing.T) {
 	var pub ed25519.PubKeyEd25519
-	for length := 1; length < 10; length++ {
-		for times := 1; times < 20; times++ {
-			rand.Read(pub[:])
-			// Test if randomly generated prefix of a given length works
-			prefix := RandString(length)
-			// Assuming that GetConfig is not sealed.
-			config := types.GetConfig()
-			config.SetBech32PrefixForAccount(prefix+"acc", prefix+"pub")
-			acc := types.AccAddress(pub.Address())
-			require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"))
-			bech32Pub := types.MustBech32ifyAccPub(pub)
-			require.True(t, strings.HasPrefix(bech32Pub, prefix+"pub"))
+	for times := 1; times < 20; times++ {
+		rand.Read(pub[:])
+		// Test if randomly generated prefix of a given length works
+		prefix := RandString(types.AddrLen)
+		// Assuming that GetConfig is not sealed.
+		config := types.GetConfig()
+		config.SetBech32PrefixForAccount(prefix+"acc", prefix+"pub")
+		acc := types.AccAddress(pub.Address())
+		require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"))
+		bech32Pub := types.MustBech32ifyAccPub(pub)
+		require.True(t, strings.HasPrefix(bech32Pub, prefix+"pub"))
 
-			config.SetBech32PrefixForValidator(prefix+"valaddr", prefix+"valpub")
-			val := types.ValAddress(pub.Address())
-			require.True(t, strings.HasPrefix(val.String(), prefix+"valaddr"))
-			bech32ValPub := types.MustBech32ifyValPub(pub)
-			require.True(t, strings.HasPrefix(bech32ValPub, prefix+"valpub"))
+		config.SetBech32PrefixForValidator(prefix+"valaddr", prefix+"valpub")
+		val := types.ValAddress(pub.Address())
+		require.True(t, strings.HasPrefix(val.String(), prefix+"valaddr"))
+		bech32ValPub := types.MustBech32ifyValPub(pub)
+		require.True(t, strings.HasPrefix(bech32ValPub, prefix+"valpub"))
 
-			config.SetBech32PrefixForConsensusNode(prefix+"consaddr", prefix+"conspub")
-			cons := types.ConsAddress(pub.Address())
-			require.True(t, strings.HasPrefix(cons.String(), prefix+"consaddr"))
-			bech32ConsPub := types.MustBech32ifyConsPub(pub)
-			require.True(t, strings.HasPrefix(bech32ConsPub, prefix+"conspub"))
-		}
-
+		config.SetBech32PrefixForConsensusNode(prefix+"consaddr", prefix+"conspub")
+		cons := types.ConsAddress(pub.Address())
+		require.True(t, strings.HasPrefix(cons.String(), prefix+"consaddr"))
+		bech32ConsPub := types.MustBech32ifyConsPub(pub)
+		require.True(t, strings.HasPrefix(bech32ConsPub, prefix+"conspub"))
 	}
+
 }

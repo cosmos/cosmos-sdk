@@ -65,6 +65,10 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return nil, err
 	}
 
+	if len(bz) != AddrLen {
+		return nil, errors.New("Incorrect address length")
+	}
+
 	return AccAddress(bz), nil
 }
 
@@ -185,6 +189,10 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixValAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(bz) != AddrLen {
+		return nil, errors.New("Incorrect address length")
 	}
 
 	return ValAddress(bz), nil
@@ -308,6 +316,10 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 	bz, err := GetFromBech32(address, Bech32PrefixConsAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(bz) != AddrLen {
+		return nil, errors.New("Incorrect address length")
 	}
 
 	return ConsAddress(bz), nil

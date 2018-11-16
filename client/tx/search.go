@@ -9,13 +9,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -139,42 +139,46 @@ func FormatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]Info, error) {
 // Search Tx REST Handler
 func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tag := r.FormValue("tag")
-		if tag == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("You need to provide at least a tag as a key=value pair to search for. Postfix the key with _bech32 to search bech32-encoded addresses or public keys"))
-			return
-		}
-
-		keyValue := strings.Split(tag, "=")
-		key := keyValue[0]
-
-		value, err := url.QueryUnescape(keyValue[1])
+		var tags []string
+		err := r.ParseForm()
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not decode address", err.Error()))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
+			return
+		}
+		if len(r.Form) == 0 {
 			return
 		}
 
-		if strings.HasSuffix(key, "_bech32") {
-			bech32address := strings.Trim(value, "'")
-			prefix := strings.Split(bech32address, "1")[0]
-			bz, err := sdk.GetFromBech32(bech32address, prefix)
+		for key, values := range r.Form {
+			value, err := url.QueryUnescape(values[0])
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not decode query value", err.Error()))
 				return
 			}
 
-			tag = strings.TrimRight(key, "_bech32") + "='" + sdk.AccAddress(bz).String() + "'"
+			if strings.HasSuffix(key, "_bech32") {
+				prefix := strings.Split(value, "1")[0]
+				bz, err := sdk.GetFromBech32(value, prefix)
+				if err != nil {
+					utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+					return
+				}
+
+				key = strings.TrimRight(key, "_bech32")
+				value = sdk.AccAddress(bz).String()
+			}
+			tag := fmt.Sprintf("%s='%s'", key, value)
+			tags = append(tags, tag)
 		}
 
-		txs, err := searchTxs(cliCtx, cdc, []string{tag})
+		//
+		txs, err := searchTxs(cliCtx, cdc, tags)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		if len(txs) == 0 {
-			w.Write([]byte("[]"))
 			return
 		}
 

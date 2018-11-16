@@ -76,10 +76,10 @@ func (coin Coin) Plus(coinB Coin) Coin {
 }
 
 // Subtracts amounts of two coins with same denom. If the coins differ in denom
-// then the receiving coin is returned.
+// then it panics.
 func (coin Coin) Minus(coinB Coin) Coin {
 	if !coin.SameDenomAs(coinB) {
-		return coin
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}

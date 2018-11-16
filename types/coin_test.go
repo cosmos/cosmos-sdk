@@ -69,7 +69,7 @@ func TestMinusCoin(t *testing.T) {
 		expected    Coin
 		shouldPanic bool
 	}{
-		{NewUInt64Coin("A", 1), NewUInt64Coin("B", 1), NewUInt64Coin("A", 1), false},
+		{NewUInt64Coin("A", 1), NewUInt64Coin("B", 1), NewUInt64Coin("A", 1), true},
 		{NewUInt64Coin("A", 10), NewUInt64Coin("A", 1), NewUInt64Coin("A", 9), false},
 		{NewUInt64Coin("A", 5), NewUInt64Coin("A", 3), NewUInt64Coin("A", 2), false},
 		{NewUInt64Coin("A", 1), NewUInt64Coin("A", 5), Coin{}, true},

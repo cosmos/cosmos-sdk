@@ -36,35 +36,28 @@ and `DeliverTx`. BaseApp is completely agnostic to serialization formats.
 
 During the execution of a transaction, it may pass through both `CheckTx` and
 `DeliverTx` as defined in the ABCI specification. `CheckTx` is executed by the
-proposing validator and is used for the Tendermint mempool. Notably, both
-`CheckTx` and `DeliverTx` execute the application's AnteHandler (if defined),
-where the AnteHandler is responsible for pre-message validation checks such as
-account and signature validation as well as fee deduction and collection. It is
-important to note that the AnteHandler does, and is expected to, perform various
-state transitions such as incrementing nonces and deducting fees.
+proposing validator and is used for the Tendermint mempool for all full nodes.
+
+Both `CheckTx` and `DeliverTx` execute the application's AnteHandler (if
+defined), where the AnteHandler is responsible for pre-message validation
+checks such as account and signature validation, fee deduction and collection,
+and incrementing sequence numbers.
 
 ### CheckTx
 
-During the execution of `CheckTx`, only the AnteHandler is executed. If the
-AnteHandler fails or panics then the transaction fails.
+During the execution of `CheckTx`, only the AnteHandler is executed.
 
-It is important to note that the state transitions due to the AnteHandler are
-persisted between subsequent calls of `CheckTx`. Also, currently the AnteHandler
-also handles making sure the sender has included enough fees as validators
-(and non-validator nodes) can set their own gas-price for validating transactions.
-This must be checked in `CheckTx` as to not cause conflicting state transitions
-during consensus.
+State transitions due to the AnteHandler are persisted between subsequent calls
+of `CheckTx` in the check-tx state, unless the AnteHandler fails and aborts.
 
 ### DeliverTx
 
+During the execution of `DeliverTx`, the AnteHandler and Handler is executed.
+
 The transaction execution during `DeliverTx` operates in a similar fashion to
-`CheckTx`. However, state transitions caused by the AnteHandler are persisted
-unless the transaction fails in addition to the messages being executed. 
+`CheckTx`. However, state transitions that occur during the AnteHandler are
+persisted even when the following Handler processing logic fails.
 
-It is possible that a malicious proposer may send a transaction that would fail
-`CheckTx` but send it anyway causing other full nodes to execute it during
-`DeliverTx`.
-
-Because of this, we do not want to brake the invariant that state transitions
-cannot occur for transactions that would otherwise fail `CheckTx`, hence we do
-not persist state in such cases.
+It is possible that a malicious proposer may include a transaction in a block
+that fails the AnteHandler.  In this case, all state transitions for the
+offending transaction are discarded.

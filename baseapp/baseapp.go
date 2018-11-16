@@ -644,32 +644,27 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		return err.Result()
 	}
 
-	// Execute the ante handler if one is defined. Note that during deliverTx, if
-	// execution fails and thus needs to abort, state modifications will not be
-	// persisted due to the transient CacheWrap multi-store that is used. Otherwise,
-	// during checkTx, state modifications are persisted between respective checkTx
-	// calls.
+	// Execute the ante handler if one is defined.
 	if app.anteHandler != nil {
+		var anteCtx sdk.Context
 		var msCache sdk.CacheMultiStore
 
-		anteCtx := ctx
-		if mode == runTxModeDeliver {
-			anteCtx, msCache = app.cacheTxContext(ctx, txBytes, mode)
-		}
+		// Cache wrap context before anteHandler call in case it aborts.
+		// This is required for both CheckTx and DeliverTx.
+		// https://github.com/cosmos/cosmos-sdk/issues/2772
+		// NOTE: Alternatively, we could require that anteHandler ensures that
+		// writes do not happen if aborted/failed.  This may have some
+		// performance benefits, but it'll be more difficult to get right.
+		anteCtx, msCache = app.cacheTxContext(ctx, txBytes, mode)
 
 		newCtx, result, abort := app.anteHandler(anteCtx, tx, (mode == runTxModeSimulate))
 		if abort {
 			return result
 		}
-
 		if !newCtx.IsZero() {
 			ctx = newCtx
 		}
-
-		if mode == runTxModeDeliver {
-			msCache.Write()
-		}
-
+		msCache.Write()
 		gasWanted = result.GasWanted
 	}
 

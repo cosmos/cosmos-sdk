@@ -8,50 +8,53 @@ import (
 )
 
 // ModuleClient exports all client functionality from this module
-type ModuleClient struct{}
+type ModuleClient struct {
+	storeKey string
+	cdc      *amino.Codec
+}
 
-func NewModuleClient() ModuleClient {
-	return ModuleClient{}
+func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
+	return ModuleClient{storeKey, cdc}
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func (mc ModuleClient) GetQueryCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	stakeQueryCmd := &cobra.Command{
 		Use:   "stake",
 		Short: "Querying commands for the staking module",
 	}
 	stakeQueryCmd.AddCommand(client.GetCommands(
-		cli.GetCmdQueryDelegation(storeKey, cdc),
-		cli.GetCmdQueryDelegations(storeKey, cdc),
-		cli.GetCmdQueryUnbondingDelegation(storeKey, cdc),
-		cli.GetCmdQueryUnbondingDelegations(storeKey, cdc),
-		cli.GetCmdQueryRedelegation(storeKey, cdc),
-		cli.GetCmdQueryRedelegations(storeKey, cdc),
-		cli.GetCmdQueryValidator(storeKey, cdc),
-		cli.GetCmdQueryValidators(storeKey, cdc),
-		cli.GetCmdQueryValidatorDelegations(storeKey, cdc),
-		cli.GetCmdQueryValidatorUnbondingDelegations(storeKey, cdc),
-		cli.GetCmdQueryValidatorRedelegations(storeKey, cdc),
-		cli.GetCmdQueryParams(storeKey, cdc),
-		cli.GetCmdQueryPool(storeKey, cdc))...)
+		cli.GetCmdQueryDelegation(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryDelegations(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryUnbondingDelegation(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryUnbondingDelegations(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryRedelegation(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryRedelegations(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryValidator(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryValidators(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryValidatorDelegations(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryValidatorUnbondingDelegations(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryValidatorRedelegations(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryParams(mc.storeKey, mc.cdc),
+		cli.GetCmdQueryPool(mc.storeKey, mc.cdc))...)
 
 	return stakeQueryCmd
 
 }
 
 // GetTxCmd returns the transaction commands for this module
-func (mc ModuleClient) GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	stakeTxCmd := &cobra.Command{
 		Use:   "stake",
 		Short: "Staking transaction subcommands",
 	}
 
 	stakeTxCmd.AddCommand(client.PostCommands(
-		cli.GetCmdCreateValidator(cdc),
-		cli.GetCmdEditValidator(cdc),
-		cli.GetCmdDelegate(cdc),
-		cli.GetCmdRedelegate(storeKey, cdc),
-		cli.GetCmdUnbond(storeKey, cdc),
+		cli.GetCmdCreateValidator(mc.cdc),
+		cli.GetCmdEditValidator(mc.cdc),
+		cli.GetCmdDelegate(mc.cdc),
+		cli.GetCmdRedelegate(mc.storeKey, mc.cdc),
+		cli.GetCmdUnbond(mc.storeKey, mc.cdc),
 	)...)
 
 	return stakeTxCmd

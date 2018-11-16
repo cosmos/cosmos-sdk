@@ -8,14 +8,17 @@ import (
 )
 
 // ModuleClient exports all client functionality from this module
-type ModuleClient struct{}
+type ModuleClient struct {
+	storeKey string
+	cdc      *amino.Codec
+}
 
-func NewModuleClient() ModuleClient {
-	return ModuleClient{}
+func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
+	return ModuleClient{storeKey, cdc}
 }
 
 // GetQueryCmd returns the cli query commands for this module
-func (mc ModuleClient) GetQueryCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	// Group gov queries under a subcommand
 	govQueryCmd := &cobra.Command{
 		Use:   "gov",
@@ -23,29 +26,29 @@ func (mc ModuleClient) GetQueryCmd(storeKey string, cdc *amino.Codec) *cobra.Com
 	}
 
 	govQueryCmd.AddCommand(client.GetCommands(
-		govCli.GetCmdQueryProposal(storeKey, cdc),
-		govCli.GetCmdQueryProposals(storeKey, cdc),
-		govCli.GetCmdQueryVote(storeKey, cdc),
-		govCli.GetCmdQueryVotes(storeKey, cdc),
-		govCli.GetCmdQueryParams(storeKey, cdc),
-		govCli.GetCmdQueryDeposit(storeKey, cdc),
-		govCli.GetCmdQueryDeposits(storeKey, cdc),
-		govCli.GetCmdQueryTally(storeKey, cdc))...)
+		govCli.GetCmdQueryProposal(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryProposals(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryVote(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryVotes(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryParams(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryDeposit(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryDeposits(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryTally(mc.storeKey, mc.cdc))...)
 
 	return govQueryCmd
 }
 
 // GetTxCmd returns the transaction commands for this module
-func (mc ModuleClient) GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	govTxCmd := &cobra.Command{
 		Use:   "gov",
 		Short: "Governance transactions subcommands",
 	}
 
 	govTxCmd.AddCommand(client.PostCommands(
-		govCli.GetCmdDeposit(cdc),
-		govCli.GetCmdVote(cdc),
-		govCli.GetCmdSubmitProposal(cdc),
+		govCli.GetCmdDeposit(mc.cdc),
+		govCli.GetCmdVote(mc.cdc),
+		govCli.GetCmdSubmitProposal(mc.cdc),
 	)...)
 
 	return govTxCmd

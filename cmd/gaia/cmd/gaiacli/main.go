@@ -1,21 +1,30 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	distClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
+	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	slashingClient "github.com/cosmos/cosmos-sdk/x/slashing/client"
+	stakeClient "github.com/cosmos/cosmos-sdk/x/stake/client"
 )
 
 const (
@@ -39,6 +48,15 @@ func main() {
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
 
+	// Module clients hold cli commnads (tx,query) and lcd routes
+	// TODO: Make the lcd command take a list of ModuleClient
+	mc := []sdk.ModuleClients{
+		govClient.NewModuleClient(storeGov, cdc),
+		distClient.NewModuleClient("", cdc),
+		stakeClient.NewModuleClient(storeStake, cdc),
+		slashingClient.NewModuleClient(storeSlashing, cdc),
+	}
+
 	rootCmd := &cobra.Command{
 		Use:   "gaiacli",
 		Short: "Command line interface for interacting with gaiad",
@@ -49,8 +67,8 @@ func main() {
 		rpc.InitClientCommand(),
 		rpc.StatusCommand(),
 		client.ConfigCmd(),
-		queryCmd(cdc),
-		txCmd(cdc),
+		queryCmd(cdc, mc),
+		txCmd(cdc, mc),
 		client.LineBreak,
 		lcd.ServeCommand(cdc),
 		client.LineBreak,
@@ -68,9 +86,53 @@ func main() {
 
 	err = executor.Execute()
 	if err != nil {
-		// handle with #870
-		panic(err)
+		fmt.Printf("Failed executing CLI command: %s, exiting...\n", err)
+		os.Exit(1)
 	}
+}
+
+func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
+	queryCmd := &cobra.Command{
+		Use:     "query",
+		Aliases: []string{"q"},
+		Short:   "Querying subcommands",
+	}
+
+	queryCmd.AddCommand(
+		rpc.ValidatorCommand(),
+		rpc.BlockCommand(),
+		tx.SearchTxCmd(cdc),
+		tx.QueryTxCmd(cdc),
+		client.LineBreak,
+		authcmd.GetAccountCmd(storeAcc, cdc),
+	)
+
+	for _, m := range mc {
+		queryCmd.AddCommand(m.GetQueryCmd())
+	}
+
+	return queryCmd
+}
+
+func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
+	txCmd := &cobra.Command{
+		Use:   "tx",
+		Short: "Transactions subcommands",
+	}
+
+	txCmd.AddCommand(
+		bankcmd.SendTxCmd(cdc),
+		client.LineBreak,
+		authcmd.GetSignCommand(cdc),
+		bankcmd.GetBroadcastCommand(cdc),
+		client.LineBreak,
+	)
+
+	for _, m := range mc {
+		txCmd.AddCommand(m.GetTxCmd())
+	}
+
+	return txCmd
 }
 
 func initConfig(cmd *cobra.Command) error {

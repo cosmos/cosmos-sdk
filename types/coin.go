@@ -17,8 +17,10 @@ import (
 // TODO: Make field members private for further safety.
 type Coin struct {
 	Denom string `json:"denom"`
-	// Amount is an integer type to allow intermediate negative values. Resulting
-	// values must always be non-negative.
+
+	// To allow the use of unsigned integers (see: #1273) a larger refactor will
+	// need to be made. So we use signed integers for now with safety measures in
+	// place preventing negative values being returned.
 	Amount Int `json:"amount"`
 }
 
@@ -229,7 +231,7 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 
 	// validate there exists no remaining negative coins
 	if ok := res.isNotNegative(); !ok {
-		panic("negative count amount")
+		panic("negative coin amount")
 	}
 
 	return res

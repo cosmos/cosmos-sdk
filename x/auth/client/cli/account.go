@@ -11,18 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// // GetAccountDecoder gets the account decoder for auth.DefaultAccount.
-// func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
-// 	return func(accBytes []byte) (acct auth.Account, err error) {
-// 		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-//
-// 		return acct, err
-// 	}
-// }
-
 // GetAccountCmd returns a query account that will display the state of the
 // account at a given address.
 // nolint: unparam

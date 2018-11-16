@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -399,64 +400,39 @@ func TestTxs(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
-	// query wrong
-	res, body := Request(t, port, "GET", "/txs", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	require.Equal(t, "\"[]\"", body)
+	var emptyTxs []tx.Info
+	txs := getTransactions(t, port)
+	require.Equal(t, emptyTxs, txs)
 
 	// query empty
-	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?sender_bech32=%s", "cosmos1jawd35d9aq4u76sr3fjalmcqc8hqygs90d0g0v"), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	require.Equal(t, "\"[]\"", body)
-
-	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?action=submit-proposal&proposer=%s", "cosmos1jawd35d9aq4u76sr3fjalmcqc8hqygs90d0g0v"), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	require.Equal(t, "\"[]\"", body)
+	txs = getTransactions(t, port, fmt.Sprintf("sender_bech32=%s", addr.String()))
+	require.Equal(t, emptyTxs, txs)
 
 	// also tests url decoding
-	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?action=submit%%20proposal&proposer=%s", "cosmos1jawd35d9aq4u76sr3fjalmcqc8hqygs90d0g0v"), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	require.Equal(t, "\"[]\"", body)
-	// create TX
-	receiveAddr, resultTx := doSend(t, port, seed, name, password, addr)
+	txs = getTransactions(t, port, fmt.Sprintf("sender_bech32=%s", addr.String()))
+	require.Equal(t, emptyTxs, txs)
 
+	txs = getTransactions(t, port, fmt.Sprintf("action=submit%%20proposal&proposer=%s", addr.String()))
+	require.Equal(t, emptyTxs, txs)
+
+	// create tx
+	receiveAddr, resultTx := doSend(t, port, seed, name, password, addr)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// check if tx is findable
-	res, body = Request(t, port, "GET", fmt.Sprintf("/txs/%s", resultTx.Hash), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var indexedTxs []tx.Info
-
 	// check if tx is queryable
-	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?tx.hash=%s", resultTx.Hash), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err := cdc.UnmarshalJSON([]byte(body), &indexedTxs)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(indexedTxs))
-
-	// XXX should this move into some other testfile for txs in general?
-	// test if created TX hash is the correct hash
-	require.Equal(t, resultTx.Hash, indexedTxs[0].Hash)
+	txs = getTransactions(t, port, fmt.Sprintf("tx.hash=%s", resultTx.Hash))
+	require.Len(t, txs, 1)
+	require.Equal(t, resultTx.Hash, txs[0].Hash)
 
 	// query sender
-	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?sender_bech32=%s", addr), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(indexedTxs), "%v", indexedTxs) // there are 2 txs created with doSend
-	require.Equal(t, resultTx.Height, indexedTxs[0].Height)
+	txs = getTransactions(t, port, fmt.Sprintf("sender_bech32=%s", addr.String()))
+	require.Len(t, txs, 1)
+	require.Equal(t, resultTx.Height, txs[0].Height)
 
 	// query recipient
-	res, body = Request(t, port, "GET", fmt.Sprintf("/txs?recipient_bech32=%s", receiveAddr), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err = cdc.UnmarshalJSON([]byte(body), &indexedTxs)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(indexedTxs))
-	require.Equal(t, resultTx.Height, indexedTxs[0].Height)
+	txs = getTransactions(t, port, fmt.Sprintf("recipient_bech32=%s", receiveAddr.String()))
+	require.Len(t, txs, 1)
+	require.Equal(t, resultTx.Height, txs[0].Height)
 }
 
 func TestPoolParamsQuery(t *testing.T) {
@@ -646,6 +622,11 @@ func TestSubmitProposal(t *testing.T) {
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
 	require.Equal(t, "Test", proposal.GetTitle())
+
+	// query tx
+	txs := getTransactions(t, port, fmt.Sprintf("action=submit-proposal&proposer=%s", addr))
+	require.Len(t, txs, 1)
+	fmt.Println(txs)
 }
 
 func TestDeposit(t *testing.T) {
@@ -937,6 +918,22 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress
 	return receiveAddr, resultTx
 }
 
+func getTransactions(t *testing.T, port string, tags ...string) []tx.Info {
+	var txs []tx.Info
+	if len(tags) == 0 {
+		return txs
+	}
+	queryStr := strings.Join(tags, "&")
+	res, body := Request(t, port, "GET", fmt.Sprintf("/txs?%s", queryStr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err := cdc.UnmarshalJSON([]byte(body), &txs)
+	require.NoError(t, err)
+	return txs
+}
+
+// ============= IBC Module ================
+
 func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// create receive address
 	kb := client.MockKeyBase()
@@ -976,6 +973,8 @@ func doIBCTransfer(t *testing.T, port, seed, name, password string, addr sdk.Acc
 
 	return resultTx
 }
+
+// ============= Slashing Module ================
 
 func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.ValidatorSigningInfo {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/slashing/validators/%s/signing_info", validatorPubKey), nil)

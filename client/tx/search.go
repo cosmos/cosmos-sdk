@@ -178,11 +178,6 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
-		if len(txs) == 0 {
-			utils.PostProcessResponse(w, cdc, "[]", cliCtx.Indent)
-			return
-		}
-
 		utils.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
 	}
 }

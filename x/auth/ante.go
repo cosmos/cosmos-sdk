@@ -265,7 +265,7 @@ func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
 	gasFees := make(sdk.Coins, len(fees))
 	// TODO: Make this not price all coins in the same way
 	for i := 0; i < len(fees); i++ {
-		gasFees[i] = sdk.NewUInt64Coin(fees[i].Denom, gasCost)
+		gasFees[i] = sdk.NewInt64Coin(fees[i].Denom, int64(gasCost))
 	}
 	return fees.Plus(gasFees)
 }

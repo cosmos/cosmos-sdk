@@ -58,24 +58,6 @@ func validateMinter(minter Minter) error {
 
 var hrsPerYr = sdk.NewDec(8766) // as defined by a julian year of 365.25 days
 
-// process provisions for the period since the last inflation
-// NOTE If ProcessProvisions is called for the first time from an
-//      InitialMinter, ProcessProvisions will effectively only set
-//      the blocktime as the default HourlyProvisions is 0.
-func (m Minter) ProcessProvisions(params Params, blockTime time.Time) (
-	minter Minter, provisions sdk.Coin) {
-
-	dur := m.LastInflation.Sub(blockTime).Nanoseconds()
-	portionOfHour := dur / time.Hour.Nanoseconds()
-
-	provisionsAmt := m.HourlyProvisions.MulRaw(portionOfHour)
-	provisions = sdk.NewCoin(params.MintDenom, provisionsAmt)
-
-	minter.LastInflation = blockTime
-
-	return m, provisions
-}
-
 // get the new inflation rate for the next hour
 func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 
@@ -103,8 +85,23 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation
 	return inflation
 }
 
-// get the new hourly inflation provisions rate
+// Rather than calculating the relative amount of inflation for each block
+// the provisions are calculated once per hour and further divided up each
+// block based on this hour value.
 func (m Minter) NextHourlyProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Int) {
 	provisionsDec := m.Inflation.Mul(totalSupply).Quo(hrsPerYr)
 	return provisionsDec.TruncateInt()
+}
+
+// process provisions for the period since the last inflation
+// based as a portion of the saved hourly provision
+func (m Minter) NextProvision(params Params, blockTime time.Time) sdk.Coin {
+
+	dur := blockTime.Sub(m.LastInflation).Nanoseconds()
+	provisionAmt := m.HourlyProvisions.
+		MulRaw(dur).
+		DivRaw(time.Hour.Nanoseconds())
+
+	provision := sdk.NewCoin(params.MintDenom, provisionAmt)
+	return provision
 }

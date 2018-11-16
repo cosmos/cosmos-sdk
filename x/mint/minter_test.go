@@ -53,22 +53,34 @@ func TestNextInflation(t *testing.T) {
 	}
 }
 
-func TestProcessProvisions(t *testing.T) {
-	minter := DefaultInitialMinter()
+func TestNextProvision(t *testing.T) {
+	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
 
 	tests := []struct {
-		blockTime     time.Time
-		expProvisions sdk.Coin
+		hourlyProvisions int64
+		blockTime        time.Time
+		expProvisions    sdk.Coin
 	}{
-		{time.Unix(0, 0), sdk.NewCoin(params.MintDenom, 0)},
+		{3600, time.Unix(0, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(0))},
+		{3600, time.Unix(60*60, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(3600))},
+		{3600, time.Unix(60, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(60))},
+		{3600, time.Unix(1, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(1))},
+
+		// some truncate cases
+		{3600, time.Unix(1, 500), sdk.NewCoin(params.MintDenom, sdk.NewInt(1))},
+		{3600, time.Unix(1, 999), sdk.NewCoin(params.MintDenom, sdk.NewInt(1))},
+		{3601, time.Unix(1, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(1))},
+		{3601, time.Unix(1800, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(1800))},
+		{3601, time.Unix(3600, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(3601))},
+		{3700, time.Unix(1800, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(1850))},
 	}
 	for i, tc := range tests {
-		minter.Inflation = tc.setInflation
+		minter.HourlyProvisions = sdk.NewInt(tc.hourlyProvisions)
+		provisions := minter.NextProvision(params, tc.blockTime)
 
-		minter, provisions := minter.ProcessProvisions(params, expProvisions)
-		require.True(t, blockTime, minter.LastInflation)
-		require.True(t, diffInflation.Equal(tc.expChange),
-			"Test Index: %v\nDiff:  %v\nExpected: %v\n", i, diffInflation, tc.expChange)
+		require.True(t, tc.expProvisions.IsEqual(provisions),
+			"test: %v\n\tExp: %v\n\tGot: %v\n",
+			i, tc.expProvisions, provisions)
 	}
 }

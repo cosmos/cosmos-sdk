@@ -87,7 +87,7 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Dec) (
 	provisions sdk.Int) {
 
-	provisionsDec := m.Inflation.MulInt(totalSupply)
+	provisionsDec := m.Inflation.Mul(totalSupply)
 	return provisionsDec.TruncateInt()
 }
 

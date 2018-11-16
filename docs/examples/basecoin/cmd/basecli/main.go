@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
@@ -64,7 +63,7 @@ func main() {
 			stakecmd.GetCmdQueryRedelegation("stake", cdc),
 			stakecmd.GetCmdQueryRedelegations("stake", cdc),
 			slashingcmd.GetCmdQuerySigningInfo("slashing", cdc),
-			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd("acc", cdc),
 		)...)
 
 	rootCmd.AddCommand(

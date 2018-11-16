@@ -15,11 +15,11 @@ type Params struct {
 	InflationMax        sdk.Dec `json:"inflation_max"`         // maximum inflation rate
 	InflationMin        sdk.Dec `json:"inflation_min"`         // minimum inflation rate
 	GoalBonded          sdk.Dec `json:"goal_bonded"`           // goal of percent bonded atoms
+	BlocksPerYear       int64   `json:"blocks_per_year"`       // expected blocks per year
 }
 
-func NewParams(mintDenom string,
-	inflationRateChange, inflationMax,
-	inflationMin, goalBonded sdk.Dec) Params {
+func NewParams(mintDenom string, inflationRateChange, inflationMax,
+	inflationMin, goalBonded sdk.Dec, blocksPerYear int64) Params {
 
 	return Params{
 		MintDenom:           mintDenom,
@@ -27,6 +27,7 @@ func NewParams(mintDenom string,
 		InflationMax:        inflationMax,
 		InflationMin:        inflationMin,
 		GoalBonded:          goalBonded,
+		BlocksPerYear:       blocksPerYear,
 	}
 }
 
@@ -38,6 +39,7 @@ func DefaultParams() Params {
 		InflationMax:        sdk.NewDecWithPrec(20, 2),
 		InflationMin:        sdk.NewDecWithPrec(7, 2),
 		GoalBonded:          sdk.NewDecWithPrec(67, 2),
+		BlocksPerYear:       int64(60 * 60 * 24 * 365 / 5), // assuming 5 second block times
 	}
 }
 

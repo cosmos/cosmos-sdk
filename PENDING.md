@@ -10,6 +10,7 @@ BREAKING CHANGES
   * [cli] [\#2786](https://github.com/cosmos/cosmos-sdk/pull/2786) Fix redelegation command flow
 
 * Gaia
+  * [mint] [\#2825] minting now occurs every block, inflation parameter updates still hourly
 
 * SDK
   * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.

@@ -2,7 +2,6 @@ package mint
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -53,33 +52,29 @@ func TestNextInflation(t *testing.T) {
 	}
 }
 
-func TestNextProvision(t *testing.T) {
+func TestBlockProvision(t *testing.T) {
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
 
-	tests := []struct {
-		hourlyProvisions int64
-		blockTime        time.Time
-		expProvisions    sdk.Coin
-	}{
-		{3600, time.Unix(0, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(0))},
-		{3600, time.Unix(60*60, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(3600))},
-		{3600, time.Unix(60, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(60))},
-		{3600, time.Unix(1, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(1))},
+	secondsPerYear := int64(60 * 60 * 24 * 365)
 
-		// some truncate cases
-		{3600, time.Unix(1, 500), sdk.NewCoin(params.MintDenom, sdk.NewInt(1))},
-		{3600, time.Unix(1, 999), sdk.NewCoin(params.MintDenom, sdk.NewInt(1))},
-		{3601, time.Unix(1, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(1))},
-		{3601, time.Unix(1800, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(1800))},
-		{3601, time.Unix(3600, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(3601))},
-		{3700, time.Unix(1800, 0), sdk.NewCoin(params.MintDenom, sdk.NewInt(1850))},
+	tests := []struct {
+		annualProvisions int64
+		expProvisions    int64
+	}{
+		{secondsPerYear / 5, 1},
+		{secondsPerYear/5 + 1, 1},
+		{(secondsPerYear / 5) * 2, 2},
+		{(secondsPerYear / 5) / 2, 0},
 	}
 	for i, tc := range tests {
-		minter.HourlyProvisions = sdk.NewInt(tc.hourlyProvisions)
-		provisions := minter.NextProvision(params, tc.blockTime)
+		minter.AnnualProvisions = sdk.NewInt(tc.annualProvisions)
+		provisions := minter.BlockProvision(params)
 
-		require.True(t, tc.expProvisions.IsEqual(provisions),
+		expProvisions := sdk.NewCoin(params.MintDenom,
+			sdk.NewInt(tc.expProvisions))
+
+		require.True(t, expProvisions.IsEqual(provisions),
 			"test: %v\n\tExp: %v\n\tGot: %v\n",
 			i, tc.expProvisions, provisions)
 	}

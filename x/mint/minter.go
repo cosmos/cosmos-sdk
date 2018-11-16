@@ -9,21 +9,19 @@ import (
 
 // Minter represents the minting state
 type Minter struct {
-	LastInflation       time.Time `json:"last_inflation"`        // time of the last inflation
-	LastInflationChange time.Time `json:"last_inflation_change"` // time which the last inflation rate change
-	Inflation           sdk.Dec   `json:"inflation"`             // current annual inflation rate
-	HourlyProvisions    sdk.Int   `json:"hourly_provisions"`     // current hourly provisions rate
+	LastUpdate       time.Time `json:"last_update"`       // time which the last update was made to the minter
+	Inflation        sdk.Dec   `json:"inflation"`         // current annual inflation rate
+	AnnualProvisions sdk.Int   `json:"annual_provisions"` // current annual exptected provisions
 }
 
 // Create a new minter object
-func NewMinter(lastInflation, lastInflationChange time.Time,
-	inflation sdk.Dec, hourlyProvisions sdk.Int) Minter {
+func NewMinter(lastUpdate time.Time, inflation sdk.Dec,
+	annualProvisions sdk.Int) Minter {
 
 	return Minter{
-		LastInflation:       lastInflation,
-		LastInflationChange: lastInflationChange,
-		Inflation:           inflation,
-		HourlyProvisions:    hourlyProvisions,
+		LastUpdate:       lastUpdate,
+		Inflation:        inflation,
+		AnnualProvisions: annualProvisions,
 	}
 }
 
@@ -31,8 +29,7 @@ func NewMinter(lastInflation, lastInflationChange time.Time,
 func InitialMinter(inflation sdk.Dec) Minter {
 	return NewMinter(
 		time.Unix(0, 0),
-		time.Unix(0, 0),
-		sdk.NewDecWithPrec(13, 2),
+		inflation,
 		sdk.NewInt(0),
 	)
 }
@@ -59,7 +56,8 @@ func validateMinter(minter Minter) error {
 var hrsPerYr = sdk.NewDec(8766) // as defined by a julian year of 365.25 days
 
 // get the new inflation rate for the next hour
-func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
+func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
+	inflation sdk.Dec) {
 
 	// The target annual inflation rate is recalculated for each previsions cycle. The
 	// inflation is also subject to a rate change (positive or negative) depending on
@@ -85,22 +83,18 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation
 	return inflation
 }
 
-// Rather than calculating the relative amount of inflation for each block
-// the provisions are calculated once per hour and further divided up each
-// block based on this hour value.
-func (m Minter) NextHourlyProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Int) {
+// calculate the annual provisions based on current total supply and inflation rate
+func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Int) {
 	provisionsDec := m.Inflation.Mul(totalSupply).Quo(hrsPerYr)
 	return provisionsDec.TruncateInt()
 }
 
-// process provisions for the period since the last inflation
-// based as a portion of the saved hourly provision
-func (m Minter) NextProvision(params Params, blockTime time.Time) sdk.Coin {
+// process provisions for a block based on average
+// param block creation rate from provisions
+func (m Minter) BlockProvision(params Params) sdk.Coin {
 
-	dur := blockTime.Sub(m.LastInflation).Nanoseconds()
-	provisionAmt := m.HourlyProvisions.
-		MulRaw(dur).
-		DivRaw(time.Hour.Nanoseconds())
+	provisionAmt := m.AnnualProvisions.
+		DivRaw(params.BlocksPerYear)
 
 	provision := sdk.NewCoin(params.MintDenom, provisionAmt)
 	return provision

@@ -1,6 +1,4 @@
-# Gaia client
-
-## Gaia CLI
+# Gaia CLI
 
 ::: tip Note
 If you receive this error message:
@@ -14,9 +12,9 @@ you must choose whether you wish to verify lite client proofs. If you trust the 
 
 `gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets. Here is a list of useful `gaiacli` commands, including usage examples.
 
-### Keys
+## Keys
 
-#### Key Types
+### Key Types
 
 There are three types of key representations that are used:
 
@@ -36,7 +34,7 @@ There are three types of key representations that are used:
   - Get this value with `gaiad tendermint show-validator`
   - e.g. `cosmosvalconspub1zcjduepq0ms2738680y72v44tfyqm3c9ppduku8fs6sr73fx7m666sjztznqzp2emf`
 
-#### Generate Keys
+### Generate Keys
 
 You'll need an account private and public key pair \(a.k.a. `sk, pk` respectively\) to be able to receive funds, send txs, bond tx, etc.
 
@@ -78,7 +76,7 @@ Note that this is the Tendermint signing key, *not* the operator key you will us
 We strongly recommend _NOT_ using the same passphrase for multiple keys. The Tendermint team and the Interchain Foundation will not be responsible for the loss of funds.
 :::
 
-#### Multisig public keys
+### Multisig public keys
 
 You can generate and print a multisig public key by typing:
 
@@ -88,13 +86,13 @@ gaiacli show --multisig-threshold K name1 name2 name3 [...]
 
 `K` is the minimum weight, e.g. minimum number of private keys that must have signed the transactions that carry the generated public key.
 
-### Account
+## Account
 
-#### Get Tokens
+### Get Tokens
 
 The best way to get tokens is from the [Cosmos Testnet Faucet](https://faucetcosmos.network). If the faucet is not working for you, try asking [#cosmos-validators](https://riot.im/app/#/room/#cosmos-validators:matrix.org). The faucet needs the `cosmos` from the account you wish to use for staking.
 
-#### Query Account balance
+### Query Account
 
 After receiving tokens to your address, you can view your account's balance by typing:
 
@@ -107,9 +105,9 @@ When you query an account balance with zero tokens, you will get this error: `No
 
 :::
 
-### Send Tokens
+## Send Tokens
 
-The following command could be used to send coins from one account to another:
+The following command can be used to send coins from one account to another:
 
 ```bash
 gaiacli tx send \
@@ -185,17 +183,17 @@ You can broadcast the signed transaction to a node by providing the JSON file to
 gaiacli tx broadcast --node=<node> signedSendTx.json
 ```
 
-### Staking
+## Staking
 
-#### Set up a Validator
+### Setup a Validator
 
 Please refer to the [Validator Setup](../validators/validator-setup.md) section for a more complete guide on how to set up a validator-candidate.
 
-#### Delegate to a Validator
+### Delegate to a Validator
 
 On the upcoming mainnet, you can delegate `atom` to a validator. These [delegators](/resources/delegators-faq) can receive part of the validator's fee revenue. Read more about the [Cosmos Token Model](https://github.com/cosmos/cosmos/raw/master/Cosmos_Token_Model.pdf).
 
-##### Query Validators
+#### Query Validators
 
 You can query the list of all validators of a specific chain:
 
@@ -209,7 +207,7 @@ If you want to get the information of a single validator you can check it with:
 gaiacli query stake validator <account_cosmosval>
 ```
 
-#### Bond Tokens
+### Bond Tokens
 
 On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond tokens to a testnet validator (*i.e.* delegate):
 
@@ -232,10 +230,10 @@ where `[name]` is the name of the key you specified when you initialized `gaiad`
 While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
 
 ::: tip Note
-Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
+Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucet.cosmos.network/)!
 :::
 
-##### Query Delegations
+#### Query Delegations
 
 Once submitted a delegation to a validator, you can see it's information by using the following command:
 
@@ -253,7 +251,7 @@ gaiacli query stake delegations <account_cosmos>
 
 You can also get previous delegation(s) status by adding the `--height` flag.
 
-#### Unbond Tokens
+### Unbond Tokens
 
 If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-fraction` (eg:`0.25`) with the corresponding flags.
 
@@ -267,7 +265,7 @@ gaiacli tx stake unbond \
 
 The unbonding will be automatically completed when the unbonding period has passed.
 
-##### Query Unbonding-Delegations
+#### Query Unbonding-Delegations
 
 Once you begin an unbonding-delegation, you can see it's information by using the following command:
 
@@ -291,7 +289,7 @@ Additionally, as you can get all the unbonding-delegations from a particular val
 
 To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
 
-#### Redelegate Tokens
+### Redelegate Tokens
 
 A redelegation is a type delegation that allows you to bond illiquid tokens from one validator to another:
 
@@ -308,7 +306,7 @@ Here you can also redelegate a specific `shares-amount` or a  `shares-fraction` 
 
 The redelegation will be automatically completed when the unbonding period has passed.
 
-##### Query Redelegations
+#### Query Redelegations
 
 Once you begin an redelegation, you can see it's information by using the following command:
 
@@ -333,7 +331,7 @@ Additionally, as you can get all the outgoing redelegations from a particular va
 
 To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
 
-#### Query Parameters
+### Query Parameters
 
 Parameters define high level settings for staking. You can get the current values by using:
 
@@ -349,7 +347,7 @@ With the above command you will get the values for:
 
 All these values will be subject to updates though a `governance` process by `ParameterChange` proposals.
 
-#### Query Pool
+### Query Pool
 
 A staking `Pool` defines the dynamic parameters of the current state. You can query them with the following command:
 
@@ -364,14 +362,14 @@ With the `pool` command you will get the values for:
 - Current anual inflation and the block in which the last inflation was processed
 - Last recorded bonded shares
 
-##### Query Delegations To Validator
+#### Query Delegations To Validator
 
 You can also query all of the delegations to a particular validator:
 ```bash
   gaiacli query delegations-to <account_cosmosval>
 ```
 
-### Governance
+## Governance
 
 Governance is the process from which users in the Cosmos Hub can come to consensus on software upgrades, parameters of the mainnet or on custom text proposals. This is done through voting on proposals, which will be submitted by `Atom` holders on the mainnet.
 
@@ -386,7 +384,7 @@ Some considerations about the voting process:
 
 For more information about the governance process and how it works, please check out the Governance module [specification](./../spec/governance).
 
-#### Create a Governance proposal
+### Create a Governance proposal
 
 In order to create a governance proposal, you must submit an initial deposit along with the proposal details:
 
@@ -404,7 +402,7 @@ gaiacli tx gov submit-proposal \
   --chain-id=<chain_id>
 ```
 
-##### Query proposals
+#### Query proposals
 
 Once created, you can now query information of the proposal:
 
@@ -420,7 +418,7 @@ gaiacli query gov proposals
 
 You can also query proposals filtered by `voter` or `depositer` by using the corresponding flags.
 
-#### Increase deposit
+### Increase deposit
 
 In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
@@ -434,7 +432,7 @@ gaiacli tx gov deposit \
 
 > _NOTE_: Proposals that don't meet this requirement will be deleted after `MaxDepositPeriod` is reached.
 
-##### Query deposits
+#### Query deposits
 
 Once a new proposal is created, you can query all the deposits submitted to it:
 
@@ -450,7 +448,7 @@ gaiacli query gov deposit \
   --depositer=<account_cosmos>
 ```
 
-#### Vote on a proposal
+### Vote on a proposal
 
 After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded `Atom` holders can then cast vote on it:
 
@@ -462,7 +460,7 @@ gaiacli tx gov vote \
   --chain-id=<chain_id>
 ```
 
-##### Query votes
+#### Query votes
 
 Check the vote with the option you just submitted:
 
@@ -478,7 +476,7 @@ You can also get all the previous votes submitted to the proposal with:
 gaiacli query gov votes --proposal-id=<proposal_id>
 ```
 
-#### Query proposal tally results
+### Query proposal tally results
 
 To check the current tally of a given proposal you can use the `tally` command:
 

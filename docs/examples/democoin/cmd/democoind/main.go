@@ -30,7 +30,6 @@ const (
 	flagClientHome = "home-client"
 )
 
-
 // coolGenAppParams sets up the app_state and appends the cool app state
 func CoolAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
 	appState json.RawMessage, err error) {

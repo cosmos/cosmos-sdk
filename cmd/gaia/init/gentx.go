@@ -3,6 +3,7 @@ package init
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -58,6 +59,14 @@ following delegation and commission default parameters:
 			}
 			genDoc, err := loadGenesisDoc(cdc, config.GenesisFile())
 			if err != nil {
+				return err
+			}
+
+			kb, err := keys.GetKeyBaseFromDir(viper.GetString(flagClientHome))
+			if err != nil {
+				return err
+			}
+			if _, err = kb.Get(viper.GetString(client.FlagName)); err != nil {
 				return err
 			}
 

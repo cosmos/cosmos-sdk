@@ -100,7 +100,7 @@ func main() {
 // registerRoutes registers the routes from the different modules for the LCD.
 // NOTE: details on the routes added for each module are in the module documentation
 // NOTE: If making updates here you also need to update the test helper in client/lcd/test_helper.go
-func registerRoutes(rs lcd.RestServer) {
+func registerRoutes(rs *lcd.RestServer) {
 	registerSwaggerUI(rs)
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
@@ -112,7 +112,7 @@ func registerRoutes(rs lcd.RestServer) {
 	gov.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
-func registerSwaggerUI(rs lcd.RestServer) {
+func registerSwaggerUI(rs *lcd.RestServer) {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)

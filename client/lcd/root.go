@@ -34,7 +34,7 @@ type RestServer struct {
 }
 
 // NewRestServer creates a new rest server instance
-func NewRestServer(cdc *codec.Codec) RestServer {
+func NewRestServer(cdc *codec.Codec) *RestServer {
 	r := mux.NewRouter()
 	cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -44,7 +44,7 @@ func NewRestServer(cdc *codec.Codec) RestServer {
 
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 
-	return RestServer{
+	return &RestServer{
 		Mux:    r,
 		CliCtx: cliCtx,
 		Cdc:    cdc,
@@ -53,7 +53,14 @@ func NewRestServer(cdc *codec.Codec) RestServer {
 	}
 }
 
-func (rs RestServer) setKeybase() {
+func (rs *RestServer) setKeybase(kb keybase.Keybase) {
+	// If a keybase is passed in, set it and return
+	if kb != nil {
+		rs.KeyBase = kb
+		return
+	}
+
+	// Otherwise get the keybase and set it
 	kb, err := keys.GetKeyBase() //XXX
 	if err != nil {
 		fmt.Printf("Failed to open Keybase: %s, exiting...", err)
@@ -63,7 +70,7 @@ func (rs RestServer) setKeybase() {
 }
 
 // Start starts the rest server
-func (rs RestServer) Start(listenAddr string, sslHosts string,
+func (rs *RestServer) Start(listenAddr string, sslHosts string,
 	certFile string, keyFile string, maxOpen int, insecure bool) (err error) {
 
 	server.TrapSignal(func() {
@@ -132,12 +139,12 @@ func (rs RestServer) Start(listenAddr string, sslHosts string,
 // ServeCommand will generate a long-running rest server
 // (aka Light Client Daemon) that exposes functionality similar
 // to the cli, but over rest
-func (rs RestServer) ServeCommand() *cobra.Command {
+func (rs *RestServer) ServeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server",
 		Short: "Start LCD (light-client daemon), a local REST server",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			rs.setKeybase()
+			rs.setKeybase(nil)
 			// Start the rest server and return error if one exists
 			err = rs.Start(
 				viper.GetString(client.FlagListenAddr),
@@ -156,7 +163,7 @@ func (rs RestServer) ServeCommand() *cobra.Command {
 	return cmd
 }
 
-func (rs RestServer) registerSwaggerUI() {
+func (rs *RestServer) registerSwaggerUI() {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(err)

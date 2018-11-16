@@ -111,6 +111,13 @@ func GetKeyBase(t *testing.T) crkeys.Keybase {
 	return keybase
 }
 
+// GetTestKeyBase fetches the current testing keybase
+func GetTestKeyBase(t *testing.T) crkeys.Keybase {
+	keybase, err := keys.GetKeyBaseWithWritePerm()
+	require.NoError(t, err)
+	return keybase
+}
+
 // CreateAddr adds an address to the key store and returns an address and seed.
 // It also requires that the key could be created.
 func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.AccAddress, string) {
@@ -296,7 +303,7 @@ func InitializeTestLCD(
 	require.NoError(t, err)
 
 	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
-	lcd, err := startLCD(logger, listenAddr, cdc)
+	lcd, err := startLCD(logger, listenAddr, cdc, t)
 	require.NoError(t, err)
 
 	tests.WaitForLCDStart(port)
@@ -355,14 +362,15 @@ func startTM(
 // startLCD starts the LCD.
 //
 // NOTE: This causes the thread to block.
-func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec) (net.Listener, error) {
+func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
+	rs.setKeybase(GetTestKeyBase(t))
 	registerRoutes(rs)
 	return tmrpc.StartHTTPServer(listenAddr, rs.Mux, logger, tmrpc.Config{})
 }
 
 // NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go
-func registerRoutes(rs RestServer) {
+func registerRoutes(rs *RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)

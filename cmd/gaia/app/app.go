@@ -210,6 +210,8 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 	tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
 
+	app.assertRuntimeInvariants()
+
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
@@ -322,6 +324,11 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	}
 	validators = stake.WriteValidators(ctx, app.stakeKeeper)
 	return appState, validators, nil
+}
+
+// load a particular height
+func (app *GaiaApp) LoadHeight(height int64) error {
+	return app.LoadVersion(height, app.keyMain)
 }
 
 //______________________________________________________________________________________________

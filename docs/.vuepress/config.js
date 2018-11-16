@@ -15,7 +15,7 @@ module.exports = {
         title: "Overview",
         collapsable: false,
         children: [
-          "/intro/README",
+          "/intro/",
           "/intro/sdk-app-architecture",
           "/intro/ocap"
         ]
@@ -26,24 +26,25 @@ module.exports = {
         children: [
           "/gaia/installation",
           "/gaia/join-testnet",
-          "/gaia/networks",
+          "/gaia/validators/validator-setup",
           "/gaia/validators/overview",
           "/gaia/validators/security",
           "/gaia/validators/validator-faq",
-          "/gaia/validators/validator-setup",
-          "/gaia/ledger"
+          "/gaia/networks",
+          "/gaia/ledger",
+          "/gaia/gaiacli"
         ]
       },
       {
         title: "Clients",
         collapsable: false,
         children: [
-      	  "/clients/README",
-      	  "/lite/", // this renders the readme
-      	  "/lite/getting_started",
-      	  "/lite/specification",
+      	  "/clients/",
           "/clients/cli",
-          "/clients/service-providers"
+          "/clients/service-providers",
+      	  "/clients/lite/", // this renders the readme
+      	  "/clients/lite/getting_started",
+      	  "/clients/lite/specification"
       	]
       }
     ]

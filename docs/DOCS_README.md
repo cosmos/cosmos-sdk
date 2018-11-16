@@ -19,6 +19,10 @@ Besides, gaia-lite API docs are also provided by gaia-lite. The default API docs
 https://localhost:1317/swagger-ui/
 ```
 
+### Updating the Documentation
+
+Please read the `Updating Documentation` section in [`CONTRIBUTING.md` document](../CONTRIBUTING.MD#updating-documentation) before making any changes.
+
 ### How It Works
 
 There is a Jenkins job listening for changes in the `/docs` directory, on both

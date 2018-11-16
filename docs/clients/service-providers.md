@@ -1,4 +1,4 @@
-# Integrate a Cosmos-SDK based blockchain as a Service Provider
+# Service Providers
 
 We define 'service providers' as entities providing services for end-users that involve some form of interaction with a Cosmos-SDK based blockchain (this includes the Cosmos Hub). More specifically, this document will be focused around interactions with tokens.
 

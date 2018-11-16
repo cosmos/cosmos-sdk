@@ -13,6 +13,8 @@ BREAKING CHANGES
 
 * SDK
   * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.
+  * [\#2019](https://github.com/cosmos/cosmos-sdk/issues/2019) Cap total number of signatures. Current per-transaction limit is 7, and if that is exceeded transaction is rejected.
+  * [\#2801](https://github.com/cosmos/cosmos-sdk/pull/2801) Remove AppInit structure.
 
 * Tendermint
 
@@ -27,10 +29,13 @@ FEATURES
   * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance
     parameter query commands.
   * [stake][cli] [\#2027] Add CLI query command for getting all delegations to a specific validator.
-    
+
 * Gaia
+  * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
   * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Implemented querier
   for getting governance parameters.
+  * [app] \#2663 - Runtime-assertable invariants
+  * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
 
 * SDK
   * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
@@ -49,7 +54,7 @@ IMPROVEMENTS
 * Gaia
  - #2773 Require moniker to be provided on `gaiad init`.
  - #2672 [Makefile] Updated for better Windows compatibility and ledger support logic, get_tools was rewritten as a cross-compatible Makefile.
-
+ - [#110](https://github.com/tendermint/devops/issues/110) Updated CircleCI job to trigger website build when cosmos docs are updated.
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
 
@@ -68,7 +73,7 @@ BUG FIXES
   * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override
 
 * SDK
-  
+
   - \#2733 [x/gov, x/mock/simulation] Fix governance simulation, update x/gov import/export
 
 * Tendermint

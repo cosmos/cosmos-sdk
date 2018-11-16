@@ -1,11 +1,9 @@
 # Begin-Block
 
-## Inflation 
-
-Inflation occurs at the beginning of each block, however inflation parameters
+Inflation occurs at the beginning of each block, however minting parameters
 are only calculated once per hour.
 
-### NextInflationRate
+## NextInflationRate
 
 The target annual inflation rate is recalculated at the first block of each new
 hour. The inflation is also subject to a rate change (positive or negative)
@@ -13,6 +11,7 @@ depending on the distance from the desired ratio (67%). The maximum rate change
 possible is defined to be 13% per year, however the annual inflation is capped
 as between 7% and 20%.
 
+```
 NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 	inflationRateChangePerYear = (1 - bondedRatio/params.GoalBonded) * params.InflationRateChange
 	inflationRateChange = inflationRateChangePerYear/hrsPerYr
@@ -27,11 +26,26 @@ NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 	}
 
 	return inflation
+```
 
-### NextHourlyProvisions
+## NextAnnualProvisions
 
-Rather than directly using the inflation rate to calculate minted tokens for each block, 
-the minted tokens is calculated once per hour, and then applied to each _________________________________________________________
+Calculate the annual provisions based on current total supply and inflation
+rate. This parameter is calculated once per block. 
 
-the provisions are calculated once per hour and further divided up each block based
-on this hour value.
+```
+NextAnnualProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Int) {
+	provisionsDec = Inflation * totalSupply
+	return provisionsDec.Truncate()
+```
+
+## BlockProvision
+
+Calculate the provisions generated for each block based on current 
+annual provisions 
+
+```
+BlockProvision(params Params) sdk.Coin {
+	provisionAmt = AnnualProvisions/ params.BlocksPerYear
+	return sdk.NewCoin(params.MintDenom, provisionAmt)
+```

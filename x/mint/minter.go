@@ -84,18 +84,15 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 }
 
 // calculate the annual provisions based on current total supply and inflation rate
-func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Int) {
-	provisionsDec := m.Inflation.Mul(totalSupply).Quo(hrsPerYr)
+func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Dec) (
+	provisions sdk.Int) {
+
+	provisionsDec := m.Inflation.MulInt(totalSupply)
 	return provisionsDec.TruncateInt()
 }
 
-// process provisions for a block based on average
-// param block creation rate from provisions
+// get the provisions for a block based on the annual provisions rate
 func (m Minter) BlockProvision(params Params) sdk.Coin {
-
-	provisionAmt := m.AnnualProvisions.
-		DivRaw(params.BlocksPerYear)
-
-	provision := sdk.NewCoin(params.MintDenom, provisionAmt)
-	return provision
+	provisionAmt := m.AnnualProvisions.DivRaw(params.BlocksPerYear)
+	return sdk.NewCoin(params.MintDenom, provisionAmt)
 }

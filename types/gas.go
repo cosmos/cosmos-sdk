@@ -25,6 +25,12 @@ type ErrorOutOfGas struct {
 	Descriptor string
 }
 
+// ErrorGasOverflow defines an error thrown when an action results gas consumption
+// unsigned integer overflow.
+type ErrorGasOverflow struct {
+	Descriptor string
+}
+
 // GasMeter interface to track gas consumption
 type GasMeter interface {
 	GasConsumed() Gas
@@ -49,7 +55,13 @@ func (g *basicGasMeter) GasConsumed() Gas {
 }
 
 func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
-	g.consumed += amount
+	var overflow bool
+
+	g.consumed, overflow = AddUint64Overflow(g.consumed, amount)
+	if overflow {
+		panic(ErrorGasOverflow{descriptor})
+	}
+
 	if g.consumed > g.limit {
 		panic(ErrorOutOfGas{descriptor})
 	}
@@ -71,7 +83,12 @@ func (g *infiniteGasMeter) GasConsumed() Gas {
 }
 
 func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
-	g.consumed += amount
+	var overflow bool
+
+	g.consumed, overflow = AddUint64Overflow(g.consumed, amount)
+	if overflow {
+		panic(ErrorGasOverflow{descriptor})
+	}
 }
 
 // GasConfig defines gas cost for each operation on KVStores

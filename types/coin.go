@@ -75,7 +75,8 @@ func (coin Coin) Plus(coinB Coin) Coin {
 	return Coin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
-// Subtracts amounts of two coins with same denom.
+// Subtracts amounts of two coins with same denom. If the coins differ in denom
+// then the receiving coin is returned.
 func (coin Coin) Minus(coinB Coin) Coin {
 	if !coin.SameDenomAs(coinB) {
 		return coin

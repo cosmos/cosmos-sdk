@@ -4,7 +4,10 @@ package types
 type Result struct {
 
 	// Code is the response code, is stored back on the chain.
-	Code ABCICodeType
+	Code CodeType
+
+	// Codespace is the string referring to the domain of an error
+	Codespace CodespaceType
 
 	// Data is any data returned from the app.
 	Data []byte

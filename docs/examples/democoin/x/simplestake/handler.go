@@ -22,12 +22,12 @@ func handleMsgBond() sdk.Result {
 	// Removed ValidatorSet from result because it does not get used.
 	// TODO: Implement correct bond/unbond handling
 	return sdk.Result{
-		Code: sdk.ABCICodeOK,
+		Code: sdk.CodeOK,
 	}
 }
 
 func handleMsgUnbond() sdk.Result {
 	return sdk.Result{
-		Code: sdk.ABCICodeOK,
+		Code: sdk.CodeOK,
 	}
 }

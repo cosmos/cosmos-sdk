@@ -94,7 +94,7 @@ func (keeper Keeper) Handle(h Handler, ctx sdk.Context, o Msg, codespace sdk.Cod
 		err := h(cctx, payload)
 		if err != nil {
 			return sdk.Result{
-				Code: sdk.ABCICodeOK,
+				Code: sdk.CodeOK,
 				Log:  err.ABCILog(),
 			}
 		}

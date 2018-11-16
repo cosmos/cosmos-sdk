@@ -3,6 +3,7 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [gaia-lite] [\#2819](https://github.com/cosmos/cosmos-sdk/pull/2819) Txs query param format is now: `/txs?tag=value` (removed '' wrapping the query parameter `value`)
 
 * Gaia CLI  (`gaiacli`)
   * [cli] [\#2728](https://github.com/cosmos/cosmos-sdk/pull/2728) Seperate `tx` and `query` subcommands by module
@@ -48,6 +49,7 @@ FEATURES
 IMPROVEMENTS
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [gaia-lite] [\#2819](https://github.com/cosmos/cosmos-sdk/pull/2819) Tx search now supports multiple tags as query parameters
 
 * Gaia CLI  (`gaiacli`)
   * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet

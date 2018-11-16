@@ -281,8 +281,8 @@ func TestCoins(t *testing.T) {
 	}
 
 	assert.True(t, good.IsValid(), "Coins are valid")
-	assert.True(t, good.isPositive(), "Expected coins to be positive: %v", good)
-	assert.False(t, null.isPositive(), "Expected coins to not be positive: %v", null)
+	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
+	assert.False(t, null.IsPositive(), "Expected coins to not be positive: %v", null)
 	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
 	assert.False(t, good.IsAllLT(empty), "Expected %v to be < %v", good, empty)
 	assert.True(t, empty.IsAllLT(good), "Expected %v to be < %v", empty, good)
@@ -459,11 +459,11 @@ func TestAmountOf(t *testing.T) {
 
 	cases := []struct {
 		coins           Coins
-		amountOf        uint64
-		amountOfSpace   uint64
-		amountOfGAS     uint64
-		amountOfMINERAL uint64
-		amountOfTREE    uint64
+		amountOf        int64
+		amountOfSpace   int64
+		amountOfGAS     int64
+		amountOfMINERAL int64
+		amountOfTREE    int64
 	}{
 		{case0, 0, 0, 0, 0, 0},
 		{case1, 0, 0, 0, 0, 0},
@@ -477,10 +477,10 @@ func TestAmountOf(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		assert.Equal(t, NewUint(tc.amountOf), tc.coins.AmountOf(""))
-		assert.Equal(t, NewUint(tc.amountOfSpace), tc.coins.AmountOf(" "))
-		assert.Equal(t, NewUint(tc.amountOfGAS), tc.coins.AmountOf("GAS"))
-		assert.Equal(t, NewUint(tc.amountOfMINERAL), tc.coins.AmountOf("MINERAL"))
-		assert.Equal(t, NewUint(tc.amountOfTREE), tc.coins.AmountOf("TREE"))
+		assert.Equal(t, NewInt(tc.amountOf), tc.coins.AmountOf(""))
+		assert.Equal(t, NewInt(tc.amountOfSpace), tc.coins.AmountOf(" "))
+		assert.Equal(t, NewInt(tc.amountOfGAS), tc.coins.AmountOf("GAS"))
+		assert.Equal(t, NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("MINERAL"))
+		assert.Equal(t, NewInt(tc.amountOfTREE), tc.coins.AmountOf("TREE"))
 	}
 }

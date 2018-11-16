@@ -93,20 +93,24 @@ func (coin Coin) Minus(coinB Coin) Coin {
 	}
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
-	if !res.isNotNegative() {
+	if !res.IsNotNegative() {
 		panic("negative count amount")
 	}
 
 	return res
 }
 
-// isPositive returns true if coin amount is positive.
-func (coin Coin) isPositive() bool {
+// IsPositive returns true if coin amount is positive.
+//
+// TODO: Remove once unsigned integers are used.
+func (coin Coin) IsPositive() bool {
 	return (coin.Amount.Sign() == 1)
 }
 
-// isNotNegative returns true if coin amount is not negative and false otherwise.
-func (coin Coin) isNotNegative() bool {
+// IsNotNegative returns true if coin amount is not negative and false otherwise.
+//
+// TODO: Remove once unsigned integers are used.
+func (coin Coin) IsNotNegative() bool {
 	return (coin.Amount.Sign() != -1)
 }
 
@@ -114,9 +118,6 @@ func (coin Coin) isNotNegative() bool {
 // Coins
 
 // Coins is a set of Coin, one per currency
-//
-// TODO: Support a deterministic map instead of a slice and use unsigned
-// integers.
 type Coins []Coin
 
 func (coins Coins) String() string {
@@ -137,7 +138,7 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		return coins[0].isPositive()
+		return coins[0].IsPositive()
 	default:
 		lowDenom := coins[0].Denom
 
@@ -145,7 +146,7 @@ func (coins Coins) IsValid() bool {
 			if coin.Denom <= lowDenom {
 				return false
 			}
-			if !coin.isPositive() {
+			if !coin.IsPositive() {
 				return false
 			}
 
@@ -253,7 +254,7 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 // negative coin amount was returned.
 func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
 	diff := coins.safePlus(coinsB.negative())
-	return diff, !diff.isNotNegative()
+	return diff, !diff.IsNotNegative()
 }
 
 // IsAllGT returns true iff for every denom in coins, the denom is present at a
@@ -264,7 +265,7 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 		return false
 	}
 
-	return diff.isPositive()
+	return diff.IsPositive()
 }
 
 // IsAllGTE returns true iff for every denom in coins, the denom is present at
@@ -278,7 +279,7 @@ func (coins Coins) IsAllGTE(coinsB Coins) bool {
 		return true
 	}
 
-	return diff.isNotNegative()
+	return diff.IsNotNegative()
 }
 
 // IsAllLT returns True iff for every denom in coins, the denom is present at
@@ -327,17 +328,17 @@ func (coins Coins) Empty() bool {
 }
 
 // Returns the amount of a denom from coins
-func (coins Coins) AmountOf(denom string) Uint {
+func (coins Coins) AmountOf(denom string) Int {
 	switch len(coins) {
 	case 0:
-		return ZeroUint()
+		return ZeroInt()
 
 	case 1:
 		coin := coins[0]
 		if coin.Denom == denom {
-			return NewUintFromBigInt(coin.Amount.BigInt())
+			return coin.Amount
 		}
-		return ZeroUint()
+		return ZeroInt()
 
 	default:
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
@@ -346,14 +347,52 @@ func (coins Coins) AmountOf(denom string) Uint {
 		if denom < coin.Denom {
 			return coins[:midIdx].AmountOf(denom)
 		} else if denom == coin.Denom {
-			return NewUintFromBigInt(coin.Amount.BigInt())
+			return coin.Amount
 		} else {
 			return coins[midIdx+1:].AmountOf(denom)
 		}
 	}
 }
 
+// IsPositive returns true if there is at least one coin and all currencies
+// have a positive value.
+//
+// TODO: Remove once unsigned integers are used.
+func (coins Coins) IsPositive() bool {
+	if len(coins) == 0 {
+		return false
+	}
+
+	for _, coin := range coins {
+		if !coin.IsPositive() {
+			return false
+		}
+	}
+
+	return true
+}
+
+// IsNotNegative returns true if there is no coin amount with a negative value
+// (even no coins is true here).
+//
+// TODO: Remove once unsigned integers are used.
+func (coins Coins) IsNotNegative() bool {
+	if len(coins) == 0 {
+		return true
+	}
+
+	for _, coin := range coins {
+		if !coin.IsNotNegative() {
+			return false
+		}
+	}
+
+	return true
+}
+
 // negative returns a set of coins with all amount negative.
+//
+// TODO: Remove once unsigned integers are used.
 func (coins Coins) negative() Coins {
 	res := make([]Coin, 0, len(coins))
 
@@ -365,38 +404,6 @@ func (coins Coins) negative() Coins {
 	}
 
 	return res
-}
-
-// isPositive returns true if there is at least one coin and all currencies
-// have a positive value.
-func (coins Coins) isPositive() bool {
-	if len(coins) == 0 {
-		return false
-	}
-
-	for _, coin := range coins {
-		if !coin.isPositive() {
-			return false
-		}
-	}
-
-	return true
-}
-
-// isNotNegative returns true if there is no coin amount with a negative value
-// (even no coins is true here).
-func (coins Coins) isNotNegative() bool {
-	if len(coins) == 0 {
-		return true
-	}
-
-	for _, coin := range coins {
-		if !coin.isNotNegative() {
-			return false
-		}
-	}
-
-	return true
 }
 
 // removeZeroCoins removes all zero coins from the given coin set in-place.

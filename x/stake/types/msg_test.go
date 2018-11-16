@@ -12,7 +12,6 @@ import (
 var (
 	coinPos  = sdk.NewInt64Coin(DefaultBondDenom, 1000)
 	coinZero = sdk.NewInt64Coin(DefaultBondDenom, 0)
-	coinNeg  = sdk.NewInt64Coin(DefaultBondDenom, -10000)
 )
 
 // test ValidateBasic for MsgCreateValidator
@@ -34,8 +33,6 @@ func TestMsgCreateValidator(t *testing.T) {
 		{"empty address", "a", "b", "c", "d", commission2, emptyAddr, pk1, coinPos, false},
 		{"empty pubkey", "a", "b", "c", "d", commission1, addr1, emptyPubkey, coinPos, true},
 		{"empty bond", "a", "b", "c", "d", commission2, addr1, pk1, coinZero, false},
-		{"negative bond", "a", "b", "c", "d", commission2, addr1, pk1, coinNeg, false},
-		{"negative bond", "a", "b", "c", "d", commission1, addr1, pk1, coinNeg, false},
 	}
 
 	for _, tc := range tests {
@@ -96,8 +93,6 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 		{"empty validator address", "a", "b", "c", "d", commission2, sdk.AccAddress(addr1), emptyAddr, pk2, coinPos, false},
 		{"empty pubkey", "a", "b", "c", "d", commission1, sdk.AccAddress(addr1), addr2, emptyPubkey, coinPos, true},
 		{"empty bond", "a", "b", "c", "d", commission2, sdk.AccAddress(addr1), addr2, pk2, coinZero, false},
-		{"negative bond", "a", "b", "c", "d", commission1, sdk.AccAddress(addr1), addr2, pk2, coinNeg, false},
-		{"negative bond", "a", "b", "c", "d", commission2, sdk.AccAddress(addr1), addr2, pk2, coinNeg, false},
 	}
 
 	for _, tc := range tests {
@@ -136,7 +131,6 @@ func TestMsgDelegate(t *testing.T) {
 		{"empty delegator", sdk.AccAddress(emptyAddr), addr1, coinPos, false},
 		{"empty validator", sdk.AccAddress(addr1), emptyAddr, coinPos, false},
 		{"empty bond", sdk.AccAddress(addr1), addr2, coinZero, false},
-		{"negative bond", sdk.AccAddress(addr1), addr2, coinNeg, false},
 	}
 
 	for _, tc := range tests {

@@ -42,7 +42,7 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 
 // get cmd to initialize all files for tendermint and application
 // nolint
-func InitCmd(ctx *server.Context, cdc *codec.Codec, appInit server.AppInit) *cobra.Command {
+func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",

@@ -98,11 +98,6 @@ The `simplegovd` command will run the daemon server as a background process. Fir
 
 ```go
 //  cmd/simplegovd/main.go
-// SimpleGovAppInit initial parameters
-var SimpleGovAppInit = server.AppInit{
-    AppGenState: SimpleGovAppGenState,
-    AppGenTx:    server.SimpleAppGenTx,
-}
 
 // SimpleGovAppGenState sets up the app_state and appends the simpleGov app state
 func SimpleGovAppGenState(cdc *codec.Codec, appGenTxs []json.RawMessage) (appState json.RawMessage, err error) {
@@ -137,7 +132,7 @@ func main() {
         PersistentPreRunE: server.PersistentPreRunEFn(ctx),
     }
 
-    server.AddCommands(ctx, cdc, rootCmd, SimpleGovAppInit,
+    server.AddCommands(ctx, cdc, rootCmd,
         server.ConstructAppCreator(newApp, "simplegov"),
         server.ConstructAppExporter(exportAppState, "simplegov"))
 

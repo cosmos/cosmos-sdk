@@ -19,7 +19,6 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 
 // GetQueryCmd returns the cli query commands for this module
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
-	// Return a hidden command to staisfy the interface, but not polute the cli
 	return &cobra.Command{Hidden: true}
 }
 

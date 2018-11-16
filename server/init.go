@@ -15,13 +15,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-// Core functionality passed from the application to the server init command
-type AppInit struct {
-	// AppGenState creates the core parameters initialization. It takes in a
-	// pubkey meant to represent the pubkey of the validator of this machine.
-	AppGenState func(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
-		appState json.RawMessage, err error)
-}
 
 // SimpleGenTx is a simple genesis tx
 type SimpleGenTx struct {
@@ -30,10 +23,6 @@ type SimpleGenTx struct {
 
 //_____________________________________________________________________
 
-// simple default application init
-var DefaultAppInit = AppInit{
-	AppGenState: SimpleAppGenState,
-}
 
 // Generate a genesis transaction
 func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (

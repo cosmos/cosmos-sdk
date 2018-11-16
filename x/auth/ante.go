@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
@@ -17,6 +19,8 @@ const (
 	maxMemoCharacters           = 100
 	// how much gas = 1 atom
 	gasPerUnitCost = 1000
+	// max total number of sigs per tx
+	txSigLimit = 7
 )
 
 // NewAnteHandler returns an AnteHandler that checks
@@ -73,6 +77,16 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// stdSigs contains the sequence number, account number, and signatures
 		stdSigs := stdTx.GetSignatures() // When simulating, this would just be a 0-length slice.
 		signerAddrs := stdTx.GetSigners()
+
+		sigCount := 0
+		for i := 0; i < len(stdSigs); i++ {
+			sigCount += countSubKeys(stdSigs[i].PubKey)
+			if sigCount > txSigLimit {
+				return newCtx, sdk.ErrTooManySignatures(fmt.Sprintf(
+					"signatures: %d, limit: %d", sigCount, txSigLimit),
+				).Result(), true
+			}
+		}
 
 		// create the list of all sign bytes
 		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, stdSigs)
@@ -307,4 +321,16 @@ func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (sign
 			stdTx.Fee, stdTx.Msgs, stdTx.Memo)
 	}
 	return
+}
+
+func countSubKeys(pub crypto.PubKey) int {
+	v, ok := pub.(*multisig.PubKeyMultisigThreshold)
+	if !ok {
+		return 1
+	}
+	nkeys := 0
+	for _, subkey := range v.PubKeys {
+		nkeys += countSubKeys(subkey)
+	}
+	return nkeys
 }

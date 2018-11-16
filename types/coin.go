@@ -20,19 +20,27 @@ type Coin struct {
 
 	// To allow the use of unsigned integers (see: #1273) a larger refactor will
 	// need to be made. So we use signed integers for now with safety measures in
-	// place preventing negative values being returned.
+	// place preventing negative values being used.
 	Amount Int `json:"amount"`
 }
 
-func NewCoin(denom string, amount Uint) Coin {
+// NewCoin returns a new coin with a denomination and amount. It will panic if
+// the amount is negative.
+func NewCoin(denom string, amount Int) Coin {
+	if amount.LT(ZeroInt()) {
+		panic("negative coin amount")
+	}
+
 	return Coin{
 		Denom:  denom,
-		Amount: NewIntFromBigInt(amount.BigInt()),
+		Amount: amount,
 	}
 }
 
-func NewUInt64Coin(denom string, amount uint64) Coin {
-	return NewCoin(denom, NewUint(amount))
+// NewInt64Coin returns a new coin with a denomination and amount. It will panic
+// if the amount is negative.
+func NewInt64Coin(denom string, amount int64) Coin {
+	return NewCoin(denom, NewInt(amount))
 }
 
 // String provides a human-readable representation of a coin
@@ -67,11 +75,13 @@ func (coin Coin) IsEqual(other Coin) bool {
 	return coin.SameDenomAs(other) && (coin.Amount.Equal(other.Amount))
 }
 
-// Adds amounts of two coins with same denom
+// Adds amounts of two coins with same denom. If the coins differ in denom then
+// it panics.
 func (coin Coin) Plus(coinB Coin) Coin {
 	if !coin.SameDenomAs(coinB) {
-		return coin
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, coinB.Denom))
 	}
+
 	return Coin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 

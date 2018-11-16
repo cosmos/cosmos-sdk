@@ -8,12 +8,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/app"
+
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
+	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
+	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/libs/cli"
 )
@@ -32,6 +37,17 @@ func main() {
 
 	// get the codec
 	cdc := app.MakeCodec()
+
+	// Setup certain SDK config
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("baseacc", "basepub")
+	config.SetBech32PrefixForValidator("baseval", "basevalpub")
+	config.SetBech32PrefixForConsensusNode("basecons", "baseconspub")
+	config.Seal()
+
+	rs := lcd.NewRestServer(cdc)
+
+	registerRoutes(rs)
 
 	// TODO: Setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
@@ -82,7 +98,7 @@ func main() {
 	// add proxy, version and key info
 	rootCmd.AddCommand(
 		client.LineBreak,
-		lcd.ServeCommand(cdc),
+		rs.ServeCommand(),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,
@@ -95,4 +111,14 @@ func main() {
 		// Note: Handle with #870
 		panic(err)
 	}
+}
+
+func registerRoutes(rs *lcd.RestServer) {
+	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
+	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
+	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, "acc")
+	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	stake.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 }

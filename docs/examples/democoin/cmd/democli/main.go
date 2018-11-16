@@ -13,8 +13,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/app"
 	coolcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool/client/cli"
@@ -46,6 +47,10 @@ func main() {
 	config.SetBech32PrefixForConsensusNode("democons", "democonspub")
 	config.Seal()
 
+	rs := lcd.NewRestServer(cdc)
+
+	registerRoutes(rs)
+
 	// TODO: setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
@@ -73,11 +78,6 @@ func main() {
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(
-			ibccmd.IBCTransferCmd(cdc),
-		)...)
-	rootCmd.AddCommand(
-		client.PostCommands(
-			ibccmd.IBCRelayCmd(cdc),
 			simplestakingcmd.BondTxCmd(cdc),
 		)...)
 	rootCmd.AddCommand(
@@ -95,7 +95,7 @@ func main() {
 	// add proxy, version and key info
 	rootCmd.AddCommand(
 		client.LineBreak,
-		lcd.ServeCommand(cdc),
+		rs.ServeCommand(),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,
@@ -108,4 +108,12 @@ func main() {
 		// handle with #870
 		panic(err)
 	}
+}
+
+func registerRoutes(rs *lcd.RestServer) {
+	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
+	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
+	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, "acc")
+	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 }

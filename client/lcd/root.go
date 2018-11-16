@@ -63,14 +63,13 @@ func (rs RestServer) setKeybase() {
 }
 
 // Start starts the rest server
-func (rs RestServer) Start(listenAddr string, sslHosts string, certFile string, keyFile string, maxOpen int, insecure bool) (err error) {
+func (rs RestServer) Start(listenAddr string, sslHosts string,
+	certFile string, keyFile string, maxOpen int, insecure bool) (err error) {
 
 	server.TrapSignal(func() {
 		err := rs.listener.Close()
 		rs.log.Error("error closing listener", "err", err)
 	})
-
-	var cleanupFunc func()
 
 	// TODO: re-enable insecure mode once #2715 has been addressed
 	if insecure {
@@ -105,12 +104,10 @@ func (rs RestServer) Start(listenAddr string, sslHosts string, certFile string, 
 				return err
 			}
 
-			cleanupFunc = func() {
+			defer func() {
 				os.Remove(certFile)
 				os.Remove(keyFile)
-			}
-
-			defer cleanupFunc()
+			}()
 		}
 
 		rs.listener, err = tmserver.StartHTTPAndTLSServer(
@@ -136,7 +133,6 @@ func (rs RestServer) Start(listenAddr string, sslHosts string, certFile string, 
 // (aka Light Client Daemon) that exposes functionality similar
 // to the cli, but over rest
 func (rs RestServer) ServeCommand() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:   "rest-server",
 		Short: "Start LCD (light-client daemon), a local REST server",

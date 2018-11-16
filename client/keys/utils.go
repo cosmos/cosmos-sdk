@@ -2,22 +2,17 @@ package keys
 
 import (
 	"fmt"
+	"net/http"
 	"path/filepath"
 
-	"github.com/syndtr/goleveldb/leveldb/opt"
-
-	"github.com/spf13/viper"
-
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/viper"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
-
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"net/http"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // KeyDBName is the directory under root where we store the keys

@@ -1,9 +1,8 @@
 # Welcome to the SDK Docs!
 
-Welcome to the SDK docs!
-
-
 ![cosmonaut reading the cosmos docs in space](./cosmos-docs.jpg)
+
+**Note:** If you've been here before, Checkout the [quick link](#quick-links), below.
 
 ## Learn the SDK
 
@@ -24,9 +23,15 @@ The following sections contain the information you need if you want to build a f
 - [Introduction](./intro/README.md): Contains introductory high-level material on the Cosmos SDK.
 - [Gaia](./gaia/README.md): Contains all documentation related to the gaia application (current name for the Cosmos-Hub).
 - [Clients](./clients/README.md): Documentation about SDK clients like the SDK Command-Line interface and the SDK Light-client.
-- [Specifications](./spec/README.md): Contains SDK and modules specifications.
+- [Specification](./spec/README.md): Contains SDK and module specifications.
 
-If you are reading this on the Cosmos Website, please know that you can find more information on [github](https://github.com/cosmos/cosmos-sdk/tree/develop/docs). Also if you find any issues with the documentation please [*open a Pull Request*](https://github.com/cosmos/cosmos-sdk/compare?expand=1), or at least [*open an Issue*](https://github.com/cosmos/cosmos-sdk/issues/new) to update the docs!
+## Quick Links
+
+Additional resources for developers:
+
+- [GoDoc](https://godoc.org/github.com/cosmos/cosmos-sdk)
+- [Lite Client API Definition](https://cosmos.network/rpc/)
+- [Gaia CLI Commands](./gaia/gaiacli.md)
 
 ## Join the public testnet for the Cosmos Hub
 

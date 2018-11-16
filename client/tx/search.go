@@ -146,6 +146,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 		if len(r.Form) == 0 {
+			utils.PostProcessResponse(w, cdc, "[]", cliCtx.Indent)
 			return
 		}
 
@@ -171,7 +172,6 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			tags = append(tags, tag)
 		}
 
-		//
 		txs, err := searchTxs(cliCtx, cdc, tags)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -179,6 +179,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 		}
 
 		if len(txs) == 0 {
+			utils.PostProcessResponse(w, cdc, "[]", cliCtx.Indent)
 			return
 		}
 

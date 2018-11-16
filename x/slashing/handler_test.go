@@ -26,7 +26,8 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// assert non-jailed validator can't be unjailed
 	got = slh(ctx, NewMsgUnjail(addr))
 	require.False(t, got.IsOK(), "allowed unjail of non-jailed validator")
-	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeValidatorNotJailed), got.Code)
+	require.EqualValues(t, CodeValidatorNotJailed, got.Code)
+	require.EqualValues(t, DefaultCodespace, got.Codespace)
 }
 
 func TestJailedValidatorDelegations(t *testing.T) {

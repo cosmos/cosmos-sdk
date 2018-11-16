@@ -75,7 +75,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 		},
 	)
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
-	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, app.RegisterCodespace(ibc.DefaultCodespace))
+	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, ibc.DefaultCodespace)
 
 	// register message routes
 	app.Router().

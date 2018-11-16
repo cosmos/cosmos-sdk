@@ -116,7 +116,8 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
 			sdk.NewDecWithPrec(20, 2),
 			sdk.NewDecWithPrec(7, 2),
-			sdk.NewDecWithPrec(67, 2)),
+			sdk.NewDecWithPrec(67, 2),
+			int64(60*60*24*365/5)),
 	}
 	fmt.Printf("Selected randomly generated minting parameters: %v\n", mintGenesis)
 	var validators []stake.Validator

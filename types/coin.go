@@ -127,7 +127,7 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		return !coins[0].IsZero()
+		return coins[0].isPositive()
 	default:
 		lowDenom := coins[0].Denom
 

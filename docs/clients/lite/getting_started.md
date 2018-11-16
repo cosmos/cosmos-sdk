@@ -1,4 +1,4 @@
-# Getting Started
+# Getting Started with the REST server
 
 To start a REST server, we need to specify the following parameters:
 

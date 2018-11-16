@@ -1,5 +1,5 @@
 module.exports = {
-  title: "Cosmos Documentation",
+  title: "Cosmos SDK Documentation",
   description: "Documentation for the Cosmos Network.",
   ga: "UA-51029217-2",
   dest: "./dist/docs",

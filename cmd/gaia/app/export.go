@@ -27,9 +27,15 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 		/* Handle fee distribution state. */
 
 		// withdraw all delegator & validator rewards
-		app.accountKeeper.IterateAccounts(ctx, func(acc auth.Account) (stop bool) {
-			app.distrKeeper.WithdrawDelegationRewardsAll(ctx, acc.GetAddress())
-			_ = app.distrKeeper.WithdrawValidatorRewardsAll(ctx, sdk.ValAddress(acc.GetAddress()))
+		app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
+			err := app.distrKeeper.WithdrawValidatorRewardsAll(ctx, valInfo.OperatorAddr)
+			if err != nil {
+				panic(err)
+			}
+			return false
+		})
+		app.distrKeeper.IterateDelegationDistInfos(ctx, func(_ int64, distInfo distr.DelegationDistInfo) (stop bool) {
+			app.distrKeeper.WithdrawDelegationRewardsAll(ctx, distInfo.DelegatorAddr)
 			return false
 		})
 

@@ -678,7 +678,8 @@ func TestRunInvalidTransaction(t *testing.T) {
 	{
 		emptyTx := &txTest{}
 		err := app.Deliver(emptyTx)
-		require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeInternal), err.Code)
+		require.EqualValues(t, sdk.CodeInternal, err.Code)
+		require.EqualValues(t, sdk.CodespaceRoot, err.Codespace)
 	}
 
 	// Transaction where ValidateBasic fails
@@ -701,7 +702,8 @@ func TestRunInvalidTransaction(t *testing.T) {
 			tx := testCase.tx
 			res := app.Deliver(tx)
 			if testCase.fail {
-				require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeInvalidSequence), res.Code)
+				require.EqualValues(t, sdk.CodeInvalidSequence, res.Code)
+				require.EqualValues(t, sdk.CodespaceRoot, res.Codespace)
 			} else {
 				require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 			}
@@ -712,11 +714,13 @@ func TestRunInvalidTransaction(t *testing.T) {
 	{
 		unknownRouteTx := txTest{[]sdk.Msg{msgNoRoute{}}, 0}
 		err := app.Deliver(unknownRouteTx)
-		require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), err.Code)
+		require.EqualValues(t, sdk.CodeUnknownRequest, err.Code)
+		require.EqualValues(t, sdk.CodespaceRoot, err.Codespace)
 
 		unknownRouteTx = txTest{[]sdk.Msg{msgCounter{}, msgNoRoute{}}, 0}
 		err = app.Deliver(unknownRouteTx)
-		require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), err.Code)
+		require.EqualValues(t, sdk.CodeUnknownRequest, err.Code)
+		require.EqualValues(t, sdk.CodespaceRoot, err.Codespace)
 	}
 
 	// Transaction with an unregistered message
@@ -732,7 +736,8 @@ func TestRunInvalidTransaction(t *testing.T) {
 		txBytes, err := newCdc.MarshalBinaryLengthPrefixed(tx)
 		require.NoError(t, err)
 		res := app.DeliverTx(txBytes)
-		require.EqualValues(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeTxDecode), res.Code)
+		require.EqualValues(t, sdk.CodeTxDecode, res.Code)
+		require.EqualValues(t, sdk.CodespaceRoot, res.Codespace)
 	}
 }
 
@@ -819,7 +824,8 @@ func TestTxGasLimits(t *testing.T) {
 		if !tc.fail {
 			require.True(t, res.IsOK(), fmt.Sprintf("%d: %v, %v", i, tc, res))
 		} else {
-			require.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), fmt.Sprintf("%d: %v, %v", i, tc, res))
+			require.Equal(t, sdk.CodeOutOfGas, res.Code, fmt.Sprintf("%d: %v, %v", i, tc, res))
+			require.Equal(t, sdk.CodespaceRoot, res.Codespace)
 		}
 	}
 }

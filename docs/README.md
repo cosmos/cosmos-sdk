@@ -34,7 +34,7 @@ To install the latest version of the `gaia` application and join the public test
 
 ## Contribute
 
-See [this file](./DOCS_README.md) for details of the build process and
+See [this file](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
 considerations when making changes.
 
 ## Version

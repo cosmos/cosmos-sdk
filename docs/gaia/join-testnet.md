@@ -17,18 +17,18 @@ These instructions are for setting up a brand new full node from scratch.
 First, initialize the node and create the necessary config files:
 
 ```bash
-gaiad init
+gaiad init --moniker <your_custom_moniker>
 ```
 
 ::: warning Note
-Only ASCII characters are supported for the `--name`. Using Unicode characters will render your node unreachable.
+Only ASCII characters are supported for the `--moniker`. Using Unicode characters will render your node unreachable.
 :::
 
-You can edit this `name` later, in the `~/.gaiad/config/config.toml` file:
+You can edit this `moniker` later, in the `~/.gaiad/config/config.toml` file:
 
 ```toml
 # A custom human readable name for this node
-moniker = "<your_custom_name>"
+moniker = "<your_custom_moniker>"
 ```
 
 You can edit the `~/.gaiad/config/gaiad.toml` file in order to enable the anti spam mechanism and reject incoming transactions with less than a minimum fee:

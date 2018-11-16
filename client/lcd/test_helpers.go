@@ -19,6 +19,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -45,6 +47,12 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	authRest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
+	bankRest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	govRest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	slashingRest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
+	stakeRest "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -100,6 +108,13 @@ func GetKeyBase(t *testing.T) crkeys.Keybase {
 	keybase, err := keys.GetKeyBaseWithWritePerm()
 	require.NoError(t, err)
 
+	return keybase
+}
+
+// GetTestKeyBase fetches the current testing keybase
+func GetTestKeyBase(t *testing.T) crkeys.Keybase {
+	keybase, err := keys.GetKeyBaseWithWritePerm()
+	require.NoError(t, err)
 	return keybase
 }
 
@@ -288,7 +303,7 @@ func InitializeTestLCD(
 	require.NoError(t, err)
 
 	tests.WaitForNextHeightTM(tests.ExtractPortFromAddress(config.RPC.ListenAddress))
-	lcd, err := startLCD(logger, listenAddr, cdc)
+	lcd, err := startLCD(logger, listenAddr, cdc, t)
 	require.NoError(t, err)
 
 	tests.WaitForLCDStart(port)
@@ -347,8 +362,23 @@ func startTM(
 // startLCD starts the LCD.
 //
 // NOTE: This causes the thread to block.
-func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec) (net.Listener, error) {
-	return tmrpc.StartHTTPServer(listenAddr, createHandler(cdc), logger, tmrpc.Config{})
+func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
+	rs := NewRestServer(cdc)
+	rs.setKeybase(GetTestKeyBase(t))
+	registerRoutes(rs)
+	return tmrpc.StartHTTPServer(listenAddr, rs.Mux, logger, tmrpc.Config{})
+}
+
+// NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go
+func registerRoutes(rs *RestServer) {
+	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
+	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
+	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	authRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, "acc")
+	bankRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	stakeRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	slashingRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	govRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
 // Request makes a test LCD test request. It returns a response object and a

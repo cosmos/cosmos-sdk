@@ -9,7 +9,7 @@ type CodeType = sdk.CodeType
 
 // POW errors reserve 200 ~ 299
 const (
-	DefaultCodespace          sdk.CodespaceType = 5
+	DefaultCodespace          sdk.CodespaceType = "pow"
 	CodeInvalidDifficulty     CodeType          = 201
 	CodeNonexistentDifficulty CodeType          = 202
 	CodeNonexistentReward     CodeType          = 203

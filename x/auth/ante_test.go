@@ -43,7 +43,7 @@ func privAndAddr() (crypto.PrivKey, sdk.AccAddress) {
 func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool) {
 	_, result, abort := anteHandler(ctx, tx, simulate)
 	require.False(t, abort)
-	require.Equal(t, sdk.ABCICodeOK, result.Code)
+	require.Equal(t, sdk.CodeOK, result.Code)
 	require.True(t, result.IsOK())
 }
 
@@ -51,8 +51,9 @@ func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool, code sdk.CodeType) {
 	newCtx, result, abort := anteHandler(ctx, tx, simulate)
 	require.True(t, abort)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code,
-		fmt.Sprintf("Expected %v, got %v", sdk.ToABCICode(sdk.CodespaceRoot, code), result))
+
+	require.Equal(t, code, result.Code, fmt.Sprintf("Expected %v, got %v", code, result))
+	require.Equal(t, sdk.CodespaceRoot, result.Codespace)
 
 	if code == sdk.CodeOutOfGas {
 		stdTx, ok := tx.(StdTx)

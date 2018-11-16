@@ -52,6 +52,24 @@ func (k Keeper) RemoveDelegationDistInfos(ctx sdk.Context) {
 	}
 }
 
+// iterate over all the validator distribution infos
+func (k Keeper) IterateDelegationDistInfos(ctx sdk.Context,
+	fn func(index int64, distInfo types.DelegationDistInfo) (stop bool)) {
+
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, DelegationDistInfoKey)
+	defer iter.Close()
+	index := int64(0)
+	for ; iter.Valid(); iter.Next() {
+		var ddi types.DelegationDistInfo
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &ddi)
+		if fn(index, ddi) {
+			return
+		}
+		index++
+	}
+}
+
 //___________________________________________________________________________________________
 
 // get the delegator withdraw address, return the delegator address if not set

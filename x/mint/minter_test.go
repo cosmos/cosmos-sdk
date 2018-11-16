@@ -2,6 +2,7 @@ package mint
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -44,7 +45,7 @@ func TestNextInflation(t *testing.T) {
 	for i, tc := range tests {
 		minter.Inflation = tc.setInflation
 
-		inflation := minter.NextInflation(params, tc.bondedRatio)
+		inflation := minter.NextInflationRate(params, tc.bondedRatio)
 		diffInflation := inflation.Sub(tc.setInflation)
 
 		require.True(t, diffInflation.Equal(tc.expChange),
@@ -52,24 +53,22 @@ func TestNextInflation(t *testing.T) {
 	}
 }
 
-//func TestProcessProvisions(t *testing.T) {
+func TestProcessProvisions(t *testing.T) {
+	minter := DefaultInitialMinter()
+	params := DefaultParams()
 
-//minter := InitialMinter()
-//params := DefaultParams()
+	tests := []struct {
+		blockTime     time.Time
+		expProvisions sdk.Coin
+	}{
+		{time.Unix(0, 0), sdk.NewCoin(params.MintDenom, 0)},
+	}
+	for i, tc := range tests {
+		minter.Inflation = tc.setInflation
 
-//// Governing Mechanism:
-////    inflationRateChangePerYear = (1- BondedRatio/ GoalBonded) * MaxInflationRateChange
-
-//tests := []struct {
-//bondedRatio, setInflation, expChange sdk.Dec
-//}{}
-//for i, tc := range tests {
-//minter.Inflation = tc.setInflation
-
-//inflation := minter.NextInflation(params, tc.bondedRatio)
-//diffInflation := inflation.Sub(tc.setInflation)
-
-//require.True(t, diffInflation.Equal(tc.expChange),
-//"Test Index: %v\nDiff:  %v\nExpected: %v\n", i, diffInflation, tc.expChange)
-//}
-//}
+		minter, provisions := minter.ProcessProvisions(params, expProvisions)
+		require.True(t, blockTime, minter.LastInflation)
+		require.True(t, diffInflation.Equal(tc.expChange),
+			"Test Index: %v\nDiff:  %v\nExpected: %v\n", i, diffInflation, tc.expChange)
+	}
+}

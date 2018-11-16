@@ -46,18 +46,20 @@ func DefaultInitialMinter() Minter {
 
 func validateMinter(minter Minter) error {
 	if minter.Inflation.LT(sdk.ZeroDec()) {
-		return fmt.Errorf("mint parameter Inflation should be positive, is %s ", minter.Inflation.String())
+		return fmt.Errorf("mint parameter Inflation should be positive, is %s",
+			minter.Inflation.String())
 	}
 	if minter.Inflation.GT(sdk.OneDec()) {
-		return fmt.Errorf("mint parameter Inflation must be <= 1, is %s", minter.Inflation.String())
+		return fmt.Errorf("mint parameter Inflation must be <= 1, is %s",
+			minter.Inflation.String())
 	}
 	return nil
 }
 
 var hrsPerYr = sdk.NewDec(8766) // as defined by a julian year of 365.25 days
 
-// process provisions for an hour period
-// NOTE if ProcessProvisions is called for the first time from an
+// process provisions for the period since the last inflation
+// NOTE If ProcessProvisions is called for the first time from an
 //      InitialMinter, ProcessProvisions will effectively only set
 //      the blocktime as the default HourlyProvisions is 0.
 func (m Minter) ProcessProvisions(params Params, blockTime time.Time) (
@@ -75,7 +77,7 @@ func (m Minter) ProcessProvisions(params Params, blockTime time.Time) (
 }
 
 // get the new inflation rate for the next hour
-func (m Minter) NextInflation(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
+func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 
 	// The target annual inflation rate is recalculated for each previsions cycle. The
 	// inflation is also subject to a rate change (positive or negative) depending on

@@ -20,7 +20,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 
 	// adjust the inflation, hourly-provision rate every hour
 	if blockTime.Sub(minter.LastInflationChange) >= time.Hour {
-		minter.Inflation = minter.NextInflation(params, bondedRatio)
+		minter.Inflation = minter.NextInflationRate(params, bondedRatio)
 		minter.LastInflationChange = blockTime
 		minter.HourlyProvisions = minter.NextHourlyProvisions(params, totalSupply)
 	}

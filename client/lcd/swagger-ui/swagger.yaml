@@ -209,14 +209,14 @@ paths:
       tags:
       - ICS0
       summary: Search transactions
-      description: Search transactions by tag
+      description: Search transactions by tag(s).
       produces:
       - application/json
       parameters:
       - in: query
         name: tag
         type: string
-        description: "transaction tag, for instance: sender_bech32=`'cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc'`"
+        description: "transaction tags such as 'action=submit-proposal' and 'proposer=cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc' which results in the following endpoint: 'GET /txs?action=submit-proposal&proposer=cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc'"
         required: true
       - in: query
         name: page
@@ -228,7 +228,7 @@ paths:
         type: integer
       responses:
         200:
-          description: All Tx matching the provided tags
+          description: All txs matching the provided tags
           schema:
             type: array
             items:

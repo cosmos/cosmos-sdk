@@ -61,6 +61,7 @@ func TestPlusCoin(t *testing.T) {
 		shouldPanic bool
 	}{
 		{NewInt64Coin("A", 1), NewInt64Coin("A", 1), NewInt64Coin("A", 2), false},
+		{NewInt64Coin("A", 1), NewInt64Coin("A", 0), NewInt64Coin("A", 1), false},
 		{NewInt64Coin("A", 1), NewInt64Coin("B", 1), NewInt64Coin("A", 1), true},
 	}
 
@@ -84,6 +85,7 @@ func TestMinusCoin(t *testing.T) {
 		{NewInt64Coin("A", 1), NewInt64Coin("B", 1), NewInt64Coin("A", 1), true},
 		{NewInt64Coin("A", 10), NewInt64Coin("A", 1), NewInt64Coin("A", 9), false},
 		{NewInt64Coin("A", 5), NewInt64Coin("A", 3), NewInt64Coin("A", 2), false},
+		{NewInt64Coin("A", 5), NewInt64Coin("A", 0), NewInt64Coin("A", 5), false},
 		{NewInt64Coin("A", 1), NewInt64Coin("A", 5), Coin{}, true},
 	}
 

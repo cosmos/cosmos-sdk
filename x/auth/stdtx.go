@@ -36,7 +36,7 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 // require access to any other information.
 func (tx StdTx) ValidateBasic() sdk.Error {
 	if !tx.Fee.Amount.IsPositive() {
-		sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
+		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
 	}
 	if len(tx.GetSignatures()) == 0 {
 		return sdk.ErrUnauthorized("no signers")

@@ -201,9 +201,7 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 
 		switch strings.Compare(coinA.Denom, coinB.Denom) {
 		case -1: // coin A denom < coin B denom
-			if coinA.IsZero() {
-				// ignore 0 sum coin
-			} else {
+			if !coinA.IsZero() {
 				sum = append(sum, coinA)
 			}
 
@@ -211,9 +209,7 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 
 		case 0: // coin A denom == coin B denom
 			res := coinA.Plus(coinB)
-			if res.IsZero() {
-				// ignore 0 sum coin type
-			} else {
+			if !res.IsZero() {
 				sum = append(sum, res)
 			}
 
@@ -221,9 +217,7 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 			indexB++
 
 		case 1: // coin A denom > coin B denom
-			if coinB.IsZero() {
-				// ignore 0 sum coin
-			} else {
+			if !coinB.IsZero() {
 				sum = append(sum, coinB)
 			}
 

@@ -35,7 +35,7 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 // ValidateBasic does a simple and lightweight validation check that doesn't
 // require access to any other information.
 func (tx StdTx) ValidateBasic() sdk.Error {
-	if !tx.Fee.Amount.IsPositive() {
+	if !tx.Fee.Amount.IsNotNegative() {
 		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
 	}
 	if len(tx.GetSignatures()) == 0 {

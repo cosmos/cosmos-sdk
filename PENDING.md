@@ -64,6 +64,8 @@ IMPROVEMENTS
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
  - #2815 Gas unit fields changed from `int64` to `uint64`.
  - #2821 Codespaces are now strings
+ - #2779 Introduce `ValidateBasic` to the `Tx` interface and call it in the ante
+ handler.
 
 * Tendermint
  - #2796 Update to go-amino 0.14.1

@@ -209,6 +209,7 @@ func TestVotes(t *testing.T) {
 	finalTally := proposal.GetTallyResult()
 	require.Equal(t, initialTally.Yes.Add(sdk.NewDec(1)), finalTally.Yes)
 	require.Equal(t, initialTally.NoWithVeto.Add(sdk.NewDec(1)), finalTally.NoWithVeto)
+	require.Equal(t, initialTally.Abstain, finalTally.Abstain)
 }
 
 func TestProposalQueues(t *testing.T) {

@@ -239,6 +239,37 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 	keeper.InsertActiveProposalQueue(ctx, proposal.GetVotingEndTime(), proposal.GetProposalID())
 }
 
+// checks if two proposals are equal
+func (keeper Keeper) decreaseProposalTally(ctx sdk.Context, proposal Proposal, option VoteOption) {
+	tally := proposal.GetTallyResult()
+	switch {
+	case option == OptionYes:
+		tally.Yes = tally.Yes.Sub(sdk.NewDec(1))
+	case option == OptionNo:
+		tally.No = tally.No.Sub(sdk.NewDec(1))
+	case option == OptionNoWithVeto:
+		tally.NoWithVeto = tally.NoWithVeto.Sub(sdk.NewDec(1))
+	case option == OptionAbstain:
+		tally.Abstain = tally.Abstain.Sub(sdk.NewDec(1))
+	}
+	proposal.SetTallyResult(tally)
+}
+
+func (keeper Keeper) increaseProposalTally(ctx sdk.Context, proposal Proposal, option VoteOption) {
+	tally := proposal.GetTallyResult()
+	switch {
+	case option == OptionYes:
+		tally.Yes = tally.Yes.Add(sdk.NewDec(1))
+	case option == OptionNo:
+		tally.No = tally.No.Add(sdk.NewDec(1))
+	case option == OptionNoWithVeto:
+		tally.NoWithVeto = tally.NoWithVeto.Add(sdk.NewDec(1))
+	case option == OptionAbstain:
+		tally.Abstain = tally.Abstain.Add(sdk.NewDec(1))
+	}
+	proposal.SetTallyResult(tally)
+}
+
 // =====================================================
 // Params
 
@@ -298,12 +329,35 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 		return ErrInvalidVote(keeper.codespace, option)
 	}
 
-	vote := Vote{
-		ProposalID: proposalID,
-		Voter:      voterAddr,
-		Option:     option,
+	oldVote, found := keeper.GetVote(ctx, proposalID, voterAddr)
+	if found {
+		// Case 1: address already has a vote
+		if oldVote.Option != option {
+			// Case 1.1: new option is different than the previous one
+			keeper.decreaseProposalTally(ctx, proposal, oldVote.Option)
+			keeper.SetProposal(ctx, proposal)
+			vote := Vote{
+				ProposalID: proposalID,
+				Voter:      voterAddr,
+				Option:     option,
+			}
+			keeper.increaseProposalTally(ctx, proposal, option)
+			keeper.setVote(ctx, proposalID, voterAddr, vote)
+			keeper.SetProposal(ctx, proposal)
+		}
+		// Case 1.2: new option is the same as the one before ==> no updates
+	} else {
+		// Case 2: address doesn't have a vote
+		vote := Vote{
+			ProposalID: proposalID,
+			Voter:      voterAddr,
+			Option:     option,
+		}
+
+		keeper.increaseProposalTally(ctx, proposal, option)
+		keeper.setVote(ctx, proposalID, voterAddr, vote)
+		keeper.SetProposal(ctx, proposal)
 	}
-	keeper.setVote(ctx, proposalID, voterAddr, vote)
 
 	return nil
 }

@@ -43,6 +43,7 @@ const (
 	storeGov      = "gov"
 	storeSlashing = "slashing"
 	storeStake    = "stake"
+	storeDist     = "distr"
 )
 
 func main() {
@@ -73,7 +74,7 @@ func main() {
 	// TODO: Make the lcd command take a list of ModuleClient
 	mc := []sdk.ModuleClients{
 		govClient.NewModuleClient(storeGov, cdc),
-		distClient.NewModuleClient("", cdc),
+		distClient.NewModuleClient(storeDist, cdc),
 		stakeClient.NewModuleClient(storeStake, cdc),
 		slashingClient.NewModuleClient(storeSlashing, cdc),
 	}
@@ -164,7 +165,7 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, "acc")
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	stake.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)

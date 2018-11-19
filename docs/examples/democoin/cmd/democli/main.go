@@ -31,6 +31,7 @@ var (
 		Use:   "democli",
 		Short: "Democoin light-client",
 	}
+	storeAcc = "acc"
 )
 
 func main() {
@@ -70,7 +71,7 @@ func main() {
 	// start with commands common to basecoin
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("acc", cdc),
+			authcmd.GetAccountCmd(storeAcc, cdc),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(
@@ -114,6 +115,6 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, "acc")
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 }

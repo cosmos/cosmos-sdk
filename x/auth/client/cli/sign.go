@@ -52,6 +52,8 @@ recommended to set such parameters manually.`,
 	cmd.Flags().Bool(flagValidateSigs, false, "Print the addresses that must sign the transaction, "+
 		"those who have already signed it, and make sure that signatures are in the correct order.")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
+
+	// Add the flags here and return the command
 	return client.PostCommands(cmd)[0]
 }
 

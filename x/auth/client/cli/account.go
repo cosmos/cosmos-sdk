@@ -55,5 +55,7 @@ func GetAccountCmd(storeName string, cdc *codec.Codec) *cobra.Command {
 			return nil
 		},
 	}
+
+	// Add the flags here and return the command
 	return client.GetCommands(cmd)[0]
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/pkg/errors"
@@ -45,7 +44,7 @@ func getShares(
 		key := stake.GetDelegationKey(delAddr, valAddr)
 		cliCtx := context.NewCLIContext().
 			WithCodec(cdc).
-			WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+			WithAccountDecoder(cdc)
 
 		resQuery, err := cliCtx.QueryStore(key, storeName)
 		if err != nil {

@@ -5,34 +5,17 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 )
-
-// GetAccountCmdDefault invokes the GetAccountCmd for the auth.BaseAccount type.
-func GetAccountCmdDefault(storeName string, cdc *codec.Codec) *cobra.Command {
-	return GetAccountCmd(storeName, cdc, GetAccountDecoder(cdc))
-}
-
-// GetAccountDecoder gets the account decoder for auth.DefaultAccount.
-func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
-	return func(accBytes []byte) (acct auth.Account, err error) {
-		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
-		if err != nil {
-			panic(err)
-		}
-
-		return acct, err
-	}
-}
 
 // GetAccountCmd returns a query account that will display the state of the
 // account at a given address.
 // nolint: unparam
-func GetAccountCmd(storeName string, cdc *codec.Codec, decoder auth.AccountDecoder) *cobra.Command {
-	return &cobra.Command{
+func GetAccountCmd(storeName string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "account [address]",
 		Short: "Query account balance",
 		Args:  cobra.ExactArgs(1),
@@ -47,9 +30,9 @@ func GetAccountCmd(storeName string, cdc *codec.Codec, decoder auth.AccountDecod
 
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(decoder)
+				WithAccountDecoder(cdc)
 
-			if err := cliCtx.EnsureAccountExistsFromAddr(key); err != nil {
+			if err = cliCtx.EnsureAccountExistsFromAddr(key); err != nil {
 				return err
 			}
 
@@ -72,4 +55,7 @@ func GetAccountCmd(storeName string, cdc *codec.Codec, decoder auth.AccountDecod
 			return nil
 		},
 	}
+
+	// Add the flags here and return the command
+	return client.GetCommands(cmd)[0]
 }

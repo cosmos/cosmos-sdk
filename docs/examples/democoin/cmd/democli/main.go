@@ -18,7 +18,6 @@ import (
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/app"
-	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
 	coolcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool/client/cli"
 	powcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow/client/cli"
 	simplestakingcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake/client/cli"
@@ -32,6 +31,7 @@ var (
 		Use:   "democli",
 		Short: "Democoin light-client",
 	}
+	storeAcc = "acc"
 )
 
 func main() {
@@ -71,7 +71,7 @@ func main() {
 	// start with commands common to basecoin
 	rootCmd.AddCommand(
 		client.GetCommands(
-			authcmd.GetAccountCmd("acc", cdc, types.GetAccountDecoder(cdc)),
+			authcmd.GetAccountCmd(storeAcc, cdc),
 		)...)
 	rootCmd.AddCommand(
 		client.PostCommands(
@@ -115,6 +115,6 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, "acc")
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 }

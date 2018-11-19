@@ -71,6 +71,7 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if err != nil {
 			return newCtx, err.Result(), true
 		}
+
 		// charge gas for the memo
 		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
 
@@ -263,10 +264,13 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey) {
 func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
 	gasCost := gas / gasPerUnitCost
 	gasFees := make(sdk.Coins, len(fees))
+
 	// TODO: Make this not price all coins in the same way
+	// TODO: Undo int64 casting once unsigned integers are supported for coins
 	for i := 0; i < len(fees); i++ {
 		gasFees[i] = sdk.NewInt64Coin(fees[i].Denom, int64(gasCost))
 	}
+
 	return fees.Plus(gasFees)
 }
 
@@ -318,10 +322,12 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 }
 
 func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
-	// set the gas meter
+	// In various cases such as simulation and during the genesis block, we do not
+	// meter any gas utilization.
 	if simulate || ctx.BlockHeight() == 0 {
 		return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	}
+
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 }
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,29 +21,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 
+	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	distClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
+	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	slashingClient "github.com/cosmos/cosmos-sdk/x/slashing/client"
+	stakeClient "github.com/cosmos/cosmos-sdk/x/stake/client"
+
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
 
 const (
-	storeAcc        = "acc"
-	storeGov        = "gov"
-	storeSlashing   = "slashing"
-	storeStake      = "stake"
-	queryRouteStake = "stake"
-)
-
-// rootCmd is the entry point for this binary
-var (
-	rootCmd = &cobra.Command{
-		Use:   "gaiacli",
-		Short: "Command line interface for interacting with gaiad",
-	}
+	storeAcc      = "acc"
+	storeGov      = "gov"
+	storeSlashing = "slashing"
+	storeStake    = "stake"
+	storeDist     = "distr"
 )
 
 func main() {
@@ -68,13 +70,27 @@ func main() {
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
 
+	// Module clients hold cli commnads (tx,query) and lcd routes
+	// TODO: Make the lcd command take a list of ModuleClient
+	mc := []sdk.ModuleClients{
+		govClient.NewModuleClient(storeGov, cdc),
+		distClient.NewModuleClient(storeDist, cdc),
+		stakeClient.NewModuleClient(storeStake, cdc),
+		slashingClient.NewModuleClient(storeSlashing, cdc),
+	}
+
+	rootCmd := &cobra.Command{
+		Use:   "gaiacli",
+		Short: "Command line interface for interacting with gaiad",
+	}
+
 	// Construct Root Command
 	rootCmd.AddCommand(
 		rpc.InitClientCommand(),
 		rpc.StatusCommand(),
 		client.ConfigCmd(),
-		queryCmd(cdc),
-		txCmd(cdc),
+		queryCmd(cdc, mc),
+		txCmd(cdc, mc),
 		client.LineBreak,
 		rs.ServeCommand(),
 		client.LineBreak,
@@ -92,9 +108,53 @@ func main() {
 
 	err = executor.Execute()
 	if err != nil {
-		// handle with #870
-		panic(err)
+		fmt.Printf("Failed executing CLI command: %s, exiting...\n", err)
+		os.Exit(1)
 	}
+}
+
+func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
+	queryCmd := &cobra.Command{
+		Use:     "query",
+		Aliases: []string{"q"},
+		Short:   "Querying subcommands",
+	}
+
+	queryCmd.AddCommand(
+		rpc.ValidatorCommand(),
+		rpc.BlockCommand(),
+		tx.SearchTxCmd(cdc),
+		tx.QueryTxCmd(cdc),
+		client.LineBreak,
+		authcmd.GetAccountCmd(storeAcc, cdc),
+	)
+
+	for _, m := range mc {
+		queryCmd.AddCommand(m.GetQueryCmd())
+	}
+
+	return queryCmd
+}
+
+func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
+	txCmd := &cobra.Command{
+		Use:   "tx",
+		Short: "Transactions subcommands",
+	}
+
+	txCmd.AddCommand(
+		bankcmd.SendTxCmd(cdc),
+		client.LineBreak,
+		authcmd.GetSignCommand(cdc),
+		bankcmd.GetBroadcastCommand(cdc),
+		client.LineBreak,
+	)
+
+	for _, m := range mc {
+		txCmd.AddCommand(m.GetTxCmd())
+	}
+
+	return txCmd
 }
 
 // registerRoutes registers the routes from the different modules for the LCD.
@@ -105,7 +165,7 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, "acc")
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	stake.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)

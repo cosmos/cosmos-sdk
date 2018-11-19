@@ -475,7 +475,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg := unmarshalStdTx(t, stdout)
-	require.Equal(t, msg.Fee.Gas, int64(client.DefaultGasLimit))
+	require.Equal(t, msg.Fee.Gas, uint64(client.DefaultGasLimit))
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
@@ -486,7 +486,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
-	require.Equal(t, msg.Fee.Gas, int64(100))
+	require.Equal(t, msg.Fee.Gas, uint64(100))
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
@@ -543,9 +543,8 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	}
 
 	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
-	require.Equal(t, msg.Fee.Gas, result.Response.GasUsed)
-	require.Equal(t, msg.Fee.Gas, result.Response.GasWanted)
-
+	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasUsed))
+	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
 	tests.WaitForNextNBlocksTM(2, port)
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))

@@ -31,6 +31,7 @@ FEATURES
   * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance
     parameter query commands.
   * [stake][cli] [\#2027] Add CLI query command for getting all delegations to a specific validator.
+  * [\#2840](https://github.com/cosmos/cosmos-sdk/pull/2840) Standardize CLI exports from modules
 
 * Gaia
   * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
@@ -64,6 +65,7 @@ IMPROVEMENTS
  - \#2821 Codespaces are now strings
  - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions
  and methods will panic when a negative amount is discovered.
+ - #2815 Gas unit fields changed from `int64` to `uint64`.
 
 * Tendermint
  - #2796 Update to go-amino 0.14.1
@@ -82,6 +84,7 @@ BUG FIXES
 * SDK
 
   - \#2733 [x/gov, x/mock/simulation] Fix governance simulation, update x/gov import/export
+  - \#2854 [x/bank] Remove unused bank.MsgIssue, prevent possible panic
 
 * Tendermint
   * [\#2797](https://github.com/tendermint/tendermint/pull/2797) AddressBook requires addresses to have IDs; Do not crap out immediately after sending pex addrs in seed mode

@@ -27,7 +27,7 @@ type Params struct {
 	InflationMax        sdk.Dec // maximum inflation rate
 	InflationMin        sdk.Dec // minimum inflation rate
 	GoalBonded          sdk.Dec // goal of percent bonded atoms
-	BlocksPerYear       int64   // expected blocks per year
+	BlocksPerYear       uint64   // expected blocks per year
 }
 ```
 

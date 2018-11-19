@@ -17,14 +17,15 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 	k.fck.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
 	k.sk.InflateSupply(ctx, sdk.NewDecFromInt(mintedCoin.Amount))
 
-	// adjust the inflation, hourly-provision rate every hour
-	if blockTime.Sub(minter.LastUpdate) >= time.Hour {
-		totalSupply := k.sk.TotalPower(ctx)
-		bondedRatio := k.sk.BondedRatio(ctx)
-		minter.Inflation = minter.NextInflationRate(params, bondedRatio)
-		minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalSupply)
-		minter.LastUpdate = blockTime
+	if blockTime.Sub(minter.LastUpdate) < time.Hour {
+		return
 	}
 
+	// adjust the inflation, hourly-provision rate every hour
+	totalSupply := k.sk.TotalPower(ctx)
+	bondedRatio := k.sk.BondedRatio(ctx)
+	minter.Inflation = minter.NextInflationRate(params, bondedRatio)
+	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalSupply)
+	minter.LastUpdate = blockTime
 	k.SetMinter(ctx, minter)
 }

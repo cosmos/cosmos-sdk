@@ -56,7 +56,7 @@ func TestBlockProvision(t *testing.T) {
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()
 
-	secondsPerYear := int64(60 * 60 * 24 * 365)
+	secondsPerYear := int64(60 * 60 * 8766)
 
 	tests := []struct {
 		annualProvisions int64

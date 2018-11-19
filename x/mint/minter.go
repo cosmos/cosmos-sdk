@@ -11,7 +11,7 @@ import (
 type Minter struct {
 	LastUpdate       time.Time `json:"last_update"`       // time which the last update was made to the minter
 	Inflation        sdk.Dec   `json:"inflation"`         // current annual inflation rate
-	AnnualProvisions sdk.Int   `json:"annual_provisions"` // current annual exptected provisions
+	AnnualProvisions sdk.Int   `json:"annual_provisions"` // current annual expected provisions
 }
 
 // Create a new minter object
@@ -44,10 +44,6 @@ func DefaultInitialMinter() Minter {
 func validateMinter(minter Minter) error {
 	if minter.Inflation.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("mint parameter Inflation should be positive, is %s",
-			minter.Inflation.String())
-	}
-	if minter.Inflation.GT(sdk.OneDec()) {
-		return fmt.Errorf("mint parameter Inflation must be <= 1, is %s",
 			minter.Inflation.String())
 	}
 	return nil

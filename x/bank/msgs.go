@@ -87,65 +87,6 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 }
 
 //----------------------------------------
-// MsgIssue
-
-// MsgIssue - high level transaction of the coin module
-type MsgIssue struct {
-	Banker  sdk.AccAddress `json:"banker"`
-	Outputs []Output       `json:"outputs"`
-}
-
-var _ sdk.Msg = MsgIssue{}
-
-// NewMsgIssue - construct arbitrary multi-in, multi-out send msg.
-func NewMsgIssue(banker sdk.AccAddress, out []Output) MsgIssue {
-	return MsgIssue{Banker: banker, Outputs: out}
-}
-
-// Implements Msg.
-// nolint
-func (msg MsgIssue) Route() string { return "bank" } // TODO: "bank/issue"
-func (msg MsgIssue) Type() string  { return "issue" }
-
-// Implements Msg.
-func (msg MsgIssue) ValidateBasic() sdk.Error {
-	// XXX
-	if len(msg.Outputs) == 0 {
-		return ErrNoOutputs(DefaultCodespace).TraceSDK("")
-	}
-	for _, out := range msg.Outputs {
-		if err := out.ValidateBasic(); err != nil {
-			return err.TraceSDK("")
-		}
-	}
-	return nil
-}
-
-// Implements Msg.
-func (msg MsgIssue) GetSignBytes() []byte {
-	var outputs []json.RawMessage
-	for _, output := range msg.Outputs {
-		outputs = append(outputs, output.GetSignBytes())
-	}
-	b, err := msgCdc.MarshalJSON(struct {
-		Banker  sdk.AccAddress    `json:"banker"`
-		Outputs []json.RawMessage `json:"outputs"`
-	}{
-		Banker:  msg.Banker,
-		Outputs: outputs,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
-
-// Implements Msg.
-func (msg MsgIssue) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Banker}
-}
-
-//----------------------------------------
 // Input
 
 // Transaction Input

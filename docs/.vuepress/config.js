@@ -46,6 +46,25 @@ module.exports = {
       	  "/clients/lite/getting_started",
       	  "/clients/lite/specification"
       	]
+      },
+      {
+        title: "Tutorial",
+        collapsable: false,
+        children: [
+	  "/tutorial/",
+          "/tutorial/app-design",
+          "/tutorial/app-init",
+          "/tutorial/keeper",
+          "/tutorial/msgs-handlers",
+          "/tutorial/set-name",
+          "/tutorial/buy-name",
+          "/tutorial/queriers",
+          "/tutorial/codec",
+          "/tutorial/cli",
+          "/tutorial/app-complete",
+          "/tutorial/entrypoint",
+          "/tutorial/dep"
+        ]
       }
     ]
   }

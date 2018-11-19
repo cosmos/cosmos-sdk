@@ -696,6 +696,8 @@ func TestVote(t *testing.T) {
 	proposal := getProposal(t, port, proposalID)
 	require.Equal(t, "Test", proposal.GetTitle())
 
+	tallyOptionBefore := proposal.GetTallyResult().Yes
+
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID, 5)
 	tests.WaitForHeight(resultTx.Height+1, port)
@@ -704,13 +706,18 @@ func TestVote(t *testing.T) {
 	proposal = getProposal(t, port, proposalID)
 	require.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
 
+	option := gov.OptionYes
+
 	// create SubmitProposal TX
-	resultTx = doVote(t, port, seed, name, password, addr, proposalID)
+	resultTx = doVote(t, port, seed, name, password, addr, proposalID, option.String())
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	vote := getVote(t, port, proposalID, addr)
 	require.Equal(t, proposalID, vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
+
+	proposal = getProposal(t, port, proposalID)
+	require.Equal(t, tallyOptionBefore.Add(sdk.NewDec(1)), proposal.GetTallyResult().Yes)
 }
 
 func TestUnjail(t *testing.T) {
@@ -800,13 +807,13 @@ func TestProposalsQuery(t *testing.T) {
 	require.Equal(t, proposalID3, proposals[1].GetProposalID())
 
 	// Addr1 votes on proposals #2 & #3
-	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID2)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID2, gov.OptionYes.String())
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID3)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID3, gov.OptionYes.String())
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 votes on proposal #3
-	resultTx = doVote(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3)
+	resultTx = doVote(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, gov.OptionYes.String())
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals
@@ -1441,7 +1448,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	return results
 }
 
-func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, option string) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
@@ -1452,7 +1459,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	// vote on proposal
 	jsonStr := []byte(fmt.Sprintf(`{
 		"voter": "%s",
-		"option": "Yes",
+		"option": "%s",
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
@@ -1460,7 +1467,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 			"account_number": "%d",
 			"sequence": "%d"
 		}
-	}`, proposerAddr, name, password, chainID, accnum, sequence))
+	}`, proposerAddr, option, name, password, chainID, accnum, sequence))
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

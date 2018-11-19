@@ -156,6 +156,7 @@ func TestVotes(t *testing.T) {
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
+	initialTally := proposal.GetTallyResult()
 
 	proposal.SetStatus(StatusVotingPeriod)
 	keeper.SetProposal(ctx, proposal)
@@ -202,6 +203,12 @@ func TestVotes(t *testing.T) {
 	votesIterator.Next()
 	require.False(t, votesIterator.Valid())
 	votesIterator.Close()
+
+	// Test Proposal Tally increased
+	proposal = keeper.GetProposal(ctx, proposalID)
+	finalTally := proposal.GetTallyResult()
+	require.Equal(t, initialTally.Yes.Add(sdk.NewDec(1)), finalTally.Yes)
+	require.Equal(t, initialTally.NoWithVeto.Add(sdk.NewDec(1)), finalTally.NoWithVeto)
 }
 
 func TestProposalQueues(t *testing.T) {

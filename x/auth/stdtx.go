@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,11 +29,35 @@ func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdT
 	}
 }
 
-//nolint
+// GetMsgs returns the all the transaction's messages.
 func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 
+// ValidateBasic does a simple and lightweight validation check that doesn't
+// require access to any other information.
+func (tx StdTx) ValidateBasic() sdk.Error {
+	if !tx.Fee.Amount.IsPositive() {
+		sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
+	}
+	if len(tx.GetSignatures()) == 0 {
+		return sdk.ErrUnauthorized("no signers")
+	}
+	if len(tx.GetSignatures()) != len(tx.GetSigners()) {
+		return sdk.ErrUnauthorized("wrong number of signers")
+	}
+	if len(tx.GetMemo()) > maxMemoCharacters {
+		return sdk.ErrMemoTooLarge(
+			fmt.Sprintf(
+				"maximum number of characters is %d but received %d characters",
+				maxMemoCharacters, len(tx.GetMemo()),
+			),
+		)
+	}
+
+	return nil
+}
+
 // GetSigners returns the addresses that must sign the transaction.
-// Addresses are returned in a determistic order.
+// Addresses are returned in a deterministic order.
 // They are accumulated from the GetSigners method for each Msg
 // in the order they appear in tx.GetMsgs().
 // Duplicate addresses will be omitted.

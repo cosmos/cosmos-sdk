@@ -67,8 +67,7 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			}
 		}()
 
-		err := validateBasic(stdTx)
-		if err != nil {
+		if err := tx.ValidateBasic(); err != nil {
 			return newCtx, err.Result(), true
 		}
 
@@ -127,29 +126,6 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// TODO: tx tags (?)
 		return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas}, false // continue...
 	}
-}
-
-// Validate the transaction based on things that don't depend on the context
-func validateBasic(tx StdTx) (err sdk.Error) {
-	// Assert that there are signatures.
-	sigs := tx.GetSignatures()
-	if len(sigs) == 0 {
-		return sdk.ErrUnauthorized("no signers")
-	}
-
-	// Assert that number of signatures is correct.
-	var signerAddrs = tx.GetSigners()
-	if len(sigs) != len(signerAddrs) {
-		return sdk.ErrUnauthorized("wrong number of signers")
-	}
-
-	memo := tx.GetMemo()
-	if len(memo) > maxMemoCharacters {
-		return sdk.ErrMemoTooLarge(
-			fmt.Sprintf("maximum number of characters is %d but received %d characters",
-				maxMemoCharacters, len(memo)))
-	}
-	return nil
 }
 
 func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (accs []Account, res sdk.Result) {

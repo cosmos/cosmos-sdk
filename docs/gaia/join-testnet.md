@@ -103,6 +103,37 @@ curl https://raw.githubusercontent.com/cosmos/testnets/master/latest/genesis.jso
 Note we use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets)
 which contains details for the latest testnet. If you are connecting to a different testnet, ensure you get the right files.
 
+You now need to generate a `genesis tx` to generate a signed self-delegation:
+
+```bash
+gaiad gentx \
+    --amount <amount_of_delegation> \
+    --commission-rate <commission_rate> \
+    --commission-max-rate <commission_max_rate> \
+    --commission-max-change-rate <commission_max_change_rate> \
+    --pubkey <consensus_pubkey> \
+    --name <key_name>
+```
+
+If unspecified, `consensus_pubkey` will default to the output of `gaiad tendermint show-validator`.
+`key_name` is the name of the private key that will be used to sign the transaction.
+
+Consult `gaiad gentx --help` for more information on the flags defaults.
+
+Once you've collected all genesis transactions in `~/.gaiad/config/gentx`, you can run:
+
+```bash
+gaiad collect-gentxs
+```
+
+The previous command will collect all genesis transactions and modify `genesis.json` accordingly.
+
+To verify the correctness of the configuration run:
+
+```bash
+gaiad start
+```
+
 ### Add Seed Nodes
 
 Your node needs to know how to find peers. You'll need to add healthy seed nodes to `$HOME/.gaiad/config/config.toml`. The `testnets` repo contains links to the seed nodes for each testnet. If you are looking to join the running testnet please [check the repository for details](https://github.com/cosmos/testnets) on which nodes to use.

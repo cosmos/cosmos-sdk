@@ -22,30 +22,31 @@ Your `cosmosvalconspub` can be used to create a new validator by staking tokens.
 gaiad tendermint show-validator
 ```
 
-Next, craft your `gaiacli tx stake create-validator` command:
+Next, craft your `gaiad gentx` command:
 
 ::: warning Note
 Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
 :::
 
 ```bash
-gaiacli tx stake create-validator \
-  --amount=5steak \
-  --pubkey=$(gaiad tendermint show-validator) \
-  --moniker="choose a moniker" \
-  --chain-id=<chain_id> \
-  --from=<key_name> \
-  --commission-rate="0.10" \
-  --commission-max-rate="0.20" \
-  --commission-max-change-rate="0.01"
+gaiad gentx \
+  --amount <amount_of_delegation> \
+  --commission-rate <commission_rate> \
+  --commission-max-rate <commission_max_rate> \
+  --commission-max-change-rate <commission_max_change_rate> \
+  --pubkey <consensus_pubkey> \
+  --name <key_name>
 ```
 
 __Note__: When specifying commission parameters, the `commission-max-change-rate`
 is used to measure % _point_ change over the `commission-rate`. E.g. 1% to 2% is
 a 100% rate increase, but only 1 percentage point.
 
+__Note__: If unspecified, `consensus_pubkey` will default to the output of `gaiad tendermint show-validator`.
+`key_name` is the name of the private key that will be used to sign the transaction.
+
 ::: tip
-Use `gaiacli tx stake create-validator -h` to get a list of all the available flags.
+Consult `gaiad gentx --help` for more information on the flags defaults.
 :::
 
 ### Edit Validator Description

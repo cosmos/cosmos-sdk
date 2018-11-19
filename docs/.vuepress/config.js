@@ -51,7 +51,7 @@ module.exports = {
         title: "Tutorial",
         collapsable: false,
         children: [
-	  "/tutorial/",
+          "/tutorial/",
           "/tutorial/app-design",
           "/tutorial/app-init",
           "/tutorial/keeper",

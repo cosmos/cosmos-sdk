@@ -62,7 +62,8 @@ IMPROVEMENTS
 
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
- - \#2821 Codespaces are now strings
+ - #2815 Gas unit fields changed from `int64` to `uint64`.
+ - #2821 Codespaces are now strings
 
 * Tendermint
  - #2796 Update to go-amino 0.14.1

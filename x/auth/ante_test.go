@@ -677,7 +677,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        args
-		gasConsumed int64
+		gasConsumed uint64
 		wantPanic   bool
 	}{
 		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), ed25519.GenPrivKey().PubKey()}, ed25519VerifyCost, false},
@@ -699,7 +699,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 func TestAdjustFeesByGas(t *testing.T) {
 	type args struct {
 		fee sdk.Coins
-		gas int64
+		gas uint64
 	}
 	tests := []struct {
 		name string

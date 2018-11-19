@@ -124,7 +124,7 @@ func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
 // GasSetting encapsulates the possible values passed through the --gas flag.
 type GasSetting struct {
 	Simulate bool
-	Gas      int64
+	Gas      uint64
 }
 
 // Type returns the flag's value type.
@@ -140,18 +140,18 @@ func (v *GasSetting) String() string {
 	if v.Simulate {
 		return GasFlagSimulate
 	}
-	return strconv.FormatInt(v.Gas, 10)
+	return strconv.FormatUint(v.Gas, 10)
 }
 
 // ParseGasFlag parses the value of the --gas flag.
-func ReadGasFlag(s string) (simulate bool, gas int64, err error) {
+func ReadGasFlag(s string) (simulate bool, gas uint64, err error) {
 	switch s {
 	case "":
 		gas = DefaultGasLimit
 	case GasFlagSimulate:
 		simulate = true
 	default:
-		gas, err = strconv.ParseInt(s, 10, 64)
+		gas, err = strconv.ParseUint(s, 10, 64)
 		if err != nil {
 			err = fmt.Errorf("gas must be either integer or %q", GasFlagSimulate)
 			return

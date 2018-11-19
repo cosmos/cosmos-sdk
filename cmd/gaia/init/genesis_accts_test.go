@@ -25,14 +25,14 @@ func TestAddGenesisAccount(t *testing.T) {
 	}{
 		{
 			"valid account",
-		args{
-			app.GenesisState{},
-			addr1,
-			sdk.Coins{},
-		},
-		false},
+			args{
+				app.GenesisState{},
+				addr1,
+				sdk.Coins{},
+			},
+			false},
 		{"dup account", args{
-			app.GenesisState{Accounts: []app.GenesisAccount{app.GenesisAccount{Address:addr1}}},
+			app.GenesisState{Accounts: []app.GenesisAccount{{Address: addr1}}},
 			addr1,
 			sdk.Coins{}}, true},
 	}

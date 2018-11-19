@@ -451,8 +451,8 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		Code:      uint32(result.Code),
 		Data:      result.Data,
 		Log:       result.Log,
-		GasWanted: result.GasWanted,
-		GasUsed:   result.GasUsed,
+		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
 		Tags:      result.Tags,
 	}
 }
@@ -477,8 +477,8 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 		Codespace: string(result.Codespace),
 		Data:      result.Data,
 		Log:       result.Log,
-		GasWanted: result.GasWanted,
-		GasUsed:   result.GasUsed,
+		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
 		Tags:      result.Tags,
 	}
 }
@@ -614,7 +614,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
-	var gasWanted int64
+	var gasWanted uint64
 
 	ctx := app.getContextForAnte(mode, txBytes)
 	ctx = app.initializeContext(ctx, mode)

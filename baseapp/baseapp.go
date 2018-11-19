@@ -660,7 +660,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		if !newCtx.IsZero() {
 			ctx = newCtx
 		}
-		msCache.Write()
+		if mode != runTxModeSimulate {
+			msCache.Write()
+		}
 		gasWanted = result.GasWanted
 	}
 

@@ -15,14 +15,12 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-
 // SimpleGenTx is a simple genesis tx
 type SimpleGenTx struct {
 	Addr sdk.AccAddress `json:"addr"`
 }
 
 //_____________________________________________________________________
-
 
 // Generate a genesis transaction
 func SimpleAppGenTx(cdc *codec.Codec, pk crypto.PubKey) (

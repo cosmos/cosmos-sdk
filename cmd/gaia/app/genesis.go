@@ -91,7 +91,6 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	}
 }
 
-
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
 func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
@@ -279,7 +278,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
-	coins :=sdk.Coins{
+	coins := sdk.Coins{
 		{"fooToken", sdk.NewInt(1000)},
 		{bondDenom, freeFermionsAcc},
 	}

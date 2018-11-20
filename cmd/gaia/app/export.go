@@ -58,7 +58,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 			return false
 		})
 		app.distrKeeper.IterateDelegationDistInfos(ctx, func(_ int64, distInfo distr.DelegationDistInfo) (stop bool) {
-			app.distrKeeper.WithdrawDelegationRewardsAll(ctx, distInfo.DelegatorAddr)
+			app.distrKeeper.WithdrawDelegationReward(ctx, distInfo.DelegatorAddr, distInfo.ValOperatorAddr)
 			return false
 		})
 
@@ -74,7 +74,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 		}
 		bondDenom := app.stakeKeeper.GetParams(ctx).BondDenom
 		if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
-			panic(fmt.Sprintf("unexpected leftover validator pool coins: %v", feePool.ValPool.AmountOf(bondDenom)))
+			panic(fmt.Sprintf("unexpected leftover validator pool coins: %v", feePool.ValPool.AmountOf(bondDenom).String()))
 		}
 
 		// reset fee pool height, save fee pool

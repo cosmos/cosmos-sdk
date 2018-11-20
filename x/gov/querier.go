@@ -111,7 +111,6 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 }
 
 // Params for query 'custom/gov/deposit'
-
 type QueryDepositParams struct {
 	ProposalID uint64
 	Depositer  sdk.AccAddress
@@ -258,6 +257,7 @@ type QueryProposalsParams struct {
 	Limit          uint64
 }
 
+// creates a new instance of QueryProposalsParams
 func NewQueryProposalsParams(status ProposalStatus, limit uint64, voter, depositer sdk.AccAddress) QueryProposalsParams {
 	return QueryProposalsParams{
 		Voter:          voter,

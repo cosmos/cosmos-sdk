@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
 )
 
 var _ sdk.Tx = (*StdTx)(nil)
@@ -35,13 +36,15 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 // ValidateBasic does a simple and lightweight validation check that doesn't
 // require access to any other information.
 func (tx StdTx) ValidateBasic() sdk.Error {
+	stdSigs := tx.GetSignatures()
+
 	if !tx.Fee.Amount.IsNotNegative() {
 		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
 	}
-	if len(tx.GetSignatures()) == 0 {
+	if len(stdSigs) == 0 {
 		return sdk.ErrUnauthorized("no signers")
 	}
-	if len(tx.GetSignatures()) != len(tx.GetSigners()) {
+	if len(stdSigs) != len(tx.GetSigners()) {
 		return sdk.ErrUnauthorized("wrong number of signers")
 	}
 	if len(tx.GetMemo()) > maxMemoCharacters {
@@ -53,7 +56,31 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 		)
 	}
 
+	sigCount := 0
+	for i := 0; i < len(stdSigs); i++ {
+		sigCount += countSubKeys(stdSigs[i].PubKey)
+		if sigCount > txSigLimit {
+			return sdk.ErrTooManySignatures(
+				fmt.Sprintf("signatures: %d, limit: %d", sigCount, txSigLimit),
+			)
+		}
+	}
+
 	return nil
+}
+
+func countSubKeys(pub crypto.PubKey) int {
+	v, ok := pub.(*multisig.PubKeyMultisigThreshold)
+	if !ok {
+		return 1
+	}
+
+	numKeys := 0
+	for _, subkey := range v.PubKeys {
+		numKeys += countSubKeys(subkey)
+	}
+
+	return numKeys
 }
 
 // GetSigners returns the addresses that must sign the transaction.

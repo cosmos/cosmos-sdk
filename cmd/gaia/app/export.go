@@ -40,6 +40,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 		})
 
 		// delete all distribution infos
+		// these will be recreated in InitGenesis
 		app.distrKeeper.RemoveValidatorDistInfos(ctx)
 		app.distrKeeper.RemoveDelegationDistInfos(ctx)
 
@@ -75,8 +76,6 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 			app.stakeKeeper.SetValidator(ctx, validator)
 			counter++
 		}
-
-		// AFAICT we do not need to reset bond heights since they are unused.
 
 		/* Handle slashing state. */
 

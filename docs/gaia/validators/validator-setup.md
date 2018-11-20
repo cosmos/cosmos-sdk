@@ -109,9 +109,7 @@ Once you've collected all genesis transactions in `~/.gaiad/config/gentx`, you c
 gaiad collect-gentxs
 ```
 
-The previous command will collect all genesis transactions and modify `genesis.json` accordingly.
-
-To verify the correctness of the configuration run:
+The previous command will collect all genesis transactions and finalise `genesis.json`. To verify the correctness of the configuration and start the node run:
 
 ```bash
 gaiad start

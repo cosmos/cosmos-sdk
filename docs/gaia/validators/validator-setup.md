@@ -14,7 +14,7 @@ Before setting up your validator node, make sure you've already gone through the
 If you want to become a validator for the Hub's `mainnet`, you should [research security](/validators/security.md).
 :::
 
-You may want to skip the next section if you have already [joined a testnet](/join-testnet.md).
+You may want to skip the next section if you have already [set up a full-node](/join-testnet.md).
 
 
 ### Setting Up a New Node

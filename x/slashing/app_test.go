@@ -36,8 +36,8 @@ func getMockApp(t *testing.T) (*mock.App, stake.Keeper, Keeper) {
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper)
 
 	paramsKeeper := params.NewKeeper(mapp.Cdc, keyParams, tkeyParams)
-	stakeKeeper := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, bankKeeper, paramsKeeper.Subspace(stake.DefaultParamspace), mapp.RegisterCodespace(stake.DefaultCodespace))
-	keeper := NewKeeper(mapp.Cdc, keySlashing, stakeKeeper, paramsKeeper.Subspace(DefaultParamspace), mapp.RegisterCodespace(DefaultCodespace))
+	stakeKeeper := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, bankKeeper, paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
+	keeper := NewKeeper(mapp.Cdc, keySlashing, stakeKeeper, paramsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 	mapp.Router().AddRoute("stake", stake.NewHandler(stakeKeeper))
 	mapp.Router().AddRoute("slashing", NewHandler(keeper))
 
@@ -126,5 +126,6 @@ func TestSlashingMsgs(t *testing.T) {
 
 	// unjail should fail with unknown validator
 	res := mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{unjailMsg}, []int64{0}, []int64{1}, false, false, priv1)
-	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeValidatorNotJailed), res.Code)
+	require.EqualValues(t, CodeValidatorNotJailed, res.Code)
+	require.EqualValues(t, DefaultCodespace, res.Codespace)
 }

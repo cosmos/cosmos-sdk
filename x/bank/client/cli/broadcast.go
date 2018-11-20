@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
@@ -36,7 +37,7 @@ in place of an input filename, the command reads from standard input.`,
 		},
 	}
 
-	return cmd
+	return client.PostCommands(cmd)[0]
 }
 
 func readAndUnmarshalStdTx(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {

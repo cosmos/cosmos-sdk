@@ -6,12 +6,13 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	amino "github.com/tendermint/go-amino"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -21,6 +22,21 @@ var (
 	flagOnlyFromValidator = "only-from-validator"
 	flagIsValidator       = "is-validator"
 )
+
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+	distTxCmd := &cobra.Command{
+		Use:   "dist",
+		Short: "Distribution transactions subcommands",
+	}
+
+	distTxCmd.AddCommand(client.PostCommands(
+		GetCmdWithdrawRewards(cdc),
+		GetCmdSetWithdrawAddr(cdc),
+	)...)
+
+	return distTxCmd
+}
 
 // command to withdraw rewards
 func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
@@ -41,7 +57,7 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+				WithAccountDecoder(cdc)
 
 			var msg sdk.Msg
 			switch {
@@ -92,7 +108,7 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+				WithAccountDecoder(cdc)
 
 			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {

@@ -71,6 +71,7 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if err != nil {
 			return newCtx, err.Result(), true
 		}
+
 		// charge gas for the memo
 		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
 
@@ -260,13 +261,16 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey) {
 	}
 }
 
-func adjustFeesByGas(fees sdk.Coins, gas int64) sdk.Coins {
+func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
 	gasCost := gas / gasPerUnitCost
 	gasFees := make(sdk.Coins, len(fees))
+
 	// TODO: Make this not price all coins in the same way
+	// TODO: Undo int64 casting once unsigned integers are supported for coins
 	for i := 0; i < len(fees); i++ {
-		gasFees[i] = sdk.NewInt64Coin(fees[i].Denom, gasCost)
+		gasFees[i] = sdk.NewInt64Coin(fees[i].Denom, int64(gasCost))
 	}
+
 	return fees.Plus(gasFees)
 }
 
@@ -277,24 +281,36 @@ func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
-	newCoins := coins.Minus(feeAmount)
-	if !newCoins.IsNotNegative() {
+	if !feeAmount.IsValid() {
+		return nil, sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", feeAmount)).Result()
+	}
+
+	newCoins, ok := coins.SafeMinus(feeAmount)
+	if ok {
 		errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
 		return nil, sdk.ErrInsufficientFunds(errMsg).Result()
 	}
+
 	err := acc.SetCoins(newCoins)
 	if err != nil {
 		// Handle w/ #870
 		panic(err)
 	}
+
 	return acc, sdk.Result{}
 }
 
 func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	// currently we use a very primitive gas pricing model with a constant gasPrice.
 	// adjustFeesByGas handles calculating the amount of fees required based on the provided gas.
-	// TODO: Make the gasPrice not a constant, and account for tx size.
-	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
+	//
+	// TODO:
+	// - Make the gasPrice not a constant, and account for tx size.
+	// - Make Gas an unsigned integer and use tx basic validation
+	if stdTx.Fee.Gas <= 0 {
+		return sdk.ErrInternal(fmt.Sprintf("invalid gas supplied: %d", stdTx.Fee.Gas)).Result()
+	}
+	requiredFees := adjustFeesByGas(ctx.MinimumFees(), uint64(stdTx.Fee.Gas))
 
 	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
 	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {
@@ -306,10 +322,12 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 }
 
 func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
-	// set the gas meter
+	// In various cases such as simulation and during the genesis block, we do not
+	// meter any gas utilization.
 	if simulate || ctx.BlockHeight() == 0 {
 		return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	}
+
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 }
 

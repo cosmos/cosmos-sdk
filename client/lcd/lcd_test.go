@@ -284,7 +284,7 @@ func TestCoinSend(t *testing.T) {
 
 	// test failure with negative gas
 	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "-200", 0, "")
-	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// test failure with 0 gas
 	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "0", 0, "")
@@ -390,8 +390,8 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
-	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasWanted)
-	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasUsed)
+	require.Equal(t, gasEstimate, uint64(resultTx.DeliverTx.GasWanted))
+	require.Equal(t, gasEstimate, uint64(resultTx.DeliverTx.GasUsed))
 }
 
 func TestTxs(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 
 // simple stake errors reserve 300 ~ 399.
 const (
-	DefaultCodespace sdk.CodespaceType = 4
+	DefaultCodespace sdk.CodespaceType = moduleName
 
 	// simplestake errors reserve 300 - 399.
 	CodeEmptyValidator        sdk.CodeType = 300

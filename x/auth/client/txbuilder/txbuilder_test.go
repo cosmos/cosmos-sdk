@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
@@ -23,7 +23,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		Codec         *codec.Codec
 		AccountNumber int64
 		Sequence      int64
-		Gas           int64
+		Gas           uint64
 		GasAdjustment float64
 		SimulateGas   bool
 		ChainID       string

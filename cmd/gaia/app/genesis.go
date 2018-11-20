@@ -93,7 +93,6 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 	}
 }
 
-
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
 func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (

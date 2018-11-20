@@ -21,7 +21,7 @@ func TestGasMeter(t *testing.T) {
 
 	for tcnum, tc := range cases {
 		meter := NewGasMeter(tc.limit)
-		used := int64(0)
+		used := uint64(0)
 
 		for unum, usage := range tc.usage {
 			used += usage

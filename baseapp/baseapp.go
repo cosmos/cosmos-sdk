@@ -10,7 +10,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
-	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -47,7 +46,6 @@ type BaseApp struct {
 	cms         sdk.CommitMultiStore // Main (uncached) state
 	router      Router               // handle any kind of message
 	queryRouter QueryRouter          // router for redirecting query calls
-	codespacer  *sdk.Codespacer      // handle module codespacing
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
@@ -95,13 +93,9 @@ func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecod
 		cms:         store.NewCommitMultiStore(db),
 		router:      NewRouter(),
 		queryRouter: NewQueryRouter(),
-		codespacer:  sdk.NewCodespacer(),
 		txDecoder:   txDecoder,
 	}
 
-	// Register the undefined & root codespaces, which should not be used by
-	// any modules.
-	app.codespacer.RegisterOrPanic(sdk.CodespaceRoot)
 	for _, option := range options {
 		option(app)
 	}
@@ -117,11 +111,6 @@ func (app *BaseApp) Name() string {
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.WithTracer(w)
-}
-
-// Register the next available codespace through the baseapp's codespacer, starting from a default
-func (app *BaseApp) RegisterCodespace(codespace sdk.CodespaceType) sdk.CodespaceType {
-	return app.codespacer.RegisterNext(codespace)
 }
 
 // Mount IAVL stores to the provided keys in the BaseApp multistore
@@ -338,8 +327,9 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			}
 		case "version":
 			return abci.ResponseQuery{
-				Code:  uint32(sdk.ABCICodeOK),
-				Value: []byte(version.GetVersion()),
+				Code:      uint32(sdk.CodeOK),
+				Codespace: string(sdk.CodespaceRoot),
+				Value:     []byte(version.GetVersion()),
 			}
 		default:
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
@@ -348,8 +338,9 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 		// Encode with json
 		value := codec.Cdc.MustMarshalBinaryLengthPrefixed(result)
 		return abci.ResponseQuery{
-			Code:  uint32(sdk.ABCICodeOK),
-			Value: value,
+			Code:      uint32(sdk.CodeOK),
+			Codespace: string(sdk.CodespaceRoot),
+			Value:     value,
 		}
 	}
 	msg := "Expected second parameter to be either simulate or version, neither was present"
@@ -409,12 +400,13 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	resBytes, err := querier(ctx, path[2:], req)
 	if err != nil {
 		return abci.ResponseQuery{
-			Code: uint32(err.ABCICode()),
-			Log:  err.ABCILog(),
+			Code:      uint32(err.Code()),
+			Codespace: string(err.Codespace()),
+			Log:       err.ABCILog(),
 		}
 	}
 	return abci.ResponseQuery{
-		Code:  uint32(sdk.ABCICodeOK),
+		Code:  uint32(sdk.CodeOK),
 		Value: resBytes,
 	}
 }
@@ -479,8 +471,8 @@ func (app *BaseApp) CheckTx(txBytes []byte) (res abci.ResponseCheckTx) {
 		Code:      uint32(result.Code),
 		Data:      result.Data,
 		Log:       result.Log,
-		GasWanted: result.GasWanted,
-		GasUsed:   result.GasUsed,
+		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
 		Tags:      result.Tags,
 	}
 }
@@ -503,10 +495,11 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseDeliverTx{
 		Code:      uint32(result.Code),
+		Codespace: string(result.Codespace),
 		Data:      result.Data,
 		Log:       result.Log,
-		GasWanted: result.GasWanted,
-		GasUsed:   result.GasUsed,
+		GasWanted: int64(result.GasWanted), // TODO: Should type accept unsigned ints?
+		GasUsed:   int64(result.GasUsed),   // TODO: Should type accept unsigned ints?
 		Tags:      result.Tags,
 	}
 }
@@ -522,7 +515,6 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 		// Validate the Msg.
 		err := msg.ValidateBasic()
 		if err != nil {
-			err = err.WithDefaultCodespace(sdk.CodespaceRoot)
 			return err
 		}
 	}
@@ -533,11 +525,11 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 // retrieve the context for the ante handler and store the tx bytes; store
 // the vote infos if the tx runs within the deliverTx() state.
 func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
-	// Get the context
-	ctx = getState(app, mode).ctx.WithTxBytes(txBytes)
+	ctx = app.getState(mode).ctx.WithTxBytes(txBytes)
 	if mode == runTxModeDeliver {
 		ctx = ctx.WithVoteInfos(app.voteInfos)
 	}
+
 	return
 }
 
@@ -547,7 +539,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 	logs := make([]string, 0, len(msgs))
 	var data []byte   // NOTE: we just append them all (?!)
 	var tags sdk.Tags // also just append them all
-	var code sdk.ABCICodeType
+	var code sdk.CodeType
+	var codespace sdk.CodespaceType
 	for msgIdx, msg := range msgs {
 		// Match route.
 		msgRoute := msg.Route()
@@ -574,6 +567,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		if !msgResult.IsOK() {
 			logs = append(logs, fmt.Sprintf("Msg %d failed: %s", msgIdx, msgResult.Log))
 			code = msgResult.Code
+			codespace = msgResult.Codespace
 			break
 		}
 
@@ -583,10 +577,11 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 	// Set the final gas values.
 	result = sdk.Result{
-		Code:    code,
-		Data:    data,
-		Log:     strings.Join(logs, "\n"),
-		GasUsed: ctx.GasMeter().GasConsumed(),
+		Code:      code,
+		Codespace: codespace,
+		Data:      data,
+		Log:       strings.Join(logs, "\n"),
+		GasUsed:   ctx.GasMeter().GasConsumed(),
 		// TODO: FeeAmount/FeeDenom
 		Tags: tags,
 	}
@@ -596,7 +591,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 // Returns the applicantion's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
-func getState(app *BaseApp, mode runTxMode) *state {
+func (app *BaseApp) getState(mode runTxMode) *state {
 	if mode == runTxModeCheck || mode == runTxModeSimulate {
 		return app.checkState
 	}
@@ -606,20 +601,42 @@ func getState(app *BaseApp, mode runTxMode) *state {
 
 func (app *BaseApp) initializeContext(ctx sdk.Context, mode runTxMode) sdk.Context {
 	if mode == runTxModeSimulate {
-		ctx = ctx.WithMultiStore(getState(app, runTxModeSimulate).CacheMultiStore())
+		ctx = ctx.WithMultiStore(app.getState(runTxModeSimulate).CacheMultiStore())
 	}
 	return ctx
 }
 
+// cacheTxContext returns a new context based off of the provided context with a
+// cache wrapped multi-store and the store itself to allow the caller to write
+// changes from the cached multi-store.
+func (app *BaseApp) cacheTxContext(
+	ctx sdk.Context, txBytes []byte, mode runTxMode,
+) (sdk.Context, sdk.CacheMultiStore) {
+
+	msCache := app.getState(mode).CacheMultiStore()
+	if msCache.TracingEnabled() {
+		msCache = msCache.WithTracingContext(
+			sdk.TraceContext(
+				map[string]interface{}{
+					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
+				},
+			),
+		).(sdk.CacheMultiStore)
+	}
+
+	return ctx.WithMultiStore(msCache), msCache
+}
+
 // runTx processes a transaction. The transactions is proccessed via an
-// anteHandler. txBytes may be nil in some cases, eg. in tests. Also, in the
-// future we may support "internal" transactions.
+// anteHandler. The provided txBytes may be nil in some cases, eg. in tests. For
+// further details on transaction execution, reference the BaseApp SDK
+// documentation.
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk.Result) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
-	var gasWanted int64
-	var msCache sdk.CacheMultiStore
+	var gasWanted uint64
+
 	ctx := app.getContextForAnte(mode, txBytes)
 	ctx = app.initializeContext(ctx, mode)
 
@@ -650,16 +667,27 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		return err.Result()
 	}
 
-	// run the ante handler
+	// Execute the ante handler if one is defined.
 	if app.anteHandler != nil {
-		newCtx, result, abort := app.anteHandler(ctx, tx, (mode == runTxModeSimulate))
+		var anteCtx sdk.Context
+		var msCache sdk.CacheMultiStore
+
+		// Cache wrap context before anteHandler call in case it aborts.
+		// This is required for both CheckTx and DeliverTx.
+		// https://github.com/cosmos/cosmos-sdk/issues/2772
+		// NOTE: Alternatively, we could require that anteHandler ensures that
+		// writes do not happen if aborted/failed.  This may have some
+		// performance benefits, but it'll be more difficult to get right.
+		anteCtx, msCache = app.cacheTxContext(ctx, txBytes, mode)
+
+		newCtx, result, abort := app.anteHandler(anteCtx, tx, (mode == runTxModeSimulate))
 		if abort {
 			return result
 		}
 		if !newCtx.IsZero() {
 			ctx = newCtx
 		}
-
+		msCache.Write()
 		gasWanted = result.GasWanted
 	}
 
@@ -669,17 +697,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		return
 	}
 
-	// Keep the state in a transient CacheWrap in case processing the messages
-	// fails.
-	msCache = getState(app, mode).CacheMultiStore()
-	if msCache.TracingEnabled() {
-		msCache = msCache.WithTracingContext(sdk.TraceContext(
-			map[string]interface{}{"txHash": cmn.HexBytes(tmhash.Sum(txBytes)).String()},
-		)).(sdk.CacheMultiStore)
-	}
-
-	ctx = ctx.WithMultiStore(msCache)
-	result = app.runMsgs(ctx, msgs, mode)
+	// Create a new context based off of the existing context with a cache wrapped
+	// multi-store in case message processing fails.
+	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes, mode)
+	result = app.runMsgs(runMsgCtx, msgs, mode)
 	result.GasWanted = gasWanted
 
 	// consume block gas

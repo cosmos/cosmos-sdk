@@ -7,7 +7,7 @@ import (
 
 // Bank errors reserve 100 ~ 199.
 const (
-	DefaultCodespace sdk.CodespaceType = 2
+	DefaultCodespace sdk.CodespaceType = "bank"
 
 	CodeInvalidInput  sdk.CodeType = 101
 	CodeInvalidOutput sdk.CodeType = 102

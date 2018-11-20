@@ -18,10 +18,16 @@ var (
 )
 
 // Gas measured by the SDK
-type Gas = int64
+type Gas = uint64
 
 // ErrorOutOfGas defines an error thrown when an action results in out of gas.
 type ErrorOutOfGas struct {
+	Descriptor string
+}
+
+// ErrorGasOverflow defines an error thrown when an action results gas consumption
+// unsigned integer overflow.
+type ErrorGasOverflow struct {
 	Descriptor string
 }
 
@@ -50,7 +56,14 @@ func (g *basicGasMeter) GasConsumed() Gas {
 }
 
 func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
-	g.consumed += amount
+	var overflow bool
+
+	// TODO: Should we set the consumed field after overflow checking?
+	g.consumed, overflow = AddUint64Overflow(g.consumed, amount)
+	if overflow {
+		panic(ErrorGasOverflow{descriptor})
+	}
+
 	if g.consumed > g.limit {
 		panic(ErrorOutOfGas{descriptor})
 	}
@@ -76,7 +89,13 @@ func (g *infiniteGasMeter) GasConsumed() Gas {
 }
 
 func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
-	g.consumed += amount
+	var overflow bool
+
+	// TODO: Should we set the consumed field after overflow checking?
+	g.consumed, overflow = AddUint64Overflow(g.consumed, amount)
+	if overflow {
+		panic(ErrorGasOverflow{descriptor})
+	}
 }
 
 func (g *infiniteGasMeter) PastLimit() bool {

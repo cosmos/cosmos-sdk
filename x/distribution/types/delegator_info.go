@@ -59,11 +59,21 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	di.DelPoolWithdrawalHeight = wc.Height
 	withdrawalTokens := vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
 
+	if di.ValOperatorAddr.String() == "cosmosvaloper1uqzxjhtvkyqpaprlg37kr8a7wwvjsul255r9uj" &&
+		di.DelegatorAddr.String() == "cosmos1kd0jlj0nwstqgthxx86grwzevfy8psehz0gs0w" {
+
+		fmt.Println("______________________")
+		fmt.Printf("debug Height: %v\n", wc.Height)
+		fmt.Printf("debug withdrawalTokens: %v\n", withdrawalTokens)
+		fmt.Printf("debug accum: %v\n", accum)
+		fmt.Printf("debug vi.DelAccum.Accum: %v\n", vi.DelAccum.Accum)
+	}
+
 	// defensive check for impossible accum ratios
 	if accum.GT(vi.DelAccum.Accum) {
-		panic(fmt.Sprintf("accum > vi.DelAccum.Accum:\n",
-			"\taccum\t\t%v\n"+
-				"\tvi.DelAccum.Accum\t%v\n",
+		panic(fmt.Sprintf("accum > vi.DelAccum.Accum:\n"+
+			"\taccum\t\t\t%v\n"+
+			"\tvi.DelAccum.Accum\t%v\n",
 			accum, vi.DelAccum.Accum))
 	}
 

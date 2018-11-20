@@ -310,7 +310,7 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	if stdTx.Fee.Gas <= 0 {
 		return sdk.ErrInternal(fmt.Sprintf("invalid gas supplied: %d", stdTx.Fee.Gas)).Result()
 	}
-	requiredFees := adjustFeesByGas(ctx.MinimumFees(), uint64(stdTx.Fee.Gas))
+	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
 
 	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
 	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {

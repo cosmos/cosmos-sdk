@@ -279,10 +279,12 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
 	coins := sdk.Coins{
-		{"fooToken", sdk.NewInt(1000)},
-		{bondDenom, freeFermionsAcc},
+		sdk.NewCoin("fooToken", sdk.NewInt(1000)),
+		sdk.NewCoin(bondDenom, freeFermionsAcc),
 	}
+
 	coins.Sort()
+
 	accAuth.Coins = coins
 	return NewGenesisAccount(&accAuth)
 }

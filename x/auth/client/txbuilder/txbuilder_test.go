@@ -23,7 +23,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		Codec         *codec.Codec
 		AccountNumber int64
 		Sequence      int64
-		Gas           int64
+		Gas           uint64
 		GasAdjustment float64
 		SimulateGas   bool
 		ChainID       string

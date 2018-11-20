@@ -50,7 +50,7 @@ func getMockApp(t *testing.T) *mock.App {
 	RegisterCodec(mapp.Cdc)
 	keyCool := sdk.NewKVStoreKey("cool")
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper)
-	keeper := NewKeeper(keyCool, bankKeeper, mapp.RegisterCodespace(DefaultCodespace))
+	keeper := NewKeeper(keyCool, bankKeeper, DefaultCodespace)
 	mapp.Router().AddRoute("cool", NewHandler(keeper))
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, "ice-cold"))
@@ -90,15 +90,15 @@ func TestMsgQuiz(t *testing.T) {
 	// Set the trend, submit a really cool quiz and check for reward
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{setTrendMsg1}, []int64{0}, []int64{0}, true, true, priv1)
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{1}, true, true, priv1)
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", sdk.NewInt(69)}})
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("icecold", sdk.NewInt(69))})
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg2}, []int64{0}, []int64{2}, false, false, priv1) // result without reward
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", sdk.NewInt(69)}})
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("icecold", sdk.NewInt(69))})
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{3}, true, true, priv1)
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", sdk.NewInt(138)}})
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("icecold", sdk.NewInt(138))})
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{setTrendMsg2}, []int64{0}, []int64{4}, true, true, priv1) // reset the trend
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg1}, []int64{0}, []int64{5}, false, false, priv1)   // the same answer will nolonger do!
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"icecold", sdk.NewInt(138)}})
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("icecold", sdk.NewInt(138))})
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{quizMsg2}, []int64{0}, []int64{6}, true, true, priv1) // earlier answer now relevant again
-	mock.CheckBalance(t, mapp, addr1, sdk.Coins{{"badvibesonly", sdk.NewInt(69)}, {"icecold", sdk.NewInt(138)}})
+	mock.CheckBalance(t, mapp, addr1, sdk.Coins{sdk.NewCoin("badvibesonly", sdk.NewInt(69)), sdk.NewCoin("icecold", sdk.NewInt(138))})
 	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{setTrendMsg3}, []int64{0}, []int64{7}, false, false, priv1) // expect to fail to set the trend to something which is not cool
 }

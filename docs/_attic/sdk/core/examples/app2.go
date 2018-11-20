@@ -126,7 +126,7 @@ func handleMsgIssue(keyIssue *sdk.KVStoreKey, keyAcc *sdk.KVStoreKey) sdk.Handle
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		issueMsg, ok := msg.(MsgIssue)
 		if !ok {
-			return sdk.NewError(2, 1, "MsgIssue is malformed").Result()
+			return sdk.NewError(bankCodespace, 1, "MsgIssue is malformed").Result()
 		}
 
 		// Retrieve stores

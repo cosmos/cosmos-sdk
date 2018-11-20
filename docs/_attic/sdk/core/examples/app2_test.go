@@ -20,7 +20,7 @@ func TestEncoding(t *testing.T) {
 	sendMsg := MsgSend{
 		From:   addr1,
 		To:     addr2,
-		Amount: sdk.Coins{{"testCoins", sdk.NewInt(100)}},
+		Amount: sdk.Coins{sdk.NewCoin("testCoins", sdk.NewInt(100))},
 	}
 
 	// Construct transaction

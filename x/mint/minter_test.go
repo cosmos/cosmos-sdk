@@ -1,6 +1,7 @@
 package mint
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -77,5 +78,21 @@ func TestBlockProvision(t *testing.T) {
 		require.True(t, expProvisions.IsEqual(provisions),
 			"test: %v\n\tExp: %v\n\tGot: %v\n",
 			i, tc.expProvisions, provisions)
+	}
+}
+
+// using sdk.Int operations:
+// BenchmarkBlockProvision-4 5000000 220 ns/op
+func BenchmarkBlockProvision(b *testing.B) {
+	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
+	params := DefaultParams()
+
+	s1 := rand.NewSource(100)
+	r1 := rand.New(s1)
+	minter.AnnualProvisions = sdk.NewInt(r1.Int63n(1000000))
+
+	// run the Fib function b.N times
+	for n := 0; n < b.N; n++ {
+		minter.BlockProvision(params)
 	}
 }

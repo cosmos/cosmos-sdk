@@ -24,6 +24,29 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 	// prepare for fresh start at zero height
 	if forZeroHeight {
 
+		/* TODO XXX check some invariants */
+
+		height := ctx.BlockHeight()
+
+		valAccum := sdk.ZeroDec()
+		app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, vdi distr.ValidatorDistInfo) bool {
+			lastValPower := app.stakeKeeper.GetLastValidatorPower(ctx, vdi.OperatorAddr)
+			valAccum = valAccum.Add(vdi.GetValAccum(height, sdk.NewDecFromInt(lastValPower)))
+			return false
+		})
+
+		lastTotalPower := sdk.NewDecFromInt(app.stakeKeeper.GetLastTotalPower(ctx))
+		totalAccum := app.distrKeeper.GetFeePool(ctx).GetTotalValAccum(height, lastTotalPower)
+
+		if !totalAccum.Equal(valAccum) {
+			panic(fmt.Errorf("validator accum invariance: \n\tfee pool totalAccum: %v"+
+				"\n\tvalidator accum \t%v\n", totalAccum.String(), valAccum.String()))
+		}
+
+		fmt.Printf("accum invariant ok!\n")
+
+		/* END TODO XXX */
+
 		/* Handle fee distribution state. */
 
 		// withdraw all delegator & validator rewards

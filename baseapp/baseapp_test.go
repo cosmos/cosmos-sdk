@@ -855,7 +855,7 @@ func TestTxGasLimits(t *testing.T) {
 
 // Test that transactions exceeding gas limits fail
 func TestMaxBlockGasLimits(t *testing.T) {
-	gasGranted := int64(10)
+	gasGranted := uint64(10)
 	anteOpt := func(bapp *BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
@@ -880,7 +880,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 			}()
 
 			count := tx.(*txTest).Counter
-			newCtx.GasMeter().ConsumeGas(count, "counter-ante")
+			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 			res = sdk.Result{
 				GasWanted: gasGranted,
 			}
@@ -892,7 +892,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 			count := msg.(msgCounter).Counter
-			ctx.GasMeter().ConsumeGas(count, "counter-handler")
+			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return sdk.Result{}
 		})
 	}
@@ -903,7 +903,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	testCases := []struct {
 		tx                *txTest
 		numDelivers       int
-		gasUsedPerDeliver int64
+		gasUsedPerDeliver uint64
 		fail              bool
 		failAfterDeliver  int
 	}{
@@ -933,12 +933,13 @@ func TestMaxBlockGasLimits(t *testing.T) {
 
 			// check for failed transactions
 			if tc.fail && (j+1) > tc.failAfterDeliver {
-				require.Equal(t, res.Code, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOutOfGas), fmt.Sprintf("%d: %v, %v", i, tc, res))
+				require.Equal(t, res.Code, sdk.CodeOutOfGas, fmt.Sprintf("%d: %v, %v", i, tc, res))
+				require.Equal(t, res.Codespace, sdk.CodespaceRoot, fmt.Sprintf("%d: %v, %v", i, tc, res))
 				require.True(t, ctx.BlockGasMeter().PastLimit())
 			} else {
 
 				// check gas used and wanted
-				expBlockGasUsed := tc.gasUsedPerDeliver * int64(j+1)
+				expBlockGasUsed := tc.gasUsedPerDeliver * uint64(j+1)
 				require.Equal(t, expBlockGasUsed, blockGasUsed,
 					fmt.Sprintf("%d,%d: %v, %v, %v, %v", i, j, tc, expBlockGasUsed, blockGasUsed, res))
 

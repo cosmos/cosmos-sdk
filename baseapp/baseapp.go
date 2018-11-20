@@ -68,7 +68,7 @@ type BaseApp struct {
 
 	// spam prevention
 	minimumFees     sdk.Coins
-	maximumBlockGas int64
+	maximumBlockGas uint64
 
 	// flag for sealing
 	sealed bool
@@ -185,7 +185,7 @@ func (app *BaseApp) initFromStore(mainKey sdk.StoreKey) error {
 func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
 
 // SetMaximumBlockGas sets the maximum gas allowable per block.
-func (app *BaseApp) SetMaximumBlockGas(gas int64) { app.maximumBlockGas = gas }
+func (app *BaseApp) SetMaximumBlockGas(gas uint64) { app.maximumBlockGas = gas }
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {

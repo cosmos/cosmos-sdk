@@ -40,7 +40,7 @@ func SetMinimumFees(minFees string) func(*BaseApp) {
 }
 
 // SetMinimumFees returns an option that sets the minimum fees on the app.
-func SetMaximumBlockGas(gas int64) func(*BaseApp) {
+func SetMaximumBlockGas(gas uint64) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.SetMaximumBlockGas(gas) }
 }
 

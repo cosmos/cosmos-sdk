@@ -63,7 +63,7 @@ func newApp(logger log.Logger, db dbm.DB,
 	if err != nil {
 		panic(err)
 	}
-	maxBlockGas := genDoc.ConsensusParams.BlockSize.MaxGas
+	maxBlockGas := uint64(genDoc.ConsensusParams.BlockSize.MaxGas)
 
 	return app.NewGaiaApp(logger, db, traceStore,
 		baseapp.SetPruning(viper.GetString("pruning")),

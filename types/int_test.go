@@ -591,6 +591,31 @@ func TestEncodingTableUint(t *testing.T) {
 	}
 }
 
+func TestSafeSub(t *testing.T) {
+	testCases := []struct {
+		x, y     Uint
+		expected uint64
+		overflow bool
+	}{
+		{NewUint(0), NewUint(0), 0, false},
+		{NewUint(10), NewUint(5), 5, false},
+		{NewUint(5), NewUint(10), 5, true},
+		{NewUint(math.MaxUint64), NewUint(0), math.MaxUint64, false},
+	}
+
+	for i, tc := range testCases {
+		res, overflow := tc.x.SafeSub(tc.y)
+		require.Equal(
+			t, tc.overflow, overflow,
+			"invalid overflow result; x: %s, y: %s, tc: #%d", tc.x, tc.y, i,
+		)
+		require.Equal(
+			t, tc.expected, res.BigInt().Uint64(),
+			"invalid subtraction result; x: %s, y: %s, tc: #%d", tc.x, tc.y, i,
+		)
+	}
+}
+
 func TestAddUint64Overflow(t *testing.T) {
 	testCases := []struct {
 		a, b     uint64

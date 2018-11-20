@@ -11,12 +11,12 @@ import (
 type Minter struct {
 	LastUpdate       time.Time `json:"last_update"`       // time which the last update was made to the minter
 	Inflation        sdk.Dec   `json:"inflation"`         // current annual inflation rate
-	AnnualProvisions sdk.Int   `json:"annual_provisions"` // current annual expected provisions
+	AnnualProvisions sdk.Dec   `json:"annual_provisions"` // current annual expected provisions
 }
 
 // Create a new minter object
-func NewMinter(lastUpdate time.Time, inflation sdk.Dec,
-	annualProvisions sdk.Int) Minter {
+func NewMinter(lastUpdate time.Time, inflation,
+	annualProvisions sdk.Dec) Minter {
 
 	return Minter{
 		LastUpdate:       lastUpdate,
@@ -30,7 +30,7 @@ func InitialMinter(inflation sdk.Dec) Minter {
 	return NewMinter(
 		time.Unix(0, 0),
 		inflation,
-		sdk.NewInt(0),
+		sdk.NewDec(0),
 	)
 }
 
@@ -81,14 +81,13 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 
 // calculate the annual provisions based on current total supply and inflation rate
 func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Dec) (
-	provisions sdk.Int) {
+	provisions sdk.Dec) {
 
-	provisionsDec := m.Inflation.Mul(totalSupply)
-	return provisionsDec.TruncateInt()
+	return m.Inflation.Mul(totalSupply)
 }
 
 // get the provisions for a block based on the annual provisions rate
 func (m Minter) BlockProvision(params Params) sdk.Coin {
-	provisionAmt := m.AnnualProvisions.DivRaw(int64(params.BlocksPerYear))
-	return sdk.NewCoin(params.MintDenom, provisionAmt)
+	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
+	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }

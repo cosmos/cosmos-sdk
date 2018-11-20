@@ -200,6 +200,10 @@ func (st *state) CacheMultiStore() sdk.CacheMultiStore {
 	return st.ms.CacheMultiStore()
 }
 
+func (st *state) Context() sdk.Context {
+	return st.ctx
+}
+
 func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
@@ -383,6 +387,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 		return sdk.ErrUnknownRequest(fmt.Sprintf("no custom querier found for route %s", path[1])).QueryResult()
 	}
 
+	// Cache wrap the commit-multistore for safety.
 	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger).
 		WithMinimumFees(app.minimumFees)
 
@@ -501,14 +506,14 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 	return nil
 }
 
-// retrieve the context for the ante handler and store the tx bytes; store
-// the vote infos if the tx runs within the deliverTx() state.
-func (app *BaseApp) getContextForAnte(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
-	ctx = app.getState(mode).ctx.WithTxBytes(txBytes)
-	if mode == runTxModeDeliver {
-		ctx = ctx.WithVoteInfos(app.voteInfos)
+// retrieve the context for the tx w/ txBytes and other memoized values.
+func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
+	ctx = app.getState(mode).ctx.
+		WithTxBytes(txBytes).
+		WithVoteInfos(app.voteInfos)
+	if mode == runTxModeSimulate {
+		ctx, _ = ctx.CacheContext()
 	}
-
 	return
 }
 
@@ -578,21 +583,14 @@ func (app *BaseApp) getState(mode runTxMode) *state {
 	return app.deliverState
 }
 
-func (app *BaseApp) initializeContext(ctx sdk.Context, mode runTxMode) sdk.Context {
-	if mode == runTxModeSimulate {
-		ctx = ctx.WithMultiStore(app.getState(runTxModeSimulate).CacheMultiStore())
-	}
-	return ctx
-}
+// cacheTxContext returns a new context based off of the provided context with
+// a cache wrapped multi-store.
+func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
+	sdk.Context, sdk.CacheMultiStore) {
 
-// cacheTxContext returns a new context based off of the provided context with a
-// cache wrapped multi-store and the store itself to allow the caller to write
-// changes from the cached multi-store.
-func (app *BaseApp) cacheTxContext(
-	ctx sdk.Context, txBytes []byte, mode runTxMode,
-) (sdk.Context, sdk.CacheMultiStore) {
-
-	msCache := app.getState(mode).CacheMultiStore()
+	ms := ctx.MultiStore()
+	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
+	msCache := ms.CacheMultiStore()
 	if msCache.TracingEnabled() {
 		msCache = msCache.WithTracingContext(
 			sdk.TraceContext(
@@ -616,8 +614,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	// meter so we initialize upfront.
 	var gasWanted uint64
 
-	ctx := app.getContextForAnte(mode, txBytes)
-	ctx = app.initializeContext(ctx, mode)
+	ctx := app.getContextForTx(mode, txBytes)
+	ms := ctx.MultiStore()
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -651,30 +649,36 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		// NOTE: Alternatively, we could require that anteHandler ensures that
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
-		anteCtx, msCache = app.cacheTxContext(ctx, txBytes, mode)
+		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
 		newCtx, result, abort := app.anteHandler(anteCtx, tx, (mode == runTxModeSimulate))
 		if abort {
 			return result
 		}
 		if !newCtx.IsZero() {
-			ctx = newCtx
+			// At this point, newCtx.MultiStore() is cache wrapped,
+			// or something else replaced by anteHandler.
+			// We want the original ms, not one which was cache-wrapped
+			// for the ante handler.
+			ctx = newCtx.WithMultiStore(ms)
 		}
 		msCache.Write()
 		gasWanted = result.GasWanted
 	}
 
-	if mode == runTxModeSimulate {
-		result = app.runMsgs(ctx, msgs, mode)
-		result.GasWanted = gasWanted
+	if mode == runTxModeCheck {
 		return
 	}
 
 	// Create a new context based off of the existing context with a cache wrapped
 	// multi-store in case message processing fails.
-	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes, mode)
+	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
 	result = app.runMsgs(runMsgCtx, msgs, mode)
 	result.GasWanted = gasWanted
+
+	if mode == runTxModeSimulate {
+		return
+	}
 
 	// only update state if all messages pass
 	if result.IsOK() {

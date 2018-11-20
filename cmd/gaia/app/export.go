@@ -58,7 +58,10 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 			return false
 		})
 		app.distrKeeper.IterateDelegationDistInfos(ctx, func(_ int64, distInfo distr.DelegationDistInfo) (stop bool) {
-			app.distrKeeper.WithdrawDelegationReward(ctx, distInfo.DelegatorAddr, distInfo.ValOperatorAddr)
+			err := app.distrKeeper.WithdrawDelegationReward(ctx, distInfo.DelegatorAddr, distInfo.ValOperatorAddr)
+			if err != nil {
+				panic(err)
+			}
 			return false
 		})
 

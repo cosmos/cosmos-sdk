@@ -35,16 +35,15 @@ passed to the --tags option. To match any transaction, use the --any option.
 
 For example:
 
-$ gaiacli tendermint txs --tag test1,test2
+$ gaiacli query txs --tag test1,test2
 
 will match any transaction tagged with both test1,test2. To match a transaction tagged with either
 test1 or test2, use:
 
-$ gaiacli tendermint txs --tag test1,test2 --any
+$ gaiacli query txs --tag test1,test2 --any
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tags := viper.GetStringSlice(flagTags)
-
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			txs, err := searchTxs(cliCtx, cdc, tags)
@@ -140,13 +139,14 @@ func FormatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]Info, error) {
 func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var tags []string
+		var txs []Info
 		err := r.ParseForm()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not parse query parameters", err.Error()))
 			return
 		}
 		if len(r.Form) == 0 {
-			utils.PostProcessResponse(w, cdc, "[]", cliCtx.Indent)
+			utils.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
 			return
 		}
 
@@ -166,13 +166,23 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 				}
 
 				key = strings.TrimRight(key, "_bech32")
-				value = sdk.AccAddress(bz).String()
+				if prefix == sdk.Bech32PrefixAccAddr {
+					value = sdk.AccAddress(bz).String()
+				} else if prefix == sdk.Bech32PrefixValAddr {
+					value = sdk.ValAddress(bz).String()
+				} else {
+					utils.WriteErrorResponse(w, http.StatusBadRequest,
+						sdk.ErrInvalidAddress(fmt.Sprintf("invalid bech32 prefix '%s'", prefix)).Error(),
+					)
+					return
+				}
+
 			}
 			tag := fmt.Sprintf("%s='%s'", key, value)
 			tags = append(tags, tag)
 		}
 
-		txs, err := searchTxs(cliCtx, cdc, tags)
+		txs, err = searchTxs(cliCtx, cdc, tags)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -21,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -353,6 +354,10 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	executeWrite(t, spStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
+
+	// Test query txs
+	// txs := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tag action=submit-proposal,proposer=%s %v", fooAddr, flags))
+	// require.Len(t, txs, 1)
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
@@ -726,6 +731,18 @@ func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 	err = cdc.UnmarshalJSON(value, &acc)
 	require.NoError(t, err, "value %v, err %v", string(value), err)
 	return acc
+}
+
+//___________________________________________________________________________________
+// txs
+
+func executeGetTxs(t *testing.T, cmdStr string) []tx.Info {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var txs []tx.Info
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &txs)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return txs
 }
 
 //___________________________________________________________________________________

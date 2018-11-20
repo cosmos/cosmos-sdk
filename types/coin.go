@@ -254,8 +254,8 @@ func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
 // IsAllGT returns true iff for every denom in coins, the denom is present at a
 // greater amount in coinsB.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
-	diff, hasNeg := coins.SafeMinus(coinsB)
-	if len(diff) == 0 || hasNeg {
+	diff, _ := coins.SafeMinus(coinsB)
+	if len(diff) == 0 {
 		return false
 	}
 
@@ -265,10 +265,7 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 // IsAllGTE returns true iff for every denom in coins, the denom is present at
 // an equal or greater amount in coinsB.
 func (coins Coins) IsAllGTE(coinsB Coins) bool {
-	diff, hasNeg := coins.SafeMinus(coinsB)
-	if hasNeg {
-		return false // negative amount resulted due to addition
-	}
+	diff, _ := coins.SafeMinus(coinsB)
 	if len(diff) == 0 {
 		return true
 	}

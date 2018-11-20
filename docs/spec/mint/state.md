@@ -10,7 +10,7 @@ The minter is a space for holding current inflation information.
 type Minter struct {
 	LastUpdate       time.Time // time which the last update was made to the minter
 	Inflation        sdk.Dec   // current annual inflation rate
-	AnnualProvisions sdk.Int   // current annual exptected provisions
+	AnnualProvisions sdk.Dec   // current annual exptected provisions
 }
 ```
 

@@ -34,9 +34,8 @@ Calculate the annual provisions based on current total supply and inflation
 rate. This parameter is calculated once per block. 
 
 ```
-NextAnnualProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Int) {
-	provisionsDec = Inflation * totalSupply
-	return provisionsDec.Truncate()
+NextAnnualProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Dec) {
+	return Inflation * totalSupply
 ```
 
 ## BlockProvision
@@ -47,5 +46,5 @@ annual provisions
 ```
 BlockProvision(params Params) sdk.Coin {
 	provisionAmt = AnnualProvisions/ params.BlocksPerYear
-	return sdk.NewCoin(params.MintDenom, provisionAmt)
+	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
 ```

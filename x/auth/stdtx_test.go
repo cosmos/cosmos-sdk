@@ -62,6 +62,12 @@ func TestTxValidateBasic(t *testing.T) {
 	// keys and addresses
 	priv1, addr1 := privAndAddr()
 	priv2, addr2 := privAndAddr()
+	priv3, addr3 := privAndAddr()
+	priv4, addr4 := privAndAddr()
+	priv5, addr5 := privAndAddr()
+	priv6, addr6 := privAndAddr()
+	priv7, addr7 := privAndAddr()
+	priv8, addr8 := privAndAddr()
 
 	// msg and signatures
 	msg1 := newTestMsg(addr1, addr2)
@@ -102,6 +108,17 @@ func TestTxValidateBasic(t *testing.T) {
 	err = tx.ValidateBasic()
 	require.Error(t, err)
 	require.Equal(t, sdk.CodeMemoTooLarge, err.Result().Code)
+
+	// require to fail validation when there are too many signatures
+	privs = []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8}
+	accNums, seqs = []int64{0, 0, 0, 0, 0, 0, 0, 0}, []int64{0, 0, 0, 0, 0, 0, 0, 0}
+	badMsg := newTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
+	badMsgs := []sdk.Msg{badMsg}
+	tx = newTestTx(ctx, badMsgs, privs, accNums, seqs, fee)
+
+	err = tx.ValidateBasic()
+	require.Error(t, err)
+	require.Equal(t, sdk.CodeTooManySignatures, err.Result().Code)
 
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []int64{0, 1}, []int64{0, 0}

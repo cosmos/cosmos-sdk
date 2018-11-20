@@ -14,6 +14,9 @@ Before setting up your validator node, make sure you've already gone through the
 If you want to become a validator for the Hub's `mainnet`, you should [research security](/validators/security.md).
 :::
 
+You may want to skip the next section if you have already [joined a testnet](/join-testnet.md).
+
+
 ### Setting Up a New Node
 
 These instructions are for setting up a brand new full node from scratch.
@@ -84,7 +87,11 @@ __Note__: If unspecified, `consensus_pubkey` will default to the output of `gaia
 Consult `gaiad gentx --help` for more information on the flags defaults.
 :::
 
-### Copy the Genesis File and Collect Genesis Transactions
+#### What are genesis transactions for?
+
+A `genesis transaction` is a JSON file carrying a self-delegation. All genesis transactions are collected by a `genesis coordinator` and validated against an initial `genesis.json`. Such initial `genesis.json` contains only a list of accounts and their coins. Once the transactions are processed, they are merged in the `genesis.json`'s `gentxs` field.
+
+#### Copy the Initial Genesis File and Process Genesis Transactions
 
 Fetch the `genesis.json` file into `gaiad`'s config directory.
 

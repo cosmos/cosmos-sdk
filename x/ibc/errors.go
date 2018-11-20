@@ -6,7 +6,7 @@ import (
 
 // IBC errors reserve 200 ~ 299.
 const (
-	DefaultCodespace sdk.CodespaceType = 3
+	DefaultCodespace sdk.CodespaceType = "ibc"
 
 	// IBC errors reserve 200 - 299.
 	CodeInvalidSequence sdk.CodeType = 200

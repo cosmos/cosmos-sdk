@@ -113,7 +113,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		app.cdc,
 		app.keyStake, app.tkeyStake,
 		app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace),
-		app.RegisterCodespace(stake.DefaultCodespace),
+		stake.DefaultCodespace,
 	)
 	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint,
 		app.paramsKeeper.Subspace(mint.DefaultParamspace),
@@ -124,19 +124,19 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		app.keyDistr,
 		app.paramsKeeper.Subspace(distr.DefaultParamspace),
 		app.bankKeeper, &stakeKeeper, app.feeCollectionKeeper,
-		app.RegisterCodespace(stake.DefaultCodespace),
+		distr.DefaultCodespace,
 	)
 	app.slashingKeeper = slashing.NewKeeper(
 		app.cdc,
 		app.keySlashing,
 		&stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
-		app.RegisterCodespace(slashing.DefaultCodespace),
+		slashing.DefaultCodespace,
 	)
 	app.govKeeper = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
 		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakeKeeper,
-		app.RegisterCodespace(gov.DefaultCodespace),
+		gov.DefaultCodespace,
 	)
 
 	// register the staking hooks
@@ -209,6 +209,8 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 
 	tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
+
+	app.assertRuntimeInvariants()
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
@@ -322,6 +324,11 @@ func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, val
 	}
 	validators = stake.WriteValidators(ctx, app.stakeKeeper)
 	return appState, validators, nil
+}
+
+// load a particular height
+func (app *GaiaApp) LoadHeight(height int64) error {
+	return app.LoadVersion(height, app.keyMain)
 }
 
 //______________________________________________________________________________________________

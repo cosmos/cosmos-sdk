@@ -71,7 +71,9 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 		[]int64{accs[1].GetAccountNumber()}, []int64{accs[1].GetSequence() + 1},
 		true, false, privKeys[1],
 	)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
+
+	require.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+	require.Equal(t, sdk.CodespaceRoot, res.Codespace)
 
 	// Resigning the tx with the correct privKey should result in an OK result
 	SignCheckDeliver(

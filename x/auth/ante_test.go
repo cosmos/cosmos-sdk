@@ -10,6 +10,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -42,7 +43,7 @@ func privAndAddr() (crypto.PrivKey, sdk.AccAddress) {
 func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool) {
 	_, result, abort := anteHandler(ctx, tx, simulate)
 	require.False(t, abort)
-	require.Equal(t, sdk.ABCICodeOK, result.Code)
+	require.Equal(t, sdk.CodeOK, result.Code)
 	require.True(t, result.IsOK())
 }
 
@@ -50,8 +51,9 @@ func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool, code sdk.CodeType) {
 	newCtx, result, abort := anteHandler(ctx, tx, simulate)
 	require.True(t, abort)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code,
-		fmt.Sprintf("Expected %v, got %v", sdk.ToABCICode(sdk.CodespaceRoot, code), result))
+
+	require.Equal(t, code, result.Code, fmt.Sprintf("Expected %v, got %v", code, result))
+	require.Equal(t, sdk.CodespaceRoot, result.Codespace)
 
 	if code == sdk.CodeOutOfGas {
 		stdTx, ok := tx.(StdTx)
@@ -675,7 +677,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        args
-		gasConsumed int64
+		gasConsumed uint64
 		wantPanic   bool
 	}{
 		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), ed25519.GenPrivKey().PubKey()}, ed25519VerifyCost, false},
@@ -697,7 +699,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 func TestAdjustFeesByGas(t *testing.T) {
 	type args struct {
 		fee sdk.Coins
-		gas int64
+		gas uint64
 	}
 	tests := []struct {
 		name string
@@ -713,4 +715,78 @@ func TestAdjustFeesByGas(t *testing.T) {
 			require.True(t, tt.want.IsEqual(adjustFeesByGas(tt.args.fee, tt.args.gas)))
 		})
 	}
+}
+
+func TestCountSubkeys(t *testing.T) {
+	genPubKeys := func(n int) []crypto.PubKey {
+		var ret []crypto.PubKey
+		for i := 0; i < n; i++ {
+			ret = append(ret, secp256k1.GenPrivKey().PubKey())
+		}
+		return ret
+	}
+	genMultiKey := func(n, k int, keysGen func(n int) []crypto.PubKey) crypto.PubKey {
+		return multisig.NewPubKeyMultisigThreshold(k, keysGen(n))
+	}
+	type args struct {
+		pub crypto.PubKey
+	}
+	mkey := genMultiKey(5, 4, genPubKeys)
+	mkeyType := mkey.(*multisig.PubKeyMultisigThreshold)
+	mkeyType.PubKeys = append(mkeyType.PubKeys, genMultiKey(6, 5, genPubKeys))
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"single key", args{secp256k1.GenPrivKey().PubKey()}, 1},
+		{"multi sig key", args{genMultiKey(5, 4, genPubKeys)}, 5},
+		{"multi multi sig", args{mkey}, 11},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(T *testing.T) {
+			require.Equal(t, tt.want, countSubKeys(tt.args.pub))
+		})
+	}
+}
+
+func TestAnteHandlerSigLimitExceeded(t *testing.T) {
+	// setup
+	ms, capKey, capKey2 := setupMultiStore()
+	cdc := codec.New()
+	RegisterBaseAccount(cdc)
+	mapper := NewAccountKeeper(cdc, capKey, ProtoBaseAccount)
+	feeCollector := NewFeeCollectionKeeper(cdc, capKey2)
+	anteHandler := NewAnteHandler(mapper, feeCollector)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	ctx = ctx.WithBlockHeight(1)
+
+	// keys and addresses
+	priv1, addr1 := privAndAddr()
+	priv2, addr2 := privAndAddr()
+	priv3, addr3 := privAndAddr()
+	priv4, addr4 := privAndAddr()
+	priv5, addr5 := privAndAddr()
+	priv6, addr6 := privAndAddr()
+	priv7, addr7 := privAndAddr()
+	priv8, addr8 := privAndAddr()
+
+	// set the accounts
+	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc1.SetCoins(newCoins())
+	mapper.SetAccount(ctx, acc1)
+	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	acc2.SetCoins(newCoins())
+	mapper.SetAccount(ctx, acc2)
+
+	var tx sdk.Tx
+	msg := newTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
+	msgs := []sdk.Msg{msg}
+	fee := newStdFee()
+
+	// test rejection logic
+	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8},
+		[]int64{0, 0, 0, 0, 0, 0, 0, 0}, []int64{0, 0, 0, 0, 0, 0, 0, 0}
+	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
 }

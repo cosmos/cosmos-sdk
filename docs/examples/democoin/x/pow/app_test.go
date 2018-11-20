@@ -27,7 +27,7 @@ func getMockApp(t *testing.T) *mock.App {
 	keyPOW := sdk.NewKVStoreKey("pow")
 	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper)
 	config := Config{"pow", 1}
-	keeper := NewKeeper(keyPOW, config, bankKeeper, mapp.RegisterCodespace(DefaultCodespace))
+	keeper := NewKeeper(keyPOW, config, bankKeeper, DefaultCodespace)
 	mapp.Router().AddRoute("pow", keeper.Handler)
 
 	mapp.SetInitChainer(getInitChainer(mapp, keeper))

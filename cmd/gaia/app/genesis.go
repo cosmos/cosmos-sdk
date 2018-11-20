@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -89,14 +88,6 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 		Coins:         ga.Coins.Sort(),
 		AccountNumber: ga.AccountNumber,
 		Sequence:      ga.Sequence,
-	}
-}
-
-// get app init parameters for server init command
-func GaiaAppInit() server.AppInit {
-
-	return server.AppInit{
-		AppGenState: GaiaAppGenStateJSON,
 	}
 }
 
@@ -287,7 +278,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
-	coins :=sdk.Coins{
+	coins := sdk.Coins{
 		{"fooToken", sdk.NewInt(1000)},
 		{bondDenom, freeFermionsAcc},
 	}

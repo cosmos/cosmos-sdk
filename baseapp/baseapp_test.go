@@ -56,7 +56,9 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	require.Equal(t, t.Name(), app.Name())
 
 	// no stores are mounted
-	require.Panics(t, func() { app.LoadLatestVersion(capKey1) })
+	require.Panics(t, func() {
+		app.LoadLatestVersion(capKey1)
+	})
 
 	app.MountStoresIAVL(capKey1, capKey2)
 
@@ -898,7 +900,13 @@ func TestMaxBlockGasLimits(t *testing.T) {
 	}
 
 	app := setupBaseApp(t, anteOpt, routerOpt)
-	app.SetMaximumBlockGas(100)
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &abci.ConsensusParams{
+			BlockSize: &abci.BlockSizeParams{
+				MaxGas: 100,
+			},
+		},
+	})
 
 	testCases := []struct {
 		tx                *txTest

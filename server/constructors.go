@@ -9,15 +9,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/node"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type (
 	// AppCreator is a function that allows us to lazily initialize an
 	// application using various configurations.
-	AppCreator func(log.Logger, dbm.DB,
-		io.Writer, node.GenesisDocProvider) abci.Application
+	AppCreator func(log.Logger, dbm.DB, io.Writer) abci.Application
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.

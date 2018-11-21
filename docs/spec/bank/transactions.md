@@ -26,12 +26,3 @@ type MsgSend struct {
   Outputs []Output
 }
 ```
-
-### MsgIssue
-
-```golang
-type MsgIssue struct {
-  Banker  AccAddress
-  Outputs []Output
-}
-```

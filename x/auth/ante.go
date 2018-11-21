@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
@@ -67,27 +66,17 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			}
 		}()
 
-		err := validateBasic(stdTx)
-		if err != nil {
+		if err := tx.ValidateBasic(); err != nil {
 			return newCtx, err.Result(), true
 		}
 
 		// charge gas for the memo
 		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
 
-		// stdSigs contains the sequence number, account number, and signatures
-		stdSigs := stdTx.GetSignatures() // When simulating, this would just be a 0-length slice.
+		// stdSigs contains the sequence number, account number, and signatures.
+		// When simulating, this would just be a 0-length slice.
+		stdSigs := stdTx.GetSignatures()
 		signerAddrs := stdTx.GetSigners()
-
-		sigCount := 0
-		for i := 0; i < len(stdSigs); i++ {
-			sigCount += countSubKeys(stdSigs[i].PubKey)
-			if sigCount > txSigLimit {
-				return newCtx, sdk.ErrTooManySignatures(fmt.Sprintf(
-					"signatures: %d, limit: %d", sigCount, txSigLimit),
-				).Result(), true
-			}
-		}
 
 		// create the list of all sign bytes
 		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, stdSigs)
@@ -127,29 +116,6 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// TODO: tx tags (?)
 		return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas}, false // continue...
 	}
-}
-
-// Validate the transaction based on things that don't depend on the context
-func validateBasic(tx StdTx) (err sdk.Error) {
-	// Assert that there are signatures.
-	sigs := tx.GetSignatures()
-	if len(sigs) == 0 {
-		return sdk.ErrUnauthorized("no signers")
-	}
-
-	// Assert that number of signatures is correct.
-	var signerAddrs = tx.GetSigners()
-	if len(sigs) != len(signerAddrs) {
-		return sdk.ErrUnauthorized("wrong number of signers")
-	}
-
-	memo := tx.GetMemo()
-	if len(memo) > maxMemoCharacters {
-		return sdk.ErrMemoTooLarge(
-			fmt.Sprintf("maximum number of characters is %d but received %d characters",
-				maxMemoCharacters, len(memo)))
-	}
-	return nil
 }
 
 func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (accs []Account, res sdk.Result) {
@@ -310,7 +276,7 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	if stdTx.Fee.Gas <= 0 {
 		return sdk.ErrInternal(fmt.Sprintf("invalid gas supplied: %d", stdTx.Fee.Gas)).Result()
 	}
-	requiredFees := adjustFeesByGas(ctx.MinimumFees(), uint64(stdTx.Fee.Gas))
+	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
 
 	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
 	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {
@@ -339,16 +305,4 @@ func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (sign
 			stdTx.Fee, stdTx.Msgs, stdTx.Memo)
 	}
 	return
-}
-
-func countSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(*multisig.PubKeyMultisigThreshold)
-	if !ok {
-		return 1
-	}
-	nkeys := 0
-	for _, subkey := range v.PubKeys {
-		nkeys += countSubKeys(subkey)
-	}
-	return nkeys
 }

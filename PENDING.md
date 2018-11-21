@@ -66,7 +66,10 @@ IMPROVEMENTS
  - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions
  and methods will panic when a negative amount is discovered.
  - #2815 Gas unit fields changed from `int64` to `uint64`.
-
+ - #2821 Codespaces are now strings
+ - #2779 Introduce `ValidateBasic` to the `Tx` interface and call it in the ante
+ handler.
+ 
 * Tendermint
  - #2796 Update to go-amino 0.14.1
 

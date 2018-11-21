@@ -283,7 +283,7 @@ func TestCoinSend(t *testing.T) {
 
 	// test failure with negative gas
 	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "-200", 0, "")
-	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// test failure with 0 gas
 	res, body, _ = doSendWithGas(t, port, seed, name, password, addr, "0", 0, "")
@@ -389,8 +389,8 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
-	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasWanted)
-	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasUsed)
+	require.Equal(t, gasEstimate, uint64(resultTx.DeliverTx.GasWanted))
+	require.Equal(t, gasEstimate, uint64(resultTx.DeliverTx.GasUsed))
 }
 
 func TestTxs(t *testing.T) {
@@ -678,7 +678,7 @@ func TestDeposit(t *testing.T) {
 func TestVote(t *testing.T) {
 	name, password := "test", "1234567890"
 	addr, seed := CreateAddr(t, "test", password, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
 	// create SubmitProposal TX
@@ -696,7 +696,7 @@ func TestVote(t *testing.T) {
 	proposal := getProposal(t, port, proposalID)
 	require.Equal(t, "Test", proposal.GetTitle())
 
-	// create SubmitProposal TX
+	// deposit
 	resultTx = doDeposit(t, port, seed, name, password, addr, proposalID, 5)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -704,13 +704,27 @@ func TestVote(t *testing.T) {
 	proposal = getProposal(t, port, proposalID)
 	require.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
 
-	// create SubmitProposal TX
+	// vote
 	resultTx = doVote(t, port, seed, name, password, addr, proposalID)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	vote := getVote(t, port, proposalID, addr)
 	require.Equal(t, proposalID, vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
+
+	tally := getTally(t, port, proposalID)
+	require.Equal(t, sdk.ZeroDec(), tally.Yes, "tally should be 0 as the address is not bonded")
+
+	// create bond TX
+	resultTx = doDelegate(t, port, seed, name, password, addr, operAddrs[0], 60)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// vote
+	resultTx = doVote(t, port, seed, name, password, addr, proposalID)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	tally = getTally(t, port, proposalID)
+	require.Equal(t, sdk.NewDec(60), tally.Yes, "tally should be equal to the amount delegated")
 }
 
 func TestUnjail(t *testing.T) {
@@ -1326,6 +1340,15 @@ func getVotes(t *testing.T, port string, proposalID uint64) []gov.Vote {
 	err := cdc.UnmarshalJSON([]byte(body), &votes)
 	require.Nil(t, err)
 	return votes
+}
+
+func getTally(t *testing.T, port string, proposalID uint64) gov.TallyResult {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/tally", proposalID), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var tally gov.TallyResult
+	err := cdc.UnmarshalJSON([]byte(body), &tally)
+	require.Nil(t, err)
+	return tally
 }
 
 func getProposalsAll(t *testing.T, port string) []gov.Proposal {

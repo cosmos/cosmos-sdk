@@ -16,10 +16,10 @@ type Result struct {
 	Log string
 
 	// GasWanted is the maximum units of work we allow this tx to perform.
-	GasWanted int64
+	GasWanted uint64
 
 	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
-	GasUsed int64
+	GasUsed uint64
 
 	// Tx fee amount and denom.
 	FeeAmount int64

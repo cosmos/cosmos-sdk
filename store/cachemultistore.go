@@ -11,6 +11,8 @@ import (
 
 // cacheMultiStore holds many cache-wrapped stores.
 // Implements MultiStore.
+// NOTE: a cacheMultiStore (and MultiStores in general) should never expose the
+// keys for the substores.
 type cacheMultiStore struct {
 	db         CacheKVStore
 	stores     map[StoreKey]CacheWrap

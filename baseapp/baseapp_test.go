@@ -298,7 +298,8 @@ func (tx *txTest) setFailOnHandler(fail bool) {
 }
 
 // Implements Tx
-func (tx txTest) GetMsgs() []sdk.Msg { return tx.Msgs }
+func (tx txTest) GetMsgs() []sdk.Msg       { return tx.Msgs }
+func (tx txTest) ValidateBasic() sdk.Error { return nil }
 
 const (
 	routeMsgCounter  = "msgCounter"
@@ -618,7 +619,7 @@ func TestConcurrentCheckDeliver(t *testing.T) {
 // Simulate() and Query("/app/simulate", txBytes) should give
 // the same results.
 func TestSimulateTx(t *testing.T) {
-	gasConsumed := int64(5)
+	gasConsumed := uint64(5)
 
 	anteOpt := func(bapp *BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
@@ -765,7 +766,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 // Test that transactions exceeding gas limits fail
 func TestTxGasLimits(t *testing.T) {
-	gasGranted := int64(10)
+	gasGranted := uint64(10)
 	anteOpt := func(bapp *BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
@@ -790,7 +791,7 @@ func TestTxGasLimits(t *testing.T) {
 			}()
 
 			count := tx.(*txTest).Counter
-			newCtx.GasMeter().ConsumeGas(count, "counter-ante")
+			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 			res = sdk.Result{
 				GasWanted: gasGranted,
 			}
@@ -802,7 +803,7 @@ func TestTxGasLimits(t *testing.T) {
 	routerOpt := func(bapp *BaseApp) {
 		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 			count := msg.(msgCounter).Counter
-			ctx.GasMeter().ConsumeGas(count, "counter-handler")
+			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
 			return sdk.Result{}
 		})
 	}
@@ -813,7 +814,7 @@ func TestTxGasLimits(t *testing.T) {
 
 	testCases := []struct {
 		tx      *txTest
-		gasUsed int64
+		gasUsed uint64
 		fail    bool
 	}{
 		{newTxCounter(0, 0), 0, false},

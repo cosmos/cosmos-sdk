@@ -20,7 +20,10 @@ func TestBeginBlocker(t *testing.T) {
 	got := stake.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
-	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+	require.Equal(
+		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+	)
 	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	val := abci.Validator{

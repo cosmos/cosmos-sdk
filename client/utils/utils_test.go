@@ -14,16 +14,16 @@ func TestParseQueryResponse(t *testing.T) {
 	cdc := app.MakeCodec()
 	sdkResBytes := cdc.MustMarshalBinaryLengthPrefixed(sdk.Result{GasUsed: 10})
 	gas, err := parseQueryResponse(cdc, sdkResBytes)
-	assert.Equal(t, gas, int64(10))
+	assert.Equal(t, gas, uint64(10))
 	assert.Nil(t, err)
 	gas, err = parseQueryResponse(cdc, []byte("fuzzy"))
-	assert.Equal(t, gas, int64(0))
+	assert.Equal(t, gas, uint64(0))
 	assert.NotNil(t, err)
 }
 
 func TestCalculateGas(t *testing.T) {
 	cdc := app.MakeCodec()
-	makeQueryFunc := func(gasUsed int64, wantErr bool) func(string, common.HexBytes) ([]byte, error) {
+	makeQueryFunc := func(gasUsed uint64, wantErr bool) func(string, common.HexBytes) ([]byte, error) {
 		return func(string, common.HexBytes) ([]byte, error) {
 			if wantErr {
 				return nil, errors.New("")
@@ -32,15 +32,15 @@ func TestCalculateGas(t *testing.T) {
 		}
 	}
 	type args struct {
-		queryFuncGasUsed int64
+		queryFuncGasUsed uint64
 		queryFuncWantErr bool
 		adjustment       float64
 	}
 	tests := []struct {
 		name         string
 		args         args
-		wantEstimate int64
-		wantAdjusted int64
+		wantEstimate uint64
+		wantAdjusted uint64
 		wantErr      bool
 	}{
 		{"error", args{0, true, 1.2}, 0, 0, true},

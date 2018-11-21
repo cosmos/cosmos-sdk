@@ -25,8 +25,8 @@ func KeyProposal(proposalID uint64) []byte {
 }
 
 // Key for getting a specific deposit from the store
-func KeyDeposit(proposalID uint64, depositerAddr sdk.AccAddress) []byte {
-	return []byte(fmt.Sprintf("deposits:%d:%d", proposalID, depositerAddr))
+func KeyDeposit(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
+	return []byte(fmt.Sprintf("deposits:%d:%d", proposalID, depositorAddr))
 }
 
 // Key for getting a specific vote from the store

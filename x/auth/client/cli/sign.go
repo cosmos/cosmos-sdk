@@ -3,9 +3,7 @@ package cli
 import (
 	"fmt"
 	"io/ioutil"
-
-	"github.com/pkg/errors"
-	"github.com/spf13/viper"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -13,7 +11,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/tendermint/go-amino"
 )
 
@@ -22,6 +22,7 @@ const (
 	flagValidateSigs = "validate-signatures"
 	flagOffline      = "offline"
 	flagSigOnly      = "signature-only"
+	flagOutfile      = "output-document"
 )
 
 // GetSignCommand returns the sign command
@@ -52,6 +53,8 @@ recommended to set such parameters manually.`,
 	cmd.Flags().Bool(flagValidateSigs, false, "Print the addresses that must sign the transaction, "+
 		"those who have already signed it, and make sure that signatures are in the correct order.")
 	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
+	cmd.Flags().String(flagOutfile, "",
+		"The document will be written to the given file instead of STDOUT")
 
 	// Add the flags here and return the command
 	return client.PostCommands(cmd)[0]
@@ -107,7 +110,20 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%s\n", json)
+
+		if viper.GetString(flagOutfile) == "" {
+			fmt.Printf("%s\n", json)
+			return
+		}
+
+		fp, err := os.OpenFile(
+			viper.GetString(flagOutfile), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
+			)
+		if err != nil {
+			return err
+		}
+		defer fp.Close()
+		fmt.Fprintf(fp, "%s\n", json)
 		return
 	}
 }

@@ -21,10 +21,7 @@ func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			proposalID := uint64(viper.GetInt64(flagProposalID))
 
-			params := gov.QueryProposalParams{
-				ProposalID: proposalID,
-			}
-
+			params := gov.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -56,9 +53,11 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			strProposalStatus := viper.GetString(flagStatus)
 			numLimit := uint64(viper.GetInt64(flagNumLimit))
 
-			params := gov.QueryProposalsParams{
-				Limit: numLimit,
-			}
+			var depositerAddr sdk.AccAddress
+			var voterAddr sdk.AccAddress
+			var proposalStatus gov.ProposalStatus
+
+			params := gov.NewQueryProposalsParams(proposalStatus, numLimit, voterAddr, depositerAddr)
 
 			if len(bechDepositerAddr) != 0 {
 				depositerAddr, err := sdk.AccAddressFromBech32(bechDepositerAddr)
@@ -138,10 +137,7 @@ func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			params := gov.QueryVoteParams{
-				Voter:      voterAddr,
-				ProposalID: proposalID,
-			}
+			params := gov.NewQueryVoteParams(proposalID, voterAddr)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -172,9 +168,7 @@ func GetCmdQueryVotes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			proposalID := uint64(viper.GetInt64(flagProposalID))
 
-			params := gov.QueryVotesParams{
-				ProposalID: proposalID,
-			}
+			params := gov.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -210,10 +204,7 @@ func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			params := gov.QueryDepositParams{
-				Depositer:  depositerAddr,
-				ProposalID: proposalID,
-			}
+			params := gov.NewQueryDepositParams(proposalID, depositerAddr)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -244,9 +235,7 @@ func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			proposalID := uint64(viper.GetInt64(flagProposalID))
 
-			params := gov.QueryDepositsParams{
-				ProposalID: proposalID,
-			}
+			params := gov.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
@@ -276,9 +265,7 @@ func GetCmdQueryTally(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			proposalID := uint64(viper.GetInt64(flagProposalID))
 
-			params := gov.QueryTallyParams{
-				ProposalID: proposalID,
-			}
+			params := gov.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err

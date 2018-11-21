@@ -1321,6 +1321,29 @@ paths:
           description: Invalid proposal id
         500:
           description: Internal Server Error
+  /gov/proposals/{proposalId}/tally:
+    get:
+      summary: Get a proposal's tally result at the current time
+      description: Gets a proposal's tally result at the current time. If the proposal is pending deposits (i.e status 'DepositPeriod') it returns an empty tally result.
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        description: proposal id
+        name: proposalId
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/TallyResult"
+        400:
+          description: Invalid proposal id
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposalId}/votes:
     post:
       summary: Vote a proposal
@@ -1893,16 +1916,7 @@ definitions:
       proposal_status:
         type: string
       tally_result:
-        type: object
-        properties:
-          yes:
-            type: string
-          abstain:
-            type: string
-          no:
-            type: string
-          no_with_veto:
-            type: string
+         $ref: "#/definitions/TallyResult"
       submit_time:
         type: string
       total_deposit:
@@ -1922,6 +1936,21 @@ definitions:
         type: integer
       depositer:
         "$ref": "#/definitions/Address"
+  TallyResult:
+    type: object
+    properties:
+      yes:
+        type: string
+        example: "0.0000000000"
+      abstain:
+        type: string
+        example: "0.0000000000"
+      no:
+        type: string
+        example: "0.0000000000"
+      no_with_veto:
+        type: string
+        example: "0.0000000000"
   Vote:
     type: object
     properties:

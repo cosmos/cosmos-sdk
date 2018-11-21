@@ -217,7 +217,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 }
 
 // initialize store from a genesis state
-func (app *GaiaApp) initGenesis(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
+func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
 	// sort by account number to maintain consistency
 	sort.Slice(genesisState.Accounts, func(i, j int) bool {
 		return genesisState.Accounts[i].AccountNumber < genesisState.Accounts[j].AccountNumber
@@ -279,7 +279,7 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}
 
-	validators := app.initGenesis(ctx, genesisState)
+	validators := app.initFromGenesisState(ctx, genesisState)
 
 	// sanity check
 	if len(req.Validators) > 0 {

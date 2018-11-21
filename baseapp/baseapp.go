@@ -688,7 +688,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	ctx = app.initializeContext(ctx, mode)
 
 	// only run the tx if there is block gas remaining
-	if mode == runTxModeDeliver && ctx.BlockGasMeter().PastLimit() {
+	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
 		result = sdk.ErrOutOfGas("no block gas left to run tx").Result()
 		return
 	}
@@ -703,6 +703,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 				log := fmt.Sprintf("recovered: %v\nstack:\n%v", r, string(debug.Stack()))
 				result = sdk.ErrInternal(log).Result()
 			}
+		}
+
+		// consume block gas whether panic or not.
+		if mode == runTxModeDeliver {
+			ctx.BlockGasMeter().ConsumeGas(
+				ctx.GasMeter().GasConsumedToLimit(), "block gas meter")
 		}
 
 		result.GasWanted = gasWanted
@@ -749,12 +755,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes, mode)
 	result = app.runMsgs(runMsgCtx, msgs, mode)
 	result.GasWanted = gasWanted
-
-	// consume block gas
-	if mode == runTxModeDeliver {
-		ctx.BlockGasMeter().ConsumeGas(
-			ctx.GasMeter().GasConsumed(), "block gas meter")
-	}
 
 	// only update state if all messages pass
 	if result.IsOK() {

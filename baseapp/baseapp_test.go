@@ -943,16 +943,16 @@ func TestMaxBlockGasLimits(t *testing.T) {
 			if tc.fail && (j+1) > tc.failAfterDeliver {
 				require.Equal(t, res.Code, sdk.CodeOutOfGas, fmt.Sprintf("%d: %v, %v", i, tc, res))
 				require.Equal(t, res.Codespace, sdk.CodespaceRoot, fmt.Sprintf("%d: %v, %v", i, tc, res))
-				require.True(t, ctx.BlockGasMeter().PastLimit())
+				//require.True(t, ctx.BlockGasMeter().IsPastLimit()) NOTE: not necessarily true.
+				require.True(t, ctx.BlockGasMeter().IsOutOfGas())
 			} else {
-
 				// check gas used and wanted
 				expBlockGasUsed := tc.gasUsedPerDeliver * uint64(j+1)
 				require.Equal(t, expBlockGasUsed, blockGasUsed,
 					fmt.Sprintf("%d,%d: %v, %v, %v, %v", i, j, tc, expBlockGasUsed, blockGasUsed, res))
 
 				require.True(t, res.IsOK(), fmt.Sprintf("%d,%d: %v, %v", i, j, tc, res))
-				require.False(t, ctx.BlockGasMeter().PastLimit())
+				require.False(t, ctx.BlockGasMeter().IsPastLimit())
 			}
 		}
 	}

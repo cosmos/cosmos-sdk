@@ -59,9 +59,9 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	di.DelPoolWithdrawalHeight = wc.Height
 	withdrawalTokens := vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
 
+	// XXX debugging - delete before merge
 	if di.ValOperatorAddr.String() == "cosmosvaloper1ygk3dqu23ruhnskcnd23zlcnlnxy7jy5mhdye5" &&
 		di.DelegatorAddr.String() == "cosmos1yz59zhqxsacqupf8d0y0e2g40e4uu6vnad455w" {
-
 		fmt.Println("______________________")
 		fmt.Printf("debug Height: %v\n", wc.Height)
 		fmt.Printf("debug withdrawalTokens: %v\n", withdrawalTokens)

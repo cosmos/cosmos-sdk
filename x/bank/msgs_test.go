@@ -35,8 +35,6 @@ func TestInputValidation(t *testing.T) {
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{sdk.NewInt64Coin("eth", 0)}
 	someEmptyCoins := sdk.Coins{sdk.NewInt64Coin("eth", 10), sdk.NewInt64Coin("atom", 0)}
-	minusCoins := sdk.Coins{sdk.NewInt64Coin("eth", -34)}
-	someMinusCoins := sdk.Coins{sdk.NewInt64Coin("atom", 20), sdk.NewInt64Coin("eth", -34)}
 	unsortedCoins := sdk.Coins{sdk.NewInt64Coin("eth", 1), sdk.NewInt64Coin("atom", 1)}
 
 	cases := []struct {
@@ -52,8 +50,6 @@ func TestInputValidation(t *testing.T) {
 		{false, NewInput(addr1, emptyCoins)},     // invalid coins
 		{false, NewInput(addr1, emptyCoins2)},    // invalid coins
 		{false, NewInput(addr1, someEmptyCoins)}, // invalid coins
-		{false, NewInput(addr1, minusCoins)},     // negative coins
-		{false, NewInput(addr1, someMinusCoins)}, // negative coins
 		{false, NewInput(addr1, unsortedCoins)},  // unsorted coins
 	}
 
@@ -77,8 +73,6 @@ func TestOutputValidation(t *testing.T) {
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{sdk.NewInt64Coin("eth", 0)}
 	someEmptyCoins := sdk.Coins{sdk.NewInt64Coin("eth", 10), sdk.NewInt64Coin("atom", 0)}
-	minusCoins := sdk.Coins{sdk.NewInt64Coin("eth", -34)}
-	someMinusCoins := sdk.Coins{sdk.NewInt64Coin("atom", 20), sdk.NewInt64Coin("eth", -34)}
 	unsortedCoins := sdk.Coins{sdk.NewInt64Coin("eth", 1), sdk.NewInt64Coin("atom", 1)}
 
 	cases := []struct {
@@ -94,8 +88,6 @@ func TestOutputValidation(t *testing.T) {
 		{false, NewOutput(addr1, emptyCoins)},     // invalid coins
 		{false, NewOutput(addr1, emptyCoins2)},    // invalid coins
 		{false, NewOutput(addr1, someEmptyCoins)}, // invalid coins
-		{false, NewOutput(addr1, minusCoins)},     // negative coins
-		{false, NewOutput(addr1, someMinusCoins)}, // negative coins
 		{false, NewOutput(addr1, unsortedCoins)},  // unsorted coins
 	}
 

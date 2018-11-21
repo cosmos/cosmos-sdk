@@ -63,7 +63,7 @@ principle:
 type AppAccount struct {...}
 var account := &AppAccount{
     Address: pub.Address(),
-    Coins: sdk.Coins{{"ATM", 100}},
+    Coins: sdk.Coins{sdk.NewInt64Coin("ATM", 100)},
 }
 var sumValue := externalModule.ComputeSumValue(account)
 ```

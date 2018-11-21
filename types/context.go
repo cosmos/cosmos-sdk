@@ -73,12 +73,12 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedKVGasConfig)
+	return c.MultiStore().GetKVStore(key).Gas(c.GasMeter(), cachedKVGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
 func (c Context) TransientStore(key StoreKey) KVStore {
-	return c.multiStore().GetKVStore(key).Gas(c.GasMeter(), cachedTransientGasConfig)
+	return c.MultiStore().GetKVStore(key).Gas(c.GasMeter(), cachedTransientGasConfig)
 }
 
 //----------------------------------------
@@ -144,10 +144,7 @@ const (
 	contextKeyMinimumFees
 )
 
-// NOTE: Do not expose MultiStore.
-// MultiStore exposes all the keys.
-// Instead, pass the context and the store key.
-func (c Context) multiStore() MultiStore {
+func (c Context) MultiStore() MultiStore {
 	return c.Value(contextKeyMultiStore).(MultiStore)
 }
 
@@ -177,7 +174,9 @@ func (c Context) IsCheckTx() bool { return c.Value(contextKeyIsCheckTx).(bool) }
 
 func (c Context) MinimumFees() Coins { return c.Value(contextKeyMinimumFees).(Coins) }
 
-func (c Context) WithMultiStore(ms MultiStore) Context { return c.withValue(contextKeyMultiStore, ms) }
+func (c Context) WithMultiStore(ms MultiStore) Context {
+	return c.withValue(contextKeyMultiStore, ms)
+}
 
 func (c Context) WithBlockHeader(header abci.Header) Context {
 	var _ proto.Message = &header // for cloning.
@@ -239,7 +238,7 @@ func (c Context) WithMinimumFees(minFees Coins) Context {
 // Cache the multistore and return a new cached context. The cached context is
 // written to the context when writeCache is called.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
-	cms := c.multiStore().CacheMultiStore()
+	cms := c.MultiStore().CacheMultiStore()
 	cc = c.WithMultiStore(cms)
 	return cc, cms.Write
 }

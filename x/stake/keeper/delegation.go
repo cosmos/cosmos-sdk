@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -394,6 +395,11 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 			ValidatorAddr: validator.OperatorAddr,
 			Shares:        sdk.ZeroDec(),
 		}
+	}
+
+	//XXX debug code delete before merge
+	if bondAmt.Amount.Int64() == 532 {
+		fmt.Printf("\ndebug found: %v\n", found)
 	}
 
 	// call the appropriate hook if present

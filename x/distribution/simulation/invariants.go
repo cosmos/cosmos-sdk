@@ -93,11 +93,29 @@ func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 			sumDelAccum := totalDelAccum[key]
 
 			if !sumDelAccum.Equal(delAccumFromVal) {
+
+				logDelAccums := ""
+				iterDel := func(_ int64, ddi distr.DelegationDistInfo) bool {
+					keyLog := ddi.ValOperatorAddr.String()
+					if keyLog == key {
+						delegation := sk.Delegation(ctx, ddi.DelegatorAddr, ddi.ValOperatorAddr)
+						accum := ddi.GetDelAccum(height, delegation.GetShares())
+						if accum.IsPositive() {
+							logDelAccums += fmt.Sprintf("\n\t\tdel: %v, accum: %v",
+								ddi.DelegatorAddr.String(),
+								accum.String())
+						}
+					}
+					return false
+				}
+				k.IterateDelegationDistInfos(ctx, iterDel)
+
 				return fmt.Errorf("delegator accum invariance: \n"+
 					"\tvalidator: %v\n"+
 					"\tsum delegator accum: %v\n"+
-					"\tvalidator's total delegator accum: %v",
-					key, sumDelAccum.String(), delAccumFromVal.String())
+					"\tvalidator's total delegator accum: %v\n"+
+					"\tlog of delegations with accum: %v\n",
+					key, sumDelAccum.String(), delAccumFromVal.String(), logDelAccums)
 			}
 		}
 

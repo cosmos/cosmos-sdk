@@ -48,7 +48,7 @@ module.exports = {
       	]
       },
       {
-        title: "Tutorial",
+        title: "SDK Tutorial",
         collapsable: false,
         children: [
           "/tutorial/",

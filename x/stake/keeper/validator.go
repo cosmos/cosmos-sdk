@@ -226,6 +226,13 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator)
 	return validators
 }
 
+// returns an iterator for the consensus validators in the last block
+func (k Keeper) AllValidatorsIterator(ctx sdk.Context) (iterator sdk.Iterator) {
+	store := ctx.KVStore(k.storeKey)
+	iterator = sdk.KVStorePrefixIterator(store, ValidatorsKey)
+	return iterator
+}
+
 // return a given amount of all the validators
 func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators []types.Validator) {
 	store := ctx.KVStore(k.storeKey)

@@ -935,8 +935,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		for j := 0; j < tc.numDelivers; j++ {
 			res := app.Deliver(tx)
 
-			ctx := app.getContextForAnte(runTxModeDeliver, nil)
-			ctx = app.initializeContext(ctx, runTxModeDeliver)
+			ctx := app.getState(runTxModeDeliver).ctx
 			blockGasUsed := ctx.BlockGasMeter().GasConsumed()
 
 			// check for failed transactions

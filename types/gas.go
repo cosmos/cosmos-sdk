@@ -65,9 +65,8 @@ func (g *basicGasMeter) Limit() Gas {
 func (g *basicGasMeter) GasConsumedToLimit() Gas {
 	if g.consumed > g.limit {
 		return g.limit
-	} else {
-		return g.consumed
 	}
+	return g.consumed
 }
 
 func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {

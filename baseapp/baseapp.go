@@ -259,9 +259,8 @@ func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) 
 func (app *BaseApp) getMaximumBlockGas() (maxGas uint64) {
 	if app.consensusParams == nil || app.consensusParams.BlockSize == nil {
 		return 0
-	} else {
-		return uint64(app.consensusParams.BlockSize.MaxGas)
 	}
+	return uint64(app.consensusParams.BlockSize.MaxGas)
 }
 
 //______________________________________________________________________________

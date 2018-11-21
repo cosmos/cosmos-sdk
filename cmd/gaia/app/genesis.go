@@ -262,7 +262,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 				"account %v not in genesis.json: %+v", addr, addrMap)
 		}
 		if acc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
-			err = fmt.Errorf("insufficient fund for the delegation: %s < %s",
+			err = fmt.Errorf("insufficient fund for the delegation: %v < %v",
 				acc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount)
 		}
 

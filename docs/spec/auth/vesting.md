@@ -11,16 +11,16 @@
       - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
     - [Transferring/Sending](#transferringsending)
       - [Continuously Vesting Accounts](#continuously-vesting-accounts-1)
-        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-1)
-        - [Keepers/Handlers](#keepershandlers)
+      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-1)
+      - [Keepers/Handlers](#keepershandlers)
     - [Delegating](#delegating)
       - [Continuously Vesting Accounts](#continuously-vesting-accounts-2)
-        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-2)
-        - [Keepers/Handlers](#keepershandlers-1)
+      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-2)
+      - [Keepers/Handlers](#keepershandlers-1)
     - [Undelegating](#undelegating)
       - [Continuously Vesting Accounts](#continuously-vesting-accounts-3)
-        - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-3)
-        - [Keepers/Handlers](#keepershandlers-2)
+      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts-3)
+      - [Keepers/Handlers](#keepershandlers-2)
   - [Keepers & Handlers](#keepers--handlers)
   - [Initializing at Genesis](#initializing-at-genesis)
   - [Examples](#examples)
@@ -181,7 +181,7 @@ func (cva ContinuousVestingAccount) SpendableCoins() Coins {
 }
 ```
 
-##### Delayed/Discrete Vesting Accounts
+#### Delayed/Discrete Vesting Accounts
 
 A delayed vesting account may send any coins it has received. In addition, if it
 has fully vested, it can send any of it's vested coins.
@@ -193,7 +193,7 @@ func (dva DelayedVestingAccount) SpendableCoins() Coins {
 }
 ```
 
-##### Keepers/Handlers
+#### Keepers/Handlers
 
 The corresponding `x/bank` keeper should appropriately handle sending coins
 based on if the account is a vesting account or not.
@@ -238,7 +238,7 @@ func (cva ContinuousVestingAccount) TrackDelegation(amount Coins) {
 }
 ```
 
-##### Delayed/Discrete Vesting Accounts
+#### Delayed/Discrete Vesting Accounts
 
 For a delayed vesting account, it can only delegate with received coins and
 coins that are fully vested so we only need to update `DF`.
@@ -249,7 +249,7 @@ func (dva DelayedVestingAccount) TrackDelegation(amount Coins) {
 }
 ```
 
-##### Keepers/Handlers
+#### Keepers/Handlers
 
 ```go
 func DelegateCoins(from Account, amount Coins) {
@@ -302,7 +302,7 @@ func (cva ContinuousVestingAccount) TrackUndelegation(amount Coins) {
 with excess an `DV` amount, even after all its coins have vested. This is because
 undelegating free coins are prioritized.
 
-##### Delayed/Discrete Vesting Accounts
+#### Delayed/Discrete Vesting Accounts
 
 For a delayed vesting account, it only needs to add back the `DF` amount since
 the account is fully vested.
@@ -313,7 +313,7 @@ func (dva DelayedVestingAccount) TrackUndelegation(amount Coins) {
 }
 ```
 
-##### Keepers/Handlers
+#### Keepers/Handlers
 
 ```go
 func UndelegateCoins(to Account, amount Coins) {

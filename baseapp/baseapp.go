@@ -704,16 +704,20 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			}
 		}
 
-		// If BlockGasMeter() panics it will be caught by the above recover and
-		// return an error - in any case BlockGasMeter will consume gas past
-		// the limit.
+		result.GasWanted = gasWanted
+		result.GasUsed = ctx.GasMeter().GasConsumed()
+	}()
+
+	// If BlockGasMeter() panics it will be caught by the above recover and
+	// return an error - in any case BlockGasMeter will consume gas past
+	// the limit.
+	// NOTE: this must exist in a separate defer function for the
+	//       above recovery to recover from this one
+	defer func() {
 		if mode == runTxModeDeliver {
 			ctx.BlockGasMeter().ConsumeGas(
 				ctx.GasMeter().GasConsumedToLimit(), "block gas meter")
 		}
-
-		result.GasWanted = gasWanted
-		result.GasUsed = ctx.GasMeter().GasConsumed()
 	}()
 
 	var msgs = tx.GetMsgs()

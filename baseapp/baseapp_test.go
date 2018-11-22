@@ -922,12 +922,13 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		{newTxCounter(2, 7), 11, 9, false, 0},
 		{newTxCounter(10, 0), 10, 10, false, 0}, // hit the limit but pass
 
-		{newTxCounter(9, 0), 12, 9, true, 11}, // fail after 11
 		{newTxCounter(10, 0), 11, 10, true, 10},
 		{newTxCounter(10, 0), 15, 10, true, 10},
+		{newTxCounter(9, 0), 12, 9, true, 11}, // fly past the limit
 	}
 
 	for i, tc := range testCases {
+		fmt.Printf("debug i: %v\n", i)
 		tx := tc.tx
 
 		// reset the block gas
@@ -944,7 +945,6 @@ func TestMaxBlockGasLimits(t *testing.T) {
 			if tc.fail && (j+1) > tc.failAfterDeliver {
 				require.Equal(t, res.Code, sdk.CodeOutOfGas, fmt.Sprintf("%d: %v, %v", i, tc, res))
 				require.Equal(t, res.Codespace, sdk.CodespaceRoot, fmt.Sprintf("%d: %v, %v", i, tc, res))
-				//require.True(t, ctx.BlockGasMeter().IsPastLimit()) NOTE: not necessarily true.
 				require.True(t, ctx.BlockGasMeter().IsOutOfGas())
 			} else {
 				// check gas used and wanted

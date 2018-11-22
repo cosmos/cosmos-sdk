@@ -67,6 +67,7 @@ IMPROVEMENTS
  - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions
  and methods will panic when a negative amount is discovered.
  - #2815 Gas unit fields changed from `int64` to `uint64`.
+ - #2825 More staking and distribution invariants
 
 * Tendermint
  - #2796 Update to go-amino 0.14.1

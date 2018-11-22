@@ -2,16 +2,71 @@
 
 The bank module provides three different exported keeper interfaces which can be passed to other modules which need to read or update account balances. Modules should use the least-permissive interface which provides the functionality they require.
 
+### Common Types
+
+#### Input
+
+An input of a multiparty transfer
+
+```golang
+type Input struct {
+  Address AccAddress
+  Coins   Coins
+}
+```
+
+#### Output
+
+An output of a multiparty transfer.
+
+```golang
+type Output struct {
+  Address AccAddress
+  Coins   Coins
+}
+```
+
 ### BaseKeeper
 
 The base keeper provides full-permission access: the ability to arbitrary modify any account's balance and mint or burn coins.
 
 ```golang
 type BaseKeeper interface {
-  SetCoins(ctx Context, addr AccAddress, amt Coins) error
-  SubtractCoins(ctx Context, addr AccAddress, amt Coins) (Coins, Tags, error)
-  AddCoins(ctx Context, addr AccAddress, amt Coins) (Coins, Tags, error)
+  SetCoins(addr AccAddress, amt Coins)
+  SubtractCoins(addr AccAddress, amt Coins)
+  AddCoins(addr AccAddress, amt Coins)
 }
+```
+
+`setCoins` fetches an account by address, sets the coins on the account, and saves the account.
+
+```
+setCoins(addr AccAddress, amt Coins)
+  account = accountKeeper.getAccount(addr)
+  if account == nil
+    fail with "no account found"
+  account.Coins = amt
+  accountKeeper.setAccount(account)
+```
+
+`subtractCoins` fetches the coins of an account, subtracts the provided amount, and saves the account. This decreases the total supply.
+
+```
+subtractCoins(addr AccAddress, amt Coins)
+  oldCoins = getCoins(addr)
+  newCoins = oldCoins - amt
+  if newCoins < 0
+    fail with "cannot end up with negative coins"
+  setCoins(addr, newCoins)
+```
+
+`addCoins` fetches the coins of an account, adds the provided amount, and saves the account. This increases the total supply.
+
+```
+addCoins(addr AccAddress, amt Coins)
+  oldCoins = getCoins(addr)
+  newCoins = oldCoins + amt
+  setCoins(addr, newCoins)
 ```
 
 ### SendKeeper
@@ -20,10 +75,22 @@ The send keeper provides access to account balances and the ability to transfer 
 
 ```golang
 type SendKeeper interface {
-  SendCoins(ctx Content, from AccAddress, to AccAddress, amt Coins) (Tags, error)
-  InputOutputCoins(ctx Context, inputs []Input, outputs []Output) (Tags, error)
+  SendCoins(from AccAddress, to AccAddress, amt Coins)
+  InputOutputCoins(inputs []Input, outputs []Output)
 }
 ```
+
+`sendCoins` transfers coins from one account to another.
+
+```
+sendCoins(from AccAddress, to AccAddress, amt Coins)
+```
+
+```
+inputOutputCoins(inputs []Input, outputs []Output)
+```
+
+`inputOutputCoins` transfers coins from any number of input accounts (who must all sign the transaction) to any number of output accounts.
 
 ### ViewKeeper
 
@@ -31,7 +98,26 @@ The view keeper provides read-only access to account balances but no balance alt
 
 ```golang
 type ViewKeeper interface {
-  GetCoins(ctx Context, addr AccAddress) Coins
-  HasCoins(ctx Context, addr AccAddress, amt Coins) bool
+  GetCoins(addr AccAddress) Coins
+  HasCoins(addr AccAddress, amt Coins) bool
 }
+```
+
+`getCoins` returns the coins associated with an account.
+
+```
+getCoins(addr AccAddress)
+  account = accountKeeper.getAccount(addr)
+  if account == nil
+    return Coins{}
+  return account.Coins
+```
+
+`hasCoins` returns whether or not an account has at least the provided amount of coins.
+
+```
+hasCoins(addr AccAddress, amt Coins)
+  account = accountKeeper.getAccount(addr)
+  coins = getCoins(addr)
+  return coins >= amt 
 ```

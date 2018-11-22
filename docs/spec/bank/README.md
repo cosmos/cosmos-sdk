@@ -16,11 +16,11 @@ This module will be used in the Cosmos Hub.
 
 1. **[State](state.md)**
 1. **[Keepers](keepers.md)**
+    1. [Common Types](keepers.md#common-types)
+        1. [Input](keepers.md#input)
+        1. [Output](keepers.md#output)
     1. [BaseKeeper](keepers.md#basekeeper)
     1. [SendKeeper](keepers.md#sendkeeper)
     1. [ViewKeeper](keepers.md#viewkeeper) 
 1. **[Transactions](transactions.md)**
-    1. [Common](transactions.md#common)
-        1. [Input](transactions.md#input)
-        1. [Output](transactions.md#output)
     1. [MsgSend](transactions.md#msgsend)

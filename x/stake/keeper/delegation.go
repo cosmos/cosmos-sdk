@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -397,16 +396,6 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 		}
 	}
 
-	//XXX debug code delete before merge
-	if bondAmt.Amount.Int64() == 532 {
-		fmt.Printf("\ndebug found: %v\n", found)
-		fmt.Printf("debug delegation: %+v\n", delegation)
-	}
-	if delAddr.String() == "cosmos1ackgp6j7uuved4uhgjrxkklel0zud77qr9kdkx" &&
-		validator.OperatorAddr.String() == "cosmosvaloper1ygk3dqu23ruhnskcnd23zlcnlnxy7jy5mhdye5" {
-		fmt.Printf("\ndebug delegation: %+v\n", delegation)
-	}
-
 	// call the appropriate hook if present
 	if found {
 		k.OnDelegationSharesModified(ctx, delAddr, validator.OperatorAddr)
@@ -460,12 +449,6 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 
 	// subtract shares from delegator
 	delegation.Shares = delegation.Shares.Sub(shares)
-
-	// XXX delete before merge
-	if delAddr.String() == "cosmos1ackgp6j7uuved4uhgjrxkklel0zud77qr9kdkx" &&
-		valAddr.String() == "cosmosvaloper1ygk3dqu23ruhnskcnd23zlcnlnxy7jy5mhdye5" {
-		fmt.Printf("\nunbond debug delegation: %+v\n", delegation)
-	}
 
 	// remove the delegation
 	if delegation.Shares.IsZero() {
@@ -617,6 +600,9 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	rounded := returnAmount.TruncateInt()
+	if rounded.IsZero() { //TODO design consideration
+		return types.Redelegation{}, types.ErrVerySmallRedelegation(k.Codespace())
+	}
 	returnCoin := sdk.NewCoin(k.BondDenom(ctx), rounded)
 	change := returnAmount.Sub(sdk.NewDecFromInt(rounded))
 
@@ -629,6 +615,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	if !found {
 		return types.Redelegation{}, types.ErrBadRedelegationDst(k.Codespace())
 	}
+
 	sharesCreated, err := k.Delegate(ctx, delAddr, returnCoin, dstValidator, false)
 	if err != nil {
 		return types.Redelegation{}, err

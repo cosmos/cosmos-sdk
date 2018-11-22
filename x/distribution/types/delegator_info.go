@@ -57,17 +57,7 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 
 	accum := di.GetDelAccum(wc.Height, delegatorShares)
 	di.DelPoolWithdrawalHeight = wc.Height
-	withdrawalTokens := vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
-
-	// XXX debugging - delete before merge
-	//if di.ValOperatorAddr.String() == "cosmosvaloper1ygk3dqu23ruhnskcnd23zlcnlnxy7jy5mhdye5" &&
-	//di.DelegatorAddr.String() == "cosmos1yz59zhqxsacqupf8d0y0e2g40e4uu6vnad455w" {
-	//fmt.Println("______________________")
-	//fmt.Printf("debug Height: %v\n", wc.Height)
-	//fmt.Printf("debug withdrawalTokens: %v\n", withdrawalTokens)
-	//fmt.Printf("debug accum: %v\n", accum)
-	//fmt.Printf("debug vi.DelAccum.Accum: %v\n", vi.DelAccum.Accum)
-	//}
+	withdrawalTokens := vi.DelPool.MulDec(accum.Quo(vi.DelAccum.Accum))
 
 	// defensive check for impossible accum ratios
 	if accum.GT(vi.DelAccum.Accum) {

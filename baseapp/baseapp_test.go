@@ -920,6 +920,7 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		{newTxCounter(10, 0), 3, 10, false, 0},
 		{newTxCounter(10, 0), 10, 10, false, 0},
 		{newTxCounter(2, 7), 11, 9, false, 0},
+		{newTxCounter(10, 0), 10, 10, false, 0}, // hit the limit but pass
 
 		{newTxCounter(10, 0), 11, 10, true, 10},
 		{newTxCounter(10, 0), 15, 10, true, 10},

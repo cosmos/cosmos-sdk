@@ -378,9 +378,8 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	} else {
 		logger = log.NewNopLogger()
 	}
-	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
-	db, _ = dbm.NewGoLevelDB("Simulation", dir)
+	db, _ := dbm.NewGoLevelDB("Simulation", dir)
 	defer func() {
 		db.Close()
 		os.RemoveAll(dir)

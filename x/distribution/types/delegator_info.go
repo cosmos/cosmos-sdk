@@ -50,6 +50,11 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	vi = vi.UpdateTotalDelAccum(wc.Height, totalDelShares)
 
 	if vi.DelAccum.Accum.IsZero() {
+		// NOTE: under the situation which a delegation was created with
+		//       zero shares, this next line of code would ensure
+		//       that no delegation-accum invariance relative to the total
+		//       delegation accum kept by validator_info. Ideally however
+		//       delegations with zero shares should never be created.
 		di.DelPoolWithdrawalHeight = wc.Height
 		return di, vi, fp, DecCoins{}
 	}

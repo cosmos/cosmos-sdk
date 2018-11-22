@@ -136,7 +136,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 		}
 		validator.BondHeight = 0
 		validator.BondIntraTxCounter = counter
-		// AFAICT we do not need to reset unbonding height since it is not used.
+		validator.UnbondingHeight = 0
 		app.stakeKeeper.SetValidator(ctx, validator)
 		counter++
 	}

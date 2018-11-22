@@ -172,6 +172,15 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	return Dec{combined}, nil
 }
 
+// Decimal from string, panic on error
+func MustNewDecFromStr(s string) Dec {
+	dec, err := NewDecFromStr(s)
+	if err != nil {
+		panic(err)
+	}
+	return dec
+}
+
 //______________________________________________________________________________________________
 //nolint
 func (d Dec) IsNil() bool       { return d.Int == nil }                 // is decimal nil

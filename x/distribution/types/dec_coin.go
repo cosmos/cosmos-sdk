@@ -140,7 +140,7 @@ func (coins DecCoins) MulDec(d sdk.Dec) DecCoins {
 	return res
 }
 
-// divide all the coins by a multiple
+// divide all the coins by a decimal
 func (coins DecCoins) QuoDec(d sdk.Dec) DecCoins {
 	res := make([]DecCoin, len(coins))
 	for i, coin := range coins {

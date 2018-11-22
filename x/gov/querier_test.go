@@ -69,10 +69,10 @@ func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier
 	return proposal
 }
 
-func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, depositer, voter sdk.AccAddress, status ProposalStatus, limit uint64) []Proposal {
+func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, depositor, voter sdk.AccAddress, status ProposalStatus, limit uint64) []Proposal {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{"custom", "gov", QueryProposals}, "/"),
-		Data: cdc.MustMarshalJSON(NewQueryProposalsParams(status, limit, voter, depositer)),
+		Data: cdc.MustMarshalJSON(NewQueryProposalsParams(status, limit, voter, depositor)),
 	}
 
 	bz, err := querier(ctx, []string{QueryProposal}, query)
@@ -85,10 +85,10 @@ func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querie
 	return proposals
 }
 
-func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64, depositer sdk.AccAddress) Deposit {
+func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64, depositor sdk.AccAddress) Deposit {
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{"custom", "gov", QueryDeposit}, "/"),
-		Data: cdc.MustMarshalJSON(NewQueryDepositParams(proposalID, depositer)),
+		Data: cdc.MustMarshalJSON(NewQueryDepositParams(proposalID, depositor)),
 	}
 
 	bz, err := querier(ctx, []string{QueryDeposits}, query)

@@ -365,7 +365,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, "  1 - Test", proposalsQuery)
 
 	deposit := executeGetDeposit(t,
-		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositer=%s --output=json %v",
+		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositor=%s --output=json %v",
 			fooAddr, flags))
 	require.Equal(t, int64(5), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
@@ -394,7 +394,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(15), deposits[0].Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
 	deposit = executeGetDeposit(t,
-		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositer=%s --output=json %v",
+		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositor=%s --output=json %v",
 			fooAddr, flags))
 	require.Equal(t, int64(15), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 

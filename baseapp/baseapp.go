@@ -136,6 +136,7 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 }
 
 // load latest application version
+// panics if called more than once on a running baseapp
 func (app *BaseApp) LoadLatestVersion(mainKey *sdk.KVStoreKey) error {
 	err := app.cms.LoadLatestVersion()
 	if err != nil {
@@ -145,6 +146,7 @@ func (app *BaseApp) LoadLatestVersion(mainKey *sdk.KVStoreKey) error {
 }
 
 // load application version
+// panics if called more than once on a running baseapp
 func (app *BaseApp) LoadVersion(version int64, mainKey *sdk.KVStoreKey) error {
 	err := app.cms.LoadVersion(version)
 	if err != nil {
@@ -702,7 +704,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			}
 		}
 
-		// consume block gas whether panic or not.
+		// If BlockGasMeter() panics it will be caught by the above recover and
+		// return an error - in any case BlockGasMeter will consume gas past
+		// the limit.
 		if mode == runTxModeDeliver {
 			ctx.BlockGasMeter().ConsumeGas(
 				ctx.GasMeter().GasConsumedToLimit(), "block gas meter")

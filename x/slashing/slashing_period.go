@@ -70,10 +70,10 @@ func (k Keeper) IterateValidatorSlashingPeriods(ctx sdk.Context, handler func(sl
 func (k Keeper) DeleteValidatorSlashingPeriods(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, ValidatorSlashingPeriodKey)
-	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		store.Delete(iter.Key())
 	}
+	iter.Close()
 }
 
 // Stored by validator Tendermint address (not operator address)

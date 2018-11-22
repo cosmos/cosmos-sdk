@@ -140,7 +140,7 @@ func (coins DecCoins) MulDec(d sdk.Dec) DecCoins {
 	return res
 }
 
-// divide all the coins by a multiple
+// divide all the coins by a decimal
 func (coins DecCoins) QuoDec(d sdk.Dec) DecCoins {
 	res := make([]DecCoin, len(coins))
 	for i, coin := range coins {
@@ -175,4 +175,14 @@ func (coins DecCoins) AmountOf(denom string) sdk.Dec {
 			return coins[midIdx+1:].AmountOf(denom)
 		}
 	}
+}
+
+// returns the amount of a denom from deccoins
+func (coins DecCoins) HasNegative() bool {
+	for _, coin := range coins {
+		if coin.Amount.IsNegative() {
+			return true
+		}
+	}
+	return false
 }

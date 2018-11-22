@@ -2,6 +2,7 @@ package mint
 
 import (
 	"fmt"
+
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +15,20 @@ type Params struct {
 	InflationMax        sdk.Dec `json:"inflation_max"`         // maximum inflation rate
 	InflationMin        sdk.Dec `json:"inflation_min"`         // minimum inflation rate
 	GoalBonded          sdk.Dec `json:"goal_bonded"`           // goal of percent bonded atoms
+	BlocksPerYear       uint64  `json:"blocks_per_year"`       // expected blocks per year
+}
+
+func NewParams(mintDenom string, inflationRateChange, inflationMax,
+	inflationMin, goalBonded sdk.Dec, blocksPerYear uint64) Params {
+
+	return Params{
+		MintDenom:           mintDenom,
+		InflationRateChange: inflationRateChange,
+		InflationMax:        inflationMax,
+		InflationMin:        inflationMin,
+		GoalBonded:          goalBonded,
+		BlocksPerYear:       blocksPerYear,
+	}
 }
 
 // default minting module parameters
@@ -24,6 +39,7 @@ func DefaultParams() Params {
 		InflationMax:        sdk.NewDecWithPrec(20, 2),
 		InflationMin:        sdk.NewDecWithPrec(7, 2),
 		GoalBonded:          sdk.NewDecWithPrec(67, 2),
+		BlocksPerYear:       uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
 	}
 }
 

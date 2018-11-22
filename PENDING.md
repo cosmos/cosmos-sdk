@@ -13,6 +13,7 @@ BREAKING CHANGES
   * [cli] [\#2874](https://github.com/cosmos/cosmos-sdk/pull/2874) `gaiacli tx sign` takes an optional `--output-document` flag to support output redirection.
 
 * Gaia
+  * [mint] [\#2825] minting now occurs every block, inflation parameter updates still hourly
 
 * SDK
   * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.
@@ -72,6 +73,7 @@ IMPROVEMENTS
  - #2821 Codespaces are now strings
  - #2779 Introduce `ValidateBasic` to the `Tx` interface and call it in the ante
  handler.
+  - #2825 More staking and distribution invariants
  
 * Tendermint
  - #2796 Update to go-amino 0.14.1

@@ -59,7 +59,9 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs
 	}
-	fmt.Printf("Selected randomly generated parameters for simulated genesis: {amount of steak per account: %v, initially bonded validators: %v}\n", amount, numInitiallyBonded)
+	fmt.Printf("Selected randomly generated parameters for simulated genesis:\n"+
+		"\t{amount of steak per account: %v, initially bonded validators: %v}\n",
+		amount, numInitiallyBonded)
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
@@ -86,7 +88,8 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
 		},
 	}
-	fmt.Printf("Selected randomly generated governance parameters: %+v\n", govGenesis)
+	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
+
 	stakeGenesis := stake.GenesisState{
 		Pool: stake.InitialPool(),
 		Params: stake.Params{
@@ -95,7 +98,8 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			BondDenom:     stakeTypes.DefaultBondDenom,
 		},
 	}
-	fmt.Printf("Selected randomly generated staking parameters: %+v\n", stakeGenesis)
+	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakeGenesis)
+
 	slashingGenesis := slashing.GenesisState{
 		Params: slashing.Params{
 			MaxEvidenceAge:           stakeGenesis.Params.UnbondingTime,
@@ -107,21 +111,21 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			SlashFractionDowntime:    sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
 		},
 	}
-	fmt.Printf("Selected randomly generated slashing parameters: %+v\n", slashingGenesis)
+	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)
+
 	mintGenesis := mint.GenesisState{
-		Minter: mint.Minter{
-			InflationLastTime: time.Unix(0, 0),
-			Inflation:         sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
-		},
-		Params: mint.Params{
-			MintDenom:           stakeTypes.DefaultBondDenom,
-			InflationRateChange: sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
-			InflationMax:        sdk.NewDecWithPrec(20, 2),
-			InflationMin:        sdk.NewDecWithPrec(7, 2),
-			GoalBonded:          sdk.NewDecWithPrec(67, 2),
-		},
+		Minter: mint.InitialMinter(
+			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
+		Params: mint.NewParams(
+			stakeTypes.DefaultBondDenom,
+			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
+			sdk.NewDecWithPrec(20, 2),
+			sdk.NewDecWithPrec(7, 2),
+			sdk.NewDecWithPrec(67, 2),
+			uint64(60*60*8766/5)),
 	}
-	fmt.Printf("Selected randomly generated minting parameters: %v\n", mintGenesis)
+	fmt.Printf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis)
+
 	var validators []stake.Validator
 	var delegations []stake.Delegation
 

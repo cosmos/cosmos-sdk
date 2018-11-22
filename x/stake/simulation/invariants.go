@@ -33,10 +33,10 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 			return err
 		}
 
-		err = PositiveDelegationInvariant(k)(app)
-		if err != nil {
-			return err
-		}
+		//err = PositiveDelegationInvariant(k)(app)
+		//if err != nil {
+		//return err
+		//}
 
 		err = DelegatorSharesInvariant(k)(app)
 		if err != nil {

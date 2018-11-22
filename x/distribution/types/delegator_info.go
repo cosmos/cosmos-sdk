@@ -50,6 +50,7 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	vi = vi.UpdateTotalDelAccum(wc.Height, totalDelShares)
 
 	if vi.DelAccum.Accum.IsZero() {
+		di.DelPoolWithdrawalHeight = wc.Height
 		return di, vi, fp, DecCoins{}
 	}
 

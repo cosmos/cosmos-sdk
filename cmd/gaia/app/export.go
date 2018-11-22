@@ -17,104 +17,14 @@ import (
 )
 
 // export the state of gaia for a genesis file
-func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
+func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
+	appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
+
 	// as if they could withdraw from the start of the next block
 	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 
-	// prepare for fresh start at zero height
 	if forZeroHeight {
-
-		/* TODO XXX check some invariants */
-
-		height := ctx.BlockHeight()
-
-		valAccum := sdk.ZeroDec()
-		app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, vdi distr.ValidatorDistInfo) bool {
-			lastValPower := app.stakeKeeper.GetLastValidatorPower(ctx, vdi.OperatorAddr)
-			valAccum = valAccum.Add(vdi.GetValAccum(height, sdk.NewDecFromInt(lastValPower)))
-			return false
-		})
-
-		lastTotalPower := sdk.NewDecFromInt(app.stakeKeeper.GetLastTotalPower(ctx))
-		totalAccum := app.distrKeeper.GetFeePool(ctx).GetTotalValAccum(height, lastTotalPower)
-
-		if !totalAccum.Equal(valAccum) {
-			panic(fmt.Errorf("validator accum invariance: \n\tfee pool totalAccum: %v"+
-				"\n\tvalidator accum \t%v\n", totalAccum.String(), valAccum.String()))
-		}
-
-		fmt.Printf("accum invariant ok!\n")
-
-		/* END TODO XXX */
-
-		/* Handle fee distribution state. */
-
-		// withdraw all delegator & validator rewards
-		app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
-			err := app.distrKeeper.WithdrawValidatorRewardsAll(ctx, valInfo.OperatorAddr)
-			if err != nil {
-				panic(err)
-			}
-			return false
-		})
-		app.distrKeeper.IterateDelegationDistInfos(ctx, func(_ int64, distInfo distr.DelegationDistInfo) (stop bool) {
-			err := app.distrKeeper.WithdrawDelegationReward(ctx, distInfo.DelegatorAddr, distInfo.ValOperatorAddr)
-			if err != nil {
-				panic(err)
-			}
-			return false
-		})
-
-		// delete all distribution infos
-		// these will be recreated in InitGenesis
-		app.distrKeeper.RemoveValidatorDistInfos(ctx)
-		app.distrKeeper.RemoveDelegationDistInfos(ctx)
-
-		// assert that the fee pool is empty
-		feePool := app.distrKeeper.GetFeePool(ctx)
-		if !feePool.TotalValAccum.Accum.IsZero() {
-			panic("unexpected leftover validator accum")
-		}
-		bondDenom := app.stakeKeeper.GetParams(ctx).BondDenom
-		if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
-			panic(fmt.Sprintf("unexpected leftover validator pool coins: %v", feePool.ValPool.AmountOf(bondDenom).String()))
-		}
-
-		// reset fee pool height, save fee pool
-		feePool.TotalValAccum.UpdateHeight = 0
-		app.distrKeeper.SetFeePool(ctx, feePool)
-
-		/* Handle stake state. */
-
-		// iterate through validators by power descending, reset bond height, update bond intra-tx counter
-		store := ctx.KVStore(app.keyStake)
-		iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsByPowerIndexKey)
-		counter := int16(0)
-		for ; iter.Valid(); iter.Next() {
-			addr := sdk.ValAddress(iter.Value())
-			validator, found := app.stakeKeeper.GetValidator(ctx, addr)
-			if !found {
-				panic("expected validator, not found")
-			}
-			validator.BondHeight = 0
-			validator.BondIntraTxCounter = counter
-			// AFAICT we do not need to reset unbonding height since it is not used.
-			app.stakeKeeper.SetValidator(ctx, validator)
-			counter++
-		}
-
-		/* Handle slashing state. */
-
-		// we have to clear the slashing periods, since they reference heights
-		app.slashingKeeper.DeleteValidatorSlashingPeriods(ctx)
-
-		// reset start height on signing infos
-		app.slashingKeeper.IterateValidatorSigningInfos(ctx, func(addr sdk.ConsAddress, info slashing.ValidatorSigningInfo) (stop bool) {
-			info.StartHeight = 0
-			app.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
-			return false
-		})
-
+		prepForZeroHeightGenesis(ctx)
 	}
 
 	// iterate to get the accounts
@@ -141,4 +51,106 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (appState js
 	}
 	validators = stake.WriteValidators(ctx, app.stakeKeeper)
 	return appState, validators, nil
+}
+
+// prepare for fresh start at zero height
+func prepForZeroHeightGenesis(ctx sdk.Context) {
+
+	/* TODO XXX check some invariants */
+
+	height := ctx.BlockHeight()
+
+	valAccum := sdk.ZeroDec()
+	vdiIter := func(_ int64, vdi distr.ValidatorDistInfo) bool {
+		lastValPower := app.stakeKeeper.GetLastValidatorPower(ctx, vdi.OperatorAddr)
+		valAccum = valAccum.Add(vdi.GetValAccum(height, sdk.NewDecFromInt(lastValPower)))
+		return false
+	}
+	app.distrKeeper.IterateValidatorDistInfos(ctx, vdiIter)
+
+	lastTotalPower := sdk.NewDecFromInt(app.stakeKeeper.GetLastTotalPower(ctx))
+	totalAccum := app.distrKeeper.GetFeePool(ctx).GetTotalValAccum(height, lastTotalPower)
+
+	if !totalAccum.Equal(valAccum) {
+		panic(fmt.Errorf("validator accum invariance: \n\tfee pool totalAccum: %v"+
+			"\n\tvalidator accum \t%v\n", totalAccum.String(), valAccum.String()))
+	}
+
+	fmt.Printf("accum invariant ok!\n")
+
+	/* END TODO XXX */
+
+	/* Handle fee distribution state. */
+
+	// withdraw all delegator & validator rewards
+	vdiIter = func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
+		err := app.distrKeeper.WithdrawValidatorRewardsAll(ctx, valInfo.OperatorAddr)
+		if err != nil {
+			panic(err)
+		}
+		return false
+	}
+	app.distrKeeper.IterateValidatorDistInfos(ctx, vdiIter)
+
+	ddiIter := func(_ int64, distInfo distr.DelegationDistInfo) (stop bool) {
+		err := app.distrKeeper.WithdrawDelegationReward(
+			ctx, distInfo.DelegatorAddr, distInfo.ValOperatorAddr)
+		if err != nil {
+			panic(err)
+		}
+		return false
+	}
+	app.distrKeeper.IterateDelegationDistInfos(ctx, ddiIter)
+
+	// delete all distribution infos
+	// these will be recreated in InitGenesis
+	app.distrKeeper.RemoveValidatorDistInfos(ctx)
+	app.distrKeeper.RemoveDelegationDistInfos(ctx)
+
+	// assert that the fee pool is empty
+	feePool := app.distrKeeper.GetFeePool(ctx)
+	if !feePool.TotalValAccum.Accum.IsZero() {
+		panic("unexpected leftover validator accum")
+	}
+	bondDenom := app.stakeKeeper.GetParams(ctx).BondDenom
+	if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
+		panic(fmt.Sprintf("unexpected leftover validator pool coins: %v",
+			feePool.ValPool.AmountOf(bondDenom).String()))
+	}
+
+	// reset fee pool height, save fee pool
+	feePool.TotalValAccum.UpdateHeight = 0
+	app.distrKeeper.SetFeePool(ctx, feePool)
+
+	/* Handle stake state. */
+
+	// iterate through validators by power descending, reset bond height, update bond intra-tx counter
+	store := ctx.KVStore(app.keyStake)
+	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsByPowerIndexKey)
+	counter := int16(0)
+	for ; iter.Valid(); iter.Next() {
+		addr := sdk.ValAddress(iter.Value())
+		validator, found := app.stakeKeeper.GetValidator(ctx, addr)
+		if !found {
+			panic("expected validator, not found")
+		}
+		validator.BondHeight = 0
+		validator.BondIntraTxCounter = counter
+		// AFAICT we do not need to reset unbonding height since it is not used.
+		app.stakeKeeper.SetValidator(ctx, validator)
+		counter++
+	}
+	iter.Close()
+
+	/* Handle slashing state. */
+
+	// we have to clear the slashing periods, since they reference heights
+	app.slashingKeeper.DeleteValidatorSlashingPeriods(ctx)
+
+	// reset start height on signing infos
+	app.slashingKeeper.IterateValidatorSigningInfos(ctx, func(addr sdk.ConsAddress, info slashing.ValidatorSigningInfo) (stop bool) {
+		info.StartHeight = 0
+		app.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+		return false
+	})
 }

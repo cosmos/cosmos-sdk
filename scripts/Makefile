@@ -51,7 +51,7 @@ $(GOPATH)/bin/statik:
 	$(call go_install,rakyll,statik,v0.1.5)
 
 $(GOPATH)/bin/goimports:
-	go install golang.org/x/tools/cmd/goimports
+	go get golang.org/x/tools/cmd/goimports
 
 .PHONY: all get_tools
 

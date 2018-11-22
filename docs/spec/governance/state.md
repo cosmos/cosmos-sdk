@@ -68,8 +68,8 @@ const (
 
 ```go
   type Deposit struct {
-    Amount      sdk.Coins       //  Amount of coins deposited by depositer
-    Depositer   crypto.address  //  Address of depositer
+    Amount      sdk.Coins       //  Amount of coins deposited by depositor
+    Depositor   crypto.address  //  Address of depositor
   }
 ```
 
@@ -185,8 +185,8 @@ And the pseudocode for the `ProposalProcessingQueue`:
         //  proposal was accepted at the end of the voting period
         //  refund deposits (non-voters already punished)
         proposal.CurrentStatus = ProposalStatusAccepted
-        for each (amount, depositer) in proposal.Deposits
-          depositer.AtomBalance += amount
+        for each (amount, depositor) in proposal.Deposits
+          depositor.AtomBalance += amount
 
       else
         // proposal was rejected

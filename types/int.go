@@ -3,10 +3,9 @@ package types
 import (
 	"encoding/json"
 	"math"
-	"testing"
-
 	"math/big"
 	"math/rand"
+	"testing"
 )
 
 func newIntegerFromString(s string) (*big.Int, bool) {

@@ -1,15 +1,16 @@
 package cli
 
 import (
+	"os"
+
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"os"
-
-	"github.com/spf13/cobra"
 )
 
 // GetCmdUnjail implements the create unjail validator command.

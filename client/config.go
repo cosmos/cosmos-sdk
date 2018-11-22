@@ -7,10 +7,11 @@ import (
 	"os"
 	"path"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/mitchellh/go-homedir"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 type cliConfig struct {

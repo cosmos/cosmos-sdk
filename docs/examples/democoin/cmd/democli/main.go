@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/spf13/cobra"
-
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -10,19 +9,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/lcd"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/app"
+	coolcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool/client/cli"
+	powcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow/client/cli"
+	simplestakingcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake/client/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
-
-	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/app"
-	coolcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool/client/cli"
-	powcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow/client/cli"
-	simplestakingcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake/client/cli"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // rootCmd is the entry point for this binary

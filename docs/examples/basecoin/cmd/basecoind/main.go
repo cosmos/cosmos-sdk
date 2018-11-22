@@ -6,15 +6,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/tendermint/tendermint/p2p"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -22,7 +13,15 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/p2p"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 const (

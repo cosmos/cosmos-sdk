@@ -7,21 +7,20 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
-	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
-	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
+	tmserver "github.com/tendermint/tendermint/rpc/lib/server" // Import statik for light client stuff
 
-	// Import statik for light client stuff
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
+	"github.com/cosmos/cosmos-sdk/codec"
+	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 // RestServer represents the Light Client Rest server

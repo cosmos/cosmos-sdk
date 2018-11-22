@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 )
 
 // REST Variable names

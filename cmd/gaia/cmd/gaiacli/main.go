@@ -9,33 +9,29 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/lcd"
+	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-
-	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
-	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
-
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	distClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	slashingClient "github.com/cosmos/cosmos-sdk/x/slashing/client"
+	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	stakeClient "github.com/cosmos/cosmos-sdk/x/stake/client"
-
-	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
+	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 )
 
 const (

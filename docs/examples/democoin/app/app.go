@@ -12,16 +12,15 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
-
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/sketchy"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
 const (

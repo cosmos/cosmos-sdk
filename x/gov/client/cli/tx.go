@@ -1,8 +1,14 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -10,14 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-
-	"encoding/json"
-	"io/ioutil"
-	"strings"
-
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const (

@@ -33,6 +33,11 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 			return err
 		}
 
+		err = PositiveDelegationInvariant(k)(app)
+		if err != nil {
+			return err
+		}
+
 		err = DelegatorSharesInvariant(k)(app)
 		if err != nil {
 			return err
@@ -132,6 +137,25 @@ func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 			}
 		}
 		iterator.Close()
+		return nil
+	}
+}
+
+// PositiveDelegationInvariant checks that all stored delegations have > 0 shares.
+func PositiveDelegationInvariant(k stake.Keeper) simulation.Invariant {
+	return func(app *baseapp.BaseApp) error {
+		ctx := app.NewContext(false, abci.Header{})
+
+		delegations := k.GetAllDelegations(ctx)
+		for _, delegation := range delegations {
+			if delegation.Shares.IsNegative() {
+				return fmt.Errorf("delegation with negative shares: %+v", delegation)
+			}
+			if delegation.Shares.IsZero() {
+				return fmt.Errorf("delegation with zero shares: %+v", delegation)
+			}
+		}
+
 		return nil
 	}
 }

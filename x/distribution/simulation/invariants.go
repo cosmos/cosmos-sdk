@@ -110,12 +110,20 @@ func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 				}
 				k.IterateDelegationDistInfos(ctx, iterDel)
 
+				operAddr, err := sdk.ValAddressFromBech32(key)
+				if err != nil {
+					panic(err)
+				}
+				validator := sk.Validator(ctx, operAddr)
+
 				return fmt.Errorf("delegator accum invariance: \n"+
-					"\tvalidator: %v\n"+
+					"\tvalidator key: %v\n"+
+					"\tvalidator: %+v\n"+
 					"\tsum delegator accum: %v\n"+
 					"\tvalidator's total delegator accum: %v\n"+
 					"\tlog of delegations with accum: %v\n",
-					key, sumDelAccum.String(), delAccumFromVal.String(), logDelAccums)
+					key, validator, sumDelAccum.String(),
+					delAccumFromVal.String(), logDelAccums)
 			}
 		}
 

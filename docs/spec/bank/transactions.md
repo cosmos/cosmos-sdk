@@ -1,6 +1,6 @@
 ## Transactions
 
-### MsgSend
+### Common
 
 #### Input
 
@@ -19,6 +19,8 @@ type Output struct {
   Coins   Coins
 }
 ```
+
+### MsgSend
 
 ```golang
 type MsgSend struct {

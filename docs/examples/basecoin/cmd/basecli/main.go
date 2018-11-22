@@ -85,6 +85,7 @@ func main() {
 		stakecmd.GetCmdQueryRedelegation(storeStake, cdc),
 		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
 		slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
+		stakecmd.GetCmdQueryValidatorDelegations(storeStake, cdc),
 		authcmd.GetAccountCmd(storeAcc, cdc),
 	)
 

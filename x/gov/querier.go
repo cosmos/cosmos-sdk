@@ -113,14 +113,14 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 // Params for query 'custom/gov/deposit'
 type QueryDepositParams struct {
 	ProposalID uint64
-	Depositer  sdk.AccAddress
+	Depositor  sdk.AccAddress
 }
 
 // creates a new instance of QueryDepositParams
-func NewQueryDepositParams(proposalID uint64, depositer sdk.AccAddress) QueryDepositParams {
+func NewQueryDepositParams(proposalID uint64, depositor sdk.AccAddress) QueryDepositParams {
 	return QueryDepositParams{
 		ProposalID: proposalID,
-		Depositer:  depositer,
+		Depositor:  depositor,
 	}
 }
 
@@ -132,7 +132,7 @@ func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	deposit, _ := keeper.GetDeposit(ctx, params.ProposalID, params.Depositer)
+	deposit, _ := keeper.GetDeposit(ctx, params.ProposalID, params.Depositor)
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposit)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
@@ -253,16 +253,16 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 // Params for query 'custom/gov/proposals'
 type QueryProposalsParams struct {
 	Voter          sdk.AccAddress
-	Depositer      sdk.AccAddress
+	Depositor      sdk.AccAddress
 	ProposalStatus ProposalStatus
 	Limit          uint64
 }
 
 // creates a new instance of QueryProposalsParams
-func NewQueryProposalsParams(status ProposalStatus, limit uint64, voter, depositer sdk.AccAddress) QueryProposalsParams {
+func NewQueryProposalsParams(status ProposalStatus, limit uint64, voter, depositor sdk.AccAddress) QueryProposalsParams {
 	return QueryProposalsParams{
 		Voter:          voter,
-		Depositer:      depositer,
+		Depositor:      depositor,
 		ProposalStatus: status,
 		Limit:          limit,
 	}
@@ -276,7 +276,7 @@ func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
 	}
 
-	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositer, params.ProposalStatus, params.Limit)
+	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
 
 	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)
 	if err != nil {

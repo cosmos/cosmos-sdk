@@ -300,7 +300,8 @@ func (tx *txTest) setFailOnHandler(fail bool) {
 }
 
 // Implements Tx
-func (tx txTest) GetMsgs() []sdk.Msg { return tx.Msgs }
+func (tx txTest) GetMsgs() []sdk.Msg       { return tx.Msgs }
+func (tx txTest) ValidateBasic() sdk.Error { return nil }
 
 const (
 	routeMsgCounter  = "msgCounter"

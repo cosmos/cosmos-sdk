@@ -6,17 +6,21 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -80,7 +84,13 @@ following delegation and commission default parameters:
 			}
 			// Run gaiad tx create-validator
 			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey)
-			createValidatorCmd := cli.GetCmdCreateValidator(cdc)
+			cliCtx, txBldr, msg, err := cli.BuildCreateValidatorMsg(
+				context.NewCLIContext().WithCodec(cdc),
+				authtxb.NewTxBuilderFromCLI().WithCodec(cdc),
+			)
+			if err != nil {
+				return err
+			}
 
 			w, err := ioutil.TempFile("", "gentx")
 			if err != nil {
@@ -88,18 +98,19 @@ following delegation and commission default parameters:
 			}
 			unsignedGenTxFilename := w.Name()
 			defer os.Remove(unsignedGenTxFilename)
-			os.Stdout = w
-			if err = createValidatorCmd.RunE(nil, args); err != nil {
+
+			if err := utils.PrintUnsignedStdTx(w, txBldr, cliCtx, []sdk.Msg{msg}, true); err != nil {
 				return err
 			}
-			w.Close()
 
 			prepareFlagsForTxSign()
 			signCmd := authcmd.GetSignCommand(cdc)
-			if w, err = prepareOutputFile(config.RootDir, nodeID); err != nil {
+
+			outputDocument, err := makeOutputFilepath(config.RootDir, nodeID)
+			if err != nil {
 				return err
 			}
-			os.Stdout = w
+			viper.Set("output-document", outputDocument)
 			return signCmd.RunE(nil, []string{unsignedGenTxFilename})
 		},
 	}
@@ -145,11 +156,10 @@ func prepareFlagsForTxSign() {
 	viper.Set("offline", true)
 }
 
-func prepareOutputFile(rootDir, nodeID string) (w *os.File, err error) {
+func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 	writePath := filepath.Join(rootDir, "config", "gentx")
-	if err = common.EnsureDir(writePath, 0700); err != nil {
-		return
+	if err := common.EnsureDir(writePath, 0700); err != nil {
+		return "", err
 	}
-	filename := filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID))
-	return os.Create(filename)
+	return filepath.Join(writePath, fmt.Sprintf("gentx-%v.json", nodeID)), nil
 }

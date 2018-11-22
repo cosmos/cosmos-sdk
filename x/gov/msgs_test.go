@@ -57,7 +57,7 @@ func TestMsgDeposit(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
 		proposalID    uint64
-		depositerAddr sdk.AccAddress
+		depositorAddr sdk.AccAddress
 		depositAmount sdk.Coins
 		expectPass    bool
 	}{
@@ -68,7 +68,7 @@ func TestMsgDeposit(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgDeposit(tc.depositerAddr, tc.proposalID, tc.depositAmount)
+		msg := NewMsgDeposit(tc.depositorAddr, tc.proposalID, tc.depositAmount)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {

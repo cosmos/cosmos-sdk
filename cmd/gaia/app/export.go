@@ -24,7 +24,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
 	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 
 	if forZeroHeight {
-		prepForZeroHeightGenesis(ctx)
+		app.prepForZeroHeightGenesis(ctx)
 	}
 
 	// iterate to get the accounts
@@ -54,7 +54,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
 }
 
 // prepare for fresh start at zero height
-func prepForZeroHeightGenesis(ctx sdk.Context) {
+func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	/* TODO XXX check some invariants */
 

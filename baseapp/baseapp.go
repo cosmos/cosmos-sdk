@@ -6,7 +6,6 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -184,7 +183,7 @@ func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
 	consensusParamsBz := mainStore.Get(mainConsensusParamsKey)
 	if consensusParamsBz != nil {
 		var consensusParams = &abci.ConsensusParams{}
-		err := proto.Unmarshal(consensusParamsBz, consensusParams)
+		err := codec.Cdc.UnmarshalBinaryLengthPrefixed(consensusParamsBz, consensusParams)
 		if err != nil {
 			panic(err)
 		}
@@ -249,7 +248,7 @@ func (app *BaseApp) setConsensusParams(consensusParams *abci.ConsensusParams) {
 
 // setConsensusParams stores the consensus params to the main store.
 func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) {
-	consensusParamsBz, err := proto.Marshal(consensusParams)
+	consensusParamsBz, err := codec.Cdc.MarshalBinaryLengthPrefixed(consensusParams)
 	if err != nil {
 		panic(err)
 	}

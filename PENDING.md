@@ -10,6 +10,7 @@ BREAKING CHANGES
   * [cli] [\#2786](https://github.com/cosmos/cosmos-sdk/pull/2786) Fix redelegation command flow
   * [cli] [\#2829](https://github.com/cosmos/cosmos-sdk/pull/2829) add-genesis-account command now validates state when adding accounts
   * [cli] [\#2804](https://github.com/cosmos/cosmos-sdk/issues/2804) Check whether key exists before passing it on to `tx create-validator`.
+  * [cli] [\#2874](https://github.com/cosmos/cosmos-sdk/pull/2874) `gaiacli tx sign` takes an optional `--output-document` flag to support output redirection.
 
 * Gaia
   * [mint] [\#2825] minting now occurs every block, inflation parameter updates still hourly
@@ -18,6 +19,7 @@ BREAKING CHANGES
   * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.
   * [\#2019](https://github.com/cosmos/cosmos-sdk/issues/2019) Cap total number of signatures. Current per-transaction limit is 7, and if that is exceeded transaction is rejected.
   * [\#2801](https://github.com/cosmos/cosmos-sdk/pull/2801) Remove AppInit structure.
+  * [\#2798](https://github.com/cosmos/cosmos-sdk/issues/2798) Governance API has miss-spelled English word in JSON response ('depositer' -> 'depositor')
 
 * Tendermint
 
@@ -67,8 +69,11 @@ IMPROVEMENTS
  - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions
  and methods will panic when a negative amount is discovered.
  - #2815 Gas unit fields changed from `int64` to `uint64`.
- - #2825 More staking and distribution invariants
-
+ - #2821 Codespaces are now strings
+ - #2779 Introduce `ValidateBasic` to the `Tx` interface and call it in the ante
+ handler.
+  - #2825 More staking and distribution invariants
+ 
 * Tendermint
  - #2796 Update to go-amino 0.14.1
 
@@ -76,6 +81,7 @@ IMPROVEMENTS
 BUG FIXES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  - [gaia-lite] #2868 Added handler for governance tally endpoit
 
 * Gaia CLI  (`gaiacli`)
 

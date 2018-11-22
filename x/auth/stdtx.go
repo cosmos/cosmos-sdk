@@ -2,10 +2,12 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
 )
 
 var _ sdk.Tx = (*StdTx)(nil)
@@ -28,11 +30,61 @@ func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdT
 	}
 }
 
-//nolint
+// GetMsgs returns the all the transaction's messages.
 func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 
+// ValidateBasic does a simple and lightweight validation check that doesn't
+// require access to any other information.
+func (tx StdTx) ValidateBasic() sdk.Error {
+	stdSigs := tx.GetSignatures()
+
+	if !tx.Fee.Amount.IsNotNegative() {
+		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
+	}
+	if len(stdSigs) == 0 {
+		return sdk.ErrUnauthorized("no signers")
+	}
+	if len(stdSigs) != len(tx.GetSigners()) {
+		return sdk.ErrUnauthorized("wrong number of signers")
+	}
+	if len(tx.GetMemo()) > maxMemoCharacters {
+		return sdk.ErrMemoTooLarge(
+			fmt.Sprintf(
+				"maximum number of characters is %d but received %d characters",
+				maxMemoCharacters, len(tx.GetMemo()),
+			),
+		)
+	}
+
+	sigCount := 0
+	for i := 0; i < len(stdSigs); i++ {
+		sigCount += countSubKeys(stdSigs[i].PubKey)
+		if sigCount > txSigLimit {
+			return sdk.ErrTooManySignatures(
+				fmt.Sprintf("signatures: %d, limit: %d", sigCount, txSigLimit),
+			)
+		}
+	}
+
+	return nil
+}
+
+func countSubKeys(pub crypto.PubKey) int {
+	v, ok := pub.(*multisig.PubKeyMultisigThreshold)
+	if !ok {
+		return 1
+	}
+
+	numKeys := 0
+	for _, subkey := range v.PubKeys {
+		numKeys += countSubKeys(subkey)
+	}
+
+	return numKeys
+}
+
 // GetSigners returns the addresses that must sign the transaction.
-// Addresses are returned in a determistic order.
+// Addresses are returned in a deterministic order.
 // They are accumulated from the GetSigners method for each Msg
 // in the order they appear in tx.GetMsgs().
 // Duplicate addresses will be omitted.

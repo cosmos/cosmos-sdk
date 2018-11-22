@@ -42,7 +42,7 @@ If proposal's deposit does not reach `MinDeposit` before `MaxDepositPeriod`, pro
 There is one instance where Atom holders that deposits can be refunded:
 * If the proposal is accepted.
 
-Then, deposits will automatically be refunded to their respective depositer.
+Then, deposits will automatically be refunded to their respective depositor.
 
 ### Proposal types
 

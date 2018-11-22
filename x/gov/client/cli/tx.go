@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -27,7 +28,7 @@ const (
 	flagDeposit      = "deposit"
 	flagVoter        = "voter"
 	flagOption       = "option"
-	flagDepositer    = "depositer"
+	flagDepositor    = "depositor"
 	flagStatus       = "status"
 	flagNumLimit     = "limit"
 	flagProposal     = "proposal"
@@ -103,7 +104,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
+				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 
 			// Build and sign the transaction, then broadcast to Tendermint
@@ -164,7 +165,7 @@ func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			depositerAddr, err := cliCtx.GetFromAddress()
+			depositorAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
@@ -176,14 +177,14 @@ func GetCmdDeposit(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := gov.NewMsgDeposit(depositerAddr, proposalID, amount)
+			msg := gov.NewMsgDeposit(depositorAddr, proposalID, amount)
 			err = msg.ValidateBasic()
 			if err != nil {
 				return err
 			}
 
 			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
+				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 
 			// Build and sign the transaction, then broadcast to a Tendermint
@@ -229,7 +230,7 @@ func GetCmdVote(cdc *codec.Codec) *cobra.Command {
 			}
 
 			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
+				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 
 			fmt.Printf("Vote[Voter:%s,ProposalID:%d,Option:%s]",

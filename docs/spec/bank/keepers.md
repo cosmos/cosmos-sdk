@@ -35,6 +35,7 @@ type BaseKeeper interface {
   SetCoins(addr AccAddress, amt Coins)
   SubtractCoins(addr AccAddress, amt Coins)
   AddCoins(addr AccAddress, amt Coins)
+  InputOutputCoins(inputs []Input, outputs []Output)
 }
 ```
 
@@ -69,6 +70,13 @@ addCoins(addr AccAddress, amt Coins)
   setCoins(addr, newCoins)
 ```
 
+`inputOutputCoins` transfers coins from any number of input accounts (who must all sign the transaction) to any number of output accounts.
+
+
+```
+inputOutputCoins(inputs []Input, outputs []Output)
+```
+
 ### SendKeeper
 
 The send keeper provides access to account balances and the ability to transfer coins between accounts, but not to alter the total supply (mint or burn coins).
@@ -76,7 +84,6 @@ The send keeper provides access to account balances and the ability to transfer 
 ```golang
 type SendKeeper interface {
   SendCoins(from AccAddress, to AccAddress, amt Coins)
-  InputOutputCoins(inputs []Input, outputs []Output)
 }
 ```
 
@@ -85,12 +92,6 @@ type SendKeeper interface {
 ```
 sendCoins(from AccAddress, to AccAddress, amt Coins)
 ```
-
-```
-inputOutputCoins(inputs []Input, outputs []Output)
-```
-
-`inputOutputCoins` transfers coins from any number of input accounts (who must all sign the transaction) to any number of output accounts.
 
 ### ViewKeeper
 

@@ -70,11 +70,15 @@ addCoins(addr AccAddress, amt Coins)
   setCoins(addr, newCoins)
 ```
 
-`inputOutputCoins` transfers coins from any number of input accounts (who must all sign the transaction) to any number of output accounts.
+`inputOutputCoins` transfers coins from any number of input accounts to any number of output accounts.
 
 
 ```
 inputOutputCoins(inputs []Input, outputs []Output)
+  for input in inputs
+    subtractCoins(input.Address, input.Coins)
+  for output in outputs
+    addCoins(output.Address, output.Coins)
 ```
 
 ### SendKeeper
@@ -91,6 +95,8 @@ type SendKeeper interface {
 
 ```
 sendCoins(from AccAddress, to AccAddress, amt Coins)
+  subtractCoins(from, amt)
+  addCoins(to, amt)
 ```
 
 ### ViewKeeper

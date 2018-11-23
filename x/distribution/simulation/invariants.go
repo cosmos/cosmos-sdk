@@ -140,7 +140,8 @@ func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
 func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant {
 	return func(app *baseapp.BaseApp) error {
-		ctx := app.NewContext(false, abci.Header{})
+		mockHeader := abci.Header{Height: app.LastBlockHeight() + 1}
+		ctx := app.NewContext(false, mockHeader)
 
 		// we don't want to write the changes
 		ctx, _ = ctx.CacheContext()

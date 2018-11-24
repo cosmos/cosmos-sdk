@@ -263,6 +263,10 @@ func (d Dec) IsInteger() bool {
 	return new(big.Int).Rem(d.Int, precisionReuse).Sign() == 0
 }
 
+func (d Dec) Format(s fmt.State, verb rune) {
+	s.Write([]byte(d.String()))
+}
+
 func (d Dec) String() string {
 	bz, err := d.Int.MarshalText()
 	if err != nil {

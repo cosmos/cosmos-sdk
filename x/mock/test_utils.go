@@ -57,9 +57,9 @@ func CheckGenTx(
 	res := app.Check(tx)
 
 	if expPass {
-		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
 	}
 
 	return res
@@ -78,9 +78,9 @@ func SignCheckDeliver(
 	res := app.Simulate(tx)
 
 	if expSimPass {
-		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
 	}
 
 	// Simulate a sending a transaction and committing a block
@@ -88,9 +88,9 @@ func SignCheckDeliver(
 	res = app.Deliver(tx)
 
 	if expPass {
-		require.Equal(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.Equal(t, sdk.CodeOK, res.Code, res.Log)
 	} else {
-		require.NotEqual(t, sdk.ABCICodeOK, res.Code, res.Log)
+		require.NotEqual(t, sdk.CodeOK, res.Code, res.Log)
 	}
 
 	app.EndBlock(abci.RequestEndBlock{})

@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -71,7 +72,7 @@ func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name 
 
 // CalculateGas simulates the execution of a transaction and returns
 // both the estimate obtained by the query and the adjusted amount.
-func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *amino.Codec, txBytes []byte, adjustment float64) (estimate, adjusted int64, err error) {
+func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *amino.Codec, txBytes []byte, adjustment float64) (estimate, adjusted uint64, err error) {
 	// run a simulation (via /app/simulate query) to
 	// estimate gas and update TxBuilder accordingly
 	rawRes, err := queryFunc("/app/simulate", txBytes)
@@ -88,7 +89,7 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 // Don't perform online validation or lookups if offline is true.
-func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
+func PrintUnsignedStdTx(w io.Writer, txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
 	var stdTx auth.StdTx
 	if offline {
 		stdTx, err = buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
@@ -100,7 +101,7 @@ func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	}
 	json, err := txBldr.Codec.MarshalJSON(stdTx)
 	if err == nil {
-		fmt.Printf("%s\n", json)
+		fmt.Fprintf(w, "%s\n", json)
 	}
 	return
 }
@@ -152,7 +153,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 
 // nolint
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted int64, err error) {
+func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted uint64, err error) {
 	txBytes, err := txBldr.BuildWithPubKey(name, msgs)
 	if err != nil {
 		return
@@ -161,11 +162,11 @@ func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name stri
 	return
 }
 
-func adjustGasEstimate(estimate int64, adjustment float64) int64 {
-	return int64(adjustment * float64(estimate))
+func adjustGasEstimate(estimate uint64, adjustment float64) uint64 {
+	return uint64(adjustment * float64(estimate))
 }
 
-func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (int64, error) {
+func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (uint64, error) {
 	var simulationResult sdk.Result
 	if err := cdc.UnmarshalBinaryLengthPrefixed(rawRes, &simulationResult); err != nil {
 		return 0, err

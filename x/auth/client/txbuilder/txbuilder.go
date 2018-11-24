@@ -16,7 +16,7 @@ type TxBuilder struct {
 	Codec         *codec.Codec
 	AccountNumber uint64
 	Sequence      uint64
-	Gas           int64 // TODO: should this turn into uint64? requires further discussion - see #2173
+	Gas           uint64
 	GasAdjustment float64
 	SimulateGas   bool
 	ChainID       string
@@ -61,7 +61,7 @@ func (bldr TxBuilder) WithChainID(chainID string) TxBuilder {
 }
 
 // WithGas returns a copy of the context with an updated gas.
-func (bldr TxBuilder) WithGas(gas int64) TxBuilder {
+func (bldr TxBuilder) WithGas(gas uint64) TxBuilder {
 	bldr.Gas = gas
 	return bldr
 }

@@ -50,9 +50,8 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	accum := di.GetDelAccum(wc.Height, delegatorShares)
 	di.DelPoolWithdrawalHeight = wc.Height
 	withdrawalTokens := vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
-	remDelPool := vi.DelPool.Minus(withdrawalTokens)
 
-	vi.DelPool = remDelPool
+	vi.DelPool = vi.DelPool.Minus(withdrawalTokens)
 	vi.DelAccum.Accum = vi.DelAccum.Accum.Sub(accum)
 
 	return di, vi, fp, withdrawalTokens

@@ -9,7 +9,6 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
@@ -42,7 +41,7 @@ type relayCommander struct {
 func IBCRelayCmd(cdc *codec.Codec) *cobra.Command {
 	cmdr := relayCommander{
 		cdc:       cdc,
-		decoder:   authcmd.GetAccountDecoder(cdc),
+		decoder:   context.GetAccountDecoder(cdc),
 		ibcStore:  "ibc",
 		mainStore: "main",
 		accStore:  "acc",

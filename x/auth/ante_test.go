@@ -43,7 +43,7 @@ func privAndAddr() (crypto.PrivKey, sdk.AccAddress) {
 func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool) {
 	_, result, abort := anteHandler(ctx, tx, simulate)
 	require.False(t, abort)
-	require.Equal(t, sdk.ABCICodeOK, result.Code)
+	require.Equal(t, sdk.CodeOK, result.Code)
 	require.True(t, result.IsOK())
 }
 
@@ -51,8 +51,9 @@ func checkValidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx
 func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, tx sdk.Tx, simulate bool, code sdk.CodeType) {
 	newCtx, result, abort := anteHandler(ctx, tx, simulate)
 	require.True(t, abort)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, code), result.Code,
-		fmt.Sprintf("Expected %v, got %v", sdk.ToABCICode(sdk.CodespaceRoot, code), result))
+
+	require.Equal(t, code, result.Code, fmt.Sprintf("Expected %v, got %v", code, result))
+	require.Equal(t, sdk.CodespaceRoot, result.Codespace)
 
 	if code == sdk.CodeOutOfGas {
 		stdTx, ok := tx.(StdTx)
@@ -676,7 +677,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        args
-		gasConsumed int64
+		gasConsumed uint64
 		wantPanic   bool
 	}{
 		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), ed25519.GenPrivKey().PubKey()}, ed25519VerifyCost, false},
@@ -698,7 +699,7 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 func TestAdjustFeesByGas(t *testing.T) {
 	type args struct {
 		fee sdk.Coins
-		gas int64
+		gas uint64
 	}
 	tests := []struct {
 		name string
@@ -707,7 +708,6 @@ func TestAdjustFeesByGas(t *testing.T) {
 	}{
 		{"nil coins", args{sdk.Coins{}, 10000}, sdk.Coins{}},
 		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 10000}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
-		{"negative coins", args{sdk.Coins{sdk.NewInt64Coin("A", -10), sdk.NewInt64Coin("B", 10)}, 10000}, sdk.Coins{sdk.NewInt64Coin("B", 20)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

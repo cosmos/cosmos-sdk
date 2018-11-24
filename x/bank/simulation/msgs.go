@@ -82,7 +82,7 @@ func createSingleInputSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.A
 		toAddr.String(),
 	)
 
-	coins := sdk.Coins{{initFromCoins[denomIndex].Denom, amt}}
+	coins := sdk.Coins{sdk.NewCoin(initFromCoins[denomIndex].Denom, amt)}
 	msg = bank.MsgSend{
 		Inputs:  []bank.Input{bank.NewInput(fromAcc.Address, coins)},
 		Outputs: []bank.Output{bank.NewOutput(toAddr, coins)},

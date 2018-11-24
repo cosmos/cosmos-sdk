@@ -115,7 +115,7 @@ func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdQueryValidatorUnbondingDelegations implements the query all unbonding delegatations from a validator command.
-func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorUnbondingDelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unbonding-delegations-from [operator-addr]",
 		Short: "Query all unbonding delegatations from a validator",
@@ -135,7 +135,7 @@ func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Code
 			}
 
 			res, err := cliCtx.QueryWithData(
-				fmt.Sprintf("custom/%s/validatorUnbondingDelegations", queryRoute),
+				fmt.Sprintf("custom/%s/validatorUnbondingDelegations", storeKey),
 				bz)
 			if err != nil {
 				return err
@@ -150,7 +150,7 @@ func GetCmdQueryValidatorUnbondingDelegations(queryRoute string, cdc *codec.Code
 }
 
 // GetCmdQueryValidatorRedelegations implements the query all redelegatations from a validator command.
-func GetCmdQueryValidatorRedelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorRedelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redelegations-from [operator-addr]",
 		Short: "Query all outgoing redelegatations from a validator",
@@ -170,7 +170,7 @@ func GetCmdQueryValidatorRedelegations(queryRoute string, cdc *codec.Codec) *cob
 			}
 
 			res, err := cliCtx.QueryWithData(
-				fmt.Sprintf("custom/%s/validatorRedelegations", queryRoute),
+				fmt.Sprintf("custom/%s/validatorRedelegations", storeKey),
 				bz)
 			if err != nil {
 				return err
@@ -288,7 +288,7 @@ func GetCmdQueryDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 
 // GetCmdQueryValidatorDelegations implements the command to query all the
 // delegations to a specific validator.
-func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQueryValidatorDelegations(storeKey string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegations-to [validator-addr]",
 		Short: "Query all delegations made to one validator",
@@ -308,7 +308,7 @@ func GetCmdQueryValidatorDelegations(queryRoute string, cdc *codec.Codec) *cobra
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validatorDelegations", queryRoute), bz)
+			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/validatorDelegations", storeKey), bz)
 			if err != nil {
 				return err
 			}

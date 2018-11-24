@@ -34,7 +34,7 @@ func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
 
 // WriteSimulationResponse prepares and writes an HTTP
 // response for transactions simulations.
-func WriteSimulationResponse(w http.ResponseWriter, gas int64) {
+func WriteSimulationResponse(w http.ResponseWriter, gas uint64) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"gas_estimate":%v}`, gas)))
 }

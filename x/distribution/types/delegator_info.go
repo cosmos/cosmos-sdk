@@ -49,16 +49,11 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	fp := wc.FeePool
 	vi = vi.UpdateTotalDelAccum(wc.Height, totalDelShares)
 
-	// NOTE: Sometimes, vi.DelAccum.Accum.IsZero(), as delegation shares can be
-	// 0 due to rounding errors.  We could add a special condition to break out
-	// early here, but it's better to keep the logic simple by making it work
-	// for all cases.
-	/* DO NOT UNCOMMENT:
+	// Break out to prevent a divide by zero.
 	if vi.DelAccum.Accum.IsZero() {
 		di.DelPoolWithdrawalHeight = wc.Height
 		return di, vi, fp, DecCoins{}
 	}
-	*/
 
 	vi, fp = vi.TakeFeePoolRewards(wc)
 

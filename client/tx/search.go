@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,6 +23,8 @@ import (
 const (
 	flagTags = "tags"
 	flagAny  = "any"
+	flagPage    = "page"
+	flagPerPage = "perPage"
 )
 
 // default client command to search through tagged transactions
@@ -32,7 +35,7 @@ func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Search for transactions that match exactly the given tags. For example:
 
-$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
+$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 0 --perPage 30
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tagsStr := viper.GetString(flagTags)
@@ -56,9 +59,11 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
 				tag = fmt.Sprintf("%s='%s'", keyValue[0], keyValue[1])
 				tmTags = append(tmTags, tag)
 			}
+			page := viper.GetInt(flagPage)
+			perPage := viper.GetInt(flagPerPage)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := SearchTxs(cliCtx, cdc, tmTags)
+			txs, err := SearchTxs(cliCtx, cdc, tmTags, page, perPage)
 			if err != nil {
 				return err
 			}
@@ -92,7 +97,7 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
 // SearchTxs performs a search for transactions for a given set of tags via
 // Tendermint RPC. It returns a slice of Info object containing txs and metadata.
 // An error is returned if the query fails.
-func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]Info, error) {
+func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, perPage int) ([]Info, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
@@ -108,9 +113,6 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]In
 
 	prove := !cliCtx.TrustNode
 
-	// TODO: take these as args
-	page := 0
-	perPage := 100
 	res, err := node.TxSearch(query, prove, page, perPage)
 	if err != nil {
 		return nil, err
@@ -175,7 +177,29 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			tags = append(tags, tag)
 		}
 
-		txs, err = SearchTxs(cliCtx, cdc, tags)
+		pageStr := r.FormValue("page")
+		if pageStr == "" {
+			pageStr = "0"
+		}
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("page parameter is not a valid integer"))
+			return
+		}
+
+		perPageStr := r.FormValue("perPage")
+		if perPageStr == "" {
+			perPageStr = "30" // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+		}
+		perPage, err := strconv.Atoi(perPageStr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("perPage parameter is not a valid integer"))
+			return
+		}
+
+		txs, err = SearchTxs(cliCtx, cdc, tags, page, perPage)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

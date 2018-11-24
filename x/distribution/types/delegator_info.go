@@ -49,27 +49,31 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	fp := wc.FeePool
 	vi = vi.UpdateTotalDelAccum(wc.Height, totalDelShares)
 
+	// NOTE: Sometimes, vi.DelAccum.Accum.IsZero(), as delegation shares can be
+	// 0 due to rounding errors.  We could add a special condition to break out
+	// early here, but it's better to keep the logic simple by making it work
+	// for all cases.
+	/* DO NOT UNCOMMENT:
 	if vi.DelAccum.Accum.IsZero() {
-		// NOTE: Under the situation which a delegation was created with
-		//       zero shares, this next line of code would ensure
-		//       that no delegation-accum invariance relative to the total
-		//       delegation accum are kept by validator_info. Ideally however
-		//       delegations with zero shares should never be created.
 		di.DelPoolWithdrawalHeight = wc.Height
 		return di, vi, fp, DecCoins{}
 	}
+	*/
 
 	vi, fp = vi.TakeFeePoolRewards(wc)
 
 	accum := di.GetDelAccum(wc.Height, delegatorShares)
 	di.DelPoolWithdrawalHeight = wc.Height
 
-	var withdrawalTokens DecCoins
-	if accum.Equal(vi.DelAccum.Accum) {
-		// required due to rounding faults
-		withdrawalTokens = vi.DelPool
-	} else {
-		withdrawalTokens = vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
+	var withdrawalTokens = vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
+
+	// Clip withdrawal tokens by pool, due to possible rounding errors.
+	// https://github.com/cosmos/cosmos-sdk/issues/2888#issuecomment-441387987
+	for i, decCoin := range withdrawalTokens {
+		poolDenomAmount := vi.DelPool.AmountOf(decCoin.Denom)
+		if decCoin.Amount.GT(poolDenomAmount) {
+			withdrawalTokens[i] = NewDecCoinFromDec(decCoin.Denom, poolDenomAmount)
+		}
 	}
 
 	// defensive check for impossible accum ratios

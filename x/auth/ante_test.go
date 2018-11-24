@@ -785,7 +785,7 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 
 	// test rejection logic
 	privs, accnums, seqs := []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8},
-		[]int64{0, 0, 0, 0, 0, 0, 0, 0}, []int64{0, 0, 0, 0, 0, 0, 0, 0}
+		[]uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
 }

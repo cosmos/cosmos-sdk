@@ -173,13 +173,13 @@ func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
 		return errors.New("baseapp expects MultiStore with 'main' KVStore")
 	}
 
-	// memoize mainKey.
+	// memoize mainKey
 	if app.mainKey != nil {
 		panic("app.mainKey expected to be nil; duplicate init?")
 	}
 	app.mainKey = mainKey
 
-	// load consensus param from the main store
+	// load consensus params from the main store
 	consensusParamsBz := mainStore.Get(mainConsensusParamsKey)
 	if consensusParamsBz != nil {
 		var consensusParams = &abci.ConsensusParams{}

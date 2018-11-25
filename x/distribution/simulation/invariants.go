@@ -171,7 +171,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 		}
 		bondDenom := sk.GetParams(ctx).BondDenom
 		if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
-			fmt.Printf("unexpected leftover validator pool coins: %v\n",
+			return fmt.Errorf("unexpected leftover validator pool coins: %v\n",
 				feePool.ValPool.AmountOf(bondDenom).String())
 		}
 		// all ok

@@ -249,9 +249,25 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 			header.Height, totalNumBlocks, opCount, blocksize)
 		lastBlocksizeState, blocksize = getBlockSize(r, params, lastBlocksizeState, avgBlockSize)
 
+		type opAndR struct {
+			op   Operation
+			rand *rand.Rand
+		}
+		opAndRz := make([]opAndR, 0, blocksize)
+		// Predetermine the blocksize slice so that we can do things like block
+		// out certain operations without changing the ops that follow.
 		for i := 0; i < blocksize; i++ {
+			opAndRz = append(opAndRz, opAndR{
+				op:   selectOp(r),
+				rand: DeriveRand(r),
+			})
+		}
 
-			logUpdate, futureOps, err := selectOp(r)(r, app, ctx, accounts, event)
+		for i := 0; i < blocksize; i++ {
+			// NOTE: the Rand 'r' should not be used here.
+			opAndR := opAndRz[i]
+			op, r2 := opAndR.op, opAndR.rand
+			logUpdate, futureOps, err := op(r2, app, ctx, accounts, event)
 			logWriter(logUpdate)
 			if err != nil {
 				displayLogs()

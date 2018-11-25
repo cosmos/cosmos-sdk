@@ -60,10 +60,13 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	accum := di.GetDelAccum(wc.Height, delegatorShares)
 	di.DelPoolWithdrawalHeight = wc.Height
 
-	var withdrawalTokens = vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
+	withdrawalTokens := vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
 
 	// Clip withdrawal tokens by pool, due to possible rounding errors.
-	// https://github.com/cosmos/cosmos-sdk/issues/2888#issuecomment-441387987
+	// This rounding error may be introduced upon multiplication since
+	// we're clipping decimal digits, and then when we divide by a number ~1 or
+	// < 1, the error doesn't get "buried", and if << 1 it'll get amplified.
+	// more: https://github.com/cosmos/cosmos-sdk/issues/2888#issuecomment-441387987
 	for i, decCoin := range withdrawalTokens {
 		poolDenomAmount := vi.DelPool.AmountOf(decCoin.Denom)
 		if decCoin.Amount.GT(poolDenomAmount) {

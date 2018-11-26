@@ -13,6 +13,7 @@ BREAKING CHANGES
   * [cli] [\#2804](https://github.com/cosmos/cosmos-sdk/issues/2804) Check whether key exists before passing it on to `tx create-validator`.
   * [cli] [\#2874](https://github.com/cosmos/cosmos-sdk/pull/2874) `gaiacli tx sign` takes an optional `--output-document` flag to support output redirection.
   * [cli] [\#2875](https://github.com/cosmos/cosmos-sdk/pull/2875) Refactor `gaiad gentx` and avoid redirection to `gaiacli tx sign` for tx signing.
+  * [cli] [\#2595](https://github.com/cosmos/cosmos-sdk/issues/2595) Rename `gaiacli keys new` to `gaiacli keys add`, incorporate `--recover` functionality in the new `add` command implementation.
 
 * Gaia
   * [mint] [\#2825] minting now occurs every block, inflation parameter updates still hourly

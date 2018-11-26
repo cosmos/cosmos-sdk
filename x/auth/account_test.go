@@ -216,14 +216,17 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 
 	// require the ability to delegate all vesting coins (50%) and all vested coins (50%)
 	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
-	cva.TrackDelegation(now.Add(12*time.Hour), origCoins)
+	cva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, cva.DelegatedVesting)
+	require.Nil(t, cva.DelegatedFree)
+
+	cva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, cva.DelegatedVesting)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, cva.DelegatedFree)
 	require.Nil(t, cva.GetCoins())
 
 	// require no modifications when delegation amount is zero or not enough funds
 	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
-
 	require.Panics(t, func() {
 		cva.TrackDelegation(endTime, sdk.Coins{sdk.NewInt64Coin(testDenom, 1000000)})
 	})

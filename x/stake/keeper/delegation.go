@@ -37,6 +37,21 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context) (delegations []types.Delegati
 	return delegations
 }
 
+// return all delegations to a specific validator. Useful for querier.
+func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress) (delegations []types.Delegation) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, DelegationKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		if delegation.GetValidatorAddr().Equals(valAddr) {
+			delegations = append(delegations, delegation)
+		}
+	}
+	return delegations
+}
+
 // return a given amount of all the delegations from a delegator
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 	maxRetrieve uint16) (delegations []types.Delegation) {
@@ -283,6 +298,21 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Set(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})
 }
 
+// iterate through all redelegations
+func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red types.Redelegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, RedelegationKey)
+	defer iterator.Close()
+
+	for i := int64(0); iterator.Valid(); iterator.Next() {
+		red := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
+		if stop := fn(i, red); stop {
+			break
+		}
+		i++
+	}
+}
+
 // remove a redelegation object and associated index
 func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
@@ -384,7 +414,6 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 
 	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)
-	delegation.Height = ctx.BlockHeight()
 	k.SetDelegation(ctx, delegation)
 
 	return newShares, nil
@@ -431,8 +460,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 
 		k.RemoveDelegation(ctx, delegation)
 	} else {
-		// Update height
-		delegation.Height = ctx.BlockHeight()
+		// update the delegation
 		k.SetDelegation(ctx, delegation)
 	}
 
@@ -570,6 +598,9 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	rounded := returnAmount.TruncateInt()
+	if rounded.IsZero() { //TODO design consideration
+		return types.Redelegation{}, types.ErrVerySmallRedelegation(k.Codespace())
+	}
 	returnCoin := sdk.NewCoin(k.BondDenom(ctx), rounded)
 	change := returnAmount.Sub(sdk.NewDecFromInt(rounded))
 
@@ -582,6 +613,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	if !found {
 		return types.Redelegation{}, types.ErrBadRedelegationDst(k.Codespace())
 	}
+
 	sharesCreated, err := k.Delegate(ctx, delAddr, returnCoin, dstValidator, false)
 	if err != nil {
 		return types.Redelegation{}, err

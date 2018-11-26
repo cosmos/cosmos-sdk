@@ -1,40 +1,40 @@
 # Contributing
 
 Thank you for considering making contributions to Cosmos-SDK and related
-repositories! 
+repositories!
 
 Contributing to this repo can mean many things such as participated in
 discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
   1. either [open](https://github.com/cosmos/cosmos-sdk/issues/new/choose) or
-     [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with, 
-  2. participate in thoughtful discussion on that issue, 
+     [find](https://github.com/cosmos/cosmos-sdk/issues) an issue you'd like to help with,
+  2. participate in thoughtful discussion on that issue,
   3. if you would then like to contribute code:
-     1. if a the issue is a proposal, ensure that the proposal has been accepted, 
+     1. if a the issue is a proposal, ensure that the proposal has been accepted,
      2. ensure that nobody else has already begun working on this issue, if they have
-       make sure to contact them to collaborate, 
+       make sure to contact them to collaborate,
      3. if nobody has been assigned the issue and you would like to work on it
        make a comment on the issue to inform the community of your intentions
-       to begin work, 
+       to begin work,
      4. follow standard github best practices: fork the repo, branch from the
-       tip of `develop`, make some commits, and submit a PR to `develop`, 
+       tip of `develop`, make some commits, and submit a PR to `develop`,
      5. include `WIP:` in the PR-title to and submit your PR early, even if it's
        incomplete, this indicates to the community you're working on something and
        allows them to provide comments early in the development process. When the code
        is complete it can be marked as ready-for-review by replacing `WIP:` with
-       `R4R:` in the PR-title. 
+       `R4R:` in the PR-title.
 
-Note that for very small or blatantly obvious problems (such as typos) it is 
+Note that for very small or blatantly obvious problems (such as typos) it is
 not required to an open issue to submit a PR, but be aware that for more complex
 problems/features, if a PR is opened before an adequate design discussion has
-taken place in a github issue, that PR runs a high likelihood of being rejected. 
+taken place in a github issue, that PR runs a high likelihood of being rejected.
 
 Take a peek at our [coding repo](https://github.com/tendermint/coding) for
 overall information on repository workflow and standards. Note, we use `make
 get_dev_tools` and `make update_dev_tools` for installing the linting tools.
 
-Other notes: 
+Other notes:
   - Looking for a good place to start contributing? How about checking out some
     [good first
     issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
@@ -44,9 +44,33 @@ Other notes:
 
 ## Pull Requests
 
-To accommodate review process we suggest that PRs are categorically broken up. 
+To accommodate review process we suggest that PRs are categorically broken up.
 Ideally each PR addresses only a single issue. Additionally, as much as possible
-code refactoring and cleanup should be submitted as a separate PRs from bugfixes/feature-additions. 
+code refactoring and cleanup should be submitted as a separate PRs from bugfixes/feature-additions.
+
+### Process for reviewing PRs
+
+All PRs require two Reviews before merge (except docs changes, or variable name-changes which only require one). When reviewing PRs please use the following review explanations:
+
+- `LGTM` without an explicit approval means that the changes look good, but you haven't pulled down the code, run tests locally and thoroughly reviewed it.
+- `Approval` through the GH UI means that you understand the code, documentation/spec is updated in the right places, you have pulled down and tested the code locally. In addition:
+  - You must also think through anything which ought to be included but is not
+  - You must think through whether any added code could be partially combined (DRYed) with existing code
+  - You must think through any potential security issues or incentive-compatibility flaws introduced by the changes
+  - Naming must be consistent with conventions and the rest of the codebase
+  - Code must live in a reasonable location, considering dependency structures (e.g. not importing testing modules in production code, or including example code modules in production code).
+  - if you approve of the PR, you are responsible for fixing any of the issues mentioned here and more
+- If you sat down with the PR submitter and did a pairing review please note that in the `Approval`, or your PR comments.
+- If you are only making "surface level" reviews, submit any notes as `Comments` without adding a review.
+
+### Updating Documentation
+
+If you open a PR on the Cosmos SDK, it is mandatory to update the relevant documentation in /docs.
+
+* If your change relates to the core SDK (baseapp, store, ...), please update the docs/gaia folder, the docs/examples folder and possibly the docs/spec folder.
+* If your changes relate specifically to the gaia application (not including modules), please modify the docs/gaia folder.
+* If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia and/or basecoin, you might also need to modify docs/gaia and/or docs/examples.
+* If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the docs/clients folder.
 
 ## Forking
 

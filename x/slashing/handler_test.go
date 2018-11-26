@@ -20,13 +20,18 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	got := stake.NewHandler(sk)(ctx, msg)
 	require.True(t, got.IsOK())
 	stake.EndBlocker(ctx, sk)
-	require.Equal(t, ck.GetCoins(ctx, sdk.AccAddress(addr)), sdk.Coins{{sk.GetParams(ctx).BondDenom, initCoins.Sub(amt)}})
+
+	require.Equal(
+		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+	)
 	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
 
 	// assert non-jailed validator can't be unjailed
 	got = slh(ctx, NewMsgUnjail(addr))
 	require.False(t, got.IsOK(), "allowed unjail of non-jailed validator")
-	require.Equal(t, sdk.ToABCICode(DefaultCodespace, CodeValidatorNotJailed), got.Code)
+	require.EqualValues(t, CodeValidatorNotJailed, got.Code)
+	require.EqualValues(t, DefaultCodespace, got.Codespace)
 }
 
 func TestJailedValidatorDelegations(t *testing.T) {
@@ -55,7 +60,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 		JailedUntil:         time.Unix(0, 0),
 		MissedBlocksCounter: int64(0),
 	}
-	slashingKeeper.setValidatorSigningInfo(ctx, consAddr, newInfo)
+	slashingKeeper.SetValidatorSigningInfo(ctx, consAddr, newInfo)
 
 	// delegate tokens to the validator
 	delAddr := sdk.AccAddress(addrs[2])

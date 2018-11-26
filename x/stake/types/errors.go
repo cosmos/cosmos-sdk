@@ -11,7 +11,7 @@ import (
 type CodeType = sdk.CodeType
 
 const (
-	DefaultCodespace sdk.CodespaceType = 4
+	DefaultCodespace sdk.CodespaceType = "STAKE"
 
 	CodeInvalidValidator  CodeType = 101
 	CodeInvalidDelegation CodeType = 102
@@ -157,6 +157,10 @@ func ErrNoRedelegation(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrSelfRedelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "cannot redelegate to the same validator")
+}
+
+func ErrVerySmallRedelegation(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation, "too few tokens to redelegate, truncates to zero tokens")
 }
 
 func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {

@@ -53,7 +53,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
+	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
@@ -63,7 +63,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	// TODO: Add tag for if voting period started
 	resTags := sdk.NewTags(
 		tags.Action, tags.ActionDeposit,
-		tags.Depositer, []byte(msg.Depositer.String()),
+		tags.Depositor, []byte(msg.Depositor.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
 
@@ -107,8 +107,8 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		var proposalID uint64
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
 		inactiveProposal := keeper.GetProposal(ctx, proposalID)
-		keeper.RefundDeposits(ctx, proposalID)
 		keeper.DeleteProposal(ctx, proposalID)
+		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
 
 		resTags = resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
 		resTags = resTags.AppendTag(tags.ProposalID, []byte(string(proposalID)))

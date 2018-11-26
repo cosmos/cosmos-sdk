@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
@@ -37,8 +38,7 @@ var (
 const nodeDirPerm = 0755
 
 // get cmd to initialize all files for tendermint testnet and application
-func TestnetFilesCmd(ctx *server.Context, cdc *codec.Codec,
-	appInit server.AppInit) *cobra.Command {
+func TestnetFilesCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "testnet",
@@ -75,14 +75,20 @@ Example:
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1",
 		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 
+	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+
 	return cmd
 }
 
 func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
+	var chainID string
 	outDir := viper.GetString(flagOutputDir)
 	numValidators := viper.GetInt(flagNumValidators)
 
-	chainID := "chain-" + cmn.RandStr(6)
+	chainID = viper.GetString(client.FlagChainID)
+	if chainID == "" {
+		chainID = "chain-" + cmn.RandStr(6)
+	}
 
 	monikers := make([]string, numValidators)
 	nodeIDs := make([]string, numValidators)
@@ -174,14 +180,14 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 			Address: addr,
 			Coins: sdk.Coins{
 				sdk.NewInt64Coin(fmt.Sprintf("%sToken", nodeDirName), 1000),
-				sdk.NewInt64Coin("steak", 150),
+				sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 150),
 			},
 		})
 
 		msg := stake.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewInt64Coin("steak", 100),
+			sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 100),
 			stake.NewDescription(nodeDirName, "", "", ""),
 			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
@@ -298,7 +304,7 @@ func collectGenFiles(
 		genFile := config.GenesisFile()
 
 		// overwrite each validator's genesis file to have a canonical genesis time
-		err = WriteGenesisFileWithTime(genFile, chainID, nil, appState, genTime)
+		err = ExportGenesisFileWithTime(genFile, chainID, nil, appState, genTime)
 		if err != nil {
 			return err
 		}

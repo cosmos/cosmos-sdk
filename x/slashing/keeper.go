@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -99,7 +96,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
 	}
 	signInfo.JailedUntil = time.Add(k.DoubleSignUnbondDuration(ctx))
-	k.setValidatorSigningInfo(ctx, consAddr, signInfo)
+	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
 // handle a validator signature, must be called once per validator per block
@@ -171,22 +168,9 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	}
 
 	// Set the updated signing info
-	k.setValidatorSigningInfo(ctx, consAddr, signInfo)
+	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
-// AddValidators adds the validators to the keepers validator addr to pubkey mapping.
-func (k Keeper) AddValidators(ctx sdk.Context, vals []abci.ValidatorUpdate) {
-	for i := 0; i < len(vals); i++ {
-		val := vals[i]
-		pubkey, err := tmtypes.PB2TM.PubKey(val.PubKey)
-		if err != nil {
-			panic(err)
-		}
-		k.addPubkey(ctx, pubkey)
-	}
-}
-
-// TODO: Make a method to remove the pubkey from the map when a validator is unbonded.
 func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
 	addr := pubkey.Address()
 	k.setAddrPubkeyRelation(ctx, addr, pubkey)

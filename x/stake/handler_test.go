@@ -341,8 +341,6 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		expDelegatorShares := int64(i+2) * bondAmount // (1 self delegation)
 		expDelegatorAcc := sdk.NewInt(initBond - expBond)
 
-		require.Equal(t, bond.Height, int64(i), "Incorrect bond height")
-
 		gotBond := bond.Shares.RoundInt64()
 		gotDelegatorShares := validator.DelegatorShares.RoundInt64()
 		gotDelegatorAcc := accMapper.GetAccount(ctx, delegatorAddr).GetCoins().AmountOf(params.BondDenom)

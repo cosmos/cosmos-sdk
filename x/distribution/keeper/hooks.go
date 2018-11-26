@@ -10,6 +10,11 @@ import (
 // Create a new validator distribution record
 func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 
+	// defensive check for existence
+	if k.HasValidatorDistInfo(ctx, valAddr) {
+		panic("validator dist info already exists (not cleaned up properly)")
+	}
+
 	height := ctx.BlockHeight()
 	vdi := types.ValidatorDistInfo{
 		OperatorAddr:            valAddr,
@@ -103,7 +108,7 @@ func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.k.onValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.k.onValidatorRemoved(ctx, valAddr)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {

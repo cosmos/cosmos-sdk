@@ -34,7 +34,7 @@ func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
 
 // WriteSimulationResponse prepares and writes an HTTP
 // response for transactions simulations.
-func WriteSimulationResponse(w http.ResponseWriter, gas int64) {
+func WriteSimulationResponse(w http.ResponseWriter, gas uint64) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"gas_estimate":%v}`, gas)))
 }
@@ -124,8 +124,8 @@ type BaseReq struct {
 	Name          string `json:"name"`
 	Password      string `json:"password"`
 	ChainID       string `json:"chain_id"`
-	AccountNumber int64  `json:"account_number"`
-	Sequence      int64  `json:"sequence"`
+	AccountNumber uint64 `json:"account_number"`
+	Sequence      uint64 `json:"sequence"`
 	Gas           string `json:"gas"`
 	GasAdjustment string `json:"gas_adjustment"`
 }

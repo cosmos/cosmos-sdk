@@ -15,6 +15,11 @@ const (
 	costAddCoins      sdk.Gas = 10
 )
 
+//-----------------------------------------------------------------------------
+// Keeper
+
+var _ Keeper = (*BaseKeeper)(nil)
+
 // Keeper defines a module interface that facilitates the transfer of coins
 // between accounts.
 type Keeper interface {
@@ -28,32 +33,25 @@ type Keeper interface {
 	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
-var _ Keeper = (*BaseKeeper)(nil)
-
 // BaseKeeper manages transfers between accounts. It implements the Keeper
 // interface.
 type BaseKeeper struct {
-	am auth.AccountKeeper
+	BaseSendKeeper
+
+	ak auth.AccountKeeper
 }
 
 // NewBaseKeeper returns a new BaseKeeper
-func NewBaseKeeper(am auth.AccountKeeper) BaseKeeper {
-	return BaseKeeper{am: am}
-}
-
-// GetCoins returns the coins at the addr.
-func (keeper BaseKeeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return getCoins(ctx, keeper.am, addr)
+func NewBaseKeeper(ak auth.AccountKeeper) BaseKeeper {
+	return BaseKeeper{
+		BaseSendKeeper: NewBaseSendKeeper(ak),
+		ak:             ak,
+	}
 }
 
 // SetCoins sets the coins at the addr.
 func (keeper BaseKeeper) SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	return setCoins(ctx, keeper.am, addr, amt)
-}
-
-// HasCoins returns whether or not an account has at least amt coins.
-func (keeper BaseKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool {
-	return hasCoins(ctx, keeper.am, addr, amt)
+	return setCoins(ctx, keeper.ak, addr, amt)
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
@@ -61,7 +59,7 @@ func (keeper BaseKeeper) SubtractCoins(
 	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Coins, sdk.Tags, sdk.Error) {
 
-	return subtractCoins(ctx, keeper.am, addr, amt)
+	return subtractCoins(ctx, keeper.ak, addr, amt)
 }
 
 // AddCoins adds amt to the coins at the addr.
@@ -69,42 +67,36 @@ func (keeper BaseKeeper) AddCoins(
 	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Coins, sdk.Tags, sdk.Error) {
 
-	return addCoins(ctx, keeper.am, addr, amt)
-}
-
-// SendCoins moves coins from one account to another
-func (keeper BaseKeeper) SendCoins(
-	ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
-) (sdk.Tags, sdk.Error) {
-
-	return sendCoins(ctx, keeper.am, fromAddr, toAddr, amt)
+	return addCoins(ctx, keeper.ak, addr, amt)
 }
 
 // InputOutputCoins handles a list of inputs and outputs
 func (keeper BaseKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
-	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
+	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
 
 // DelegateCoins performs delegation by deducting amt coins from an account with
 // address addr. For vesting accounts, delegations amounts are tracked for both
 // vesting and vested coins.
 func (keeper BaseKeeper) DelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
-	return delegateCoins(ctx, keeper.am, addr, amt)
+	return delegateCoins(ctx, keeper.ak, addr, amt)
 }
 
 // UndelegateCoins performs undelegation by crediting amt coins to an account with
 // address addr. For vesting accounts, undelegation amounts are tracked for both
 // vesting and vested coins.
 func (keeper BaseKeeper) UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
-	return undelegateCoins(ctx, keeper.am, addr, amt)
+	return undelegateCoins(ctx, keeper.ak, addr, amt)
 }
 
-//______________________________________________________________________________________________
+//-----------------------------------------------------------------------------
+// Send Keeper
 
 // SendKeeper defines a module interface that facilitates the transfer of coins
 // between accounts without the possibility of creating coins.
 type SendKeeper interface {
 	ViewKeeper
+
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
 }
@@ -114,22 +106,17 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 // SendKeeper only allows transfers between accounts without the possibility of
 // creating coins. It implements the SendKeeper interface.
 type BaseSendKeeper struct {
-	am auth.AccountKeeper
+	BaseViewKeeper
+
+	ak auth.AccountKeeper
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
-func NewBaseSendKeeper(am auth.AccountKeeper) BaseSendKeeper {
-	return BaseSendKeeper{am: am}
-}
-
-// GetCoins returns the coins at the addr.
-func (keeper BaseSendKeeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return getCoins(ctx, keeper.am, addr)
-}
-
-// HasCoins returns whether or not an account has at least amt coins.
-func (keeper BaseSendKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool {
-	return hasCoins(ctx, keeper.am, addr, amt)
+func NewBaseSendKeeper(ak auth.AccountKeeper) BaseSendKeeper {
+	return BaseSendKeeper{
+		BaseViewKeeper: NewBaseViewKeeper(ak),
+		ak:             ak,
+	}
 }
 
 // SendCoins moves coins from one account to another
@@ -137,7 +124,7 @@ func (keeper BaseSendKeeper) SendCoins(
 	ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Tags, sdk.Error) {
 
-	return sendCoins(ctx, keeper.am, fromAddr, toAddr, amt)
+	return sendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
 }
 
 // InputOutputCoins handles a list of inputs and outputs
@@ -145,10 +132,13 @@ func (keeper BaseSendKeeper) InputOutputCoins(
 	ctx sdk.Context, inputs []Input, outputs []Output,
 ) (sdk.Tags, sdk.Error) {
 
-	return inputOutputCoins(ctx, keeper.am, inputs, outputs)
+	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
 
-//______________________________________________________________________________________________
+//-----------------------------------------------------------------------------
+// View Keeper
+
+var _ ViewKeeper = (*BaseViewKeeper)(nil)
 
 // ViewKeeper defines a module interface that facilitates read only access to
 // account balances.
@@ -157,29 +147,29 @@ type ViewKeeper interface {
 	HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool
 }
 
-var _ ViewKeeper = (*BaseViewKeeper)(nil)
-
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	am auth.AccountKeeper
+	ak auth.AccountKeeper
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(am auth.AccountKeeper) BaseViewKeeper {
-	return BaseViewKeeper{am: am}
+func NewBaseViewKeeper(ak auth.AccountKeeper) BaseViewKeeper {
+	return BaseViewKeeper{
+		ak: ak,
+	}
 }
 
 // GetCoins returns the coins at the addr.
 func (keeper BaseViewKeeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins {
-	return getCoins(ctx, keeper.am, addr)
+	return getCoins(ctx, keeper.ak, addr)
 }
 
 // HasCoins returns whether or not an account has at least amt coins.
 func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool {
-	return hasCoins(ctx, keeper.am, addr, amt)
+	return hasCoins(ctx, keeper.ak, addr, amt)
 }
 
-//______________________________________________________________________________________________
+//-----------------------------------------------------------------------------
 
 func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
 	ctx.GasMeter().ConsumeGas(costGetCoins, "getCoins")
@@ -218,9 +208,8 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 
 	oldCoins := getCoins(ctx, ak, addr)
-	newCoins := oldCoins.Minus(amt)
-
-	if !newCoins.IsNotNegative() {
+	newCoins, hasNeg := oldCoins.SafeMinus(amt)
+	if hasNeg {
 		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
 
@@ -230,7 +219,7 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 		blockTime := ctx.BlockHeader().Time
 		spendableCoins := va.SpendableCoins(blockTime)
 
-		if !spendableCoins.Minus(amt).IsNotNegative() {
+		if _, hasNeg := spendableCoins.SafeMinus(amt); hasNeg {
 			return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", spendableCoins, amt))
 		}
 	}

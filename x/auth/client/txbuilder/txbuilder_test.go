@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
@@ -20,9 +21,9 @@ var (
 func TestTxBuilderBuild(t *testing.T) {
 	type fields struct {
 		Codec         *codec.Codec
-		AccountNumber int64
-		Sequence      int64
-		Gas           int64
+		AccountNumber uint64
+		Sequence      uint64
+		Gas           uint64
 		GasAdjustment float64
 		SimulateGas   bool
 		ChainID       string
@@ -46,7 +47,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				SimulateGas:   false,
 				ChainID:       "test-chain",
 				Memo:          "hello",
-				Fee:           "1steak",
+				Fee:           "1" + stakeTypes.DefaultBondDenom,
 			},
 			defaultMsg,
 			StdSignMsg{
@@ -55,7 +56,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello",
 				Msgs:          defaultMsg,
-				Fee:           auth.NewStdFee(100, sdk.NewCoin("steak", sdk.NewInt(1))),
+				Fee:           auth.NewStdFee(100, sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))),
 			},
 			false,
 		},

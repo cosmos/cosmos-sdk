@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	"github.com/gorilla/mux"
 )
@@ -17,11 +16,11 @@ import (
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
 	r.HandleFunc(
 		"/auth/accounts/{address}",
-		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
+		QueryAccountRequestHandlerFn(storeName, cdc, context.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(
 		"/bank/balances/{address}",
-		QueryBalancesRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
+		QueryBalancesRequestHandlerFn(storeName, cdc, context.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(
 		"/tx/sign",

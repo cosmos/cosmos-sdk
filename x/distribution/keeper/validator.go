@@ -36,8 +36,43 @@ func (k Keeper) SetValidatorDistInfo(ctx sdk.Context, vdi types.ValidatorDistInf
 
 // remove a validator distribution info
 func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress) {
+
+	// defensive check
+	vdi := k.GetValidatorDistInfo(ctx, valAddr)
+	if vdi.DelAccum.Accum.IsPositive() {
+		panic("Should not delete validator with unwithdrawn delegator accum")
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetValidatorDistInfoKey(valAddr))
+}
+
+// remove all validator distribution infos
+func (k Keeper) RemoveValidatorDistInfos(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
+}
+
+// iterate over all the validator distribution infos
+func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context,
+	fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
+
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
+	defer iter.Close()
+	index := int64(0)
+	for ; iter.Valid(); iter.Next() {
+		var vdi types.ValidatorDistInfo
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &vdi)
+		if fn(index, vdi) {
+			return
+		}
+		index++
+	}
 }
 
 // Get the calculated accum of a validator at the current block
@@ -66,6 +101,10 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	// withdraw self-delegation
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
 	withdraw := k.withdrawDelegationRewardsAll(ctx, accAddr)
+
+	//if withdraw.AmountOf {
+	//return types.ErrNoValidatorDistInfo(k.codespace)
+	//}
 
 	// withdrawal validator commission rewards
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)

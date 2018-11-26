@@ -167,11 +167,11 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 		k.IterateDelegationDistInfos(ctx, ddiIter)
 
 		// assert that the fee pool is empty
-		bondDenom := sk.GetParams(ctx).BondDenom
 		feePool := k.GetFeePool(ctx)
 		if !feePool.TotalValAccum.Accum.IsZero() {
 			return fmt.Errorf("unexpected leftover validator accum")
 		}
+		bondDenom := sk.GetParams(ctx).BondDenom
 		if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
 			return fmt.Errorf("unexpected leftover validator pool coins: %v",
 				feePool.ValPool.AmountOf(bondDenom).String())

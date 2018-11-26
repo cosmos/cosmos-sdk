@@ -193,13 +193,3 @@ func (coins DecCoins) HasNegative() bool {
 	}
 	return false
 }
-
-// has a positive DecCoin amount
-func (coins DecCoins) HasPositive() bool {
-	for _, coin := range coins {
-		if coin.Amount.IsPositive() {
-			return true
-		}
-	}
-	return false
-}

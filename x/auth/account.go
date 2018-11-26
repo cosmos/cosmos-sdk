@@ -290,14 +290,13 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	}
 
 	// calculate the vesting scalar
-	x := blockTime.Unix() - cva.StartTime.Unix()
-	y := cva.EndTime.Unix() - cva.StartTime.Unix()
+	x := int64(blockTime.Sub(cva.StartTime).Seconds())
+	y := int64(cva.EndTime.Sub(cva.StartTime).Seconds())
 	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
 
 	for _, ovc := range cva.OriginalVesting {
 		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
-		vestedCoin := sdk.NewCoin(ovc.Denom, vestedAmt)
-		vestedCoins = vestedCoins.Plus(sdk.Coins{vestedCoin})
+		vestedCoins = append(vestedCoins, sdk.NewCoin(ovc.Denom, vestedAmt))
 	}
 
 	return vestedCoins

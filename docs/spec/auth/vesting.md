@@ -1,28 +1,6 @@
 # Vesting
 
-<!-- TOC -->
-
-- [Vesting](#vesting)
-  - [Intro and Requirements](#intro-and-requirements)
-  - [Vesting Account Types](#vesting-account-types)
-  - [Vesting Account Specification](#vesting-account-specification)
-    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
-      - [Continuously Vesting Accounts](#continuously-vesting-accounts)
-      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
-    - [Transferring/Sending](#transferringsending)
-      - [Keepers/Handlers](#keepershandlers)
-    - [Delegating](#delegating)
-      - [Keepers/Handlers](#keepershandlers-1)
-    - [Undelegating](#undelegating)
-      - [Keepers/Handlers](#keepershandlers-2)
-  - [Keepers & Handlers](#keepers--handlers)
-  - [Initializing at Genesis](#initializing-at-genesis)
-  - [Examples](#examples)
-    - [Simple](#simple)
-    - [Slashing](#slashing)
-  - [Glossary](#glossary)
-
-<!-- /TOC -->
+<!-- TOC -->autoauto- [Vesting](#vesting)auto  - [Intro and Requirements](#intro-and-requirements)auto  - [Vesting Account Types](#vesting-account-types)auto  - [Vesting Account Specification](#vesting-account-specification)auto    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)auto      - [Continuously Vesting Accounts](#continuously-vesting-accounts)auto      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)auto    - [Transferring/Sending](#transferringsending)auto      - [Keepers/Handlers](#keepershandlers)auto    - [Delegating](#delegating)auto      - [Keepers/Handlers](#keepershandlers-1)auto    - [Undelegating](#undelegating)auto      - [Keepers/Handlers](#keepershandlers-2)auto  - [Keepers & Handlers](#keepers--handlers)auto  - [Initializing at Genesis](#initializing-at-genesis)auto  - [Examples](#examples)auto    - [Simple](#simple)auto    - [Slashing](#slashing)auto  - [Glossary](#glossary)autoauto<!-- /TOC -->
 
 ## Intro and Requirements
 
@@ -143,6 +121,7 @@ func (cva ContinuousVestingAccount) GetVestingCoins(t Time) Coins {
 
 Delayed vesting accounts are easier to reason about as they only have the full
 amount vesting up until a certain time, then all the coins become vested (unlocked).
+This does not include any unlocked coins the account may have initially.
 
 ```go
 func (dva DelayedVestingAccount) GetVestedCoins(t Time) Coins {

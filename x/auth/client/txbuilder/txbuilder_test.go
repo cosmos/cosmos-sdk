@@ -21,8 +21,8 @@ var (
 func TestTxBuilderBuild(t *testing.T) {
 	type fields struct {
 		Codec         *codec.Codec
-		AccountNumber int64
-		Sequence      int64
+		AccountNumber uint64
+		Sequence      uint64
 		Gas           uint64
 		GasAdjustment float64
 		SimulateGas   bool

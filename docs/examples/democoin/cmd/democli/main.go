@@ -70,13 +70,11 @@ func main() {
 	// add query/post commands (custom to binary)
 	// start with commands common to basecoin
 	rootCmd.AddCommand(
-		client.GetCommands(
-			authcmd.GetAccountCmd(storeAcc, cdc),
-		)...)
+		authcmd.GetAccountCmd(storeAcc, cdc),
+	)
 	rootCmd.AddCommand(
-		client.PostCommands(
-			bankcmd.SendTxCmd(cdc),
-		)...)
+		bankcmd.SendTxCmd(cdc),
+	)
 	rootCmd.AddCommand(
 		client.PostCommands(
 			simplestakingcmd.BondTxCmd(cdc),

@@ -35,6 +35,7 @@ func InitialMinter(inflation sdk.Dec) Minter {
 }
 
 // default initial minter object for a new chain
+// which uses an inflation rate of 13%
 func DefaultInitialMinter() Minter {
 	return InitialMinter(
 		sdk.NewDecWithPrec(13, 2),

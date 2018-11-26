@@ -30,7 +30,11 @@ func (di DelegationDistInfo) GetDelAccum(height int64, delegatorShares sdk.Dec) 
 
 	// defensive check
 	if accum.IsNegative() {
-		panic(fmt.Sprintf("negative accum: %v\n", accum.String()))
+		panic(fmt.Sprintf("negative accum: %v\n"+
+			"\theight: %v\n"+
+			"\tdelegation_dist_info: %v\n"+
+			"\tdelegator_shares: %v\n",
+			accum.String(), height, di, delegatorShares))
 	}
 	return accum
 }
@@ -49,7 +53,9 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	fp := wc.FeePool
 	vi = vi.UpdateTotalDelAccum(wc.Height, totalDelShares)
 
+	// Break out to prevent a divide by zero.
 	if vi.DelAccum.Accum.IsZero() {
+		di.DelPoolWithdrawalHeight = wc.Height
 		return di, vi, fp, DecCoins{}
 	}
 
@@ -58,12 +64,18 @@ func (di DelegationDistInfo) WithdrawRewards(wc WithdrawContext, vi ValidatorDis
 	accum := di.GetDelAccum(wc.Height, delegatorShares)
 	di.DelPoolWithdrawalHeight = wc.Height
 
-	var withdrawalTokens DecCoins
-	if accum.Equal(vi.DelAccum.Accum) {
-		// required due to rounding faults
-		withdrawalTokens = vi.DelPool
-	} else {
-		withdrawalTokens = vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
+	withdrawalTokens := vi.DelPool.MulDec(accum).QuoDec(vi.DelAccum.Accum)
+
+	// Clip withdrawal tokens by pool, due to possible rounding errors.
+	// This rounding error may be introduced upon multiplication since
+	// we're clipping decimal digits, and then when we divide by a number ~1 or
+	// < 1, the error doesn't get "buried", and if << 1 it'll get amplified.
+	// more: https://github.com/cosmos/cosmos-sdk/issues/2888#issuecomment-441387987
+	for i, decCoin := range withdrawalTokens {
+		poolDenomAmount := vi.DelPool.AmountOf(decCoin.Denom)
+		if decCoin.Amount.GT(poolDenomAmount) {
+			withdrawalTokens[i] = NewDecCoinFromDec(decCoin.Denom, poolDenomAmount)
+		}
 	}
 
 	// defensive check for impossible accum ratios

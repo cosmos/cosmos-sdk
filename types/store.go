@@ -64,6 +64,7 @@ type MultiStore interface { //nolint
 	CacheMultiStore() CacheMultiStore
 
 	// Convenience for fetching substores.
+	// If the store does not exist, panics.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
 

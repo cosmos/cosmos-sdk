@@ -7,10 +7,10 @@ import (
 
 // GenesisState - all slashing state that must be provided at genesis
 type GenesisState struct {
-	Params          Params
-	SigningInfos    map[string]ValidatorSigningInfo
-	MissedBlocks    map[string][]MissedBlock
-	SlashingPeriods []ValidatorSlashingPeriod
+	Params          Params                          `json:"params"`
+	SigningInfos    map[string]ValidatorSigningInfo `json:"signing_infos"`
+	MissedBlocks    map[string][]MissedBlock        `json:"missed_blocks"`
+	SlashingPeriods []ValidatorSlashingPeriod       `json:"slashing_periods"`
 }
 
 // MissedBlock
@@ -41,7 +41,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 		if err != nil {
 			panic(err)
 		}
-		keeper.setValidatorSigningInfo(ctx, address, info)
+		keeper.SetValidatorSigningInfo(ctx, address, info)
 	}
 
 	for addr, array := range data.MissedBlocks {
@@ -70,12 +70,12 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 
 	signingInfos := make(map[string]ValidatorSigningInfo)
 	missedBlocks := make(map[string][]MissedBlock)
-	keeper.iterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool) {
+	keeper.IterateValidatorSigningInfos(ctx, func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool) {
 		bechAddr := address.String()
 		signingInfos[bechAddr] = info
 		localMissedBlocks := []MissedBlock{}
 
-		keeper.iterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
+		keeper.IterateValidatorMissedBlockBitArray(ctx, address, func(index int64, missed bool) (stop bool) {
 			localMissedBlocks = append(localMissedBlocks, MissedBlock{index, missed})
 			return false
 		})
@@ -85,7 +85,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 	})
 
 	slashingPeriods := []ValidatorSlashingPeriod{}
-	keeper.iterateValidatorSlashingPeriods(ctx, func(slashingPeriod ValidatorSlashingPeriod) (stop bool) {
+	keeper.IterateValidatorSlashingPeriods(ctx, func(slashingPeriod ValidatorSlashingPeriod) (stop bool) {
 		slashingPeriods = append(slashingPeriods, slashingPeriod)
 		return false
 	})

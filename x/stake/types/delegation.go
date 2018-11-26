@@ -33,19 +33,16 @@ type Delegation struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
 	Shares        sdk.Dec        `json:"shares"`
-	Height        int64          `json:"height"` // Last height bond updated
 }
 
 type delegationValue struct {
 	Shares sdk.Dec
-	Height int64
 }
 
 // return the delegation without fields contained within the key for the store
 func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
 	val := delegationValue{
 		delegation.Shares,
-		delegation.Height,
 	}
 	return cdc.MustMarshalBinaryLengthPrefixed(val)
 }
@@ -81,7 +78,6 @@ func UnmarshalDelegation(cdc *codec.Codec, key, value []byte) (delegation Delega
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
 		Shares:        storeValue.Shares,
-		Height:        storeValue.Height,
 	}, nil
 }
 
@@ -89,7 +85,6 @@ func UnmarshalDelegation(cdc *codec.Codec, key, value []byte) (delegation Delega
 func (d Delegation) Equal(d2 Delegation) bool {
 	return bytes.Equal(d.DelegatorAddr, d2.DelegatorAddr) &&
 		bytes.Equal(d.ValidatorAddr, d2.ValidatorAddr) &&
-		d.Height == d2.Height &&
 		d.Shares.Equal(d2.Shares)
 }
 
@@ -109,7 +104,6 @@ func (d Delegation) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Delegator: %s\n", d.DelegatorAddr)
 	resp += fmt.Sprintf("Validator: %s\n", d.ValidatorAddr)
 	resp += fmt.Sprintf("Shares: %s\n", d.Shares.String())
-	resp += fmt.Sprintf("Height: %d", d.Height)
 
 	return resp, nil
 }

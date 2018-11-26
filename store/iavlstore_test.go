@@ -28,8 +28,8 @@ var (
 	nMoreData = 0
 )
 
-// make a tree and save it
-func newTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, CommitID) {
+// make a tree with data from above and save it
+func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, CommitID) {
 	tree := iavl.NewMutableTree(db, cacheSize)
 	for k, v := range treeData {
 		tree.Set([]byte(k), []byte(v))
@@ -46,7 +46,7 @@ func newTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, CommitID) {
 
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, _ := newTree(t, db)
+	tree, _ := newAlohaTree(t, db)
 	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	key := "hello"
@@ -71,7 +71,7 @@ func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 
 func TestIAVLIterator(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, _ := newTree(t, db)
+	tree, _ := newAlohaTree(t, db)
 	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 	iter := iavlStore.Iterator([]byte("aloha"), []byte("hellz"))
 	expected := []string{"aloha", "hello"}
@@ -142,9 +142,40 @@ func TestIAVLIterator(t *testing.T) {
 	require.Equal(t, len(expected), i)
 }
 
-func TestIAVLSubspaceIterator(t *testing.T) {
+func TestIAVLReverseIterator(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, _ := newTree(t, db)
+	tree := iavl.NewMutableTree(db, cacheSize)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
+
+	iavlStore.Set([]byte{0x00}, []byte("0"))
+	iavlStore.Set([]byte{0x00, 0x00}, []byte("0 0"))
+	iavlStore.Set([]byte{0x00, 0x01}, []byte("0 1"))
+	iavlStore.Set([]byte{0x00, 0x02}, []byte("0 2"))
+	iavlStore.Set([]byte{0x01}, []byte("1"))
+
+	var testReverseIterator = func(t *testing.T, start []byte, end []byte, expected []string) {
+		iter := iavlStore.ReverseIterator(start, end)
+		var i int
+		for i = 0; iter.Valid(); iter.Next() {
+			expectedValue := expected[i]
+			value := iter.Value()
+			require.EqualValues(t, string(value), expectedValue)
+			i++
+		}
+		require.Equal(t, len(expected), i)
+	}
+
+	testReverseIterator(t, nil, nil, []string{"1", "0 2", "0 1", "0 0", "0"})
+	testReverseIterator(t, []byte{0x00}, nil, []string{"1", "0 2", "0 1", "0 0", "0"})
+	testReverseIterator(t, []byte{0x00}, []byte{0x00, 0x01}, []string{"0 0", "0"})
+	testReverseIterator(t, []byte{0x00}, []byte{0x01}, []string{"0 2", "0 1", "0 0", "0"})
+	testReverseIterator(t, []byte{0x00, 0x01}, []byte{0x01}, []string{"0 2", "0 1"})
+	testReverseIterator(t, nil, []byte{0x01}, []string{"0 2", "0 1", "0 0", "0"})
+}
+
+func TestIAVLPrefixIterator(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree := iavl.NewMutableTree(db, cacheSize)
 	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))
@@ -204,9 +235,9 @@ func TestIAVLSubspaceIterator(t *testing.T) {
 	require.Equal(t, len(expected), i)
 }
 
-func TestIAVLReverseSubspaceIterator(t *testing.T) {
+func TestIAVLReversePrefixIterator(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, _ := newTree(t, db)
+	tree := iavl.NewMutableTree(db, cacheSize)
 	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
 
 	iavlStore.Set([]byte("test1"), []byte("test1"))

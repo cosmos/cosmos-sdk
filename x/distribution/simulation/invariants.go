@@ -14,19 +14,17 @@ import (
 // AllInvariants runs all invariants of the distribution module
 // Currently: total supply, positive power
 func AllInvariants(d distr.Keeper, stk stake.Keeper) simulation.Invariant {
-	//sk := distr.StakeKeeper(stk)
+	sk := distr.StakeKeeper(stk)
 	return func(app *baseapp.BaseApp) error {
-		/*
-			err := ValAccumInvariants(d, sk)(app)
-			if err != nil {
-				return err
-			}
-			err = DelAccumInvariants(d, sk)(app)
-			if err != nil {
-				return err
-			}
-		*/
-		err := CanWithdrawInvariant(d, stk)(app)
+		err := ValAccumInvariants(d, sk)(app)
+		if err != nil {
+			return err
+		}
+		err = DelAccumInvariants(d, sk)(app)
+		if err != nil {
+			return err
+		}
+		err = CanWithdrawInvariant(d, stk)(app)
 		if err != nil {
 			return err
 		}
@@ -144,8 +142,10 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 	return func(app *baseapp.BaseApp) error {
 		mockHeader := abci.Header{Height: app.LastBlockHeight() + 1}
 		ctx := app.NewContext(false, mockHeader)
+
 		// we don't want to write the changes
 		ctx, _ = ctx.CacheContext()
+
 		// withdraw all delegator & validator rewards
 		vdiIter := func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
 			err := k.WithdrawValidatorRewardsAll(ctx, valInfo.OperatorAddr)
@@ -155,6 +155,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 			return false
 		}
 		k.IterateValidatorDistInfos(ctx, vdiIter)
+
 		ddiIter := func(_ int64, distInfo distr.DelegationDistInfo) (stop bool) {
 			err := k.WithdrawDelegationReward(
 				ctx, distInfo.DelegatorAddr, distInfo.ValOperatorAddr)
@@ -164,6 +165,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 			return false
 		}
 		k.IterateDelegationDistInfos(ctx, ddiIter)
+
 		// assert that the fee pool is empty
 		feePool := k.GetFeePool(ctx)
 		if !feePool.TotalValAccum.Accum.IsZero() {
@@ -171,10 +173,12 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 		}
 		bondDenom := sk.GetParams(ctx).BondDenom
 		if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
-			return fmt.Errorf("unexpected leftover validator pool coins: %v\n",
+			return fmt.Errorf("unexpected leftover validator pool coins: %v",
 				feePool.ValPool.AmountOf(bondDenom).String())
 		}
+
 		// all ok
 		return nil
+
 	}
 }

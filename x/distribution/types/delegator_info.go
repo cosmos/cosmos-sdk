@@ -30,7 +30,11 @@ func (di DelegationDistInfo) GetDelAccum(height int64, delegatorShares sdk.Dec) 
 
 	// defensive check
 	if accum.IsNegative() {
-		panic(fmt.Sprintf("negative accum: %v\n", accum.String()))
+		panic(fmt.Sprintf("negative accum: %v\n"+
+			"\theight: %v\n"+
+			"\tdelegation_dist_info: %v\n"+
+			"\tdelegator_shares: %v\n",
+			accum.String(), height, di, delegatorShares))
 	}
 	return accum
 }

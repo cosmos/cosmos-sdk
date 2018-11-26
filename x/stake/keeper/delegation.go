@@ -600,7 +600,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	rounded := returnAmount.TruncateInt()
-	if rounded.IsZero() { //TODO design consideration
+	if rounded.IsZero() {
 		return types.Redelegation{}, types.ErrVerySmallRedelegation(k.Codespace())
 	}
 	returnCoin := sdk.NewCoin(k.BondDenom(ctx), rounded)

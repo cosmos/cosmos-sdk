@@ -34,8 +34,8 @@ func TestStdTx(t *testing.T) {
 func TestStdSignBytes(t *testing.T) {
 	type args struct {
 		chainID  string
-		accnum   int64
-		sequence int64
+		accnum   uint64
+		sequence uint64
 		fee      StdFee
 		msgs     []sdk.Msg
 		memo     string
@@ -85,7 +85,7 @@ func TestTxValidateBasic(t *testing.T) {
 	require.Equal(t, sdk.CodeInsufficientFee, err.Result().Code)
 
 	// require to fail validation when no signatures exist
-	privs, accNums, seqs := []crypto.PrivKey{}, []int64{}, []int64{}
+	privs, accNums, seqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
 	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
@@ -93,7 +93,7 @@ func TestTxValidateBasic(t *testing.T) {
 	require.Equal(t, sdk.CodeUnauthorized, err.Result().Code)
 
 	// require to fail validation when signatures do not match expected signers
-	privs, accNums, seqs = []crypto.PrivKey{priv1}, []int64{0, 1}, []int64{0, 0}
+	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0, 1}, []uint64{0, 0}
 	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
@@ -102,7 +102,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when memo is too large
 	badMemo := strings.Repeat("bad memo", 50)
-	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []int64{0, 1}, []int64{0, 0}
+	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
 	tx = newTestTxWithMemo(ctx, msgs, privs, accNums, seqs, fee, badMemo)
 
 	err = tx.ValidateBasic()
@@ -111,7 +111,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when there are too many signatures
 	privs = []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8}
-	accNums, seqs = []int64{0, 0, 0, 0, 0, 0, 0, 0}, []int64{0, 0, 0, 0, 0, 0, 0, 0}
+	accNums, seqs = []uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
 	badMsg := newTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
 	badMsgs := []sdk.Msg{badMsg}
 	tx = newTestTx(ctx, badMsgs, privs, accNums, seqs, fee)
@@ -121,7 +121,7 @@ func TestTxValidateBasic(t *testing.T) {
 	require.Equal(t, sdk.CodeTooManySignatures, err.Result().Code)
 
 	// require to pass when above criteria are matched
-	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []int64{0, 1}, []int64{0, 0}
+	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
 	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()

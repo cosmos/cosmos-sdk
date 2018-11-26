@@ -44,6 +44,7 @@ FEATURES
   for getting governance parameters.
   * [app] \#2663 - Runtime-assertable invariants
   * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
+  * [app] \#2812 Support export alterations to prepare for restarting at zero-height
 
 * SDK
   * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time

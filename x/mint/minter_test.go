@@ -95,6 +95,7 @@ func BenchmarkBlockProvision(b *testing.B) {
 	r1 := rand.New(s1)
 	minter.AnnualProvisions = sdk.NewDec(r1.Int63n(1000000))
 
+	// run the Fib function b.N times
 	for n := 0; n < b.N; n++ {
 		minter.BlockProvision(params)
 	}

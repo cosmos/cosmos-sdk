@@ -415,7 +415,6 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 
 	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)
-	delegation.Height = ctx.BlockHeight()
 	k.SetDelegation(ctx, delegation)
 
 	return newShares, nil
@@ -462,8 +461,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 
 		k.RemoveDelegation(ctx, delegation)
 	} else {
-		// Update height
-		delegation.Height = ctx.BlockHeight()
+		// update the delegation
 		k.SetDelegation(ctx, delegation)
 	}
 
@@ -600,7 +598,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	rounded := returnAmount.TruncateInt()
-	if rounded.IsZero() {
+	if rounded.IsZero() { //TODO design consideration
 		return types.Redelegation{}, types.ErrVerySmallRedelegation(k.Codespace())
 	}
 	returnCoin := sdk.NewCoin(k.BondDenom(ctx), rounded)

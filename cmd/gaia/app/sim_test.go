@@ -137,7 +137,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		validator := stake.NewValidator(valAddr, accs[i].PubKey, stake.Description{})
 		validator.Tokens = sdk.NewDec(amount)
 		validator.DelegatorShares = sdk.NewDec(amount)
-		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(amount), 0}
+		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(amount)}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
@@ -210,7 +210,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
-	err := simulation.SimulateFromSeed(
+	_, err := simulation.SimulateFromSeed(
 		b, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -253,7 +253,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	err := simulation.SimulateFromSeed(
+	_, err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -295,7 +295,7 @@ func TestGaiaImportExport(t *testing.T) {
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
-	err := simulation.SimulateFromSeed(
+	_, err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
 		[]simulation.RandSetup{},
@@ -315,7 +315,7 @@ func TestGaiaImportExport(t *testing.T) {
 
 	fmt.Printf("Exporting genesis...\n")
 
-	appState, _, err := app.ExportAppStateAndValidators()
+	appState, _, err := app.ExportAppStateAndValidators(false)
 	if err != nil {
 		panic(err)
 	}
@@ -330,15 +330,16 @@ func TestGaiaImportExport(t *testing.T) {
 	}()
 	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil)
 	require.Equal(t, "GaiaApp", newApp.Name())
-	request := abci.RequestInitChain{
-		AppStateBytes: appState,
+	var genesisState GenesisState
+	err = app.cdc.UnmarshalJSON(appState, &genesisState)
+	if err != nil {
+		panic(err)
 	}
-	newApp.InitChain(request)
-	newApp.Commit()
+	ctxB := newApp.NewContext(true, abci.Header{})
+	newApp.initFromGenesisState(ctxB, genesisState)
 
 	fmt.Printf("Comparing stores...\n")
 	ctxA := app.NewContext(true, abci.Header{})
-	ctxB := newApp.NewContext(true, abci.Header{})
 	type StoreKeysPrefixes struct {
 		A        sdk.StoreKey
 		B        sdk.StoreKey
@@ -366,6 +367,87 @@ func TestGaiaImportExport(t *testing.T) {
 		require.True(t, equal, "unequal stores: %s / %s:\nstore A %s (%X) => %s (%X)\nstore B %s (%X) => %s (%X)",
 			storeKeyA, storeKeyB, kvA.Key, kvA.Key, kvA.Value, kvA.Value, kvB.Key, kvB.Key, kvB.Value, kvB.Value)
 	}
+
+}
+
+func TestGaiaSimulationAfterImport(t *testing.T) {
+	if !enabled {
+		t.Skip("Skipping Gaia simulation after import")
+	}
+
+	// Setup Gaia application
+	var logger log.Logger
+	if verbose {
+		logger = log.TestingLogger()
+	} else {
+		logger = log.NewNopLogger()
+	}
+	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
+	db, _ := dbm.NewGoLevelDB("Simulation", dir)
+	defer func() {
+		db.Close()
+		os.RemoveAll(dir)
+	}()
+	app := NewGaiaApp(logger, db, nil)
+	require.Equal(t, "GaiaApp", app.Name())
+
+	// Run randomized simulation
+	stopEarly, err := simulation.SimulateFromSeed(
+		t, app.BaseApp, appStateFn, seed,
+		testAndRunTxs(app),
+		[]simulation.RandSetup{},
+		invariants(app),
+		numBlocks,
+		blockSize,
+		commit,
+	)
+	if commit {
+		// for memdb:
+		// fmt.Println("Database Size", db.Stats()["database.size"])
+		fmt.Println("GoLevelDB Stats")
+		fmt.Println(db.Stats()["leveldb.stats"])
+		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	}
+	require.Nil(t, err)
+
+	if stopEarly {
+		// we can't export or import a zero-validator genesis
+		fmt.Printf("We can't export or import a zero-validator genesis, exiting test...\n")
+		return
+	}
+
+	fmt.Printf("Exporting genesis...\n")
+
+	appState, _, err := app.ExportAppStateAndValidators(true)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Importing genesis...\n")
+
+	newDir, _ := ioutil.TempDir("", "goleveldb-gaia-sim-2")
+	newDB, _ := dbm.NewGoLevelDB("Simulation-2", dir)
+	defer func() {
+		newDB.Close()
+		os.RemoveAll(newDir)
+	}()
+	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil)
+	require.Equal(t, "GaiaApp", newApp.Name())
+	newApp.InitChain(abci.RequestInitChain{
+		AppStateBytes: appState,
+	})
+
+	// Run randomized simulation on imported app
+	_, err = simulation.SimulateFromSeed(
+		t, newApp.BaseApp, appStateFn, seed,
+		testAndRunTxs(newApp),
+		[]simulation.RandSetup{},
+		invariants(newApp),
+		numBlocks,
+		blockSize,
+		commit,
+	)
+	require.Nil(t, err)
 
 }
 

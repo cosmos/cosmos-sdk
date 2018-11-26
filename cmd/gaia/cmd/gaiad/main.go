@@ -62,9 +62,8 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application
 }
 
 func exportAppStateAndTMValidators(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64) (
-	json.RawMessage, []tmtypes.GenesisValidator, error) {
-
+	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
+) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 	gApp := app.NewGaiaApp(logger, db, traceStore)
 	if height != -1 {
 		err := gApp.LoadHeight(height)
@@ -72,5 +71,5 @@ func exportAppStateAndTMValidators(
 			return nil, nil, err
 		}
 	}
-	return gApp.ExportAppStateAndValidators()
+	return gApp.ExportAppStateAndValidators(forZeroHeight)
 }

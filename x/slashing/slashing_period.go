@@ -54,7 +54,7 @@ func (k Keeper) getValidatorSlashingPeriodForHeight(ctx sdk.Context, address sdk
 // Iterate over all slashing periods in the store, calling on each
 // decode slashing period a provided handler function
 // Stop if the provided handler function returns true
-func (k Keeper) iterateValidatorSlashingPeriods(ctx sdk.Context, handler func(slashingPeriod ValidatorSlashingPeriod) (stop bool)) {
+func (k Keeper) IterateValidatorSlashingPeriods(ctx sdk.Context, handler func(slashingPeriod ValidatorSlashingPeriod) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, ValidatorSlashingPeriodKey)
 	defer iter.Close()
@@ -64,6 +64,16 @@ func (k Keeper) iterateValidatorSlashingPeriods(ctx sdk.Context, handler func(sl
 			break
 		}
 	}
+}
+
+// Delete all slashing periods in the store.
+func (k Keeper) DeleteValidatorSlashingPeriods(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorSlashingPeriodKey)
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
+	iter.Close()
 }
 
 // Stored by validator Tendermint address (not operator address)

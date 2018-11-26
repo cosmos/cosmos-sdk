@@ -32,11 +32,11 @@
 
 [[override]]
   name = "github.com/tendermint/iavl"
-  version = "=v0.11.1"
+  branch = "jae/reverseiterator"
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "v0.26.1"
+  branch = "jae/reverseiterator"
 
 ## deps without releases:
 

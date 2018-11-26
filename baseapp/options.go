@@ -102,6 +102,16 @@ func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
 	app.pubkeyPeerFilter = pf
 }
 
+func (app *BaseApp) SetSimulationMode() {
+	if app.sealed {
+		panic("SetSimulationMode() on sealed BaseApp")
+	}
+	app.simulationMode = true
+}
+
+//----------------------------------------
+// TODO: move these out of this file?
+
 func (app *BaseApp) Router() Router {
 	if app.sealed {
 		panic("Router() on sealed BaseApp")

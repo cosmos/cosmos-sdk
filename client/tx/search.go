@@ -40,13 +40,38 @@ $ gaiacli query txs --tag test1,test2
 will match any transaction tagged with both test1,test2. To match a transaction tagged with either
 test1 or test2, use:
 
-$ gaiacli query txs --tag test1,test2 --any
+$ gaiacli query txs --tag <key1>=<value1>&<key2>=<value2> --any
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tags := viper.GetStringSlice(flagTags)
+			tagsStr := viper.GetString(flagTags)
+			tagsStr = strings.Trim(tagsStr, "'")
+
+			var tags []string
+			switch strings.Contains(tagsStr, "&") {
+			case true:
+				tags = strings.Split(tagsStr, "&")
+			case false:
+				tags = []string{tagsStr}
+			}
+
+			var tmTags []string
+			for _, tag := range tags {
+				if !strings.Contains(tag, "=") {
+					return fmt.Errorf("%s should be of the format <key>=<value>", tagsStr)
+				}
+				keyValue := strings.Split(tag, "=")
+				key, value, errMsg := getKeyFromBechPrefix(keyValue[0], keyValue[1])
+				if errMsg == "" {
+					return fmt.Errorf(errMsg)
+				}
+
+				tag = fmt.Sprintf("%s='%s'", key, value)
+				tmTags = append(tmTags, tag)
+			}
+
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			txs, err := searchTxs(cliCtx, cdc, tags)
+			txs, err := searchTxs(cliCtx, cdc, tmTags)
 			if err != nil {
 				return err
 			}
@@ -119,6 +144,28 @@ func searchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]In
 	return info, nil
 }
 
+func getKeyFromBechPrefix(key string, value string) (string, string, string) {
+	if strings.HasSuffix(key, "_bech32") {
+		prefix := strings.Split(value, "1")[0]
+		bz, err := sdk.GetFromBech32(value, prefix)
+		if err != nil {
+			return "", "", err.Error()
+		}
+
+		switch prefix {
+		case sdk.Bech32PrefixAccAddr:
+			value = sdk.AccAddress(bz).String()
+		case sdk.Bech32PrefixValAddr:
+			value = sdk.ValAddress(bz).String()
+		default:
+			return "", "", sdk.ErrInvalidAddress(fmt.Sprintf("invalid bech32 prefix '%s'", prefix)).Error()
+		}
+		key = strings.TrimRight(key, "_bech32")
+	}
+	return key, value, ""
+
+}
+
 // parse the indexed txs into an array of Info
 func FormatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]Info, error) {
 	var err error
@@ -157,27 +204,12 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 				return
 			}
 
-			if strings.HasSuffix(key, "_bech32") {
-				prefix := strings.Split(value, "1")[0]
-				bz, err := sdk.GetFromBech32(value, prefix)
-				if err != nil {
-					utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-					return
-				}
-
-				key = strings.TrimRight(key, "_bech32")
-				if prefix == sdk.Bech32PrefixAccAddr {
-					value = sdk.AccAddress(bz).String()
-				} else if prefix == sdk.Bech32PrefixValAddr {
-					value = sdk.ValAddress(bz).String()
-				} else {
-					utils.WriteErrorResponse(w, http.StatusBadRequest,
-						sdk.ErrInvalidAddress(fmt.Sprintf("invalid bech32 prefix '%s'", prefix)).Error(),
-					)
-					return
-				}
-
+			key, value, errMsg := getKeyFromBechPrefix(key, value)
+			if errMsg == "" {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, errMsg)
+				return
 			}
+
 			tag := fmt.Sprintf("%s='%s'", key, value)
 			tags = append(tags, tag)
 		}

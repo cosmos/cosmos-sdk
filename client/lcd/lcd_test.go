@@ -680,7 +680,7 @@ func TestDeposit(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// query tx
-	txs := getTransactions(t, port, fmt.Sprintf("action=deposit&depositer=%s", addr))
+	txs := getTransactions(t, port, fmt.Sprintf("action=deposit&depositor=%s", addr))
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
 

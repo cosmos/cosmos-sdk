@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -32,6 +33,16 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 			return err
 		}
 
+		err = PositiveDelegationInvariant(k)(app)
+		if err != nil {
+			return err
+		}
+
+		err = DelegatorSharesInvariant(k)(app)
+		if err != nil {
+			return err
+		}
+
 		err = ValidatorSetInvariant(k)(app)
 		return err
 	}
@@ -48,7 +59,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		loose := sdk.ZeroDec()
 		bonded := sdk.ZeroDec()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf("steak")))
+			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom)))
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) bool {
@@ -70,19 +81,19 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		feePool := d.GetFeePool(ctx)
 
 		// add outstanding fees
-		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf("steak")))
+		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(stakeTypes.DefaultBondDenom)))
 
 		// add community pool
-		loose = loose.Add(feePool.CommunityPool.AmountOf("steak"))
+		loose = loose.Add(feePool.CommunityPool.AmountOf(stakeTypes.DefaultBondDenom))
 
 		// add validator distribution pool
-		loose = loose.Add(feePool.ValPool.AmountOf("steak"))
+		loose = loose.Add(feePool.ValPool.AmountOf(stakeTypes.DefaultBondDenom))
 
 		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
 		d.IterateValidatorDistInfos(ctx,
 			func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
-				loose = loose.Add(distInfo.DelPool.AmountOf("steak"))
-				loose = loose.Add(distInfo.ValCommission.AmountOf("steak"))
+				loose = loose.Add(distInfo.DelPool.AmountOf(stakeTypes.DefaultBondDenom))
+				loose = loose.Add(distInfo.ValCommission.AmountOf(stakeTypes.DefaultBondDenom))
 				return false
 			},
 		)
@@ -126,6 +137,53 @@ func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 			}
 		}
 		iterator.Close()
+		return nil
+	}
+}
+
+// PositiveDelegationInvariant checks that all stored delegations have > 0 shares.
+func PositiveDelegationInvariant(k stake.Keeper) simulation.Invariant {
+	return func(app *baseapp.BaseApp) error {
+		ctx := app.NewContext(false, abci.Header{})
+
+		delegations := k.GetAllDelegations(ctx)
+		for _, delegation := range delegations {
+			if delegation.Shares.IsNegative() {
+				return fmt.Errorf("delegation with negative shares: %+v", delegation)
+			}
+			if delegation.Shares.IsZero() {
+				return fmt.Errorf("delegation with zero shares: %+v", delegation)
+			}
+		}
+
+		return nil
+	}
+}
+
+// DelegatorSharesInvariant checks whether all the delegator shares which persist
+// in the delegator object add up to the correct total delegator shares
+// amount stored in each validator
+func DelegatorSharesInvariant(k stake.Keeper) simulation.Invariant {
+	return func(app *baseapp.BaseApp) error {
+		ctx := app.NewContext(false, abci.Header{})
+
+		validators := k.GetAllValidators(ctx)
+		for _, validator := range validators {
+
+			valTotalDelShares := validator.GetDelegatorShares()
+
+			totalDelShares := sdk.ZeroDec()
+			delegations := k.GetValidatorDelegations(ctx, validator.GetOperator())
+			for _, delegation := range delegations {
+				totalDelShares = totalDelShares.Add(delegation.Shares)
+			}
+
+			if !valTotalDelShares.Equal(totalDelShares) {
+				return fmt.Errorf("broken delegator shares invariance:\n"+
+					"\tvalidator.DelegatorShares: %v\n"+
+					"\tsum of Delegator.Shares: %v", valTotalDelShares, totalDelShares)
+			}
+		}
 		return nil
 	}
 }

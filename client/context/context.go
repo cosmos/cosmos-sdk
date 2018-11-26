@@ -175,10 +175,22 @@ func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	return ctx
 }
 
+// GetAccountDecoder gets the account decoder for auth.DefaultAccount.
+func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
+	return func(accBytes []byte) (acct auth.Account, err error) {
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
+		if err != nil {
+			panic(err)
+		}
+
+		return acct, err
+	}
+}
+
 // WithAccountDecoder returns a copy of the context with an updated account
 // decoder.
-func (ctx CLIContext) WithAccountDecoder(decoder auth.AccountDecoder) CLIContext {
-	ctx.AccDecoder = decoder
+func (ctx CLIContext) WithAccountDecoder(cdc *codec.Codec) CLIContext {
+	ctx.AccDecoder = GetAccountDecoder(cdc)
 	return ctx
 }
 

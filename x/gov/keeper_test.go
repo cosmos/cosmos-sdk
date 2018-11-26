@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 func TestGetSetProposal(t *testing.T) {
@@ -69,14 +70,14 @@ func TestDeposits(t *testing.T) {
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
 	proposalID := proposal.GetProposalID()
 
-	fourSteak := sdk.Coins{sdk.NewInt64Coin("steak", 4)}
-	fiveSteak := sdk.Coins{sdk.NewInt64Coin("steak", 5)}
+	fourSteak := sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 4)}
+	fiveSteak := sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 5)}
 
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
-	// require.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.NewInt64Coin("steak", 42)}))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin("steak", 42)}, addr0Initial)
+	// require.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)}))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)}, addr0Initial)
 
 	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
 
@@ -92,7 +93,7 @@ func TestDeposits(t *testing.T) {
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[0])
 	require.True(t, found)
 	require.Equal(t, fourSteak, deposit.Amount)
-	require.Equal(t, addrs[0], deposit.Depositer)
+	require.Equal(t, addrs[0], deposit.Depositor)
 	require.Equal(t, fourSteak, keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
 	require.Equal(t, addr0Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
@@ -103,7 +104,7 @@ func TestDeposits(t *testing.T) {
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[0])
 	require.True(t, found)
 	require.Equal(t, fourSteak.Plus(fiveSteak), deposit.Amount)
-	require.Equal(t, addrs[0], deposit.Depositer)
+	require.Equal(t, addrs[0], deposit.Depositor)
 	require.Equal(t, fourSteak.Plus(fiveSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
 	require.Equal(t, addr0Initial.Minus(fourSteak).Minus(fiveSteak), keeper.ck.GetCoins(ctx, addrs[0]))
 
@@ -113,7 +114,7 @@ func TestDeposits(t *testing.T) {
 	require.True(t, votingStarted)
 	deposit, found = keeper.GetDeposit(ctx, proposalID, addrs[1])
 	require.True(t, found)
-	require.Equal(t, addrs[1], deposit.Depositer)
+	require.Equal(t, addrs[1], deposit.Depositor)
 	require.Equal(t, fourSteak, deposit.Amount)
 	require.Equal(t, fourSteak.Plus(fiveSteak).Plus(fourSteak), keeper.GetProposal(ctx, proposalID).GetTotalDeposit())
 	require.Equal(t, addr1Initial.Minus(fourSteak), keeper.ck.GetCoins(ctx, addrs[1]))
@@ -125,11 +126,11 @@ func TestDeposits(t *testing.T) {
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
 	require.True(t, depositsIterator.Valid())
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
-	require.Equal(t, addrs[0], deposit.Depositer)
+	require.Equal(t, addrs[0], deposit.Depositor)
 	require.Equal(t, fourSteak.Plus(fiveSteak), deposit.Amount)
 	depositsIterator.Next()
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
-	require.Equal(t, addrs[1], deposit.Depositer)
+	require.Equal(t, addrs[1], deposit.Depositor)
 	require.Equal(t, fourSteak, deposit.Amount)
 	depositsIterator.Next()
 	require.False(t, depositsIterator.Valid())

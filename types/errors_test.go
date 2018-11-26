@@ -42,7 +42,7 @@ var errFns = []errFn{
 }
 
 func TestCodeType(t *testing.T) {
-	require.True(t, ABCICodeOK.IsOK())
+	require.True(t, CodeOK.IsOK())
 
 	for tcnum, c := range codeTypes {
 		msg := CodeToDefaultMsg(c)
@@ -59,12 +59,9 @@ func TestErrFn(t *testing.T) {
 		codeType := codeTypes[i]
 		require.Equal(t, err.Code(), codeType, "Err function expected to return proper code. tc #%d", i)
 		require.Equal(t, err.Codespace(), CodespaceRoot, "Err function expected to return proper codespace. tc #%d", i)
-		require.Equal(t, err.Result().Code, ToABCICode(CodespaceRoot, codeType), "Err function expected to return proper ABCICode. tc #%d")
-		require.Equal(t, err.QueryResult().Code, uint32(err.ABCICode()), "Err function expected to return proper ABCICode from QueryResult. tc #%d")
+		require.Equal(t, err.QueryResult().Code, uint32(err.Code()), "Err function expected to return proper Code from QueryResult. tc #%d")
 		require.Equal(t, err.QueryResult().Log, err.ABCILog(), "Err function expected to return proper ABCILog from QueryResult. tc #%d")
 	}
-
-	require.Equal(t, ABCICodeOK, ToABCICode(CodespaceRoot, CodeOK))
 }
 
 func TestAppendMsgToErr(t *testing.T) {

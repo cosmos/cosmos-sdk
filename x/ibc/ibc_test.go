@@ -44,7 +44,6 @@ func makeCodec() *codec.Codec {
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(bank.MsgSend{}, "test/ibc/Send", nil)
-	cdc.RegisterConcrete(bank.MsgIssue{}, "test/ibc/Issue", nil)
 	cdc.RegisterConcrete(IBCTransferMsg{}, "test/ibc/IBCTransferMsg", nil)
 	cdc.RegisterConcrete(IBCReceiveMsg{}, "test/ibc/IBCReceiveMsg", nil)
 
@@ -91,11 +90,11 @@ func TestIBC(t *testing.T) {
 
 	var msg sdk.Msg
 	var res sdk.Result
-	var egl int64
-	var igs int64
+	var egl uint64
+	var igs uint64
 
 	egl = ibcm.getEgressLength(store, chainid)
-	require.Equal(t, egl, int64(0))
+	require.Equal(t, egl, uint64(0))
 
 	msg = IBCTransferMsg{
 		IBCPacket: packet,
@@ -108,10 +107,10 @@ func TestIBC(t *testing.T) {
 	require.Equal(t, zero, coins)
 
 	egl = ibcm.getEgressLength(store, chainid)
-	require.Equal(t, egl, int64(1))
+	require.Equal(t, egl, uint64(1))
 
 	igs = ibcm.GetIngressSequence(ctx, chainid)
-	require.Equal(t, igs, int64(0))
+	require.Equal(t, igs, uint64(0))
 
 	msg = IBCReceiveMsg{
 		IBCPacket: packet,
@@ -126,11 +125,11 @@ func TestIBC(t *testing.T) {
 	require.Equal(t, mycoins, coins)
 
 	igs = ibcm.GetIngressSequence(ctx, chainid)
-	require.Equal(t, igs, int64(1))
+	require.Equal(t, igs, uint64(1))
 
 	res = h(ctx, msg)
 	require.False(t, res.IsOK())
 
 	igs = ibcm.GetIngressSequence(ctx, chainid)
-	require.Equal(t, igs, int64(1))
+	require.Equal(t, igs, uint64(1))
 }

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultCodespace sdk.CodespaceType = 5
+	DefaultCodespace sdk.CodespaceType = "GOV"
 
 	CodeUnknownProposal         sdk.CodeType = 1
 	CodeInactiveProposal        sdk.CodeType = 2

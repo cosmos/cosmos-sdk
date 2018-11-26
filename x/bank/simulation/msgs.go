@@ -82,7 +82,7 @@ func createSingleInputSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.A
 		toAddr.String(),
 	)
 
-	coins := sdk.Coins{{initFromCoins[denomIndex].Denom, amt}}
+	coins := sdk.Coins{sdk.NewCoin(initFromCoins[denomIndex].Denom, amt)}
 	msg = bank.MsgSend{
 		Inputs:  []bank.Input{bank.NewInput(fromAcc.Address, coins)},
 		Outputs: []bank.Output{bank.NewOutput(toAddr, coins)},
@@ -95,8 +95,8 @@ func createSingleInputSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.A
 func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg bank.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
-	AccountNumbers := make([]int64, len(msg.Inputs))
-	SequenceNumbers := make([]int64, len(msg.Inputs))
+	AccountNumbers := make([]uint64, len(msg.Inputs))
+	SequenceNumbers := make([]uint64, len(msg.Inputs))
 
 	for i := 0; i < len(msg.Inputs); i++ {
 		acc := mapper.GetAccount(ctx, msg.Inputs[i].Address)

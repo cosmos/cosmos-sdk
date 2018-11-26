@@ -21,25 +21,17 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the validator update delay,
 	// so that e.g. slashing periods are correctly initialized for the validator set
-	// e.g. with a one-block offset - the first TM block is at height 0, so state updates applied from genesis.json are in block -1.
-	ctx = ctx.WithBlockHeight(-types.ValidatorUpdateDelay)
+	// e.g. with a one-block offset - the first TM block is at height 1, so state updates applied from genesis.json are in block 0.
+	ctx = ctx.WithBlockHeight(1 - types.ValidatorUpdateDelay)
 
 	keeper.SetPool(ctx, data.Pool)
 	keeper.SetParams(ctx, data.Params)
 	keeper.SetIntraTxCounter(ctx, data.IntraTxCounter)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
-	// We only need to set this if we're starting from a list of validators, not a state export
-	setBondIntraTxCounter := true
-	for _, validator := range data.Validators {
-		if validator.BondIntraTxCounter != 0 {
-			setBondIntraTxCounter = false
-		}
-	}
-
 	for i, validator := range data.Validators {
 		// set the intra-tx counter to the order the validators are presented, if necessary
-		if setBondIntraTxCounter {
+		if !data.Exported {
 			validator.BondIntraTxCounter = int16(i)
 		}
 		keeper.SetValidator(ctx, validator)
@@ -76,7 +68,22 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.InsertRedelegationQueue(ctx, red)
 	}
 
-	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	// don't need to run Tendermint updates if we exported
+	if data.Exported {
+		for _, lv := range data.LastValidatorPowers {
+			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)
+			validator, found := keeper.GetValidator(ctx, lv.Address)
+			if !found {
+				panic("expected validator, not found")
+			}
+			update := validator.ABCIValidatorUpdate()
+			update.Power = lv.Power.Int64() // keep the next-val-set offset, use the last power for the first block
+			res = append(res, update)
+		}
+	} else {
+		res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	}
+
 	return
 }
 
@@ -100,16 +107,23 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 		redelegations = append(redelegations, red)
 		return false
 	})
+	var lastValidatorPowers []types.LastValidatorPower
+	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power sdk.Int) (stop bool) {
+		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{addr, power})
+		return false
+	})
 
 	return types.GenesisState{
 		Pool:                 pool,
 		Params:               params,
 		IntraTxCounter:       intraTxCounter,
 		LastTotalPower:       lastTotalPower,
+		LastValidatorPowers:  lastValidatorPowers,
 		Validators:           validators,
 		Bonds:                bonds,
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
+		Exported:             true,
 	}
 }
 

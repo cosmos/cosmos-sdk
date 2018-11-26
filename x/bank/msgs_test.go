@@ -35,8 +35,6 @@ func TestInputValidation(t *testing.T) {
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{sdk.NewInt64Coin("eth", 0)}
 	someEmptyCoins := sdk.Coins{sdk.NewInt64Coin("eth", 10), sdk.NewInt64Coin("atom", 0)}
-	minusCoins := sdk.Coins{sdk.NewInt64Coin("eth", -34)}
-	someMinusCoins := sdk.Coins{sdk.NewInt64Coin("atom", 20), sdk.NewInt64Coin("eth", -34)}
 	unsortedCoins := sdk.Coins{sdk.NewInt64Coin("eth", 1), sdk.NewInt64Coin("atom", 1)}
 
 	cases := []struct {
@@ -52,8 +50,6 @@ func TestInputValidation(t *testing.T) {
 		{false, NewInput(addr1, emptyCoins)},     // invalid coins
 		{false, NewInput(addr1, emptyCoins2)},    // invalid coins
 		{false, NewInput(addr1, someEmptyCoins)}, // invalid coins
-		{false, NewInput(addr1, minusCoins)},     // negative coins
-		{false, NewInput(addr1, someMinusCoins)}, // negative coins
 		{false, NewInput(addr1, unsortedCoins)},  // unsorted coins
 	}
 
@@ -77,8 +73,6 @@ func TestOutputValidation(t *testing.T) {
 	emptyCoins := sdk.Coins{}
 	emptyCoins2 := sdk.Coins{sdk.NewInt64Coin("eth", 0)}
 	someEmptyCoins := sdk.Coins{sdk.NewInt64Coin("eth", 10), sdk.NewInt64Coin("atom", 0)}
-	minusCoins := sdk.Coins{sdk.NewInt64Coin("eth", -34)}
-	someMinusCoins := sdk.Coins{sdk.NewInt64Coin("atom", 20), sdk.NewInt64Coin("eth", -34)}
 	unsortedCoins := sdk.Coins{sdk.NewInt64Coin("eth", 1), sdk.NewInt64Coin("atom", 1)}
 
 	cases := []struct {
@@ -94,8 +88,6 @@ func TestOutputValidation(t *testing.T) {
 		{false, NewOutput(addr1, emptyCoins)},     // invalid coins
 		{false, NewOutput(addr1, emptyCoins2)},    // invalid coins
 		{false, NewOutput(addr1, someEmptyCoins)}, // invalid coins
-		{false, NewOutput(addr1, minusCoins)},     // negative coins
-		{false, NewOutput(addr1, someMinusCoins)}, // negative coins
 		{false, NewOutput(addr1, unsortedCoins)},  // unsorted coins
 	}
 
@@ -223,48 +215,3 @@ func TestMsgSendSigners(t *testing.T) {
 	require.Equal(t, signers, tx.Signers())
 }
 */
-
-// ----------------------------------------
-// MsgIssue Tests
-
-func TestNewMsgIssue(t *testing.T) {
-	// TODO
-}
-
-func TestMsgIssueRoute(t *testing.T) {
-	// Construct an MsgIssue
-	addr := sdk.AccAddress([]byte("loan-from-bank"))
-	coins := sdk.Coins{sdk.NewInt64Coin("atom", 10)}
-	var msg = MsgIssue{
-		Banker:  sdk.AccAddress([]byte("input")),
-		Outputs: []Output{NewOutput(addr, coins)},
-	}
-
-	// TODO some failures for bad result
-	require.Equal(t, msg.Route(), "bank")
-}
-
-func TestMsgIssueValidation(t *testing.T) {
-	// TODO
-}
-
-func TestMsgIssueGetSignBytes(t *testing.T) {
-	addr := sdk.AccAddress([]byte("loan-from-bank"))
-	coins := sdk.Coins{sdk.NewInt64Coin("atom", 10)}
-	var msg = MsgIssue{
-		Banker:  sdk.AccAddress([]byte("input")),
-		Outputs: []Output{NewOutput(addr, coins)},
-	}
-	res := msg.GetSignBytes()
-
-	expected := `{"banker":"cosmos1d9h8qat57ljhcm","outputs":[{"address":"cosmos1d3hkzm3dveex7mfdvfsku6cjngpcj","coins":[{"amount":"10","denom":"atom"}]}]}`
-	require.Equal(t, expected, string(res))
-}
-
-func TestMsgIssueGetSigners(t *testing.T) {
-	var msg = MsgIssue{
-		Banker: sdk.AccAddress([]byte("onlyone")),
-	}
-	res := msg.GetSigners()
-	require.Equal(t, fmt.Sprintf("%v", res), "[6F6E6C796F6E65]")
-}

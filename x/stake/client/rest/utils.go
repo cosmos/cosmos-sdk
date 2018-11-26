@@ -106,10 +106,7 @@ func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) ht
 			return
 		}
 
-		params := stake.QueryBondsParams{
-			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validatorAddr,
-		}
+		params := stake.NewQueryBondsParams(delegatorAddr, validatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -137,9 +134,7 @@ func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			return
 		}
 
-		params := stake.QueryDelegatorParams{
-			DelegatorAddr: delegatorAddr,
-		}
+		params := stake.NewQueryDelegatorParams(delegatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -167,9 +162,7 @@ func queryValidator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			return
 		}
 
-		params := stake.QueryValidatorParams{
-			ValidatorAddr: validatorAddr,
-		}
+		params := stake.NewQueryValidatorParams(validatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {

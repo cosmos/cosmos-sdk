@@ -94,6 +94,7 @@ BUG FIXES
 
   - \#2733 [x/gov, x/mock/simulation] Fix governance simulation, update x/gov import/export
   - \#2854 [x/bank] Remove unused bank.MsgIssue, prevent possible panic
+  - \#2884 [docs/examples] Fix `basecli version` panic
 
 * Tendermint
   * [\#2797](https://github.com/tendermint/tendermint/pull/2797) AddressBook requires addresses to have IDs; Do not crap out immediately after sending pex addrs in seed mode

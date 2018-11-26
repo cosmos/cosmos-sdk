@@ -165,12 +165,13 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:ea40c24cdbacd054a6ae9de03e62c5f252479b96c716375aace5c120d68647c8"
+  digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
     "hcl/ast",
     "hcl/parser",
+    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -300,7 +301,7 @@
     "model",
   ]
   pruneopts = "UT"
-  revision = "aeab699e26f4d4089dba5e522e5d9babd2adbaf7"
+  revision = "4724e9255275ce38f7179b2478abeae4e28c904f"
 
 [[projects]]
   branch = "master"
@@ -445,7 +446,7 @@
 
 [[projects]]
   branch = "jae/reverseiterator"
-  digest = "1:748b05d8b1066ba311a90bdac423d98f718b3e4408605a8b67f4e1585353f395"
+  digest = "1:db22ebc8142359cc3f8b6fc3954177be59358699af699794302cf60168dcf343"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -510,7 +511,7 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "b582a9ea65633c41bf8b61fb0284faba86b4a1c4"
+  revision = "70a7cae58c8f880aede3b19101e54fb9a7b08c0b"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"

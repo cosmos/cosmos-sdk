@@ -56,7 +56,7 @@ type BaseApp struct {
 	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
 	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
 	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
-	simulationMode   bool             // if true, MountStoresIAVL uses MountStoresDB for speed.
+	simulationMode   bool             // if true, MountStores uses MountStoresDB for speed.
 
 	//--------------------
 	// Volatile
@@ -113,8 +113,8 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.WithTracer(w)
 }
 
-// Mount IAVL stores to the provided keys in the BaseApp multistore
-func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
+// Mount IAVL or DB stores to the provided keys in the BaseApp multistore
+func (app *BaseApp) MountStores(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
 		if !app.simulationMode {
 			app.MountStore(key, sdk.StoreTypeIAVL)

@@ -2,6 +2,8 @@
 
 The bank module provides three different exported keeper interfaces which can be passed to other modules which need to read or update account balances. Modules should use the least-permissive interface which provides the functionality they require.
 
+Note that you should always review the `bank` module code to ensure that permissions are limited in the way that you expect.
+
 ### Common Types
 
 #### Input

@@ -3,7 +3,7 @@ module.exports = {
   description: "Documentation for the Cosmos Network.",
   ga: "UA-51029217-2",
   dest: "./dist/docs",
-  base: "/",
+  base: "/docs/",
   markdown: {
     lineNumbers: true
   },

@@ -182,9 +182,8 @@ func (ci *cacheKVStore) dirtyItems(start, end []byte, ascending bool) []cmn.KVPa
 	sort.Slice(items, func(i, j int) bool {
 		if ascending {
 			return bytes.Compare(items[i].Key, items[j].Key) < 0
-		} else {
-			return bytes.Compare(items[i].Key, items[j].Key) > 0
 		}
+		return bytes.Compare(items[i].Key, items[j].Key) > 0
 	})
 
 	return items

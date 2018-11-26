@@ -43,7 +43,8 @@ FEATURES
   * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
 
 * SDK
-    * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
+  * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
+  * [core] \#2775 Add deliverTx maximum block gas limit
 
 * Tendermint
 

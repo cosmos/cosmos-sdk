@@ -3,7 +3,7 @@ module.exports = {
   description: "Documentation for the Cosmos Network.",
   ga: "UA-51029217-2",
   dest: "./dist/docs",
-  base: "/docs/",
+  base: "/",
   markdown: {
     lineNumbers: true
   },
@@ -36,19 +36,7 @@ module.exports = {
         ]
       },
       {
-        title: "Clients",
-        collapsable: false,
-        children: [
-      	  "/clients/",
-          "/clients/cli",
-          "/clients/service-providers",
-      	  "/clients/lite/", // this renders the readme
-      	  "/clients/lite/getting_started",
-      	  "/clients/lite/specification"
-      	]
-      },
-      {
-        title: "SDK Tutorial",
+        title: "Tutorial",
         collapsable: false,
         children: [
           "/tutorial/",
@@ -63,8 +51,21 @@ module.exports = {
           "/tutorial/cli",
           "/tutorial/app-complete",
           "/tutorial/entrypoint",
-          "/tutorial/dep"
+          "/tutorial/dep",
+          "/tutorial/build-run"
         ]
+      },
+      {
+        title: "Clients",
+        collapsable: false,
+        children: [
+      	  "/clients/",
+          "/clients/cli",
+          "/clients/service-providers",
+      	  "/clients/lite/", // this renders the readme
+      	  "/clients/lite/getting_started",
+      	  "/clients/lite/specification"
+      	]
       }
     ]
   }

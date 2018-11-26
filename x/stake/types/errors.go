@@ -160,7 +160,7 @@ func ErrSelfRedelegation(codespace sdk.CodespaceType) sdk.Error {
 }
 
 func ErrVerySmallRedelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation, "to few tokens to redelegate, truncates to zero tokens")
+	return sdk.NewError(codespace, CodeInvalidDelegation, "too few tokens to redelegate, truncates to zero tokens")
 }
 
 func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {

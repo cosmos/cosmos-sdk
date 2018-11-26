@@ -65,6 +65,7 @@ IMPROVEMENTS
   - #2772 Update BaseApp to not persist state when the ante handler fails on DeliverTx.
   - #2773 Require moniker to be provided on `gaiad init`.
   - #2672 [Makefile] Updated for better Windows compatibility and ledger support logic, get_tools was rewritten as a cross-compatible Makefile.
+  - #2766 [Makefile] Added goimports tool to get_tools. Get_tools now only builds new versions if binaries are missing.
   - [#110](https://github.com/tendermint/devops/issues/110) Updated CircleCI job to trigger website build when cosmos docs are updated.
 
 * SDK

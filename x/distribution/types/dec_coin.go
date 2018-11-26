@@ -184,10 +184,20 @@ func (coins DecCoins) AmountOf(denom string) sdk.Dec {
 	}
 }
 
-// returns the amount of a denom from deccoins
+// has a negative DecCoin amount
 func (coins DecCoins) HasNegative() bool {
 	for _, coin := range coins {
 		if coin.Amount.IsNegative() {
+			return true
+		}
+	}
+	return false
+}
+
+// has a positive DecCoin amount
+func (coins DecCoins) HasPositive() bool {
+	for _, coin := range coins {
+		if coin.Amount.IsPositive() {
 			return true
 		}
 	}

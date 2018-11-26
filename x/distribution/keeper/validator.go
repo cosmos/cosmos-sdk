@@ -102,10 +102,6 @@ func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.Va
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
 	withdraw := k.withdrawDelegationRewardsAll(ctx, accAddr)
 
-	//if withdraw.AmountOf {
-	//return types.ErrNoValidatorDistInfo(k.codespace)
-	//}
-
 	// withdrawal validator commission rewards
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
 	wc := k.GetWithdrawContext(ctx, operatorAddr)

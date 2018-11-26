@@ -223,7 +223,10 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 
 	// require no modifications when delegation amount is zero or not enough funds
 	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
-	cva.TrackDelegation(endTime, sdk.Coins{sdk.NewInt64Coin(testDenom, 1000000)})
+
+	require.Panics(t, func() {
+		cva.TrackDelegation(endTime, sdk.Coins{sdk.NewInt64Coin(testDenom, 1000000)})
+	})
 	require.Nil(t, cva.DelegatedVesting)
 	require.Nil(t, cva.DelegatedFree)
 	require.Equal(t, origCoins, cva.GetCoins())
@@ -254,7 +257,10 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 
 	// require no modifications when the undelegation amount is zero
 	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
-	cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 0)})
+
+	require.Panics(t, func() {
+		cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 0)})
+	})
 	require.Nil(t, cva.DelegatedFree)
 	require.Nil(t, cva.DelegatedVesting)
 	require.Equal(t, origCoins, cva.GetCoins())
@@ -381,7 +387,10 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 
 	// require no modifications when delegation amount is zero or not enough funds
 	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
-	dva.TrackDelegation(endTime, sdk.Coins{sdk.NewInt64Coin(testDenom, 1000000)})
+
+	require.Panics(t, func() {
+		dva.TrackDelegation(endTime, sdk.Coins{sdk.NewInt64Coin(testDenom, 1000000)})
+	})
 	require.Nil(t, dva.DelegatedVesting)
 	require.Nil(t, dva.DelegatedFree)
 	require.Equal(t, origCoins, dva.GetCoins())
@@ -412,7 +421,10 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 
 	// require no modifications when the undelegation amount is zero
 	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
-	dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 0)})
+
+	require.Panics(t, func() {
+		dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 0)})
+	})
 	require.Nil(t, dva.DelegatedFree)
 	require.Nil(t, dva.DelegatedVesting)
 	require.Equal(t, origCoins, dva.GetCoins())

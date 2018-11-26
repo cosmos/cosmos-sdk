@@ -74,7 +74,6 @@ addCoins(addr AccAddress, amt Coins)
 
 `inputOutputCoins` transfers coins from any number of input accounts to any number of output accounts.
 
-
 ```
 inputOutputCoins(inputs []Input, outputs []Output)
   for input in inputs

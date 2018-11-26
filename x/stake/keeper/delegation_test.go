@@ -56,11 +56,11 @@ func TestDelegation(t *testing.T) {
 	require.True(t, bond1to1.Equal(resBond))
 
 	// add some more records
-	bond1to2 := types.Delegation{addrDels[0], addrVals[1], sdk.NewDec(9), 0}
-	bond1to3 := types.Delegation{addrDels[0], addrVals[2], sdk.NewDec(9), 1}
-	bond2to1 := types.Delegation{addrDels[1], addrVals[0], sdk.NewDec(9), 2}
-	bond2to2 := types.Delegation{addrDels[1], addrVals[1], sdk.NewDec(9), 3}
-	bond2to3 := types.Delegation{addrDels[1], addrVals[2], sdk.NewDec(9), 4}
+	bond1to2 := types.Delegation{addrDels[0], addrVals[1], sdk.NewDec(9)}
+	bond1to3 := types.Delegation{addrDels[0], addrVals[2], sdk.NewDec(9)}
+	bond2to1 := types.Delegation{addrDels[1], addrVals[0], sdk.NewDec(9)}
+	bond2to2 := types.Delegation{addrDels[1], addrVals[1], sdk.NewDec(9)}
+	bond2to3 := types.Delegation{addrDels[1], addrVals[2], sdk.NewDec(9)}
 	keeper.SetDelegation(ctx, bond1to2)
 	keeper.SetDelegation(ctx, bond1to3)
 	keeper.SetDelegation(ctx, bond2to1)

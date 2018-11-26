@@ -41,8 +41,10 @@ type GenesisState struct {
 	GenTxs       []json.RawMessage     `json:"gentxs"`
 }
 
-func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState, stakeData stake.GenesisState, mintData mint.GenesisState,
-	distrData distr.GenesisState, govData gov.GenesisState, slashingData slashing.GenesisState) GenesisState {
+func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
+	stakeData stake.GenesisState, mintData mint.GenesisState,
+	distrData distr.GenesisState, govData gov.GenesisState,
+	slashingData slashing.GenesisState) GenesisState {
 
 	return GenesisState{
 		Accounts:     accounts,
@@ -59,8 +61,8 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState, stak
 type GenesisAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`
-	Sequence      int64          `json:"sequence_number"`
-	AccountNumber int64          `json:"account_number"`
+	Sequence      uint64         `json:"sequence_number"`
+	AccountNumber uint64         `json:"account_number"`
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
@@ -90,7 +92,6 @@ func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
 		Sequence:      ga.Sequence,
 	}
 }
-
 
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
@@ -261,7 +262,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 				"account %v not in genesis.json: %+v", addr, addrMap)
 		}
 		if acc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
-			err = fmt.Errorf("insufficient fund for the delegation: %s < %s",
+			err = fmt.Errorf("insufficient fund for the delegation: %v < %v",
 				acc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount)
 		}
 
@@ -279,11 +280,13 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
-	coins :=sdk.Coins{
-		{"fooToken", sdk.NewInt(1000)},
-		{bondDenom, freeFermionsAcc},
+	coins := sdk.Coins{
+		sdk.NewCoin("fooToken", sdk.NewInt(1000)),
+		sdk.NewCoin(bondDenom, freeFermionsAcc),
 	}
+
 	coins.Sort()
+
 	accAuth.Coins = coins
 	return NewGenesisAccount(&accAuth)
 }

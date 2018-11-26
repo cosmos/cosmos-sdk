@@ -643,6 +643,7 @@
     "github.com/bgentry/speakeasy",
     "github.com/btcsuite/btcd/btcec",
     "github.com/cosmos/go-bip39",
+    "github.com/gogo/protobuf/proto",
     "github.com/golang/protobuf/proto",
     "github.com/gorilla/mux",
     "github.com/mattn/go-isatty",

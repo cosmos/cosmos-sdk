@@ -27,7 +27,7 @@ type AppStateFn func(r *rand.Rand, accs []Account) json.RawMessage
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
 	appStateFn AppStateFn, ops WeightedOperations, setups []RandSetup,
-	invariants Invariants, numBlocks int, blockSize int, commit bool) error {
+	invariants Invariants, numBlocks int, blockSize int, commit bool) (bool, error) {
 
 	time := time.Now().UnixNano()
 	return SimulateFromSeed(t, app, appStateFn, time, ops,
@@ -57,10 +57,9 @@ func initChain(r *rand.Rand, params Params, accounts []Account,
 func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
 	setups []RandSetup, invariants Invariants,
-	numBlocks int, blockSize int, commit bool) (simError error) {
+	numBlocks int, blockSize int, commit bool) (stopEarly bool, simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
-	stopEarly := false
 	testingMode, t, b := getTestingMode(tb)
 	fmt.Printf("Starting SimulateFromSeed with randomness "+
 		"created with seed %d\n", int(seed))
@@ -217,14 +216,14 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 	if stopEarly {
 		eventStats.Print()
-		return simError
+		return true, simError
 	}
 	fmt.Printf("\nSimulation complete. Final height (blocks): %d, "+
 		"final time (seconds), : %v, operations ran %d\n",
 		header.Height, header.Time, opCount)
 
 	eventStats.Print()
-	return nil
+	return false, nil
 }
 
 //______________________________________________________________________________

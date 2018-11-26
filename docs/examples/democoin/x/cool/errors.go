@@ -8,7 +8,7 @@ import (
 
 // Cool errors reserve 400 ~ 499.
 const (
-	DefaultCodespace sdk.CodespaceType = 6
+	DefaultCodespace sdk.CodespaceType = "cool"
 
 	// Cool module reserves error 400-499 lawl
 	CodeIncorrectCoolAnswer sdk.CodeType = 400

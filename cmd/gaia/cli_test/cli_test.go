@@ -370,7 +370,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, "  1 - Test", proposalsQuery)
 
 	deposit := executeGetDeposit(t,
-		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositer=%s --output=json %v",
+		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositor=%s --output=json %v",
 			fooAddr, flags))
 	require.Equal(t, int64(5), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
@@ -399,7 +399,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(15), deposits[0].Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
 	deposit = executeGetDeposit(t,
-		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositer=%s --output=json %v",
+		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositor=%s --output=json %v",
 			fooAddr, flags))
 	require.Equal(t, int64(15), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
@@ -480,7 +480,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg := unmarshalStdTx(t, stdout)
-	require.Equal(t, msg.Fee.Gas, int64(client.DefaultGasLimit))
+	require.Equal(t, msg.Fee.Gas, uint64(client.DefaultGasLimit))
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
@@ -491,7 +491,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
-	require.Equal(t, msg.Fee.Gas, int64(100))
+	require.Equal(t, msg.Fee.Gas, uint64(100))
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
@@ -542,16 +542,19 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
 		"gaiacli tx broadcast %v --json %v", flags, signedTxFile.Name()))
 	require.True(t, success)
+
 	var result struct {
 		Response abci.ResponseDeliverTx
 	}
+
 	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
-	require.Equal(t, msg.Fee.Gas, result.Response.GasUsed)
-	require.Equal(t, msg.Fee.Gas, result.Response.GasWanted)
+	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasUsed))
+	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
 	tests.WaitForNextNBlocksTM(2, port)
 
 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
 	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 }
@@ -608,10 +611,11 @@ func getTestingHomeDirs() (string, string) {
 
 func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
+	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf(
 		"gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
@@ -625,10 +629,10 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
 	require.NoError(t, err)
 	genDoc.AppState = appStateJSON
 	genDoc.SaveAs(genFile)
-	executeWrite(t, fmt.Sprintf(
+	executeWriteCheckErr(t, fmt.Sprintf(
 		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome),
 		app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
 	// get a free port, also setup some common flags
 	servAddr, port, err = server.FreeTCPAddr()
 	require.NoError(t, err)
@@ -663,6 +667,10 @@ func readGenesisFile(t *testing.T, genFile string) types.GenesisDoc {
 
 //___________________________________________________________________________________
 // executors
+
+func executeWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {
+	require.True(t, executeWrite(t, cmdStr, writes...))
+}
 
 func executeWrite(t *testing.T, cmdStr string, writes ...string) (exitSuccess bool) {
 	exitSuccess, _, _ = executeWriteRetStdStreams(t, cmdStr, writes...)

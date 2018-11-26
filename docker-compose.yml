@@ -8,7 +8,7 @@ services:
       - "26656-26657:26656-26657"
     environment:
       - ID=0
-      - LOG=$${LOG:-gaiad.log}
+      - LOG=${LOG:-gaiad.log}
     volumes:
       - ./build:/gaiad:Z
     networks:
@@ -22,7 +22,7 @@ services:
       - "26659-26660:26656-26657"
     environment:
       - ID=1
-      - LOG=$${LOG:-gaiad.log}
+      - LOG=${LOG:-gaiad.log}
     volumes:
       - ./build:/gaiad:Z
     networks:
@@ -34,7 +34,7 @@ services:
     image: "tendermint/gaiadnode"
     environment:
       - ID=2
-      - LOG=$${LOG:-gaiad.log}
+      - LOG=${LOG:-gaiad.log}
     ports:
       - "26661-26662:26656-26657"
     volumes:
@@ -48,7 +48,7 @@ services:
     image: "tendermint/gaiadnode"
     environment:
       - ID=3
-      - LOG=$${LOG:-gaiad.log}
+      - LOG=${LOG:-gaiad.log}
     ports:
       - "26663-26664:26656-26657"
     volumes:

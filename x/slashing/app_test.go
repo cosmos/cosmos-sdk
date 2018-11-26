@@ -111,7 +111,7 @@ func TestSlashingMsgs(t *testing.T) {
 	createValidatorMsg := stake.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission,
 	)
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []int64{0}, []int64{0}, true, true, priv1)
+	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
@@ -125,7 +125,7 @@ func TestSlashingMsgs(t *testing.T) {
 	checkValidatorSigningInfo(t, mapp, keeper, sdk.ConsAddress(addr1), false)
 
 	// unjail should fail with unknown validator
-	res := mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{unjailMsg}, []int64{0}, []int64{1}, false, false, priv1)
+	res := mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
 	require.EqualValues(t, CodeValidatorNotJailed, res.Code)
 	require.EqualValues(t, DefaultCodespace, res.Codespace)
 }

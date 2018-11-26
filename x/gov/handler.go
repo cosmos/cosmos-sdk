@@ -53,7 +53,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
+	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
@@ -63,7 +63,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	// TODO: Add tag for if voting period started
 	resTags := sdk.NewTags(
 		tags.Action, tags.ActionDeposit,
-		tags.Depositer, []byte(msg.Depositer.String()),
+		tags.Depositor, []byte(msg.Depositor.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
 

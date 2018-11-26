@@ -10,13 +10,17 @@ BREAKING CHANGES
   * [cli] [\#2786](https://github.com/cosmos/cosmos-sdk/pull/2786) Fix redelegation command flow
   * [cli] [\#2829](https://github.com/cosmos/cosmos-sdk/pull/2829) add-genesis-account command now validates state when adding accounts
   * [cli] [\#2804](https://github.com/cosmos/cosmos-sdk/issues/2804) Check whether key exists before passing it on to `tx create-validator`.
+  * [cli] [\#2874](https://github.com/cosmos/cosmos-sdk/pull/2874) `gaiacli tx sign` takes an optional `--output-document` flag to support output redirection.
+  * [cli] [\#2875](https://github.com/cosmos/cosmos-sdk/pull/2875) Refactor `gaiad gentx` and avoid redirection to `gaiacli tx sign` for tx signing.
 
 * Gaia
 
 * SDK
   * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.
+  * [\#2701](https://github.com/cosmos/cosmos-sdk/issues/2701) Account numbers and sequence numbers in `auth` are now `uint64` instead of `int64`
   * [\#2019](https://github.com/cosmos/cosmos-sdk/issues/2019) Cap total number of signatures. Current per-transaction limit is 7, and if that is exceeded transaction is rejected.
   * [\#2801](https://github.com/cosmos/cosmos-sdk/pull/2801) Remove AppInit structure.
+  * [\#2798](https://github.com/cosmos/cosmos-sdk/issues/2798) Governance API has miss-spelled English word in JSON response ('depositer' -> 'depositor')
 
 * Tendermint
 
@@ -41,7 +45,8 @@ FEATURES
   * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
 
 * SDK
-    * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
+  * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
+  * [core] \#2775 Add deliverTx maximum block gas limit
 
 * Tendermint
 
@@ -62,9 +67,14 @@ IMPROVEMENTS
 
 * SDK
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
+ - \#2821 Codespaces are now strings
+ - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions
+ and methods will panic when a negative amount is discovered.
  - #2815 Gas unit fields changed from `int64` to `uint64`.
  - #2821 Codespaces are now strings
-
+ - #2779 Introduce `ValidateBasic` to the `Tx` interface and call it in the ante
+ handler.
+ 
 * Tendermint
  - #2796 Update to go-amino 0.14.1
 
@@ -72,17 +82,20 @@ IMPROVEMENTS
 BUG FIXES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  - [gaia-lite] #2868 Added handler for governance tally endpoit
 
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
   * [\#2723] Use `cosmosvalcons` Bech32 prefix in `tendermint show-address`
   * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override
+  * [\#2898](https://github.com/cosmos/cosmos-sdk/issues/2898) Remove redundant '$' in docker-compose.yml 
 
 * SDK
 
   - \#2733 [x/gov, x/mock/simulation] Fix governance simulation, update x/gov import/export
   - \#2854 [x/bank] Remove unused bank.MsgIssue, prevent possible panic
+  - \#2884 [docs/examples] Fix `basecli version` panic
 
 * Tendermint
   * [\#2797](https://github.com/tendermint/tendermint/pull/2797) AddressBook requires addresses to have IDs; Do not crap out immediately after sending pex addrs in seed mode

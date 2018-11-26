@@ -13,7 +13,6 @@ import (
 var (
 	coinsPos         = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000)}
 	coinsZero        = sdk.Coins{}
-	coinsNeg         = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, -10000)}
 	coinsPosNotAtoms = sdk.Coins{sdk.NewInt64Coin("foo", 10000)}
 	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
 )
@@ -40,7 +39,6 @@ func TestMsgSubmitProposal(t *testing.T) {
 		{"Test Proposal", "the purpose of this proposal is to test", 0x05, addrs[0], coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, sdk.AccAddress{}, coinsPos, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsZero, true},
-		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsNeg, false},
 		{"Test Proposal", "the purpose of this proposal is to test", ProposalTypeText, addrs[0], coinsMulti, true},
 	}
 
@@ -59,19 +57,18 @@ func TestMsgDeposit(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
 		proposalID    uint64
-		depositerAddr sdk.AccAddress
+		depositorAddr sdk.AccAddress
 		depositAmount sdk.Coins
 		expectPass    bool
 	}{
 		{0, addrs[0], coinsPos, true},
 		{1, sdk.AccAddress{}, coinsPos, false},
 		{1, addrs[0], coinsZero, true},
-		{1, addrs[0], coinsNeg, false},
 		{1, addrs[0], coinsMulti, true},
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgDeposit(tc.depositerAddr, tc.proposalID, tc.depositAmount)
+		msg := NewMsgDeposit(tc.depositorAddr, tc.proposalID, tc.depositAmount)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {

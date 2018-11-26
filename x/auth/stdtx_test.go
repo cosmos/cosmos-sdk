@@ -2,11 +2,15 @@ package auth
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 var (
@@ -30,8 +34,8 @@ func TestStdTx(t *testing.T) {
 func TestStdSignBytes(t *testing.T) {
 	type args struct {
 		chainID  string
-		accnum   int64
-		sequence int64
+		accnum   uint64
+		sequence uint64
 		fee      StdFee
 		msgs     []sdk.Msg
 		memo     string
@@ -50,4 +54,76 @@ func TestStdSignBytes(t *testing.T) {
 		got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.fee, tc.args.msgs, tc.args.memo))
 		require.Equal(t, tc.want, got, "Got unexpected result on test case i: %d", i)
 	}
+}
+
+func TestTxValidateBasic(t *testing.T) {
+	ctx := sdk.NewContext(nil, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+
+	// keys and addresses
+	priv1, addr1 := privAndAddr()
+	priv2, addr2 := privAndAddr()
+	priv3, addr3 := privAndAddr()
+	priv4, addr4 := privAndAddr()
+	priv5, addr5 := privAndAddr()
+	priv6, addr6 := privAndAddr()
+	priv7, addr7 := privAndAddr()
+	priv8, addr8 := privAndAddr()
+
+	// msg and signatures
+	msg1 := newTestMsg(addr1, addr2)
+	fee := newStdFee()
+
+	msgs := []sdk.Msg{msg1}
+
+	// require to fail validation upon invalid fee
+	badFee := newStdFee()
+	badFee.Amount[0].Amount = sdk.NewInt(-5)
+	tx := newTestTx(ctx, nil, nil, nil, nil, badFee)
+
+	err := tx.ValidateBasic()
+	require.Error(t, err)
+	require.Equal(t, sdk.CodeInsufficientFee, err.Result().Code)
+
+	// require to fail validation when no signatures exist
+	privs, accNums, seqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
+	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
+
+	err = tx.ValidateBasic()
+	require.Error(t, err)
+	require.Equal(t, sdk.CodeUnauthorized, err.Result().Code)
+
+	// require to fail validation when signatures do not match expected signers
+	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0, 1}, []uint64{0, 0}
+	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
+
+	err = tx.ValidateBasic()
+	require.Error(t, err)
+	require.Equal(t, sdk.CodeUnauthorized, err.Result().Code)
+
+	// require to fail validation when memo is too large
+	badMemo := strings.Repeat("bad memo", 50)
+	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
+	tx = newTestTxWithMemo(ctx, msgs, privs, accNums, seqs, fee, badMemo)
+
+	err = tx.ValidateBasic()
+	require.Error(t, err)
+	require.Equal(t, sdk.CodeMemoTooLarge, err.Result().Code)
+
+	// require to fail validation when there are too many signatures
+	privs = []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8}
+	accNums, seqs = []uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
+	badMsg := newTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
+	badMsgs := []sdk.Msg{badMsg}
+	tx = newTestTx(ctx, badMsgs, privs, accNums, seqs, fee)
+
+	err = tx.ValidateBasic()
+	require.Error(t, err)
+	require.Equal(t, sdk.CodeTooManySignatures, err.Result().Code)
+
+	// require to pass when above criteria are matched
+	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
+	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
+
+	err = tx.ValidateBasic()
+	require.NoError(t, err)
 }

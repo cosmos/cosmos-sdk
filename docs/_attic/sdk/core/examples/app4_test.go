@@ -30,7 +30,7 @@ func InitTestChain(bc *bapp.BaseApp, chainID string, addrs ...sdk.AccAddress) {
 	for _, addr := range addrs {
 		acc := GenesisAccount{
 			Address: addr,
-			Coins:   sdk.Coins{{"testCoin", sdk.NewInt(100)}},
+			Coins:   sdk.Coins{sdk.NewCoin("testCoin", sdk.NewInt(100))},
 		}
 		accounts = append(accounts, &acc)
 	}
@@ -61,12 +61,12 @@ func TestBadMsg(t *testing.T) {
 	addr2 := priv2.PubKey().Address().Bytes()
 
 	// Attempt to spend non-existent funds
-	msg := GenerateSpendMsg(addr1, addr2, sdk.Coins{{"testCoin", sdk.NewInt(100)}})
+	msg := GenerateSpendMsg(addr1, addr2, sdk.Coins{sdk.NewCoin("testCoin", sdk.NewInt(100))})
 
 	// Construct transaction
 	fee := auth.StdFee{
 		Gas:    1000000000000000,
-		Amount: sdk.Coins{{"testCoin", sdk.NewInt(0)}},
+		Amount: sdk.Coins{sdk.NewCoin("testCoin", sdk.NewInt(0))},
 	}
 	signBytes := auth.StdSignBytes("test-chain", 0, 0, fee, []sdk.Msg{msg}, "")
 	sig, err := priv1.Sign(signBytes)
@@ -108,11 +108,11 @@ func TestMsgSend(t *testing.T) {
 	InitTestChain(bc, "test-chain", addr1)
 
 	// Send funds to addr2
-	msg := GenerateSpendMsg(addr1, addr2, sdk.Coins{{"testCoin", sdk.NewInt(100)}})
+	msg := GenerateSpendMsg(addr1, addr2, sdk.Coins{sdk.NewCoin("testCoin", sdk.NewInt(100))})
 
 	fee := auth.StdFee{
 		Gas:    1000000000000000,
-		Amount: sdk.Coins{{"testCoin", sdk.NewInt(0)}},
+		Amount: sdk.Coins{sdk.NewCoin("testCoin", sdk.NewInt(0))},
 	}
 	signBytes := auth.StdSignBytes("test-chain", 0, 0, fee, []sdk.Msg{msg}, "")
 	sig, err := priv1.Sign(signBytes)

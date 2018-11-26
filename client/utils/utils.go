@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -88,7 +89,7 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 // Don't perform online validation or lookups if offline is true.
-func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
+func PrintUnsignedStdTx(w io.Writer, txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
 	var stdTx auth.StdTx
 	if offline {
 		stdTx, err = buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
@@ -100,7 +101,7 @@ func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	}
 	json, err := txBldr.Codec.MarshalJSON(stdTx)
 	if err == nil {
-		fmt.Printf("%s\n", json)
+		fmt.Fprintf(w, "%s\n", json)
 	}
 	return
 }

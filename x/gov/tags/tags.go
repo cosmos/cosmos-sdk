@@ -17,6 +17,6 @@ var (
 	Proposer          = "proposer"
 	ProposalID        = "proposal-id"
 	VotingPeriodStart = "voting-period-start"
-	Depositer         = "depositer"
+	Depositor         = "depositor"
 	Voter             = "voter"
 )

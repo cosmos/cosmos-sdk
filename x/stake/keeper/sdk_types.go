@@ -10,7 +10,7 @@ import (
 // Implements ValidatorSet
 var _ sdk.ValidatorSet = Keeper{}
 
-// iterate through the active validator set and perform the provided function
+// iterate through the validator set and perform the provided function
 func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
@@ -27,7 +27,7 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 	iterator.Close()
 }
 
-// iterate through the active validator set and perform the provided function
+// iterate through the bonded validator set and perform the provided function
 func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.MaxValidators(ctx)

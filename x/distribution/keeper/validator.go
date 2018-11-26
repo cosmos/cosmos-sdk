@@ -36,6 +36,13 @@ func (k Keeper) SetValidatorDistInfo(ctx sdk.Context, vdi types.ValidatorDistInf
 
 // remove a validator distribution info
 func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress) {
+
+	// defensive check
+	vdi := k.GetValidatorDistInfo(ctx, valAddr)
+	if vdi.DelAccum.Accum.IsPositive() {
+		panic("Should not delete validator with unwithdrawn delegator accum")
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetValidatorDistInfoKey(valAddr))
 }

@@ -162,7 +162,8 @@ func (fck DummyFeeCollectionKeeper) ClearCollectedFees(_ sdk.Context) {
 //__________________________________________________________________________________
 // used in simulation
 
-// iterate over all the validator distribution infos (inefficient, just used to check invariants)
+// iterate over all the validator distribution infos (inefficient, just used to
+// check invariants)
 func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context,
 	fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
 
@@ -174,6 +175,25 @@ func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context,
 		var vdi types.ValidatorDistInfo
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &vdi)
 		if fn(index, vdi) {
+			return
+		}
+		index++
+	}
+}
+
+// iterate over all the delegation distribution infos (inefficient, just used
+// to check invariants)
+func (k Keeper) IterateDelegationDistInfos(ctx sdk.Context,
+	fn func(index int64, distInfo types.DelegationDistInfo) (stop bool)) {
+
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, DelegationDistInfoKey)
+	defer iter.Close()
+	index := int64(0)
+	for ; iter.Valid(); iter.Next() {
+		var ddi types.DelegationDistInfo
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &ddi)
+		if fn(index, ddi) {
 			return
 		}
 		index++

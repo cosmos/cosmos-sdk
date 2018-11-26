@@ -600,6 +600,9 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	}
 
 	rounded := returnAmount.TruncateInt()
+	if rounded.IsZero() {
+		return types.Redelegation{}, types.ErrVerySmallRedelegation(k.Codespace())
+	}
 	returnCoin := sdk.NewCoin(k.BondDenom(ctx), rounded)
 	change := returnAmount.Sub(sdk.NewDecFromInt(rounded))
 
@@ -612,6 +615,7 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	if !found {
 		return types.Redelegation{}, types.ErrBadRedelegationDst(k.Codespace())
 	}
+
 	sharesCreated, err := k.Delegate(ctx, delAddr, returnCoin, dstValidator, false)
 	if err != nil {
 		return types.Redelegation{}, err

@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"io"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,7 +50,6 @@ type commitDBStoreAdapter struct {
 }
 
 func (cdsa commitDBStoreAdapter) Commit() CommitID {
-	fmt.Println(">>> COMMITTED")
 	return CommitID{
 		Version: -1,
 		Hash:    []byte("FAKE_HASH"),
@@ -59,7 +57,6 @@ func (cdsa commitDBStoreAdapter) Commit() CommitID {
 }
 
 func (cdsa commitDBStoreAdapter) LastCommitID() CommitID {
-	fmt.Println(">>> LAST COMMITTED")
 	return CommitID{
 		Version: -1,
 		Hash:    []byte("FAKE_HASH"),

@@ -192,7 +192,7 @@ func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID u
 	if lastProposalID < 1 {
 		return 0, false
 	}
-	proposalID = uint64(r.Intn(int(lastProposalID)))
+	proposalID = uint64(r.Intn(1+int(lastProposalID)) - 1)
 	return proposalID, true
 }
 

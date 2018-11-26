@@ -188,13 +188,19 @@ func MakeCodec() *codec.Codec {
 
 // application updates every end block
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 
 	// distribute rewards from previous block
 	distr.BeginBlocker(ctx, req, app.distrKeeper)
 
 	// mint new tokens for this new block
 	mint.BeginBlocker(ctx, app.mintKeeper)
+
+	// slash anyone who double signed.
+	// NOTE: This should happen after distr.BeginBlocker so that
+	// there is nothing left over in the validator fee pool,
+	// so as to keep the CanWithdrawInvariant invariant.
+	// TODO: This should really happen at EndBlocker.
+	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 
 	return abci.ResponseBeginBlock{
 		Tags: tags.ToKVPairs(),

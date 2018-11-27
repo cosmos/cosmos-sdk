@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	flagTags = "tag"
+	flagTags = "tags"
 	flagAny  = "any"
 )
 
@@ -31,38 +31,37 @@ func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Search for all transactions that match the given tags.",
 		Long: strings.TrimSpace(`
 Search for transactions that match the given tags. By default, transactions must match ALL tags
-passed to the --tags option. To match any transaction, use the --any option.
+passed to the --tag option. To match any transaction, use the --any option.
 
 For example:
 
-$ gaiacli query txs --tag test1,test2
+$ gaiacli query txs --tags <key1>:<value1>&<key2>:<value2>
 
-will match any transaction tagged with both test1,test2. To match a transaction tagged with either
-test1 or test2, use:
+will match any transaction tagged with both <key1>=<value1> and <key2>=<value2>.
+To match a transaction tagged with either value1 or value2, use:
 
-$ gaiacli query txs --tag <key1>=<value1>&<key2>=<value2> --any
+$ gaiacli query txs --tags <key1>:<value1>&<key2>:<value2> --any
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tagsStr := viper.GetString(flagTags)
 			tagsStr = strings.Trim(tagsStr, "'")
-
 			var tags []string
 			switch strings.Contains(tagsStr, "&") {
 			case true:
 				tags = strings.Split(tagsStr, "&")
 			case false:
-				tags = []string{tagsStr}
+				tags = append(tags, tagsStr)
 			}
 
 			var tmTags []string
 			for _, tag := range tags {
-				if !strings.Contains(tag, "=") {
-					return fmt.Errorf("%s should be of the format <key>=<value>", tagsStr)
+				if !strings.Contains(tag, ":") {
+					return fmt.Errorf("%s should be of the format <key>:<value>", tagsStr)
 				}
-				keyValue := strings.Split(tag, "=")
+				keyValue := strings.Split(tag, ":")
 				key, value, errMsg := getKeyFromBechPrefix(keyValue[0], keyValue[1])
-				if errMsg == "" {
-					return fmt.Errorf(errMsg)
+				if errMsg != "" {
+					return errors.New(errMsg)
 				}
 
 				tag = fmt.Sprintf("%s='%s'", key, value)
@@ -98,7 +97,7 @@ $ gaiacli query txs --tag <key1>=<value1>&<key2>=<value2> --any
 	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
-	cmd.Flags().StringSlice(flagTags, nil, "Comma-separated list of tags that must match")
+	cmd.Flags().String(flagTags, "", "key:value list of tags that must match")
 	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")
 	return cmd
 }
@@ -205,11 +204,11 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			}
 
 			key, value, errMsg := getKeyFromBechPrefix(key, value)
-			if errMsg == "" {
+			if errMsg != "" {
 				utils.WriteErrorResponse(w, http.StatusBadRequest, errMsg)
 				return
 			}
-
+			fmt.Println(fmt.Sprintf("%s='%s'", key, value))
 			tag := fmt.Sprintf("%s='%s'", key, value)
 			tags = append(tags, tag)
 		}

@@ -383,7 +383,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, spStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	txs := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tag='action=submit-proposal&proposer=%s' %v", fooAddr, flags))
+	txs := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='action:submit-proposal&proposer:%s' %v", fooAddr, flags))
 	require.Len(t, txs, 1)
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))

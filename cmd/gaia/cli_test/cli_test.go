@@ -606,10 +606,11 @@ func getTestingHomeDirs() (string, string) {
 
 func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
+	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf(
 		"gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
@@ -623,10 +624,10 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
 	require.NoError(t, err)
 	genDoc.AppState = appStateJSON
 	genDoc.SaveAs(genFile)
-	executeWrite(t, fmt.Sprintf(
+	executeWriteCheckErr(t, fmt.Sprintf(
 		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome),
 		app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
 	// get a free port, also setup some common flags
 	servAddr, port, err = server.FreeTCPAddr()
 	require.NoError(t, err)
@@ -661,6 +662,10 @@ func readGenesisFile(t *testing.T, genFile string) types.GenesisDoc {
 
 //___________________________________________________________________________________
 // executors
+
+func executeWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {
+	require.True(t, executeWrite(t, cmdStr, writes...))
+}
 
 func executeWrite(t *testing.T, cmdStr string, writes ...string) (exitSuccess bool) {
 	exitSuccess, _, _ = executeWriteRetStdStreams(t, cmdStr, writes...)

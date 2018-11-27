@@ -124,7 +124,7 @@ func newApp(logger log.Logger, db dbm.DB, storeTracer io.Writer) abci.Applicatio
 	return app.NewBasecoinApp(logger, db, baseapp.SetPruning(viper.GetString("pruning")))
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, storeTracer io.Writer, _ int64) (
+func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, storeTracer io.Writer, _ int64, _ bool) (
 	json.RawMessage, []tmtypes.GenesisValidator, error) {
 	bapp := app.NewBasecoinApp(logger, db)
 	return bapp.ExportAppStateAndValidators()

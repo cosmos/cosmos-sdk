@@ -60,7 +60,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 		JailedUntil:         time.Unix(0, 0),
 		MissedBlocksCounter: int64(0),
 	}
-	slashingKeeper.setValidatorSigningInfo(ctx, consAddr, newInfo)
+	slashingKeeper.SetValidatorSigningInfo(ctx, consAddr, newInfo)
 
 	// delegate tokens to the validator
 	delAddr := sdk.AccAddress(addrs[2])

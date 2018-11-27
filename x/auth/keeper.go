@@ -118,7 +118,7 @@ func (am AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.
 }
 
 // Returns the Sequence of the account at address
-func (am AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64, sdk.Error) {
+func (am AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, sdk.Error) {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return 0, sdk.ErrUnknownAddress(addr.String())
@@ -126,7 +126,7 @@ func (am AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64
 	return acc.GetSequence(), nil
 }
 
-func (am AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence int64) sdk.Error {
+func (am AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence uint64) sdk.Error {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())
@@ -141,8 +141,8 @@ func (am AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSeq
 }
 
 // Returns and increments the global account number counter
-func (am AccountKeeper) GetNextAccountNumber(ctx sdk.Context) int64 {
-	var accNumber int64
+func (am AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
+	var accNumber uint64
 	store := ctx.KVStore(am.key)
 	bz := store.Get(globalAccountNumberKey)
 	if bz == nil {

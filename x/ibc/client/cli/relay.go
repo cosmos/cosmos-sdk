@@ -114,7 +114,7 @@ OUTER:
 			panic(err)
 		}
 
-		var processed int64
+		var processed uint64
 		if processedbz == nil {
 			processed = 0
 		} else if err = c.cdc.UnmarshalBinaryLengthPrefixed(processedbz, &processed); err != nil {
@@ -127,7 +127,7 @@ OUTER:
 			continue OUTER // TODO replace with continue (I think it should just to the correct place where OUTER is now)
 		}
 
-		var egressLength int64
+		var egressLength uint64
 		if egressLengthbz == nil {
 			egressLength = 0
 		} else if err = c.cdc.UnmarshalBinaryLengthPrefixed(egressLengthbz, &egressLength); err != nil {
@@ -171,7 +171,7 @@ func (c relayCommander) broadcastTx(node string, tx []byte) error {
 	return err
 }
 
-func (c relayCommander) getSequence(node string) int64 {
+func (c relayCommander) getSequence(node string) uint64 {
 	res, err := query(node, auth.AddressStoreKey(c.address), c.accStore)
 	if err != nil {
 		panic(err)
@@ -189,7 +189,7 @@ func (c relayCommander) getSequence(node string) int64 {
 	return 0
 }
 
-func (c relayCommander) refine(bz []byte, ibcSeq, accSeq int64, passphrase string) []byte {
+func (c relayCommander) refine(bz []byte, ibcSeq, accSeq uint64, passphrase string) []byte {
 	var packet ibc.IBCPacket
 	if err := c.cdc.UnmarshalBinaryLengthPrefixed(bz, &packet); err != nil {
 		panic(err)

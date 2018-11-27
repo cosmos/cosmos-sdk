@@ -33,6 +33,16 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 			return err
 		}
 
+		err = PositiveDelegationInvariant(k)(app)
+		if err != nil {
+			return err
+		}
+
+		err = DelegatorSharesInvariant(k)(app)
+		if err != nil {
+			return err
+		}
+
 		err = ValidatorSetInvariant(k)(app)
 		return err
 	}
@@ -127,6 +137,53 @@ func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 			}
 		}
 		iterator.Close()
+		return nil
+	}
+}
+
+// PositiveDelegationInvariant checks that all stored delegations have > 0 shares.
+func PositiveDelegationInvariant(k stake.Keeper) simulation.Invariant {
+	return func(app *baseapp.BaseApp) error {
+		ctx := app.NewContext(false, abci.Header{})
+
+		delegations := k.GetAllDelegations(ctx)
+		for _, delegation := range delegations {
+			if delegation.Shares.IsNegative() {
+				return fmt.Errorf("delegation with negative shares: %+v", delegation)
+			}
+			if delegation.Shares.IsZero() {
+				return fmt.Errorf("delegation with zero shares: %+v", delegation)
+			}
+		}
+
+		return nil
+	}
+}
+
+// DelegatorSharesInvariant checks whether all the delegator shares which persist
+// in the delegator object add up to the correct total delegator shares
+// amount stored in each validator
+func DelegatorSharesInvariant(k stake.Keeper) simulation.Invariant {
+	return func(app *baseapp.BaseApp) error {
+		ctx := app.NewContext(false, abci.Header{})
+
+		validators := k.GetAllValidators(ctx)
+		for _, validator := range validators {
+
+			valTotalDelShares := validator.GetDelegatorShares()
+
+			totalDelShares := sdk.ZeroDec()
+			delegations := k.GetValidatorDelegations(ctx, validator.GetOperator())
+			for _, delegation := range delegations {
+				totalDelShares = totalDelShares.Add(delegation.Shares)
+			}
+
+			if !valTotalDelShares.Equal(totalDelShares) {
+				return fmt.Errorf("broken delegator shares invariance:\n"+
+					"\tvalidator.DelegatorShares: %v\n"+
+					"\tsum of Delegator.Shares: %v", valTotalDelShares, totalDelShares)
+			}
+		}
 		return nil
 	}
 }

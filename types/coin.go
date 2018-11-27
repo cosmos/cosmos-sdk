@@ -28,7 +28,7 @@ type Coin struct {
 // the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
 	if amount.LT(ZeroInt()) {
-		panic("negative coin amount")
+		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
 	}
 
 	return Coin{

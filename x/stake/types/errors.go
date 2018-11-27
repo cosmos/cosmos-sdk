@@ -159,6 +159,10 @@ func ErrSelfRedelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "cannot redelegate to the same validator")
 }
 
+func ErrVerySmallRedelegation(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation, "too few tokens to redelegate, truncates to zero tokens")
+}
+
 func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation validator not found")
 }

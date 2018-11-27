@@ -158,6 +158,18 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
+// AddCoin adds a single coin to a set of coins.
+func (coins Coins) AddCoin(other Coin) Coins {
+	for i, coin := range coins {
+		if coin.Denom == other.Denom {
+			coins[i] = coin.Plus(other)
+			break
+		}
+	}
+
+	return coins
+}
+
 // Plus adds two sets of coins.
 //
 // e.g.
@@ -224,6 +236,24 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 			indexB++
 		}
 	}
+}
+
+// SubCoin subtracts a single coin from a set of coins.
+func (coins Coins) SubCoin(other Coin) Coins {
+	for i, coin := range coins {
+		if coin.Denom == other.Denom {
+			otherNeg := Coin{other.Denom, other.Amount.Neg()}
+
+			coins[i] = coin.Plus(otherNeg)
+			if !coins[i].IsNotNegative() {
+				panic("negative coin amount")
+			}
+
+			break
+		}
+	}
+
+	return coins
 }
 
 // Minus subtracts a set of coins from another.

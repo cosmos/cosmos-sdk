@@ -174,7 +174,7 @@ func (ci *cacheKVStore) dirtyItems(start, end []byte, ascending bool) []cmn.KVPa
 		if !cacheValue.dirty {
 			continue
 		}
-		if dbm.IsKeyInDomain([]byte(key), start, end) {
+		if dbm.IsKeyInDomain([]byte(key), start, end, false) {
 			items = append(items, cmn.KVPair{Key: []byte(key), Value: cacheValue.value})
 		}
 	}

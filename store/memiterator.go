@@ -18,7 +18,7 @@ type memIterator struct {
 func newMemIterator(start, end []byte, items []cmn.KVPair) *memIterator {
 	itemsInDomain := make([]cmn.KVPair, 0)
 	for _, item := range items {
-		if dbm.IsKeyInDomain(item.Key, start, end) {
+		if dbm.IsKeyInDomain(item.Key, start, end, false) {
 			itemsInDomain = append(itemsInDomain, item)
 		}
 	}

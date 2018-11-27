@@ -193,8 +193,18 @@ gaiacli tx broadcast --node=<node> signedSendTx.json
 
 You can use the transaction search command to query for transactions that match a specific set of `tags`, which are added on every transaction.
 
+Each tag is conformed by a key-value pair in the form of `<tag>:<value>`. Tags can also be combined to query for a more specific result using the `&` symbol.
+
+The command for querying transactions using a `tag` is the following:
+
 ```bash
-gaiacli query txs --tags=<tag1>:<value1>&<tag2>:<value2>
+gaiacli query txs --tags='<tag>:<value>'
+```
+
+And for using multiple `tags`:
+
+```bash
+gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 ```
 
 ::: tip Note

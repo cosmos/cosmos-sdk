@@ -32,7 +32,7 @@ func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Search for transactions that match exactly the given tags. For example:
 
-$ gaiacli query txs --tags <tag1>:<value1>&<tag2>:<value2>
+$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tagsStr := viper.GetString(flagTags)
@@ -48,7 +48,10 @@ $ gaiacli query txs --tags <tag1>:<value1>&<tag2>:<value2>
 			for _, tag := range tags {
 				if !strings.Contains(tag, ":") {
 					return fmt.Errorf("%s should be of the format <key>:<value>", tagsStr)
+				} else if strings.Count(tag, ":") > 1 {
+					return fmt.Errorf("%s should only contain one <key>:<value> pair", tagsStr)
 				}
+
 				keyValue := strings.Split(tag, ":")
 				tag = fmt.Sprintf("%s='%s'", keyValue[0], keyValue[1])
 				tmTags = append(tmTags, tag)

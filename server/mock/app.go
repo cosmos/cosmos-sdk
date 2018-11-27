@@ -31,7 +31,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
 
 	// Set mounts for BaseApp's MultiStore.
-	baseApp.MountStoresIAVL(capKeyMainStore)
+	baseApp.MountStores(capKeyMainStore)
 
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 

@@ -102,6 +102,16 @@ func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
 	app.pubkeyPeerFilter = pf
 }
 
+func (app *BaseApp) SetFauxMerkleMode() {
+	if app.sealed {
+		panic("SetFauxMerkleMode() on sealed BaseApp")
+	}
+	app.fauxMerkleMode = true
+}
+
+//----------------------------------------
+// TODO: move these out of this file?
+
 func (app *BaseApp) Router() Router {
 	if app.sealed {
 		panic("Router() on sealed BaseApp")

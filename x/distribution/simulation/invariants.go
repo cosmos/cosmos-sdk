@@ -179,6 +179,5 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 
 		// all ok
 		return nil
-
 	}
 }

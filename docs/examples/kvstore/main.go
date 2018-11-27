@@ -35,7 +35,7 @@ func main() {
 	var baseApp = bam.NewBaseApp("kvstore", logger, db, decodeTx)
 
 	// Set mounts for BaseApp's MultiStore.
-	baseApp.MountStoresIAVL(capKeyMainStore)
+	baseApp.MountStores(capKeyMainStore)
 
 	// Set a handler Route.
 	baseApp.Router().AddRoute("kvstore", Handler(capKeyMainStore))

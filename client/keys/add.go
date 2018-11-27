@@ -106,7 +106,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	interactive := !viper.GetBool(flagInteractive)
+	interactive := viper.GetBool(flagInteractive)
 	flags := cmd.Flags()
 	bipFlag := flags.Lookup(flagBIP44Path)
 

@@ -80,8 +80,9 @@ IMPROVEMENTS
  - #2821 Codespaces are now strings
  - #2779 Introduce `ValidateBasic` to the `Tx` interface and call it in the ante
  handler.
-  - #2825 More staking and distribution invariants
-
+ - #2825 More staking and distribution invariants
+ - #2912 Print commit ID in hex when commit is synced.
+ 
 * Tendermint
  - #2796 Update to go-amino 0.14.1
 

@@ -405,11 +405,11 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, emptyTxs, txs)
 
 	// query empty
-	txs = getTransactions(t, port, fmt.Sprintf("sender_bech32=%s", addr.String()))
+	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
 	require.Equal(t, emptyTxs, txs)
 
 	// also tests url decoding
-	txs = getTransactions(t, port, fmt.Sprintf("sender_bech32=%s", addr.String()))
+	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
 	require.Equal(t, emptyTxs, txs)
 
 	txs = getTransactions(t, port, fmt.Sprintf("action=submit%%20proposal&proposer=%s", addr.String()))
@@ -425,12 +425,12 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, resultTx.Hash, txs[0].Hash)
 
 	// query sender
-	txs = getTransactions(t, port, fmt.Sprintf("sender_bech32=%s", addr.String()))
+	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
 	// query recipient
-	txs = getTransactions(t, port, fmt.Sprintf("recipient_bech32=%s", receiveAddr.String()))
+	txs = getTransactions(t, port, fmt.Sprintf("recipient=%s", receiveAddr.String()))
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
 }

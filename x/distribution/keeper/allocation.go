@@ -19,6 +19,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 	feesCollectedDec := types.NewDecCoins(feesCollected)
 
 	feePool := k.GetFeePool(ctx)
+	// Temporary workaround to keep CanWithdrawInvariant happy.
+	// General discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
 	if k.stakeKeeper.GetLastTotalPower(ctx).IsZero() {
 		feePool.CommunityPool = feePool.CommunityPool.Plus(feesCollectedDec)
 		k.SetFeePool(ctx, feePool)

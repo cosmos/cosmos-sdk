@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -455,146 +457,146 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 }
 
-// func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
-// 	chainID, servAddr, port := initializeFixtures(t)
-// 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
-//
-// 	// start gaiad server
-// 	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf(
-// 		"gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
-//
-// 	defer proc.Stop(false)
-// 	tests.WaitForTMStart(port)
-// 	tests.WaitForNextNBlocksTM(2, port)
-//
-// 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
-// 	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
-//
-// 	// Test generate sendTx with default gas
-// 	success, stdout, stderr := executeWriteRetStdStreams(t, fmt.Sprintf(
-// 		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --generate-only",
-// 		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
-// 	require.True(t, success)
-// 	require.Empty(t, stderr)
-// 	msg := unmarshalStdTx(t, stdout)
-// 	require.Equal(t, msg.Fee.Gas, uint64(client.DefaultGasLimit))
-// 	require.Equal(t, len(msg.Msgs), 1)
-// 	require.Equal(t, 0, len(msg.GetSignatures()))
-//
-// 	// Test generate sendTx with --gas=$amount
-// 	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
-// 		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=100 --generate-only",
-// 		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
-// 	require.True(t, success)
-// 	require.Empty(t, stderr)
-// 	msg = unmarshalStdTx(t, stdout)
-// 	require.Equal(t, msg.Fee.Gas, uint64(100))
-// 	require.Equal(t, len(msg.Msgs), 1)
-// 	require.Equal(t, 0, len(msg.GetSignatures()))
-//
-// 	// Test generate sendTx, estimate gas
-// 	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
-// 		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=simulate --generate-only",
-// 		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
-// 	require.True(t, success)
-// 	require.NotEmpty(t, stderr)
-// 	msg = unmarshalStdTx(t, stdout)
-// 	require.True(t, msg.Fee.Gas > 0)
-// 	require.Equal(t, len(msg.Msgs), 1)
-//
-// 	// Write the output to disk
-// 	unsignedTxFile := writeToNewTempFile(t, stdout)
-// 	defer os.Remove(unsignedTxFile.Name())
-//
-// 	// Test sign --validate-signatures
-// 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-// 		"gaiacli tx sign %v --validate-signatures %v", flags, unsignedTxFile.Name()))
-// 	require.False(t, success)
-// 	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
-//
-// 	// Test sign
-// 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-// 		"gaiacli tx sign %v --name=foo %v", flags, unsignedTxFile.Name()), app.DefaultKeyPass)
-// 	require.True(t, success)
-// 	msg = unmarshalStdTx(t, stdout)
-// 	require.Equal(t, len(msg.Msgs), 1)
-// 	require.Equal(t, 1, len(msg.GetSignatures()))
-// 	require.Equal(t, fooAddr.String(), msg.GetSigners()[0].String())
-//
-// 	// Write the output to disk
-// 	signedTxFile := writeToNewTempFile(t, stdout)
-// 	defer os.Remove(signedTxFile.Name())
-//
-// 	// Test sign --print-signatures
-// 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-// 		"gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()))
-// 	require.True(t, success)
-// 	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\t[OK]\n\n", fooAddr.String(),
-// 		fooAddr.String()), stdout)
-//
-// 	// Test broadcast
-// 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-// 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-//
-// 	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-// 		"gaiacli tx broadcast %v --json %v", flags, signedTxFile.Name()))
-// 	require.True(t, success)
-//
-// 	var result struct {
-// 		Response abci.ResponseDeliverTx
-// 	}
-//
-// 	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
-// 	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasUsed))
-// 	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
-// 	tests.WaitForNextNBlocksTM(2, port)
-//
-// 	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
-// 	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-//
-// 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-// 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-// }
-//
-// func TestGaiaCLIConfig(t *testing.T) {
-// 	require.NoError(t, os.RemoveAll(gaiacliHome))
-// 	require.NoError(t, os.RemoveAll(gaiadHome))
-// 	servAddr, port, err := server.FreeTCPAddr()
-// 	require.NoError(t, err)
-// 	node := fmt.Sprintf("%s:%s", servAddr, port)
-// 	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
-// 	executeWrite(t, fmt.Sprintf("gaiacli --home=%s config", gaiadHome), gaiacliHome, node, "y")
-// 	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
-// 	require.NoError(t, err)
-// 	expectedConfig := fmt.Sprintf(`chain_id = "%s"
-// home = "%s"
-// node = "%s"
-// output = "text"
-// trace = false
-// trust_node = true
-// `, chainID, gaiacliHome, node)
-// 	require.Equal(t, expectedConfig, string(config))
-// 	// ensure a backup gets created
-// 	executeWrite(t, "gaiacli config", gaiacliHome, node, "y", "y")
-// 	configBackup, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml-old"))
-// 	require.NoError(t, err)
-// 	require.Equal(t, expectedConfig, string(configBackup))
-//
-// 	require.NoError(t, os.RemoveAll(gaiadHome))
-// 	executeWrite(t, "gaiacli config", gaiacliHome, node, "y")
-//
-// 	// ensure it works without an initialized gaiad state
-// 	expectedConfig = fmt.Sprintf(`chain_id = ""
-// home = "%s"
-// node = "%s"
-// output = "text"
-// trace = false
-// trust_node = true
-// `, gaiacliHome, node)
-// 	config, err = ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
-// 	require.NoError(t, err)
-// 	require.Equal(t, expectedConfig, string(config))
-// }
+func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
+	chainID, servAddr, port := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf(
+		"gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+
+	// Test generate sendTx with default gas
+	success, stdout, stderr := executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --generate-only",
+		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
+	require.True(t, success)
+	require.Empty(t, stderr)
+	msg := unmarshalStdTx(t, stdout)
+	require.Equal(t, msg.Fee.Gas, uint64(client.DefaultGasLimit))
+	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
+
+	// Test generate sendTx with --gas=$amount
+	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=100 --generate-only",
+		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
+	require.True(t, success)
+	require.Empty(t, stderr)
+	msg = unmarshalStdTx(t, stdout)
+	require.Equal(t, msg.Fee.Gas, uint64(100))
+	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 0, len(msg.GetSignatures()))
+
+	// Test generate sendTx, estimate gas
+	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=simulate --generate-only",
+		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
+	require.True(t, success)
+	require.NotEmpty(t, stderr)
+	msg = unmarshalStdTx(t, stdout)
+	require.True(t, msg.Fee.Gas > 0)
+	require.Equal(t, len(msg.Msgs), 1)
+
+	// Write the output to disk
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// Test sign --validate-signatures
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli tx sign %v --validate-signatures %v", flags, unsignedTxFile.Name()))
+	require.False(t, success)
+	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
+
+	// Test sign
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli tx sign %v --name=foo %v", flags, unsignedTxFile.Name()), app.DefaultKeyPass)
+	require.True(t, success)
+	msg = unmarshalStdTx(t, stdout)
+	require.Equal(t, len(msg.Msgs), 1)
+	require.Equal(t, 1, len(msg.GetSignatures()))
+	require.Equal(t, fooAddr.String(), msg.GetSigners()[0].String())
+
+	// Write the output to disk
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// Test sign --print-signatures
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()))
+	require.True(t, success)
+	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\t[OK]\n\n", fooAddr.String(),
+		fooAddr.String()), stdout)
+
+	// Test broadcast
+	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+
+	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
+		"gaiacli tx broadcast %v --json %v", flags, signedTxFile.Name()))
+	require.True(t, success)
+
+	var result struct {
+		Response abci.ResponseDeliverTx
+	}
+
+	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
+	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasUsed))
+	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
+	tests.WaitForNextNBlocksTM(2, port)
+
+	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
+	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+
+	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
+	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+}
+
+func TestGaiaCLIConfig(t *testing.T) {
+	require.NoError(t, os.RemoveAll(gaiacliHome))
+	require.NoError(t, os.RemoveAll(gaiadHome))
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+	node := fmt.Sprintf("%s:%s", servAddr, port)
+	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
+	executeWrite(t, fmt.Sprintf("gaiacli --home=%s config", gaiadHome), gaiacliHome, node, "y")
+	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
+	require.NoError(t, err)
+	expectedConfig := fmt.Sprintf(`chain_id = "%s"
+home = "%s"
+node = "%s"
+output = "text"
+trace = false
+trust_node = true
+`, chainID, gaiacliHome, node)
+	require.Equal(t, expectedConfig, string(config))
+	// ensure a backup gets created
+	executeWrite(t, "gaiacli config", gaiacliHome, node, "y", "y")
+	configBackup, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml-old"))
+	require.NoError(t, err)
+	require.Equal(t, expectedConfig, string(configBackup))
+
+	require.NoError(t, os.RemoveAll(gaiadHome))
+	executeWrite(t, "gaiacli config", gaiacliHome, node, "y")
+
+	// ensure it works without an initialized gaiad state
+	expectedConfig = fmt.Sprintf(`chain_id = ""
+home = "%s"
+node = "%s"
+output = "text"
+trace = false
+trust_node = true
+`, gaiacliHome, node)
+	config, err = ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
+	require.NoError(t, err)
+	require.Equal(t, expectedConfig, string(config))
+}
 
 //___________________________________________________________________________________
 // helper methods

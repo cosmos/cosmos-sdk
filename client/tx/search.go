@@ -30,17 +30,9 @@ func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "txs",
 		Short: "Search for all transactions that match the given tags.",
 		Long: strings.TrimSpace(`
-Search for transactions that match the given tags. By default, transactions must match ALL tags
-passed to the --tag option. To match any transaction, use the --any option.
-
-For example:
+Search for transactions that match the given tags. For example:
 
 $ gaiacli query txs --tags <tag1>:<value1>&<tag2>:<value2>
-
-will match any transaction tagged with both <key1>=<value1> and <key2>=<value2>.
-To match a transaction tagged with either value1 or value2, use:
-
-$ gaiacli query txs --tags <tag1>:<value1>&<tag2>:<value2> --any
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tagsStr := viper.GetString(flagTags)
@@ -98,7 +90,6 @@ $ gaiacli query txs --tags <tag1>:<value1>&<tag2>:<value2> --any
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
-	cmd.Flags().Bool(flagAny, false, "Return transactions that match ANY tag, rather than ALL")
 	return cmd
 }
 

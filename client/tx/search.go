@@ -199,7 +199,6 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 				utils.WriteErrorResponse(w, http.StatusBadRequest, errMsg)
 				return
 			}
-			fmt.Println(fmt.Sprintf("%s='%s'", key, value))
 			tag := fmt.Sprintf("%s='%s'", key, value)
 			tags = append(tags, tag)
 		}

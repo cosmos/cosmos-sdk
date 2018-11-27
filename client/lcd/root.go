@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
-	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
+	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
 
 	// Import statik for light client stuff
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
@@ -81,7 +81,6 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 		rs.log.Error("error closing listener", "err", err)
 	})
 
-	// TODO: re-enable insecure mode once #2715 has been addressed
 	tmconfig := tmserver.Config{MaxOpenConnections: maxOpen}
 	if rs.listener, err = tmserver.Listen(listenAddr, tmconfig); err != nil {
 		return err

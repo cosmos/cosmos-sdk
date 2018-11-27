@@ -102,11 +102,11 @@ func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
 	app.pubkeyPeerFilter = pf
 }
 
-func (app *BaseApp) SetSimulationMode() {
+func (app *BaseApp) SetFauxMerkleMode() {
 	if app.sealed {
-		panic("SetSimulationMode() on sealed BaseApp")
+		panic("SetFauxMerkleMode() on sealed BaseApp")
 	}
-	app.simulationMode = true
+	app.fauxMerkleMode = true
 }
 
 //----------------------------------------

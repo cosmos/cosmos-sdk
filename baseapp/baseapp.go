@@ -56,7 +56,7 @@ type BaseApp struct {
 	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
 	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
 	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
-	simulationMode   bool             // if true, MountStores uses MountStoresDB for speed.
+	fauxMerkleMode   bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	//--------------------
 	// Volatile
@@ -94,7 +94,7 @@ func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecod
 		router:         NewRouter(),
 		queryRouter:    NewQueryRouter(),
 		txDecoder:      txDecoder,
-		simulationMode: false,
+		fauxMerkleMode: false,
 	}
 	for _, option := range options {
 		option(app)
@@ -116,7 +116,7 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 // Mount IAVL or DB stores to the provided keys in the BaseApp multistore
 func (app *BaseApp) MountStores(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
-		if !app.simulationMode {
+		if !app.fauxMerkleMode {
 			app.MountStore(key, sdk.StoreTypeIAVL)
 		} else {
 			// StoreTypeDB doesn't do anything upon commit, and it doesn't

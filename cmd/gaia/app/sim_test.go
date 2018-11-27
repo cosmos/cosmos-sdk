@@ -195,8 +195,8 @@ func invariants(app *GaiaApp) []simulation.Invariant {
 }
 
 // Pass this in as an option to use a dbStoreAdapter instead of an IAVLStore for simulation speed.
-func simulationModeOpt(bapp *baseapp.BaseApp) {
-	bapp.SetSimulationMode()
+func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
+	bapp.SetFauxMerkleMode()
 }
 
 // Profile with:
@@ -255,7 +255,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, simulationModeOpt)
+	app := NewGaiaApp(logger, db, nil, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
@@ -297,7 +297,7 @@ func TestGaiaImportExport(t *testing.T) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, simulationModeOpt)
+	app := NewGaiaApp(logger, db, nil, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
@@ -334,7 +334,7 @@ func TestGaiaImportExport(t *testing.T) {
 		newDB.Close()
 		os.RemoveAll(newDir)
 	}()
-	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, simulationModeOpt)
+	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", newApp.Name())
 	var genesisState GenesisState
 	err = app.cdc.UnmarshalJSON(appState, &genesisState)
@@ -394,7 +394,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, simulationModeOpt)
+	app := NewGaiaApp(logger, db, nil, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
@@ -437,7 +437,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		newDB.Close()
 		os.RemoveAll(newDir)
 	}()
-	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, simulationModeOpt)
+	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", newApp.Name())
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: appState,

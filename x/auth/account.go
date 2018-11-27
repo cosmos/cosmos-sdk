@@ -155,7 +155,8 @@ type BaseVestingAccount struct {
 // spendableCoins returns all the spendable coins for a vesting account given a
 // set of vesting coins.
 //
-// CONTRACT: vestingCoins and the account's coins must be sorted.
+// CONTRACT: The account's coins, delegated vesting coins, vestingCoins must be
+// sorted.
 func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 	var spendableCoins sdk.Coins
 	bc := bva.GetCoins()

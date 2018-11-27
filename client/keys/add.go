@@ -46,7 +46,7 @@ If run with --dry-run, a key would be generated (or recovered) but not stored to
 		Args: cobra.ExactArgs(1),
 		RunE: runAddCmd,
 	}
-	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for bip39 passphrase and mnemonic")
+	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
 	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	cmd.Flags().String(flagBIP44Path, "44'/118'/0'/0/0", "BIP44 path from which to derive a private key")
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")

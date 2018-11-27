@@ -312,7 +312,7 @@ func delegateCoins(
 		}
 	}
 
-	return sdk.NewTags("delegateCoins", []byte(addr.String())), nil
+	return sdk.NewTags("action", "delegateCoins"), nil
 }
 
 func undelegateCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
@@ -337,5 +337,5 @@ func undelegateCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress
 		}
 	}
 
-	return sdk.NewTags("undelegateCoins", []byte(addr.String())), nil
+	return sdk.NewTags("action", "undelegateCoins"), nil
 }

@@ -199,7 +199,7 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 	bc := bva.GetCoins()
 
 	for _, coin := range amount {
-		// Skip if the delegation amount is zero or if the base coins does not
+		// Panic if the delegation amount is zero or if the base coins does not
 		// exceed the desired delegation amount.
 		if coin.Amount.IsZero() || bc.AmountOf(coin.Denom).LT(coin.Amount) {
 			panic("delegation attempt with zero coins or insufficient funds")
@@ -236,7 +236,7 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 	bc := bva.GetCoins()
 
 	for _, coin := range amount {
-		// skip if the undelegation amount is zero
+		// panic if the undelegation amount is zero
 		if coin.Amount.IsZero() {
 			panic("undelegation attempt with zero coins")
 		}

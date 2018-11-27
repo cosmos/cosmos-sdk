@@ -35,7 +35,7 @@ func addKeyCommand() *cobra.Command {
 		Use:   "add <name>",
 		Short: "Add an encrypted private key (either newly generated or recovered), encrypt it, and save to disk",
 		Long: `Derive a new private key and encrypt to disk.
-Optionally specify a bip39 mnemonic, a bip39 passphrase to further secure the mnemonic,
+Optionally specify a BIP39 mnemonic, a BIP39 passphrase to further secure the mnemonic,
 and a bip32 HD path to derive a specific account. The key will be stored under the given name 
 and encrypted with the given password. The only input that is required is the encryption password.
 

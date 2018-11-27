@@ -42,7 +42,7 @@ There are three types of key representations that are used:
 
 You'll need an account private and public key pair \(a.k.a. `sk, pk` respectively\) to be able to receive funds, send txs, bond tx, etc.
 
-To generate a new key \(default _ed25519_ elliptic curve\):
+To generate a new _secp256k1_ key:
 
 ```bash
 gaiacli keys add <account_name>

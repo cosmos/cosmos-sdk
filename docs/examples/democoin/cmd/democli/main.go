@@ -48,10 +48,6 @@ func main() {
 	config.SetBech32PrefixForConsensusNode("democons", "democonspub")
 	config.Seal()
 
-	rs := lcd.NewRestServer(cdc)
-
-	registerRoutes(rs)
-
 	// TODO: setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
@@ -94,7 +90,7 @@ func main() {
 	// add proxy, version and key info
 	rootCmd.AddCommand(
 		client.LineBreak,
-		rs.ServeCommand(),
+		lcd.ServeCommand(cdc, registerRoutes),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

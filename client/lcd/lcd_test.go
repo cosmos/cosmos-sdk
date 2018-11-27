@@ -764,20 +764,6 @@ func TestUnjail(t *testing.T) {
 	require.Equal(t, true, signingInfo.IndexOffset > 0)
 	require.Equal(t, time.Unix(0, 0).UTC(), signingInfo.JailedUntil)
 	require.Equal(t, true, signingInfo.MissedBlocksCounter == 0)
-
-	// resultTx := doUnjail(t, port, seed, name, password, operatorAddrs[0])
-	// tests.WaitForHeight(resultTx.Height+1, port)
-	//
-	// // check if tx was committed
-	// require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	// require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
-	//
-	// // query tx
-	// txs := getTransactions(t, port,
-	// 	fmt.Sprintf("action=unjaill&validator=%s", operatorAddrs[0]),
-	// )
-	// require.Len(t, txs, 1)
-	// require.Equal(t, resultTx.Height, txs[0].Height)
 }
 
 func TestProposalsQuery(t *testing.T) {

@@ -33,7 +33,7 @@ const (
 func addKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add",
-		Short: "Add an encyrpted private key (either newly generated, or recovered), encrypt it, and save to disk",
+		Short: "Add an encrypted private key (either newly generated, or recovered), encrypt it, and save to disk",
 		Long: `Derive a new private key and encrypt to disk.
 Optionally specify a bip39 mnemonic, a bip39 passphrase to further secure the mnemonic,
 and a bip32 HD path to derive a specific account. The key will be stored under the given name 

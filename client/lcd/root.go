@@ -82,36 +82,30 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 	})
 
 	// TODO: re-enable insecure mode once #2715 has been addressed
+	tmconfig := tmserver.Config{MaxOpenConnections: maxOpen}
+	if rs.listener, err = tmserver.Listen(listenAddr, tmconfig); err != nil {
+		return err
+	}
+	rs.log.Info("Starting REST server...")
 	if insecure {
-		fmt.Println(
-			"Insecure mode is temporarily disabled, please locally generate an " +
-				"SSL certificate to test. Support will be re-enabled soon!",
-		)
-		// listener, err = rpcserver.StartHTTPServer(
-		// 	listenAddr, handler, logger,
-		// 	rpcserver.Config{MaxOpenConnections: maxOpen},
-		// )
-		// if err != nil {
-		// 	return
-		// }
+		return tmserver.StartHTTPServer(rs.listener, rs.Mux, rs.log)
 	} else {
 		if certFile != "" {
 			// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
-			err = validateCertKeyFiles(certFile, keyFile)
-			if err != nil {
+			if err := validateCertKeyFiles(certFile, keyFile); err != nil {
 				return err
 			}
 
 			//  cert/key pair is provided, read the fingerprint
 			rs.fingerprint, err = fingerprintFromFile(certFile)
 			if err != nil {
-				return err
+				return
 			}
 		} else {
 			// if certificate is not supplied, generate a self-signed one
 			certFile, keyFile, rs.fingerprint, err = genCertKeyFilesAndReturnFingerprint(sslHosts)
 			if err != nil {
-				return err
+				return
 			}
 
 			defer func() {
@@ -120,26 +114,13 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 			}()
 		}
 
-		rs.listener, err = rpcserver.Listen(
-			listenAddr,
-			rpcserver.Config{MaxOpenConnections: maxOpen},
-		)
-		if err != nil {
-			return
-		}
-		go rpcserver.StartHTTPAndTLSServer(
-			rs.listener,
-			rs.Mux,
-			certFile, keyFile,
-			rs.log,
-		)
 		rs.log.Info(rs.fingerprint)
-		rs.log.Info("REST server started")
+		return tmserver.StartHTTPAndTLSServer(
+			rs.listener, rs.Mux, certFile, keyFile, rs.log,
+		)
+
 	}
-
-	// logger.Info("REST server started")
-
-	return nil
+	return
 }
 
 // ServeCommand will generate a long-running rest server
@@ -152,15 +133,14 @@ func (rs *RestServer) ServeCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			rs.setKeybase(nil)
 			// Start the rest server and return error if one exists
-			err = rs.Start(
+			return rs.Start(
 				viper.GetString(client.FlagListenAddr),
 				viper.GetString(client.FlagSSLHosts),
 				viper.GetString(client.FlagSSLCertFile),
 				viper.GetString(client.FlagSSLKeyFile),
 				viper.GetInt(client.FlagMaxOpenConnections),
-				viper.GetBool(client.FlagInsecure))
-
-			return err
+				viper.GetBool(client.FlagInsecure),
+			)
 		},
 	}
 

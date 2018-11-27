@@ -365,11 +365,10 @@ func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing
 	rs.setKeybase(GetTestKeyBase(t))
 	registerRoutes(rs)
 	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
-	if err != nil {
-		return nil, err
-	}
-	go tmrpc.StartHTTPServer(listener, rs.Mux, logger)
-	return listener, nil
+	require.NoError(t, err)
+	rs.listener = listener
+	go tmrpc.StartHTTPServer(rs.listener, rs.Mux, logger)
+	return rs.listener, nil
 }
 
 // NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go

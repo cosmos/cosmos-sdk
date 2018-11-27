@@ -216,12 +216,12 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedVesting = bva.DelegatedVesting.Plus(sdk.Coins{xCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.AddCoinByDenom(xCoin)
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedFree = bva.DelegatedFree.Plus(sdk.Coins{yCoin})
+			bva.DelegatedFree = bva.DelegatedFree.AddCoinByDenom(yCoin)
 		}
 
 		// XXX: this should most likely be handled upstream (i.e. bank keeper)
@@ -251,12 +251,12 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedFree = bva.DelegatedFree.Minus(sdk.Coins{xCoin})
+			bva.DelegatedFree = bva.DelegatedFree.SubCoinByDenom(xCoin)
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedVesting = bva.DelegatedVesting.Minus(sdk.Coins{yCoin})
+			bva.DelegatedVesting = bva.DelegatedVesting.SubCoinByDenom(yCoin)
 		}
 
 		// XXX: this should most likely be handled upstream (i.e. bank keeper)

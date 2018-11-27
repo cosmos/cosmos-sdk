@@ -493,7 +493,6 @@ func TestCoinsAddCoin(t *testing.T) {
 		other    Coin
 		expected Coins
 	}{
-		{Coins{}, Coin{}, Coins{}},
 		{
 			Coins{NewInt64Coin("A", 10), NewInt64Coin("B", 5)},
 			NewInt64Coin("A", 5),
@@ -504,10 +503,15 @@ func TestCoinsAddCoin(t *testing.T) {
 			NewInt64Coin("C", 5),
 			Coins{NewInt64Coin("A", 10), NewInt64Coin("B", 5)},
 		},
+		{
+			Coins{},
+			NewInt64Coin("C", 5),
+			Coins{NewInt64Coin("C", 5)},
+		},
 	}
 
 	for i, tc := range testCases {
-		coins := tc.coins.AddCoin(tc.other)
+		coins := tc.coins.AddCoinByDenom(tc.other)
 		require.Equal(t, tc.expected, coins, "invalid coins after adding a coin; tc #%d", i)
 	}
 }
@@ -519,7 +523,6 @@ func TestCoinsSubCoin(t *testing.T) {
 		expected    Coins
 		shouldPanic bool
 	}{
-		{Coins{}, Coin{}, Coins{}, false},
 		{
 			Coins{NewInt64Coin("A", 10), NewInt64Coin("B", 5)},
 			NewInt64Coin("A", 5),
@@ -534,6 +537,24 @@ func TestCoinsSubCoin(t *testing.T) {
 		},
 		{
 			Coins{NewInt64Coin("A", 10), NewInt64Coin("B", 5)},
+			NewInt64Coin("A", 10),
+			Coins{NewInt64Coin("B", 5)},
+			false,
+		},
+		{
+			Coins{NewInt64Coin("A", 10)},
+			NewInt64Coin("A", 10),
+			nil,
+			false,
+		},
+		{
+			Coins{},
+			NewInt64Coin("C", 5),
+			Coins{NewInt64Coin("C", 5)},
+			false,
+		},
+		{
+			Coins{NewInt64Coin("A", 10), NewInt64Coin("B", 5)},
 			NewInt64Coin("A", 15),
 			Coins{},
 			true,
@@ -543,10 +564,10 @@ func TestCoinsSubCoin(t *testing.T) {
 	for i, tc := range testCases {
 		if tc.shouldPanic {
 			require.Panics(t, func() {
-				tc.coins.SubCoin(tc.other)
+				tc.coins.SubCoinByDenom(tc.other)
 			})
 		} else {
-			coins := tc.coins.SubCoin(tc.other)
+			coins := tc.coins.SubCoinByDenom(tc.other)
 			require.Equal(t, tc.expected, coins, "invalid coins after subtracting a coin; tc #%d", i)
 		}
 	}

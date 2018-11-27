@@ -158,8 +158,13 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
-// AddCoin adds a single coin to a set of coins.
-func (coins Coins) AddCoin(other Coin) Coins {
+// AddCoinByDenom adds a single coin to another coin in a set of coins by
+// denomination. If the coins are empty, the coin is added to the empty set.
+func (coins Coins) AddCoinByDenom(other Coin) Coins {
+	if len(coins) == 0 {
+		return Coins{other}
+	}
+
 	for i, coin := range coins {
 		if coin.Denom == other.Denom {
 			coins[i] = coin.Plus(other)
@@ -238,19 +243,32 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 	}
 }
 
-// SubCoin subtracts a single coin from a set of coins.
-func (coins Coins) SubCoin(other Coin) Coins {
+// SubCoinByDenom subtracts a single coin from another coin in a set of coins by
+// denomination. If the coins are empty, the coin is added to the empty set. If
+// the resulting coin is zero, it is removed.
+func (coins Coins) SubCoinByDenom(other Coin) Coins {
+	if len(coins) == 0 {
+		return Coins{other}
+	}
+
 	for i, coin := range coins {
 		if coin.Denom == other.Denom {
 			otherNeg := Coin{other.Denom, other.Amount.Neg()}
 
 			coins[i] = coin.Plus(otherNeg)
-			if !coins[i].IsNotNegative() {
+			if coins[i].IsZero() {
+				// remove resulting zero coin
+				coins = append(coins[:i], coins[i+1:]...)
+			} else if !coins[i].IsNotNegative() {
 				panic("negative coin amount")
 			}
 
 			break
 		}
+	}
+
+	if len(coins) == 0 {
+		return nil
 	}
 
 	return coins

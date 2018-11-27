@@ -805,7 +805,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	commitID := app.cms.Commit()
 	// TODO: this is missing a module identifier and dumps byte array
 	app.Logger.Debug("Commit synced",
-		"commit", commitID,
+		"commit", fmt.Sprintf("%X", commitID),
 	)
 
 	// Reset the Check state to the latest committed

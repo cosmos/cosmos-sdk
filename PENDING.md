@@ -87,7 +87,8 @@ IMPROVEMENTS
 BUG FIXES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-  - [gaia-lite] #2868 Added handler for governance tally endpoit
+  - [gaia-lite] #2868 Added handler for governance tally endpoint
+  * #2907 Refactor and fix the way Gaia Lite is started.
 
 * Gaia CLI  (`gaiacli`)
 

@@ -34,10 +34,15 @@ func addKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add",
 		Short: "Add an encyrpted private key (either newly generated, or recovered), encrypt it, and save to disk",
-		Long: `Derive a new private key using an interactive command that will prompt you for each input.
+		Long: `Derive a new private key and encrypt to disk.
 Optionally specify a bip39 mnemonic, a bip39 passphrase to further secure the mnemonic,
 and a bip32 HD path to derive a specific account. The key will be stored under the given name 
-and encrypted with the given password. The only input that is required is the encryption password.`,
+and encrypted with the given password. The only input that is required is the encryption password.
+
+If run with -i, it will prompt the user for BIP44 path, BIP39 mnemonic, and passphrase.
+The flag --recover allows one to recover a key from a seed passphrase.
+If run with --dry-run, a key would be generated (or recovered) but not stored to the local keystore.
+`,
 		Args: cobra.ExactArgs(1),
 		RunE: runAddCmd,
 	}

@@ -131,12 +131,13 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 		rs.log.Info("Starting Gaia Lite REST service...")
 		rs.log.Info(rs.fingerprint)
 
-		if err := rpcserver.StartHTTPAndTLSServer(
+		err := rpcserver.StartHTTPAndTLSServer(
 			rs.listener,
 			rs.Mux,
 			certFile, keyFile,
 			rs.log,
-		); err != nil {
+		)
+		if err != nil {
 			return err
 		}
 	}

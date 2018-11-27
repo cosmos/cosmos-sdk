@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# XXX: this script is intended to be run from
-# a fresh Digital Ocean droplet with Ubuntu
-
 # change this to a specific release or branch
 BRANCH=master
 REPO=github.com/cosmos/cosmos-sdk

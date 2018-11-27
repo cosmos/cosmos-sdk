@@ -48,7 +48,11 @@ To generate a new _secp256k1_ key:
 gaiacli keys add <account_name>
 ```
 
-Next, you will have to create a passphrase to protect the key on disk. The output of the above command will contain a _seed phrase_. Save the _seed phrase_ in a safe place in case you forget the password!
+Next, you will have to create a passphrase to protect the key on disk. The output of the above command will contain a _seed phrase_. Save the _seed phrase_ in a safe place so that in case you forget the password, you could eventually regenerate the key from the seed phrase with the following command:
+
+```bash
+gaiacli keys add --recover
+```
 
 If you check your private keys, you'll now see `<account_name>`:
 

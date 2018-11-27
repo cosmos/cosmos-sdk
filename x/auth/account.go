@@ -152,15 +152,35 @@ type BaseVestingAccount struct {
 	EndTime time.Time // when the coins become unlocked
 }
 
+// spendableCoins returns all the spendable coins for a vesting account given a
+// set of vesting coins.
+//
+// CONTRACT: vestingCoins and the account's coins must be sorted.
 func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 	var spendableCoins sdk.Coins
-
 	bc := bva.GetCoins()
 
+	j, k := 0, 0
 	for _, coin := range bc {
+		for j < len(vestingCoins) && vestingCoins[j].Denom != coin.Denom {
+			j++
+		}
+
+		for k < len(bva.DelegatedVesting) && bva.DelegatedVesting[k].Denom != coin.Denom {
+			k++
+		}
+
 		baseAmt := coin.Amount
-		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
-		vestingAmt := vestingCoins.AmountOf(coin.Denom)
+
+		vestingAmt := sdk.ZeroInt()
+		if len(vestingCoins) > 0 {
+			vestingAmt = vestingCoins[j].Amount
+		}
+
+		delVestingAmt := sdk.ZeroInt()
+		if len(bva.DelegatedVesting) > 0 {
+			delVestingAmt = bva.DelegatedVesting[k].Amount
+		}
 
 		// compute min((BC + DV) - V, BC) per the specification
 		min := sdk.MinInt(baseAmt.Add(delVestingAmt).Sub(vestingAmt), baseAmt)

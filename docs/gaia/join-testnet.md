@@ -103,6 +103,12 @@ curl https://raw.githubusercontent.com/cosmos/testnets/master/latest/genesis.jso
 Note we use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets)
 which contains details for the latest testnet. If you are connecting to a different testnet, ensure you get the right files.
 
+To verify the correctness of the configuration run:
+
+```bash
+gaiad start
+```
+
 ### Add Seed Nodes
 
 Your node needs to know how to find peers. You'll need to add healthy seed nodes to `$HOME/.gaiad/config/config.toml`. The `testnets` repo contains links to the seed nodes for each testnet. If you are looking to join the running testnet please [check the repository for details](https://github.com/cosmos/testnets) on which nodes to use.

@@ -32,11 +32,11 @@
 
 [[override]]
   name = "github.com/tendermint/iavl"
-  version = "=v0.11.1"
+  revision = "d8d0eef715649bcc21682990ac635566119f070c"
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "v0.26.1"
+  revision = "70a7cae58c8f880aede3b19101e54fb9a7b08c0b"
 
 ## deps without releases:
 

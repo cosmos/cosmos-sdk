@@ -11,6 +11,9 @@ GOTOOLS = \
 GOBIN ?= $(GOPATH)/bin
 all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
 
+# The below include contains the get_tools target.
+include scripts/Makefile
+
 ########################################
 ### CI
 
@@ -107,19 +110,12 @@ check_tools:
 
 update_tools:
 	@echo "--> Updating tools to correct version"
-	$(MAKE) -C scripts get_tools
+	$(MAKE) --always-make get_tools
 
 update_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get -u github.com/tendermint/lint/golint
-
-get_tools: $(GOBIN)/dep $(GOBIN)/gometalinter $(GOBIN)/statik
-	@echo "--> Installing tools"
-	$(MAKE) -C scripts get_tools
-
-$(GOBIN)/%:
-	$(MAKE) -C scripts $(subst $(GOBIN)/,,$(@))
 
 get_dev_tools: get_tools
 	@echo "--> Downloading linters (this may take awhile)"
@@ -178,7 +174,7 @@ test_sim_gaia_nondeterminism:
 
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=500 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=10 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=500 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -v -timeout 24h
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
@@ -216,6 +212,7 @@ test_lint:
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
 
 benchmark:
 	@go test -bench=. $(PACKAGES_NOSIMULATION)

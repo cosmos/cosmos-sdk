@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
-	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
+	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
 
 	// Import statik for light client stuff
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
@@ -87,9 +87,9 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 			"Insecure mode is temporarily disabled, please locally generate an " +
 				"SSL certificate to test. Support will be re-enabled soon!",
 		)
-		// listener, err = tmserver.StartHTTPServer(
+		// listener, err = rpcserver.StartHTTPServer(
 		// 	listenAddr, handler, logger,
-		// 	tmserver.Config{MaxOpenConnections: maxOpen},
+		// 	rpcserver.Config{MaxOpenConnections: maxOpen},
 		// )
 		// if err != nil {
 		// 	return
@@ -120,16 +120,19 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 			}()
 		}
 
-		rs.listener, err = tmserver.StartHTTPAndTLSServer(
-			listenAddr, rs.Mux,
-			certFile, keyFile,
-			rs.log,
-			tmserver.Config{MaxOpenConnections: maxOpen},
+		rs.listener, err = rpcserver.Listen(
+			listenAddr,
+			rpcserver.Config{MaxOpenConnections: maxOpen},
 		)
 		if err != nil {
 			return
 		}
-
+		go rpcserver.StartHTTPAndTLSServer(
+			rs.listener,
+			rs.Mux,
+			certFile, keyFile,
+			rs.log,
+		)
 		rs.log.Info(rs.fingerprint)
 		rs.log.Info("REST server started")
 	}

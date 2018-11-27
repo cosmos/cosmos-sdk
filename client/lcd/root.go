@@ -88,38 +88,35 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 	rs.log.Info("Starting REST server...")
 	if insecure {
 		return tmserver.StartHTTPServer(rs.listener, rs.Mux, rs.log)
-	} else {
-		if certFile != "" {
-			// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
-			if err := validateCertKeyFiles(certFile, keyFile); err != nil {
-				return err
-			}
-
-			//  cert/key pair is provided, read the fingerprint
-			rs.fingerprint, err = fingerprintFromFile(certFile)
-			if err != nil {
-				return
-			}
-		} else {
-			// if certificate is not supplied, generate a self-signed one
-			certFile, keyFile, rs.fingerprint, err = genCertKeyFilesAndReturnFingerprint(sslHosts)
-			if err != nil {
-				return
-			}
-
-			defer func() {
-				os.Remove(certFile)
-				os.Remove(keyFile)
-			}()
+	}
+	if certFile != "" {
+		// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
+		if err := validateCertKeyFiles(certFile, keyFile); err != nil {
+			return err
 		}
 
-		rs.log.Info(rs.fingerprint)
-		return tmserver.StartHTTPAndTLSServer(
-			rs.listener, rs.Mux, certFile, keyFile, rs.log,
-		)
+		//  cert/key pair is provided, read the fingerprint
+		rs.fingerprint, err = fingerprintFromFile(certFile)
+		if err != nil {
+			return
+		}
+	} else {
+		// if certificate is not supplied, generate a self-signed one
+		certFile, keyFile, rs.fingerprint, err = genCertKeyFilesAndReturnFingerprint(sslHosts)
+		if err != nil {
+			return
+		}
 
+		defer func() {
+			os.Remove(certFile)
+			os.Remove(keyFile)
+		}()
 	}
-	return
+
+	rs.log.Info(rs.fingerprint)
+	return tmserver.StartHTTPAndTLSServer(
+		rs.listener, rs.Mux, certFile, keyFile, rs.log,
+	)
 }
 
 // ServeCommand will generate a long-running rest server

@@ -21,13 +21,13 @@ import (
 )
 
 const (
-	flagNewDefault = "default"
-	flagBIP44Path  = "bip44-path"
-	flagRecover    = "recover"
-	flagNoBackup   = "no-backup"
-	flagDryRun     = "dry-run"
-	flagAccount    = "account"
-	flagIndex      = "index"
+	flagInteractive = "interactive"
+	flagBIP44Path   = "bip44-path"
+	flagRecover     = "recover"
+	flagNoBackup    = "no-backup"
+	flagDryRun      = "dry-run"
+	flagAccount     = "account"
+	flagIndex       = "index"
 )
 
 func addKeyCommand() *cobra.Command {
@@ -41,7 +41,7 @@ and encrypted with the given password. The only input that is required is the en
 		Args: cobra.ExactArgs(1),
 		RunE: runAddCmd,
 	}
-	cmd.Flags().Bool(flagNewDefault, false, "Skip the prompts and just use the default values for everything")
+	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for bip39 passphrase and mnemonic")
 	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	cmd.Flags().String(flagBIP44Path, "44'/118'/0'/0/0", "BIP44 path from which to derive a private key")
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
@@ -101,11 +101,11 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	interactive := !viper.GetBool(flagInteractive)
 	flags := cmd.Flags()
-	useDefaults, _ := flags.GetBool(flagNewDefault)
 	bipFlag := flags.Lookup(flagBIP44Path)
 
-	bip44Params, err := getBIP44ParamsAndPath(bipFlag.Value.String(), bipFlag.Changed || useDefaults)
+	bip44Params, err := getBIP44ParamsAndPath(bipFlag.Value.String(), bipFlag.Changed || !interactive)
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if !useDefaults {
+	if interactive {
 		mnemonic, err = client.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", buf)
 		if err != nil {
 			return err
@@ -164,7 +164,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 	// get bip39 passphrase
 	var bip39Passphrase string
-	if !useDefaults {
+	if interactive {
 		printStep()
 		printPrefixed("Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed")
 

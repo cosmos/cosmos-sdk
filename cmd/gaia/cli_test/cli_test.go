@@ -21,6 +21,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -277,7 +278,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.NotZero(t, validatorDelegations[0].Shares)
 
 	// unbond a single share
-	unbondStr := fmt.Sprintf("gaiacli tx stake unbond begin %v", flags)
+	unbondStr := fmt.Sprintf("gaiacli tx stake unbond %v", flags)
 	unbondStr += fmt.Sprintf(" --from=%s", "bar")
 	unbondStr += fmt.Sprintf(" --validator=%s", sdk.ValAddress(barAddr))
 	unbondStr += fmt.Sprintf(" --shares-amount=%v", "1")
@@ -354,6 +355,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, spStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
+	txs := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='action:submit-proposal&proposer:%s' %v", fooAddr, flags))
+	require.Len(t, txs, 1)
+
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
@@ -398,6 +402,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 			fooAddr, flags))
 	require.Equal(t, int64(15), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
+	txs = executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags=action:deposit&depositor:%s %v", fooAddr, flags))
+	require.Len(t, txs, 1)
+
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
@@ -431,6 +438,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Len(t, votes, 1)
 	require.Equal(t, uint64(1), votes[0].ProposalID)
 	require.Equal(t, gov.OptionYes, votes[0].Option)
+
+	txs = executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags=action:vote&voter:%s %v", fooAddr, flags))
+	require.Len(t, txs, 1)
 
 	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query gov proposals --status=DepositPeriod %v", flags), "")
 	require.Equal(t, "No matching proposals found", proposalsQuery)
@@ -734,6 +744,18 @@ func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 	err = cdc.UnmarshalJSON(value, &acc)
 	require.NoError(t, err, "value %v, err %v", string(value), err)
 	return acc
+}
+
+//___________________________________________________________________________________
+// txs
+
+func executeGetTxs(t *testing.T, cmdStr string) []tx.Info {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var txs []tx.Info
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &txs)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return txs
 }
 
 //___________________________________________________________________________________

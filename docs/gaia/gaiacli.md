@@ -183,8 +183,48 @@ gaiacli tx sign --validate-signatures signedSendTx.json
 
 You can broadcast the signed transaction to a node by providing the JSON file to the following command:
 
-```
+```bash
 gaiacli tx broadcast --node=<node> signedSendTx.json
+```
+
+### Query Transactions
+
+#### Matching a set of tags
+
+You can use the transaction search command to query for transactions that match a specific set of `tags`, which are added on every transaction.
+
+Each tag is conformed by a key-value pair in the form of `<tag>:<value>`. Tags can also be combined to query for a more specific result using the `&` symbol.
+
+The command for querying transactions using a `tag` is the following:
+
+```bash
+gaiacli query txs --tags='<tag>:<value>'
+```
+
+And for using multiple `tags`:
+
+```bash
+gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
+```
+
+::: tip Note
+
+You can find a list of available `tags` on each of the SDK modules:
+
+- [Common tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/types/tags.go#L57-L63)
+- [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/stake/tags/tags.go#L8-L24)
+- [Governance tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/gov/tags/tags.go#L8-L22)
+- [Slashing tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/slashing/handler.go#L52)
+- [Distribution tags](https://github.com/cosmos/cosmos-sdk/blob/develop/x/distribution/tags/tags.go#L8-L17)
+- [Bank tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/bank/keeper.go#L193-L206)
+:::
+
+#### Matching a transaction's hash
+
+You can also query a single transaction by its hash using the following command:
+
+```bash
+gaiacli query tx [hash]
 ```
 
 ### Staking

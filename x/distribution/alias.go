@@ -16,6 +16,8 @@ type (
 	ValidatorDistInfo     = types.ValidatorDistInfo
 	TotalAccum            = types.TotalAccum
 	FeePool               = types.FeePool
+	DecCoin               = types.DecCoin
+	DecCoins              = types.DecCoins
 
 	MsgSetWithdrawAddress          = types.MsgSetWithdrawAddress
 	MsgWithdrawDelegatorRewardsAll = types.MsgWithdrawDelegatorRewardsAll
@@ -56,6 +58,8 @@ var (
 	NewMsgWithdrawDelegatorRewardsAll = types.NewMsgWithdrawDelegatorRewardsAll
 	NewMsgWithdrawDelegatorReward     = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorRewardsAll = types.NewMsgWithdrawValidatorRewardsAll
+
+	NewDecCoins = types.NewDecCoins
 )
 
 const (

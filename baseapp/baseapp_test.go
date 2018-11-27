@@ -60,7 +60,7 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 		app.LoadLatestVersion(capKey1)
 	})
 
-	app.MountStoresIAVL(capKey1, capKey2)
+	app.MountStores(capKey1, capKey2)
 
 	// stores are mounted
 	err := app.LoadLatestVersion(capKey1)
@@ -91,7 +91,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
-	app.MountStoresIAVL(capKey)
+	app.MountStores(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
 
@@ -117,7 +117,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadLatestVersion
 	app = NewBaseApp(name, logger, db, nil)
-	app.MountStoresIAVL(capKey)
+	app.MountStores(capKey)
 	err = app.LoadLatestVersion(capKey)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(2), commitID2)
@@ -125,7 +125,7 @@ func TestLoadVersion(t *testing.T) {
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
 	app = NewBaseApp(name, logger, db, nil)
-	app.MountStoresIAVL(capKey)
+	app.MountStores(capKey)
 	err = app.LoadVersion(1, capKey)
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(1), commitID1)
@@ -161,7 +161,7 @@ func testChangeNameHelper(name string) func(*BaseApp) {
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey("main")
-	app.MountStoresIAVL(capKey)
+	app.MountStores(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
 
@@ -219,7 +219,7 @@ func TestInitChainer(t *testing.T) {
 	app := NewBaseApp(name, logger, db, nil)
 	capKey := sdk.NewKVStoreKey("main")
 	capKey2 := sdk.NewKVStoreKey("key2")
-	app.MountStoresIAVL(capKey, capKey2)
+	app.MountStores(capKey, capKey2)
 
 	// set a value in the store on init chain
 	key, value := []byte("hello"), []byte("goodbye")
@@ -262,7 +262,7 @@ func TestInitChainer(t *testing.T) {
 	// reload app
 	app = NewBaseApp(name, logger, db, nil)
 	app.SetInitChainer(initChainer)
-	app.MountStoresIAVL(capKey, capKey2)
+	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
 

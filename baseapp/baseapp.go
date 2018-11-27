@@ -56,6 +56,7 @@ type BaseApp struct {
 	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
 	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
 	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
+	fauxMerkleMode   bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	//--------------------
 	// Volatile
@@ -86,13 +87,14 @@ var _ abci.Application = (*BaseApp)(nil)
 // Accepts variable number of option functions, which act on the BaseApp to set configuration choices
 func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{
-		Logger:      logger,
-		name:        name,
-		db:          db,
-		cms:         store.NewCommitMultiStore(db),
-		router:      NewRouter(),
-		queryRouter: NewQueryRouter(),
-		txDecoder:   txDecoder,
+		Logger:         logger,
+		name:           name,
+		db:             db,
+		cms:            store.NewCommitMultiStore(db),
+		router:         NewRouter(),
+		queryRouter:    NewQueryRouter(),
+		txDecoder:      txDecoder,
+		fauxMerkleMode: false,
 	}
 	for _, option := range options {
 		option(app)
@@ -111,10 +113,16 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.WithTracer(w)
 }
 
-// Mount IAVL stores to the provided keys in the BaseApp multistore
-func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
+// Mount IAVL or DB stores to the provided keys in the BaseApp multistore
+func (app *BaseApp) MountStores(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeIAVL)
+		if !app.fauxMerkleMode {
+			app.MountStore(key, sdk.StoreTypeIAVL)
+		} else {
+			// StoreTypeDB doesn't do anything upon commit, and it doesn't
+			// retain history, but it's useful for faster simulation.
+			app.MountStore(key, sdk.StoreTypeDB)
+		}
 	}
 }
 

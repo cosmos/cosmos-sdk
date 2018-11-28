@@ -174,15 +174,15 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@bash scripts/import-export-sim.sh 50
+	@bash scripts/multisim.sh 50 TestGaiaImportExport
 
 test_sim_gaia_simulation_after_import:
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	@bash scripts/simulation-after-import.sh 50
+	@bash scripts/multisim.sh 50 TestGaiaSimulationAfterImport
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 50
+	@bash scripts/multisim.sh 50 TestFullGaiaSimulation
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

@@ -163,10 +163,10 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 
 	j, k := 0, 0
 	for _, coin := range bc {
+		// zip/lineup all coins by their denomination to provide O(n) time
 		for j < len(vestingCoins) && vestingCoins[j].Denom != coin.Denom {
 			j++
 		}
-
 		for k < len(bva.DelegatedVesting) && bva.DelegatedVesting[k].Denom != coin.Denom {
 			k++
 		}
@@ -195,18 +195,47 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 	return spendableCoins
 }
 
+// trackDelegation tracks a delegation amount for any given vesting account type
+// given the amount of coins currently vesting.
+//
+// CONTRACT: The account's coins, delegation coins, vesting coins, and delegated
+// vesting coins must be sorted.
 func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 	bc := bva.GetCoins()
 
+	i, j, k := 0, 0, 0
 	for _, coin := range amount {
-		// Panic if the delegation amount is zero or if the base coins does not
-		// exceed the desired delegation amount.
-		if coin.Amount.IsZero() || bc.AmountOf(coin.Denom).LT(coin.Amount) {
-			panic("delegation attempt with zero coins or insufficient funds")
+		// zip/lineup all coins by their denomination to provide O(n) time
+		for i < len(bc) && bc[i].Denom != coin.Denom {
+			i++
+		}
+		for j < len(vestingCoins) && vestingCoins[j].Denom != coin.Denom {
+			j++
+		}
+		for k < len(bva.DelegatedVesting) && bva.DelegatedVesting[k].Denom != coin.Denom {
+			k++
 		}
 
-		vestingAmt := vestingCoins.AmountOf(coin.Denom)
-		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
+		baseAmt := sdk.ZeroInt()
+		if len(bc) > 0 {
+			baseAmt = bc[i].Amount
+		}
+
+		vestingAmt := sdk.ZeroInt()
+		if len(vestingCoins) > 0 {
+			vestingAmt = vestingCoins[j].Amount
+		}
+
+		delVestingAmt := sdk.ZeroInt()
+		if len(bva.DelegatedVesting) > 0 {
+			delVestingAmt = bva.DelegatedVesting[k].Amount
+		}
+
+		// Panic if the delegation amount is zero or if the base coins does not
+		// exceed the desired delegation amount.
+		if coin.Amount.IsZero() || baseAmt.LT(coin.Amount) {
+			panic("delegation attempt with zero coins or insufficient funds")
+		}
 
 		// compute x and y per the specification, where:
 		// X := min(max(V - DV, 0), D)
@@ -231,21 +260,31 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 // TrackUndelegation tracks an undelegation amount by setting the necessary
 // values by which delegated vesting and delegated vesting need to decrease and
 // by which amount the base coins need to increase.
+//
+// CONTRACT: The account's coins and undelegation coins must be sorted.
 func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 	bc := bva.GetCoins()
 
+	i := 0
 	for _, coin := range amount {
 		// panic if the undelegation amount is zero
 		if coin.Amount.IsZero() {
 			panic("undelegation attempt with zero coins")
 		}
 
-		DelegatedFree := bva.DelegatedFree.AmountOf(coin.Denom)
+		for i < len(bva.DelegatedFree) && bva.DelegatedFree[i].Denom != coin.Denom {
+			i++
+		}
+
+		delegatedFree := sdk.ZeroInt()
+		if len(bva.DelegatedFree) > 0 {
+			delegatedFree = bva.DelegatedFree[i].Amount
+		}
 
 		// compute x and y per the specification, where:
 		// X := min(DF, D)
 		// Y := D - X
-		x := sdk.MinInt(DelegatedFree, coin.Amount)
+		x := sdk.MinInt(delegatedFree, coin.Amount)
 		y := coin.Amount.Sub(x)
 
 		if !x.IsZero() {

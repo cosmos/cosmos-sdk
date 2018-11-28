@@ -406,7 +406,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	if subtractAccount {
 		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
 		if err != nil {
-			return newShares, err
+			return sdk.Dec{}, err
 		}
 	}
 

@@ -40,6 +40,7 @@ var (
 	enabled   bool
 	verbose   bool
 	commit    bool
+	period    int
 )
 
 func init() {
@@ -49,6 +50,7 @@ func init() {
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
 	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
+	flag.IntVar(&period, "SimulationPeriod", 100, "Run slow invariants only once every period assertions")
 }
 
 func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
@@ -187,9 +189,9 @@ func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
 		govsim.AllInvariants(),
-		distrsim.AllInvariants(app.distrKeeper, app.stakeKeeper),
-		stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper,
-			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
+		simulation.PeriodicInvariant(distrsim.AllInvariants(app.distrKeeper, app.stakeKeeper), period, 0),
+		simulation.PeriodicInvariant(stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper,
+			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper), period, 0),
 		slashingsim.AllInvariants(),
 	}
 }

@@ -164,10 +164,6 @@ test_unit:
 test_race:
 	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)
 
-test_sim_modules:
-	@echo "Running individual module simulations..."
-	@go test $(PACKAGES_SIMTEST)
-
 test_sim_gaia_nondeterminism:
 	@echo "Running nondeterminism test..."
 	@go test ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m

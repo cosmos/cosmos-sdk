@@ -18,8 +18,15 @@ func deleteKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>",
 		Short: "Delete the given key",
-		RunE:  runDeleteCmd,
-		Args:  cobra.ExactArgs(1),
+		Long: `Delete a key from the store.
+
+Note that removing offline or ledger keys will remove
+only the public key references stored locally, i.e.
+private keys stored in a ledger device cannot be deleted with
+gaiacli.
+`,
+		RunE: runDeleteCmd,
+		Args: cobra.ExactArgs(1),
 	}
 	return cmd
 }
@@ -41,7 +48,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		if err := kb.Delete(name, "yes"); err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stderr, "Deleted")
+		fmt.Fprintln(os.Stderr, "Public key deleted")
 	}
 
 	buf := client.BufferStdin()

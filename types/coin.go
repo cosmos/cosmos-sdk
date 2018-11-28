@@ -159,21 +159,23 @@ func (coins Coins) IsValid() bool {
 }
 
 // AddCoinByDenom looks for a matching coin in coins that has the same denom as
-// other. Upon matching, the other coin is added to the matching coin in place.
-// If the coins are empty, the coin is simply added to the empty set.
+// other. Upon matching, the other coin is added to the matching coin. If the
+// coins are empty, the coin is simply added to the empty set.
 func (coins Coins) AddCoinByDenom(other Coin) Coins {
-	if len(coins) == 0 {
+	res := copyCoins(coins)
+
+	if len(res) == 0 {
 		return Coins{other}
 	}
 
-	for i, coin := range coins {
+	for i, coin := range res {
 		if coin.Denom == other.Denom {
-			coins[i] = coin.Plus(other)
+			res[i] = coin.Plus(other)
 			break
 		}
 	}
 
-	return coins
+	return res
 }
 
 // Plus adds two sets of coins.
@@ -245,23 +247,25 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 }
 
 // SubCoinByDenom looks for a matching coin in coins that has the same denom as
-// other. Upon matching, the other coin is subtracted from the matching coin in
-// place. If the resulting coin is zero, it is removed. If the coins are empty,
-// the coin is simply added to the empty set.
+// other. Upon matching, the other coin is subtracted from the matching coin. If
+// the resulting coin is zero, it is removed. If the coins are empty, the coin
+// is simply added to the empty set.
 func (coins Coins) SubCoinByDenom(other Coin) Coins {
-	if len(coins) == 0 {
+	res := copyCoins(coins)
+
+	if len(res) == 0 {
 		return Coins{other}
 	}
 
-	for i, coin := range coins {
+	for i, coin := range res {
 		if coin.Denom == other.Denom {
 			otherNeg := Coin{other.Denom, other.Amount.Neg()}
 
-			coins[i] = coin.Plus(otherNeg)
-			if coins[i].IsZero() {
+			res[i] = coin.Plus(otherNeg)
+			if res[i].IsZero() {
 				// remove resulting zero coin
-				coins = append(coins[:i], coins[i+1:]...)
-			} else if !coins[i].IsNotNegative() {
+				res = append(res[:i], res[i+1:]...)
+			} else if !res[i].IsNotNegative() {
 				panic("negative coin amount")
 			}
 
@@ -269,11 +273,11 @@ func (coins Coins) SubCoinByDenom(other Coin) Coins {
 		}
 	}
 
-	if len(coins) == 0 {
+	if len(res) == 0 {
 		return nil
 	}
 
-	return coins
+	return res
 }
 
 // Minus subtracts a set of coins from another.
@@ -461,6 +465,12 @@ func removeZeroCoins(coins Coins) Coins {
 	}
 
 	return coins[:i]
+}
+
+func copyCoins(coins Coins) Coins {
+	copyCoins := make(Coins, len(coins))
+	copy(copyCoins, coins)
+	return copyCoins
 }
 
 //-----------------------------------------------------------------------------

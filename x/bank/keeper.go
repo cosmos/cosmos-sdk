@@ -225,7 +225,7 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 	}
 
 	err := setCoins(ctx, ak, addr, newCoins)
-	tags := sdk.NewTags("sender", []byte(addr.String()))
+	tags := sdk.NewTags(TagKeySender, []byte(addr.String()))
 
 	return newCoins, tags, err
 }
@@ -242,7 +242,7 @@ func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 	}
 
 	err := setCoins(ctx, am, addr, newCoins)
-	tags := sdk.NewTags("recipient", []byte(addr.String()))
+	tags := sdk.NewTags(TagKeyRecipient, []byte(addr.String()))
 
 	return newCoins, tags, err
 }
@@ -312,7 +312,10 @@ func delegateCoins(
 		}
 	}
 
-	return sdk.NewTags("action", []byte("delegateCoins")), nil
+	return sdk.NewTags(
+		sdk.TagAction, TagActionDelegateCoins,
+		sdk.TagDelegator, []byte(addr.String()),
+	), nil
 }
 
 func undelegateCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
@@ -337,5 +340,8 @@ func undelegateCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress
 		}
 	}
 
-	return sdk.NewTags("action", []byte("undelegateCoins")), nil
+	return sdk.NewTags(
+		sdk.TagAction, TagActionUndelegateCoins,
+		sdk.TagDelegator, []byte(addr.String()),
+	), nil
 }

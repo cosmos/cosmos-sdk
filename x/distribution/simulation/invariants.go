@@ -3,28 +3,26 @@ package simulation
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // AllInvariants runs all invariants of the distribution module
 // Currently: total supply, positive power
 func AllInvariants(d distr.Keeper, stk stake.Keeper) simulation.Invariant {
 	sk := distr.StakeKeeper(stk)
-	return func(app *baseapp.BaseApp) error {
-		err := ValAccumInvariants(d, sk)(app)
+	return func(ctx sdk.Context) error {
+		err := ValAccumInvariants(d, sk)(ctx)
 		if err != nil {
 			return err
 		}
-		err = DelAccumInvariants(d, sk)(app)
+		err = DelAccumInvariants(d, sk)(ctx)
 		if err != nil {
 			return err
 		}
-		err = CanWithdrawInvariant(d, stk)(app)
+		err = CanWithdrawInvariant(d, stk)(ctx)
 		if err != nil {
 			return err
 		}
@@ -35,9 +33,7 @@ func AllInvariants(d distr.Keeper, stk stake.Keeper) simulation.Invariant {
 // ValAccumInvariants checks that the fee pool accum == sum all validators' accum
 func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
 
-	return func(app *baseapp.BaseApp) error {
-		mockHeader := abci.Header{Height: app.LastBlockHeight() + 1}
-		ctx := app.NewContext(false, mockHeader)
+	return func(ctx sdk.Context) error {
 		height := ctx.BlockHeight()
 
 		valAccum := sdk.ZeroDec()
@@ -62,9 +58,7 @@ func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 // DelAccumInvariants checks that each validator del accum == sum all delegators' accum
 func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
 
-	return func(app *baseapp.BaseApp) error {
-		mockHeader := abci.Header{Height: app.LastBlockHeight() + 1}
-		ctx := app.NewContext(false, mockHeader)
+	return func(ctx sdk.Context) error {
 		height := ctx.BlockHeight()
 
 		totalDelAccumFromVal := make(map[string]sdk.Dec) // key is the valOpAddr string
@@ -139,10 +133,7 @@ func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
 func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant {
-	return func(app *baseapp.BaseApp) error {
-		mockHeader := abci.Header{Height: app.LastBlockHeight() + 1}
-		ctx := app.NewContext(false, mockHeader)
-
+	return func(ctx sdk.Context) error {
 		// we don't want to write the changes
 		ctx, _ = ctx.CacheContext()
 

@@ -48,7 +48,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		if err := kb.Delete(name, "yes"); err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stderr, "Public key deleted")
+		fmt.Fprintln(os.Stderr, "Public key reference deleted")
 	}
 
 	buf := client.BufferStdin()
@@ -62,7 +62,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(os.Stderr, "Password deleted forever (uh oh!)")
+	fmt.Fprintln(os.Stderr, "Key deleted forever (uh oh!)")
 	return nil
 }
 

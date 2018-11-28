@@ -14,6 +14,9 @@
 
 # change this to a specific release or branch
 set BRANCH=master
+set REPO=github.com/cosmos/cosmos-sdk
+
+set GO_VERSION=1.11.2
 
 sudo pkg update
 
@@ -22,8 +25,8 @@ sudo pkg install -y gmake
 sudo pkg install -y git
 
 # get and unpack golang
-curl -O https://storage.googleapis.com/golang/go1.10.freebsd-amd64.tar.gz
-tar -xvf go1.10.freebsd-amd64.tar.gz
+curl -O https://storage.googleapis.com/golang/go$GO_VERSION.freebsd-amd64.tar.gz
+tar -xvf go$GO_VERSION.freebsd-amd64.tar.gz
 
 # move go binary and add to path
 mv go /usr/local
@@ -39,7 +42,6 @@ echo "set path=($path $GOPATH/bin)" >> ~/.tcshrc
 source ~/.tcshrc
 
 # get the code and move into repo
-set REPO=github.com/cosmos/cosmos-sdk
 go get $REPO
 cd $GOPATH/src/$REPO
 

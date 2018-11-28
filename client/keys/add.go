@@ -98,8 +98,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		// ask for a password when generating a local key
 		if !viper.GetBool(client.FlagUseLedger) {
 			pass, err = client.GetCheckPassword(
-				"Enter a passphrase for your key:",
-				"Repeat the passphrase:", buf)
+				"> Enter a passphrase for your key:",
+				"> Repeat the passphrase:", buf)
 			if err != nil {
 				return err
 			}
@@ -170,10 +170,9 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	// get bip39 passphrase
 	var bip39Passphrase string
 	if interactive {
-		printStep()
-		printPrefixed("Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed")
-
-		bip39Passphrase, err = client.GetString("Most users should just hit enter to use the default, \"\"", buf)
+		bip39Passphrase, err = client.GetString(
+			"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
+				"Most users should just hit enter to use the default, \"\"", buf)
 		if err != nil {
 			return err
 		}
@@ -190,8 +189,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-
-	printStep()
 
 	// get the encryption password
 	encryptPassword, err := client.GetCheckPassword(
@@ -217,8 +214,6 @@ func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
 	if !flagSet {
 		var err error
 
-		printStep()
-
 		bip44Path, err = client.GetString(fmt.Sprintf("Enter your bip44 path. Default is %s\n", path), buf)
 		if err != nil {
 			return nil, err
@@ -241,11 +236,12 @@ func printCreate(info keys.Info, seed string) {
 	output := viper.Get(cli.OutputFlag)
 	switch output {
 	case "text":
+		fmt.Fprintln(os.Stderr, "")
 		printKeyInfo(info, Bech32KeyOutput)
 
 		// print seed unless requested not to.
 		if !viper.GetBool(client.FlagUseLedger) && !viper.GetBool(flagNoBackup) {
-			fmt.Fprintln(os.Stderr, "**Important** write this seed phrase in a safe place.")
+			fmt.Fprintln(os.Stderr, "\n**Important** write this seed phrase in a safe place.")
 			fmt.Fprintln(os.Stderr, "It is the only way to recover your account if you ever forget your password.")
 			fmt.Fprintln(os.Stderr)
 			fmt.Fprintln(os.Stderr, seed)
@@ -283,7 +279,7 @@ func getSeed(algo keys.SigningAlgo) string {
 }
 
 func printPrefixed(msg string) {
-	fmt.Fprintf(os.Stderr, "> %s\n", msg)
+	fmt.Fprintln(os.Stderr, msg)
 }
 
 func printStep() {

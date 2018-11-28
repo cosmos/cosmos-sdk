@@ -386,13 +386,9 @@ func (kb dbKeybase) Delete(name, passphrase string) error {
 		kb.db.DeleteSync(infoKey(name))
 		return nil
 	case ledgerInfo:
+		return kb.deleteOfflineLedgerKey(info, passphrase)
 	case offlineInfo:
-		if passphrase != "yes" {
-			return fmt.Errorf("enter 'yes' exactly to delete the key - this cannot be undone")
-		}
-		kb.db.DeleteSync(addrKey(info.GetAddress()))
-		kb.db.DeleteSync(infoKey(name))
-		return nil
+		return kb.deleteOfflineLedgerKey(info, passphrase)
 	}
 
 	return nil
@@ -468,4 +464,13 @@ func addrKey(address types.AccAddress) []byte {
 
 func infoKey(name string) []byte {
 	return []byte(fmt.Sprintf("%s.%s", name, infoSuffix))
+}
+
+func (kb dbKeybase) deleteOfflineLedgerKey(info Info, yesPassphrase string) error {
+	if yesPassphrase != "yes" {
+		return fmt.Errorf("enter 'yes' exactly to delete the key - this cannot be undone")
+	}
+	kb.db.DeleteSync(addrKey(info.GetAddress()))
+	kb.db.DeleteSync(infoKey(info.GetName()))
+	return nil
 }

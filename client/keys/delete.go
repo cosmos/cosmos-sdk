@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -31,9 +32,16 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = kb.Get(name)
+	info, err := kb.Get(name)
 	if err != nil {
 		return err
+	}
+
+	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
+		if err := kb.Delete(name, "yes"); err != nil {
+			return err
+		}
+		fmt.Fprintln(os.Stderr, "Deleted")
 	}
 
 	buf := client.BufferStdin()
@@ -47,7 +55,7 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Password deleted forever (uh oh!)")
+	fmt.Fprintln(os.Stderr, "Password deleted forever (uh oh!)")
 	return nil
 }
 

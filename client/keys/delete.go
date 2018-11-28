@@ -1,10 +1,14 @@
 package keys
 
 import (
+	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
+
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -12,6 +16,10 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
+)
+
+const (
+	flagYes = "yes"
 )
 
 func deleteKeyCommand() *cobra.Command {
@@ -28,6 +36,9 @@ gaiacli.
 		RunE: runDeleteCmd,
 		Args: cobra.ExactArgs(1),
 	}
+
+	cmd.Flags().BoolP(flagYes, "y", false,
+		"Skip confirmation prompt when deleting offline or ledger key references")
 	return cmd
 }
 
@@ -44,14 +55,20 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	buf := client.BufferStdin()
 	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
-		if err := kb.Delete(name, "yes"); err != nil {
+		if !viper.GetBool(flagYes) {
+			if err := confirmDeletion(buf); err != nil {
+				return err
+			}
+		}
+		if err := kb.Delete(name, ""); err != nil {
 			return err
 		}
 		fmt.Fprintln(os.Stderr, "Public key reference deleted")
+		return nil
 	}
 
-	buf := client.BufferStdin()
 	oldpass, err := client.GetPassword(
 		"DANGER - enter password to permanently delete key:", buf)
 	if err != nil {
@@ -112,4 +129,15 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func confirmDeletion(buf *bufio.Reader) error {
+	answer, err := client.GetConfirmation("Key reference will be deleted. Continue?", buf)
+	if err != nil {
+		return err
+	}
+	if !answer {
+		return errors.New("aborted")
+	}
+	return nil
 }

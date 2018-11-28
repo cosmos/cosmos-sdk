@@ -1,6 +1,24 @@
 # Vesting
 
-<!-- TOC -->autoauto- [Vesting](#vesting)auto  - [Intro and Requirements](#intro-and-requirements)auto  - [Vesting Account Types](#vesting-account-types)auto  - [Vesting Account Specification](#vesting-account-specification)auto    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)auto      - [Continuously Vesting Accounts](#continuously-vesting-accounts)auto      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)auto    - [Transferring/Sending](#transferringsending)auto      - [Keepers/Handlers](#keepershandlers)auto    - [Delegating](#delegating)auto      - [Keepers/Handlers](#keepershandlers-1)auto    - [Undelegating](#undelegating)auto      - [Keepers/Handlers](#keepershandlers-2)auto  - [Keepers & Handlers](#keepers--handlers)auto  - [Initializing at Genesis](#initializing-at-genesis)auto  - [Examples](#examples)auto    - [Simple](#simple)auto    - [Slashing](#slashing)auto  - [Glossary](#glossary)autoauto<!-- /TOC -->
+- [Vesting](#vesting)
+  - [Intro and Requirements](#intro-and-requirements)
+  - [Vesting Account Types](#vesting-account-types)
+  - [Vesting Account Specification](#vesting-account-specification)
+    - [Determining Vesting & Vested Amounts](#determining-vesting--vested-amounts)
+      - [Continuously Vesting Accounts](#continuously-vesting-accounts)
+      - [Delayed/Discrete Vesting Accounts](#delayeddiscrete-vesting-accounts)
+    - [Transferring/Sending](#transferringsending)
+      - [Keepers/Handlers](#keepershandlers)
+    - [Delegating](#delegating)
+      - [Keepers/Handlers](#keepershandlers-1)
+    - [Undelegating](#undelegating)
+      - [Keepers/Handlers](#keepershandlers-2)
+  - [Keepers & Handlers](#keepers--handlers)
+  - [Initializing at Genesis](#initializing-at-genesis)
+  - [Examples](#examples)
+    - [Simple](#simple)
+    - [Slashing](#slashing)
+  - [Glossary](#glossary)
 
 ## Intro and Requirements
 

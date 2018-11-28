@@ -13,6 +13,7 @@ const (
 	costSetCoins      sdk.Gas = 100
 	costSubtractCoins sdk.Gas = 10
 	costAddCoins      sdk.Gas = 10
+	costGetAccount    sdk.Gas = 10
 )
 
 //-----------------------------------------------------------------------------
@@ -201,29 +202,33 @@ func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 	return getCoins(ctx, am, addr).IsAllGTE(amt)
 }
 
+func getAccount(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress) auth.Account {
+	ctx.GasMeter().ConsumeGas(costGetAccount, "getAccount")
+	return ak.GetAccount(ctx, addr)
+}
+
 // subtractCoins subtracts amt coins from an account with the given address addr.
 //
 // CONTRACT: If the account is a vesting account, the amount has to be spendable.
 func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 
-	oldCoins := getCoins(ctx, ak, addr)
-	newCoins, hasNeg := oldCoins.SafeMinus(amt)
+	oldCoins, spendableCoins := sdk.Coins{}, sdk.Coins{}
+
+	acc := getAccount(ctx, ak, addr)
+	if acc != nil {
+		oldCoins = acc.GetCoins()
+		spendableCoins = acc.SpendableCoins(ctx.BlockHeader().Time)
+	}
+
+	// For non-vesting accounts, spendable coins will simply be the original coins.
+	// So the check here is sufficient instead of subtracting from oldCoins.
+	_, hasNeg := spendableCoins.SafeMinus(amt)
 	if hasNeg {
-		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", spendableCoins, amt))
 	}
 
-	// for vesting accounts, only 'spendable' coins can be spent
-	va, ok := ak.GetAccount(ctx, addr).(auth.VestingAccount)
-	if ok {
-		blockTime := ctx.BlockHeader().Time
-		spendableCoins := va.SpendableCoins(blockTime)
-
-		if _, hasNeg := spendableCoins.SafeMinus(amt); hasNeg {
-			return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", spendableCoins, amt))
-		}
-	}
-
+	newCoins := oldCoins.Minus(amt) // should not panic as spendable coins was already checked
 	err := setCoins(ctx, ak, addr, newCoins)
 	tags := sdk.NewTags(TagKeySender, []byte(addr.String()))
 

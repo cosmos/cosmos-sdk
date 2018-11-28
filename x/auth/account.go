@@ -30,15 +30,15 @@ type Account interface {
 
 	GetCoins() sdk.Coins
 	SetCoins(sdk.Coins) error
+
+	// Calculates the amount of coins that can be sent to other accounts given
+	// the current time.
+	SpendableCoins(blockTime time.Time) sdk.Coins
 }
 
 // VestingAccount defines an account type that vests coins via a vesting schedule.
 type VestingAccount interface {
 	Account
-
-	// Calculates the amount of coins that can be sent to other accounts given
-	// the current time.
-	SpendableCoins(blockTime time.Time) sdk.Coins
 
 	GetVestedCoins(blockTime time.Time) sdk.Coins
 	GetVestingCoins(blockTime time.Time) sdk.Coins
@@ -137,6 +137,11 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 	return nil
 }
 
+// SpendableCoins returns the total set of spendable coins.
+func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
+	return acc.GetCoins()
+}
+
 //-----------------------------------------------------------------------------
 // Base Vesting Account
 
@@ -188,7 +193,7 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 		spendableCoin := sdk.NewCoin(coin.Denom, min)
 
 		if !spendableCoin.IsZero() {
-			spendableCoins = spendableCoins.Plus(sdk.Coins{spendableCoin})
+			spendableCoins = spendableCoins.AddCoinByDenom(spendableCoin)
 		}
 	}
 

@@ -481,7 +481,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				100,
 				true,
 			)
-			//app.Commit()
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash
 		}

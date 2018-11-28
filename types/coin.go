@@ -243,9 +243,10 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 	}
 }
 
-// SubCoinByDenom subtracts a single coin from another coin in a set of coins by
-// denomination. If the coins are empty, the coin is added to the empty set. If
-// the resulting coin is zero, it is removed.
+// SubCoinByDenom looks for a matching coin in coins that has the same denom as
+// other. Upon matching, the other coin is subtracted from the matching coin in
+// place. If the resulting coin is zero, it is removed. If the coins are empty,
+// the coin is added to the empty set.
 func (coins Coins) SubCoinByDenom(other Coin) Coins {
 	if len(coins) == 0 {
 		return Coins{other}

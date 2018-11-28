@@ -1,4 +1,4 @@
-# Networks
+# Deploy a private testnet
 
 There are a variety of ways to setup either local or remote networks with automation, detailed below.
 All the required files are found in the [networks directory](https://github.com/cosmos/cosmos-sdk/tree/develop/networks) and additionally the `local` or `remote` sub-directories.

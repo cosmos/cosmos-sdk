@@ -21,9 +21,7 @@ breaking changes.
 
 ## Gaia Testnet
 
-To install the binaries, read the [install instructions](./docs/gaia/installation.md)
-
-To join the latest testnet, follow 
+To set up a full-node and join the latest testnet, follow 
 [the guide](./docs/gaia/join-testnet.md).
 
 For status updates and genesis files, see the

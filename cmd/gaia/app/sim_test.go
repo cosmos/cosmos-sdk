@@ -221,7 +221,6 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 	_, err := simulation.SimulateFromSeed(
 		b, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
-		[]simulation.RandSetup{},
 		invariants(app), // these shouldn't get ran
 		numBlocks,
 		blockSize,
@@ -264,7 +263,6 @@ func TestFullGaiaSimulation(t *testing.T) {
 	_, err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
-		[]simulation.RandSetup{},
 		invariants(app),
 		numBlocks,
 		blockSize,
@@ -306,7 +304,6 @@ func TestGaiaImportExport(t *testing.T) {
 	_, err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
-		[]simulation.RandSetup{},
 		invariants(app),
 		numBlocks,
 		blockSize,
@@ -403,7 +400,6 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	stopEarly, err := simulation.SimulateFromSeed(
 		t, app.BaseApp, appStateFn, seed,
 		testAndRunTxs(app),
-		[]simulation.RandSetup{},
 		invariants(app),
 		numBlocks,
 		blockSize,
@@ -449,7 +445,6 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 	_, err = simulation.SimulateFromSeed(
 		t, newApp.BaseApp, appStateFn, seed,
 		testAndRunTxs(newApp),
-		[]simulation.RandSetup{},
 		invariants(newApp),
 		numBlocks,
 		blockSize,
@@ -481,7 +476,6 @@ func TestAppStateDeterminism(t *testing.T) {
 			simulation.SimulateFromSeed(
 				t, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app),
-				[]simulation.RandSetup{},
 				[]simulation.Invariant{},
 				50,
 				100,

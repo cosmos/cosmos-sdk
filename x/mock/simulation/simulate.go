@@ -18,25 +18,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// RandSetup performs the random setup the mock module needs.
-type RandSetup func(r *rand.Rand, accounts []Account)
-
 // AppStateFn returns the app state json bytes
 type AppStateFn func(r *rand.Rand, accs []Account) json.RawMessage
 
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
-	appStateFn AppStateFn, ops WeightedOperations, setups []RandSetup,
+	appStateFn AppStateFn, ops WeightedOperations,
 	invariants Invariants, numBlocks int, blockSize int, commit bool) (bool, error) {
 
 	time := time.Now().UnixNano()
 	return SimulateFromSeed(t, app, appStateFn, time, ops,
-		setups, invariants, numBlocks, blockSize, commit)
+		invariants, numBlocks, blockSize, commit)
 }
 
 // initialize the chain for the simulation
 func initChain(r *rand.Rand, params Params, accounts []Account,
-	setups []RandSetup, app *baseapp.BaseApp,
+	app *baseapp.BaseApp,
 	appStateFn AppStateFn) mockValidators {
 
 	req := abci.RequestInitChain{
@@ -45,9 +42,6 @@ func initChain(r *rand.Rand, params Params, accounts []Account,
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
-	for i := 0; i < len(setups); i++ {
-		setups[i](r, accounts)
-	}
 	return validators
 }
 
@@ -56,7 +50,7 @@ func initChain(r *rand.Rand, params Params, accounts []Account,
 // TODO split this monster function up
 func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	appStateFn AppStateFn, seed int64, ops WeightedOperations,
-	setups []RandSetup, invariants Invariants,
+	invariants Invariants,
 	numBlocks int, blockSize int, commit bool) (stopEarly bool, simError error) {
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
@@ -78,7 +72,7 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators := initChain(r, params, accs, setups, app, appStateFn)
+	validators := initChain(r, params, accs, app, appStateFn)
 	nextValidators := validators
 
 	header := abci.Header{

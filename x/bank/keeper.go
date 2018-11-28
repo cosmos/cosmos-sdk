@@ -212,7 +212,6 @@ func getAccount(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress) aut
 // CONTRACT: If the account is a vesting account, the amount has to be spendable.
 func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
-
 	oldCoins, spendableCoins := sdk.Coins{}, sdk.Coins{}
 
 	acc := getAccount(ctx, ak, addr)
@@ -298,23 +297,21 @@ func delegateCoins(
 
 	ctx.GasMeter().ConsumeGas(costSubtractCoins, "delegateCoins")
 
-	oldCoins := getCoins(ctx, ak, addr)
-	newCoins := oldCoins.Minus(amt)
+	acc := getAccount(ctx, ak, addr)
+	if acc == nil {
+		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
+	}
 
-	if !newCoins.IsNotNegative() {
+	oldCoins := acc.GetCoins()
+
+	_, hasNeg := oldCoins.SafeMinus(amt)
+	if hasNeg {
 		return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
 
-	va, ok := ak.GetAccount(ctx, addr).(auth.VestingAccount)
-	if ok {
-		blockTime := ctx.BlockHeader().Time
-
-		va.TrackDelegation(blockTime, amt)
-		ak.SetAccount(ctx, va)
-	} else {
-		if err := setCoins(ctx, ak, addr, newCoins); err != nil {
-			return nil, err
-		}
+	newCoins := acc.TrackDelegation(ctx.BlockHeader().Time, amt)
+	if err := setCoins(ctx, ak, addr, newCoins); err != nil {
+		return nil, err
 	}
 
 	return sdk.NewTags(
@@ -323,26 +320,20 @@ func delegateCoins(
 	), nil
 }
 
-func undelegateCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
+func undelegateCoins(
+	ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Tags, sdk.Error) {
 
 	ctx.GasMeter().ConsumeGas(costAddCoins, "undelegateCoins")
 
-	oldCoins := getCoins(ctx, ak, addr)
-	newCoins := oldCoins.Plus(amt)
-
-	if !newCoins.IsNotNegative() {
-		return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+	acc := getAccount(ctx, ak, addr)
+	if acc == nil {
+		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
 
-	va, ok := ak.GetAccount(ctx, addr).(auth.VestingAccount)
-	if ok {
-		va.TrackUndelegation(amt)
-		ak.SetAccount(ctx, va)
-	} else {
-		if err := setCoins(ctx, ak, addr, newCoins); err != nil {
-			return nil, err
-		}
+	newCoins := acc.TrackUndelegation(amt)
+	if err := setCoins(ctx, ak, addr, newCoins); err != nil {
+		return nil, err
 	}
 
 	return sdk.NewTags(

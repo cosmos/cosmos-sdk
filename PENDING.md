@@ -74,6 +74,7 @@ IMPROVEMENTS
   - [#110](https://github.com/tendermint/devops/issues/110) Updated CircleCI job to trigger website build when cosmos docs are updated.
 
 * SDK
+ - [x/mock/simulation] \#2832, \#2885, \#2873, \#2902 Simulation cleanup
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
  - \#2821 Codespaces are now strings
  - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions

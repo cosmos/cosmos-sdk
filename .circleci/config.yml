@@ -90,24 +90,6 @@ jobs:
             make test_cli
             make test_examples
 
-  test_sim_modules:
-    <<: *defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
-      - run:
-          name: Test individual module simulations
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make test_sim_modules
-
   test_sim_gaia_nondeterminism:
     <<: *defaults
     parallelism: 1
@@ -305,9 +287,6 @@ workflows:
           requires:
             - setup_dependencies
       - integration_tests:
-          requires:
-            - setup_dependencies
-      - test_sim_modules:
           requires:
             - setup_dependencies
       - test_sim_gaia_nondeterminism:

@@ -161,12 +161,12 @@ func (k Keeper) WithdrawDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress
 		return types.ErrNoDelegationDistInfo(k.codespace)
 	}
 
-	feePool, valInfo, delInfo, withdraw :=
-		k.withdrawDelegationReward(ctx, delAddr, valAddr)
+	feePool, valInfo, delInfo, withdraw := k.withdrawDelegationReward(ctx, delAddr, valAddr)
 
 	k.SetValidatorDistInfo(ctx, valInfo)
 	k.SetDelegationDistInfo(ctx, delInfo)
 	k.WithdrawToDelegator(ctx, feePool, delAddr, withdraw)
+
 	return nil
 }
 
@@ -194,19 +194,21 @@ func (k Keeper) WithdrawDelegationRewardsAll(ctx sdk.Context, delAddr sdk.AccAdd
 func (k Keeper) withdrawDelegationRewardsAll(ctx sdk.Context,
 	delAddr sdk.AccAddress) types.DecCoins {
 
-	// iterate over all the delegations
 	withdraw := types.DecCoins{}
-	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
 
+	// iterate over all the delegations
+	operationAtDelegation := func(_ int64, del sdk.Delegation) (stop bool) {
 		valAddr := del.GetValidatorAddr()
-		feePool, valInfo, delInfo, diWithdraw :=
-			k.withdrawDelegationReward(ctx, delAddr, valAddr)
+		feePool, valInfo, delInfo, diWithdraw := k.withdrawDelegationReward(ctx, delAddr, valAddr)
 		withdraw = withdraw.Plus(diWithdraw)
+
 		k.SetFeePool(ctx, feePool)
 		k.SetValidatorDistInfo(ctx, valInfo)
 		k.SetDelegationDistInfo(ctx, delInfo)
+
 		return false
 	}
+
 	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
 	return withdraw
 }

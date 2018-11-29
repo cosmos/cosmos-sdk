@@ -1,5 +1,3 @@
-// +build cli_test
-
 package clitest
 
 import (
@@ -11,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/stretchr/testify/require"
@@ -222,8 +221,11 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	tests.WaitForNextNBlocksTM(2, port)
 
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
-	barAddr, barPubKey := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
-	barCeshPubKey := sdk.MustBech32ifyConsPub(barPubKey)
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+	consPubKey, err := sdk.Bech32ifyConsPub(ed25519.GenPrivKey().PubKey())
+	if err != nil {
+		panic(err)
+	}
 
 	executeWrite(t, fmt.Sprintf("gaiacli tx send %v --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -240,7 +242,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli tx stake create-validator %v", flags)
 	cvStr += fmt.Sprintf(" --from=%s", "bar")
-	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
+	cvStr += fmt.Sprintf(" --pubkey=%s", consPubKey)
 	cvStr += fmt.Sprintf(" --amount=%v", fmt.Sprintf("2%s", stakeTypes.DefaultBondDenom))
 	cvStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
 	cvStr += fmt.Sprintf(" --commission-rate=%v", "0.05")

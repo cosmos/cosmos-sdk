@@ -151,12 +151,7 @@ var (
 )
 
 var (
-	ActionCreateValidator      = tags.ActionCreateValidator
-	ActionEditValidator        = tags.ActionEditValidator
-	ActionDelegate             = tags.ActionDelegate
-	ActionBeginUnbonding       = tags.ActionBeginUnbonding
 	ActionCompleteUnbonding    = tags.ActionCompleteUnbonding
-	ActionBeginRedelegation    = tags.ActionBeginRedelegation
 	ActionCompleteRedelegation = tags.ActionCompleteRedelegation
 
 	TagAction       = tags.Action

@@ -72,11 +72,6 @@ var (
 	ErrNilWithdrawAddr  = types.ErrNilWithdrawAddr
 	ErrNilValidatorAddr = types.ErrNilValidatorAddr
 
-	ActionModifyWithdrawAddress       = tags.ActionModifyWithdrawAddress
-	ActionWithdrawDelegatorRewardsAll = tags.ActionWithdrawDelegatorRewardsAll
-	ActionWithdrawDelegatorReward     = tags.ActionWithdrawDelegatorReward
-	ActionWithdrawValidatorRewardsAll = tags.ActionWithdrawValidatorRewardsAll
-
 	TagValidator = tags.Validator
 	TagDelegator = tags.Delegator
 )

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/stake"
 	"net/http"
 	"strings"
 
@@ -161,18 +162,18 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 
 		switch {
 		case isBondTx:
-			actions = append(actions, string(tags.ActionDelegate))
+			actions = append(actions, string(stake.MsgDelegate{}.Type()))
 		case isUnbondTx:
-			actions = append(actions, string(tags.ActionBeginUnbonding))
+			actions = append(actions, string(stake.MsgBeginUnbonding{}.Type()))
 			actions = append(actions, string(tags.ActionCompleteUnbonding))
 		case isRedTx:
-			actions = append(actions, string(tags.ActionBeginRedelegation))
+			actions = append(actions, string(stake.MsgBeginRedelegate{}.Type()))
 			actions = append(actions, string(tags.ActionCompleteRedelegation))
 		case noQuery:
-			actions = append(actions, string(tags.ActionDelegate))
-			actions = append(actions, string(tags.ActionBeginUnbonding))
+			actions = append(actions, string(stake.MsgDelegate{}.Type()))
+			actions = append(actions, string(stake.MsgBeginUnbonding{}.Type()))
 			actions = append(actions, string(tags.ActionCompleteUnbonding))
-			actions = append(actions, string(tags.ActionBeginRedelegation))
+			actions = append(actions, string(stake.MsgBeginRedelegate{}.Type()))
 			actions = append(actions, string(tags.ActionCompleteRedelegation))
 		default:
 			w.WriteHeader(http.StatusNoContent)

@@ -270,7 +270,7 @@ $ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
+				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
 			}
 
 			// check to see if the proposal is in the store

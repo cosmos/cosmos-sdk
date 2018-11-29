@@ -200,7 +200,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// new tx from wrong account number
 	seqs = []uint64{1}
 	tx = newTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidAccountNumber)
 
 	// from correct account number
 	seqs = []uint64{1}
@@ -213,7 +213,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	msgs = []sdk.Msg{msg1, msg2}
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{1, 0}, []uint64{2, 0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidAccountNumber)
 
 	// correct account numbers
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{2, 0}

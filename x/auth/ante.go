@@ -143,7 +143,7 @@ func validateAccNumAndSequence(ctx sdk.Context, accs []Account, sigs []StdSignat
 
 		accnum := accs[i].GetAccountNumber()
 		if ctx.BlockHeight() != 0 && accnum != sigs[i].AccountNumber {
-			return sdk.ErrInvalidSequence(
+			return sdk.ErrInvalidAccountNumber(
 				fmt.Sprintf("Invalid account number. Got %d, expected %d", sigs[i].AccountNumber, accnum)).Result()
 		}
 

@@ -372,7 +372,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 			fooAddr, flags))
 	require.Equal(t, int64(5), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
-	depositStr := fmt.Sprintf("gaiacli tx gov deposit 1 10%s %v", fmt.Sprintf("10%s", stakeTypes.DefaultBondDenom), flags)
+	depositStr := fmt.Sprintf("gaiacli tx gov deposit 1 %s %v", fmt.Sprintf("10%s", stakeTypes.DefaultBondDenom), flags)
 	depositStr += fmt.Sprintf(" --from=%s", "foo")
 
 	// Test generate only

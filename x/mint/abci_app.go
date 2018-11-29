@@ -6,21 +6,26 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Called every block, process inflation on the first block of every hour
+// Inflate every block, update inflation parameters once per hour
 func BeginBlocker(ctx sdk.Context, k Keeper) {
 
 	blockTime := ctx.BlockHeader().Time
 	minter := k.GetMinter(ctx)
-	if blockTime.Sub(minter.InflationLastTime) < time.Hour { // only mint on the hour!
+	params := k.GetParams(ctx)
+
+	mintedCoin := minter.BlockProvision(params)
+	k.fck.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
+	k.sk.InflateSupply(ctx, sdk.NewDecFromInt(mintedCoin.Amount))
+
+	if blockTime.Sub(minter.LastUpdate) < time.Hour {
 		return
 	}
 
-	params := k.GetParams(ctx)
+	// adjust the inflation, hourly-provision rate every hour
 	totalSupply := k.sk.TotalPower(ctx)
 	bondedRatio := k.sk.BondedRatio(ctx)
-	minter.InflationLastTime = blockTime
-	minter, mintedCoin := minter.ProcessProvisions(params, totalSupply, bondedRatio)
-	k.fck.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
-	k.sk.InflateSupply(ctx, sdk.NewDecFromInt(mintedCoin.Amount))
+	minter.Inflation = minter.NextInflationRate(params, bondedRatio)
+	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalSupply)
+	minter.LastUpdate = blockTime
 	k.SetMinter(ctx, minter)
 }

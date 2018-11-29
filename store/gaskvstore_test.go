@@ -3,6 +3,7 @@ package store
 import (
 	"testing"
 
+	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,7 +87,7 @@ func testGasKVStoreWrap(t *testing.T, store KVStore) {
 
 func TestGasKVStoreWrap(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, _ := newTree(t, db)
+	tree := iavl.NewMutableTree(db, cacheSize)
 	iavl := newIAVLStore(tree, numRecent, storeEvery)
 	testGasKVStoreWrap(t, iavl)
 

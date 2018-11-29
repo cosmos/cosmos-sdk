@@ -19,7 +19,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 		JailedUntil:         time.Unix(2, 0),
 		MissedBlocksCounter: int64(10),
 	}
-	keeper.setValidatorSigningInfo(ctx, sdk.ConsAddress(addrs[0]), newInfo)
+	keeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrs[0]), newInfo)
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(addrs[0]))
 	require.True(t, found)
 	require.Equal(t, info.StartHeight, int64(4))

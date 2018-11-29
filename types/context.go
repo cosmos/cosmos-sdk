@@ -48,6 +48,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithVoteInfos(nil)
 	c = c.WithGasMeter(NewInfiniteGasMeter())
 	c = c.WithMinimumFees(Coins{})
+	c = c.WithConsensusParams(nil)
 	return c
 }
 
@@ -133,14 +134,15 @@ const (
 	contextKeyMultiStore contextKey = iota
 	contextKeyBlockHeader
 	contextKeyBlockHeight
-	contextKeyConsensusParams
 	contextKeyChainID
 	contextKeyIsCheckTx
 	contextKeyTxBytes
 	contextKeyLogger
 	contextKeyVoteInfos
 	contextKeyGasMeter
+	contextKeyBlockGasMeter
 	contextKeyMinimumFees
+	contextKeyConsensusParams
 )
 
 func (c Context) MultiStore() MultiStore {
@@ -150,10 +152,6 @@ func (c Context) MultiStore() MultiStore {
 func (c Context) BlockHeader() abci.Header { return c.Value(contextKeyBlockHeader).(abci.Header) }
 
 func (c Context) BlockHeight() int64 { return c.Value(contextKeyBlockHeight).(int64) }
-
-func (c Context) ConsensusParams() abci.ConsensusParams {
-	return c.Value(contextKeyConsensusParams).(abci.ConsensusParams)
-}
 
 func (c Context) ChainID() string { return c.Value(contextKeyChainID).(string) }
 
@@ -167,9 +165,15 @@ func (c Context) VoteInfos() []abci.VoteInfo {
 
 func (c Context) GasMeter() GasMeter { return c.Value(contextKeyGasMeter).(GasMeter) }
 
+func (c Context) BlockGasMeter() GasMeter { return c.Value(contextKeyBlockGasMeter).(GasMeter) }
+
 func (c Context) IsCheckTx() bool { return c.Value(contextKeyIsCheckTx).(bool) }
 
 func (c Context) MinimumFees() Coins { return c.Value(contextKeyMinimumFees).(Coins) }
+
+func (c Context) ConsensusParams() *abci.ConsensusParams {
+	return c.Value(contextKeyConsensusParams).(*abci.ConsensusParams)
+}
 
 func (c Context) WithMultiStore(ms MultiStore) Context {
 	return c.withValue(contextKeyMultiStore, ms)
@@ -198,16 +202,6 @@ func (c Context) WithBlockHeight(height int64) Context {
 	return c.withValue(contextKeyBlockHeight, height).withValue(contextKeyBlockHeader, newHeader)
 }
 
-func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
-	if params == nil {
-		return c
-	}
-
-	// TODO: Do we need to handle invalid MaxGas values?
-	return c.withValue(contextKeyConsensusParams, params).
-		WithGasMeter(NewGasMeter(uint64(params.BlockSize.MaxGas)))
-}
-
 func (c Context) WithChainID(chainID string) Context { return c.withValue(contextKeyChainID, chainID) }
 
 func (c Context) WithTxBytes(txBytes []byte) Context { return c.withValue(contextKeyTxBytes, txBytes) }
@@ -220,12 +214,20 @@ func (c Context) WithVoteInfos(VoteInfos []abci.VoteInfo) Context {
 
 func (c Context) WithGasMeter(meter GasMeter) Context { return c.withValue(contextKeyGasMeter, meter) }
 
+func (c Context) WithBlockGasMeter(meter GasMeter) Context {
+	return c.withValue(contextKeyBlockGasMeter, meter)
+}
+
 func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c.withValue(contextKeyIsCheckTx, isCheckTx)
 }
 
 func (c Context) WithMinimumFees(minFees Coins) Context {
 	return c.withValue(contextKeyMinimumFees, minFees)
+}
+
+func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
+	return c.withValue(contextKeyConsensusParams, params)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

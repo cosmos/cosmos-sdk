@@ -96,9 +96,7 @@ func TestKeyManagement(t *testing.T) {
 	require.Equal(t, 2, len(keyS))
 
 	// delete the offline key
-	err = cstore.Delete(o1, "no")
-	require.NotNil(t, err)
-	err = cstore.Delete(o1, "yes")
+	err = cstore.Delete(o1, "")
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)

@@ -42,13 +42,20 @@ There are three types of key representations that are used:
 
 You'll need an account private and public key pair \(a.k.a. `sk, pk` respectively\) to be able to receive funds, send txs, bond tx, etc.
 
-To generate a new key \(default _ed25519_ elliptic curve\):
+To generate a new _secp256k1_ key:
 
 ```bash
 gaiacli keys add <account_name>
 ```
 
-Next, you will have to create a passphrase to protect the key on disk. The output of the above command will contain a _seed phrase_. Save the _seed phrase_ in a safe place in case you forget the password!
+Next, you will have to create a passphrase to protect the key on disk. The output of the above
+command will contain a _seed phrase_. It is recommended to save the _seed phrase_ in a safe
+place so that in case you forget the password, you could eventually regenerate the key from
+the seed phrase with the following command:
+
+```bash
+gaiacli keys add --recover
+```
 
 If you check your private keys, you'll now see `<account_name>`:
 
@@ -183,8 +190,50 @@ gaiacli tx sign --validate-signatures signedSendTx.json
 
 You can broadcast the signed transaction to a node by providing the JSON file to the following command:
 
-```
+```bash
 gaiacli tx broadcast --node=<node> signedSendTx.json
+```
+
+### Query Transactions
+
+#### Matching a set of tags
+
+You can use the transaction search command to query for transactions that match a specific set of `tags`, which are added on every transaction.
+
+Each tag is conformed by a key-value pair in the form of `<tag>:<value>`. Tags can also be combined to query for a more specific result using the `&` symbol.
+
+The command for querying transactions using a `tag` is the following:
+
+```bash
+gaiacli query txs --tags='<tag>:<value>'
+```
+
+And for using multiple `tags`:
+
+```bash
+gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
+```
+
+::: tip Note
+
+The action tag always equals the message type returned by the `Type()` function of the relevant message. 
+
+You can find a list of available `tags` on each of the SDK modules:
+
+- [Common tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/types/tags.go#L57-L63)
+- [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/stake/tags/tags.go#L8-L24)
+- [Governance tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/gov/tags/tags.go#L8-L22)
+- [Slashing tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/slashing/handler.go#L52)
+- [Distribution tags](https://github.com/cosmos/cosmos-sdk/blob/develop/x/distribution/tags/tags.go#L8-L17)
+- [Bank tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/bank/keeper.go#L193-L206)
+:::
+
+#### Matching a transaction's hash
+
+You can also query a single transaction by its hash using the following command:
+
+```bash
+gaiacli query tx [hash]
 ```
 
 ### Staking

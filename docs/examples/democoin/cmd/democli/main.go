@@ -48,10 +48,6 @@ func main() {
 	config.SetBech32PrefixForConsensusNode("democons", "democonspub")
 	config.Seal()
 
-	rs := lcd.NewRestServer(cdc)
-
-	registerRoutes(rs)
-
 	// TODO: setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
@@ -70,13 +66,11 @@ func main() {
 	// add query/post commands (custom to binary)
 	// start with commands common to basecoin
 	rootCmd.AddCommand(
-		client.GetCommands(
-			authcmd.GetAccountCmd(storeAcc, cdc),
-		)...)
+		authcmd.GetAccountCmd(storeAcc, cdc),
+	)
 	rootCmd.AddCommand(
-		client.PostCommands(
-			bankcmd.SendTxCmd(cdc),
-		)...)
+		bankcmd.SendTxCmd(cdc),
+	)
 	rootCmd.AddCommand(
 		client.PostCommands(
 			simplestakingcmd.BondTxCmd(cdc),
@@ -96,7 +90,7 @@ func main() {
 	// add proxy, version and key info
 	rootCmd.AddCommand(
 		client.LineBreak,
-		rs.ServeCommand(),
+		lcd.ServeCommand(cdc, registerRoutes),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

@@ -1,5 +1,3 @@
-// +build cli_test
-
 package clitest
 
 import (
@@ -11,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/types"
 
 	"github.com/stretchr/testify/require"
@@ -21,6 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -221,8 +221,8 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	tests.WaitForNextNBlocksTM(2, port)
 
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
-	barAddr, barPubKey := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
-	barCeshPubKey := sdk.MustBech32ifyConsPub(barPubKey)
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+	consPubKey := sdk.MustBech32ifyConsPub(ed25519.GenPrivKey().PubKey())
 
 	executeWrite(t, fmt.Sprintf("gaiacli tx send %v --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -239,7 +239,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli tx stake create-validator %v", flags)
 	cvStr += fmt.Sprintf(" --from=%s", "bar")
-	cvStr += fmt.Sprintf(" --pubkey=%s", barCeshPubKey)
+	cvStr += fmt.Sprintf(" --pubkey=%s", consPubKey)
 	cvStr += fmt.Sprintf(" --amount=%v", fmt.Sprintf("2%s", stakeTypes.DefaultBondDenom))
 	cvStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
 	cvStr += fmt.Sprintf(" --commission-rate=%v", "0.05")
@@ -277,7 +277,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.NotZero(t, validatorDelegations[0].Shares)
 
 	// unbond a single share
-	unbondStr := fmt.Sprintf("gaiacli tx stake unbond begin %v", flags)
+	unbondStr := fmt.Sprintf("gaiacli tx stake unbond %v", flags)
 	unbondStr += fmt.Sprintf(" --from=%s", "bar")
 	unbondStr += fmt.Sprintf(" --validator=%s", sdk.ValAddress(barAddr))
 	unbondStr += fmt.Sprintf(" --shares-amount=%v", "1")
@@ -354,6 +354,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, spStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
+	txs := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='action:submit_proposal&proposer:%s' %v", fooAddr, flags))
+	require.Len(t, txs, 1)
+
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
@@ -398,6 +401,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 			fooAddr, flags))
 	require.Equal(t, int64(15), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
+	txs = executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags=action:deposit&depositor:%s %v", fooAddr, flags))
+	require.Len(t, txs, 1)
+
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
@@ -431,6 +437,9 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Len(t, votes, 1)
 	require.Equal(t, uint64(1), votes[0].ProposalID)
 	require.Equal(t, gov.OptionYes, votes[0].Option)
+
+	txs = executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags=action:vote&voter:%s %v", fooAddr, flags))
+	require.Len(t, txs, 1)
 
 	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query gov proposals --status=DepositPeriod %v", flags), "")
 	require.Equal(t, "No matching proposals found", proposalsQuery)
@@ -606,10 +615,11 @@ func getTestingHomeDirs() (string, string) {
 
 func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
+	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass, app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass, app.DefaultKeyPass)
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf(
 		"gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
@@ -623,10 +633,10 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
 	require.NoError(t, err)
 	genDoc.AppState = appStateJSON
 	genDoc.SaveAs(genFile)
-	executeWrite(t, fmt.Sprintf(
+	executeWriteCheckErr(t, fmt.Sprintf(
 		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome),
 		app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
 	// get a free port, also setup some common flags
 	servAddr, port, err = server.FreeTCPAddr()
 	require.NoError(t, err)
@@ -661,6 +671,10 @@ func readGenesisFile(t *testing.T, genFile string) types.GenesisDoc {
 
 //___________________________________________________________________________________
 // executors
+
+func executeWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {
+	require.True(t, executeWrite(t, cmdStr, writes...))
+}
 
 func executeWrite(t *testing.T, cmdStr string, writes ...string) (exitSuccess bool) {
 	exitSuccess, _, _ = executeWriteRetStdStreams(t, cmdStr, writes...)
@@ -729,6 +743,18 @@ func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 	err = cdc.UnmarshalJSON(value, &acc)
 	require.NoError(t, err, "value %v, err %v", string(value), err)
 	return acc
+}
+
+//___________________________________________________________________________________
+// txs
+
+func executeGetTxs(t *testing.T, cmdStr string) []tx.Info {
+	out, _ := tests.ExecuteT(t, cmdStr, "")
+	var txs []tx.Info
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(out), &txs)
+	require.NoError(t, err, "out %v\n, err %v", out, err)
+	return txs
 }
 
 //___________________________________________________________________________________

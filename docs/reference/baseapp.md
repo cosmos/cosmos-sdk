@@ -61,3 +61,64 @@ persisted even when the following Handler processing logic fails.
 It is possible that a malicious proposer may include a transaction in a block
 that fails the AnteHandler.  In this case, all state transitions for the
 offending transaction are discarded.
+
+
+## Other ABCI Messages
+
+Besides `CheckTx` and `DeliverTx`, BaseApp handles the following ABCI messages.
+
+### Info
+TODO complete description
+
+### SetOption
+TODO complete description
+
+### Query
+TODO complete description
+
+### InitChain
+TODO complete description
+
+During chain initialization InitChain runs the initialization logic directly on
+the CommitMultiStore. The deliver and check states are initialized with the
+ChainID.
+
+Note that we do not commit after InitChain, so BeginBlock for block 1 starts
+from the deliver state as initialized by InitChain.
+
+### BeginBlock
+TODO complete description
+
+### EndBlock
+TODO complete description
+
+### Commit
+TODO complete description
+
+
+## Gas Management
+
+### Gas: InitChain
+
+During InitChain, the block gas meter is initialized with an infinite amount of
+gas to run any genesis transactions.
+
+Additionally, the InitChain request message includes ConsensusParams as
+declared in the genesis.json file.
+
+### Gas: BeginBlock
+
+The block gas meter is reset during BeginBlock for the deliver state.  If no
+maximum block gas is set within baseapp then an infinite gas meter is set,
+otherwise a gas meter with `ConsensusParam.BlockSize.MaxGas` is initialized.
+
+### Gas: DeliverTx
+
+Before the transaction logic is run, the `BlockGasMeter` is first checked to
+see if any gas remains. If no gas remains, then `DeliverTx` immediately returns
+an error. 
+
+After the transaction has been processed, the used gas (up to the transaction
+gas limit) is deducted from the BlockGasMeter. If the remaining gas exceeds the
+meter's limits, then DeliverTx returns an error and the transaction is not
+committed. 

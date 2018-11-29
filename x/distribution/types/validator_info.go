@@ -91,7 +91,7 @@ func (vi ValidatorDistInfo) TakeFeePoolRewards(wc WithdrawContext) (
 	if accum.GT(fp.TotalValAccum.Accum) {
 		panic("individual accum should never be greater than the total")
 	}
-	withdrawalTokens := fp.ValPool.MulDec(accum).QuoDec(fp.TotalValAccum.Accum)
+	withdrawalTokens := fp.ValPool.MulDec(accum).QuoDec(fp.TotalValAccum.Accum) // XXX ensure this doesn't cause problems
 	remValPool := fp.ValPool.Minus(withdrawalTokens)
 
 	commission := withdrawalTokens.MulDec(wc.CommissionRate)

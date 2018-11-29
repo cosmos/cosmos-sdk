@@ -7,45 +7,54 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// current inflation state
+// Minter represents the minting state
 type Minter struct {
-	InflationLastTime time.Time `json:"inflation_last_time"` // block time which the last inflation was processed
-	Inflation         sdk.Dec   `json:"inflation"`           // current annual inflation rate
+	LastUpdate       time.Time `json:"last_update"`       // time which the last update was made to the minter
+	Inflation        sdk.Dec   `json:"inflation"`         // current annual inflation rate
+	AnnualProvisions sdk.Dec   `json:"annual_provisions"` // current annual expected provisions
 }
 
-// minter object for a new minter
-func InitialMinter() Minter {
+// Create a new minter object
+func NewMinter(lastUpdate time.Time, inflation,
+	annualProvisions sdk.Dec) Minter {
+
 	return Minter{
-		InflationLastTime: time.Unix(0, 0),
-		Inflation:         sdk.NewDecWithPrec(13, 2),
+		LastUpdate:       lastUpdate,
+		Inflation:        inflation,
+		AnnualProvisions: annualProvisions,
 	}
+}
+
+// minter object for a new chain
+func InitialMinter(inflation sdk.Dec) Minter {
+	return NewMinter(
+		time.Unix(0, 0),
+		inflation,
+		sdk.NewDec(0),
+	)
+}
+
+// default initial minter object for a new chain
+// which uses an inflation rate of 13%
+func DefaultInitialMinter() Minter {
+	return InitialMinter(
+		sdk.NewDecWithPrec(13, 2),
+	)
 }
 
 func validateMinter(minter Minter) error {
 	if minter.Inflation.LT(sdk.ZeroDec()) {
-		return fmt.Errorf("mint parameter Inflation should be positive, is %s ", minter.Inflation.String())
-	}
-	if minter.Inflation.GT(sdk.OneDec()) {
-		return fmt.Errorf("mint parameter Inflation must be <= 1, is %s", minter.Inflation.String())
+		return fmt.Errorf("mint parameter Inflation should be positive, is %s",
+			minter.Inflation.String())
 	}
 	return nil
 }
 
 var hrsPerYr = sdk.NewDec(8766) // as defined by a julian year of 365.25 days
 
-// process provisions for an hour period
-func (m Minter) ProcessProvisions(params Params, totalSupply, bondedRatio sdk.Dec) (
-	minter Minter, provisions sdk.Coin) {
-
-	m.Inflation = m.NextInflation(params, bondedRatio)
-	provisionsDec := m.Inflation.Mul(totalSupply).Quo(hrsPerYr)
-	provisions = sdk.NewCoin(params.MintDenom, provisionsDec.TruncateInt())
-
-	return m, provisions
-}
-
-// get the next inflation rate for the hour
-func (m Minter) NextInflation(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
+// get the new inflation rate for the next hour
+func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
+	inflation sdk.Dec) {
 
 	// The target annual inflation rate is recalculated for each previsions cycle. The
 	// inflation is also subject to a rate change (positive or negative) depending on
@@ -69,4 +78,17 @@ func (m Minter) NextInflation(params Params, bondedRatio sdk.Dec) (inflation sdk
 	}
 
 	return inflation
+}
+
+// calculate the annual provisions based on current total supply and inflation rate
+func (m Minter) NextAnnualProvisions(params Params, totalSupply sdk.Dec) (
+	provisions sdk.Dec) {
+
+	return m.Inflation.Mul(totalSupply)
+}
+
+// get the provisions for a block based on the annual provisions rate
+func (m Minter) BlockProvision(params Params) sdk.Coin {
+	provisionAmt := m.AnnualProvisions.QuoInt(sdk.NewInt(int64(params.BlocksPerYear)))
+	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }

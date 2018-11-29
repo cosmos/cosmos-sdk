@@ -25,6 +25,7 @@ BREAKING CHANGES
   * [\#2798](https://github.com/cosmos/cosmos-sdk/issues/2798) Governance API has miss-spelled English word in JSON response ('depositer' -> 'depositor')
   * [\#2943](https://github.com/cosmos/cosmos-sdk/pull/2943) Transaction action tags equal the message type. Stake EndBlocker tags are included.
   * [\#2945](https://github.com/cosmos/cosmos-sdk/issues/2945) CreateValidator pubKey type is now validated against `ConsensusParams`
+  * [\#2944](https://github.com/cosmos/cosmos-sdk/pull/2944) Message SetWithdrawAddress had duplicate JSON field name ('delegator_addr' -> 'withdraw_addr')
 
 * Tendermint
   - Update to Tendermint 0.27.0

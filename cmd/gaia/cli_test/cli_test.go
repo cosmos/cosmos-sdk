@@ -222,10 +222,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
-	consPubKey, err := sdk.Bech32ifyConsPub(ed25519.GenPrivKey().PubKey())
-	if err != nil {
-		panic(err)
-	}
+	consPubKey := sdk.MustBech32ifyConsPub(ed25519.GenPrivKey().PubKey())
 
 	executeWrite(t, fmt.Sprintf("gaiacli tx send %v --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)

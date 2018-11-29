@@ -134,17 +134,21 @@ func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (a
 }
 
 func validateAccNumAndSequence(ctx sdk.Context, accs []Account, sigs []StdSignature) sdk.Result {
-	for i := 0; i < len(accs); i++ {
-		// on InitChain make sure account number == 0
-		if ctx.BlockHeight() == 0 && sigs[i].AccountNumber != 0 {
-			return sdk.ErrInvalidAccountNumber(
-				fmt.Sprintf("Invalid account number for BlockHeight == 0. Got %d, expected 0", sigs[i].AccountNumber)).Result()
-		}
+	isGenesis := ctx.BlockHeight() == 0
 
-		accnum := accs[i].GetAccountNumber()
-		if ctx.BlockHeight() != 0 && accnum != sigs[i].AccountNumber {
-			return sdk.ErrInvalidAccountNumber(
-				fmt.Sprintf("Invalid account number. Got %d, expected %d", sigs[i].AccountNumber, accnum)).Result()
+	for i := 0; i < len(accs); i++ {
+		if isGenesis {
+			// on InitChain make sure account number == 0
+			if sigs[i].AccountNumber != 0 {
+				return sdk.ErrInvalidAccountNumber(
+					fmt.Sprintf("Invalid account number for BlockHeight == 0. Got %d, expected 0", sigs[i].AccountNumber)).Result()
+			}
+		} else {
+			accnum := accs[i].GetAccountNumber()
+			if accnum != sigs[i].AccountNumber {
+				return sdk.ErrInvalidAccountNumber(
+					fmt.Sprintf("Invalid account number. Got %d, expected %d", sigs[i].AccountNumber, accnum)).Result()
+			}
 		}
 
 		seq := accs[i].GetSequence()

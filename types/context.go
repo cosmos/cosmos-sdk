@@ -48,6 +48,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithVoteInfos(nil)
 	c = c.WithGasMeter(NewInfiniteGasMeter())
 	c = c.WithMinimumFees(Coins{})
+	c = c.WithConsensusParams(nil)
 	return c
 }
 

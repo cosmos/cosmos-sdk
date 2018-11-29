@@ -27,22 +27,23 @@ func (code CodeType) IsOK() bool {
 // SDK error codes
 const (
 	// Base error codes
-	CodeOK                CodeType = 0
-	CodeInternal          CodeType = 1
-	CodeTxDecode          CodeType = 2
-	CodeInvalidSequence   CodeType = 3
-	CodeUnauthorized      CodeType = 4
-	CodeInsufficientFunds CodeType = 5
-	CodeUnknownRequest    CodeType = 6
-	CodeInvalidAddress    CodeType = 7
-	CodeInvalidPubKey     CodeType = 8
-	CodeUnknownAddress    CodeType = 9
-	CodeInsufficientCoins CodeType = 10
-	CodeInvalidCoins      CodeType = 11
-	CodeOutOfGas          CodeType = 12
-	CodeMemoTooLarge      CodeType = 13
-	CodeInsufficientFee   CodeType = 14
-	CodeTooManySignatures CodeType = 15
+	CodeOK                   CodeType = 0
+	CodeInternal             CodeType = 1
+	CodeTxDecode             CodeType = 2
+	CodeInvalidSequence      CodeType = 3
+	CodeUnauthorized         CodeType = 4
+	CodeInsufficientFunds    CodeType = 5
+	CodeUnknownRequest       CodeType = 6
+	CodeInvalidAddress       CodeType = 7
+	CodeInvalidPubKey        CodeType = 8
+	CodeUnknownAddress       CodeType = 9
+	CodeInsufficientCoins    CodeType = 10
+	CodeInvalidCoins         CodeType = 11
+	CodeOutOfGas             CodeType = 12
+	CodeMemoTooLarge         CodeType = 13
+	CodeInsufficientFee      CodeType = 14
+	CodeTooManySignatures    CodeType = 15
+	CodeInvalidAccountNumber CodeType = 16
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -88,6 +89,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "insufficient fee"
 	case CodeTooManySignatures:
 		return "maximum numer of signatures exceeded"
+	case CodeInvalidAccountNumber:
+		return "invalid account number"
 	default:
 		return unknownCodeMsg(code)
 	}
@@ -106,6 +109,9 @@ func ErrTxDecode(msg string) Error {
 }
 func ErrInvalidSequence(msg string) Error {
 	return newErrorWithRootCodespace(CodeInvalidSequence, msg)
+}
+func ErrInvalidAccountNumber(msg string) Error {
+	return newErrorWithRootCodespace(CodeInvalidAccountNumber, msg)
 }
 func ErrUnauthorized(msg string) Error {
 	return newErrorWithRootCodespace(CodeUnauthorized, msg)

@@ -77,7 +77,6 @@ var (
 	ActionWithdrawDelegatorReward     = tags.ActionWithdrawDelegatorReward
 	ActionWithdrawValidatorRewardsAll = tags.ActionWithdrawValidatorRewardsAll
 
-	TagAction    = tags.Action
 	TagValidator = tags.Validator
 	TagDelegator = tags.Delegator
 )

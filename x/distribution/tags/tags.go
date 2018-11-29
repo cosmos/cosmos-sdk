@@ -11,7 +11,6 @@ var (
 	ActionWithdrawDelegatorReward     = []byte("withdraw-delegator-reward")
 	ActionWithdrawValidatorRewardsAll = []byte("withdraw-validator-rewards-all")
 
-	Action    = sdk.TagAction
 	Validator = sdk.TagSrcValidator
 	Delegator = sdk.TagDelegator
 )

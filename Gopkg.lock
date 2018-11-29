@@ -444,7 +444,7 @@
   revision = "d8d0eef715649bcc21682990ac635566119f070c"
 
 [[projects]]
-  digest = "1:86eea4d2e0992aecae63ead1e1d00373d6d56288af625d0ad080cf647ebd141f"
+  digest = "1:629ec3e6d89da546c9b7f329ab54a843b2d8da932a3ed44e0e883dba5bb757e5"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -509,7 +509,7 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "v0.27.0-dev0"
+  revision = "v0.27.0-dev1"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
@@ -637,12 +637,12 @@
   version = "v1.16.0"
 
 [[projects]]
-  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
+  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
 
 [solve-meta]
   analyzer-name = "dep"

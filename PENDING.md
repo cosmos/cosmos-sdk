@@ -99,6 +99,7 @@ BUG FIXES
   * #2907 Refactor and fix the way Gaia Lite is started.
 
 * Gaia CLI  (`gaiacli`)
+  * [\#2921](https://github.com/cosmos/cosmos-sdk/issues/2921) Fix `keys delete` inability to delete offline and ledger keys.
 
 * Gaia
   * [\#2723] Use `cosmosvalcons` Bech32 prefix in `tendermint show-address`

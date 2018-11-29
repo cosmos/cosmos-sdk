@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/bartekn/go-bip39"
+	"github.com/cosmos/go-bip39"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

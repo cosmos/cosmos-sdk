@@ -28,6 +28,7 @@ type Keeper interface {
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
+	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
 }
 
 // BaseKeeper manages transfers between accounts. It implements the Keeper
@@ -67,6 +68,14 @@ func (keeper BaseKeeper) AddCoins(
 	return addCoins(ctx, keeper.ak, addr, amt)
 }
 
+// InputOutputCoins handles a list of inputs and outputs
+func (keeper BaseKeeper) InputOutputCoins(
+	ctx sdk.Context, inputs []Input, outputs []Output,
+) (sdk.Tags, sdk.Error) {
+
+	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
+}
+
 //-----------------------------------------------------------------------------
 // Send Keeper
 
@@ -76,7 +85,6 @@ type SendKeeper interface {
 	ViewKeeper
 
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -103,14 +111,6 @@ func (keeper BaseSendKeeper) SendCoins(
 ) (sdk.Tags, sdk.Error) {
 
 	return sendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
-}
-
-// InputOutputCoins handles a list of inputs and outputs
-func (keeper BaseSendKeeper) InputOutputCoins(
-	ctx sdk.Context, inputs []Input, outputs []Output,
-) (sdk.Tags, sdk.Error) {
-
-	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
 
 //-----------------------------------------------------------------------------

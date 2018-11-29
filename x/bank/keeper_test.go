@@ -124,7 +124,6 @@ func TestSendKeeper(t *testing.T) {
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
-	addr3 := sdk.AccAddress([]byte("addr3"))
 	acc := accountKeeper.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
@@ -156,27 +155,6 @@ func TestSendKeeper(t *testing.T) {
 	sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 5)})
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 5)}))
 	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 10)}))
-
-	// Test InputOutputCoins
-	input1 := NewInput(addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 2)})
-	output1 := NewOutput(addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 2)})
-	sendKeeper.InputOutputCoins(ctx, []Input{input1}, []Output{output1})
-	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{sdk.NewInt64Coin("barcoin", 20), sdk.NewInt64Coin("foocoin", 7)}))
-	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("barcoin", 10), sdk.NewInt64Coin("foocoin", 8)}))
-
-	inputs := []Input{
-		NewInput(addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 3)}),
-		NewInput(addr2, sdk.Coins{sdk.NewInt64Coin("barcoin", 3), sdk.NewInt64Coin("foocoin", 2)}),
-	}
-
-	outputs := []Output{
-		NewOutput(addr, sdk.Coins{sdk.NewInt64Coin("barcoin", 1)}),
-		NewOutput(addr3, sdk.Coins{sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5)}),
-	}
-	sendKeeper.InputOutputCoins(ctx, inputs, outputs)
-	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{sdk.NewInt64Coin("barcoin", 21), sdk.NewInt64Coin("foocoin", 4)}))
-	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("barcoin", 7), sdk.NewInt64Coin("foocoin", 6)}))
-	require.True(t, sendKeeper.GetCoins(ctx, addr3).IsEqual(sdk.Coins{sdk.NewInt64Coin("barcoin", 2), sdk.NewInt64Coin("foocoin", 5)}))
 
 }
 

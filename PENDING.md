@@ -36,7 +36,8 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
-
+ - \#1277 Complete bank module specification
+ 
 * Tendermint
 
 

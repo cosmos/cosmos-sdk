@@ -3,6 +3,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,8 +45,9 @@ func ErrValidatorPubKeyExists(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this pubkey, must use new validator pubkey")
 }
 
-func ErrValidatorPubKeyTypeNotSupported(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator pubkey type is not supported")
+func ErrValidatorPubKeyTypeNotSupported(codespace sdk.CodespaceType, keyType string, supportedTypes []string) sdk.Error {
+	msg := fmt.Sprintf("validator pubkey type %s is not supported, must use %s", keyType, strings.Join(supportedTypes, ","))
+	return sdk.NewError(codespace, CodeInvalidValidator, msg)
 }
 
 func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {

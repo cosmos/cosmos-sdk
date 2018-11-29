@@ -39,7 +39,7 @@ gaiad add-genesis-account $(gaiacli keys show validator -o json | jq -r ".addres
 gaiad gentx --name validator
 
 # Add the generated bonding transaction to the genesis file
-gaiad collect-gentx
+gaiad collect-gentxs
 
 # Now its safe to start `gaiad`
 gaiad start

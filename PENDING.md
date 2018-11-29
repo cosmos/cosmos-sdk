@@ -85,6 +85,8 @@ IMPROVEMENTS
  handler.
  - #2825 More staking and distribution invariants
  - #2912 Print commit ID in hex when commit is synced.
+ * Use `CodeInvalidAccountNumber` instead of `CodeInvalidSequence` in the ante
+ handler when an invalid account number is given.
  
 * Tendermint
  - #2796 Update to go-amino 0.14.1

@@ -16,28 +16,31 @@ const (
 	ed25519VerifyCost           = 59
 	secp256k1VerifyCost         = 100
 	maxMemoCharacters           = 100
+
 	// how much gas = 1 atom
 	gasPerUnitCost = 1000
+
 	// max total number of sigs per tx
 	txSigLimit = 7
 )
 
-// NewAnteHandler returns an AnteHandler that checks
-// and increments sequence numbers, checks signatures & account numbers,
-// and deducts fees from the first signer.
+// NewAnteHandler returns an AnteHandler that checks and increments sequence
+// numbers, checks signatures & account numbers, and deducts fees from the first
+// signer.
 func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
-		// This AnteHandler requires Txs to be StdTxs
+		// all transactions must be of type auth.StdTx
 		stdTx, ok := tx.(StdTx)
 		if !ok {
 			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
 
-		// Ensure that the provided fees meet a minimum threshold for the validator, if this is a CheckTx.
-		// This is only for local mempool purposes, and thus is only ran on check tx.
+		// Ensure that the provided fees meet a minimum threshold for the validator,
+		// if this is a CheckTx. This is only for local mempool purposes, and thus
+		// is only ran on check tx.
 		if ctx.IsCheckTx() && !simulate {
 			res := ensureSufficientMempoolFees(ctx, stdTx)
 			if !res.IsOK() {
@@ -47,10 +50,10 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		newCtx = setGasMeter(simulate, ctx, stdTx)
 
-		// AnteHandlers must have their own defer/recover in order
-		// for the BaseApp to know how much gas was used!
-		// This is because the GasMeter is created in the AnteHandler,
-		// but if it panics the context won't be set properly in runTx's recover ...
+		// AnteHandlers must have their own defer/recover in order for the BaseApp
+		// to know how much gas was used! This is because the GasMeter is created in
+		// the AnteHandler, but if it panics the context won't be set properly in
+		// runTx's recover call.
 		defer func() {
 			if r := recover(); r != nil {
 				switch rType := r.(type) {
@@ -70,7 +73,6 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, err.Result(), true
 		}
 
-		// charge gas for the memo
 		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
 
 		// stdSigs contains the sequence number, account number, and signatures.
@@ -84,6 +86,7 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
+
 		res = validateAccNumAndSequence(ctx, signerAccs, stdSigs)
 		if !res.IsOK() {
 			return newCtx, res, true
@@ -96,6 +99,7 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
+
 			fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
 		}
 
@@ -106,7 +110,6 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				return newCtx, res, true
 			}
 
-			// Save the account.
 			am.SetAccount(newCtx, signerAccs[i])
 		}
 
@@ -126,36 +129,36 @@ func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (a
 			return nil, sdk.ErrUnknownAddress(addrs[i].String()).Result()
 		}
 	}
+
 	return
 }
 
 func validateAccNumAndSequence(ctx sdk.Context, accs []Account, sigs []StdSignature) sdk.Result {
 	for i := 0; i < len(accs); i++ {
-		// On InitChain, make sure account number == 0
+		// on InitChain make sure account number == 0
 		if ctx.BlockHeight() == 0 && sigs[i].AccountNumber != 0 {
 			return sdk.ErrInvalidAccountNumber(
 				fmt.Sprintf("Invalid account number for BlockHeight == 0. Got %d, expected 0", sigs[i].AccountNumber)).Result()
 		}
 
-		// Check account number.
 		accnum := accs[i].GetAccountNumber()
 		if ctx.BlockHeight() != 0 && accnum != sigs[i].AccountNumber {
 			return sdk.ErrInvalidSequence(
 				fmt.Sprintf("Invalid account number. Got %d, expected %d", sigs[i].AccountNumber, accnum)).Result()
 		}
 
-		// Check sequence number.
 		seq := accs[i].GetSequence()
 		if seq != sigs[i].Sequence {
 			return sdk.ErrInvalidSequence(
 				fmt.Sprintf("Invalid sequence. Got %d, expected %d", sigs[i].Sequence, seq)).Result()
 		}
 	}
+
 	return sdk.Result{}
 }
 
-// verify the signature and increment the sequence.
-// if the account doesn't have a pubkey, set it.
+// verify the signature and increment the sequence. If the account doesn't have
+// a pubkey, set it.
 func processSig(ctx sdk.Context,
 	acc Account, sig StdSignature, signBytes []byte, simulate bool) (updatedAcc Account, res sdk.Result) {
 	pubKey, res := processPubKey(acc, sig, simulate)
@@ -172,7 +175,6 @@ func processSig(ctx sdk.Context,
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
-	// increment the sequence number
 	err = acc.SetSequence(acc.GetSequence() + 1)
 	if err != nil {
 		// Handle w/ #870
@@ -190,8 +192,7 @@ func init() {
 }
 
 func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
-	// If pubkey is not known for account,
-	// set it from the StdSignature.
+	// If pubkey is not known for account, set it from the StdSignature.
 	pubKey := acc.GetPubKey()
 	if simulate {
 		// In simulate mode the transaction comes with no signatures, thus
@@ -201,18 +202,22 @@ func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 		if pubKey == nil {
 			return dummySecp256k1Pubkey, sdk.Result{}
 		}
+
 		return pubKey, sdk.Result{}
 	}
+
 	if pubKey == nil {
 		pubKey = sig.PubKey
 		if pubKey == nil {
 			return nil, sdk.ErrInvalidPubKey("PubKey not found").Result()
 		}
+
 		if !bytes.Equal(pubKey.Address(), acc.GetAddress()) {
 			return nil, sdk.ErrInvalidPubKey(
 				fmt.Sprintf("PubKey does not match Signer address %v", acc.GetAddress())).Result()
 		}
 	}
+
 	return pubKey, sdk.Result{}
 }
 

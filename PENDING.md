@@ -29,12 +29,9 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-<<<<<<< HEAD
     * [gaia-lite] [\#2182] Added LCD endpoint for querying redelegations
-=======
   * [gov] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance parameter
     query REST endpoints.
->>>>>>> develop
 
 * Gaia CLI  (`gaiacli`)
   * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance

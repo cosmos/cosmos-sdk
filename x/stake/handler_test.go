@@ -7,6 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -155,6 +159,25 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
+}
+
+func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+
+	addr := sdk.ValAddress(keep.Addrs[0])
+	invalidPk := secp256k1.GenPrivKey().PubKey()
+
+	// invalid pukKey type should not be allowed
+	msgCreateValidator := NewTestMsgCreateValidator(addr, invalidPk, 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.False(t, got.IsOK(), "%v", got)
+
+	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
+		Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeSecp256k1}},
+	})
+
+	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "%v", got)
 }
 
 func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
@@ -340,8 +363,6 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 		expBond := int64(i+1) * bondAmount
 		expDelegatorShares := int64(i+2) * bondAmount // (1 self delegation)
 		expDelegatorAcc := sdk.NewInt(initBond - expBond)
-
-		require.Equal(t, bond.Height, int64(i), "Incorrect bond height")
 
 		gotBond := bond.Shares.RoundInt64()
 		gotDelegatorShares := validator.DelegatorShares.RoundInt64()

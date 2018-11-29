@@ -7,6 +7,13 @@ defaults: &defaults
   environment:
     GOBIN: /tmp/workspace/bin
 
+docs_update: &docs_deploy
+  working_directory: ~/repo
+  docker:
+    - image: tendermint/docs_deployment
+  environment:
+    AWS_REGION: us-east-1
+
 jobs:
 
   setup_dependencies:
@@ -83,24 +90,6 @@ jobs:
             make test_cli
             make test_examples
 
-  test_sim_modules:
-    <<: *defaults
-    parallelism: 1
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
-      - run:
-          name: Test individual module simulations
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make test_sim_modules
-
   test_sim_gaia_nondeterminism:
     <<: *defaults
     parallelism: 1
@@ -154,6 +143,24 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_sim_gaia_import_export
+
+  test_sim_gaia_simulation_after_import:
+    <<: *defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - run:
+          name: dependencies
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make get_vendor_deps
+      - run:
+          name: Test Gaia import/export simulation
+          command: |
+            export PATH="$GOBIN:$PATH"
+            make test_sim_gaia_simulation_after_import
 
   test_sim_gaia_multi_seed:
     <<: *defaults
@@ -255,20 +262,31 @@ jobs:
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
-
+  deploy_docs:
+    <<: *docs_deploy
+    steps:
+      - checkout
+      - run:
+          name: Trigger website build
+          command: |
+            export LAST_COMMIT=`git rev-parse HEAD`
+            export DOCS_COMMIT=`git log -1 --format=format:%H --full-diff docs`
+            if [[ $DOCS_COMMIT == $LAST_COMMIT ]]; then
+              chamber exec cosmos-sdk -- start_website_build
+            else
+              echo "No changes to docs detected"
+            fi
 
 workflows:
   version: 2
   test-suite:
     jobs:
+      - deploy_docs
       - setup_dependencies
       - lint:
           requires:
             - setup_dependencies
       - integration_tests:
-          requires:
-            - setup_dependencies
-      - test_sim_modules:
           requires:
             - setup_dependencies
       - test_sim_gaia_nondeterminism:
@@ -278,6 +296,9 @@ workflows:
           requires:
             - setup_dependencies
       - test_sim_gaia_import_export:
+          requires:
+            - setup_dependencies
+      - test_sim_gaia_simulation_after_import:
           requires:
             - setup_dependencies
       - test_sim_gaia_multi_seed:

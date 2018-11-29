@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // GenesisState - all staking state that must be provided at genesis
@@ -43,7 +44,7 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		StartingProposalID: 1,
 		DepositParams: DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin("steak", 10)},
+			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10)},
 			MaxDepositPeriod: time.Duration(172800) * time.Second,
 		},
 		VotingParams: VotingParams{
@@ -68,7 +69,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.setVotingParams(ctx, data.VotingParams)
 	k.setTallyParams(ctx, data.TallyParams)
 	for _, deposit := range data.Deposits {
-		k.setDeposit(ctx, deposit.ProposalID, deposit.Deposit.Depositer, deposit.Deposit)
+		k.setDeposit(ctx, deposit.ProposalID, deposit.Deposit.Depositor, deposit.Deposit)
 	}
 	for _, vote := range data.Votes {
 		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)

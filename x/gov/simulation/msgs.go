@@ -11,10 +11,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 const (
-	denom = "steak"
+	denom = stakeTypes.DefaultBondDenom
 )
 
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
@@ -95,7 +96,8 @@ func SimulateMsgSubmitProposal(k gov.Keeper) simulation.Operation {
 
 func simulateHandleMsgSubmitProposal(msg gov.MsgSubmitProposal, handler sdk.Handler, ctx sdk.Context, event func(string)) (action string, ok bool) {
 	ctx, _ = ctx.CacheContext()
-	handler(ctx, msg)
+	result := handler(ctx, msg)
+	ok = result.IsOK()
 	event(fmt.Sprintf("gov/MsgSubmitProposal/%v", ok))
 	action = fmt.Sprintf("TestMsgSubmitProposal: ok %v, msg %s", ok, msg.GetSignBytes())
 	return
@@ -190,7 +192,7 @@ func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID u
 	if lastProposalID < 1 {
 		return 0, false
 	}
-	proposalID = uint64(r.Intn(int(lastProposalID)))
+	proposalID = uint64(r.Intn(1+int(lastProposalID)) - 1)
 	return proposalID, true
 }
 

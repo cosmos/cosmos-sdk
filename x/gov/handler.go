@@ -36,7 +36,6 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	proposalIDBytes := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal.GetProposalID())
 
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionSubmitProposal,
 		tags.Proposer, []byte(msg.Proposer.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
@@ -53,7 +52,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
 
-	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
+	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
@@ -62,8 +61,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 
 	// TODO: Add tag for if voting period started
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionDeposit,
-		tags.Depositer, []byte(msg.Depositer.String()),
+		tags.Depositor, []byte(msg.Depositor.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
 
@@ -86,7 +84,6 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(msg.ProposalID)
 
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionVote,
 		tags.Voter, []byte(msg.Voter.String()),
 		tags.ProposalID, proposalIDBytes,
 	)

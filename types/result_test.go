@@ -13,6 +13,6 @@ func TestResult(t *testing.T) {
 	res.Data = []byte("data")
 	require.True(t, res.IsOK())
 
-	res.Code = ABCICodeType(1)
+	res.Code = CodeType(1)
 	require.False(t, res.IsOK())
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -46,54 +45,13 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		ctx := app.NewContext(false, abci.Header{})
 		pool := k.GetPool(ctx)
 
-		loose := sdk.ZeroDec()
 		bonded := sdk.ZeroDec()
-		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom)))
-			return false
-		})
-		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) bool {
-			loose = loose.Add(sdk.NewDecFromInt(ubd.Balance.Amount))
-			return false
-		})
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
-			switch validator.GetStatus() {
-			case sdk.Bonded:
+			if validator.GetStatus() == sdk.Bonded {
 				bonded = bonded.Add(validator.GetPower())
-			case sdk.Unbonding:
-				loose = loose.Add(validator.GetTokens())
-			case sdk.Unbonded:
-				loose = loose.Add(validator.GetTokens())
 			}
 			return false
 		})
-
-		feePool := d.GetFeePool(ctx)
-
-		// add outstanding fees
-		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(stakeTypes.DefaultBondDenom)))
-
-		// add community pool
-		loose = loose.Add(feePool.CommunityPool.AmountOf(stakeTypes.DefaultBondDenom))
-
-		// add validator distribution pool
-		loose = loose.Add(feePool.ValPool.AmountOf(stakeTypes.DefaultBondDenom))
-
-		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
-		d.IterateValidatorDistInfos(ctx,
-			func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
-				loose = loose.Add(distInfo.DelPool.AmountOf(stakeTypes.DefaultBondDenom))
-				loose = loose.Add(distInfo.ValCommission.AmountOf(stakeTypes.DefaultBondDenom))
-				return false
-			},
-		)
-
-		// Loose tokens should equal coin supply plus unbonding delegations
-		// plus tokens on unbonded validators
-		if !pool.LooseTokens.Equal(loose) {
-			return fmt.Errorf("loose token invariance:\n\tpool.LooseTokens: %v"+
-				"\n\tsum of account tokens: %v", pool.LooseTokens, loose)
-		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
 		if !pool.BondedTokens.Equal(bonded) {

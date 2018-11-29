@@ -40,7 +40,7 @@ func TestGovWithRandomMessages(t *testing.T) {
 		return abci.ResponseEndBlock{}
 	})
 
-	err := mapp.CompleteSetup(stakeKey, stakeTKey, paramKey, paramTKey, govKey)
+	err := mapp.CompleteSetup(bankKey, stakeKey, stakeTKey, paramKey, paramTKey, govKey)
 	if err != nil {
 		panic(err)
 	}

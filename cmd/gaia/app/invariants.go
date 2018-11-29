@@ -8,6 +8,7 @@ import (
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (app *GaiaApp) runtimeInvariants() []simulation.Invariant {
@@ -23,8 +24,9 @@ func (app *GaiaApp) runtimeInvariants() []simulation.Invariant {
 func (app *GaiaApp) assertRuntimeInvariants() {
 	invariants := app.runtimeInvariants()
 	start := time.Now()
+	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
 	for _, inv := range invariants {
-		if err := inv(app.BaseApp); err != nil {
+		if err := inv(ctx); err != nil {
 			panic(fmt.Errorf("invariant broken: %s", err))
 		}
 	}

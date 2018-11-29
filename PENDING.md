@@ -3,6 +3,7 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [gaia-lite] [\#2819](https://github.com/cosmos/cosmos-sdk/pull/2819) Txs query param format is now: `/txs?tag=value` (removed '' wrapping the query parameter `value`)
 
 * Gaia CLI  (`gaiacli`)
   * [cli] [\#2728](https://github.com/cosmos/cosmos-sdk/pull/2728) Seperate `tx` and `query` subcommands by module
@@ -22,8 +23,10 @@ BREAKING CHANGES
   * [\#2019](https://github.com/cosmos/cosmos-sdk/issues/2019) Cap total number of signatures. Current per-transaction limit is 7, and if that is exceeded transaction is rejected.
   * [\#2801](https://github.com/cosmos/cosmos-sdk/pull/2801) Remove AppInit structure.
   * [\#2798](https://github.com/cosmos/cosmos-sdk/issues/2798) Governance API has miss-spelled English word in JSON response ('depositer' -> 'depositor')
+  * [\#2943](https://github.com/cosmos/cosmos-sdk/pull/2943) Transaction action tags equal the message type. Stake EndBlocker tags are included.
 
 * Tendermint
+  - Update to Tendermint 0.27.0
 
 
 FEATURES
@@ -58,10 +61,12 @@ FEATURES
 IMPROVEMENTS
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [gaia-lite] [\#2819](https://github.com/cosmos/cosmos-sdk/pull/2819) Tx search now supports multiple tags as query parameters
   * [\#2836](https://github.com/cosmos/cosmos-sdk/pull/2836) Expose LCD router to allow users to register routes there.
 
 * Gaia CLI  (`gaiacli`)
   * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet
+  * [\#2819](https://github.com/cosmos/cosmos-sdk/pull/2819) Tx search now supports multiple tags as query parameters
 
 * Gaia
   - #2772 Update BaseApp to not persist state when the ante handler fails on DeliverTx.
@@ -71,6 +76,7 @@ IMPROVEMENTS
   - [#110](https://github.com/tendermint/devops/issues/110) Updated CircleCI job to trigger website build when cosmos docs are updated.
 
 * SDK
+ - [x/mock/simulation] \#2832, \#2885, \#2873, \#2902 Simulation cleanup
  - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
  - \#2821 Codespaces are now strings
  - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions
@@ -79,7 +85,8 @@ IMPROVEMENTS
  - #2821 Codespaces are now strings
  - #2779 Introduce `ValidateBasic` to the `Tx` interface and call it in the ante
  handler.
-  - #2825 More staking and distribution invariants
+ - #2825 More staking and distribution invariants
+ - #2912 Print commit ID in hex when commit is synced.
  
 * Tendermint
  - #2796 Update to go-amino 0.14.1
@@ -88,14 +95,15 @@ IMPROVEMENTS
 BUG FIXES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-  - [gaia-lite] #2868 Added handler for governance tally endpoit
+  - [gaia-lite] #2868 Added handler for governance tally endpoint
+  * #2907 Refactor and fix the way Gaia Lite is started.
 
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
   * [\#2723] Use `cosmosvalcons` Bech32 prefix in `tendermint show-address`
   * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override
-  * [\#2898](https://github.com/cosmos/cosmos-sdk/issues/2898) Remove redundant '$' in docker-compose.yml 
+  * [\#2898](https://github.com/cosmos/cosmos-sdk/issues/2898) Remove redundant '$' in docker-compose.yml
 
 * SDK
 

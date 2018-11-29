@@ -127,30 +127,37 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 		if err != nil {
 			return
 		}
-		go rpcserver.StartHTTPAndTLSServer(
+
+		rs.log.Info("Starting Gaia Lite REST service...")
+		rs.log.Info(rs.fingerprint)
+
+		err := rpcserver.StartHTTPAndTLSServer(
 			rs.listener,
 			rs.Mux,
 			certFile, keyFile,
 			rs.log,
 		)
-		rs.log.Info(rs.fingerprint)
-		rs.log.Info("REST server started")
+		if err != nil {
+			return err
+		}
 	}
-
-	// logger.Info("REST server started")
 
 	return nil
 }
 
-// ServeCommand will generate a long-running rest server
-// (aka Light Client Daemon) that exposes functionality similar
-// to the cli, but over rest
-func (rs *RestServer) ServeCommand() *cobra.Command {
+// ServeCommand will start a Gaia Lite REST service as a blocking process. It
+// takes a codec to create a RestServer object and a function to register all
+// necessary routes.
+func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server",
 		Short: "Start LCD (light-client daemon), a local REST server",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			rs := NewRestServer(cdc)
+
 			rs.setKeybase(nil)
+			registerRoutesFn(rs)
+
 			// Start the rest server and return error if one exists
 			err = rs.Start(
 				viper.GetString(client.FlagListenAddr),

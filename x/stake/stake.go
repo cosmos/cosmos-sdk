@@ -37,7 +37,7 @@ var (
 	GetValidatorsByPowerIndexKey = keeper.GetValidatorsByPowerIndexKey
 	GetDelegationKey             = keeper.GetDelegationKey
 	GetDelegationsKey            = keeper.GetDelegationsKey
-	PoolKey                      = keeper.PoolKey
+	BondedTokensKey              = keeper.BondedTokensKey
 	IntraTxCounterKey            = keeper.IntraTxCounterKey
 	LastValidatorPowerKey        = keeper.LastValidatorPowerKey
 	LastTotalPowerKey            = keeper.LastTotalPowerKey

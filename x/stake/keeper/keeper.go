@@ -53,22 +53,47 @@ func (k Keeper) Codespace() sdk.CodespaceType {
 
 //_______________________________________________________________________
 
+// Sum total of all staking tokens
+func (k Keeper) getTotalSupply(ctx sdk.Context) sdk.Dec {
+	totalSupply, err := k.bankKeeper.GetDenomSupply(ctx, k.GetParams(ctx).BondDenom)
+	if err != nil {
+		panic("staking token doesn't exist in bank keeper")
+	}
+	return sdk.NewDecFromInt(totalSupply.Amount)
+}
+
+// Sum total of all staking tokens
+func (k Keeper) setTotalSupply(ctx sdk.Context, newTotalSupply sdk.Dec) {
+	newSupplyCoin := sdk.NewCoin(k.GetParams(ctx).BondDenom, newTotalSupply.RoundInt())
+	err := k.bankKeeper.SetDenomSupply(ctx, newSupplyCoin)
+	if err != nil {
+		panic("staking token doesn't exist in bank keeper")
+	}
+}
+
 // load the pool
 func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(PoolKey)
+	b := store.Get(BondedTokensKey)
 	if b == nil {
 		panic("stored pool should not have been nil")
 	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &pool)
-	return
+	var bondedTokens sdk.Dec
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &bondedTokens)
+
+	return types.Pool{
+		BondedTokens: bondedTokens,
+		LooseTokens:  k.getTotalSupply(ctx).Sub(bondedTokens),
+	}
+
 }
 
 // set the pool
 func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(pool)
-	store.Set(PoolKey, b)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(pool.BondedTokens)
+	store.Set(BondedTokensKey, b)
+	k.setTotalSupply(ctx, pool.TokenSupply())
 }
 
 //_______________________________________________________________________

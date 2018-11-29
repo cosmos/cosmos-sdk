@@ -3,6 +3,7 @@ package bank
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
@@ -13,6 +14,11 @@ const (
 	costSetCoins      sdk.Gas = 100
 	costSubtractCoins sdk.Gas = 10
 	costAddCoins      sdk.Gas = 10
+
+	costSetDenomMetadata sdk.Gas = 10
+	costGetDenomMetadata sdk.Gas = 10
+	costMintCoins        sdk.Gas = 10
+	costBurnCoins        sdk.Gas = 10
 )
 
 //-----------------------------------------------------------------------------
@@ -25,10 +31,12 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 
-	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
-	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
-	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
-	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
+	MintCoins(ctx sdk.Context, amt sdk.Coins) sdk.Error
+	BurnCoins(ctx sdk.Context, amt sdk.Coins) sdk.Error
+	MintAddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	BurnSubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	SetDenomSupply(ctx sdk.Context, totalSupply sdk.Coin) sdk.Error
+	SetDenomDecimals(ctx sdk.Context, denom string, decimals uint8) sdk.Error
 }
 
 // BaseKeeper manages transfers between accounts. It implements the Keeper
@@ -40,40 +48,51 @@ type BaseKeeper struct {
 }
 
 // NewBaseKeeper returns a new BaseKeeper
-func NewBaseKeeper(ak auth.AccountKeeper) BaseKeeper {
+func NewBaseKeeper(cdc *codec.Codec, ak auth.AccountKeeper, storeKey sdk.StoreKey) BaseKeeper {
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(ak),
+		BaseSendKeeper: NewBaseSendKeeper(cdc, ak, storeKey),
 		ak:             ak,
 	}
 }
 
-// SetCoins sets the coins at the addr.
-func (keeper BaseKeeper) SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	return setCoins(ctx, keeper.ak, addr, amt)
+// Increases the total supply of a specific denom
+func (keeper BaseKeeper) MintCoins(ctx sdk.Context, amt sdk.Coins) sdk.Error {
+	return mintCoins(ctx, keeper.cdc, keeper.metadataStoreKey, amt)
 }
 
-// SubtractCoins subtracts amt from the coins at the addr.
-func (keeper BaseKeeper) SubtractCoins(
-	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
-) (sdk.Coins, sdk.Tags, sdk.Error) {
-
-	return subtractCoins(ctx, keeper.ak, addr, amt)
+// Decreases the total supply of a specific denom
+func (keeper BaseKeeper) BurnCoins(ctx sdk.Context, amt sdk.Coins) sdk.Error {
+	return burnCoins(ctx, keeper.cdc, keeper.metadataStoreKey, amt)
 }
 
-// AddCoins adds amt to the coins at the addr.
-func (keeper BaseKeeper) AddCoins(
-	ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins,
-) (sdk.Coins, sdk.Tags, sdk.Error) {
-
-	return addCoins(ctx, keeper.ak, addr, amt)
+// Adds coins to an account and increases the total supply of a specific denom
+func (keeper BaseKeeper) MintAddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+	err := keeper.MintCoins(ctx, amt)
+	if err != nil {
+		return err
+	}
+	_, _, err = keeper.AddCoins(ctx, addr, amt)
+	return err
 }
 
-// InputOutputCoins handles a list of inputs and outputs
-func (keeper BaseKeeper) InputOutputCoins(
-	ctx sdk.Context, inputs []Input, outputs []Output,
-) (sdk.Tags, sdk.Error) {
+// Subtracts coins to an account and decreases the total supply of a specific denom
+func (keeper BaseKeeper) BurnSubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+	err := keeper.BurnCoins(ctx, amt)
+	if err != nil {
+		return err
+	}
+	_, _, err = keeper.SubtractCoins(ctx, addr, amt)
+	return err
+}
 
-	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
+// SetDenomSupply sets the total supply of a specific denom
+func (keeper BaseViewKeeper) SetDenomSupply(ctx sdk.Context, totalSupply sdk.Coin) sdk.Error {
+	return setDenomSupply(ctx, keeper.cdc, keeper.metadataStoreKey, totalSupply)
+}
+
+// SetDenomDecimals sets the decimals of a specific denom
+func (keeper BaseViewKeeper) SetDenomDecimals(ctx sdk.Context, denom string, decimals uint8) sdk.Error {
+	return setDenomDecimals(ctx, keeper.cdc, keeper.metadataStoreKey, denom, decimals)
 }
 
 //-----------------------------------------------------------------------------
@@ -84,7 +103,11 @@ func (keeper BaseKeeper) InputOutputCoins(
 type SendKeeper interface {
 	ViewKeeper
 
+	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
+	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -98,19 +121,36 @@ type BaseSendKeeper struct {
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
-func NewBaseSendKeeper(ak auth.AccountKeeper) BaseSendKeeper {
+func NewBaseSendKeeper(cdc *codec.Codec, ak auth.AccountKeeper, storeKey sdk.StoreKey) BaseSendKeeper {
 	return BaseSendKeeper{
-		BaseViewKeeper: NewBaseViewKeeper(ak),
+		BaseViewKeeper: NewBaseViewKeeper(cdc, ak, storeKey),
 		ak:             ak,
 	}
 }
 
-// SendCoins moves coins from one account to another
-func (keeper BaseSendKeeper) SendCoins(
-	ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
-) (sdk.Tags, sdk.Error) {
+// SetCoins sets the coins at the addr.
+func (keeper BaseSendKeeper) SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
+	return setCoins(ctx, keeper.ak, addr, amt)
+}
 
+// SubtractCoins subtracts amt from the coins at the addr.
+func (keeper BaseSendKeeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
+	return subtractCoins(ctx, keeper.ak, addr, amt)
+}
+
+// AddCoins adds amt to the coins at the addr.
+func (keeper BaseSendKeeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
+	return addCoins(ctx, keeper.ak, addr, amt)
+}
+
+// SendCoins moves coins from one account to another
+func (keeper BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
 	return sendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
+}
+
+// InputOutputCoins handles a list of inputs and outputs
+func (keeper BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
+	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
 
 //-----------------------------------------------------------------------------
@@ -123,17 +163,26 @@ var _ ViewKeeper = (*BaseViewKeeper)(nil)
 type ViewKeeper interface {
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool
+
+	GetDenomSupply(ctx sdk.Context, denom string) (sdk.Coin, sdk.Error)
+	GetDenomDecimals(ctx sdk.Context, denom string) (uint8, sdk.Error)
 }
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
 	ak auth.AccountKeeper
+	// The wire codec for binary encoding/decoding.
+	cdc *codec.Codec
+	// The (unexposed) keys used to access the stores from the Context.
+	metadataStoreKey sdk.StoreKey
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(ak auth.AccountKeeper) BaseViewKeeper {
+func NewBaseViewKeeper(cdc *codec.Codec, ak auth.AccountKeeper, storeKey sdk.StoreKey) BaseViewKeeper {
 	return BaseViewKeeper{
-		ak: ak,
+		cdc:              cdc,
+		ak:               ak,
+		metadataStoreKey: storeKey,
 	}
 }
 
@@ -145,6 +194,16 @@ func (keeper BaseViewKeeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.
 // HasCoins returns whether or not an account has at least amt coins.
 func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool {
 	return hasCoins(ctx, keeper.ak, addr, amt)
+}
+
+// GetDenomSupply returns the total supply of a specific denom
+func (keeper BaseViewKeeper) GetDenomSupply(ctx sdk.Context, denom string) (sdk.Coin, sdk.Error) {
+	return getDenomSupply(ctx, keeper.cdc, keeper.metadataStoreKey, denom)
+}
+
+// GetDenomDecimals returns the decimals of a specific denom
+func (keeper BaseViewKeeper) GetDenomDecimals(ctx sdk.Context, denom string) (uint8, sdk.Error) {
+	return getDenomDecimals(ctx, keeper.cdc, keeper.metadataStoreKey, denom)
 }
 
 //-----------------------------------------------------------------------------
@@ -245,4 +304,70 @@ func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, ou
 	}
 
 	return allTags, nil
+}
+
+func mintCoins(ctx sdk.Context, cdc *codec.Codec, storeKey sdk.StoreKey, amt sdk.Coins) sdk.Error {
+	ctx.GasMeter().ConsumeGas(costMintCoins, "mintCoins")
+	for _, coin := range amt {
+		supply, err := getDenomSupply(ctx, cdc, storeKey, coin.Denom)
+		if err != nil {
+			return err
+		}
+		supply = supply.Plus(coin)
+		err = setDenomSupply(ctx, cdc, storeKey, supply)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func burnCoins(ctx sdk.Context, cdc *codec.Codec, storeKey sdk.StoreKey, amt sdk.Coins) sdk.Error {
+	ctx.GasMeter().ConsumeGas(costBurnCoins, "burnCoins")
+	for _, coin := range amt {
+		supply, err := getDenomSupply(ctx, cdc, storeKey, coin.Denom)
+		if err != nil {
+			return err
+		}
+		supply = supply.Minus(coin)
+		err = setDenomSupply(ctx, cdc, storeKey, supply)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func getDenomSupply(ctx sdk.Context, cdc *codec.Codec, storeKey sdk.StoreKey, denom string) (totalSupplyCoin sdk.Coin, err sdk.Error) {
+	store := ctx.KVStore(storeKey)
+	bz := store.Get(KeySupply(denom))
+	if bz == nil {
+		return totalSupplyCoin, sdk.ErrInvalidCoins("nonexistent denom")
+	}
+	cdc.MustUnmarshalBinaryBare(bz, &totalSupplyCoin)
+	return totalSupplyCoin, nil
+}
+
+func setDenomSupply(ctx sdk.Context, cdc *codec.Codec, storeKey sdk.StoreKey, totalSupply sdk.Coin) sdk.Error {
+	store := ctx.KVStore(storeKey)
+	bz := cdc.MustMarshalBinaryBare(totalSupply)
+	store.Set(KeySupply(totalSupply.Denom), bz)
+	return nil
+}
+
+func getDenomDecimals(ctx sdk.Context, cdc *codec.Codec, storeKey sdk.StoreKey, denom string) (decimals uint8, err sdk.Error) {
+	store := ctx.KVStore(storeKey)
+	bz := store.Get(KeyDecimals(denom))
+	if bz == nil {
+		return decimals, sdk.ErrInvalidCoins("nonexistent denom")
+	}
+	cdc.MustUnmarshalBinaryBare(bz, &decimals)
+	return decimals, nil
+}
+
+func setDenomDecimals(ctx sdk.Context, cdc *codec.Codec, storeKey sdk.StoreKey, denom string, decimals uint8) sdk.Error {
+	store := ctx.KVStore(storeKey)
+	bz := cdc.MustMarshalBinaryBare(decimals)
+	store.Set(KeySupply(denom), bz)
+	return nil
 }

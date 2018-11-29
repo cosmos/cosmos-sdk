@@ -25,7 +25,8 @@ func getMockApp(t *testing.T) *mock.App {
 
 	RegisterCodec(mapp.Cdc)
 	keyPOW := sdk.NewKVStoreKey("pow")
-	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper)
+	keyBank := sdk.NewKVStoreKey("bank")
+	bankKeeper := bank.NewBaseKeeper(mapp.Cdc, mapp.AccountKeeper, keyBank)
 	config := Config{"pow", 1}
 	keeper := NewKeeper(keyPOW, config, bankKeeper, DefaultCodespace)
 	mapp.Router().AddRoute("pow", keeper.Handler)

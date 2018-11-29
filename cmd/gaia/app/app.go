@@ -45,6 +45,7 @@ type GaiaApp struct {
 	// keys to access the substores
 	keyMain          *sdk.KVStoreKey
 	keyAccount       *sdk.KVStoreKey
+	keyBank          *sdk.KVStoreKey
 	keyStake         *sdk.KVStoreKey
 	tkeyStake        *sdk.TransientStoreKey
 	keySlashing      *sdk.KVStoreKey
@@ -80,6 +81,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		cdc:              cdc,
 		keyMain:          sdk.NewKVStoreKey("main"),
 		keyAccount:       sdk.NewKVStoreKey("acc"),
+		keyBank:          sdk.NewKVStoreKey("bank"),
 		keyStake:         sdk.NewKVStoreKey("stake"),
 		tkeyStake:        sdk.NewTransientStoreKey("transient_stake"),
 		keyMint:          sdk.NewKVStoreKey("mint"),
@@ -100,7 +102,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	)
 
 	// add handlers
-	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
+	app.bankKeeper = bank.NewBaseKeeper(app.cdc, app.accountKeeper, app.keyBank)
 	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
 		app.cdc,
 		app.keyFeeCollection,
@@ -158,7 +160,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		AddRoute("stake", stake.NewQuerier(app.stakeKeeper, app.cdc))
 
 	// initialize BaseApp
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keyMint, app.keyDistr,
+	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyBank, app.keyStake, app.keyMint, app.keyDistr,
 		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)

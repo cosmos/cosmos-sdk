@@ -60,11 +60,12 @@ func makeCodec() *codec.Codec {
 func TestIBC(t *testing.T) {
 	cdc := makeCodec()
 
+	bankKey := sdk.NewKVStoreKey("bank")
 	key := sdk.NewKVStoreKey("ibc")
 	ctx := defaultContext(key)
 
 	am := auth.NewAccountKeeper(cdc, key, auth.ProtoBaseAccount)
-	ck := bank.NewBaseKeeper(am)
+	ck := bank.NewBaseKeeper(cdc, am, bankKey)
 
 	src := newAddress()
 	dest := newAddress()

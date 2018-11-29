@@ -531,10 +531,9 @@ func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current staking pool values",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			key := stake.PoolKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryStore(key, storeName)
+			res, err := cliCtx.QueryWithData("custom/stake/validator", nil)
 			if err != nil {
 				return err
 			}

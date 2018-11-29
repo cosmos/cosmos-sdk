@@ -20,13 +20,14 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 
 	RegisterCodec(mApp.Cdc)
 
+	keyBank := sdk.NewKVStoreKey("bank")
 	keyStake := sdk.NewKVStoreKey("stake")
 
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keyParams := sdk.NewKVStoreKey("params")
 	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 
-	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper)
+	bankKeeper := bank.NewBaseKeeper(mApp.Cdc, mApp.AccountKeeper, keyBank)
 	pk := params.NewKeeper(mApp.Cdc, keyParams, tkeyParams)
 
 	keeper := NewKeeper(mApp.Cdc, keyStake, tkeyStake, bankKeeper, pk.Subspace(DefaultParamspace), DefaultCodespace)
@@ -35,7 +36,7 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper))
 
-	require.NoError(t, mApp.CompleteSetup(keyStake, tkeyStake, keyParams, tkeyParams))
+	require.NoError(t, mApp.CompleteSetup(keyStake, keyBank, tkeyStake, keyParams, tkeyParams))
 	return mApp, keeper
 }
 

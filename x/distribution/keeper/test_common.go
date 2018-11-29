@@ -87,6 +87,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
+	keyBank := sdk.NewKVStoreKey("bank")
 	keyFeeCollection := sdk.NewKVStoreKey("fee")
 	keyParams := sdk.NewKVStoreKey("params")
 	tkeyParams := sdk.NewTransientStoreKey("transient_params")
@@ -98,6 +99,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyFeeCollection, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
@@ -110,10 +112,11 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, auth.ProtoBaseAccount)
-	ck := bank.NewBaseKeeper(accountKeeper)
+	ck := bank.NewBaseKeeper(cdc, accountKeeper, keyBank)
 	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
-	sk.SetPool(ctx, stake.InitialPool())
+	// Params must be set before pool, as setting pool calls params in order to get the staking token denom
 	sk.SetParams(ctx, stake.DefaultParams())
+	sk.SetPool(ctx, stake.InitialPool())
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range addrs {

@@ -79,6 +79,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keyAcc := sdk.NewKVStoreKey("acc")
+	keyBank := sdk.NewKVStoreKey("bank")
 	keyParams := sdk.NewKVStoreKey("params")
 	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 
@@ -87,6 +88,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
 	err := ms.LoadLatestVersion()
@@ -100,12 +102,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		auth.ProtoBaseAccount, // prototype
 	)
 
-	ck := bank.NewBaseKeeper(accountKeeper)
+	ck := bank.NewBaseKeeper(cdc, accountKeeper, keyBank)
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
 	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
-	keeper.SetPool(ctx, types.InitialPool())
+	// Params must be set before pool, as setting pool calls params in order to get the staking token denom
 	keeper.SetParams(ctx, types.DefaultParams())
+	keeper.SetPool(ctx, types.InitialPool())
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range Addrs {

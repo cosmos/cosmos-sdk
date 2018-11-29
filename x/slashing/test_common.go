@@ -52,6 +52,7 @@ func createTestCodec() *codec.Codec {
 
 func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey("acc")
+	keyBank := sdk.NewKVStoreKey("bank")
 	keyStake := sdk.NewKVStoreKey("stake")
 	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
 	keySlashing := sdk.NewKVStoreKey("slashing")
@@ -60,6 +61,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyBank, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
 	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
@@ -71,7 +73,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	cdc := createTestCodec()
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, auth.ProtoBaseAccount)
 
-	ck := bank.NewBaseKeeper(accountKeeper)
+	ck := bank.NewBaseKeeper(cdc, accountKeeper, keyBank)
 	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
 	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()

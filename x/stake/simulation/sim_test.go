@@ -23,7 +23,8 @@ func TestStakeWithRandomMessages(t *testing.T) {
 
 	bank.RegisterCodec(mapp.Cdc)
 	mapper := mapp.AccountKeeper
-	bankKeeper := bank.NewBaseKeeper(mapper)
+	bankKey := sdk.NewKVStoreKey("bank")
+	bankKeeper := bank.NewBaseKeeper(mapp.Cdc, mapper, bankKey)
 	feeKey := sdk.NewKVStoreKey("fee")
 	stakeKey := sdk.NewKVStoreKey("stake")
 	stakeTKey := sdk.NewTransientStoreKey("transient_stake")

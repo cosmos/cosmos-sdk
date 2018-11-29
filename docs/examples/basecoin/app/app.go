@@ -38,6 +38,7 @@ type BasecoinApp struct {
 
 	// keys to access the multistore
 	keyMain    *sdk.KVStoreKey
+	keyBank    *sdk.KVStoreKey
 	keyAccount *sdk.KVStoreKey
 	keyIBC     *sdk.KVStoreKey
 
@@ -62,6 +63,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 		cdc:        cdc,
 		BaseApp:    bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...),
 		keyMain:    sdk.NewKVStoreKey("main"),
+		keyBank:    sdk.NewKVStoreKey("bank"),
 		keyAccount: sdk.NewKVStoreKey("acc"),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
 	}
@@ -74,7 +76,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 			return &types.AppAccount{}
 		},
 	)
-	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
+	app.bankKeeper = bank.NewBaseKeeper(app.cdc, app.accountKeeper, app.keyBank)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.keyIBC, ibc.DefaultCodespace)
 
 	// register message routes

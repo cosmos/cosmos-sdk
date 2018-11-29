@@ -15,7 +15,7 @@ var (
 	// Keys for store prefixes
 	// TODO DEPRECATED: delete in next release and reorder keys
 	// ParamKey                         = []byte{0x00} // key for parameters relating to staking
-	PoolKey           = []byte{0x01} // key for the staking pools
+	BondedTokensKey   = []byte{0x01} // key for the staking pools
 	IntraTxCounterKey = []byte{0x02} // key for intra-block tx index
 
 	// Last* values are const during a block.

@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // Parameter store default namestore
@@ -21,9 +19,6 @@ var (
 	ParamStoreKeyDepositParams = []byte("depositparams")
 	ParamStoreKeyVotingParams  = []byte("votingparams")
 	ParamStoreKeyTallyParams   = []byte("tallyparams")
-
-	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
-	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
 
 // Type declaration for parameters
@@ -373,7 +368,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// Send coins from depositor's account to DepositedCoinsAccAddr account
-	_, err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
+	_, _, err := keeper.ck.SubtractCoins(ctx, depositorAddr, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -418,7 +413,7 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
+		_, _, err := keeper.ck.AddCoins(ctx, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}
@@ -438,7 +433,7 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
+		err := keeper.ck.BurnCoins(ctx, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}

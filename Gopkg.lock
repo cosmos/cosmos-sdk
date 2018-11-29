@@ -314,7 +314,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "185b4288413d2a0dd0806f78c90dde719829e5ae"
+  revision = "619930b0b4713cc1280189bf0a4c54b3fb506f60"
 
 [[projects]]
   digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
@@ -437,7 +437,6 @@
   version = "v0.14.1"
 
 [[projects]]
-  branch = "jae/reverseiterator"
   digest = "1:c42b83333367f9c701d2373c2ce11177382c41bfce3b105aa632eaf0e5654ccb"
   name = "github.com/tendermint/iavl"
   packages = ["."]
@@ -445,8 +444,7 @@
   revision = "d8d0eef715649bcc21682990ac635566119f070c"
 
 [[projects]]
-  branch = "jae/reverseiterator"
-  digest = "1:db22ebc8142359cc3f8b6fc3954177be59358699af699794302cf60168dcf343"
+  digest = "1:86eea4d2e0992aecae63ead1e1d00373d6d56288af625d0ad080cf647ebd141f"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -511,7 +509,7 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "70a7cae58c8f880aede3b19101e54fb9a7b08c0b"
+  revision = "v0.27.0-dev0"
 
 [[projects]]
   digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"

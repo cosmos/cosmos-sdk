@@ -25,6 +25,7 @@ BREAKING CHANGES
   * [\#2798](https://github.com/cosmos/cosmos-sdk/issues/2798) Governance API has miss-spelled English word in JSON response ('depositer' -> 'depositor')
 
 * Tendermint
+  - Update to Tendermint 0.27.0
 
 
 FEATURES

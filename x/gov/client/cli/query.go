@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +20,11 @@ func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "proposal [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query details of a single proposal",
+		Long: strings.TrimSpace(`
+Query details for a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+
+$ gaiacli query gov proposal 1
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -63,6 +69,13 @@ func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proposals",
 		Short: "Query proposals with optional filters",
+		Long: strings.TrimSpace(`
+Query for a all proposals. You can filter the returns with the following flags:
+
+$ gaiacli query gov proposals --depositor cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+$ gaiacli query gov proposals --voter cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+$ gaiacli query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Rejected)
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bechDepositorAddr := viper.GetString(flagDepositor)
 			bechVoterAddr := viper.GetString(flagVoter)
@@ -145,6 +158,11 @@ func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "vote [proposal-id] [voter-address]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a single vote",
+		Long: strings.TrimSpace(`
+Query details for a single vote on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+
+$ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -193,6 +211,11 @@ func GetCmdQueryVotes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "votes [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query votes on a proposal",
+		Long: strings.TrimSpace(`
+Query vote details for a single proposal. You can find the proposal-id by running gaiacli query gov proposals:
+
+$ gaiacli query gov votes 1
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -236,6 +259,11 @@ func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "deposit [proposal-id] [depositer-address]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a deposit",
+		Long: strings.TrimSpace(`
+Query details for a single proposal deposit on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+
+$ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -284,6 +312,11 @@ func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "deposits [proposal-id]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query deposits on a proposal",
+		Long: strings.TrimSpace(`
+Query details for all deposits on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+
+$ gaiacli query gov deposits 1
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -323,8 +356,14 @@ func GetCmdQueryDeposits(queryRoute string, cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryTally implements the command to query for proposal tally result.
 func GetCmdQueryTally(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tally",
+		Use:   "tally [proposal-id]",
+		Args:  cobra.ExactArgs(1),
 		Short: "Get the tally of a proposal vote",
+		Long: strings.TrimSpace(`
+Query tally of votes on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+
+$ gaiacli query gov tally 1
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 

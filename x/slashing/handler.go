@@ -49,7 +49,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 	// unjail the validator
 	k.validatorSet.Unjail(ctx, consAddr)
 
-	tags := sdk.NewTags("action", []byte("unjail"), "validator", []byte(msg.ValidatorAddr.String()))
+	tags := sdk.NewTags("validator", []byte(msg.ValidatorAddr.String()))
 
 	return sdk.Result{
 		Tags: tags,

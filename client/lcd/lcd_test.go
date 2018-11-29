@@ -564,7 +564,7 @@ func TestBonding(t *testing.T) {
 
 	// query tx
 	txs = getTransactions(t, port,
-		fmt.Sprintf("action=begin-unbonding&delegator=%s", addr),
+		fmt.Sprintf("action=begin_unbonding&delegator=%s", addr),
 		fmt.Sprintf("source-validator=%s", operAddrs[0]),
 	)
 	require.Len(t, txs, 1)
@@ -582,7 +582,7 @@ func TestBonding(t *testing.T) {
 
 	// query tx
 	txs = getTransactions(t, port,
-		fmt.Sprintf("action=begin-redelegation&delegator=%s", addr),
+		fmt.Sprintf("action=begin_redelegate&delegator=%s", addr),
 		fmt.Sprintf("source-validator=%s", operAddrs[0]),
 		fmt.Sprintf("destination-validator=%s", operAddrs[1]),
 	)
@@ -649,7 +649,7 @@ func TestSubmitProposal(t *testing.T) {
 	require.Equal(t, "Test", proposal.GetTitle())
 
 	// query tx
-	txs := getTransactions(t, port, fmt.Sprintf("action=submit-proposal&proposer=%s", addr))
+	txs := getTransactions(t, port, fmt.Sprintf("action=submit_proposal&proposer=%s", addr))
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
 }

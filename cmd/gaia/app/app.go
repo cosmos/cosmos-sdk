@@ -212,7 +212,8 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 
 	tags := gov.EndBlocker(ctx, app.govKeeper)
-	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
+	validatorUpdates, endBlockerTags := stake.EndBlocker(ctx, app.stakeKeeper)
+	tags = append(tags, endBlockerTags...)
 
 	app.assertRuntimeInvariants()
 

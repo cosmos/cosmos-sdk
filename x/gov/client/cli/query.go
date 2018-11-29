@@ -39,8 +39,6 @@ func GetCmdQueryProposal(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagProposalID, "", "proposalID of proposal being queried")
-
 	return cmd
 }
 

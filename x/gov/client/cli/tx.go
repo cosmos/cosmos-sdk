@@ -23,7 +23,6 @@ import (
 )
 
 const (
-	flagProposalID   = "proposal-id"
 	flagTitle        = "title"
 	flagDescription  = "description"
 	flagProposalType = "type"

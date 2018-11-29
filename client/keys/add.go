@@ -67,14 +67,12 @@ output
 	- armor encrypted private key (saved to file)
 */
 func runAddCmd(cmd *cobra.Command, args []string) error {
-	var (
-		kb                   keys.Keybase
-		err                  error
-		name, pass, mnemonic string
-	)
+	var kb keys.Keybase
+	var err error
+	var pass string
 
 	buf := client.BufferStdin()
-	name = args[0]
+	name := args[0]
 	if viper.GetBool(flagDryRun) {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
@@ -147,6 +145,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	var mnemonic string
 	if interactive {
 		mnemonic, err = client.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", buf)
 		if err != nil {

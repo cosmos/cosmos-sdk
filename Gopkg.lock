@@ -437,11 +437,12 @@
   version = "v0.14.1"
 
 [[projects]]
-  digest = "1:c42b83333367f9c701d2373c2ce11177382c41bfce3b105aa632eaf0e5654ccb"
+  digest = "1:e1cc8dd891e64aab63b0c09f2f12456cbe2cd9cbd9d96dfae3281245f05c2428"
   name = "github.com/tendermint/iavl"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d8d0eef715649bcc21682990ac635566119f070c"
+  revision = "de0740903a67b624d887f9055d4c60175dcfa758"
+  version = "v0.12.0"
 
 [[projects]]
   digest = "1:629ec3e6d89da546c9b7f329ab54a843b2d8da932a3ed44e0e883dba5bb757e5"

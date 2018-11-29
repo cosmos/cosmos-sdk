@@ -195,10 +195,10 @@ func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 	// If pubkey is not known for account, set it from the StdSignature.
 	pubKey := acc.GetPubKey()
 	if simulate {
-		// In simulate mode the transaction comes with no signatures, thus
-		// if the account's pubkey is nil, both signature verification
-		// and gasKVStore.Set() shall consume the largest amount, i.e.
-		// it takes more gas to verifiy secp256k1 keys than ed25519 ones.
+		// In simulate mode the transaction comes with no signatures, thus if the
+		// account's pubkey is nil, both signature verification and gasKVStore.Set()
+		// shall consume the largest amount, i.e. it takes more gas to verify
+		// secp256k1 keys than ed25519 ones.
 		if pubKey == nil {
 			return dummySecp256k1Pubkey, sdk.Result{}
 		}
@@ -272,8 +272,9 @@ func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 }
 
 func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
-	// currently we use a very primitive gas pricing model with a constant gasPrice.
-	// adjustFeesByGas handles calculating the amount of fees required based on the provided gas.
+	// Currently we use a very primitive gas pricing model with a constant
+	// gasPrice where adjustFeesByGas handles calculating the amount of fees
+	// required based on the provided gas.
 	//
 	// TODO:
 	// - Make the gasPrice not a constant, and account for tx size.
@@ -286,9 +287,12 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
 	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {
 		// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
-		return sdk.ErrInsufficientFee(fmt.Sprintf(
-			"insufficient fee, got: %q required: %q", stdTx.Fee.Amount, requiredFees)).Result()
+		return sdk.ErrInsufficientFee(
+			fmt.Sprintf(
+				"insufficient fee, got: %q required: %q", stdTx.Fee.Amount, requiredFees),
+		).Result()
 	}
+
 	return sdk.Result{}
 }
 

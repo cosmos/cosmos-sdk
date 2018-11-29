@@ -187,12 +187,12 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 
 func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
-		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
-		govsim.AllInvariants(),
+		simulation.PeriodInvariant(banksim.NonnegativeBalanceInvariant(app.accountKeeper), period, 0),
+		simulation.PeriodicInvariant(govsim.AllInvariants(), period, 0),
 		simulation.PeriodicInvariant(distrsim.AllInvariants(app.distrKeeper, app.stakeKeeper), period, 0),
 		simulation.PeriodicInvariant(stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper,
 			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper), period, 0),
-		slashingsim.AllInvariants(),
+		simulation.PeriodicInvariant(slashingsim.AllInvariants(), period, 0),
 	}
 }
 

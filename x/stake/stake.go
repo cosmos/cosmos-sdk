@@ -118,15 +118,16 @@ const (
 )
 
 var (
-	ErrNilValidatorAddr      = types.ErrNilValidatorAddr
-	ErrNoValidatorFound      = types.ErrNoValidatorFound
-	ErrValidatorOwnerExists  = types.ErrValidatorOwnerExists
-	ErrValidatorPubKeyExists = types.ErrValidatorPubKeyExists
-	ErrValidatorJailed       = types.ErrValidatorJailed
-	ErrBadRemoveValidator    = types.ErrBadRemoveValidator
-	ErrDescriptionLength     = types.ErrDescriptionLength
-	ErrCommissionNegative    = types.ErrCommissionNegative
-	ErrCommissionHuge        = types.ErrCommissionHuge
+	ErrNilValidatorAddr               = types.ErrNilValidatorAddr
+	ErrNoValidatorFound               = types.ErrNoValidatorFound
+	ErrValidatorOwnerExists           = types.ErrValidatorOwnerExists
+	ErrValidatorPubKeyExists          = types.ErrValidatorPubKeyExists
+	ErrValidatorPubKeyTypeUnsupported = types.ErrValidatorPubKeyTypeNotSupported
+	ErrValidatorJailed                = types.ErrValidatorJailed
+	ErrBadRemoveValidator             = types.ErrBadRemoveValidator
+	ErrDescriptionLength              = types.ErrDescriptionLength
+	ErrCommissionNegative             = types.ErrCommissionNegative
+	ErrCommissionHuge                 = types.ErrCommissionHuge
 
 	ErrNilDelegatorAddr          = types.ErrNilDelegatorAddr
 	ErrBadDenom                  = types.ErrBadDenom

@@ -209,6 +209,8 @@ gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 
 ::: tip Note
 
+The action tag always equals the message type returned by the `Type()` function of the relevant message. 
+
 You can find a list of available `tags` on each of the SDK modules:
 
 - [Common tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/types/tags.go#L57-L63)

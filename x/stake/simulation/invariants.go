@@ -22,7 +22,7 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 	am auth.AccountKeeper) simulation.Invariant {
 
 	return func(app *baseapp.BaseApp) error {
-		err := SupplyInvariants(ck, k, f, d, am)(app)
+		err := BondedAmountInvariants(ck, k, f, d, am)(app)
 		if err != nil {
 			return err
 		}
@@ -37,9 +37,9 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 	}
 }
 
-// SupplyInvariants checks that the total supply reflects all held loose tokens, bonded tokens, and unbonding delegations
+// BondedAmountInvariants checks that the logged amount of bonded tokens reflects the amount held in validators.
 // nolint: unparam
-func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
+func BondedAmountInvariants(ck bank.Keeper, k stake.Keeper,
 	f auth.FeeCollectionKeeper, d distribution.Keeper, am auth.AccountKeeper) simulation.Invariant {
 	return func(app *baseapp.BaseApp) error {
 		ctx := app.NewContext(false, abci.Header{})

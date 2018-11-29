@@ -1,6 +1,6 @@
 # Networks
 
-This document describes 3 ways to setup a network of `gaiad` nodes, each with an increasing level of complexity:
+This document describes 3 ways to setup a network of `gaiad` nodes, each serving a different usecase:
 
 1. Single-node, local, manual testnet
 2. Multi-node, local, automated testnet
@@ -17,6 +17,7 @@ This guide helps you create a single validator node that runs a network locally 
 ### Requirements
 
 - [Install gaia](./installation.md)
+- [Install `jq`](https://stedolan.github.io/jq/download/) (optional)
 
 ### Create genesis file and start the network
 

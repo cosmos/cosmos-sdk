@@ -162,12 +162,12 @@ func (i Int) IsZero() bool {
 
 // IsNegative returns true if Int is negative
 func (i Int) IsNegative() bool {
-	return i.i.Sign() == 0
+	return i.i.Sign() == -1
 }
 
 // IsPositive returns true if Int is positive
 func (i Int) IsPositive() bool {
-	return i.i.Sign() == 0
+	return i.i.Sign() == 1
 }
 
 // Sign returns sign of Int

@@ -15,7 +15,7 @@ func BeginBlocker(ctx sdk.Context, k Keeper) {
 
 	mintedCoin := minter.BlockProvision(params)
 	k.fck.AddCollectedFees(ctx, sdk.Coins{mintedCoin})
-	k.sk.InflateSupply(ctx, sdk.NewDecFromInt(mintedCoin.Amount))
+	k.sk.InflateSupply(ctx, mintedCoin.Amount)
 
 	if blockTime.Sub(minter.LastUpdate) < time.Hour {
 		return

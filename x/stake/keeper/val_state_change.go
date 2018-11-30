@@ -49,8 +49,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// if we get to a zero-power validator (which we don't bond),
 		// there are no more possible bonded validators
-		// note: we must check the ABCI power, since we round before sending to Tendermint
-		if validator.Tokens.RoundInt64() == int64(0) {
+		if validator.Tokens.IsZero() {
 			break
 		}
 
@@ -72,7 +71,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		oldPowerBytes, found := last[valAddrBytes]
 
 		// calculate the new power bytes
-		newPower := validator.BondedTokens().RoundInt64()
+		newPower := validator.BondedTokens().Int64()
 		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(sdk.NewInt(newPower))
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {

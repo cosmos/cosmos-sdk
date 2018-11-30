@@ -26,7 +26,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	keeper.vs.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.Validator) (stop bool) {
 		currValidators[validator.GetOperator().String()] = validatorGovInfo{
 			Address:         validator.GetOperator(),
-			Power:           validator.GetPower(),
+			Power:           sdk.NewDecFromInt(validator.GetPower()),
 			DelegatorShares: validator.GetDelegatorShares(),
 			Minus:           sdk.ZeroDec(),
 			Vote:            OptionEmpty,

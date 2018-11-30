@@ -422,28 +422,25 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 
 // unbond the the delegation return
 func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	shares sdk.Dec) (amount sdk.Dec, err sdk.Error) {
+	shares sdk.Dec) (amount sdk.Int, err sdk.Error) {
 
 	// check if delegation has any shares in it unbond
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
-		err = types.ErrNoDelegatorForAddress(k.Codespace())
-		return
+		return amount, types.ErrNoDelegatorForAddress(k.Codespace())
 	}
 
 	k.OnDelegationSharesModified(ctx, delAddr, valAddr)
 
 	// retrieve the amount to remove
 	if delegation.Shares.LT(shares) {
-		err = types.ErrNotEnoughDelegationShares(k.Codespace(), delegation.Shares.String())
-		return
+		return amount, types.ErrNotEnoughDelegationShares(k.Codespace(), delegation.Shares.String())
 	}
 
 	// get validator
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		err = types.ErrNoValidatorFound(k.Codespace())
-		return
+		return amount, types.ErrNoValidatorFound(k.Codespace())
 	}
 
 	// subtract shares from delegator
@@ -522,15 +519,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	if err != nil {
 		return types.UnbondingDelegation{}, err
 	}
-
-	rounded := returnAmount.TruncateInt()
-	balance := sdk.NewCoin(k.BondDenom(ctx), rounded)
-	change := returnAmount.Sub(sdk.NewDecFromInt(rounded))
-
-	// for now, change is just burned
-	pool := k.GetPool(ctx)
-	pool.LooseTokens = pool.LooseTokens.Sub(change)
-	k.SetPool(ctx, pool)
+	balance := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
 
 	// no need to create the ubd object just complete now
 	if completeNow {
@@ -597,17 +586,10 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return types.Redelegation{}, err
 	}
 
-	rounded := returnAmount.TruncateInt()
-	if rounded.IsZero() { //TODO design consideration
+	if returnAmount.IsZero() {
 		return types.Redelegation{}, types.ErrVerySmallRedelegation(k.Codespace())
 	}
-	returnCoin := sdk.NewCoin(k.BondDenom(ctx), rounded)
-	change := returnAmount.Sub(sdk.NewDecFromInt(rounded))
-
-	// for now, change is just burned
-	pool := k.GetPool(ctx)
-	pool.LooseTokens = pool.LooseTokens.Sub(change)
-	k.SetPool(ctx, pool)
+	returnCoin := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
 
 	dstValidator, found := k.GetValidator(ctx, valDstAddr)
 	if !found {

@@ -6,9 +6,9 @@ import (
 
 // expected stake keeper
 type StakeKeeper interface {
-	TotalPower(ctx sdk.Context) sdk.Dec
+	TotalPower(ctx sdk.Context) sdk.Int
 	BondedRatio(ctx sdk.Context) sdk.Dec
-	InflateSupply(ctx sdk.Context, newTokens sdk.Dec)
+	InflateSupply(ctx sdk.Context, newTokens sdk.Int)
 }
 
 // expected fee collection keeper interface

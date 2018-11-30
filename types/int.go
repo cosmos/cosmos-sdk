@@ -40,6 +40,13 @@ func min(i *big.Int, i2 *big.Int) *big.Int {
 	return new(big.Int).Set(i)
 }
 
+func max(i *big.Int, i2 *big.Int) *big.Int {
+	if i.Cmp(i2) == 1 {
+		return new(big.Int).Set(i)
+	}
+	return new(big.Int).Set(i2)
+}
+
 // MarshalAmino for custom encoding scheme
 func marshalAmino(i *big.Int) (string, error) {
 	bz, err := i.MarshalText()
@@ -264,9 +271,14 @@ func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
 }
 
-// Return the minimum of the ints
+// return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
+}
+
+// return the maximum of the ints
+func MaxInt(i1, i2 Int) Int {
+	return Int{max(i1.BigInt(), i2.BigInt())}
 }
 
 // Human readable string

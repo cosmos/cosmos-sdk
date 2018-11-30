@@ -49,6 +49,7 @@ BUG FIXES
   * [\#2921](https://github.com/cosmos/cosmos-sdk/issues/2921) Fix `keys delete` inability to delete offline and ledger keys.
 
 * Gaia
+  * [\#2960](https://github.com/cosmos/cosmos-sdk/issues/2960) Fix regression in initChainer() that is causing validator nodes to panic on gaiad start after genesis.
 
 * SDK
 

@@ -30,7 +30,7 @@ module.exports = {
           "/gaia/validators/overview",
           "/gaia/validators/security",
           "/gaia/validators/validator-faq",
-          "/gaia/private-testnet",
+          "/gaia/deploy-testnet",
           "/gaia/ledger",
           "/gaia/gaiacli"
         ]

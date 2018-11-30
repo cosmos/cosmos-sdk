@@ -202,6 +202,9 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 	// TODO: This should really happen at EndBlocker.
 	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 
+	// assert runtime invariants
+	app.assertRuntimeInvariants()
+
 	return abci.ResponseBeginBlock{
 		Tags: tags.ToKVPairs(),
 	}
@@ -302,9 +305,6 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 			}
 		}
 	}
-
-	// assert runtime invariants
-	app.assertRuntimeInvariants()
 
 	return abci.ResponseInitChain{
 		Validators: validators,

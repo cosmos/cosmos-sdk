@@ -32,17 +32,9 @@ import (
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-var (
-	gaiadHome   = ""
-	gaiacliHome = ""
-)
-
-func init() {
-	gaiadHome, gaiacliHome = getTestingHomeDirs()
-}
-
 func TestGaiaCLIMinimumFees(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t)
+	chainID, servAddr, port := initializeFixtures(t, gaiadHome, gaiacliHome)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server with minimum fees
@@ -66,7 +58,8 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 }
 
 func TestGaiaCLIFeesDeduction(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t)
+	chainID, servAddr, port := initializeFixtures(t, gaiadHome, gaiacliHome)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server with minimum fees
@@ -108,7 +101,8 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 }
 
 func TestGaiaCLISend(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t)
+	chainID, servAddr, port := initializeFixtures(t, gaiadHome, gaiacliHome)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -159,7 +153,8 @@ func TestGaiaCLISend(t *testing.T) {
 }
 
 func TestGaiaCLIGasAuto(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t)
+	chainID, servAddr, port := initializeFixtures(t, gaiadHome, gaiacliHome)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -210,7 +205,8 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t)
+	chainID, servAddr, port := initializeFixtures(t, gaiadHome, gaiacliHome)
 	flags := fmt.Sprintf("--home=%s --chain-id=%v --node=%s", gaiacliHome, chainID, servAddr)
 
 	// start gaiad server
@@ -307,7 +303,8 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t)
+	chainID, servAddr, port := initializeFixtures(t, gaiadHome, gaiacliHome)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -463,7 +460,8 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 }
 
 func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t)
+	chainID, servAddr, port := initializeFixtures(t, gaiadHome, gaiacliHome)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -564,8 +562,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 }
 
 func TestGaiaCLIConfig(t *testing.T) {
-	require.NoError(t, os.RemoveAll(gaiacliHome))
-	require.NoError(t, os.RemoveAll(gaiadHome))
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t)
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 	node := fmt.Sprintf("%s:%s", servAddr, port)
@@ -606,14 +603,15 @@ trust_node = true
 //___________________________________________________________________________________
 // helper methods
 
-func getTestingHomeDirs() (string, string) {
-	tmpDir := os.TempDir()
+func getTestingHomeDirs(t *testing.T) (string, string) {
+	tmpDir, err := ioutil.TempDir("", t.Name())
+	require.NoError(t, err)
 	gaiadHome := fmt.Sprintf("%s%s.test_gaiad", tmpDir, string(os.PathSeparator))
 	gaiacliHome := fmt.Sprintf("%s%s.test_gaiacli", tmpDir, string(os.PathSeparator))
 	return gaiadHome, gaiacliHome
 }
 
-func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
+func initializeFixtures(t *testing.T, gaiadHome, gaiacliHome string) (chainID, servAddr, port string) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
 	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
 	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s --force foo", gaiacliHome))

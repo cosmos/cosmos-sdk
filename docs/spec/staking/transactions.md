@@ -20,6 +20,7 @@ Other notes:
 * `getXxx`, `setXxx`, and `removeXxx` functions are used to retrieve and
   modify objects from the store
 * `sdk.Dec` refers to a decimal type specified by the SDK.
+* `sdk.Int` refers to an integer type specified by the SDK.
 
 ## TxCreateValidator
 

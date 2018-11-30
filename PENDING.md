@@ -10,6 +10,7 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
+  * [stake] \#2513 Validator power type from Dec -> Int 
 
 * Tendermint
 

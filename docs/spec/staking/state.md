@@ -10,8 +10,8 @@ inflation information, etc.
 
 ```golang
 type Pool struct {
-    LooseTokens         int64   // tokens not associated with any bonded validator
-    BondedTokens        int64   // reserve of bonded tokens
+    LooseTokens         sdk.Int   // tokens not associated with any bonded validator
+    BondedTokens        sdk.Int   // reserve of bonded tokens
 }
 ```
 
@@ -65,9 +65,8 @@ type Validator struct {
     Jailed          bool           // has the validator been jailed?
 
     Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
-    Tokens          sdk.Dec        // delegated tokens (incl. self-delegation)
+    Tokens          sdk.Int        // delegated tokens (incl. self-delegation)
     DelegatorShares sdk.Dec        // total shares issued to a validator's delegators
-    SlashRatio      sdk.Dec        // increases each time the validator is slashed
 
     Description        Description  // description terms for the validator
 

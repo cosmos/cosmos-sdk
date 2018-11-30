@@ -263,7 +263,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
 	require.True(t, validator.Jailed)
-	require.Equal(t, sdk.NewDec(10), validator.Tokens)
+	require.Equal(t, int64(10), validator.Tokens.Int64())
 
 	// verify delegation still exists
 	bond, found := keeper.GetDelegation(ctx, delAddr, valAddr)
@@ -1010,7 +1010,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// validator power should have been reduced by half
 	validator, found := keeper.GetValidator(ctx, valA)
 	require.True(t, found)
-	require.Equal(t, sdk.NewDec(5), validator.GetPower())
+	require.Equal(t, int64(5), validator.GetPower().Int64())
 
 	// slash the validator for an infraction committed after the unbonding and redelegation begin
 	ctx = ctx.WithBlockHeight(3)

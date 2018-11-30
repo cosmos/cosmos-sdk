@@ -36,21 +36,10 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
- - [x/mock/simulation] \#2832, \#2885, \#2873, \#2902 Simulation cleanup
- - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
- - \#2821 Codespaces are now strings
- - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions
- and methods will panic when a negative amount is discovered.
- - #2815 Gas unit fields changed from `int64` to `uint64`.
- - #2821 Codespaces are now strings
- - #2779 Introduce `ValidateBasic` to the `Tx` interface and call it in the ante
- handler.
- - #2825 More staking and distribution invariants
- - #2912 Print commit ID in hex when commit is synced.
- * Use `CodeInternal` instead of `CodeInvalidSequence` in the ante handler when
+  * Use `CodeInternal` instead of `CodeInvalidSequence` in the ante handler when
  an invalid account number is given.
- - \#1277 Complete bank module specification
- 
+  * #1277 Complete bank module specification
+
 * Tendermint
 
 

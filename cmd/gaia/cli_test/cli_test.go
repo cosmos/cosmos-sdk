@@ -616,8 +616,8 @@ func getTestingHomeDirs() (string, string) {
 func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
 	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s --force foo", gaiacliHome))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s --force bar", gaiacliHome))
 	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass, app.DefaultKeyPass)
 	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass, app.DefaultKeyPass)
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf(

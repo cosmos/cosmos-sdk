@@ -8,7 +8,7 @@ BREAKING CHANGES
   * [cli] [\#2595](https://github.com/cosmos/cosmos-sdk/issues/2595) Remove `keys new` in favor of `keys add` incorporating existing functionality with addition of key recovery functionality.
 
 * Gaia
-
+ - [#128](https://github.com/tendermint/devops/issues/128) Updated CircleCI job to trigger website build on every push to master/develop.
 * SDK
 
 * Tendermint

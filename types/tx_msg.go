@@ -45,6 +45,9 @@ type Tx interface {
 // TxDecoder unmarshals transaction bytes
 type TxDecoder func(txBytes []byte) (Tx, Error)
 
+// TxEncoder marshals transaction to bytes
+type TxEncoder func(tx Tx) ([]byte, error)
+
 //__________________________________________________________
 
 var _ Msg = (*TestMsg)(nil)

@@ -99,7 +99,7 @@ func PrintUnsignedStdTx(w io.Writer, txBldr authtxb.TxBuilder, cliCtx context.CL
 	if err != nil {
 		return
 	}
-	json, err := txBldr.Codec.MarshalJSON(stdTx)
+	json, err := cliCtx.Codec.MarshalJSON(stdTx)
 	if err == nil {
 		fmt.Fprintf(w, "%s\n", json)
 	}

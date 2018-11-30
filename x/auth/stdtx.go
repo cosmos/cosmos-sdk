@@ -217,3 +217,9 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 		return tx, nil
 	}
 }
+
+func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
+	return func(tx sdk.Tx) ([]byte, error) {
+		return cdc.MarshalBinaryLengthPrefixed(tx)
+	}
+}

@@ -456,9 +456,9 @@ func TestPoolParamsQuery(t *testing.T) {
 	require.NotNil(t, body)
 
 	initialPool := stake.InitialPool()
-	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewDec(100))
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100))     // Delegate tx on GaiaAppGenState
-	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewDec(int64(50))) // freeFermionsAcc = 50 on GaiaAppGenState
+	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewInt(100))
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(100)) // Delegate tx on GaiaAppGenState
+	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewInt(50))    // freeFermionsAcc = 50 on GaiaAppGenState
 
 	var pool stake.Pool
 	err = cdc.UnmarshalJSON([]byte(body), &pool)

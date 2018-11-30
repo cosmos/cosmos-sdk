@@ -46,7 +46,7 @@ const (
 
 // Info for each payload
 type Info struct {
-	Power      sdk.Dec
+	Power      sdk.Int
 	Hash       []byte
 	LastSigned int64
 	Status     InfoStatus

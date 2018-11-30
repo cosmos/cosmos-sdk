@@ -52,18 +52,18 @@ func TestHandleDoubleSign(t *testing.T) {
 	// unjail to measure power
 	sk.Unjail(ctx, sdk.ConsAddress(val.Address()))
 	// power should be reduced
-	require.Equal(
-		t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))),
+	require.True(sdk.IntEq(
+		t, amt.Mul(sdk.NewInt(19)).Div(sdk.NewInt(20)),
 		sk.Validator(ctx, operatorAddr).GetPower(),
-	)
+	))
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(keeper.MaxEvidenceAge(ctx))})
 
 	// double sign past max age
 	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
-	require.Equal(
-		t, sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20))),
+	require.True(sdk.IntEq(
+		t, amt.Mul(sdk.NewInt(19)).Div(sdk.NewInt(20)),
 		sk.Validator(ctx, operatorAddr).GetPower(),
-	)
+	))
 }
 
 // Test that the amount a validator is slashed for multiple double signs

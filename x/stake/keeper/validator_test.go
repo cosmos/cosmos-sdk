@@ -82,12 +82,12 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	validator, pool, delSharesCreated := validator.AddTokensFromDel(pool, sdk.NewInt(100))
 	require.Equal(t, sdk.Unbonded, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
+	require.Equal(t, int64(100), validator.Tokens.Int64())
 	keeper.SetPool(ctx, pool)
 	TestingUpdateValidator(keeper, ctx, validator)
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, int64(100), validator.Tokens.RoundInt64(), "\nvalidator %v\npool %v", validator, pool)
+	require.Equal(t, int64(100), validator.Tokens.Int64(), "\nvalidator %v\npool %v", validator, pool)
 
 	pool = keeper.GetPool(ctx)
 	power := GetValidatorsByPowerIndexKey(validator, pool)
@@ -96,7 +96,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	// burn half the delegator shares
 	keeper.DeleteValidatorByPowerIndex(ctx, validator, pool)
 	validator, pool, burned := validator.RemoveDelShares(pool, delSharesCreated.Quo(sdk.NewDec(2)))
-	require.Equal(t, int64(50), burned.RoundInt64())
+	require.Equal(t, int64(50), burned.Int64())
 	keeper.SetPool(ctx, pool)                      // update the pool
 	TestingUpdateValidator(keeper, ctx, validator) // update the validator, possibly kicking it out
 	require.False(t, validatorByPowerIndexExists(keeper, ctx, power))
@@ -175,11 +175,11 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(100))
 	require.Equal(t, sdk.Unbonded, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
+	require.Equal(t, int64(100), validator.Tokens.Int64())
 	keeper.SetPool(ctx, pool)
 	keeper.SetValidatorByConsAddr(ctx, validator)
 	validator = TestingUpdateValidator(keeper, ctx, validator)
-	require.Equal(t, int64(100), validator.Tokens.RoundInt64(), "\nvalidator %v\npool %v", validator, pool)
+	require.Equal(t, int64(100), validator.Tokens.Int64(), "\nvalidator %v\npool %v", validator, pool)
 
 	// slash the validator by 100%
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())
@@ -202,7 +202,7 @@ func TestValidatorBasics(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(addrVals[i], PKs[i], types.Description{})
 		validators[i].Status = sdk.Unbonded
-		validators[i].Tokens = sdk.ZeroDec()
+		validators[i].Tokens = sdk.ZeroInt()
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, sdk.NewInt(amt))
 		keeper.SetPool(ctx, pool)
 	}
@@ -220,7 +220,7 @@ func TestValidatorBasics(t *testing.T) {
 	require.Zero(t, len(resVals))
 
 	pool = keeper.GetPool(ctx)
-	assert.True(sdk.DecEq(t, sdk.ZeroDec(), pool.BondedTokens))
+	assert.True(sdk.IntEq(t, sdk.ZeroInt(), pool.BondedTokens))
 
 	// set and retrieve a record
 	validators[0] = TestingUpdateValidator(keeper, ctx, validators[0])
@@ -244,7 +244,7 @@ func TestValidatorBasics(t *testing.T) {
 	assert.True(sdk.IntEq(t, sdk.NewInt(9), validators[0].BondedTokens()))
 
 	pool = keeper.GetPool(ctx)
-	assert.True(sdk.DecEq(t, pool.BondedTokens, validators[0].BondedTokens()))
+	assert.True(sdk.IntEq(t, pool.BondedTokens, validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
 	validators[0].Status = sdk.Bonded

@@ -402,14 +402,14 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 }
 
 // RemoveDelShares removes delegator shares from a validator.
-// NOTE: due to burning of excess tokens, the exchange rate
-//       of future shares of this validator can increase.
+// NOTE: because token fractions are left in the valiadator,
+//       the exchange rate of future shares of this validator can increase.
 func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Int) {
 	issuedTokensDec := v.DelegatorShareExRate().Mul(delShares)
 
-	// burn excess tokens
+	// leave excess tokens in the validator
+	// however burn all the delegator shares
 	issuedTokens := issuedTokensDec.TruncateInt()
-
 	v.Tokens = v.Tokens.Sub(issuedTokens)
 	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
 

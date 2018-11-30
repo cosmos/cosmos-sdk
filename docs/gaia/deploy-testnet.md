@@ -1,4 +1,4 @@
-# Deploy a private testnet
+# Deploy your own testnet
 
 There are a variety of ways to setup either local or remote networks with automation, detailed below.
 All the required files are found in the [networks directory](https://github.com/cosmos/cosmos-sdk/tree/develop/networks) and additionally the `local` or `remote` sub-directories.
@@ -30,7 +30,7 @@ make build-linux
 make build-docker-gaiadnode
 ```
 
-### Run a testnet
+### Run your testnet
 
 To start a 4 node testnet run:
 

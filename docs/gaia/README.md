@@ -10,7 +10,7 @@ Welcome to the `Gaia` docs. `Gaia` is the current name of the Cosmos SDK applica
 
 ## Setup your own `gaia` testnet
 
-- [Setup your own `gaia` private testnet](./private-testnet.md)
+- [Setup your own `gaia` testnet](./deploy-testnet.md)
 
 ## Additional resources
 

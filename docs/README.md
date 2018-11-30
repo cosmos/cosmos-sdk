@@ -32,7 +32,7 @@ If you are reading this on the Cosmos Website, please know that you can find mor
 
 To install the latest version of the `gaia` application (application of the Cosmos Hub) and join the public testnet, **click [here](./gaia/join-testnet.md)**
 
-To start a local `gaia` testnet, **click [here](./gaia/private-testnet.md)**
+To start your own `gaia` testnet, **click [here](./gaia/deploy-testnet.md)**
 
 ## Contribute
 

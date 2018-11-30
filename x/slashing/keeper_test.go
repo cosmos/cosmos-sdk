@@ -101,8 +101,8 @@ func TestSlashingPeriodCap(t *testing.T) {
 	// end block
 	stake.EndBlocker(ctx, sk)
 	// power should be reduced
-	expectedPower := sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
-	require.Equal(t, expectedPower, sk.Validator(ctx, operatorAddr).GetPower())
+	expectedPower := amt.Mul(sdk.NewInt(19)).Div(sdk.NewInt(20))
+	require.True(sdk.IntEq(t, expectedPower, sk.Validator(ctx, operatorAddr).GetPower()))
 
 	// double sign again, same slashing period
 	keeper.handleDoubleSign(ctx, valConsAddr, 1, time.Unix(0, 0), amtInt)
@@ -117,8 +117,8 @@ func TestSlashingPeriodCap(t *testing.T) {
 	// end block
 	stake.EndBlocker(ctx, sk)
 	// power should be equal, no more should have been slashed
-	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(19).Quo(sdk.NewDec(20)))
-	require.Equal(t, expectedPower, sk.Validator(ctx, operatorAddr).GetPower())
+	expectedPower = amt.Mul(sdk.NewInt(19)).Div(sdk.NewInt(20))
+	require.True(sdk.IntEq(t, expectedPower, sk.Validator(ctx, operatorAddr).GetPower()))
 
 	// double sign again, new slashing period
 	keeper.handleDoubleSign(ctx, valConsAddr, 3, time.Unix(0, 0), amtInt)
@@ -129,8 +129,8 @@ func TestSlashingPeriodCap(t *testing.T) {
 	// end block
 	stake.EndBlocker(ctx, sk)
 	// power should be reduced
-	expectedPower = sdk.NewDecFromInt(amt).Mul(sdk.NewDec(18).Quo(sdk.NewDec(20)))
-	require.Equal(t, expectedPower, sk.Validator(ctx, operatorAddr).GetPower())
+	expectedPower = amt.Mul(sdk.NewInt(18)).Div(sdk.NewInt(20))
+	require.True(sdk.IntEq(t, expectedPower, sk.Validator(ctx, operatorAddr).GetPower()))
 }
 
 // Test a validator through uptime, downtime, revocation,
@@ -186,7 +186,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Bonded, validator.GetStatus())
 	pool := sk.GetPool(ctx)
-	require.Equal(sdk.IntEq(t, amt, pool.BondedTokens))
+	require.True(sdk.IntEq(t, amt, pool.BondedTokens))
 
 	// 501st block missed
 	ctx = ctx.WithBlockHeight(height)
@@ -312,7 +312,7 @@ func TestHandleNewValidator(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt))},
 	)
-	require.Equal(t, sdk.NewDec(amt), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, amt, sk.Validator(ctx, addr).GetPower().Int64())
 
 	// Now a validator, for two blocks
 	keeper.handleValidatorSignature(ctx, val.Address(), 100, true)

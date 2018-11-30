@@ -96,8 +96,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		// ask for a password when generating a local key
 		if !viper.GetBool(client.FlagUseLedger) {
 			encrypPassword, err = client.GetCheckPassword(
-				"> Enter a passphrase for your key:",
-				"> Repeat the passphrase:", buf)
+				"Enter a passphrase to encrypt your key to disk:",
+				"Repeat the passphrase:", buf)
 			if err != nil {
 				return err
 			}

@@ -19,6 +19,7 @@ FEATURES
 * Gaia REST API (`gaiacli advanced rest-server`)
 
 * Gaia CLI  (`gaiacli`)
+  - [\#2961](https://github.com/cosmos/cosmos-sdk/issues/2961) Add --force flag to gaiacli keys delete command to skip passphrase check and force key deletion unconditionally.
 
 * Gaia
 

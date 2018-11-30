@@ -37,6 +37,7 @@ IMPROVEMENTS
 
 * SDK
  - \#1277 Complete bank module specification
+ - \#2963 Complete auth module specification
  
 * Tendermint
 

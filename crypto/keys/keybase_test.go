@@ -73,9 +73,9 @@ func TestKeyManagement(t *testing.T) {
 	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
 
 	// deleting a key removes it
-	err = cstore.Delete("bad name", "foo")
+	err = cstore.Delete("bad name", "foo", false)
 	require.NotNil(t, err)
-	err = cstore.Delete(n1, p1)
+	err = cstore.Delete(n1, p1, false)
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
@@ -96,14 +96,14 @@ func TestKeyManagement(t *testing.T) {
 	require.Equal(t, 2, len(keyS))
 
 	// delete the offline key
-	err = cstore.Delete(o1, "")
+	err = cstore.Delete(o1, "", false)
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
 
-	// addr cache gets nuked
-	err = cstore.Delete(n2, p2)
+	// addr cache gets nuked - and test skip flag
+	err = cstore.Delete(n2, "", true)
 	require.NoError(t, err)
 	require.False(t, db.Has(addrKey(i2.GetAddress())))
 }
@@ -336,7 +336,7 @@ func TestSeedPhrase(t *testing.T) {
 	assert.NotEmpty(t, mnemonic)
 
 	// now, let us delete this key
-	err = cstore.Delete(n1, p1)
+	err = cstore.Delete(n1, p1, false)
 	require.Nil(t, err, "%+v", err)
 	_, err = cstore.Get(n1)
 	require.NotNil(t, err)

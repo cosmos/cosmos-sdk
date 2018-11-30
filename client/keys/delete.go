@@ -19,7 +19,8 @@ import (
 )
 
 const (
-	flagYes = "yes"
+	flagYes   = "yes"
+	flagForce = "force"
 )
 
 func deleteKeyCommand() *cobra.Command {
@@ -39,6 +40,8 @@ gaiacli.
 
 	cmd.Flags().BoolP(flagYes, "y", false,
 		"Skip confirmation prompt when deleting offline or ledger key references")
+	cmd.Flags().BoolP(flagForce, "f", false,
+		"Remove the key unconditionally without asking for the passphrase")
 	return cmd
 }
 
@@ -62,20 +65,24 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		}
-		if err := kb.Delete(name, ""); err != nil {
+		if err := kb.Delete(name, "", true); err != nil {
 			return err
 		}
 		fmt.Fprintln(os.Stderr, "Public key reference deleted")
 		return nil
 	}
 
-	oldpass, err := client.GetPassword(
-		"DANGER - enter password to permanently delete key:", buf)
-	if err != nil {
-		return err
+	// skip passphrase check if run with --force
+	skipPass := viper.GetBool(flagForce)
+	var oldpass string
+	if !skipPass {
+		if oldpass, err = client.GetPassword(
+			"DANGER - enter password to permanently delete key:", buf); err != nil {
+			return err
+		}
 	}
 
-	err = kb.Delete(name, oldpass)
+	err = kb.Delete(name, oldpass, skipPass)
 	if err != nil {
 		return err
 	}
@@ -113,7 +120,7 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = kb.Delete(name, m.Password)
+	err = kb.Delete(name, m.Password, false)
 	if keyerror.IsErrKeyNotFound(err) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))

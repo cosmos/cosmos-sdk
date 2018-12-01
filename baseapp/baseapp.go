@@ -587,7 +587,8 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	ctx = app.getState(mode).ctx.
 		WithTxBytes(txBytes).
-		WithVoteInfos(app.voteInfos)
+		WithVoteInfos(app.voteInfos).
+		WithConsensusParams(app.consensusParams)
 	if mode == runTxModeSimulate {
 		ctx, _ = ctx.CacheContext()
 	}
@@ -615,13 +616,13 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		if mode != runTxModeCheck {
 			msgResult = handler(ctx, msg)
 		}
-		msgResult.Tags = append(msgResult.Tags, sdk.MakeTag("action", []byte(msg.Type())))
 
 		// NOTE: GasWanted is determined by ante handler and
 		// GasUsed by the GasMeter
 
 		// Append Data and Tags
 		data = append(data, msgResult.Data...)
+		tags = append(tags, sdk.MakeTag(sdk.TagAction, []byte(msg.Type())))
 		tags = append(tags, msgResult.Tags...)
 
 		// Stop execution and return on first failed message.

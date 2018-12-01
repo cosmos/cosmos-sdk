@@ -409,7 +409,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	newAmt := int64(101)
 	got = sh(ctx, NewTestMsgCreateValidator(addrs[1], pks[1], sdk.NewInt(newAmt)))
 	require.True(t, got.IsOK())
-	validatorUpdates := stake.EndBlocker(ctx, sk)
+	validatorUpdates, _ := stake.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ := sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Unbonding, validator.Status)
@@ -421,7 +421,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator added back in
 	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], sdk.NewInt(2)))
 	require.True(t, got.IsOK())
-	validatorUpdates = stake.EndBlocker(ctx, sk)
+	validatorUpdates, _ = stake.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)

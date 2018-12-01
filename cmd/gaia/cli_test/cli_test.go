@@ -53,8 +53,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	success := executeWrite(t, fmt.Sprintf(
 		"gaiacli tx send %v --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
 	require.False(t, success)
-	tests.WaitForNextNBlocksTM(2, port)
-
+	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
 func TestGaiaCLIFeesDeduction(t *testing.T) {
@@ -97,7 +96,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	success = executeWrite(t, fmt.Sprintf(
 		"gaiacli tx send %v --fee=300fooToken --amount=500fooToken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
-	tests.WaitForNextNBlocksTM(2, port)
+	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
 func TestGaiaCLISend(t *testing.T) {
@@ -150,6 +149,7 @@ func TestGaiaCLISend(t *testing.T) {
 	require.Equal(t, int64(30), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(20), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
 func TestGaiaCLIGasAuto(t *testing.T) {
@@ -202,6 +202,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	// Check state has changed accordingly
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {
@@ -300,6 +301,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	pool := executeGetPool(t, fmt.Sprintf("gaiacli query stake pool --output=json %v", flags))
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
+	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
@@ -457,6 +459,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	proposalsQuery, _ = tests.ExecuteT(t, fmt.Sprintf("gaiacli query gov proposals --limit=1 %v", flags), "")
 	require.Equal(t, "  2 - Apples", proposalsQuery)
+	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
 func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
@@ -559,6 +562,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
 func TestGaiaCLIConfig(t *testing.T) {
@@ -598,6 +602,7 @@ trust_node = true
 	config, err = ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)
 	require.Equal(t, expectedConfig, string(config))
+	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
 //___________________________________________________________________________________
@@ -885,4 +890,10 @@ func executeGetDeposits(t *testing.T, cmdStr string) []gov.Deposit {
 	err := cdc.UnmarshalJSON([]byte(out), &deposits)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return deposits
+}
+
+func cleanupDirs(dirs ...string) {
+	for _, d := range dirs {
+		os.RemoveAll(d)
+	}
 }

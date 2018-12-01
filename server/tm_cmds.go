@@ -4,14 +4,21 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	cmn "github.com/tendermint/tendermint/libs/common"
+
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/privval"
 	pvm "github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/types"
 )
 
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
@@ -39,6 +46,25 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cfg := ctx.Config
+
+			//Check to see if there is valid KMS url
+			if cfg.PrivValidator != "" {
+				privval, err := createAndStartPrivValidatorSocketClient(cfg.PrivValidator, ctx.Logger)
+
+				if err != nil {
+					return err
+				}
+
+				pubkey, err := sdk.Bech32ifyConsPub(privval.GetPubKey())
+
+				if err != nil {
+					return err	
+				}
+				fmt.Println(pubkey)
+				return nil
+
+			}
+
 			privValidator := pvm.LoadOrGenFilePV(cfg.PrivValidatorFile())
 			valPubKey := privValidator.PubKey
 
@@ -57,6 +83,37 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 	}
 	cmd.Flags().Bool(client.FlagJson, false, "get machine parseable output")
 	return &cmd
+}
+
+//This is a copy of a the same function from Tendermint.
+func createAndStartPrivValidatorSocketClient(
+	listenAddr string,
+	logger log.Logger,
+) (types.PrivValidator, error) {
+	var pvsc types.PrivValidator
+
+	protocol, address := cmn.ProtocolAndAddress(listenAddr)
+	switch protocol {
+	case "unix":
+		pvsc = privval.NewIPCVal(logger.With("module", "privval"), address)
+	case "tcp":
+		// TODO: persist this key so external signer
+		// can actually authenticate us
+		pvsc = privval.NewTCPVal(logger.With("module", "privval"), listenAddr, ed25519.GenPrivKey())
+	default:
+		return nil, fmt.Errorf(
+			"Wrong listen address: expected either 'tcp' or 'unix' protocols, got %s",
+			protocol,
+		)
+	}
+
+	if pvsc, ok := pvsc.(cmn.Service); ok {
+		if err := pvsc.Start(); err != nil {
+			return nil, errors.Wrap(err, "failed to start")
+		}
+	}
+
+	return pvsc, nil
 }
 
 // ShowAddressCmd - show this node's validator address

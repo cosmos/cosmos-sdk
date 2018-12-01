@@ -36,7 +36,7 @@ module.exports = {
         ]
       },
       {
-        title: "Clients",
+        title: "SDK Clients",
         collapsable: false,
         children: [
       	  "/clients/",

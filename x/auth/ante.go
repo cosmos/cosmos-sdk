@@ -77,17 +77,14 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// When simulating, this would just be a 0-length slice.
 		stdSigs := stdTx.GetSignatures()
 		signerAddrs := stdTx.GetSigners()
-
-		// create the list of all sign bytes
-		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, stdSigs)
 		signerAccs, res := getSignerAccs(newCtx, am, signerAddrs)
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
-		res = validateAccNumAndSequence(ctx, signerAccs, stdSigs)
-		if !res.IsOK() {
-			return newCtx, res, true
-		}
+
+		isGenesis := ctx.BlockHeight() == 0
+		// create the list of all sign bytes
+		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, signerAccs, isGenesis)
 
 		// first sig pays the fees
 		if !stdTx.Fee.Amount.IsZero() {
@@ -127,31 +124,6 @@ func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (a
 		}
 	}
 	return
-}
-
-func validateAccNumAndSequence(ctx sdk.Context, accs []Account, sigs []StdSignature) sdk.Result {
-	for i := 0; i < len(accs); i++ {
-		// On InitChain, make sure account number == 0
-		if ctx.BlockHeight() == 0 && sigs[i].AccountNumber != 0 {
-			return sdk.ErrInvalidSequence(
-				fmt.Sprintf("Invalid account number for BlockHeight == 0. Got %d, expected 0", sigs[i].AccountNumber)).Result()
-		}
-
-		// Check account number.
-		accnum := accs[i].GetAccountNumber()
-		if ctx.BlockHeight() != 0 && accnum != sigs[i].AccountNumber {
-			return sdk.ErrInvalidSequence(
-				fmt.Sprintf("Invalid account number. Got %d, expected %d", sigs[i].AccountNumber, accnum)).Result()
-		}
-
-		// Check sequence number.
-		seq := accs[i].GetSequence()
-		if seq != sigs[i].Sequence {
-			return sdk.ErrInvalidSequence(
-				fmt.Sprintf("Invalid sequence. Got %d, expected %d", sigs[i].Sequence, seq)).Result()
-		}
-	}
-	return sdk.Result{}
 }
 
 // verify the signature and increment the sequence.
@@ -297,11 +269,15 @@ func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 }
 
-func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (signatureBytesList [][]byte) {
-	signatureBytesList = make([][]byte, len(stdSigs))
-	for i := 0; i < len(stdSigs); i++ {
+func getSignBytesList(chainID string, stdTx StdTx, accs []Account, genesis bool) (signatureBytesList [][]byte) {
+	signatureBytesList = make([][]byte, len(accs))
+	for i := 0; i < len(accs); i++ {
+		accNum := accs[i].GetAccountNumber()
+		if genesis {
+			accNum = 0
+		}
 		signatureBytesList[i] = StdSignBytes(chainID,
-			stdSigs[i].AccountNumber, stdSigs[i].Sequence,
+			accNum, accs[i].GetSequence(),
 			stdTx.Fee, stdTx.Msgs, stdTx.Memo)
 	}
 	return

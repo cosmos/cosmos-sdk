@@ -202,10 +202,8 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 		}
 
 		sigs[i] = auth.StdSignature{
-			PubKey:        p.PubKey(),
-			Signature:     sig,
-			AccountNumber: accnums[i],
-			Sequence:      seq[i],
+			PubKey:    p.PubKey(),
+			Signature: sig,
 		}
 	}
 

@@ -162,9 +162,7 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 	}
 
 	sigs := []auth.StdSignature{{
-		AccountNumber: msg.AccountNumber,
-		Sequence:      msg.Sequence,
-		PubKey:        info.GetPubKey(),
+		PubKey: info.GetPubKey(),
 	}}
 
 	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
@@ -206,9 +204,7 @@ func MakeSignature(name, passphrase string, msg StdSignMsg) (sig auth.StdSignatu
 		return
 	}
 	return auth.StdSignature{
-		AccountNumber: msg.AccountNumber,
-		Sequence:      msg.Sequence,
-		PubKey:        pubkey,
-		Signature:     sigBytes,
+		PubKey:    pubkey,
+		Signature: sigBytes,
 	}, nil
 }

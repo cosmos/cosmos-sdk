@@ -18,11 +18,12 @@ import (
 	"github.com/spf13/viper"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 const (
-	flagTags = "tags"
-	flagAny  = "any"
+	flagTags    = "tags"
+	flagAny     = "any"
 	flagPage    = "page"
 	flagPerPage = "perPage"
 )
@@ -35,7 +36,7 @@ func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Search for transactions that match exactly the given tags. For example:
 
-$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 0 --perPage 30
+$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --perPage 30
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tagsStr := viper.GetString(flagTags)
@@ -56,7 +57,11 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 0 --perPage 
 				}
 
 				keyValue := strings.Split(tag, ":")
-				tag = fmt.Sprintf("%s='%s'", keyValue[0], keyValue[1])
+				if keyValue[0] == types.TxHeightKey {
+					tag = fmt.Sprintf("%s=%s", keyValue[0], keyValue[1])
+				} else {
+					tag = fmt.Sprintf("%s='%s'", keyValue[0], keyValue[1])
+				}
 				tmTags = append(tmTags, tag)
 			}
 			page := viper.GetInt(flagPage)
@@ -91,6 +96,8 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 0 --perPage 
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
+	cmd.Flags().String(flagPage, "", "page of pagination parameter")
+	cmd.Flags().String(flagPerPage, "", "num of transactions per page returned")
 	return cmd
 }
 
@@ -167,13 +174,21 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 		}
 
 		for key, values := range r.Form {
+			if key == "page" || key == "perPage" {
+				continue
+			}
 			value, err := url.QueryUnescape(values[0])
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not decode query value", err.Error()))
 				return
 			}
 
-			tag := fmt.Sprintf("%s='%s'", key, value)
+			var tag string
+			if key == types.TxHeightKey {
+				tag = fmt.Sprintf("%s=%s", key, value)
+			} else {
+				tag = fmt.Sprintf("%s='%s'", key, value)
+			}
 			tags = append(tags, tag)
 		}
 

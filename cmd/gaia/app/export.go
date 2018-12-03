@@ -81,12 +81,18 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	}
 	app.distrKeeper.IterateDelegationDistInfos(ctx, ddiIter)
 
-	app.assertRuntimeInvariantsWith(ctx)
-	fmt.Printf("pre-deletion\n")
+	app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
+		if !valInfo.DelPool.IsZero() || !valInfo.ValCommission.IsZero() {
+			panic(fmt.Sprintf("valInfo: %+v", valInfo))
+		}
+		return false
+	})
 
 	// delete all distribution infos
 	// these will be recreated in InitGenesis
 	app.distrKeeper.RemoveValidatorDistInfos(ctx)
+	app.assertRuntimeInvariantsWith(ctx)
+	fmt.Printf("pre-deletion\n")
 	app.distrKeeper.RemoveDelegationDistInfos(ctx)
 
 	// assert again

@@ -193,3 +193,12 @@ func (coins DecCoins) HasNegative() bool {
 	}
 	return false
 }
+
+func (coins DecCoins) IsZero() bool {
+	for _, coin := range coins {
+		if !coin.Amount.IsZero() {
+			return false
+		}
+	}
+	return true
+}

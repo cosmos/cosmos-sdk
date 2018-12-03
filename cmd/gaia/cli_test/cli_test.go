@@ -597,8 +597,8 @@ trust_node = true
 
 func getTestingHomeDirs(name string) (string, string) {
 	tmpDir := os.TempDir()
-	gaiadHome := fmt.Sprintf("%s%s/.test_gaiad", tmpDir, name)
-	gaiacliHome := fmt.Sprintf("%s%s/.test_gaiacli", tmpDir, name)
+	gaiadHome := fmt.Sprintf("%s%s%s%s.test_gaiad", tmpDir, string(os.PathSeparator), name, string(os.PathSeparator))
+	gaiacliHome := fmt.Sprintf("%s%s%s%s.test_gaiacli", tmpDir, string(os.PathSeparator), name, string(os.PathSeparator))
 	return gaiadHome, gaiacliHome
 }
 

@@ -36,7 +36,7 @@ func ConfigCmd() *cobra.Command {
 		Use:   "config <key> [value]",
 		Short: "Create or query a Gaia CLI configuration file",
 		RunE:  runConfigCmd,
-		Args:  cobra.MaximumNArgs(2),
+		Args:  cobra.RangeArgs(0, 2),
 	}
 
 	cmd.Flags().String(cli.HomeFlag, app.DefaultCLIHome,
@@ -53,7 +53,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	getAction := viper.GetBool(flagGet)
-	if (getAction && len(args) != 1) || (len(args) != 2 && len(args) != 0) {
+	if getAction && len(args) != 1 {
 		return fmt.Errorf("wrong number of arguments")
 	}
 
@@ -77,12 +77,13 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	// Get value action
 	if getAction {
 		switch key {
-		case "chain_id", "output", "node":
-			defaultValue := configDefaults[key]
-			fmt.Println(tree.GetDefault(key, defaultValue).(string))
 		case "trace", "trust_node":
 			fmt.Println(tree.GetDefault(key, false).(bool))
 		default:
+			if defaultValue, ok := configDefaults[key]; ok {
+				fmt.Println(tree.GetDefault(key, defaultValue).(string))
+				return nil
+			}
 			return errUnknownConfigKey(key)
 		}
 		return nil

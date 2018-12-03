@@ -159,18 +159,6 @@ func (st *Store) Delete(key []byte) {
 	st.tree.Remove(key)
 }
 
-// XXX: delete
-/*
-// Implements types.KVStore
-func (st *Store) Prefix(prefix []byte) types.KVStore {
-	return prefixStore{st, prefix}
-}
-
-// Implements types.KVStore
-func (st *Store) Gas(meter types.GasMeter, config types.GasConfig) types.KVStore {
-	return NewGasKVStore(meter, config, st)
-}
-*/
 // Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
 	return newIAVLIterator(st.tree.ImmutableTree, start, end, true)

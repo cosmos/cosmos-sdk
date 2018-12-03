@@ -77,18 +77,6 @@ func (tkv *Store) Has(key []byte) bool {
 	return tkv.parent.Has(key)
 }
 
-// XXX: delete
-/*
-// Prefix implements the KVStore interface.
-func (tkv *Store) Prefix(prefix []byte) KVStore {
-	return prefixStore{tkv, prefix}
-}
-
-// Gas implements the KVStore interface.
-func (tkv *Store) Gas(meter GasMeter, config GasConfig) KVStore {
-	return NewGasKVStore(meter, config, tkv.parent)
-}
-*/
 // Iterator implements the KVStore interface. It delegates the Iterator call
 // the to the parent KVStore.
 func (tkv *Store) Iterator(start, end []byte) types.Iterator {

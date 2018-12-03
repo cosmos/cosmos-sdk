@@ -86,18 +86,6 @@ func (ci *Store) Delete(key []byte) {
 	ci.setCacheValue(key, nil, true, true)
 }
 
-// XXX: delete
-/*
-// Implements types.KVStore
-func (ci *Store) Prefix(prefix []byte) types.KVStore {
-	return prefixStore{ci, prefix}
-}
-
-// Implements types.KVStore
-func (ci *Store) Gas(meter GasMeter, config GasConfig) types.KVStore {
-	return NewGasKVStore(meter, config, ci)
-}
-*/
 // Implements Cachetypes.KVStore.
 func (ci *Store) Write() {
 	ci.mtx.Lock()

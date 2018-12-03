@@ -79,18 +79,6 @@ func (s Store) Delete(key []byte) {
 	s.parent.Delete(s.key(key))
 }
 
-// XXX: delete
-/*
-// Implements KVStore
-func (s Store) Prefix(prefix []byte) types.KVStore {
-	return Store{s, prefix}
-}
-
-// Implements KVStore
-func (s Store) Gas(meter types.GasMeter, config types.GasConfig) types.KVStore {
-	return NewGasKVStore(meter, config, s)
-}
-*/
 // Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L106
 func (s Store) Iterator(start, end []byte) types.Iterator {

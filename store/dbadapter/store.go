@@ -31,17 +31,5 @@ func (dsa Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 	return cache.NewStore(trace.NewStore(dsa, w, tc))
 }
 
-// XXX: delete
-/*
-// Implements KVStore
-func (dsa Store) Prefix(prefix []byte) KVStore {
-	return prefixStore{dsa, prefix}
-}
-
-// Implements KVStore
-func (dsa Store) Gas(meter GasMeter, config GasConfig) KVStore {
-	return NewGasKVStore(meter, config, dsa)
-}
-*/
 // dbm.DB implements KVStore so we can CacheKVStore it.
 var _ types.KVStore = Store{}

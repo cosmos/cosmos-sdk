@@ -75,8 +75,6 @@ func (c Context) Value(key interface{}) interface{} {
 	return value
 }
 
-// XXX: temporary breakes gas semantic
-// will be solved after the store->types dependency is inverted
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
 	return gas.NewStore(c.GasMeter(), stypes.KVGasConfig(), c.MultiStore().GetKVStore(key))

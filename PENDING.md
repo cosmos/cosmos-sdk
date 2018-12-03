@@ -13,6 +13,7 @@ BREAKING CHANGES
   * [cli] [\#2804](https://github.com/cosmos/cosmos-sdk/issues/2804) Check whether key exists before passing it on to `tx create-validator`.
   * [cli] [\#2874](https://github.com/cosmos/cosmos-sdk/pull/2874) `gaiacli tx sign` takes an optional `--output-document` flag to support output redirection.
   * [cli] [\#2875](https://github.com/cosmos/cosmos-sdk/pull/2875) Refactor `gaiad gentx` and avoid redirection to `gaiacli tx sign` for tx signing.
+  * [cli] [\#2938](https://github.com/cosmos/cosmos-sdk/pull/2938) Remove flags from `gaiacli tx gov` and `gaiacli query gov` to improve UX. Also better errors.
 
 * Gaia
   * [mint] [\#2825] minting now occurs every block, inflation parameter updates still hourly
@@ -87,7 +88,7 @@ IMPROVEMENTS
  handler.
  - #2825 More staking and distribution invariants
  - #2912 Print commit ID in hex when commit is synced.
- 
+
 * Tendermint
  - #2796 Update to go-amino 0.14.1
 

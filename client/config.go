@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	flagGet  = "get"
-	flagList = "list"
+	flagGet = "get"
 )
 
 var configDefaults map[string]string
@@ -44,8 +43,6 @@ func ConfigCmd() *cobra.Command {
 		"set client's home directory for configuration")
 	cmd.Flags().Bool(flagGet, false,
 		"print configuration value or its default if unset")
-	cmd.Flags().BoolP(flagList, "l", false,
-		"list all variables set in the config file, along with their values")
 	return cmd
 }
 
@@ -55,14 +52,8 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	getAction, listAction := viper.GetBool(flagGet), viper.GetBool(flagList)
-	// Args validation
-	if listAction && getAction {
-		return fmt.Errorf("only one action at a time")
-	}
-
-	if (listAction && len(args) != 0) ||
-		(getAction && len(args) != 1) || len(args) != 2 {
+	getAction := viper.GetBool(flagGet)
+	if (getAction && len(args) != 1) || (len(args) != 2 && len(args) != 0) {
 		return fmt.Errorf("wrong number of arguments")
 	}
 
@@ -72,8 +63,8 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// List action
-	if listAction {
+	// Print the config and exit
+	if len(args) == 0 {
 		s, err := tree.ToTomlString()
 		if err != nil {
 			return err

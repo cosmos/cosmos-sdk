@@ -36,7 +36,27 @@ module.exports = {
         ]
       },
       {
-        title: "SDK Clients",
+        title: "Tutorial",
+        collapsable: false,
+        children: [
+          "/tutorial/",
+          "/tutorial/app-design",
+          "/tutorial/app-init",
+          "/tutorial/keeper",
+          "/tutorial/msgs-handlers",
+          "/tutorial/set-name",
+          "/tutorial/buy-name",
+          "/tutorial/queriers",
+          "/tutorial/codec",
+          "/tutorial/cli",
+          "/tutorial/app-complete",
+          "/tutorial/entrypoint",
+          "/tutorial/dep",
+          "/tutorial/build-run"
+        ]
+      },
+      {
+        title: "Clients",
         collapsable: false,
         children: [
       	  "/clients/",

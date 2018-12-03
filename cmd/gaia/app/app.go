@@ -189,10 +189,10 @@ func MakeCodec() *codec.Codec {
 // application updates every end block
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 
-	// mint new tokens for this new block
+	// mint new tokens for the previous block
 	mint.BeginBlocker(ctx, app.mintKeeper)
 
-	// distribute rewards for this block
+	// distribute rewards for the previous block
 	distr.BeginBlocker(ctx, req, app.distrKeeper)
 
 	// slash anyone who double signed.

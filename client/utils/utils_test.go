@@ -1,7 +1,12 @@
 package utils
 
 import (
+	"encoding/json"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,6 +14,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	priv = ed25519.GenPrivKey()
+	addr = sdk.AccAddress(priv.PubKey().Address())
 )
 
 func TestParseQueryResponse(t *testing.T) {
@@ -56,4 +66,45 @@ func TestCalculateGas(t *testing.T) {
 			assert.Equal(t, gotAdjusted, tt.wantAdjusted)
 		})
 	}
+}
+
+func TestDefaultTxEncoder(t *testing.T) {
+	cdc := makeCodec()
+
+	defaultEncoder := auth.DefaultTxEncoder(cdc)
+	encoder := GetTxEncoder(cdc)
+
+	compareEncoders(t, defaultEncoder, encoder)
+}
+
+func TestConfiguredTxEncoder(t *testing.T) {
+	cdc := makeCodec()
+
+	customEncoder := func(tx sdk.Tx) ([]byte, error) {
+		return json.Marshal(tx)
+	}
+
+	config := sdk.GetConfig()
+	config.SetTxEncoder(customEncoder)
+
+	encoder := GetTxEncoder(cdc)
+
+	compareEncoders(t, customEncoder, encoder)
+}
+
+func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	tx := auth.NewStdTx(msgs, auth.StdFee{}, []auth.StdSignature{}, "")
+
+	defaultEncoderBytes, err := expected(tx)
+	require.NoError(t, err)
+	encoderBytes, err := actual(tx)
+	require.NoError(t, err)
+	require.Equal(t, defaultEncoderBytes, encoderBytes)
+}
+
+func makeCodec() *codec.Codec {
+	cdc := app.MakeCodec()
+	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	return cdc
 }

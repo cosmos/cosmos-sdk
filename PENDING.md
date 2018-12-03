@@ -37,8 +37,9 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
- - \#1277 Complete bank module specification
- 
+  * \#1277 Complete bank module specification
+  * \#2914 No longer withdraw validator rewards on a self bond/unbond
+
 * Tendermint
 
 

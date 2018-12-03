@@ -1,6 +1,6 @@
 module.exports = {
-  title: "Cosmos Documentation",
-  description: "Documentation for the Cosmos Network.",
+  title: "Cosmos SDK Documentation",
+  description: "Documentation for the Cosmos SDK and Gaia.",
   ga: "UA-51029217-2",
   dest: "./dist/docs",
   base: "/docs/",
@@ -30,13 +30,13 @@ module.exports = {
           "/gaia/validators/overview",
           "/gaia/validators/security",
           "/gaia/validators/validator-faq",
-          "/gaia/networks",
+          "/gaia/deploy-testnet",
           "/gaia/ledger",
           "/gaia/gaiacli"
         ]
       },
       {
-        title: "Clients",
+        title: "SDK Clients",
         collapsable: false,
         children: [
       	  "/clients/",

@@ -32,15 +32,6 @@ import (
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-// var (
-// 	gaiadHome   = ""
-// 	gaiacliHome = ""
-// )
-//
-// func init() {
-// 	gaiadHome, gaiacliHome = getTestingHomeDirs()
-// }
-
 func TestGaiaCLIMinimumFees(t *testing.T) {
 	t.Parallel()
 	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
@@ -567,12 +558,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 func TestGaiaCLIConfig(t *testing.T) {
 	t.Parallel()
 	chainID, servAddr, port, gaiadHome, gaiacliHome, _ := initializeFixtures(t)
-	// require.NoError(t, os.RemoveAll(gaiacliHome))
-	// require.NoError(t, os.RemoveAll(gaiadHome))
-	// servAddr, port, err := server.FreeTCPAddr()
-	// require.NoError(t, err)
 	node := fmt.Sprintf("%s:%s", servAddr, port)
-	// chainID := executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
 	executeWrite(t, fmt.Sprintf("gaiacli --home=%s config", gaiadHome), gaiacliHome, node, "y")
 	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)

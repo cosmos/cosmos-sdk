@@ -32,21 +32,22 @@ import (
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-var (
-	gaiadHome   = ""
-	gaiacliHome = ""
-)
-
-func init() {
-	gaiadHome, gaiacliHome = getTestingHomeDirs()
-}
+// var (
+// 	gaiadHome   = ""
+// 	gaiacliHome = ""
+// )
+//
+// func init() {
+// 	gaiadHome, gaiacliHome = getTestingHomeDirs()
+// }
 
 func TestGaiaCLIMinimumFees(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server with minimum fees
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --minimum_fees=2feeToken", gaiadHome, servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=2feeToken", gaiadHome, servAddr, p2pAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -66,11 +67,12 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 }
 
 func TestGaiaCLIFeesDeduction(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server with minimum fees
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --minimum_fees=1fooToken", gaiadHome, servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=1fooToken", gaiadHome, servAddr, p2pAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -108,12 +110,12 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 }
 
 func TestGaiaCLISend(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
-
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", gaiadHome, servAddr, p2pAddr))
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
 	tests.WaitForNextNBlocksTM(2, port)
@@ -159,11 +161,12 @@ func TestGaiaCLISend(t *testing.T) {
 }
 
 func TestGaiaCLIGasAuto(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", gaiadHome, servAddr, p2pAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -210,11 +213,12 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --chain-id=%v --node=%s", gaiacliHome, chainID, servAddr)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", gaiadHome, servAddr, p2pAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -307,11 +311,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", gaiadHome, servAddr, p2pAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -360,7 +365,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
-	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli query gov proposal --proposal-id=1 --output=json %v", flags))
+	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli query gov proposal 1 --output=json %v", flags))
 	require.Equal(t, uint64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 
@@ -368,14 +373,12 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, "  1 - Test", proposalsQuery)
 
 	deposit := executeGetDeposit(t,
-		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositor=%s --output=json %v",
+		fmt.Sprintf("gaiacli query gov deposit 1 %s --output=json %v",
 			fooAddr, flags))
 	require.Equal(t, int64(5), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
-	depositStr := fmt.Sprintf("gaiacli tx gov deposit %v", flags)
+	depositStr := fmt.Sprintf("gaiacli tx gov deposit 1 %s %v", fmt.Sprintf("10%s", stakeTypes.DefaultBondDenom), flags)
 	depositStr += fmt.Sprintf(" --from=%s", "foo")
-	depositStr += fmt.Sprintf(" --deposit=%s", fmt.Sprintf("10%s", stakeTypes.DefaultBondDenom))
-	depositStr += fmt.Sprintf(" --proposal-id=%s", "1")
 
 	// Test generate only
 	success, stdout, stderr = executeWriteRetStdStreams(t, depositStr+" --generate-only", app.DefaultKeyPass)
@@ -392,12 +395,12 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// test query deposit
 	deposits := executeGetDeposits(t,
-		fmt.Sprintf("gaiacli query gov deposits --proposal-id=1 --output=json %v", flags))
+		fmt.Sprintf("gaiacli query gov deposits 1 --output=json %v", flags))
 	require.Len(t, deposits, 1)
 	require.Equal(t, int64(15), deposits[0].Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
 	deposit = executeGetDeposit(t,
-		fmt.Sprintf("gaiacli query gov deposit --proposal-id=1 --depositor=%s --output=json %v",
+		fmt.Sprintf("gaiacli query gov deposit 1 %s --output=json %v",
 			fooAddr, flags))
 	require.Equal(t, int64(15), deposit.Amount.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
@@ -407,14 +410,12 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 
 	require.Equal(t, int64(35), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli query gov proposal --proposal-id=1 --output=json %v", flags))
+	proposal1 = executeGetProposal(t, fmt.Sprintf("gaiacli query gov proposal 1 --output=json %v", flags))
 	require.Equal(t, uint64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusVotingPeriod, proposal1.GetStatus())
 
-	voteStr := fmt.Sprintf("gaiacli tx gov vote %v", flags)
+	voteStr := fmt.Sprintf("gaiacli tx gov vote 1 Yes %v", flags)
 	voteStr += fmt.Sprintf(" --from=%s", "foo")
-	voteStr += fmt.Sprintf(" --proposal-id=%s", "1")
-	voteStr += fmt.Sprintf(" --option=%s", "Yes")
 
 	// Test generate only
 	success, stdout, stderr = executeWriteRetStdStreams(t, voteStr+" --generate-only", app.DefaultKeyPass)
@@ -429,11 +430,11 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	executeWrite(t, voteStr, app.DefaultKeyPass)
 	tests.WaitForNextNBlocksTM(2, port)
 
-	vote := executeGetVote(t, fmt.Sprintf("gaiacli query gov vote --proposal-id=1 --voter=%s --output=json %v", fooAddr, flags))
+	vote := executeGetVote(t, fmt.Sprintf("gaiacli query gov vote 1 %s --output=json %v", fooAddr, flags))
 	require.Equal(t, uint64(1), vote.ProposalID)
 	require.Equal(t, gov.OptionYes, vote.Option)
 
-	votes := executeGetVotes(t, fmt.Sprintf("gaiacli query gov votes --proposal-id=1 --output=json %v", flags))
+	votes := executeGetVotes(t, fmt.Sprintf("gaiacli query gov votes 1 --output=json %v", flags))
 	require.Len(t, votes, 1)
 	require.Equal(t, uint64(1), votes[0].ProposalID)
 	require.Equal(t, gov.OptionYes, votes[0].Option)
@@ -463,12 +464,12 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 }
 
 func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
-	chainID, servAddr, port := initializeFixtures(t)
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf(
-		"gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", gaiadHome, servAddr, p2pAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -564,12 +565,14 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 }
 
 func TestGaiaCLIConfig(t *testing.T) {
-	require.NoError(t, os.RemoveAll(gaiacliHome))
-	require.NoError(t, os.RemoveAll(gaiadHome))
-	servAddr, port, err := server.FreeTCPAddr()
-	require.NoError(t, err)
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, _ := initializeFixtures(t)
+	// require.NoError(t, os.RemoveAll(gaiacliHome))
+	// require.NoError(t, os.RemoveAll(gaiadHome))
+	// servAddr, port, err := server.FreeTCPAddr()
+	// require.NoError(t, err)
 	node := fmt.Sprintf("%s:%s", servAddr, port)
-	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
+	// chainID := executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
 	executeWrite(t, fmt.Sprintf("gaiacli --home=%s config", gaiadHome), gaiacliHome, node, "y")
 	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)
@@ -606,39 +609,33 @@ trust_node = true
 //___________________________________________________________________________________
 // helper methods
 
-func getTestingHomeDirs() (string, string) {
+func getTestingHomeDirs(name string) (string, string) {
 	tmpDir := os.TempDir()
-	gaiadHome := fmt.Sprintf("%s%s.test_gaiad", tmpDir, string(os.PathSeparator))
-	gaiacliHome := fmt.Sprintf("%s%s.test_gaiacli", tmpDir, string(os.PathSeparator))
+	gaiadHome := fmt.Sprintf("%s%s/.test_gaiad", tmpDir, name)
+	gaiacliHome := fmt.Sprintf("%s%s/.test_gaiacli", tmpDir, name)
 	return gaiadHome, gaiacliHome
 }
 
-func initializeFixtures(t *testing.T) (chainID, servAddr, port string) {
+func initializeFixtures(t *testing.T) (chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr string) {
+	gaiadHome, gaiacliHome = getTestingHomeDirs(t.Name())
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
 	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s --force foo", gaiacliHome))
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s --force bar", gaiacliHome))
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
 	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
 	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf(
-		"gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
 	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
-	genFile := filepath.Join(gaiadHome, "config", "genesis.json")
-	genDoc := readGenesisFile(t, genFile)
-	var appState app.GenesisState
-	err := codec.Cdc.UnmarshalJSON(genDoc.AppState, &appState)
-	require.NoError(t, err)
-	appState.Accounts = []app.GenesisAccount{app.NewDefaultGenesisAccount(fooAddr)}
-	appStateJSON, err := codec.Cdc.MarshalJSON(appState)
-	require.NoError(t, err)
-	genDoc.AppState = appStateJSON
-	genDoc.SaveAs(genFile)
+
 	executeWriteCheckErr(t, fmt.Sprintf(
-		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome),
-		app.DefaultKeyPass)
+		"gaiad add-genesis-account %s 150%s,1000fooToken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
+	executeWriteCheckErr(t, fmt.Sprintf(
+		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome), app.DefaultKeyPass)
 	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
 	// get a free port, also setup some common flags
-	servAddr, port, err = server.FreeTCPAddr()
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+	p2pAddr, _, err = server.FreeTCPAddr()
 	require.NoError(t, err)
 	return
 }

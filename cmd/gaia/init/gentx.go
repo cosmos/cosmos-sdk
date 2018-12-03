@@ -109,7 +109,8 @@ following delegation and commission default parameters:
 				// Ensure that account is in genesis
 				if string(key.GetAddress()) == string(acc.Address) {
 					// Ensure account contains enough funds of default bond denom
-					if acc.Coins.AmountOf(stakeTypes.DefaultBondDenom).LT(coins.AmountOf(stakeTypes.DefaultBondDenom)) {
+					if acc.Coins.AmountOf(stakeTypes.DefaultBondDenom).
+						LT(coins.AmountOf(stakeTypes.DefaultBondDenom)) {
 						return fmt.Errorf(
 							"Account %s is in genesis, but the only has %s available to stake, not %s",
 							key.GetAddress(), acc.Coins, amount,

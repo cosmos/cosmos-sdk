@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"strings"
+
 	amino "github.com/tendermint/go-amino"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/lib/client"
-	"strings"
 )
 
 // Wait for the next tendermint block from the Tendermint RPC
@@ -109,8 +110,6 @@ func waitForHeight(height int64, url string) {
 		var resultBlock ctypes.ResultBlock
 		err = cdc.UnmarshalJSON(body, &resultBlock)
 		if err != nil {
-			fmt.Println("RES", res)
-			fmt.Println("BODY", string(body))
 			panic(err)
 		}
 
@@ -143,7 +142,7 @@ func WaitForStart(url string) {
 	// ping the status endpoint a few times a second
 	// for a few seconds until we get a good response.
 	// otherwise something probably went wrong
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 100; i++ {
 		time.Sleep(time.Millisecond * 100)
 
 		var res *http.Response

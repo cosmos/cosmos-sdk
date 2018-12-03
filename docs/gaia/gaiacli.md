@@ -513,7 +513,7 @@ gaiacli tx gov vote <proposal_id> <Yes/No/NoWithVeto/Abstain> \
 Check the vote with the option you just submitted:
 
 ```bash
-gaiacli query gov vote <proposal_id> <voter_account>
+gaiacli query gov vote <proposal_id> <voter_address>
 ```
 
 You can also get all the previous votes submitted to the proposal with:

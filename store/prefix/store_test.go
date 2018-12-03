@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // copied from iavl/store_test.go

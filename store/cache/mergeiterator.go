@@ -3,7 +3,7 @@ package cache
 import (
 	"bytes"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // cacheMergeIterator merges a parent Iterator and a cache Iterator.

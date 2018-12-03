@@ -5,7 +5,8 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Key for the length of the list
@@ -22,11 +23,11 @@ func ElemKey(index uint64) []byte {
 // It panics when the element type cannot be (un/)marshalled by the codec
 type List struct {
 	cdc   *codec.Codec
-	store sdk.KVStore
+	store types.KVStore
 }
 
 // NewList constructs new List
-func NewList(cdc *codec.Codec, store sdk.KVStore) List {
+func NewList(cdc *codec.Codec, store types.KVStore) List {
 	return List{
 		cdc:   cdc,
 		store: store,
@@ -83,7 +84,7 @@ func (m List) Push(value interface{}) {
 
 // CONTRACT: No writes may happen within a domain while iterating over it.
 func (m List) Iterate(ptr interface{}, fn func(uint64) bool) {
-	iter := sdk.KVStorePrefixIterator(m.store, []byte{0x01})
+	iter := types.KVStorePrefixIterator(m.store, []byte{0x01})
 	for ; iter.Valid(); iter.Next() {
 		v := iter.Value()
 		m.cdc.MustUnmarshalBinaryLengthPrefixed(v, ptr)

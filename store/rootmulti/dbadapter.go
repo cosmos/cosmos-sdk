@@ -2,7 +2,7 @@ package rootmulti
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 //----------------------------------------

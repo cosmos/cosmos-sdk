@@ -1,7 +1,7 @@
 package transient
 
 import (
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"

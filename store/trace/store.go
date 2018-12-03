@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (

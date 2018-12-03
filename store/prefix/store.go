@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/store/cache"
 	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 var _ types.KVStore = Store{}

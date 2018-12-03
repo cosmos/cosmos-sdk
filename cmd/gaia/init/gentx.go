@@ -71,7 +71,6 @@ following delegation and commission default parameters:
 			}
 
 			genesisState := app.GenesisState{}
-
 			if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
 				return err
 			}

@@ -1,6 +1,7 @@
 package store
 
 import (
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -26,7 +27,7 @@ type (
 	StoreType        = types.StoreType
 	Queryable        = types.Queryable
 	TraceContext     = types.TraceContext
-	Gas              = types.Gas
+	Gas              = stypes.Gas
 	GasMeter         = types.GasMeter
-	GasConfig        = types.GasConfig
+	GasConfig        = stypes.GasConfig
 )

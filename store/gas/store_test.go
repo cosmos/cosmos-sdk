@@ -1,4 +1,4 @@
-package gas
+package gas_test
 
 import (
 	"fmt"
@@ -7,15 +7,16 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/gas"
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/stretchr/testify/require"
 )
 
-func newGasKVStore() types.KVStore {
-	meter := types.NewGasMeter(1000)
+func newGasKVStore() stypes.KVStore {
+	meter := stypes.NewGasMeter(1000)
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	return NewStore(meter, types.KVGasConfig(), mem)
+	return gas.NewStore(meter, stypes.KVGasConfig(), mem)
 }
 
 func bz(s string) []byte { return []byte(s) }
@@ -25,20 +26,20 @@ func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestGasKVStoreBasic(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := types.NewGasMeter(1000)
-	st := NewStore(meter, types.KVGasConfig(), mem)
+	meter := stypes.NewGasMeter(1000)
+	st := gas.NewStore(meter, stypes.KVGasConfig(), mem)
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	st.Delete(keyFmt(1))
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
-	require.Equal(t, meter.GasConsumed(), types.Gas(193))
+	require.Equal(t, meter.GasConsumed(), stypes.Gas(193))
 }
 
 func TestGasKVStoreIterator(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := types.NewGasMeter(1000)
-	st := NewStore(meter, types.KVGasConfig(), mem)
+	meter := stypes.NewGasMeter(1000)
+	st := gas.NewStore(meter, stypes.KVGasConfig(), mem)
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	require.Empty(t, st.Get(keyFmt(2)), "Expected `key2` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
@@ -56,61 +57,22 @@ func TestGasKVStoreIterator(t *testing.T) {
 	iterator.Next()
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, meter.GasConsumed(), types.Gas(384))
+	require.Equal(t, meter.GasConsumed(), stypes.Gas(384))
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := types.NewGasMeter(0)
-	st := NewStore(meter, types.KVGasConfig(), mem)
+	meter := stypes.NewGasMeter(0)
+	st := gas.NewStore(meter, stypes.KVGasConfig(), mem)
 	require.Panics(t, func() { st.Set(keyFmt(1), valFmt(1)) }, "Expected out-of-gas")
 }
 
 func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := types.NewGasMeter(200)
-	st := NewStore(meter, types.KVGasConfig(), mem)
+	meter := stypes.NewGasMeter(200)
+	st := gas.NewStore(meter, stypes.KVGasConfig(), mem)
 	st.Set(keyFmt(1), valFmt(1))
 	iterator := st.Iterator(nil, nil)
 	iterator.Next()
 	require.Panics(t, func() { iterator.Value() }, "Expected out-of-gas")
 }
-
-// XXX: delete
-// Not important since we are not method chaining to wrap stores
-/*
-func testGasKVStoreWrap(t *testing.T, store types.KVStore) {
-	meter := types.NewGasMeter(10000)
-
-	store = NewStore(meter, types.GasConfig{HasCost: 10}, store)
-	require.Equal(t, uint64(0), meter.GasConsumed())
-
-	store.Has([]byte("key"))
-	require.Equal(t, uint64(10), meter.GasConsumed())
-
-	store = NewStore(meter, types.GasConfig{HasCost: 20}, store)
-
-	store.Has([]byte("key"))
-	require.Equal(t, uint64(40), meter.GasConsumed())
-}
-
-func TestGasKVStoreWrap(t *testing.T) {
-	db := dbm.NewMemDB()
-	tree := iavl.NewMutableTree(db, cacheSize)
-	iavl := newIAVLStore(tree, numRecent, storeEvery)
-	testGasKVStoreWrap(t, iavl)
-
-	st := NewCacheKVStore(iavl)
-	testGasKVStoreWrap(t, st)
-
-	pref := st.Prefix([]byte("prefix"))
-	testGasKVStoreWrap(t, pref)
-
-	dsa := dbadapter.Store{dbm.NewMemDB()}
-	testGasKVStoreWrap(t, dsa)
-
-	ts := newTransientStore()
-	testGasKVStoreWrap(t, ts)
-
-}
-*/

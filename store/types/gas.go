@@ -1,5 +1,7 @@
 package types
 
+import "math"
+
 // Gas consumption descriptors.
 const (
 	GasIterNextCostFlatDesc = "IterNextFlat"
@@ -67,6 +69,17 @@ func (g *basicGasMeter) GasConsumedToLimit() Gas {
 		return g.limit
 	}
 	return g.consumed
+}
+
+// Copied from types/int.go
+// AddUint64Overflow performs the addition operation on two uint64 integers and
+// returns a boolean on whether or not the result overflows.
+func AddUint64Overflow(a, b uint64) (uint64, bool) {
+	if math.MaxUint64-a < b {
+		return 0, true
+	}
+
+	return a + b, false
 }
 
 func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {

@@ -3,7 +3,7 @@ package gas
 import (
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 var _ types.KVStore = &Store{}
@@ -63,24 +63,6 @@ func (gs *Store) Delete(key []byte) {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.DeleteCost, types.GasDeleteDesc)
 	gs.parent.Delete(key)
 }
-
-// XXX: delete
-/*
-// Implements KVStore
-func (gs *Store) Prefix(prefix []byte) types.KVStore {
-	// Keep gasstore layer at the top
-	return &Store{
-		gasMeter:  gs.gasMeter,
-		gasConfig: gs.gasConfig,
-		parent:    prefixStore{gs.parent, prefix},
-	}
-}
-
-// Implements KVStore
-func (gs *Store) Gas(meter types.GasMeter, config types.GasConfig) types.KVStore {
-	return NewGasKVStore(meter, config, gs)
-}
-*/
 
 // Iterator implements the KVStore interface. It returns an iterator which
 // incurs a flat gas cost for seeking to the first key/value pair and a variable

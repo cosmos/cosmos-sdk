@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/cache"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/gas"
 )
 
 //----------------------------------------
@@ -132,9 +131,4 @@ func (cms Store) GetStore(key types.StoreKey) types.Store {
 // Implements MultiStore.
 func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
 	return cms.stores[key].(types.KVStore)
-}
-
-// Implements MultiStore.
-func (cms Store) GetKVStoreWithGas(meter types.GasMeter, config types.GasConfig, key types.StoreKey) types.KVStore {
-	return gas.NewStore(meter, config, cms.GetKVStore(key))
 }

@@ -358,7 +358,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(45), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
-	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli query gov proposal 1 --output=json %v", flags))
+	proposal1 := executeGetProposal(t, fmt.Sprintf("gaiacli query gov proposal --proposal-id 1 --output=json %v", flags))
 	require.Equal(t, uint64(1), proposal1.GetProposalID())
 	require.Equal(t, gov.StatusDepositPeriod, proposal1.GetStatus())
 

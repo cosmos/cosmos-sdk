@@ -6,6 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// name to identify transaction routes
+const MsgRoute = "bank"
+
 // MsgSend - high level transaction of the coin module
 type MsgSend struct {
 	Inputs  []Input  `json:"inputs"`
@@ -21,7 +24,7 @@ func NewMsgSend(in []Input, out []Output) MsgSend {
 
 // Implements Msg.
 // nolint
-func (msg MsgSend) Route() string { return "bank" } // TODO: "bank/send"
+func (msg MsgSend) Route() string { return MsgRoute }
 func (msg MsgSend) Type() string  { return "send" }
 
 // Implements Msg.

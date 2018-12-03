@@ -69,7 +69,7 @@ output
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var err error
-	var pass string
+	var encrypPassword string
 
 	buf := client.BufferStdin()
 	name := args[0]
@@ -77,7 +77,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
 		kb = client.MockKeyBase()
-		pass = "throwing-this-key-away"
+		encrypPassword = "throwing-this-key-away"
 	} else {
 		kb, err = GetKeyBaseWithWritePerm()
 		if err != nil {
@@ -95,9 +95,9 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 		// ask for a password when generating a local key
 		if !viper.GetBool(client.FlagUseLedger) {
-			pass, err = client.GetCheckPassword(
-				"> Enter a passphrase for your key:",
-				"> Repeat the passphrase:", buf)
+			encrypPassword, err = client.GetCheckPassword(
+				"Enter a passphrase to encrypt your key to disk:",
+				"Repeat the passphrase:", buf)
 			if err != nil {
 				return err
 			}
@@ -135,7 +135,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		info, err := kb.CreateKey(name, seed, pass)
+		info, err := kb.CreateKey(name, seed, encrypPassword)
 		if err != nil {
 			return err
 		}
@@ -189,15 +189,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// get the encryption password
-	encryptPassword, err := client.GetCheckPassword(
-		"> Enter a passphrase to encrypt your key to disk:",
-		"> Repeat the passphrase:", buf)
-	if err != nil {
-		return err
-	}
-
-	info, err := kb.Derive(name, mnemonic, bip39Passphrase, encryptPassword, *bip44Params)
+	info, err := kb.Derive(name, mnemonic, bip39Passphrase, encrypPassword, *bip44Params)
 	if err != nil {
 		return err
 	}

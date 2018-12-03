@@ -371,13 +371,13 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 // passphrases don't match.
 // Passphrase is ignored when deleting references to
 // offline and Ledger / HW wallet keys.
-func (kb dbKeybase) Delete(name, passphrase string) error {
+func (kb dbKeybase) Delete(name, passphrase string, skipPass bool) error {
 	// verify we have the proper password before deleting
 	info, err := kb.Get(name)
 	if err != nil {
 		return err
 	}
-	if linfo, ok := info.(localInfo); ok {
+	if linfo, ok := info.(localInfo); ok && !skipPass {
 		if _, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase); err != nil {
 			return err
 		}

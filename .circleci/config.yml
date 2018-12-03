@@ -269,19 +269,18 @@ jobs:
       - run:
           name: Trigger website build
           command: |
-            export LAST_COMMIT=`git rev-parse HEAD`
-            export DOCS_COMMIT=`git log -1 --format=format:%H --full-diff docs`
-            if [[ $DOCS_COMMIT == $LAST_COMMIT ]]; then
-              chamber exec cosmos-sdk -- start_website_build
-            else
-              echo "No changes to docs detected"
-            fi
+            chamber exec cosmos-sdk -- start_website_build
 
 workflows:
   version: 2
   test-suite:
     jobs:
-      - deploy_docs
+      - deploy_docs:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
       - setup_dependencies
       - lint:
           requires:

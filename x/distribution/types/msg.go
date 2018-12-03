@@ -17,7 +17,7 @@ var _, _ sdk.Msg = &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorRewardsAl
 // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
 type MsgSetWithdrawAddress struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-	WithdrawAddr  sdk.AccAddress `json:"delegator_addr"`
+	WithdrawAddr  sdk.AccAddress `json:"withdraw_addr"`
 }
 
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgSetWithdrawAddress {

@@ -1,8 +1,8 @@
-# Install Gaia
+## Install Gaia
 
 This guide will explain how to install the `gaiad` and `gaiacli` entrypoints onto your system. With these installed on a server, you can participate in the latest testnet as either a [Full Node](./join-testnet.md#run-a-full-node) or a [Validator](./validators/validator-setup.md).
 
-## Install Go
+### Install Go
 
 Install `go` by following the [official docs](https://golang.org/doc/install). Remember to set your `$GOPATH`, `$GOBIN`, and `$PATH` environment variables, for example:
 
@@ -17,7 +17,7 @@ echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 **Go 1.11+** is required for the Cosmos SDK.
 :::
 
-## Install Cosmos SDK
+### Install the binaries
 
 Next, let's install the latest version of Gaia. Here we'll use the `master` branch, which contains the latest stable release.
 If necessary, make sure you `git checkout` the correct
@@ -40,6 +40,6 @@ $ gaiad version
 $ gaiacli version
 ```
 
-## Run a Full Node
+### Next
 
-With the binaries installed, you can run [a full node on the latest testnet](./join-testnet.md).
+Now you can [join the public testnet](./join-testnet.md) or [create you own private testnet](./private-testnet.md)

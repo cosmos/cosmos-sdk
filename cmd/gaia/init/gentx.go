@@ -104,10 +104,11 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			// Check if the account is in genesis
 			inGenesis := false
+			bondDenom := genesisState.StakeData.Params.BondDenom
+
+			// Check if the account is in genesis
 			for _, acc := range genesisState.Accounts {
-				bondDenom := genesisState.StakeData.Params.BondDenom
 				// Ensure that account is in genesis
 				if acc.Address.Equals(key.GetAddress()) {
 
@@ -123,7 +124,6 @@ following delegation and commission default parameters:
 				}
 			}
 
-			// If the account is not in genesis return the following error
 			if !inGenesis {
 				return fmt.Errorf(
 					"Account %s in not in the app_state.accounts array of genesis.json",

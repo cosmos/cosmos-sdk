@@ -104,19 +104,27 @@ following delegation and commission default parameters:
 				return err
 			}
 
+			// Check if the account is in genesis
+			inGenesis := false
 			for _, acc := range genesisState.Accounts {
+				bondDenom := genesisState.StakeData.Params.BondDenom
 				// Ensure that account is in genesis
 				if acc.Address.Equals(key.GetAddress()) {
+
 					// Ensure account contains enough funds of default bond denom
-					if acc.Coins.AmountOf(genesisState.StakeData.Params.BondDenom).
-						LT(coins.AmountOf(genesisState.StakeData.Params.BondDenom)) {
+					if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
 						return fmt.Errorf(
-							"Account %s is in genesis, but the only has %s available to stake, not %s",
-							key.GetAddress(), acc.Coins, amount,
+							"Account %s is in genesis, but the only has %s%s available to stake, not %s%s",
+							key.GetAddress(), acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
 						)
 					}
+					inGenesis = true
+					break
 				}
-				// If the account is not in genesis return an error
+			}
+
+			// If the account is not in genesis return the following error
+			if !inGenesis {
 				return fmt.Errorf(
 					"Account %s in not in the app_state.accounts array of genesis.json",
 					key.GetAddress(),
@@ -149,13 +157,18 @@ following delegation and commission default parameters:
 				return err
 			}
 
+			// Fetch output file name
 			outputDocument, err := makeOutputFilepath(config.RootDir, nodeID)
 			if err != nil {
 				return err
 			}
+
+			// Write transaction to output file
 			if err := writeSignedGenTx(cdc, outputDocument, signedTx); err != nil {
 				return err
 			}
+
+			// Log success to the user
 			fmt.Fprintf(os.Stderr, "Genesis transaction written to %q\n", outputDocument)
 			return nil
 		},

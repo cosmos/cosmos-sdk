@@ -1,13 +1,34 @@
-package store
+package list
 
 import (
 	"math/rand"
 	"testing"
 
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
+type S struct {
+	I uint64
+	B bool
+}
+
+func defaultComponents(key sdk.StoreKey) (sdk.Context, *codec.Codec) {
+	db := dbm.NewMemDB()
+	cms := rootmulti.NewStore(db)
+	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
+	cms.LoadLatestVersion()
+	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
+	cdc := codec.New()
+	return ctx, cdc
+}
 func TestList(t *testing.T) {
 	key := sdk.NewKVStoreKey("test")
 	ctx, cdc := defaultComponents(key)

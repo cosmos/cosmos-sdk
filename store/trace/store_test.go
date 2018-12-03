@@ -2,6 +2,7 @@ package trace_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"testing"
 
@@ -10,8 +11,15 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/trace"
 	"github.com/cosmos/cosmos-sdk/types"
 )
+
+func bz(s string) []byte { return []byte(s) }
+
+func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
+func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 var kvPairs = []types.KVPair{
 	{Key: keyFmt(1), Value: valFmt(1)},
@@ -19,7 +27,7 @@ var kvPairs = []types.KVPair{
 	{Key: keyFmt(3), Value: valFmt(3)},
 }
 
-func newTraceKVStore(w io.Writer) *TraceKVStore {
+func newTraceKVStore(w io.Writer) *trace.Store {
 	store := newEmptyTraceKVStore(w)
 
 	for _, kvPair := range kvPairs {
@@ -29,11 +37,11 @@ func newTraceKVStore(w io.Writer) *TraceKVStore {
 	return store
 }
 
-func newEmptyTraceKVStore(w io.Writer) *TraceKVStore {
-	memDB := dbStoreAdapter{dbm.NewMemDB()}
-	tc := TraceContext(map[string]interface{}{"blockHeight": 64})
+func newEmptyTraceKVStore(w io.Writer) *trace.Store {
+	memDB := dbadapter.Store{dbm.NewMemDB()}
+	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
 
-	return NewTraceKVStore(memDB, w, tc)
+	return trace.NewStore(memDB, w, tc)
 }
 
 func TestTraceKVStoreGet(t *testing.T) {
@@ -266,12 +274,12 @@ func TestTestTraceKVStoreReverseIterator(t *testing.T) {
 
 func TestTraceKVStorePrefix(t *testing.T) {
 	store := newEmptyTraceKVStore(nil)
-	pStore := store.Prefix([]byte("trace_prefix"))
-	require.IsType(t, prefixStore{}, pStore)
+	pStore := prefix.NewStore(store, []byte("trace_prefix"))
+	require.IsType(t, prefix.Store{}, pStore)
 }
 
 func TestTraceKVStoreGetStoreType(t *testing.T) {
-	memDB := dbStoreAdapter{dbm.NewMemDB()}
+	memDB := dbadapter.Store{dbm.NewMemDB()}
 	store := newEmptyTraceKVStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }

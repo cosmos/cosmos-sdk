@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/store/cache"
+	"github.com/cosmos/cosmos-sdk/store/trace"
 )
 
 var _ types.KVStore = Store{}
@@ -18,6 +19,13 @@ var _ types.KVStore = Store{}
 type Store struct {
 	parent types.KVStore
 	prefix []byte
+}
+
+func NewStore(parent types.KVStore, prefix []byte) Store {
+	return Store{
+		parent: parent,
+		prefix: prefix,
+	}
 }
 
 func cloneAppend(bz []byte, tail []byte) (res []byte) {
@@ -47,7 +55,7 @@ func (s Store) CacheWrap() types.CacheWrap {
 
 // CacheWrapWithTrace implements the KVStore interface.
 func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cache.NewStore(NewTraceKVStore(s, w, tc))
+	return cache.NewStore(trace.NewStore(s, w, tc))
 }
 
 // Implements KVStore

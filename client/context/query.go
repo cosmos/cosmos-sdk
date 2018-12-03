@@ -10,7 +10,7 @@ import (
 
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -210,7 +210,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 	}
 
 	// TODO: Instead of reconstructing, stash on CLIContext field?
-	prt := store.DefaultProofRuntime()
+	prt := rootmulti.DefaultProofRuntime()
 
 	// TODO: Better convention for path?
 	storeName, err := parseQueryStorePath(queryPath)
@@ -250,7 +250,7 @@ func isQueryStoreWithProof(path string) bool {
 		return false
 	case paths[0] != "store":
 		return false
-	case store.RequireProof("/" + paths[2]):
+	case rootmulti.RequireProof("/" + paths[2]):
 		return true
 	}
 

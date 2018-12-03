@@ -1,4 +1,4 @@
-package store
+package rootmulti
 
 import (
 	"fmt"
@@ -10,7 +10,12 @@ import (
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/cachemulti"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/iavl"
+	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/transient"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -18,36 +23,36 @@ const (
 	commitInfoKeyFmt = "s/%d" // s/<version>
 )
 
-// rootMultiStore is composed of many CommitStores. Name contrasts with
+// Store is composed of many CommitStores. Name contrasts with
 // cacheMultiStore which is for cache-wrapping other MultiStores. It implements
 // the CommitMultiStore interface.
-type rootMultiStore struct {
+type Store struct {
 	db           dbm.DB
-	lastCommitID CommitID
-	pruning      sdk.PruningStrategy
-	storesParams map[StoreKey]storeParams
-	stores       map[StoreKey]CommitStore
-	keysByName   map[string]StoreKey
+	lastCommitID types.CommitID
+	pruning      types.PruningStrategy
+	storesParams map[types.StoreKey]storeParams
+	stores       map[types.StoreKey]types.CommitStore
+	keysByName   map[string]types.StoreKey
 
 	traceWriter  io.Writer
-	traceContext TraceContext
+	traceContext types.TraceContext
 }
 
-var _ CommitMultiStore = (*rootMultiStore)(nil)
-var _ Queryable = (*rootMultiStore)(nil)
+var _ types.CommitMultiStore = (*Store)(nil)
+var _ types.Queryable = (*Store)(nil)
 
 // nolint
-func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
-	return &rootMultiStore{
+func NewStore(db dbm.DB) *Store {
+	return &Store{
 		db:           db,
-		storesParams: make(map[StoreKey]storeParams),
-		stores:       make(map[StoreKey]CommitStore),
-		keysByName:   make(map[string]StoreKey),
+		storesParams: make(map[types.StoreKey]storeParams),
+		stores:       make(map[types.StoreKey]types.CommitStore),
+		keysByName:   make(map[string]types.StoreKey),
 	}
 }
 
 // Implements CommitMultiStore
-func (rs *rootMultiStore) SetPruning(pruning sdk.PruningStrategy) {
+func (rs *Store) SetPruning(pruning types.PruningStrategy) {
 	rs.pruning = pruning
 	for _, substore := range rs.stores {
 		substore.SetPruning(pruning)
@@ -55,20 +60,20 @@ func (rs *rootMultiStore) SetPruning(pruning sdk.PruningStrategy) {
 }
 
 // Implements Store.
-func (rs *rootMultiStore) GetStoreType() StoreType {
-	return sdk.StoreTypeMulti
+func (rs *Store) GetStoreType() types.StoreType {
+	return types.StoreTypeMulti
 }
 
 // Implements CommitMultiStore.
-func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB) {
+func (rs *Store) MountStoreWithDB(key types.StoreKey, typ types.StoreType, db dbm.DB) {
 	if key == nil {
 		panic("MountIAVLStore() key cannot be nil")
 	}
 	if _, ok := rs.storesParams[key]; ok {
-		panic(fmt.Sprintf("rootMultiStore duplicate store key %v", key))
+		panic(fmt.Sprintf("Store duplicate store key %v", key))
 	}
 	if _, ok := rs.keysByName[key.Name()]; ok {
-		panic(fmt.Sprintf("rootMultiStore duplicate store key name %v", key))
+		panic(fmt.Sprintf("Store duplicate store key name %v", key))
 	}
 	rs.storesParams[key] = storeParams{
 		key: key,
@@ -79,36 +84,36 @@ func (rs *rootMultiStore) MountStoreWithDB(key StoreKey, typ StoreType, db dbm.D
 }
 
 // Implements CommitMultiStore.
-func (rs *rootMultiStore) GetCommitStore(key StoreKey) CommitStore {
+func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
 	return rs.stores[key]
 }
 
 // Implements CommitMultiStore.
-func (rs *rootMultiStore) GetCommitKVStore(key StoreKey) CommitKVStore {
-	return rs.stores[key].(CommitKVStore)
+func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
+	return rs.stores[key].(types.CommitKVStore)
 }
 
 // Implements CommitMultiStore.
-func (rs *rootMultiStore) LoadLatestVersion() error {
+func (rs *Store) LoadLatestVersion() error {
 	ver := getLatestVersion(rs.db)
 	return rs.LoadVersion(ver)
 }
 
 // Implements CommitMultiStore.
-func (rs *rootMultiStore) LoadVersion(ver int64) error {
+func (rs *Store) LoadVersion(ver int64) error {
 
 	// Special logic for version 0
 	if ver == 0 {
 		for key, storeParams := range rs.storesParams {
-			id := CommitID{}
+			id := types.CommitID{}
 			store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
 			if err != nil {
-				return fmt.Errorf("failed to load rootMultiStore: %v", err)
+				return fmt.Errorf("failed to load Store: %v", err)
 			}
 			rs.stores[key] = store
 		}
 
-		rs.lastCommitID = CommitID{}
+		rs.lastCommitID = types.CommitID{}
 		return nil
 	}
 	// Otherwise, version is 1 or greater
@@ -120,15 +125,15 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 	}
 
 	// Convert StoreInfos slice to map
-	infos := make(map[StoreKey]storeInfo)
+	infos := make(map[types.StoreKey]storeInfo)
 	for _, storeInfo := range cInfo.StoreInfos {
 		infos[rs.nameToKey(storeInfo.Name)] = storeInfo
 	}
 
 	// Load each Store
-	var newStores = make(map[StoreKey]CommitStore)
+	var newStores = make(map[types.StoreKey]types.CommitStore)
 	for key, storeParams := range rs.storesParams {
-		var id CommitID
+		var id types.CommitID
 		info, ok := infos[key]
 		if ok {
 			id = info.Core.CommitID
@@ -136,7 +141,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 
 		store, err := rs.loadCommitStoreFromParams(key, id, storeParams)
 		if err != nil {
-			return fmt.Errorf("failed to load rootMultiStore: %v", err)
+			return fmt.Errorf("failed to load Store: %v", err)
 		}
 		newStores[key] = store
 	}
@@ -149,7 +154,7 @@ func (rs *rootMultiStore) LoadVersion(ver int64) error {
 
 // WithTracer sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations. A MultiStore is returned.
-func (rs *rootMultiStore) WithTracer(w io.Writer) MultiStore {
+func (rs *Store) WithTracer(w io.Writer) types.MultiStore {
 	rs.traceWriter = w
 	return rs
 }
@@ -158,7 +163,7 @@ func (rs *rootMultiStore) WithTracer(w io.Writer) MultiStore {
 // the given context with the existing context by key. Any existing keys will
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
-func (rs *rootMultiStore) WithTracingContext(tc TraceContext) MultiStore {
+func (rs *Store) WithTracingContext(tc types.TraceContext) types.MultiStore {
 	if rs.traceContext != nil {
 		for k, v := range tc {
 			rs.traceContext[k] = v
@@ -171,12 +176,12 @@ func (rs *rootMultiStore) WithTracingContext(tc TraceContext) MultiStore {
 }
 
 // TracingEnabled returns if tracing is enabled for the MultiStore.
-func (rs *rootMultiStore) TracingEnabled() bool {
+func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
 // ResetTraceContext resets the current tracing context.
-func (rs *rootMultiStore) ResetTraceContext() MultiStore {
+func (rs *Store) ResetTraceContext() types.MultiStore {
 	rs.traceContext = nil
 	return rs
 }
@@ -185,12 +190,12 @@ func (rs *rootMultiStore) ResetTraceContext() MultiStore {
 // +CommitStore
 
 // Implements Committer/CommitStore.
-func (rs *rootMultiStore) LastCommitID() CommitID {
+func (rs *Store) LastCommitID() types.CommitID {
 	return rs.lastCommitID
 }
 
 // Implements Committer/CommitStore.
-func (rs *rootMultiStore) Commit() CommitID {
+func (rs *Store) Commit() types.CommitID {
 
 	// Commit stores.
 	version := rs.lastCommitID.Version + 1
@@ -203,7 +208,7 @@ func (rs *rootMultiStore) Commit() CommitID {
 	batch.Write()
 
 	// Prepare for next version.
-	commitID := CommitID{
+	commitID := types.CommitID{
 		Version: version,
 		Hash:    commitInfo.Hash(),
 	}
@@ -212,12 +217,12 @@ func (rs *rootMultiStore) Commit() CommitID {
 }
 
 // Implements CacheWrapper/Store/CommitStore.
-func (rs *rootMultiStore) CacheWrap() CacheWrap {
-	return rs.CacheMultiStore().(CacheWrap)
+func (rs *Store) CacheWrap() types.CacheWrap {
+	return rs.CacheMultiStore().(types.CacheWrap)
 }
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
-func (rs *rootMultiStore) CacheWrapWithTrace(_ io.Writer, _ TraceContext) CacheWrap {
+func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
 	return rs.CacheWrap()
 }
 
@@ -225,13 +230,17 @@ func (rs *rootMultiStore) CacheWrapWithTrace(_ io.Writer, _ TraceContext) CacheW
 // +MultiStore
 
 // Implements MultiStore.
-func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
-	return newCacheMultiStoreFromRMS(rs)
+func (rs *Store) CacheMultiStore() types.CacheMultiStore {
+	stores := make(map[types.StoreKey]types.CacheWrapper)
+	for k, v := range rs.stores {
+		stores[k] = v
+	}
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext)
 }
 
 // Implements MultiStore.
 // If the store does not exist, panics.
-func (rs *rootMultiStore) GetStore(key StoreKey) Store {
+func (rs *Store) GetStore(key types.StoreKey) types.Store {
 	store := rs.stores[key]
 	if store == nil {
 		panic("Could not load store " + key.String())
@@ -240,14 +249,14 @@ func (rs *rootMultiStore) GetStore(key StoreKey) Store {
 }
 
 // GetKVStore implements the MultiStore interface. If tracing is enabled on the
-// rootMultiStore, a wrapped TraceKVStore will be returned with the given
+// Store, a wrapped TraceKVStore will be returned with the given
 // tracer, otherwise, the original KVStore will be returned.
 // If the store does not exist, panics.
-func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
-	store := rs.stores[key].(KVStore)
+func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
+	store := rs.stores[key].(types.KVStore)
 
 	if rs.TracingEnabled() {
-		store = NewTraceKVStore(store, rs.traceWriter, rs.traceContext)
+		store = trace.NewStore(store, rs.traceWriter, rs.traceContext)
 	}
 
 	return store
@@ -260,7 +269,7 @@ func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 // This is not exposed to the extensions (which will need the
 // StoreKey), but is useful in main, and particularly app.Query,
 // in order to convert human strings into CommitStores.
-func (rs *rootMultiStore) getStoreByName(name string) Store {
+func (rs *Store) getStoreByName(name string) types.Store {
 	key := rs.keysByName[name]
 	if key == nil {
 		return nil
@@ -274,7 +283,7 @@ func (rs *rootMultiStore) getStoreByName(name string) Store {
 // modified to remove the substore prefix.
 // Ie. `req.Path` here is `/<substore>/<path>`, and trimmed to `/<path>` for the substore.
 // TODO: add proof for `multistore -> substore`.
-func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
+func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	// Query just routes this to a substore.
 	path := req.Path
 	storeName, subpath, err := parsePath(path)
@@ -285,12 +294,12 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return types.ErrUnknownRequest(msg).QueryResult()
 	}
-	queryable, ok := store.(Queryable)
+	queryable, ok := store.(types.Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return sdk.ErrUnknownRequest(msg).QueryResult()
+		return types.ErrUnknownRequest(msg).QueryResult()
 	}
 
 	// trim the path and make the query
@@ -302,12 +311,12 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	if res.Proof == nil || len(res.Proof.Ops) == 0 {
-		return sdk.ErrInternal("substore proof was nil/empty when it should never be").QueryResult()
+		return types.ErrInternal("substore proof was nil/empty when it should never be").QueryResult()
 	}
 
 	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
 	if errMsg != nil {
-		return sdk.ErrInternal(errMsg.Error()).QueryResult()
+		return types.ErrInternal(errMsg.Error()).QueryResult()
 	}
 
 	// Restore origin path and append proof op.
@@ -324,9 +333,9 @@ func (rs *rootMultiStore) Query(req abci.RequestQuery) abci.ResponseQuery {
 // parsePath expects a format like /<storeName>[/<subpath>]
 // Must start with /, subpath may be empty
 // Returns error if it doesn't start with /
-func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
+func parsePath(path string) (storeName string, subpath string, err types.Error) {
 	if !strings.HasPrefix(path, "/") {
-		err = sdk.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
+		err = types.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
 		return
 	}
 
@@ -342,7 +351,7 @@ func parsePath(path string) (storeName string, subpath string, err sdk.Error) {
 
 //----------------------------------------
 
-func (rs *rootMultiStore) loadCommitStoreFromParams(key sdk.StoreKey, id CommitID, params storeParams) (store CommitStore, err error) {
+func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID, params storeParams) (store types.CommitStore, err error) {
 	var db dbm.DB
 	if params.db != nil {
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
@@ -350,30 +359,30 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(key sdk.StoreKey, id CommitI
 		db = dbm.NewPrefixDB(rs.db, []byte("s/k:"+params.key.Name()+"/"))
 	}
 	switch params.typ {
-	case sdk.StoreTypeMulti:
+	case types.StoreTypeMulti:
 		panic("recursive MultiStores not yet supported")
 		// TODO: id?
 		// return NewCommitMultiStore(db, id)
-	case sdk.StoreTypeIAVL:
-		store, err = LoadIAVLStore(db, id, rs.pruning)
+	case types.StoreTypeIAVL:
+		store, err = iavl.LoadStore(db, id, rs.pruning)
 		return
-	case sdk.StoreTypeDB:
-		store = commitDBStoreAdapter{dbStoreAdapter{db}}
+	case types.StoreTypeDB:
+		store = commitDBStoreAdapter{dbadapter.Store{db}}
 		return
-	case sdk.StoreTypeTransient:
-		_, ok := key.(*sdk.TransientStoreKey)
+	case types.StoreTypeTransient:
+		_, ok := key.(*types.TransientStoreKey)
 		if !ok {
 			err = fmt.Errorf("invalid StoreKey for StoreTypeTransient: %s", key.String())
 			return
 		}
-		store = newTransientStore()
+		store = transient.NewStore()
 		return
 	default:
 		panic(fmt.Sprintf("unrecognized store type %v", params.typ))
 	}
 }
 
-func (rs *rootMultiStore) nameToKey(name string) StoreKey {
+func (rs *Store) nameToKey(name string) types.StoreKey {
 	for key := range rs.storesParams {
 		if key.Name() == name {
 			return key
@@ -386,9 +395,9 @@ func (rs *rootMultiStore) nameToKey(name string) StoreKey {
 // storeParams
 
 type storeParams struct {
-	key StoreKey
+	key types.StoreKey
 	db  dbm.DB
-	typ StoreType
+	typ types.StoreType
 }
 
 //----------------------------------------
@@ -415,8 +424,8 @@ func (ci commitInfo) Hash() []byte {
 	return merkle.SimpleHashFromMap(m)
 }
 
-func (ci commitInfo) CommitID() CommitID {
-	return CommitID{
+func (ci commitInfo) CommitID() types.CommitID {
+	return types.CommitID{
 		Version: ci.Version,
 		Hash:    ci.Hash(),
 	}
@@ -426,7 +435,7 @@ func (ci commitInfo) CommitID() CommitID {
 // storeInfo
 
 // storeInfo contains the name and core reference for an
-// underlying store.  It is the leaf of the rootMultiStores top
+// underlying store.  It is the leaf of the Stores top
 // level simple merkle tree.
 type storeInfo struct {
 	Name string
@@ -435,7 +444,7 @@ type storeInfo struct {
 
 type storeCore struct {
 	// StoreType StoreType
-	CommitID CommitID
+	CommitID types.CommitID
 	// ... maybe add more state
 }
 
@@ -480,14 +489,14 @@ func setLatestVersion(batch dbm.Batch, version int64) {
 }
 
 // Commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[StoreKey]CommitStore) commitInfo {
+func commitStores(version int64, storeMap map[types.StoreKey]types.CommitStore) commitInfo {
 	storeInfos := make([]storeInfo, 0, len(storeMap))
 
 	for key, store := range storeMap {
 		// Commit
 		commitID := store.Commit()
 
-		if store.GetStoreType() == sdk.StoreTypeTransient {
+		if store.GetStoreType() == types.StoreTypeTransient {
 			continue
 		}
 
@@ -513,14 +522,14 @@ func getCommitInfo(db dbm.DB, ver int64) (commitInfo, error) {
 	cInfoKey := fmt.Sprintf(commitInfoKeyFmt, ver)
 	cInfoBytes := db.Get([]byte(cInfoKey))
 	if cInfoBytes == nil {
-		return commitInfo{}, fmt.Errorf("failed to get rootMultiStore: no data")
+		return commitInfo{}, fmt.Errorf("failed to get Store: no data")
 	}
 
 	var cInfo commitInfo
 
 	err := cdc.UnmarshalBinaryLengthPrefixed(cInfoBytes, &cInfo)
 	if err != nil {
-		return commitInfo{}, fmt.Errorf("failed to get rootMultiStore: %v", err)
+		return commitInfo{}, fmt.Errorf("failed to get Store: %v", err)
 	}
 
 	return cInfo, nil

@@ -1,8 +1,12 @@
 package store
 
+// TODO: make it independent from list
+/*
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/list"
 )
 
 // Key for the top element position in the queue
@@ -13,7 +17,7 @@ func TopKey() []byte {
 // Queue is a List wrapper that provides queue-like functions
 // It panics when the element type cannot be (un/)marshalled by the codec
 type Queue struct {
-	List List
+	List list.List
 }
 
 // NewQueue constructs new Queue
@@ -86,3 +90,4 @@ func (m Queue) Flush(ptr interface{}, fn func() bool) {
 	}
 	m.setTop(i)
 }
+*/

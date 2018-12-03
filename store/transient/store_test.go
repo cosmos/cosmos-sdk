@@ -1,4 +1,4 @@
-package store
+package transient
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 var k, v = []byte("hello"), []byte("world")
 
 func TestTransientStore(t *testing.T) {
-	tstore := newTransientStore()
+	tstore := NewStore()
 
 	require.Nil(t, tstore.Get(k))
 

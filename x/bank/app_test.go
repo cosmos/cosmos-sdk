@@ -123,7 +123,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 			msgs:       []sdk.Msg{sendMsg1, sendMsg2},
 			accNums:    []uint64{0},
 			accSeqs:    []uint64{0},
-			expSimPass: false,
+			expSimPass: true, // doesn't check signature
 			expPass:    false,
 			privKeys:   []crypto.PrivKey{priv1},
 		},
@@ -136,19 +136,6 @@ func TestMsgSendWithAccounts(t *testing.T) {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
 		}
 	}
-
-	// bumping the tx nonce number without resigning should be an auth error
-	mapp.BeginBlock(abci.RequestBeginBlock{})
-
-	tx := mock.GenTx([]sdk.Msg{sendMsg1}, []uint64{0}, []uint64{0}, priv1)
-	tx.Signatures[0].Sequence = 1
-
-	res := mapp.Deliver(tx)
-	require.EqualValues(t, sdk.CodeUnauthorized, res.Code, res.Log)
-	require.EqualValues(t, sdk.CodespaceRoot, res.Codespace)
-
-	// resigning the tx with the bumped sequence should work
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{sendMsg1, sendMsg2}, []uint64{0}, []uint64{1}, true, true, priv1)
 }
 
 func TestMsgSendMultipleOut(t *testing.T) {

@@ -38,6 +38,10 @@
   name = "github.com/tendermint/tendermint"
   revision = "v0.27.0-dev1"
 
+[[constraint]]
+  name = "github.com/zondax/ledger-cosmos-go"
+  version = "=v0.9.2"
+
 ## deps without releases:
 
 [[override]]
@@ -48,10 +52,6 @@
 [[constraint]]
   name = "github.com/cosmos/go-bip39"
   revision = "52158e4697b87de16ed390e1bdaf813e581008fa"
-
-[[constraint]]
-  name = "github.com/zondax/ledger-goclient"
-  version = "=v0.1.0"
 
 ## transitive deps, with releases:
 

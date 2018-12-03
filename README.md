@@ -19,12 +19,9 @@ breaking changes.
 
 **Note**: Requires [Go 1.11+](https://golang.org/dl/)
 
-## Gaia Testnet
+## Cosmos Hub Public Testnet
 
-To install the binaries, read the [install instructions](./docs/gaia/installation.md)
-
-To join the latest testnet, follow 
-[the guide](./docs/gaia/join-testnet.md).
+To run a full-node in the latest public testnet of the Hub, first [install `gaia`](./docs/gaia/installation.md), then follow [the guide](./docs/gaia/join-testnet.md).
 
 For status updates and genesis files, see the
 [testnets repo](https://github.com/cosmos/testnets).

@@ -42,13 +42,20 @@ There are three types of key representations that are used:
 
 You'll need an account private and public key pair \(a.k.a. `sk, pk` respectively\) to be able to receive funds, send txs, bond tx, etc.
 
-To generate a new key \(default _ed25519_ elliptic curve\):
+To generate a new _secp256k1_ key:
 
 ```bash
 gaiacli keys add <account_name>
 ```
 
-Next, you will have to create a passphrase to protect the key on disk. The output of the above command will contain a _seed phrase_. Save the _seed phrase_ in a safe place in case you forget the password!
+Next, you will have to create a passphrase to protect the key on disk. The output of the above
+command will contain a _seed phrase_. It is recommended to save the _seed phrase_ in a safe
+place so that in case you forget the password, you could eventually regenerate the key from
+the seed phrase with the following command:
+
+```bash
+gaiacli keys add --recover
+```
 
 If you check your private keys, you'll now see `<account_name>`:
 

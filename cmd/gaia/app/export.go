@@ -113,7 +113,6 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	/* Handle stake state. */
 
 	// iterate through validators by power descending, reset bond height, update bond intra-tx counter
-	pool := app.stakeKeeper.GetPool(ctx)
 	store := ctx.KVStore(app.keyStake)
 	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsByPowerIndexKey)
 	counter := int16(0)
@@ -127,7 +126,6 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 		validator.BondIntraTxCounter = counter
 		validator.UnbondingHeight = 0
 		app.stakeKeeper.SetValidator(ctx, validator)
-		app.stakeKeeper.SetValidatorByPowerIndex(ctx, validator, pool)
 		counter++
 	}
 	iter.Close()
@@ -143,8 +141,4 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 		app.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
 		return false
 	})
-
-	/* assert runtime invariants */
-	ctx = ctx.WithBlockHeight(0)
-	app.assertRuntimeInvariantsWith(ctx)
 }

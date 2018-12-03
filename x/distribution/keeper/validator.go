@@ -91,6 +91,18 @@ func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) 
 	return accum, nil
 }
 
+// UpdateValidatorDistInfoFromPool updates the validator's distribution info
+// from the global fee pool without withdrawing any rewards. This will be called
+// from a onDelegationSharesModified hook on a non self bond/unbond call.
+func (k Keeper) UpdateValidatorDistInfoFromPool(ctx sdk.Context, operatorAddr sdk.ValAddress) {
+	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
+	wc := k.GetWithdrawContext(ctx, operatorAddr)
+	valInfo, feePool := valInfo.TakeFeePoolRewards(wc)
+
+	k.SetFeePool(ctx, feePool)
+	k.SetValidatorDistInfo(ctx, valInfo)
+}
+
 // withdrawal all the validator rewards including the commission
 func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
 

@@ -495,7 +495,7 @@ gaiacli query gov deposits <proposal_id>
 You can also query a deposit submitted by a specific address:
 
 ```bash
-gaiacli query gov deposit <proposal_id> <depositor_account>
+gaiacli query gov deposit <proposal_id> <depositor_address>
 ```
 
 #### Vote on a proposal

@@ -38,6 +38,7 @@ IMPROVEMENTS
 
 * SDK
  - \#1277 Complete bank module specification
+ - \#2986 Store Refactor
  
 * Tendermint
 

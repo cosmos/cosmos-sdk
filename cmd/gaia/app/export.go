@@ -81,23 +81,19 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	}
 	app.distrKeeper.IterateDelegationDistInfos(ctx, ddiIter)
 
-	app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
-		if !valInfo.DelPool.IsZero() || !valInfo.ValCommission.IsZero() {
-			panic(fmt.Sprintf("valInfo: %+v", valInfo))
-		}
+	app.assertRuntimeInvariantsWith(ctx)
+
+	// set distribution info withdrawal heights to 0
+	app.distrKeeper.IterateDelegationDistInfos(ctx, func(_ int64, delInfo distr.DelegationDistInfo) (stop bool) {
+		delInfo.DelPoolWithdrawalHeight = 0
+		app.distrKeeper.SetDelegationDistInfo(ctx, delInfo)
 		return false
 	})
-
-	// delete all distribution infos
-	// these will be recreated in InitGenesis
-	app.distrKeeper.RemoveValidatorDistInfos(ctx)
-	app.assertRuntimeInvariantsWith(ctx)
-	fmt.Printf("pre-deletion\n")
-	app.distrKeeper.RemoveDelegationDistInfos(ctx)
-
-	// assert again
-	app.assertRuntimeInvariantsWith(ctx)
-	fmt.Printf("post-deletion\n")
+	app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
+		valInfo.FeePoolWithdrawalHeight = 0
+		app.distrKeeper.SetValidatorDistInfo(ctx, valInfo)
+		return false
+	})
 
 	// assert that the fee pool is empty
 	feePool := app.distrKeeper.GetFeePool(ctx)
@@ -117,6 +113,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	/* Handle stake state. */
 
 	// iterate through validators by power descending, reset bond height, update bond intra-tx counter
+	pool := app.stakeKeeper.GetPool(ctx)
 	store := ctx.KVStore(app.keyStake)
 	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsByPowerIndexKey)
 	counter := int16(0)
@@ -130,6 +127,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 		validator.BondIntraTxCounter = counter
 		validator.UnbondingHeight = 0
 		app.stakeKeeper.SetValidator(ctx, validator)
+		app.stakeKeeper.SetValidatorByPowerIndex(ctx, validator, pool)
 		counter++
 	}
 	iter.Close()

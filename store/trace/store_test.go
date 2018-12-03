@@ -1,4 +1,4 @@
-package store
+package trace_test
 
 import (
 	"bytes"
@@ -8,9 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
-var kvPairs = []KVPair{
+var kvPairs = []types.KVPair{
 	{Key: keyFmt(1), Value: valFmt(1)},
 	{Key: keyFmt(2), Value: valFmt(2)},
 	{Key: keyFmt(3), Value: valFmt(3)},

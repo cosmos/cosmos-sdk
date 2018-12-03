@@ -1,10 +1,13 @@
-package store
+package dbadapter
 
 import (
 	"io"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	"github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/cache"
 )
 
 // Wrapper type for dbm.Db with implementation of KVStore
@@ -13,20 +16,22 @@ type dbStoreAdapter struct {
 }
 
 // Implements Store.
-func (dbStoreAdapter) GetStoreType() StoreType {
-	return sdk.StoreTypeDB
+func (dbStoreAdapter) GetStoreType() types.StoreType {
+	return types.StoreTypeDB
 }
 
 // Implements KVStore.
-func (dsa dbStoreAdapter) CacheWrap() CacheWrap {
-	return NewCacheKVStore(dsa)
+func (dsa dbStoreAdapter) CacheWrap() types.CacheWrap {
+	return cache.NewStore(dsa)
 }
 
 // CacheWrapWithTrace implements the KVStore interface.
-func (dsa dbStoreAdapter) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap {
+func (dsa dbStoreAdapter) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
 	return NewCacheKVStore(NewTraceKVStore(dsa, w, tc))
 }
 
+// XXX: delete
+/*
 // Implements KVStore
 func (dsa dbStoreAdapter) Prefix(prefix []byte) KVStore {
 	return prefixStore{dsa, prefix}
@@ -36,9 +41,9 @@ func (dsa dbStoreAdapter) Prefix(prefix []byte) KVStore {
 func (dsa dbStoreAdapter) Gas(meter GasMeter, config GasConfig) KVStore {
 	return NewGasKVStore(meter, config, dsa)
 }
-
+*/
 // dbm.DB implements KVStore so we can CacheKVStore it.
-var _ KVStore = dbStoreAdapter{}
+var _ types.KVStore = dbStoreAdapter{}
 
 //----------------------------------------
 // commitDBStoreWrapper should only be used for simulation/debugging,
@@ -49,18 +54,18 @@ type commitDBStoreAdapter struct {
 	dbStoreAdapter
 }
 
-func (cdsa commitDBStoreAdapter) Commit() CommitID {
-	return CommitID{
+func (cdsa commitDBStoreAdapter) Commit() types.CommitID {
+	return types.CommitID{
 		Version: -1,
 		Hash:    []byte("FAKE_HASH"),
 	}
 }
 
-func (cdsa commitDBStoreAdapter) LastCommitID() CommitID {
-	return CommitID{
+func (cdsa commitDBStoreAdapter) LastCommitID() types.CommitID {
+	return types.CommitID{
 		Version: -1,
 		Hash:    []byte("FAKE_HASH"),
 	}
 }
 
-func (cdsa commitDBStoreAdapter) SetPruning(_ PruningStrategy) {}
+func (cdsa commitDBStoreAdapter) SetPruning(_ types.PruningStrategy) {}

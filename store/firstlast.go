@@ -38,3 +38,13 @@ func Last(st KVStore, start, end []byte) (kv cmn.KVPair, ok bool) {
 
 	return cmn.KVPair{Key: iter.Key(), Value: iter.Value()}, true
 }
+
+//----------------------------------------
+func cp(bz []byte) (ret []byte) {
+	if bz == nil {
+		return nil
+	}
+	ret = make([]byte, len(bz))
+	copy(ret, bz)
+	return ret
+}

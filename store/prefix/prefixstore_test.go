@@ -1,4 +1,4 @@
-package store
+package prefix
 
 import (
 	"math/rand"

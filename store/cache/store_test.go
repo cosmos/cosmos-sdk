@@ -1,4 +1,4 @@
-package store
+package cache_test
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 )
 
 func newCacheKVStore() CacheKVStore {

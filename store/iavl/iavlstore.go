@@ -430,14 +430,3 @@ func (iter *iavlIterator) assertIsValid(unlockMutex bool) {
 		panic("invalid iterator")
 	}
 }
-
-//----------------------------------------
-
-func cp(bz []byte) (ret []byte) {
-	if bz == nil {
-		return nil
-	}
-	ret = make([]byte, len(bz))
-	copy(ret, bz)
-	return ret
-}

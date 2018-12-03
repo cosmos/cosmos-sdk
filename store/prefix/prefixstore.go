@@ -1,20 +1,22 @@
-package store
+package prefix
 
 import (
 	"bytes"
 	"io"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/cache"
 )
 
-var _ KVStore = prefixStore{}
+var _ types.KVStore = Store{}
 
-// prefixStore is similar with tendermint/tendermint/libs/db/prefix_db
+// Store is similar with tendermint/tendermint/libs/db/prefix_db
 // both gives access only to the limited subset of the store
 // for convinience or safety
 
-type prefixStore struct {
-	parent KVStore
+type Store struct {
+	parent types.KVStore
 	prefix []byte
 }
 
@@ -25,63 +27,65 @@ func cloneAppend(bz []byte, tail []byte) (res []byte) {
 	return
 }
 
-func (s prefixStore) key(key []byte) (res []byte) {
+func (s Store) key(key []byte) (res []byte) {
 	if key == nil {
-		panic("nil key on prefixStore")
+		panic("nil key on Store")
 	}
 	res = cloneAppend(s.prefix, key)
 	return
 }
 
 // Implements Store
-func (s prefixStore) GetStoreType() StoreType {
+func (s Store) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }
 
 // Implements CacheWrap
-func (s prefixStore) CacheWrap() CacheWrap {
-	return NewCacheKVStore(s)
+func (s Store) CacheWrap() types.CacheWrap {
+	return cache.NewStore(s)
 }
 
 // CacheWrapWithTrace implements the KVStore interface.
-func (s prefixStore) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap {
-	return NewCacheKVStore(NewTraceKVStore(s, w, tc))
+func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	return cache.NewStore(NewTraceKVStore(s, w, tc))
 }
 
 // Implements KVStore
-func (s prefixStore) Get(key []byte) []byte {
+func (s Store) Get(key []byte) []byte {
 	res := s.parent.Get(s.key(key))
 	return res
 }
 
 // Implements KVStore
-func (s prefixStore) Has(key []byte) bool {
+func (s Store) Has(key []byte) bool {
 	return s.parent.Has(s.key(key))
 }
 
 // Implements KVStore
-func (s prefixStore) Set(key, value []byte) {
+func (s Store) Set(key, value []byte) {
 	s.parent.Set(s.key(key), value)
 }
 
 // Implements KVStore
-func (s prefixStore) Delete(key []byte) {
+func (s Store) Delete(key []byte) {
 	s.parent.Delete(s.key(key))
 }
 
+// XXX: delete
+/*
 // Implements KVStore
-func (s prefixStore) Prefix(prefix []byte) KVStore {
-	return prefixStore{s, prefix}
+func (s Store) Prefix(prefix []byte) types.KVStore {
+	return Store{s, prefix}
 }
 
 // Implements KVStore
-func (s prefixStore) Gas(meter GasMeter, config GasConfig) KVStore {
+func (s Store) Gas(meter types.GasMeter, config types.GasConfig) types.KVStore {
 	return NewGasKVStore(meter, config, s)
 }
-
+*/
 // Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L106
-func (s prefixStore) Iterator(start, end []byte) Iterator {
+func (s Store) Iterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
@@ -98,7 +102,7 @@ func (s prefixStore) Iterator(start, end []byte) Iterator {
 
 // Implements KVStore
 // Check https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db.go#L129
-func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
+func (s Store) ReverseIterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
 	var newend []byte
@@ -113,16 +117,16 @@ func (s prefixStore) ReverseIterator(start, end []byte) Iterator {
 	return newPrefixIterator(s.prefix, start, end, iter)
 }
 
-var _ sdk.Iterator = (*prefixIterator)(nil)
+var _ types.Iterator = (*prefixIterator)(nil)
 
 type prefixIterator struct {
 	prefix     []byte
 	start, end []byte
-	iter       Iterator
+	iter       types.Iterator
 	valid      bool
 }
 
-func newPrefixIterator(prefix, start, end []byte, parent Iterator) *prefixIterator {
+func newPrefixIterator(prefix, start, end []byte, parent types.Iterator) *prefixIterator {
 	return &prefixIterator{
 		prefix: prefix,
 		start:  start,
@@ -184,9 +188,9 @@ func stripPrefix(key []byte, prefix []byte) []byte {
 	return key[len(prefix):]
 }
 
-// wrapping sdk.PrefixEndBytes
+// wrapping types.PrefixEndBytes
 func cpIncr(bz []byte) []byte {
-	return sdk.PrefixEndBytes(bz)
+	return types.PrefixEndBytes(bz)
 }
 
 // copied from github.com/tendermint/tendermint/libs/db/util.go
@@ -209,7 +213,7 @@ func cpDecr(bz []byte) (ret []byte) {
 	return nil
 }
 
-func skipOne(iter Iterator, skipKey []byte) {
+func skipOne(iter types.Iterator, skipKey []byte) {
 	if iter.Valid() {
 		if bytes.Equal(iter.Key(), skipKey) {
 			iter.Next()

@@ -80,7 +80,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -182,7 +182,7 @@ Submit a deposit for an acive proposal. You can find the proposal-id by running 
 $ gaiacli tx gov deposit 1 10STAKE --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -252,7 +252,7 @@ Submit a vote for an acive proposal. You can find the proposal-id by running gai
 $ gaiacli tx gov vote 1 yes --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)

@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"io"
 	"os"
 
@@ -152,6 +153,14 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	}
 
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
+}
+
+func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
+	encoder = sdk.GetConfig().GetTxEncoder()
+	if encoder == nil {
+		encoder = auth.DefaultTxEncoder(cdc)
+	}
+	return
 }
 
 // nolint

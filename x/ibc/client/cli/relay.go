@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/utils"
 	"os"
 	"time"
 
@@ -201,7 +202,7 @@ func (c relayCommander) refine(bz []byte, ibcSeq, accSeq uint64, passphrase stri
 		Sequence:  ibcSeq,
 	}
 
-	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(accSeq).WithCodec(c.cdc)
+	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(accSeq).WithTxEncoder(utils.GetTxEncoder(c.cdc))
 	cliCtx := context.NewCLIContext()
 
 	name, err := cliCtx.GetFromName()

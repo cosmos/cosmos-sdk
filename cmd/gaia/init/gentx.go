@@ -163,12 +163,10 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			// Write transaction to output file
 			if err := writeSignedGenTx(cdc, outputDocument, signedTx); err != nil {
 				return err
 			}
 
-			// Log success to the user
 			fmt.Fprintf(os.Stderr, "Genesis transaction written to %q\n", outputDocument)
 			return nil
 		},

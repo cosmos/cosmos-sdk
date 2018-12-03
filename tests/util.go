@@ -134,7 +134,7 @@ func WaitForTMStart(port string) {
 }
 
 // WaitForStart waits for the node to start by pinging the url
-// every 100ms for 5s until it returns 200. If it takes longer than 5s,
+// every 100ms for 10s until it returns 200. If it takes longer than 5s,
 // it panics.
 func WaitForStart(url string) {
 	var err error

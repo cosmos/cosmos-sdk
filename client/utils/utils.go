@@ -155,6 +155,8 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
 }
 
+// GetTxEncoder return tx encoder from global sdk configuration if ones is defined.
+// Otherwise returns encoder with default logic.
 func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 	encoder = sdk.GetConfig().GetTxEncoder()
 	if encoder == nil {

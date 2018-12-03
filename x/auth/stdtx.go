@@ -218,6 +218,7 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	}
 }
 
+// logic for standard transaction encoding
 func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryLengthPrefixed(tx)

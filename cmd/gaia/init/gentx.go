@@ -107,7 +107,7 @@ following delegation and commission default parameters:
 
 			for _, acc := range genesisState.Accounts {
 				// Ensure that account is in genesis
-				if string(key.GetAddress()) == string(acc.Address) {
+				if acc.Address.Equals(key.GetAddress()) {
 					// Ensure account contains enough funds of default bond denom
 					if acc.Coins.AmountOf(stakeTypes.DefaultBondDenom).
 						LT(coins.AmountOf(stakeTypes.DefaultBondDenom)) {

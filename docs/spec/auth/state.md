@@ -7,7 +7,7 @@ including public key, address, and account number / sequence number for replay p
 since account balances must also be fetched to pay fees, account structs also store the balance of a user
 as `sdk.Coins`.
 
-Accounts are exposed internally as an interface, and stored internally as
+Accounts are exposed externally as an interface, and stored internally as
 either a base account or vesting account. Module clients wishing to add more
 account types may do so.
 

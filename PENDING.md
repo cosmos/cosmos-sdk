@@ -11,6 +11,8 @@ BREAKING CHANGES
 
 * Gaia
  - [#128](https://github.com/tendermint/devops/issues/128) Updated CircleCI job to trigger website build on every push to master/develop.
+ - [\#2994](https://github.com/cosmos/cosmos-sdk/pull/2994) Change wrong-password error message.
+
 * SDK
  - [auth] \#2952 Signatures are no longer serialized on chain with the account number and sequence number
 

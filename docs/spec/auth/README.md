@@ -14,10 +14,10 @@ This module will be used in the Cosmos Hub.
 ## Contents
 
 1. **[State](state.md)**
-    1. [Account](types.md#account)
-        1. [Account Interface](types.md#account-interface)
-        1. [Base Account](types.md#baseaccount)
-        1. [Vesting Account](vesting.md)
+    1. [Accounts](state.md#accounts)
+        1. [Account Interface](state.md#account-interface)
+        1. [Base Account](state.md#baseaccount)
+        1. [Vesting Account](state.md#vestingaccount)
 1. **[Types](types.md)**
     1. [StdTx](types.md#stdtx)
 1. **[Keepers](keepers.md)**

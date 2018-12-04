@@ -2,7 +2,15 @@
 
 ### Account
 
+Accounts are exposed internally as an interface, and stored internally as
+either a base account or vesting account. Module clients wishing to add more
+account types may do so.
+
 #### Account Interface
+
+The account interface exposes methods to read and write standard account information.
+Note that all of these methods operate on an account struct confirming to the interface
+- in order to write the account to the store, the account keeper will need to be used.
 
 ```golang
 type Account interface {
@@ -24,6 +32,9 @@ type Account interface {
 ```
 
 #### Base Account
+
+A base account is the simplest and most common account type, which just stores all requisite
+fields directly in a struct.
 
 ```golang
 type BaseAccount struct {

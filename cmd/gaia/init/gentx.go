@@ -104,31 +104,9 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			inGenesis := false
-			bondDenom := genesisState.StakeData.Params.BondDenom
-
-			// Check if the account is in genesis
-			for _, acc := range genesisState.Accounts {
-				// Ensure that account is in genesis
-				if acc.Address.Equals(key.GetAddress()) {
-
-					// Ensure account contains enough funds of default bond denom
-					if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
-						return fmt.Errorf(
-							"Account %s is in genesis, but the only has %s%s available to stake, not %s%s",
-							key.GetAddress(), acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
-						)
-					}
-					inGenesis = true
-					break
-				}
-			}
-
-			if !inGenesis {
-				return fmt.Errorf(
-					"Account %s in not in the app_state.accounts array of genesis.json",
-					key.GetAddress(),
-				)
+			err = accountInGenesis(genesisState, key.GetAddress(), coins)
+			if err != nil {
+				return err
 			}
 
 			// Run gaiad tx create-validator
@@ -180,6 +158,34 @@ following delegation and commission default parameters:
 	cmd.Flags().AddFlagSet(cli.FsPk)
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
+}
+
+func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins) error {
+	accountIsInGenesis := false
+	bondDenom := genesisState.StakeData.Params.BondDenom
+
+	// Check if the account is in genesis
+	for _, acc := range genesisState.Accounts {
+		// Ensure that account is in genesis
+		if acc.Address.Equals(key) {
+
+			// Ensure account contains enough funds of default bond denom
+			if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
+				return fmt.Errorf(
+					"Account %s is in genesis, but the only has %s%s available to stake, not %s%s",
+					key, acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
+				)
+			}
+			accountIsInGenesis = true
+			break
+		}
+	}
+
+	if accountIsInGenesis {
+		return nil
+	}
+
+	return fmt.Errorf("Account %s in not in the app_state.accounts array of genesis.json", key)
 }
 
 func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID string,

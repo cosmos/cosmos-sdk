@@ -63,10 +63,6 @@
   name = "github.com/rakyll/statik"
   version = "=v0.1.4"
 
-[[constraint]]
-  name = "github.com/mitchellh/go-homedir"
-  version = "1.0.0"
-
 ## transitive deps, without releases:
 
 [[override]]

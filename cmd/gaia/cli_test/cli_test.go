@@ -28,7 +28,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	// Pull the two addresses
 	fooAddr := f.GetKeyAddress(keyFoo)
 	barAddr := f.GetKeyAddress(keyBar)
-
+  
 	// Get account balance and ensure correctness
 	fooAcc := f.GetAccount(fooAddr)
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(bondDenom).Int64())
@@ -156,6 +156,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	// start gaiad server
 	proc := f.StartGaiad(t)
 	t.Log("Starting gaiad")
+
 	defer proc.Stop(false)
 	cdc := app.MakeCodec()
 
@@ -559,7 +560,6 @@ func TestGaiaCLIConfig(t *testing.T) {
 	config, err := ioutil.ReadFile(path.Join(f.gaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)
 	expectedConfig := fmt.Sprintf(`chain_id = "%s"
-home = "%s"
 node = "%s"
 output = "text"
 trace = false

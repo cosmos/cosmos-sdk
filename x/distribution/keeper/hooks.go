@@ -28,9 +28,11 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 
 // Withdraw all validator rewards
 func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
-	// This doesn't need to be run at genesis
+	// Move the validator's rewards from the global pool to the validator's pools
+	// (dist info), but without actually withdrawing the rewards. This does not
+	// need to happen during the genesis block.
 	if ctx.BlockHeight() > 0 {
-		if err := k.WithdrawValidatorRewardsAll(ctx, valAddr); err != nil {
+		if err := k.updateValidatorDistInfoFromPool(ctx, valAddr); err != nil {
 			panic(err)
 		}
 	}

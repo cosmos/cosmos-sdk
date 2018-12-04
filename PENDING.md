@@ -43,7 +43,9 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
- - \#1277 Complete bank module specification
+  * \#1277 Complete bank module specification
+  * \#2914 No longer withdraw validator rewards on bond/unbond, but rather move
+  the rewards to the respective validator's pools.
 
 * Tendermint
 

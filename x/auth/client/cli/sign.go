@@ -166,7 +166,7 @@ func printAndValidateSigs(cliCtx context.CLIContext, chainID string, stdTx auth.
 			stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 		)
 
-		if ok := sig.PubKey.VerifyBytes(sigBytes, sig.Signature); !ok {
+		if ok := sig.VerifyBytes(sigBytes, sig.Signature); !ok {
 			sigSanity = "ERROR: signature invalid"
 			success = false
 		} else if i >= len(signers) || !sigAddr.Equals(signers[i]) {

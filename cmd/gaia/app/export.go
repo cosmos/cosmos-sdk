@@ -57,7 +57,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
 func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	/* Just to be safe, assert the invariants on current state. */
-	app.assertRuntimeInvariantsWith(ctx)
+	app.assertRuntimeInvariantsOnContext(ctx)
 
 	/* Handle fee distribution state. */
 
@@ -81,7 +81,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	}
 	app.distrKeeper.IterateDelegationDistInfos(ctx, ddiIter)
 
-	app.assertRuntimeInvariantsWith(ctx)
+	app.assertRuntimeInvariantsOnContext(ctx)
 
 	// set distribution info withdrawal heights to 0
 	app.distrKeeper.IterateDelegationDistInfos(ctx, func(_ int64, delInfo distr.DelegationDistInfo) (stop bool) {
@@ -107,7 +107,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	}
 
 	// reset fee pool height, save fee pool
-	feePool.TotalValAccum = distr.TotalAccum{0, sdk.ZeroDec()}
+	feePool.TotalValAccum = distr.NewTotalAccum(0)
 	app.distrKeeper.SetFeePool(ctx, feePool)
 
 	/* Handle stake state. */

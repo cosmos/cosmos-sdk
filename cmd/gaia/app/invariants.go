@@ -24,10 +24,10 @@ func (app *GaiaApp) runtimeInvariants() []simulation.Invariant {
 
 func (app *GaiaApp) assertRuntimeInvariants() {
 	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
-	app.assertRuntimeInvariantsWith(ctx)
+	app.assertRuntimeInvariantsOnContext(ctx)
 }
 
-func (app *GaiaApp) assertRuntimeInvariantsWith(ctx sdk.Context) {
+func (app *GaiaApp) assertRuntimeInvariantsOnContext(ctx sdk.Context) {
 	start := time.Now()
 	invariants := app.runtimeInvariants()
 	for _, inv := range invariants {

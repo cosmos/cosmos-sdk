@@ -117,7 +117,7 @@ func BenchmarkNextInflation(b *testing.B) {
 }
 
 // Next annual provisions benchmarking
-// BenchmarkNextAnnualProvisions-4 5000000251 ns/op
+// BenchmarkNextAnnualProvisions-4 5000000 251 ns/op
 func BenchmarkNextAnnualProvisions(b *testing.B) {
 	minter := InitialMinter(sdk.NewDecWithPrec(1, 1))
 	params := DefaultParams()

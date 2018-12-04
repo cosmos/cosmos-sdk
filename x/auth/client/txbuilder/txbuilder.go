@@ -208,28 +208,3 @@ func MakeSignature(name, passphrase string, msg StdSignMsg) (sig auth.StdSignatu
 		Signature: sigBytes,
 	}, nil
 }
-
-// SigBytesFromStdTx returns signature bytes for a given StdTx. An error is
-// returned if the signing the transaction fails.
-func (bldr TxBuilder) SigBytesFromStdTx(name, passphrase string, stdTx auth.StdTx) ([]byte, error) {
-	signMsg := StdSignMsg{
-		ChainID:       bldr.ChainID,
-		AccountNumber: bldr.AccountNumber,
-		Sequence:      bldr.Sequence,
-		Fee:           stdTx.Fee,
-		Msgs:          stdTx.GetMsgs(),
-		Memo:          stdTx.GetMemo(),
-	}
-
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		return nil, err
-	}
-
-	sigBytes, _, err := keybase.Sign(name, passphrase, signMsg.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	return sigBytes, nil
-}

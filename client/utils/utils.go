@@ -153,49 +153,6 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
 }
 
-// BuildStdTxSigBytes returns signature bytes for a given StdTx. An error is
-// returned if getting any necessary information for creating a signature fails
-// or generating the signature itself fails.
-func BuildStdTxSigBytes(
-	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, stdTx auth.StdTx, offline bool,
-) ([]byte, error) {
-
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		return nil, err
-	}
-
-	info, err := keybase.Get(name)
-	if err != nil {
-		return nil, err
-	}
-
-	addr := info.GetPubKey().Address()
-
-	if !offline && txBldr.AccountNumber == 0 {
-		accNum, err := cliCtx.GetAccountNumber(addr)
-		if err != nil {
-			return nil, err
-		}
-		txBldr = txBldr.WithAccountNumber(accNum)
-	}
-
-	if !offline && txBldr.Sequence == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(addr)
-		if err != nil {
-			return nil, err
-		}
-		txBldr = txBldr.WithSequence(accSeq)
-	}
-
-	passphrase, err := keys.GetPassphrase(name)
-	if err != nil {
-		return nil, err
-	}
-
-	return txBldr.SigBytesFromStdTx(name, passphrase, stdTx)
-}
-
 // nolint
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
 func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted uint64, err error) {

@@ -66,48 +66,6 @@ func checkInvalidTx(t *testing.T, anteHandler sdk.AnteHandler, ctx sdk.Context, 
 	}
 }
 
-func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee) sdk.Tx {
-	sigs := make([]StdSignature, len(privs))
-	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, "")
-		sig, err := priv.Sign(signBytes)
-		if err != nil {
-			panic(err)
-		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
-	}
-	tx := NewStdTx(msgs, fee, sigs, "")
-	return tx
-}
-
-func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee, memo string) sdk.Tx {
-	sigs := make([]StdSignature, len(privs))
-	for i, priv := range privs {
-		signBytes := StdSignBytes(ctx.ChainID(), accNums[i], seqs[i], fee, msgs, memo)
-		sig, err := priv.Sign(signBytes)
-		if err != nil {
-			panic(err)
-		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
-	}
-	tx := NewStdTx(msgs, fee, sigs, memo)
-	return tx
-}
-
-// All signers sign over the same StdSignDoc. Should always create invalid signatures
-func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []uint64, seqs []uint64, fee StdFee, signBytes []byte, memo string) sdk.Tx {
-	sigs := make([]StdSignature, len(privs))
-	for i, priv := range privs {
-		sig, err := priv.Sign(signBytes)
-		if err != nil {
-			panic(err)
-		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
-	}
-	tx := NewStdTx(msgs, fee, sigs, memo)
-	return tx
-}
-
 // Test various error cases in the AnteHandler control flow.
 func TestAnteHandlerSigErrors(t *testing.T) {
 	// setup

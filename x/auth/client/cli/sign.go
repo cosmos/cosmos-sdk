@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/go-amino"
@@ -67,10 +67,14 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			return
 		}
 
+		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
+		txBldr := authtxb.NewTxBuilderFromCLI()
+
 		if viper.GetBool(flagValidateSigs) {
-			if !printSignatures(stdTx) {
+			if !printAndValidateSigs(cliCtx, txBldr.ChainID, stdTx) {
 				return fmt.Errorf("signatures validation failed")
 			}
+
 			return nil
 		}
 
@@ -78,8 +82,6 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		if name == "" {
 			return errors.New("required flag \"name\" has not been set")
 		}
-		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
-		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		// if --signature-only is on, then override --append
 		generateSignatureOnly := viper.GetBool(flagSigOnly)
@@ -107,6 +109,7 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 				json, err = cdc.MarshalJSON(newTx)
 			}
 		}
+
 		if err != nil {
 			return err
 		}
@@ -122,35 +125,59 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		if err != nil {
 			return err
 		}
+
 		defer fp.Close()
 		fmt.Fprintf(fp, "%s\n", json)
+
 		return
 	}
 }
 
-func printSignatures(stdTx auth.StdTx) bool {
+func printAndValidateSigs(cliCtx context.CLIContext, chainID string, stdTx auth.StdTx) bool {
 	fmt.Println("Signers:")
+
 	signers := stdTx.GetSigners()
 	for i, signer := range signers {
 		fmt.Printf(" %v: %v\n", i, signer.String())
 	}
 
+	success := true
 	sigs := stdTx.GetSignatures()
+
 	fmt.Println("")
 	fmt.Println("Signatures:")
-	success := true
+
 	if len(sigs) != len(signers) {
 		success = false
 	}
-	for i, sig := range stdTx.GetSignatures() {
+
+	for i, sig := range sigs {
 		sigAddr := sdk.AccAddress(sig.Address())
 		sigSanity := "OK"
-		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
-			sigSanity = fmt.Sprintf("ERROR: signature %d does not match its respective signer", i)
+
+		acc, err := cliCtx.GetAccount(sigAddr)
+		if err != nil {
+			fmt.Printf("failed to get account: %s\n", sigAddr)
+			return false
+		}
+
+		sigBytes := auth.StdSignBytes(
+			chainID, acc.GetAccountNumber(), acc.GetSequence(),
+			stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
+		)
+
+		if ok := sig.PubKey.VerifyBytes(sigBytes, sig.Signature); !ok {
+			sigSanity = "ERROR: signature invalid"
+			success = false
+		} else if i >= len(signers) || !sigAddr.Equals(signers[i]) {
+			// check the signature address and that it matches the respective signer
+			sigSanity = "ERROR: signature does not match its respective signer"
 			success = false
 		}
+
 		fmt.Printf(" %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)
 	}
+
 	fmt.Println("")
 	return success
 }

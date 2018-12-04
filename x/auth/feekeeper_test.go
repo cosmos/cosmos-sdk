@@ -5,10 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-
-	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,57 +15,42 @@ var (
 )
 
 func TestFeeCollectionKeeperGetSet(t *testing.T) {
-	ms, _, capKey2 := setupMultiStore()
-	cdc := codec.New()
-
-	// make context and keeper
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey2)
+	input := setupTestInput()
 
 	// no coins initially
-	currFees := fck.GetCollectedFees(ctx)
+	currFees := input.fck.GetCollectedFees(input.ctx)
 	require.True(t, currFees.IsEqual(emptyCoins))
 
 	// set feeCollection to oneCoin
-	fck.setCollectedFees(ctx, oneCoin)
+	input.fck.setCollectedFees(input.ctx, oneCoin)
 
 	// check that it is equal to oneCoin
-	require.True(t, fck.GetCollectedFees(ctx).IsEqual(oneCoin))
+	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(oneCoin))
 }
 
 func TestFeeCollectionKeeperAdd(t *testing.T) {
-	ms, _, capKey2 := setupMultiStore()
-	cdc := codec.New()
-
-	// make context and keeper
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey2)
+	input := setupTestInput()
 
 	// no coins initially
-	require.True(t, fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
+	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(emptyCoins))
 
 	// add oneCoin and check that pool is now oneCoin
-	fck.AddCollectedFees(ctx, oneCoin)
-	require.True(t, fck.GetCollectedFees(ctx).IsEqual(oneCoin))
+	input.fck.AddCollectedFees(input.ctx, oneCoin)
+	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(oneCoin))
 
 	// add oneCoin again and check that pool is now twoCoins
-	fck.AddCollectedFees(ctx, oneCoin)
-	require.True(t, fck.GetCollectedFees(ctx).IsEqual(twoCoins))
+	input.fck.AddCollectedFees(input.ctx, oneCoin)
+	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(twoCoins))
 }
 
 func TestFeeCollectionKeeperClear(t *testing.T) {
-	ms, _, capKey2 := setupMultiStore()
-	cdc := codec.New()
-
-	// make context and keeper
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	fck := NewFeeCollectionKeeper(cdc, capKey2)
+	input := setupTestInput()
 
 	// set coins initially
-	fck.setCollectedFees(ctx, twoCoins)
-	require.True(t, fck.GetCollectedFees(ctx).IsEqual(twoCoins))
+	input.fck.setCollectedFees(input.ctx, twoCoins)
+	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(twoCoins))
 
 	// clear fees and see that pool is now empty
-	fck.ClearCollectedFees(ctx)
-	require.True(t, fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
+	input.fck.ClearCollectedFees(input.ctx)
+	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(emptyCoins))
 }

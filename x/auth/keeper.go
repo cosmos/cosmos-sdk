@@ -29,7 +29,7 @@ type AccountKeeper struct {
 // (binary) encode and decode concrete sdk.Accounts.
 // nolint
 func NewAccountKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramstore params.Subspace, proto func() Account,
+	cdc *codec.Codec, key sdk.StoreKey, paramstore params.Subspace, proto func() types.Account,
 ) AccountKeeper {
 
 	return AccountKeeper{
@@ -41,7 +41,7 @@ func NewAccountKeeper(
 }
 
 // Implaements sdk.AccountKeeper.
-func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) Account {
+func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.Account {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
@@ -57,7 +57,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 }
 
 // New Account
-func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
+func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.Account) types.Account {
 	err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx))
 	if err != nil {
 		// TODO: Handle with #870
@@ -72,7 +72,7 @@ func AddressStoreKey(addr sdk.AccAddress) []byte {
 }
 
 // Implements sdk.AccountKeeper.
-func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account {
+func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.Account {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(AddressStoreKey(addr))
 	if bz == nil {
@@ -83,7 +83,7 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account
 }
 
 // Implements sdk.AccountKeeper.
-func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc Account) {
+func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	bz := ak.encodeAccount(acc)
@@ -91,14 +91,14 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc Account) {
 }
 
 // RemoveAccount removes an account for the account mapper store.
-func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc Account) {
+func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	store.Delete(AddressStoreKey(addr))
 }
 
 // Implements sdk.AccountKeeper.
-func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
+func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(types.Account) (stop bool)) {
 	store := ctx.KVStore(ak.key)
 	iter := sdk.KVStorePrefixIterator(store, []byte("account:"))
 	defer iter.Close()
@@ -170,7 +170,7 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 //----------------------------------------
 // misc.
 
-func (ak AccountKeeper) encodeAccount(acc Account) []byte {
+func (ak AccountKeeper) encodeAccount(acc types.Account) []byte {
 	bz, err := ak.cdc.MarshalBinaryBare(acc)
 	if err != nil {
 		panic(err)
@@ -178,7 +178,7 @@ func (ak AccountKeeper) encodeAccount(acc Account) []byte {
 	return bz
 }
 
-func (ak AccountKeeper) decodeAccount(bz []byte) (acc Account) {
+func (ak AccountKeeper) decodeAccount(bz []byte) (acc types.Account) {
 	err := ak.cdc.UnmarshalBinaryBare(bz, &acc)
 	if err != nil {
 		panic(err)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -33,7 +34,7 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
 		// all transactions must be of type auth.StdTx
-		stdTx, ok := tx.(StdTx)
+		stdTx, ok := tx.(types.StdTx)
 		if !ok {
 			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
@@ -115,8 +116,8 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 	}
 }
 
-func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (accs []Account, res sdk.Result) {
-	accs = make([]Account, len(addrs))
+func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) ([]types.Account, sdk.Result) {
+	accs := make([]types.Account, len(addrs))
 	for i := 0; i < len(accs); i++ {
 		accs[i] = am.GetAccount(ctx, addrs[i])
 		if accs[i] == nil {
@@ -124,14 +125,14 @@ func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (a
 		}
 	}
 
-	return
+	return accs, sdk.Result{}
 }
 
 // verify the signature and increment the sequence. If the account doesn't have
 // a pubkey, set it.
 func processSig(
-	ctx sdk.Context, acc Account, sig StdSignature, signBytes []byte, simulate bool,
-) (updatedAcc Account, res sdk.Result) {
+	ctx sdk.Context, acc types.Account, sig types.StdSignature, signBytes []byte, simulate bool,
+) (updatedAcc types.Account, res sdk.Result) {
 
 	pubKey, res := processPubKey(acc, sig, simulate)
 	if !res.IsOK() {
@@ -164,7 +165,7 @@ func init() {
 	copy(dummySecp256k1Pubkey[:], bz)
 }
 
-func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
+func processPubKey(acc types.Account, sig types.StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
 	// If pubkey is not known for account, set it from the StdSignature.
 	pubKey := acc.GetPubKey()
 	if simulate {
@@ -221,7 +222,7 @@ func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
 // Deduct the fee from the account.
 // We could use the CoinKeeper (in addition to the AccountKeeper,
 // because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
+func deductFees(acc types.Account, fee types.StdFee) (types.Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
@@ -244,7 +245,7 @@ func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 	return acc, sdk.Result{}
 }
 
-func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
+func ensureSufficientMempoolFees(ctx sdk.Context, stdTx types.StdTx) sdk.Result {
 	// Currently we use a very primitive gas pricing model with a constant
 	// gasPrice where adjustFeesByGas handles calculating the amount of fees
 	// required based on the provided gas.
@@ -269,7 +270,7 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	return sdk.Result{}
 }
 
-func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
+func setGasMeter(simulate bool, ctx sdk.Context, stdTx types.StdTx) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
 	if simulate || ctx.BlockHeight() == 0 {
@@ -279,16 +280,17 @@ func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 }
 
-func getSignBytesList(chainID string, stdTx StdTx, accs []Account, genesis bool) (signatureBytesList [][]byte) {
-	signatureBytesList = make([][]byte, len(accs))
+func getSignBytesList(chainID string, stdTx types.StdTx, accs []types.Account, genesis bool) [][]byte {
+	signatureBytesList := make([][]byte, len(accs))
 	for i := 0; i < len(accs); i++ {
 		accNum := accs[i].GetAccountNumber()
 		if genesis {
 			accNum = 0
 		}
-		signatureBytesList[i] = StdSignBytes(chainID,
+		signatureBytesList[i] = types.StdSignBytes(chainID,
 			accNum, accs[i].GetSequence(),
 			stdTx.Fee, stdTx.Msgs, stdTx.Memo)
 	}
-	return
+
+	return signatureBytesList
 }

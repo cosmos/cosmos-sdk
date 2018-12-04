@@ -47,12 +47,12 @@ type Params struct {
 // nolint
 func (p Params) KeyValuePairs() params.KeyValuePairs {
 	return params.KeyValuePairs{
-		{KeyMemoCostPerByte, p.MemoCostPerByte},
-		{KeyMaxMemoCharacters, p.MaxMemoCharacters},
-		{KeyGasPerUnitCost, p.GasPerUnitCost},
-		{KeyTxSigLimit, p.TxSigLimit},
-		{KeySigVerifyCostED25519, p.SigVerifyCostED25519},
-		{KeySigVerifyCostSecp256k1, p.SigVerifyCostSecp256k1},
+		{KeyMemoCostPerByte, &p.MemoCostPerByte},
+		{KeyMaxMemoCharacters, &p.MaxMemoCharacters},
+		{KeyGasPerUnitCost, &p.GasPerUnitCost},
+		{KeyTxSigLimit, &p.TxSigLimit},
+		{KeySigVerifyCostED25519, &p.SigVerifyCostED25519},
+		{KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1},
 	}
 }
 

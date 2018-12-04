@@ -5,23 +5,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
-	key := ed25519.GenPrivKey()
-	pub := key.PubKey()
-	addr := sdk.AccAddress(pub.Address())
-	return key, pub, addr
-}
-
 func TestBaseAddressPubKey(t *testing.T) {
-	_, pub1, addr1 := keyPubAddr()
-	_, pub2, addr2 := keyPubAddr()
+	_, pub1, addr1 := NewTestKeyPubAddr()
+	_, pub2, addr2 := NewTestKeyPubAddr()
 	acc := NewBaseAccountWithAddress(addr1)
 
 	// check the address (set) and pubkey (not set)
@@ -53,7 +43,7 @@ func TestBaseAddressPubKey(t *testing.T) {
 }
 
 func TestBaseAccountCoins(t *testing.T) {
-	_, _, addr := keyPubAddr()
+	_, _, addr := NewTestKeyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
 	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
@@ -64,7 +54,7 @@ func TestBaseAccountCoins(t *testing.T) {
 }
 
 func TestBaseAccountSequence(t *testing.T) {
-	_, _, addr := keyPubAddr()
+	_, _, addr := NewTestKeyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
 	seq := uint64(7)
@@ -75,7 +65,7 @@ func TestBaseAccountSequence(t *testing.T) {
 }
 
 func TestBaseAccountMarshal(t *testing.T) {
-	_, pub, addr := keyPubAddr()
+	_, pub, addr := NewTestKeyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
 	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}

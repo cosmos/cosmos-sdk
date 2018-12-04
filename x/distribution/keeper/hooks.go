@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,9 +28,11 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 
 // Withdraw all validator rewards
 func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
-	// This doesn't need to be run at genesis
+	// Move the validator's rewards from the global pool to the validator's pools
+	// (dist info), but without actually withdrawing the rewards. This does not
+	// need to happen during the genesis block.
 	if ctx.BlockHeight() > 0 {
-		if err := k.WithdrawValidatorRewardsAll(ctx, valAddr); err != nil {
+		if err := k.updateValidatorDistInfoFromPool(ctx, valAddr); err != nil {
 			panic(err)
 		}
 	}
@@ -78,14 +79,6 @@ func (k Keeper) onDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress,
 func (k Keeper) onDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
 
-	if bytes.Equal(delAddr.Bytes(), valAddr.Bytes()) {
-		// On updates to a self bond/unbond, we must update the validator's dist
-		// info without withdrawing any rewards.
-		k.UpdateValidatorDistInfoFromPool(ctx, valAddr)
-	} else {
-		k.onValidatorModified(ctx, valAddr)
-	}
-
 	if err := k.WithdrawDelegationReward(ctx, delAddr, valAddr); err != nil {
 		panic(err)
 	}
@@ -125,6 +118,7 @@ func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valA
 	h.k.onDelegationCreated(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.k.onValidatorModified(ctx, valAddr)
 	h.k.onDelegationSharesModified(ctx, delAddr, valAddr)
 }
 func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {

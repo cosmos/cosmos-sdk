@@ -559,7 +559,6 @@ func TestGaiaCLIConfig(t *testing.T) {
 	t.Parallel()
 	chainID, servAddr, port, gaiadHome, gaiacliHome, _ := initializeFixtures(t)
 	node := fmt.Sprintf("%s:%s", servAddr, port)
-	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
 	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config node %s`, gaiacliHome, node))
 	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config output text`, gaiacliHome))
 	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config trust_node true`, gaiacliHome))

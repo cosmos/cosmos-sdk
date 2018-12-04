@@ -96,7 +96,7 @@ func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) 
 // from a onValidatorModified hook.
 func (k Keeper) updateValidatorDistInfoFromPool(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
 	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
-		types.ErrNoValidatorDistInfo(k.codespace)
+		return types.ErrNoValidatorDistInfo(k.codespace)
 	}
 
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)

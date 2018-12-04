@@ -6,6 +6,7 @@ BREAKING CHANGES
 
 * Gaia CLI  (`gaiacli`)
   * [cli] [\#2595](https://github.com/cosmos/cosmos-sdk/issues/2595) Remove `keys new` in favor of `keys add` incorporating existing functionality with addition of key recovery functionality.
+  * [cli] [\#2971](https://github.com/cosmos/cosmos-sdk/pull/2971) Additional verification when running `gaiad gentx`
 
 * Gaia
  - [#128](https://github.com/tendermint/devops/issues/128) Updated CircleCI job to trigger website build on every push to master/develop.
@@ -39,7 +40,7 @@ IMPROVEMENTS
 
 * SDK
  - \#1277 Complete bank module specification
- 
+
 * Tendermint
 
 

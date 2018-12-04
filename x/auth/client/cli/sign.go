@@ -170,7 +170,6 @@ func printAndValidateSigs(cliCtx context.CLIContext, chainID string, stdTx auth.
 			sigSanity = "ERROR: signature invalid"
 			success = false
 		} else if i >= len(signers) || !sigAddr.Equals(signers[i]) {
-			// check the signature address and that it matches the respective signer
 			sigSanity = "ERROR: signature does not match its respective signer"
 			success = false
 		}

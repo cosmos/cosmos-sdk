@@ -4,7 +4,6 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/tendermint/tendermint/crypto"
 )
 
@@ -21,26 +20,19 @@ type AccountKeeper struct {
 
 	// The codec codec for binary encoding/decoding of accounts.
 	cdc *codec.Codec
-
-	paramStore params.Subspace
 }
 
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
-// nolint
-func NewAccountKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramstore params.Subspace, proto func() types.Account,
-) AccountKeeper {
-
+func NewAccountKeeper(cdc *codec.Codec, key sdk.StoreKey, proto func() types.Account) AccountKeeper {
 	return AccountKeeper{
-		key:        key,
-		proto:      proto,
-		cdc:        cdc,
-		paramStore: paramstore.WithTypeTable(ParamTypeTable()),
+		key:   key,
+		proto: proto,
+		cdc:   cdc,
 	}
 }
 
-// Implaements sdk.AccountKeeper.
+// Implements sdk.AccountKeeper.
 func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.Account {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)

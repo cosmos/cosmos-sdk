@@ -10,6 +10,20 @@ import (
 	"github.com/tendermint/tendermint/crypto/multisig"
 )
 
+// TODO: These will all be removed in the param store implementation
+const (
+	MemoCostPerByte     sdk.Gas = 1
+	ED25519VerifyCost           = 59
+	Secp256k1VerifyCost         = 100
+	MaxMemoCharacters           = 100
+
+	// how much gas = 1 atom
+	GasPerUnitCost = 1000
+
+	// max total number of sigs per tx
+	TxSigLimit = 7
+)
+
 var _ sdk.Tx = (*StdTx)(nil)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
@@ -47,11 +61,11 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	if len(stdSigs) != len(tx.GetSigners()) {
 		return sdk.ErrUnauthorized("wrong number of signers")
 	}
-	if len(tx.GetMemo()) > DefaultMaxMemoCharacters {
+	if len(tx.GetMemo()) > MaxMemoCharacters {
 		return sdk.ErrMemoTooLarge(
 			fmt.Sprintf(
 				"maximum number of characters is %d but received %d characters",
-				DefaultMaxMemoCharacters, len(tx.GetMemo()),
+				MaxMemoCharacters, len(tx.GetMemo()),
 			),
 		)
 	}
@@ -59,9 +73,9 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	sigCount := 0
 	for i := 0; i < len(stdSigs); i++ {
 		sigCount += CountSubKeys(stdSigs[i].PubKey)
-		if sigCount > DefaultTxSigLimit {
+		if sigCount > TxSigLimit {
 			return sdk.ErrTooManySignatures(
-				fmt.Sprintf("signatures: %d, limit: %d", sigCount, DefaultTxSigLimit),
+				fmt.Sprintf("signatures: %d, limit: %d", sigCount, TxSigLimit),
 			)
 		}
 	}

@@ -12,19 +12,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
-const (
-	memoCostPerByte     sdk.Gas = 1
-	ed25519VerifyCost           = 59
-	secp256k1VerifyCost         = 100
-	maxMemoCharacters           = 100
-
-	// how much gas = 1 atom
-	gasPerUnitCost = 1000
-
-	// max total number of sigs per tx
-	txSigLimit = 7
-)
-
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
@@ -74,7 +61,7 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, err.Result(), true
 		}
 
-		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
+		newCtx.GasMeter().ConsumeGas(types.MemoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
 
 		// stdSigs contains the sequence number, account number, and signatures.
 		// When simulating, this would just be a 0-length slice.
@@ -198,16 +185,16 @@ func processPubKey(acc types.Account, sig types.StdSignature, simulate bool) (cr
 func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey) {
 	switch pubkey.(type) {
 	case ed25519.PubKeyEd25519:
-		meter.ConsumeGas(ed25519VerifyCost, "ante verify: ed25519")
+		meter.ConsumeGas(types.ED25519VerifyCost, "ante verify: ed25519")
 	case secp256k1.PubKeySecp256k1:
-		meter.ConsumeGas(secp256k1VerifyCost, "ante verify: secp256k1")
+		meter.ConsumeGas(types.Secp256k1VerifyCost, "ante verify: secp256k1")
 	default:
 		panic("Unrecognized signature type")
 	}
 }
 
 func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
-	gasCost := gas / gasPerUnitCost
+	gasCost := gas / types.GasPerUnitCost
 	gasFees := make(sdk.Coins, len(fees))
 
 	// TODO: Make this not price all coins in the same way

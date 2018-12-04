@@ -22,10 +22,10 @@ import (
 )
 
 const (
-	flagTags    = "tags"
-	flagAny     = "any"
-	flagPage    = "page"
-	flagPerPage = "perPage"
+	flagTags  = "tags"
+	flagAny   = "any"
+	flagPage  = "page"
+	flagLimit = "limit"
 )
 
 // default client command to search through tagged transactions
@@ -36,7 +36,7 @@ func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Search for transactions that match exactly the given tags. For example:
 
-$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --perPage 30
+$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tagsStr := viper.GetString(flagTags)
@@ -65,10 +65,10 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --perPage 
 				tmTags = append(tmTags, tag)
 			}
 			page := viper.GetInt(flagPage)
-			perPage := viper.GetInt(flagPerPage)
+			limit := viper.GetInt(flagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := SearchTxs(cliCtx, cdc, tmTags, page, perPage)
+			txs, err := SearchTxs(cliCtx, cdc, tmTags, page, limit)
 			if err != nil {
 				return err
 			}
@@ -96,15 +96,15 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --perPage 
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
-	cmd.Flags().String(flagPage, "", "page of pagination parameter")
-	cmd.Flags().String(flagPerPage, "", "num of transactions per page returned")
+	cmd.Flags().Int32(flagPage, 1, "page of pagination parameter")
+	cmd.Flags().Int32(flagLimit, 30, "num of transactions per page returned")
 	return cmd
 }
 
 // SearchTxs performs a search for transactions for a given set of tags via
 // Tendermint RPC. It returns a slice of Info object containing txs and metadata.
 // An error is returned if the query fails.
-func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, perPage int) ([]Info, error) {
+func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, limit int) ([]Info, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
@@ -120,7 +120,7 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 
 	prove := !cliCtx.TrustNode
 
-	res, err := node.TxSearch(query, prove, page, perPage)
+	res, err := node.TxSearch(query, prove, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 		}
 
 		for key, values := range r.Form {
-			if key == "page" || key == "perPage" {
+			if key == "page" || key == "limit" {
 				continue
 			}
 			value, err := url.QueryUnescape(values[0])
@@ -198,23 +198,21 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 		}
 		page, err := strconv.Atoi(pageStr)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("page parameter is not a valid integer"))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		perPageStr := r.FormValue("perPage")
-		if perPageStr == "" {
-			perPageStr = "30" // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+		limitStr := r.FormValue("limit")
+		if limitStr == "" {
+			limitStr = "30" // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
 		}
-		perPage, err := strconv.Atoi(perPageStr)
+		limit, err := strconv.Atoi(limitStr)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("perPage parameter is not a valid integer"))
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		txs, err = SearchTxs(cliCtx, cdc, tags, page, perPage)
+		txs, err = SearchTxs(cliCtx, cdc, tags, page, limit)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

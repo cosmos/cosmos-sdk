@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,7 +31,9 @@ func QueryDepositsByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +76,9 @@ func QueryVotesByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +117,9 @@ func QueryVoteByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.Voter, []byte(params.Voter.String())),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +160,9 @@ func QueryDepositByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.Depositor, []byte(params.Depositor.String())),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +202,9 @@ func QueryProposerByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
 	if err != nil {
 		return nil, err
 	}

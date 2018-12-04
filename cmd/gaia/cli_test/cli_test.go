@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
@@ -36,7 +37,7 @@ import (
 
 func TestGaiaCLIMinimumFees(t *testing.T) {
 	t.Parallel()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t, nil)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server with minimum fees
@@ -60,7 +61,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 
 func TestGaiaCLIFeesDeduction(t *testing.T) {
 	t.Parallel()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t, nil)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server with minimum fees
@@ -103,7 +104,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 func TestGaiaCLISend(t *testing.T) {
 	t.Parallel()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t, nil)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -155,7 +156,7 @@ func TestGaiaCLISend(t *testing.T) {
 
 func TestGaiaCLIGasAuto(t *testing.T) {
 	t.Parallel()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t, nil)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -208,7 +209,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 
 func TestGaiaCLICreateValidator(t *testing.T) {
 	t.Parallel()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t, nil)
 	flags := fmt.Sprintf("--home=%s --chain-id=%v --node=%s", gaiacliHome, chainID, servAddr)
 
 	// start gaiad server
@@ -306,7 +307,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
 	t.Parallel()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t, nil)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -457,7 +458,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 func TestGaiaCLIValidateSignatures(t *testing.T) {
 	t.Parallel()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t, nil)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -526,7 +527,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 
 func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	t.Parallel()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t, nil)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -628,7 +629,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 func TestGaiaCLIConfig(t *testing.T) {
 	t.Parallel()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, _ := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, _ := initializeFixtures(t, nil)
 	node := fmt.Sprintf("%s:%s", servAddr, port)
 	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config node %s`, gaiacliHome, node))
 	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config output text`, gaiacliHome))
@@ -685,7 +686,7 @@ func TestSlashingGetParams(t *testing.T) {
 	t.Parallel()
 
 	cdc := app.MakeCodec()
-	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t, nil)
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
@@ -709,6 +710,56 @@ func TestSlashingGetParams(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestGaiaCLIQueryTxPagination(t *testing.T) {
+	t.Parallel()
+	configOverride := cfg.DefaultConfig()
+	configOverride.TxIndex.IndexAllTags = true
+	configOverride.Consensus.SkipTimeoutCommit = true
+	chainID, servAddr, port, gaiadHome, gaiacliHome, _ := initializeFixtures(t, configOverride)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad git server
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf(
+		"gaiad start --home=%s --rpc.laddr=%v", gaiadHome, servAddr))
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(2, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --output=json --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --output=json --home=%s", gaiacliHome))
+
+	for i := 1; i <= 30; i++ {
+		success := executeWrite(t, fmt.Sprintf(
+			"gaiacli tx send %v --amount=%dfootoken --to=%s --from=foo",
+			flags, i, barAddr), app.DefaultKeyPass)
+		require.True(t, success)
+		tests.WaitForNextNBlocksTM(1, port)
+	}
+
+	// perPage = 15, 2 pages
+	txsPage1 := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=15 --page=1", fooAddr, flags))
+	require.Len(t, txsPage1, 15)
+	txsPage2 := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=15 --page=2", fooAddr, flags))
+	require.Len(t, txsPage2, 15)
+	require.NotEqual(t, txsPage1, txsPage2)
+	txsPage3 := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=15 --page=3", fooAddr, flags))
+	require.Len(t, txsPage3, 15)
+	require.Equal(t, txsPage2, txsPage3)
+
+	// perPage = 16, 2 pages
+	txsPage1 = executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=16 --page=1", fooAddr, flags))
+	require.Len(t, txsPage1, 16)
+	txsPage2 = executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=16 --page=2", fooAddr, flags))
+	require.Len(t, txsPage2, 14)
+	require.NotEqual(t, txsPage1, txsPage2)
+
+	// perPage = 50
+	txsPageFull := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=50 --page=1", fooAddr, flags))
+	require.Len(t, txsPageFull, 30)
+	require.Equal(t, txsPageFull, append(txsPage1, txsPage2...))
+}
+
 //___________________________________________________________________________________
 // helper methods
 
@@ -719,7 +770,7 @@ func getTestingHomeDirs(name string) (string, string) {
 	return gaiadHome, gaiacliHome
 }
 
-func initializeFixtures(t *testing.T) (chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr string) {
+func initializeFixtures(t *testing.T, configOverride *cfg.Config) (chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr string) {
 	gaiadHome, gaiacliHome = getTestingHomeDirs(t.Name())
 	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
 	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
@@ -731,6 +782,9 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port, gaiadHome, gaiac
 	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", gaiacliHome))
 	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
 
+	if configOverride != nil {
+		cfg.WriteConfigFile(filepath.Join(gaiadHome, "config", "config.toml"), configOverride)
+	}
 	executeWriteCheckErr(t, fmt.Sprintf(
 		"gaiad add-genesis-account %s 150%s,1000footoken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
 	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", gaiadHome, string(os.PathSeparator), string(os.PathSeparator)))

@@ -15,13 +15,12 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 )
 
-// CompleteAndBroadcastTxCli implements a utility function that
-// facilitates sending a series of messages in a signed
-// transaction given a TxBuilder and a QueryContext. It ensures
-// that the account exists, has a proper number and sequence
-// set. In addition, it builds and signs a transaction with the
-// supplied messages.  Finally, it broadcasts the signed
-// transaction to a node.
+// CompleteAndBroadcastTxCli implements a utility function that facilitates
+// sending a series of messages in a signed transaction given a TxBuilder and a
+// QueryContext. It ensures that the account exists, has a proper number and
+// sequence set. In addition, it builds and signs a transaction with the
+// supplied messages. Finally, it broadcasts the signed transaction to a node.
+//
 // NOTE: Also see CompleteAndBroadcastTxREST.
 func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
 	txBldr, err := prepareTxBuilder(txBldr, cliCtx)
@@ -116,13 +115,15 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	if err != nil {
 		return signedStdTx, err
 	}
+
 	info, err := keybase.Get(name)
 	if err != nil {
 		return signedStdTx, err
 	}
+
 	addr := info.GetPubKey().Address()
 
-	// Check whether the address is a signer
+	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
 		return signedStdTx, fmt.Errorf(
 			"The generated transaction's intended signer does not match the given signer: %q", name)
@@ -148,7 +149,51 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	if err != nil {
 		return signedStdTx, err
 	}
+
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
+}
+
+// BuildStdTxSigBytes returns signature bytes for a given StdTx. An error is
+// returned if getting any necessary information for creating a signature fails
+// or generating the signature itself fails.
+func BuildStdTxSigBytes(
+	txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, stdTx auth.StdTx, offline bool,
+) ([]byte, error) {
+
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := keybase.Get(name)
+	if err != nil {
+		return nil, err
+	}
+
+	addr := info.GetPubKey().Address()
+
+	if !offline && txBldr.AccountNumber == 0 {
+		accNum, err := cliCtx.GetAccountNumber(addr)
+		if err != nil {
+			return nil, err
+		}
+		txBldr = txBldr.WithAccountNumber(accNum)
+	}
+
+	if !offline && txBldr.Sequence == 0 {
+		accSeq, err := cliCtx.GetAccountSequence(addr)
+		if err != nil {
+			return nil, err
+		}
+		txBldr = txBldr.WithSequence(accSeq)
+	}
+
+	passphrase, err := keys.GetPassphrase(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return txBldr.SigBytesFromStdTx(name, passphrase, stdTx)
 }
 
 // nolint

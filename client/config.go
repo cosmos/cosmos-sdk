@@ -108,7 +108,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	if err := saveConfigFile(cfgFile, tree); err != nil {
 		return err
 	}
-	fmt.Fprintf(os.Stderr, "configuration saved to %q\n", cfgFile)
+	fmt.Fprintf(os.Stderr, "configuration saved to %s\n", cfgFile)
 
 	return nil
 }
@@ -124,6 +124,7 @@ func ensureConfFile(rootDir string) (string, error) {
 
 func loadConfigFile(cfgFile string) (*toml.Tree, error) {
 	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "%s does not exist\n", cfgFile)
 		return toml.Load(``)
 	}
 

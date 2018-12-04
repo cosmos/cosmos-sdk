@@ -563,36 +563,20 @@ func TestGaiaCLIConfig(t *testing.T) {
 	t.Parallel()
 	chainID, servAddr, port, gaiadHome, gaiacliHome, _ := initializeFixtures(t)
 	node := fmt.Sprintf("%s:%s", servAddr, port)
-	executeWrite(t, fmt.Sprintf("gaiacli --home=%s config", gaiadHome), gaiacliHome, node, "y")
+	chainID := executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
+	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config node %s`, gaiacliHome, node))
+	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config output text`, gaiacliHome))
+	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config trust_node true`, gaiacliHome))
+	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config chain_id %s`, gaiacliHome, chainID))
+	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config trace false`, gaiacliHome))
 	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)
 	expectedConfig := fmt.Sprintf(`chain_id = "%s"
-home = "%s"
 node = "%s"
 output = "text"
 trace = false
 trust_node = true
-`, chainID, gaiacliHome, node)
-	require.Equal(t, expectedConfig, string(config))
-	// ensure a backup gets created
-	executeWrite(t, "gaiacli config", gaiacliHome, node, "y", "y")
-	configBackup, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml-old"))
-	require.NoError(t, err)
-	require.Equal(t, expectedConfig, string(configBackup))
-
-	require.NoError(t, os.RemoveAll(gaiadHome))
-	executeWrite(t, "gaiacli config", gaiacliHome, node, "y")
-
-	// ensure it works without an initialized gaiad state
-	expectedConfig = fmt.Sprintf(`chain_id = ""
-home = "%s"
-node = "%s"
-output = "text"
-trace = false
-trust_node = true
-`, gaiacliHome, node)
-	config, err = ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
-	require.NoError(t, err)
+`, chainID, node)
 	require.Equal(t, expectedConfig, string(config))
 	cleanupDirs(gaiadHome, gaiacliHome)
 }

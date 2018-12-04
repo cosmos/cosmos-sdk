@@ -60,5 +60,6 @@ BUG FIXES
 * Gaia
 
 * SDK
+  * \#2967 Change ordering of `mint.BeginBlocker` and `distr.BeginBlocker`, recalculate inflation each block
 
 * Tendermint

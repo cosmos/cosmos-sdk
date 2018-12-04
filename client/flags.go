@@ -43,6 +43,9 @@ const (
 	FlagSSLHosts           = "ssl-hosts"
 	FlagSSLCertFile        = "ssl-certfile"
 	FlagSSLKeyFile         = "ssl-keyfile"
+	FlagTrace              = "trace"
+	FlagOutput             = "output"
+	FlagHome               = "home"
 )
 
 // LineBreak can be included in a command list to provide a blank line

@@ -1,4 +1,4 @@
-# Networks
+# Deploy your own testnet
 
 This document describes 3 ways to setup a network of `gaiad` nodes, each serving a different usecase:
 
@@ -73,7 +73,7 @@ make build-linux
 make build-docker-gaiadnode
 ```
 
-### Run a testnet
+### Run your testnet
 
 To start a 4 node testnet run:
 

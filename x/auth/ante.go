@@ -79,22 +79,16 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// When simulating, this would just be a 0-length slice.
 		stdSigs := stdTx.GetSignatures()
 		signerAddrs := stdTx.GetSigners()
-
-		// create the list of all sign bytes
-		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, stdSigs)
 		signerAccs, res := getSignerAccs(newCtx, am, signerAddrs)
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
 
-		res = validateAccNumAndSequence(ctx, signerAccs, stdSigs)
-		if !res.IsOK() {
-			return newCtx, res, true
-		}
+		isGenesis := ctx.BlockHeight() == 0
+		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, signerAccs, isGenesis)
 
 		// first sig pays the fees
 		if !stdTx.Fee.Amount.IsZero() {
-			// signerAccs[0] is the fee payer
 			signerAccs[0], res = deductFees(signerAccs[0], stdTx.Fee)
 			if !res.IsOK() {
 				return newCtx, res, true
@@ -133,50 +127,17 @@ func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (a
 	return
 }
 
-func validateAccNumAndSequence(ctx sdk.Context, accs []Account, sigs []StdSignature) sdk.Result {
-	isGenesis := ctx.BlockHeight() == 0
-
-	for i := 0; i < len(accs); i++ {
-		// TODO: The logic below will be removed per #2952
-		if isGenesis {
-			// on InitChain make sure account number == 0
-			if sigs[i].AccountNumber != 0 {
-				return sdk.ErrInternal(
-					fmt.Sprintf(
-						"invalid account number for block height zero; got %d, expected 0",
-						sigs[i].AccountNumber,
-					),
-				).Result()
-			}
-		} else {
-			accnum := accs[i].GetAccountNumber()
-			if accnum != sigs[i].AccountNumber {
-				return sdk.ErrInternal(
-					fmt.Sprintf(
-						"invalid account number; got %d, expected %d", sigs[i].AccountNumber, accnum,
-					),
-				).Result()
-			}
-		}
-
-		seq := accs[i].GetSequence()
-		if seq != sigs[i].Sequence {
-			return sdk.ErrInvalidSequence(
-				fmt.Sprintf("Invalid sequence. Got %d, expected %d", sigs[i].Sequence, seq)).Result()
-		}
-	}
-
-	return sdk.Result{}
-}
-
 // verify the signature and increment the sequence. If the account doesn't have
 // a pubkey, set it.
-func processSig(ctx sdk.Context,
-	acc Account, sig StdSignature, signBytes []byte, simulate bool) (updatedAcc Account, res sdk.Result) {
+func processSig(
+	ctx sdk.Context, acc Account, sig StdSignature, signBytes []byte, simulate bool,
+) (updatedAcc Account, res sdk.Result) {
+
 	pubKey, res := processPubKey(acc, sig, simulate)
 	if !res.IsOK() {
 		return nil, res
 	}
+
 	err := acc.SetPubKey(pubKey)
 	if err != nil {
 		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
@@ -318,11 +279,15 @@ func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 }
 
-func getSignBytesList(chainID string, stdTx StdTx, stdSigs []StdSignature) (signatureBytesList [][]byte) {
-	signatureBytesList = make([][]byte, len(stdSigs))
-	for i := 0; i < len(stdSigs); i++ {
+func getSignBytesList(chainID string, stdTx StdTx, accs []Account, genesis bool) (signatureBytesList [][]byte) {
+	signatureBytesList = make([][]byte, len(accs))
+	for i := 0; i < len(accs); i++ {
+		accNum := accs[i].GetAccountNumber()
+		if genesis {
+			accNum = 0
+		}
 		signatureBytesList[i] = StdSignBytes(chainID,
-			stdSigs[i].AccountNumber, stdSigs[i].Sequence,
+			accNum, accs[i].GetSequence(),
 			stdTx.Fee, stdTx.Msgs, stdTx.Memo)
 	}
 	return

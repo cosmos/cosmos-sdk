@@ -209,6 +209,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	if err := cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
 		return appGenTxs, persistentPeers, err
 	}
+
 	addrMap := make(map[string]GenesisAccount, len(appState.Accounts))
 	for i := 0; i < len(appState.Accounts); i++ {
 		acc := appState.Accounts[i]
@@ -257,13 +258,17 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 		msg := msgs[0].(stake.MsgCreateValidator)
 		addr := string(sdk.AccAddress(msg.ValidatorAddr))
 		acc, ok := addrMap[addr]
+
 		if !ok {
 			return appGenTxs, persistentPeers, fmt.Errorf(
 				"account %v not in genesis.json: %+v", addr, addrMap)
 		}
+
 		if acc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
-			err = fmt.Errorf("insufficient fund for the delegation: %v < %v",
-				acc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount)
+			return appGenTxs, persistentPeers, fmt.Errorf(
+				"insufficient fund for delegation %v: %v < %v",
+				acc.Address, acc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount,
+			)
 		}
 
 		// exclude itself from persistent peers

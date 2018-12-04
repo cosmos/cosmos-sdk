@@ -74,7 +74,7 @@ func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 	tx := NewStdTx(msgs, fee, sigs, "")
 	return tx
@@ -88,7 +88,7 @@ func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
@@ -102,7 +102,7 @@ func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []ui
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
@@ -200,7 +200,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// new tx from wrong account number
 	seqs = []uint64{1}
 	tx = newTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// from correct account number
 	seqs = []uint64{1}
@@ -213,7 +213,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	msgs = []sdk.Msg{msg1, msg2}
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{1, 0}, []uint64{2, 0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// correct account numbers
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{2, 0}
@@ -260,7 +260,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// new tx from wrong account number
 	seqs = []uint64{1}
 	tx = newTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// from correct account number
 	seqs = []uint64{1}
@@ -273,7 +273,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	msgs = []sdk.Msg{msg1, msg2}
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{1, 0}, []uint64{2, 0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// correct account numbers
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 0}, []uint64{2, 0}
@@ -322,7 +322,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	// test sending it again fails (replay protection)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// fix sequence, should pass
 	seqs = []uint64{1}
@@ -339,14 +339,14 @@ func TestAnteHandlerSequences(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	// replay fails
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// tx from just second signer with incorrect sequence fails
 	msg = newTestMsg(addr2)
 	msgs = []sdk.Msg{msg}
 	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{1}, []uint64{0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// fix the sequence and it passes
 	tx = newTestTx(ctx, msgs, []crypto.PrivKey{priv2}, []uint64{1}, []uint64{1}, fee)

@@ -1,4 +1,4 @@
-package auth
+package types
 
 import (
 	"encoding/json"
@@ -47,11 +47,11 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	if len(stdSigs) != len(tx.GetSigners()) {
 		return sdk.ErrUnauthorized("wrong number of signers")
 	}
-	if len(tx.GetMemo()) > maxMemoCharacters {
+	if len(tx.GetMemo()) > DefaultMaxMemoCharacters {
 		return sdk.ErrMemoTooLarge(
 			fmt.Sprintf(
 				"maximum number of characters is %d but received %d characters",
-				maxMemoCharacters, len(tx.GetMemo()),
+				DefaultMaxMemoCharacters, len(tx.GetMemo()),
 			),
 		)
 	}
@@ -59,9 +59,9 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	sigCount := 0
 	for i := 0; i < len(stdSigs); i++ {
 		sigCount += countSubKeys(stdSigs[i].PubKey)
-		if sigCount > txSigLimit {
+		if sigCount > DefaultTxSigLimit {
 			return sdk.ErrTooManySignatures(
-				fmt.Sprintf("signatures: %d, limit: %d", sigCount, txSigLimit),
+				fmt.Sprintf("signatures: %d, limit: %d", sigCount, DefaultTxSigLimit),
 			)
 		}
 	}

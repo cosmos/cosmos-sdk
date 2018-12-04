@@ -1,4 +1,4 @@
-package auth
+package types
 
 import (
 	"fmt"
@@ -17,6 +17,23 @@ var (
 	priv = ed25519.GenPrivKey()
 	addr = sdk.AccAddress(priv.PubKey().Address())
 )
+
+func newStdFee() StdFee {
+	return NewStdFee(5000,
+		sdk.NewInt64Coin("atom", 150),
+	)
+}
+
+func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
+	return sdk.NewTestMsg(addrs...)
+}
+
+// generate a priv key and return it with its address
+func privAndAddr() (crypto.PrivKey, sdk.AccAddress) {
+	priv := ed25519.GenPrivKey()
+	addr := sdk.AccAddress(priv.PubKey().Address())
+	return priv, addr
+}
 
 func TestStdTx(t *testing.T) {
 	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
@@ -78,7 +95,7 @@ func TestTxValidateBasic(t *testing.T) {
 	// require to fail validation upon invalid fee
 	badFee := newStdFee()
 	badFee.Amount[0].Amount = sdk.NewInt(-5)
-	tx := newTestTx(ctx, nil, nil, nil, nil, badFee)
+	tx := NewTestTx(ctx, nil, nil, nil, nil, badFee)
 
 	err := tx.ValidateBasic()
 	require.Error(t, err)
@@ -86,7 +103,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when no signatures exist
 	privs, accNums, seqs := []crypto.PrivKey{}, []uint64{}, []uint64{}
-	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -94,7 +111,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to fail validation when signatures do not match expected signers
 	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0, 1}, []uint64{0, 0}
-	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -103,7 +120,7 @@ func TestTxValidateBasic(t *testing.T) {
 	// require to fail validation when memo is too large
 	badMemo := strings.Repeat("bad memo", 50)
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
-	tx = newTestTxWithMemo(ctx, msgs, privs, accNums, seqs, fee, badMemo)
+	tx = NewTestTxWithMemo(ctx, msgs, privs, accNums, seqs, fee, badMemo)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -114,7 +131,7 @@ func TestTxValidateBasic(t *testing.T) {
 	accNums, seqs = []uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
 	badMsg := newTestMsg(addr1, addr2, addr3, addr4, addr5, addr6, addr7, addr8)
 	badMsgs := []sdk.Msg{badMsg}
-	tx = newTestTx(ctx, badMsgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, badMsgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
@@ -122,7 +139,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
-	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)
+	tx = NewTestTx(ctx, msgs, privs, accNums, seqs, fee)
 
 	err = tx.ValidateBasic()
 	require.NoError(t, err)

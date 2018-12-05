@@ -14,6 +14,7 @@ const (
 	costSubtractCoins sdk.Gas = 10
 	costAddCoins      sdk.Gas = 10
 	costGetAccount    sdk.Gas = 10
+	costSetAccount    sdk.Gas = 10
 )
 
 //-----------------------------------------------------------------------------
@@ -202,6 +203,11 @@ func getAccount(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress) aut
 	return ak.GetAccount(ctx, addr)
 }
 
+func setAccount(ctx sdk.Context, ak auth.AccountKeeper, acc auth.Account) {
+	ctx.GasMeter().ConsumeGas(costSetAccount, "setAccount")
+	ak.SetAccount(ctx, acc)
+}
+
 // subtractCoins subtracts amt coins from an account with the given address addr.
 //
 // CONTRACT: If the account is a vesting account, the amount has to be spendable.
@@ -304,10 +310,8 @@ func delegateCoins(
 		return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
 
-	newCoins := acc.TrackDelegation(ctx.BlockHeader().Time, amt)
-	if err := setCoins(ctx, ak, addr, newCoins); err != nil {
-		return nil, err
-	}
+	acc.TrackDelegation(ctx.BlockHeader().Time, amt)
+	setAccount(ctx, ak, acc)
 
 	return sdk.NewTags(
 		sdk.TagAction, TagActionDelegateCoins,
@@ -326,10 +330,8 @@ func undelegateCoins(
 		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
 
-	newCoins := acc.TrackUndelegation(amt)
-	if err := setCoins(ctx, ak, addr, newCoins); err != nil {
-		return nil, err
-	}
+	acc.TrackUndelegation(amt)
+	setAccount(ctx, ak, acc)
 
 	return sdk.NewTags(
 		sdk.TagAction, TagActionUndelegateCoins,

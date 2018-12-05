@@ -37,8 +37,8 @@ type Account interface {
 
 	// Delegation and undelegation accounting that returns the resulting base
 	// coins amount.
-	TrackDelegation(blockTime time.Time, amount sdk.Coins) sdk.Coins
-	TrackUndelegation(amount sdk.Coins) sdk.Coins
+	TrackDelegation(blockTime time.Time, amount sdk.Coins)
+	TrackUndelegation(amount sdk.Coins)
 }
 
 // VestingAccount defines an account type that vests coins via a vesting schedule.
@@ -146,17 +146,15 @@ func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 }
 
 // TrackDelegation performs delegation accounting. For a base account it simply
-// returns the base coins minus the desired delegation amount.
-func (acc *BaseAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) sdk.Coins {
+// sets the base coins minus the desired delegation amount.
+func (acc *BaseAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
 	acc.Coins = acc.Coins.Minus(amount)
-	return acc.Coins
 }
 
 // TrackUndelegation performs undelegation accounting. For a base account it
-// simply returns the base coins plus the undelegation amount.
-func (acc *BaseAccount) TrackUndelegation(amount sdk.Coins) sdk.Coins {
+// simply sets the base coins plus the undelegation amount.
+func (acc *BaseAccount) TrackUndelegation(amount sdk.Coins) {
 	acc.Coins = acc.Coins.Plus(amount)
-	return acc.Coins
 }
 
 //-----------------------------------------------------------------------------
@@ -223,7 +221,7 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 //
 // CONTRACT: The account's coins, delegation coins, vesting coins, and delegated
 // vesting coins must be sorted.
-func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) sdk.Coins {
+func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 	bc := bva.GetCoins()
 
 	i, j, k := 0, 0, 0
@@ -278,8 +276,6 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) s
 
 		bva.Coins = bva.Coins.SubCoinByDenom(coin)
 	}
-
-	return bva.Coins
 }
 
 // TrackUndelegation tracks an undelegation amount by setting the necessary
@@ -288,7 +284,7 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) s
 // returned.
 //
 // CONTRACT: The account's coins and undelegation coins must be sorted.
-func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) sdk.Coins {
+func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 	i := 0
 	for _, coin := range amount {
 		// panic if the undelegation amount is zero
@@ -323,8 +319,6 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) sdk.Coins {
 
 		bva.Coins = bva.Coins.AddCoinByDenom(coin)
 	}
-
-	return bva.Coins
 }
 
 //-----------------------------------------------------------------------------
@@ -401,8 +395,8 @@ func (cva ContinuousVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coin
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) sdk.Coins {
-	return cva.trackDelegation(cva.GetVestingCoins(blockTime), amount)
+func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
+	cva.trackDelegation(cva.GetVestingCoins(blockTime), amount)
 }
 
 //-----------------------------------------------------------------------------
@@ -460,8 +454,8 @@ func (dva DelayedVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) sdk.Coins {
-	return dva.trackDelegation(dva.GetVestingCoins(blockTime), amount)
+func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
+	dva.trackDelegation(dva.GetVestingCoins(blockTime), amount)
 }
 
 //-----------------------------------------------------------------------------

@@ -459,7 +459,11 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", gaiadHome, servAddr, p2pAddr))
+	proc := tests.GoExecuteTWithStdout(
+		t, fmt.Sprintf(
+			"gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", gaiadHome, servAddr, p2pAddr,
+		),
+	)
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)

@@ -90,10 +90,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
 	}
 
-	app.paramsKeeper = params.NewKeeper(
-		app.cdc,
-		app.keyParams, app.tkeyParams,
-	)
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// define the accountKeeper
 	app.accountKeeper = auth.NewAccountKeeper(

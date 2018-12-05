@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/params"
 
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
@@ -45,8 +46,11 @@ type DemocoinApp struct {
 	capKeyPowStore     *sdk.KVStoreKey
 	capKeyIBCStore     *sdk.KVStoreKey
 	capKeyStakingStore *sdk.KVStoreKey
+	keyParams          *sdk.KVStoreKey
+	tkeyParams         *sdk.TransientStoreKey
 
 	// keepers
+	paramsKeeper        params.Keeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
 	coolKeeper          cool.Keeper
@@ -72,13 +76,18 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 		capKeyPowStore:     sdk.NewKVStoreKey("pow"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
 		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
+		keyParams:          sdk.NewKVStoreKey("params"),
+		tkeyParams:         sdk.NewTransientStoreKey("transient_params"),
 	}
+
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// Define the accountKeeper.
 	app.accountKeeper = auth.NewAccountKeeper(
 		cdc,
 		app.capKeyAccountStore, // target store
-		types.ProtoAppAccount,  // prototype
+		app.paramsKeeper.Subspace(auth.DefaultParamspace),
+		types.ProtoAppAccount, // prototype
 	)
 
 	// Add handlers.

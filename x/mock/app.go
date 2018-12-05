@@ -66,10 +66,7 @@ func NewApp() *App {
 		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
 	}
 
-	app.paramsKeeper = params.NewKeeper(
-		app.Cdc,
-		app.keyParams, app.tkeyParams,
-	)
+	app.paramsKeeper = params.NewKeeper(app.Cdc, app.keyParams, app.tkeyParams)
 
 	// Define the accountKeeper
 	app.AccountKeeper = auth.NewAccountKeeper(

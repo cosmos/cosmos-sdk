@@ -148,13 +148,15 @@ func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 // TrackDelegation performs delegation accounting. For a base account it simply
 // returns the base coins minus the desired delegation amount.
 func (acc *BaseAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) sdk.Coins {
-	return acc.GetCoins().Minus(amount)
+	acc.Coins = acc.Coins.Minus(amount)
+	return acc.Coins
 }
 
 // TrackUndelegation performs undelegation accounting. For a base account it
 // simply returns the base coins plus the undelegation amount.
 func (acc *BaseAccount) TrackUndelegation(amount sdk.Coins) sdk.Coins {
-	return acc.GetCoins().Plus(amount)
+	acc.Coins = acc.Coins.Plus(amount)
+	return acc.Coins
 }
 
 //-----------------------------------------------------------------------------

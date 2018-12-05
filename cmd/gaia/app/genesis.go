@@ -165,23 +165,23 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 		return nil
 	}
 
-	stake.ValidateGenesis(genesisState.StakeData)
+	err = stake.ValidateGenesis(genesisState.StakeData)
 	if err != nil {
 		return err
 	}
-	mint.ValidateGenesis(genesisState.MintData)
+	err = mint.ValidateGenesis(genesisState.MintData)
 	if err != nil {
 		return err
 	}
-	distr.ValidateGenesis(genesisState.DistrData)
+	err = distr.ValidateGenesis(genesisState.DistrData)
 	if err != nil {
 		return err
 	}
-	gov.ValidateGenesis(genesisState.GovData)
+	err = gov.ValidateGenesis(genesisState.GovData)
 	if err != nil {
 		return err
 	}
-	slashing.ValidateGenesis(genesisState.SlashingData)
+	err = slashing.ValidateGenesis(genesisState.SlashingData)
 	if err != nil {
 		return err
 	}

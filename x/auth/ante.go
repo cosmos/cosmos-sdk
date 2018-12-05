@@ -216,7 +216,7 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey, p
 	case strings.Contains(pubkeyType, "secp256k1"):
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
 	default:
-		panic("Unrecognized signature type")
+		panic(fmt.Sprintf("unrecognized signature type: %s", pubkeyType))
 	}
 }
 

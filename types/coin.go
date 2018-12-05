@@ -168,6 +168,8 @@ func (coins Coins) AddCoinByDenom(other Coin) Coins {
 		return Coins{other}
 	}
 
+	// TODO: Perform binary search on coins to improve runtime performance
+	// (i.e. implement a generic binary coin search on Coins)
 	for i, coin := range res {
 		if coin.Denom == other.Denom {
 			res[i] = coin.Plus(other)
@@ -257,6 +259,8 @@ func (coins Coins) SubCoinByDenom(other Coin) Coins {
 		return Coins{other}
 	}
 
+	// TODO: Perform binary search on coins to improve runtime performance
+	// (i.e. implement a generic binary coin search on Coins)
 	for i, coin := range res {
 		if coin.Denom == other.Denom {
 			otherNeg := Coin{other.Denom, other.Amount.Neg()}

@@ -5,7 +5,7 @@ import (
 
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	"github.com/cosmos/cosmos-sdk/store/cache"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -30,7 +30,7 @@ var _ types.CacheMultiStore = Store{}
 
 func NewFromKVStore(store types.KVStore, stores map[types.StoreKey]types.CacheWrapper, keysByName map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext) Store {
 	cms := Store{
-		db:           cache.NewStore(store),
+		db:           cachekv.NewStore(store),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
 		keysByName:   keysByName,
 		traceWriter:  traceWriter,

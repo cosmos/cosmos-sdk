@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -256,7 +256,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	store := rs.stores[key].(types.KVStore)
 
 	if rs.TracingEnabled() {
-		store = trace.NewStore(store, rs.traceWriter, rs.traceContext)
+		store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
 	}
 
 	return store

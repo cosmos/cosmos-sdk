@@ -1,4 +1,4 @@
-package cache
+package cachekv
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 
-	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 )
 
 // If value is nil but deleted is false, it means the parent doesn't have the
@@ -129,7 +129,7 @@ func (ci *Store) CacheWrap() types.CacheWrap {
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
 func (ci *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return NewStore(trace.NewStore(ci, w, tc))
+	return NewStore(tracekv.NewStore(ci, w, tc))
 }
 
 //----------------------------------------

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/store/cache"
-	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -48,12 +48,12 @@ func (s Store) GetStoreType() types.StoreType {
 
 // Implements CacheWrap
 func (s Store) CacheWrap() types.CacheWrap {
-	return cache.NewStore(s)
+	return cachekv.NewStore(s)
 }
 
 // CacheWrapWithTrace implements the KVStore interface.
 func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cache.NewStore(trace.NewStore(s, w, tc))
+	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
 }
 
 // Implements KVStore

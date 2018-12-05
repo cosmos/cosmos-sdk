@@ -1,4 +1,4 @@
-package cache_test
+package cachekv_test
 
 import (
 	"fmt"
@@ -8,14 +8,14 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	"github.com/cosmos/cosmos-sdk/store/cache"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func newCacheKVStore() types.CacheKVStore {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	return cache.NewStore(mem)
+	return cachekv.NewStore(mem)
 }
 
 func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
@@ -23,7 +23,7 @@ func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	st := cache.NewStore(mem)
+	st := cachekv.NewStore(mem)
 
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 
@@ -49,11 +49,11 @@ func TestCacheKVStore(t *testing.T) {
 	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 
 	// make a new one, check it
-	st = cache.NewStore(mem)
+	st = cachekv.NewStore(mem)
 	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 
 	// make a new one and delete - should not be removed from mem
-	st = cache.NewStore(mem)
+	st = cachekv.NewStore(mem)
 	st.Delete(keyFmt(1))
 	require.Empty(t, st.Get(keyFmt(1)))
 	require.Equal(t, mem.Get(keyFmt(1)), valFmt(2))
@@ -66,7 +66,7 @@ func TestCacheKVStore(t *testing.T) {
 
 func TestCacheKVStoreNested(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	st := cache.NewStore(mem)
+	st := cachekv.NewStore(mem)
 
 	// set. check its there on st and not on mem.
 	st.Set(keyFmt(1), valFmt(1))
@@ -74,7 +74,7 @@ func TestCacheKVStoreNested(t *testing.T) {
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 
 	// make a new from st and check
-	st2 := cache.NewStore(st)
+	st2 := cachekv.NewStore(st)
 	require.Equal(t, valFmt(1), st2.Get(keyFmt(1)))
 
 	// update the value on st2, check it only effects st2

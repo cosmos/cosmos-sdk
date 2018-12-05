@@ -5,8 +5,8 @@ import (
 
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	"github.com/cosmos/cosmos-sdk/store/cache"
-	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -22,12 +22,12 @@ func (Store) GetStoreType() types.StoreType {
 
 // Implements KVStore.
 func (dsa Store) CacheWrap() types.CacheWrap {
-	return cache.NewStore(dsa)
+	return cachekv.NewStore(dsa)
 }
 
 // CacheWrapWithTrace implements the KVStore interface.
 func (dsa Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cache.NewStore(trace.NewStore(dsa, w, tc))
+	return cachekv.NewStore(tracekv.NewStore(dsa, w, tc))
 }
 
 // dbm.DB implements KVStore so we can CacheKVStore it.

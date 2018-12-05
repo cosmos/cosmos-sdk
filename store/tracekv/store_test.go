@@ -1,4 +1,4 @@
-package trace_test
+package tracekv_test
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -27,7 +27,7 @@ var kvPairs = []types.KVPair{
 	{Key: keyFmt(3), Value: valFmt(3)},
 }
 
-func newTraceKVStore(w io.Writer) *trace.Store {
+func newTraceKVStore(w io.Writer) *tracekv.Store {
 	store := newEmptyTraceKVStore(w)
 
 	for _, kvPair := range kvPairs {
@@ -37,11 +37,11 @@ func newTraceKVStore(w io.Writer) *trace.Store {
 	return store
 }
 
-func newEmptyTraceKVStore(w io.Writer) *trace.Store {
+func newEmptyTraceKVStore(w io.Writer) *tracekv.Store {
 	memDB := dbadapter.Store{dbm.NewMemDB()}
 	tc := types.TraceContext(map[string]interface{}{"blockHeight": 64})
 
-	return trace.NewStore(memDB, w, tc)
+	return tracekv.NewStore(memDB, w, tc)
 }
 
 func TestTraceKVStoreGet(t *testing.T) {

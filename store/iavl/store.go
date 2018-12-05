@@ -13,8 +13,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/store/cache"
-	"github.com/cosmos/cosmos-sdk/store/trace"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 )
 
 const (
@@ -130,12 +130,12 @@ func (st *Store) GetStoreType() types.StoreType {
 
 // Implements Store.
 func (st *Store) CacheWrap() types.CacheWrap {
-	return cache.NewStore(st)
+	return cachekv.NewStore(st)
 }
 
 // CacheWrapWithTrace implements the Store interface.
 func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cache.NewStore(trace.NewStore(st, w, tc))
+	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
 }
 
 // Implements types.KVStore.

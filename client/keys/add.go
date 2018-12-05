@@ -28,6 +28,7 @@ const (
 	flagDryRun      = "dry-run"
 	flagAccount     = "account"
 	flagIndex       = "index"
+	flagOverwrite   = "ow"
 )
 
 func addKeyCommand() *cobra.Command {
@@ -36,7 +37,7 @@ func addKeyCommand() *cobra.Command {
 		Short: "Add an encrypted private key (either newly generated or recovered), encrypt it, and save to disk",
 		Long: `Derive a new private key and encrypt to disk.
 Optionally specify a BIP39 mnemonic, a BIP39 passphrase to further secure the mnemonic,
-and a bip32 HD path to derive a specific account. The key will be stored under the given name 
+and a bip32 HD path to derive a specific account. The key will be stored under the given name
 and encrypted with the given password. The only input that is required is the encryption password.
 
 If run with -i, it will prompt the user for BIP44 path, BIP39 mnemonic, and passphrase.
@@ -52,6 +53,7 @@ If run with --dry-run, a key would be generated (or recovered) but not stored to
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
+	cmd.Flags().Bool(flagOverwrite, false, "Overwrite key if found")
 	cmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
 	cmd.Flags().Uint32(flagIndex, 0, "Index number for HD derivation")
 	return cmd
@@ -85,7 +87,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		_, err := kb.Get(name)
-		if err == nil {
+		if err == nil && !viper.GetBool(flagOverwrite) {
 			// account exists, ask for user confirmation
 			if response, err := client.GetConfirmation(
 				fmt.Sprintf("override the existing name %s", name), buf); err != nil || !response {

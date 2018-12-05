@@ -9,8 +9,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PrepareCLIMainCommand adds necessary things to main gaiacli command
@@ -123,13 +121,4 @@ func bindFlagsLoadViper(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	return nil
-}
-
-// GetSDKConfig sets the address prefixes to the SDK style
-func SetSDKConfig() {
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
-	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
-	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
-	config.Seal()
 }

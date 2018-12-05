@@ -69,11 +69,12 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			return
 		}
 
+		offline := viper.GetBool(flagOffline)
 		cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		if viper.GetBool(flagValidateSigs) {
-			if !printAndValidateSigs(cliCtx, txBldr.ChainID, stdTx) {
+			if !printAndValidateSigs(cliCtx, txBldr.ChainID, stdTx, offline) {
 				return fmt.Errorf("signatures validation failed")
 			}
 
@@ -88,7 +89,7 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		// if --signature-only is on, then override --append
 		generateSignatureOnly := viper.GetBool(flagSigOnly)
 		appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, appendSig, viper.GetBool(flagOffline))
+		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, appendSig, offline)
 		if err != nil {
 			return err
 		}
@@ -135,7 +136,13 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 	}
 }
 
-func printAndValidateSigs(cliCtx context.CLIContext, chainID string, stdTx auth.StdTx) bool {
+// printAndValidateSigs will validate the signatures of a given transaction over
+// its expected signers. In addition, if offline has not been supplied, the
+// signature is verified over the transaction sign bytes.
+func printAndValidateSigs(
+	cliCtx context.CLIContext, chainID string, stdTx auth.StdTx, offline bool,
+) bool {
+
 	fmt.Println("Signers:")
 
 	signers := stdTx.GetSigners()
@@ -157,23 +164,29 @@ func printAndValidateSigs(cliCtx context.CLIContext, chainID string, stdTx auth.
 		sigAddr := sdk.AccAddress(sig.Address())
 		sigSanity := "OK"
 
-		acc, err := cliCtx.GetAccount(sigAddr)
-		if err != nil {
-			fmt.Printf("failed to get account: %s\n", sigAddr)
-			return false
-		}
-
-		sigBytes := auth.StdSignBytes(
-			chainID, acc.GetAccountNumber(), acc.GetSequence(),
-			stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
-		)
-
-		if ok := sig.VerifyBytes(sigBytes, sig.Signature); !ok {
-			sigSanity = "ERROR: signature invalid"
-			success = false
-		} else if i >= len(signers) || !sigAddr.Equals(signers[i]) {
+		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
 			sigSanity = "ERROR: signature does not match its respective signer"
 			success = false
+		}
+
+		// Validate the actual signature over the transaction bytes since we can
+		// reach out to a full node to query accounts.
+		if !offline {
+			acc, err := cliCtx.GetAccount(sigAddr)
+			if err != nil {
+				fmt.Printf("failed to get account: %s\n", sigAddr)
+				return false
+			}
+
+			sigBytes := auth.StdSignBytes(
+				chainID, acc.GetAccountNumber(), acc.GetSequence(),
+				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
+			)
+
+			if ok := sig.VerifyBytes(sigBytes, sig.Signature); !ok {
+				sigSanity = "ERROR: signature invalid"
+				success = false
+			}
 		}
 
 		fmt.Printf(" %v: %v\t[%s]\n", i, sigAddr.String(), sigSanity)

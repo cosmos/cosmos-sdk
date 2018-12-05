@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	rootCmd := gaiadcmd.MakeGaiaD()
+	rootCmd := gaiadcmd.MakeGaiad()
 
 	err := rootCmd.Execute()
 	if err != nil {

@@ -1187,11 +1187,10 @@ func doDelegate(t *testing.T, port, seed, name, password string,
 	res, body := Request(t, port, "PUT", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results []ctypes.ResultBroadcastTxCommit
-	err := cdc.UnmarshalJSON([]byte(body), &results)
+	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
 	require.Nil(t, err)
 
-	return results[0]
+	return
 }
 
 func doBeginUnbonding(t *testing.T, port, seed, name, password string,
@@ -1218,11 +1217,10 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results []ctypes.ResultBroadcastTxCommit
-	err := cdc.UnmarshalJSON([]byte(body), &results)
+	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
 	require.Nil(t, err)
 
-	return results[0]
+	return
 }
 
 func doBeginRedelegation(t *testing.T, port, seed, name, password string,
@@ -1251,11 +1249,10 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/redelegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results []ctypes.ResultBroadcastTxCommit
-	err := cdc.UnmarshalJSON([]byte(body), &results)
+	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
 	require.Nil(t, err)
 
-	return results[0]
+	return
 }
 
 func getValidators(t *testing.T, port string) []stake.Validator {

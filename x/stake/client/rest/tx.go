@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -68,13 +69,13 @@ func putDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.C
 		if !baseReq.ValidateBasic(w) {
 			return
 		}
-
+		fmt.Println("sanitize")
 		info, err := kb.Get(baseReq.Name)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
-
+		fmt.Println("get key name")
 		delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())

@@ -27,17 +27,17 @@ const chainID = ""
 // capabilities aren't needed for testing.
 type App struct {
 	*bam.BaseApp
-	Cdc        *codec.Codec // Cdc is public since the codec is passed into the module anyways
-	KeyMain    *sdk.KVStoreKey
-	KeyAccount *sdk.KVStoreKey
-	keyParams  *sdk.KVStoreKey
-	tkeyParams *sdk.TransientStoreKey
-
-	paramsKeeper params.Keeper
+	Cdc              *codec.Codec // Cdc is public since the codec is passed into the module anyways
+	KeyMain          *sdk.KVStoreKey
+	KeyAccount       *sdk.KVStoreKey
+	KeyFeeCollection *sdk.KVStoreKey
+	KeyParams        *sdk.KVStoreKey
+	TKeyParams       *sdk.TransientStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
 	AccountKeeper       auth.AccountKeeper
 	FeeCollectionKeeper auth.FeeCollectionKeeper
+	ParamsKeeper        params.Keeper
 
 	GenesisAccounts  []auth.Account
 	TotalCoinsSupply sdk.Coins
@@ -62,18 +62,23 @@ func NewApp() *App {
 		KeyMain:          sdk.NewKVStoreKey("main"),
 		KeyAccount:       sdk.NewKVStoreKey("acc"),
 		TotalCoinsSupply: sdk.Coins{},
-		keyParams:        sdk.NewKVStoreKey("params"),
-		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
+		KeyFeeCollection: sdk.NewKVStoreKey("fee"),
+		KeyParams:        sdk.NewKVStoreKey("params"),
+		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
 	}
 
-	app.paramsKeeper = params.NewKeeper(app.Cdc, app.keyParams, app.tkeyParams)
+	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
 
 	// Define the accountKeeper
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,
-		app.paramsKeeper.Subspace(auth.DefaultParamspace),
+		app.ParamsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
+	)
+	app.FeeCollectionKeeper = auth.NewFeeCollectionKeeper(
+		app.Cdc,
+		app.KeyFeeCollection,
 	)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
@@ -89,8 +94,10 @@ func NewApp() *App {
 // CompleteSetup completes the application setup after the routes have been
 // registered.
 func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
-	newKeys = append(newKeys, app.KeyMain)
-	newKeys = append(newKeys, app.KeyAccount)
+	newKeys = append(
+		newKeys,
+		app.KeyMain, app.KeyAccount, app.KeyParams, app.TKeyParams, app.KeyFeeCollection,
+	)
 
 	for _, key := range newKeys {
 		switch key.(type) {
@@ -117,6 +124,8 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 		acc.SetCoins(genacc.GetCoins())
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
+
+	auth.InitGenesis(ctx, app.AccountKeeper, app.FeeCollectionKeeper, auth.DefaultGenesisState())
 
 	return abci.ResponseInitChain{}
 }

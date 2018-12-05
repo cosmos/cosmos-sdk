@@ -10,37 +10,53 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
-	db := dbm.NewMemDB()
-	authKey := sdk.NewKVStoreKey("authkey")
-	capKey := sdk.NewKVStoreKey("capkey")
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(authKey, sdk.StoreTypeIAVL, db)
-	ms.LoadLatestVersion()
-	return ms, authKey, capKey
+type testInput struct {
+	cdc    *codec.Codec
+	ctx    sdk.Context
+	capKey *sdk.KVStoreKey
+	bk     bank.BaseKeeper
 }
 
-func TestKeeperGetSet(t *testing.T) {
-	ms, authKey, capKey := setupMultiStore()
+func setupTestInput() testInput {
+	db := dbm.NewMemDB()
+
 	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
-	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
-	stakeKeeper := NewKeeper(capKey, bank.NewBaseKeeper(accountKeeper), DefaultCodespace)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	capKey := sdk.NewKVStoreKey("capkey")
+	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
+	ms.LoadLatestVersion()
+
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	ak := auth.NewAccountKeeper(cdc, capKey, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	bk := bank.NewBaseKeeper(ak)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+
+	return testInput{cdc: cdc, ctx: ctx, capKey: capKey, bk: bk}
+}
+
+func TestKeeperGetSet(t *testing.T) {
+	input := setupTestInput()
+
+	stakeKeeper := NewKeeper(input.capKey, input.bk, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
 
-	bi := stakeKeeper.getBondInfo(ctx, addr)
+	bi := stakeKeeper.getBondInfo(input.ctx, addr)
 	require.Equal(t, bi, bondInfo{})
 
 	privKey := ed25519.GenPrivKey()
@@ -50,42 +66,36 @@ func TestKeeperGetSet(t *testing.T) {
 		Power:  int64(10),
 	}
 	fmt.Printf("Pubkey: %v\n", privKey.PubKey())
-	stakeKeeper.setBondInfo(ctx, addr, bi)
+	stakeKeeper.setBondInfo(input.ctx, addr, bi)
 
-	savedBi := stakeKeeper.getBondInfo(ctx, addr)
+	savedBi := stakeKeeper.getBondInfo(input.ctx, addr)
 	require.NotNil(t, savedBi)
 	fmt.Printf("Bond Info: %v\n", savedBi)
 	require.Equal(t, int64(10), savedBi.Power)
 }
 
 func TestBonding(t *testing.T) {
-	ms, authKey, capKey := setupMultiStore()
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
+	input := setupTestInput()
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-
-	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountKeeper)
-	stakeKeeper := NewKeeper(capKey, bankKeeper, DefaultCodespace)
+	stakeKeeper := NewKeeper(input.capKey, input.bk, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
 
-	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
+	_, _, err := stakeKeeper.unbondWithoutCoins(input.ctx, addr)
 	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 
-	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
+	_, err = stakeKeeper.bondWithoutCoins(input.ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
 	require.Nil(t, err)
 
-	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
+	power, err := stakeKeeper.bondWithoutCoins(input.ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
 	require.Nil(t, err)
 	require.Equal(t, int64(20), power)
 
-	pk, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
+	pk, _, err := stakeKeeper.unbondWithoutCoins(input.ctx, addr)
 	require.Nil(t, err)
 	require.Equal(t, pubKey, pk)
 
-	_, _, err = stakeKeeper.unbondWithoutCoins(ctx, addr)
+	_, _, err = stakeKeeper.unbondWithoutCoins(input.ctx, addr)
 	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 }

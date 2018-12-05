@@ -1,4 +1,4 @@
-# Join the Testnet
+# Join the latest public testnet
 
 ::: tip Current Testnet
 See the [testnet repo](https://github.com/cosmos/testnets) for
@@ -6,11 +6,13 @@ information on the latest testnet, including the correct version
 of the Cosmos-SDK to use and details about the genesis file.
 :::
 
-**Please ensure you have the [gaia binaries](./installation.md) installed.**
-
-If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
+::: warning
+**You need to [install gaia](./installation.md) before you go further**
+:::
 
 ## Setting Up a New Node
+
+> NOTE: If you ran a full node on a previous testnet, please skip to [Upgrading From Previous Testnet](#upgrading-from-previous-testnet).
 
 These instructions are for setting up a brand new full node from scratch.
 

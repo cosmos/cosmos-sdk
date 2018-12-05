@@ -1,8 +1,10 @@
-# Validator Setup
+# Run a validator on the gaia public testnet
 
 ::: tip
 Information on how to join the current testnet (`genesis.json` file and seeds) is held [in our `testnet` repo](https://github.com/cosmos/testnets/tree/master/latest). Please check there if you are looking to join our latest testnet. 
 :::
+
+__Note__: This documentation is only intended for validators of the **public testnet**
 
 Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/docs/getting-started/full-node.md) guide.
 
@@ -126,8 +128,9 @@ mkdir -p $HOME/.gaiad/config
 curl https://raw.githubusercontent.com/cosmos/testnets/master/latest/genesis.json > $HOME/.gaiad/config/genesis.json
 ```
 
-Note we use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets)
+__Note:__ We use the `latest` directory in the [testnets repo](https://github.com/cosmos/testnets)
 which contains details for the latest testnet. If you are connecting to a different testnet, ensure you get the right files.
+
 
 You also need to fetch the genesis transactions of all the other genesis validators. For now there is no repository where genesis transactions can be submitted by validators, but this will as soon as we try out this feature in a testnet.
 
@@ -136,6 +139,8 @@ Once you've collected all genesis transactions in `~/.gaiad/config/gentx`, you c
 ```bash
 gaiad collect-gentxs
 ```
+
+__Note:__ The accounts from which you delegate in the `gentx` transactions need to possess staking tokens in the genesis file, otherwise `collect-gentx` will fail.
 
 The previous command will collect all genesis transactions and finalise `genesis.json`. To verify the correctness of the configuration and start the node run:
 

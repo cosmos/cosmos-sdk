@@ -64,8 +64,14 @@ following delegation and commission default parameters:
 			if err != nil {
 				return err
 			}
+
 			genDoc, err := loadGenesisDoc(cdc, config.GenesisFile())
 			if err != nil {
+				return err
+			}
+
+			genesisState := app.GenesisState{}
+			if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
 				return err
 			}
 
@@ -75,7 +81,8 @@ following delegation and commission default parameters:
 			}
 
 			name := viper.GetString(client.FlagName)
-			if _, err := kb.Get(name); err != nil {
+			key, err := kb.Get(name)
+			if err != nil {
 				return err
 			}
 
@@ -86,8 +93,23 @@ following delegation and commission default parameters:
 					return err
 				}
 			}
-			// Run gaiad tx create-validator
+
+			// Set flags for creating gentx
 			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey)
+
+			// Fetch the amount of coins staked
+			amount := viper.GetString(cli.FlagAmount)
+			coins, err := sdk.ParseCoins(amount)
+			if err != nil {
+				return err
+			}
+
+			err = accountInGenesis(genesisState, key.GetAddress(), coins)
+			if err != nil {
+				return err
+			}
+
+			// Run gaiad tx create-validator
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 			cliCtx, txBldr, msg, err := cli.BuildCreateValidatorMsg(cliCtx, txBldr)
@@ -113,13 +135,16 @@ following delegation and commission default parameters:
 				return err
 			}
 
+			// Fetch output file name
 			outputDocument, err := makeOutputFilepath(config.RootDir, nodeID)
 			if err != nil {
 				return err
 			}
+
 			if err := writeSignedGenTx(cdc, outputDocument, signedTx); err != nil {
 				return err
 			}
+
 			fmt.Fprintf(os.Stderr, "Genesis transaction written to %q\n", outputDocument)
 			return nil
 		},
@@ -133,6 +158,34 @@ following delegation and commission default parameters:
 	cmd.Flags().AddFlagSet(cli.FsPk)
 	cmd.MarkFlagRequired(client.FlagName)
 	return cmd
+}
+
+func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins) error {
+	accountIsInGenesis := false
+	bondDenom := genesisState.StakeData.Params.BondDenom
+
+	// Check if the account is in genesis
+	for _, acc := range genesisState.Accounts {
+		// Ensure that account is in genesis
+		if acc.Address.Equals(key) {
+
+			// Ensure account contains enough funds of default bond denom
+			if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
+				return fmt.Errorf(
+					"Account %s is in genesis, but the only has %s%s available to stake, not %s%s",
+					key, acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
+				)
+			}
+			accountIsInGenesis = true
+			break
+		}
+	}
+
+	if accountIsInGenesis {
+		return nil
+	}
+
+	return fmt.Errorf("Account %s in not in the app_state.accounts array of genesis.json", key)
 }
 
 func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID string,

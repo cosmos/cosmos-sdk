@@ -56,34 +56,13 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
 // prepare for fresh start at zero height
 func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
-	/* TODO XXX check some invariants */
-
-	height := ctx.BlockHeight()
-
-	valAccum := sdk.ZeroDec()
-	vdiIter := func(_ int64, vdi distr.ValidatorDistInfo) bool {
-		lastValPower := app.stakeKeeper.GetLastValidatorPower(ctx, vdi.OperatorAddr)
-		valAccum = valAccum.Add(vdi.GetValAccum(height, sdk.NewDecFromInt(lastValPower)))
-		return false
-	}
-	app.distrKeeper.IterateValidatorDistInfos(ctx, vdiIter)
-
-	lastTotalPower := sdk.NewDecFromInt(app.stakeKeeper.GetLastTotalPower(ctx))
-	totalAccum := app.distrKeeper.GetFeePool(ctx).GetTotalValAccum(height, lastTotalPower)
-
-	if !totalAccum.Equal(valAccum) {
-		panic(fmt.Errorf("validator accum invariance: \n\tfee pool totalAccum: %v"+
-			"\n\tvalidator accum \t%v\n", totalAccum.String(), valAccum.String()))
-	}
-
-	fmt.Printf("accum invariant ok!\n")
-
-	/* END TODO XXX */
+	/* Just to be safe, assert the invariants on current state. */
+	app.assertRuntimeInvariantsOnContext(ctx)
 
 	/* Handle fee distribution state. */
 
 	// withdraw all delegator & validator rewards
-	vdiIter = func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
+	vdiIter := func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
 		err := app.distrKeeper.WithdrawValidatorRewardsAll(ctx, valInfo.OperatorAddr)
 		if err != nil {
 			panic(err)
@@ -102,10 +81,19 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	}
 	app.distrKeeper.IterateDelegationDistInfos(ctx, ddiIter)
 
-	// delete all distribution infos
-	// these will be recreated in InitGenesis
-	app.distrKeeper.RemoveValidatorDistInfos(ctx)
-	app.distrKeeper.RemoveDelegationDistInfos(ctx)
+	app.assertRuntimeInvariantsOnContext(ctx)
+
+	// set distribution info withdrawal heights to 0
+	app.distrKeeper.IterateDelegationDistInfos(ctx, func(_ int64, delInfo distr.DelegationDistInfo) (stop bool) {
+		delInfo.DelPoolWithdrawalHeight = 0
+		app.distrKeeper.SetDelegationDistInfo(ctx, delInfo)
+		return false
+	})
+	app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
+		valInfo.FeePoolWithdrawalHeight = 0
+		app.distrKeeper.SetValidatorDistInfo(ctx, valInfo)
+		return false
+	})
 
 	// assert that the fee pool is empty
 	feePool := app.distrKeeper.GetFeePool(ctx)
@@ -119,7 +107,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	}
 
 	// reset fee pool height, save fee pool
-	feePool.TotalValAccum.UpdateHeight = 0
+	feePool.TotalValAccum = distr.NewTotalAccum(0)
 	app.distrKeeper.SetFeePool(ctx, feePool)
 
 	/* Handle stake state. */

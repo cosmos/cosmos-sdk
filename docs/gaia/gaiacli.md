@@ -42,13 +42,20 @@ There are three types of key representations that are used:
 
 You'll need an account private and public key pair \(a.k.a. `sk, pk` respectively\) to be able to receive funds, send txs, bond tx, etc.
 
-To generate a new key \(default _ed25519_ elliptic curve\):
+To generate a new _secp256k1_ key:
 
 ```bash
 gaiacli keys add <account_name>
 ```
 
-Next, you will have to create a passphrase to protect the key on disk. The output of the above command will contain a _seed phrase_. Save the _seed phrase_ in a safe place in case you forget the password!
+Next, you will have to create a passphrase to protect the key on disk. The output of the above
+command will contain a _seed phrase_. It is recommended to save the _seed phrase_ in a safe
+place so that in case you forget the password, you could eventually regenerate the key from
+the seed phrase with the following command:
+
+```bash
+gaiacli keys add --recover
+```
 
 If you check your private keys, you'll now see `<account_name>`:
 
@@ -209,7 +216,7 @@ gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 
 ::: tip Note
 
-The action tag always equals the message type returned by the `Type()` function of the relevant message. 
+The action tag always equals the message type returned by the `Type()` function of the relevant message.
 
 You can find a list of available `tags` on each of the SDK modules:
 
@@ -454,7 +461,7 @@ gaiacli tx gov submit-proposal \
 Once created, you can now query information of the proposal:
 
 ```bash
-gaiacli query gov proposal --proposal-id=<proposal_id>
+gaiacli query gov proposal <proposal_id>
 ```
 
 Or query all available proposals:
@@ -470,9 +477,7 @@ You can also query proposals filtered by `voter` or `depositor` by using the cor
 In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
 ```bash
-gaiacli tx gov deposit \
-  --proposal-id=<proposal_id> \
-  --deposit=<200steak> \
+gaiacli tx gov deposit <proposal_id> <200steak> \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -484,15 +489,13 @@ gaiacli tx gov deposit \
 Once a new proposal is created, you can query all the deposits submitted to it:
 
 ```bash
-gaiacli query gov deposits --proposal-id=<proposal_id>
+gaiacli query gov deposits <proposal_id>
 ```
 
 You can also query a deposit submitted by a specific address:
 
 ```bash
-gaiacli query gov deposit \
-  --proposal-id=<proposal_id> \
-  --depositor=<account_cosmos>
+gaiacli query gov deposit <proposal_id> <depositor_address>
 ```
 
 #### Vote on a proposal
@@ -500,9 +503,7 @@ gaiacli query gov deposit \
 After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded `Atom` holders can then cast vote on it:
 
 ```bash
-gaiacli tx gov vote \
-  --proposal-id=<proposal_id> \
-  --option=<Yes/No/NoWithVeto/Abstain> \
+gaiacli tx gov vote <proposal_id> <Yes/No/NoWithVeto/Abstain> \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -512,15 +513,13 @@ gaiacli tx gov vote \
 Check the vote with the option you just submitted:
 
 ```bash
-gaiacli query gov vote \
-  --proposal-id=<proposal_id> \
-  --voter=<account_cosmos>
+gaiacli query gov vote <proposal_id> <voter_address>
 ```
 
 You can also get all the previous votes submitted to the proposal with:
 
 ```bash
-gaiacli query gov votes --proposal-id=<proposal_id>
+gaiacli query gov votes <proposal_id>
 ```
 
 #### Query proposal tally results
@@ -528,5 +527,15 @@ gaiacli query gov votes --proposal-id=<proposal_id>
 To check the current tally of a given proposal you can use the `tally` command:
 
 ```bash
-gaiacli query gov tally --proposal-id=<proposal_id>
+gaiacli query gov tally <proposal_id>
+```
+
+#### Query governance parameters
+
+To check the current governance parameters run:
+
+```bash
+gaiacli query gov param voting
+gaiacli query gov param tallying
+gaiacli query gov param deposit
 ```

@@ -587,7 +587,8 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	ctx = app.getState(mode).ctx.
 		WithTxBytes(txBytes).
-		WithVoteInfos(app.voteInfos)
+		WithVoteInfos(app.voteInfos).
+		WithConsensusParams(app.consensusParams)
 	if mode == runTxModeSimulate {
 		ctx, _ = ctx.CacheContext()
 	}

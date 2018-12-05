@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
@@ -22,9 +23,13 @@ func (app *GaiaApp) runtimeInvariants() []simulation.Invariant {
 }
 
 func (app *GaiaApp) assertRuntimeInvariants() {
-	invariants := app.runtimeInvariants()
-	start := time.Now()
 	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
+	app.assertRuntimeInvariantsOnContext(ctx)
+}
+
+func (app *GaiaApp) assertRuntimeInvariantsOnContext(ctx sdk.Context) {
+	start := time.Now()
+	invariants := app.runtimeInvariants()
 	for _, inv := range invariants {
 		if err := inv(ctx); err != nil {
 			panic(fmt.Errorf("invariant broken: %s", err))

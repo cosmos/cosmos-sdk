@@ -16,28 +16,31 @@ const (
 	ed25519VerifyCost           = 59
 	secp256k1VerifyCost         = 100
 	maxMemoCharacters           = 100
+
 	// how much gas = 1 atom
 	gasPerUnitCost = 1000
+
 	// max total number of sigs per tx
 	txSigLimit = 7
 )
 
-// NewAnteHandler returns an AnteHandler that checks
-// and increments sequence numbers, checks signatures & account numbers,
-// and deducts fees from the first signer.
+// NewAnteHandler returns an AnteHandler that checks and increments sequence
+// numbers, checks signatures & account numbers, and deducts fees from the first
+// signer.
 func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 	return func(
 		ctx sdk.Context, tx sdk.Tx, simulate bool,
 	) (newCtx sdk.Context, res sdk.Result, abort bool) {
 
-		// This AnteHandler requires Txs to be StdTxs
+		// all transactions must be of type auth.StdTx
 		stdTx, ok := tx.(StdTx)
 		if !ok {
 			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
 
-		// Ensure that the provided fees meet a minimum threshold for the validator, if this is a CheckTx.
-		// This is only for local mempool purposes, and thus is only ran on check tx.
+		// Ensure that the provided fees meet a minimum threshold for the validator,
+		// if this is a CheckTx. This is only for local mempool purposes, and thus
+		// is only ran on check tx.
 		if ctx.IsCheckTx() && !simulate {
 			res := ensureSufficientMempoolFees(ctx, stdTx)
 			if !res.IsOK() {
@@ -47,10 +50,10 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		newCtx = setGasMeter(simulate, ctx, stdTx)
 
-		// AnteHandlers must have their own defer/recover in order
-		// for the BaseApp to know how much gas was used!
-		// This is because the GasMeter is created in the AnteHandler,
-		// but if it panics the context won't be set properly in runTx's recover ...
+		// AnteHandlers must have their own defer/recover in order for the BaseApp
+		// to know how much gas was used! This is because the GasMeter is created in
+		// the AnteHandler, but if it panics the context won't be set properly in
+		// runTx's recover call.
 		defer func() {
 			if r := recover(); r != nil {
 				switch rType := r.(type) {
@@ -70,7 +73,6 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, err.Result(), true
 		}
 
-		// charge gas for the memo
 		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
 
 		// stdSigs contains the sequence number, account number, and signatures.
@@ -83,16 +85,15 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		}
 
 		isGenesis := ctx.BlockHeight() == 0
-		// create the list of all sign bytes
 		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, signerAccs, isGenesis)
 
 		// first sig pays the fees
 		if !stdTx.Fee.Amount.IsZero() {
-			// signerAccs[0] is the fee payer
 			signerAccs[0], res = deductFees(signerAccs[0], stdTx.Fee)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
+
 			fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
 		}
 
@@ -103,7 +104,6 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 				return newCtx, res, true
 			}
 
-			// Save the account.
 			am.SetAccount(newCtx, signerAccs[i])
 		}
 
@@ -123,17 +123,21 @@ func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (a
 			return nil, sdk.ErrUnknownAddress(addrs[i].String()).Result()
 		}
 	}
+
 	return
 }
 
-// verify the signature and increment the sequence.
-// if the account doesn't have a pubkey, set it.
-func processSig(ctx sdk.Context,
-	acc Account, sig StdSignature, signBytes []byte, simulate bool) (updatedAcc Account, res sdk.Result) {
+// verify the signature and increment the sequence. If the account doesn't have
+// a pubkey, set it.
+func processSig(
+	ctx sdk.Context, acc Account, sig StdSignature, signBytes []byte, simulate bool,
+) (updatedAcc Account, res sdk.Result) {
+
 	pubKey, res := processPubKey(acc, sig, simulate)
 	if !res.IsOK() {
 		return nil, res
 	}
+
 	err := acc.SetPubKey(pubKey)
 	if err != nil {
 		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
@@ -144,7 +148,6 @@ func processSig(ctx sdk.Context,
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
-	// increment the sequence number
 	err = acc.SetSequence(acc.GetSequence() + 1)
 	if err != nil {
 		// Handle w/ #870
@@ -162,29 +165,32 @@ func init() {
 }
 
 func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
-	// If pubkey is not known for account,
-	// set it from the StdSignature.
+	// If pubkey is not known for account, set it from the StdSignature.
 	pubKey := acc.GetPubKey()
 	if simulate {
-		// In simulate mode the transaction comes with no signatures, thus
-		// if the account's pubkey is nil, both signature verification
-		// and gasKVStore.Set() shall consume the largest amount, i.e.
-		// it takes more gas to verifiy secp256k1 keys than ed25519 ones.
+		// In simulate mode the transaction comes with no signatures, thus if the
+		// account's pubkey is nil, both signature verification and gasKVStore.Set()
+		// shall consume the largest amount, i.e. it takes more gas to verify
+		// secp256k1 keys than ed25519 ones.
 		if pubKey == nil {
 			return dummySecp256k1Pubkey, sdk.Result{}
 		}
+
 		return pubKey, sdk.Result{}
 	}
+
 	if pubKey == nil {
 		pubKey = sig.PubKey
 		if pubKey == nil {
 			return nil, sdk.ErrInvalidPubKey("PubKey not found").Result()
 		}
+
 		if !bytes.Equal(pubKey.Address(), acc.GetAddress()) {
 			return nil, sdk.ErrInvalidPubKey(
 				fmt.Sprintf("PubKey does not match Signer address %v", acc.GetAddress())).Result()
 		}
 	}
+
 	return pubKey, sdk.Result{}
 }
 
@@ -239,8 +245,9 @@ func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 }
 
 func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
-	// currently we use a very primitive gas pricing model with a constant gasPrice.
-	// adjustFeesByGas handles calculating the amount of fees required based on the provided gas.
+	// Currently we use a very primitive gas pricing model with a constant
+	// gasPrice where adjustFeesByGas handles calculating the amount of fees
+	// required based on the provided gas.
 	//
 	// TODO:
 	// - Make the gasPrice not a constant, and account for tx size.
@@ -253,9 +260,12 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
 	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {
 		// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
-		return sdk.ErrInsufficientFee(fmt.Sprintf(
-			"insufficient fee, got: %q required: %q", stdTx.Fee.Amount, requiredFees)).Result()
+		return sdk.ErrInsufficientFee(
+			fmt.Sprintf(
+				"insufficient fee, got: %q required: %q", stdTx.Fee.Amount, requiredFees),
+		).Result()
 	}
+
 	return sdk.Result{}
 }
 

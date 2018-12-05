@@ -502,7 +502,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// validate signatures
-	success, stdout, _ = executeWriteRetStdStreams(
+	success, _, _ = executeWriteRetStdStreams(
 		t, fmt.Sprintf(
 			"gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()),
 	)

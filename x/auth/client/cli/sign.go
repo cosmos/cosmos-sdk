@@ -40,7 +40,7 @@ If the flag --validate-signatures is on, then the command would check whether al
 signers have signed the transactions, whether the signatures were collected in the right
 order, and if the signature is valid over the given transaction. If the --offline
 flag is also provided, signature validation over the transaction will be not be
-performed as that will require communication with another node.
+performed as that will require communication with a full node.
 
 The --offline flag makes sure that the client will not reach out to an external node.
 Thus account number or sequence number lookups will not be performed and it is
@@ -54,7 +54,7 @@ recommended to set such parameters manually.`,
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit.")
 	cmd.Flags().Bool(flagValidateSigs, false, "Print the addresses that must sign the transaction, "+
 		"those who have already signed it, and make sure that signatures are in the correct order.")
-	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query local cache.")
+	cmd.Flags().Bool(flagOffline, false, "Offline mode. Do not query a full node.")
 	cmd.Flags().String(flagOutfile, "",
 		"The document will be written to the given file instead of STDOUT")
 

@@ -171,7 +171,7 @@ func printAndValidateSigs(
 
 		// Validate the actual signature over the transaction bytes since we can
 		// reach out to a full node to query accounts.
-		if !offline {
+		if !offline && success {
 			acc, err := cliCtx.GetAccount(sigAddr)
 			if err != nil {
 				fmt.Printf("failed to get account: %s\n", sigAddr)

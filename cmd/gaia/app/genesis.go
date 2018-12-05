@@ -254,20 +254,30 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 				"each genesis transaction must provide a single genesis message")
 		}
 
-		// validate the validator address and funds against the accounts in the state
 		msg := msgs[0].(stake.MsgCreateValidator)
-		addr := string(sdk.AccAddress(msg.ValidatorAddr))
-		acc, ok := addrMap[addr]
+		// validate delegator and validator addresses and funds against the accounts in the state
+		delAddr := string(msg.DelegatorAddr)
+		valAddr := string(sdk.AccAddress(msg.ValidatorAddr))
 
-		if !ok {
+		delAcc, delOk := addrMap[delAddr]
+		_, valOk := addrMap[valAddr]
+
+		accsNotInGenesis := []string{}
+		if !delOk {
+			accsNotInGenesis = append(accsNotInGenesis, fmt.Sprintf("%v", delAddr))
+		}
+		if !valOk {
+			accsNotInGenesis = append(accsNotInGenesis, fmt.Sprintf("%v", valAddr))
+		}
+		if len(accsNotInGenesis) != 0 {
 			return appGenTxs, persistentPeers, fmt.Errorf(
-				"account %v not in genesis.json: %+v", addr, addrMap)
+				"account(s) %v not in genesis.json: %+v", strings.Join(accsNotInGenesis, " "), addrMap)
 		}
 
-		if acc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
+		if delAcc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
 			return appGenTxs, persistentPeers, fmt.Errorf(
 				"insufficient fund for delegation %v: %v < %v",
-				acc.Address, acc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount,
+				delAcc.Address, delAcc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount,
 			)
 		}
 

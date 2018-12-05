@@ -58,6 +58,7 @@ BUG FIXES
   * [\#2921](https://github.com/cosmos/cosmos-sdk/issues/2921) Fix `keys delete` inability to delete offline and ledger keys.
 
 * Gaia
+  * [\#3003](https://github.com/cosmos/cosmos-sdk/issues/3003) CollectStdTxs() must validate DelegatorAddr against genesis accounts.
 
 * SDK
   * \#2967 Change ordering of `mint.BeginBlocker` and `distr.BeginBlocker`, recalculate inflation each block

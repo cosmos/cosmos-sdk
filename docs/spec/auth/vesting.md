@@ -47,15 +47,8 @@ order to make such a distinction.
 type VestingAccount interface {
     Account
 
-    // Calculates the amount of coins that can be sent to other accounts given
-    // the current time.
-    SpendableCoins(Time) Coins
-
     GetVestedCoins(Time) Coins
     GetVestingCoins(Time) Coins
-
-    TrackDelegation(Time, Coins) // Performs delegation accounting.
-    TrackUndelegation(Coins) // Performs undelegation accounting.
 }
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all
@@ -83,6 +76,25 @@ type ContinuousVestingAccount struct {
 // locked until a specified time.
 type DelayedVestingAccount struct {
     BaseVestingAccount
+}
+```
+
+In order to facilitate less ad-hoc type checking and assertions and to support
+flexibility in account usage, the existing `Account` interface is updated to contain
+the following:
+
+```go
+type Account interface {
+    // ...
+
+    // Calculates the amount of coins that can be sent to other accounts given
+    // the current time.
+    SpendableCoins(Time) Coins
+
+    // Delegation and undelegation accounting that returns the resulting base
+    // coins amount.
+    TrackDelegation(Time, Coins)
+    TrackUndelegation(Coins)
 }
 ```
 

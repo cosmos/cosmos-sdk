@@ -1172,15 +1172,9 @@ func doDelegate(t *testing.T, port, seed, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 
 	jsonStr := []byte(fmt.Sprintf(`{
-		"delegations": [
-			{
-				"delegator_addr": "%s",
-				"validator_addr": "%s",
-				"delegation": { "denom": "%s", "amount": "%d" }
-			}
-		],
-		"begin_unbondings": [],
-		"begin_redelegates": [],
+		"delegator_addr": "%s",
+		"validator_addr": "%s",
+		"delegation": { "denom": "%s", "amount": "%d" },
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
@@ -1190,7 +1184,7 @@ func doDelegate(t *testing.T, port, seed, name, password string,
 		}
 	}`, delAddr, valAddr, stakeTypes.DefaultBondDenom, amount, name, password, chainID, accnum, sequence))
 
-	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
+	res, body := Request(t, port, "PUT", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -1209,15 +1203,9 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 
 	jsonStr := []byte(fmt.Sprintf(`{
-		"delegations": [],
-		"begin_unbondings": [
-			{
-				"delegator_addr": "%s",
-				"validator_addr": "%s",
-				"shares": "%d"
-			}
-		],
-		"begin_redelegates": [],
+		"delegator_addr": "%s",
+		"validator_addr": "%s",
+		"shares": "%d",
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
@@ -1227,7 +1215,7 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 		}
 	}`, delAddr, valAddr, amount, name, password, chainID, accnum, sequence))
 
-	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit
@@ -1247,16 +1235,10 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	chainID := viper.GetString(client.FlagChainID)
 
 	jsonStr := []byte(fmt.Sprintf(`{
-		"delegations": [],
-		"begin_unbondings": [],
-		"begin_redelegates": [
-			{
-				"delegator_addr": "%s",
-				"validator_src_addr": "%s",
-				"validator_dst_addr": "%s",
-				"shares": "%d"
-			}
-		],
+		"delegator_addr": "%s",
+		"validator_src_addr": "%s",
+		"validator_dst_addr": "%s",
+		"shares": "%d",
 		"base_req": {
 			"name": "%s",
 			"password": "%s",
@@ -1266,7 +1248,7 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 		}
 	}`, delAddr, valSrcAddr, valDstAddr, amount, name, password, chainID, accnum, sequence))
 
-	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/redelegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var results []ctypes.ResultBroadcastTxCommit

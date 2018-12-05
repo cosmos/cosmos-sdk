@@ -476,7 +476,9 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	success, stdout, stderr := executeWriteRetStdStreams(
 		t, fmt.Sprintf(
 			"gaiacli tx send %v --amount=10%s --to=%s --from=foo --generate-only",
-			flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...,
+			flags, stakeTypes.DefaultBondDenom, barAddr,
+		),
+		[]string{}...,
 	)
 	require.True(t, success)
 	require.Empty(t, stderr)
@@ -487,8 +489,8 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 
 	// validate we can successfully sign
 	success, stdout, _ = executeWriteRetStdStreams(
-		t, fmt.Sprintf(
-			"gaiacli tx sign %v --name=foo %v", flags, unsignedTxFile.Name()), app.DefaultKeyPass,
+		t, fmt.Sprintf("gaiacli tx sign %v --name=foo %v", flags, unsignedTxFile.Name()),
+		app.DefaultKeyPass,
 	)
 	require.True(t, success)
 
@@ -503,8 +505,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 
 	// validate signatures
 	success, _, _ = executeWriteRetStdStreams(
-		t, fmt.Sprintf(
-			"gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()),
+		t, fmt.Sprintf("gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()),
 	)
 	require.True(t, success)
 
@@ -516,8 +517,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 
 	// validate signature validation failure due to different transaction sig bytes
 	success, _, _ = executeWriteRetStdStreams(
-		t, fmt.Sprintf(
-			"gaiacli tx sign %v --validate-signatures %v", flags, modSignedTxFile.Name()),
+		t, fmt.Sprintf("gaiacli tx sign %v --validate-signatures %v", flags, modSignedTxFile.Name()),
 	)
 	require.False(t, success)
 }

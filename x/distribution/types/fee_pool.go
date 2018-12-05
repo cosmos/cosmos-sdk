@@ -38,19 +38,19 @@ func InitialFeePool() FeePool {
 func (f FeePool) ValidateGenesis() error {
 	if f.TotalValAccum.Accum.IsNegative() {
 		return fmt.Errorf("negative accum in distribution fee pool, is %v",
-			minter.TotalValAccum.Accum.String())
+			f.TotalValAccum.Accum.String())
 	}
 	if f.TotalValAccum.UpdateHeight < 0 {
 		return fmt.Errorf("negative update height in distribution fee pool, is %v",
-			minter.TotalValAccum.UpdateHeight)
+			f.TotalValAccum.UpdateHeight)
 	}
 	if f.ValPool.HasNegative() {
 		return fmt.Errorf("negative ValPool in distribution fee pool, is %v",
-			minter.ValPool)
+			f.ValPool)
 	}
 	if f.CommunityPool.HasNegative() {
 		return fmt.Errorf("negative CommunityPool in distribution fee pool, is %v",
-			minter.CommunityPool)
+			f.CommunityPool)
 	}
 
 	return nil

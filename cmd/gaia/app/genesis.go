@@ -177,11 +177,11 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 	if err != nil {
 		return err
 	}
-	gov.ValidateGenesis(genesisState.DistrData)
+	gov.ValidateGenesis(genesisState.GovData)
 	if err != nil {
 		return err
 	}
-	slashing.ValidateGenesis(genesisState.DistrData)
+	slashing.ValidateGenesis(genesisState.SlashingData)
 	if err != nil {
 		return err
 	}

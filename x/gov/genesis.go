@@ -58,6 +58,11 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
+// ValidateGenesis TODO https://github.com/cosmos/cosmos-sdk/issues/3007
+func ValidateGenesis(data GenesisState) error {
+	return nil
+}
+
 // InitGenesis - store genesis parameters
 func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	err := k.setInitialProposalID(ctx, data.StartingProposalID)

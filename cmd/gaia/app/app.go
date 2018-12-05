@@ -138,10 +138,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	)
 
 	// register the staking hooks
-	// NOTE: stakeKeeper above are passed by reference,
-	// so that it can be modified like below:
+	// NOTE: The stakeKeeper above is passed by reference, so that it can be
+	// modified like below:
 	app.stakeKeeper = *stakeKeeper.SetHooks(
-		NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
+		NewStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
+	)
 
 	// register message routes
 	app.Router().
@@ -318,52 +319,53 @@ func (app *GaiaApp) LoadHeight(height int64) error {
 
 //______________________________________________________________________________________________
 
-// Combined Staking Hooks
-type Hooks struct {
+var _ sdk.StakingHooks = StakingHooks{}
+
+// StakingHooks contains combined distribution and slashing hooks needed for the
+// staking module.
+type StakingHooks struct {
 	dh distr.Hooks
 	sh slashing.Hooks
 }
 
-func NewHooks(dh distr.Hooks, sh slashing.Hooks) Hooks {
-	return Hooks{dh, sh}
+func NewStakingHooks(dh distr.Hooks, sh slashing.Hooks) StakingHooks {
+	return StakingHooks{dh, sh}
 }
 
-var _ sdk.StakingHooks = Hooks{}
-
 // nolint
-func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorCreated(ctx, valAddr)
 	h.sh.OnValidatorCreated(ctx, valAddr)
 }
-func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorModified(ctx, valAddr)
 	h.sh.OnValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorRemoved(ctx, consAddr, valAddr)
 	h.sh.OnValidatorRemoved(ctx, consAddr, valAddr)
 }
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorBonded(ctx, consAddr, valAddr)
 	h.sh.OnValidatorBonded(ctx, consAddr, valAddr)
 }
-func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorPowerDidChange(ctx, consAddr, valAddr)
 	h.sh.OnValidatorPowerDidChange(ctx, consAddr, valAddr)
 }
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorBeginUnbonding(ctx, consAddr, valAddr)
 	h.sh.OnValidatorBeginUnbonding(ctx, consAddr, valAddr)
 }
-func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)
 	h.sh.OnDelegationCreated(ctx, delAddr, valAddr)
 }
-func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationSharesModified(ctx, delAddr, valAddr)
 	h.sh.OnDelegationSharesModified(ctx, delAddr, valAddr)
 }
-func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationRemoved(ctx, delAddr, valAddr)
 	h.sh.OnDelegationRemoved(ctx, delAddr, valAddr)
 }

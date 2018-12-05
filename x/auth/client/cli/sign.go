@@ -37,10 +37,12 @@ If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.
 
 If the flag --validate-signatures is on, then the command would check whether all required
-signers have signed the transactions and whether the signatures were collected in the right
-order.
+signers have signed the transactions, whether the signatures were collected in the right
+order, and if the signature is valid over the given transaction. If the --offline
+flag is also provided, signature validation over the transaction will be not be
+performed as that will require communication with another node.
 
-The --offline flag makes sure that the client will not reach out to the local cache.
+The --offline flag makes sure that the client will not reach out to an external node.
 Thus account number or sequence number lookups will not be performed and it is
 recommended to set such parameters manually.`,
 		RunE: makeSignCmd(codec),

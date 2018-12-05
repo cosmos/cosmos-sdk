@@ -84,7 +84,6 @@ func TestGetParams(t *testing.T) {
 
 	input.ak.SetParams(input.ctx, params)
 
-	newParams := Params{}
-	input.ak.GetParams(input.ctx, &newParams)
+	newParams := input.ak.GetParams(input.ctx)
 	require.Equal(t, params, newParams)
 }

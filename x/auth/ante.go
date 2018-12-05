@@ -25,8 +25,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
 
-		params := Params{}
-		ak.GetParams(ctx, &params)
+		params := ak.GetParams(ctx)
 
 		// Ensure that the provided fees meet a minimum threshold for the validator,
 		// if this is a CheckTx. This is only for local mempool purposes, and thus

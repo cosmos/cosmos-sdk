@@ -142,6 +142,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
+		AuthData:     auth.DefaultGenesisState(),
 		StakeData:    stake.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),

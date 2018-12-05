@@ -22,13 +22,13 @@ In a proof of stake blockchain, each validator has an associated stake.
 Transaction fees get rewarded to validators based on the incentive scheme of the underlying proof of stake model.
 The fee distribution problem occurs in proof of stake blockchains supporting delegation, as there is a need to distribute a validator's fee rewards to its delegators.
 The trivial solution of just giving the rewards to each delegator every block is too expensive to perform on-chain.
-So instead fee distribution algorithms have delegators perform an explicit withdraw action, which yields the same total amount of fees as though they received it at every block. 
+So instead fee distribution algorithms have delegators perform an explicit withdraw transaction, which when performed yields the same total amount of fees as if they had received them at every block. 
 
 This details F1, an approximation-free, slash-tolerant fee distribution algorithm which allows validator commission-rates, inflation rates, and fee proportions, which can all efficiently change per validator, every block.
 The algorithm requires iterating over the validators every block, and withdraws require iterating over all of the corresponding validator's slashes whilst the delegator was bonded.
 The former iteration is cheap, due to staking logic already requiring iteration over all validators, which causes the expensive state-reads to be cached.
 The number of slashes is expected to be 0 or 1 for most validators,
-so the latter term also meets the blockchains efficiency needs.
+so the latter term also meets the blockchain's efficiency needs.
 
 The key point of how F1 works is that it tracks how much rewards a delegator with 1 stake for a given validator would be entitled to if it had bonded at block 0 until the latest block.
 When a delegator bonds at block $b$, the amount of rewards a delegator with 1 stake would have if bonded at block 0 until block $b$ is also persisted to state.
@@ -43,7 +43,7 @@ In this section, we show that the F1 base algorithm gives each delegator rewards
 Even distribution of a validators rewards amongst its validators weighted by stake means the following: 
 Suppose a delegator delegates $x$ stake to a validator $v$ at block $h$.
 Let the amount of stake the validator has at block $i$ be $s_i$ and the amount of fees they receive at this height be $f_i$.
-Then if a delegator contributing $x$ stake decides to withdraw at block $n$, the rewards they receive is 
+Then if a delegator contributing $x$ stake decides to withdraw at block $n$, the rewards they receive are 
 $$\sum_{i = h}^{n} \frac{x}{s_i}f_i = x \sum_{i = h}^{n} \frac{f_i}{s_i}$$
 
 Note that $s_i$ does not change every block,
@@ -72,7 +72,7 @@ The reward they should receive when withdrawing is:
 
 $$x \sum_{i = k + 1}^{f} \frac{T_i}{n_i} = x\left(\left(\sum_{i=0}^{f}\frac{T_i}{n_i}\right) - \left(\sum_{i=0}^{k}\frac{T_i}{n_i}\right)\right) = x\left(Entry_f - Entry_k\right)$$
 
-It is clear from the equations that this payout mechanism maintains correctness, and required no iterations. It just needed the two state reads for these entries.
+It is clear from the equations that this payout mechanism maintains correctness, and requires no iterations. It just needed the two state reads for these entries.
 
 $T_f$ is a separate variable in state for the amount of fees this validator has accrued since the last update to its power.
 This variable is incremented at every block by however much fees this validator received that block.
@@ -93,8 +93,8 @@ This allows for efficient updates to a validator's commission rate every block i
 
 \subsection{Slashing}
 \label{ssec:slashing}
-Slashing is distinct from withdrawals, since lowers the stake of all of the delegator's by a fixed percentage.
-Since noone is charged gas for slashes, a slash cannot iterate over all delegators.
+Slashing is distinct from withdrawals, since it lowers the stake of all of the delegator's by a fixed percentage.
+Since no one is charged gas for slashes, a slash cannot iterate over all delegators.
 Thus we can no longer just multiply by $x$ over the difference in stake. 
 The solution here is to instead store each period created by a slash in the validators state.
 Then when withdrawing, you must iterate over all slashes between when you started and ended.

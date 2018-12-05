@@ -74,13 +74,9 @@ func DefaultGenesisWithValidators(valAddrs []sdk.ValAddress) GenesisState {
 
 // ValidateGenesis validates the genesis state of distribution genesis input
 func ValidateGenesis(data GenesisState) error {
-	if data.CommunityTax.IsNegative() {
-		return fmt.Errorf("mint parameter CommunityTax should be positive, is %s",
-			data.CommunityTax.String())
-	}
-	if data.CommunityTax.GT(sdk.OneDec()) {
-		return fmt.Errorf("mint parameter CommunityTax should be less than one, is %s",
-			data.CommunityTax.String())
+	if data.CommunityTax.IsNegative() || data.CommunityTax.GT(sdk.OneDec()) {
+		return fmt.Errorf("mint parameter CommunityTax should be positive "+
+			"and less than one, is %s", data.CommunityTax.String())
 	}
 	if data.BaseProposerReward.IsNegative() {
 		return fmt.Errorf("mint parameter BaseProposerReward should be positive, is %s",

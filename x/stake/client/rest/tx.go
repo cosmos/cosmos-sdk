@@ -2,7 +2,6 @@ package rest
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -32,29 +31,28 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 
 type (
 	msgDelegationsInput struct {
-		BaseReq       utils.BaseReq `json:"base_req"`
-		DelegatorAddr string        `json:"delegator_addr"` // in bech32
-		ValidatorAddr string        `json:"validator_addr"` // in bech32
-		Delegation    sdk.Coin      `json:"delegation"`
+		BaseReq       utils.BaseReq  `json:"base_req"`
+		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
+		ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
+		Delegation    sdk.Coin       `json:"delegation"`
 	}
 
 	msgBeginRedelegateInput struct {
-		BaseReq          utils.BaseReq `json:"base_req"`
-		DelegatorAddr    string        `json:"delegator_addr"`     // in bech32
-		ValidatorSrcAddr string        `json:"validator_src_addr"` // in bech32
-		ValidatorDstAddr string        `json:"validator_dst_addr"` // in bech32
-		SharesAmount     string        `json:"shares"`
+		BaseReq          utils.BaseReq  `json:"base_req"`
+		DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
+		ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
+		ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // in bech32
+		SharesAmount     sdk.Dec        `json:"shares"`
 	}
 
 	msgBeginUnbondingInput struct {
-		BaseReq       utils.BaseReq `json:"base_req"`
-		DelegatorAddr string        `json:"delegator_addr"` // in bech32
-		ValidatorAddr string        `json:"validator_addr"` // in bech32
-		SharesAmount  string        `json:"shares"`
+		BaseReq       utils.BaseReq  `json:"base_req"`
+		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
+		ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
+		SharesAmount  sdk.Dec        `json:"shares"`
 	}
 )
 
-// If not, we can just use CompleteAndBroadcastTxREST.
 func putDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgDelegationsInput
@@ -69,31 +67,19 @@ func putDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.C
 		if !baseReq.ValidateBasic(w) {
 			return
 		}
-		fmt.Println("sanitize")
+
 		info, err := kb.Get(baseReq.Name)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		}
-		fmt.Println("get key name")
-		delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
 
-		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		if !bytes.Equal(info.GetPubKey().Address(), delAddr) {
+		if !bytes.Equal(info.GetPubKey().Address(), req.DelegatorAddr) {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own delegator address")
 			return
 		}
 
-		msg := stake.NewMsgDelegate(delAddr, valAddr, req.Delegation)
+		msg := stake.NewMsgDelegate(req.DelegatorAddr, req.ValidatorAddr, req.Delegation)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -125,35 +111,12 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 			return
 		}
 
-		delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		if !bytes.Equal(info.GetPubKey().Address(), delAddr) {
+		if !bytes.Equal(info.GetPubKey().Address(), req.DelegatorAddr) {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own delegator address")
 			return
 		}
 
-		valSrcAddr, err := sdk.ValAddressFromBech32(req.ValidatorSrcAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-		valDstAddr, err := sdk.ValAddressFromBech32(req.ValidatorDstAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		shares, err := sdk.NewDecFromStr(req.SharesAmount)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		msg := stake.NewMsgBeginRedelegate(delAddr, valSrcAddr, valDstAddr, shares)
+		msg := stake.NewMsgBeginRedelegate(req.DelegatorAddr, req.ValidatorSrcAddr, req.ValidatorDstAddr, req.SharesAmount)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -174,12 +137,6 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
 		baseReq := req.BaseReq.Sanitize()
 		if !baseReq.ValidateBasic(w) {
 			return
@@ -191,24 +148,12 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		if !bytes.Equal(info.GetPubKey().Address(), delAddr) {
+		if !bytes.Equal(info.GetPubKey().Address(), req.DelegatorAddr) {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own delegator address")
 			return
 		}
 
-		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		shares, err := sdk.NewDecFromStr(req.SharesAmount)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		msg := stake.NewMsgBeginUnbonding(delAddr, valAddr, shares)
+		msg := stake.NewMsgBeginUnbonding(req.DelegatorAddr, req.ValidatorAddr, req.SharesAmount)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

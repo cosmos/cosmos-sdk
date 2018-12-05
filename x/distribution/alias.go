@@ -60,6 +60,8 @@ var (
 	NewMsgWithdrawValidatorRewardsAll = types.NewMsgWithdrawValidatorRewardsAll
 
 	NewDecCoins = types.NewDecCoins
+
+	NewTotalAccum = types.NewTotalAccum
 )
 
 const (
@@ -72,12 +74,6 @@ var (
 	ErrNilWithdrawAddr  = types.ErrNilWithdrawAddr
 	ErrNilValidatorAddr = types.ErrNilValidatorAddr
 
-	ActionModifyWithdrawAddress       = tags.ActionModifyWithdrawAddress
-	ActionWithdrawDelegatorRewardsAll = tags.ActionWithdrawDelegatorRewardsAll
-	ActionWithdrawDelegatorReward     = tags.ActionWithdrawDelegatorReward
-	ActionWithdrawValidatorRewardsAll = tags.ActionWithdrawValidatorRewardsAll
-
-	TagAction    = tags.Action
 	TagValidator = tags.Validator
 	TagDelegator = tags.Delegator
 )

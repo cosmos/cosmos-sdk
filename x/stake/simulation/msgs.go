@@ -7,11 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // SimulateMsgCreateValidator
@@ -226,28 +224,5 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k stake.Keeper) simulation
 		event(fmt.Sprintf("stake/MsgBeginRedelegate/%v", result.IsOK()))
 		action = fmt.Sprintf("TestMsgBeginRedelegate: %s", msg.GetSignBytes())
 		return action, nil, nil
-	}
-}
-
-// Setup
-// nolint: errcheck
-func Setup(mapp *mock.App, k stake.Keeper) simulation.RandSetup {
-	return func(r *rand.Rand, accs []simulation.Account) {
-		ctx := mapp.NewContext(false, abci.Header{})
-		gen := stake.DefaultGenesisState()
-		stake.InitGenesis(ctx, k, gen)
-		params := k.GetParams(ctx)
-		denom := params.BondDenom
-		loose := sdk.ZeroInt()
-		mapp.AccountKeeper.IterateAccounts(ctx, func(acc auth.Account) bool {
-			balance := simulation.RandomAmount(r, sdk.NewInt(1000000))
-			acc.SetCoins(acc.GetCoins().Plus(sdk.Coins{sdk.NewCoin(denom, balance)}))
-			mapp.AccountKeeper.SetAccount(ctx, acc)
-			loose = loose.Add(balance)
-			return false
-		})
-		pool := k.GetPool(ctx)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(loose.Int64()))
-		k.SetPool(ctx, pool)
 	}
 }

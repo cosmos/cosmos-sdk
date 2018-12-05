@@ -22,15 +22,17 @@ The following sections contain the information you need if you want to build a f
 >*NOTE*: We are currently working on improving the docs. Some info might be missing. If that is the case, try the Cosmos [Forum](https://forum.cosmos.network). Failing that, [open an issue](https://github.com/cosmos/cosmos-sdk/issues/new).
 
 - [Introduction](./intro/README.md): Contains introductory high-level material on the Cosmos SDK.
-- [Gaia](./gaia/README.md): Contains all documentation related to the gaia application (current name for the Cosmos-Hub).
+- [Gaia](./gaia/README.md): Contains all documentation related to the gaia application (current name for the Cosmos-Hub). Also contains info on how to join gaia testnets.
 - [Clients](./clients/README.md): Documentation about SDK clients like the SDK Command-Line interface and the SDK Light-client.
 - [Specifications](./spec/README.md): Contains SDK and modules specifications.
 
 If you are reading this on the Cosmos Website, please know that you can find more information on [github](https://github.com/cosmos/cosmos-sdk/tree/develop/docs). Also if you find any issues with the documentation please [*open a Pull Request*](https://github.com/cosmos/cosmos-sdk/compare?expand=1), or at least [*open an Issue*](https://github.com/cosmos/cosmos-sdk/issues/new) to update the docs!
 
-## Join the public testnet for the Cosmos Hub
+## Cosmos Hub testnet
 
-To install the latest version of the `gaia` application and join the public testnet, **click [here](./gaia/README.md#join-the-cosmos-hub-public-testnet)**
+To install the latest version of the `gaia` application (application of the Cosmos Hub) and join the public testnet, **click [here](./gaia/join-testnet.md)**
+
+To start your own `gaia` testnet, **click [here](./gaia/deploy-testnet.md)**
 
 ## Contribute
 

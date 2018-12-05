@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -89,7 +90,7 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		// first signer pays the fees
 		if !stdTx.Fee.Amount.IsZero() {
-			signerAccs[0], res = deductFees(ctx, signerAccs[0], stdTx.Fee.Amount)
+			signerAccs[0], res = deductFees(ctx.BlockHeader().Time, signerAccs[0], stdTx.Fee.Amount)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -220,7 +221,7 @@ func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
 
 // deductFees attempts to deduct fees from a given address. Upon success the
 // updated account and a result is returned.
-func deductFees(ctx sdk.Context, acc Account, fee sdk.Coins) (Account, sdk.Result) {
+func deductFees(blockTime time.Time, acc Account, fee sdk.Coins) (Account, sdk.Result) {
 	if !fee.IsValid() {
 		return nil, sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", fee)).Result()
 	}
@@ -236,7 +237,7 @@ func deductFees(ctx sdk.Context, acc Account, fee sdk.Coins) (Account, sdk.Resul
 
 	// Validate the account has enough "spendable" coins as this will cover cases
 	// such as vesting accounts.
-	spendableCoins := acc.SpendableCoins(ctx.BlockHeader().Time)
+	spendableCoins := acc.SpendableCoins(blockTime)
 	if _, hasNeg := spendableCoins.SafeMinus(fee); hasNeg {
 		return nil, sdk.ErrInsufficientFunds(fmt.Sprintf("%s < %s", spendableCoins, fee)).Result()
 	}

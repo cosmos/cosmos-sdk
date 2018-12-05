@@ -3,10 +3,12 @@ package auth
 import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/tendermint/tendermint/crypto"
 )
+
+// ----------------------------------------------------------------------------
+// Account
 
 var globalAccountNumberKey = []byte("globalAccountNumber")
 
@@ -17,31 +19,31 @@ type AccountKeeper struct {
 	key sdk.StoreKey
 
 	// The prototypical Account constructor.
-	proto func() types.Account
+	proto func() Account
 
 	// The codec codec for binary encoding/decoding of accounts.
 	cdc *codec.Codec
 
-	paramStore params.Subspace
+	paramSubspace params.Subspace
 }
 
 // NewAccountKeeper returns a new sdk.AccountKeeper that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 // nolint
 func NewAccountKeeper(
-	cdc *codec.Codec, key sdk.StoreKey, paramstore params.Subspace, proto func() types.Account,
+	cdc *codec.Codec, key sdk.StoreKey, paramstore params.Subspace, proto func() Account,
 ) AccountKeeper {
 
 	return AccountKeeper{
-		key:        key,
-		proto:      proto,
-		cdc:        cdc,
-		paramStore: paramstore.WithTypeTable(ParamTypeTable()),
+		key:           key,
+		proto:         proto,
+		cdc:           cdc,
+		paramSubspace: paramstore.WithTypeTable(ParamTypeTable()),
 	}
 }
 
 // Implaements sdk.AccountKeeper.
-func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.Account {
+func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) Account {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
@@ -57,7 +59,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 }
 
 // New Account
-func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.Account) types.Account {
+func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
 	err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx))
 	if err != nil {
 		// TODO: Handle with #870
@@ -72,7 +74,7 @@ func AddressStoreKey(addr sdk.AccAddress) []byte {
 }
 
 // Implements sdk.AccountKeeper.
-func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.Account {
+func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) Account {
 	store := ctx.KVStore(ak.key)
 	bz := store.Get(AddressStoreKey(addr))
 	if bz == nil {
@@ -83,7 +85,7 @@ func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.A
 }
 
 // Implements sdk.AccountKeeper.
-func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.Account) {
+func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	bz := ak.encodeAccount(acc)
@@ -91,14 +93,14 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.Account) {
 }
 
 // RemoveAccount removes an account for the account mapper store.
-func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.Account) {
+func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc Account) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.key)
 	store.Delete(AddressStoreKey(addr))
 }
 
 // Implements sdk.AccountKeeper.
-func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(types.Account) (stop bool)) {
+func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(ak.key)
 	iter := sdk.KVStorePrefixIterator(store, []byte("account:"))
 	defer iter.Close()
@@ -167,10 +169,23 @@ func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
 	return accNumber
 }
 
-//----------------------------------------
-// misc.
+//-----------------------------------------------------------------------------
+// Params
 
-func (ak AccountKeeper) encodeAccount(acc types.Account) []byte {
+// SetParams sets the auth module's parameters.
+func (ak AccountKeeper) SetParams(ctx sdk.Context, params Params) {
+	ak.paramSubspace.SetParamSet(ctx, &params)
+}
+
+// GetParams gets the auth module's parameters.
+func (ak AccountKeeper) GetParams(ctx sdk.Context, params *Params) {
+	ak.paramSubspace.GetParamSet(ctx, params)
+}
+
+//-----------------------------------------------------------------------------
+// Misc.
+
+func (ak AccountKeeper) encodeAccount(acc Account) []byte {
 	bz, err := ak.cdc.MarshalBinaryBare(acc)
 	if err != nil {
 		panic(err)
@@ -178,7 +193,7 @@ func (ak AccountKeeper) encodeAccount(acc types.Account) []byte {
 	return bz
 }
 
-func (ak AccountKeeper) decodeAccount(bz []byte) (acc types.Account) {
+func (ak AccountKeeper) decodeAccount(bz []byte) (acc Account) {
 	err := ak.cdc.UnmarshalBinaryBare(bz, &acc)
 	if err != nil {
 		panic(err)

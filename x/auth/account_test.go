@@ -1,4 +1,4 @@
-package types
+package auth
 
 import (
 	"testing"
@@ -10,8 +10,8 @@ import (
 )
 
 func TestBaseAddressPubKey(t *testing.T) {
-	_, pub1, addr1 := NewTestKeyPubAddr()
-	_, pub2, addr2 := NewTestKeyPubAddr()
+	_, pub1, addr1 := newTestKeyPubAddr()
+	_, pub2, addr2 := newTestKeyPubAddr()
 	acc := NewBaseAccountWithAddress(addr1)
 
 	// check the address (set) and pubkey (not set)
@@ -43,7 +43,7 @@ func TestBaseAddressPubKey(t *testing.T) {
 }
 
 func TestBaseAccountCoins(t *testing.T) {
-	_, _, addr := NewTestKeyPubAddr()
+	_, _, addr := newTestKeyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
 	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
@@ -54,7 +54,7 @@ func TestBaseAccountCoins(t *testing.T) {
 }
 
 func TestBaseAccountSequence(t *testing.T) {
-	_, _, addr := NewTestKeyPubAddr()
+	_, _, addr := newTestKeyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
 	seq := uint64(7)
@@ -65,7 +65,7 @@ func TestBaseAccountSequence(t *testing.T) {
 }
 
 func TestBaseAccountMarshal(t *testing.T) {
-	_, pub, addr := NewTestKeyPubAddr()
+	_, pub, addr := newTestKeyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
 	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}

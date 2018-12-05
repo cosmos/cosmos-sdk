@@ -67,84 +67,24 @@ func TestAccountMapperRemoveAccount(t *testing.T) {
 	require.Equal(t, accSeq2, acc2.GetSequence())
 }
 
-func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
+func TestSetParams(t *testing.T) {
 	input := setupTestInput()
+	params := DefaultParams()
 
-	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
-		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
-		input.ak.SetAccount(input.ctx, acc)
-	}
+	input.ak.SetParams(input.ctx, params)
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		input.ak.GetAccount(input.ctx, sdk.AccAddress(arr))
-	}
+	newParams := Params{}
+	input.ak.paramSubspace.Get(input.ctx, KeyTxSigLimit, &newParams.TxSigLimit)
+	require.Equal(t, newParams.TxSigLimit, DefaultTxSigLimit)
 }
 
-func BenchmarkAccountMapperGetAccountFoundWithCoins(b *testing.B) {
+func TestGetParams(t *testing.T) {
 	input := setupTestInput()
-	coins := sdk.Coins{
-		sdk.NewCoin("LTC", sdk.NewInt(1000)),
-		sdk.NewCoin("BTC", sdk.NewInt(1000)),
-		sdk.NewCoin("ETH", sdk.NewInt(1000)),
-		sdk.NewCoin("XRP", sdk.NewInt(1000)),
-		sdk.NewCoin("BCH", sdk.NewInt(1000)),
-		sdk.NewCoin("EOS", sdk.NewInt(1000)),
-	}
+	params := DefaultParams()
 
-	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
-		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
-		acc.SetCoins(coins)
-		input.ak.SetAccount(input.ctx, acc)
-	}
+	input.ak.SetParams(input.ctx, params)
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		input.ak.GetAccount(input.ctx, sdk.AccAddress(arr))
-	}
-}
-
-func BenchmarkAccountMapperSetAccount(b *testing.B) {
-	input := setupTestInput()
-
-	b.ResetTimer()
-
-	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
-		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
-		input.ak.SetAccount(input.ctx, acc)
-	}
-}
-
-func BenchmarkAccountMapperSetAccountWithCoins(b *testing.B) {
-	input := setupTestInput()
-	coins := sdk.Coins{
-		sdk.NewCoin("LTC", sdk.NewInt(1000)),
-		sdk.NewCoin("BTC", sdk.NewInt(1000)),
-		sdk.NewCoin("ETH", sdk.NewInt(1000)),
-		sdk.NewCoin("XRP", sdk.NewInt(1000)),
-		sdk.NewCoin("BCH", sdk.NewInt(1000)),
-		sdk.NewCoin("EOS", sdk.NewInt(1000)),
-	}
-
-	b.ResetTimer()
-
-	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
-		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
-		addr := sdk.AccAddress(arr)
-		acc := input.ak.NewAccountWithAddress(input.ctx, addr)
-		acc.SetCoins(coins)
-		input.ak.SetAccount(input.ctx, acc)
-	}
+	newParams := Params{}
+	input.ak.GetParams(input.ctx, &newParams)
+	require.Equal(t, params, newParams)
 }

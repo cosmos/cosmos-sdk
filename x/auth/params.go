@@ -1,4 +1,4 @@
-package types
+package auth
 
 import (
 	"bytes"
@@ -10,14 +10,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
+// DefaultParamspace defines the default auth module parameter subspace
+const DefaultParamspace = "auth"
+
 // Default parameter values
 const (
 	DefaultMemoCostPerByte        sdk.Gas = 1
-	DefaultMaxMemoCharacters              = 100
-	DefaultGasPerUnitCost                 = 1000
-	DefaultTxSigLimit                     = 7
-	DefaultSigVerifyCostED25519           = 59
-	DefaultSigVerifyCostSecp256k1         = 100
+	DefaultMaxMemoCharacters      uint64  = 100
+	DefaultGasPerUnitCost         uint64  = 1000
+	DefaultTxSigLimit             uint64  = 7
+	DefaultSigVerifyCostED25519   uint64  = 59
+	DefaultSigVerifyCostSecp256k1 uint64  = 100
 )
 
 // Parameter keys
@@ -30,7 +33,7 @@ var (
 	KeySigVerifyCostSecp256k1 = []byte("SigVerifyCostSecp256k1")
 )
 
-var _ params.ParamSet = Params{}
+var _ params.ParamSet = &Params{}
 
 // Params defines the parameters for the auth module.
 type Params struct {
@@ -42,10 +45,15 @@ type Params struct {
 	SigVerifyCostSecp256k1 uint64
 }
 
+// ParamTable for stake module
+func ParamTypeTable() params.TypeTable {
+	return params.NewTypeTable().RegisterParamSet(&Params{})
+}
+
 // KeyValuePairs implements the ParamSet interface and returns all the key/value
 // pairs of auth module's parameters.
 // nolint
-func (p Params) KeyValuePairs() params.KeyValuePairs {
+func (p *Params) KeyValuePairs() params.KeyValuePairs {
 	return params.KeyValuePairs{
 		{KeyMemoCostPerByte, &p.MemoCostPerByte},
 		{KeyMaxMemoCharacters, &p.MaxMemoCharacters},

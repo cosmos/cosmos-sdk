@@ -2,18 +2,17 @@ package auth
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 /*
 
 Usage:
 
-var accounts types.AccountKeeper
+var accounts AccountKeeper
 
 // Fetch all signer accounts.
 addrs := tx.GetSigners()
-signers := make([]types.Account, len(addrs))
+signers := make([]Account, len(addrs))
 for i, addr := range addrs {
 	acc := accounts.GetAccount(ctx)
 	signers[i] = acc
@@ -35,15 +34,15 @@ const (
 )
 
 // add the signers to the context
-func WithSigners(ctx sdk.Context, accounts []types.Account) sdk.Context {
+func WithSigners(ctx sdk.Context, accounts []Account) sdk.Context {
 	return ctx.WithValue(contextKeySigners, accounts)
 }
 
 // get the signers from the context
-func GetSigners(ctx sdk.Context) []types.Account {
+func GetSigners(ctx sdk.Context) []Account {
 	v := ctx.Value(contextKeySigners)
 	if v == nil {
-		return []types.Account{}
+		return []Account{}
 	}
-	return v.([]types.Account)
+	return v.([]Account)
 }

@@ -213,8 +213,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	addrMap := make(map[string]GenesisAccount, len(appState.Accounts))
 	for i := 0; i < len(appState.Accounts); i++ {
 		acc := appState.Accounts[i]
-		strAddr := string(acc.Address)
-		addrMap[strAddr] = acc
+		addrMap[acc.Address.String()] = acc
 	}
 
 	// addresses and IPs (and port) validator server info
@@ -256,18 +255,18 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 		msg := msgs[0].(stake.MsgCreateValidator)
 		// validate delegator and validator addresses and funds against the accounts in the state
-		delAddr := string(msg.DelegatorAddr)
-		valAddr := string(sdk.AccAddress(msg.ValidatorAddr))
+		delAddr := msg.DelegatorAddr.String()
+		valAddr := sdk.AccAddress(msg.ValidatorAddr).String()
 
 		delAcc, delOk := addrMap[delAddr]
 		_, valOk := addrMap[valAddr]
 
 		accsNotInGenesis := []string{}
 		if !delOk {
-			accsNotInGenesis = append(accsNotInGenesis, fmt.Sprintf("%v", delAddr))
+			accsNotInGenesis = append(accsNotInGenesis, delAddr)
 		}
 		if !valOk {
-			accsNotInGenesis = append(accsNotInGenesis, fmt.Sprintf("%v", valAddr))
+			accsNotInGenesis = append(accsNotInGenesis, valAddr)
 		}
 		if len(accsNotInGenesis) != 0 {
 			return appGenTxs, persistentPeers, fmt.Errorf(

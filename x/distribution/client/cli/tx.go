@@ -3,6 +3,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -86,6 +87,10 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 					return err
 				}
 				msg = types.NewMsgWithdrawDelegatorRewardsAll(delAddr)
+			}
+
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint

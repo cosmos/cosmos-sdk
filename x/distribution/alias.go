@@ -60,6 +60,8 @@ var (
 	NewMsgWithdrawValidatorRewardsAll = types.NewMsgWithdrawValidatorRewardsAll
 
 	NewDecCoins = types.NewDecCoins
+
+	NewTotalAccum = types.NewTotalAccum
 )
 
 const (

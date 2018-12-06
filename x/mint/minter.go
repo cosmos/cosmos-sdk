@@ -2,24 +2,20 @@ package mint
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Minter represents the minting state
 type Minter struct {
-	LastUpdate       time.Time `json:"last_update"`       // time which the last update was made to the minter
-	Inflation        sdk.Dec   `json:"inflation"`         // current annual inflation rate
-	AnnualProvisions sdk.Dec   `json:"annual_provisions"` // current annual expected provisions
+	Inflation        sdk.Dec `json:"inflation"`         // current annual inflation rate
+	AnnualProvisions sdk.Dec `json:"annual_provisions"` // current annual expected provisions
 }
 
 // Create a new minter object
-func NewMinter(lastUpdate time.Time, inflation,
-	annualProvisions sdk.Dec) Minter {
+func NewMinter(inflation, annualProvisions sdk.Dec) Minter {
 
 	return Minter{
-		LastUpdate:       lastUpdate,
 		Inflation:        inflation,
 		AnnualProvisions: annualProvisions,
 	}
@@ -28,7 +24,6 @@ func NewMinter(lastUpdate time.Time, inflation,
 // minter object for a new chain
 func InitialMinter(inflation sdk.Dec) Minter {
 	return NewMinter(
-		time.Unix(0, 0),
 		inflation,
 		sdk.NewDec(0),
 	)
@@ -50,8 +45,6 @@ func validateMinter(minter Minter) error {
 	return nil
 }
 
-var hrsPerYr = sdk.NewDec(8766) // as defined by a julian year of 365.25 days
-
 // get the new inflation rate for the next hour
 func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 	inflation sdk.Dec) {
@@ -66,7 +59,7 @@ func (m Minter) NextInflationRate(params Params, bondedRatio sdk.Dec) (
 	inflationRateChangePerYear := sdk.OneDec().
 		Sub(bondedRatio.Quo(params.GoalBonded)).
 		Mul(params.InflationRateChange)
-	inflationRateChange := inflationRateChangePerYear.Quo(hrsPerYr)
+	inflationRateChange := inflationRateChangePerYear.Quo(sdk.NewDec(int64(params.BlocksPerYear)))
 
 	// increase the new annual inflation for this next cycle
 	inflation = m.Inflation.Add(inflationRateChange)

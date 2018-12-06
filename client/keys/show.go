@@ -2,9 +2,10 @@ package keys
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/tendermint/tendermint/crypto"
-	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,8 +51,8 @@ func showKeysCmd() *cobra.Command {
 	}
 
 	cmd.Flags().String(FlagBechPrefix, "acc", "The Bech32 prefix encoding for a key (acc|val|cons)")
-	cmd.Flags().Bool(FlagAddress, false, "output the address only (overrides --output)")
-	cmd.Flags().Bool(FlagPublicKey, false, "output the public key only (overrides --output)")
+	cmd.Flags().BoolP(FlagAddress, "a", false, "output the address only (overrides --output)")
+	cmd.Flags().BoolP(FlagPublicKey, "p", false, "output the public key only (overrides --output)")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures")
 
 	return cmd

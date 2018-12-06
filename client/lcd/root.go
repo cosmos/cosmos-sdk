@@ -39,7 +39,7 @@ type RestServer struct {
 // NewRestServer creates a new rest server instance
 func NewRestServer(cdc *codec.Codec) *RestServer {
 	r := mux.NewRouter()
-	cliCtx := context.NewCLIContext().WithCodec(cdc)
+	cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 
 	// Register version methods on the router
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")

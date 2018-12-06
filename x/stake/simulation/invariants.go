@@ -93,18 +93,18 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		)
 
 		// XXX TODO investigate why go test TestGaiaSimulationAfterImport
-		//          loses decimal fractions if RoundInt is not used below here
+		//          loses decimal fractions in below two checks
 
 		// Loose tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators
-		if !pool.LooseTokens.Equal(loose.RoundInt()) {
+		if !sdk.NewDecFromInt(pool.LooseTokens).Equal(loose) {
 			return fmt.Errorf("loose token invariance:\n"+
 				"\tpool.LooseTokens: %v\n"+
 				"\tsum of account tokens: %v", pool.LooseTokens, loose)
 		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		if !pool.BondedTokens.Equal(bonded.RoundInt()) {
+		if !sdk.NewDecFromInt(pool.BondedTokens).Equal(bonded) {
 			return fmt.Errorf("bonded token invariance:\n"+
 				"\tpool.BondedTokens: %v\n"+
 				"\tsum of account tokens: %v", pool.BondedTokens, bonded)

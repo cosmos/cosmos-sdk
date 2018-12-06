@@ -50,7 +50,7 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 
 	sigCount := 0
 	for i := 0; i < len(stdSigs); i++ {
-		sigCount += CountSubKeys(stdSigs[i].PubKey)
+		sigCount += countSubKeys(stdSigs[i].PubKey)
 		if uint64(sigCount) > DefaultTxSigLimit {
 			return sdk.ErrTooManySignatures(
 				fmt.Sprintf("signatures: %d, limit: %d", sigCount, DefaultTxSigLimit),
@@ -61,8 +61,8 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// CountSubKeys counts the total number of keys for a multi-sig public key.
-func CountSubKeys(pub crypto.PubKey) int {
+// countSubKeys counts the total number of keys for a multi-sig public key.
+func countSubKeys(pub crypto.PubKey) int {
 	v, ok := pub.(*multisig.PubKeyMultisigThreshold)
 	if !ok {
 		return 1
@@ -70,7 +70,7 @@ func CountSubKeys(pub crypto.PubKey) int {
 
 	numKeys := 0
 	for _, subkey := range v.PubKeys {
-		numKeys += CountSubKeys(subkey)
+		numKeys += countSubKeys(subkey)
 	}
 
 	return numKeys

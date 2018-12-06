@@ -635,7 +635,7 @@ func TestCountSubkeys(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(T *testing.T) {
-			require.Equal(t, tt.want, CountSubKeys(tt.args.pub))
+			require.Equal(t, tt.want, countSubKeys(tt.args.pub))
 		})
 	}
 }

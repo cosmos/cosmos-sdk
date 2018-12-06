@@ -198,7 +198,7 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 	}
 
 	txBldr := authtxb.TxBuilder{
-		Encoder:       GetTxEncoder(cdc),
+		TxEncoder:     GetTxEncoder(cdc),
 		Gas:           gas,
 		GasAdjustment: adjustment,
 		SimulateGas:   simulateGas,

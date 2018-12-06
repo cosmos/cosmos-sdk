@@ -7,10 +7,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// ----------------------------------------------------------------------------
-// Account
+var (
+	// Prefix for account-by-address store
+	AddressStoreKeyPrefix = []byte{0x01}
 
-var globalAccountNumberKey = []byte("globalAccountNumber")
+	globalAccountNumberKey = []byte("globalAccountNumber")
+)
 
 // This AccountKeeper encodes/decodes accounts using the go-amino (binary)
 // encoding/decoding library.
@@ -70,7 +72,7 @@ func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
 
 // Turn an address to key used to get it from the account store
 func AddressStoreKey(addr sdk.AccAddress) []byte {
-	return append([]byte("account:"), addr.Bytes()...)
+	return append(AddressStoreKeyPrefix, addr.Bytes()...)
 }
 
 // Implements sdk.AccountKeeper.
@@ -102,7 +104,7 @@ func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc Account) {
 // Implements sdk.AccountKeeper.
 func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(ak.key)
-	iter := sdk.KVStorePrefixIterator(store, []byte("account:"))
+	iter := sdk.KVStorePrefixIterator(store, AddressStoreKeyPrefix)
 	defer iter.Close()
 	for {
 		if !iter.Valid() {

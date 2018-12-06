@@ -30,6 +30,8 @@ FEATURES
 * Gaia
 
 * SDK
+  * \#2996 Update the `AccountKeeper` to contain params used in the context of
+  the ante handler.
 
 * Tendermint
 

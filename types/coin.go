@@ -160,7 +160,8 @@ func (coins Coins) IsValid() bool {
 
 // AddCoinByDenom looks for a matching coin in coins that has the same denom as
 // other. Upon matching, the other coin is added to the matching coin. If the
-// coins are empty, the coin is simply added to the empty set.
+// coins are empty, the coin is simply added to the empty set. If the denom of
+// the coin to be added does not exist in coins, the function will panic.
 func (coins Coins) AddCoinByDenom(other Coin) Coins {
 	res := copyCoins(coins)
 
@@ -251,7 +252,8 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 // SubCoinByDenom looks for a matching coin in coins that has the same denom as
 // other. Upon matching, the other coin is subtracted from the matching coin. If
 // the resulting coin is zero, it is removed. If the coins are empty, the coin
-// is simply added to the empty set.
+// is simply added to the empty set. If the denom of the coin to be subtracted
+// does not exist in coins, the function will panic.
 func (coins Coins) SubCoinByDenom(other Coin) Coins {
 	res := copyCoins(coins)
 

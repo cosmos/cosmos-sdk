@@ -645,6 +645,37 @@ trust_node = true
 	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
+func TestGaiadCollectGentxs(t *testing.T) {
+	t.Parallel()
+	// Initialise temporary directories
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t.Name())
+	gentxDir, err := ioutil.TempDir("", "")
+	gentxDoc := filepath.Join(gentxDir, "gentx.json")
+	require.NoError(t, err)
+
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
+	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli config --home=%s output json", gaiacliHome))
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", gaiacliHome))
+
+	// Run init
+	_ = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
+	// Add account to genesis.json
+	executeWriteCheckErr(t, fmt.Sprintf(
+		"gaiad add-genesis-account %s 150%s,1000fooToken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
+	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", gaiadHome, string(os.PathSeparator), string(os.PathSeparator)))
+	// Write gentx file
+	executeWriteCheckErr(t, fmt.Sprintf(
+		"gaiad gentx --name=foo --home=%s --home-client=%s --output-document=%s", gaiadHome, gaiacliHome, gentxDoc), app.DefaultKeyPass)
+	// Collect gentxs from a custom directory
+	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s --gentx-dir=%s", gaiadHome, gentxDir), app.DefaultKeyPass)
+	cleanupDirs(gaiadHome, gaiacliHome, gentxDir)
+}
+
 //___________________________________________________________________________________
 // helper methods
 

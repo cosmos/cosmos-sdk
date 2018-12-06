@@ -406,9 +406,9 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 //       the exchange rate of future shares of this validator can increase.
 func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Int) {
 
-	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
+	remainingShares := v.DelegatorShares.Sub(delShares)
 	var issuedTokens sdk.Int
-	if v.DelegatorShares.IsZero() {
+	if remainingShares.IsZero() {
 
 		// last delegation share gets any trimmings
 		issuedTokens = v.Tokens
@@ -419,6 +419,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 		issuedTokens = v.DelegatorShareExRate().Mul(delShares).TruncateInt()
 	}
 
+	v.DelegatorShares = remainingShares
 	v.Tokens = v.Tokens.Sub(issuedTokens)
 	if v.Status == sdk.Bonded {
 		pool = pool.bondedTokensToLoose(issuedTokens)

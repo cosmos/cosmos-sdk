@@ -162,11 +162,11 @@ func TestRemoveDelShares(t *testing.T) {
 
 	// Remove delegator shares
 	valB, poolB, coinsB := valA.RemoveDelShares(poolA, sdk.NewDec(10))
-	assert.Equal(t, int64(10), coinsB.Int64())
-	assert.Equal(t, int64(90), valB.DelegatorShares.RoundInt64())
-	assert.Equal(t, int64(90), valB.BondedTokens().Int64())
-	assert.Equal(t, int64(90), poolB.BondedTokens.Int64())
-	assert.Equal(t, int64(20), poolB.LooseTokens.Int64())
+	require.Equal(t, int64(10), coinsB.Int64())
+	require.Equal(t, int64(90), valB.DelegatorShares.RoundInt64())
+	require.Equal(t, int64(90), valB.BondedTokens().Int64())
+	require.Equal(t, int64(90), poolB.BondedTokens.Int64())
+	require.Equal(t, int64(20), poolB.LooseTokens.Int64())
 
 	// conservation of tokens
 	require.True(sdk.IntEq(t,

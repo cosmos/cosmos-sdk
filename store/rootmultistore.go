@@ -230,13 +230,19 @@ func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 }
 
 // Implements MultiStore.
+// If the store does not exist, panics.
 func (rs *rootMultiStore) GetStore(key StoreKey) Store {
-	return rs.stores[key]
+	store := rs.stores[key]
+	if store == nil {
+		panic("Could not load store " + key.String())
+	}
+	return store
 }
 
 // GetKVStore implements the MultiStore interface. If tracing is enabled on the
 // rootMultiStore, a wrapped TraceKVStore will be returned with the given
 // tracer, otherwise, the original KVStore will be returned.
+// If the store does not exist, panics.
 func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 	store := rs.stores[key].(KVStore)
 
@@ -352,7 +358,8 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(key sdk.StoreKey, id CommitI
 		store, err = LoadIAVLStore(db, id, rs.pruning)
 		return
 	case sdk.StoreTypeDB:
-		panic("dbm.DB is not a CommitStore")
+		store = commitDBStoreAdapter{dbStoreAdapter{db}}
+		return
 	case sdk.StoreTypeTransient:
 		_, ok := key.(*sdk.TransientStoreKey)
 		if !ok {

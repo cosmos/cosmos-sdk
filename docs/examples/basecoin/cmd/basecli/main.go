@@ -52,10 +52,6 @@ func main() {
 	config.SetBech32PrefixForConsensusNode("basecons", "baseconspub")
 	config.Seal()
 
-	rs := lcd.NewRestServer(cdc)
-
-	registerRoutes(rs)
-
 	// TODO: Setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
 	// with the cdc.
@@ -72,40 +68,39 @@ func main() {
 
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
-		client.GetCommands(
-			stakecmd.GetCmdQueryValidator(storeStake, cdc),
-			stakecmd.GetCmdQueryValidators(storeStake, cdc),
-			stakecmd.GetCmdQueryValidatorUnbondingDelegations(storeStake, cdc),
-			stakecmd.GetCmdQueryValidatorRedelegations(storeStake, cdc),
-			stakecmd.GetCmdQueryDelegation(storeStake, cdc),
-			stakecmd.GetCmdQueryDelegations(storeStake, cdc),
-			stakecmd.GetCmdQueryPool(storeStake, cdc),
-			stakecmd.GetCmdQueryParams(storeStake, cdc),
-			stakecmd.GetCmdQueryUnbondingDelegation(storeStake, cdc),
-			stakecmd.GetCmdQueryUnbondingDelegations(storeStake, cdc),
-			stakecmd.GetCmdQueryRedelegation(storeStake, cdc),
-			stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
-			slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
-			authcmd.GetAccountCmd(storeAcc, cdc),
-		)...)
+		stakecmd.GetCmdQueryValidator(storeStake, cdc),
+		stakecmd.GetCmdQueryValidators(storeStake, cdc),
+		stakecmd.GetCmdQueryValidatorUnbondingDelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryValidatorRedelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryDelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryDelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryPool(storeStake, cdc),
+		stakecmd.GetCmdQueryParams(storeStake, cdc),
+		stakecmd.GetCmdQueryUnbondingDelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryUnbondingDelegations(storeStake, cdc),
+		stakecmd.GetCmdQueryRedelegation(storeStake, cdc),
+		stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
+		slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
+		stakecmd.GetCmdQueryValidatorDelegations(storeStake, cdc),
+		authcmd.GetAccountCmd(storeAcc, cdc),
+	)
 
 	rootCmd.AddCommand(
-		client.PostCommands(
-			bankcmd.SendTxCmd(cdc),
-			ibccmd.IBCTransferCmd(cdc),
-			ibccmd.IBCRelayCmd(cdc),
-			stakecmd.GetCmdCreateValidator(cdc),
-			stakecmd.GetCmdEditValidator(cdc),
-			stakecmd.GetCmdDelegate(cdc),
-			stakecmd.GetCmdUnbond(storeStake, cdc),
-			stakecmd.GetCmdRedelegate(storeStake, cdc),
-			slashingcmd.GetCmdUnjail(cdc),
-		)...)
+		bankcmd.SendTxCmd(cdc),
+		ibccmd.IBCTransferCmd(cdc),
+		ibccmd.IBCRelayCmd(cdc),
+		stakecmd.GetCmdCreateValidator(cdc),
+		stakecmd.GetCmdEditValidator(cdc),
+		stakecmd.GetCmdDelegate(cdc),
+		stakecmd.GetCmdUnbond(storeStake, cdc),
+		stakecmd.GetCmdRedelegate(storeStake, cdc),
+		slashingcmd.GetCmdUnjail(cdc),
+	)
 
 	// add proxy, version and key info
 	rootCmd.AddCommand(
 		client.LineBreak,
-		rs.ServeCommand(),
+		lcd.ServeCommand(cdc, registerRoutes),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,

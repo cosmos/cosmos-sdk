@@ -95,6 +95,14 @@ func (keeper BaseViewKeeper) SetDenomDecimals(ctx sdk.Context, denom string, dec
 	return setDenomDecimals(ctx, keeper.cdc, keeper.metadataStoreKey, denom, decimals)
 }
 
+// InputOutputCoins handles a list of inputs and outputs
+func (keeper BaseKeeper) InputOutputCoins(
+	ctx sdk.Context, inputs []Input, outputs []Output,
+) (sdk.Tags, sdk.Error) {
+
+	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
+}
+
 //-----------------------------------------------------------------------------
 // Send Keeper
 

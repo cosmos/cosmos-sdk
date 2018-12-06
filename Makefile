@@ -11,6 +11,9 @@ GOTOOLS = \
 GOBIN ?= $(GOPATH)/bin
 all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
 
+# The below include contains the get_tools target.
+include scripts/Makefile
+
 ########################################
 ### CI
 
@@ -107,19 +110,12 @@ check_tools:
 
 update_tools:
 	@echo "--> Updating tools to correct version"
-	$(MAKE) -C scripts get_tools
+	$(MAKE) --always-make get_tools
 
 update_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get -u github.com/tendermint/lint/golint
-
-get_tools: $(GOBIN)/dep $(GOBIN)/gometalinter $(GOBIN)/statik
-	@echo "--> Installing tools"
-	$(MAKE) -C scripts get_tools
-
-$(GOBIN)/%:
-	$(MAKE) -C scripts $(subst $(GOBIN)/,,$(@))
 
 get_dev_tools: get_tools
 	@echo "--> Downloading linters (this may take awhile)"
@@ -156,7 +152,7 @@ godocs:
 test: test_unit
 
 test_cli:
-	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
+	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
 
 test_examples:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/docs/examples/basecoin/cli_test` -tags=cli_test
@@ -168,25 +164,25 @@ test_unit:
 test_race:
 	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)
 
-test_sim_modules:
-	@echo "Running individual module simulations..."
-	@go test $(PACKAGES_SIMTEST)
-
 test_sim_gaia_nondeterminism:
 	@echo "Running nondeterminism test..."
 	@go test ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
 
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=500 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=10 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -v -timeout 24h
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@bash scripts/import-export-sim.sh 50
+	@bash scripts/multisim.sh 50 TestGaiaImportExport
+
+test_sim_gaia_simulation_after_import:
+	@echo "Running Gaia simulation-after-import. This may take several minutes..."
+	@bash scripts/multisim.sh 50 TestGaiaSimulationAfterImport
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 25
+	@bash scripts/multisim.sh 50 TestFullGaiaSimulation
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
@@ -212,6 +208,7 @@ test_lint:
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
 
 benchmark:
 	@go test -bench=. $(PACKAGES_NOSIMULATION)

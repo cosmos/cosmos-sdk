@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# XXX: this script is intended to be run from
-# a fresh Digital Ocean droplet with Ubuntu
-
 # change this to a specific release or branch
 BRANCH=master
 REPO=github.com/cosmos/cosmos-sdk
@@ -14,16 +11,16 @@ sudo apt-get upgrade -y
 sudo apt-get install -y make
 
 # get and unpack golang
-curl -O https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
-tar -xvf go$GO_VERSION.linux-amd64.tar.gz
+curl -O https://dl.google.com/go/go$GO_VERSION.linux-armv6l.tar.gz
+tar -xvf go$GO_VERSION.linux-armv6l.tar.gz
 
 # move go binary and add to path
-mv go /usr/local
+sudo mv go /usr/local
 echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.profile
 
 # create the go directory, set GOPATH, and put it on PATH
 mkdir go
-echo "export GOPATH=/root/go" >> ~/.profile
+echo "export GOPATH=$HOME/go" >> ~/.profile
 echo "export PATH=\$PATH:\$GOPATH/bin" >> ~/.profile
 
 source ~/.profile

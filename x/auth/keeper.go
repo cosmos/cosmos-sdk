@@ -6,7 +6,12 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-var globalAccountNumberKey = []byte("globalAccountNumber")
+var (
+	// Prefix for account-by-address store
+	AddressStoreKeyPrefix = []byte{0x01}
+
+	globalAccountNumberKey = []byte("globalAccountNumber")
+)
 
 // This AccountKeeper encodes/decodes accounts using the
 // go-amino (binary) encoding/decoding library.
@@ -61,7 +66,7 @@ func (am AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
 
 // Turn an address to key used to get it from the account store
 func AddressStoreKey(addr sdk.AccAddress) []byte {
-	return append([]byte("account:"), addr.Bytes()...)
+	return append(AddressStoreKeyPrefix, addr.Bytes()...)
 }
 
 // Implements sdk.AccountKeeper.
@@ -93,7 +98,7 @@ func (am AccountKeeper) RemoveAccount(ctx sdk.Context, acc Account) {
 // Implements sdk.AccountKeeper.
 func (am AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (stop bool)) {
 	store := ctx.KVStore(am.key)
-	iter := sdk.KVStorePrefixIterator(store, []byte("account:"))
+	iter := sdk.KVStorePrefixIterator(store, AddressStoreKeyPrefix)
 	defer iter.Close()
 	for {
 		if !iter.Valid() {
@@ -118,7 +123,7 @@ func (am AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.
 }
 
 // Returns the Sequence of the account at address
-func (am AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64, sdk.Error) {
+func (am AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, sdk.Error) {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return 0, sdk.ErrUnknownAddress(addr.String())
@@ -126,7 +131,7 @@ func (am AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (int64
 	return acc.GetSequence(), nil
 }
 
-func (am AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence int64) sdk.Error {
+func (am AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSequence uint64) sdk.Error {
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())
@@ -141,8 +146,8 @@ func (am AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSeq
 }
 
 // Returns and increments the global account number counter
-func (am AccountKeeper) GetNextAccountNumber(ctx sdk.Context) int64 {
-	var accNumber int64
+func (am AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
+	var accNumber uint64
 	store := ctx.KVStore(am.key)
 	bz := store.Get(globalAccountNumberKey)
 	if bz == nil {

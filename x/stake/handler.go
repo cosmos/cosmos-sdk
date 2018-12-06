@@ -3,11 +3,14 @@ package stake
 import (
 	"bytes"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/common"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func NewHandler(k keeper.Keeper) sdk.Handler {
@@ -31,9 +34,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 // Called every block, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) (validatorUpdates []abci.ValidatorUpdate) {
-	endBlockerTags := sdk.EmptyTags()
-
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) (validatorUpdates []abci.ValidatorUpdate, endBlockerTags sdk.Tags) {
 	// Reset the intra-transaction counter.
 	k.SetIntraTxCounter(ctx, 0)
 
@@ -103,6 +104,13 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
+	if ctx.ConsensusParams() != nil {
+		tmPubKey := tmtypes.TM2PB.PubKey(msg.PubKey)
+		if !common.StringInSlice(tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes) {
+			return ErrValidatorPubKeyTypeUnsupported(k.Codespace(), tmPubKey.Type, ctx.ConsensusParams().Validator.PubKeyTypes).Result()
+		}
+	}
+
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
 	commission := NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
@@ -127,7 +135,6 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	tags := sdk.NewTags(
-		tags.Action, tags.ActionCreateValidator,
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 		tags.Moniker, []byte(msg.Description.Moniker),
 		tags.Identity, []byte(msg.Description.Identity),
@@ -165,7 +172,6 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	k.SetValidator(ctx, validator)
 
 	tags := sdk.NewTags(
-		tags.Action, tags.ActionEditValidator,
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 		tags.Moniker, []byte(description.Moniker),
 		tags.Identity, []byte(description.Identity),
@@ -196,7 +202,6 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	}
 
 	tags := sdk.NewTags(
-		tags.Action, tags.ActionDelegate,
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
 	)
@@ -215,7 +220,6 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(ubd.MinTime)
 
 	tags := sdk.NewTags(
-		tags.Action, tags.ActionBeginUnbonding,
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
 		tags.EndTime, finishTime,
@@ -233,7 +237,6 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(red.MinTime)
 
 	tags := sdk.NewTags(
-		tags.Action, tags.ActionBeginRedelegation,
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
 		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),

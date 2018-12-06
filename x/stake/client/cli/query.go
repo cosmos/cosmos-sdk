@@ -533,27 +533,22 @@ func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			res, err := cliCtx.QueryWithData("custom/stake/validator", nil)
+			res, err := cliCtx.QueryWithData("custom/stake/pool", nil)
 			if err != nil {
 				return err
 			}
 
-			pool := types.MustUnmarshalPool(cdc, res)
-
 			switch viper.Get(cli.OutputFlag) {
 			case "text":
+				var pool types.Pool
+				cdc.UnmarshalJSON(res, &pool)
+
 				human := pool.HumanReadableString()
 
 				fmt.Println(human)
 
 			case "json":
-				// parse out the pool
-				output, err := codec.MarshalJSONIndent(cdc, pool)
-				if err != nil {
-					return err
-				}
-
-				fmt.Println(string(output))
+				fmt.Println(string(res))
 			}
 			return nil
 		},

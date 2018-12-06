@@ -8,8 +8,8 @@ The minter is a space for holding current inflation information.
 
 ```golang
 type Minter struct {
-	InflationLastTime time.Time // block time which the last inflation was processed
-	Inflation         sdk.Dec   // current annual inflation rate
+	Inflation        sdk.Dec   // current annual inflation rate
+	AnnualProvisions sdk.Dec   // current annual exptected provisions
 }
 ```
 
@@ -26,6 +26,6 @@ type Params struct {
 	InflationMax        sdk.Dec // maximum inflation rate
 	InflationMin        sdk.Dec // minimum inflation rate
 	GoalBonded          sdk.Dec // goal of percent bonded atoms
+	BlocksPerYear       uint64   // expected blocks per year
 }
 ```
-

@@ -167,10 +167,11 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		time := header.Time
 		vals := voteInfos
 
-		if r.Float64() < params.PastEvidenceFraction {
-			height = int64(r.Intn(int(header.Height) - 1))
-			time = pastTimes[height]
-			vals = pastVoteInfos[height]
+		if r.Float64() < params.PastEvidenceFraction && header.Height > 1 {
+			height = int64(r.Intn(int(header.Height)-1)) + 1 // Tendermint starts at height 1
+			// array indices offset by one
+			time = pastTimes[height-1]
+			vals = pastVoteInfos[height-1]
 		}
 		validator := vals[r.Intn(len(vals))].Validator
 

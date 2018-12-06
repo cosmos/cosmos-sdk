@@ -36,8 +36,43 @@ func (k Keeper) SetValidatorDistInfo(ctx sdk.Context, vdi types.ValidatorDistInf
 
 // remove a validator distribution info
 func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress) {
+
+	// defensive check
+	vdi := k.GetValidatorDistInfo(ctx, valAddr)
+	if vdi.DelAccum.Accum.IsPositive() {
+		panic("Should not delete validator with unwithdrawn delegator accum")
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetValidatorDistInfoKey(valAddr))
+}
+
+// remove all validator distribution infos
+func (k Keeper) RemoveValidatorDistInfos(ctx sdk.Context) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
+}
+
+// iterate over all the validator distribution infos
+func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context,
+	fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
+
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
+	defer iter.Close()
+	index := int64(0)
+	for ; iter.Valid(); iter.Next() {
+		var vdi types.ValidatorDistInfo
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &vdi)
+		if fn(index, vdi) {
+			return
+		}
+		index++
+	}
 }
 
 // Get the calculated accum of a validator at the current block
@@ -54,6 +89,24 @@ func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) 
 	accum := valInfo.GetValAccum(height, sdk.NewDecFromInt(lastValPower))
 
 	return accum, nil
+}
+
+// updateValidatorDistInfoFromPool updates the validator's distribution info
+// from the global fee pool without withdrawing any rewards. This will be called
+// from a onValidatorModified hook.
+func (k Keeper) updateValidatorDistInfoFromPool(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
+		return types.ErrNoValidatorDistInfo(k.codespace)
+	}
+
+	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
+	wc := k.GetWithdrawContext(ctx, operatorAddr)
+	valInfo, feePool := valInfo.TakeFeePoolRewards(wc)
+
+	k.SetFeePool(ctx, feePool)
+	k.SetValidatorDistInfo(ctx, valInfo)
+
+	return nil
 }
 
 // withdrawal all the validator rewards including the commission

@@ -172,10 +172,21 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	return Dec{combined}, nil
 }
 
+// Decimal from string, panic on error
+func MustNewDecFromStr(s string) Dec {
+	dec, err := NewDecFromStr(s)
+	if err != nil {
+		panic(err)
+	}
+	return dec
+}
+
 //______________________________________________________________________________________________
 //nolint
 func (d Dec) IsNil() bool       { return d.Int == nil }                 // is decimal nil
 func (d Dec) IsZero() bool      { return (d.Int).Sign() == 0 }          // is equal to zero
+func (d Dec) IsNegative() bool  { return (d.Int).Sign() == -1 }         // is negative
+func (d Dec) IsPositive() bool  { return (d.Int).Sign() == 1 }          // is positive
 func (d Dec) Equal(d2 Dec) bool { return (d.Int).Cmp(d2.Int) == 0 }     // equal decimals
 func (d Dec) GT(d2 Dec) bool    { return (d.Int).Cmp(d2.Int) > 0 }      // greater than
 func (d Dec) GTE(d2 Dec) bool   { return (d.Int).Cmp(d2.Int) >= 0 }     // greater than or equal
@@ -250,6 +261,14 @@ func (d Dec) QuoInt(i Int) Dec {
 // is integer, e.g. decimals are zero
 func (d Dec) IsInteger() bool {
 	return new(big.Int).Rem(d.Int, precisionReuse).Sign() == 0
+}
+
+// format decimal state
+func (d Dec) Format(s fmt.State, verb rune) {
+	_, err := s.Write([]byte(d.String()))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (d Dec) String() string {

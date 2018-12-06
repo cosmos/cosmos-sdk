@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
-	tmserver "github.com/tendermint/tendermint/rpc/lib/server"
+	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
 
 	// Import statik for light client stuff
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
@@ -39,7 +39,7 @@ type RestServer struct {
 // NewRestServer creates a new rest server instance
 func NewRestServer(cdc *codec.Codec) *RestServer {
 	r := mux.NewRouter()
-	cliCtx := context.NewCLIContext().WithCodec(cdc)
+	cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 
 	// Register version methods on the router
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
@@ -87,9 +87,9 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 			"Insecure mode is temporarily disabled, please locally generate an " +
 				"SSL certificate to test. Support will be re-enabled soon!",
 		)
-		// listener, err = tmserver.StartHTTPServer(
+		// listener, err = rpcserver.StartHTTPServer(
 		// 	listenAddr, handler, logger,
-		// 	tmserver.Config{MaxOpenConnections: maxOpen},
+		// 	rpcserver.Config{MaxOpenConnections: maxOpen},
 		// )
 		// if err != nil {
 		// 	return
@@ -120,34 +120,44 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 			}()
 		}
 
-		rs.listener, err = tmserver.StartHTTPAndTLSServer(
-			listenAddr, rs.Mux,
-			certFile, keyFile,
-			rs.log,
-			tmserver.Config{MaxOpenConnections: maxOpen},
+		rs.listener, err = rpcserver.Listen(
+			listenAddr,
+			rpcserver.Config{MaxOpenConnections: maxOpen},
 		)
 		if err != nil {
 			return
 		}
 
+		rs.log.Info("Starting Gaia Lite REST service...")
 		rs.log.Info(rs.fingerprint)
-		rs.log.Info("REST server started")
-	}
 
-	// logger.Info("REST server started")
+		err := rpcserver.StartHTTPAndTLSServer(
+			rs.listener,
+			rs.Mux,
+			certFile, keyFile,
+			rs.log,
+		)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
 
-// ServeCommand will generate a long-running rest server
-// (aka Light Client Daemon) that exposes functionality similar
-// to the cli, but over rest
-func (rs *RestServer) ServeCommand() *cobra.Command {
+// ServeCommand will start a Gaia Lite REST service as a blocking process. It
+// takes a codec to create a RestServer object and a function to register all
+// necessary routes.
+func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rest-server",
 		Short: "Start LCD (light-client daemon), a local REST server",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			rs := NewRestServer(cdc)
+
 			rs.setKeybase(nil)
+			registerRoutesFn(rs)
+
 			// Start the rest server and return error if one exists
 			err = rs.Start(
 				viper.GetString(client.FlagListenAddr),

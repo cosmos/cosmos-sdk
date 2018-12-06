@@ -89,7 +89,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 
 	// mount the multistore and load the latest state
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyIBC)
+	app.MountStores(app.keyMain, app.keyAccount, app.keyIBC)
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
 		cmn.Exit(err.Error())

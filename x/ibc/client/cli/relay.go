@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	codec "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -103,6 +103,7 @@ func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode 
 	}
 
 	ingressKey := ibc.IngressSequenceKey(fromChainID)
+	lengthKey := ibc.EgressLengthKey(toChainID)
 
 OUTER:
 	for {
@@ -120,11 +121,10 @@ OUTER:
 			panic(err)
 		}
 
-		lengthKey := ibc.EgressLengthKey(toChainID)
 		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
 			c.logger.Error("error querying outgoing packet list length", "err", err)
-			continue OUTER //TODO replace with continue (I think it should just to the correct place where OUTER is now)
+			continue OUTER // TODO replace with continue (I think it should just to the correct place where OUTER is now)
 		}
 
 		var egressLength uint64
@@ -147,7 +147,7 @@ OUTER:
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
 			}
 
-			err = c.broadcastTx(seq, toChainNode, c.refine(egressbz, i, passphrase))
+			err = c.broadcastTx(toChainNode, c.refine(egressbz, i, seq, passphrase))
 
 			seq++
 
@@ -166,13 +166,13 @@ func query(node string, key []byte, storeName string) (res []byte, err error) {
 }
 
 // nolint: unparam
-func (c relayCommander) broadcastTx(seq uint64, node string, tx []byte) error {
+func (c relayCommander) broadcastTx(node string, tx []byte) error {
 	_, err := context.NewCLIContext().WithNodeURI(node).BroadcastTx(tx)
 	return err
 }
 
 func (c relayCommander) getSequence(node string) uint64 {
-	res, err := query(node, c.address, c.accStore)
+	res, err := query(node, auth.AddressStoreKey(c.address), c.accStore)
 	if err != nil {
 		panic(err)
 	}
@@ -189,7 +189,7 @@ func (c relayCommander) getSequence(node string) uint64 {
 	return 0
 }
 
-func (c relayCommander) refine(bz []byte, sequence uint64, passphrase string) []byte {
+func (c relayCommander) refine(bz []byte, ibcSeq, accSeq uint64, passphrase string) []byte {
 	var packet ibc.IBCPacket
 	if err := c.cdc.UnmarshalBinaryLengthPrefixed(bz, &packet); err != nil {
 		panic(err)
@@ -198,10 +198,10 @@ func (c relayCommander) refine(bz []byte, sequence uint64, passphrase string) []
 	msg := ibc.IBCReceiveMsg{
 		IBCPacket: packet,
 		Relayer:   c.address,
-		Sequence:  sequence,
+		Sequence:  ibcSeq,
 	}
 
-	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(sequence).WithCodec(c.cdc)
+	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(accSeq).WithCodec(c.cdc)
 	cliCtx := context.NewCLIContext()
 
 	name, err := cliCtx.GetFromName()

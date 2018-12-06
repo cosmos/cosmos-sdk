@@ -56,6 +56,7 @@ type BaseApp struct {
 	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
 	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
 	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
+	fauxMerkleMode   bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	//--------------------
 	// Volatile
@@ -86,13 +87,14 @@ var _ abci.Application = (*BaseApp)(nil)
 // Accepts variable number of option functions, which act on the BaseApp to set configuration choices
 func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{
-		Logger:      logger,
-		name:        name,
-		db:          db,
-		cms:         store.NewCommitMultiStore(db),
-		router:      NewRouter(),
-		queryRouter: NewQueryRouter(),
-		txDecoder:   txDecoder,
+		Logger:         logger,
+		name:           name,
+		db:             db,
+		cms:            store.NewCommitMultiStore(db),
+		router:         NewRouter(),
+		queryRouter:    NewQueryRouter(),
+		txDecoder:      txDecoder,
+		fauxMerkleMode: false,
 	}
 	for _, option := range options {
 		option(app)
@@ -111,10 +113,16 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.WithTracer(w)
 }
 
-// Mount IAVL stores to the provided keys in the BaseApp multistore
-func (app *BaseApp) MountStoresIAVL(keys ...*sdk.KVStoreKey) {
+// Mount IAVL or DB stores to the provided keys in the BaseApp multistore
+func (app *BaseApp) MountStores(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeIAVL)
+		if !app.fauxMerkleMode {
+			app.MountStore(key, sdk.StoreTypeIAVL)
+		} else {
+			// StoreTypeDB doesn't do anything upon commit, and it doesn't
+			// retain history, but it's useful for faster simulation.
+			app.MountStore(key, sdk.StoreTypeDB)
+		}
 	}
 }
 
@@ -579,7 +587,8 @@ func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Context) {
 	ctx = app.getState(mode).ctx.
 		WithTxBytes(txBytes).
-		WithVoteInfos(app.voteInfos)
+		WithVoteInfos(app.voteInfos).
+		WithConsensusParams(app.consensusParams)
 	if mode == runTxModeSimulate {
 		ctx, _ = ctx.CacheContext()
 	}
@@ -607,13 +616,13 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		if mode != runTxModeCheck {
 			msgResult = handler(ctx, msg)
 		}
-		msgResult.Tags = append(msgResult.Tags, sdk.MakeTag("action", []byte(msg.Type())))
 
 		// NOTE: GasWanted is determined by ante handler and
 		// GasUsed by the GasMeter
 
 		// Append Data and Tags
 		data = append(data, msgResult.Data...)
+		tags = append(tags, sdk.MakeTag(sdk.TagAction, []byte(msg.Type())))
 		tags = append(tags, msgResult.Tags...)
 
 		// Stop execution and return on first failed message.
@@ -797,7 +806,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	commitID := app.cms.Commit()
 	// TODO: this is missing a module identifier and dumps byte array
 	app.Logger.Debug("Commit synced",
-		"commit", commitID,
+		"commit", fmt.Sprintf("%X", commitID),
 	)
 
 	// Reset the Check state to the latest committed

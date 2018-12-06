@@ -60,12 +60,6 @@ func main() {
 	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 	config.Seal()
 
-	// Create a new RestServer instance to serve the light client routes
-	rs := lcd.NewRestServer(cdc)
-
-	// registerRoutes registers the routes on the rest server
-	registerRoutes(rs)
-
 	// TODO: setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
@@ -92,7 +86,7 @@ func main() {
 		queryCmd(cdc, mc),
 		txCmd(cdc, mc),
 		client.LineBreak,
-		rs.ServeCommand(),
+		lcd.ServeCommand(cdc, registerRoutes),
 		client.LineBreak,
 		keys.Commands(),
 		client.LineBreak,

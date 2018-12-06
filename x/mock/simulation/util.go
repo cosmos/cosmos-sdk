@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B) {
@@ -113,9 +113,9 @@ func getBlockSize(r *rand.Rand, params Params,
 // computationally heavy simulations.
 // TODO reference this function in the codebase probably through use of a switch
 func PeriodicInvariant(invariant Invariant, period int, offset int) Invariant {
-	return func(app *baseapp.BaseApp) error {
-		if int(app.LastBlockHeight())%period == offset {
-			return invariant(app)
+	return func(ctx sdk.Context) error {
+		if int(ctx.BlockHeight())%period == offset {
+			return invariant(ctx)
 		}
 		return nil
 	}

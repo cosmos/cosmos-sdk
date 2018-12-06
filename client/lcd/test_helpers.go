@@ -360,13 +360,16 @@ func startTM(
 }
 
 // startLCD starts the LCD.
-//
-// NOTE: This causes the thread to block.
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
 	rs.setKeybase(GetTestKeyBase(t))
 	registerRoutes(rs)
-	return tmrpc.StartHTTPServer(listenAddr, rs.Mux, logger, tmrpc.Config{})
+	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
+	if err != nil {
+		return nil, err
+	}
+	go tmrpc.StartHTTPServer(listener, rs.Mux, logger)
+	return listener, nil
 }
 
 // NOTE: If making updates here also update cmd/gaia/cmd/gaiacli/main.go

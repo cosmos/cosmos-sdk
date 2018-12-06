@@ -16,41 +16,44 @@ var (
 
 func TestFeeCollectionKeeperGetSet(t *testing.T) {
 	input := setupTestInput()
+	ctx := input.ctx
 
 	// no coins initially
-	currFees := input.fck.GetCollectedFees(input.ctx)
+	currFees := input.fck.GetCollectedFees(ctx)
 	require.True(t, currFees.IsEqual(emptyCoins))
 
 	// set feeCollection to oneCoin
-	input.fck.setCollectedFees(input.ctx, oneCoin)
+	input.fck.setCollectedFees(ctx, oneCoin)
 
 	// check that it is equal to oneCoin
-	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(oneCoin))
+	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(oneCoin))
 }
 
 func TestFeeCollectionKeeperAdd(t *testing.T) {
 	input := setupTestInput()
+	ctx := input.ctx
 
 	// no coins initially
-	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(emptyCoins))
+	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
 
 	// add oneCoin and check that pool is now oneCoin
-	input.fck.AddCollectedFees(input.ctx, oneCoin)
-	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(oneCoin))
+	input.fck.AddCollectedFees(ctx, oneCoin)
+	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(oneCoin))
 
 	// add oneCoin again and check that pool is now twoCoins
-	input.fck.AddCollectedFees(input.ctx, oneCoin)
-	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(twoCoins))
+	input.fck.AddCollectedFees(ctx, oneCoin)
+	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(twoCoins))
 }
 
 func TestFeeCollectionKeeperClear(t *testing.T) {
 	input := setupTestInput()
+	ctx := input.ctx
 
 	// set coins initially
-	input.fck.setCollectedFees(input.ctx, twoCoins)
-	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(twoCoins))
+	input.fck.setCollectedFees(ctx, twoCoins)
+	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(twoCoins))
 
 	// clear fees and see that pool is now empty
-	input.fck.ClearCollectedFees(input.ctx)
-	require.True(t, input.fck.GetCollectedFees(input.ctx).IsEqual(emptyCoins))
+	input.fck.ClearCollectedFees(ctx)
+	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
 }

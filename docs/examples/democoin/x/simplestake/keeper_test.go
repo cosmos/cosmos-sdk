@@ -52,11 +52,12 @@ func setupTestInput() testInput {
 
 func TestKeeperGetSet(t *testing.T) {
 	input := setupTestInput()
+	ctx := input.ctx
 
 	stakeKeeper := NewKeeper(input.capKey, input.bk, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
 
-	bi := stakeKeeper.getBondInfo(input.ctx, addr)
+	bi := stakeKeeper.getBondInfo(ctx, addr)
 	require.Equal(t, bi, bondInfo{})
 
 	privKey := ed25519.GenPrivKey()
@@ -66,9 +67,9 @@ func TestKeeperGetSet(t *testing.T) {
 		Power:  int64(10),
 	}
 	fmt.Printf("Pubkey: %v\n", privKey.PubKey())
-	stakeKeeper.setBondInfo(input.ctx, addr, bi)
+	stakeKeeper.setBondInfo(ctx, addr, bi)
 
-	savedBi := stakeKeeper.getBondInfo(input.ctx, addr)
+	savedBi := stakeKeeper.getBondInfo(ctx, addr)
 	require.NotNil(t, savedBi)
 	fmt.Printf("Bond Info: %v\n", savedBi)
 	require.Equal(t, int64(10), savedBi.Power)
@@ -76,26 +77,27 @@ func TestKeeperGetSet(t *testing.T) {
 
 func TestBonding(t *testing.T) {
 	input := setupTestInput()
+	ctx := input.ctx
 
 	stakeKeeper := NewKeeper(input.capKey, input.bk, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
 
-	_, _, err := stakeKeeper.unbondWithoutCoins(input.ctx, addr)
+	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
 	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 
-	_, err = stakeKeeper.bondWithoutCoins(input.ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
+	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
 	require.Nil(t, err)
 
-	power, err := stakeKeeper.bondWithoutCoins(input.ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
+	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
 	require.Nil(t, err)
 	require.Equal(t, int64(20), power)
 
-	pk, _, err := stakeKeeper.unbondWithoutCoins(input.ctx, addr)
+	pk, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
 	require.Nil(t, err)
 	require.Equal(t, pubKey, pk)
 
-	_, _, err = stakeKeeper.unbondWithoutCoins(input.ctx, addr)
+	_, _, err = stakeKeeper.unbondWithoutCoins(ctx, addr)
 	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 }

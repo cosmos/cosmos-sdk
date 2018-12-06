@@ -59,14 +59,14 @@ func TestTxValidateBasic(t *testing.T) {
 	ctx := sdk.NewContext(nil, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
-	priv1, _, addr1 := newTestKeyPubAddr()
-	priv2, _, addr2 := newTestKeyPubAddr()
-	priv3, _, addr3 := newTestKeyPubAddr()
-	priv4, _, addr4 := newTestKeyPubAddr()
-	priv5, _, addr5 := newTestKeyPubAddr()
-	priv6, _, addr6 := newTestKeyPubAddr()
-	priv7, _, addr7 := newTestKeyPubAddr()
-	priv8, _, addr8 := newTestKeyPubAddr()
+	priv1, _, addr1 := keyPubAddr()
+	priv2, _, addr2 := keyPubAddr()
+	priv3, _, addr3 := keyPubAddr()
+	priv4, _, addr4 := keyPubAddr()
+	priv5, _, addr5 := keyPubAddr()
+	priv6, _, addr6 := keyPubAddr()
+	priv7, _, addr7 := keyPubAddr()
+	priv8, _, addr8 := keyPubAddr()
 
 	// msg and signatures
 	msg1 := newTestMsg(addr1, addr2)

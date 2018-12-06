@@ -49,24 +49,25 @@ func setupTestInput() testInput {
 
 func TestPowKeeperGetSet(t *testing.T) {
 	input := setupTestInput()
+	ctx := input.ctx
 
 	config := NewConfig("pow", int64(1))
 	keeper := NewKeeper(input.capKey, config, input.bk, DefaultCodespace)
 
-	err := InitGenesis(input.ctx, keeper, Genesis{uint64(1), uint64(0)})
+	err := InitGenesis(ctx, keeper, Genesis{uint64(1), uint64(0)})
 	require.Nil(t, err)
 
-	genesis := ExportGenesis(input.ctx, keeper)
+	genesis := ExportGenesis(ctx, keeper)
 	require.Nil(t, err)
 	require.Equal(t, genesis, Genesis{uint64(1), uint64(0)})
 
-	res, err := keeper.GetLastDifficulty(input.ctx)
+	res, err := keeper.GetLastDifficulty(ctx)
 	require.Nil(t, err)
 	require.Equal(t, res, uint64(1))
 
-	keeper.SetLastDifficulty(input.ctx, 2)
+	keeper.SetLastDifficulty(ctx, 2)
 
-	res, err = keeper.GetLastDifficulty(input.ctx)
+	res, err = keeper.GetLastDifficulty(ctx)
 	require.Nil(t, err)
 	require.Equal(t, res, uint64(2))
 }

@@ -50,18 +50,19 @@ func setupTestInput() testInput {
 func TestCoolKeeper(t *testing.T) {
 	input := setupTestInput()
 	keeper := NewKeeper(input.capKey, input.bk, DefaultCodespace)
+	ctx := input.ctx
 
-	err := InitGenesis(input.ctx, keeper, Genesis{"icy"})
+	err := InitGenesis(ctx, keeper, Genesis{"icy"})
 	require.Nil(t, err)
 
-	genesis := ExportGenesis(input.ctx, keeper)
+	genesis := ExportGenesis(ctx, keeper)
 	require.Nil(t, err)
 	require.Equal(t, genesis, Genesis{"icy"})
 
-	res := keeper.GetTrend(input.ctx)
+	res := keeper.GetTrend(ctx)
 	require.Equal(t, res, "icy")
 
-	keeper.setTrend(input.ctx, "fiery")
-	res = keeper.GetTrend(input.ctx)
+	keeper.setTrend(ctx, "fiery")
+	res = keeper.GetTrend(ctx)
 	require.Equal(t, res, "fiery")
 }

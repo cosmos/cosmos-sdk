@@ -9,8 +9,8 @@ import (
 func TestContextWithSigners(t *testing.T) {
 	input := setupTestInput()
 
-	_, _, addr1 := newTestKeyPubAddr()
-	_, _, addr2 := newTestKeyPubAddr()
+	_, _, addr1 := keyPubAddr()
+	_, _, addr2 := keyPubAddr()
 	acc1 := NewBaseAccountWithAddress(addr1)
 	acc1.SetSequence(7132)
 	acc2 := NewBaseAccountWithAddress(addr2)

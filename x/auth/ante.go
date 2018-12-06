@@ -62,7 +62,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, err.Result(), true
 		}
 
-		if res := validateMemo(newCtx, stdTx, params); !res.IsOK() {
+		if res := validateMemo(newCtx.GasMeter(), stdTx, params); !res.IsOK() {
 			return newCtx, res, true
 		}
 
@@ -120,7 +120,7 @@ func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) ([
 	return accs, sdk.Result{}
 }
 
-func validateMemo(ctx sdk.Context, stdTx StdTx, params Params) sdk.Result {
+func validateMemo(gasMeter sdk.GasMeter, stdTx StdTx, params Params) sdk.Result {
 	memoLength := len(stdTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
 		return sdk.ErrMemoTooLarge(
@@ -131,7 +131,7 @@ func validateMemo(ctx sdk.Context, stdTx StdTx, params Params) sdk.Result {
 		).Result()
 	}
 
-	ctx.GasMeter().ConsumeGas(params.MemoCostPerByte*sdk.Gas(memoLength), "memo")
+	gasMeter.ConsumeGas(params.MemoCostPerByte*sdk.Gas(memoLength), "memo")
 	return sdk.Result{}
 }
 

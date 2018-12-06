@@ -39,6 +39,7 @@ IMPROVEMENTS
 * Gaia REST API (`gaiacli advanced rest-server`)
 
 * Gaia CLI  (`gaiacli`)
+  * \#2991 Fully validate transaction signatures during `gaiacli tx sign --validate-signatures`
 
 * Gaia
 

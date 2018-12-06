@@ -412,15 +412,16 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 
 		// last delegation share gets any trimmings
 		issuedTokens = v.Tokens
+		v.Tokens = sdk.ZeroInt()
 	} else {
 
 		// leave excess tokens in the validator
-		// however burn all the delegator shares
+		// however fully use all the delegator shares
 		issuedTokens = v.DelegatorShareExRate().Mul(delShares).TruncateInt()
+		v.Tokens = v.Tokens.Sub(issuedTokens)
 	}
 
 	v.DelegatorShares = remainingShares
-	v.Tokens = v.Tokens.Sub(issuedTokens)
 	if v.Status == sdk.Bonded {
 		pool = pool.bondedTokensToLoose(issuedTokens)
 	}

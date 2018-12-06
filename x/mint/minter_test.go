@@ -82,6 +82,17 @@ func TestBlockProvision(t *testing.T) {
 	}
 }
 
+func TestBlockProvisionHighInflation(t *testing.T) {
+	minter := InitialMinter(sdk.NewDec(100))
+	params := DefaultParams()
+	totalSupply := sdk.NewInt(1000000)
+
+	minter.AnnualProvisions = minter.Inflation.MulInt(totalSupply)
+
+	provision := minter.BlockProvision(params)
+	require.False(t, provision.Amount.Equal(sdk.ZeroInt()), "rounded to zero: %v, provisions per year: %v, blocks per year: %v", provision, minter.Inflation.MulInt(totalSupply), params.BlocksPerYear)
+}
+
 // Benchmarking :)
 // previously using sdk.Int operations:
 // BenchmarkBlockProvision-4 5000000 220 ns/op

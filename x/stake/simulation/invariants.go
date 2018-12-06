@@ -92,9 +92,6 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 			},
 		)
 
-		// XXX TODO investigate why go test TestGaiaSimulationAfterImport
-		//          loses decimal fractions in below two checks
-
 		// Loose tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators
 		if !sdk.NewDecFromInt(pool.LooseTokens).Equal(loose) {

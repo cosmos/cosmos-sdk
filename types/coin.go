@@ -277,9 +277,9 @@ func (coins Coins) SubCoinByDenom(other Coin) Coins {
 
 			if len(res) == 0 {
 				return nil
-			} else {
-				return res
 			}
+
+			return res
 		}
 	}
 

@@ -173,11 +173,11 @@ func (coins Coins) AddCoinByDenom(other Coin) Coins {
 	for i, coin := range res {
 		if coin.Denom == other.Denom {
 			res[i] = coin.Plus(other)
-			break
+			return res
 		}
 	}
 
-	return res
+	panic(fmt.Sprintf("coin denom %s not found in coins", other.Denom))
 }
 
 // Plus adds two sets of coins.
@@ -273,15 +273,15 @@ func (coins Coins) SubCoinByDenom(other Coin) Coins {
 				panic("negative coin amount")
 			}
 
-			break
+			if len(res) == 0 {
+				return nil
+			} else {
+				return res
+			}
 		}
 	}
 
-	if len(res) == 0 {
-		return nil
-	}
-
-	return res
+	panic(fmt.Sprintf("coin denom %s not found in coins", other.Denom))
 }
 
 // Minus subtracts a set of coins from another.

@@ -1184,7 +1184,7 @@ func doDelegate(t *testing.T, port, seed, name, password string,
 		}
 	}`, delAddr, valAddr, stakeTypes.DefaultBondDenom, amount, name, password, chainID, accnum, sequence))
 
-	res, body := Request(t, port, "PUT", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), jsonStr)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err := cdc.UnmarshalJSON([]byte(body), &resultTx)

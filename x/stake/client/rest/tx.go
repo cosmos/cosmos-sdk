@@ -18,7 +18,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/delegations",
 		putDelegationsHandlerFn(cdc, kb, cliCtx),
-	).Methods("PUT")
+	).Methods("POST")
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/unbonding_delegations",
 		postUnbondingDelegationsHandlerFn(cdc, kb, cliCtx),

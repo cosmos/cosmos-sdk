@@ -652,7 +652,7 @@ paths:
           description: Invalid delegator address
         500:
           description: Internal Server Error
-    put:
+    post:
       summary: Submit delegation
       parameters:
       - in: query

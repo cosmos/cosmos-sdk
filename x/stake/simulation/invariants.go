@@ -26,7 +26,7 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 			return err
 		}
 
-		err = PositivePowerInvariant(k)(ctx)
+		err = NonNegativePowerInvariant(k)(ctx)
 		if err != nil {
 			return err
 		}
@@ -111,8 +111,8 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 	}
 }
 
-// PositivePowerInvariant checks that all stored validators have > 0 power.
-func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
+// NonNegativePowerInvariant checks that all stored validators have >= 0 power.
+func NonNegativePowerInvariant(k stake.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		iterator := k.ValidatorsPowerStoreIterator(ctx)
 
@@ -127,6 +127,10 @@ func PositivePowerInvariant(k stake.Keeper) simulation.Invariant {
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				return fmt.Errorf("power store invariance:\n\tvalidator.Power: %v"+
 					"\n\tkey should be: %v\n\tkey in store: %v", validator.GetPower(), powerKey, iterator.Key())
+			}
+
+			if validator.Tokens.LT(sdk.ZeroDec()) {
+				return fmt.Errorf("negative tokens for validator: %v", validator)
 			}
 		}
 		iterator.Close()

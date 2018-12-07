@@ -155,20 +155,42 @@ func NewDefaultGenesisState() GenesisState {
 // TODO: No validators are both bonded and jailed (#2088)
 // TODO: Error if there is a duplicate validator (#1708)
 // TODO: Ensure all state machine parameters are in genesis (#1704)
-func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
-	err = validateGenesisStateAccounts(genesisState.Accounts)
+func GaiaValidateGenesisState(genesisState GenesisState) error {
+	err := validateGenesisStateAccounts(genesisState.Accounts)
 	if err != nil {
-		return
+		return err
 	}
 	// skip stakeData validation as genesis is created from txs
 	if len(genesisState.GenTxs) > 0 {
 		return nil
 	}
-	return stake.ValidateGenesis(genesisState.StakeData)
+
+	err = stake.ValidateGenesis(genesisState.StakeData)
+	if err != nil {
+		return err
+	}
+	err = mint.ValidateGenesis(genesisState.MintData)
+	if err != nil {
+		return err
+	}
+	err = distr.ValidateGenesis(genesisState.DistrData)
+	if err != nil {
+		return err
+	}
+	err = gov.ValidateGenesis(genesisState.GovData)
+	if err != nil {
+		return err
+	}
+	err = slashing.ValidateGenesis(genesisState.SlashingData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Ensures that there are no duplicate accounts in the genesis state,
-func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
+func validateGenesisStateAccounts(accs []GenesisAccount) error {
 	addrMap := make(map[string]bool, len(accs))
 	for i := 0; i < len(accs); i++ {
 		acc := accs[i]
@@ -178,7 +200,7 @@ func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
 		}
 		addrMap[strAddr] = true
 	}
-	return
+	return nil
 }
 
 // GaiaAppGenState but with JSON

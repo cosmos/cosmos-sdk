@@ -63,19 +63,19 @@ func DefaultGenesisState() GenesisState {
 func ValidateGenesis(data GenesisState) error {
 	threshold := data.TallyParams.Threshold
 	if threshold.IsNegative() || threshold.GT(sdk.OneDec()) {
-		return fmt.Errorf("Governance vote threshold should be positive and less than one, is %s",
+		return fmt.Errorf("Governance vote threshold should be positive and less or equal to one, is %s",
 			threshold.String())
 	}
 
 	veto := data.TallyParams.Veto
 	if veto.IsNegative() || veto.GT(sdk.OneDec()) {
-		return fmt.Errorf("Governance vote veto threshold should be positive and less than one, is %s",
+		return fmt.Errorf("Governance vote veto threshold should be positive and less or equal to one, is %s",
 			veto.String())
 	}
 
 	govPenalty := data.TallyParams.GovernancePenalty
 	if govPenalty.IsNegative() || govPenalty.GT(sdk.OneDec()) {
-		return fmt.Errorf("Governance vote veto threshold should be positive and less than one, is %s",
+		return fmt.Errorf("Governance vote veto threshold should be positive and less or equal to one, is %s",
 			govPenalty.String())
 	}
 
@@ -88,7 +88,7 @@ func ValidateGenesis(data GenesisState) error {
 		return fmt.Errorf("Governance deposit amount must be a valid sdk.Coins amount, is %s",
 			data.DepositParams.MinDeposit.String())
 	}
-  
+
 	return nil
 }
 

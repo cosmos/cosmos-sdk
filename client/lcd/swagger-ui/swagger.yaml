@@ -1,7 +1,7 @@
 ---
 swagger: '2.0'
 info:
-  version: 1.1.0
+  version: "3.0"
   title: Gaia-Lite for Cosmos
   description: A REST interface for state queries, transaction generation, signing, and broadcast.
 tags:
@@ -17,6 +17,8 @@ tags:
   description: Governance module APIs
 - name: ICS23
   description: Slashing module APIs
+- name: ICS24
+  description: Fee distribution module APIs
 - name: version
   description: Query app version
 schemes:
@@ -1575,7 +1577,316 @@ paths:
           description: Found no voting parameters
         500:
           description: Internal Server Error
-
+  /distribution/delegators/{delegatorAddr}/rewards:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Get the total rewards balance from all delegations
+      description: Get the sum of all the rewards earned by delegations by a single delegator
+      produces:
+      - application/json
+      tags:
+      - ICS24
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
+        400:
+          description: Invalid delegator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Withdraw all the delegator's delegation rewards
+      description: Withdraw all the delegator's delegation rewards
+      tags:
+      - ICS24
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: Withdraw request body
+        schema:
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid delegator address
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /distribution/delegators/{delegatorAddr}/rewards/{validatorAddr}:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    - in: path
+      name: validatorAddr
+      description: Bech32 OperatorAddress of validator
+      required: true
+      type: string
+    get:
+      summary: Query a delegation reward
+      description: Query a single delegation reward by a delegator
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
+        400:
+          description: Invalid delegator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Withdraw a delegation reward
+      description: Withdraw a delegator's delegation reward from a single validator
+      tags:
+      - ICS24
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: Withdraw request body
+        schema:
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid delegator address or delegation body
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /distribution/delegators/{delegatorAddr}/withdraw_address:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Get the rewards withdrawal address
+      description: Get the delegations' rewards withdrawal address. This is the address in which the user will receive the reward funds
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Address"
+        400:
+          description: Invalid delegator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Replace the rewards withdrawal address
+      description: Replace the delegations' rewards withdrawal address for a new one.
+      tags:
+      - ICS24
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: Withdraw request body
+        schema:
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+            withdraw_address:
+              $ref: "#/definitions/Address"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid delegator or withdraw address
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /distribution/validators/{validatorAddr}:
+    parameters:
+      - in: path
+        name: validatorAddr
+        description: Bech32 OperatorAddress of validator
+        required: true
+        type: string
+    get:
+      summary: Validator distribution information
+      description: Query the distribution information of a single validator
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ValidatorDistInfo"
+        400:
+          description: Invalid validator address
+        500:
+          description: Internal Server Error
+  /distribution/validators/{validatorAddr}/rewards:
+    parameters:
+      - in: path
+        name: validatorAddr
+        description: Bech32 OperatorAddress of validator
+        required: true
+        type: string
+    get:
+      summary: Commission and self-delegation rewards of a single a validator
+      description: Query the commission and self-delegation rewards of a validator.
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
+        400:
+          description: Invalid validator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Withdraw the validator's rewards
+      description: Withdraw the validator's self-delegation and commissions rewards
+      tags:
+      - ICS24
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: Withdraw request body
+        schema:
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid validator address
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /distribution/parameters:
+    get:
+      summary: Fee distribution parameters
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            properties:
+              base_proposer_reward:
+                type: string
+              bonus_proposer_reward:
+                type: string
+              community_tax:
+                type: string
+        500:
+          description: Internal Server Error
+  /distribution/pool:
+    get:
+      summary: Fee distribution pool
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/FeePool"
+        500:
+          description: Internal Server Error
 definitions:
   CheckTxResult:
     type: object
@@ -2064,3 +2375,40 @@ definitions:
         type: string
       shares_dst:
         type: string
+  FeePool:
+    type: object
+    properties:
+      community_pool:
+        type: array
+        items:
+          $ref: '#/definitions/Coin'
+      val_accum:
+        $ref: '#/definitions/TotalAccum'
+      val_pool:
+        type: array
+        items:
+           $ref: '#/definitions/Coin'
+  TotalAccum:
+    type: object
+    properties:
+      update_height:
+        type: integer
+      accum:
+        type: string
+  ValidatorDistInfo:
+    type: object
+    properties:
+      operator_addr:
+        $ref: '#/definitions/ValidatorAddress'
+      fee_pool_withdrawal_height:
+        type: integer
+      del_accum:
+        $ref: '#/definitions/TotalAccum'
+      del_pool:
+        type: array
+        items:
+          $ref: '#/definitions/Coin'
+      val_commission:
+        type: array
+        items:
+          $ref: '#/definitions/Coin'

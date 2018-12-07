@@ -50,6 +50,7 @@ func main() {
 func run(rootDir string) {
 
 	// Copy the rootDir to a new directory, to preserve the old one.
+	fmt.Println("Copying rootdir over")
 	oldRootDir := rootDir
 	rootDir = oldRootDir + "_replay"
 	if cmn.FileExists(rootDir) {
@@ -66,6 +67,7 @@ func run(rootDir string) {
 
 	// App DB
 	// appDB := dbm.NewMemDB()
+	fmt.Println("Opening app database")
 	appDB, err := dbm.NewGoLevelDB("application", dataDir)
 	if err != nil {
 		panic(err)
@@ -73,12 +75,14 @@ func run(rootDir string) {
 
 	// TM DB
 	// tmDB := dbm.NewMemDB()
+	fmt.Println("Opening tendermint state database")
 	tmDB, err := dbm.NewGoLevelDB("state", dataDir)
 	if err != nil {
 		panic(err)
 	}
 
 	// Blockchain DB
+	fmt.Println("Opening blockstore database")
 	bcDB, err := dbm.NewGoLevelDB("blockstore", dataDir)
 	if err != nil {
 		panic(err)
@@ -97,6 +101,7 @@ func run(rootDir string) {
 	}
 
 	// Application
+	fmt.Println("Creating application")
 	myapp := app.NewGaiaApp(
 		ctx.Logger, appDB, traceStoreWriter,
 		baseapp.SetPruning("everything"), // nothing
@@ -123,6 +128,7 @@ func run(rootDir string) {
 	defer proxyApp.Stop()
 
 	// Send InitChain msg
+	fmt.Println("Sending InitChain msg")
 	validators := tm.TM2PB.ValidatorUpdates(genState.Validators)
 	csParams := tm.TM2PB.ConsensusParams(genDoc.ConsensusParams)
 	req := abci.RequestInitChain{
@@ -138,17 +144,19 @@ func run(rootDir string) {
 	}
 
 	// Create executor
+	fmt.Println("Creating block executor")
 	blockExec := tmsm.NewBlockExecutor(tmDB, ctx.Logger, proxyApp.Consensus(),
 		tmsm.MockMempool{}, tmsm.MockEvidencePool{})
 
 	// Create block store
+	fmt.Println("Creating block store")
 	blockStore := bcm.NewBlockStore(bcDB)
 
 	// Update this state.
 	state := genState
 	tz := []time.Duration{0, 0, 0}
 	for i := 1; i < 1e10; i++ {
-
+		fmt.Println("Running block ", i)
 		t1 := time.Now()
 
 		// Apply block

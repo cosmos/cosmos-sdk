@@ -127,7 +127,9 @@ func run(rootDir string) {
 	if err != nil {
 		panic(err)
 	}
-	defer proxyApp.Stop()
+	defer func() {
+		_ = proxyApp.Stop()
+	}()
 
 	var state tmsm.State = tmsm.LoadState(tmDB)
 	if state.LastBlockHeight == 0 {

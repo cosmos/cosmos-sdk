@@ -92,6 +92,7 @@ In block $h$ a validator receives $f_h$ fees.
 Instead of incrementing that validators ``total accrued fees this period variable" by $f_h$, it is instead incremented by $(1 - commission\_rate) * f_p$.
 Then $commission\_rate * f_p$ is deposited directly to the validator's account.
 This allows for efficient updates to a validator's commission rate every block if desired.
+More generally, each validator could have a function which takes their fees as input, and outputs a set of outputs to pay these fees too. (i.e. x\% going to themselves, y\% to delegators, z\% burnt)
 
 \subsection{Slashing}
 \label{ssec:slashing}
@@ -186,7 +187,9 @@ Core idea: you use the same mechanism as previously, but you just don't take tha
 Fairly simple to do.
 
 \subsection{Delegation updates}
-Updating your delegation amount is equivalent to withdrawing earned rewards and a fully independent new delegation occuring in the same block.
+Updating your delegation amount is equivalent to withdrawing earned rewards and a fully independent new delegation occurring in the same block.
+The same applies for redelegation.
+From the view of fee distribution, partial redelegation is the same as a delegation update + a new delegation.
 
 \subsection{Jailing / being kicked out of the validator set}
 This basically requires no change.

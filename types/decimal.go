@@ -304,9 +304,8 @@ func (d Dec) String() string {
 	}
 	if isNeg {
 		return "-" + string(bzWDec)
-	} else {
-		return string(bzWDec)
 	}
+	return string(bzWDec)
 }
 
 //     ____

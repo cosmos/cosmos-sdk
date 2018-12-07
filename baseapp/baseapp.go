@@ -113,6 +113,10 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.WithTracer(w)
 }
 
+// Do nothing
+func (app *BaseApp) AssertRuntimeInvariants() {
+}
+
 // Mount IAVL or DB stores to the provided keys in the BaseApp multistore
 func (app *BaseApp) MountStores(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
@@ -552,6 +556,8 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 
 	// Even though the Result.Code is not OK, there are still effects,
 	// namely fee deductions and sequence incrementing.
+
+	app.AssertRuntimeInvariants()
 
 	// Tell the blockchain engine (i.e. Tendermint).
 	return abci.ResponseDeliverTx{

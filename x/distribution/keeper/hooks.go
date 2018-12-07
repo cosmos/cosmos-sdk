@@ -57,7 +57,7 @@ func (k Keeper) onValidatorPowerDidChange(ctx sdk.Context, valAddr sdk.ValAddres
 // Withdrawal all validator distribution rewards and cleanup the distribution record
 func (k Keeper) onValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
 	vi := k.GetValidatorDistInfo(ctx, valAddr)
-	fmt.Printf("val info: %v\n", vi)
+	fmt.Printf("deleting val info: %v\n", vi)
 	if !vi.DelPool.AmountOf("STAKE").IsZero() {
 		panic(fmt.Sprintf("nonzero delpool"))
 	}

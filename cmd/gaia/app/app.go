@@ -207,12 +207,20 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 	}
 }
 
+func (app *GaiaApp) AssertRuntimeInvariants() {
+	app.assertRuntimeInvariants()
+}
+
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 
+	app.assertRuntimeInvariants()
+
 	tags := gov.EndBlocker(ctx, app.govKeeper)
+	app.assertRuntimeInvariants()
 	validatorUpdates, endBlockerTags := stake.EndBlocker(ctx, app.stakeKeeper)
+	app.assertRuntimeInvariants()
 	tags = append(tags, endBlockerTags...)
 
 	app.assertRuntimeInvariants()

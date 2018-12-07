@@ -49,16 +49,18 @@ func main() {
 
 func run(rootDir string) {
 
-	// Copy the rootDir to a new directory, to preserve the old one.
-	fmt.Println("Copying rootdir over")
-	oldRootDir := rootDir
-	rootDir = oldRootDir + "_replay"
-	if cmn.FileExists(rootDir) {
-		cmn.Exit(fmt.Sprintf("temporary copy dir %v already exists", rootDir))
-	}
-	err := cpm.Copy(oldRootDir, rootDir)
-	if err != nil {
-		panic(err)
+	if false {
+		// Copy the rootDir to a new directory, to preserve the old one.
+		fmt.Println("Copying rootdir over")
+		oldRootDir := rootDir
+		rootDir = oldRootDir + "_replay"
+		if cmn.FileExists(rootDir) {
+			cmn.Exit(fmt.Sprintf("temporary copy dir %v already exists", rootDir))
+		}
+		err := cpm.Copy(oldRootDir, rootDir)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	configDir := filepath.Join(rootDir, "config")
@@ -127,20 +129,33 @@ func run(rootDir string) {
 	}
 	defer proxyApp.Stop()
 
-	// Send InitChain msg
-	fmt.Println("Sending InitChain msg")
-	validators := tm.TM2PB.ValidatorUpdates(genState.Validators)
-	csParams := tm.TM2PB.ConsensusParams(genDoc.ConsensusParams)
-	req := abci.RequestInitChain{
-		Time:            genDoc.GenesisTime,
-		ChainId:         genDoc.ChainID,
-		ConsensusParams: csParams,
-		Validators:      validators,
-		AppStateBytes:   genDoc.AppState,
-	}
-	_, err = proxyApp.Consensus().InitChainSync(req)
-	if err != nil {
-		panic(err)
+	var state tmsm.State = tmsm.LoadState(tmDB)
+	if state.LastBlockHeight == 0 {
+		// Send InitChain msg
+		fmt.Println("Sending InitChain msg")
+		validators := tm.TM2PB.ValidatorUpdates(genState.Validators)
+		csParams := tm.TM2PB.ConsensusParams(genDoc.ConsensusParams)
+		req := abci.RequestInitChain{
+			Time:            genDoc.GenesisTime,
+			ChainId:         genDoc.ChainID,
+			ConsensusParams: csParams,
+			Validators:      validators,
+			AppStateBytes:   genDoc.AppState,
+		}
+		res, err := proxyApp.Consensus().InitChainSync(req)
+		if err != nil {
+			panic(err)
+		}
+		newValidatorz, err := tm.PB2TM.ValidatorUpdates(res.Validators)
+		if err != nil {
+			panic(err)
+		}
+		newValidators := tm.NewValidatorSet(newValidatorz)
+
+		// Take the genesis state.
+		state = genState
+		state.Validators = newValidators
+		state.NextValidators = newValidators
 	}
 
 	// Create executor
@@ -152,10 +167,8 @@ func run(rootDir string) {
 	fmt.Println("Creating block store")
 	blockStore := bcm.NewBlockStore(bcDB)
 
-	// Update this state.
-	state := genState
 	tz := []time.Duration{0, 0, 0}
-	for i := 1; i < 1e10; i++ {
+	for i := int(state.LastBlockHeight) + 1; ; i++ {
 		fmt.Println("Running block ", i)
 		t1 := time.Now()
 
@@ -163,7 +176,8 @@ func run(rootDir string) {
 		fmt.Printf("loading and applying block %d\n", i)
 		blockmeta := blockStore.LoadBlockMeta(int64(i))
 		if blockmeta == nil {
-			panic(fmt.Sprintf("couldn't find block meta %d", i))
+			fmt.Printf("Couldn't find block meta %d... done?\n", i)
+			return
 		}
 		block := blockStore.LoadBlock(int64(i))
 		if block == nil {

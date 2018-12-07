@@ -47,8 +47,10 @@ Then if a delegator contributing $x$ stake decides to withdraw at block $n$, the
 $$\sum_{i = h}^{n} \frac{x}{s_i}f_i = x \sum_{i = h}^{n} \frac{f_i}{s_i}$$
 
 Note that $s_i$ does not change every block,
-it only changes if the validator gets slashed, or if someone new has bonded or unbonded.
-We'll relegate handling of slashes to \autoref{ssec:slashing}, and only consider the case with no slashing here.
+it only changes if the validator gets slashed,
+or if any delegator alters the amount they have delegated.
+We'll relegate handling of slashes to \autoref{ssec:slashing},
+and only consider the case with no slashing here.
 We can change the iteration from being over every block, to instead being over the set of blocks between two changes in validator $v$'s total stake.
 Let each of these set of blocks be called a period.
 A new period begins every time that validator's total stake changes.
@@ -108,28 +110,80 @@ Validators that get slashed a lot will naturally lose their delegators.
 A malicious validator that gets itself slashed many times would increase the gas to withdraw linearly, but the economic loss of funds due to the slashes should far out-weigh the extra overhead the honest withdrawer must pay for due to the gas.
 
 \subsection{Inflation}
-Inflation is the idea that we want every staked coin to create more staking tokens as time progresses. (To the purpose of driving down the worth of unstaked tokens) Each block, every staked token should produce $x$ staking tokens as inflation, where $x$ is calculated from a function $inflation$ which takes state and the block information as input. This inflation can be auto-bonded efficiently into the fee distribution model as follows:
+Inflation is the idea that we want every staked coin to create more staking tokens as time progresses.
+The purpose being to drive down the relative worth of unstaked tokens.
+Each block, every staked token should produce $x$ staking tokens as inflation, where $x$ is calculated from a function $inflation$ which takes state and the block information as input.
+Let $x_i$ represent the evaluation of $inflation$ in the $i$th block.
+The goal of this section is to auto-bond inflation in the fee distribution model without iteration.
+This is done by preserving the invariant that every state entry contains the rewards one would have if they had bonded one stake at genesis until that corresponding block.
 
-Make each block store the evaluation of $inflation$, which represents the number of staking tokens a single staked token should produce. 
-At the end of each period, increase the validators total number of tokens within the fee distribution by the amount due to inflation. This can be done by multiplying the validators number of staked tokens by $(1 + $ sum of x over the period$)$.
+In state a variable should be kept for the number of tokens one would have now due to inflation,
+given that they bonded one token at genesis.
+This is $\prod_{0}^{now} (1 + x_i)$.
+Each period now stores this total inflation product along with what it already stores per-period.
 
-In state a variable should be kept for the sum of all $inflation$ evaluations from now until genesis.
-Then each period will store this total inflation sum in addition to what it already stores per-period.
-The presence of comission rates causes the distribution of delegated stake within a validator to change per block.
-To get around this, when accumulating the value per validator in state, instead of calculating the rewards you'd get for 1 stake, you treat it as though you have $\prod_0^{now} 1 + x$ stake, where $\prod_0^{now} 1 + x$ is the amount of stake accumulated since genesis until now if you had $1$ stake originally bonded.
-When withdrawing, you take the difference as before, which yields the amount of rewards you would have obtained with $(\prod_0^{begin\ bonding\ period}1 + x)$ stake from the block you began bonding at until now. You then divide that by $(\prod_0^{begin\ bonding\ period}1 + x)$ to normalize it, and then proceed as before.
+Let $R_i$ be the fee rewards in block $i$, and $n_i$ be the total amount bonded to that validator in that block.
+The correct amount of rewards which 1 token at genesis should have now is:
+$$Reward(now) = \sum_{i = 0}^{now}\left(\prod_{j = 0}^{i} 1 + x_j \right) * \frac{R_i}{n_i}$$
+The term in the sum is the amount of stake one stake becomes due to inflation, multiplied by the amount of fees per stake.
 
-TODO: Explain this better / put equations to prove correctness
+Now we cast this into the period frame of view.
+Recall that we build the rewards by creating a state entry for the rewards of the previous period, and keeping track of the rewards within this period.
+Thus we first define the correct amount of rewards for each successive period, proving correctness of this via induction.
+We then show that the state entry that gets efficiently built up block by block is equal to this value for the latest period.
 
-This works great in the model where the inflation rate should be dynamic each block, but apply the same to each validator.
+Let $start, end$ denote the start/end of a period.
+
+Suppose that $\forall f > 0$, $Reward(end(f))$ is correctly constructed as
+$$Reward(end(f)) = Reward(end(f-1)) + \sum_{i = start(f)}^{end(f)}\left(\prod_{j = 0}^{i} 1 + x_j \right) \frac{R_i}{n_i}$$
+and that for $f = 0$, $Reward(end(0)) = 0$.
+(With period 1 being defined as the period that has the first bond into it)
+It must be shown that assuming the supposition $\forall f \leq f_0$, $$Reward(end(f_0 + 1)) = Reward(end(f_0)) + \sum_{i = start(f_0 + 1)}^{end(f_0 + 1)}\left(\prod_{j = 0}^{i} 1 + x_j \right) \frac{R_i}{n_i}$$
+Using the definition of $Reward$, it follows that:
+$$\sum_{i = 0}^{end(f_0 + 1)}\left(\prod_{j = 0}^{i} 1 + x_j \right) * \frac{R_i}{n_i} = \sum_{i = 0}^{end(f_0)}\left(\prod_{j = 0}^{i} 1 + x_j \right) * \frac{R_i}{n_i} + \sum_{i = start(f_0 + 1)}^{end(f_0 + 1)}\left(\prod_{j = 0}^{i} 1 + x_j \right) \frac{R_i}{n_i}$$
+
+Since the first summation on the right hand side is $Reward(end(f_0))$, the supposition is proven true.
+Consequently, the reward for just period $f$ adjusted for the amount of inflation 1 token at genesis would produce, is:
+$$\sum_{i = start(f)}^{end(f)}\left(\prod_{j = 0}^{i} 1 + x_j \right) \frac{R_i}{n_i}$$
+
+TODO: make this proof + pre-amble less verbose, and just wrap up into a lemma. 
+Maybe just leave this proof or the last part to the reader, since it easily follows from summation bounds.
+
+Now note that 
+$$\sum_{i = start(f)}^{end(f)}\left(\prod_{j = 0}^{i} 1 + x_j \right) \frac{R_i}{n_i} = \left(\prod_{j = 0}^{end(f - 1)} 1 + x_j \right)\sum_{i = start(f)}^{end(f)}\left(\prod_{j = start(f)}^{i} 1 + x_j \right) \frac{R_i}{n_i}$$
+By definition of period, and inflation being applied every block, \\
+$n_i = n_{start(f)}\left(\prod_{j = start(f)}^{i} 1 + x_j \right)$. This cancels out the product in the summation, therefore
+$$\sum_{i = start(f)}^{end(f)}\left(\prod_{j = 0}^{i} 1 + x_j \right) \frac{R_i}{n_i} = \left(\prod_{j = 0}^{end(f - 1)} 1 + x_j \right)\frac{\sum_{i = start(f)}^{end(f)}R_i}{n_{start(f)}}$$
+
+Thus every block, each validator just has to add the total amount of fees (The $R_i$ term) that goes to delegates to some per-period term.
+When creating a new period, $n_{start(f)}$ can be cached in state, and the product is already stored in the previous periods state entry.
+You then get the next period's $n_{start(f)}$ from the current tm-power entry. 
+This is thus extremely efficient per block.
+
+When withdrawing, you take the difference as before,
+which yields the amount of rewards you would have obtained with $(\prod_0^{begin\ bonding\ period}1 + x)$ stake from the block you began bonding at until now.
+$(\prod_0^{begin\ bonding\ period}1 + x)$ is known, since its included in the state entry for when you bonded.
+You then divide the entitled fees by $(\prod_0^{begin\ bonding\ period}1 + x)$ to normalize it to being the amount of rewards you're entitled to from 1 stake at that block to now.
+Then as before, you multiply by the amount of stake you had initially bonded.
+TODO: (Does the difference equating to that make sense, or should it be shown explicitly)
+
+Note that the inflation function could vary per block,
+and per validator if ever a need rose. 
+If the inflation rate is the same for everyone then there can be a single global store for the entries corresponding to the product of inflations.
 Inflation creation can trivially be epoched as long as inflation isn't required within the epoch, through changes to the $inflation$ function.
 
-Note that this process is extremely efficient.
+Again note that this process is extremely efficient.
 
-The above can be trivially amended if we want inflation to proceed differently for different validators each block.
-(e.g. depending on who was offline) It can also be made to be easily adapted in a live chain. (i.e. via governance) 
-It is unclear if either of these two are more desirable settings.
-Note that this inflation model is more fair than the currently implemented inflation algorithm, as this has inflation reward delegators not just validators.
+\subsection{Withdrawing with no iteration over slashes}
+TODO: Fill this out. 
+Core idea: you use the same mechanism as previously, but you just make that blocks $x_j$ term negative.
+(So a $20\%$ slash would be equivalent to an inflation on that validator of $-20\%$)
+This foregoes the constant inflation per validator, may or may not be worth it depending on expected number of slashes
+
+\subsection{Auto bonding fees}
+TODO: Fill this out. 
+Core idea: you use the same mechanism as previously, but you just don't take that optimization with $n_{i}$ and the $n_{start}$ relation.
+Fairly simple to do.
 
 \subsection{Delegation updates}
 Updating your delegation amount is equivalent to withdrawing earned rewards and a fully independent new delegation occuring in the same block.
@@ -177,13 +231,15 @@ This is an extremely simple scheme with many nice benefits.
 
 Thus this scheme has efficiency improvements, simplicity improvements, and expressiveness improvements over the currently proposed schemes. With a correct fee distribution amongst the validator set, this solves the existing problem where one could withhold their signature for risk-free gain.
 
-\section{Future Work}
+\section{TO DOs}
 
 \begin{itemize}
 	\item A global fee pool can be described.
 	\item Determine if auto-bonding fees is compatible with inflation and comission rates in conjunction
-	\item Reduce storage in the inflation case, by only having one store of the product of inflation results
+	\item mention storage optimization in the uniform inflation and iteration over slashing case: only have one storage location w/ refcount of the product of inflation results
 	\item Remove iteration over slashes by the same normalization trick used in inflation
+	\item Add equation numbers
+	\item perhaps re-organize so that the no iteration
 \end{itemize}
 
 

@@ -453,6 +453,75 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
+func TestGaiaCLIValidateSignatures(t *testing.T) {
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server
+	proc := tests.GoExecuteTWithStdout(
+		t, fmt.Sprintf(
+			"gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", gaiadHome, servAddr, p2pAddr,
+		),
+	)
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(1, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", gaiacliHome))
+
+	// generate sendTx with default gas
+	success, stdout, stderr := executeWriteRetStdStreams(
+		t, fmt.Sprintf(
+			"gaiacli tx send %v --amount=10%s --to=%s --from=foo --generate-only",
+			flags, stakeTypes.DefaultBondDenom, barAddr,
+		),
+		[]string{}...,
+	)
+	require.True(t, success)
+	require.Empty(t, stderr)
+
+	// write  unsigned tx to file
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// validate we can successfully sign
+	success, stdout, _ = executeWriteRetStdStreams(
+		t, fmt.Sprintf("gaiacli tx sign %v --name=foo %v", flags, unsignedTxFile.Name()),
+		app.DefaultKeyPass,
+	)
+	require.True(t, success)
+
+	stdTx := unmarshalStdTx(t, stdout)
+	require.Equal(t, len(stdTx.Msgs), 1)
+	require.Equal(t, 1, len(stdTx.GetSignatures()))
+	require.Equal(t, fooAddr.String(), stdTx.GetSigners()[0].String())
+
+	// write signed tx to file
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// validate signatures
+	success, _, _ = executeWriteRetStdStreams(
+		t, fmt.Sprintf("gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()),
+	)
+	require.True(t, success)
+
+	// modify the transaction
+	stdTx.Memo = "MODIFIED-ORIGINAL-TX-BAD"
+	bz := marshalStdTx(t, stdTx)
+	modSignedTxFile := writeToNewTempFile(t, string(bz))
+	defer os.Remove(modSignedTxFile.Name())
+
+	// validate signature validation failure due to different transaction sig bytes
+	success, _, _ = executeWriteRetStdStreams(
+		t, fmt.Sprintf("gaiacli tx sign %v --validate-signatures %v", flags, modSignedTxFile.Name()),
+	)
+	require.False(t, success)
+}
+
 func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	t.Parallel()
 	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
@@ -610,6 +679,13 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port, gaiadHome, gaiac
 	p2pAddr, _, err = server.FreeTCPAddr()
 	require.NoError(t, err)
 	return
+}
+
+func marshalStdTx(t *testing.T, stdTx auth.StdTx) []byte {
+	cdc := app.MakeCodec()
+	bz, err := cdc.MarshalBinaryBare(stdTx)
+	require.NoError(t, err)
+	return bz
 }
 
 func unmarshalStdTx(t *testing.T, s string) (stdTx auth.StdTx) {

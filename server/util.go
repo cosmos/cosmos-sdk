@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"net"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -90,7 +93,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.TxIndex.IndexAllTags = true
-		conf.Consensus.TimeoutCommit = 5000
+		conf.Consensus.TimeoutCommit = 5 * time.Second
 		cfg.WriteConfigFile(configFilePath, conf)
 		// Fall through, just so that its parsed into memory.
 	}
@@ -126,7 +129,7 @@ func validateConfig(conf *cfg.Config) error {
 // add server commands
 func AddCommands(
 	ctx *Context, cdc *codec.Codec,
-	rootCmd *cobra.Command, appInit AppInit,
+	rootCmd *cobra.Command,
 	appCreator AppCreator, appExport AppExporter) {
 
 	rootCmd.PersistentFlags().String("log_level", ctx.Config.LogLevel, "Log level")
@@ -201,6 +204,23 @@ func ExternalIP() (string, error) {
 		}
 	}
 	return "", errors.New("are you connected to the network?")
+}
+
+// TrapSignal traps SIGINT and SIGTERM and terminates the server correctly.
+func TrapSignal(cleanupFunc func()) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigs
+		switch sig {
+		case syscall.SIGTERM:
+			defer cleanupFunc()
+			os.Exit(128 + int(syscall.SIGTERM))
+		case syscall.SIGINT:
+			defer cleanupFunc()
+			os.Exit(128 + int(syscall.SIGINT))
+		}
+	}()
 }
 
 func skipInterface(iface net.Interface) bool {

@@ -14,9 +14,9 @@ import (
 // TxBuilder implements a transaction context created in SDK modules.
 type TxBuilder struct {
 	Codec         *codec.Codec
-	AccountNumber int64
-	Sequence      int64
-	Gas           int64 // TODO: should this turn into uint64? requires further discussion - see #2173
+	AccountNumber uint64
+	Sequence      uint64
+	Gas           uint64
 	GasAdjustment float64
 	SimulateGas   bool
 	ChainID       string
@@ -38,10 +38,10 @@ func NewTxBuilderFromCLI() TxBuilder {
 
 	return TxBuilder{
 		ChainID:       chainID,
-		AccountNumber: viper.GetInt64(client.FlagAccountNumber),
+		AccountNumber: uint64(viper.GetInt64(client.FlagAccountNumber)),
 		Gas:           client.GasFlagVar.Gas,
 		GasAdjustment: viper.GetFloat64(client.FlagGasAdjustment),
-		Sequence:      viper.GetInt64(client.FlagSequence),
+		Sequence:      uint64(viper.GetInt64(client.FlagSequence)),
 		SimulateGas:   client.GasFlagVar.Simulate,
 		Fee:           viper.GetString(client.FlagFee),
 		Memo:          viper.GetString(client.FlagMemo),
@@ -61,7 +61,7 @@ func (bldr TxBuilder) WithChainID(chainID string) TxBuilder {
 }
 
 // WithGas returns a copy of the context with an updated gas.
-func (bldr TxBuilder) WithGas(gas int64) TxBuilder {
+func (bldr TxBuilder) WithGas(gas uint64) TxBuilder {
 	bldr.Gas = gas
 	return bldr
 }
@@ -73,7 +73,7 @@ func (bldr TxBuilder) WithFee(fee string) TxBuilder {
 }
 
 // WithSequence returns a copy of the context with an updated sequence number.
-func (bldr TxBuilder) WithSequence(sequence int64) TxBuilder {
+func (bldr TxBuilder) WithSequence(sequence uint64) TxBuilder {
 	bldr.Sequence = sequence
 	return bldr
 }
@@ -85,7 +85,7 @@ func (bldr TxBuilder) WithMemo(memo string) TxBuilder {
 }
 
 // WithAccountNumber returns a copy of the context with an account number.
-func (bldr TxBuilder) WithAccountNumber(accnum int64) TxBuilder {
+func (bldr TxBuilder) WithAccountNumber(accnum uint64) TxBuilder {
 	bldr.AccountNumber = accnum
 	return bldr
 }
@@ -125,7 +125,8 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 	if err != nil {
 		return nil, err
 	}
-	return bldr.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo))
+
+	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -161,12 +162,10 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 	}
 
 	sigs := []auth.StdSignature{{
-		AccountNumber: msg.AccountNumber,
-		Sequence:      msg.Sequence,
-		PubKey:        info.GetPubKey(),
+		PubKey: info.GetPubKey(),
 	}}
 
-	return bldr.Codec.MarshalBinary(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If append
@@ -205,9 +204,7 @@ func MakeSignature(name, passphrase string, msg StdSignMsg) (sig auth.StdSignatu
 		return
 	}
 	return auth.StdSignature{
-		AccountNumber: msg.AccountNumber,
-		Sequence:      msg.Sequence,
-		PubKey:        pubkey,
-		Signature:     sigBytes,
+		PubKey:    pubkey,
+		Signature: sigBytes,
 	}, nil
 }

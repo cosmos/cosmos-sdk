@@ -156,34 +156,37 @@ func TestMultiStoreQuery(t *testing.T) {
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	require.EqualValues(t, sdk.CodeUnknownRequest, qres.Code)
+	require.EqualValues(t, sdk.CodespaceRoot, qres.Codespace)
 
 	query.Path = "h897fy32890rf63296r92"
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	require.EqualValues(t, sdk.CodeUnknownRequest, qres.Code)
+	require.EqualValues(t, sdk.CodespaceRoot, qres.Codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnknownRequest), sdk.ABCICodeType(qres.Code))
+	require.EqualValues(t, sdk.CodeUnknownRequest, qres.Code)
+	require.EqualValues(t, sdk.CodespaceRoot, qres.Codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
+	require.EqualValues(t, sdk.CodeOK, qres.Code)
 	require.Equal(t, v, qres.Value)
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
+	require.EqualValues(t, sdk.CodeOK, qres.Code)
 	require.Nil(t, qres.Value)
 
 	// Test store2 data.
 	query.Data = k2
 	qres = multi.Query(query)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeOK), sdk.ABCICodeType(qres.Code))
+	require.EqualValues(t, sdk.CodeOK, qres.Code)
 	require.Equal(t, v2, qres.Value)
 }
 
@@ -215,7 +218,7 @@ func getExpectedCommitID(store *rootMultiStore, ver int64) CommitID {
 }
 
 func hashStores(stores map[StoreKey]CommitStore) []byte {
-	m := make(map[string]merkle.Hasher, len(stores))
+	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
 		name := key.Name()
 		m[name] = storeInfo{
@@ -224,7 +227,7 @@ func hashStores(stores map[StoreKey]CommitStore) []byte {
 				CommitID: store.LastCommitID(),
 				// StoreType: store.GetStoreType(),
 			},
-		}
+		}.Hash()
 	}
 	return merkle.SimpleHashFromMap(m)
 }

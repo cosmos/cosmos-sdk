@@ -61,22 +61,24 @@ func TestCheckAndDeliverGenTx(t *testing.T) {
 
 	SignCheckDeliver(
 		t, mApp.BaseApp, []sdk.Msg{msg},
-		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence()},
+		[]uint64{accs[0].GetAccountNumber()}, []uint64{accs[0].GetSequence()},
 		true, true, privKeys[0],
 	)
 
 	// Signing a tx with the wrong privKey should result in an auth error
 	res := SignCheckDeliver(
 		t, mApp.BaseApp, []sdk.Msg{msg},
-		[]int64{accs[1].GetAccountNumber()}, []int64{accs[1].GetSequence() + 1},
+		[]uint64{accs[1].GetAccountNumber()}, []uint64{accs[1].GetSequence() + 1},
 		true, false, privKeys[1],
 	)
-	require.Equal(t, sdk.ToABCICode(sdk.CodespaceRoot, sdk.CodeUnauthorized), res.Code, res.Log)
+
+	require.Equal(t, sdk.CodeUnauthorized, res.Code, res.Log)
+	require.Equal(t, sdk.CodespaceRoot, res.Codespace)
 
 	// Resigning the tx with the correct privKey should result in an OK result
 	SignCheckDeliver(
 		t, mApp.BaseApp, []sdk.Msg{msg},
-		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence() + 1},
+		[]uint64{accs[0].GetAccountNumber()}, []uint64{accs[0].GetSequence() + 1},
 		true, true, privKeys[0],
 	)
 }
@@ -90,14 +92,14 @@ func TestCheckGenTx(t *testing.T) {
 	msg1 := testMsg{signers: []sdk.AccAddress{addrs[0]}, positiveNum: 1}
 	CheckGenTx(
 		t, mApp.BaseApp, []sdk.Msg{msg1},
-		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence()},
+		[]uint64{accs[0].GetAccountNumber()}, []uint64{accs[0].GetSequence()},
 		true, privKeys[0],
 	)
 
 	msg2 := testMsg{signers: []sdk.AccAddress{addrs[0]}, positiveNum: -1}
 	CheckGenTx(
 		t, mApp.BaseApp, []sdk.Msg{msg2},
-		[]int64{accs[0].GetAccountNumber()}, []int64{accs[0].GetSequence()},
+		[]uint64{accs[0].GetAccountNumber()}, []uint64{accs[0].GetSequence()},
 		false, privKeys[0],
 	)
 }

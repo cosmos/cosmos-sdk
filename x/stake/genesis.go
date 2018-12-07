@@ -2,13 +2,13 @@ package stake
 
 import (
 	"fmt"
+	"sort"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/pkg/errors"
 )
 
 // InitGenesis sets the pool and parameters for the provided keeper and
@@ -21,27 +21,30 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 
 	// We need to pretend to be "n blocks before genesis", where "n" is the validator update delay,
 	// so that e.g. slashing periods are correctly initialized for the validator set
-	// e.g. with a one-block offset - the first TM block is at height 0, so state updates applied from genesis.json are in block -1.
-	ctx = ctx.WithBlockHeight(-types.ValidatorUpdateDelay)
+	// e.g. with a one-block offset - the first TM block is at height 1, so state updates applied from genesis.json are in block 0.
+	ctx = ctx.WithBlockHeight(1 - types.ValidatorUpdateDelay)
 
 	keeper.SetPool(ctx, data.Pool)
 	keeper.SetParams(ctx, data.Params)
+	keeper.SetIntraTxCounter(ctx, data.IntraTxCounter)
+	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
 	for i, validator := range data.Validators {
-		validator.BondIntraTxCounter = int16(i) // set the intra-tx counter to the order the validators are presented
+		// set the intra-tx counter to the order the validators are presented, if necessary
+		if !data.Exported {
+			validator.BondIntraTxCounter = int16(i)
+		}
 		keeper.SetValidator(ctx, validator)
-
-		if validator.Tokens.IsZero() {
-			return res, errors.Errorf("genesis validator cannot have zero pool shares, validator: %v", validator)
-		}
-		if validator.DelegatorShares.IsZero() {
-			return res, errors.Errorf("genesis validator cannot have zero delegator shares, validator: %v", validator)
-		}
 
 		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator, data.Pool)
 		keeper.OnValidatorCreated(ctx, validator.OperatorAddr)
+
+		// Set timeslice if necessary
+		if validator.Status == sdk.Unbonding {
+			keeper.InsertValidatorQueue(ctx, validator)
+		}
 	}
 
 	for _, delegation := range data.Bonds {
@@ -49,30 +52,84 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.OnDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
-	res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	sort.SliceStable(data.UnbondingDelegations[:], func(i, j int) bool {
+		return data.UnbondingDelegations[i].CreationHeight < data.UnbondingDelegations[j].CreationHeight
+	})
+	for _, ubd := range data.UnbondingDelegations {
+		keeper.SetUnbondingDelegation(ctx, ubd)
+		keeper.InsertUnbondingQueue(ctx, ubd)
+	}
+
+	sort.SliceStable(data.Redelegations[:], func(i, j int) bool {
+		return data.Redelegations[i].CreationHeight < data.Redelegations[j].CreationHeight
+	})
+	for _, red := range data.Redelegations {
+		keeper.SetRedelegation(ctx, red)
+		keeper.InsertRedelegationQueue(ctx, red)
+	}
+
+	// don't need to run Tendermint updates if we exported
+	if data.Exported {
+		for _, lv := range data.LastValidatorPowers {
+			keeper.SetLastValidatorPower(ctx, lv.Address, lv.Power)
+			validator, found := keeper.GetValidator(ctx, lv.Address)
+			if !found {
+				panic("expected validator, not found")
+			}
+			update := validator.ABCIValidatorUpdate()
+			update.Power = lv.Power.Int64() // keep the next-val-set offset, use the last power for the first block
+			res = append(res, update)
+		}
+	} else {
+		res = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	}
+
 	return
 }
 
-// WriteGenesis returns a GenesisState for a given context and keeper. The
+// ExportGenesis returns a GenesisState for a given context and keeper. The
 // GenesisState will contain the pool, params, validators, and bonds found in
 // the keeper.
-func WriteGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
+func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
+	intraTxCounter := keeper.GetIntraTxCounter(ctx)
+	lastTotalPower := keeper.GetLastTotalPower(ctx)
 	validators := keeper.GetAllValidators(ctx)
 	bonds := keeper.GetAllDelegations(ctx)
+	var unbondingDelegations []types.UnbondingDelegation
+	keeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd types.UnbondingDelegation) (stop bool) {
+		unbondingDelegations = append(unbondingDelegations, ubd)
+		return false
+	})
+	var redelegations []types.Redelegation
+	keeper.IterateRedelegations(ctx, func(_ int64, red types.Redelegation) (stop bool) {
+		redelegations = append(redelegations, red)
+		return false
+	})
+	var lastValidatorPowers []types.LastValidatorPower
+	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power sdk.Int) (stop bool) {
+		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{addr, power})
+		return false
+	})
 
 	return types.GenesisState{
-		Pool:       pool,
-		Params:     params,
-		Validators: validators,
-		Bonds:      bonds,
+		Pool:                 pool,
+		Params:               params,
+		IntraTxCounter:       intraTxCounter,
+		LastTotalPower:       lastTotalPower,
+		LastValidatorPowers:  lastValidatorPowers,
+		Validators:           validators,
+		Bonds:                bonds,
+		UnbondingDelegations: unbondingDelegations,
+		Redelegations:        redelegations,
+		Exported:             true,
 	}
 }
 
 // WriteValidators returns a slice of bonded genesis validators.
 func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisValidator) {
-	keeper.IterateValidatorsBonded(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
+	keeper.IterateLastValidators(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
 			PubKey: validator.GetConsPubKey(),
 			Power:  validator.GetPower().RoundInt64(),
@@ -118,11 +175,8 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 		if val.Jailed && val.Status == sdk.Bonded {
 			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
 		}
-		if val.Tokens.IsZero() {
-			return fmt.Errorf("genesis validator cannot have zero pool shares, validator: %v", val)
-		}
-		if val.DelegatorShares.IsZero() {
-			return fmt.Errorf("genesis validator cannot have zero delegator shares, validator: %v", val)
+		if val.DelegatorShares.IsZero() && val.Status != sdk.Unbonding {
+			return fmt.Errorf("bonded/unbonded genesis validator cannot have zero delegator shares, validator: %v", val)
 		}
 		addrMap[strKey] = true
 	}

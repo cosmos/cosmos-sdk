@@ -1,12 +1,19 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // Create a new validator distribution record
 func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+
+	// defensive check for existence
+	if k.HasValidatorDistInfo(ctx, valAddr) {
+		panic("validator dist info already exists (not cleaned up properly)")
+	}
 
 	height := ctx.BlockHeight()
 	vdi := types.ValidatorDistInfo{
@@ -21,9 +28,11 @@ func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 
 // Withdraw all validator rewards
 func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
-	// This doesn't need to be run at genesis
+	// Move the validator's rewards from the global pool to the validator's pools
+	// (dist info), but without actually withdrawing the rewards. This does not
+	// need to happen during the genesis block.
 	if ctx.BlockHeight() > 0 {
-		if err := k.WithdrawValidatorRewardsAll(ctx, valAddr); err != nil {
+		if err := k.updateValidatorDistInfoFromPool(ctx, valAddr); err != nil {
 			panic(err)
 		}
 	}
@@ -38,11 +47,12 @@ func (k Keeper) onValidatorBonded(ctx sdk.Context, valAddr sdk.ValAddress) {
 	k.onValidatorModified(ctx, valAddr)
 }
 
-// XXX Consider removing this after debugging.
+// Sanity check, very useful!
 func (k Keeper) onValidatorPowerDidChange(ctx sdk.Context, valAddr sdk.ValAddress) {
 	vi := k.GetValidatorDistInfo(ctx, valAddr)
 	if vi.FeePoolWithdrawalHeight != ctx.BlockHeight() {
-		panic("expected validator dist info FeePoolWithdrawalHeight to be updated, but was not.")
+		panic(fmt.Sprintf("expected validator (%v) dist info FeePoolWithdrawalHeight to be updated to %v, but was %v.",
+			valAddr.String(), ctx.BlockHeight(), vi.FeePoolWithdrawalHeight))
 	}
 }
 
@@ -100,7 +110,7 @@ func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.k.onValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (h Hooks) OnValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.k.onValidatorRemoved(ctx, valAddr)
 }
 func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {

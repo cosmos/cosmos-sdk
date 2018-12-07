@@ -130,7 +130,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	keeper := NewKeeper(cdc, keyDistr, pk.Subspace(DefaultParamspace), ck, sk, fck, types.DefaultCodespace)
 
 	// set the distribution hooks on staking
-	sk = sk.WithHooks(keeper.Hooks())
+	sk.SetHooks(keeper.Hooks())
 
 	// set genesis items required for distribution
 	keeper.SetFeePool(ctx, types.InitialFeePool())
@@ -157,25 +157,4 @@ func (fck DummyFeeCollectionKeeper) SetCollectedFees(in sdk.Coins) {
 }
 func (fck DummyFeeCollectionKeeper) ClearCollectedFees(_ sdk.Context) {
 	heldFees = sdk.Coins{}
-}
-
-//__________________________________________________________________________________
-// used in simulation
-
-// iterate over all the validator distribution infos (inefficient, just used to check invariants)
-func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context,
-	fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
-
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
-	defer iter.Close()
-	index := int64(0)
-	for ; iter.Valid(); iter.Next() {
-		var vdi types.ValidatorDistInfo
-		k.cdc.MustUnmarshalBinary(iter.Value(), &vdi)
-		if fn(index, vdi) {
-			return
-		}
-		index++
-	}
 }

@@ -67,7 +67,7 @@ func TestBaseAccountSequence(t *testing.T) {
 	_, _, addr := keyPubAddr()
 	acc := NewBaseAccountWithAddress(addr)
 
-	seq := int64(7)
+	seq := uint64(7)
 
 	err := acc.SetSequence(seq)
 	require.Nil(t, err)
@@ -79,7 +79,7 @@ func TestBaseAccountMarshal(t *testing.T) {
 	acc := NewBaseAccountWithAddress(addr)
 
 	someCoins := sdk.Coins{sdk.NewInt64Coin("atom", 123), sdk.NewInt64Coin("eth", 246)}
-	seq := int64(7)
+	seq := uint64(7)
 
 	// set everything on the account
 	err := acc.SetPubKey(pub)
@@ -93,16 +93,16 @@ func TestBaseAccountMarshal(t *testing.T) {
 	cdc := codec.New()
 	codec.RegisterCrypto(cdc)
 
-	b, err := cdc.MarshalBinary(acc)
+	b, err := cdc.MarshalBinaryLengthPrefixed(acc)
 	require.Nil(t, err)
 
 	acc2 := BaseAccount{}
-	err = cdc.UnmarshalBinary(b, &acc2)
+	err = cdc.UnmarshalBinaryLengthPrefixed(b, &acc2)
 	require.Nil(t, err)
 	require.Equal(t, acc, acc2)
 
 	// error on bad bytes
 	acc2 = BaseAccount{}
-	err = cdc.UnmarshalBinary(b[:len(b)/2], &acc2)
+	err = cdc.UnmarshalBinaryLengthPrefixed(b[:len(b)/2], &acc2)
 	require.NotNil(t, err)
 }

@@ -17,7 +17,7 @@ func TestGenerateSelfSignedCert(t *testing.T) {
 	cert, err := x509.ParseCertificate(certBytes)
 	require.Nil(t, err)
 	require.Equal(t, 2, len(cert.IPAddresses))
-	require.Equal(t, 1, len(cert.DNSNames))
+	require.Equal(t, 2, len(cert.DNSNames))
 	require.True(t, cert.IsCA)
 }
 

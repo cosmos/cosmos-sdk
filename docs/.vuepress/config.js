@@ -1,6 +1,6 @@
 module.exports = {
-  title: "Cosmos Documentation",
-  description: "Documentation for the Cosmos Network.",
+  title: "Cosmos SDK Documentation",
+  description: "Documentation for the Cosmos SDK and Gaia.",
   ga: "UA-51029217-2",
   dest: "./dist/docs",
   base: "/docs/",
@@ -12,105 +12,60 @@ module.exports = {
     nav: [{ text: "Back to Cosmos", link: "https://cosmos.network" }],
     sidebar: [
       {
-        title: "Introduction",
+        title: "Overview",
         collapsable: false,
         children: [
-          "/introduction/cosmos-hub",
-          "/introduction/tendermint-cosmos",
-          "/introduction/tendermint"
+          "/intro/",
+          "/intro/sdk-app-architecture",
+          "/intro/ocap"
         ]
       },
       {
-        title: "Getting Started",
+        title: "Gaia",
         collapsable: false,
         children: [
-          "/getting-started/voyager",
-          "/getting-started/installation",
-          "/getting-started/join-testnet",
-          "/getting-started/networks"
+          "/gaia/installation",
+          "/gaia/join-testnet",
+          "/gaia/validators/validator-setup",
+          "/gaia/validators/overview",
+          "/gaia/validators/security",
+          "/gaia/validators/validator-faq",
+          "/gaia/deploy-testnet",
+          "/gaia/ledger",
+          "/gaia/gaiacli"
         ]
       },
       {
-        title: "Cosmos SDK",
+        title: "Tutorial",
         collapsable: false,
         children: [
-          ["/sdk/overview", "Overview"],
-          ["/sdk/core/intro", "Core"],
-          "/sdk/core/app1",
-          "/sdk/core/app2",
-          "/sdk/core/app3",
-          "/sdk/core/app4",
-          "/sdk/core/app5",
-          // "/sdk/modules",
-          "/sdk/clients"
-        ]
-      },
-      // {
-      //   title: "Specifications",
-      //   collapsable: false,
-      //   children: [
-      //     ["/specs/overview", "Overview"],
-      //     "/specs/governance",
-      //     "/specs/ibc",
-      //     "/specs/staking",
-      //     "/specs/icts",
-      //   ]
-      // },
-      {
-        title: "SDK by Examples - Simple Governance",
-        collapsable: false,
-        children: [
-          ["/sdk/sdk-by-examples/simple-governance/intro", "Intro"],
-          "/sdk/sdk-by-examples/simple-governance/setup-and-design",
-          "/sdk/sdk-by-examples/simple-governance/app-init",
-          "/sdk/sdk-by-examples/simple-governance/simple-gov-module",
-          "/sdk/sdk-by-examples/simple-governance/bridging-it-all",
-          "/sdk/sdk-by-examples/simple-governance/running-the-application"
-        ]
-      },
-      {
-        title: "Light Client",
-        collapsable: false,
-        children: [
-	  "/light/",
-	  "/light/getting_started"
-	]
-      },
-      {
-        title: "Lotion JS",
-        collapsable: false,
-        children: [
-	  ["/lotion/overview", "Overview"]
-	]
-      },
-      {
-        title: "Validators",
-        collapsable: false,
-        children: [
-          ["/validators/overview", "Overview"],
-          ["/validators/security", "Security"],
-          ["/validators/validator-setup", "Validator Setup"],
-          "/validators/validator-faq"
+          "/tutorial/",
+          "/tutorial/app-design",
+          "/tutorial/app-init",
+          "/tutorial/keeper",
+          "/tutorial/msgs-handlers",
+          "/tutorial/set-name",
+          "/tutorial/buy-name",
+          "/tutorial/queriers",
+          "/tutorial/codec",
+          "/tutorial/cli",
+          "/tutorial/app-complete",
+          "/tutorial/entrypoint",
+          "/tutorial/dep",
+          "/tutorial/build-run"
         ]
       },
       {
         title: "Clients",
         collapsable: false,
         children: [
-          ["/clients/service-providers", "Service Providers"]
-        ]
-      },
-      {
-        title: "Resources",
-        collapsable: false,
-        children: [
-          // ["/resources/faq" "General"],
-          "/resources/delegator-faq",
-          ["/resources/whitepaper", "Whitepaper - English"],
-          ["/resources/whitepaper-ko", "Whitepaper - 한국어"],
-          ["/resources/whitepaper-zh-CN", "Whitepaper - 中文"],
-          ["/resources/whitepaper-pt", "Whitepaper - Português"]
-        ]
+      	  "/clients/",
+          "/clients/cli",
+          "/clients/service-providers",
+      	  "/clients/lite/", // this renders the readme
+      	  "/clients/lite/getting_started",
+      	  "/clients/lite/specification"
+      	]
       }
     ]
   }

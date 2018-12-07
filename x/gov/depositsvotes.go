@@ -11,7 +11,7 @@ import (
 // Vote
 type Vote struct {
 	Voter      sdk.AccAddress `json:"voter"`       //  address of the voter
-	ProposalID int64          `json:"proposal_id"` //  proposalID of the proposal
+	ProposalID uint64         `json:"proposal_id"` //  proposalID of the proposal
 	Option     VoteOption     `json:"option"`      //  option from OptionSet chosen by the voter
 }
 
@@ -28,14 +28,14 @@ func (voteA Vote) Empty() bool {
 
 // Deposit
 type Deposit struct {
-	Depositer  sdk.AccAddress `json:"depositer"`   //  Address of the depositer
-	ProposalID int64          `json:"proposal_id"` //  proposalID of the proposal
+	Depositor  sdk.AccAddress `json:"depositor"`   //  Address of the depositor
+	ProposalID uint64         `json:"proposal_id"` //  proposalID of the proposal
 	Amount     sdk.Coins      `json:"amount"`      //  Deposit amount
 }
 
 // Returns whether 2 deposits are equal
 func (depositA Deposit) Equals(depositB Deposit) bool {
-	return depositA.Depositer.Equals(depositB.Depositer) && depositA.ProposalID == depositB.ProposalID && depositA.Amount.IsEqual(depositB.Amount)
+	return depositA.Depositor.Equals(depositB.Depositor) && depositA.ProposalID == depositB.ProposalID && depositA.Amount.IsEqual(depositB.Amount)
 }
 
 // Returns whether a deposit is empty

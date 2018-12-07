@@ -3,6 +3,7 @@ package store
 import (
 	"testing"
 
+	"github.com/tendermint/iavl"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,20 +74,20 @@ func testGasKVStoreWrap(t *testing.T, store KVStore) {
 	meter := sdk.NewGasMeter(10000)
 
 	store = store.Gas(meter, sdk.GasConfig{HasCost: 10})
-	require.Equal(t, int64(0), meter.GasConsumed())
+	require.Equal(t, uint64(0), meter.GasConsumed())
 
 	store.Has([]byte("key"))
-	require.Equal(t, int64(10), meter.GasConsumed())
+	require.Equal(t, uint64(10), meter.GasConsumed())
 
 	store = store.Gas(meter, sdk.GasConfig{HasCost: 20})
 
 	store.Has([]byte("key"))
-	require.Equal(t, int64(40), meter.GasConsumed())
+	require.Equal(t, uint64(40), meter.GasConsumed())
 }
 
 func TestGasKVStoreWrap(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, _ := newTree(t, db)
+	tree := iavl.NewMutableTree(db, cacheSize)
 	iavl := newIAVLStore(tree, numRecent, storeEvery)
 	testGasKVStoreWrap(t, iavl)
 

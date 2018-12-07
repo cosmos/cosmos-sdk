@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -22,7 +21,6 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 const (
@@ -109,39 +107,42 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		app.cdc,
 		app.keyParams, app.tkeyParams,
 	)
-	app.stakeKeeper = stake.NewKeeper(
+	stakeKeeper := stake.NewKeeper(
 		app.cdc,
 		app.keyStake, app.tkeyStake,
 		app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace),
-		app.RegisterCodespace(stake.DefaultCodespace),
+		stake.DefaultCodespace,
 	)
 	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint,
 		app.paramsKeeper.Subspace(mint.DefaultParamspace),
-		app.stakeKeeper, app.feeCollectionKeeper,
+		&stakeKeeper, app.feeCollectionKeeper,
 	)
 	app.distrKeeper = distr.NewKeeper(
 		app.cdc,
 		app.keyDistr,
 		app.paramsKeeper.Subspace(distr.DefaultParamspace),
-		app.bankKeeper, app.stakeKeeper, app.feeCollectionKeeper,
-		app.RegisterCodespace(stake.DefaultCodespace),
+		app.bankKeeper, &stakeKeeper, app.feeCollectionKeeper,
+		distr.DefaultCodespace,
 	)
 	app.slashingKeeper = slashing.NewKeeper(
 		app.cdc,
 		app.keySlashing,
-		app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
-		app.RegisterCodespace(slashing.DefaultCodespace),
+		&stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
+		slashing.DefaultCodespace,
 	)
 	app.govKeeper = gov.NewKeeper(
 		app.cdc,
 		app.keyGov,
-		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, app.stakeKeeper,
-		app.RegisterCodespace(gov.DefaultCodespace),
+		app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakeKeeper,
+		gov.DefaultCodespace,
 	)
 
 	// register the staking hooks
-	app.stakeKeeper = app.stakeKeeper.WithHooks(
-		NewHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()))
+	// NOTE: The stakeKeeper above is passed by reference, so that it can be
+	// modified like below:
+	app.stakeKeeper = *stakeKeeper.SetHooks(
+		NewStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
+	)
 
 	// register message routes
 	app.Router().
@@ -156,7 +157,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 		AddRoute("stake", stake.NewQuerier(app.stakeKeeper, app.cdc))
 
 	// initialize BaseApp
-	app.MountStoresIAVL(app.keyMain, app.keyAccount, app.keyStake, app.keyMint, app.keyDistr,
+	app.MountStores(app.keyMain, app.keyAccount, app.keyStake, app.keyMint, app.keyDistr,
 		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
@@ -188,13 +189,19 @@ func MakeCodec() *codec.Codec {
 
 // application updates every end block
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 
-	// distribute rewards from previous block
+	// mint new tokens for the previous block
+	mint.BeginBlocker(ctx, app.mintKeeper)
+
+	// distribute rewards for the previous block
 	distr.BeginBlocker(ctx, req, app.distrKeeper)
 
-	// mint new tokens for this new block
-	mint.BeginBlocker(ctx, app.mintKeeper)
+	// slash anyone who double signed.
+	// NOTE: This should happen after distr.BeginBlocker so that
+	// there is nothing left over in the validator fee pool,
+	// so as to keep the CanWithdrawInvariant invariant.
+	// TODO: This should really happen at EndBlocker.
+	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
 
 	return abci.ResponseBeginBlock{
 		Tags: tags.ToKVPairs(),
@@ -206,15 +213,66 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 
 	tags := gov.EndBlocker(ctx, app.govKeeper)
-	validatorUpdates := stake.EndBlocker(ctx, app.stakeKeeper)
+	validatorUpdates, endBlockerTags := stake.EndBlocker(ctx, app.stakeKeeper)
+	tags = append(tags, endBlockerTags...)
 
-	// Add these new validators to the addr -> pubkey map.
-	app.slashingKeeper.AddValidators(ctx, validatorUpdates)
+	app.assertRuntimeInvariants()
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Tags:             tags,
 	}
+}
+
+// initialize store from a genesis state
+func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
+	// sort by account number to maintain consistency
+	sort.Slice(genesisState.Accounts, func(i, j int) bool {
+		return genesisState.Accounts[i].AccountNumber < genesisState.Accounts[j].AccountNumber
+	})
+	// load the accounts
+	for _, gacc := range genesisState.Accounts {
+		acc := gacc.ToAccount()
+		acc.AccountNumber = app.accountKeeper.GetNextAccountNumber(ctx)
+		app.accountKeeper.SetAccount(ctx, acc)
+	}
+
+	// load the initial stake information
+	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
+	if err != nil {
+		panic(err) // TODO find a way to do this w/o panics
+	}
+
+	// initialize module-specific stores
+	auth.InitGenesis(ctx, app.feeCollectionKeeper, genesisState.AuthData)
+	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
+	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
+	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
+	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
+
+	// validate genesis state
+	err = GaiaValidateGenesisState(genesisState)
+	if err != nil {
+		panic(err) // TODO find a way to do this w/o panics
+	}
+
+	if len(genesisState.GenTxs) > 0 {
+		for _, genTx := range genesisState.GenTxs {
+			var tx auth.StdTx
+			err = app.cdc.UnmarshalJSON(genTx, &tx)
+			if err != nil {
+				panic(err)
+			}
+			bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
+			res := app.BaseApp.DeliverTx(bz)
+			if !res.IsOK() {
+				panic(res.Log)
+			}
+		}
+
+		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	}
+	return validators
 }
 
 // custom logic for gaia initialization
@@ -229,51 +287,13 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		// return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}
 
-	// load the accounts
-	for _, gacc := range genesisState.Accounts {
-		acc := gacc.ToAccount()
-		acc.AccountNumber = app.accountKeeper.GetNextAccountNumber(ctx)
-		app.accountKeeper.SetAccount(ctx, acc)
-	}
-
-	// load the initial stake information
-	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
-	if err != nil {
-		panic(err) // TODO find a way to do this w/o panics
-	}
-
-	// load the address to pubkey map
-	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
-	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
-	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
-	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
-	err = GaiaValidateGenesisState(genesisState)
-	if err != nil {
-		panic(err) // TODO find a way to do this w/o panics
-	}
-
-	if len(genesisState.GenTxs) > 0 {
-		for _, genTx := range genesisState.GenTxs {
-			var tx auth.StdTx
-			err = app.cdc.UnmarshalJSON(genTx, &tx)
-			if err != nil {
-				panic(err)
-			}
-			bz := app.cdc.MustMarshalBinary(tx)
-			res := app.BaseApp.DeliverTx(bz)
-			if !res.IsOK() {
-				panic(res.Log)
-			}
-		}
-
-		validators = app.stakeKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	}
-	app.slashingKeeper.AddValidators(ctx, validators)
+	validators := app.initFromGenesisState(ctx, genesisState)
 
 	// sanity check
 	if len(req.Validators) > 0 {
 		if len(req.Validators) != len(validators) {
-			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d) ", len(req.Validators), len(validators)))
+			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d)",
+				len(req.Validators), len(validators)))
 		}
 		sort.Sort(abci.ValidatorUpdates(req.Validators))
 		sort.Sort(abci.ValidatorUpdates(validators))
@@ -284,81 +304,68 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		}
 	}
 
+	// assert runtime invariants
+	app.assertRuntimeInvariants()
+
 	return abci.ResponseInitChain{
 		Validators: validators,
 	}
 }
 
-// export the state of gaia for a genesis file
-func (app *GaiaApp) ExportAppStateAndValidators() (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
-	ctx := app.NewContext(true, abci.Header{})
-
-	// iterate to get the accounts
-	accounts := []GenesisAccount{}
-	appendAccount := func(acc auth.Account) (stop bool) {
-		account := NewGenesisAccountI(acc)
-		accounts = append(accounts, account)
-		return false
-	}
-	app.accountKeeper.IterateAccounts(ctx, appendAccount)
-	genState := NewGenesisState(
-		accounts,
-		stake.WriteGenesis(ctx, app.stakeKeeper),
-		mint.WriteGenesis(ctx, app.mintKeeper),
-		distr.WriteGenesis(ctx, app.distrKeeper),
-		gov.WriteGenesis(ctx, app.govKeeper),
-		slashing.GenesisState{}, // TODO create write methods
-	)
-	appState, err = codec.MarshalJSONIndent(app.cdc, genState)
-	if err != nil {
-		return nil, nil, err
-	}
-	validators = stake.WriteValidators(ctx, app.stakeKeeper)
-	return appState, validators, nil
+// load a particular height
+func (app *GaiaApp) LoadHeight(height int64) error {
+	return app.LoadVersion(height, app.keyMain)
 }
 
 //______________________________________________________________________________________________
 
-// Combined Staking Hooks
-type Hooks struct {
+var _ sdk.StakingHooks = StakingHooks{}
+
+// StakingHooks contains combined distribution and slashing hooks needed for the
+// staking module.
+type StakingHooks struct {
 	dh distr.Hooks
 	sh slashing.Hooks
 }
 
-func NewHooks(dh distr.Hooks, sh slashing.Hooks) Hooks {
-	return Hooks{dh, sh}
+func NewStakingHooks(dh distr.Hooks, sh slashing.Hooks) StakingHooks {
+	return StakingHooks{dh, sh}
 }
-
-var _ sdk.StakingHooks = Hooks{}
 
 // nolint
-func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorCreated(ctx, valAddr)
+	h.sh.OnValidatorCreated(ctx, valAddr)
 }
-func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorModified(ctx, valAddr)
+	h.sh.OnValidatorModified(ctx, valAddr)
 }
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, valAddr sdk.ValAddress) {
-	h.dh.OnValidatorRemoved(ctx, valAddr)
+func (h StakingHooks) OnValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.dh.OnValidatorRemoved(ctx, consAddr, valAddr)
+	h.sh.OnValidatorRemoved(ctx, consAddr, valAddr)
 }
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorBonded(ctx, consAddr, valAddr)
 	h.sh.OnValidatorBonded(ctx, consAddr, valAddr)
 }
-func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorPowerDidChange(ctx, consAddr, valAddr)
 	h.sh.OnValidatorPowerDidChange(ctx, consAddr, valAddr)
 }
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.OnValidatorBeginUnbonding(ctx, consAddr, valAddr)
 	h.sh.OnValidatorBeginUnbonding(ctx, consAddr, valAddr)
 }
-func (h Hooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationCreated(ctx, delAddr, valAddr)
+	h.sh.OnDelegationCreated(ctx, delAddr, valAddr)
 }
-func (h Hooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationSharesModified(ctx, delAddr, valAddr)
+	h.sh.OnDelegationSharesModified(ctx, delAddr, valAddr)
 }
-func (h Hooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (h StakingHooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationRemoved(ctx, delAddr, valAddr)
+	h.sh.OnDelegationRemoved(ctx, delAddr, valAddr)
 }

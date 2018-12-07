@@ -57,6 +57,9 @@ var (
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 	TestingUpdateValidator       = keeper.TestingUpdateValidator
+	UnbondingQueueKey            = keeper.UnbondingQueueKey
+	RedelegationQueueKey         = keeper.RedelegationQueueKey
+	ValidatorQueueKey            = keeper.ValidatorQueueKey
 
 	DefaultParamspace = keeper.DefaultParamspace
 	KeyUnbondingTime  = types.KeyUnbondingTime
@@ -81,7 +84,10 @@ var (
 	NewMsgBeginUnbonding            = types.NewMsgBeginUnbonding
 	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
 
-	NewQuerier = querier.NewQuerier
+	NewQuerier              = querier.NewQuerier
+	NewQueryDelegatorParams = querier.NewQueryDelegatorParams
+	NewQueryValidatorParams = querier.NewQueryValidatorParams
+	NewQueryBondsParams     = querier.NewQueryBondsParams
 )
 
 const (
@@ -112,15 +118,16 @@ const (
 )
 
 var (
-	ErrNilValidatorAddr      = types.ErrNilValidatorAddr
-	ErrNoValidatorFound      = types.ErrNoValidatorFound
-	ErrValidatorOwnerExists  = types.ErrValidatorOwnerExists
-	ErrValidatorPubKeyExists = types.ErrValidatorPubKeyExists
-	ErrValidatorJailed       = types.ErrValidatorJailed
-	ErrBadRemoveValidator    = types.ErrBadRemoveValidator
-	ErrDescriptionLength     = types.ErrDescriptionLength
-	ErrCommissionNegative    = types.ErrCommissionNegative
-	ErrCommissionHuge        = types.ErrCommissionHuge
+	ErrNilValidatorAddr               = types.ErrNilValidatorAddr
+	ErrNoValidatorFound               = types.ErrNoValidatorFound
+	ErrValidatorOwnerExists           = types.ErrValidatorOwnerExists
+	ErrValidatorPubKeyExists          = types.ErrValidatorPubKeyExists
+	ErrValidatorPubKeyTypeUnsupported = types.ErrValidatorPubKeyTypeNotSupported
+	ErrValidatorJailed                = types.ErrValidatorJailed
+	ErrBadRemoveValidator             = types.ErrBadRemoveValidator
+	ErrDescriptionLength              = types.ErrDescriptionLength
+	ErrCommissionNegative             = types.ErrCommissionNegative
+	ErrCommissionHuge                 = types.ErrCommissionHuge
 
 	ErrNilDelegatorAddr          = types.ErrNilDelegatorAddr
 	ErrBadDenom                  = types.ErrBadDenom
@@ -145,12 +152,7 @@ var (
 )
 
 var (
-	ActionCreateValidator      = tags.ActionCreateValidator
-	ActionEditValidator        = tags.ActionEditValidator
-	ActionDelegate             = tags.ActionDelegate
-	ActionBeginUnbonding       = tags.ActionBeginUnbonding
 	ActionCompleteUnbonding    = tags.ActionCompleteUnbonding
-	ActionBeginRedelegation    = tags.ActionBeginRedelegation
 	ActionCompleteRedelegation = tags.ActionCompleteRedelegation
 
 	TagAction       = tags.Action

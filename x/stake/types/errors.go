@@ -3,6 +3,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +12,7 @@ import (
 type CodeType = sdk.CodeType
 
 const (
-	DefaultCodespace sdk.CodespaceType = 4
+	DefaultCodespace sdk.CodespaceType = "STAKE"
 
 	CodeInvalidValidator  CodeType = 101
 	CodeInvalidDelegation CodeType = 102
@@ -42,6 +43,11 @@ func ErrValidatorOwnerExists(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrValidatorPubKeyExists(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "validator already exist for this pubkey, must use new validator pubkey")
+}
+
+func ErrValidatorPubKeyTypeNotSupported(codespace sdk.CodespaceType, keyType string, supportedTypes []string) sdk.Error {
+	msg := fmt.Sprintf("validator pubkey type %s is not supported, must use %s", keyType, strings.Join(supportedTypes, ","))
+	return sdk.NewError(codespace, CodeInvalidValidator, msg)
 }
 
 func ErrValidatorJailed(codespace sdk.CodespaceType) sdk.Error {
@@ -159,6 +165,10 @@ func ErrSelfRedelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "cannot redelegate to the same validator")
 }
 
+func ErrVerySmallRedelegation(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation, "too few tokens to redelegate, truncates to zero tokens")
+}
+
 func ErrBadRedelegationDst(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation, "redelegation validator not found")
 }
@@ -171,6 +181,11 @@ func ErrTransitiveRedelegation(codespace sdk.CodespaceType) sdk.Error {
 func ErrConflictingRedelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation,
 		"conflicting redelegation from this source validator to this dest validator already exists, you must wait for it to finish")
+}
+
+func ErrDelegatorShareExRateInvalid(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidDelegation,
+		"cannot delegate to validators with invalid (zero) ex-rate")
 }
 
 func ErrBothShareMsgsGiven(codespace sdk.CodespaceType) sdk.Error {

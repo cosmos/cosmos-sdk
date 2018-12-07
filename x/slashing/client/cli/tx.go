@@ -5,9 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -22,7 +22,7 @@ func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+				WithAccountDecoder(cdc)
 
 			valAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
@@ -31,7 +31,7 @@ func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
 
 			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
 			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, false)
+				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},

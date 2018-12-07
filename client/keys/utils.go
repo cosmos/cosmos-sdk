@@ -2,20 +2,17 @@ package keys
 
 import (
 	"fmt"
-	"github.com/syndtr/goleveldb/leveldb/opt"
+	"net/http"
 	"path/filepath"
 
-	"github.com/spf13/viper"
-
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/viper"
+	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
-
-	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"net/http"
 )
 
 // KeyDBName is the directory under root where we store the keys
@@ -96,7 +93,12 @@ func GetKeyBaseFromDirWithWritePerm(rootDir string) (keys.Keybase, error) {
 
 // GetKeyBaseFromDir initializes a read-only keybase at a particular dir.
 func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
+	// Disabled because of the inability to create a new keys database directory
+	// in the instance of when ReadOnly is set to true.
+	//
+	// ref: syndtr/goleveldb#240
+	// return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
+	return getKeyBaseFromDirWithOpts(rootDir, nil)
 }
 
 func getKeyBaseFromDirWithOpts(rootDir string, o *opt.Options) (keys.Keybase, error) {

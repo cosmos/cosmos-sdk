@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"encoding/hex"
+	"math/rand"
 	"strconv"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -59,7 +61,6 @@ func MakeTestCodec() *codec.Codec {
 	// Register Msgs
 	cdc.RegisterInterface((*sdk.Msg)(nil), nil)
 	cdc.RegisterConcrete(bank.MsgSend{}, "test/stake/Send", nil)
-	cdc.RegisterConcrete(bank.MsgIssue{}, "test/stake/Issue", nil)
 	cdc.RegisterConcrete(types.MsgCreateValidator{}, "test/stake/CreateValidator", nil)
 	cdc.RegisterConcrete(types.MsgEditValidator{}, "test/stake/EditValidator", nil)
 	cdc.RegisterConcrete(types.MsgBeginUnbonding{}, "test/stake/BeginUnbonding", nil)
@@ -93,6 +94,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	require.Nil(t, err)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
+	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}}})
 	cdc := MakeTestCodec()
 	accountKeeper := auth.NewAccountKeeper(
 		cdc,                   // amino codec
@@ -214,4 +216,18 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {
 	store := ctx.KVStore(k.storeKey)
 	return store.Has(power)
+}
+
+// RandomValidator returns a random validator given access to the keeper and ctx
+func RandomValidator(r *rand.Rand, keeper Keeper, ctx sdk.Context) types.Validator {
+	vals := keeper.GetAllValidators(ctx)
+	i := r.Intn(len(vals))
+	return vals[i]
+}
+
+// RandomBondedValidator returns a random bonded validator given access to the keeper and ctx
+func RandomBondedValidator(r *rand.Rand, keeper Keeper, ctx sdk.Context) types.Validator {
+	vals := keeper.GetBondedValidatorsByPower(ctx)
+	i := r.Intn(len(vals))
+	return vals[i]
 }

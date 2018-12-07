@@ -121,8 +121,13 @@ func createVerifier() tmlite.Verifier {
 		fmt.Printf("Must specify these options: %s when --trust-node is false\n", errMsg.String())
 		os.Exit(1)
 	}
+
 	node := rpcclient.NewHTTP(nodeURI, "/websocket")
-	verifier, err := tmliteProxy.NewVerifier(chainID, filepath.Join(home, ".gaialite"), node, log.NewNopLogger())
+	cacheSize := 10 // TODO: determine appropriate cache size
+	verifier, err := tmliteProxy.NewVerifier(
+		chainID, filepath.Join(home, ".gaialite"),
+		node, log.NewNopLogger(), cacheSize,
+	)
 
 	if err != nil {
 		fmt.Printf("Create verifier failed: %s\n", err.Error())
@@ -170,10 +175,22 @@ func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	return ctx
 }
 
+// GetAccountDecoder gets the account decoder for auth.DefaultAccount.
+func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
+	return func(accBytes []byte) (acct auth.Account, err error) {
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
+		if err != nil {
+			panic(err)
+		}
+
+		return acct, err
+	}
+}
+
 // WithAccountDecoder returns a copy of the context with an updated account
 // decoder.
-func (ctx CLIContext) WithAccountDecoder(decoder auth.AccountDecoder) CLIContext {
-	ctx.AccDecoder = decoder
+func (ctx CLIContext) WithAccountDecoder(cdc *codec.Codec) CLIContext {
+	ctx.AccDecoder = GetAccountDecoder(cdc)
 	return ctx
 }
 

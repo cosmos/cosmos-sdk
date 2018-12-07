@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 
@@ -63,6 +64,7 @@ type MultiStore interface { //nolint
 	CacheMultiStore() CacheMultiStore
 
 	// Convenience for fetching substores.
+	// If the store does not exist, panics.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
 
@@ -127,7 +129,7 @@ type KVStore interface {
 	// Has checks if a key exists. Panics on nil key.
 	Has(key []byte) bool
 
-	// Set sets the key. Panics on nil key.
+	// Set sets the key. Panics on nil key or value.
 	Set(key, value []byte)
 
 	// Delete deletes the key. Panics on nil key.
@@ -141,7 +143,7 @@ type KVStore interface {
 	Iterator(start, end []byte) Iterator
 
 	// Iterator over a domain of keys in descending order. End is exclusive.
-	// Start must be greater than end, or the Iterator is invalid.
+	// Start must be less than end, or the Iterator is invalid.
 	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator
@@ -174,6 +176,44 @@ func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 // Iterator over all the keys with a certain prefix in descending order.
 func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 	return kvs.ReverseIterator(prefix, PrefixEndBytes(prefix))
+}
+
+// Compare two KVstores, return either the first key/value pair
+// at which they differ and whether or not they are equal, skipping
+// value comparison for a set of provided prefixes
+func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvA cmn.KVPair, kvB cmn.KVPair, count int64, equal bool) {
+	iterA := a.Iterator(nil, nil)
+	iterB := b.Iterator(nil, nil)
+	count = int64(0)
+	for {
+		if !iterA.Valid() && !iterB.Valid() {
+			break
+		}
+		var kvA, kvB cmn.KVPair
+		if iterA.Valid() {
+			kvA = cmn.KVPair{Key: iterA.Key(), Value: iterA.Value()}
+			iterA.Next()
+		}
+		if iterB.Valid() {
+			kvB = cmn.KVPair{Key: iterB.Key(), Value: iterB.Value()}
+			iterB.Next()
+		}
+		if !bytes.Equal(kvA.Key, kvB.Key) {
+			return kvA, kvB, count, false
+		}
+		compareValue := true
+		for _, prefix := range prefixesToSkip {
+			// Skip value comparison if we matched a prefix
+			if bytes.Equal(kvA.Key[:len(prefix)], prefix) {
+				compareValue = false
+			}
+		}
+		if compareValue && !bytes.Equal(kvA.Value, kvB.Value) {
+			return kvA, kvB, count, false
+		}
+		count++
+	}
+	return cmn.KVPair{}, cmn.KVPair{}, count, true
 }
 
 // CacheKVStore cache-wraps a KVStore.  After calling .Write() on

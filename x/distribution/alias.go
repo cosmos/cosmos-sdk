@@ -16,6 +16,8 @@ type (
 	ValidatorDistInfo     = types.ValidatorDistInfo
 	TotalAccum            = types.TotalAccum
 	FeePool               = types.FeePool
+	DecCoin               = types.DecCoin
+	DecCoins              = types.DecCoins
 
 	MsgSetWithdrawAddress          = types.MsgSetWithdrawAddress
 	MsgWithdrawDelegatorRewardsAll = types.MsgWithdrawDelegatorRewardsAll
@@ -47,6 +49,7 @@ var (
 	InitialFeePool = types.InitialFeePool
 
 	NewGenesisState              = types.NewGenesisState
+	ValidateGenesis              = types.ValidateGenesis
 	DefaultGenesisState          = types.DefaultGenesisState
 	DefaultGenesisWithValidators = types.DefaultGenesisWithValidators
 
@@ -56,6 +59,10 @@ var (
 	NewMsgWithdrawDelegatorRewardsAll = types.NewMsgWithdrawDelegatorRewardsAll
 	NewMsgWithdrawDelegatorReward     = types.NewMsgWithdrawDelegatorReward
 	NewMsgWithdrawValidatorRewardsAll = types.NewMsgWithdrawValidatorRewardsAll
+
+	NewDecCoins = types.NewDecCoins
+
+	NewTotalAccum = types.NewTotalAccum
 )
 
 const (
@@ -68,12 +75,6 @@ var (
 	ErrNilWithdrawAddr  = types.ErrNilWithdrawAddr
 	ErrNilValidatorAddr = types.ErrNilValidatorAddr
 
-	ActionModifyWithdrawAddress       = tags.ActionModifyWithdrawAddress
-	ActionWithdrawDelegatorRewardsAll = tags.ActionWithdrawDelegatorRewardsAll
-	ActionWithdrawDelegatorReward     = tags.ActionWithdrawDelegatorReward
-	ActionWithdrawValidatorRewardsAll = tags.ActionWithdrawValidatorRewardsAll
-
-	TagAction    = tags.Action
 	TagValidator = tags.Validator
 	TagDelegator = tags.Delegator
 )

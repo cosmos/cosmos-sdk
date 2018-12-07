@@ -37,13 +37,13 @@ func main() {
 		Short:             "Gaia Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
-	appInit := app.GaiaAppInit()
-	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc, appInit))
-	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc, appInit))
+	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.CollectGenTxsCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
 	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.AddGenesisAccountCmd(ctx, cdc))
 
-	server.AddCommands(ctx, cdc, rootCmd, appInit,
-		newApp, exportAppStateAndTMValidators)
+	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
@@ -62,8 +62,14 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application
 }
 
 func exportAppStateAndTMValidators(
-	logger log.Logger, db dbm.DB, traceStore io.Writer,
+	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 	gApp := app.NewGaiaApp(logger, db, traceStore)
-	return gApp.ExportAppStateAndValidators()
+	if height != -1 {
+		err := gApp.LoadHeight(height)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	return gApp.ExportAppStateAndValidators(forZeroHeight)
 }

@@ -17,7 +17,7 @@ import (
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/delegations",
-		putDelegationsHandlerFn(cdc, kb, cliCtx),
+		postDelegationsHandlerFn(cdc, kb, cliCtx),
 	).Methods("POST")
 	r.HandleFunc(
 		"/stake/delegators/{delegatorAddr}/unbonding_delegations",
@@ -53,7 +53,7 @@ type (
 	}
 )
 
-func putDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
+func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgDelegationsInput
 

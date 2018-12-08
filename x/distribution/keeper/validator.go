@@ -91,25 +91,43 @@ func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) 
 	return accum, nil
 }
 
-// withdrawValidatorSelfDelegationAndCommission updates the validator's distribution info
+// takeValidatorFeePoolRewards updates the validator's distribution info
 // from the global fee pool without withdrawing any rewards. This will be called
 // from a onValidatorModified hook.
-func (k Keeper) withdrawValidatorSelfDelegationAndCommission(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+func (k Keeper) takeValidatorFeePoolRewards(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
 	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
 		return types.ErrNoValidatorDistInfo(k.codespace)
 	}
 	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-	withdraw := types.DecCoins{}
 
 	// withdraw reward for self-delegation
 	if k.HasDelegationDistInfo(ctx, accAddr, operatorAddr) {
-		fp, vi, di, diWithdraw :=
+		fp, vi, di, withdraw :=
 			k.withdrawDelegationReward(ctx, accAddr, operatorAddr)
 		k.SetFeePool(ctx, fp)
-		withdraw = withdraw.Plus(diWithdraw)
 		k.SetValidatorDistInfo(ctx, vi)
 		k.SetDelegationDistInfo(ctx, di)
+		k.WithdrawToDelegator(ctx, fp, accAddr, withdraw)
 	}
+
+	// withdrawal validator commission rewards
+	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
+	wc := k.GetWithdrawContext(ctx, operatorAddr)
+	valInfo, feePool := valInfo.TakeFeePoolRewards(wc)
+	k.SetFeePool(ctx, feePool)
+	k.SetValidatorDistInfo(ctx, valInfo)
+	return nil
+}
+
+// withdrawal all the validator rewards including the commission
+func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
+	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
+		return types.ErrNoValidatorDistInfo(k.codespace)
+	}
+
+	// withdraw self-delegation
+	accAddr := sdk.AccAddress(operatorAddr.Bytes())
+	withdraw := k.withdrawDelegationRewardsAll(ctx, accAddr)
 
 	// withdrawal validator commission rewards
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
@@ -117,24 +135,7 @@ func (k Keeper) withdrawValidatorSelfDelegationAndCommission(ctx sdk.Context, op
 	valInfo, feePool, commission := valInfo.WithdrawCommission(wc)
 	withdraw = withdraw.Plus(commission)
 	k.SetValidatorDistInfo(ctx, valInfo)
-	k.WithdrawToDelegator(ctx, feePool, accAddr, withdraw)
 
-	return nil
-}
-
-// withdrawal all the validator rewards including the commission
-func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
-	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-
-	// withdraw validator commission rewards, and self-delegation.
-	err := k.withdrawValidatorSelfDelegationAndCommission(ctx, operatorAddr)
-	if err != nil {
-		return err
-	}
-
-	// withdraw reward for all (other) delegations.
-	withdraw := k.withdrawDelegationRewardsAll(ctx, accAddr)
-	feePool := k.GetFeePool(ctx)
 	k.WithdrawToDelegator(ctx, feePool, accAddr, withdraw)
 	return nil
 }

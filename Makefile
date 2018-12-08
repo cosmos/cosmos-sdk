@@ -186,7 +186,7 @@ test_sim_gaia_simulation_after_import:
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 50 TestFullGaiaSimulation
+	@bash scripts/multisim.sh 400 TestFullGaiaSimulation
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

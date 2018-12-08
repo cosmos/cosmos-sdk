@@ -3,6 +3,7 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [lcd] https://github.com/cosmos/cosmos-sdk/pull/3045 Fix quoted json return on GET /keys (keys list)
 
 * Gaia CLI  (`gaiacli`)
   * [cli] [\#2595](https://github.com/cosmos/cosmos-sdk/issues/2595) Remove `keys new` in favor of `keys add` incorporating existing functionality with addition of key recovery functionality.

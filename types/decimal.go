@@ -272,6 +272,10 @@ func (d Dec) Format(s fmt.State, verb rune) {
 }
 
 func (d Dec) String() string {
+	isNeg := d.IsNegative()
+	if d.IsNegative() {
+		d = d.Neg()
+	}
 	bz, err := d.Int.MarshalText()
 	if err != nil {
 		return ""
@@ -297,6 +301,9 @@ func (d Dec) String() string {
 		copy(bzWDec, bz[:inputSize-10])
 		bzWDec[inputSize-10] = byte('.')
 		copy(bzWDec[inputSize-9:], bz[inputSize-10:])
+	}
+	if isNeg {
+		return "-" + string(bzWDec)
 	}
 	return string(bzWDec)
 }

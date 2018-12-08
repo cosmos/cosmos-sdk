@@ -400,6 +400,11 @@ func (d Dec) TruncateInt() Int {
 	return NewIntFromBigInt(chopPrecisionAndTruncateNonMutative(d.Int))
 }
 
+// TruncateDec truncates the decimals from the number and returns a Dec
+func (d Dec) TruncateDec() Dec {
+	return NewDecFromBigInt(chopPrecisionAndTruncateNonMutative(d.Int))
+}
+
 //___________________________________________________________________________________
 
 // reuse nil values

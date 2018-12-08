@@ -53,6 +53,7 @@ else
 	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
 	go build $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
+	go build $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
 endif
 
 build-linux:
@@ -85,6 +86,7 @@ install: check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
 
 install_examples:
 	go install $(BUILD_FLAGS) ./docs/examples/basecoin/cmd/basecoind

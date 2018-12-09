@@ -179,6 +179,6 @@ func (gi *gasIterator) Close() {
 func (gi *gasIterator) consumeSeekGas() {
 	value := gi.Value()
 
-	gi.gasMeter.ConsumeGas(gi.gasConfig.ValueCostPerByte*sdk.Gas(len(value)), sdk.GasValuePerByteDesc)
+	gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*sdk.Gas(len(value)), sdk.GasValuePerByteDesc)
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, sdk.GasIterNextCostFlatDesc)
 }

@@ -120,6 +120,16 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 	store.Set(GetValidatorsByPowerIndexKey(validator), validator.OperatorAddr)
 }
 
+// Set validator bond height/intratxcounter.  In case of a conflict, the
+// validator which least recently changed power takes precedence.
+// NOTE: Mutates the validator.
+func (k Keeper) BumpValidatorBondHeightAndCounter(ctx sdk.Context, validator *types.Validator) {
+	counter := k.GetIntraTxCounter(ctx)
+	validator.BondHeight = ctx.BlockHeight()
+	validator.BondIntraTxCounter = counter
+	k.SetIntraTxCounter(ctx, counter+1)
+}
+
 //___________________________________________________________________________
 
 // Update the tokens of an existing validator, update the validators power index key
@@ -129,11 +139,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	pool := k.GetPool(ctx)
 	validator, pool, addedShares = validator.AddTokensFromDel(pool, tokensToAdd)
-	// increment the intra-tx counter
-	// in case of a conflict, the validator which least recently changed power takes precedence
-	counter := k.GetIntraTxCounter(ctx)
-	validator.BondIntraTxCounter = counter
-	k.SetIntraTxCounter(ctx, counter+1)
+	k.BumpValidatorBondHeightAndCounter(ctx, &validator)
 	k.SetValidator(ctx, validator)
 	k.SetPool(ctx, pool)
 	k.SetValidatorByPowerIndex(ctx, validator)

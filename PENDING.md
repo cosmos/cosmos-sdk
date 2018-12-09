@@ -17,6 +17,7 @@ BREAKING CHANGES
 
 * SDK
  - [auth] \#2952 Signatures are no longer serialized on chain with the account number and sequence number
+ - [stake] Newly creator validators have bond height/intratxcounter immediately set
 
 * Tendermint
 

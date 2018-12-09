@@ -112,6 +112,8 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	validator := NewValidator(msg.ValidatorAddr, msg.PubKey, msg.Description)
+	k.BumpValidatorBondHeightAndCounter(ctx, &validator)
+
 	commission := NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,

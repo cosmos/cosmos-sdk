@@ -111,10 +111,6 @@ option that casts a `NoWithVeto` vote.*
 Quorum is defined as the minimum percentage of voting power that needs to be 
 casted on a proposal for the result to be valid. 
 
-In the initial version of the governance module, there will be no quorum 
-enforced by the protocol. Participation is ensured via the combination of 
-inheritance and validator's punishment for non-voting.
-
 ### Threshold
 
 Threshold is defined as the minimum proportion of `Yes` votes (excluding 

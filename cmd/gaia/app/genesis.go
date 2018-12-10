@@ -155,20 +155,42 @@ func NewDefaultGenesisState() GenesisState {
 // TODO: No validators are both bonded and jailed (#2088)
 // TODO: Error if there is a duplicate validator (#1708)
 // TODO: Ensure all state machine parameters are in genesis (#1704)
-func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
-	err = validateGenesisStateAccounts(genesisState.Accounts)
+func GaiaValidateGenesisState(genesisState GenesisState) error {
+	err := validateGenesisStateAccounts(genesisState.Accounts)
 	if err != nil {
-		return
+		return err
 	}
 	// skip stakeData validation as genesis is created from txs
 	if len(genesisState.GenTxs) > 0 {
 		return nil
 	}
-	return stake.ValidateGenesis(genesisState.StakeData)
+
+	err = stake.ValidateGenesis(genesisState.StakeData)
+	if err != nil {
+		return err
+	}
+	err = mint.ValidateGenesis(genesisState.MintData)
+	if err != nil {
+		return err
+	}
+	err = distr.ValidateGenesis(genesisState.DistrData)
+	if err != nil {
+		return err
+	}
+	err = gov.ValidateGenesis(genesisState.GovData)
+	if err != nil {
+		return err
+	}
+	err = slashing.ValidateGenesis(genesisState.SlashingData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Ensures that there are no duplicate accounts in the genesis state,
-func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
+func validateGenesisStateAccounts(accs []GenesisAccount) error {
 	addrMap := make(map[string]bool, len(accs))
 	for i := 0; i < len(accs); i++ {
 		acc := accs[i]
@@ -178,7 +200,7 @@ func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
 		}
 		addrMap[strAddr] = true
 	}
-	return
+	return nil
 }
 
 // GaiaAppGenState but with JSON
@@ -213,8 +235,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	addrMap := make(map[string]GenesisAccount, len(appState.Accounts))
 	for i := 0; i < len(appState.Accounts); i++ {
 		acc := appState.Accounts[i]
-		strAddr := string(acc.Address)
-		addrMap[strAddr] = acc
+		addrMap[acc.Address.String()] = acc
 	}
 
 	// addresses and IPs (and port) validator server info
@@ -254,20 +275,30 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 				"each genesis transaction must provide a single genesis message")
 		}
 
-		// validate the validator address and funds against the accounts in the state
 		msg := msgs[0].(stake.MsgCreateValidator)
-		addr := string(sdk.AccAddress(msg.ValidatorAddr))
-		acc, ok := addrMap[addr]
+		// validate delegator and validator addresses and funds against the accounts in the state
+		delAddr := msg.DelegatorAddr.String()
+		valAddr := sdk.AccAddress(msg.ValidatorAddr).String()
 
-		if !ok {
+		delAcc, delOk := addrMap[delAddr]
+		_, valOk := addrMap[valAddr]
+
+		accsNotInGenesis := []string{}
+		if !delOk {
+			accsNotInGenesis = append(accsNotInGenesis, delAddr)
+		}
+		if !valOk {
+			accsNotInGenesis = append(accsNotInGenesis, valAddr)
+		}
+		if len(accsNotInGenesis) != 0 {
 			return appGenTxs, persistentPeers, fmt.Errorf(
-				"account %v not in genesis.json: %+v", addr, addrMap)
+				"account(s) %v not in genesis.json: %+v", strings.Join(accsNotInGenesis, " "), addrMap)
 		}
 
-		if acc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
+		if delAcc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
 			return appGenTxs, persistentPeers, fmt.Errorf(
 				"insufficient fund for delegation %v: %v < %v",
-				acc.Address, acc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount,
+				delAcc.Address, delAcc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount,
 			)
 		}
 

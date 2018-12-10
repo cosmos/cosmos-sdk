@@ -50,7 +50,7 @@ func init() {
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
 	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
-	flag.IntVar(&period, "SimulationPeriod", 100, "Run slow invariants only once every period assertions")
+	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
 func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {

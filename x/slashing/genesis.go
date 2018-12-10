@@ -29,6 +29,11 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
+// ValidateGenesis TODO https://github.com/cosmos/cosmos-sdk/issues/3008
+func ValidateGenesis(data GenesisState) error {
+	return nil
+}
+
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
 func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.GenesisState) {

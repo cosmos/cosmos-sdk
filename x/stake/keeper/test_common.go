@@ -227,15 +227,14 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 			panic("validator expected but not found")
 		}
 		return validator
-	} else {
-		cachectx, _ := ctx.CacheContext()
-		keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
-		validator, found := keeper.GetValidator(cachectx, validator.OperatorAddr)
-		if !found {
-			panic("validator expected but not found")
-		}
-		return validator
 	}
+	cachectx, _ := ctx.CacheContext()
+	keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
+	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddr)
+	if !found {
+		panic("validator expected but not found")
+	}
+	return validator
 }
 
 func validatorByPowerIndexExists(k Keeper, ctx sdk.Context, power []byte) bool {

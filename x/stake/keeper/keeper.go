@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"container/list"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -11,12 +13,14 @@ import (
 
 // keeper of the stake store
 type Keeper struct {
-	storeKey   sdk.StoreKey
-	storeTKey  sdk.StoreKey
-	cdc        *codec.Codec
-	bankKeeper bank.Keeper
-	hooks      sdk.StakingHooks
-	paramstore params.Subspace
+	storeKey           sdk.StoreKey
+	storeTKey          sdk.StoreKey
+	cdc                *codec.Codec
+	bankKeeper         bank.Keeper
+	hooks              sdk.StakingHooks
+	paramstore         params.Subspace
+	validatorCache     map[string]cachedValidator
+	validatorCacheList *list.List
 
 	// codespace
 	codespace sdk.CodespaceType
@@ -24,13 +28,15 @@ type Keeper struct {
 
 func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
-		storeKey:   key,
-		storeTKey:  tkey,
-		cdc:        cdc,
-		bankKeeper: ck,
-		paramstore: paramstore.WithTypeTable(ParamTypeTable()),
-		hooks:      nil,
-		codespace:  codespace,
+		storeKey:           key,
+		storeTKey:          tkey,
+		cdc:                cdc,
+		bankKeeper:         ck,
+		paramstore:         paramstore.WithTypeTable(ParamTypeTable()),
+		hooks:              nil,
+		validatorCache:     make(map[string]cachedValidator, 500),
+		validatorCacheList: list.New(),
+		codespace:          codespace,
 	}
 	return keeper
 }

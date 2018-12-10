@@ -31,6 +31,7 @@ FEATURES
   - [\#2961](https://github.com/cosmos/cosmos-sdk/issues/2961) Add --force flag to gaiacli keys delete command to skip passphrase check and force key deletion unconditionally.
 
 * Gaia
+  - [gov] Added minimum quorum needed for vote to pass
 
 * SDK
 

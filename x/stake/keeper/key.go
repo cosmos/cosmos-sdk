@@ -15,8 +15,7 @@ var (
 	// Keys for store prefixes
 	// TODO DEPRECATED: delete in next release and reorder keys
 	// ParamKey                         = []byte{0x00} // key for parameters relating to staking
-	PoolKey           = []byte{0x01} // key for the staking pools
-	IntraTxCounterKey = []byte{0x02} // key for intra-block tx index
+	PoolKey = []byte{0x01} // key for the staking pools
 
 	// Last* values are const during a block.
 	LastValidatorPowerKey = []byte{0x11} // prefix for each key to a validator index, for bonded validators
@@ -86,16 +85,12 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 	powerBytes := tendermintPowerBytes
 	powerBytesLen := len(powerBytes)
 
-	// key is of format prefix || powerbytes || heightBytes || counterBytes
-	key := make([]byte, 1+powerBytesLen+8+2)
+	// key is of format prefix || powerbytes || addrBytes
+	key := make([]byte, 1+powerBytesLen+sdk.AddrLen)
 
 	key[0] = ValidatorsByPowerIndexKey[0]
 	copy(key[1:powerBytesLen+1], powerBytes)
-
-	// include heightBytes height is inverted (older validators first)
-	binary.BigEndian.PutUint64(key[powerBytesLen+1:powerBytesLen+9], ^uint64(validator.BondHeight))
-	// include counterBytes, counter is inverted (first txns have priority)
-	binary.BigEndian.PutUint16(key[powerBytesLen+9:powerBytesLen+11], ^uint16(validator.BondIntraTxCounter))
+	copy(key[powerBytesLen+1:], validator.OperatorAddr)
 
 	return key
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -340,13 +341,13 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = NewStdFee(2001, sdk.NewInt64Coin("atom", 0))
-	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	fee = NewStdFee(9000, sdk.NewInt64Coin("atom", 0))
+	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("01234567890", 500))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = NewStdFee(1100, sdk.NewInt64Coin("atom", 0))
-	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	fee = NewStdFee(9000, sdk.NewInt64Coin("atom", 0))
+	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("0123456789", 10))
 	checkValidTx(t, anteHandler, ctx, tx, false)
 }
 
@@ -597,8 +598,8 @@ func TestAdjustFeesByGas(t *testing.T) {
 		args args
 		want sdk.Coins
 	}{
-		{"nil coins", args{sdk.Coins{}, 10000, params.GasPerUnitCost}, sdk.Coins{}},
-		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 10000, params.GasPerUnitCost}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
+		{"nil coins", args{sdk.Coins{}, 100000, params.GasPerUnitCost}, sdk.Coins{}},
+		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 100000, params.GasPerUnitCost}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

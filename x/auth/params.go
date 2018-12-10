@@ -15,12 +15,12 @@ const DefaultParamspace = "auth"
 
 // Default parameter values
 const (
-	DefaultMemoCostPerByte        sdk.Gas = 1
-	DefaultMaxMemoCharacters      uint64  = 100
-	DefaultGasPerUnitCost         uint64  = 1000
+	DefaultMemoCostPerByte        sdk.Gas = 3
+	DefaultMaxMemoCharacters      uint64  = 256
+	DefaultGasPerUnitCost         uint64  = 10000
 	DefaultTxSigLimit             uint64  = 7
-	DefaultSigVerifyCostED25519   uint64  = 59
-	DefaultSigVerifyCostSecp256k1 uint64  = 100
+	DefaultSigVerifyCostED25519   uint64  = 590
+	DefaultSigVerifyCostSecp256k1 uint64  = 1000
 )
 
 // Parameter keys

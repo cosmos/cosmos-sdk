@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -30,4 +32,26 @@ func InitialFeePool() FeePool {
 		ValPool:       DecCoins{},
 		CommunityPool: DecCoins{},
 	}
+}
+
+// ValidateGenesis validates the fee pool for a genesis state
+func (f FeePool) ValidateGenesis() error {
+	if f.TotalValAccum.Accum.IsNegative() {
+		return fmt.Errorf("negative accum in distribution fee pool, is %v",
+			f.TotalValAccum.Accum.String())
+	}
+	if f.TotalValAccum.UpdateHeight < 0 {
+		return fmt.Errorf("negative update height in distribution fee pool, is %v",
+			f.TotalValAccum.UpdateHeight)
+	}
+	if f.ValPool.HasNegative() {
+		return fmt.Errorf("negative ValPool in distribution fee pool, is %v",
+			f.ValPool)
+	}
+	if f.CommunityPool.HasNegative() {
+		return fmt.Errorf("negative CommunityPool in distribution fee pool, is %v",
+			f.CommunityPool)
+	}
+
+	return nil
 }

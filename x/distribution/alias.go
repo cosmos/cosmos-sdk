@@ -49,6 +49,7 @@ var (
 	InitialFeePool = types.InitialFeePool
 
 	NewGenesisState              = types.NewGenesisState
+	ValidateGenesis              = types.ValidateGenesis
 	DefaultGenesisState          = types.DefaultGenesisState
 	DefaultGenesisWithValidators = types.DefaultGenesisWithValidators
 

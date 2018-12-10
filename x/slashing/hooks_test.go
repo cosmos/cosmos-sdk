@@ -11,7 +11,7 @@ import (
 func TestHookOnValidatorBonded(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t, DefaultParams())
 	addr := sdk.ConsAddress(addrs[0])
-	keeper.onValidatorBonded(ctx, addr, nil)
+	keeper.AfterValidatorBonded(ctx, addr, nil)
 	period := keeper.getValidatorSlashingPeriodForHeight(ctx, addr, ctx.BlockHeight())
 	require.Equal(t, ValidatorSlashingPeriod{addr, ctx.BlockHeight(), 0, sdk.ZeroDec()}, period)
 }
@@ -19,8 +19,8 @@ func TestHookOnValidatorBonded(t *testing.T) {
 func TestHookOnValidatorBeginUnbonding(t *testing.T) {
 	ctx, _, _, _, keeper := createTestInput(t, DefaultParams())
 	addr := sdk.ConsAddress(addrs[0])
-	keeper.onValidatorBonded(ctx, addr, nil)
-	keeper.onValidatorBeginUnbonding(ctx, addr, addrs[0])
+	keeper.AfterValidatorBonded(ctx, addr, nil)
+	keeper.AfterValidatorBeginUnbonding(ctx, addr, addrs[0])
 	period := keeper.getValidatorSlashingPeriodForHeight(ctx, addr, ctx.BlockHeight())
 	require.Equal(t, ValidatorSlashingPeriod{addr, ctx.BlockHeight(), ctx.BlockHeight(), sdk.ZeroDec()}, period)
 }

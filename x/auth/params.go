@@ -17,7 +17,6 @@ const DefaultParamspace = "auth"
 const (
 	DefaultMemoCostPerByte        sdk.Gas = 3
 	DefaultMaxMemoCharacters      uint64  = 256
-	DefaultGasPerUnitCost         uint64  = 10000
 	DefaultTxSigLimit             uint64  = 7
 	DefaultSigVerifyCostED25519   uint64  = 590
 	DefaultSigVerifyCostSecp256k1 uint64  = 1000
@@ -27,7 +26,6 @@ const (
 var (
 	KeyMemoCostPerByte        = []byte("MemoCostPerByte")
 	KeyMaxMemoCharacters      = []byte("MaxMemoCharacters")
-	KeyGasPerUnitCost         = []byte("GasPerUnitCost")
 	KeyTxSigLimit             = []byte("TxSigLimit")
 	KeySigVerifyCostED25519   = []byte("SigVerifyCostED25519")
 	KeySigVerifyCostSecp256k1 = []byte("SigVerifyCostSecp256k1")
@@ -39,7 +37,6 @@ var _ params.ParamSet = &Params{}
 type Params struct {
 	MemoCostPerByte        sdk.Gas
 	MaxMemoCharacters      uint64
-	GasPerUnitCost         uint64 // how much gas = 1 atom
 	TxSigLimit             uint64 // max total number of signatures per tx
 	SigVerifyCostED25519   uint64
 	SigVerifyCostSecp256k1 uint64
@@ -57,7 +54,6 @@ func (p *Params) KeyValuePairs() params.KeyValuePairs {
 	return params.KeyValuePairs{
 		{KeyMemoCostPerByte, &p.MemoCostPerByte},
 		{KeyMaxMemoCharacters, &p.MaxMemoCharacters},
-		{KeyGasPerUnitCost, &p.GasPerUnitCost},
 		{KeyTxSigLimit, &p.TxSigLimit},
 		{KeySigVerifyCostED25519, &p.SigVerifyCostED25519},
 		{KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1},
@@ -76,7 +72,6 @@ func DefaultParams() Params {
 	return Params{
 		MemoCostPerByte:        DefaultMemoCostPerByte,
 		MaxMemoCharacters:      DefaultMaxMemoCharacters,
-		GasPerUnitCost:         DefaultGasPerUnitCost,
 		TxSigLimit:             DefaultTxSigLimit,
 		SigVerifyCostED25519:   DefaultSigVerifyCostED25519,
 		SigVerifyCostSecp256k1: DefaultSigVerifyCostSecp256k1,
@@ -90,7 +85,6 @@ func (p Params) String() string {
 	sb.WriteString("Params: \n")
 	sb.WriteString(fmt.Sprintf("MemoCostPerByte: %v\n", p.MemoCostPerByte))
 	sb.WriteString(fmt.Sprintf("MaxMemoCharacters: %d\n", p.MaxMemoCharacters))
-	sb.WriteString(fmt.Sprintf("GasPerUnitCost: %d\n", p.GasPerUnitCost))
 	sb.WriteString(fmt.Sprintf("TxSigLimit: %d\n", p.TxSigLimit))
 	sb.WriteString(fmt.Sprintf("SigVerifyCostED25519: %d\n", p.SigVerifyCostED25519))
 	sb.WriteString(fmt.Sprintf("SigVerifyCostSecp256k1: %d\n", p.SigVerifyCostSecp256k1))

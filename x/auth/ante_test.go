@@ -586,24 +586,21 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 }
 
 func TestAdjustFeesByGas(t *testing.T) {
-	params := DefaultParams()
-
 	type args struct {
-		fee            sdk.Coins
-		gas            uint64
-		gasPerUnitCost uint64
+		fee sdk.Coins
+		gas uint64
 	}
 	tests := []struct {
 		name string
 		args args
 		want sdk.Coins
 	}{
-		{"nil coins", args{sdk.Coins{}, 100000, params.GasPerUnitCost}, sdk.Coins{}},
-		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 100000, params.GasPerUnitCost}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
+		{"nil coins", args{sdk.Coins{}, 100000}, sdk.Coins{}},
+		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 100000}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.True(t, tt.want.IsEqual(adjustFeesByGas(tt.args.fee, tt.args.gas, tt.args.gasPerUnitCost)))
+			require.True(t, tt.want.IsEqual(adjustFeesByGas(tt.args.fee, tt.args.gas)))
 		})
 	}
 }

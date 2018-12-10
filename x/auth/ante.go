@@ -11,6 +11,11 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 )
 
+var (
+	// TODO: Allow this to be configurable in the same way as minimum fees.
+	gasPerUnitCost uint64 = 10000 // how much gas = 1 atom
+)
+
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
@@ -31,7 +36,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// if this is a CheckTx. This is only for local mempool purposes, and thus
 		// is only ran on check tx.
 		if ctx.IsCheckTx() && !simulate {
-			res := ensureSufficientMempoolFees(ctx, stdTx, params)
+			res := ensureSufficientMempoolFees(ctx, stdTx)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -219,7 +224,7 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey, p
 	}
 }
 
-func adjustFeesByGas(fees sdk.Coins, gas, gasPerUnitCost uint64) sdk.Coins {
+func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
 	gasCost := gas / gasPerUnitCost
 	gasFees := make(sdk.Coins, len(fees))
 
@@ -258,7 +263,7 @@ func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 	return acc, sdk.Result{}
 }
 
-func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx, params Params) sdk.Result {
+func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	// Currently we use a very primitive gas pricing model with a constant
 	// gasPrice where adjustFeesByGas handles calculating the amount of fees
 	// required based on the provided gas.
@@ -269,7 +274,7 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx, params Params) sd
 	if stdTx.Fee.Gas <= 0 {
 		return sdk.ErrInternal(fmt.Sprintf("invalid gas supplied: %d", stdTx.Fee.Gas)).Result()
 	}
-	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas, params.GasPerUnitCost)
+	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
 
 	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
 	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {

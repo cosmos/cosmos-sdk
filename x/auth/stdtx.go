@@ -3,7 +3,6 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +13,7 @@ import (
 var (
 	_ sdk.Tx = (*StdTx)(nil)
 
-	maxGasWanted = uint64(math.Pow(2, 63)) - 1
+	maxGasWanted = uint64((1 << 63) - 1)
 )
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.

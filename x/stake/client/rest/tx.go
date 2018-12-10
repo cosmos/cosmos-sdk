@@ -219,14 +219,14 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 
 			baseReq.Sequence++
 
-			if utils.HasDryRunArg(r) || txBldr.SimulateGas {
+			if baseReq.Simulate || txBldr.SimulateGas {
 				newBldr, err := utils.EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, []sdk.Msg{msg})
 				if err != nil {
 					utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 					return
 				}
 
-				if utils.HasDryRunArg(r) {
+				if baseReq.Simulate {
 					utils.WriteSimulationResponse(w, newBldr.Gas)
 					return
 				}
@@ -234,7 +234,7 @@ func delegationsRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx conte
 				txBldr = newBldr
 			}
 
-			if utils.HasGenerateOnlyArg(r) {
+			if baseReq.GenerateOnly {
 				utils.WriteGenerateStdTxResponse(w, txBldr, []sdk.Msg{msg})
 				return
 			}

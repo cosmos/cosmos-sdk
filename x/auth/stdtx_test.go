@@ -120,6 +120,15 @@ func TestTxValidateBasic(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, sdk.CodeTooManySignatures, err.Result().Code)
 
+	// require to fail with invalid gas supplied
+	badFee = newStdFee()
+	badFee.Gas = 9223372036854775808
+	tx = newTestTx(ctx, nil, nil, nil, nil, badFee)
+
+	err = tx.ValidateBasic()
+	require.Error(t, err)
+	require.Equal(t, sdk.CodeInternal, err.Result().Code)
+
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
 	tx = newTestTx(ctx, msgs, privs, accNums, seqs, fee)

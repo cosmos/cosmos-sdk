@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,7 +11,11 @@ import (
 	"github.com/tendermint/tendermint/crypto/multisig"
 )
 
-var _ sdk.Tx = (*StdTx)(nil)
+var (
+	_ sdk.Tx = (*StdTx)(nil)
+
+	maxGasWanted = uint64(math.Pow(2, 63)) - 1
+)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
@@ -38,6 +43,9 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 func (tx StdTx) ValidateBasic() sdk.Error {
 	stdSigs := tx.GetSignatures()
 
+	if tx.Fee.Gas > maxGasWanted {
+		return sdk.ErrInternal(fmt.Sprintf("invalid gas supplied; %d > %d", tx.Fee.Gas, maxGasWanted))
+	}
 	if !tx.Fee.Amount.IsNotNegative() {
 		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
 	}

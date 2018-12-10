@@ -44,7 +44,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		}
 
 		var req sendReq
-		err = utils.ReadRESTReq(w, r, cdc, &req)
+		cliCtx, err = utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
 		if err != nil {
 			return
 		}

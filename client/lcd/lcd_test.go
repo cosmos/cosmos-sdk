@@ -342,7 +342,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	acc := getAccount(t, port, addr)
 
 	// generate TX
-	res, body, _ := doSendWithGas(t, port, seed, name, password, addr, "simulate", 0, "?generate_only=true")
+	res, body, _ := doSendWithGas(t, port, seed, name, "", addr, "simulate", 0, "?generate_only=true")
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var msg auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))

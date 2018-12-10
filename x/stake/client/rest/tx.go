@@ -57,7 +57,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgDelegationsInput
 
-		err := utils.ReadRESTReq(w, r, cdc, &req)
+		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -94,7 +94,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgBeginRedelegateInput
 
-		err := utils.ReadRESTReq(w, r, cdc, &req)
+		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -131,7 +131,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgBeginUnbondingInput
 
-		err := utils.ReadRESTReq(w, r, cdc, &req)
+		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

@@ -71,7 +71,7 @@ type voteReq struct {
 func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req postProposalReq
-		err := utils.ReadRESTReq(w, r, cdc, &req)
+		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -117,7 +117,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 		}
 
 		var req depositReq
-		err := utils.ReadRESTReq(w, r, cdc, &req)
+		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
 		if err != nil {
 			return
 		}
@@ -156,7 +156,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 		}
 
 		var req voteReq
-		err := utils.ReadRESTReq(w, r, cdc, &req)
+		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
 		if err != nil {
 			return
 		}

@@ -38,7 +38,7 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		}
 
 		var req transferReq
-		err = utils.ReadRESTReq(w, r, cdc, &req)
+		cliCtx, err = utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
 		if err != nil {
 			return
 		}

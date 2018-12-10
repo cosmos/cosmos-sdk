@@ -156,40 +156,50 @@ unmarshals to the req interface.
     req := new(SomeReq)
     err := ReadRESTReq(w, r, cdc, req)
 */
-func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) error {
+func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, cliCtx context.CLIContext, req interface{}) (context.CLIContext, error) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		return err
+		return cliCtx, err
 	}
 
 	err = cdc.UnmarshalJSON(body, req)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		return err
+		return cliCtx, err
 	}
 
-	return nil
+	genOnlyStr := r.FormValue("generate_only")
+	if len(genOnlyStr) > 0 {
+		cliCtx.GenerateOnly, err = strconv.ParseBool(genOnlyStr)
+		if err != nil {
+			WriteErrorResponse(w, http.StatusBadRequest,
+				fmt.Sprintf("invalid value %s for generate_only", genOnlyStr))
+			return cliCtx, err
+		}
+	}
+
+	return cliCtx, nil
 }
 
 // ValidateBasic performs basic validation of a BaseReq. If custom validation
 // logic is needed, the implementing request handler should perform those
 // checks manually.
 func (br BaseReq) ValidateBasic(w http.ResponseWriter, genOnly bool) bool {
-	switch {
-	case len(br.Name) == 0:
+	if !genOnly {
+		switch {
+		case len(br.Password) == 0:
+			WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
+			return false
+		case len(br.ChainID) == 0:
+			WriteErrorResponse(w, http.StatusUnauthorized, "chain-id required but not specified")
+			return false
+		}
+	}
+	if len(br.Name) == 0 {
 		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
 		return false
-
-	case !genOnly && len(br.Password) == 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
-		return false
-
-	case !genOnly && len(br.ChainID) == 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "chainID required but not specified")
-		return false
 	}
-
 	return true
 }
 

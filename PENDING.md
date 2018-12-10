@@ -18,6 +18,7 @@ BREAKING CHANGES
 
 * SDK
  - [auth] \#2952 Signatures are no longer serialized on chain with the account number and sequence number
+ - [stake] \#3055 Use address instead of bond height / intratxcounter for deduplication
 
 * Tendermint
 

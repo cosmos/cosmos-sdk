@@ -4,16 +4,17 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
-	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func setGenesis(bapp *DemocoinApp, trend string, accs ...auth.BaseAccount) error {

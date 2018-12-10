@@ -10,9 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+
+	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
 // REST Variable names

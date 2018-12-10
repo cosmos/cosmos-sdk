@@ -6,13 +6,14 @@ import (
 	"io"
 	"os"
 
+	"github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/libs/common"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/libs/common"
 )
 
 // CompleteAndBroadcastTxCli implements a utility function that facilitates

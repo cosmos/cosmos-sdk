@@ -7,14 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-const (
-	costGetCoins      sdk.Gas = 10
-	costHasCoins      sdk.Gas = 10
-	costSetCoins      sdk.Gas = 100
-	costSubtractCoins sdk.Gas = 10
-	costAddCoins      sdk.Gas = 10
-)
-
 //-----------------------------------------------------------------------------
 // Keeper
 
@@ -28,6 +20,7 @@ type Keeper interface {
 	SetCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) sdk.Error
 	SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
 	AddCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error)
+	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
 }
 
 // BaseKeeper manages transfers between accounts. It implements the Keeper
@@ -67,6 +60,14 @@ func (keeper BaseKeeper) AddCoins(
 	return addCoins(ctx, keeper.ak, addr, amt)
 }
 
+// InputOutputCoins handles a list of inputs and outputs
+func (keeper BaseKeeper) InputOutputCoins(
+	ctx sdk.Context, inputs []Input, outputs []Output,
+) (sdk.Tags, sdk.Error) {
+
+	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
+}
+
 //-----------------------------------------------------------------------------
 // Send Keeper
 
@@ -76,7 +77,6 @@ type SendKeeper interface {
 	ViewKeeper
 
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
-	InputOutputCoins(ctx sdk.Context, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error)
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -103,14 +103,6 @@ func (keeper BaseSendKeeper) SendCoins(
 ) (sdk.Tags, sdk.Error) {
 
 	return sendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
-}
-
-// InputOutputCoins handles a list of inputs and outputs
-func (keeper BaseSendKeeper) InputOutputCoins(
-	ctx sdk.Context, inputs []Input, outputs []Output,
-) (sdk.Tags, sdk.Error) {
-
-	return inputOutputCoins(ctx, keeper.ak, inputs, outputs)
 }
 
 //-----------------------------------------------------------------------------
@@ -150,7 +142,6 @@ func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 //-----------------------------------------------------------------------------
 
 func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
-	ctx.GasMeter().ConsumeGas(costGetCoins, "getCoins")
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.Coins{}
@@ -159,7 +150,6 @@ func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.C
 }
 
 func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	ctx.GasMeter().ConsumeGas(costSetCoins, "setCoins")
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		acc = am.NewAccountWithAddress(ctx, addr)
@@ -175,14 +165,11 @@ func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 
 // HasCoins returns whether or not an account has at least amt coins.
 func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
-	ctx.GasMeter().ConsumeGas(costHasCoins, "hasCoins")
 	return getCoins(ctx, am, addr).IsAllGTE(amt)
 }
 
 // SubtractCoins subtracts amt from the coins at the addr.
 func subtractCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
-	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
-
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins, hasNeg := oldCoins.SafeMinus(amt)
 	if hasNeg {
@@ -196,7 +183,6 @@ func subtractCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, 
 
 // AddCoins adds amt to the coins at the addr.
 func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
-	ctx.GasMeter().ConsumeGas(costAddCoins, "addCoins")
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Plus(amt)
 	if !newCoins.IsNotNegative() {

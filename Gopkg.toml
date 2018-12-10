@@ -26,6 +26,10 @@
   name = "github.com/stretchr/testify"
   version = "=1.2.1"
 
+[[constraint]]
+  name = "github.com/otiai10/copy"
+  revision = "7e9a647135a142c2669943d4a4d29be015ce9392"
+
 [[override]]
   name = "github.com/tendermint/go-amino"
   version = "v0.14.1"
@@ -36,7 +40,11 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  revision = "v0.27.0-dev1"
+  revision = "v0.27.0"
+
+[[constraint]]
+  name = "github.com/zondax/ledger-cosmos-go"
+  version = "=v0.9.2"
 
 ## deps without releases:
 
@@ -49,10 +57,6 @@
   name = "github.com/cosmos/go-bip39"
   revision = "52158e4697b87de16ed390e1bdaf813e581008fa"
 
-[[constraint]]
-  name = "github.com/zondax/ledger-goclient"
-  version = "=v0.1.0"
-
 ## transitive deps, with releases:
 
 [[override]]
@@ -62,10 +66,6 @@
 [[constraint]]
   name = "github.com/rakyll/statik"
   version = "=v0.1.4"
-
-[[constraint]]
-  name = "github.com/mitchellh/go-homedir"
-  version = "1.0.0"
 
 ## transitive deps, without releases:
 

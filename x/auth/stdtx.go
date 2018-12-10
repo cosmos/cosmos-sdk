@@ -10,7 +10,11 @@ import (
 	"github.com/tendermint/tendermint/crypto/multisig"
 )
 
-var _ sdk.Tx = (*StdTx)(nil)
+var (
+	_ sdk.Tx = (*StdTx)(nil)
+
+	maxGasWanted = uint64((1 << 63) - 1)
+)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
@@ -38,6 +42,9 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 func (tx StdTx) ValidateBasic() sdk.Error {
 	stdSigs := tx.GetSignatures()
 
+	if tx.Fee.Gas > maxGasWanted {
+		return sdk.ErrGasOverflow(fmt.Sprintf("invalid gas supplied; %d > %d", tx.Fee.Gas, maxGasWanted))
+	}
 	if !tx.Fee.Amount.IsNotNegative() {
 		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
 	}
@@ -188,8 +195,6 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 type StdSignature struct {
 	crypto.PubKey `json:"pub_key"` // optional
 	Signature     []byte           `json:"signature"`
-	AccountNumber uint64           `json:"account_number"`
-	Sequence      uint64           `json:"sequence"`
 }
 
 // logic for standard transaction decoding

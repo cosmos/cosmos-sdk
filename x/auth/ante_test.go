@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
@@ -20,7 +21,7 @@ func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 }
 
 func newStdFee() StdFee {
-	return NewStdFee(5000,
+	return NewStdFee(50000,
 		sdk.NewInt64Coin("atom", 150),
 	)
 }
@@ -74,7 +75,7 @@ func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 	tx := NewStdTx(msgs, fee, sigs, "")
 	return tx
@@ -88,7 +89,7 @@ func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
@@ -102,7 +103,7 @@ func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []ui
 		if err != nil {
 			panic(err)
 		}
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig, AccountNumber: accNums[i], Sequence: seqs[i]}
+		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
 	}
 	tx := NewStdTx(msgs, fee, sigs, memo)
 	return tx
@@ -200,7 +201,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	// new tx from wrong account number
 	seqs = []uint64{1}
 	tx = newTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// from correct account number
 	seqs = []uint64{1}
@@ -213,7 +214,7 @@ func TestAnteHandlerAccountNumbers(t *testing.T) {
 	msgs = []sdk.Msg{msg1, msg2}
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{1, 0}, []uint64{2, 0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// correct account numbers
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{2, 0}
@@ -260,7 +261,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	// new tx from wrong account number
 	seqs = []uint64{1}
 	tx = newTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// from correct account number
 	seqs = []uint64{1}
@@ -273,7 +274,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 	msgs = []sdk.Msg{msg1, msg2}
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{1, 0}, []uint64{2, 0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// correct account numbers
 	privs, accnums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 0}, []uint64{2, 0}
@@ -322,7 +323,7 @@ func TestAnteHandlerSequences(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	// test sending it again fails (replay protection)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// fix sequence, should pass
 	seqs = []uint64{1}
@@ -339,14 +340,14 @@ func TestAnteHandlerSequences(t *testing.T) {
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	// replay fails
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// tx from just second signer with incorrect sequence fails
 	msg = newTestMsg(addr2)
 	msgs = []sdk.Msg{msg}
 	privs, accnums, seqs = []crypto.PrivKey{priv2}, []uint64{1}, []uint64{0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidSequence)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
 
 	// fix the sequence and it passes
 	tx = newTestTx(ctx, msgs, []crypto.PrivKey{priv2}, []uint64{1}, []uint64{1}, fee)
@@ -437,13 +438,13 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = NewStdFee(2001, sdk.NewInt64Coin("atom", 0))
-	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	fee = NewStdFee(9000, sdk.NewInt64Coin("atom", 0))
+	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("01234567890", 500))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = NewStdFee(1100, sdk.NewInt64Coin("atom", 0))
-	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	fee = NewStdFee(9000, sdk.NewInt64Coin("atom", 0))
+	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("0123456789", 10))
 	checkValidTx(t, anteHandler, ctx, tx, false)
 }
 
@@ -706,8 +707,8 @@ func TestAdjustFeesByGas(t *testing.T) {
 		args args
 		want sdk.Coins
 	}{
-		{"nil coins", args{sdk.Coins{}, 10000}, sdk.Coins{}},
-		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 10000}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
+		{"nil coins", args{sdk.Coins{}, 100000}, sdk.Coins{}},
+		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 100000}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

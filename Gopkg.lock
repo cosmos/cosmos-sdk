@@ -2,12 +2,20 @@
 
 
 [[projects]]
-  branch = "master"
   digest = "1:7736fc6da04620727f8f3aa2ced8d77be8e074a302820937aa5993848c769b27"
   name = "github.com/ZondaX/hid-go"
   packages = ["."]
   pruneopts = "UT"
   revision = "48b08affede2cea076a3cf13b2e3f72ed262b743"
+  version = "v0.4.0"
+
+[[projects]]
+  digest = "1:1ba351898f7efc68c7c9ff3145b920e478f716b077fdaaf06b967c5d883fa988"
+  name = "github.com/ZondaX/ledger-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c3225ab10c2f53397d4aa419a588466493572b22"
+  version = "v0.4.0"
 
 [[projects]]
   branch = "master"
@@ -39,7 +47,7 @@
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "UT"
-  revision = "3dcf298fed2d5fd65918dc560b3942b2aa0629e8"
+  revision = "7d2daa5bfef28c5e282571bc06416516936115ee"
 
 [[projects]]
   digest = "1:386de157f7d19259a7f9c81f26ce011223ce0f090353c1152ffdf730d7d10ac2"
@@ -232,20 +240,19 @@
   version = "v1.0.1"
 
 [[projects]]
-  digest = "1:78bbb1ba5b7c3f2ed0ea1eab57bdd3859aec7e177811563edc41198a760b06af"
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
-  version = "v1.0.0"
-
-[[projects]]
   digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "UT"
   revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
   version = "v1.1.2"
+
+[[projects]]
+  digest = "1:6d4d9067e639d96a804ee9a30fa89c7233c5c5edbfe736072ff00d48c97bccc4"
+  name = "github.com/otiai10/copy"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7e9a647135a142c2669943d4a4d29be015ce9392"
 
 [[projects]]
   digest = "1:95741de3af260a92cc5c7f3f3061e85273f5a81b5db20d4bd68da74bd521675e"
@@ -272,7 +279,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:26663fafdea73a38075b07e8e9d82fc0056379d2be8bb4e13899e8fda7c7dd23"
+  digest = "1:93a746f1060a8acbcf69344862b2ceced80f854170e1caae089b2834c5fbf7f4"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
@@ -280,8 +287,8 @@
     "prometheus/promhttp",
   ]
   pruneopts = "UT"
-  revision = "abad2d1bd44235a26707c172eab6bca5bf2dbad3"
-  version = "v0.9.1"
+  revision = "505eaef017263e299324067d40ca2c48f6a2cf50"
+  version = "v0.9.2"
 
 [[projects]]
   branch = "master"
@@ -305,7 +312,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ef74914912f99c79434d9c09658274678bc85080ebe3ab32bec3940ebce5e1fc"
+  digest = "1:d39e7c7677b161c2dd4c635a2ac196460608c7d8ba5337cc8cae5825a2681f8f"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -314,7 +321,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "619930b0b4713cc1280189bf0a4c54b3fb506f60"
+  revision = "1dc9a6cbc91aacc3e8b2d63db4d2e957a5394ac4"
 
 [[projects]]
   digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
@@ -445,7 +452,7 @@
   version = "v0.12.0"
 
 [[projects]]
-  digest = "1:629ec3e6d89da546c9b7f329ab54a843b2d8da932a3ed44e0e883dba5bb757e5"
+  digest = "1:23c49a2a0f3f8a8258982bbb1567d60d74253c18a454dbe4189126f7e94834e6"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -510,15 +517,15 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "v0.27.0-dev1"
+  revision = "v0.27.0"
 
 [[projects]]
-  digest = "1:7886f86064faff6f8d08a3eb0e8c773648ff5a2e27730831e2bfbf07467f6666"
-  name = "github.com/zondax/ledger-goclient"
+  digest = "1:a7485b2a69f996923f9d3406a9a853fd8eb31818515e985a830d71f88f6a925b"
+  name = "github.com/zondax/ledger-cosmos-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "58598458c11bc0ad1c1b8dac3dc3e11eaf270b79"
-  version = "v0.1.0"
+  revision = "d4aed6d929a703bb555a2d79fe9c470afe61f648"
+  version = "v0.9.2"
 
 [[projects]]
   digest = "1:6f6dc6060c4e9ba73cf28aa88f12a69a030d3d19d518ef8e931879eaa099628d"
@@ -603,24 +610,29 @@
   revision = "383e8b2c3b9e36c4076b235b32537292176bae20"
 
 [[projects]]
-  digest = "1:c3ad9841823db6da420a5625b367913b4ff54bbe60e8e3c98bd20e243e62e2d2"
+  digest = "1:9edd250a3c46675d0679d87540b30c9ed253b19bd1fd1af08f4f5fb3c79fc487"
   name = "google.golang.org/grpc"
   packages = [
     ".",
     "balancer",
     "balancer/base",
     "balancer/roundrobin",
+    "binarylog/grpc_binarylog_v1",
     "codes",
     "connectivity",
     "credentials",
+    "credentials/internal",
     "encoding",
     "encoding/proto",
     "grpclog",
     "internal",
     "internal/backoff",
+    "internal/binarylog",
     "internal/channelz",
     "internal/envconfig",
     "internal/grpcrand",
+    "internal/grpcsync",
+    "internal/syscall",
     "internal/transport",
     "keepalive",
     "metadata",
@@ -634,8 +646,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "2e463a05d100327ca47ac218281906921038fd95"
-  version = "v1.16.0"
+  revision = "df014850f6dee74ba2fc94874043a9f3f75fbfd8"
+  version = "v1.17.0"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -657,7 +669,7 @@
     "github.com/golang/protobuf/proto",
     "github.com/gorilla/mux",
     "github.com/mattn/go-isatty",
-    "github.com/mitchellh/go-homedir",
+    "github.com/otiai10/copy",
     "github.com/pelletier/go-toml",
     "github.com/pkg/errors",
     "github.com/rakyll/statik/fs",
@@ -671,6 +683,7 @@
     "github.com/tendermint/iavl",
     "github.com/tendermint/tendermint/abci/server",
     "github.com/tendermint/tendermint/abci/types",
+    "github.com/tendermint/tendermint/blockchain",
     "github.com/tendermint/tendermint/cmd/tendermint/commands",
     "github.com/tendermint/tendermint/config",
     "github.com/tendermint/tendermint/crypto",
@@ -699,10 +712,11 @@
     "github.com/tendermint/tendermint/rpc/core/types",
     "github.com/tendermint/tendermint/rpc/lib/client",
     "github.com/tendermint/tendermint/rpc/lib/server",
+    "github.com/tendermint/tendermint/state",
     "github.com/tendermint/tendermint/types",
     "github.com/tendermint/tendermint/types/time",
     "github.com/tendermint/tendermint/version",
-    "github.com/zondax/ledger-goclient",
+    "github.com/zondax/ledger-cosmos-go",
     "golang.org/x/crypto/bcrypt",
   ]
   solver-name = "gps-cdcl"

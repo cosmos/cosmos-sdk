@@ -52,6 +52,8 @@ ifeq ($(OS),Windows_NT)
 else
 	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
+	go build $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
+	go build $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
 endif
 
 build-linux:
@@ -83,6 +85,8 @@ endif
 install: check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
 
 install_examples:
 	go install $(BUILD_FLAGS) ./docs/examples/basecoin/cmd/basecoind
@@ -152,7 +156,7 @@ godocs:
 test: test_unit
 
 test_cli:
-	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
+	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
 
 test_examples:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/docs/examples/basecoin/cli_test` -tags=cli_test
@@ -182,7 +186,7 @@ test_sim_gaia_simulation_after_import:
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 50 TestFullGaiaSimulation
+	@bash scripts/multisim.sh 400 TestFullGaiaSimulation
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

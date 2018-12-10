@@ -12,10 +12,11 @@ import (
 
 // This will fail half the time with the second output being 173
 // This is due to secp256k1 signatures not being constant size.
-// This will be resolved when updating to tendermint v0.24.0
 // nolint: vet
 func ExampleTxSendSize() {
 	cdc := app.MakeCodec()
+	var gas uint64 = 1
+
 	priv1 := secp256k1.GenPrivKeySecp256k1([]byte{0})
 	addr1 := sdk.AccAddress(priv1.PubKey().Address())
 	priv2 := secp256k1.GenPrivKeySecp256k1([]byte{1})
@@ -25,11 +26,14 @@ func ExampleTxSendSize() {
 		Inputs:  []bank.Input{bank.NewInput(addr1, coins)},
 		Outputs: []bank.Output{bank.NewOutput(addr2, coins)},
 	}
-	sig, _ := priv1.Sign(msg1.GetSignBytes())
-	sigs := []auth.StdSignature{{nil, sig, 0, 0}}
-	tx := auth.NewStdTx([]sdk.Msg{msg1}, auth.NewStdFee(0, coins...), sigs, "")
+	fee := auth.NewStdFee(gas, coins...)
+	signBytes := auth.StdSignBytes("example-chain-ID",
+		1, 1, fee, []sdk.Msg{msg1}, "")
+	sig, _ := priv1.Sign(signBytes)
+	sigs := []auth.StdSignature{{nil, sig}}
+	tx := auth.NewStdTx([]sdk.Msg{msg1}, fee, sigs, "")
 	fmt.Println(len(cdc.MustMarshalBinaryBare([]sdk.Msg{msg1})))
 	fmt.Println(len(cdc.MustMarshalBinaryBare(tx)))
 	// output: 80
-	// 167
+	// 169
 }

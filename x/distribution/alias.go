@@ -49,6 +49,7 @@ var (
 	InitialFeePool = types.InitialFeePool
 
 	NewGenesisState              = types.NewGenesisState
+	ValidateGenesis              = types.ValidateGenesis
 	DefaultGenesisState          = types.DefaultGenesisState
 	DefaultGenesisWithValidators = types.DefaultGenesisWithValidators
 
@@ -60,6 +61,8 @@ var (
 	NewMsgWithdrawValidatorRewardsAll = types.NewMsgWithdrawValidatorRewardsAll
 
 	NewDecCoins = types.NewDecCoins
+
+	NewTotalAccum = types.NewTotalAccum
 )
 
 const (

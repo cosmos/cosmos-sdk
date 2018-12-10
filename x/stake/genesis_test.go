@@ -53,12 +53,10 @@ func TestInitGenesis(t *testing.T) {
 	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[0]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
-	require.Equal(t, int16(0), resVal.BondIntraTxCounter)
 
 	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[1]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
-	require.Equal(t, int16(1), resVal.BondIntraTxCounter)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range validators {

@@ -43,6 +43,7 @@ const (
 	CodeMemoTooLarge      CodeType = 13
 	CodeInsufficientFee   CodeType = 14
 	CodeTooManySignatures CodeType = 15
+	CodeGasOverflow       CodeType = 16
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -142,6 +143,9 @@ func ErrInsufficientFee(msg string) Error {
 }
 func ErrTooManySignatures(msg string) Error {
 	return newErrorWithRootCodespace(CodeTooManySignatures, msg)
+}
+func ErrGasOverflow(msg string) Error {
+	return newErrorWithRootCodespace(CodeGasOverflow, msg)
 }
 
 //----------------------------------------

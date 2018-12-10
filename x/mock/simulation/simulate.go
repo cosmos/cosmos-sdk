@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	// "log"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -13,13 +14,14 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	log "github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AppStateFn returns the app state json bytes
-type AppStateFn func(r *rand.Rand, accs []Account) json.RawMessage
+type AppStateFn func(r *rand.Rand, accs []Account, logger log.Logger) json.RawMessage
 
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
@@ -37,7 +39,7 @@ func initChain(r *rand.Rand, params Params, accounts []Account,
 	appStateFn AppStateFn) mockValidators {
 
 	req := abci.RequestInitChain{
-		AppStateBytes: appStateFn(r, accounts),
+		AppStateBytes: appStateFn(r, accounts, app.Logger),
 	}
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
@@ -55,16 +57,16 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 	// in case we have to end early, don't os.Exit so that we can run cleanup code.
 	testingMode, t, b := getTestingMode(tb)
-	fmt.Printf("Starting SimulateFromSeed with randomness "+
-		"created with seed %d\n", int(seed))
+	app.Logger.Info(fmt.Sprintf("Starting SimulateFromSeed with randomness "+
+		"created with seed %d\n", int(seed)))
 
 	r := rand.New(rand.NewSource(seed))
 	params := RandomParams(r) // := DefaultParams()
-	fmt.Printf("Randomized simulation params: %+v\n", params)
+	app.Logger.Info(fmt.Sprintf("Randomized simulation params: %+v\n", params))
 
 	timestamp := RandTimestamp(r)
-	fmt.Printf("Starting the simulation from time %v, unixtime %v\n",
-		timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
+	app.Logger.Info(fmt.Sprintf("Starting the simulation from time %v, unixtime %v\n",
+		timestamp.UTC().Format(time.UnixDate), timestamp.Unix()))
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := RandomAccounts(r, params.NumKeys)
@@ -87,8 +89,8 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
 		receivedSignal := <-c
-		fmt.Printf("\nExiting early due to %s, on block %d, operation %d\n",
-			receivedSignal, header.Height, opCount)
+		app.Logger.Info(fmt.Sprintf("\nExiting early due to %s, on block %d, operation %d\n",
+			receivedSignal, header.Height, opCount))
 		simError = fmt.Errorf("Exited due to %s", receivedSignal)
 		stopEarly = true
 	}()
@@ -239,8 +241,8 @@ func createBlockSimulator(testingMode bool, tb testing.TB, t *testing.T, params 
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accounts []Account, header abci.Header, logWriter func(string)) (opCount int) {
 
-		fmt.Printf("\rSimulating... block %d/%d, operation %d/%d. ",
-			header.Height, totalNumBlocks, opCount, blocksize)
+		app.Logger.Info(fmt.Sprintf("\rSimulating... block %d/%d, operation %d/%d. ",
+			header.Height, totalNumBlocks, opCount, blocksize))
 		lastBlocksizeState, blocksize = getBlockSize(r, params, lastBlocksizeState, avgBlockSize)
 
 		type opAndR struct {

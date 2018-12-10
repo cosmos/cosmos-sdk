@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -34,26 +36,31 @@ import (
 )
 
 var (
-	seed      int64
-	numBlocks int
-	blockSize int
-	enabled   bool
-	verbose   bool
-	commit    bool
-	period    int
+	seed          int64
+	numBlocks     int
+	blockSize     int
+	enabled       bool
+	multisim      bool
+	numSims       int
+	verbose       bool
+	commit        bool
+	period        int
+	multiSimSeeds = []int64{1, 2, 4, 7, 9, 20, 32, 123, 124, 582, 1893, 2989, 3012, 4728, 37827, 981928, 87821, 891823782, 989182, 89182391, 11, 22, 44, 77, 99, 2020, 3232, 123123, 124124, 582582, 18931893, 29892989, 30123012, 47284728, 37827}
 )
 
 func init() {
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
+	flag.IntVar(&numSims, "NumberConcurrentSimulations", 4, "Number of simulations to run concurrently")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
+	flag.BoolVar(&multisim, "RunMultiSim", false, "Run the multisim")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
 	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
 	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
+func appStateFn(r *rand.Rand, accs []simulation.Account, logger log.Logger) json.RawMessage {
 	var genesisAccounts []GenesisAccount
 
 	amount := int64(r.Intn(1e6))
@@ -62,9 +69,9 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	if numInitiallyBonded > numAccs {
 		numInitiallyBonded = numAccs
 	}
-	fmt.Printf("Selected randomly generated parameters for simulated genesis:\n"+
+	logger.Info(fmt.Sprintf("Selected randomly generated parameters for simulated genesis:\n"+
 		"\t{amount of steak per account: %v, initially bonded validators: %v}\n",
-		amount, numInitiallyBonded)
+		amount, numInitiallyBonded))
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
@@ -91,7 +98,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
 		},
 	}
-	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
+	logger.Info(fmt.Sprintf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis))
 
 	stakeGenesis := stake.GenesisState{
 		Pool: stake.InitialPool(),
@@ -101,7 +108,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			BondDenom:     stakeTypes.DefaultBondDenom,
 		},
 	}
-	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakeGenesis)
+	logger.Info(fmt.Sprintf("Selected randomly generated staking parameters:\n\t%+v\n", stakeGenesis))
 
 	slashingGenesis := slashing.GenesisState{
 		Params: slashing.Params{
@@ -114,7 +121,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			SlashFractionDowntime:    sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
 		},
 	}
-	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)
+	logger.Info(fmt.Sprintf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis))
 
 	mintGenesis := mint.GenesisState{
 		Minter: mint.InitialMinter(
@@ -127,7 +134,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			sdk.NewDecWithPrec(67, 2),
 			uint64(60*60*8766/5)),
 	}
-	fmt.Printf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis)
+	logger.Info(fmt.Sprintf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis))
 
 	var validators []stake.Validator
 	var delegations []stake.Delegation
@@ -235,6 +242,92 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 		fmt.Println(db.Stats()["leveldb.stats"])
 		fmt.Println("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
 	}
+}
+
+func TestFullGaiaMultiSim(t *testing.T) {
+	if !multisim {
+		t.Skip("Skipping Gaia multisim")
+	}
+
+	var wg = &sync.WaitGroup{}
+	// Create temporary directory to house all sim results
+	tmpDir, err := ioutil.TempDir("", "simulation")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpDir)
+	var sem = make(chan struct{}, numSims)
+	for _, seed := range multiSimSeeds {
+		sem <- struct{}{}
+		wg.Add(1)
+		go runSimWithSeed(t, tmpDir, seed, wg, sem)
+	}
+	wg.Wait()
+}
+
+func runSimWithSeed(t *testing.T, tmpDir string, seed int64, wg *sync.WaitGroup, sem chan struct{}) {
+	// Setup Gaia application
+	var logger log.Logger
+	var db dbm.DB
+	dir, err := ioutil.TempDir(tmpDir, "goleveldb-gaia-sim")
+	require.NoError(t, err)
+	db, err = dbm.NewGoLevelDB("Simulation", dir)
+	require.NoError(t, err)
+	testTime := time.Now().Format("2018-12-30T23:59:59+00:00")
+	outFile, err := ioutil.TempFile(dir, fmt.Sprintf("gaia-simulation-seed-%d-date-%s.stdout", seed, testTime))
+	require.NoError(t, err)
+	fmt.Printf("Running Gaia simulation with seed %d. This may take awhile!\n", seed)
+	fmt.Printf("Writing stdout to %s...\n", outFile.Name())
+	defer func() {
+		db.Close()
+		outFile.Close()
+		os.RemoveAll(dir)
+		<-sem
+		wg.Done()
+	}()
+	if verbose {
+		logger = testingLoggerWOutput(outFile)
+	} else {
+		logger = log.NewNopLogger()
+	}
+	app := NewGaiaApp(logger, db, nil, fauxMerkleModeOpt)
+	require.Equal(t, "GaiaApp", app.Name())
+
+	// Run randomized simulation
+	fmt.Printf("Simulation processes w/ seed %d spawning, waiting for completion...\n", seed)
+	_, err = simulation.SimulateFromSeed(
+		t, app.BaseApp, appStateFn, seed,
+		testAndRunTxs(app),
+		invariants(app),
+		numBlocks,
+		blockSize,
+		commit,
+	)
+	if commit {
+		// for memdb:
+		// fmt.Println("Database Size", db.Stats()["database.size"])
+		logger.Info("GoLevelDB Stats")
+		logger.Info(db.Stats()["leveldb.stats"])
+		logger.Info("GoLevelDB cached block size", db.Stats()["leveldb.cachedblock"])
+	}
+	if err != nil {
+		fmt.Printf("Simulation with seed %d failed!\n", seed)
+		fmt.Printf("To replicate, run 'go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=%d -SimulationVerbose=true -SimulationCommit=true -SimulationSeed=%d -v -timeout 24h'\n", numBlocks, seed)
+		require.Nil(t, err)
+	}
+}
+
+func testingLoggerWOutput(w io.Writer) log.Logger {
+	var _testingLogger log.Logger
+	if _testingLogger != nil {
+		return _testingLogger
+	}
+
+	if testing.Verbose() {
+		_testingLogger = log.NewTMLogger(log.NewSyncWriter(w))
+	} else {
+		_testingLogger = log.NewNopLogger()
+	}
+
+	return _testingLogger
 }
 
 func TestFullGaiaSimulation(t *testing.T) {

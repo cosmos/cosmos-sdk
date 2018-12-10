@@ -50,7 +50,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	iterator.Next()
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, meter.GasConsumed(), sdk.Gas(384))
+	require.Equal(t, meter.GasConsumed(), sdk.Gas(6987))
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {
@@ -62,7 +62,7 @@ func TestGasKVStoreOutOfGasSet(t *testing.T) {
 
 func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
-	meter := sdk.NewGasMeter(2000)
+	meter := sdk.NewGasMeter(20000)
 	st := NewGasKVStore(meter, sdk.KVGasConfig(), mem)
 	st.Set(keyFmt(1), valFmt(1))
 	iterator := st.Iterator(nil, nil)

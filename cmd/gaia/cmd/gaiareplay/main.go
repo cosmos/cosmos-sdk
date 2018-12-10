@@ -131,7 +131,7 @@ func run(rootDir string) {
 		_ = proxyApp.Stop()
 	}()
 
-	var state tmsm.State = tmsm.LoadState(tmDB)
+	state := tmsm.LoadState(tmDB)
 	if state.LastBlockHeight == 0 {
 		// Send InitChain msg
 		fmt.Println("Sending InitChain msg")

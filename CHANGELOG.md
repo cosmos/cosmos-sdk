@@ -14,9 +14,15 @@ BREAKING CHANGES
   * [#128](https://github.com/tendermint/devops/issues/128) Updated CircleCI job to trigger website build on every push to master/develop.
   * [\#2994](https://github.com/cosmos/cosmos-sdk/pull/2994) Change wrong-password error message.
   * [\#3009](https://github.com/cosmos/cosmos-sdk/issues/3009) Added missing Gaia genesis verification
+  * [#128](https://github.com/tendermint/devops/issues/128) Updated CircleCI job to trigger website build on every push to master/develop.
+  * [\#2994](https://github.com/cosmos/cosmos-sdk/pull/2994) Change wrong-password error message.
+  * [\#3009](https://github.com/cosmos/cosmos-sdk/issues/3009) Added missing Gaia genesis verification
+  * [gas] [\#3052](https://github.com/cosmos/cosmos-sdk/issues/3052) Updated gas costs to more reasonable numbers
 
 * SDK
   * [auth] [\#2952](https://github.com/cosmos/cosmos-sdk/issues/2952) Signatures are no longer serialized on chain with the account number and sequence number
+  * [auth] [\#2952](https://github.com/cosmos/cosmos-sdk/issues/2952) Signatures are no longer serialized on chain with the account number and sequence number
+  * [stake] [\#3055](https://github.com/cosmos/cosmos-sdk/issues/3055) Use address instead of bond height / intratxcounter for deduplication
 
 FEATURES
 

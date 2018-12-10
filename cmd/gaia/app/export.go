@@ -123,7 +123,6 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 			panic("expected validator, not found")
 		}
 		validator.BondHeight = 0
-		validator.BondIntraTxCounter = counter
 		validator.UnbondingHeight = 0
 		app.stakeKeeper.SetValidator(ctx, validator)
 		counter++

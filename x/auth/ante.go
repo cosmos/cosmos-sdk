@@ -12,13 +12,13 @@ import (
 )
 
 const (
-	memoCostPerByte     sdk.Gas = 1
-	ed25519VerifyCost           = 59
-	secp256k1VerifyCost         = 100
-	maxMemoCharacters           = 100
+	memoCostPerByte     sdk.Gas = 3
+	ed25519VerifyCost           = 590
+	secp256k1VerifyCost         = 1000
+	maxMemoCharacters           = 256
 
 	// how much gas = 1 atom
-	gasPerUnitCost = 1000
+	gasPerUnitCost = 10000
 
 	// max total number of sigs per tx
 	txSigLimit = 7

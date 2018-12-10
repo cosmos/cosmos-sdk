@@ -52,6 +52,7 @@ BUG FIXES
 * SDK
   * [\#2967](https://github.com/cosmos/cosmos-sdk/issues/2967) Change ordering of `mint.BeginBlocker` and `distr.BeginBlocker`, recalculate inflation each block
   * [\#3068](https://github.com/cosmos/cosmos-sdk/issues/3068) check for uint64 gas overflow during `Std#ValidateBasic`.
+  * [\#3071](https://github.com/cosmos/cosmos-sdk/issues/3071) Catch overflow on block gas meter
 
 
 ## 0.27.0

@@ -701,7 +701,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		return
 	}
 
-	startingGas := ctx.BlockGasMeter().GasConsumed()
+	var startingGas uint64
+	if mode == runTxModeDeliver {
+		startingGas = ctx.BlockGasMeter().GasConsumed()
+	}
 
 	defer func() {
 		if r := recover(); r != nil {

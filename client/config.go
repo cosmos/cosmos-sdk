@@ -7,8 +7,9 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"

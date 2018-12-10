@@ -8,11 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
+
+	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 //BlockCommand returns the verified block data for a given heights

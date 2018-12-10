@@ -121,13 +121,15 @@ func urlQueryHasArg(url *url.URL, arg string) bool { return url.Query().Get(arg)
 // BaseReq defines a structure that can be embedded in other request structures
 // that all share common "base" fields.
 type BaseReq struct {
-	Name          string `json:"name"`
-	Password      string `json:"password"`
-	ChainID       string `json:"chain_id"`
-	AccountNumber uint64 `json:"account_number"`
-	Sequence      uint64 `json:"sequence"`
-	Gas           string `json:"gas"`
-	GasAdjustment string `json:"gas_adjustment"`
+	Name          string    `json:"name"`
+	Password      string    `json:"password"`
+	Memo          string    `json:"memo"`
+	ChainID       string    `json:"chain_id"`
+	AccountNumber uint64    `json:"account_number"`
+	Sequence      uint64    `json:"sequence"`
+	Gas           string    `json:"gas"`
+	GasAdjustment string    `json:"gas_adjustment"`
+	Fees          sdk.Coins `json:"fees"`
 }
 
 // Sanitize performs basic sanitization on a BaseReq object.
@@ -135,11 +137,13 @@ func (br BaseReq) Sanitize() BaseReq {
 	return BaseReq{
 		Name:          strings.TrimSpace(br.Name),
 		Password:      strings.TrimSpace(br.Password),
+		Memo:          strings.TrimSpace(br.Memo),
 		ChainID:       strings.TrimSpace(br.ChainID),
 		Gas:           strings.TrimSpace(br.Gas),
 		GasAdjustment: strings.TrimSpace(br.GasAdjustment),
 		AccountNumber: br.AccountNumber,
 		Sequence:      br.Sequence,
+		Fees:          br.Fees,
 	}
 }
 
@@ -188,6 +192,10 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 	case len(br.ChainID) == 0:
 		WriteErrorResponse(w, http.StatusUnauthorized, "chainID required but not specified")
 		return false
+
+	case !br.Fees.IsValid():
+		WriteErrorResponse(w, http.StatusPaymentRequired, sdk.ErrInvalidCoins("").Error())
+		return false
 	}
 
 	return true
@@ -213,15 +221,7 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		return
 	}
 
-	txBldr := authtxb.TxBuilder{
-		Codec:         cdc,
-		Gas:           gas,
-		GasAdjustment: adjustment,
-		SimulateGas:   simulateGas,
-		ChainID:       baseReq.ChainID,
-		AccountNumber: baseReq.AccountNumber,
-		Sequence:      baseReq.Sequence,
-	}
+	txBldr := authtxb.NewTxBuilder(cdc, baseReq.AccountNumber, baseReq.Sequence, gas, adjustment, simulateGas, baseReq.ChainID, baseReq.Memo, baseReq.Fees)
 
 	if HasDryRunArg(r) || txBldr.SimulateGas {
 		newBldr, err := EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)

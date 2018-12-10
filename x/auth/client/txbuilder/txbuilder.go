@@ -1,6 +1,8 @@
 package context
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,7 +23,31 @@ type TxBuilder struct {
 	SimulateGas   bool
 	ChainID       string
 	Memo          string
-	Fee           string
+	Fees          sdk.Coins
+}
+
+// NewTxBuilder returns a new initialized TxBuilder
+func NewTxBuilder(cdc *codec.Codec, accNumber, seq, gas uint64, gasAdj float64, simulate bool, chainID, memo string, fees sdk.Coins) TxBuilder {
+	// if chain ID is not specified manually, read default chain ID
+	if chainID == "" {
+		defaultChainID, err := sdk.DefaultChainID()
+		if err != nil {
+			panic(err)
+		}
+		chainID = defaultChainID
+	}
+
+	return TxBuilder{
+		Codec:         cdc,
+		ChainID:       chainID,
+		AccountNumber: accNumber,
+		Gas:           gas,
+		GasAdjustment: gasAdj,
+		Sequence:      seq,
+		SimulateGas:   simulate,
+		Fees:          fees,
+		Memo:          memo,
+	}
 }
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
@@ -32,8 +58,14 @@ func NewTxBuilderFromCLI() TxBuilder {
 	if chainID == "" {
 		defaultChainID, err := sdk.DefaultChainID()
 		if err != nil {
-			chainID = defaultChainID
+			panic(err)
 		}
+		chainID = defaultChainID
+	}
+	feesStr := viper.GetString(client.FlagFee)
+	parsedFees, err := sdk.ParseCoins(feesStr)
+	if err != nil {
+		panic(fmt.Sprintf("invalid coins: %s", feesStr))
 	}
 
 	return TxBuilder{
@@ -43,7 +75,7 @@ func NewTxBuilderFromCLI() TxBuilder {
 		GasAdjustment: viper.GetFloat64(client.FlagGasAdjustment),
 		Sequence:      uint64(viper.GetInt64(client.FlagSequence)),
 		SimulateGas:   client.GasFlagVar.Simulate,
-		Fee:           viper.GetString(client.FlagFee),
+		Fees:          parsedFees,
 		Memo:          viper.GetString(client.FlagMemo),
 	}
 }
@@ -67,8 +99,12 @@ func (bldr TxBuilder) WithGas(gas uint64) TxBuilder {
 }
 
 // WithFee returns a copy of the context with an updated fee.
-func (bldr TxBuilder) WithFee(fee string) TxBuilder {
-	bldr.Fee = fee
+func (bldr TxBuilder) WithFees(fee string) TxBuilder {
+	parsedFees, err := sdk.ParseCoins(fee)
+	if err != nil {
+		panic(fmt.Sprintf("invalid coins: %s", fee))
+	}
+	bldr.Fees = parsedFees
 	return bldr
 }
 
@@ -98,23 +134,13 @@ func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 		return StdSignMsg{}, errors.Errorf("chain ID required but not specified")
 	}
 
-	fee := sdk.Coin{}
-	if bldr.Fee != "" {
-		parsedFee, err := sdk.ParseCoin(bldr.Fee)
-		if err != nil {
-			return StdSignMsg{}, err
-		}
-
-		fee = parsedFee
-	}
-
 	return StdSignMsg{
 		ChainID:       bldr.ChainID,
 		AccountNumber: bldr.AccountNumber,
 		Sequence:      bldr.Sequence,
 		Memo:          bldr.Memo,
 		Msgs:          msgs,
-		Fee:           auth.NewStdFee(bldr.Gas, fee),
+		Fee:           auth.NewStdFee(bldr.Gas, bldr.Fees),
 	}, nil
 }
 

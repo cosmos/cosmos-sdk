@@ -127,7 +127,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
-	require.Equal(t, sdk.CodeInternal, err.Result().Code)
+	require.Equal(t, sdk.CodeGasOverflow, err.Result().Code)
 
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}

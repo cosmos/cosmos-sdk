@@ -69,5 +69,6 @@ BUG FIXES
 
 * SDK
   * \#2967 Change ordering of `mint.BeginBlocker` and `distr.BeginBlocker`, recalculate inflation each block
+  * \#3071 Catch overflow on block gas meter
 
 * Tendermint

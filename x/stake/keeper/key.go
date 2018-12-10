@@ -83,16 +83,32 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 	binary.BigEndian.PutUint64(tendermintPowerBytes[:], uint64(tendermintPower))
 
 	powerBytes := tendermintPowerBytes
-	powerBytesLen := len(powerBytes)
+	powerBytesLen := len(powerBytes) // 8
 
 	// key is of format prefix || powerbytes || addrBytes
 	key := make([]byte, 1+powerBytesLen+sdk.AddrLen)
 
 	key[0] = ValidatorsByPowerIndexKey[0]
 	copy(key[1:powerBytesLen+1], powerBytes)
-	copy(key[powerBytesLen+1:], validator.OperatorAddr)
+	operAddrInvr := cp(validator.OperatorAddr)
+	for i, b := range operAddrInvr {
+		operAddrInvr[i] = ^b
+	}
+	copy(key[powerBytesLen+1:], operAddrInvr)
 
 	return key
+}
+
+func parseValidatorPowerRankKey(key []byte) (operAddr []byte) {
+	powerBytesLen := 8
+	if len(key) != 1+powerBytesLen+sdk.AddrLen {
+		panic("Invalid validator power rank key length")
+	}
+	operAddr = cp(key[powerBytesLen+1:])
+	for i, b := range operAddr {
+		operAddr[i] = ^b
+	}
+	return operAddr
 }
 
 // gets the prefix for all unbonding delegations from a delegator
@@ -256,4 +272,15 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 	return append(
 		GetREDsToValDstIndexKey(valDstAddr),
 		delAddr.Bytes()...)
+}
+
+//-------------------------------------------------
+
+func cp(bz []byte) (ret []byte) {
+	if bz == nil {
+		return nil
+	}
+	ret = make([]byte, len(bz))
+	copy(ret, bz)
+	return ret
 }

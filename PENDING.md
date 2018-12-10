@@ -3,6 +3,7 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [\#3056](https://github.com/cosmos/cosmos-sdk/pull/3056) `generate_only` and `simulate` have moved from query arguments to POST requests body.
 
 * Gaia CLI  (`gaiacli`)
   * [cli] [\#2595](https://github.com/cosmos/cosmos-sdk/issues/2595) Remove `keys new` in favor of `keys add` incorporating existing functionality with addition of key recovery functionality.

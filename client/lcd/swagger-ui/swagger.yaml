@@ -1871,23 +1871,32 @@ definitions:
     properties:
       name:
         type: string
+        example: "my_name"
       password:
         type: string
         example: "12345678"
+      memo:
+        type: string
+        example: "Sent via Cosmos Voyager 🚀"
       chain_id:
         type: string
+        example: "Cosmos-Hub"
       account_number:
-        type: string
-        example: "0"
+        type: integer
+        example: 0
       sequence:
-        type: string
-        example: "0"
+        type: integer
+        example: 1
       gas:
         type: string
         example: "200000"
       gas_adjustment:
         type: string
         example: "1.2"
+      fees:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
   TendermintValidator:
     type: object
     properties:

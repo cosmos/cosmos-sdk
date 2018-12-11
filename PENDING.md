@@ -35,6 +35,7 @@ IMPROVEMENTS
 
 * Gaia
   * [\#3021](https://github.com/cosmos/cosmos-sdk/pull/3021) Add `--gentx-dir` to `gaiad collect-gentxs` to specify a directory from which collect and load gentxs.
+    Add `--output-document` to `gaiad init` to allow one to redirect output to file.
 
 * SDK
 

@@ -740,13 +740,6 @@ type sendReq struct {
 // ICS 21 - Stake
 // ----------------------------------------------------------------------
 
-type editDelegationsReq struct {
-	BaseReq          utils.BaseReq             `json:"base_req"`
-	Delegations      []msgDelegationsInput     `json:"delegations"`
-	BeginUnbondings  []msgBeginUnbondingInput  `json:"begin_unbondings"`
-	BeginRedelegates []msgBeginRedelegateInput `json:"begin_redelegates"`
-}
-
 // POST /stake/delegators/{delegatorAddr}/delegations Submit delegation
 func doDelegate(t *testing.T, port, name, password string,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64) (resultTx ctypes.ResultBroadcastTxCommit) {

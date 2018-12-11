@@ -127,8 +127,8 @@ func exportChain(cdc *codec.Codec, sHeight, eHeight int64, bs *bc.BlockStore, w 
 			Txs:        make([]sdk.Tx, len(block.Txs)),
 		}
 
-		for i, valAddr := range block.LastCommit.Precommits {
-			exportTx.Validators[i] = fmt.Sprintf("%X", valAddr)
+		for i, preCommit := range block.LastCommit.Precommits {
+			exportTx.Validators[i] = fmt.Sprintf("%X", preCommit.ValidatorAddress)
 		}
 
 		for i, tx := range block.Txs {

@@ -37,9 +37,12 @@ const (
 	name1 = "test1"
 	name2 = "test2"
 	name3 = "test3"
+	memo  = "LCD test tx"
 	pw    = app.DefaultKeyPass
 	altPw = "12345678901"
 )
+
+var fees sdk.Coins = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 5)}
 
 func init() {
 	mintkey.BcryptSecurityParameter = 1
@@ -222,7 +225,7 @@ func TestCoinSend(t *testing.T) {
 	initialBalance := acc.GetCoins()
 
 	// create TX
-	receiveAddr, resultTx := doSend(t, port, seed, name1, pw, addr)
+	receiveAddr, resultTx := doSend(t, port, seed, name1, memo, pw, addr, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
@@ -235,7 +238,7 @@ func TestCoinSend(t *testing.T) {
 	mycoins := coins[0]
 
 	require.Equal(t, stakeTypes.DefaultBondDenom, mycoins.Denom)
-	require.Equal(t, initialBalance[0].Amount.SubRaw(1), mycoins.Amount)
+	require.Equal(t, initialBalance[0].Minus(fees[0]).Amount.SubRaw(1), mycoins.Amount)
 
 	// query receiver
 	acc = getAccount(t, port, receiveAddr)
@@ -245,30 +248,32 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, stakeTypes.DefaultBondDenom, mycoins.Denom)
 	require.Equal(t, int64(1), mycoins.Amount.Int64())
 
+	emptyFees := sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 0)}
+
 	// test failure with too little gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "100", 0, false, false)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "0", 0, false, false, emptyFees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// test failure with negative gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "-200", 0, false, false)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "-200", 0, false, false, emptyFees)
 	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// test failure with 0 gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "0", 0, false, false)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "0", 0, false, false, emptyFees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// test failure with wrong adjustment
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "simulate", 0.1, false, false)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "simulate", 0.1, false, false, emptyFees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "", 0, true, false)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "", 0, true, false, emptyFees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var responseBody struct {
 		GasEstimate int64 `json:"gas_estimate"`
 	}
 	require.Nil(t, json.Unmarshal([]byte(body), &responseBody))
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, fmt.Sprintf("%v", responseBody.GasEstimate), 0, false, false)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, fmt.Sprintf("%v", responseBody.GasEstimate), 0, false, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
@@ -279,7 +284,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	acc := getAccount(t, port, addr)
 
 	// generate TX
-	res, body, _ := doSendWithGas(t, port, seed, name, "", addr, "simulate", 0, false, true)
+	res, body, _ := doSendWithGas(t, port, seed, name1, memo, "", addr, "0", 0, false, true, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var msg auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))
@@ -352,7 +357,7 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, emptyTxs, txs)
 
 	// create tx
-	receiveAddr, resultTx := doSend(t, port, seed, name1, pw, addr)
+	receiveAddr, resultTx := doSend(t, port, seed, name1, memo, pw, addr, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx is queryable
@@ -445,7 +450,7 @@ func TestBonding(t *testing.T) {
 	validator := getValidator(t, port, operAddrs[0])
 
 	// create bond TX
-	resultTx := doDelegate(t, port, seed, name1, pw, addr, operAddrs[0], 60)
+	resultTx := doDelegate(t, port, seed, name1, pw, addr, operAddrs[0], 60, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -462,7 +467,7 @@ func TestBonding(t *testing.T) {
 	acc := getAccount(t, port, addr)
 	coins := acc.GetCoins()
 
-	require.Equal(t, int64(40), coins.AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	require.Equal(t, int64(35), coins.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
 	// query delegation
 	bond := getDelegation(t, port, addr, operAddrs[0])
@@ -485,7 +490,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
 
 	// testing unbonding
-	resultTx = doBeginUnbonding(t, port, seed, name1, pw, addr, operAddrs[0], 30)
+	resultTx = doBeginUnbonding(t, port, seed, name1, pw, addr, operAddrs[0], 30, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -508,7 +513,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, "30", unbonding.Balance.Amount.String())
 
 	// test redelegation
-	resultTx = doBeginRedelegation(t, port, seed, name1, pw, addr, operAddrs[0], operAddrs[1], 30)
+	resultTx = doBeginRedelegation(t, port, seed, name1, pw, addr, operAddrs[0], operAddrs[1], 30, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -567,7 +572,7 @@ func TestSubmitProposal(t *testing.T) {
 	defer cleanup()
 
 	// create SubmitProposal TX
-	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 5)
+	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 5, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
@@ -593,7 +598,7 @@ func TestDeposit(t *testing.T) {
 	defer cleanup()
 
 	// create SubmitProposal TX
-	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 5)
+	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 5, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
@@ -608,7 +613,7 @@ func TestDeposit(t *testing.T) {
 	require.Equal(t, "Test", proposal.GetTitle())
 
 	// create SubmitProposal TX
-	resultTx = doDeposit(t, port, seed, name1, pw, addr, proposalID, 5)
+	resultTx = doDeposit(t, port, seed, name1, pw, addr, proposalID, 5, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// query tx
@@ -631,7 +636,7 @@ func TestVote(t *testing.T) {
 	defer cleanup()
 
 	// create SubmitProposal TX
-	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 5)
+	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 5, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
@@ -646,7 +651,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, "Test", proposal.GetTitle())
 
 	// deposit
-	resultTx = doDeposit(t, port, seed, name1, pw, addr, proposalID, 5)
+	resultTx = doDeposit(t, port, seed, name1, pw, addr, proposalID, 5, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// query proposal
@@ -654,7 +659,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
 
 	// vote
-	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID)
+	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// query tx
@@ -670,11 +675,11 @@ func TestVote(t *testing.T) {
 	require.Equal(t, sdk.ZeroDec(), tally.Yes, "tally should be 0 as the address is not bonded")
 
 	// create bond TX
-	resultTx = doDelegate(t, port, seed, name1, pw, addr, operAddrs[0], 60)
+	resultTx = doDelegate(t, port, seed, name1, pw, addr, operAddrs[0], 60, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// vote
-	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID)
+	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	tally = getTally(t, port, proposalID)
@@ -708,27 +713,27 @@ func TestProposalsQuery(t *testing.T) {
 	getTallyingParam(t, port)
 
 	// Addr1 proposes (and deposits) proposals #1 and #2
-	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit)
+	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit, fees)
 	var proposalID1 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit)
+	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit, fees)
 	var proposalID2 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
-	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], halfMinDeposit)
+	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], halfMinDeposit, fees)
 	var proposalID3 uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3
-	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID2, halfMinDeposit)
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID2, halfMinDeposit, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, halfMinDeposit)
+	resultTx = doDeposit(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, halfMinDeposit, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check deposits match proposal and individual deposits
@@ -750,7 +755,7 @@ func TestProposalsQuery(t *testing.T) {
 	require.Equal(t, deposit, deposits[0])
 
 	// increasing the amount of the deposit should update the existing one
-	resultTx = doDeposit(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID1, 1)
+	resultTx = doDeposit(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID1, 1, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	deposits = getDeposits(t, port, proposalID1)
@@ -767,13 +772,13 @@ func TestProposalsQuery(t *testing.T) {
 	require.Equal(t, proposalID3, proposals[1].GetProposalID())
 
 	// Addr1 votes on proposals #2 & #3
-	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID2)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID2, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID3)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID3, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 votes on proposal #3
-	resultTx = doVote(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3)
+	resultTx = doVote(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals

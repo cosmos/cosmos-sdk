@@ -147,8 +147,8 @@ func (br BaseReq) Sanitize() BaseReq {
 // ValidateBasic performs basic validation of a BaseReq. If custom validation
 // logic is needed, the implementing request handler should perform those
 // checks manually.
-func (br BaseReq) ValidateBasic(w http.ResponseWriter, cliCtx context.CLIContext) bool {
-	if !cliCtx.GenerateOnly && !cliCtx.Simulate {
+func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
+	if !(br.GenerateOnly || br.Simulate) {
 		switch {
 		case len(br.Password) == 0:
 			WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
@@ -157,7 +157,7 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter, cliCtx context.CLIContext
 			WriteErrorResponse(w, http.StatusUnauthorized, "chain-id required but not specified")
 			return false
 		case !br.Fees.IsValid():
-			WriteErrorResponse(w, http.StatusPaymentRequired, sdk.ErrInvalidCoins("").Error())
+			WriteErrorResponse(w, http.StatusPaymentRequired, "invalid or insuficient fees")
 			return false
 		}
 	}

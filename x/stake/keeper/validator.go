@@ -42,7 +42,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	k.validatorCacheList.PushBack(cachedVal)
 
 	// if the cache is too big, pop off the last element from it
-	if k.validatorCacheList.Len() > 500 {
+	if k.validatorCacheList.Len() > aminoCacheSize {
 		valToRemove := k.validatorCacheList.Remove(k.validatorCacheList.Front()).(cachedValidator)
 		delete(k.validatorCache, valToRemove.marshalled)
 	}

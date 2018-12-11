@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
+const aminoCacheSize = 500
+
 // keeper of the stake store
 type Keeper struct {
 	storeKey           sdk.StoreKey
@@ -34,7 +36,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramst
 		bankKeeper:         ck,
 		paramstore:         paramstore.WithTypeTable(ParamTypeTable()),
 		hooks:              nil,
-		validatorCache:     make(map[string]cachedValidator, 500),
+		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
 		validatorCacheList: list.New(),
 		codespace:          codespace,
 	}

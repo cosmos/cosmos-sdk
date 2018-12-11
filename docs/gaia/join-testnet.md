@@ -1,4 +1,4 @@
-# Join the latest public testnet
+# Join Public Testnet
 
 ::: tip Current Testnet
 See the [testnet repo](https://github.com/cosmos/testnets) for

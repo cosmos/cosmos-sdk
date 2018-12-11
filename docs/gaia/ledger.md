@@ -1,4 +1,4 @@
-# Ledger // Cosmos
+# Ledger Nano Support
 
 ### Ledger Support for account keys
 

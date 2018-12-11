@@ -104,6 +104,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 		}
 
 		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
 
 		baseReq := req.BaseReq.Sanitize()
 		if !baseReq.ValidateBasic(w, cliCtx) {
@@ -143,6 +144,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 		}
 
 		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
 
 		baseReq := req.BaseReq.Sanitize()
 		if !baseReq.ValidateBasic(w, cliCtx) {

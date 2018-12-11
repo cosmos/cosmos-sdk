@@ -6,9 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestTickExpiredDepositPeriod(t *testing.T) {

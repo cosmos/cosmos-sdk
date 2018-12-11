@@ -160,10 +160,9 @@ func (k Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
 		panic(fmt.Sprintf("cannot jail already jailed validator, validator: %v\n", validator))
 	}
 
-	pool := k.GetPool(ctx)
 	validator.Jailed = true
 	k.SetValidator(ctx, validator)
-	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
+	k.DeleteValidatorByPowerIndex(ctx, validator)
 }
 
 // remove a validator from jail
@@ -172,28 +171,26 @@ func (k Keeper) unjailValidator(ctx sdk.Context, validator types.Validator) {
 		panic(fmt.Sprintf("cannot unjail already unjailed validator, validator: %v\n", validator))
 	}
 
-	pool := k.GetPool(ctx)
 	validator.Jailed = false
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByPowerIndex(ctx, validator, pool)
+	k.SetValidatorByPowerIndex(ctx, validator)
 }
 
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
-	pool := k.GetPool(ctx)
-
-	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
+	k.DeleteValidatorByPowerIndex(ctx, validator)
 
 	validator.BondHeight = ctx.BlockHeight()
 
 	// set the status
+	pool := k.GetPool(ctx)
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	k.SetPool(ctx, pool)
 
 	// save the now bonded validator record to the two referenced stores
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByPowerIndex(ctx, validator, pool)
+	k.SetValidatorByPowerIndex(ctx, validator)
 
 	// delete from queue if present
 	k.DeleteValidatorQueue(ctx, validator)
@@ -209,10 +206,9 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 // perform all the store operations for when a validator status begins unbonding
 func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
-	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
 
-	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
+	k.DeleteValidatorByPowerIndex(ctx, validator)
 
 	// sanity check
 	if validator.Status != sdk.Bonded {
@@ -220,6 +216,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	}
 
 	// set the status
+	pool := k.GetPool(ctx)
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
 	k.SetPool(ctx, pool)
 
@@ -228,7 +225,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 	// save the now unbonded validator record and power index
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByPowerIndex(ctx, validator, pool)
+	k.SetValidatorByPowerIndex(ctx, validator)
 
 	// Adds to unbonding validator queue
 	k.InsertValidatorQueue(ctx, validator)

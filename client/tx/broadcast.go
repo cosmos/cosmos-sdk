@@ -3,10 +3,11 @@ package tx
 import (
 	"net/http"
 
+	"io/ioutil"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"io/ioutil"
 )
 
 const (

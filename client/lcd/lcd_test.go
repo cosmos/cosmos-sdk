@@ -248,26 +248,26 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, stakeTypes.DefaultBondDenom, mycoins.Denom)
 	require.Equal(t, int64(1), mycoins.Amount.Int64())
 
-	emptyFees := sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 0)}
+	lowFees := sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1)}
 
 	// test failure with too little gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "0", 0, false, false, emptyFees)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "0", 0, false, false, lowFees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// test failure with negative gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "-200", 0, false, false, emptyFees)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "-200", 0, false, false, lowFees)
 	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// test failure with 0 gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "0", 0, false, false, emptyFees)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "0", 0, false, false, lowFees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// test failure with wrong adjustment
-	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "simulate", 0.1, false, false, emptyFees)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "", 0.1, true, false, lowFees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "", 0, true, false, emptyFees)
+	res, body, _ = doSendWithGas(t, port, seed, name1, memo, pw, addr, "200000", 0, true, false, lowFees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var responseBody struct {
 		GasEstimate int64 `json:"gas_estimate"`
@@ -292,7 +292,9 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, msg.Msgs[0].Route(), "bank")
 	require.Equal(t, msg.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(msg.Signatures))
-	gasEstimate := msg.Fee.Gas
+	require.Equal(t, memo, msg.Memo)
+
+	gasEstimate := int64(msg.Fee.Gas)
 
 	// sign tx
 	var signedMsg auth.StdTx
@@ -332,8 +334,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
-	require.Equal(t, gasEstimate, uint64(resultTx.DeliverTx.GasWanted))
-	require.Equal(t, gasEstimate, uint64(resultTx.DeliverTx.GasUsed))
+	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasWanted)
 }
 
 func TestTxs(t *testing.T) {
@@ -369,6 +370,7 @@ func TestTxs(t *testing.T) {
 	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
+	fmt.Println(txs[0])
 
 	// query recipient
 	txs = getTransactions(t, port, fmt.Sprintf("recipient=%s", receiveAddr.String()))
@@ -499,7 +501,7 @@ func TestBonding(t *testing.T) {
 	// sender should have not received any coins as the unbonding has only just begun
 	acc = getAccount(t, port, addr)
 	coins = acc.GetCoins()
-	require.Equal(t, int64(40), coins.AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	require.Equal(t, int64(30), coins.AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
 	// query tx
 	txs = getTransactions(t, port,

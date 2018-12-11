@@ -125,7 +125,7 @@ func NewBaseReq(
 		ChainID:       strings.TrimSpace(chainID),
 		Fees:          fees,
 		Gas:           strings.TrimSpace(gas),
-		GasAdjustment: strings.TrimSpace(gasAdjustment),
+		GasAdjustment: gasAdjustment,
 		AccountNumber: accNumber,
 		Sequence:      seq,
 		GenerateOnly:  genOnly,
@@ -148,7 +148,7 @@ func (br BaseReq) Sanitize() BaseReq {
 // logic is needed, the implementing request handler should perform those
 // checks manually.
 func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
-	if !(br.GenerateOnly || br.Simulate) {
+	if !br.GenerateOnly && !br.Simulate {
 		switch {
 		case len(br.Password) == 0:
 			WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
@@ -206,18 +206,18 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
 func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
-	simulateGas, gas, err := client.ReadGasFlag(baseReq.Gas)
+	_, gas, err := client.ReadGasFlag(baseReq.Gas)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	adjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
+	gasAdjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return
 	}
 
-	txBldr := authtxb.NewTxBuilder(cdc, baseReq.AccountNumber, baseReq.Sequence, gas, adjustment, simulateGas, baseReq.ChainID, baseReq.Memo, baseReq.Fees)
+	txBldr := authtxb.NewTxBuilder(cdc, baseReq.AccountNumber, baseReq.Sequence, gas, gasAdjustment, baseReq.Simulate, baseReq.ChainID, baseReq.Memo, baseReq.Fees)
 
 	if baseReq.Simulate || txBldr.SimulateGas {
 		newBldr, err := EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)

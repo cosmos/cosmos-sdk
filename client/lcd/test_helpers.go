@@ -601,7 +601,7 @@ func doSendWithGas(t *testing.T, port, seed, name, memo, password string, addr s
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, memo, chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, memo, chainID, "", "", accnum, sequence, fees, generateOnly, simulate)
 
 	sr := sendReq{
 		Amount:  sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1)},
@@ -678,8 +678,9 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
 
-	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), req)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations", delAddr), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	fmt.Println(body)
 
 	var result ctypes.ResultBroadcastTxCommit
 	err = cdc.UnmarshalJSON([]byte(body), &result)
@@ -716,7 +717,7 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
 
-	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), req)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/redelegations", delAddr), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var result ctypes.ResultBroadcastTxCommit

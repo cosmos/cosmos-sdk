@@ -701,6 +701,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		return
 	}
 
+	var startingGas uint64
+	if mode == runTxModeDeliver {
+		startingGas = ctx.BlockGasMeter().GasConsumed()
+	}
+
 	defer func() {
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
@@ -726,6 +731,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		if mode == runTxModeDeliver {
 			ctx.BlockGasMeter().ConsumeGas(
 				ctx.GasMeter().GasConsumedToLimit(), "block gas meter")
+			if ctx.BlockGasMeter().GasConsumed() < startingGas {
+				panic(sdk.ErrorGasOverflow{"tx gas summation"})
+			}
 		}
 	}()
 

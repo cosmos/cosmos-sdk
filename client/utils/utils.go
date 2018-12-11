@@ -6,14 +6,15 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/cobra"
+	"github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/libs/common"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/libs/common"
 )
 
 // CobraExecErrFn defines a function alias for a Cobra command executor RunE.
@@ -37,14 +38,14 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return err
 	}
 
-	if txBldr.SimulateGas || cliCtx.DryRun {
+	if txBldr.SimulateGas || cliCtx.Simulate {
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas)
 	}
-	if cliCtx.DryRun {
+	if cliCtx.Simulate {
 		return nil
 	}
 

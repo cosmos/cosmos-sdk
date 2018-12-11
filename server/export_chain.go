@@ -90,13 +90,17 @@ func exportChainExec(ctx *Context, cdc *codec.Codec) utils.CobraExecErrFn {
 		if err != nil {
 			return err
 		}
-		defer fileHandle.Close()
+		defer func() {
+			_ = fileHandle.Close()
+		}()
 
 		// wrap with a gzip stream if the export file contains the appropriate extension
 		var writer io.Writer = fileHandle
 		if strings.HasSuffix(filePath, ".gz") {
 			writer = gzip.NewWriter(writer)
-			defer writer.(*gzip.Writer).Close()
+			defer func() {
+				_ = writer.(*gzip.Writer).Close()
+			}()
 		}
 
 		if endHeight == 0 {
@@ -151,7 +155,9 @@ func exportChain(cdc *codec.Codec, sHeight, eHeight int64, bs *bc.BlockStore, w 
 			exportTx.Txs[i] = stdTx
 		}
 
-		streamEncoder.Encode(exportTx)
+		if err := streamEncoder.Encode(exportTx); err != nil {
+			return err
+		}
 	}
 
 	return nil

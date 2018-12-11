@@ -32,7 +32,7 @@ func (k Keeper) onValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	// (dist info), but without actually withdrawing the rewards. This does not
 	// need to happen during the genesis block.
 	if ctx.BlockHeight() > 0 {
-		if err := k.updateValidatorDistInfoFromPool(ctx, valAddr); err != nil {
+		if err := k.takeValidatorFeePoolRewards(ctx, valAddr); err != nil {
 			panic(err)
 		}
 	}

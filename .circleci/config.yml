@@ -178,7 +178,7 @@ jobs:
           name: Test multi-seed Gaia simulation
           command: |
             export PATH="$GOBIN:$PATH"
-            make test_sim_gaia_multi_seed
+            scripts/multisim.sh 25 TestFullGaiaSimulation
 
   test_cover:
     <<: *defaults

@@ -1,9 +1,10 @@
 package auth
 
 import (
+	"github.com/tendermint/tendermint/crypto"
+
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 var (

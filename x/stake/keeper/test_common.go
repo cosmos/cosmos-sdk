@@ -201,11 +201,36 @@ func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) b
 }
 
 // update validator for testing
-func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) types.Validator {
+func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator, apply bool) types.Validator {
 	keeper.SetValidator(ctx, validator)
+	{ // Remove any existing power key for validator.
+		store := ctx.KVStore(keeper.storeKey)
+		iterator := sdk.KVStorePrefixIterator(store, ValidatorsByPowerIndexKey)
+		deleted := false
+		for ; iterator.Valid(); iterator.Next() {
+			valAddr := parseValidatorPowerRankKey(iterator.Key())
+			if bytes.Equal(valAddr, validator.OperatorAddr) {
+				if deleted {
+					panic("found duplicate power index key")
+				} else {
+					deleted = true
+				}
+				store.Delete(iterator.Key())
+			}
+		}
+	}
 	keeper.SetValidatorByPowerIndex(ctx, validator)
-	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
+	if apply {
+		keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+		validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
+		if !found {
+			panic("validator expected but not found")
+		}
+		return validator
+	}
+	cachectx, _ := ctx.CacheContext()
+	keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
+	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddr)
 	if !found {
 		panic("validator expected but not found")
 	}

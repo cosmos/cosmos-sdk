@@ -51,6 +51,7 @@ func DefaultGenesisState() GenesisState {
 			VotingPeriod: time.Duration(172800) * time.Second,
 		},
 		TallyParams: TallyParams{
+			Quorum:            sdk.NewDecWithPrec(334, 3),
 			Threshold:         sdk.NewDecWithPrec(5, 1),
 			Veto:              sdk.NewDecWithPrec(334, 3),
 			GovernancePenalty: sdk.NewDecWithPrec(1, 2),

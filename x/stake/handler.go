@@ -35,9 +35,6 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 // Called every block, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) (validatorUpdates []abci.ValidatorUpdate, endBlockerTags sdk.Tags) {
-	// Reset the intra-transaction counter.
-	k.SetIntraTxCounter(ctx, 0)
-
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before

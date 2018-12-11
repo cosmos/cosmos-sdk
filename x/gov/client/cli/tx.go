@@ -5,21 +5,23 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/pkg/errors"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/pkg/errors"
 
 	"encoding/json"
 	"io/ioutil"
 	"strings"
 
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
 const (

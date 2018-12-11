@@ -3,9 +3,10 @@ package auth
 import (
 	"errors"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // Account is an interface used to store coins at a given address within state.

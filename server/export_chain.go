@@ -2,6 +2,7 @@ package server
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -15,6 +16,9 @@ import (
 	"github.com/tendermint/tendermint/node"
 
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
@@ -22,23 +26,31 @@ const (
 	flagExportChainHeightEnd   = "height-end"
 )
 
-// TODO: ...
-func ExportChainCmd(ctx *Context) *cobra.Command {
+type exportTx struct {
+	Height     int64    `json:"height"`
+	Proposer   string   `json:"proposer"`
+	Validators []string `json:"validators"`
+	Txs        []sdk.Tx `json:"txs"`
+}
+
+// ExportChainCmd returns a command that allows for blockchain transaction
+// exporting.
+func ExportChainCmd(ctx *Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-chain <file>",
 		Short: "Export blockchain transactions and metadata by height to a JSON file",
 		Long:  ``, // TODO: ...
 		Args:  cobra.ExactArgs(1),
-		RunE:  exportChainExec(ctx),
+		RunE:  exportChainExec(ctx, cdc),
 	}
 
-	cmd.Flags().Uint64(flagExportChainHeightStart, 0, "Start block height for export")
+	cmd.Flags().Uint64(flagExportChainHeightStart, 1, "Start block height for export")
 	cmd.Flags().Uint64(flagExportChainHeightEnd, 0, "End block height for export")
 
 	return cmd
 }
 
-func exportChainExec(ctx *Context) utils.CobraExecErrFn {
+func exportChainExec(ctx *Context, cdc *codec.Codec) utils.CobraExecErrFn {
 	return func(cmd *cobra.Command, args []string) error {
 		filePath := args[0]
 		startHeight := viper.GetInt64(flagExportChainHeightStart)
@@ -79,7 +91,7 @@ func exportChainExec(ctx *Context) utils.CobraExecErrFn {
 			endHeight = latestHeight
 		}
 
-		return exportChain(startHeight, endHeight, blockStore, writer)
+		return exportChain(cdc, startHeight, endHeight, blockStore, writer)
 	}
 }
 
@@ -96,21 +108,36 @@ func validateHeights(startHeight, endHeight, currentHeight int64) error {
 	return nil
 }
 
-func exportChain(startHeight, endHeight int64, blockStore *bc.BlockStore, w io.Writer) error {
+func exportChain(cdc *codec.Codec, sHeight, eHeight int64, bs *bc.BlockStore, w io.Writer) error {
 	var currHeight int64
-	currHeight = startHeight
+	currHeight = sHeight
 
-	// type exportChain struct {
-	// 	Height uint64 `json:"height"`
-	// }
+	txDecoder := auth.DefaultTxDecoder(cdc)
+	streamEncoder := json.NewEncoder(w)
 
-	// json.NewEncoder(w)
-
-	for ; currHeight < endHeight; currHeight++ {
-		block := blockStore.LoadBlock(currHeight)
-		for _, tx := range block.Txs {
-
+	for ; currHeight < eHeight; currHeight++ {
+		block := bs.LoadBlock(currHeight)
+		export := exportTx{
+			Height:     block.Height,
+			Proposer:   fmt.Sprintf("%X", block.Header.ProposerAddress),
+			Validators: make([]string, len(block.LastCommit.Precommits)),
+			Txs:        make([]sdk.Tx, len(block.Txs)),
 		}
+
+		for i, valAddr := range block.LastCommit.Precommits {
+			export.Validators[i] = fmt.Sprintf("%X", valAddr)
+		}
+
+		for i, tx := range block.Txs {
+			stdTx, err := txDecoder(tx)
+			if err != nil {
+				return err
+			}
+
+			export.Txs[i] = stdTx
+		}
+
+		streamEncoder.Encode(export)
 	}
 
 	return nil

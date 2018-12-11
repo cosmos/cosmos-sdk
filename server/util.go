@@ -152,7 +152,7 @@ func AddCommands(
 		client.LineBreak,
 		tendermintCmd,
 		ExportCmd(ctx, cdc, appExport),
-		ExportChainCmd(ctx),
+		ExportChainCmd(ctx, cdc),
 		client.LineBreak,
 		version.VersionCmd,
 	)

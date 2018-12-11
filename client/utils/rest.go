@@ -159,21 +159,21 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 // ValidateBasic performs basic validation of a BaseReq. If custom validation
 // logic is needed, the implementing request handler should perform those
 // checks manually.
-func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
-	switch {
-	case len(br.Name) == 0:
+func (br BaseReq) ValidateBasic(w http.ResponseWriter, cliCtx context.CLIContext) bool {
+	if !cliCtx.GenerateOnly && !cliCtx.Simulate {
+		switch {
+		case len(br.Password) == 0:
+			WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
+			return false
+		case len(br.ChainID) == 0:
+			WriteErrorResponse(w, http.StatusUnauthorized, "chain-id required but not specified")
+			return false
+		}
+	}
+	if len(br.Name) == 0 {
 		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
 		return false
-
-	case len(br.Password) == 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
-		return false
-
-	case len(br.ChainID) == 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "chainID required but not specified")
-		return false
 	}
-
 	return true
 }
 

@@ -47,7 +47,7 @@ type CLIContext struct {
 	JSON          bool
 	PrintResponse bool
 	Verifier      tmlite.Verifier
-	DryRun        bool
+	Simulate      bool
 	GenerateOnly  bool
 	fromAddress   types.AccAddress
 	fromName      string
@@ -85,7 +85,7 @@ func NewCLIContext() CLIContext {
 		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
-		DryRun:        viper.GetBool(client.FlagDryRun),
+		Simulate:      viper.GetBool(client.FlagDryRun),
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
 		fromAddress:   fromAddress,
 		fromName:      fromName,
@@ -242,5 +242,17 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 // WithVerifier - return a copy of the context with an updated Verifier
 func (ctx CLIContext) WithVerifier(verifier tmlite.Verifier) CLIContext {
 	ctx.Verifier = verifier
+	return ctx
+}
+
+// WithGenerateOnly returns a copy of the context with updated GenerateOnly value
+func (ctx CLIContext) WithGenerateOnly(generateOnly bool) CLIContext {
+	ctx.GenerateOnly = generateOnly
+	return ctx
+}
+
+// WithSimulation returns a copy of the context with updated Simulate value
+func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
+	ctx.Simulate = simulate
 	return ctx
 }

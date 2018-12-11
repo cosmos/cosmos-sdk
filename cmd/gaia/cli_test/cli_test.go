@@ -73,7 +73,6 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
-	fmt.Print(fooAcc)
 
 	// test simulation
 	success := executeWrite(t, fmt.Sprintf(

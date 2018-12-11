@@ -57,14 +57,17 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgDelegationsInput
 
-		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
+		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w, cliCtx.GenerateOnly) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 
@@ -94,14 +97,16 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgBeginRedelegateInput
 
-		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
+		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w, cliCtx.GenerateOnly) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 
@@ -131,14 +136,16 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgBeginUnbondingInput
 
-		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
+		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w, cliCtx.GenerateOnly) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 

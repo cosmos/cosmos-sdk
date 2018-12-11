@@ -7,10 +7,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"io/ioutil"
 	"path"
+
+	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 const (

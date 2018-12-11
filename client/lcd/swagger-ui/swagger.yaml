@@ -376,16 +376,6 @@ paths:
       produces:
       - application/json
       parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
       - in: path
         name: address
         description: Account address in bech32 format
@@ -655,16 +645,6 @@ paths:
     post:
       summary: Submit delegation
       parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
       - in: body
         name: delegation
         description: The password of the account to remove from the KMS
@@ -1180,16 +1160,6 @@ paths:
       tags:
       - ICS23
       parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
       - type: string
         description: Bech32 validator address
         name: validatorAddr
@@ -1226,16 +1196,6 @@ paths:
       tags:
       - ICS22
       parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
       - description: valid value of `"proposal_type"` can be `"text"`, `"parameter_change"`, `"software_upgrade"`
         name: post_proposal_body
         in: body
@@ -1359,16 +1319,6 @@ paths:
       tags:
       - ICS22
       parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
       - type: string
         description: proposal id
         name: proposalId
@@ -1465,16 +1415,6 @@ paths:
       tags:
       - ICS22
       parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
       - type: string
         description: proposal id
         name: proposalId
@@ -1945,6 +1885,12 @@ definitions:
       gas_adjustment:
         type: string
         example: "1.2"
+      generate_only:
+        type: boolean
+        example: false
+      simulate:
+        type: boolean
+        example: true
   TendermintValidator:
     type: object
     properties:

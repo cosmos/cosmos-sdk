@@ -10,10 +10,11 @@ import (
 
 	"github.com/spf13/viper"
 
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	keyerror "github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
-	"github.com/gorilla/mux"
 
 	"github.com/spf13/cobra"
 )

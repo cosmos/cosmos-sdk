@@ -4,11 +4,12 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/spf13/cobra"
+	amino "github.com/tendermint/go-amino"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/spf13/cobra"
-	amino "github.com/tendermint/go-amino"
 )
 
 // GetSignCommand returns the sign command

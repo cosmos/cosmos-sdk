@@ -10,9 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+
+	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
 // REST Variable names
@@ -71,14 +72,17 @@ type voteReq struct {
 func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req postProposalReq
-		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
+		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w, cliCtx.GenerateOnly) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 
@@ -117,13 +121,16 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 		}
 
 		var req depositReq
-		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
+		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w, cliCtx.GenerateOnly) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 
@@ -156,13 +163,16 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 		}
 
 		var req voteReq
-		cliCtx, err := utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
+		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w, cliCtx.GenerateOnly) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 

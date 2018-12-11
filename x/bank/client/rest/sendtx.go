@@ -44,13 +44,16 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		}
 
 		var req sendReq
-		cliCtx, err = utils.ReadRESTReq(w, r, cdc, cliCtx, &req)
+		err = utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w, cliCtx.GenerateOnly) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 

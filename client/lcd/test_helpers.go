@@ -15,12 +15,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -420,24 +420,92 @@ func Request(t *testing.T, port, method, path string, payload []byte) (*http.Res
 // ICS 0 - Tendermint
 // ----------------------------------------------------------------------
 // GET /node_info The properties of the connected node
-// SEE TestNodeStatus
+func getNodeInfo(t *testing.T, port string) p2p.DefaultNodeInfo {
+	res, body := Request(t, port, "GET", "/node_info", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var nodeInfo p2p.DefaultNodeInfo
+	err := cdc.UnmarshalJSON([]byte(body), &nodeInfo)
+	require.Nil(t, err, "Couldn't parse node info")
+
+	require.NotEqual(t, p2p.DefaultNodeInfo{}, nodeInfo, "res: %v", res)
+	return nodeInfo
+}
 
 // GET /syncing Syncing state of node
-// SEE TestNodeStatus
+func getSyncStatus(t *testing.T, port string, syncing bool) {
+	res, body := Request(t, port, "GET", "/syncing", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	if syncing {
+		require.Equal(t, "true", body)
+		return
+	}
+	require.Equal(t, "false", body)
+}
 
 // GET /blocks/latest Get the latest block
-// SEE TestBlock
-
 // GET /blocks/{height} Get a block at a certain height
-// SEE TestBlock
+func getBlock(t *testing.T, port string, height int, expectFail bool) ctypes.ResultBlock {
+	var url string
+	if height > 0 {
+		url = fmt.Sprintf("/blocks/%d", height)
+	} else {
+		url = "/blocks/latest"
+	}
+	var resultBlock ctypes.ResultBlock
 
-// GET /validatorsets/latest Get the latest validator set
-// SEE TestValidators
+	res, body := Request(t, port, "GET", url, nil)
+	if expectFail {
+		require.Equal(t, http.StatusNotFound, res.StatusCode, body)
+		return resultBlock
+	}
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err := cdc.UnmarshalJSON([]byte(body), &resultBlock)
+	require.Nil(t, err, "Couldn't parse block")
+
+	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
+	return resultBlock
+}
 
 // GET /validatorsets/{height} Get a validator set a certain height
-// SEE TestValidators
+// GET /validatorsets/latest Get the latest validator set
+func getValidatorSets(t *testing.T, port string, height int, expectFail bool) rpc.ResultValidatorsOutput {
+	var url string
+	if height > 0 {
+		url = fmt.Sprintf("/validatorsets/%d", height)
+	} else {
+		url = "/validatorsets/latest"
+	}
+	var resultVals rpc.ResultValidatorsOutput
+
+	res, body := Request(t, port, "GET", url, nil)
+
+	if expectFail {
+		require.Equal(t, http.StatusNotFound, res.StatusCode, body)
+		return resultVals
+	}
+
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err := cdc.UnmarshalJSON([]byte(body), &resultVals)
+	require.Nil(t, err, "Couldn't parse validatorset")
+
+	require.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
+	return resultVals
+}
 
 // GET /txs/{hash} get tx by hash
+func getTransaction(t *testing.T, port string, hash string) tx.Info {
+	var tx tx.Info
+	res, body := Request(t, port, "GET", fmt.Sprintf("/txs/%s", hash), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	err := cdc.UnmarshalJSON([]byte(body), &tx)
+	require.NoError(t, err)
+	return tx
+}
+
 // POST /txs broadcast txs
 
 // GET /txs search transactions
@@ -571,14 +639,47 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 // ICS 20 - Tokens
 // ----------------------------------------------------------------------
 
-// TODO: TEST THE FOLLOWING ROUTES
 // POST /tx/sign Sign a Tx
+func doSign(t *testing.T, port, name, password, chainID string, accnum, sequence uint64, msg auth.StdTx) auth.StdTx {
+	var signedMsg auth.StdTx
+	payload := authrest.SignBody{
+		Tx:               msg,
+		LocalAccountName: name,
+		Password:         password,
+		ChainID:          chainID,
+		AccountNumber:    accnum,
+		Sequence:         sequence,
+	}
+	json, err := cdc.MarshalJSON(payload)
+	require.Nil(t, err)
+	res, body := Request(t, port, "POST", "/tx/sign", json)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &signedMsg))
+	return signedMsg
+}
+
 // POST /tx/broadcast Send a signed Tx
+func doBroadcast(t *testing.T, port string, msg auth.StdTx) ctypes.ResultBroadcastTxCommit {
+	tx := broadcastReq{Tx: msg, Return: "block"}
+	req, err := cdc.MarshalJSON(tx)
+	require.Nil(t, err)
+	res, body := Request(t, port, "POST", "/tx/broadcast", req)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	var resultTx ctypes.ResultBroadcastTxCommit
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
+	return resultTx
+}
+
+type broadcastReq struct {
+	Tx     auth.StdTx `json:"tx"`
+	Return string     `json:"return"`
+}
+
 // GET /bank/balances/{address} Get the account balances
 
 // POST /bank/accounts/{address}/transfers Send coins (build -> sign -> send)
-func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (receiveAddr sdk.AccAddress, resultTx ctypes.ResultBroadcastTxCommit) {
-	res, body, receiveAddr := doSendWithGas(t, port, seed, name, password, addr, "", 0, false, false)
+func doTransfer(t *testing.T, port, seed, name, password string, addr sdk.AccAddress) (receiveAddr sdk.AccAddress, resultTx ctypes.ResultBroadcastTxCommit) {
+	res, body, receiveAddr := doTransferWithGas(t, port, seed, name, password, addr, "", 0, false, false)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
@@ -587,7 +688,7 @@ func doSend(t *testing.T, port, seed, name, password string, addr sdk.AccAddress
 	return receiveAddr, resultTx
 }
 
-func doSendWithGas(t *testing.T, port, seed, name, password string, addr sdk.AccAddress, gas string,
+func doTransferWithGas(t *testing.T, port, seed, name, password string, addr sdk.AccAddress, gas string,
 	gasAdjustment float64, simulate, generateOnly bool) (
 	res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
@@ -935,10 +1036,26 @@ func getValidatorRedelegations(t *testing.T, port string, validatorAddr sdk.ValA
 }
 
 // GET /stake/pool Get the current state of the staking pool
-// SEE TestPoolParamsQuery
+func getStakePool(t *testing.T, port string) stake.Pool {
+	res, body := Request(t, port, "GET", "/stake/pool", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NotNil(t, body)
+	var pool stake.Pool
+	err := cdc.UnmarshalJSON([]byte(body), &pool)
+	require.Nil(t, err)
+	return pool
+}
 
 // GET /stake/parameters Get the current staking parameter values
-// SEE TestPoolParamsQuery
+func getStakeParams(t *testing.T, port string) stake.Params {
+	res, body := Request(t, port, "GET", "/stake/parameters", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var params stake.Params
+	err := cdc.UnmarshalJSON([]byte(body), &params)
+	require.Nil(t, err)
+	return params
+}
 
 // ----------------------------------------------------------------------
 // ICS 22 - Gov
@@ -1230,6 +1347,7 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 	return signingInfo
 }
 
+// TODO: Test this functionality, it is not currently in any of the tests
 // POST /slashing/validators/{validatorAddr}/unjail Unjail a jailed validator
 func doUnjail(t *testing.T, port, seed, name, password string,
 	valAddr sdk.ValAddress) (resultTx ctypes.ResultBroadcastTxCommit) {

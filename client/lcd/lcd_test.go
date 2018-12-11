@@ -13,14 +13,11 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	p2p "github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	client "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	tests "github.com/cosmos/cosmos-sdk/tests"
@@ -123,86 +120,26 @@ func TestVersion(t *testing.T) {
 func TestNodeStatus(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
-
-	// node info
-	res, body := Request(t, port, "GET", "/node_info", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var nodeInfo p2p.DefaultNodeInfo
-	err := cdc.UnmarshalJSON([]byte(body), &nodeInfo)
-	require.Nil(t, err, "Couldn't parse node info")
-
-	require.NotEqual(t, p2p.DefaultNodeInfo{}, nodeInfo, "res: %v", res)
-
-	// syncing
-	res, body = Request(t, port, "GET", "/syncing", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	// we expect that there is no other node running so the syncing state is "false"
-	require.Equal(t, "false", body)
+	getNodeInfo(t, port)
+	getSyncStatus(t, port, false)
 }
 
 func TestBlock(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
-
-	var resultBlock ctypes.ResultBlock
-
-	res, body := Request(t, port, "GET", "/blocks/latest", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err := cdc.UnmarshalJSON([]byte(body), &resultBlock)
-	require.Nil(t, err, "Couldn't parse block")
-
-	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
-
-	// --
-
-	res, body = Request(t, port, "GET", "/blocks/2", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err = codec.Cdc.UnmarshalJSON([]byte(body), &resultBlock)
-	require.Nil(t, err, "Couldn't parse block")
-
-	require.NotEqual(t, ctypes.ResultBlock{}, resultBlock)
-
-	// --
-
-	res, body = Request(t, port, "GET", "/blocks/1000000000", nil)
-	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
+	getBlock(t, port, -1, false)
+	getBlock(t, port, 2, false)
+	getBlock(t, port, 100000000, true)
 }
 
 func TestValidators(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
 	defer cleanup()
-
-	var resultVals rpc.ResultValidatorsOutput
-
-	res, body := Request(t, port, "GET", "/validatorsets/latest", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err := cdc.UnmarshalJSON([]byte(body), &resultVals)
-	require.Nil(t, err, "Couldn't parse validatorset")
-
-	require.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
-
+	resultVals := getValidatorSets(t, port, -1, false)
 	require.Contains(t, resultVals.Validators[0].Address.String(), "cosmosvaloper")
 	require.Contains(t, resultVals.Validators[0].PubKey, "cosmosvalconspub")
-
-	// --
-
-	res, body = Request(t, port, "GET", "/validatorsets/2", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	err = cdc.UnmarshalJSON([]byte(body), &resultVals)
-	require.Nil(t, err, "Couldn't parse validatorset")
-
-	require.NotEqual(t, rpc.ResultValidatorsOutput{}, resultVals)
-
-	// --
-
-	res, body = Request(t, port, "GET", "/validatorsets/1000000000", nil)
-	require.Equal(t, http.StatusNotFound, res.StatusCode, body)
+	getValidatorSets(t, port, 2, false)
+	getValidatorSets(t, port, 10000000, true)
 }
 
 func TestCoinSend(t *testing.T) {
@@ -222,7 +159,7 @@ func TestCoinSend(t *testing.T) {
 	initialBalance := acc.GetCoins()
 
 	// create TX
-	receiveAddr, resultTx := doSend(t, port, seed, name1, pw, addr)
+	receiveAddr, resultTx := doTransfer(t, port, seed, name1, pw, addr)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
@@ -246,29 +183,29 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, int64(1), mycoins.Amount.Int64())
 
 	// test failure with too little gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "100", 0, false, false)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, pw, addr, "100", 0, false, false)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// test failure with negative gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "-200", 0, false, false)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, pw, addr, "-200", 0, false, false)
 	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// test failure with 0 gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "0", 0, false, false)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, pw, addr, "0", 0, false, false)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// test failure with wrong adjustment
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "simulate", 0.1, false, false)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, pw, addr, "simulate", 0.1, false, false)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, "", 0, true, false)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, pw, addr, "", 0, true, false)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var responseBody struct {
 		GasEstimate int64 `json:"gas_estimate"`
 	}
 	require.Nil(t, json.Unmarshal([]byte(body), &responseBody))
-	res, body, _ = doSendWithGas(t, port, seed, name1, pw, addr, fmt.Sprintf("%v", responseBody.GasEstimate), 0, false, false)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, pw, addr, fmt.Sprintf("%v", responseBody.GasEstimate), 0, false, false)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 }
 
@@ -279,7 +216,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	acc := getAccount(t, port, addr)
 
 	// generate TX
-	res, body, _ := doSendWithGas(t, port, seed, name1, pw, addr, "simulate", 0, false, true)
+	res, body, _ := doTransferWithGas(t, port, seed, name1, pw, addr, "simulate", 0, false, true)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var msg auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))
@@ -288,11 +225,11 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, msg.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(msg.Signatures))
 	gasEstimate := msg.Fee.Gas
+	accnum := acc.GetAccountNumber()
+	sequence := acc.GetSequence()
 
 	// sign tx
 	var signedMsg auth.StdTx
-	accnum := acc.GetAccountNumber()
-	sequence := acc.GetSequence()
 
 	payload := authrest.SignBody{
 		Tx:               msg,
@@ -352,13 +289,12 @@ func TestTxs(t *testing.T) {
 	require.Equal(t, emptyTxs, txs)
 
 	// create tx
-	receiveAddr, resultTx := doSend(t, port, seed, name1, pw, addr)
+	receiveAddr, resultTx := doTransfer(t, port, seed, name1, pw, addr)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx is queryable
-	txs = getTransactions(t, port, fmt.Sprintf("tx.hash=%s", resultTx.Hash))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Hash, txs[0].Hash)
+	tx := getTransaction(t, port, resultTx.Hash.String())
+	require.Equal(t, resultTx.Hash, tx.Hash)
 
 	// query sender
 	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
@@ -378,26 +314,16 @@ func TestPoolParamsQuery(t *testing.T) {
 
 	defaultParams := stake.DefaultParams()
 
-	res, body := Request(t, port, "GET", "/stake/parameters", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var params stake.Params
-	err := cdc.UnmarshalJSON([]byte(body), &params)
-	require.Nil(t, err)
+	params := getStakeParams(t, port)
 	require.True(t, defaultParams.Equal(params))
 
-	res, body = Request(t, port, "GET", "/stake/pool", nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	require.NotNil(t, body)
+	pool := getStakePool(t, port)
 
 	initialPool := stake.InitialPool()
 	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewDec(100))
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100))     // Delegate tx on GaiaAppGenState
 	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewDec(int64(50))) // freeFermionsAcc = 50 on GaiaAppGenState
 
-	var pool stake.Pool
-	err = cdc.UnmarshalJSON([]byte(body), &pool)
-	require.Nil(t, err)
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 	require.Equal(t, initialPool.LooseTokens, pool.LooseTokens)
 }

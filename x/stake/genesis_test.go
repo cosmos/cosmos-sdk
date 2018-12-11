@@ -8,11 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestInitGenesis(t *testing.T) {
@@ -53,12 +54,10 @@ func TestInitGenesis(t *testing.T) {
 	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[0]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
-	require.Equal(t, int16(0), resVal.BondIntraTxCounter)
 
 	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[1]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
-	require.Equal(t, int16(1), resVal.BondIntraTxCounter)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range validators {

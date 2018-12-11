@@ -5,13 +5,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // GetCmdQueryProposal implements the query proposal command.

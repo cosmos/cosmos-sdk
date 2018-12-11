@@ -5,10 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
@@ -57,6 +58,32 @@ func TestTallyNoOneVotes(t *testing.T) {
 
 	require.False(t, passes)
 	require.True(t, tallyResults.Equals(EmptyTallyResult()))
+}
+
+func TestTallyNoQuorum(t *testing.T) {
+	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+	stakeHandler := stake.NewHandler(sk)
+
+	valAddrs := make([]sdk.ValAddress, len(addrs[:2]))
+	for i, addr := range addrs[:2] {
+		valAddrs[i] = sdk.ValAddress(addr)
+	}
+
+	createValidators(t, stakeHandler, ctx, valAddrs, []int64{2, 5})
+	stake.EndBlocker(ctx, sk)
+
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
+	keeper.SetProposal(ctx, proposal)
+
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
+	require.Nil(t, err)
+
+	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	require.False(t, passes)
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {

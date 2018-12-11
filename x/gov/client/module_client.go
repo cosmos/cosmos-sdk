@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	govCli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	govCli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
 // ModuleClient exports all client functionality from this module

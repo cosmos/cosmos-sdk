@@ -2,10 +2,9 @@ package auth
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -13,6 +12,9 @@ import (
 	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/log"
+
+	codec "github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
@@ -20,7 +22,7 @@ func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 }
 
 func newStdFee() StdFee {
-	return NewStdFee(5000,
+	return NewStdFee(50000,
 		sdk.NewInt64Coin("atom", 150),
 	)
 }
@@ -437,13 +439,13 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = NewStdFee(2001, sdk.NewInt64Coin("atom", 0))
-	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsdabcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	fee = NewStdFee(9000, sdk.NewInt64Coin("atom", 0))
+	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("01234567890", 500))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = NewStdFee(1100, sdk.NewInt64Coin("atom", 0))
-	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
+	fee = NewStdFee(9000, sdk.NewInt64Coin("atom", 0))
+	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("0123456789", 10))
 	checkValidTx(t, anteHandler, ctx, tx, false)
 }
 
@@ -706,8 +708,8 @@ func TestAdjustFeesByGas(t *testing.T) {
 		args args
 		want sdk.Coins
 	}{
-		{"nil coins", args{sdk.Coins{}, 10000}, sdk.Coins{}},
-		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 10000}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
+		{"nil coins", args{sdk.Coins{}, 100000}, sdk.Coins{}},
+		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 100000}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

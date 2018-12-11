@@ -11,9 +11,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/spf13/cobra"
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
 )
+
+// CobraExecErrFn defines a function alias for a Cobra command executor RunE.
+type CobraExecErrFn func(cmd *cobra.Command, args []string) error
 
 // CompleteAndBroadcastTxCli implements a utility function that facilitates
 // sending a series of messages in a signed transaction given a TxBuilder and a

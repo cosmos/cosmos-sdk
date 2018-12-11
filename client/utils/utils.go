@@ -34,14 +34,14 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return err
 	}
 
-	if txBldr.SimulateGas || cliCtx.DryRun {
+	if txBldr.SimulateGas || cliCtx.Simulate {
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas)
 	}
-	if cliCtx.DryRun {
+	if cliCtx.Simulate {
 		return nil
 	}
 

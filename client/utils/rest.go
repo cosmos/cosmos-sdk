@@ -133,28 +133,38 @@ func NewBaseReq(
 	}
 }
 
+// Sanitize cleans up the values
+func (br BaseReq) Sanitize() BaseReq {
+	newBr := NewBaseReq(
+		br.Name, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
+		br.AccountNumber, br.Sequence, br.Fees, br.GenerateOnly, br.Simulate)
+	return newBr
+}
+
 // ValidateBasic performs basic validation of a BaseReq. If custom validation
 // logic is needed, the implementing request handler should perform those
 // checks manually.
-func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
-	switch {
-	case len(br.Name) == 0:
+// ValidateBasic performs basic validation of a BaseReq. If custom validation
+// logic is needed, the implementing request handler should perform those
+// checks manually.
+func (br BaseReq) ValidateBasic(w http.ResponseWriter, cliCtx context.CLIContext) bool {
+	if !cliCtx.GenerateOnly && !cliCtx.Simulate {
+		switch {
+		case len(br.Password) == 0:
+			WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
+			return false
+		case len(br.ChainID) == 0:
+			WriteErrorResponse(w, http.StatusUnauthorized, "chain-id required but not specified")
+			return false
+		case !br.Fees.IsValid():
+			WriteErrorResponse(w, http.StatusPaymentRequired, sdk.ErrInvalidCoins("").Error())
+			return false
+		}
+	}
+	if len(br.Name) == 0 {
 		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
 		return false
-
-	case len(br.Password) == 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
-		return false
-
-	case len(br.ChainID) == 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "chainID required but not specified")
-		return false
-
-	case !br.Fees.IsValid():
-		WriteErrorResponse(w, http.StatusPaymentRequired, sdk.ErrInvalidCoins("").Error())
-		return false
 	}
-
 	return true
 }
 

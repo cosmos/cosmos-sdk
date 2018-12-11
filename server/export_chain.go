@@ -110,15 +110,17 @@ func validateHeights(startHeight, endHeight, currentHeight int64) error {
 }
 
 func exportChain(cdc *codec.Codec, sHeight, eHeight int64, bs *bc.BlockStore, w io.Writer) error {
-	var currHeight int64
-	currHeight = sHeight
-
+	currHeight := sHeight
 	txDecoder := auth.DefaultTxDecoder(cdc)
 	streamEncoder := json.NewEncoder(w)
 
 	for ; currHeight <= eHeight; currHeight++ {
 		block := bs.LoadBlock(currHeight)
-		export := exportTx{
+		if block == nil {
+			return fmt.Errorf("unexpected nil block at height %d", currHeight)
+		}
+
+		exportTx := exportTx{
 			Height:     block.Height,
 			Proposer:   fmt.Sprintf("%X", block.Header.ProposerAddress),
 			Validators: make([]string, len(block.LastCommit.Precommits)),
@@ -126,7 +128,7 @@ func exportChain(cdc *codec.Codec, sHeight, eHeight int64, bs *bc.BlockStore, w 
 		}
 
 		for i, valAddr := range block.LastCommit.Precommits {
-			export.Validators[i] = fmt.Sprintf("%X", valAddr)
+			exportTx.Validators[i] = fmt.Sprintf("%X", valAddr)
 		}
 
 		for i, tx := range block.Txs {
@@ -135,10 +137,10 @@ func exportChain(cdc *codec.Codec, sHeight, eHeight int64, bs *bc.BlockStore, w 
 				return err
 			}
 
-			export.Txs[i] = stdTx
+			exportTx.Txs[i] = stdTx
 		}
 
-		streamEncoder.Encode(export)
+		streamEncoder.Encode(exportTx)
 	}
 
 	return nil

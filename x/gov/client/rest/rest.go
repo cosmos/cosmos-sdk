@@ -78,11 +78,6 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
-			return
-		}
-
 		proposalType, err := gov.ProposalTypeFromString(govClientUtils.NormalizeProposalType(req.ProposalType))
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -97,7 +92,7 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, baseReq, []sdk.Msg{msg}, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 

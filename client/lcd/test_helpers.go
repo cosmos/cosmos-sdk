@@ -649,26 +649,20 @@ type editDelegationsReq struct {
 // POST /stake/delegators/{delegatorAddr}/delegations Submit delegation
 func doDelegate(t *testing.T, port, seed, name, password string,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64) (resultTx ctypes.ResultBroadcastTxCommit) {
-
+		sdk.DefaultChainID()
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	ed := editDelegationsReq{
-		BaseReq: utils.BaseReq{
-			Name:          name,
-			Password:      password,
-			ChainID:       chainID,
-			AccountNumber: accnum,
-			Sequence:      sequence,
-		},
-		Delegations: []msgDelegationsInput{msgDelegationsInput{
+	baseReq := utils.NewBaseReq(name, password, memo, chainID, "", "", accnum, sequence, fees, false, false)
+	msg := msgDelegationsInput{
+			BaseReq: baseReq
 			DelegatorAddr: delAddr.String(),
 			ValidatorAddr: valAddr.String(),
 			Delegation:    sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, amount),
-		}},
+		},
 	}
-	req, err := cdc.MarshalJSON(ed)
+	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), req)
@@ -695,21 +689,15 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	ed := editDelegationsReq{
-		BaseReq: utils.BaseReq{
-			Name:          name,
-			Password:      password,
-			ChainID:       chainID,
-			AccountNumber: accnum,
-			Sequence:      sequence,
-		},
-		BeginUnbondings: []msgBeginUnbondingInput{msgBeginUnbondingInput{
+	baseReq := utils.NewBaseReq(name, password, memo, chainID, "", "", accnum, sequence, fees, false, false)
+	msg := msgBeginUnbondingInput{
+			BaseReq: baseReq,
 			DelegatorAddr: delAddr.String(),
 			ValidatorAddr: valAddr.String(),
 			SharesAmount:  fmt.Sprintf("%d", amount),
-		}},
-	}
-	req, err := cdc.MarshalJSON(ed)
+		}
+
+	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
 
 	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), req)

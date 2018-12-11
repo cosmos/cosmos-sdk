@@ -114,21 +114,48 @@ type BaseReq struct {
 	Simulate      bool      `json:"simulate"`
 }
 
-// Sanitize performs basic sanitization on a BaseReq object.
-func (br BaseReq) Sanitize() BaseReq {
+// NewBaseReq creates a new basic request instance and sanitizes its values
+func NewBaseReq(
+	name, password, memo, chainID, gas, gasAdjustment string, accNumber, seq uint64,
+	fees sdk.Coins, genOnly, simulate bool) BaseReq {
 	return BaseReq{
-		Name:          strings.TrimSpace(br.Name),
-		Password:      strings.TrimSpace(br.Password),
-		Memo:          strings.TrimSpace(br.Memo),
-		ChainID:       strings.TrimSpace(br.ChainID),
-		Fees:          br.Fees,
-		Gas:           strings.TrimSpace(br.Gas),
-		GasAdjustment: strings.TrimSpace(br.GasAdjustment),
-		AccountNumber: br.AccountNumber,
-		Sequence:      br.Sequence,
-		GenerateOnly:  br.GenerateOnly,
-		Simulate:      br.Simulate,
+		Name:          strings.TrimSpace(name),
+		Password:      password,
+		Memo:          strings.TrimSpace(memo),
+		ChainID:       strings.TrimSpace(chainID),
+		Fees:          fees,
+		Gas:           strings.TrimSpace(gas),
+		GasAdjustment: strings.TrimSpace(gasAdjustment),
+		AccountNumber: accNumber,
+		Sequence:      seq,
+		GenerateOnly:  genOnly,
+		Simulate:      simulate,
 	}
+}
+
+// ValidateBasic performs basic validation of a BaseReq. If custom validation
+// logic is needed, the implementing request handler should perform those
+// checks manually.
+func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
+	switch {
+	case len(br.Name) == 0:
+		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
+		return false
+
+	case len(br.Password) == 0:
+		WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
+		return false
+
+	case len(br.ChainID) == 0:
+		WriteErrorResponse(w, http.StatusUnauthorized, "chainID required but not specified")
+		return false
+
+	case !br.Fees.IsValid():
+		WriteErrorResponse(w, http.StatusPaymentRequired, sdk.ErrInvalidCoins("").Error())
+		return false
+	}
+
+	return true
 }
 
 /*
@@ -158,31 +185,6 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 	}
 
 	return nil
-}
-
-// ValidateBasic performs basic validation of a BaseReq. If custom validation
-// logic is needed, the implementing request handler should perform those
-// checks manually.
-func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
-	switch {
-	case len(br.Name) == 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
-		return false
-
-	case len(br.Password) == 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
-		return false
-
-	case len(br.ChainID) == 0:
-		WriteErrorResponse(w, http.StatusUnauthorized, "chainID required but not specified")
-		return false
-
-	case !br.Fees.IsValid():
-		WriteErrorResponse(w, http.StatusPaymentRequired, sdk.ErrInvalidCoins("").Error())
-		return false
-	}
-
-	return true
 }
 
 // CompleteAndBroadcastTxREST implements a utility function that facilitates

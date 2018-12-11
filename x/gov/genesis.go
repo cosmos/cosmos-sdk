@@ -1,6 +1,7 @@
 package gov
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -61,6 +62,34 @@ func DefaultGenesisState() GenesisState {
 
 // ValidateGenesis TODO https://github.com/cosmos/cosmos-sdk/issues/3007
 func ValidateGenesis(data GenesisState) error {
+	threshold := data.TallyParams.Threshold
+	if threshold.IsNegative() || threshold.GT(sdk.OneDec()) {
+		return fmt.Errorf("Governance vote threshold should be positive and less or equal to one, is %s",
+			threshold.String())
+	}
+
+	veto := data.TallyParams.Veto
+	if veto.IsNegative() || veto.GT(sdk.OneDec()) {
+		return fmt.Errorf("Governance vote veto threshold should be positive and less or equal to one, is %s",
+			veto.String())
+	}
+
+	govPenalty := data.TallyParams.GovernancePenalty
+	if govPenalty.IsNegative() || govPenalty.GT(sdk.OneDec()) {
+		return fmt.Errorf("Governance vote veto threshold should be positive and less or equal to one, is %s",
+			govPenalty.String())
+	}
+
+	if data.DepositParams.MaxDepositPeriod > data.VotingParams.VotingPeriod {
+		return fmt.Errorf("Governance deposit period should be less than or equal to the voting period (%ds), is %ds",
+			data.VotingParams.VotingPeriod, data.DepositParams.MaxDepositPeriod)
+	}
+
+	if !data.DepositParams.MinDeposit.IsValid() {
+		return fmt.Errorf("Governance deposit amount must be a valid sdk.Coins amount, is %s",
+			data.DepositParams.MinDeposit.String())
+	}
+
 	return nil
 }
 

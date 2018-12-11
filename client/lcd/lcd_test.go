@@ -433,7 +433,7 @@ func TestValidatorQuery(t *testing.T) {
 }
 
 func TestBonding(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
 
 	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 2, []sdk.AccAddress{addr})
 	defer cleanup()
@@ -445,7 +445,7 @@ func TestBonding(t *testing.T) {
 	validator := getValidator(t, port, operAddrs[0])
 
 	// create bond TX
-	resultTx := doDelegate(t, port, seed, name1, pw, addr, operAddrs[0], 60)
+	resultTx := doDelegate(t, port, name1, pw, addr, operAddrs[0], 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -485,7 +485,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
 
 	// testing unbonding
-	resultTx = doBeginUnbonding(t, port, seed, name1, pw, addr, operAddrs[0], 30)
+	resultTx = doBeginUnbonding(t, port, name1, pw, addr, operAddrs[0], 30)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -508,7 +508,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, "30", unbonding.Balance.Amount.String())
 
 	// test redelegation
-	resultTx = doBeginRedelegation(t, port, seed, name1, pw, addr, operAddrs[0], operAddrs[1], 30)
+	resultTx = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], 30)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -670,7 +670,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, sdk.ZeroDec(), tally.Yes, "tally should be 0 as the address is not bonded")
 
 	// create bond TX
-	resultTx = doDelegate(t, port, seed, name1, pw, addr, operAddrs[0], 60)
+	resultTx = doDelegate(t, port, name1, pw, addr, operAddrs[0], 60)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// vote

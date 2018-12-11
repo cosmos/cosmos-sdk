@@ -647,14 +647,14 @@ type editDelegationsReq struct {
 }
 
 // POST /stake/delegators/{delegatorAddr}/delegations Submit delegation
-func doDelegate(t *testing.T, port, seed, name, password string,
+func doDelegate(t *testing.T, port, name, password string,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	ed := editDelegationsReq{
+	ed := msgDelegationsInput{
 		BaseReq: utils.BaseReq{
 			Name:          name,
 			Password:      password,
@@ -662,40 +662,36 @@ func doDelegate(t *testing.T, port, seed, name, password string,
 			AccountNumber: accnum,
 			Sequence:      sequence,
 		},
-		Delegations: []msgDelegationsInput{msgDelegationsInput{
-			DelegatorAddr: delAddr.String(),
-			ValidatorAddr: valAddr.String(),
-			Delegation:    sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, amount),
-		}},
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
+		Delegation:    sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, amount),
 	}
 	req, err := cdc.MarshalJSON(ed)
 	require.NoError(t, err)
-
-	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), req)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr.String()), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var results []ctypes.ResultBroadcastTxCommit
+	var results ctypes.ResultBroadcastTxCommit
 	err = cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
-
-	return results[0]
+	return results
 }
 
 type msgDelegationsInput struct {
-	DelegatorAddr string   `json:"delegator_addr"` // in bech32
-	ValidatorAddr string   `json:"validator_addr"` // in bech32
-	Delegation    sdk.Coin `json:"delegation"`
+	BaseReq       utils.BaseReq  `json:"base_req"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
+	Delegation    sdk.Coin       `json:"delegation"`
 }
 
 // POST /stake/delegators/{delegatorAddr}/delegations Submit delegation
-func doBeginUnbonding(t *testing.T, port, seed, name, password string,
+func doBeginUnbonding(t *testing.T, port, name, password string,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	ed := editDelegationsReq{
+	ed := msgBeginUnbondingInput{
 		BaseReq: utils.BaseReq{
 			Name:          name,
 			Password:      password,
@@ -703,33 +699,32 @@ func doBeginUnbonding(t *testing.T, port, seed, name, password string,
 			AccountNumber: accnum,
 			Sequence:      sequence,
 		},
-		BeginUnbondings: []msgBeginUnbondingInput{msgBeginUnbondingInput{
-			DelegatorAddr: delAddr.String(),
-			ValidatorAddr: valAddr.String(),
-			SharesAmount:  fmt.Sprintf("%d", amount),
-		}},
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
+		SharesAmount:  sdk.NewDec(amount),
 	}
 	req, err := cdc.MarshalJSON(ed)
 	require.NoError(t, err)
 
-	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), req)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations", delAddr), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results []ctypes.ResultBroadcastTxCommit
+	var results ctypes.ResultBroadcastTxCommit
 	err = cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
-	return results[0]
+	return results
 }
 
 type msgBeginUnbondingInput struct {
-	DelegatorAddr string `json:"delegator_addr"` // in bech32
-	ValidatorAddr string `json:"validator_addr"` // in bech32
-	SharesAmount  string `json:"shares"`
+	BaseReq       utils.BaseReq  `json:"base_req"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
+	SharesAmount  sdk.Dec        `json:"shares"`
 }
 
 // POST /stake/delegators/{delegatorAddr}/delegations Submit delegation
-func doBeginRedelegation(t *testing.T, port, seed, name, password string,
+func doBeginRedelegation(t *testing.T, port, name, password string,
 	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount int64) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, delAddr)
@@ -737,7 +732,7 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 	sequence := acc.GetSequence()
 
 	chainID := viper.GetString(client.FlagChainID)
-	ed := editDelegationsReq{
+	ed := msgBeginRedelegateInput{
 		BaseReq: utils.BaseReq{
 			Name:          name,
 			Password:      password,
@@ -745,31 +740,30 @@ func doBeginRedelegation(t *testing.T, port, seed, name, password string,
 			AccountNumber: accnum,
 			Sequence:      sequence,
 		},
-		BeginRedelegates: []msgBeginRedelegateInput{msgBeginRedelegateInput{
-			DelegatorAddr:    delAddr.String(),
-			ValidatorSrcAddr: valSrcAddr.String(),
-			ValidatorDstAddr: valDstAddr.String(),
-			SharesAmount:     fmt.Sprintf("%d", amount),
-		}},
+		DelegatorAddr:    delAddr,
+		ValidatorSrcAddr: valSrcAddr,
+		ValidatorDstAddr: valDstAddr,
+		SharesAmount:     sdk.NewDec(amount),
 	}
 	req, err := cdc.MarshalJSON(ed)
 	require.NoError(t, err)
 
-	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/delegations", delAddr), req)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/stake/delegators/%s/redelegations", delAddr), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results []ctypes.ResultBroadcastTxCommit
+	var results ctypes.ResultBroadcastTxCommit
 	err = cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
-	return results[0]
+	return results
 }
 
 type msgBeginRedelegateInput struct {
-	DelegatorAddr    string `json:"delegator_addr"`     // in bech32
-	ValidatorSrcAddr string `json:"validator_src_addr"` // in bech32
-	ValidatorDstAddr string `json:"validator_dst_addr"` // in bech32
-	SharesAmount     string `json:"shares"`
+	BaseReq          utils.BaseReq  `json:"base_req"`
+	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
+	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
+	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // in bech32
+	SharesAmount     sdk.Dec        `json:"shares"`
 }
 
 // GET /stake/delegators/{delegatorAddr}/delegations Get all delegations from a delegator

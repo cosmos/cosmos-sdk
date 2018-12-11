@@ -78,8 +78,11 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 
@@ -123,8 +126,11 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 
@@ -162,8 +168,11 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
+		cliCtx = cliCtx.WithGenerateOnly(req.BaseReq.GenerateOnly)
+		cliCtx = cliCtx.WithSimulation(req.BaseReq.Simulate)
+
 		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
+		if !baseReq.ValidateBasic(w, cliCtx) {
 			return
 		}
 

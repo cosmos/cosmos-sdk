@@ -3,6 +3,7 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [lcd] https://github.com/cosmos/cosmos-sdk/pull/3045 Fix quoted json return on GET /keys (keys list)
   * [gaia-lite] [\#2191](https://github.com/cosmos/cosmos-sdk/issues/2191) Split `POST /stake/delegators/{delegatorAddr}/delegations` into `POST /stake/delegators/{delegatorAddr}/delegations`, `POST /stake/delegators/{delegatorAddr}/unbonding_delegations` and `POST /stake/delegators/{delegatorAddr}/redelegations`
   * [gaia-lite] [\#3056](https://github.com/cosmos/cosmos-sdk/pull/3056) `generate_only` and `simulate` have moved from query arguments to POST requests body.
 

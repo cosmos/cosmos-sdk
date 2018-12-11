@@ -39,9 +39,20 @@ func ExportChainCmd(ctx *Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-chain <file>",
 		Short: "Export blockchain transactions and metadata by height to a JSON file",
-		Long:  ``, // TODO: ...
-		Args:  cobra.ExactArgs(1),
-		RunE:  exportChainExec(ctx, cdc),
+		Long: `Export blockchain transactions and metadata by height to a JSON file.
+
+The exported file will contain a list of JSON objects. Each JSON object will
+respresent a single exported block that will contain the height, the validators,
+the proposer and the transactions.
+
+If the JSON file ends with '.gz' it will be gzip compressed. In addition, optional
+--height-start and --height-end may be provided to export blocks within a given
+range.
+
+Example:
+$ gaiad export-chain gaia-xxxx-export.json.gz`,
+		Args: cobra.ExactArgs(1),
+		RunE: exportChainExec(ctx, cdc),
 	}
 
 	cmd.Flags().SortFlags = false

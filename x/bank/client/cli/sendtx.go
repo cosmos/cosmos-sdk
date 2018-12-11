@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -8,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	bankClient "github.com/cosmos/cosmos-sdk/x/bank/client"
-	"os"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

@@ -1,8 +1,9 @@
 package mock
 
 import (
-	"github.com/tendermint/tendermint/types"
 	"testing"
+
+	"github.com/tendermint/tendermint/types"
 
 	"github.com/stretchr/testify/require"
 

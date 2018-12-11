@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -15,11 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-)
-
-const (
-	queryArgDryRun       = "simulate"
-	queryArgGenerateOnly = "generate_only"
 )
 
 //----------------------------------------
@@ -37,18 +31,6 @@ func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
 func WriteSimulationResponse(w http.ResponseWriter, gas uint64) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"gas_estimate":%v}`, gas)))
-}
-
-// HasDryRunArg returns true if the request's URL query contains the dry run
-// argument and its value is set to "true".
-func HasDryRunArg(r *http.Request) bool {
-	return urlQueryHasArg(r.URL, queryArgDryRun)
-}
-
-// HasGenerateOnlyArg returns whether a URL's query "generate-only" parameter
-// is set to "true".
-func HasGenerateOnlyArg(r *http.Request) bool {
-	return urlQueryHasArg(r.URL, queryArgGenerateOnly)
 }
 
 // ParseInt64OrReturnBadRequest converts s to a int64 value.
@@ -113,8 +95,6 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, txBldr authtxb.TxBuilder,
 	return
 }
 
-func urlQueryHasArg(url *url.URL, arg string) bool { return url.Query().Get(arg) == "true" }
-
 //----------------------------------------
 // Building / Sending utilities
 
@@ -127,9 +107,11 @@ type BaseReq struct {
 	ChainID       string    `json:"chain_id"`
 	AccountNumber uint64    `json:"account_number"`
 	Sequence      uint64    `json:"sequence"`
+	Fees          sdk.Coins `json:"fees"`
 	Gas           string    `json:"gas"`
 	GasAdjustment string    `json:"gas_adjustment"`
-	Fees          sdk.Coins `json:"fees"`
+	GenerateOnly  bool      `json:"generate_only"`
+	Simulate      bool      `json:"simulate"`
 }
 
 // Sanitize performs basic sanitization on a BaseReq object.
@@ -139,11 +121,13 @@ func (br BaseReq) Sanitize() BaseReq {
 		Password:      strings.TrimSpace(br.Password),
 		Memo:          strings.TrimSpace(br.Memo),
 		ChainID:       strings.TrimSpace(br.ChainID),
+		Fees:          br.Fees,
 		Gas:           strings.TrimSpace(br.Gas),
 		GasAdjustment: strings.TrimSpace(br.GasAdjustment),
 		AccountNumber: br.AccountNumber,
 		Sequence:      br.Sequence,
-		Fees:          br.Fees,
+		GenerateOnly:  br.GenerateOnly,
+		Simulate:      br.Simulate,
 	}
 }
 
@@ -223,14 +207,14 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 
 	txBldr := authtxb.NewTxBuilder(cdc, baseReq.AccountNumber, baseReq.Sequence, gas, adjustment, simulateGas, baseReq.ChainID, baseReq.Memo, baseReq.Fees)
 
-	if HasDryRunArg(r) || txBldr.SimulateGas {
+	if baseReq.Simulate || txBldr.SimulateGas {
 		newBldr, err := EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		if HasDryRunArg(r) {
+		if baseReq.Simulate {
 			WriteSimulationResponse(w, newBldr.Gas)
 			return
 		}
@@ -238,7 +222,7 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		txBldr = newBldr
 	}
 
-	if HasGenerateOnlyArg(r) {
+	if baseReq.GenerateOnly {
 		WriteGenerateStdTxResponse(w, txBldr, msgs)
 		return
 	}

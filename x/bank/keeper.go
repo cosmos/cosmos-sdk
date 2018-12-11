@@ -7,16 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-const (
-	costGetCoins      sdk.Gas = 10
-	costHasCoins      sdk.Gas = 10
-	costSetCoins      sdk.Gas = 100
-	costSubtractCoins sdk.Gas = 10
-	costAddCoins      sdk.Gas = 10
-	costGetAccount    sdk.Gas = 10
-	costSetAccount    sdk.Gas = 10
-)
-
 //-----------------------------------------------------------------------------
 // Keeper
 
@@ -169,7 +159,6 @@ func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 //-----------------------------------------------------------------------------
 
 func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
-	ctx.GasMeter().ConsumeGas(costGetCoins, "getCoins")
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		return sdk.Coins{}
@@ -178,7 +167,6 @@ func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.C
 }
 
 func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) sdk.Error {
-	ctx.GasMeter().ConsumeGas(costSetCoins, "setCoins")
 	acc := am.GetAccount(ctx, addr)
 	if acc == nil {
 		acc = am.NewAccountWithAddress(ctx, addr)
@@ -194,17 +182,14 @@ func setCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 
 // HasCoins returns whether or not an account has at least amt coins.
 func hasCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) bool {
-	ctx.GasMeter().ConsumeGas(costHasCoins, "hasCoins")
 	return getCoins(ctx, am, addr).IsAllGTE(amt)
 }
 
 func getAccount(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress) auth.Account {
-	ctx.GasMeter().ConsumeGas(costGetAccount, "getAccount")
 	return ak.GetAccount(ctx, addr)
 }
 
 func setAccount(ctx sdk.Context, ak auth.AccountKeeper, acc auth.Account) {
-	ctx.GasMeter().ConsumeGas(costSetAccount, "setAccount")
 	ak.SetAccount(ctx, acc)
 }
 
@@ -212,7 +197,6 @@ func setAccount(ctx sdk.Context, ak auth.AccountKeeper, acc auth.Account) {
 //
 // CONTRACT: If the account is a vesting account, the amount has to be spendable.
 func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
-	ctx.GasMeter().ConsumeGas(costSubtractCoins, "subtractCoins")
 	oldCoins, spendableCoins := sdk.Coins{}, sdk.Coins{}
 
 	acc := getAccount(ctx, ak, addr)
@@ -237,8 +221,6 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 
 // AddCoins adds amt to the coins at the addr.
 func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins) (sdk.Coins, sdk.Tags, sdk.Error) {
-	ctx.GasMeter().ConsumeGas(costAddCoins, "addCoins")
-
 	oldCoins := getCoins(ctx, am, addr)
 	newCoins := oldCoins.Plus(amt)
 
@@ -296,8 +278,6 @@ func delegateCoins(
 	ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Tags, sdk.Error) {
 
-	ctx.GasMeter().ConsumeGas(costSubtractCoins, "delegateCoins")
-
 	acc := getAccount(ctx, ak, addr)
 	if acc == nil {
 		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
@@ -322,8 +302,6 @@ func delegateCoins(
 func undelegateCoins(
 	ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Tags, sdk.Error) {
-
-	ctx.GasMeter().ConsumeGas(costAddCoins, "undelegateCoins")
 
 	acc := getAccount(ctx, ak, addr)
 	if acc == nil {

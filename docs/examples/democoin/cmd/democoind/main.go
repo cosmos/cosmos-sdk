@@ -6,10 +6,11 @@ import (
 	"io"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/p2p"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/spf13/cobra"
 

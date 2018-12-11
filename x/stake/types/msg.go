@@ -3,8 +3,9 @@ package types
 import (
 	"bytes"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // name to identify transaction routes

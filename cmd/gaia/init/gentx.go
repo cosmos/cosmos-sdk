@@ -11,6 +11,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	cfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/crypto"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/common"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -23,10 +28,6 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/common"
 )
 
 const (
@@ -172,7 +173,7 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 			// Ensure account contains enough funds of default bond denom
 			if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
 				return fmt.Errorf(
-					"Account %s is in genesis, but the only has %s%s available to stake, not %s%s",
+					"Account %v is in genesis, but the only has %v%v available to stake, not %v%v",
 					key, acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
 				)
 			}

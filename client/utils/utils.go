@@ -6,22 +6,22 @@ import (
 	"io"
 	"os"
 
+	"github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/libs/common"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/libs/common"
 )
 
-// CompleteAndBroadcastTxCli implements a utility function that
-// facilitates sending a series of messages in a signed
-// transaction given a TxBuilder and a QueryContext. It ensures
-// that the account exists, has a proper number and sequence
-// set. In addition, it builds and signs a transaction with the
-// supplied messages.  Finally, it broadcasts the signed
-// transaction to a node.
+// CompleteAndBroadcastTxCli implements a utility function that facilitates
+// sending a series of messages in a signed transaction given a TxBuilder and a
+// QueryContext. It ensures that the account exists, has a proper number and
+// sequence set. In addition, it builds and signs a transaction with the
+// supplied messages. Finally, it broadcasts the signed transaction to a node.
+//
 // NOTE: Also see CompleteAndBroadcastTxREST.
 func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
 	txBldr, err := prepareTxBuilder(txBldr, cliCtx)
@@ -34,14 +34,14 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return err
 	}
 
-	if txBldr.SimulateGas || cliCtx.DryRun {
+	if txBldr.SimulateGas || cliCtx.Simulate {
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas)
 	}
-	if cliCtx.DryRun {
+	if cliCtx.Simulate {
 		return nil
 	}
 
@@ -116,13 +116,15 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	if err != nil {
 		return signedStdTx, err
 	}
+
 	info, err := keybase.Get(name)
 	if err != nil {
 		return signedStdTx, err
 	}
+
 	addr := info.GetPubKey().Address()
 
-	// Check whether the address is a signer
+	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
 		return signedStdTx, fmt.Errorf(
 			"The generated transaction's intended signer does not match the given signer: %q", name)
@@ -148,6 +150,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	if err != nil {
 		return signedStdTx, err
 	}
+
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
 }
 

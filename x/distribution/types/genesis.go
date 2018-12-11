@@ -1,6 +1,10 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // the address for where distributions rewards are withdrawn to by default
 // this struct is only used at genesis to feed in default withdraw addresses
@@ -66,4 +70,27 @@ func DefaultGenesisWithValidators(valAddrs []sdk.ValAddress) GenesisState {
 		ValidatorDistInfos:  vdis,
 		DelegationDistInfos: ddis,
 	}
+}
+
+// ValidateGenesis validates the genesis state of distribution genesis input
+func ValidateGenesis(data GenesisState) error {
+	if data.CommunityTax.IsNegative() || data.CommunityTax.GT(sdk.OneDec()) {
+		return fmt.Errorf("mint parameter CommunityTax should non-negative and "+
+			"less than one, is %s", data.CommunityTax.String())
+	}
+	if data.BaseProposerReward.IsNegative() {
+		return fmt.Errorf("mint parameter BaseProposerReward should be positive, is %s",
+			data.BaseProposerReward.String())
+	}
+	if data.BonusProposerReward.IsNegative() {
+		return fmt.Errorf("mint parameter BonusProposerReward should be positive, is %s",
+			data.BonusProposerReward.String())
+	}
+	if (data.BaseProposerReward.Add(data.BonusProposerReward)).
+		GT(sdk.OneDec()) {
+		return fmt.Errorf("mint parameters BaseProposerReward and "+
+			"BonusProposerReward cannot add to be greater than one, "+
+			"adds to %s", data.BaseProposerReward.Add(data.BonusProposerReward).String())
+	}
+	return data.FeePool.ValidateGenesis()
 }

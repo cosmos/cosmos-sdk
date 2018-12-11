@@ -32,7 +32,7 @@ func TotalCoinsInvariant(mapper auth.AccountKeeper, totalSupplyFn func() sdk.Coi
 	return func(ctx sdk.Context) error {
 		totalCoins := sdk.Coins{}
 
-		chkAccount := func(acc auth.Account) bool {
+		chkAccount := func(acc sdk.Account) bool {
 			coins := acc.GetCoins()
 			totalCoins = totalCoins.Plus(coins)
 			return false

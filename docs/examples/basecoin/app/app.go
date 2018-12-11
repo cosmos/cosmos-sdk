@@ -71,7 +71,7 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 	app.accountKeeper = auth.NewAccountKeeper(
 		cdc,
 		app.keyAccount, // target store
-		func() auth.Account {
+		func() sdk.Account {
 			return &types.AppAccount{}
 		},
 	)
@@ -168,7 +168,7 @@ func (app *BasecoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 	ctx := app.NewContext(true, abci.Header{})
 	accounts := []*types.GenesisAccount{}
 
-	appendAccountsFn := func(acc auth.Account) bool {
+	appendAccountsFn := func(acc sdk.Account) bool {
 		account := &types.GenesisAccount{
 			Address: acc.GetAddress(),
 			Coins:   acc.GetCoins(),

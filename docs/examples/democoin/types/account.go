@@ -2,14 +2,13 @@ package types
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-var _ auth.Account = (*AppAccount)(nil)
+var _ sdk.Account = (*AppAccount)(nil)
 
 // Custom extensions for this application.  This is just an example of
 // extending auth.BaseAccount with custom fields.
@@ -22,7 +21,7 @@ type AppAccount struct {
 }
 
 // Constructor for AppAccount
-func ProtoAppAccount() auth.Account {
+func ProtoAppAccount() sdk.Account {
 	return &AppAccount{}
 }
 
@@ -32,7 +31,7 @@ func (acc *AppAccount) SetName(name string) { acc.Name = name }
 
 // Get the AccountDecoder function for the custom AppAccount
 func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
-	return func(accBytes []byte) (res auth.Account, err error) {
+	return func(accBytes []byte) (res sdk.Account, err error) {
 		if len(accBytes) == 0 {
 			return nil, sdk.ErrTxDecode("accBytes are empty")
 		}

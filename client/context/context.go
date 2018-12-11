@@ -7,21 +7,19 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-
 	"github.com/spf13/viper"
-
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const ctxAccStoreName = "acc"
@@ -178,7 +176,7 @@ func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 
 // GetAccountDecoder gets the account decoder for auth.DefaultAccount.
 func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
-	return func(accBytes []byte) (acct auth.Account, err error) {
+	return func(accBytes []byte) (acct types.Account, err error) {
 		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
 		if err != nil {
 			panic(err)

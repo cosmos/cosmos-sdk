@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-var _ auth.Account = (*AppAccount)(nil)
+var _ sdk.Account = (*AppAccount)(nil)
 
 // AppAccount is a custom extension for this application. It is an example of
 // extending auth.BaseAccount with custom fields. It is compatible with the
@@ -31,7 +31,7 @@ func NewAppAccount(name string, baseAcct auth.BaseAccount) *AppAccount {
 // GetAccountDecoder returns the AccountDecoder function for the custom
 // AppAccount.
 func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
-	return func(accBytes []byte) (auth.Account, error) {
+	return func(accBytes []byte) (sdk.Account, error) {
 		if len(accBytes) == 0 {
 			return nil, sdk.ErrTxDecode("accBytes are empty")
 		}

@@ -116,8 +116,8 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 	}
 }
 
-func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (accs []Account, res sdk.Result) {
-	accs = make([]Account, len(addrs))
+func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (accs []sdk.Account, res sdk.Result) {
+	accs = make([]sdk.Account, len(addrs))
 	for i := 0; i < len(accs); i++ {
 		accs[i] = am.GetAccount(ctx, addrs[i])
 		if accs[i] == nil {
@@ -131,8 +131,8 @@ func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (a
 // verify the signature and increment the sequence. If the account doesn't have
 // a pubkey, set it.
 func processSig(
-	ctx sdk.Context, acc Account, sig StdSignature, signBytes []byte, simulate bool,
-) (updatedAcc Account, res sdk.Result) {
+	ctx sdk.Context, acc sdk.Account, sig StdSignature, signBytes []byte, simulate bool,
+) (updatedAcc sdk.Account, res sdk.Result) {
 
 	pubKey, res := processPubKey(acc, sig, simulate)
 	if !res.IsOK() {
@@ -165,7 +165,7 @@ func init() {
 	copy(dummySecp256k1Pubkey[:], bz)
 }
 
-func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
+func processPubKey(acc sdk.Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
 	// If pubkey is not known for account, set it from the StdSignature.
 	pubKey := acc.GetPubKey()
 	if simulate {
@@ -222,7 +222,7 @@ func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
 // Deduct the fee from the account.
 // We could use the CoinKeeper (in addition to the AccountKeeper,
 // because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
+func deductFees(acc sdk.Account, fee StdFee) (sdk.Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
@@ -280,7 +280,7 @@ func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 }
 
-func getSignBytesList(chainID string, stdTx StdTx, accs []Account, genesis bool) (signatureBytesList [][]byte) {
+func getSignBytesList(chainID string, stdTx StdTx, accs []sdk.Account, genesis bool) (signatureBytesList [][]byte) {
 	signatureBytesList = make([][]byte, len(accs))
 	for i := 0; i < len(accs); i++ {
 		accNum := accs[i].GetAccountNumber()

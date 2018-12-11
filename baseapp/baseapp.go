@@ -8,7 +8,6 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // Key to store the consensus params in the main store.
@@ -63,9 +63,10 @@ type BaseApp struct {
 	// checkState is set on initialization and reset on Commit.
 	// deliverState is set in InitChain and BeginBlock and cleared on Commit.
 	// See methods setCheckState and setDeliverState.
-	checkState   *state          // for CheckTx
-	deliverState *state          // for DeliverTx
-	voteInfos    []abci.VoteInfo // absent validators from begin block
+	checkState        *state          // for CheckTx
+	deliverState      *state          // for DeliverTx
+	voteInfos         []abci.VoteInfo // absent validators from begin block
+	accountStoreCache sdk.AccountStoreCache
 
 	// consensus params
 	// TODO move this in the future to baseapp param store on main store.
@@ -216,14 +217,15 @@ func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).WithMinimumFees(app.minimumFees)
+		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).WithMinimumFees(app.minimumFees).WithAccountCache(app.checkState.accountCache)
 	}
-	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
+	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger).WithAccountCache(app.deliverState.accountCache)
 }
 
 type state struct {
-	ms  sdk.CacheMultiStore
-	ctx sdk.Context
+	ms           sdk.CacheMultiStore
+	accountCache sdk.AccountCache
+	ctx          sdk.Context
 }
 
 func (st *state) CacheMultiStore() sdk.CacheMultiStore {
@@ -234,19 +236,27 @@ func (st *state) Context() sdk.Context {
 	return st.ctx
 }
 
+func (st *state) writeAccountCache() {
+	st.accountCache.Write()
+}
+
 func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
+	accountCache := auth.NewAccountCache(app.accountStoreCache)
 	app.checkState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinimumFees(app.minimumFees),
+		ms:           ms,
+		accountCache: accountCache,
+		ctx:          sdk.NewContext(ms, header, true, app.Logger).WithMinimumFees(app.minimumFees).WithAccountCache(accountCache),
 	}
 }
 
 func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
+	accountCache := auth.NewAccountCache(app.accountStoreCache)
 	app.deliverState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.Logger),
+		ms:           ms,
+		accountCache: accountCache,
+		ctx:          sdk.NewContext(ms, header, false, app.Logger).WithAccountCache(accountCache),
 	}
 }
 
@@ -317,6 +327,9 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		WithBlockGasMeter(sdk.NewInfiniteGasMeter())
 
 	res = app.initChainer(app.deliverState.ctx, req)
+
+	// we need to write updates to underlying cache and storage
+	app.deliverState.writeAccountCache()
 
 	// NOTE: we don't commit, but BeginBlock for block 1
 	// starts from this deliverState
@@ -679,7 +692,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
 		).(sdk.CacheMultiStore)
 	}
 
-	return ctx.WithMultiStore(msCache), msCache
+	return ctx.WithMultiStore(msCache).WithAccountCache(ctx.AccountCache().Cache()), msCache
 }
 
 // runTx processes a transaction. The transactions is proccessed via an
@@ -786,6 +799,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 	// only update state if all messages pass
 	if result.IsOK() {
+		ctx.AccountCache().Write()
 		msCache.Write()
 	}
 
@@ -810,6 +824,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	header := app.deliverState.ctx.BlockHeader()
 
 	// Write the Deliver state and commit the MultiStore
+	app.deliverState.writeAccountCache()
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
 	// TODO: this is missing a module identifier and dumps byte array

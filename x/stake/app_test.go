@@ -114,7 +114,7 @@ func TestStakeMsgs(t *testing.T) {
 		Address: addr2,
 		Coins:   sdk.Coins{genCoin},
 	}
-	accs := []auth.Account{acc1, acc2}
+	accs := []sdk.Account{acc1, acc2}
 
 	mock.SetGenesis(mApp, accs)
 	mock.CheckBalance(t, mApp, addr1, sdk.Coins{genCoin})

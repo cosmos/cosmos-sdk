@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
@@ -67,7 +66,7 @@ func MakeTestCodec() *codec.Codec {
 	cdc.RegisterConcrete(types.MsgBeginRedelegate{}, "test/stake/BeginRedelegate", nil)
 
 	// Register AppAccount
-	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&auth.BaseAccount{}, "test/stake/Account", nil)
 	codec.RegisterCrypto(cdc)
 

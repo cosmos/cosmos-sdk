@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -143,6 +142,7 @@ const (
 	contextKeyBlockGasMeter
 	contextKeyMinimumFees
 	contextKeyConsensusParams
+	contextKeyAccountCache
 )
 
 func (c Context) MultiStore() MultiStore {
@@ -173,6 +173,10 @@ func (c Context) MinimumFees() Coins { return c.Value(contextKeyMinimumFees).(Co
 
 func (c Context) ConsensusParams() *abci.ConsensusParams {
 	return c.Value(contextKeyConsensusParams).(*abci.ConsensusParams)
+}
+
+func (c Context) AccountCache() AccountCache {
+	return c.Value(contextKeyAccountCache).(AccountCache)
 }
 
 func (c Context) WithMultiStore(ms MultiStore) Context {
@@ -228,6 +232,10 @@ func (c Context) WithMinimumFees(minFees Coins) Context {
 
 func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	return c.withValue(contextKeyConsensusParams, params)
+}
+
+func (c Context) WithAccountCache(cache AccountCache) Context {
+	return c.withValue(contextKeyAccountCache, cache)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

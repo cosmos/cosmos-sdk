@@ -3,11 +3,11 @@ package bank
 import (
 	"testing"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // getBenchmarkMockApp initializes a mock application for this module, for purposes of benchmarking
@@ -32,7 +32,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 		// Some value conceivably higher than the benchmarks would ever go
 		Coins: sdk.Coins{sdk.NewInt64Coin("foocoin", 100000000000)},
 	}
-	accs := []auth.Account{acc}
+	accs := []sdk.Account{acc}
 
 	// Construct genesis state
 	mock.SetGenesis(benchmarkApp, accs)

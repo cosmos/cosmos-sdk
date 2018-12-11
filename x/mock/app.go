@@ -35,7 +35,7 @@ type App struct {
 	AccountKeeper       auth.AccountKeeper
 	FeeCollectionKeeper auth.FeeCollectionKeeper
 
-	GenesisAccounts  []auth.Account
+	GenesisAccounts  []sdk.Account
 	TotalCoinsSupply sdk.Coins
 }
 
@@ -145,7 +145,7 @@ func (b AddrKeysSlice) Swap(i, j int) {
 
 // CreateGenAccounts generates genesis accounts loaded with coins, and returns
 // their addresses, pubkeys, and privkeys.
-func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []sdk.Account, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
 	addrKeysSlice := AddrKeysSlice{}
 
 	for i := 0; i < numAccs; i++ {
@@ -176,7 +176,7 @@ func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account,
 }
 
 // SetGenesis sets the mock app genesis accounts.
-func SetGenesis(app *App, accs []auth.Account) {
+func SetGenesis(app *App, accs []sdk.Account) {
 	// Pass the accounts in via the application (lazy) instead of through
 	// RequestInitChain.
 	app.GenesisAccounts = accs
@@ -263,7 +263,7 @@ func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.
 // provided addresses and coin denominations.
 // nolint: errcheck
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
-	accts := make([]auth.Account, len(addrs), len(addrs))
+	accts := make([]sdk.Account, len(addrs), len(addrs))
 	randCoinIntervals := []BigInterval{
 		{sdk.NewIntWithDecimal(1, 0), sdk.NewIntWithDecimal(1, 1)},
 		{sdk.NewIntWithDecimal(1, 2), sdk.NewIntWithDecimal(1, 3)},
@@ -290,9 +290,9 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
-func GetAllAccounts(mapper auth.AccountKeeper, ctx sdk.Context) []auth.Account {
-	accounts := []auth.Account{}
-	appendAccount := func(acc auth.Account) (stop bool) {
+func GetAllAccounts(mapper auth.AccountKeeper, ctx sdk.Context) []sdk.Account {
+	accounts := []sdk.Account{}
+	appendAccount := func(acc sdk.Account) (stop bool) {
 		accounts = append(accounts, acc)
 		return false
 	}

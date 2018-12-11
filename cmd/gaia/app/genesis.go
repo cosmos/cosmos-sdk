@@ -75,7 +75,7 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	}
 }
 
-func NewGenesisAccountI(acc auth.Account) GenesisAccount {
+func NewGenesisAccountI(acc sdk.Account) GenesisAccount {
 	return GenesisAccount{
 		Address:       acc.GetAddress(),
 		Coins:         acc.GetCoins(),

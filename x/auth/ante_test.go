@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/log"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -649,7 +649,7 @@ func TestProcessPubKey(t *testing.T) {
 	priv2, _ := privAndAddr()
 	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
 	type args struct {
-		acc      Account
+		acc      sdk.Account
 		sig      StdSignature
 		simulate bool
 	}

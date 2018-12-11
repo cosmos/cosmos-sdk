@@ -103,7 +103,7 @@ func TestSlashingMsgs(t *testing.T) {
 		Address: addr1,
 		Coins:   sdk.Coins{genCoin},
 	}
-	accs := []auth.Account{acc1}
+	accs := []sdk.Account{acc1}
 	mock.SetGenesis(mapp, accs)
 
 	description := stake.NewDescription("foo_moniker", "", "", "")

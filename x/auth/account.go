@@ -9,36 +9,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Account is an interface used to store coins at a given address within state.
-// It presumes a notion of sequence numbers for replay protection,
-// a notion of account numbers for replay protection for previously pruned accounts,
-// and a pubkey for authentication purposes.
-//
-// Many complex conditions can be used in the concrete struct which implements Account.
-type Account interface {
-	GetAddress() sdk.AccAddress
-	SetAddress(sdk.AccAddress) error // errors if already set.
-
-	GetPubKey() crypto.PubKey // can return nil.
-	SetPubKey(crypto.PubKey) error
-
-	GetAccountNumber() uint64
-	SetAccountNumber(uint64) error
-
-	GetSequence() uint64
-	SetSequence(uint64) error
-
-	GetCoins() sdk.Coins
-	SetCoins(sdk.Coins) error
-}
-
 // AccountDecoder unmarshals account bytes
-type AccountDecoder func(accountBytes []byte) (Account, error)
+type AccountDecoder func(accountBytes []byte) (sdk.Account, error)
 
 //-----------------------------------------------------------
 // BaseAccount
 
-var _ Account = (*BaseAccount)(nil)
+var _ sdk.Account = (*BaseAccount)(nil)
 
 // BaseAccount - a base account structure.
 // This can be extended by embedding within in your AppAccount.
@@ -54,7 +31,7 @@ type BaseAccount struct {
 }
 
 // Prototype function for BaseAccount
-func ProtoBaseAccount() Account {
+func ProtoBaseAccount() sdk.Account {
 	return &BaseAccount{}
 }
 
@@ -122,12 +99,37 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 	return nil
 }
 
+// Implements sdk.Account.
+func (acc *BaseAccount) Clone() sdk.Account {
+	// given the fact PubKey and Address doesn't change,
+	// it should be fine if not deep copy them. if both of
+	// the two interfaces can provide a Clone() method would be terrific.
+	clonedAcc := &BaseAccount{
+		PubKey:        acc.PubKey,
+		Address:       acc.Address,
+		AccountNumber: acc.AccountNumber,
+		Sequence:      acc.Sequence,
+	}
+
+	if acc.Coins == nil {
+		clonedAcc.Coins = nil
+	} else {
+		coins := make(sdk.Coins, 0, len(acc.Coins))
+		for _, coin := range acc.Coins {
+			coins = append(coins, sdk.Coin{Denom: coin.Denom, Amount: coin.Amount})
+		}
+		clonedAcc.Coins = coins
+	}
+
+	return clonedAcc
+}
+
 //----------------------------------------
 // Wire
 
 // Most users shouldn't use this, but this comes in handy for tests.
 func RegisterBaseAccount(cdc *codec.Codec) {
-	cdc.RegisterInterface((*Account)(nil), nil)
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	codec.RegisterCrypto(cdc)
 }

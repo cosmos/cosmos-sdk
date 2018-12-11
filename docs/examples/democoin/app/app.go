@@ -12,16 +12,15 @@ import (
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/ibc"
-
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/sketchy"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
 )
 
 const (
@@ -121,7 +120,7 @@ func MakeCodec() *codec.Codec {
 	simplestake.RegisterCodec(cdc)
 
 	// Register AppAccount
-	cdc.RegisterInterface((*auth.Account)(nil), nil)
+	cdc.RegisterInterface((*sdk.Account)(nil), nil)
 	cdc.RegisterConcrete(&types.AppAccount{}, "democoin/Account", nil)
 
 	cdc.Seal()
@@ -174,7 +173,7 @@ func (app *DemocoinApp) ExportAppStateAndValidators() (appState json.RawMessage,
 
 	// iterate to get the accounts
 	accounts := []*types.GenesisAccount{}
-	appendAccount := func(acc auth.Account) (stop bool) {
+	appendAccount := func(acc sdk.Account) (stop bool) {
 		account := &types.GenesisAccount{
 			Address: acc.GetAddress(),
 			Coins:   acc.GetCoins(),

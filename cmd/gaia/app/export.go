@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	stake "github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 // export the state of gaia for a genesis file
@@ -30,7 +30,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
 
 	// iterate to get the accounts
 	accounts := []GenesisAccount{}
-	appendAccount := func(acc auth.Account) (stop bool) {
+	appendAccount := func(acc sdk.Account) (stop bool) {
 		account := NewGenesisAccountI(acc)
 		accounts = append(accounts, account)
 		return false

@@ -13,20 +13,19 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-
-	p2p "github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/p2p"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	client "github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
-	tests "github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	version "github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -888,10 +887,10 @@ func TestProposalsQuery(t *testing.T) {
 
 //_____________________________________________________________________________
 // get the account to get the sequence
-func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
+func getAccount(t *testing.T, port string, addr sdk.AccAddress) sdk.Account {
 	res, body := Request(t, port, "GET", fmt.Sprintf("/auth/accounts/%s", addr.String()), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var acc auth.Account
+	var acc sdk.Account
 	err := cdc.UnmarshalJSON([]byte(body), &acc)
 	require.Nil(t, err)
 	return acc

@@ -44,6 +44,7 @@ func ExportChainCmd(ctx *Context, cdc *codec.Codec) *cobra.Command {
 		RunE:  exportChainExec(ctx, cdc),
 	}
 
+	cmd.Flags().SortFlags = false
 	cmd.Flags().Uint64(flagExportChainHeightStart, 1, "Start block height for export")
 	cmd.Flags().Uint64(flagExportChainHeightEnd, 0, "End block height for export")
 
@@ -115,7 +116,7 @@ func exportChain(cdc *codec.Codec, sHeight, eHeight int64, bs *bc.BlockStore, w 
 	txDecoder := auth.DefaultTxDecoder(cdc)
 	streamEncoder := json.NewEncoder(w)
 
-	for ; currHeight < eHeight; currHeight++ {
+	for ; currHeight <= eHeight; currHeight++ {
 		block := bs.LoadBlock(currHeight)
 		export := exportTx{
 			Height:     block.Height,

@@ -80,8 +80,8 @@ func ValidateGenesis(data GenesisState) error {
 			govPenalty.String())
 	}
 
-	if data.DepositParams.MaxDepositPeriod < data.VotingParams.VotingPeriod {
-		return fmt.Errorf("Governance deposit period should be less than the voting period (%ds), is %ds",
+	if data.DepositParams.MaxDepositPeriod > data.VotingParams.VotingPeriod {
+		return fmt.Errorf("Governance deposit period should be less than or equal to the voting period (%ds), is %ds",
 			data.VotingParams.VotingPeriod, data.DepositParams.MaxDepositPeriod)
 	}
 

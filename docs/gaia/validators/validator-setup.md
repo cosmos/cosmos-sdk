@@ -1,4 +1,4 @@
-# Run a validator on the gaia public testnet
+# Run a Validator on Public Testnet
 
 ::: tip
 Information on how to join the current testnet (`genesis.json` file and seeds) is held [in our `testnet` repo](https://github.com/cosmos/testnets/tree/master/latest). Please check there if you are looking to join our latest testnet. 

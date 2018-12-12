@@ -5,12 +5,13 @@ import (
 	"strings"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -119,6 +120,15 @@ func TestTxValidateBasic(t *testing.T) {
 	err = tx.ValidateBasic()
 	require.Error(t, err)
 	require.Equal(t, sdk.CodeTooManySignatures, err.Result().Code)
+
+	// require to fail with invalid gas supplied
+	badFee = newStdFee()
+	badFee.Gas = 9223372036854775808
+	tx = newTestTx(ctx, nil, nil, nil, nil, badFee)
+
+	err = tx.ValidateBasic()
+	require.Error(t, err)
+	require.Equal(t, sdk.CodeGasOverflow, err.Result().Code)
 
 	// require to pass when above criteria are matched
 	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}

@@ -11,6 +11,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	cfg "github.com/tendermint/tendermint/config"
+	"github.com/tendermint/tendermint/crypto"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/common"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -23,10 +28,6 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/common"
 )
 
 const (
@@ -136,9 +137,12 @@ following delegation and commission default parameters:
 			}
 
 			// Fetch output file name
-			outputDocument, err := makeOutputFilepath(config.RootDir, nodeID)
-			if err != nil {
-				return err
+			outputDocument := viper.GetString(client.FlagOutputDocument)
+			if outputDocument == "" {
+				outputDocument, err = makeOutputFilepath(config.RootDir, nodeID)
+				if err != nil {
+					return err
+				}
 			}
 
 			if err := writeSignedGenTx(cdc, outputDocument, signedTx); err != nil {
@@ -153,6 +157,8 @@ following delegation and commission default parameters:
 	cmd.Flags().String(tmcli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
+	cmd.Flags().String(client.FlagOutputDocument, "",
+		"write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
 	cmd.Flags().AddFlagSet(cli.FsAmount)
 	cmd.Flags().AddFlagSet(cli.FsPk)

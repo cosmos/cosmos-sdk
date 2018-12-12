@@ -1,8 +1,9 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 // GetKeyBase initializes a keybase based on the given db.

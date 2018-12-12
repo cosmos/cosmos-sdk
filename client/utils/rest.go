@@ -133,7 +133,7 @@ func NewBaseReq(
 	}
 }
 
-// Sanitize cleans up the values
+// Sanitize performs basic sanitization on a BaseReq object.
 func (br BaseReq) Sanitize() BaseReq {
 	newBr := NewBaseReq(
 		br.Name, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,

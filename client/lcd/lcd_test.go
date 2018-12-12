@@ -173,9 +173,10 @@ func TestCoinSend(t *testing.T) {
 	acc = getAccount(t, port, addr)
 	coins := acc.GetCoins()
 	mycoins := coins[0]
+	expectedBalance := initialBalance[0].Minus(fees[0])
 
 	require.Equal(t, stakeTypes.DefaultBondDenom, mycoins.Denom)
-	require.Equal(t, initialBalance[0].Minus(fees[0]).Amount.SubRaw(1), mycoins.Amount)
+	require.Equal(t, expectedBalance.Amount.SubRaw(1), mycoins.Amount)
 
 	// query receiver
 	acc = getAccount(t, port, receiveAddr)
@@ -212,6 +213,10 @@ func TestCoinSend(t *testing.T) {
 	require.Nil(t, json.Unmarshal([]byte(body), &responseBody))
 	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, fmt.Sprintf("%v", responseBody.GasEstimate), 0, false, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	acc = getAccount(t, port, addr)
+	expectedBalance = expectedBalance.Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount.SubRaw(1), acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 }
 
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
@@ -377,6 +382,9 @@ func TestBonding(t *testing.T) {
 	amt := sdk.NewDec(60)
 	validator := getValidator(t, port, operAddrs[0])
 
+	acc := getAccount(t, port, addr)
+	initialBalance := acc.GetCoins()
+
 	// create bond TX
 	resultTx := doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
@@ -392,10 +400,12 @@ func TestBonding(t *testing.T) {
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
-	acc := getAccount(t, port, addr)
+	// verify balance
+	acc = getAccount(t, port, addr)
 	coins := acc.GetCoins()
-
-	require.Equal(t, int64(35), coins.AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	expectedBalance := initialBalance[0].Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount.SubRaw(60), coins.AmountOf(stakeTypes.DefaultBondDenom))
+	expectedBalance = coins[0]
 
 	// query delegation
 	bond := getDelegation(t, port, addr, operAddrs[0])
@@ -427,7 +437,9 @@ func TestBonding(t *testing.T) {
 	// sender should have not received any coins as the unbonding has only just begun
 	acc = getAccount(t, port, addr)
 	coins = acc.GetCoins()
-	require.Equal(t, int64(30), coins.AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	expectedBalance = expectedBalance.Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount, coins.AmountOf(stakeTypes.DefaultBondDenom))
+	expectedBalance = coins[0]
 
 	// query tx
 	txs = getTransactions(t, port,
@@ -438,7 +450,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
 	unbonding := getUndelegation(t, port, addr, operAddrs[0])
-	require.Equal(t, "30", unbonding.Balance.Amount.String())
+	require.Equal(t, int64(30), unbonding.Balance.Amount.Int64())
 
 	// test redelegation
 	resultTx = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], 30, fees)
@@ -446,6 +458,11 @@ func TestBonding(t *testing.T) {
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// verify balance after paying fees
+	acc = getAccount(t, port, addr)
+	expectedBalance = expectedBalance.Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount, acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom))
 
 	// query tx
 	txs = getTransactions(t, port,
@@ -499,6 +516,9 @@ func TestSubmitProposal(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
+	acc := getAccount(t, port, addr)
+	initialBalance := acc.GetCoins()
+
 	// create SubmitProposal TX
 	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 5, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
@@ -509,6 +529,11 @@ func TestSubmitProposal(t *testing.T) {
 
 	var proposalID uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
+
+	// verify balance
+	acc = getAccount(t, port, addr)
+	expectedBalance := initialBalance[0].Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount.SubRaw(5), acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom))
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -525,6 +550,9 @@ func TestDeposit(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
+	acc := getAccount(t, port, addr)
+	initialBalance := acc.GetCoins()
+
 	// create SubmitProposal TX
 	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 5, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
@@ -536,6 +564,13 @@ func TestDeposit(t *testing.T) {
 	var proposalID uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
 
+	// verify balance
+	acc = getAccount(t, port, addr)
+	coins := acc.GetCoins()
+	expectedBalance := initialBalance[0].Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount.SubRaw(5), coins.AmountOf(stakeTypes.DefaultBondDenom))
+	expectedBalance = coins[0]
+
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
 	require.Equal(t, "Test", proposal.GetTitle())
@@ -543,6 +578,11 @@ func TestDeposit(t *testing.T) {
 	// create SubmitProposal TX
 	resultTx = doDeposit(t, port, seed, name1, pw, addr, proposalID, 5, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// verify balance after deposit and fee
+	acc = getAccount(t, port, addr)
+	expectedBalance = expectedBalance.Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount.SubRaw(5), acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom))
 
 	// query tx
 	txs := getTransactions(t, port, fmt.Sprintf("action=deposit&depositor=%s", addr))
@@ -563,8 +603,11 @@ func TestVote(t *testing.T) {
 	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
+	acc := getAccount(t, port, addr)
+	initialBalance := acc.GetCoins()
+
 	// create SubmitProposal TX
-	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 5, fees)
+	resultTx := doSubmitProposal(t, port, seed, name1, pw, addr, 10, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
@@ -574,21 +617,28 @@ func TestVote(t *testing.T) {
 	var proposalID uint64
 	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
 
+	// verify balance
+	acc = getAccount(t, port, addr)
+	coins := acc.GetCoins()
+	expectedBalance := initialBalance[0].Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount.SubRaw(10), coins.AmountOf(stakeTypes.DefaultBondDenom))
+	expectedBalance = coins[0]
+
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
 	require.Equal(t, "Test", proposal.GetTitle())
-
-	// deposit
-	resultTx = doDeposit(t, port, seed, name1, pw, addr, proposalID, 5, fees)
-	tests.WaitForHeight(resultTx.Height+1, port)
-
-	// query proposal
-	proposal = getProposal(t, port, proposalID)
 	require.Equal(t, gov.StatusVotingPeriod, proposal.GetStatus())
 
 	// vote
-	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID, fees)
+	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID, "Yes", fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// verify balance after vote and fee
+	acc = getAccount(t, port, addr)
+	coins = acc.GetCoins()
+	expectedBalance = expectedBalance.Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount, coins.AmountOf(stakeTypes.DefaultBondDenom))
+	expectedBalance = coins[0]
 
 	// query tx
 	txs := getTransactions(t, port, fmt.Sprintf("action=vote&voter=%s", addr))
@@ -606,12 +656,28 @@ func TestVote(t *testing.T) {
 	resultTx = doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	// vote
-	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID, fees)
-	tests.WaitForHeight(resultTx.Height+1, port)
+	// verify balance
+	acc = getAccount(t, port, addr)
+	coins = acc.GetCoins()
+	expectedBalance = expectedBalance.Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount.SubRaw(60), coins.AmountOf(stakeTypes.DefaultBondDenom))
+	expectedBalance = coins[0]
 
 	tally = getTally(t, port, proposalID)
 	require.Equal(t, sdk.NewDec(60), tally.Yes, "tally should be equal to the amount delegated")
+
+	// change vote option
+	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID, "No", fees)
+	tests.WaitForHeight(resultTx.Height+1, port)
+
+	// verify balance
+	acc = getAccount(t, port, addr)
+	expectedBalance = expectedBalance.Minus(fees[0])
+	require.Equal(t, expectedBalance.Amount, acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom))
+
+	tally = getTally(t, port, proposalID)
+	require.Equal(t, sdk.ZeroDec(), tally.Yes, "tally should be 0 the user changed the option")
+	require.Equal(t, sdk.NewDec(60), tally.No, "tally should be equal to the amount delegated")
 }
 
 func TestUnjail(t *testing.T) {
@@ -700,13 +766,13 @@ func TestProposalsQuery(t *testing.T) {
 	require.Equal(t, proposalID3, proposals[1].GetProposalID())
 
 	// Addr1 votes on proposals #2 & #3
-	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID2, fees)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID2, "Yes", fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID3, fees)
+	resultTx = doVote(t, port, seeds[0], names[0], passwords[0], addrs[0], proposalID3, "Yes", fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 votes on proposal #3
-	resultTx = doVote(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, fees)
+	resultTx = doVote(t, port, seeds[1], names[1], passwords[1], addrs[1], proposalID3, "Yes", fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Test query all proposals

@@ -1177,7 +1177,7 @@ func getTally(t *testing.T, port string, proposalID uint64) gov.TallyResult {
 }
 
 // POST /gov/proposals/{proposalId}/votes Vote a proposal
-func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, option string, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
@@ -1187,7 +1187,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 
 	vr := voteReq{
 		Voter:   proposerAddr,
-		Option:  "Yes",
+		Option:  option,
 		BaseReq: baseReq,
 	}
 

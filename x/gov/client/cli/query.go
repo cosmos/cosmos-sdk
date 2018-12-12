@@ -160,8 +160,9 @@ func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a single vote",
 		Long: strings.TrimSpace(`
-Query details for a single vote on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Query details for a single vote on a proposal given its identifier.
 
+Example:
 $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -179,23 +180,32 @@ $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
-			// get voter address
 			voterAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			// Construct query
 			params := gov.NewQueryVoteParams(proposalID, voterAddr)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			// Query store
 			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/vote", queryRoute), bz)
 			if err != nil {
 				return err
+			}
+
+			var vote gov.Vote
+			// FIXME: We should check the error here but empty/non-existing votes will
+			// fail to unmarshal.
+			cdc.UnmarshalJSON(res, &vote)
+
+			if vote.Empty() {
+				res, err = gcutils.QueryVoteByTxQuery(cdc, cliCtx, params)
+				if err != nil {
+					return err
+				}
 			}
 
 			fmt.Println(string(res))

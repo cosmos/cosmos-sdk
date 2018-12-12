@@ -197,8 +197,6 @@ $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			var vote gov.Vote
-			// FIXME: We should check the error here but empty/non-existing votes will
-			// fail to unmarshal.
 			cdc.UnmarshalJSON(res, &vote)
 
 			if vote.Empty() {
@@ -318,8 +316,6 @@ $ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			}
 
 			var deposit gov.Deposit
-			// FIXME: We should check the error here but empty/non-existing deposits will
-			// fail to unmarshal.
 			cdc.UnmarshalJSON(res, &deposit)
 
 			if deposit.Empty() {

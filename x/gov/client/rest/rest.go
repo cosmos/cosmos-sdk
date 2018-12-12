@@ -336,8 +336,6 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		}
 
 		var deposit gov.Deposit
-		// FIXME: We should check the error here but empty/non-existing deposits will
-		// fail to unmarshal.
 		cdc.UnmarshalJSON(res, &deposit)
 
 		// For an empty deposit, either the proposal does not exist or is inactive in
@@ -412,8 +410,6 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 		}
 
 		var vote gov.Vote
-		// FIXME: We should check the error here but empty/non-existing votes will
-		// fail to unmarshal.
 		cdc.UnmarshalJSON(res, &vote)
 
 		// For an empty vote, either the proposal does not exist or is inactive in

@@ -335,7 +335,7 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		}
 
 		var deposit gov.Deposit
-		// TODO: We should check the error here but empty/non-existing deposits will
+		// FIXME: We should check the error here but empty/non-existing deposits will
 		// fail to unmarshal.
 		cdc.UnmarshalJSON(res, &deposit)
 
@@ -408,7 +408,7 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 		}
 
 		var vote gov.Vote
-		// TODO: We should check the error here but empty/non-existing votes will
+		// FIXME: We should check the error here but empty/non-existing votes will
 		// fail to unmarshal.
 		cdc.UnmarshalJSON(res, &vote)
 

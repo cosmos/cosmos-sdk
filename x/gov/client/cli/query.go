@@ -271,8 +271,9 @@ func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a deposit",
 		Long: strings.TrimSpace(`
-Query details for a single proposal deposit on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Query details for a single proposal deposit on a proposal by its identifier.
 
+Example:
 $ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -290,23 +291,32 @@ $ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
-			// Get the depositer address
 			depositorAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			// Construct query
 			params := gov.NewQueryDepositParams(proposalID, depositorAddr)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			// Query store
 			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposit", queryRoute), bz)
 			if err != nil {
 				return err
+			}
+
+			var deposit gov.Deposit
+			// FIXME: We should check the error here but empty/non-existing deposits will
+			// fail to unmarshal.
+			cdc.UnmarshalJSON(res, &deposit)
+
+			if deposit.Empty() {
+				res, err = gcutils.QueryDepositByTxQuery(cdc, cliCtx, params)
+				if err != nil {
+					return err
+				}
 			}
 
 			fmt.Println(string(res))

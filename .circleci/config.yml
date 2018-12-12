@@ -63,8 +63,7 @@ jobs:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_tools
-            make get_dev_tools
+            make devtools
       - run:
           name: Lint source
           command: |

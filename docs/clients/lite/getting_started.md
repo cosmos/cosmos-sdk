@@ -26,7 +26,7 @@ gaiacli advanced rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
     --node tcp://localhost:26657 \
     --trust-node=false \
-    --certfile=mycert.pem --keyfile=mykey.key
+    --ssl-certfile=mycert.pem --ssl-keyfile=mykey.key
 ```
 
 If no certificate/keyfile pair is supplied, a self-signed certificate will be generated and its fingerprint printed out.

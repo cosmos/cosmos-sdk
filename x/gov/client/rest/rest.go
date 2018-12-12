@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -277,11 +278,11 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		// as they're no longer in state.
 		propStatus := proposal.GetStatus()
 		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
-			queryDepositsByTxQuery(cdc, cliCtx, w, params)
-			return
+			res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
+		} else {
+			res, err = cliCtx.QueryWithData("custom/gov/deposits", bz)
 		}
 
-		res, err = cliCtx.QueryWithData("custom/gov/deposits", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -349,15 +350,18 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 				return
 			}
 
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+			res, err = cliCtx.QueryWithData("custom/gov/proposal", bz)
 			if err != nil || len(res) == 0 {
 				err := fmt.Errorf("proposalID %d does not exist", proposalID)
 				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 				return
 			}
 
-			queryDepositByTxQuery(cdc, cliCtx, w, params)
-			return
+			res, err = gcutils.QueryDepositByTxQuery(cdc, cliCtx, params)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
 		}
 
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
@@ -422,15 +426,18 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 				return
 			}
 
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+			res, err = cliCtx.QueryWithData("custom/gov/proposal", bz)
 			if err != nil || len(res) == 0 {
 				err := fmt.Errorf("proposalID %d does not exist", proposalID)
 				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 				return
 			}
 
-			queryVoteByTxQuery(cdc, cliCtx, w, params)
-			return
+			res, err = gcutils.QueryVoteByTxQuery(cdc, cliCtx, params)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
 		}
 
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
@@ -478,11 +485,11 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		// as they're no longer in state.
 		propStatus := proposal.GetStatus()
 		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
-			queryVotesByTxQuery(cdc, cliCtx, w, params)
-			return
+			res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
+		} else {
+			res, err = cliCtx.QueryWithData("custom/gov/votes", bz)
 		}
 
-		res, err = cliCtx.QueryWithData("custom/gov/votes", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -1,26 +1,24 @@
-package rest
+package utils
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
 
-// queryDepositsByTxQuery will query for deposits via a direct txs tags query. It
-// will fetch and build deposits directly from the returned txs and write the
-// JSON response to the provided ResponseWriter.
+// QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
+// will fetch and build deposits directly from the returned txs and return a
+// JSON marshalled result or any error that occurred.
 //
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
-func queryDepositsByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, params gov.QueryProposalParams,
-) {
+func QueryDepositsByTxQuery(
+	cdc *codec.Codec, cliCtx context.CLIContext, params gov.QueryProposalParams,
+) ([]byte, error) {
 
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalDeposit),
@@ -29,8 +27,7 @@ func queryDepositsByTxQuery(
 
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
+		return nil, err
 	}
 
 	var deposits []gov.Deposit
@@ -49,18 +46,19 @@ func queryDepositsByTxQuery(
 		}
 	}
 
-	utils.PostProcessResponse(w, cdc, deposits, cliCtx.Indent)
+	return cdc.MarshalJSON(deposits)
 }
 
-// queryVotesByTxQuery will query for votes via a direct txs tags query. It
-// will fetch and build votes directly from the returned txs and write the
-// JSON response to the provided ResponseWriter.
+// QueryVotesByTxQuery will query for votes via a direct txs tags query. It
+// will fetch and build votes directly from the returned txs and return a JSON
+// marshalled result or any error that occurred.
 //
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
-func queryVotesByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, params gov.QueryProposalParams,
-) {
+func QueryVotesByTxQuery(
+	cdc *codec.Codec, cliCtx context.CLIContext, params gov.QueryProposalParams,
+) ([]byte, error) {
+
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalVote),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
@@ -68,8 +66,7 @@ func queryVotesByTxQuery(
 
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
+		return nil, err
 	}
 
 	var votes []gov.Vote
@@ -88,13 +85,13 @@ func queryVotesByTxQuery(
 		}
 	}
 
-	utils.PostProcessResponse(w, cdc, votes, cliCtx.Indent)
+	return cdc.MarshalJSON(votes)
 }
 
-// queryVoteByTxQuery will query for a single vote via a direct txs tags query.
-func queryVoteByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, params gov.QueryVoteParams,
-) {
+// QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
+func QueryVoteByTxQuery(
+	cdc *codec.Codec, cliCtx context.CLIContext, params gov.QueryVoteParams,
+) ([]byte, error) {
 
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalVote),
@@ -104,8 +101,7 @@ func queryVoteByTxQuery(
 
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
+		return nil, err
 	}
 
 	for _, info := range infos {
@@ -113,28 +109,27 @@ func queryVoteByTxQuery(
 			if msg.Type() == gov.TypeMsgVote {
 				voteMsg := msg.(gov.MsgVote)
 
-				// there should only be a single vote under the given conditions
 				vote := gov.Vote{
 					Voter:      voteMsg.Voter,
 					ProposalID: params.ProposalID,
 					Option:     voteMsg.Option,
 				}
 
-				utils.PostProcessResponse(w, cdc, vote, cliCtx.Indent)
-				return
+				// there should only be a single vote under the given conditions
+				return cdc.MarshalJSON(vote)
 			}
 		}
 	}
 
 	err = fmt.Errorf("address '%s' did not vote on proposalID %d", params.Voter, params.ProposalID)
-	utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+	return nil, err
 }
 
-// queryDepositByTxQuery will query for a single deposit via a direct txs tags
+// QueryDepositByTxQuery will query for a single deposit via a direct txs tags
 // query.
-func queryDepositByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, params gov.QueryDepositParams,
-) {
+func QueryDepositByTxQuery(
+	cdc *codec.Codec, cliCtx context.CLIContext, params gov.QueryDepositParams,
+) ([]byte, error) {
 
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalDeposit),
@@ -144,8 +139,7 @@ func queryDepositByTxQuery(
 
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
+		return nil, err
 	}
 
 	for _, info := range infos {
@@ -153,19 +147,18 @@ func queryDepositByTxQuery(
 			if msg.Type() == gov.TypeMsgDeposit {
 				depMsg := msg.(gov.MsgDeposit)
 
-				// there should only be a single deposit under the given conditions
 				deposit := gov.Deposit{
 					Depositor:  depMsg.Depositor,
 					ProposalID: params.ProposalID,
 					Amount:     depMsg.Amount,
 				}
 
-				utils.PostProcessResponse(w, cdc, deposit, cliCtx.Indent)
-				return
+				// there should only be a single deposit under the given conditions
+				return cdc.MarshalJSON(deposit)
 			}
 		}
 	}
 
 	err = fmt.Errorf("address '%s' did not deposit to proposalID %d", params.Depositor, params.ProposalID)
-	utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+	return nil, err
 }

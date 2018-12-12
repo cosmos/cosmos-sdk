@@ -320,10 +320,7 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		params := gov.QueryDepositParams{
-			ProposalID: proposalID,
-			Depositor:  depositorAddr,
-		}
+		params := gov.NewQueryDepositParams(proposalID, depositorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -338,16 +335,28 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		}
 
 		var deposit gov.Deposit
+		// TODO: We should check the error here but empty/non-existing deposits will
+		// fail to unmarshal.
 		cdc.UnmarshalJSON(res, &deposit)
+
+		// For an empty deposit, either the proposal does not exist or is inactive in
+		// which case the deposit would be removed from state and should be queried
+		// for directly via a txs query.
 		if deposit.Empty() {
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinaryLengthPrefixed(gov.QueryProposalParams{params.ProposalID}))
+			bz, err := cdc.MarshalJSON(gov.NewQueryProposalParams(proposalID))
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
 			if err != nil || len(res) == 0 {
-				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+				err := fmt.Errorf("proposalID %d does not exist", proposalID)
 				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 				return
 			}
-			err = errors.Errorf("depositor [%s] did not deposit on proposalID [%d]", bechDepositorAddr, proposalID)
-			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+
+			queryDepositByTxQuery(cdc, cliCtx, w, params)
 			return
 		}
 

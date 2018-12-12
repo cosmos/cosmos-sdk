@@ -92,9 +92,6 @@ func queryVotesByTxQuery(
 }
 
 // queryVoteByTxQuery will query for a single vote via a direct txs tags query.
-//
-// NOTE: SearchTxs is used to facilitate the txs query which does not currently
-// support configurable pagination.
 func queryVoteByTxQuery(
 	cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, params gov.QueryVoteParams,
 ) {
@@ -116,7 +113,7 @@ func queryVoteByTxQuery(
 			if msg.Type() == gov.TypeMsgVote {
 				voteMsg := msg.(gov.MsgVote)
 
-				// there should only be a single vote under the given condition
+				// there should only be a single vote under the given conditions
 				vote := gov.Vote{
 					Voter:      voteMsg.Voter,
 					ProposalID: params.ProposalID,
@@ -129,6 +126,46 @@ func queryVoteByTxQuery(
 		}
 	}
 
-	err = fmt.Errorf("voter '%s' did not vote on proposalID %d", params.Voter, params.ProposalID)
+	err = fmt.Errorf("address '%s' did not vote on proposalID %d", params.Voter, params.ProposalID)
+	utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+}
+
+// queryDepositByTxQuery will query for a single deposit via a direct txs tags
+// query.
+func queryDepositByTxQuery(
+	cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, params gov.QueryDepositParams,
+) {
+
+	tags := []string{
+		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalDeposit),
+		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+		fmt.Sprintf("%s='%s'", tags.Depositor, []byte(params.Depositor.String())),
+	}
+
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	if err != nil {
+		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, info := range infos {
+		for _, msg := range info.Tx.GetMsgs() {
+			if msg.Type() == gov.TypeMsgDeposit {
+				depMsg := msg.(gov.MsgDeposit)
+
+				// there should only be a single deposit under the given conditions
+				deposit := gov.Deposit{
+					Depositor:  depMsg.Depositor,
+					ProposalID: params.ProposalID,
+					Amount:     depMsg.Amount,
+				}
+
+				utils.PostProcessResponse(w, cdc, deposit, cliCtx.Indent)
+				return
+			}
+		}
+	}
+
+	err = fmt.Errorf("address '%s' did not deposit to proposalID %d", params.Depositor, params.ProposalID)
 	utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 }

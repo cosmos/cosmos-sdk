@@ -225,9 +225,7 @@ func queryProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		params := gov.QueryProposalParams{
-			ProposalID: proposalID,
-		}
+		params := gov.NewQueryProposalParams(proposalID)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -263,7 +261,26 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/deposits", bz)
+		res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		var proposal gov.Proposal
+		if err := cdc.UnmarshalJSON(res, &proposal); err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		// For inactive proposals we must query the txs directly to get the deposits
+		// as they're no longer in state.
+		if proposal.GetStatus() != gov.StatusVotingPeriod {
+			queryDepositsByTxQuery(cdc, cliCtx, w, proposalID)
+			return
+		}
+
+		res, err = cliCtx.QueryWithData("custom/gov/deposits", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

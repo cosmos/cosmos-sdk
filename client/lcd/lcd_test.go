@@ -501,7 +501,7 @@ func TestSubmitProposal(t *testing.T) {
 	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 
 	var proposalID uint64
-	cdc.MustUnmarshalBinaryBare(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
 
 	// query proposal
 	proposal := getProposal(t, port, proposalID)
@@ -686,6 +686,7 @@ func TestProposalsQuery(t *testing.T) {
 	proposals := getProposalsFilterStatus(t, port, gov.StatusDepositPeriod)
 	require.Len(t, proposals, 1)
 	require.Equal(t, proposalID1, proposals[0].GetProposalID())
+
 	// Only proposals #2 and #3 should be in Voting Period
 	proposals = getProposalsFilterStatus(t, port, gov.StatusVotingPeriod)
 	require.Len(t, proposals, 2)

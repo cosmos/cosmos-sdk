@@ -275,7 +275,8 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 
 		// For inactive proposals we must query the txs directly to get the deposits
 		// as they're no longer in state.
-		if proposal.GetStatus() != gov.StatusVotingPeriod {
+		propStatus := proposal.GetStatus()
+		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 			queryDepositsByTxQuery(cdc, cliCtx, w, proposalID)
 			return
 		}
@@ -383,10 +384,8 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 			return
 		}
 
-		params := gov.QueryVoteParams{
-			Voter:      voterAddr,
-			ProposalID: proposalID,
-		}
+		params := gov.NewQueryVoteParams(proposalID, voterAddr)
+
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -400,7 +399,11 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 		}
 
 		var vote gov.Vote
-		cdc.UnmarshalJSON(res, &vote)
+		if err := cdc.UnmarshalJSON(res, &vote); err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
 		if vote.Empty() {
 			bz, err := cdc.MarshalJSON(gov.QueryProposalParams{params.ProposalID})
 			if err != nil {
@@ -417,6 +420,7 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return
 		}
+
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
@@ -460,7 +464,8 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 
 		// For inactive proposals we must query the txs directly to get the votes
 		// as they're no longer in state.
-		if proposal.GetStatus() != gov.StatusVotingPeriod {
+		propStatus := proposal.GetStatus()
+		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
 			queryVotesByTxQuery(cdc, cliCtx, w, proposalID)
 			return
 		}

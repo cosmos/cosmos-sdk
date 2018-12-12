@@ -44,7 +44,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	return sdk.Result{
-		Data: keeper.cdc.MustMarshalBinaryBare(proposalID),
+		Data: keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID),
 		Tags: resTags,
 	}
 }

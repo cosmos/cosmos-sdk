@@ -25,6 +25,7 @@ FEATURES
 * Gaia
 
 * SDK
+  - [\#2926](https://github.com/cosmos/cosmos-sdk/issues/2926) Add TxEncoder to client TxBuilder.
 
 * Tendermint
 

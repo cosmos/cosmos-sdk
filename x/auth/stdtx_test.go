@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"strings"
 	"testing"
 
@@ -136,4 +137,26 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.NoError(t, err)
+}
+
+func TestDefaultTxEncoder(t *testing.T) {
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	RegisterCodec(cdc)
+	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	encoder := DefaultTxEncoder(cdc)
+
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	fee := newStdFee()
+	sigs := []StdSignature{}
+
+	tx := NewStdTx(msgs, fee, sigs, "")
+
+	cdcBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
+
+	require.NoError(t, err)
+	encoderBytes, err := encoder(tx)
+
+	require.NoError(t, err)
+	require.Equal(t, cdcBytes, encoderBytes)
 }

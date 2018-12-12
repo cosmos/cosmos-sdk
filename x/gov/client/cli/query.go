@@ -337,21 +337,30 @@ $ gaiacli query gov deposits 1
 				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
 			}
 
-			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
-			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
-			}
-
-			// Construct query
 			params := gov.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			// Query store
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposits", queryRoute), bz)
+			// check to see if the proposal is in the store
+			res, err := queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			if err != nil {
+				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
+			}
+
+			var proposal gov.Proposal
+			if err := cdc.UnmarshalJSON(res, &proposal); err != nil {
+				return err
+			}
+
+			propStatus := proposal.GetStatus()
+			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
+				res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
+			} else {
+				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposits", queryRoute), bz)
+			}
+
 			if err != nil {
 				return err
 			}

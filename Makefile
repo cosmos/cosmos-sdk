@@ -9,7 +9,7 @@ GOTOOLS = \
 	github.com/alecthomas/gometalinter \
 	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
-all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
+all: devtools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
 
 # The below include contains the get_tools target.
 include scripts/Makefile
@@ -17,7 +17,7 @@ include scripts/Makefile
 ########################################
 ### CI
 
-ci: get_tools get_vendor_deps install test_cover test_lint test
+ci: devtools get_vendor_deps install test_cover test_lint test
 
 ########################################
 ### Build/Install
@@ -121,26 +121,34 @@ update_dev_tools:
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get -u github.com/tendermint/lint/golint
 
-get_dev_tools: get_tools
+devtools: devtools-stamp
+devtools-stamp: tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get github.com/tendermint/lint/golint
+	touch $@
 
-get_vendor_deps: get_tools
+get_vendor_deps: tools
 	@echo "--> Generating vendor directory via dep ensure"
 	@rm -rf .vendor-new
 	@dep ensure -v -vendor-only
 
-update_vendor_deps: get_tools
+update_vendor_deps: tools
 	@echo "--> Running dep ensure"
 	@rm -rf .vendor-new
 	@dep ensure -v
 
-draw_deps: get_tools
+draw_deps: tools
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
+tools: tools-stamp
+tools-stamp: get_tools
+	touch $@
+
+clean:
+	rm -f tools-stamp devtools-stamp
 
 ########################################
 ### Documentation
@@ -261,7 +269,7 @@ localnet-stop:
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build build_cosmos-sdk-cli build_examples install install_examples install_cosmos-sdk-cli install_debug dist \
-check_tools check_dev_tools get_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
+check_tools check_dev_tools devtools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \

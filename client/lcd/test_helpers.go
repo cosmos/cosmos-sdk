@@ -742,8 +742,8 @@ func doDelegate(t *testing.T, port, name, password string,
 	baseReq := utils.NewBaseReq(name, password, "", chainID, 0, "", accnum, sequence, fees, false, false)
 	msg := msgDelegationsInput{
 		BaseReq:       baseReq,
-		DelegatorAddr: delAddr.String(),
-		ValidatorAddr: valAddr.String(),
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
 		Delegation:    sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
@@ -759,10 +759,10 @@ func doDelegate(t *testing.T, port, name, password string,
 }
 
 type msgDelegationsInput struct {
-	BaseReq       utils.BaseReq `json:"base_req"`
-	DelegatorAddr string        `json:"delegator_addr"` // in bech32
-	ValidatorAddr string        `json:"validator_addr"` // in bech32
-	Delegation    sdk.Coin      `json:"delegation"`
+	BaseReq       utils.BaseReq  `json:"base_req"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
+	Delegation    sdk.Coin       `json:"delegation"`
 }
 
 // POST /stake/delegators/{delegatorAddr}/delegations Submit delegation
@@ -776,8 +776,8 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 	baseReq := utils.NewBaseReq(name, password, "", chainID, 0, "", accnum, sequence, fees, false, false)
 	msg := msgBeginUnbondingInput{
 		BaseReq:       baseReq,
-		DelegatorAddr: delAddr.String(),
-		ValidatorAddr: valAddr.String(),
+		DelegatorAddr: delAddr,
+		ValidatorAddr: valAddr,
 		SharesAmount:  sdk.NewDec(amount),
 	}
 
@@ -795,10 +795,10 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 }
 
 type msgBeginUnbondingInput struct {
-	BaseReq       utils.BaseReq `json:"base_req"`
-	DelegatorAddr string        `json:"delegator_addr"` // in bech32
-	ValidatorAddr string        `json:"validator_addr"` // in bech32
-	SharesAmount  sdk.Dec       `json:"shares"`
+	BaseReq       utils.BaseReq  `json:"base_req"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
+	SharesAmount  sdk.Dec        `json:"shares"`
 }
 
 // POST /stake/delegators/{delegatorAddr}/delegations Submit delegation
@@ -814,9 +814,9 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 
 	msg := msgBeginRedelegateInput{
 		BaseReq:          baseReq,
-		DelegatorAddr:    delAddr.String(),
-		ValidatorSrcAddr: valSrcAddr.String(),
-		ValidatorDstAddr: valDstAddr.String(),
+		DelegatorAddr:    delAddr,
+		ValidatorSrcAddr: valSrcAddr,
+		ValidatorDstAddr: valDstAddr,
 		SharesAmount:     sdk.NewDec(amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
@@ -833,11 +833,11 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 }
 
 type msgBeginRedelegateInput struct {
-	BaseReq          utils.BaseReq `json:"base_req"`
-	DelegatorAddr    string        `json:"delegator_addr"`     // in bech32
-	ValidatorSrcAddr string        `json:"validator_src_addr"` // in bech32
-	ValidatorDstAddr string        `json:"validator_dst_addr"` // in bech32
-	SharesAmount     sdk.Dec       `json:"shares"`
+	BaseReq          utils.BaseReq  `json:"base_req"`
+	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
+	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
+	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // in bech32
+	SharesAmount     sdk.Dec        `json:"shares"`
 }
 
 // GET /stake/delegators/{delegatorAddr}/delegations Get all delegations from a delegator

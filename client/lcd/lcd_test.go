@@ -39,7 +39,7 @@ const (
 	altPw = "12345678901"
 )
 
-var fees sdk.Coins = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 5)}
+var fees = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 5)}
 
 func init() {
 	mintkey.BcryptSecurityParameter = 1
@@ -172,43 +172,45 @@ func TestCoinSend(t *testing.T) {
 	// query sender
 	acc = getAccount(t, port, addr)
 	coins := acc.GetCoins()
-	mycoins := coins[0]
 	expectedBalance := initialBalance[0].Minus(fees[0])
 
-	require.Equal(t, stakeTypes.DefaultBondDenom, mycoins.Denom)
-	require.Equal(t, expectedBalance.Amount.SubRaw(1), mycoins.Amount)
+	require.Equal(t, stakeTypes.DefaultBondDenom, coins[0].Denom)
+	require.Equal(t, expectedBalance.Amount.SubRaw(1), coins[0].Amount)
+	expectedBalance = coins[0]
 
 	// query receiver
-	acc = getAccount(t, port, receiveAddr)
-	coins = acc.GetCoins()
-	mycoins = coins[0]
-
-	require.Equal(t, stakeTypes.DefaultBondDenom, mycoins.Denom)
-	require.Equal(t, int64(1), mycoins.Amount.Int64())
-
-	lowFees := sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1)}
+	acc2 := getAccount(t, port, receiveAddr)
+	coins2 := acc2.GetCoins()
+	require.Equal(t, stakeTypes.DefaultBondDenom, coins2[0].Denom)
+	require.Equal(t, int64(1), coins2[0].Amount.Int64())
 
 	// test failure with too little gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 100, 0, false, false, lowFees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 100, 0, false, false, fees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
-	// test failure with wrong adjustment
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 50000, -0.1, false, false, lowFees)
-	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+	// test failure with negative adjustment
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 10000, -0.1, true, false, fees)
+	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 50000, 1.0, true, false, lowFees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 10000, 1.0, true, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	tests.WaitForHeight(resultTx.Height+1, port)
 	var responseBody struct {
 		GasEstimate int64 `json:"gas_estimate"`
 	}
 	require.Nil(t, json.Unmarshal([]byte(body), &responseBody))
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, uint64(responseBody.GasEstimate), 0, false, false, fees)
+
+	acc = getAccount(t, port, addr)
+	require.Equal(t, expectedBalance.Amount, acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom))
+
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, uint64(responseBody.GasEstimate), 1.0, false, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	tests.WaitForHeight(resultTx.Height+1, port)
 
 	acc = getAccount(t, port, addr)
 	expectedBalance = expectedBalance.Minus(fees[0])
-	require.Equal(t, expectedBalance.Amount.SubRaw(1), acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	require.Equal(t, expectedBalance.Amount.SubRaw(1), acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom))
 }
 
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {

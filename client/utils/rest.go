@@ -217,19 +217,18 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 
 	txBldr := authtxb.NewTxBuilder(cdc, baseReq.AccountNumber, baseReq.Sequence, baseReq.Gas, gasAdjustment, baseReq.Simulate, baseReq.ChainID, baseReq.Memo, baseReq.Fees)
 
-	if baseReq.Simulate || txBldr.SimulateGas {
+	if baseReq.Simulate {
+		if gasAdjustment < 0 {
+			WriteErrorResponse(w, http.StatusBadRequest, "gas adjustment must be a positive float")
+			return
+		}
 		newBldr, err := EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		if baseReq.Simulate {
-			WriteSimulationResponse(w, newBldr.Gas)
-			return
-		}
-
-		txBldr = newBldr
+		WriteSimulationResponse(w, newBldr.Gas)
+		return
 	}
 
 	if baseReq.GenerateOnly {

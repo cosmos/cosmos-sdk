@@ -49,9 +49,6 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			return
 		}
 
-		
-		
-
 		req.BaseReq = req.BaseReq.Sanitize()
 		if !req.BaseReq.ValidateBasic(w) {
 			return

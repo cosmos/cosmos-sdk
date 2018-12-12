@@ -10,6 +10,7 @@ import (
 const (
 	MsgRoute       = "gov"
 	TypeMsgDeposit = "deposit"
+	TypeMsgVote    = "vote"
 )
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
@@ -164,7 +165,7 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) MsgV
 // Implements Msg.
 // nolint
 func (msg MsgVote) Route() string { return MsgRoute }
-func (msg MsgVote) Type() string  { return "vote" }
+func (msg MsgVote) Type() string  { return TypeMsgVote }
 
 // Implements Msg.
 func (msg MsgVote) ValidateBasic() sdk.Error {

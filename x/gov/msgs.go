@@ -6,8 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// name to idetify transaction types
-const MsgRoute = "gov"
+// Governance message types and routes
+const (
+	MsgRoute       = "gov"
+	TypeMsgDeposit = "deposit"
+)
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
@@ -100,7 +103,7 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 // Implements Msg.
 // nolint
 func (msg MsgDeposit) Route() string { return MsgRoute }
-func (msg MsgDeposit) Type() string  { return "deposit" }
+func (msg MsgDeposit) Type() string  { return TypeMsgDeposit }
 
 // Implements Msg.
 func (msg MsgDeposit) ValidateBasic() sdk.Error {

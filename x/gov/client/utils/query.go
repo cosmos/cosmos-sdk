@@ -46,6 +46,10 @@ func QueryDepositsByTxQuery(
 		}
 	}
 
+	if cliCtx.Indent {
+		return cdc.MarshalJSONIndent(deposits, "", "  ")
+	}
+
 	return cdc.MarshalJSON(deposits)
 }
 
@@ -85,6 +89,10 @@ func QueryVotesByTxQuery(
 		}
 	}
 
+	if cliCtx.Indent {
+		return cdc.MarshalJSONIndent(votes, "", "  ")
+	}
+
 	return cdc.MarshalJSON(votes)
 }
 
@@ -106,6 +114,7 @@ func QueryVoteByTxQuery(
 
 	for _, info := range infos {
 		for _, msg := range info.Tx.GetMsgs() {
+			// there should only be a single vote under the given conditions
 			if msg.Type() == gov.TypeMsgVote {
 				voteMsg := msg.(gov.MsgVote)
 
@@ -115,7 +124,10 @@ func QueryVoteByTxQuery(
 					Option:     voteMsg.Option,
 				}
 
-				// there should only be a single vote under the given conditions
+				if cliCtx.Indent {
+					return cdc.MarshalJSONIndent(vote, "", "  ")
+				}
+
 				return cdc.MarshalJSON(vote)
 			}
 		}
@@ -144,6 +156,7 @@ func QueryDepositByTxQuery(
 
 	for _, info := range infos {
 		for _, msg := range info.Tx.GetMsgs() {
+			// there should only be a single deposit under the given conditions
 			if msg.Type() == gov.TypeMsgDeposit {
 				depMsg := msg.(gov.MsgDeposit)
 
@@ -153,7 +166,10 @@ func QueryDepositByTxQuery(
 					Amount:     depMsg.Amount,
 				}
 
-				// there should only be a single deposit under the given conditions
+				if cliCtx.Indent {
+					return cdc.MarshalJSONIndent(deposit, "", "  ")
+				}
+
 				return cdc.MarshalJSON(deposit)
 			}
 		}

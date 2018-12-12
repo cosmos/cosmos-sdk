@@ -446,7 +446,26 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/votes", bz)
+		res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		var proposal gov.Proposal
+		if err := cdc.UnmarshalJSON(res, &proposal); err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		// For inactive proposals we must query the txs directly to get the votes
+		// as they're no longer in state.
+		if proposal.GetStatus() != gov.StatusVotingPeriod {
+			queryVotesByTxQuery(cdc, cliCtx, w, proposalID)
+			return
+		}
+
+		res, err = cliCtx.QueryWithData("custom/gov/votes", bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

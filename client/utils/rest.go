@@ -108,7 +108,7 @@ type BaseReq struct {
 	AccountNumber uint64    `json:"account_number"`
 	Sequence      uint64    `json:"sequence"`
 	Fees          sdk.Coins `json:"fees"`
-	Gas           string    `json:"gas"`
+	Gas           uint64    `json:"gas"`
 	GasAdjustment string    `json:"gas_adjustment"`
 	GenerateOnly  bool      `json:"generate_only"`
 	Simulate      bool      `json:"simulate"`
@@ -116,7 +116,7 @@ type BaseReq struct {
 
 // NewBaseReq creates a new basic request instance and sanitizes its values
 func NewBaseReq(
-	name, password, memo, chainID, gas, gasAdjustment string, accNumber, seq uint64,
+	name, password, memo, chainID string, gas uint64, gasAdjustment string, accNumber, seq uint64,
 	fees sdk.Coins, genOnly, simulate bool) BaseReq {
 	return BaseReq{
 		Name:          strings.TrimSpace(name),
@@ -124,7 +124,7 @@ func NewBaseReq(
 		Memo:          strings.TrimSpace(memo),
 		ChainID:       strings.TrimSpace(chainID),
 		Fees:          fees,
-		Gas:           strings.TrimSpace(gas),
+		Gas:           gas,
 		GasAdjustment: gasAdjustment,
 		AccountNumber: accNumber,
 		Sequence:      seq,
@@ -206,10 +206,8 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
 func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
-	_, gas, err := client.ReadGasFlag(baseReq.Gas)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		return
+	if baseReq.Gas == 0 {
+		baseReq.Gas = client.DefaultGasLimit
 	}
 
 	gasAdjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
@@ -217,7 +215,7 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		return
 	}
 
-	txBldr := authtxb.NewTxBuilder(cdc, baseReq.AccountNumber, baseReq.Sequence, gas, gasAdjustment, baseReq.Simulate, baseReq.ChainID, baseReq.Memo, baseReq.Fees)
+	txBldr := authtxb.NewTxBuilder(cdc, baseReq.AccountNumber, baseReq.Sequence, baseReq.Gas, gasAdjustment, baseReq.Simulate, baseReq.ChainID, baseReq.Memo, baseReq.Fees)
 
 	if baseReq.Simulate || txBldr.SimulateGas {
 		newBldr, err := EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)

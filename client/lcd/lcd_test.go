@@ -189,29 +189,21 @@ func TestCoinSend(t *testing.T) {
 	lowFees := sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1)}
 
 	// test failure with too little gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "0", 0, false, false, lowFees)
-	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
-
-	// test failure with negative gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "-200", 0, false, false, lowFees)
-	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
-
-	// test failure with 0 gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "0", 0, false, false, lowFees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 100, 0, false, false, lowFees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// test failure with wrong adjustment
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "", 0.1, true, false, lowFees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 50000, -0.1, false, false, lowFees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "200000", 0, true, false, lowFees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 50000, 1.0, true, false, lowFees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var responseBody struct {
 		GasEstimate int64 `json:"gas_estimate"`
 	}
 	require.Nil(t, json.Unmarshal([]byte(body), &responseBody))
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, fmt.Sprintf("%v", responseBody.GasEstimate), 0, false, false, fees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, uint64(responseBody.GasEstimate), 0, false, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	acc = getAccount(t, port, addr)
@@ -226,7 +218,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	acc := getAccount(t, port, addr)
 
 	// generate TX
-	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, "0", 0, false, true, fees)
+	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, 200000, 1, false, true, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var msg auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))

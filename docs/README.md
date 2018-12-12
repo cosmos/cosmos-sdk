@@ -15,24 +15,25 @@ If you are a newcomer and would like to learn more about the Cosmos SDK, this **
 
 If you like to learn by doing, you can follow the **[SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial)**. It showcases how to build an SDK-based blockchain from scratch, and teaches you about the basic principles the SDK in the process.
 
-## Use the SDK
-
-The following sections contain the information you need if you want to build a fully-functional SDK-based blockchain:
-
->*NOTE*: We are currently working on improving the docs. Some info might be missing. If that is the case, try the Cosmos [Forum](https://forum.cosmos.network). Failing that, [open an issue](https://github.com/cosmos/cosmos-sdk/issues/new).
-
-- [Introduction](./intro/README.md): Contains introductory high-level material on the Cosmos SDK.
-- [Gaia](./gaia/README.md): Contains all documentation related to the gaia application (current name for the Cosmos-Hub). Also contains info on how to join gaia testnets.
-- [Clients](./clients/README.md): Documentation about SDK clients like the SDK Command-Line interface and the SDK Light-client.
-- [Specifications](./spec/README.md): Contains SDK and modules specifications.
-
-If you are reading this on the Cosmos Website, please know that you can find more information on [github](https://github.com/cosmos/cosmos-sdk/tree/develop/docs). Also if you find any issues with the documentation please [*open a Pull Request*](https://github.com/cosmos/cosmos-sdk/compare?expand=1), or at least [*open an Issue*](https://github.com/cosmos/cosmos-sdk/issues/new) to update the docs!
-
 ## Cosmos Hub testnet
 
 To install the latest version of the `gaia` application (application of the Cosmos Hub) and join the public testnet, **click [here](./gaia/join-testnet.md)**
 
 To start your own `gaia` testnet, **click [here](./gaia/deploy-testnet.md)**
+
+## Creating a new SDK project
+
+To create a new project, you can either:
+
+- Fork [this repo](https://github.com/cosmos/sdk-application-tutorial/). Do not forget to remove the `nameservice` module from the various files if you don't need it. 
+- Copy the `docs/examples/basecoin` directory. 
+- Use community tools like [chainkit](https://github.com/blocklayerhq/chainkit).
+
+## Languages
+
+The Cosmos-SDK is currently written in [Golang](https://golang.org/), though the
+framework could be implemented similarly in other languages.
+Contact us for information about funding an implementation in another language.
 
 ## Contribute
 

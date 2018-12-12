@@ -2,11 +2,29 @@
 
 ## Parts of a SDK blockchain
 
-A blockchain application is just a [replicated deterministic state machine](https://en.wikipedia.org/wiki/State_machine_replication). As a developer, you just have to define the state machine (i.e. what the state, a starting state and messages that trigger state transitions), and [*Tendermint*](https://tendermint.com/docs/introduction/introduction.html) will handle replication over the network for you.
+At its core, a blockchain application is a [replicated deterministic state machine](https://en.wikipedia.org/wiki/State_machine_replication). As a developer, you just have to define the state machine (i.e. the structure of the state, a starting state and transactions that trigger state transitions), and [*Tendermint*](https://tendermint.com/docs/introduction/introduction.html) will handle replication over the network for you.
+
+
+```
+                ^  +-------------------------------+  ^
+                |  |                               |  |   Built with Cosmos SDK
+                |  |  State-machine = Application  |  |
+                |  |                               |  v
+                |  +-------------------------------+
+                |  |                               |  ^
+Blockchain node |  |           Consensus           |  |
+                |  |                               |  |
+                |  +-------------------------------+  |   Tendermint Core
+                |  |                               |  |
+                |  |           Networking          |  |
+                |  |                               |  |
+                v  +-------------------------------+  v
+```
+
 
 >Tendermint is an application-agnostic engine that is responsible for handling the *networking* and *consensus* layers of your blockchain. In practice, this means that Tendermint is reponsible for propagating and ordering transaction bytes. Tendermint Core relies on an eponymous Byzantine-Fault-Tolerant (BFT) algorithm to reach consensus on the order of transactions. For more on Tendermint, click [here](https://tendermint.com/docs/introduction/introduction.html).
 
-Tendermint passes transactions from the network to the application through an interface called the [ABCI](https://github.com/tendermint/tendermint/tree/master/abci. If you look at the architecture of the blockchain node you are building, it looks like the following:
+Tendermint passes transactions from the network to the application through an interface called the [ABCI](https://github.com/tendermint/tendermint/tree/master/abci. 
 
 ```
 +---------------------+
@@ -26,6 +44,8 @@ Tendermint passes transactions from the network to the application through an in
 +---------------------+
 ```
 
+
+
 Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK provides a boilerplate implementation of it in the form of [baseapp](#baseapp).
 
 ## BaseApp
@@ -33,7 +53,7 @@ Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK pro
 Implements an ABCI App using a [MultiStore](../reference/store) for persistence and a Router to handle transactions.
 The goal is to provide a secure interface between the store and the extensible state machine while defining as little about that state machine as possible (staying true to the ABCI).
 
-For more on `baseapp`, please go to the [baseapp reference](../reference/baseapp.md).
+For more on `baseapp`, please click [here](../concepts/baseapp.md).
 
 ## Modules
 

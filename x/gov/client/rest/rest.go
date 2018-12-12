@@ -277,7 +277,7 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		// as they're no longer in state.
 		propStatus := proposal.GetStatus()
 		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
-			queryDepositsByTxQuery(cdc, cliCtx, w, proposalID)
+			queryDepositsByTxQuery(cdc, cliCtx, w, params)
 			return
 		}
 
@@ -399,25 +399,28 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 		}
 
 		var vote gov.Vote
-		if err := cdc.UnmarshalJSON(res, &vote); err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
+		// TODO: We should check the error here but empty/non-existing votes will
+		// fail to unmarshal.
+		cdc.UnmarshalJSON(res, &vote)
 
+		// For an empty vote, either the proposal does not exist or is inactive in
+		// which case the vote would be removed from state and should be queried for
+		// directly via a txs query.
 		if vote.Empty() {
-			bz, err := cdc.MarshalJSON(gov.QueryProposalParams{params.ProposalID})
+			bz, err := cdc.MarshalJSON(gov.NewQueryProposalParams(proposalID))
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
+
 			res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
 			if err != nil || len(res) == 0 {
-				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+				err := fmt.Errorf("proposalID %d does not exist", proposalID)
 				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 				return
 			}
-			err = errors.Errorf("voter [%s] did not deposit on proposalID [%d]", bechVoterAddr, proposalID)
-			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+
+			queryVoteByTxQuery(cdc, cliCtx, w, params)
 			return
 		}
 
@@ -466,7 +469,7 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 		// as they're no longer in state.
 		propStatus := proposal.GetStatus()
 		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
-			queryVotesByTxQuery(cdc, cliCtx, w, proposalID)
+			queryVotesByTxQuery(cdc, cliCtx, w, params)
 			return
 		}
 

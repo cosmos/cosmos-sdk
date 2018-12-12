@@ -18,10 +18,13 @@ import (
 //
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
-func queryDepositsByTxQuery(cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, proposalID uint64) {
+func queryDepositsByTxQuery(
+	cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, params gov.QueryProposalParams,
+) {
+
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalDeposit),
-		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
@@ -39,7 +42,7 @@ func queryDepositsByTxQuery(cdc *codec.Codec, cliCtx context.CLIContext, w http.
 
 				deposits = append(deposits, gov.Deposit{
 					Depositor:  depMsg.Depositor,
-					ProposalID: proposalID,
+					ProposalID: params.ProposalID,
 					Amount:     depMsg.Amount,
 				})
 			}
@@ -55,10 +58,12 @@ func queryDepositsByTxQuery(cdc *codec.Codec, cliCtx context.CLIContext, w http.
 //
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
-func queryVotesByTxQuery(cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, proposalID uint64) {
+func queryVotesByTxQuery(
+	cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, params gov.QueryProposalParams,
+) {
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalVote),
-		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
@@ -76,7 +81,7 @@ func queryVotesByTxQuery(cdc *codec.Codec, cliCtx context.CLIContext, w http.Res
 
 				votes = append(votes, gov.Vote{
 					Voter:      voteMsg.Voter,
-					ProposalID: proposalID,
+					ProposalID: params.ProposalID,
 					Option:     voteMsg.Option,
 				})
 			}
@@ -84,4 +89,46 @@ func queryVotesByTxQuery(cdc *codec.Codec, cliCtx context.CLIContext, w http.Res
 	}
 
 	utils.PostProcessResponse(w, cdc, votes, cliCtx.Indent)
+}
+
+// queryVoteByTxQuery will query for a single vote via a direct txs tags query.
+//
+// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+// support configurable pagination.
+func queryVoteByTxQuery(
+	cdc *codec.Codec, cliCtx context.CLIContext, w http.ResponseWriter, params gov.QueryVoteParams,
+) {
+
+	tags := []string{
+		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalVote),
+		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
+		fmt.Sprintf("%s='%s'", tags.Voter, []byte(params.Voter.String())),
+	}
+
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	if err != nil {
+		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, info := range infos {
+		for _, msg := range info.Tx.GetMsgs() {
+			if msg.Type() == gov.TypeMsgVote {
+				voteMsg := msg.(gov.MsgVote)
+
+				// there should only be a single vote under the given condition
+				vote := gov.Vote{
+					Voter:      voteMsg.Voter,
+					ProposalID: params.ProposalID,
+					Option:     voteMsg.Option,
+				}
+
+				utils.PostProcessResponse(w, cdc, vote, cliCtx.Indent)
+				return
+			}
+		}
+	}
+
+	err = fmt.Errorf("voter '%s' did not vote on proposalID %d", params.Voter, params.ProposalID)
+	utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 }

@@ -43,6 +43,7 @@ const (
 	FlagSSLHosts           = "ssl-hosts"
 	FlagSSLCertFile        = "ssl-certfile"
 	FlagSSLKeyFile         = "ssl-keyfile"
+	FlagOutputDocument     = "output-document" // inspired by wget -O
 )
 
 // LineBreak can be included in a command list to provide a blank line

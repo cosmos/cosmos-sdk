@@ -72,7 +72,8 @@ type BaseApp struct {
 	consensusParams *abci.ConsensusParams
 
 	// spam prevention
-	minimumFees sdk.Coins
+	minimumFees    sdk.Coins
+	gasPerUnitCost sdk.Coins
 
 	// flag for sealing
 	sealed bool
@@ -213,10 +214,15 @@ func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
 // SetMinimumFees sets the minimum fees.
 func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
 
+// SetGasPerUnitCost sets the gasPerUnitCost
+func (app *BaseApp) SetGasPerUnitCost(gasPerUnitCost sdk.Coins) { app.gasPerUnitCost = gasPerUnitCost }
+
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).WithMinimumFees(app.minimumFees)
+		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).
+			WithMinimumFees(app.minimumFees).
+			WithGasPerUnitCost(app.gasPerUnitCost)
 	}
 	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
 }

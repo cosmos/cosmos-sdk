@@ -47,6 +47,14 @@ func (app *BaseApp) SetName(name string) {
 	app.name = name
 }
 
+func SetGasPerUnitCost(gasPerUnitCost string) func(*BaseApp) {
+	gpuc, err := sdk.ParseCoins(gasPerUnitCost)
+	if err != nil {
+		panic(fmt.Sprintf("invalid gasPerUnitCost: %v", err))
+	}
+	return func(bap *BaseApp) { bap.SetGasPerUnitCost(gpuc) }
+}
+
 func (app *BaseApp) SetDB(db dbm.DB) {
 	if app.sealed {
 		panic("SetDB() on sealed BaseApp")

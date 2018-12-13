@@ -18,9 +18,6 @@ const (
 	secp256k1VerifyCost         = 1000
 	maxMemoCharacters           = 256
 
-	// how much gas = 1 atom
-	gasPerUnitCost = 10000
-
 	// max total number of sigs per tx
 	txSigLimit = 7
 )
@@ -206,7 +203,7 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey) {
 	}
 }
 
-func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
+func adjustFeesByGas(fees sdk.Coins, gas uint64, gasPerUnitCost uint64) sdk.Coins {
 	gasCost := gas / gasPerUnitCost
 	gasFees := make(sdk.Coins, len(fees))
 
@@ -256,7 +253,13 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	if stdTx.Fee.Gas <= 0 {
 		return sdk.ErrInternal(fmt.Sprintf("invalid gas supplied: %d", stdTx.Fee.Gas)).Result()
 	}
-	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
+
+	// TODO: Generalize this
+	gasPerUnitCost := ctx.GasPerUnitCost()[0].Amount
+	if gasPerUnitCost.Sign() != 1 {
+		panic("Zero or Negative coins amount for gasPerUnitCost, must be positive")
+	}
+	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas, uint64(gasPerUnitCost.Int64()))
 
 	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
 	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {

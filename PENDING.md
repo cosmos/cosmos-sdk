@@ -27,6 +27,7 @@ FEATURES
 * SDK
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
   the ante handler.
+  * [\#2926](https://github.com/cosmos/cosmos-sdk/issues/2926) Add TxEncoder to client TxBuilder.
 
 * Tendermint
 

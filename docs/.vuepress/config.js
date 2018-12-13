@@ -49,10 +49,12 @@ module.exports = {
           "/tutorial/queriers",
           "/tutorial/codec",
           "/tutorial/cli",
+          "/tutorial/rest",
           "/tutorial/app-complete",
           "/tutorial/entrypoint",
           "/tutorial/dep",
-          "/tutorial/build-run"
+          "/tutorial/build-run",
+          "/tutorial/run-rest"
         ]
       },
       {

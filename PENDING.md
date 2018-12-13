@@ -25,6 +25,7 @@ FEATURES
 * Gaia
 
 * SDK
+  - \#3099 Implement F1 fee distribution
   - [\#2926](https://github.com/cosmos/cosmos-sdk/issues/2926) Add TxEncoder to client TxBuilder.
 
 * Tendermint

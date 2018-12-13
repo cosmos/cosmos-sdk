@@ -58,7 +58,7 @@ func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-// GetCmdQueryProposal implements a command to fetch slashing parameters.
+// GetCmdQueryParams implements a command to fetch slashing parameters.
 func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",

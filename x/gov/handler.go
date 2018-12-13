@@ -35,7 +35,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionProposalCreated,
+		tags.Action, tags.ActionProposalSubmitted,
 		tags.Proposer, []byte(msg.Proposer.String()),
 		tags.ProposalID, proposalIDBytes,
 	)

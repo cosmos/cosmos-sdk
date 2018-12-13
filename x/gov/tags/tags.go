@@ -6,12 +6,12 @@ import (
 
 // Governance tags
 var (
-	ActionProposalDropped  = []byte("proposal-dropped")
-	ActionProposalPassed   = []byte("proposal-passed")
-	ActionProposalRejected = []byte("proposal-rejected")
-	ActionProposalCreated  = []byte("proposal-created")
-	ActionProposalVote     = []byte("proposal-vote")
-	ActionProposalDeposit  = []byte("proposal-deposit")
+	ActionProposalDropped   = []byte("proposal-dropped")
+	ActionProposalPassed    = []byte("proposal-passed")
+	ActionProposalRejected  = []byte("proposal-rejected")
+	ActionProposalSubmitted = []byte("proposal-Submitted")
+	ActionProposalVote      = []byte("proposal-vote")
+	ActionProposalDeposit   = []byte("proposal-deposit")
 
 	Action            = sdk.TagAction
 	Proposer          = "proposer"

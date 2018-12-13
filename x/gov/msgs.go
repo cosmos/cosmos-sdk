@@ -8,9 +8,10 @@ import (
 
 // Governance message types and routes
 const (
-	MsgRoute       = "gov"
-	TypeMsgDeposit = "deposit"
-	TypeMsgVote    = "vote"
+	MsgRoute              = "gov"
+	TypeMsgDeposit        = "deposit"
+	TypeMsgVote           = "vote"
+	TypeMsgSubmitProposal = "submit_proposal"
 )
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
@@ -37,7 +38,7 @@ func NewMsgSubmitProposal(title string, description string, proposalType Proposa
 
 //nolint
 func (msg MsgSubmitProposal) Route() string { return MsgRoute }
-func (msg MsgSubmitProposal) Type() string  { return "submit_proposal" }
+func (msg MsgSubmitProposal) Type() string  { return TypeMsgSubmitProposal }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {

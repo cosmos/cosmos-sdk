@@ -372,7 +372,7 @@ $ gaiacli query gov deposits 1
 
 			propStatus := proposal.GetStatus()
 			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
-				res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
+				res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
 			} else {
 				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposits", queryRoute), bz)
 			}

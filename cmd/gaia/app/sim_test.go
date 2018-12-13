@@ -149,11 +149,14 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	stakeGenesis.Validators = validators
 	stakeGenesis.Bonds = delegations
 
+	// TODO
+	distrGenesis := distr.DefaultGenesisState()
+
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		StakeData:    stakeGenesis,
 		MintData:     mintGenesis,
-		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),
+		DistrData:    distrGenesis,
 		SlashingData: slashingGenesis,
 		GovData:      govGenesis,
 	}

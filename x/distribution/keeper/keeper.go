@@ -22,7 +22,6 @@ type Keeper struct {
 
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
 	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
-
 	keeper := Keeper{
 		storeKey:            key,
 		cdc:                 cdc,
@@ -55,58 +54,23 @@ func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
 	store.Set(FeePoolKey, b)
 }
 
-// get the total validator accum for the ctx height
-// in the fee pool
-func (k Keeper) GetFeePoolValAccum(ctx sdk.Context) sdk.Dec {
-
-	// withdraw self-delegation
-	height := ctx.BlockHeight()
-	totalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
-	fp := k.GetFeePool(ctx)
-	return fp.GetTotalValAccum(height, totalPower)
-}
-
-//______________________________________________________________________
-
-// set the proposer public key for this block
+// get the proposer public key for this block
 func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
-
 	b := store.Get(ProposerKey)
 	if b == nil {
 		panic("Previous proposer not set")
 	}
-
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &consAddr)
 	return
 }
 
-// get the proposer public key for this block
+// set the proposer public key for this block
 func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(consAddr)
 	store.Set(ProposerKey, b)
 }
-
-//______________________________________________________________________
-
-// get context required for withdraw operations
-func (k Keeper) GetWithdrawContext(ctx sdk.Context,
-	valOperatorAddr sdk.ValAddress) types.WithdrawContext {
-
-	feePool := k.GetFeePool(ctx)
-	height := ctx.BlockHeight()
-	validator := k.stakeKeeper.Validator(ctx, valOperatorAddr)
-	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, valOperatorAddr)
-	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
-
-	return types.NewWithdrawContext(
-		feePool, height, lastTotalPower, sdk.NewDecFromInt(lastValPower),
-		validator.GetCommission())
-}
-
-//______________________________________________________________________
-// PARAM STORE
 
 // Type declaration for parameters
 func ParamTypeTable() params.TypeTable {

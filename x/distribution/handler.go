@@ -32,7 +32,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAddress, k keeper.Keeper) sdk.Result {
 
-	k.SetDelegatorWithdrawAddr(ctx, msg.DelegatorAddr, msg.WithdrawAddr)
+	// k.SetDelegatorWithdrawAddr(ctx, msg.DelegatorAddr, msg.WithdrawAddr)
 
 	tags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
@@ -44,7 +44,7 @@ func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAdd
 
 func handleMsgWithdrawDelegatorRewardsAll(ctx sdk.Context, msg types.MsgWithdrawDelegatorRewardsAll, k keeper.Keeper) sdk.Result {
 
-	k.WithdrawDelegationRewardsAll(ctx, msg.DelegatorAddr)
+	// k.WithdrawDelegationRewardsAll(ctx, msg.DelegatorAddr)
 
 	tags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
@@ -56,10 +56,12 @@ func handleMsgWithdrawDelegatorRewardsAll(ctx sdk.Context, msg types.MsgWithdraw
 
 func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDelegatorReward, k keeper.Keeper) sdk.Result {
 
-	err := k.WithdrawDelegationReward(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
-	if err != nil {
-		return err.Result()
-	}
+	/*
+		  err := k.WithdrawDelegationReward(ctx, msg.DelegatorAddr, msg.ValidatorAddr)
+			if err != nil {
+				return err.Result()
+			}
+	*/
 
 	tags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
@@ -72,10 +74,12 @@ func handleMsgWithdrawDelegatorReward(ctx sdk.Context, msg types.MsgWithdrawDele
 
 func handleMsgWithdrawValidatorRewardsAll(ctx sdk.Context, msg types.MsgWithdrawValidatorRewardsAll, k keeper.Keeper) sdk.Result {
 
-	err := k.WithdrawValidatorRewardsAll(ctx, msg.ValidatorAddr)
-	if err != nil {
-		return err.Result()
-	}
+	/*
+		err := k.WithdrawValidatorRewardsAll(ctx, msg.ValidatorAddr)
+		if err != nil {
+			return err.Result()
+		}
+	*/
 
 	tags := sdk.NewTags(
 		tags.Validator, []byte(msg.ValidatorAddr.String()),

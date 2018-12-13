@@ -10,20 +10,21 @@ import (
 // set the proposer for determining distribution during endblock
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 
+	// TODO This is Tendermint-dependent. ref https://github.com/cosmos/cosmos-sdk/issues/3095
 	if ctx.BlockHeight() > 1 {
-		previousPercentPrecommitVotes := getPreviousPercentPrecommitVotes(req)
+		previousFractionPrecommitVotes := getFractionPercentPrecommitVotes(req)
 		previousProposer := k.GetPreviousProposerConsAddr(ctx)
-		k.AllocateTokens(ctx, previousPercentPrecommitVotes, previousProposer)
+		k.AllocateTokens(ctx, previousFractionPrecommitVotes, previousProposer)
 	}
 
 	consAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	k.SetPreviousProposerConsAddr(ctx, consAddr)
 }
 
-// percent precommit votes for the previous block
-func getPreviousPercentPrecommitVotes(req abci.RequestBeginBlock) sdk.Dec {
+// fraction precommit votes for the previous block
+func getFractionPercentPrecommitVotes(req abci.RequestBeginBlock) sdk.Dec {
 
-	// determine the total number of signed power
+	// determine the total power signing the block
 	totalPower, sumPrecommitPower := int64(0), int64(0)
 	for _, voteInfo := range req.LastCommitInfo.GetVotes() {
 		totalPower += voteInfo.Validator.Power
@@ -35,5 +36,6 @@ func getPreviousPercentPrecommitVotes(req abci.RequestBeginBlock) sdk.Dec {
 	if totalPower == 0 {
 		return sdk.ZeroDec()
 	}
+
 	return sdk.NewDec(sumPrecommitPower).Quo(sdk.NewDec(totalPower))
 }

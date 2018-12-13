@@ -2,8 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -63,53 +61,9 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	/* Handle fee distribution state. */
 
 	// withdraw all delegator & validator rewards
-	vdiIter := func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
-		err := app.distrKeeper.WithdrawValidatorRewardsAll(ctx, valInfo.OperatorAddr)
-		if err != nil {
-			panic(err)
-		}
-		return false
-	}
-	app.distrKeeper.IterateValidatorDistInfos(ctx, vdiIter)
-
-	ddiIter := func(_ int64, distInfo distr.DelegationDistInfo) (stop bool) {
-		err := app.distrKeeper.WithdrawDelegationReward(
-			ctx, distInfo.DelegatorAddr, distInfo.ValOperatorAddr)
-		if err != nil {
-			panic(err)
-		}
-		return false
-	}
-	app.distrKeeper.IterateDelegationDistInfos(ctx, ddiIter)
+	// TODO
 
 	app.assertRuntimeInvariantsOnContext(ctx)
-
-	// set distribution info withdrawal heights to 0
-	app.distrKeeper.IterateDelegationDistInfos(ctx, func(_ int64, delInfo distr.DelegationDistInfo) (stop bool) {
-		delInfo.DelPoolWithdrawalHeight = 0
-		app.distrKeeper.SetDelegationDistInfo(ctx, delInfo)
-		return false
-	})
-	app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
-		valInfo.FeePoolWithdrawalHeight = 0
-		app.distrKeeper.SetValidatorDistInfo(ctx, valInfo)
-		return false
-	})
-
-	// assert that the fee pool is empty
-	feePool := app.distrKeeper.GetFeePool(ctx)
-	if !feePool.TotalValAccum.Accum.IsZero() {
-		panic("unexpected leftover validator accum")
-	}
-	bondDenom := app.stakeKeeper.GetParams(ctx).BondDenom
-	if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
-		panic(fmt.Sprintf("unexpected leftover validator pool coins: %v",
-			feePool.ValPool.AmountOf(bondDenom).String()))
-	}
-
-	// reset fee pool height, save fee pool
-	feePool.TotalValAccum = distr.NewTotalAccum(0)
-	app.distrKeeper.SetFeePool(ctx, feePool)
 
 	/* Handle stake state. */
 

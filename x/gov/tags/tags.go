@@ -9,7 +9,7 @@ var (
 	ActionProposalDropped   = []byte("proposal-dropped")
 	ActionProposalPassed    = []byte("proposal-passed")
 	ActionProposalRejected  = []byte("proposal-rejected")
-	ActionProposalSubmitted = []byte("proposal-Submitted")
+	ActionProposalSubmitted = []byte("proposal-submitted")
 	ActionProposalVote      = []byte("proposal-vote")
 	ActionProposalDeposit   = []byte("proposal-deposit")
 

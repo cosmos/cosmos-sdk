@@ -16,8 +16,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const storeName = "stake"
-
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 
 	// Get all delegations from a delegator

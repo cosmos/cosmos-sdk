@@ -17,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
@@ -75,10 +76,10 @@ func TestBonding(t *testing.T) {
 	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
 	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 
-	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
+	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
 	require.Nil(t, err)
 
-	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
+	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
 	require.Nil(t, err)
 	require.Equal(t, int64(20), power)
 

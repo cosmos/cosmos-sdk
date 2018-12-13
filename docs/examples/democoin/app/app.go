@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
@@ -67,11 +68,11 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	var app = &DemocoinApp{
 		BaseApp:            bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc)),
 		cdc:                cdc,
-		capKeyMainStore:    sdk.NewKVStoreKey("main"),
-		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
+		capKeyMainStore:    sdk.NewKVStoreKey(bam.MainStoreKey),
+		capKeyAccountStore: sdk.NewKVStoreKey(auth.StoreKey),
 		capKeyPowStore:     sdk.NewKVStoreKey("pow"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
-		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
+		capKeyStakingStore: sdk.NewKVStoreKey(stake.StoreKey),
 	}
 
 	// Define the accountKeeper.

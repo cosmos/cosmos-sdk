@@ -68,6 +68,10 @@ var (
 const (
 	DefaultCodespace = types.DefaultCodespace
 	CodeInvalidInput = types.CodeInvalidInput
+	StoreKey         = types.StoreKey
+	TStoreKey        = types.TStoreKey
+	RouterKey        = types.RouterKey
+	QuerierKey       = types.QuerierKey
 )
 
 var (

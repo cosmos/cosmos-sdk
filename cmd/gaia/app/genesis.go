@@ -167,6 +167,9 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 		return nil
 	}
 
+	if err := auth.ValidateGenesis(genesisState.AuthData); err != nil {
+		return err
+	}
 	err = stake.ValidateGenesis(genesisState.StakeData)
 	if err != nil {
 		return err

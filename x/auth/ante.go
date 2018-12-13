@@ -106,9 +106,6 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			ak.SetAccount(newCtx, signerAccs[i])
 		}
 
-		// cache the signer accounts in the context
-		newCtx = WithSigners(newCtx, signerAccs)
-
 		// TODO: tx tags (?)
 		return newCtx, sdk.Result{GasWanted: stdTx.Fee.Gas}, false // continue...
 	}

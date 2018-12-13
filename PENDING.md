@@ -32,12 +32,12 @@ FEATURES
 IMPROVEMENTS
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-  * \#3091 Update deposit and vote endpoints to perform a direct txs query
+  * \#2879, \#2880 Update deposit and vote endpoints to perform a direct txs query
     when a given proposal is inactive and thus having votes and deposits removed
     from state.
 
 * Gaia CLI  (`gaiacli`)
-  * \#3091 Update deposit and vote CLI commands to perform a direct txs query
+  * \#2879, \#2880 Update deposit and vote CLI commands to perform a direct txs query
     when a given proposal is inactive and thus having votes and deposits removed
     from state.
 

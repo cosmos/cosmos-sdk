@@ -16,6 +16,7 @@ var (
 	// StoreKey is string representation of the store key for auth
 	StoreKey = "acc"
 
+	// FeeStoreKey is a string representation of the store key for fees
 	FeeStoreKey = "fee"
 )
 

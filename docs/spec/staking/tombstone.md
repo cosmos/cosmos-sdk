@@ -26,16 +26,15 @@ We are now in a new slashing period, however we still have to keep the door open
 
 > Note:  Currently, according to the `slashing` module spec, a new slashing period is created everytime a validator is unbonded then rebonded.  This should probably be changed to jailed/unjailed, as in the current system, let's say I compromised the key of the rank 100 validator, I could bond my own validator into and out of the validator set many times, in order to create as many slashing periods I want for the validator.  Then I can create infractions for each of the slashing periods I created for the validator, allowing me to get them multiply slashed. I'm not sure if this is how it is implemented in the code, or is just a mistake in the spec.  For the remainder of this, I will assume that we only start a new slashing period when a validator gets unjailed.
 
-The maximum number of slashing periods is the `len(UnbondingPeriod) / len(JailPeriod)`.  The current defaults in Gaia for the `UnbondingPeriod` and `JailPeriod` are 3 weeks and 2 days, respectively.  This means there could potentially be up to 11 slashing periods concurrently being tracked per validator.
+The maximum number of slashing periods is the `len(UnbondingPeriod) / len(JailPeriod)`.  The current defaults in Gaia for the `UnbondingPeriod` and `JailPeriod` are 3 weeks and 2 days, respectively.  This means there could potentially be up to 11 slashing periods concurrently being tracked per validator.  If we set the `JailPeriod >= UnbondingPeriod`, we only have to track 1 slashing period (i.e not have to track slashing periods).
 
-Things get even messier, once we begin to add in delegations.  
+Things get even messier, once we begin to add in delegations.  TODO
 
-If we set the `JailPeriod >= UnbondingPeriod`, we only have to track 1 slashing period.  And at the point that the JailPeriod is equivalent to the UnbondingPeriod, we might as well just call JailPeriod 
+Currently, in the jail period implementation, once a validator unjails, all of their delegators who are delegated to them (haven't unbonded / redelegated away), stay with them.  Given that consensus safety faults, are so egregious (way more so than liveness faults), it is probably prudent to have delegators not "auto-rebond" to the validator. Thus, we propose that instead of being put in a "jailed state" after evidence for a consensus safety fault, validators are instead put into a "tombstone state", which means the validator is kicked out of the validator set and not allowed to rejoin.  All of the stake that was delegated to it is put into an unbonding period.  The validator operator can create a new validator if they would like, preferably with a new consensus key (do we need to enforce this?  No rational validator should reuse the same compromised key lol), but they have to "reearn" their delegations back.
 
-We can get rid of the hooks between staking and slashing.
+Doing this tombstone system and getting rid of the slashing period tracking, will make the `slashing` module way simpler, especially because we can remove the hooks between the `stake` and `slashing` modules.
 
-
-
+Note: The tombstone concept, only applies to byzantine faults reported over ABCI.  For slashable offenses tracked by the state machine (such as liveness faults), as there is not a delay between infraction and slashing, no slashing period tracking is needed. Also, a liveness bug probably isn't so egregious that it mandates force unbonding all delegations, and so the current jail system is adequate.
 
 <!-- 
 First, part of the design of the `stake` module is that delegators should be slashed for the infractions that happened during blocks that they were delegated to the offending validator, however, they should not be slashed for infractions that their voting power did not contribute to.
@@ -56,7 +55,3 @@ Delegator X should not be slashed. -->
 
 
 
-
-
-
-Note: The tombstone concept, only applies to byzantine faults reported over ABCI.  For slashable offenses tracked by the state machine (such as liveness faults), as there is not a delay between infraction and slashing, the current jail system is adequate.

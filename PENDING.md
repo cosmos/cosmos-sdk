@@ -36,6 +36,7 @@ IMPROVEMENTS
 
 * SDK
  - #2573 [x/distribution] add accum invariance
+ - #2605 [x/params] add subkey accessing
 
 * Tendermint
 

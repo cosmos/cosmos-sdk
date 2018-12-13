@@ -14,6 +14,7 @@ import (
 
 var (
 	// TODO: Allow this to be configurable in the same way as minimum fees.
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/3101
 	gasPerUnitCost uint64 = 10000 // how much gas = 1 atom
 )
 

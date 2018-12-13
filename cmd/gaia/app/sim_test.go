@@ -79,11 +79,11 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	// Random genesis states
 	authGenesis := auth.GenesisState{
 		Params: auth.Params{
-			MemoCostPerByte:        uint64(r.Intn(10)),
-			MaxMemoCharacters:      uint64(r.Intn(200)),
-			TxSigLimit:             uint64(r.Intn(7)),
-			SigVerifyCostED25519:   uint64(r.Intn(1000-100) + 100),
-			SigVerifyCostSecp256k1: uint64(r.Intn(1000-100) + 100),
+			MemoCostPerByte:        uint64(r.Intn(10) + 1),
+			MaxMemoCharacters:      uint64(r.Intn(200-100) + 100),
+			TxSigLimit:             uint64(r.Intn(7) + 1),
+			SigVerifyCostED25519:   uint64(r.Intn(1000-500) + 500),
+			SigVerifyCostSecp256k1: uint64(r.Intn(1000-500) + 500),
 		},
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)

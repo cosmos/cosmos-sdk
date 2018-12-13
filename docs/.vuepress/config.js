@@ -8,6 +8,11 @@ module.exports = {
     lineNumbers: true
   },
   themeConfig: {
+    repo: "cosmos/cosmos-sdk",
+    editLinks: true,
+    docsDir: "docs",
+    docsBranch: "develop",
+    editLinkText: 'Edit this page on Github',
     lastUpdated: true,
     algolia: {
       apiKey: 'a6e2f64347bb826b732e118c1366819a',

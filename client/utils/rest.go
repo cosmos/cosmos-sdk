@@ -118,6 +118,7 @@ type BaseReq struct {
 func NewBaseReq(
 	name, password, memo, chainID string, gas uint64, gasAdjustment string, accNumber, seq uint64,
 	fees sdk.Coins, genOnly, simulate bool) BaseReq {
+
 	return BaseReq{
 		Name:          strings.TrimSpace(name),
 		Password:      password,
@@ -137,7 +138,8 @@ func NewBaseReq(
 func (br BaseReq) Sanitize() BaseReq {
 	newBr := NewBaseReq(
 		br.Name, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
-		br.AccountNumber, br.Sequence, br.Fees, br.GenerateOnly, br.Simulate)
+		br.AccountNumber, br.Sequence, br.Fees, br.GenerateOnly, br.Simulate,
+		)
 	return newBr
 }
 

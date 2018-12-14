@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
@@ -740,4 +741,16 @@ func TestProposalsQuery(t *testing.T) {
 	require.Len(t, votes, 2)
 	require.True(t, addrs[0].String() == votes[0].Voter.String() || addrs[0].String() == votes[1].Voter.String())
 	require.True(t, addrs[1].String() == votes[0].Voter.String() || addrs[1].String() == votes[1].Voter.String())
+}
+
+func TestSlashingGetParams(t *testing.T) {
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+
+	res, body := Request(t, port, "GET", "/slashing/parameters", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var params slashing.Params
+	err := cdc.UnmarshalJSON([]byte(body), &params)
+	require.NoError(t, err)
 }

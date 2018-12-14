@@ -236,6 +236,32 @@ You can also query a single transaction by its hash using the following command:
 gaiacli query tx [hash]
 ```
 
+### Slashing
+
+#### Unjailing
+
+To unjail your jailed validator
+
+```bash
+gaiacli tx slashing unjail --from <validator-operator-addr>
+```
+
+#### Signing Info
+
+To retrieve a validator's signing info:
+
+```bash
+gaiacli query slashing signing-info <validator-pubkey>
+```
+
+#### Query Parameters
+
+You can get the current slashing parameters via:
+
+```bash
+gaiacli query slashing params
+```
+
 ### Staking
 
 #### Set up a Validator

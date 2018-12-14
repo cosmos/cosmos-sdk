@@ -19,8 +19,10 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * \#2399 Implement `/slashing/parameters` endpoint to query slashing parameters.
 
 * Gaia CLI  (`gaiacli`)
+  * \#2399 Implement `params` command to query slashing parameters.
 
 * Gaia
 

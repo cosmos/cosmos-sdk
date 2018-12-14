@@ -146,9 +146,6 @@ func (br BaseReq) Sanitize() BaseReq {
 // ValidateBasic performs basic validation of a BaseReq. If custom validation
 // logic is needed, the implementing request handler should perform those
 // checks manually.
-// ValidateBasic performs basic validation of a BaseReq. If custom validation
-// logic is needed, the implementing request handler should perform those
-// checks manually.
 func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 	if !br.GenerateOnly && !br.Simulate {
 		switch {

@@ -65,12 +65,6 @@ import (
 
 // makePathname creates a unique pathname for each test. It will panic if it
 // cannot get the current working directory.
-
-const (
-	DefaultGasAdjustment = 1.0
-	DefaultGasLimit      = "200000"
-)
-
 func makePathname() string {
 	p, err := os.Getwd()
 	if err != nil {
@@ -720,7 +714,6 @@ func doTransferWithGas(t *testing.T, port, seed, name, memo, password string, ad
 	require.NoError(t, err)
 
 	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/accounts/%s/transfers", receiveAddr), req)
-
 	return
 }
 
@@ -781,7 +774,6 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 		ValidatorAddr: valAddr,
 		SharesAmount:  sdk.NewDec(amount),
 	}
-
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
 

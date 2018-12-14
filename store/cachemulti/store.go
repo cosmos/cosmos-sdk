@@ -60,18 +60,18 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext)
 }
 
-// WithTracer sets the tracer for the MultiStore that the underlying
+// SetTracer sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations. A MultiStore is returned.
-func (cms Store) WithTracer(w io.Writer) types.MultiStore {
+func (cms Store) SetTracer(w io.Writer) types.MultiStore {
 	cms.traceWriter = w
 	return cms
 }
 
-// WithTracingContext updates the tracing context for the MultiStore by merging
+// SetTracingContext updates the tracing context for the MultiStore by merging
 // the given context with the existing context by key. Any existing keys will
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
-func (cms Store) WithTracingContext(tc types.TraceContext) types.MultiStore {
+func (cms Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
 	if cms.traceContext != nil {
 		for k, v := range tc {
 			cms.traceContext[k] = v
@@ -86,12 +86,6 @@ func (cms Store) WithTracingContext(tc types.TraceContext) types.MultiStore {
 // TracingEnabled returns if tracing is enabled for the MultiStore.
 func (cms Store) TracingEnabled() bool {
 	return cms.traceWriter != nil
-}
-
-// ResetTraceContext resets the current tracing context.
-func (cms Store) ResetTraceContext() types.MultiStore {
-	cms.traceContext = nil
-	return cms
 }
 
 // Implements Store.

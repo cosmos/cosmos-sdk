@@ -5,6 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
+var commithash = []byte("FAKE_HASH")
+
 //----------------------------------------
 // commitDBStoreWrapper should only be used for simulation/debugging,
 // as it doesn't compute any commit hash, and it cannot load older state.
@@ -17,14 +19,14 @@ type commitDBStoreAdapter struct {
 func (cdsa commitDBStoreAdapter) Commit() types.CommitID {
 	return types.CommitID{
 		Version: -1,
-		Hash:    []byte("FAKE_HASH"),
+		Hash:    commithash,
 	}
 }
 
 func (cdsa commitDBStoreAdapter) LastCommitID() types.CommitID {
 	return types.CommitID{
 		Version: -1,
-		Hash:    []byte("FAKE_HASH"),
+		Hash:    commithash,
 	}
 }
 

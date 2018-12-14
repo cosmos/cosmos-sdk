@@ -1,7 +1,5 @@
 package types
 
-// Copied from types/
-
 import (
 	"bytes"
 	"fmt"
@@ -73,17 +71,15 @@ type MultiStore interface { //nolint
 	// TracingEnabled returns if tracing is enabled for the MultiStore.
 	TracingEnabled() bool
 
-	// WithTracer sets the tracer for the MultiStore that the underlying
-	// stores will utilize to trace operations. A MultiStore is returned.
-	WithTracer(w io.Writer) MultiStore
+	// SetTracer sets the tracer for the MultiStore that the underlying
+	// stores will utilize to trace operations. The modified MultiStore is
+	// returned.
+	SetTracer(w io.Writer) MultiStore
 
-	// WithTracingContext sets the tracing context for a MultiStore. It is
+	// SetTracingContext sets the tracing context for a MultiStore. It is
 	// implied that the caller should update the context when necessary between
-	// tracing operations. A MultiStore is returned.
-	WithTracingContext(TraceContext) MultiStore
-
-	// ResetTraceContext resets the current tracing context.
-	ResetTraceContext() MultiStore
+	// tracing operations. The modified MultiStore is returned.
+	SetTracingContext(TraceContext) MultiStore
 }
 
 // From MultiStore.CacheMultiStore()....
@@ -149,13 +145,6 @@ type KVStore interface {
 	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator
-
-	// TODO Not yet implemented.
-	// CreateSubKVStore(key *storeKey) (KVStore, error)
-
-	// TODO Not yet implemented.
-	// GetSubKVStore(key *storeKey) KVStore
-
 }
 
 // Alias iterator to db's Iterator for convenience.

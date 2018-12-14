@@ -4,6 +4,8 @@ import (
 	"bytes"
 
 	cmn "github.com/tendermint/tendermint/libs/common"
+
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Gets the first item.
@@ -22,7 +24,7 @@ func Last(st KVStore, start, end []byte) (kv cmn.KVPair, ok bool) {
 	iter := st.ReverseIterator(end, start)
 	if !iter.Valid() {
 		if v := st.Get(start); v != nil {
-			return cmn.KVPair{Key: cp(start), Value: cp(v)}, true
+			return cmn.KVPair{Key: types.Cp(start), Value: types.Cp(v)}, true
 		}
 		return kv, false
 	}
@@ -37,14 +39,4 @@ func Last(st KVStore, start, end []byte) (kv cmn.KVPair, ok bool) {
 	}
 
 	return cmn.KVPair{Key: iter.Key(), Value: iter.Value()}, true
-}
-
-//----------------------------------------
-func cp(bz []byte) (ret []byte) {
-	if bz == nil {
-		return nil
-	}
-	ret = make([]byte, len(bz))
-	copy(ret, bz)
-	return ret
 }

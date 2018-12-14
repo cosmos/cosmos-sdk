@@ -152,18 +152,18 @@ func (rs *Store) LoadVersion(ver int64) error {
 	return nil
 }
 
-// WithTracer sets the tracer for the MultiStore that the underlying
+// SetTracer sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations. A MultiStore is returned.
-func (rs *Store) WithTracer(w io.Writer) types.MultiStore {
+func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
 	rs.traceWriter = w
 	return rs
 }
 
-// WithTracingContext updates the tracing context for the MultiStore by merging
+// SetTracingContext updates the tracing context for the MultiStore by merging
 // the given context with the existing context by key. Any existing keys will
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
-func (rs *Store) WithTracingContext(tc types.TraceContext) types.MultiStore {
+func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
 	if rs.traceContext != nil {
 		for k, v := range tc {
 			rs.traceContext[k] = v
@@ -178,12 +178,6 @@ func (rs *Store) WithTracingContext(tc types.TraceContext) types.MultiStore {
 // TracingEnabled returns if tracing is enabled for the MultiStore.
 func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
-}
-
-// ResetTraceContext resets the current tracing context.
-func (rs *Store) ResetTraceContext() types.MultiStore {
-	rs.traceContext = nil
-	return rs
 }
 
 //----------------------------------------

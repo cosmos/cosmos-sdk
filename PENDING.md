@@ -6,6 +6,7 @@ BREAKING CHANGES
   * [lcd] https://github.com/cosmos/cosmos-sdk/pull/3045 Fix quoted json return on GET /keys (keys list)
   * [gaia-lite] [\#2191](https://github.com/cosmos/cosmos-sdk/issues/2191) Split `POST /stake/delegators/{delegatorAddr}/delegations` into `POST /stake/delegators/{delegatorAddr}/delegations`, `POST /stake/delegators/{delegatorAddr}/unbonding_delegations` and `POST /stake/delegators/{delegatorAddr}/redelegations`
   * [gaia-lite] [\#3056](https://github.com/cosmos/cosmos-sdk/pull/3056) `generate_only` and `simulate` have moved from query arguments to POST requests body.
+  * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) `gas` type on `base_req` changed from `string` to `uint64`
 
 * Gaia CLI  (`gaiacli`)
 
@@ -19,8 +20,11 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [\#3067](https://github.com/cosmos/cosmos-sdk/issues/3067) Add support for fees on transactions
+  * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) Add a custom memo on transactions
 
 * Gaia CLI  (`gaiacli`)
+  * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) `fee` flag now supports multiple coins
 
 * Gaia
 

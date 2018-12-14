@@ -687,6 +687,7 @@ func TestProposalsQuery(t *testing.T) {
 	proposals := getProposalsFilterStatus(t, port, gov.StatusDepositPeriod)
 	require.Len(t, proposals, 1)
 	require.Equal(t, proposalID1, proposals[0].GetProposalID())
+
 	// Only proposals #2 and #3 should be in Voting Period
 	proposals = getProposalsFilterStatus(t, port, gov.StatusVotingPeriod)
 	require.Len(t, proposals, 2)

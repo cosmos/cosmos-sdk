@@ -58,7 +58,7 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
 			}
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := searchTxs(cliCtx, cdc, tmTags)
+			txs, err := SearchTxs(cliCtx, cdc, tmTags)
 			if err != nil {
 				return err
 			}
@@ -89,7 +89,10 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
 	return cmd
 }
 
-func searchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]Info, error) {
+// SearchTxs performs a search for transactions for a given set of tags via
+// Tendermint RPC. It returns a slice of Info object containing txs and metadata.
+// An error is returned if the query fails.
+func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]Info, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
 	}
@@ -172,7 +175,7 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			tags = append(tags, tag)
 		}
 
-		txs, err = searchTxs(cliCtx, cdc, tags)
+		txs, err = SearchTxs(cliCtx, cdc, tags)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

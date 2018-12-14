@@ -35,8 +35,14 @@ FEATURES
 IMPROVEMENTS
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * \#2879, \#2880 Update deposit and vote endpoints to perform a direct txs query
+    when a given proposal is inactive and thus having votes and deposits removed
+    from state.
 
 * Gaia CLI  (`gaiacli`)
+  * \#2879, \#2880 Update deposit and vote CLI commands to perform a direct txs query
+    when a given proposal is inactive and thus having votes and deposits removed
+    from state.
 
 * Gaia
   * [\#3021](https://github.com/cosmos/cosmos-sdk/pull/3021) Add `--gentx-dir` to `gaiad collect-gentxs` to specify a directory from which collect and load gentxs.

@@ -6,6 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Governance message types and routes
+const (
+	TypeMsgDeposit        = "deposit"
+	TypeMsgVote           = "vote"
+	TypeMsgSubmitProposal = "submit_proposal"
+)
+
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
 //-----------------------------------------------------------
@@ -30,7 +37,7 @@ func NewMsgSubmitProposal(title string, description string, proposalType Proposa
 
 //nolint
 func (msg MsgSubmitProposal) Route() string { return RouterKey }
-func (msg MsgSubmitProposal) Type() string  { return "submit_proposal" }
+func (msg MsgSubmitProposal) Type() string  { return TypeMsgSubmitProposal }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
@@ -97,7 +104,7 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 // Implements Msg.
 // nolint
 func (msg MsgDeposit) Route() string { return RouterKey }
-func (msg MsgDeposit) Type() string  { return "deposit" }
+func (msg MsgDeposit) Type() string  { return TypeMsgDeposit }
 
 // Implements Msg.
 func (msg MsgDeposit) ValidateBasic() sdk.Error {
@@ -158,7 +165,7 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) MsgV
 // Implements Msg.
 // nolint
 func (msg MsgVote) Route() string { return RouterKey }
-func (msg MsgVote) Type() string  { return "vote" }
+func (msg MsgVote) Type() string  { return TypeMsgVote }
 
 // Implements Msg.
 func (msg MsgVote) ValidateBasic() sdk.Error {

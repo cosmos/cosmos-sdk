@@ -54,7 +54,7 @@ func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj fl
 func NewTxBuilderFromCLI() TxBuilder {
 	// if chain ID is not specified manually, read default chain ID
 	chainID := viper.GetString(client.FlagChainID)
-	fees := viper.GetString(client.FlagFee)
+	fees := viper.GetString(client.FlagFees)
 
 	if chainID == "" {
 		defaultChainID, err := sdk.DefaultChainID()

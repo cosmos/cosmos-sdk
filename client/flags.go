@@ -29,7 +29,7 @@ const (
 	FlagAccountNumber      = "account-number"
 	FlagSequence           = "sequence"
 	FlagMemo               = "memo"
-	FlagFee                = "fee"
+	FlagFees               = "fees"
 	FlagAsync              = "async"
 	FlagJson               = "json"
 	FlagPrintResponse      = "print-response"
@@ -78,7 +78,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Uint64(FlagAccountNumber, 0, "AccountNumber number to sign the tx")
 		c.Flags().Uint64(FlagSequence, 0, "Sequence number to sign the tx")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
-		c.Flags().String(FlagFee, "", "Fees to pay along with transaction; eg: 10stake,1atom")
+		c.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 10stake,1atom")
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")

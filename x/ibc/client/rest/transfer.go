@@ -56,7 +56,7 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 
 		packet := ibc.NewIBCPacket(
 			sdk.AccAddress(info.GetPubKey().Address()), to,
-			req.Amount, baseReq.ChainID, destChainID,
+			req.Amount, req.BaseReq.ChainID, destChainID,
 		)
 		msg := ibc.IBCTransferMsg{IBCPacket: packet}
 

@@ -703,7 +703,10 @@ func doTransferWithGas(t *testing.T, port, seed, name, memo, password string, ad
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
 
-	baseReq := utils.NewBaseReq(name, password, memo, chainID, gas, fmt.Sprintf("%f", gasAdjustment), accnum, sequence, fees, generateOnly, simulate)
+	baseReq := utils.NewBaseReq(name, password, memo, chainID, gas,
+		fmt.Sprintf("%f", gasAdjustment), accnum, sequence, fees,
+		generateOnly, simulate,
+	)
 
 	sr := sendReq{
 		Amount:  sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1)},

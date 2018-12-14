@@ -1,7 +1,7 @@
 package context
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -54,6 +54,8 @@ func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj fl
 func NewTxBuilderFromCLI() TxBuilder {
 	// if chain ID is not specified manually, read default chain ID
 	chainID := viper.GetString(client.FlagChainID)
+	fees := viper.GetString(client.FlagFee)
+
 	if chainID == "" {
 		defaultChainID, err := sdk.DefaultChainID()
 		if err != nil {
@@ -61,22 +63,18 @@ func NewTxBuilderFromCLI() TxBuilder {
 		}
 		chainID = defaultChainID
 	}
-	feesStr := viper.GetString(client.FlagFee)
-	parsedFees, err := sdk.ParseCoins(feesStr)
-	if err != nil {
-		panic(fmt.Sprintf("invalid coins: %s", feesStr))
-	}
 
-	return TxBuilder{
+	txbldr := TxBuilder{
 		ChainID:       chainID,
 		AccountNumber: uint64(viper.GetInt64(client.FlagAccountNumber)),
 		Gas:           client.GasFlagVar.Gas,
 		GasAdjustment: viper.GetFloat64(client.FlagGasAdjustment),
 		Sequence:      uint64(viper.GetInt64(client.FlagSequence)),
 		SimulateGas:   client.GasFlagVar.Simulate,
-		Fees:          parsedFees,
 		Memo:          viper.GetString(client.FlagMemo),
 	}
+
+	return txbldr.WithFees(fees)
 }
 
 // WithCodec returns a copy of the context with an updated codec.
@@ -98,10 +96,10 @@ func (bldr TxBuilder) WithGas(gas uint64) TxBuilder {
 }
 
 // WithFee returns a copy of the context with an updated fee.
-func (bldr TxBuilder) WithFees(fee string) TxBuilder {
-	parsedFees, err := sdk.ParseCoins(fee)
+func (bldr TxBuilder) WithFees(fees string) TxBuilder {
+	parsedFees, err := sdk.ParseCoins(fees)
 	if err != nil {
-		panic(fmt.Sprintf("invalid coins: %s", fee))
+		panic(err)
 	}
 	bldr.Fees = parsedFees
 	return bldr
@@ -115,7 +113,7 @@ func (bldr TxBuilder) WithSequence(sequence uint64) TxBuilder {
 
 // WithMemo returns a copy of the context with an updated memo.
 func (bldr TxBuilder) WithMemo(memo string) TxBuilder {
-	bldr.Memo = memo
+	bldr.Memo = strings.TrimSpace(memo)
 	return bldr
 }
 

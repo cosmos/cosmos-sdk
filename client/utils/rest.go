@@ -119,6 +119,10 @@ func NewBaseReq(
 	name, password, memo, chainID string, gas uint64, gasAdjustment string, accNumber, seq uint64,
 	fees sdk.Coins, genOnly, simulate bool) BaseReq {
 
+	if gas == 0 {
+		gas = client.DefaultGasLimit
+	}
+
 	return BaseReq{
 		Name:          strings.TrimSpace(name),
 		Password:      password,
@@ -139,7 +143,7 @@ func (br BaseReq) Sanitize() BaseReq {
 	newBr := NewBaseReq(
 		br.Name, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
 		br.AccountNumber, br.Sequence, br.Fees, br.GenerateOnly, br.Simulate,
-		)
+	)
 	return newBr
 }
 
@@ -205,10 +209,6 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
 func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
-	if baseReq.Gas == 0 {
-		baseReq.Gas = client.DefaultGasLimit
-	}
-
 	gasAdjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return

@@ -720,6 +720,7 @@ func doTransferWithGas(t *testing.T, port, seed, name, memo, password string, ad
 	require.NoError(t, err)
 
 	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/accounts/%s/transfers", receiveAddr), req)
+
 	return
 }
 

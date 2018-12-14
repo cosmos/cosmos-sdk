@@ -26,19 +26,15 @@ func (ms multiStore) CacheWrapWithTrace(_ io.Writer, _ sdk.TraceContext) sdk.Cac
 	panic("not implemented")
 }
 
-func (ms multiStore) ResetTraceContext() sdk.MultiStore {
-	panic("not implemented")
-}
-
 func (ms multiStore) TracingEnabled() bool {
 	panic("not implemented")
 }
 
-func (ms multiStore) WithTracingContext(tc sdk.TraceContext) sdk.MultiStore {
+func (ms multiStore) SetTracingContext(tc sdk.TraceContext) sdk.MultiStore {
 	panic("not implemented")
 }
 
-func (ms multiStore) WithTracer(w io.Writer) sdk.MultiStore {
+func (ms multiStore) SetTracer(w io.Writer) sdk.MultiStore {
 	panic("not implemented")
 }
 

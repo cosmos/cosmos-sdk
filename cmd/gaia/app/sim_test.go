@@ -50,7 +50,7 @@ func init() {
 	flag.BoolVar(&enabled, "SimulationEnabled", false, "Enable the simulation")
 	flag.BoolVar(&verbose, "SimulationVerbose", false, "Verbose log output")
 	flag.BoolVar(&commit, "SimulationCommit", false, "Have the simulation commit")
-	flag.IntVar(&period, "SimulationPeriod", 100, "Run slow invariants only once every period assertions")
+	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
 func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
@@ -76,14 +76,15 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	}
 
 	// Random genesis states
+	vp := time.Duration(r.Intn(2*172800)) * time.Second
 	govGenesis := gov.GenesisState{
 		StartingProposalID: uint64(r.Intn(100)),
 		DepositParams: gov.DepositParams{
 			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, int64(r.Intn(1e3)))},
-			MaxDepositPeriod: time.Duration(r.Intn(2*172800)) * time.Second,
+			MaxDepositPeriod: vp,
 		},
 		VotingParams: gov.VotingParams{
-			VotingPeriod: time.Duration(r.Intn(2*172800)) * time.Second,
+			VotingPeriod: vp,
 		},
 		TallyParams: gov.TallyParams{
 			Threshold:         sdk.NewDecWithPrec(5, 1),

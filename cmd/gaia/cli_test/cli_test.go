@@ -453,6 +453,75 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
+func TestGaiaCLIValidateSignatures(t *testing.T) {
+	t.Parallel()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server
+	proc := tests.GoExecuteTWithStdout(
+		t, fmt.Sprintf(
+			"gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", gaiadHome, servAddr, p2pAddr,
+		),
+	)
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(1, port)
+
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", gaiacliHome))
+	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", gaiacliHome))
+
+	// generate sendTx with default gas
+	success, stdout, stderr := executeWriteRetStdStreams(
+		t, fmt.Sprintf(
+			"gaiacli tx send %v --amount=10%s --to=%s --from=foo --generate-only",
+			flags, stakeTypes.DefaultBondDenom, barAddr,
+		),
+		[]string{}...,
+	)
+	require.True(t, success)
+	require.Empty(t, stderr)
+
+	// write  unsigned tx to file
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// validate we can successfully sign
+	success, stdout, _ = executeWriteRetStdStreams(
+		t, fmt.Sprintf("gaiacli tx sign %v --name=foo %v", flags, unsignedTxFile.Name()),
+		app.DefaultKeyPass,
+	)
+	require.True(t, success)
+
+	stdTx := unmarshalStdTx(t, stdout)
+	require.Equal(t, len(stdTx.Msgs), 1)
+	require.Equal(t, 1, len(stdTx.GetSignatures()))
+	require.Equal(t, fooAddr.String(), stdTx.GetSigners()[0].String())
+
+	// write signed tx to file
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// validate signatures
+	success, _, _ = executeWriteRetStdStreams(
+		t, fmt.Sprintf("gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()),
+	)
+	require.True(t, success)
+
+	// modify the transaction
+	stdTx.Memo = "MODIFIED-ORIGINAL-TX-BAD"
+	bz := marshalStdTx(t, stdTx)
+	modSignedTxFile := writeToNewTempFile(t, string(bz))
+	defer os.Remove(modSignedTxFile.Name())
+
+	// validate signature validation failure due to different transaction sig bytes
+	success, _, _ = executeWriteRetStdStreams(
+		t, fmt.Sprintf("gaiacli tx sign %v --validate-signatures %v", flags, modSignedTxFile.Name()),
+	)
+	require.False(t, success)
+}
+
 func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	t.Parallel()
 	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
@@ -576,6 +645,37 @@ trust_node = true
 	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
+func TestGaiadCollectGentxs(t *testing.T) {
+	t.Parallel()
+	// Initialise temporary directories
+	gaiadHome, gaiacliHome := getTestingHomeDirs(t.Name())
+	gentxDir, err := ioutil.TempDir("", "")
+	gentxDoc := filepath.Join(gentxDir, "gentx.json")
+	require.NoError(t, err)
+
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
+	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli config --home=%s output json", gaiacliHome))
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", gaiacliHome))
+
+	// Run init
+	_ = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
+	// Add account to genesis.json
+	executeWriteCheckErr(t, fmt.Sprintf(
+		"gaiad add-genesis-account %s 150%s,1000fooToken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
+	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", gaiadHome, string(os.PathSeparator), string(os.PathSeparator)))
+	// Write gentx file
+	executeWriteCheckErr(t, fmt.Sprintf(
+		"gaiad gentx --name=foo --home=%s --home-client=%s --output-document=%s", gaiadHome, gaiacliHome, gentxDoc), app.DefaultKeyPass)
+	// Collect gentxs from a custom directory
+	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s --gentx-dir=%s", gaiadHome, gentxDir), app.DefaultKeyPass)
+	cleanupDirs(gaiadHome, gaiacliHome, gentxDir)
+}
+
 //___________________________________________________________________________________
 // helper methods
 
@@ -610,6 +710,13 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port, gaiadHome, gaiac
 	p2pAddr, _, err = server.FreeTCPAddr()
 	require.NoError(t, err)
 	return
+}
+
+func marshalStdTx(t *testing.T, stdTx auth.StdTx) []byte {
+	cdc := app.MakeCodec()
+	bz, err := cdc.MarshalBinaryBare(stdTx)
+	require.NoError(t, err)
+	return bz
 }
 
 func unmarshalStdTx(t *testing.T, s string) (stdTx auth.StdTx) {

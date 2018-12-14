@@ -3,9 +3,10 @@ package keeper
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSetGetPreviousProposerConsAddr(t *testing.T) {

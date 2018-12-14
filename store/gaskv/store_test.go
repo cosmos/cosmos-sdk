@@ -14,7 +14,7 @@ import (
 )
 
 func newGasKVStore() stypes.KVStore {
-	meter := stypes.NewGasMeter(1000)
+	meter := stypes.NewGasMeter(10000)
 	mem := dbadapter.Store{dbm.NewMemDB()}
 	return gaskv.NewStore(mem, meter, stypes.KVGasConfig())
 }
@@ -26,19 +26,19 @@ func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestGasKVStoreBasic(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := stypes.NewGasMeter(1000)
+	meter := stypes.NewGasMeter(10000)
 	st := gaskv.NewStore(mem, meter, stypes.KVGasConfig())
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	st.Delete(keyFmt(1))
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
-	require.Equal(t, meter.GasConsumed(), stypes.Gas(193))
+	require.Equal(t, meter.GasConsumed(), stypes.Gas(6429))
 }
 
 func TestGasKVStoreIterator(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := stypes.NewGasMeter(1000)
+	meter := stypes.NewGasMeter(10000)
 	st := gaskv.NewStore(mem, meter, stypes.KVGasConfig())
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	require.Empty(t, st.Get(keyFmt(2)), "Expected `key2` to be empty")
@@ -57,7 +57,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	iterator.Next()
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, meter.GasConsumed(), stypes.Gas(384))
+	require.Equal(t, meter.GasConsumed(), stypes.Gas(6987))
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {
@@ -69,7 +69,7 @@ func TestGasKVStoreOutOfGasSet(t *testing.T) {
 
 func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := stypes.NewGasMeter(200)
+	meter := stypes.NewGasMeter(20000)
 	st := gaskv.NewStore(mem, meter, stypes.KVGasConfig())
 	st.Set(keyFmt(1), valFmt(1))
 	iterator := st.Iterator(nil, nil)

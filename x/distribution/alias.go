@@ -12,9 +12,8 @@ type (
 	Hooks  = keeper.Hooks
 
 	MsgSetWithdrawAddress          = types.MsgSetWithdrawAddress
-	MsgWithdrawDelegatorRewardsAll = types.MsgWithdrawDelegatorRewardsAll
 	MsgWithdrawDelegatorReward     = types.MsgWithdrawDelegatorReward
-	MsgWithdrawValidatorRewardsAll = types.MsgWithdrawValidatorRewardsAll
+	MsgWithdrawValidatorCommission = types.MsgWithdrawValidatorCommission
 
 	GenesisState = types.GenesisState
 
@@ -39,8 +38,7 @@ var (
 
 	NewMsgSetWithdrawAddress          = types.NewMsgSetWithdrawAddress
 	NewMsgWithdrawDelegatorReward     = types.NewMsgWithdrawDelegatorReward
-	NewMsgWithdrawDelegatorRewardsAll = types.NewMsgWithdrawDelegatorRewardsAll
-	NewMsgWithdrawValidatorRewardsAll = types.NewMsgWithdrawValidatorRewardsAll
+	NewMsgWithdrawValidatorCommission = types.NewMsgWithdrawValidatorCommission
 
 	NewKeeper         = keeper.NewKeeper
 	DefaultParamspace = keeper.DefaultParamspace

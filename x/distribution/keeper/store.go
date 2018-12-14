@@ -5,6 +5,28 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+// get the delegator withdraw address, defaulting to the delegator address
+func (k Keeper) GetDelegatorWithdrawAddr(ctx sdk.Context, delAddr sdk.AccAddress) sdk.AccAddress {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(GetDelegatorWithdrawAddrKey(delAddr))
+	if b == nil {
+		return delAddr
+	}
+	return sdk.AccAddress(b)
+}
+
+// set the delegator withdraw address
+func (k Keeper) SetDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(GetDelegatorWithdrawAddrKey(delAddr), withdrawAddr.Bytes())
+}
+
+// remove a delegator withdraw addr
+func (k Keeper) RemoveDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetDelegatorWithdrawAddrKey(delAddr))
+}
+
 // get the global fee pool distribution info
 func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
 	store := ctx.KVStore(k.storeKey)
@@ -42,18 +64,18 @@ func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAd
 }
 
 // get the starting period associated with a delegator
-func (k Keeper) GetDelegatorStartingPeriod(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) (period types.DelegatorStartingPeriod) {
+func (k Keeper) GetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) (period types.DelegatorStartingInfo) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(GetDelegatorStartingPeriodKey(val, del))
+	b := store.Get(GetDelegatorStartingInfoKey(val, del))
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &period)
 	return
 }
 
 // set the starting period associated with a delegator
-func (k Keeper) setDelegatorStartingPeriod(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress, period types.DelegatorStartingPeriod) {
+func (k Keeper) setDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress, period types.DelegatorStartingInfo) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(period)
-	store.Set(GetDelegatorStartingPeriodKey(val, del), b)
+	store.Set(GetDelegatorStartingInfoKey(val, del), b)
 }
 
 // get historical rewards for a particular period

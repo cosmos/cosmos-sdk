@@ -5,10 +5,7 @@ import (
 )
 
 // historical rewards for a validator
-type ValidatorHistoricalRewards struct {
-	AccumulatedFees sdk.DecCoins `json:"accumulated_fees"`
-	TotalPower      sdk.Dec      `json:"total_power"`
-}
+type ValidatorHistoricalRewards = sdk.DecCoins
 
 // current rewards for a validator
 type ValidatorCurrentRewards struct {
@@ -19,8 +16,11 @@ type ValidatorCurrentRewards struct {
 // accumulated commission for a validator
 type ValidatorAccumulatedCommission = sdk.DecCoins
 
-// starting period for a delegator's rewards
-type DelegatorStartingPeriod = uint64
+// starting info for a delegator reward period
+type DelegatorStartingInfo struct {
+	PreviousPeriod uint64  `json:"previous_period"`
+	Stake          sdk.Int `json:"stake"`
+}
 
 // outstanding rewards for everyone
 type OutstandingRewards = sdk.DecCoins

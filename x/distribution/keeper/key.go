@@ -18,7 +18,7 @@ var (
 	OutstandingRewardsKey = []byte{0x02} // key for outstanding rewards
 
 	DelegatorWithdrawAddrPrefix          = []byte{0x03} // key for delegator withdraw address
-	DelegatorStartingPeriodPrefix        = []byte{0x04} // key for delegator starting period
+	DelegatorStartingInfoPrefix          = []byte{0x04} // key for delegator starting info
 	ValidatorHistoricalRewardsPrefix     = []byte{0x05} // key for historical validators rewards / stake
 	ValidatorCurrentRewardsPrefix        = []byte{0x06} // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = []byte{0x07} // key for accumulated validator commission
@@ -42,9 +42,9 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 	return sdk.AccAddress(addr)
 }
 
-// gets the key for a delegator's starting period
-func GetDelegatorStartingPeriodKey(v sdk.ValAddress, d sdk.AccAddress) []byte {
-	return append(append(DelegatorStartingPeriodPrefix, v.Bytes()...), d.Bytes()...)
+// gets the key for a delegator's starting info
+func GetDelegatorStartingInfoKey(v sdk.ValAddress, d sdk.AccAddress) []byte {
+	return append(append(DelegatorStartingInfoPrefix, v.Bytes()...), d.Bytes()...)
 }
 
 // gets the key for a validator's historical rewards

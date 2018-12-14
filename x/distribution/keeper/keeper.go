@@ -34,3 +34,41 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, c
 	}
 	return keeper
 }
+
+// withdraw rewards from a delegation
+func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) sdk.Error {
+	val := k.stakeKeeper.Validator(ctx, valAddr)
+	if val == nil {
+		return types.ErrNoValidatorDistInfo(k.codespace)
+	}
+
+	del := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
+	if del == nil {
+		return types.ErrNoDelegationDistInfo(k.codespace)
+	}
+
+	// withdraw rewards
+	if err := k.withdrawDelegationRewards(ctx, val, del); err != nil {
+		return err
+	}
+
+	// reinitialize the delegation
+	k.initializeDelegation(ctx, valAddr, delAddr)
+
+	return nil
+}
+
+// withdraw validator commission
+func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Error {
+	accAddr := sdk.AccAddress(valAddr)
+
+	var coins sdk.Coins
+
+	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
+
+	if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -6,10 +6,16 @@ BREAKING CHANGES
 
 * Gaia CLI  (`gaiacli`)
   * [cli] [\#2595](https://github.com/cosmos/cosmos-sdk/issues/2595) Remove `keys new` in favor of `keys add` incorporating existing functionality with addition of key recovery functionality.
+  * [cli] [\#2987](https://github.com/cosmos/cosmos-sdk/pull/2987) Add shorthand `-a` to `gaiacli keys show` and update docs
+  * [cli] [\#2971](https://github.com/cosmos/cosmos-sdk/pull/2971) Additional verification when running `gaiad gentx`
+  * [cli] [\#2734](https://github.com/cosmos/cosmos-sdk/issues/2734) Rewrite `gaiacli config`. It is now a non-interactive config utility.
 
 * Gaia
  - [#128](https://github.com/tendermint/devops/issues/128) Updated CircleCI job to trigger website build on every push to master/develop.
+ - [\#2994](https://github.com/cosmos/cosmos-sdk/pull/2994) Change wrong-password error message.
+
 * SDK
+ - [auth] \#2952 Signatures are no longer serialized on chain with the account number and sequence number
 
 * Tendermint
 
@@ -39,7 +45,9 @@ IMPROVEMENTS
 * SDK
  - \#1277 Complete bank module specification
  - \#2986 Store Refactor
- 
+ - \#2914 No longer withdraw validator rewards on bond/unbond, but rather move
+  the rewards to the respective validator's pools.
+
 * Tendermint
 
 
@@ -53,5 +61,6 @@ BUG FIXES
 * Gaia
 
 * SDK
+  * \#2967 Change ordering of `mint.BeginBlocker` and `distr.BeginBlocker`, recalculate inflation each block
 
 * Tendermint

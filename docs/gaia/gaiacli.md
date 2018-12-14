@@ -216,7 +216,7 @@ gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 
 ::: tip Note
 
-The action tag always equals the message type returned by the `Type()` function of the relevant message. 
+The action tag always equals the message type returned by the `Type()` function of the relevant message.
 
 You can find a list of available `tags` on each of the SDK modules:
 
@@ -461,7 +461,7 @@ gaiacli tx gov submit-proposal \
 Once created, you can now query information of the proposal:
 
 ```bash
-gaiacli query gov proposal --proposal-id=<proposal_id>
+gaiacli query gov proposal <proposal_id>
 ```
 
 Or query all available proposals:
@@ -477,9 +477,7 @@ You can also query proposals filtered by `voter` or `depositor` by using the cor
 In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:
 
 ```bash
-gaiacli tx gov deposit \
-  --proposal-id=<proposal_id> \
-  --deposit=<200steak> \
+gaiacli tx gov deposit <proposal_id> <200steak> \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -491,15 +489,13 @@ gaiacli tx gov deposit \
 Once a new proposal is created, you can query all the deposits submitted to it:
 
 ```bash
-gaiacli query gov deposits --proposal-id=<proposal_id>
+gaiacli query gov deposits <proposal_id>
 ```
 
 You can also query a deposit submitted by a specific address:
 
 ```bash
-gaiacli query gov deposit \
-  --proposal-id=<proposal_id> \
-  --depositor=<account_cosmos>
+gaiacli query gov deposit <proposal_id> <depositor_address>
 ```
 
 #### Vote on a proposal
@@ -507,9 +503,7 @@ gaiacli query gov deposit \
 After a proposal's deposit reaches the `MinDeposit` value, the voting period opens. Bonded `Atom` holders can then cast vote on it:
 
 ```bash
-gaiacli tx gov vote \
-  --proposal-id=<proposal_id> \
-  --option=<Yes/No/NoWithVeto/Abstain> \
+gaiacli tx gov vote <proposal_id> <Yes/No/NoWithVeto/Abstain> \
   --from=<name> \
   --chain-id=<chain_id>
 ```
@@ -519,15 +513,13 @@ gaiacli tx gov vote \
 Check the vote with the option you just submitted:
 
 ```bash
-gaiacli query gov vote \
-  --proposal-id=<proposal_id> \
-  --voter=<account_cosmos>
+gaiacli query gov vote <proposal_id> <voter_address>
 ```
 
 You can also get all the previous votes submitted to the proposal with:
 
 ```bash
-gaiacli query gov votes --proposal-id=<proposal_id>
+gaiacli query gov votes <proposal_id>
 ```
 
 #### Query proposal tally results
@@ -535,5 +527,15 @@ gaiacli query gov votes --proposal-id=<proposal_id>
 To check the current tally of a given proposal you can use the `tally` command:
 
 ```bash
-gaiacli query gov tally --proposal-id=<proposal_id>
+gaiacli query gov tally <proposal_id>
+```
+
+#### Query governance parameters
+
+To check the current governance parameters run:
+
+```bash
+gaiacli query gov param voting
+gaiacli query gov param tallying
+gaiacli query gov param deposit
 ```

@@ -57,7 +57,7 @@ func (e errWrongPassword) Code() int {
 }
 
 func (e errWrongPassword) Error() string {
-	return fmt.Sprintf("Ciphertext decryption failed")
+	return "invalid account password"
 }
 
 // NewErrWrongPassword returns a standardized error reflecting that the specified password is wrong

@@ -18,24 +18,24 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		case MsgVote:
 			return handleMsgVote(ctx, keeper, msg)
 		default:
-			errMsg := "Unrecognized gov msg type"
+			errMsg := fmt.Sprintf("Unrecognized gov msg type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-
 	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
+	proposalID := proposal.GetProposalID()
+	proposalIDBytes := []byte(fmt.Sprintf("%d", proposalID))
 
-	err, votingStarted := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)
+	err, votingStarted := keeper.AddDeposit(ctx, proposalID, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryLengthPrefixed(proposal.GetProposalID())
-
 	resTags := sdk.NewTags(
+		tags.Action, tags.ActionProposalSubmitted,
 		tags.Proposer, []byte(msg.Proposer.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
@@ -45,22 +45,20 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	return sdk.Result{
-		Data: proposalIDBytes,
+		Data: keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID),
 		Tags: resTags,
 	}
 }
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
-
 	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(msg.ProposalID)
-
-	// TODO: Add tag for if voting period started
+	proposalIDBytes := []byte(fmt.Sprintf("%d", msg.ProposalID))
 	resTags := sdk.NewTags(
+		tags.Action, tags.ActionProposalDeposit,
 		tags.Depositor, []byte(msg.Depositor.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
@@ -75,33 +73,29 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 }
 
 func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
-
 	err := keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
 	if err != nil {
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(msg.ProposalID)
-
-	resTags := sdk.NewTags(
-		tags.Voter, []byte(msg.Voter.String()),
-		tags.ProposalID, proposalIDBytes,
-	)
 	return sdk.Result{
-		Tags: resTags,
+		Tags: sdk.NewTags(
+			tags.Action, tags.ActionProposalVote,
+			tags.Voter, []byte(msg.Voter.String()),
+			tags.ProposalID, []byte(fmt.Sprintf("%d", msg.ProposalID)),
+		),
 	}
 }
 
 // Called every block, process inflation, update validator set
 func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
-
 	logger := ctx.Logger().With("module", "x/gov")
-
 	resTags = sdk.NewTags()
 
 	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; inactiveIterator.Valid(); inactiveIterator.Next() {
 		var proposalID uint64
+
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
 		inactiveProposal := keeper.GetProposal(ctx, proposalID)
 		keeper.DeleteProposal(ctx, proposalID)
@@ -119,11 +113,13 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 			),
 		)
 	}
+
 	inactiveIterator.Close()
 
 	activeIterator := keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; activeIterator.Valid(); activeIterator.Next() {
 		var proposalID uint64
+
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
 		activeProposal := keeper.GetProposal(ctx, proposalID)
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
@@ -138,9 +134,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 			activeProposal.SetStatus(StatusRejected)
 			action = tags.ActionProposalRejected
 		}
+
 		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
-
 		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.GetVotingEndTime(), activeProposal.GetProposalID())
 
 		logger.Info(fmt.Sprintf("proposal %d (%s) tallied; passed: %v",
@@ -149,6 +145,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		resTags = resTags.AppendTag(tags.Action, action)
 		resTags = resTags.AppendTag(tags.ProposalID, []byte(string(proposalID)))
 	}
+
 	activeIterator.Close()
 
 	return resTags

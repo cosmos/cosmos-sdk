@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/types"
 
@@ -674,6 +676,37 @@ func TestGaiadCollectGentxs(t *testing.T) {
 	// Collect gentxs from a custom directory
 	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s --gentx-dir=%s", gaiadHome, gentxDir), app.DefaultKeyPass)
 	cleanupDirs(gaiadHome, gaiacliHome, gentxDir)
+}
+
+// ---------------------------------------------------------------------------
+// Slashing
+
+func TestSlashingGetParams(t *testing.T) {
+	t.Parallel()
+
+	cdc := app.MakeCodec()
+	chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr := initializeFixtures(t)
+	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
+
+	// start gaiad server
+	proc := tests.GoExecuteTWithStdout(
+		t,
+		fmt.Sprintf(
+			"gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v",
+			gaiadHome, servAddr, p2pAddr,
+		),
+	)
+
+	defer proc.Stop(false)
+	tests.WaitForTMStart(port)
+	tests.WaitForNextNBlocksTM(1, port)
+
+	res, errStr := tests.ExecuteT(t, fmt.Sprintf("gaiacli query slashing params %s", flags), "")
+	require.Empty(t, errStr)
+
+	var params slashing.Params
+	err := cdc.UnmarshalJSON([]byte(res), &params)
+	require.NoError(t, err)
 }
 
 //___________________________________________________________________________________

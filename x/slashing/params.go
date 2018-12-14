@@ -30,13 +30,13 @@ func ParamTypeTable() params.TypeTable {
 
 // Params - used for initializing default parameter for slashing at genesis
 type Params struct {
-	MaxEvidenceAge           time.Duration `json:"max-evidence-age"`
-	SignedBlocksWindow       int64         `json:"signed-blocks-window"`
-	MinSignedPerWindow       sdk.Dec       `json:"min-signed-per-window"`
-	DoubleSignUnbondDuration time.Duration `json:"double-sign-unbond-duration"`
-	DowntimeUnbondDuration   time.Duration `json:"downtime-unbond-duration"`
-	SlashFractionDoubleSign  sdk.Dec       `json:"slash-fraction-double-sign"`
-	SlashFractionDowntime    sdk.Dec       `json:"slash-fraction-downtime"`
+	MaxEvidenceAge           time.Duration `json:"max_evidence_age"`
+	SignedBlocksWindow       int64         `json:"signed_blocks_window"`
+	MinSignedPerWindow       sdk.Dec       `json:"min_signed_per_window"`
+	DoubleSignUnbondDuration time.Duration `json:"double_sign_unbond_duration"`
+	DowntimeUnbondDuration   time.Duration `json:"downtime_unbond_duration"`
+	SlashFractionDoubleSign  sdk.Dec       `json:"slash_fraction_double_sign"`
+	SlashFractionDowntime    sdk.Dec       `json:"slash_fraction_downtime"`
 }
 
 // Implements params.ParamStruct
@@ -89,7 +89,7 @@ func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
 	return
 }
 
-// Downtime slashing thershold - default 50% of the SignedBlocksWindow
+// Downtime slashing threshold - default 50% of the SignedBlocksWindow
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
 	k.paramspace.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
@@ -119,4 +119,10 @@ func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, KeySlashFractionDowntime, &res)
 	return
+}
+
+// GetParams returns the total set of slashing parameters.
+func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
+	k.paramspace.GetParamSet(ctx, &params)
+	return params
 }

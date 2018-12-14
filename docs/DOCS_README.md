@@ -111,7 +111,7 @@ much as possible with its [counterpart in the Tendermint Core repo](https://gith
 
 1. Execute the following command at the root directory to install the swagger-ui generate tool.
     ```
-    make get_tools
+    make tools
     ```
 2. Edit API docs
     1. Directly Edit API docs manually: `client/lcd/swagger-ui/swagger.yaml`.

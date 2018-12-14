@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
@@ -15,7 +14,7 @@ import (
 
 // TxBuilder implements a transaction context created in SDK modules.
 type TxBuilder struct {
-	Codec         *codec.Codec
+	TxEncoder     sdk.TxEncoder
 	AccountNumber uint64
 	Sequence      uint64
 	Gas           uint64
@@ -27,7 +26,7 @@ type TxBuilder struct {
 }
 
 // NewTxBuilder returns a new initialized TxBuilder
-func NewTxBuilder(cdc *codec.Codec, accNumber, seq, gas uint64, gasAdj float64, simulate bool, chainID, memo string, fees sdk.Coins) TxBuilder {
+func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64, simulate bool, chainID, memo string, fees sdk.Coins) TxBuilder {
 	// if chain ID is not specified manually, read default chain ID
 	if chainID == "" {
 		defaultChainID, err := sdk.DefaultChainID()
@@ -38,7 +37,7 @@ func NewTxBuilder(cdc *codec.Codec, accNumber, seq, gas uint64, gasAdj float64, 
 	}
 
 	return TxBuilder{
-		Codec:         cdc,
+		TxEncoder:     txEncoder,
 		ChainID:       chainID,
 		AccountNumber: accNumber,
 		Gas:           gas,
@@ -81,8 +80,8 @@ func NewTxBuilderFromCLI() TxBuilder {
 }
 
 // WithCodec returns a copy of the context with an updated codec.
-func (bldr TxBuilder) WithCodec(cdc *codec.Codec) TxBuilder {
-	bldr.Codec = cdc
+func (bldr TxBuilder) WithTxEncoder(txEncoder sdk.TxEncoder) TxBuilder {
+	bldr.TxEncoder = txEncoder
 	return bldr
 }
 
@@ -152,7 +151,7 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 		return nil, err
 	}
 
-	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo))
+	return bldr.TxEncoder(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -191,7 +190,7 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 		PubKey: info.GetPubKey(),
 	}}
 
-	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	return bldr.TxEncoder(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If append

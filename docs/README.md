@@ -25,6 +25,8 @@ The following sections contain the information you need if you want to build a f
 - [Gaia](./gaia/README.md): Contains all documentation related to the gaia application (current name for the Cosmos-Hub). Also contains info on how to join gaia testnets.
 - [Clients](./clients/README.md): Documentation about SDK clients like the SDK Command-Line interface and the SDK Light-client.
 - [Specifications](./spec/README.md): Contains SDK and modules specifications.
+- [SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk): Godocs of the Cosmos-SDK.
+- [REST API spec](https://cosmos.network/rpc/): List of endpoints to interract with a `gaia` full-node through REST.
 
 If you are reading this on the Cosmos Website, please know that you can find more information on [github](https://github.com/cosmos/cosmos-sdk/tree/develop/docs). Also if you find any issues with the documentation please [*open a Pull Request*](https://github.com/cosmos/cosmos-sdk/compare?expand=1), or at least [*open an Issue*](https://github.com/cosmos/cosmos-sdk/issues/new) to update the docs!
 

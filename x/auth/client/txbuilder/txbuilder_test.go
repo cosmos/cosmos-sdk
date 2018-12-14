@@ -21,7 +21,7 @@ var (
 
 func TestTxBuilderBuild(t *testing.T) {
 	type fields struct {
-		Codec         *codec.Codec
+		TxEncoder     sdk.TxEncoder
 		AccountNumber uint64
 		Sequence      uint64
 		Gas           uint64
@@ -40,7 +40,7 @@ func TestTxBuilderBuild(t *testing.T) {
 	}{
 		{
 			fields{
-				Codec:         codec.New(),
+				TxEncoder:     auth.DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           100,
@@ -63,7 +63,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		},
 	}
 	for i, tc := range tests {
-		bldr := NewTxBuilder(tc.fields.Codec, tc.fields.AccountNumber, tc.fields.Sequence, tc.fields.Gas, tc.fields.GasAdjustment, tc.fields.SimulateGas, tc.fields.ChainID, tc.fields.Memo, tc.fields.Fees)
+		bldr := NewTxBuilder(tc.fields.TxEncoder, tc.fields.AccountNumber, tc.fields.Sequence, tc.fields.Gas, tc.fields.GasAdjustment, tc.fields.SimulateGas, tc.fields.ChainID, tc.fields.Memo, tc.fields.Fees)
 		got, err := bldr.Build(tc.msgs)
 		require.Equal(t, tc.wantErr, (err != nil), "TxBuilder.Build() error = %v, wantErr %v, tc %d", err, tc.wantErr, i)
 		if !reflect.DeepEqual(got, tc.want) {

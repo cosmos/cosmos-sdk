@@ -20,6 +20,7 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
+// create a new keeper
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
 	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
@@ -32,90 +33,4 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, c
 		codespace:           codespace,
 	}
 	return keeper
-}
-
-//______________________________________________________________________
-
-// get the global fee pool distribution info
-func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(FeePoolKey)
-	if b == nil {
-		panic("Stored fee pool should not have been nil")
-	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &feePool)
-	return
-}
-
-// set the global fee pool distribution info
-func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(feePool)
-	store.Set(FeePoolKey, b)
-}
-
-// get the proposer public key for this block
-func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(ProposerKey)
-	if b == nil {
-		panic("Previous proposer not set")
-	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &consAddr)
-	return
-}
-
-// set the proposer public key for this block
-func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(consAddr)
-	store.Set(ProposerKey, b)
-}
-
-// Type declaration for parameters
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(
-		ParamStoreKeyCommunityTax, sdk.Dec{},
-		ParamStoreKeyBaseProposerReward, sdk.Dec{},
-		ParamStoreKeyBonusProposerReward, sdk.Dec{},
-	)
-}
-
-// Returns the current CommunityTax rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyCommunityTax, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetCommunityTax(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyCommunityTax, &percent)
-}
-
-// Returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetBaseProposerReward(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyBaseProposerReward, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetBaseProposerReward(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyBaseProposerReward, &percent)
-}
-
-// Returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetBonusProposerReward(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyBonusProposerReward, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetBonusProposerReward(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyBonusProposerReward, &percent)
 }

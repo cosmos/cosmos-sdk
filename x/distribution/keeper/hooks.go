@@ -2,10 +2,17 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
-	// Create a new running deccoins
+	// Set current rewards
+	k.setValidatorCurrentRewards(ctx, valAddr, types.ValidatorCurrentRewards{})
+
+	// Set accumulated commission
+	k.setValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{})
+
 	// Create a new fees / power record
 }
 
@@ -43,6 +50,7 @@ func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
 // nolint
 func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.k.onValidatorCreated(ctx, valAddr)
 }
 func (h Hooks) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 }

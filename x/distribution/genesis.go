@@ -11,8 +11,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetCommunityTax(ctx, data.CommunityTax)
 	keeper.SetBaseProposerReward(ctx, data.BaseProposerReward)
 	keeper.SetBonusProposerReward(ctx, data.BonusProposerReward)
-
 	keeper.SetPreviousProposerConsAddr(ctx, data.PreviousProposer)
+	keeper.SetOutstandingRewards(ctx, data.OutstandingRewards)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
@@ -22,5 +22,6 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	baseProposerRewards := keeper.GetBaseProposerReward(ctx)
 	bonusProposerRewards := keeper.GetBonusProposerReward(ctx)
 	pp := keeper.GetPreviousProposerConsAddr(ctx)
-	return types.NewGenesisState(feePool, communityTax, baseProposerRewards, bonusProposerRewards, []types.DelegatorWithdrawInfo{}, pp)
+	outstanding := keeper.GetOutstandingRewards(ctx)
+	return types.NewGenesisState(feePool, communityTax, baseProposerRewards, bonusProposerRewards, []types.DelegatorWithdrawInfo{}, pp, outstanding)
 }

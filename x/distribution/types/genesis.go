@@ -21,9 +21,11 @@ type GenesisState struct {
 	BonusProposerReward    sdk.Dec                 `json:"bonus_proposer_reward"`
 	DelegatorWithdrawInfos []DelegatorWithdrawInfo `json:"delegator_withdraw_infos"`
 	PreviousProposer       sdk.ConsAddress         `json:"previous_proposer"`
+	OutstandingRewards     sdk.DecCoins            `json:"outstanding_rewards"`
 }
 
-func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress) GenesisState {
+func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
+	dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r OutstandingRewards) GenesisState {
 
 	return GenesisState{
 		FeePool:                feePool,
@@ -32,6 +34,7 @@ func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusPro
 		BonusProposerReward:    bonusProposerReward,
 		DelegatorWithdrawInfos: dwis,
 		PreviousProposer:       pp,
+		OutstandingRewards:     r,
 	}
 }
 

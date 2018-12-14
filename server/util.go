@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -51,7 +52,7 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		if cmd.Name() == version.VersionCmd.Name() {
 			return nil
 		}
-		config, err := interceptLoadConfig()
+		config, err := interceptLoadConfig(context.Config.RootDir)
 		if err != nil {
 			return err
 		}
@@ -59,6 +60,7 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 		if err != nil {
 			return err
 		}
+
 		logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 		logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, cfg.DefaultLogLevel())
 		if err != nil {
@@ -75,8 +77,9 @@ func PersistentPreRunEFn(context *Context) func(*cobra.Command, []string) error 
 }
 
 // If a new config is created, change some of the default tendermint settings
-func interceptLoadConfig() (conf *cfg.Config, err error) {
+func interceptLoadConfig(path string) (conf *cfg.Config, err error) {
 	tmpConf := cfg.DefaultConfig()
+	tmpConf.RootDir = path
 	err = viper.Unmarshal(tmpConf)
 	if err != nil {
 		// TODO: Handle with #870
@@ -87,6 +90,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 	// Intercept only if the file doesn't already exist
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		fmt.Println("enter the loop")
 		// the following parse config is needed to create directories
 		conf, _ = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
 		conf.ProfListenAddress = "localhost:6060"

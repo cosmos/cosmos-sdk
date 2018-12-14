@@ -10,6 +10,7 @@ BREAKING CHANGES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
 
 * SDK
 

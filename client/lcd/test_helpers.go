@@ -886,17 +886,26 @@ func getDelegatorUnbondingDelegations(t *testing.T, port string, delegatorAddr s
 	return ubds
 }
 
-// GET /stake/delegators/{delegatorAddr}/redelegations Get all redelegations from a delegator
-func getDelegatorRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress) []stake.Redelegation {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/redelegations", delegatorAddr), nil)
+// GET /stake/redelegations?delegator=0xdeadbeef&validator_from=0xdeadbeef&validator_to=0xdeadbeef& Get redelegations filters by params passed in
+func getRedelegations(t *testing.T, port string, delegatorAddr sdk.AccAddress, srcValidatorAddr sdk.ValAddress, dstValidatorAddr sdk.ValAddress) []stake.Redelegation {
+	var res *http.Response
+	var body string
+	endpoint := "/stake/redelegations?"
+	if !delegatorAddr.Empty() {
+		endpoint += fmt.Sprintf("delegator=%s&", delegatorAddr)
+	}
+	if !srcValidatorAddr.Empty() {
+		endpoint += fmt.Sprintf("validator_from=%s&", srcValidatorAddr)
+	}
+	if !dstValidatorAddr.Empty() {
+		endpoint += fmt.Sprintf("validator_to=%s&", dstValidatorAddr)
+	}
+	res, body = Request(t, port, "GET", endpoint, nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var reds []stake.Redelegation
-
-	err := cdc.UnmarshalJSON([]byte(body), &reds)
+	var redels []stake.Redelegation
+	err := cdc.UnmarshalJSON([]byte(body), &redels)
 	require.Nil(t, err)
-
-	return reds
+	return redels
 }
 
 // GET /stake/delegators/{delegatorAddr}/validators Query all validators that a delegator is bonded to
@@ -1014,18 +1023,6 @@ func getValidatorUnbondingDelegations(t *testing.T, port string, validatorAddr s
 	require.Nil(t, err)
 
 	return ubds
-}
-
-// GET /stake/validators/{validatorAddr}/redelegations Get all outgoing redelegations from a validator
-func getValidatorRedelegations(t *testing.T, port string, validatorAddr sdk.ValAddress) []stake.Redelegation {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/validators/%s/redelegations", validatorAddr.String()), nil)
-	require.Equal(t, http.StatusOK, res.StatusCode, body)
-
-	var reds []stake.Redelegation
-	err := cdc.UnmarshalJSON([]byte(body), &reds)
-	require.Nil(t, err)
-
-	return reds
 }
 
 // GET /stake/pool Get the current state of the staking pool

@@ -327,14 +327,16 @@ func (coins Coins) Empty() bool {
 
 // Returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
-	lowercaseDenom := strings.ToLower(denom)
+	if strings.ToLower(denom) != denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
+	}
 	switch len(coins) {
 	case 0:
 		return ZeroInt()
 
 	case 1:
 		coin := coins[0]
-		if coin.Denom == lowercaseDenom {
+		if coin.Denom == denom {
 			return coin.Amount
 		}
 		return ZeroInt()
@@ -343,12 +345,12 @@ func (coins Coins) AmountOf(denom string) Int {
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]
 
-		if lowercaseDenom < coin.Denom {
-			return coins[:midIdx].AmountOf(lowercaseDenom)
-		} else if lowercaseDenom == coin.Denom {
+		if denom < coin.Denom {
+			return coins[:midIdx].AmountOf(denom)
+		} else if denom == coin.Denom {
 			return coin.Amount
 		} else {
-			return coins[midIdx+1:].AmountOf(lowercaseDenom)
+			return coins[midIdx+1:].AmountOf(denom)
 		}
 	}
 }

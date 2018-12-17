@@ -491,4 +491,6 @@ func TestAmountOf(t *testing.T) {
 		assert.Equal(t, NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"))
 		assert.Equal(t, NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"))
 	}
+
+	assert.Panics(t, func() { cases[0].coins.AmountOf("Invalid") })
 }

@@ -88,9 +88,9 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
+func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 	logger := ctx.Logger().With("module", "x/gov")
-	resTags = sdk.NewTags()
+	resTags := sdk.NewTags()
 
 	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; inactiveIterator.Valid(); inactiveIterator.Next() {
@@ -101,8 +101,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		keeper.DeleteProposal(ctx, proposalID)
 		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
 
-		resTags = resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
-		resTags = resTags.AppendTag(tags.ProposalID, []byte(string(proposalID)))
+		resTags = resTags.AppendTag(tags.ProposalResult, tags.ActionProposalDropped)
 
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
@@ -124,15 +123,15 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		activeProposal := keeper.GetProposal(ctx, proposalID)
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 
-		var action []byte
+		var tagValue []byte
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusPassed)
-			action = tags.ActionProposalPassed
+			tagValue = tags.ActionProposalPassed
 		} else {
 			keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusRejected)
-			action = tags.ActionProposalRejected
+			tagValue = tags.ActionProposalRejected
 		}
 
 		activeProposal.SetTallyResult(tallyResults)
@@ -142,8 +141,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		logger.Info(fmt.Sprintf("proposal %d (%s) tallied; passed: %v",
 			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
 
-		resTags = resTags.AppendTag(tags.Action, action)
-		resTags = resTags.AppendTag(tags.ProposalID, []byte(string(proposalID)))
+		resTags = resTags.AppendTag(tags.ProposalResult, tagValue)
 	}
 
 	activeIterator.Close()

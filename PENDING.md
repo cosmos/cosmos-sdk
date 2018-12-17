@@ -22,10 +22,11 @@ FEATURES
 * Gaia REST API (`gaiacli advanced rest-server`)
   * [\#3067](https://github.com/cosmos/cosmos-sdk/issues/3067) Add support for fees on transactions
   * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) Add a custom memo on transactions
+  * \#2399 Implement `/slashing/parameters` endpoint to query slashing parameters.
 
 * Gaia CLI  (`gaiacli`)
-  * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) `fee` flag now supports multiple coins
-  * \#2399 Implement `/slashing/parameters` endpoint to query slashing parameters.
+  * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) fee flag now supports multiple coins and was renamed to `--fees`
+  * \#2399 Implement `params` command to query slashing parameters.
 
 * Gaia
 

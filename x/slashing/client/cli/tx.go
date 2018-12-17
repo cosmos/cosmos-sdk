@@ -1,13 +1,14 @@
 package cli
 
 import (
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +20,7 @@ func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "unjail validator previously jailed for downtime",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)

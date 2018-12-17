@@ -1,11 +1,13 @@
 package keys
 
 import (
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 func TestGetKeyBaseLocks(t *testing.T) {

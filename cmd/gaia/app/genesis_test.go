@@ -7,13 +7,14 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	codec "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
@@ -27,7 +27,7 @@ func IBCTransferCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "transfer",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)

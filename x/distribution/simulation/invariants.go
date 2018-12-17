@@ -101,9 +101,10 @@ func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 						delegation := sk.Delegation(ctx, ddi.DelegatorAddr, ddi.ValOperatorAddr)
 						accum := ddi.GetDelAccum(height, delegation.GetShares())
 						if accum.IsPositive() {
-							logDelAccums += fmt.Sprintf("\n\t\tdel: %v, accum: %v",
+							logDelAccums += fmt.Sprintf("\n\t\tdel: %v, accum: %v, power: %v",
 								ddi.DelegatorAddr.String(),
-								accum.String())
+								accum.String(),
+								delegation.GetShares())
 						}
 					}
 					return false

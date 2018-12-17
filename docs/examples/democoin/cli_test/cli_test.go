@@ -8,9 +8,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
-	"github.com/stretchr/testify/require"
 )
 
 var (

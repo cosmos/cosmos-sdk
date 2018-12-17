@@ -5,20 +5,21 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
-	memoCostPerByte     sdk.Gas = 1
-	ed25519VerifyCost           = 59
-	secp256k1VerifyCost         = 100
-	maxMemoCharacters           = 100
+	memoCostPerByte     sdk.Gas = 3
+	ed25519VerifyCost           = 590
+	secp256k1VerifyCost         = 1000
+	maxMemoCharacters           = 256
 
 	// how much gas = 1 atom
-	gasPerUnitCost = 1000
+	gasPerUnitCost = 10000
 
 	// max total number of sigs per tx
 	txSigLimit = 7

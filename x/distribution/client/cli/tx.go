@@ -3,6 +3,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -54,7 +55,7 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 					flagOnlyFromValidator, flagIsValidator)
 			}
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -88,6 +89,10 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 				msg = types.NewMsgWithdrawDelegatorRewardsAll(delAddr)
 			}
 
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
+			}
+
 			// build and sign the transaction, then broadcast to Tendermint
 			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
@@ -105,7 +110,7 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)

@@ -1,9 +1,10 @@
 package rest
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/stake"
 	"net/http"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"

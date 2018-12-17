@@ -29,9 +29,8 @@ type Validator struct {
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
-	Description        Description `json:"description"`           // description terms for the validator
-	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
-	BondIntraTxCounter int16       `json:"bond_intra_tx_counter"` // block-local tx index of validator change
+	Description Description `json:"description"` // description terms for the validator
+	BondHeight  int64       `json:"bond_height"` // earliest height as a bonded validator
 
 	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
@@ -42,50 +41,47 @@ type Validator struct {
 // NewValidator - initialize a new validator
 func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		OperatorAddr:       operator,
-		ConsPubKey:         pubKey,
-		Jailed:             false,
-		Status:             sdk.Unbonded,
-		Tokens:             sdk.ZeroDec(),
-		DelegatorShares:    sdk.ZeroDec(),
-		Description:        description,
-		BondHeight:         int64(0),
-		BondIntraTxCounter: int16(0),
-		UnbondingHeight:    int64(0),
-		UnbondingMinTime:   time.Unix(0, 0).UTC(),
-		Commission:         NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		OperatorAddr:     operator,
+		ConsPubKey:       pubKey,
+		Jailed:           false,
+		Status:           sdk.Unbonded,
+		Tokens:           sdk.ZeroDec(),
+		DelegatorShares:  sdk.ZeroDec(),
+		Description:      description,
+		BondHeight:       int64(0),
+		UnbondingHeight:  int64(0),
+		UnbondingMinTime: time.Unix(0, 0).UTC(),
+		Commission:       NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 	}
 }
 
 // what's kept in the store value
 type validatorValue struct {
-	ConsPubKey         crypto.PubKey
-	Jailed             bool
-	Status             sdk.BondStatus
-	Tokens             sdk.Dec
-	DelegatorShares    sdk.Dec
-	Description        Description
-	BondHeight         int64
-	BondIntraTxCounter int16
-	UnbondingHeight    int64
-	UnbondingMinTime   time.Time
-	Commission         Commission
+	ConsPubKey       crypto.PubKey
+	Jailed           bool
+	Status           sdk.BondStatus
+	Tokens           sdk.Dec
+	DelegatorShares  sdk.Dec
+	Description      Description
+	BondHeight       int64
+	UnbondingHeight  int64
+	UnbondingMinTime time.Time
+	Commission       Commission
 }
 
 // return the redelegation without fields contained within the key for the store
 func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 	val := validatorValue{
-		ConsPubKey:         validator.ConsPubKey,
-		Jailed:             validator.Jailed,
-		Status:             validator.Status,
-		Tokens:             validator.Tokens,
-		DelegatorShares:    validator.DelegatorShares,
-		Description:        validator.Description,
-		BondHeight:         validator.BondHeight,
-		BondIntraTxCounter: validator.BondIntraTxCounter,
-		UnbondingHeight:    validator.UnbondingHeight,
-		UnbondingMinTime:   validator.UnbondingMinTime,
-		Commission:         validator.Commission,
+		ConsPubKey:       validator.ConsPubKey,
+		Jailed:           validator.Jailed,
+		Status:           validator.Status,
+		Tokens:           validator.Tokens,
+		DelegatorShares:  validator.DelegatorShares,
+		Description:      validator.Description,
+		BondHeight:       validator.BondHeight,
+		UnbondingHeight:  validator.UnbondingHeight,
+		UnbondingMinTime: validator.UnbondingMinTime,
+		Commission:       validator.Commission,
 	}
 	return cdc.MustMarshalBinaryLengthPrefixed(val)
 }
@@ -112,18 +108,17 @@ func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator
 	}
 
 	return Validator{
-		OperatorAddr:       operatorAddr,
-		ConsPubKey:         storeValue.ConsPubKey,
-		Jailed:             storeValue.Jailed,
-		Tokens:             storeValue.Tokens,
-		Status:             storeValue.Status,
-		DelegatorShares:    storeValue.DelegatorShares,
-		Description:        storeValue.Description,
-		BondHeight:         storeValue.BondHeight,
-		BondIntraTxCounter: storeValue.BondIntraTxCounter,
-		UnbondingHeight:    storeValue.UnbondingHeight,
-		UnbondingMinTime:   storeValue.UnbondingMinTime,
-		Commission:         storeValue.Commission,
+		OperatorAddr:     operatorAddr,
+		ConsPubKey:       storeValue.ConsPubKey,
+		Jailed:           storeValue.Jailed,
+		Tokens:           storeValue.Tokens,
+		Status:           storeValue.Status,
+		DelegatorShares:  storeValue.DelegatorShares,
+		Description:      storeValue.Description,
+		BondHeight:       storeValue.BondHeight,
+		UnbondingHeight:  storeValue.UnbondingHeight,
+		UnbondingMinTime: storeValue.UnbondingMinTime,
+		Commission:       storeValue.Commission,
 	}, nil
 }
 
@@ -164,9 +159,8 @@ type bechValidator struct {
 	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
-	Description        Description `json:"description"`           // description terms for the validator
-	BondHeight         int64       `json:"bond_height"`           // earliest height as a bonded validator
-	BondIntraTxCounter int16       `json:"bond_intra_tx_counter"` // block-local tx index of validator change
+	Description Description `json:"description"` // description terms for the validator
+	BondHeight  int64       `json:"bond_height"` // earliest height as a bonded validator
 
 	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
@@ -182,18 +176,17 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 	}
 
 	return codec.Cdc.MarshalJSON(bechValidator{
-		OperatorAddr:       v.OperatorAddr,
-		ConsPubKey:         bechConsPubKey,
-		Jailed:             v.Jailed,
-		Status:             v.Status,
-		Tokens:             v.Tokens,
-		DelegatorShares:    v.DelegatorShares,
-		Description:        v.Description,
-		BondHeight:         v.BondHeight,
-		BondIntraTxCounter: v.BondIntraTxCounter,
-		UnbondingHeight:    v.UnbondingHeight,
-		UnbondingMinTime:   v.UnbondingMinTime,
-		Commission:         v.Commission,
+		OperatorAddr:     v.OperatorAddr,
+		ConsPubKey:       bechConsPubKey,
+		Jailed:           v.Jailed,
+		Status:           v.Status,
+		Tokens:           v.Tokens,
+		DelegatorShares:  v.DelegatorShares,
+		Description:      v.Description,
+		BondHeight:       v.BondHeight,
+		UnbondingHeight:  v.UnbondingHeight,
+		UnbondingMinTime: v.UnbondingMinTime,
+		Commission:       v.Commission,
 	})
 }
 
@@ -208,25 +201,24 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*v = Validator{
-		OperatorAddr:       bv.OperatorAddr,
-		ConsPubKey:         consPubKey,
-		Jailed:             bv.Jailed,
-		Tokens:             bv.Tokens,
-		Status:             bv.Status,
-		DelegatorShares:    bv.DelegatorShares,
-		Description:        bv.Description,
-		BondHeight:         bv.BondHeight,
-		BondIntraTxCounter: bv.BondIntraTxCounter,
-		UnbondingHeight:    bv.UnbondingHeight,
-		UnbondingMinTime:   bv.UnbondingMinTime,
-		Commission:         bv.Commission,
+		OperatorAddr:     bv.OperatorAddr,
+		ConsPubKey:       consPubKey,
+		Jailed:           bv.Jailed,
+		Tokens:           bv.Tokens,
+		Status:           bv.Status,
+		DelegatorShares:  bv.DelegatorShares,
+		Description:      bv.Description,
+		BondHeight:       bv.BondHeight,
+		UnbondingHeight:  bv.UnbondingHeight,
+		UnbondingMinTime: bv.UnbondingMinTime,
+		Commission:       bv.Commission,
 	}
 	return nil
 }
 
 //___________________________________________________________________
 
-// only the vitals - does not check bond height of IntraTxCounter
+// only the vitals
 func (v Validator) Equal(v2 Validator) bool {
 	return v.ConsPubKey.Equals(v2.ConsPubKey) &&
 		bytes.Equal(v.OperatorAddr, v2.OperatorAddr) &&
@@ -360,11 +352,16 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 
 // removes tokens from a validator
 func (v Validator) RemoveTokens(pool Pool, tokens sdk.Dec) (Validator, Pool) {
+	if tokens.IsNegative() {
+		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
+	}
+	if v.Tokens.LT(tokens) {
+		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
+	}
+	v.Tokens = v.Tokens.Sub(tokens)
 	if v.Status == sdk.Bonded {
 		pool = pool.bondedTokensToLoose(tokens)
 	}
-
-	v.Tokens = v.Tokens.Sub(tokens)
 	return v, pool
 }
 
@@ -404,15 +401,11 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 
 // RemoveDelShares removes delegator shares from a validator.
 func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Dec) {
-	issuedTokens := v.DelegatorShareExRate().Mul(delShares)
-	v.Tokens = v.Tokens.Sub(issuedTokens)
+	delTokens := v.DelegatorShareExRate().Mul(delShares)
+	delTokens = sdk.MinDec(delTokens, v.Tokens)
+	v, pool = v.RemoveTokens(pool, delTokens)
 	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
-
-	if v.Status == sdk.Bonded {
-		pool = pool.bondedTokensToLoose(issuedTokens)
-	}
-
-	return v, pool, issuedTokens
+	return v, pool, delTokens
 }
 
 // DelegatorShareExRate gets the exchange rate of tokens over delegator shares.

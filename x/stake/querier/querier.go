@@ -1,11 +1,12 @@
 package querier
 
 import (
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // query endpoints supported by the staking Querier

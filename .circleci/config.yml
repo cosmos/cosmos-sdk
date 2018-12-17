@@ -59,7 +59,7 @@ jobs:
           name: tools
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_tools
+            make tools
       - *dependencies
       - run:
           name: binaries
@@ -175,7 +175,7 @@ jobs:
           name: Test multi-seed Gaia simulation
           command: |
             export PATH="$GOBIN:$PATH"
-            scripts/multisim.sh 25 TestFullGaiaSimulation
+            scripts/multisim.sh 700 TestFullGaiaSimulation
 
   test_cover:
     <<: *linux_defaults
@@ -331,10 +331,11 @@ workflows:
           requires:
             - setup_dependencies
           filters:
-            - branches:
-                only:
-                  - master
-                  - develop
+            branches:
+              only:
+                - master
+                - develop
+                - mircea/devops142
       - test_cover:
           requires:
             - setup_dependencies

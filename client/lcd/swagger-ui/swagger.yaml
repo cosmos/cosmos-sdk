@@ -1187,6 +1187,35 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
+  /slashing/parameters:
+    get:
+      summary: Get the current slashing parameters
+      tags:
+      - ICS23
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              max_evidence_age:
+                type: integer
+              signed_blocks_window:
+                type: integer
+              min_signed_per_window:
+                type: integer
+              double_sign_unbond_duration:
+                type: integer
+              downtime_unbond_duration:
+                type: integer
+              slash_fraction_double_sign:
+                type: integer
+              slash_fraction_downtime:
+                type: integer
+        500:
+          description: Internal Server Error
   /gov/proposals:
     post:
       summary: Submit a proposal

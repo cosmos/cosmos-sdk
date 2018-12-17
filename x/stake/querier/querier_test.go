@@ -29,7 +29,7 @@ func TestNewQuerier(t *testing.T) {
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
 		validators[i].BondIntraTxCounter = int16(i)
 		keeper.SetValidator(ctx, validators[i])
-		keeper.SetValidatorByPowerIndex(ctx, validators[i], pool)
+		keeper.SetValidatorByPowerIndex(ctx, validators[i])
 	}
 	keeper.SetPool(ctx, pool)
 
@@ -170,13 +170,11 @@ func TestQueryDelegation(t *testing.T) {
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
 	keeper.SetValidator(ctx, val1)
-	pool := keeper.GetPool(ctx)
-	keeper.SetValidatorByPowerIndex(ctx, val1, pool)
+	keeper.SetValidatorByPowerIndex(ctx, val1)
 
 	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
 	keeper.SetValidator(ctx, val2)
-	pool = keeper.GetPool(ctx)
-	keeper.SetValidatorByPowerIndex(ctx, val2, pool)
+	keeper.SetValidatorByPowerIndex(ctx, val2)
 
 	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin(types.DefaultBondDenom, sdk.NewInt(20)), val1, true)
 

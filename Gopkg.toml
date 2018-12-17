@@ -26,6 +26,10 @@
   name = "github.com/stretchr/testify"
   version = "=1.2.1"
 
+[[constraint]]
+  name = "github.com/otiai10/copy"
+  revision = "7e9a647135a142c2669943d4a4d29be015ce9392"
+
 [[override]]
   name = "github.com/tendermint/go-amino"
   version = "v0.14.1"

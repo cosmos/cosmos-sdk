@@ -3,8 +3,9 @@ package mock
 import (
 	"bytes"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Validator implements sdk.Validator

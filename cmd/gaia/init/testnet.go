@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
@@ -24,6 +23,8 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
+
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 var (
@@ -278,13 +279,7 @@ func collectGenFiles(
 		config.SetRoot(nodeDir)
 
 		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
-		initCfg := initConfig{
-			ChainID:   chainID,
-			GenTxsDir: gentxsDir,
-			Name:      moniker,
-			NodeID:    nodeID,
-			ValPubKey: valPubKey,
-		}
+		initCfg := newInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
 
 		genDoc, err := loadGenesisDoc(cdc, config.GenesisFile())
 		if err != nil {

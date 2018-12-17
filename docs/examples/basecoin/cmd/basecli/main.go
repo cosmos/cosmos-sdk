@@ -9,6 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/app"
 
+	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/libs/cli"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -20,8 +23,6 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (

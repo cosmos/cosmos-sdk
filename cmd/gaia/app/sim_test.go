@@ -76,19 +76,19 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	}
 
 	// Random genesis states
+	vp := time.Duration(r.Intn(2*172800)) * time.Second
 	govGenesis := gov.GenesisState{
 		StartingProposalID: uint64(r.Intn(100)),
 		DepositParams: gov.DepositParams{
 			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, int64(r.Intn(1e3)))},
-			MaxDepositPeriod: time.Duration(r.Intn(2*172800)) * time.Second,
+			MaxDepositPeriod: vp,
 		},
 		VotingParams: gov.VotingParams{
-			VotingPeriod: time.Duration(r.Intn(2*172800)) * time.Second,
+			VotingPeriod: vp,
 		},
 		TallyParams: gov.TallyParams{
-			Threshold:         sdk.NewDecWithPrec(5, 1),
-			Veto:              sdk.NewDecWithPrec(334, 3),
-			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
+			Threshold: sdk.NewDecWithPrec(5, 1),
+			Veto:      sdk.NewDecWithPrec(334, 3),
 		},
 	}
 	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)

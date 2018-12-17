@@ -1,4 +1,4 @@
-## Updating the docs
+# Updating the docs
 
 If you want to open a PR on the Cosmos SDK to update the documentation, please follow the guidelines in the [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md)
 
@@ -14,43 +14,34 @@ built from the files in this (`/docs`) directory for
 and [develop](https://github.com/cosmos/cosmos-sdk/tree/develop/docs),
 respectively.
 
-Besides, gaia-lite API docs are also provided by gaia-lite. The default API docs page is:
-```
-https://localhost:1317/swagger-ui/
-```
-
-### Updating the Documentation
-
-Please read the `Updating Documentation` section in [`CONTRIBUTING.md` document](../CONTRIBUTING.MD#updating-documentation) before making any changes.
-
 ### How It Works
 
-There is a Jenkins job listening for changes in the `/docs` directory, on both
+There is a CircleCI job listening for changes in the `/docs` directory, on both
 the  `master` and `develop` branches. Any updates to files in this directory
 on those branches will automatically trigger a website deployment. Under the hood,
-a private website repository has make targets consumed by a standard Jenkins task.
+the private website repository has a `make build-docs` target consumed by a CircleCI job in that repo.
 
-### README
+## README
 
 The [README.md](./README.md) is also the landing page for the documentation
 on the website. During the Jenkins build, the current commit is added to the bottom
 of the README.
 
-### Config.js
+## Config.js
 
 The [config.js](./.vuepress/config.js) generates the sidebar and Table of Contents
 on the website docs. Note the use of relative links and the omission of
 file extensions. Additional features are available to improve the look
 of the sidebar.
 
-### Links
+## Links
 
 **NOTE:** Strongly consider the existing links - both within this directory
 and to the website docs - when moving or deleting files.
 
 Relative links should be used nearly everywhere, having discovered and weighed the following:
 
-#### Relative
+### Relative
 
 Where is the other file, relative to the current one?
 
@@ -58,7 +49,7 @@ Where is the other file, relative to the current one?
 - confusing / annoying to have things like: `../../../../myfile.md`
 - requires more updates when files are re-shuffled
 
-#### Absolute
+### Absolute
 
 Where is the other file, given the root of the repo?
 
@@ -66,12 +57,12 @@ Where is the other file, given the root of the repo?
 - this is much nicer: `/docs/hereitis/myfile.md`
 - if you move that file around, the links inside it are preserved (but not to it, of course)
 
-#### Full
+### Full
 
 The full GitHub URL to a file or directory. Used occasionally when it makes sense
 to send users to the GitHub.
 
-### Building Locally
+## Building Locally
 
 To build and serve the documentation locally, run:
 
@@ -102,22 +93,20 @@ python -m SimpleHTTPServer 8080
 
 then navigate to localhost:8080 in your browser.
 
-### Consistency
+## Build RPC Docs
+
+First, run `make get_tools` from the root of repo, to install the swagger-ui tool.
+
+Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/develop/client/lcd/swagger-ui/swagger.yaml)
+
+Finally, run `make update_gaia_lite_docs` from the root of the repo.
+
+## Search
+
+We are using [Algolia](https://www.algolia.com) to power full-text search. This uses a public API search-only key in the `config.js` as well as a [cosmos_network.json](https://github.com/algolia/docsearch-configs/blob/master/configs/cosmos_network.json) configuration file that we can update with PRs.
+
+## Consistency
 
 Because the build processes are identical (as is the information contained herein), this file should be kept in sync as
 much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/develop/docs/DOCS_README.md).
 
-### Update and Build the RPC docs
-
-1. Execute the following command at the root directory to install the swagger-ui generate tool.
-    ```
-    make get_tools
-    ```
-2. Edit API docs
-    1. Directly Edit API docs manually: `client/lcd/swagger-ui/swagger.yaml`.
-    2. Edit API docs within [SwaggerHub](https://app.swaggerhub.com). Please refer to this [document](https://app.swaggerhub.com/help/index) for how to use the about website to edit API docs.
-3. Download `swagger.yaml` and replace the old `swagger.yaml` under fold `client/lcd/swagger-ui`.
-4. Compile gaiacli
-    ```
-    make install
-    ```

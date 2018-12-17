@@ -1,7 +1,7 @@
 ---
 swagger: '2.0'
 info:
-  version: 1.1.0
+  version: "3.0"
   title: Gaia-Lite for Cosmos
   description: A REST interface for state queries, transaction generation, signing, and broadcast.
 tags:
@@ -17,6 +17,8 @@ tags:
   description: Governance module APIs
 - name: ICS23
   description: Slashing module APIs
+- name: ICS24
+  description: Fee distribution module APIs
 - name: version
   description: Query app version
 schemes:
@@ -376,16 +378,6 @@ paths:
       produces:
       - application/json
       parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
       - in: path
         name: address
         description: Account address in bech32 format
@@ -635,81 +627,6 @@ paths:
       description: Bech32 AccAddress of Delegator
       required: true
       type: string
-    post:
-      summary: Submit delegation
-      parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
-      - in: body
-        name: delegation
-        description: The password of the account to remove from the KMS
-        schema:
-          type: object
-          properties:
-            base_req:
-              "$ref": "#/definitions/BaseReq"
-            delegations:
-              type: array
-              items:
-                type: object
-                properties:
-                  delegator_addr:
-                    $ref: "#/definitions/Address"
-                  validator_addr:
-                    $ref: "#/definitions/ValidatorAddress"
-                  delegation:
-                    $ref: "#/definitions/Coin"
-            begin_unbondings:
-              type: array
-              items:
-                type: object
-                properties:
-                  delegator_addr:
-                    $ref: "#/definitions/Address"
-                  validator_addr:
-                    $ref: "#/definitions/ValidatorAddress"
-                  shares:
-                    type: string
-                    example: "100"
-            begin_redelegates:
-              type: array
-              items:
-                type: object
-                properties:
-                  delegator_addr:
-                    $ref: "#/definitions/Address"
-                  validator_src_addr:
-                    $ref: "#/definitions/ValidatorAddress"
-                  validator_dst_addr:
-                    $ref: "#/definitions/ValidatorAddress"
-                  shares:
-                    type: string
-                    example: "100"
-      tags:
-      - ICS21
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/BroadcastTxCommitResult"
-        400:
-          description: Invalid delegator address or delegation body
-        401:
-          description: Key password is wrong
-        500:
-          description: Internal Server Error
     get:
       summary: Get all delegations from a delegator
       tags:
@@ -722,10 +639,70 @@ paths:
           schema:
             type: array
             items:
-              type: object
-              "$ref": "#/definitions/Delegation"
+              $ref: "#/definitions/Delegation"
         400:
           description: Invalid delegator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Submit delegation
+      parameters:
+      - in: body
+        name: delegation
+        description: The password of the account to remove from the KMS
+        schema:
+          type: object
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+            delegator_addr:
+              $ref: "#/definitions/Address"
+            validator_addr:
+              $ref: "#/definitions/ValidatorAddress"
+            delegation:
+              $ref: "#/definitions/Coin"
+      tags:
+      - ICS21
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid delegator address or delegation request body
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    - in: path
+      name: validatorAddr
+      description: Bech32 OperatorAddress of validator
+      required: true
+      type: string
+    get:
+      summary: Query the current delegation between a delegator and a validator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Delegation"
+        400:
+          description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/unbonding_delegations:
@@ -747,10 +724,83 @@ paths:
           schema:
             type: array
             items:
-              type: object
-              "$ref": "#/definitions/UnbondingDelegation"
+              $ref: "#/definitions/UnbondingDelegation"
         400:
           description: Invalid delegator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Submit an unbonding delegation
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: delegation
+        description: The password of the account to remove from the KMS
+        schema:
+          type: object
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+            delegator_addr:
+              $ref: "#/definitions/Address"
+            validator_addr:
+              $ref: "#/definitions/ValidatorAddress"
+            shares:
+              type: string
+              example: "100"
+      tags:
+      - ICS21
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid delegator address or unbonding delegation request body
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    - in: path
+      name: validatorAddr
+      description: Bech32 OperatorAddress of validator
+      required: true
+      type: string
+    get:
+      summary: Query all unbonding delegations between a delegator and a validator
+      tags:
+      - ICS21
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/UnbondingDelegation"
+        400:
+          description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/redelegations:
@@ -772,10 +822,56 @@ paths:
           schema:
             type: array
             items:
-              type: object
-              "$ref": "#/definitions/Redelegation"
+              $ref: "#/definitions/Redelegation"
         400:
           description: Invalid delegator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Submit a redelegation
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: delegation
+        description: The password of the account to remove from the KMS
+        schema:
+          type: object
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+            delegator_addr:
+              $ref: "#/definitions/Address"
+            validator_src_addr:
+              $ref: "#/definitions/ValidatorAddress"
+            validator_dst_addr:
+              $ref: "#/definitions/ValidatorAddress"
+            shares:
+              type: string
+              example: "100"
+      tags:
+        - ICS21
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid delegator address or redelegation request body
+        401:
+          description: Key password is wrong
         500:
           description: Internal Server Error
   /stake/delegators/{delegatorAddr}/validators:
@@ -853,63 +949,6 @@ paths:
           description: No staking transaction about this delegator address
         400:
           description: Invalid delegator address
-        500:
-          description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}:
-    parameters:
-    - in: path
-      name: delegatorAddr
-      description: Bech32 AccAddress of Delegator
-      required: true
-      type: string
-    - in: path
-      name: validatorAddr
-      description: Bech32 OperatorAddress of validator
-      required: true
-      type: string
-    get:
-      summary: Query the current delegation between a delegator and a validator
-      tags:
-      - ICS21
-      produces:
-      - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/Delegation"
-        400:
-          description: Invalid delegator address or validator address
-        500:
-          description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
-    parameters:
-    - in: path
-      name: delegatorAddr
-      description: Bech32 AccAddress of Delegator
-      required: true
-      type: string
-    - in: path
-      name: validatorAddr
-      description: Bech32 OperatorAddress of validator
-      required: true
-      type: string
-    get:
-      summary: Query all unbonding delegations between a delegator and a validator
-      tags:
-      - ICS21
-      produces:
-      - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              type: object
-              "$ref": "#/definitions/UnbondingDelegation"
-        400:
-          description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
   /stake/validators:
@@ -1123,16 +1162,6 @@ paths:
       tags:
       - ICS23
       parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
       - type: string
         description: Bech32 validator address
         name: validatorAddr
@@ -1146,7 +1175,7 @@ paths:
           type: object
           properties:
             base_req:
-              "$ref": "#/definitions/BaseReq"
+              $ref: "#/definitions/BaseReq"
       responses:
         200:
           description: OK
@@ -1156,6 +1185,35 @@ paths:
           description: Invalid validator address or base_req
         401:
           description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /slashing/parameters:
+    get:
+      summary: Get the current slashing parameters
+      tags:
+      - ICS23
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              max_evidence_age:
+                type: integer
+              signed_blocks_window:
+                type: integer
+              min_signed_per_window:
+                type: integer
+              double_sign_unbond_duration:
+                type: integer
+              downtime_unbond_duration:
+                type: integer
+              slash_fraction_double_sign:
+                type: integer
+              slash_fraction_downtime:
+                type: integer
         500:
           description: Internal Server Error
   /gov/proposals:
@@ -1169,16 +1227,6 @@ paths:
       tags:
       - ICS22
       parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
       - description: valid value of `"proposal_type"` can be `"text"`, `"parameter_change"`, `"software_upgrade"`
         name: post_proposal_body
         in: body
@@ -1187,7 +1235,7 @@ paths:
           type: object
           properties:
             base_req:
-              "$ref": "#/definitions/BaseReq"
+              $ref: "#/definitions/BaseReq"
             title:
               type: string
             description:
@@ -1196,7 +1244,7 @@ paths:
               type: string
               example: "text"
             proposer:
-              "$ref": "#/definitions/Address"
+              $ref: "#/definitions/Address"
             initial_deposit:
               type: array
               items:
@@ -1205,7 +1253,7 @@ paths:
         200:
           description: OK
           schema:
-            "$ref": "#/definitions/BroadcastTxCommitResult"
+            $ref: "#/definitions/BroadcastTxCommitResult"
         400:
           description: Invalid proposal body
         401:
@@ -1241,182 +1289,9 @@ paths:
           schema:
             type: array
             items:
-              "$ref": "#/definitions/TextProposal"
+              $ref: "#/definitions/TextProposal"
         400:
           description: Invalid query parameters
-        500:
-          description: Internal Server Error
-  /gov/proposals/{proposalId}/deposits:
-    post:
-      summary: Deposit tokens to a proposal
-      description: Send transaction to deposit tokens to a proposal
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      tags:
-      - ICS22
-      parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
-      - type: string
-        description: proposal id
-        name: proposalId
-        required: true
-        in: path
-      - description: ''
-        name: post_deposit_body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            base_req:
-              "$ref": "#/definitions/BaseReq"
-            depositor:
-              "$ref": "#/definitions/Address"
-            amount:
-              type: array
-              items:
-                $ref: "#/definitions/Coin"
-      responses:
-        200:
-          description: OK
-          schema:
-            "$ref": "#/definitions/BroadcastTxCommitResult"
-        400:
-          description: Invalid proposal id or deposit body
-        401:
-          description: Key password is wrong
-        500:
-          description: Internal Server Error
-    get:
-      summary: Query deposits
-      description: Query deposits by proposalId
-      produces:
-      - application/json
-      tags:
-      - ICS22
-      parameters:
-      - type: string
-        name: proposalId
-        required: true
-        in: path
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              "$ref": "#/definitions/Deposit"
-        400:
-          description: Invalid proposal id
-        500:
-          description: Internal Server Error
-  /gov/proposals/{proposalId}/tally:
-    get:
-      summary: Get a proposal's tally result at the current time
-      description: Gets a proposal's tally result at the current time. If the proposal is pending deposits (i.e status 'DepositPeriod') it returns an empty tally result.
-      produces:
-      - application/json
-      tags:
-      - ICS22
-      parameters:
-      - type: string
-        description: proposal id
-        name: proposalId
-        required: true
-        in: path
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/TallyResult"
-        400:
-          description: Invalid proposal id
-        500:
-          description: Internal Server Error
-  /gov/proposals/{proposalId}/votes:
-    post:
-      summary: Vote a proposal
-      description: Send transaction to vote a proposal
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      tags:
-      - ICS22
-      parameters:
-      - in: query
-        name: simulate
-        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
-        required: false
-        type: boolean
-      - in: query
-        name: generate_only
-        description: if true, build an unsigned transaction and write it back
-        required: false
-        type: boolean
-      - type: string
-        description: proposal id
-        name: proposalId
-        required: true
-        in: path
-      - description: valid value of `"option"` field can be `"yes"`, `"no"`, `"no_with_veto"` and `"abstain"`
-        name: post_vote_body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            base_req:
-              "$ref": "#/definitions/BaseReq"
-            voter:
-              "$ref": "#/definitions/Address"
-            option:
-              type: string
-              example: "yes"
-      responses:
-        200:
-          description: OK
-          schema:
-            "$ref": "#/definitions/BroadcastTxCommitResult"
-        400:
-          description: Invalid proposal id or vote body
-        401:
-          description: Key password is wrong
-        500:
-          description: Internal Server Error
-    get:
-      summary: Query voters
-      description: Query voters information by proposalId
-      produces:
-      - application/json
-      tags:
-      - ICS22
-      parameters:
-      - type: string
-        description: proposal id
-        name: proposalId
-        required: true
-        in: path
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              "$ref": "#/definitions/Vote"
-        400:
-          description: Invalid proposal id
         500:
           description: Internal Server Error
   /gov/proposals/{proposalId}:
@@ -1436,9 +1311,74 @@ paths:
         200:
           description: OK
           schema:
-            "$ref": "#/definitions/TextProposal"
+            $ref: "#/definitions/TextProposal"
         400:
           description: Invalid proposal id
+        500:
+          description: Internal Server Error
+  /gov/proposals/{proposalId}/deposits:
+    get:
+      summary: Query deposits
+      description: Query deposits by proposalId
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        name: proposalId
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Deposit"
+        400:
+          description: Invalid proposal id
+        500:
+          description: Internal Server Error
+    post:
+      summary: Deposit tokens to a proposal
+      description: Send transaction to deposit tokens to a proposal
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        description: proposal id
+        name: proposalId
+        required: true
+        in: path
+      - description: ''
+        name: post_deposit_body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+            depositor:
+              $ref: "#/definitions/Address"
+            amount:
+              type: array
+              items:
+                $ref: "#/definitions/Coin"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid proposal id or deposit body
+        401:
+          description: Key password is wrong
         500:
           description: Internal Server Error
   /gov/proposals/{proposalId}/deposits/{depositor}:
@@ -1471,6 +1411,71 @@ paths:
           description: Found no deposit
         500:
           description: Internal Server Error
+  /gov/proposals/{proposalId}/votes:
+    get:
+      summary: Query voters
+      description: Query voters information by proposalId
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        description: proposal id
+        name: proposalId
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Vote"
+        400:
+          description: Invalid proposal id
+        500:
+          description: Internal Server Error
+    post:
+      summary: Vote a proposal
+      description: Send transaction to vote a proposal
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        description: proposal id
+        name: proposalId
+        required: true
+        in: path
+      - description: valid value of `"option"` field can be `"yes"`, `"no"`, `"no_with_veto"` and `"abstain"`
+        name: post_vote_body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+            voter:
+              $ref: "#/definitions/Address"
+            option:
+              type: string
+              example: "yes"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid proposal id or vote body
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposalId}/votes/{voter}:
     get:
       summary: Query vote
@@ -1499,6 +1504,29 @@ paths:
           description: Invalid proposal id or voter address
         404:
           description: Found no vote
+        500:
+          description: Internal Server Error
+  /gov/proposals/{proposalId}/tally:
+    get:
+      summary: Get a proposal's tally result at the current time
+      description: Gets a proposal's tally result at the current time. If the proposal is pending deposits (i.e status 'DepositPeriod') it returns an empty tally result.
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        description: proposal id
+        name: proposalId
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/TallyResult"
+        400:
+          description: Invalid proposal id
         500:
           description: Internal Server Error
   /gov/parameters/deposit:
@@ -1578,7 +1606,316 @@ paths:
           description: Found no voting parameters
         500:
           description: Internal Server Error
-
+  /distribution/delegators/{delegatorAddr}/rewards:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Get the total rewards balance from all delegations
+      description: Get the sum of all the rewards earned by delegations by a single delegator
+      produces:
+      - application/json
+      tags:
+      - ICS24
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
+        400:
+          description: Invalid delegator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Withdraw all the delegator's delegation rewards
+      description: Withdraw all the delegator's delegation rewards
+      tags:
+      - ICS24
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: Withdraw request body
+        schema:
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid delegator address
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /distribution/delegators/{delegatorAddr}/rewards/{validatorAddr}:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    - in: path
+      name: validatorAddr
+      description: Bech32 OperatorAddress of validator
+      required: true
+      type: string
+    get:
+      summary: Query a delegation reward
+      description: Query a single delegation reward by a delegator
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
+        400:
+          description: Invalid delegator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Withdraw a delegation reward
+      description: Withdraw a delegator's delegation reward from a single validator
+      tags:
+      - ICS24
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: Withdraw request body
+        schema:
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid delegator address or delegation body
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /distribution/delegators/{delegatorAddr}/withdraw_address:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
+    get:
+      summary: Get the rewards withdrawal address
+      description: Get the delegations' rewards withdrawal address. This is the address in which the user will receive the reward funds
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Address"
+        400:
+          description: Invalid delegator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Replace the rewards withdrawal address
+      description: Replace the delegations' rewards withdrawal address for a new one.
+      tags:
+      - ICS24
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: Withdraw request body
+        schema:
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+            withdraw_address:
+              $ref: "#/definitions/Address"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid delegator or withdraw address
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /distribution/validators/{validatorAddr}:
+    parameters:
+      - in: path
+        name: validatorAddr
+        description: Bech32 OperatorAddress of validator
+        required: true
+        type: string
+    get:
+      summary: Validator distribution information
+      description: Query the distribution information of a single validator
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/ValidatorDistInfo"
+        400:
+          description: Invalid validator address
+        500:
+          description: Internal Server Error
+  /distribution/validators/{validatorAddr}/rewards:
+    parameters:
+      - in: path
+        name: validatorAddr
+        description: Bech32 OperatorAddress of validator
+        required: true
+        type: string
+    get:
+      summary: Commission and self-delegation rewards of a single a validator
+      description: Query the commission and self-delegation rewards of a validator.
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
+        400:
+          description: Invalid validator address
+        500:
+          description: Internal Server Error
+    post:
+      summary: Withdraw the validator's rewards
+      description: Withdraw the validator's self-delegation and commissions rewards
+      tags:
+      - ICS24
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: simulate
+        description: if true, ignore the gas field and perform a simulation of a transaction, but don't broadcast it
+        required: false
+        type: boolean
+      - in: query
+        name: generate_only
+        description: if true, build an unsigned transaction and write it back
+        required: false
+        type: boolean
+      - in: body
+        name: Withdraw request body
+        schema:
+          properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/BroadcastTxCommitResult"
+        400:
+          description: Invalid validator address
+        401:
+          description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /distribution/parameters:
+    get:
+      summary: Fee distribution parameters
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            properties:
+              base_proposer_reward:
+                type: string
+              bonus_proposer_reward:
+                type: string
+              community_tax:
+                type: string
+        500:
+          description: Internal Server Error
+  /distribution/pool:
+    get:
+      summary: Fee distribution pool
+      tags:
+      - ICS24
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/FeePool"
+        500:
+          description: Internal Server Error
 definitions:
   CheckTxResult:
     type: object
@@ -1598,7 +1935,7 @@ definitions:
       tags:
         type: array
         items:
-          "$ref": "#/definitions/KVPair"
+          $ref: "#/definitions/KVPair"
     example:
       code: 0
       data: data
@@ -1627,7 +1964,7 @@ definitions:
       tags:
         type: array
         items:
-          "$ref": "#/definitions/KVPair"
+          $ref: "#/definitions/KVPair"
     example:
       code: 5
       data: data
@@ -1888,6 +2225,12 @@ definitions:
       gas_adjustment:
         type: string
         example: "1.2"
+      generate_only:
+        type: boolean
+        example: false
+      simulate:
+        type: boolean
+        example: true
   TendermintValidator:
     type: object
     properties:
@@ -1922,7 +2265,7 @@ definitions:
       total_deposit:
         type: array
         items:
-          "$ref": "#/definitions/Coin"
+          $ref: "#/definitions/Coin"
       voting_start_time:
         type: string
   Deposit:
@@ -1931,11 +2274,11 @@ definitions:
       amount:
         type: array
         items:
-          "$ref": "#/definitions/Coin"
+          $ref: "#/definitions/Coin"
       proposal_id:
         type: integer
       depositor:
-        "$ref": "#/definitions/Address"
+        $ref: "#/definitions/Address"
   TallyResult:
     type: object
     properties:
@@ -2061,3 +2404,40 @@ definitions:
         type: string
       shares_dst:
         type: string
+  FeePool:
+    type: object
+    properties:
+      community_pool:
+        type: array
+        items:
+          $ref: '#/definitions/Coin'
+      val_accum:
+        $ref: '#/definitions/TotalAccum'
+      val_pool:
+        type: array
+        items:
+           $ref: '#/definitions/Coin'
+  TotalAccum:
+    type: object
+    properties:
+      update_height:
+        type: integer
+      accum:
+        type: string
+  ValidatorDistInfo:
+    type: object
+    properties:
+      operator_addr:
+        $ref: '#/definitions/ValidatorAddress'
+      fee_pool_withdrawal_height:
+        type: integer
+      del_accum:
+        $ref: '#/definitions/TotalAccum'
+      del_pool:
+        type: array
+        items:
+          $ref: '#/definitions/Coin'
+      val_commission:
+        type: array
+        items:
+          $ref: '#/definitions/Coin'

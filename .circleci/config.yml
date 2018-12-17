@@ -55,9 +55,6 @@ jobs:
       - run: mkdir -p /tmp/workspace/bin
       - run: mkdir -p /tmp/workspace/profiles
       - checkout
-      - restore_cache:
-          keys:
-            - v1-pkg-cache
       - run:
           name: tools
           command: |
@@ -178,7 +175,7 @@ jobs:
           name: Test multi-seed Gaia simulation
           command: |
             export PATH="$GOBIN:$PATH"
-            scripts/multisim.sh 250 TestFullGaiaSimulation
+            scripts/multisim.sh 1000 TestFullGaiaSimulation
 
   test_cover:
     <<: *linux_defaults

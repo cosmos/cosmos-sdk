@@ -52,10 +52,9 @@ func DefaultGenesisState() GenesisState {
 			VotingPeriod: time.Duration(172800) * time.Second,
 		},
 		TallyParams: TallyParams{
-			Quorum:            sdk.NewDecWithPrec(334, 3),
-			Threshold:         sdk.NewDecWithPrec(5, 1),
-			Veto:              sdk.NewDecWithPrec(334, 3),
-			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
+			Quorum:    sdk.NewDecWithPrec(334, 3),
+			Threshold: sdk.NewDecWithPrec(5, 1),
+			Veto:      sdk.NewDecWithPrec(334, 3),
 		},
 	}
 }
@@ -72,12 +71,6 @@ func ValidateGenesis(data GenesisState) error {
 	if veto.IsNegative() || veto.GT(sdk.OneDec()) {
 		return fmt.Errorf("Governance vote veto threshold should be positive and less or equal to one, is %s",
 			veto.String())
-	}
-
-	govPenalty := data.TallyParams.GovernancePenalty
-	if govPenalty.IsNegative() || govPenalty.GT(sdk.OneDec()) {
-		return fmt.Errorf("Governance vote veto threshold should be positive and less or equal to one, is %s",
-			govPenalty.String())
 	}
 
 	if data.DepositParams.MaxDepositPeriod > data.VotingParams.VotingPeriod {

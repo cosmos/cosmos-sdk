@@ -87,9 +87,8 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			VotingPeriod: vp,
 		},
 		TallyParams: gov.TallyParams{
-			Threshold:         sdk.NewDecWithPrec(5, 1),
-			Veto:              sdk.NewDecWithPrec(334, 3),
-			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
+			Threshold: sdk.NewDecWithPrec(5, 1),
+			Veto:      sdk.NewDecWithPrec(334, 3),
 		},
 	}
 	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)

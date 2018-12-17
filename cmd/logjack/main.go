@@ -12,6 +12,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
+//nolint
 const Version = "0.0.2"
 const sleepSeconds = 1      // Every second
 const readBufferSize = 1024 // 1KB at a time

@@ -3,11 +3,11 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-  * [lcd] https://github.com/cosmos/cosmos-sdk/pull/3045 Fix quoted json return on GET /keys (keys list)
-  * [gaia-lite] [\#2191](https://github.com/cosmos/cosmos-sdk/issues/2191) Split `POST /stake/delegators/{delegatorAddr}/delegations` into `POST /stake/delegators/{delegatorAddr}/delegations`, `POST /stake/delegators/{delegatorAddr}/unbonding_delegations` and `POST /stake/delegators/{delegatorAddr}/redelegations`
-  * [gaia-lite] [\#3056](https://github.com/cosmos/cosmos-sdk/pull/3056) `generate_only` and `simulate` have moved from query arguments to POST requests body.
 
 * Gaia CLI  (`gaiacli`)
+  * [\#810](https://github.com/cosmos/cosmos-sdk/issues/810) Don't fallback to any default values for chain ID.
+    - Users need to supply chain ID either via config file or the `--chain-id` flag.
+    - Change `chain_id` and `trust_node` in `gaiacli` configuration to `chain-id` and `trust-node` respectively.
 
 * Gaia
 
@@ -27,7 +27,6 @@ FEATURES
 * SDK
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
   the ante handler.
-  * [\#2926](https://github.com/cosmos/cosmos-sdk/issues/2926) Add TxEncoder to client TxBuilder.
 
 * Tendermint
 
@@ -39,8 +38,6 @@ IMPROVEMENTS
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
-  * [\#3021](https://github.com/cosmos/cosmos-sdk/pull/3021) Add `--gentx-dir` to `gaiad collect-gentxs` to specify a directory from which collect and load gentxs.
-    Add `--output-document` to `gaiad init` to allow one to redirect output to file.
 
 * SDK
 
@@ -54,6 +51,8 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+
+  * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version
 
 * SDK
 

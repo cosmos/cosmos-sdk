@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
 // GetCmdQueryProposal implements the query proposal command.
@@ -106,7 +106,7 @@ $ gaiacli query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Reject
 			}
 
 			if len(strProposalStatus) != 0 {
-				proposalStatus, err := gov.ProposalStatusFromString(govClientUtils.NormalizeProposalStatus(strProposalStatus))
+				proposalStatus, err := gov.ProposalStatusFromString(gcutils.NormalizeProposalStatus(strProposalStatus))
 				if err != nil {
 					return err
 				}
@@ -160,8 +160,9 @@ func GetCmdQueryVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a single vote",
 		Long: strings.TrimSpace(`
-Query details for a single vote on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Query details for a single vote on a proposal given its identifier.
 
+Example:
 $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -179,23 +180,30 @@ $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
-			// get voter address
 			voterAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			// Construct query
 			params := gov.NewQueryVoteParams(proposalID, voterAddr)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			// Query store
 			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/vote", queryRoute), bz)
 			if err != nil {
 				return err
+			}
+
+			var vote gov.Vote
+			cdc.UnmarshalJSON(res, &vote)
+
+			if vote.Empty() {
+				res, err = gcutils.QueryVoteByTxQuery(cdc, cliCtx, params)
+				if err != nil {
+					return err
+				}
 			}
 
 			fmt.Println(string(res))
@@ -213,8 +221,9 @@ func GetCmdQueryVotes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Query votes on a proposal",
 		Long: strings.TrimSpace(`
-Query vote details for a single proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Query vote details for a single proposal by its identifier.
 
+Example:
 $ gaiacli query gov votes 1
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -226,21 +235,30 @@ $ gaiacli query gov votes 1
 				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
 			}
 
-			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
-			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
-			}
-
-			// Construct query
 			params := gov.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			// Query store
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/votes", queryRoute), bz)
+			// check to see if the proposal is in the store
+			res, err := queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			if err != nil {
+				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
+			}
+
+			var proposal gov.Proposal
+			if err := cdc.UnmarshalJSON(res, &proposal); err != nil {
+				return err
+			}
+
+			propStatus := proposal.GetStatus()
+			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
+				res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
+			} else {
+				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/votes", queryRoute), bz)
+			}
+
 			if err != nil {
 				return err
 			}
@@ -261,8 +279,9 @@ func GetCmdQueryDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		Short: "Query details of a deposit",
 		Long: strings.TrimSpace(`
-Query details for a single proposal deposit on a proposal. You can find the proposal-id by running gaiacli query gov proposals:
+Query details for a single proposal deposit on a proposal by its identifier.
 
+Example:
 $ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -280,23 +299,30 @@ $ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
-			// Get the depositer address
 			depositorAddr, err := sdk.AccAddressFromBech32(args[1])
 			if err != nil {
 				return err
 			}
 
-			// Construct query
 			params := gov.NewQueryDepositParams(proposalID, depositorAddr)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			// Query store
 			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposit", queryRoute), bz)
 			if err != nil {
 				return err
+			}
+
+			var deposit gov.Deposit
+			cdc.UnmarshalJSON(res, &deposit)
+
+			if deposit.Empty() {
+				res, err = gcutils.QueryDepositByTxQuery(cdc, cliCtx, params)
+				if err != nil {
+					return err
+				}
 			}
 
 			fmt.Println(string(res))
@@ -327,21 +353,30 @@ $ gaiacli query gov deposits 1
 				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
 			}
 
-			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
-			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
-			}
-
-			// Construct query
 			params := gov.NewQueryProposalParams(proposalID)
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			// Query store
-			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposits", queryRoute), bz)
+			// check to see if the proposal is in the store
+			res, err := queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			if err != nil {
+				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
+			}
+
+			var proposal gov.Proposal
+			if err := cdc.UnmarshalJSON(res, &proposal); err != nil {
+				return err
+			}
+
+			propStatus := proposal.GetStatus()
+			if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
+				res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
+			} else {
+				res, err = cliCtx.QueryWithData(fmt.Sprintf("custom/%s/deposits", queryRoute), bz)
+			}
+
 			if err != nil {
 				return err
 			}

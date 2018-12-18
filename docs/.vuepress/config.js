@@ -8,8 +8,21 @@ module.exports = {
     lineNumbers: true
   },
   themeConfig: {
-    lastUpdated: "Last Updated",
-    nav: [{ text: "Back to Cosmos", link: "https://cosmos.network" }],
+    repo: "cosmos/cosmos-sdk",
+    editLinks: true,
+    docsDir: "docs",
+    docsBranch: "develop",
+    editLinkText: 'Edit this page on Github',
+    lastUpdated: true,
+    algolia: {
+      apiKey: 'a6e2f64347bb826b732e118c1366819a',
+      indexName: 'cosmos_network',
+      debug: false
+    },
+    nav: [
+      { text: "Back to Cosmos", link: "https://cosmos.network" },
+      { text: "RPC", link: "../rpc/" }
+    ],
     sidebar: [
       {
         title: "Overview",

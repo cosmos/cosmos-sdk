@@ -7,11 +7,12 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/tags"
 )
 
 // slashing begin block functionality
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) sdk.Tags {
-	tags := sdk.NewTags("slashing-height", []byte(fmt.Sprintf("%d", req.Header.Height)))
+	tags := sdk.NewTags(tags.SlashingHeight, []byte(fmt.Sprintf("%d", req.Header.Height)))
 
 	// Iterate over all the validators  which *should* have signed this block
 	// store whether or not they have actually signed it and slash/unbond any

@@ -14,8 +14,8 @@ const (
 	// RouterKey is the message route for slashing
 	RouterKey = "slashing"
 
-	// QuerierKey is the querier route for slashing
-	QuerierKey = "slashing"
+	// QuerierRoute is the querier route for slashing
+	QuerierRoute = "slashing"
 )
 
 // key prefix bytes

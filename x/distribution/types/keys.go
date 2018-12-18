@@ -10,6 +10,6 @@ const (
 	// RouterKey is the message route for distribution
 	RouterKey = "distr"
 
-	// QuerierKey is the querier route for distribution
-	QuerierKey = "distr"
+	// QuerierRoute is the querier route for distribution
+	QuerierRoute = "distr"
 )

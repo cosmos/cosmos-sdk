@@ -108,7 +108,7 @@ const (
 const (
 	StoreKey              = types.StoreKey
 	TStoreKey             = types.TStoreKey
-	QuerierKey            = types.QuerierKey
+	QuerierRoute            = types.QuerierRoute
 	RouterKey             = types.RouterKey
 	DefaultCodespace      = types.DefaultCodespace
 	CodeInvalidValidator  = types.CodeInvalidValidator

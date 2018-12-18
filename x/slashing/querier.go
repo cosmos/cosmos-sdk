@@ -9,8 +9,6 @@ import (
 
 // Query endpoints supported by the slashing querier
 const (
-	QuerierRoute = "slashing"
-
 	QueryParameters = "parameters"
 )
 

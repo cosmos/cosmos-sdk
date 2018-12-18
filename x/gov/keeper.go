@@ -18,8 +18,8 @@ const (
 	// RouterKey is the message route for gov
 	RouterKey = "gov"
 
-	// QuerierKey is the querier route for gov
-	QuerierKey = "gov"
+	// QuerierRoute is the querier route for gov
+	QuerierRoute = "gov"
 
 	// Parameter store default namestore
 	DefaultParamspace = "gov"

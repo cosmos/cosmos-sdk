@@ -105,7 +105,7 @@ func run(rootDir string) {
 	// Application
 	fmt.Println("Creating application")
 	myapp := app.NewGaiaApp(
-		ctx.Logger, appDB, traceStoreWriter,
+		ctx.Logger, appDB, traceStoreWriter, true,
 		baseapp.SetPruning("everything"), // nothing
 	)
 

@@ -58,7 +58,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application
 	return app.NewGaiaApp(logger, db, traceStore,
 		baseapp.SetPruning(viper.GetString("pruning")),
 		baseapp.SetMinimumFees(viper.GetString("minimum_fees")),
-		baseapp.SettokenPerUnitGas(viper.GetString("gas_per_unit_cost")),
+		baseapp.SetTokenPerUnitGas(viper.GetString("gas_per_unit_cost")),
 	)
 }
 

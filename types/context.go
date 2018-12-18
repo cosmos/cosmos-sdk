@@ -49,7 +49,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithGasMeter(NewInfiniteGasMeter())
 	c = c.WithMinimumFees(Coins{})
 	c = c.WithConsensusParams(nil)
-	c = c.WithtokenPerUnitGas(Coins{})
+	c = c.WithTokenPerUnitGas(Coins{})
 	return c
 }
 
@@ -144,7 +144,7 @@ const (
 	contextKeyBlockGasMeter
 	contextKeyMinimumFees
 	contextKeyConsensusParams
-	contextKeytokenPerUnitGas
+	contextKeyTokenPerUnitGas
 )
 
 func (c Context) MultiStore() MultiStore {
@@ -173,7 +173,7 @@ func (c Context) IsCheckTx() bool { return c.Value(contextKeyIsCheckTx).(bool) }
 
 func (c Context) MinimumFees() Coins { return c.Value(contextKeyMinimumFees).(Coins) }
 
-func (c Context) tokenPerUnitGas() Coins { return c.Value(contextKeytokenPerUnitGas).(Coins) }
+func (c Context) TokenPerUnitGas() Coins { return c.Value(contextKeyTokenPerUnitGas).(Coins) }
 
 func (c Context) ConsensusParams() *abci.ConsensusParams {
 	return c.Value(contextKeyConsensusParams).(*abci.ConsensusParams)
@@ -234,8 +234,8 @@ func (c Context) WithConsensusParams(params *abci.ConsensusParams) Context {
 	return c.withValue(contextKeyConsensusParams, params)
 }
 
-func (c Context) WithtokenPerUnitGas(tokenPerUnitGas Coins) Context {
-	return c.withValue(contextKeytokenPerUnitGas, tokenPerUnitGas)
+func (c Context) WithTokenPerUnitGas(tokenPerUnitGas Coins) Context {
+	return c.withValue(contextKeyTokenPerUnitGas, tokenPerUnitGas)
 }
 
 // Cache the multistore and return a new cached context. The cached context is

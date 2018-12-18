@@ -214,15 +214,15 @@ func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
 // SetMinimumFees sets the minimum fees.
 func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
 
-// SettokenPerUnitGas sets the tokenPerUnitGas
-func (app *BaseApp) SettokenPerUnitGas(tokenPerUnitGas sdk.Coins) { app.tokenPerUnitGas = tokenPerUnitGas }
+// SetTokenPerUnitGas sets the tokenPerUnitGas
+func (app *BaseApp) SetTokenPerUnitGas(tokenPerUnitGas sdk.Coins) { app.tokenPerUnitGas = tokenPerUnitGas }
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).
 			WithMinimumFees(app.minimumFees).
-			WithtokenPerUnitGas(app.tokenPerUnitGas)
+			WithTokenPerUnitGas(app.tokenPerUnitGas)
 	}
 	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
 }

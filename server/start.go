@@ -16,12 +16,12 @@ import (
 )
 
 const (
-	flagWithTendermint = "with-tendermint"
-	flagAddress        = "address"
-	flagTraceStore     = "trace-store"
-	flagPruning        = "pruning"
-	flagMinimumFees    = "minimum_fees"
-	flagtokenPerUnitGas = "gas_per_unit_cost"
+	flagWithTendermint  = "with-tendermint"
+	flagAddress         = "address"
+	flagTraceStore      = "trace-store"
+	flagPruning         = "pruning"
+	flagMinimumFees     = "minimum_fees"
+	flagtokenPerUnitGas = "token_per_unit_gas"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -49,7 +49,7 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything")
 	cmd.Flags().String(flagMinimumFees, "", "Minimum fees validator will accept for transactions")
-	cmd.Flags().String(flagtokenPerUnitGas, "", "Amount of gas per fee unit cost")
+	cmd.Flags().String(flagtokenPerUnitGas, "", "Amount of token per unit gas")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

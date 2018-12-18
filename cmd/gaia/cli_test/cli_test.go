@@ -78,7 +78,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// test simulation
 	success := executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fee=1footoken --dry-run", flags, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fees=1footoken --dry-run", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, port)
 	// ensure state didn't change
@@ -87,7 +87,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// insufficient funds (coins + fees)
 	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fee=1footoken", flags, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fees=1footoken", flags, barAddr), app.DefaultKeyPass)
 	require.False(t, success)
 	tests.WaitForNextNBlocksTM(1, port)
 	// ensure state didn't change
@@ -96,7 +96,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// test success (transfer = coins + fees)
 	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --fee=300footoken --amount=500footoken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --fees=300footoken --amount=500footoken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 	cleanupDirs(gaiadHome, gaiacliHome)
 }

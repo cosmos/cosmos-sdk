@@ -28,12 +28,6 @@ type TxBuilder struct {
 func NewTxBuilderFromCLI() TxBuilder {
 	// if chain ID is not specified manually, read default chain ID
 	chainID := viper.GetString(client.FlagChainID)
-	if chainID == "" {
-		defaultChainID, err := sdk.DefaultChainID()
-		if err != nil {
-			chainID = defaultChainID
-		}
-	}
 
 	return TxBuilder{
 		ChainID:       chainID,

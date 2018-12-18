@@ -274,21 +274,23 @@ jobs:
   macos_ci:
     macos:
       xcode: "10.1.0"
+    working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
     steps:
       - run:
           name: Install go
           command: |
             curl -L -O https://dl.google.com/go/go1.11.4.darwin-amd64.tar.gz
-            mkdir /Users/distiller/go
-            tar -C /Users/distillers -xzf go1.11.4.darwin-amd64.tar.gz
+            tar -C $HOME -xzf go1.11.4.darwin-amd64.tar.gz
             rm go1.11.4.darwin-amd64.tar.gz
-            export PATH=$PATH:/Users/distiller/go/bin
+            export PATH=$PATH:$HOME/go/bin
             go version
       - checkout
       - run:
           name: Build SDK
           command: |
-            export PATH=$PATH:/Users/distiller/go/bin
+            export GOPATH=$HOME/project
+            export GOBIN=$GOPATH/bin
+            export PATH=$PATH:$HOME/go/bin:$GOBIN
             make get_vendor_deps
             make build
 

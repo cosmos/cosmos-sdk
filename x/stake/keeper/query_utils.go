@@ -85,17 +85,24 @@ func (k Keeper) GetAllUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAdd
 }
 
 // return all redelegations for a delegator
-func (k Keeper) GetAllRedelegations(ctx sdk.Context, delegator sdk.AccAddress) (redelegations []types.Redelegation) {
+func (k Keeper) GetAllRedelegations(ctx sdk.Context, delegator sdk.AccAddress, srcValAddress, dstValAddress sdk.ValAddress) (redelegations []types.Redelegation) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetREDsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 	defer iterator.Close()
 
-	i := 0
+	srcValFilter := !(srcValAddress.Empty() || srcValAddress == nil)
+	dstValFilter := !(dstValAddress.Empty() || dstValAddress == nil)
+
 	for ; iterator.Valid(); iterator.Next() {
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Key(), iterator.Value())
+		if srcValFilter && !(srcValAddress.Equals(redelegation.ValidatorSrcAddr)) {
+			continue
+		}
+		if dstValFilter && !(dstValAddress.Equals(redelegation.ValidatorDstAddr)) {
+			continue
+		}
 		redelegations = append(redelegations, redelegation)
-		i++
 	}
 	return redelegations
 }

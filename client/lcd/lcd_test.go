@@ -455,11 +455,15 @@ func TestBonding(t *testing.T) {
 	require.Len(t, delegatorDels, 1)
 	require.Equal(t, "30.0000000000", delegatorDels[0].GetShares().String())
 
+	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
+	require.Len(t, redelegation, 1)
+	require.Equal(t, "30", redelegation[0].Balance.Amount.String())
+
 	delegatorUbds := getDelegatorUnbondingDelegations(t, port, addr)
 	require.Len(t, delegatorUbds, 1)
 	require.Equal(t, "30", delegatorUbds[0].Balance.Amount.String())
 
-	delegatorReds := getDelegatorRedelegations(t, port, addr)
+	delegatorReds := getRedelegations(t, port, addr, nil, nil)
 	require.Len(t, delegatorReds, 1)
 	require.Equal(t, "30", delegatorReds[0].Balance.Amount.String())
 
@@ -467,7 +471,7 @@ func TestBonding(t *testing.T) {
 	require.Len(t, validatorUbds, 1)
 	require.Equal(t, "30", validatorUbds[0].Balance.Amount.String())
 
-	validatorReds := getValidatorRedelegations(t, port, operAddrs[0])
+	validatorReds := getRedelegations(t, port, nil, operAddrs[0], nil)
 	require.Len(t, validatorReds, 1)
 	require.Equal(t, "30", validatorReds[0].Balance.Amount.String())
 

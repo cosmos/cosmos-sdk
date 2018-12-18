@@ -16,7 +16,7 @@
 set BRANCH=master
 set REPO=github.com/cosmos/cosmos-sdk
 
-set GO_VERSION=1.11.2
+set GO_VERSION=1.11.3
 
 sudo pkg update
 

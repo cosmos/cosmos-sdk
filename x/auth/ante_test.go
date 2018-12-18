@@ -396,12 +396,14 @@ func TestAnteHandlerFees(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientFunds)
 
 	require.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(emptyCoins))
+	require.True(t, mapper.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(149)))
 
 	acc1.SetCoins(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	mapper.SetAccount(ctx, acc1)
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	require.True(t, feeCollector.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewInt64Coin("atom", 150)}))
+	require.True(t, mapper.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(0)))
 }
 
 // Test logic around memo gas consumption.
@@ -646,8 +648,10 @@ func TestProcessPubKey(t *testing.T) {
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 	// keys
 	_, addr1 := privAndAddr()
-	priv2, _ := privAndAddr()
+	priv2, addr2 := privAndAddr()
 	acc1 := mapper.NewAccountWithAddress(ctx, addr1)
+	acc2 := mapper.NewAccountWithAddress(ctx, addr2)
+	acc2.SetPubKey(priv2.PubKey())
 	type args struct {
 		acc      Account
 		sig      StdSignature
@@ -660,6 +664,7 @@ func TestProcessPubKey(t *testing.T) {
 	}{
 		{"no sigs, simulate off", args{acc1, StdSignature{}, false}, true},
 		{"no sigs, simulate on", args{acc1, StdSignature{}, true}, false},
+		{"no sigs, account with pub, simulate on", args{acc2, StdSignature{}, true}, false},
 		{"pubkey doesn't match addr, simulate off", args{acc1, StdSignature{PubKey: priv2.PubKey()}, false}, true},
 		{"pubkey doesn't match addr, simulate on", args{acc1, StdSignature{PubKey: priv2.PubKey()}, true}, false},
 	}

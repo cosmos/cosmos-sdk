@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.11.1
+    - image: circleci/golang:1.11.3
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -251,8 +251,8 @@ jobs:
             name: run localnet and exit on failure
             command: |
               pushd /tmp
-              wget https://dl.google.com/go/go1.11.linux-amd64.tar.gz
-              sudo tar -xvf go1.11.linux-amd64.tar.gz
+              wget https://dl.google.com/go/go1.11.3.linux-amd64.tar.gz
+              sudo tar -xvf go1.11.3.linux-amd64.tar.gz
               sudo rm -rf /usr/local/go
               sudo mv go /usr/local
               popd

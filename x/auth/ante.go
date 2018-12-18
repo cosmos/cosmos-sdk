@@ -127,13 +127,11 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 }
 
 // GetSignerAcc a signers for a given address that is expected to sign a transaction.
-func GetSignerAcc(ctx sdk.Context, am AccountKeeper, addr sdk.AccAddress) (acc Account, res sdk.Result) {
-	acc = am.GetAccount(ctx, addr)
-	if acc == nil {
-		res = sdk.ErrUnknownAddress(addr.String()).Result()
-		return
+func GetSignerAcc(ctx sdk.Context, am AccountKeeper, addr sdk.AccAddress) (Account, sdk.Result) {
+	if acc := am.GetAccount(ctx, addr); acc != nil {
+		return acc, sdk.Result{}
 	}
-	return
+	return nil, sdk.ErrUnknownAddress(addr.String()).Result()
 }
 
 // verify the signature and increment the sequence. If the account doesn't have
@@ -301,13 +299,12 @@ func SetGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 
 // GetSignBytes returns a slice of bytes to sign over for a given transaction
 // and an account.
-func GetSignBytes(chainID string, stdTx StdTx, acc Account, genesis bool) (signBytes []byte) {
+func GetSignBytes(chainID string, stdTx StdTx, acc Account, genesis bool) []byte {
 	accNum := acc.GetAccountNumber()
 	if genesis {
 		accNum = 0
 	}
-	signBytes = StdSignBytes(chainID,
+	return StdSignBytes(chainID,
 		accNum, acc.GetSequence(),
 		stdTx.Fee, stdTx.Msgs, stdTx.Memo)
-	return
 }

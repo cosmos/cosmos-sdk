@@ -31,6 +31,17 @@ const (
 	Bech32PrefixConsPub = "cosmosvalconspub"
 )
 
+// Address is a common interface for different types of addresses used by the SDK
+type Address interface {
+	Equals([]byte) bool
+	Empty() bool
+	Marshal() ([]byte, error)
+	MarshalJSON() ([]byte, error)
+	Bytes() []byte
+	String() string
+	Format(s fmt.State, verb rune)
+}
+
 // ----------------------------------------------------------------------------
 // account
 // ----------------------------------------------------------------------------

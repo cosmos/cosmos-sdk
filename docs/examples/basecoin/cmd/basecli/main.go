@@ -59,7 +59,6 @@ func main() {
 
 	// add standard rpc, and tx commands
 	rootCmd.AddCommand(
-		rpc.InitClientCommand(),
 		rpc.StatusCommand(),
 		client.LineBreak,
 		tx.SearchTxCmd(cdc),

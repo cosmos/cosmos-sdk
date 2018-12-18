@@ -40,7 +40,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server with minimum fees
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=2feeToken", gaiadHome, servAddr, p2pAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=2feetoken", gaiadHome, servAddr, p2pAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -64,7 +64,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server with minimum fees
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=1fooToken", gaiadHome, servAddr, p2pAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=1footoken", gaiadHome, servAddr, p2pAddr))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -74,29 +74,29 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", gaiacliHome))
 
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("footoken").Int64())
 
 	// test simulation
 	success := executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=1000fooToken --to=%s --from=foo --fee=1fooToken --dry-run", flags, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fee=1footoken --dry-run", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, port)
 	// ensure state didn't change
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("footoken").Int64())
 
 	// insufficient funds (coins + fees)
 	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=1000fooToken --to=%s --from=foo --fee=1fooToken", flags, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fee=1footoken", flags, barAddr), app.DefaultKeyPass)
 	require.False(t, success)
 	tests.WaitForNextNBlocksTM(1, port)
 	// ensure state didn't change
 	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("fooToken").Int64())
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("footoken").Int64())
 
 	// test success (transfer = coins + fees)
 	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --fee=300fooToken --amount=500fooToken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --fee=300footoken --amount=500footoken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 	cleanupDirs(gaiadHome, gaiacliHome)
 }
@@ -668,7 +668,7 @@ func TestGaiadCollectGentxs(t *testing.T) {
 	_ = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
 	// Add account to genesis.json
 	executeWriteCheckErr(t, fmt.Sprintf(
-		"gaiad add-genesis-account %s 150%s,1000fooToken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
+		"gaiad add-genesis-account %s 150%s,1000footoken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
 	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", gaiadHome, string(os.PathSeparator), string(os.PathSeparator)))
 	// Write gentx file
 	executeWriteCheckErr(t, fmt.Sprintf(
@@ -732,7 +732,7 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port, gaiadHome, gaiac
 	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
 
 	executeWriteCheckErr(t, fmt.Sprintf(
-		"gaiad add-genesis-account %s 150%s,1000fooToken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
+		"gaiad add-genesis-account %s 150%s,1000footoken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
 	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", gaiadHome, string(os.PathSeparator), string(os.PathSeparator)))
 	executeWriteCheckErr(t, fmt.Sprintf(
 		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome), app.DefaultKeyPass)

@@ -665,7 +665,7 @@ func TestProcessPubKey(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := processPubKey(tt.args.acc, tt.args.sig, tt.args.simulate)
+			_, err := ProcessPubKey(tt.args.acc, tt.args.sig, tt.args.simulate)
 			require.Equal(t, tt.wantErr, !err.IsOK())
 		})
 	}

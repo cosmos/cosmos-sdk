@@ -632,16 +632,16 @@ func TestGaiaCLIConfig(t *testing.T) {
 	node := fmt.Sprintf("%s:%s", servAddr, port)
 	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config node %s`, gaiacliHome, node))
 	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config output text`, gaiacliHome))
-	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config trust_node true`, gaiacliHome))
-	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config chain_id %s`, gaiacliHome, chainID))
+	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config trust-node true`, gaiacliHome))
+	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config chain-id %s`, gaiacliHome, chainID))
 	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config trace false`, gaiacliHome))
 	config, err := ioutil.ReadFile(path.Join(gaiacliHome, "config", "config.toml"))
 	require.NoError(t, err)
-	expectedConfig := fmt.Sprintf(`chain_id = "%s"
+	expectedConfig := fmt.Sprintf(`chain-id = "%s"
 node = "%s"
 output = "text"
 trace = false
-trust_node = true
+trust-node = true
 `, chainID, node)
 	require.Equal(t, expectedConfig, string(config))
 	cleanupDirs(gaiadHome, gaiacliHome)

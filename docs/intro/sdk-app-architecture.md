@@ -1,8 +1,38 @@
 # SDK Application Architecture
 
-## Parts of a SDK blockchain
+## State machine 
 
-At its core, a blockchain application is a [replicated deterministic state machine](https://en.wikipedia.org/wiki/State_machine_replication). As a developer, you just have to define the state machine (i.e. the structure of the state, a starting state and transactions that trigger state transitions), and [*Tendermint*](https://tendermint.com/docs/introduction/introduction.html) will handle replication over the network for you.
+At its core, a blockchain application is a [replicated deterministic state machine](https://en.wikipedia.org/wiki/State_machine_replication). 
+
+A state machine is a computer science concept whereby a machine can have multiple states, but only one at a given time. There is a state, which describes the current state of the system, and transactions, that trigger state transitions. 
+
+Given a state S and a transaction T, the state machine will return a new state S'. 
+
+```
++--------+                 +--------+
+|        |                 |        |
+|   S    +---------------->+   S'   |
+|        |    apply(T)     |        |
++--------+                 +--------+
+```
+
+In practice, the transactions are bundled in blocks to make the process more efficient. Given a state S and a block of transactions B, the state machine will return a new state S'.
+
+```
++--------+                              +--------+
+|        |                              |        |
+|   S    +----------------------------> |   S'   |
+|        |   For each T in B: apply(T)  |        |
++--------+                              +--------+
+```
+
+In a blockchain context, the state machine is deterministic. This means that if you start at a given state and replay the same sequence of transactions, you will always end up with the same final state. 
+
+The Cosmos SDK gives you maximum flexibility to define the state of your application, transaction types and state-transition functions. The process of building the state-machine with the SDK will be described more in depth in the following sections. But first, let us see how it is replicated using **Tendermint**. 
+
+## Tendermint
+
+As a developer, you just have to define the state machine using the Cosmos-SDK, and [*Tendermint*](https://tendermint.com/docs/introduction/introduction.html) will handle replication over the network for you.
 
 
 ```
@@ -22,9 +52,16 @@ Blockchain node |  |           Consensus           |  |
 ```
 
 
->Tendermint is an application-agnostic engine that is responsible for handling the *networking* and *consensus* layers of your blockchain. In practice, this means that Tendermint is reponsible for propagating and ordering transaction bytes. Tendermint Core relies on an eponymous Byzantine-Fault-Tolerant (BFT) algorithm to reach consensus on the order of transactions. For more on Tendermint, click [here](https://tendermint.com/docs/introduction/introduction.html).
+Tendermint is an application-agnostic engine that is responsible for handling the *networking* and *consensus* layers of your blockchain. In practice, this means that Tendermint is reponsible for propagating and ordering transaction bytes. Tendermint Core relies on an eponymous Byzantine-Fault-Tolerant (BFT) algorithm to reach consensus on the order of transactions. For more on Tendermint, click [here](https://tendermint.com/docs/introduction/introduction.html).
 
-Tendermint passes transactions from the network to the application through an interface called the [ABCI](https://github.com/tendermint/tendermint/tree/master/abci. 
+Tendermint consensus algorithm works with a set of special nodes called *Validators*. Validators are responsible for adding blocks of transactions to the blockchain. At any given block, there is a validator set V. A validator in V is chosen by the algorithm to be the proposer of the next block. This block is considered valid if more than two thirds of V signed it twice, and if all the transactions that it contains are valid. The validator set can be changed by rules written in the state-machine. For a deeper look at the algorithm, click [here](https://tendermint.com/docs/introduction/what-is-tendermint.html#consensus-overview).
+
+
+The main part of a Cosmos SDK application is a blockchain daemon that is run by each node in the network locally. If less than two thirds of the *validator set* is byzantine (i.e. malicious), then each node should obtain the same result when querying the state at the same time. 
+
+## ABCI
+
+Tendermint passes transactions from the network to the application through an interface called the [ABCI](https://github.com/tendermint/tendermint/tree/master/abci). 
 
 ```
 +---------------------+
@@ -44,39 +81,16 @@ Tendermint passes transactions from the network to the application through an in
 +---------------------+
 ```
 
+ Note that Tendermint only handles transaction bytes. It has no knowledge of what these bytes realy mean. All Tendermint does is to order them deterministically. It is the job of the application to give meaning to these bytes. Tendermint passes the bytes to the application via the ABCI, and expects a return code to inform it if the message was succesful or not. 
 
+Here are the most important messages of the ABCI:
 
-Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK provides a boilerplate implementation of it in the form of [baseapp](#baseapp).
+- `CheckTx`: When a transaction is received by Tendermint Core, it is passed to the application to check its validity via `CheckTx`. If it is, the transaction is added to the [mempool](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality) and relayed to peer nodes. Note that transactions are not processed (i.e. no modification of the state occurs) with `CheckTx` since they have not been included in a block yet. 
+- `DeliverTx`: When a [valid block](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation) is received by the Tendermint engine a blockchain node, each transaction in it is passed to the application via `DeliverTx` to be processed. 
+- `BeginBlock`/`EndBlock`: These messages are executed at the beginning and the end of each block, wether the block contains transaction or not. It is useful to trigger automatic execution of logic. Proceed with caution though, as computationally expensive loops could slow down your blockchain, or even freeze it if the loop is infinite. 
 
-## BaseApp
+For a more detailed view of the ABCI methods and types, click [here](https://tendermint.com/docs/spec/abci/abci.html#overview).
 
-Implements an ABCI App using a [MultiStore](../reference/store) for persistence and a Router to handle transactions.
-The goal is to provide a secure interface between the store and the extensible state machine while defining as little about that state machine as possible (staying true to the ABCI).
+Any application built on Tendermint needs to implement the ABCI in order to communicate with the underlying local Tendermint engine. Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK provides a boilerplate implementation of it in the form of [baseapp](./sdk-design.md#baseapp).
 
-For more on `baseapp`, please click [here](../concepts/baseapp.md).
-
-## Modules
-
-The power of the SDK lies in its modularity. SDK blockchains are built out of customizable and interoperable modules. These modules are contained in the `x/` folder.
-
-In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. In other words, building a SDK blockchain consists in importing some modules and building others (the ones you need that do not exist yet!).
-
-Some core modules include:
-
-- `x/auth`: Used to manage accounts and signatures.
-- `x/bank`: Used to enable tokens and token transfers.
-- `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
-
-## Basecoin
-
-Basecoin is the first complete application in the stack. Complete applications require extensions to the core modules of the SDK to actually implement handler functionality.
-
-Basecoin implements a `BaseApp` state machine using the `x/auth` and `x/bank` modules, which define how transaction signers are authenticated and how coins are transferred. It should also use `x/ibc` and probably a simple staking extension.
-
-Basecoin and the native `x/` extensions use go-amino for all serialization needs, including for transactions and accounts.
-
-## SDK tutorial
-
-If you want to learn more about how to build an SDK application and get a deepeer understanding of the concepts presented above in the process, please check out the [SDK Application Tutorial](https://github.com/cosmos/sdk-application-tutorial).
-
-
+### Next, let us go into the [high-level design principles of the SDK](./sdk-design.md)

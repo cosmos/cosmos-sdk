@@ -114,7 +114,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate",
-		Short: "delegate liquid tokens to an validator",
+		Short: "delegate liquid tokens to a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().

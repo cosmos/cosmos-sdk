@@ -78,14 +78,14 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 }
 
 // WriteGenerateStdTxResponse writes response for the generate_only mode.
-func WriteGenerateStdTxResponse(w http.ResponseWriter, txBldr authtxb.TxBuilder, msgs []sdk.Msg) {
+func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, txBldr authtxb.TxBuilder, msgs []sdk.Msg) {
 	stdMsg, err := txBldr.Build(msgs)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	output, err := txBldr.Codec.MarshalJSON(auth.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
+	output, err := cdc.MarshalJSON(auth.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
 	if err != nil {
 		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
@@ -198,7 +198,7 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 	}
 
 	txBldr := authtxb.TxBuilder{
-		Codec:         cdc,
+		TxEncoder:     GetTxEncoder(cdc),
 		Gas:           gas,
 		GasAdjustment: adjustment,
 		SimulateGas:   simulateGas,
@@ -223,7 +223,7 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 	}
 
 	if baseReq.GenerateOnly {
-		WriteGenerateStdTxResponse(w, txBldr, msgs)
+		WriteGenerateStdTxResponse(w, cdc, txBldr, msgs)
 		return
 	}
 

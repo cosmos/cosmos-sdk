@@ -12,3 +12,35 @@ It is based on two major principles:
 
 ### Next, learn more about the [SDK Application Architecture](./sdk-app-architecture.md)
 
+<<<<<<< HEAD
+=======
+- [SDK application architecture](./sdk-app-architecture.md)
+- [SDK security paradigm: ocap](./ocap.md)
+
+## Creating a new SDK project
+
+To create a new project, you can either:
+
+- Fork [this repo](https://github.com/cosmos/sdk-application-tutorial/). Do not forget to remove the `nameservice` module from the various files if you don't need it. 
+- Copy the `docs/examples/basecoin` directory. 
+- Use community tools! More info to come.
+
+## SDK Directory Structure
+
+The SDK is laid out in the following directories:
+
+- `baseapp`: Defines the template for a basic [ABCI](https://github.com/tendermint/tendermint/tree/master/abci) application so that your Cosmos-SDK application can communicate with the underlying Tendermint node.
+- `client`: CLI and REST server tooling for interacting with SDK application.
+- `docs/examples`: Examples of how to build working standalone applications.
+- `server`: The full node server for running an SDK application on top of
+  Tendermint.
+- `store`: The database of the SDK - a Merkle multistore supporting multiple types of underling Merkle key-value stores.
+- `types`: Common types in SDK applications.
+- `x`: Extensions to the core, where all messages and handlers are defined.
+
+## Languages
+
+The Cosmos-SDK is currently written in [Golang](https://golang.org/), though the
+framework could be implemented similarly in other languages.
+Contact us for information about funding an implementation in another language.
+>>>>>>> develop

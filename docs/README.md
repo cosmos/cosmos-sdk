@@ -12,6 +12,12 @@ If you are a newcomer and would like to learn more about the Cosmos SDK, this **
 
 If you like to learn by doing, you can follow the **[SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial)**. It showcases how to build an SDK-based blockchain from scratch, and teaches you about the basic principles the SDK in the process.
 
+### Resources
+
+- [Specifications](./spec/README.md): Specifications of modules and other parts of the Cosmos SDK. 
+- [SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk): Godocs of the Cosmos SDK.
+- [REST API spec](https://cosmos.network/rpc/): List of endpoints to interract with a `gaia` full-node through REST.
+
 ## Cosmos Hub testnet
 
 To install the latest version of the `gaia` application (application of the Cosmos Hub) and join the public testnet, **click [here](./gaia/join-testnet.md)**

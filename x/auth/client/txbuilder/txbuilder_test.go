@@ -21,7 +21,7 @@ var (
 
 func TestTxBuilderBuild(t *testing.T) {
 	type fields struct {
-		Codec         *codec.Codec
+		TxEncoder     sdk.TxEncoder
 		AccountNumber uint64
 		Sequence      uint64
 		Gas           uint64
@@ -40,7 +40,7 @@ func TestTxBuilderBuild(t *testing.T) {
 	}{
 		{
 			fields{
-				Codec:         codec.New(),
+				TxEncoder:     auth.DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           100,
@@ -64,7 +64,7 @@ func TestTxBuilderBuild(t *testing.T) {
 	}
 	for i, tc := range tests {
 		bldr := TxBuilder{
-			Codec:         tc.fields.Codec,
+			TxEncoder:     tc.fields.TxEncoder,
 			AccountNumber: tc.fields.AccountNumber,
 			Sequence:      tc.fields.Sequence,
 			Gas:           tc.fields.Gas,

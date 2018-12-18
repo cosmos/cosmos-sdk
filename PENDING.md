@@ -42,6 +42,7 @@ IMPROVEMENTS
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [\#2186](https://github.com/cosmos/cosmos-sdk/issues/2186) Add Address Interface
 
 * SDK
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature

@@ -47,6 +47,8 @@ BUG FIXES
 
 * Gaia
 
+  * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version
+
 * SDK
 
 * Tendermint

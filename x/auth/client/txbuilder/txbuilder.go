@@ -27,11 +27,6 @@ type TxBuilder struct {
 
 // NewTxBuilder returns a new initialized TxBuilder
 func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64, simulate bool, chainID, memo string, fees sdk.Coins) TxBuilder {
-	// if chain ID is not specified manually, read default chain ID
-	if chainID == "" {
-		panic(errors.New("Chain-id cannot be empty"))
-	}
-
 	return TxBuilder{
 		TxEncoder:     txEncoder,
 		ChainID:       chainID,
@@ -48,13 +43,8 @@ func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj fl
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
 // the command line using Viper.
 func NewTxBuilderFromCLI() TxBuilder {
-	chainID := viper.GetString(client.FlagChainID)
-	if chainID == "" {
-		panic(errors.New("Chain-id cannot be empty"))
-	}
-
 	txbldr := TxBuilder{
-		ChainID:       chainID,
+		ChainID:       viper.GetString(client.FlagChainID),
 		AccountNumber: uint64(viper.GetInt64(client.FlagAccountNumber)),
 		Gas:           client.GasFlagVar.Gas,
 		GasAdjustment: viper.GetFloat64(client.FlagGasAdjustment),

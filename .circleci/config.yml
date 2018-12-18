@@ -336,7 +336,12 @@ workflows:
   version: 2
   test-suite:
     jobs:
-      - macos_ci
+      - macos_ci:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
       - deploy_docs:
           filters:
             branches:

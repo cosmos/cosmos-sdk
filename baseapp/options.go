@@ -47,12 +47,12 @@ func (app *BaseApp) SetName(name string) {
 	app.name = name
 }
 
-func SetGasPerUnitCost(gasPerUnitCost string) func(*BaseApp) {
-	gpuc, err := sdk.ParseCoins(gasPerUnitCost)
+func SettokenPerUnitGas(tokenPerUnitGas string) func(*BaseApp) {
+	gpuc, err := sdk.ParseCoins(tokenPerUnitGas)
 	if err != nil {
-		panic(fmt.Sprintf("invalid gasPerUnitCost: %v", err))
+		panic(fmt.Sprintf("invalid tokenPerUnitGas: %v", err))
 	}
-	return func(bap *BaseApp) { bap.SetGasPerUnitCost(gpuc) }
+	return func(bap *BaseApp) { bap.SettokenPerUnitGas(gpuc) }
 }
 
 func (app *BaseApp) SetDB(db dbm.DB) {

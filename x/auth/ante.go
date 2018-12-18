@@ -203,8 +203,8 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey) {
 	}
 }
 
-func adjustFeesByGas(fees sdk.Coins, gas uint64, gasPerUnitCost uint64) sdk.Coins {
-	gasCost := gas / gasPerUnitCost
+func adjustFeesByGas(fees sdk.Coins, gas uint64, tokenPerUnitGas uint64) sdk.Coins {
+	gasCost := gas / tokenPerUnitGas
 	gasFees := make(sdk.Coins, len(fees))
 
 	// TODO: Make this not price all coins in the same way
@@ -255,11 +255,11 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	}
 
 	// TODO: Generalize this
-	gasPerUnitCost := ctx.GasPerUnitCost()[0].Amount
-	if gasPerUnitCost.Sign() != 1 {
-		panic("Zero or Negative coins amount for gasPerUnitCost, must be positive")
+	tokenPerUnitGas := ctx.tokenPerUnitGas()[0].Amount
+	if tokenPerUnitGas.Sign() != 1 {
+		panic("Zero or Negative coins amount for tokenPerUnitGas, must be positive")
 	}
-	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas, uint64(gasPerUnitCost.Int64()))
+	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas, uint64(tokenPerUnitGas.Int64()))
 
 	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
 	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {

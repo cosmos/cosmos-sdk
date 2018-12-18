@@ -43,13 +43,13 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// if this is a CheckTx. This is only for local mempool purposes, and thus
 		// is only ran on check tx.
 		if ctx.IsCheckTx() && !simulate {
-			res := ensureSufficientMempoolFees(ctx, stdTx)
+			res := EnsureSufficientMempoolFees(ctx, stdTx)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
 		}
 
-		newCtx = setGasMeter(simulate, ctx, stdTx)
+		newCtx = SetGasMeter(simulate, ctx, stdTx)
 
 		// AnteHandlers must have their own defer/recover in order for the BaseApp
 		// to know how much gas was used! This is because the GasMeter is created in
@@ -76,27 +76,27 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 
 		newCtx.GasMeter().ConsumeGas(memoCostPerByte*sdk.Gas(len(stdTx.GetMemo())), "memo")
 
-		// stdSigs contains the sequence number, account number, and signatures.
-		// When simulating, this would just be a 0-length slice.
-		stdSigs := stdTx.GetSignatures()
-		signerAddrs := stdTx.GetSigners()
-		signerAccs, res := getSignerAccs(newCtx, am, signerAddrs)
+		signerAccs, res := GetSignerAccs(newCtx, am, stdTx.GetSigners())
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
 
-		isGenesis := ctx.BlockHeight() == 0
-		signBytesList := getSignBytesList(newCtx.ChainID(), stdTx, signerAccs, isGenesis)
-
-		// first sig pays the fees
+		// the first signer pays the transaction fees
 		if !stdTx.Fee.Amount.IsZero() {
-			signerAccs[0], res = deductFees(signerAccs[0], stdTx.Fee)
+			signerAccs[0], res = DeductFees(signerAccs[0], stdTx.Fee)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
 
 			fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
 		}
+
+		isGenesis := ctx.BlockHeight() == 0
+		signBytesList := GetSignBytesList(newCtx.ChainID(), stdTx, signerAccs, isGenesis)
+
+		// stdSigs contains the sequence number, account number, and signatures.
+		// When simulating, this would just be a 0-length slice.
+		stdSigs := stdTx.GetSignatures()
 
 		for i := 0; i < len(stdSigs); i++ {
 			// check signature, return account with incremented nonce
@@ -116,7 +116,9 @@ func NewAnteHandler(am AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 	}
 }
 
-func getSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (accs []Account, res sdk.Result) {
+// GetSignerAccs returns a list of signers for a given list of addresses that
+// are expected to sign a transaction.
+func GetSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) (accs []Account, res sdk.Result) {
 	accs = make([]Account, len(addrs))
 	for i := 0; i < len(accs); i++ {
 		accs[i] = am.GetAccount(ctx, addrs[i])
@@ -134,7 +136,7 @@ func processSig(
 	ctx sdk.Context, acc Account, sig StdSignature, signBytes []byte, simulate bool,
 ) (updatedAcc Account, res sdk.Result) {
 
-	pubKey, res := processPubKey(acc, sig, simulate)
+	pubKey, res := ProcessPubKey(acc, sig, simulate)
 	if !res.IsOK() {
 		return nil, res
 	}
@@ -165,7 +167,10 @@ func init() {
 	copy(dummySecp256k1Pubkey[:], bz)
 }
 
-func processPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
+// ProcessPubKey verifies that the given account address matches that of the
+// StdSignature. In addition, it will set the public key of the account if it
+// has not been set.
+func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
 	// If pubkey is not known for account, set it from the StdSignature.
 	pubKey := acc.GetPubKey()
 	if simulate {
@@ -219,10 +224,11 @@ func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
 	return fees.Plus(gasFees)
 }
 
-// Deduct the fee from the account.
-// We could use the CoinKeeper (in addition to the AccountKeeper,
-// because the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
+// DeductFees deducts fees from the given account.
+//
+// NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
+// the CoinKeeper doesn't give us accounts), but it seems easier to do this.
+func DeductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
@@ -245,7 +251,13 @@ func deductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 	return acc, sdk.Result{}
 }
 
-func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
+// EnsureSufficientMempoolFees verifies that the given transaction has supplied
+// enough fees to cover a proposer's minimum fees. An result object is returned
+// indicating success or failure.
+//
+// NOTE: This should only be called during CheckTx as it cannot be part of
+// consensus.
+func EnsureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	// Currently we use a very primitive gas pricing model with a constant
 	// gasPrice where adjustFeesByGas handles calculating the amount of fees
 	// required based on the provided gas.
@@ -270,7 +282,8 @@ func ensureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	return sdk.Result{}
 }
 
-func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
+// SetGasMeter returns a new context with a gas meter set from a given context.
+func SetGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
 	if simulate || ctx.BlockHeight() == 0 {
@@ -280,7 +293,9 @@ func setGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 }
 
-func getSignBytesList(chainID string, stdTx StdTx, accs []Account, genesis bool) (signatureBytesList [][]byte) {
+// GetSignBytesList returns a slice of bytes to sign over for a given transaction
+// and list of accounts.
+func GetSignBytesList(chainID string, stdTx StdTx, accs []Account, genesis bool) (signatureBytesList [][]byte) {
 	signatureBytesList = make([][]byte, len(accs))
 	for i := 0; i < len(accs); i++ {
 		accNum := accs[i].GetAccountNumber()

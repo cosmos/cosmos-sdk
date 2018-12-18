@@ -49,11 +49,13 @@ build:
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
+	go build $(BUILD_FLAGS) -o build/logjack ./cmd/logjack
 else
 	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
 	go build $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
 	go build $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
+	go build $(BUILD_FLAGS) -o build/logjack ./cmd/logjack
 endif
 
 build-linux:
@@ -87,6 +89,7 @@ install: check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
+	go install $(BUILD_FLAGS) ./cmd/logjack
 
 install_examples:
 	go install $(BUILD_FLAGS) ./docs/examples/basecoin/cmd/basecoind

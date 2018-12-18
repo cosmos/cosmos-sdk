@@ -29,7 +29,7 @@ The SDK is laid out in the following directories:
 
 - `baseapp`: Defines the template for a basic [ABCI](https://github.com/tendermint/tendermint/tree/master/abci) application so that your Cosmos-SDK application can communicate with the underlying Tendermint node.
 - `client`: CLI and REST server tooling for interacting with SDK application.
-- `examples`: Examples of how to build working standalone applications.
+- `docs/examples`: Examples of how to build working standalone applications.
 - `server`: The full node server for running an SDK application on top of
   Tendermint.
 - `store`: The database of the SDK - a Merkle multistore supporting multiple types of underling Merkle key-value stores.

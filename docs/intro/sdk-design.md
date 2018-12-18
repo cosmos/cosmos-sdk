@@ -22,7 +22,7 @@ For more on `baseapp`, please click [here](../concepts/baseapp.md).
 
 ## Multistore
 
-The Cosmos SDK provides a multistore for persisting  state. The multistore allows developers to declare any number of [`KVStores`](https://github.com/blocklayerhq/chainkit). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [go-amino](https://github.com/tendermint/go-amino) before being stored.
+ The Cosmos SDK provides a multistore for persisting state. The multistore allows developers to declare any number of [`KVStores`](https://github.com/blocklayerhq/chainkit). These `KVStores` only accept the `[]byte` type as value and therefore any custom structure needs to be marshalled using [go-amino](https://github.com/tendermint/go-amino) before being stored.
 
 The multistore abstraction is used to divide the state in distinct compartments, each managed by its own module. For more on the multistore, click [here](../concepts/store.md)
 

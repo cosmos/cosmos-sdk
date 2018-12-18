@@ -87,7 +87,7 @@ Here are the most important messages of the ABCI:
 
 - `CheckTx`: When a transaction is received by Tendermint Core, it is passed to the application to check its validity via `CheckTx`. If it is, the transaction is added to the [mempool](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality) and relayed to peer nodes. Note that transactions are not processed (i.e. no modification of the state occurs) with `CheckTx` since they have not been included in a block yet. 
 - `DeliverTx`: When a [valid block](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation) is received by the Tendermint engine a blockchain node, each transaction in it is passed to the application via `DeliverTx` to be processed. 
-- `BeginBlock`/`EndBlock`: These messages are executed at the beginning and the end of each block, wether the block contains transaction or not. It is useful to trigger automatic execution of logic. Proceed with caution though, as computationally expensive loops could slow down your blockchain, or even freeze it if the loop is infinite. 
+ - `BeginBlock`/`EndBlock`: These messages are executed at the beginning and the end of each block, whether the block contains transaction or not. It is useful to trigger automatic execution of logic. Proceed with caution though, as computationally expensive loops could slow down your blockchain, or even freeze it if the loop is infinite. 
 
 For a more detailed view of the ABCI methods and types, click [here](https://tendermint.com/docs/spec/abci/abci.html#overview).
 

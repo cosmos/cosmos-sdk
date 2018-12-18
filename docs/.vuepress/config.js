@@ -19,7 +19,10 @@ module.exports = {
       indexName: 'cosmos_network',
       debug: false
     },
-    nav: [{ text: "Back to Cosmos", link: "https://cosmos.network" }],
+    nav: [
+      { text: "Back to Cosmos", link: "https://cosmos.network" },
+      { text: "RPC", link: "../rpc/" }
+    ],
     sidebar: [
       {
         title: "Overview",

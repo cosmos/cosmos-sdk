@@ -271,44 +271,66 @@ jobs:
           command: |
             chamber exec cosmos-sdk -- start_website_build
 
+  macos_ci:
+    macos:
+      xcode: "10.1.0"
+    steps:
+      - run:
+          name: Install go
+          command: |
+            curl -L -O https://dl.google.com/go/go1.11.4.darwin-amd64.tar.gz
+            mkdir /Users/distiller/go
+            tar -C /Users/distillers -xzf go1.11.4.darwin-amd64.tar.gz
+            rm go1.11.4.darwin-amd64.tar.gz
+            export PATH=$PATH:/Users/distiller/go/bin
+            go version
+      - checkout
+      - run:
+          name: Build SDK
+          command: |
+            export PATH=$PATH:/Users/distiller/go/bin
+            make get_vendor_deps
+            make build
+
 workflows:
   version: 2
   test-suite:
     jobs:
-      - deploy_docs:
-          filters:
-            branches:
-              only:
-                - master
-                - develop
-      - setup_dependencies
-      - lint:
-          requires:
-            - setup_dependencies
-      - integration_tests:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_nondeterminism:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_fast:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_import_export:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_simulation_after_import:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_multi_seed:
-          requires:
-            - setup_dependencies
-      - test_cover:
-          requires:
-            - setup_dependencies
-      - localnet:
-          requires:
-            - setup_dependencies
-      - upload_coverage:
-          requires:
-            - test_cover
+      - macos_ci
+#      - deploy_docs:
+#          filters:
+#            branches:
+#              only:
+#                - master
+#                - develop
+#      - setup_dependencies
+#      - lint:
+#          requires:
+#            - setup_dependencies
+#      - integration_tests:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_nondeterminism:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_fast:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_import_export:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_simulation_after_import:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_multi_seed:
+#          requires:
+#            - setup_dependencies
+#      - test_cover:
+#          requires:
+#            - setup_dependencies
+#      - localnet:
+#          requires:
+#            - setup_dependencies
+#      - upload_coverage:
+#          requires:
+#            - test_cover

@@ -39,6 +39,8 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
+  * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
+    verification may fail before last signature is checked.
 
 * Tendermint
 

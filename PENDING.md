@@ -8,6 +8,7 @@ BREAKING CHANGES
   * [\#810](https://github.com/cosmos/cosmos-sdk/issues/810) Don't fallback to any default values for chain ID.
     - Users need to supply chain ID either via config file or the `--chain-id` flag.
     - Change `chain_id` and `trust_node` in `gaiacli` configuration to `chain-id` and `trust-node` respectively.
+  * [\#3156](https://github.com/cosmos/cosmos-sdk/pull/3156) Remove unimplemented `gaiacli init` command
 
 * Gaia
 

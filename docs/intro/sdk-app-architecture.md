@@ -81,7 +81,7 @@ Tendermint passes transactions from the network to the application through an in
 +---------------------+
 ```
 
- Note that Tendermint only handles transaction bytes. It has no knowledge of what these bytes realy mean. All Tendermint does is to order them deterministically. It is the job of the application to give meaning to these bytes. Tendermint passes the bytes to the application via the ABCI, and expects a return code to inform it if the message was succesful or not. 
+  Note that Tendermint only handles transaction bytes. It has no knowledge of what these bytes mean. All Tendermint does is to order them deterministically. It is the job of the application to give meaning to these bytes. Tendermint passes the bytes to the application via the ABCI, and expects a return code to inform it if the message was successful or not. 
 
 Here are the most important messages of the ABCI:
 

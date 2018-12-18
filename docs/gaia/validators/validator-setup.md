@@ -29,12 +29,12 @@ gaiad tendermint show-validator
 Next, craft your `gaiad gentx` command:
 
 ::: warning Note
-Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
+Don't use more `STAKE` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
 :::
 
 ```bash
 gaiacli tx stake create-validator \
-  --amount=5steak \
+  --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
@@ -92,7 +92,7 @@ In this case, you need both the signature of the validator and the delegator. St
 
 ```bash
 gaiacli tx stake create-validator \
-  --amount=5steak \
+  --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \

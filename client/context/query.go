@@ -70,7 +70,7 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 	if err != nil {
 		return nil, err
 	} else if len(res) == 0 {
-		return nil, err
+		return nil, ErrInvalidAccount(address)
 	}
 
 	account, err := ctx.AccDecoder(res)

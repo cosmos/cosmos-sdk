@@ -6,7 +6,6 @@ defaults: &linux_defaults
     - image: circleci/golang:1.11.4
   environment:
     GOBIN: /tmp/workspace/bin
-    GO_VERSION: "1.11.4"
 
 
 ############
@@ -18,6 +17,7 @@ macos_config: &macos_defaults
     xcode: "10.1.0"
   working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
   environment:
+    GO_VERSION: "1.11.4"
 
 set_macos_env: &macos_env
   run:

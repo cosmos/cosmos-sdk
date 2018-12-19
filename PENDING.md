@@ -10,6 +10,8 @@ BREAKING CHANGES
 
 * SDK
 
+    * \#3163 Withdraw commission on self bond removal
+
 * Tendermint
 
 

@@ -16,7 +16,7 @@ If you like to learn by doing, you can follow the **[SDK application tutorial](h
 
 - [Specifications](./spec/README.md): Specifications of modules and other parts of the Cosmos SDK. 
 - [SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk): Godocs of the Cosmos SDK.
-- [REST API spec](https://cosmos.network/rpc/): List of endpoints to interract with a `gaia` full-node through REST.
+- [REST API spec](https://cosmos.network/rpc/): List of endpoints to interact with a `gaia` full-node through REST.
 
 ## Cosmos Hub testnet
 
@@ -41,3 +41,7 @@ Contact us for information about funding an implementation in another language.
 
 See [this file](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
 considerations when making changes.
+
+## Version
+
+ This documentation is built from the following commit:

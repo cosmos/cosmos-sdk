@@ -3,9 +3,10 @@ version: 2
 defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.11.3
+    - image: circleci/golang:1.11.4
   environment:
     GOBIN: /tmp/workspace/bin
+    GO_VERSION: "1.11.4"
 
 
 ############
@@ -17,7 +18,6 @@ macos_config: &macos_defaults
     xcode: "10.1.0"
   working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
   environment:
-    GO_VERSION: "1.11.4"
 
 set_macos_env: &macos_env
   run:
@@ -272,6 +272,7 @@ jobs:
         GOPATH: /home/circleci/.go_workspace/
         GOOS: linux
         GOARCH: amd64
+        GO_VERSION: "1.11.4"
       parallelism: 1
       steps:
         - checkout
@@ -279,8 +280,8 @@ jobs:
             name: run localnet and exit on failure
             command: |
               pushd /tmp
-              wget https://dl.google.com/go/go1.11.3.linux-amd64.tar.gz
-              sudo tar -xvf go1.11.3.linux-amd64.tar.gz
+              wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
+              sudo tar -xvf go$GO_VERSION.linux-amd64.tar.gz
               sudo rm -rf /usr/local/go
               sudo mv go /usr/local
               popd

@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -24,8 +25,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 
 // cli version REST handler endpoint
 func CLIVersionRequestHandler(w http.ResponseWriter, r *http.Request) {
-	v := version.GetVersion()
-	w.Write([]byte(v))
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(fmt.Sprintf("{\"version\": \"%s\"}", version.GetVersion())))
 }
 
 // connected node version REST handler endpoint

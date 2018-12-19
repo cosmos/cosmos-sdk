@@ -12,6 +12,7 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
+  * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
 
 * Tendermint
 
@@ -19,10 +20,15 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+    * [gaia-lite] [\#2182] Added LCD endpoint for querying redelegations
+    * [gov] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance parameter
+    query REST endpoints.
 
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+
+    * [\#2182] [x/stake] Added querier for querying a single redelegation
 
 * SDK
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
@@ -40,6 +46,8 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
+  * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
+    verification may fail before last signature is checked.
 
 * Tendermint
 

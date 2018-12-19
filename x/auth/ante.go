@@ -69,16 +69,21 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, err.Result(), true
 		}
 
-		if res := validateMemo(newCtx.GasMeter(), stdTx, params); !res.IsOK() {
+		if res := ValidateMemo(newCtx.GasMeter(), stdTx, params); !res.IsOK() {
 			return newCtx, res, true
 		}
 
-		signerAccs, res := GetSignerAccs(newCtx, ak, stdTx.GetSigners())
+		// stdSigs contains the sequence number, account number, and signatures.
+		// When simulating, this would just be a 0-length slice.
+		signerAddrs := stdTx.GetSigners()
+		signerAccs := make([]Account, len(signerAddrs))
+		isGenesis := ctx.BlockHeight() == 0
+
+		// fetch first signer, who's going to pay the fees
+		signerAccs[0], res = GetSignerAcc(newCtx, ak, signerAddrs[0])
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
-
-		// the first signer pays the transaction fees
 		if !stdTx.Fee.Amount.IsZero() {
 			signerAccs[0], res = DeductFees(signerAccs[0], stdTx.Fee)
 			if !res.IsOK() {
@@ -88,18 +93,22 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			fck.AddCollectedFees(newCtx, stdTx.Fee.Amount)
 		}
 
-		isGenesis := ctx.BlockHeight() == 0
-		signBytesList := GetSignBytesList(newCtx.ChainID(), stdTx, signerAccs, isGenesis)
-
 		// stdSigs contains the sequence number, account number, and signatures.
 		// When simulating, this would just be a 0-length slice.
 		stdSigs := stdTx.GetSignatures()
 
 		for i := 0; i < len(stdSigs); i++ {
+			// skip the fee payer, account is cached and fees were deducted already
+			if i != 0 {
+				signerAccs[i], res = GetSignerAcc(newCtx, ak, signerAddrs[i])
+				if !res.IsOK() {
+					return newCtx, res, true
+				}
+			}
+
 			// check signature, return account with incremented nonce
-			signerAccs[i], res = processSig(
-				newCtx, signerAccs[i], stdSigs[i], signBytesList[i], simulate, params,
-			)
+			signBytes := GetSignBytes(newCtx.ChainID(), stdTx, signerAccs[i], isGenesis)
+			signerAccs[i], res = processSig(newCtx, signerAccs[i], stdSigs[i], signBytes, simulate, params)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -112,21 +121,18 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 	}
 }
 
-// GetSignerAccs returns a list of signers for a given list of addresses that
-// are expected to sign a transaction.
-func GetSignerAccs(ctx sdk.Context, am AccountKeeper, addrs []sdk.AccAddress) ([]Account, sdk.Result) {
-	accs := make([]Account, len(addrs))
-	for i := 0; i < len(accs); i++ {
-		accs[i] = am.GetAccount(ctx, addrs[i])
-		if accs[i] == nil {
-			return nil, sdk.ErrUnknownAddress(addrs[i].String()).Result()
-		}
+// GetSignerAcc returns an account for a given address that is expected to sign
+// a transaction.
+func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (Account, sdk.Result) {
+	if acc := ak.GetAccount(ctx, addr); acc != nil {
+		return acc, sdk.Result{}
 	}
-
-	return accs, sdk.Result{}
+	return nil, sdk.ErrUnknownAddress(addr.String()).Result()
 }
 
-func validateMemo(gasMeter sdk.GasMeter, stdTx StdTx, params Params) sdk.Result {
+// ValidateMemo validates the memo and if successful consumes gas for
+// verification.
+func ValidateMemo(gasMeter sdk.GasMeter, stdTx StdTx, params Params) sdk.Result {
 	memoLength := len(stdTx.GetMemo())
 	if uint64(memoLength) > params.MaxMemoCharacters {
 		return sdk.ErrMemoTooLarge(
@@ -310,20 +316,17 @@ func SetGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
 	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
 }
 
-// GetSignBytesList returns a slice of bytes to sign over for a given transaction
-// and list of accounts.
-func GetSignBytesList(chainID string, stdTx StdTx, accs []Account, genesis bool) [][]byte {
-	signatureBytesList := make([][]byte, len(accs))
-	for i := 0; i < len(accs); i++ {
-		accNum := accs[i].GetAccountNumber()
-		if genesis {
-			accNum = 0
-		}
-
-		signatureBytesList[i] = StdSignBytes(chainID,
-			accNum, accs[i].GetSequence(),
-			stdTx.Fee, stdTx.Msgs, stdTx.Memo)
+// GetSignBytes returns a slice of bytes to sign over for a given transaction
+// and an account.
+func GetSignBytes(chainID string, stdTx StdTx, acc Account, genesis bool) []byte {
+	var accNum uint64
+	if !genesis {
+		accNum = acc.GetAccountNumber()
 	}
 
-	return signatureBytesList
+	return StdSignBytes(
+		chainID,
+		accNum, acc.GetSequence(),
+		stdTx.Fee, stdTx.Msgs, stdTx.Memo,
+	)
 }

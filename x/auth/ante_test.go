@@ -304,12 +304,14 @@ func TestAnteHandlerFees(t *testing.T) {
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInsufficientFunds)
 
 	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(emptyCoins))
+	require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(149)))
 
 	acc1.SetCoins(sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	input.ak.SetAccount(ctx, acc1)
 	checkValidTx(t, anteHandler, ctx, tx, false)
 
 	require.True(t, input.fck.GetCollectedFees(ctx).IsEqual(sdk.Coins{sdk.NewInt64Coin("atom", 150)}))
+	require.True(t, input.ak.GetAccount(ctx, addr1).GetCoins().AmountOf("atom").Equal(sdk.NewInt(0)))
 }
 
 // Test logic around memo gas consumption.
@@ -530,8 +532,11 @@ func TestProcessPubKey(t *testing.T) {
 
 	// keys
 	_, _, addr1 := keyPubAddr()
-	priv2, _, _ := keyPubAddr()
+	priv2, _, addr2 := keyPubAddr()
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
+	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
+
+	acc2.SetPubKey(priv2.PubKey())
 
 	type args struct {
 		acc      Account
@@ -545,6 +550,7 @@ func TestProcessPubKey(t *testing.T) {
 	}{
 		{"no sigs, simulate off", args{acc1, StdSignature{}, false}, true},
 		{"no sigs, simulate on", args{acc1, StdSignature{}, true}, false},
+		{"no sigs, account with pub, simulate on", args{acc2, StdSignature{}, true}, false},
 		{"pubkey doesn't match addr, simulate off", args{acc1, StdSignature{PubKey: priv2.PubKey()}, false}, true},
 		{"pubkey doesn't match addr, simulate on", args{acc1, StdSignature{PubKey: priv2.PubKey()}, true}, false},
 	}
@@ -597,7 +603,7 @@ func TestAdjustFeesByGas(t *testing.T) {
 		want sdk.Coins
 	}{
 		{"nil coins", args{sdk.Coins{}, 100000}, sdk.Coins{}},
-		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("A", 10), sdk.NewInt64Coin("B", 0)}, 100000}, sdk.Coins{sdk.NewInt64Coin("A", 20), sdk.NewInt64Coin("B", 10)}},
+		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("a", 10), sdk.NewInt64Coin("b", 0)}, 100000}, sdk.Coins{sdk.NewInt64Coin("a", 20), sdk.NewInt64Coin("b", 10)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

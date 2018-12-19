@@ -102,10 +102,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		keeper.DeleteProposal(ctx, proposalID)
 		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
 
-		resTags = resTags.AppendTag(
-			fmt.Sprintf("%s-%d", tags.ProposalResult, proposalID),
-			tags.ActionProposalDropped,
-		)
+		resTags = resTags.AppendTag(tags.ProposalResult, tags.ActionProposalDropped)
 
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
@@ -149,10 +146,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 			),
 		)
 
-		resTags = resTags.AppendTag(
-			fmt.Sprintf("%s-%d", tags.ProposalResult, proposalID),
-			tagValue,
-		)
+		resTags = resTags.AppendTag(tags.ProposalResult, tagValue)
 	}
 
 	activeIterator.Close()

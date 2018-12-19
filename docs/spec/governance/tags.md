@@ -4,9 +4,9 @@ The governance module emits the following events/tags:
 
 ## BeginBlocker
 
-| Key                          | Value                                              |
-|------------------------------|----------------------------------------------------|
-| proposal-result-{proposalID} | proposal-passed|proposal-rejected|proposal-dropped |
+| Key             | Value                                              |
+|-----------------|----------------------------------------------------|
+| proposal-result | proposal-passed|proposal-rejected|proposal-dropped |
 
 ## Handlers
 

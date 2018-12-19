@@ -193,7 +193,6 @@ func MakeCodec() *codec.Codec {
 
 // application updates every end block
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-
 	// mint new tokens for the previous block
 	mint.BeginBlocker(ctx, app.mintKeeper)
 
@@ -215,7 +214,6 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-
 	tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates, endBlockerTags := stake.EndBlocker(ctx, app.stakeKeeper)
 	tags = append(tags, endBlockerTags...)

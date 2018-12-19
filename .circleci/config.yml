@@ -1,11 +1,36 @@
 version: 2
 
-defaults: &defaults
+defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
     - image: circleci/golang:1.11.3
   environment:
     GOBIN: /tmp/workspace/bin
+
+
+############
+#
+# Configure macos integration tests
+
+macos_config: &macos_defaults
+  macos:
+    xcode: "10.1.0"
+  working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
+  environment:
+    GO_VERSION: "1.11.4"
+
+set_macos_env: &macos_env
+  run:
+    name: Set environment
+    command: |
+      echo 'export PATH=$PATH:$HOME/go/bin' >> $BASH_ENV
+      echo 'export GOPATH=$HOME/project' >> $BASH_ENV
+      echo 'export GOBIN=$GOPATH/bin' >> $BASH_ENV
+      echo 'export PATH=$PATH:$HOME/go/bin:$GOBIN' >> $BASH_ENV
+
+############
+#
+# Configure docs deployment
 
 docs_update: &docs_deploy
   working_directory: ~/repo
@@ -14,10 +39,13 @@ docs_update: &docs_deploy
   environment:
     AWS_REGION: us-east-1
 
+
+############
+
 jobs:
 
   setup_dependencies:
-    <<: *defaults
+    <<: *linux_defaults
     steps:
       - run: mkdir -p /tmp/workspace/bin
       - run: mkdir -p /tmp/workspace/profiles
@@ -48,7 +76,7 @@ jobs:
             - profiles
 
   lint:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
@@ -72,7 +100,7 @@ jobs:
             make test_lint
 
   integration_tests:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
@@ -91,7 +119,7 @@ jobs:
             make test_examples
 
   test_sim_gaia_nondeterminism:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
@@ -109,7 +137,7 @@ jobs:
             make test_sim_gaia_nondeterminism
 
   test_sim_gaia_fast:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
@@ -127,7 +155,7 @@ jobs:
             make test_sim_gaia_fast
 
   test_sim_gaia_import_export:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
@@ -145,7 +173,7 @@ jobs:
             make test_sim_gaia_import_export
 
   test_sim_gaia_simulation_after_import:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
@@ -163,7 +191,7 @@ jobs:
             make test_sim_gaia_simulation_after_import
 
   test_sim_gaia_multi_seed:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
@@ -181,7 +209,7 @@ jobs:
             scripts/multisim.sh 25 TestFullGaiaSimulation
 
   test_cover:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 4
     steps:
       - attach_workspace:
@@ -211,7 +239,7 @@ jobs:
           path: /tmp/logs
 
   upload_coverage:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
@@ -271,10 +299,47 @@ jobs:
           command: |
             chamber exec cosmos-sdk -- start_website_build
 
+  macos_ci:
+    <<: *macos_defaults
+    steps:
+      - *macos_env
+      - run:
+          name: Install go
+          command: |
+            source $BASH_ENV
+            curl -L -O https://dl.google.com/go/go$GO_VERSION.darwin-amd64.tar.gz
+            tar -C $HOME -xzf go$GO_VERSION.darwin-amd64.tar.gz
+            rm go$GO_VERSION.darwin-amd64.tar.gz
+            go version
+      - checkout
+      - run:
+          name: Install SDK
+          command: |
+            source $BASH_ENV
+            make get_tools
+            make get_vendor_deps
+            make install
+      - run:
+          name: Integration tests
+          command:
+            source $BASH_ENV
+            make test_cli
+      - run:
+          name: Test full gaia simulation
+          command: |
+            source $BASH_ENV
+            make test_sim_gaia_fast
+
 workflows:
   version: 2
   test-suite:
     jobs:
+      - macos_ci:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
       - deploy_docs:
           filters:
             branches:

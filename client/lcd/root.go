@@ -41,11 +41,6 @@ type RestServer struct {
 func NewRestServer(cdc *codec.Codec) *RestServer {
 	r := mux.NewRouter()
 	cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
-
-	// Register version methods on the router
-	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
-	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")
-
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 
 	return &RestServer{

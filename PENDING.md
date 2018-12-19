@@ -10,6 +10,7 @@ BREAKING CHANGES
     * Users need to supply chain ID either via config file or the `--chain-id` flag.
     * Change `chain_id` and `trust_node` in `gaiacli` configuration to `chain-id` and `trust-node` respectively.
   * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) `--fee` flag renamed to `--fees` to support multiple coins
+  * [\#3156](https://github.com/cosmos/cosmos-sdk/pull/3156) Remove unimplemented `gaiacli init` command
 
 * Gaia
 
@@ -43,12 +44,16 @@ IMPROVEMENTS
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
 
 * SDK
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
 
 * Tendermint
+
+* CI
+    * \#2498 Added macos CI job to CircleCI
 
 
 BUG FIXES

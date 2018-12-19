@@ -80,7 +80,6 @@ func main() {
 
 	// Construct Root Command
 	rootCmd.AddCommand(
-		rpc.InitClientCommand(),
 		rpc.StatusCommand(),
 		client.ConfigCmd(),
 		queryCmd(cdc, mc),

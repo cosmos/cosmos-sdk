@@ -6,6 +6,8 @@ import (
 
 // Slashing tags
 var (
-	Action         = sdk.TagAction
-	SlashingHeight = "slashing-height"
+	ActionValidatorUnjailed = []byte("validator-unjailed")
+
+	Action    = sdk.TagAction
+	Validator = "validator"
 )

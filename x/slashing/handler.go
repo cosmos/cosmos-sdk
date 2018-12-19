@@ -2,6 +2,7 @@ package slashing
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing/tags"
 )
 
 func NewHandler(k Keeper) sdk.Handler {
@@ -49,7 +50,10 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 	// unjail the validator
 	k.validatorSet.Unjail(ctx, consAddr)
 
-	tags := sdk.NewTags("validator", []byte(msg.ValidatorAddr.String()))
+	tags := sdk.NewTags(
+		tags.Action, tags.ActionValidatorUnjailed,
+		tags.Validator, []byte(msg.ValidatorAddr.String()),
+	)
 
 	return sdk.Result{
 		Tags: tags,

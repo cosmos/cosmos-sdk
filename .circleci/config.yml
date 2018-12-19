@@ -319,13 +319,11 @@ jobs:
             make get_tools
             make get_vendor_deps
             make install
-            make install_examples
       - run:
           name: Integration tests
           command:
             source $BASH_ENV
             make test_cli
-            make test_examples
       - run:
           name: Test full gaia simulation
           command: |

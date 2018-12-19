@@ -4,7 +4,7 @@
 
 At its core, a blockchain application is a [replicated deterministic state machine](https://en.wikipedia.org/wiki/State_machine_replication). 
 
-A state machine is a computer science concept whereby a machine can have multiple states, but only one at a given time. There is a state, which describes the current state of the system, and transactions, that trigger state transitions. 
+A state machine is a computer science concept whereby a machine can have multiple states, but only one at any given time. There is a state, which describes the current state of the system, and transactions, that trigger state transitions. 
 
 Given a state S and a transaction T, the state machine will return a new state S'. 
 
@@ -61,7 +61,7 @@ The main part of a Cosmos SDK application is a blockchain daemon that is run by 
 
 ## ABCI
 
-Tendermint passes transactions from the network to the application through an interface called the [ABCI](https://github.com/tendermint/tendermint/tree/master/abci). 
+Tendermint passes transactions from the network to the application through an interface called the [ABCI](https://github.com/tendermint/tendermint/tree/master/abci), which the application must implement. 
 
 ```
 +---------------------+
@@ -85,12 +85,12 @@ Note that Tendermint only handles transaction bytes. It has no knowledge of what
 
 Here are the most important messages of the ABCI:
 
-- `CheckTx`: When a transaction is received by Tendermint Core, it is passed to the application to check its validity via `CheckTx`. If it is, the transaction is added to the [mempool](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality) and relayed to peer nodes. Note that transactions are not processed (i.e. no modification of the state occurs) with `CheckTx` since they have not been included in a block yet. 
-- `DeliverTx`: When a [valid block](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation) is received by the Tendermint engine a blockchain node, each transaction in it is passed to the application via `DeliverTx` to be processed. 
+- `CheckTx`: When a transaction is received by Tendermint Core, it is passed to the application to check its validity. A special handler called the "Ante Handler" is used to execute a series of validation steps such as checking for sufficient fees and validating the signatures. If the transaction is valid, the transaction is added to the [mempool](https://tendermint.com/docs/spec/reactors/mempool/functionality.html#mempool-functionality) and relayed to peer nodes. Note that transactions are not processed (i.e. no modification of the state occurs) with `CheckTx` since they have not been included in a block yet. 
+- `DeliverTx`: When a [valid block](https://tendermint.com/docs/spec/blockchain/blockchain.html#validation) is received by Tendermint Core, each transaction in the given block is passed to the application via `DeliverTx` to be processed. It is during this stage where the state transitions occur. The "Ante Handler" executes again along with the actual handlers for each message in the transaction.
  - `BeginBlock`/`EndBlock`: These messages are executed at the beginning and the end of each block, whether the block contains transaction or not. It is useful to trigger automatic execution of logic. Proceed with caution though, as computationally expensive loops could slow down your blockchain, or even freeze it if the loop is infinite. 
 
 For a more detailed view of the ABCI methods and types, click [here](https://tendermint.com/docs/spec/abci/abci.html#overview).
 
-Any application built on Tendermint needs to implement the ABCI in order to communicate with the underlying local Tendermint engine. Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK provides a boilerplate implementation of it in the form of [baseapp](./sdk-design.md#baseapp).
+Any application built on Tendermint needs to implement the ABCI interface in order to communicate with the underlying local Tendermint engine. Fortunately, you do not have to implement the ABCI interface. The Cosmos SDK provides a boilerplate implementation of it in the form of [baseapp](./sdk-design.md#baseapp).
 
 ### Next, let us go into the [high-level design principles of the SDK](./sdk-design.md)

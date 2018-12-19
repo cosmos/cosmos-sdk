@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -135,7 +136,7 @@ func (v *GasSetting) Type() string { return "string" }
 
 // Set parses and sets the value of the --gas flag.
 func (v *GasSetting) Set(s string) (err error) {
-	v.Simulate, v.Gas, err = ReadGasFlag(s)
+	v.Simulate, v.Gas, err = ParseGas(s)
 	return
 }
 
@@ -146,17 +147,17 @@ func (v *GasSetting) String() string {
 	return strconv.FormatUint(v.Gas, 10)
 }
 
-// ParseGasFlag parses the value of the --gas flag.
-func ReadGasFlag(s string) (simulate bool, gas uint64, err error) {
-	switch s {
+// ParseGas parses the value of the gas option.
+func ParseGas(gasStr string) (simulateAndExecute bool, gas uint64, err error) {
+	switch gasStr {
 	case "":
 		gas = DefaultGasLimit
 	case GasFlagSimulate:
-		simulate = true
+		simulateAndExecute = true
 	default:
-		gas, err = strconv.ParseUint(s, 10, 64)
+		gas, err = strconv.ParseUint(gasStr, 10, 64)
 		if err != nil {
-			err = fmt.Errorf("gas must be either integer or %q", GasFlagSimulate)
+			err = errors.New("gas must be a positive integer")
 			return
 		}
 	}

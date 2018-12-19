@@ -36,7 +36,7 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return err
 	}
 
-	if txBldr.GetSimulateGas() || cliCtx.Simulate {
+	if txBldr.GetSimulateAndExecute() || cliCtx.Simulate {
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return err
@@ -232,7 +232,7 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 }
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
-	if txBldr.GetSimulateGas() {
+	if txBldr.GetSimulateAndExecute() {
 		var name string
 		name, err = cliCtx.GetFromName()
 		if err != nil {

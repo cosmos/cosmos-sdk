@@ -14,29 +14,29 @@ import (
 
 // TxBuilder implements a transaction context created in SDK modules.
 type TxBuilder struct {
-	txEncoder     sdk.TxEncoder
-	accountNumber uint64
-	sequence      uint64
-	gas           uint64
-	gasAdjustment float64
-	simulateGas   bool
-	chainID       string
-	memo          string
-	fees          sdk.Coins
+	txEncoder          sdk.TxEncoder
+	accountNumber      uint64
+	sequence           uint64
+	gas                uint64
+	gasAdjustment      float64
+	simulateAndExecute bool
+	chainID            string
+	memo               string
+	fees               sdk.Coins
 }
 
 // NewTxBuilder returns a new initialized TxBuilder
-func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64, simulate bool, chainID, memo string, fees sdk.Coins) TxBuilder {
+func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64, simulateAndExecute bool, chainID, memo string, fees sdk.Coins) TxBuilder {
 	return TxBuilder{
-		txEncoder:     txEncoder,
-		accountNumber: accNumber,
-		sequence:      seq,
-		gas:           gas,
-		gasAdjustment: gasAdj,
-		simulateGas:   simulate,
-		chainID:       chainID,
-		memo:          memo,
-		fees:          fees,
+		txEncoder:          txEncoder,
+		accountNumber:      accNumber,
+		sequence:           seq,
+		gas:                gas,
+		gasAdjustment:      gasAdj,
+		simulateAndExecute: simulateAndExecute,
+		chainID:            chainID,
+		memo:               memo,
+		fees:               fees,
 	}
 }
 
@@ -44,13 +44,13 @@ func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj fl
 // the command line using Viper.
 func NewTxBuilderFromCLI() TxBuilder {
 	txbldr := TxBuilder{
-		accountNumber: uint64(viper.GetInt64(client.FlagAccountNumber)),
-		sequence:      uint64(viper.GetInt64(client.FlagSequence)),
-		gas:           client.GasFlagVar.Gas,
-		gasAdjustment: viper.GetFloat64(client.FlagGasAdjustment),
-		simulateGas:   client.GasFlagVar.Simulate,
-		chainID:       viper.GetString(client.FlagChainID),
-		memo:          viper.GetString(client.FlagMemo),
+		accountNumber:      uint64(viper.GetInt64(client.FlagAccountNumber)),
+		sequence:           uint64(viper.GetInt64(client.FlagSequence)),
+		gas:                client.GasFlagVar.Gas,
+		gasAdjustment:      viper.GetFloat64(client.FlagGasAdjustment),
+		simulateAndExecute: client.GasFlagVar.Simulate,
+		chainID:            viper.GetString(client.FlagChainID),
+		memo:               viper.GetString(client.FlagMemo),
 	}
 	return txbldr.WithFees(viper.GetString(client.FlagFees))
 }
@@ -70,8 +70,9 @@ func (bldr TxBuilder) GetGas() uint64 { return bldr.gas }
 // GetGasAdjustment returns the gas adjustment
 func (bldr TxBuilder) GetGasAdjustment() float64 { return bldr.gasAdjustment }
 
-// GetSimulateGas returns the TxBuilder's simulate gas option
-func (bldr TxBuilder) GetSimulateGas() bool { return bldr.simulateGas }
+// GetSimulateAndExecute returns the option to simulate and then execute the transaction
+// using the gas from the simulation results
+func (bldr TxBuilder) GetSimulateAndExecute() bool { return bldr.simulateAndExecute }
 
 // GetChainID returns the chain id
 func (bldr TxBuilder) GetChainID() string { return bldr.chainID }
@@ -100,7 +101,7 @@ func (bldr TxBuilder) WithGas(gas uint64) TxBuilder {
 	return bldr
 }
 
-// WithFee returns a copy of the context with an updated fee.
+// WithFees returns a copy of the context with an updated fee.
 func (bldr TxBuilder) WithFees(fees string) TxBuilder {
 	parsedFees, err := sdk.ParseCoins(fees)
 	if err != nil {
@@ -193,7 +194,8 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 		PubKey: info.GetPubKey(),
 	}}
 
-	return bldr.txEncoder(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	txEncoder := bldr.GetTxEncoder()
+	return txEncoder(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If append

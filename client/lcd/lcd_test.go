@@ -186,16 +186,16 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, int64(1), coins2[0].Amount.Int64())
 
 	// test failure with too little gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 100, 0, false, false, fees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "100", 0, false, false, fees)
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 	require.Nil(t, err)
 
 	// test failure with negative adjustment
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 10000, -0.1, true, false, fees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "10000", -0.1, true, false, fees)
 	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, 10000, 1.0, true, false, fees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var responseBody struct {
 		GasEstimate int64 `json:"gas_estimate"`
@@ -205,7 +205,8 @@ func TestCoinSend(t *testing.T) {
 	acc = getAccount(t, port, addr)
 	require.Equal(t, expectedBalance.Amount, acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom))
 
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, uint64(responseBody.GasEstimate), 1.0, false, false, fees)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr,
+		fmt.Sprintf("%d", responseBody.GasEstimate), 1.0, false, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
@@ -227,7 +228,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	acc := getAccount(t, port, addr)
 
 	// generate TX
-	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, 200000, 1, false, true, fees)
+	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, "200000", 1, false, true, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var msg auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))

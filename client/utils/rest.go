@@ -108,7 +108,7 @@ type BaseReq struct {
 	AccountNumber uint64    `json:"account_number"`
 	Sequence      uint64    `json:"sequence"`
 	Fees          sdk.Coins `json:"fees"`
-	Gas           uint64    `json:"gas"`
+	Gas           string    `json:"gas"`
 	GasAdjustment string    `json:"gas_adjustment"`
 	GenerateOnly  bool      `json:"generate_only"`
 	Simulate      bool      `json:"simulate"`
@@ -116,12 +116,8 @@ type BaseReq struct {
 
 // NewBaseReq creates a new basic request instance and sanitizes its values
 func NewBaseReq(
-	name, password, memo, chainID string, gas uint64, gasAdjustment string,
+	name, password, memo, chainID string, gas, gasAdjustment string,
 	accNumber, seq uint64, fees sdk.Coins, genOnly, simulate bool) BaseReq {
-
-	if gas == 0 {
-		gas = client.DefaultGasLimit
-	}
 
 	return BaseReq{
 		Name:          strings.TrimSpace(name),
@@ -129,8 +125,8 @@ func NewBaseReq(
 		Memo:          strings.TrimSpace(memo),
 		ChainID:       strings.TrimSpace(chainID),
 		Fees:          fees,
-		Gas:           gas,
-		GasAdjustment: gasAdjustment,
+		Gas:           strings.TrimSpace(gas),
+		GasAdjustment: strings.TrimSpace(gasAdjustment),
 		AccountNumber: accNumber,
 		Sequence:      seq,
 		GenerateOnly:  genOnly,
@@ -214,22 +210,32 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		return
 	}
 
+	simulateAndExecute, gas, err := client.ParseGas(baseReq.Gas)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	txBldr := authtxb.NewTxBuilder(GetTxEncoder(cdc), baseReq.AccountNumber,
-		baseReq.Sequence, baseReq.Gas, gasAdjustment, baseReq.Simulate,
+		baseReq.Sequence, gas, gasAdjustment, baseReq.Simulate,
 		baseReq.ChainID, baseReq.Memo, baseReq.Fees)
 
-	if baseReq.Simulate {
+	if baseReq.Simulate || simulateAndExecute {
 		if gasAdjustment < 0 {
 			WriteErrorResponse(w, http.StatusBadRequest, "gas adjustment must be a positive float")
 			return
 		}
-		newBldr, err := EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
+
+		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		WriteSimulationResponse(w, newBldr.GetGas())
-		return
+
+		if baseReq.Simulate {
+			WriteSimulationResponse(w, txBldr.GetGas())
+			return
+		}
 	}
 
 	if baseReq.GenerateOnly {

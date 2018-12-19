@@ -2,11 +2,11 @@
 
 The governance module emits the following events/tags:
 
-## BeginBlocker
+## EndBlocker
 
-| Key             | Value                                              |
-|-----------------|----------------------------------------------------|
-| proposal-result | proposal-passed|proposal-rejected|proposal-dropped |
+| Key             | Value                                                |
+|-----------------|------------------------------------------------------|
+| proposal-result | proposal-passed\|proposal-rejected\|proposal-dropped |
 
 ## Handlers
 

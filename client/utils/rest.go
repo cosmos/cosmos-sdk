@@ -116,8 +116,8 @@ type BaseReq struct {
 
 // NewBaseReq creates a new basic request instance and sanitizes its values
 func NewBaseReq(
-	name, password, memo, chainID string, gas uint64, gasAdjustment string, accNumber, seq uint64,
-	fees sdk.Coins, genOnly, simulate bool) BaseReq {
+	name, password, memo, chainID string, gas uint64, gasAdjustment string,
+	accNumber, seq uint64, fees sdk.Coins, genOnly, simulate bool) BaseReq {
 
 	if gas == 0 {
 		gas = client.DefaultGasLimit
@@ -160,7 +160,7 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 			WriteErrorResponse(w, http.StatusUnauthorized, "chain-id required but not specified")
 			return false
 		case !br.Fees.IsValid():
-			WriteErrorResponse(w, http.StatusPaymentRequired, "invalid or insuficient fees")
+			WriteErrorResponse(w, http.StatusPaymentRequired, "invalid or insufficient fees")
 			return false
 		}
 	}
@@ -214,7 +214,9 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 		return
 	}
 
-	txBldr := authtxb.NewTxBuilder(GetTxEncoder(cdc), baseReq.AccountNumber, baseReq.Sequence, baseReq.Gas, gasAdjustment, baseReq.Simulate, baseReq.ChainID, baseReq.Memo, baseReq.Fees)
+	txBldr := authtxb.NewTxBuilder(GetTxEncoder(cdc), baseReq.AccountNumber,
+		baseReq.Sequence, baseReq.Gas, gasAdjustment, baseReq.Simulate,
+		baseReq.ChainID, baseReq.Memo, baseReq.Fees)
 
 	if baseReq.Simulate {
 		if gasAdjustment < 0 {
@@ -226,7 +228,7 @@ func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx c
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		WriteSimulationResponse(w, newBldr.Gas)
+		WriteSimulationResponse(w, newBldr.GetGas())
 		return
 	}
 

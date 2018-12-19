@@ -26,7 +26,6 @@ const (
 	RestVoter          = "voter"
 	RestProposalStatus = "status"
 	RestNumLimit       = "limit"
-	storeName          = "gov"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application

@@ -77,18 +77,18 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	var app = &GaiaApp{
 		BaseApp:          bApp,
 		cdc:              cdc,
-		keyMain:          sdk.NewKVStoreKey("main"),
-		keyAccount:       sdk.NewKVStoreKey("acc"),
-		keyStake:         sdk.NewKVStoreKey("stake"),
-		tkeyStake:        sdk.NewTransientStoreKey("transient_stake"),
-		keyMint:          sdk.NewKVStoreKey("mint"),
-		keyDistr:         sdk.NewKVStoreKey("distr"),
-		tkeyDistr:        sdk.NewTransientStoreKey("transient_distr"),
-		keySlashing:      sdk.NewKVStoreKey("slashing"),
-		keyGov:           sdk.NewKVStoreKey("gov"),
-		keyFeeCollection: sdk.NewKVStoreKey("fee"),
-		keyParams:        sdk.NewKVStoreKey("params"),
-		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
+		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
+		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
+		keyStake:         sdk.NewKVStoreKey(stake.StoreKey),
+		tkeyStake:        sdk.NewTransientStoreKey(stake.TStoreKey),
+		keyMint:          sdk.NewKVStoreKey(mint.StoreKey),
+		keyDistr:         sdk.NewKVStoreKey(distr.StoreKey),
+		tkeyDistr:        sdk.NewTransientStoreKey(distr.TStoreKey),
+		keySlashing:      sdk.NewKVStoreKey(slashing.StoreKey),
+		keyGov:           sdk.NewKVStoreKey(gov.StoreKey),
+		keyFeeCollection: sdk.NewKVStoreKey(auth.FeeStoreKey),
+		keyParams:        sdk.NewKVStoreKey(params.StoreKey),
+		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
 	// define the accountKeeper
@@ -147,16 +147,16 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
-		AddRoute("distr", distr.NewHandler(app.distrKeeper)).
-		AddRoute("slashing", slashing.NewHandler(app.slashingKeeper)).
-		AddRoute("gov", gov.NewHandler(app.govKeeper))
+		AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
+		AddRoute(stake.RouterKey, stake.NewHandler(app.stakeKeeper)).
+		AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
+		AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
+		AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
 
 	app.QueryRouter().
-		AddRoute("gov", gov.NewQuerier(app.govKeeper)).
-		AddRoute(slashing.QuerierRoute, slashing.NewQuerier(app.slashingKeeper, app.cdc)).
-		AddRoute("stake", stake.NewQuerier(app.stakeKeeper, app.cdc))
+		AddRoute(gov.QuerierRoute, gov.NewQuerier(app.govKeeper)).
+    AddRoute(slashing.QuerierRoute, slashing.NewQuerier(app.slashingKeeper, app.cdc)).
+		AddRoute(stake.QuerierRoute, stake.NewQuerier(app.stakeKeeper, app.cdc))
 
 	// initialize BaseApp
 	app.MountStores(app.keyMain, app.keyAccount, app.keyStake, app.keyMint, app.keyDistr,

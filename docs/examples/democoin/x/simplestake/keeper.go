@@ -6,9 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
-
-const stakingToken = "stake"
 
 const moduleName = "simplestake"
 
@@ -62,7 +61,7 @@ func (k Keeper) deleteBondInfo(ctx sdk.Context, addr sdk.AccAddress) {
 
 // register a bond with the keeper
 func (k Keeper) Bond(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
-	if stake.Denom != stakingToken {
+	if stake.Denom != stakeTypes.DefaultBondDenom {
 		return 0, ErrIncorrectStakingToken(k.codespace)
 	}
 
@@ -93,7 +92,7 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, int
 	}
 	k.deleteBondInfo(ctx, addr)
 
-	returnedBond := sdk.NewInt64Coin(stakingToken, bi.Power)
+	returnedBond := sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, bi.Power)
 
 	_, _, err := k.ck.AddCoins(ctx, addr, []sdk.Coin{returnedBond})
 	if err != nil {
@@ -106,7 +105,7 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, int
 // FOR TESTING PURPOSES -------------------------------------------------
 
 func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
-	if stake.Denom != stakingToken {
+	if stake.Denom != stakeTypes.DefaultBondDenom {
 		return 0, ErrIncorrectStakingToken(k.codespace)
 	}
 

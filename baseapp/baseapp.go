@@ -33,6 +33,9 @@ const (
 	runTxModeSimulate runTxMode = iota
 	// Deliver a transaction
 	runTxModeDeliver runTxMode = iota
+
+	// MainStoreKey is the string representation of the main store
+	MainStoreKey = "main"
 )
 
 // BaseApp reflects the ABCI application implementation.

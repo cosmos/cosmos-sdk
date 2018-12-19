@@ -22,10 +22,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
+	at "github.com/cosmos/cosmos-sdk/x/auth"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	dist "github.com/cosmos/cosmos-sdk/x/distribution"
+	gv "github.com/cosmos/cosmos-sdk/x/gov"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
+	st "github.com/cosmos/cosmos-sdk/x/stake"
 	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -36,14 +41,6 @@ import (
 	stakeClient "github.com/cosmos/cosmos-sdk/x/stake/client"
 
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
-)
-
-const (
-	storeAcc      = "acc"
-	storeGov      = "gov"
-	storeSlashing = "slashing"
-	storeStake    = "stake"
-	storeDist     = "distr"
 )
 
 func main() {
@@ -67,10 +64,10 @@ func main() {
 	// Module clients hold cli commnads (tx,query) and lcd routes
 	// TODO: Make the lcd command take a list of ModuleClient
 	mc := []sdk.ModuleClients{
-		govClient.NewModuleClient(storeGov, cdc),
-		distClient.NewModuleClient(storeDist, cdc),
-		stakeClient.NewModuleClient(storeStake, cdc),
-		slashingClient.NewModuleClient(storeSlashing, cdc),
+		govClient.NewModuleClient(gv.StoreKey, cdc),
+		distClient.NewModuleClient(dist.StoreKey, cdc),
+		stakeClient.NewModuleClient(st.StoreKey, cdc),
+		slashingClient.NewModuleClient(sl.StoreKey, cdc),
 	}
 
 	rootCmd := &cobra.Command{
@@ -119,7 +116,7 @@ func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 		tx.SearchTxCmd(cdc),
 		tx.QueryTxCmd(cdc),
 		client.LineBreak,
-		authcmd.GetAccountCmd(storeAcc, cdc),
+		authcmd.GetAccountCmd(at.StoreKey, cdc),
 	)
 
 	for _, m := range mc {
@@ -158,7 +155,7 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, at.StoreKey)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	stake.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)

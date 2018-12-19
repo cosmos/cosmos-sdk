@@ -12,6 +12,12 @@ var (
 	AddressStoreKeyPrefix = []byte{0x01}
 
 	globalAccountNumberKey = []byte("globalAccountNumber")
+
+	// StoreKey is string representation of the store key for auth
+	StoreKey = "acc"
+
+	// FeeStoreKey is a string representation of the store key for fees
+	FeeStoreKey = "fee"
 )
 
 // This AccountKeeper encodes/decodes accounts using the

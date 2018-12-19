@@ -11,6 +11,7 @@ BREAKING CHANGES
   * [\#3156](https://github.com/cosmos/cosmos-sdk/pull/3156) Remove unimplemented `gaiacli init` command
 
 * Gaia
+  * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
 
 * SDK
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.

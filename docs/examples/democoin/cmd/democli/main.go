@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	at "github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
@@ -31,7 +32,6 @@ var (
 		Use:   "democli",
 		Short: "Democoin light-client",
 	}
-	storeAcc = "acc"
 )
 
 func main() {
@@ -65,7 +65,7 @@ func main() {
 	// add query/post commands (custom to binary)
 	// start with commands common to basecoin
 	rootCmd.AddCommand(
-		authcmd.GetAccountCmd(storeAcc, cdc),
+		authcmd.GetAccountCmd(at.StoreKey, cdc),
 	)
 	rootCmd.AddCommand(
 		bankcmd.SendTxCmd(cdc),
@@ -108,6 +108,6 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, at.StoreKey)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 }

@@ -16,8 +16,6 @@ One of the "design desires" of `slashing` module is that if multiple infractions
    
 Only Infraction 2 should have it's slash take effect, as it is the highest.  This is done, so that in the case of the compromise of a validator's consensus key, they will only be punished once, even if the hacker double-signs many blocks.  Because, the unjailing has to be done with the validator's operator key, they have a chance to re-secure their consensus key, and then signal that they are ready using their operator key.  We call this period during which we track only the max infraction, the "slashing period".
 
-> Note:  Currently, from what I can tell in the code, while the stake actively delegated to a validator follows the Max slash rule, but stake that is unbonding or redelegating away from a validator gets slashed cumulatively for consecutive faults.  I think this may be a bug that needs to be fixed independently of whether the tombstone is accepted or not.
-
 Once, a validator rejoins by unjailing themselves, we begin a new slashing period; if they commit a new infraction after unjailing, it gets slashed cumulatively on top of the worst infraction from the previous slashing period.
 
 However, while infractions are grouped based off of the slashing periods, because evidence can be submitted up to an `unbondingPeriod` after the infraction, we still have to allow for evidence to be submitted for previous slashing periods.  For example, if the sequence of events is:

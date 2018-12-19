@@ -84,12 +84,5 @@ SDK modules are defined in the `.x/` folder of the SDK. Some core modules includ
 
 In addition to the already existing modules in `x/`, that anyone can use in their app, the SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://cosmos.network/docs/tutorial/keeper.html). 
 
-## Basecoin
-
-Basecoin is the first complete application in the stack. Complete applications require extensions to the core modules of the SDK to actually implement handler functionality.
-
-Basecoin implements a `BaseApp` state machine using the `x/auth` and `x/bank` modules, which define how transaction signers are authenticated and how coins are transferred. It should also use `x/ibc` and probably a simple staking extension.
-
-Basecoin and the native `x/` extensions use go-amino for all serialization needs, including for transactions and accounts.
 
 ### Next, learn more about the security model of the Cosmos SDK, [ocap](./ocap.md)

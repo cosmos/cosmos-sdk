@@ -29,7 +29,6 @@ To start your own `gaia` testnet, **click [here](./gaia/deploy-testnet.md)**
 To create a new project, you can either:
 
 - Fork [this repo](https://github.com/cosmos/sdk-application-tutorial/). Do not forget to remove the `nameservice` module from the various files if you don't need it. 
-- Copy the `docs/examples/basecoin` directory. 
 - Use community tools like [chainkit](https://github.com/blocklayerhq/chainkit).
 
 ## Languages
@@ -42,7 +41,3 @@ Contact us for information about funding an implementation in another language.
 
 See [this file](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
 considerations when making changes.
-
-## Version
-
-This documentation is built from the following commit:

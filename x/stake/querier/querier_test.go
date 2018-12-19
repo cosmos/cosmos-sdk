@@ -69,9 +69,6 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"validatorUnbondingDelegations"}, query)
 	require.Nil(t, err)
 
-	_, err = querier(ctx, []string{"validatorRedelegations"}, query)
-	require.Nil(t, err)
-
 	queryDelParams := NewQueryDelegatorParams(addrAcc2)
 	bz, errRes = cdc.MarshalJSON(queryDelParams)
 	require.Nil(t, errRes)
@@ -85,10 +82,14 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"delegatorUnbondingDelegations"}, query)
 	require.Nil(t, err)
 
-	_, err = querier(ctx, []string{"delegatorRedelegations"}, query)
+	_, err = querier(ctx, []string{"delegatorValidators"}, query)
 	require.Nil(t, err)
 
-	_, err = querier(ctx, []string{"delegatorValidators"}, query)
+	bz, errRes = cdc.MarshalJSON(NewQueryRedelegationParams(nil, nil, nil))
+	require.Nil(t, errRes)
+	query.Data = bz
+
+	_, err = querier(ctx, []string{"redelegations"}, query)
 	require.Nil(t, err)
 }
 
@@ -344,6 +345,27 @@ func TestQueryDelegation(t *testing.T) {
 
 	_, err = queryDelegatorUnbondingDelegations(ctx, cdc, query, keeper)
 	require.NotNil(t, err)
+
+	// Query redelegation
+	redel, err := keeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr, sdk.NewDec(10))
+	require.Nil(t, err)
+
+	bz, errRes = cdc.MarshalJSON(NewQueryRedelegationParams(addrAcc2, val1.OperatorAddr, val2.OperatorAddr))
+	require.Nil(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "/custom/stake/redelegations",
+		Data: bz,
+	}
+
+	res, err = queryRedelegations(ctx, cdc, query, keeper)
+	require.Nil(t, err)
+
+	var redelRes []types.Redelegation
+	errRes = cdc.UnmarshalJSON(res, &redelRes)
+	require.Nil(t, errRes)
+
+	require.Equal(t, redel, redelRes[0])
 }
 
 func TestQueryRedelegations(t *testing.T) {
@@ -371,11 +393,11 @@ func TestQueryRedelegations(t *testing.T) {
 	require.Nil(t, errRes)
 
 	query := abci.RequestQuery{
-		Path: "/custom/stake/delegatorRedelegations",
+		Path: "/custom/stake/redelegations",
 		Data: bz,
 	}
 
-	res, err := queryDelegatorRedelegations(ctx, cdc, query, keeper)
+	res, err := queryRedelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	var redsRes []types.Redelegation
@@ -390,11 +412,11 @@ func TestQueryRedelegations(t *testing.T) {
 	require.Nil(t, errRes)
 
 	query = abci.RequestQuery{
-		Path: "/custom/stake/validatorRedelegations",
+		Path: "/custom/stake/redelegations",
 		Data: bz,
 	}
 
-	res, err = queryValidatorRedelegations(ctx, cdc, query, keeper)
+	res, err = queryRedelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	errRes = cdc.UnmarshalJSON(res, &redsRes)

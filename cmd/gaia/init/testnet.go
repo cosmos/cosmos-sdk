@@ -82,7 +82,7 @@ Example:
 		client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created",
 	)
 	cmd.Flags().String(
-		flagMinimumFees, fmt.Sprintf("1%s", staketypes.DefaultBondDenom), "Validator mimimum fees",
+		flagMinimumFees, fmt.Sprintf("1%s", staketypes.DefaultBondDenom), "Validator minimum fees",
 	)
 
 	return cmd

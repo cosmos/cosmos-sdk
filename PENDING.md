@@ -44,6 +44,8 @@ IMPROVEMENTS
 
 * Gaia
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
+  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees
+  in a local testnet.
 
 * SDK
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
@@ -62,8 +64,9 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
-
   * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version
+  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Fix parsing `gaiad.toml`
+  when it already exists.
 
 * SDK
 

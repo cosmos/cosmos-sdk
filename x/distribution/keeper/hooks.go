@@ -87,6 +87,10 @@ func (k Keeper) onDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddre
 // Withdrawal all validator distribution rewards and cleanup the distribution record
 func (k Keeper) onDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
+	if valAddr.Equals(sdk.ValAddress(delAddr)) {
+		feePool, commission := k.withdrawValidatorCommission(ctx, valAddr)
+		k.WithdrawToDelegator(ctx, feePool, delAddr, commission)
+	}
 
 	k.RemoveDelegationDistInfo(ctx, delAddr, valAddr)
 }

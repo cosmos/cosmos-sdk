@@ -4,8 +4,12 @@
 
 BREAKING CHANGES
 
+* Gaia
+  * [\#3148](https://github.com/cosmos/cosmos-sdk/issues/3148) Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version
+
 * SDK
   * [\#3163](https://github.com/cosmos/cosmos-sdk/issues/3163) Withdraw commission on self bond removal
+
 
 ## 0.28.1
 

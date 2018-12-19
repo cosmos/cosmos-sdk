@@ -50,6 +50,9 @@ IMPROVEMENTS
 
 * Tendermint
 
+* CI
+    * \#2498 Added macos CI job to CircleCI
+
 
 BUG FIXES
 

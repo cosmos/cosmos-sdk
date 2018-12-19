@@ -97,7 +97,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	stakeGenesis := stake.GenesisState{
 		Pool: stake.InitialPool(),
 		Params: stake.Params{
-			UnbondingTime: time.Duration(r.Intn(60*60*24*3*2)) * time.Second,
+			UnbondingTime: time.Duration(randIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
 			MaxValidators: uint16(r.Intn(250)),
 			BondDenom:     stakeTypes.DefaultBondDenom,
 		},
@@ -107,9 +107,9 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	slashingGenesis := slashing.GenesisState{
 		Params: slashing.Params{
 			MaxEvidenceAge:           stakeGenesis.Params.UnbondingTime,
-			DoubleSignUnbondDuration: time.Duration(r.Intn(60*60*24)) * time.Second,
-			SignedBlocksWindow:       int64(r.Intn(1000)),
-			DowntimeUnbondDuration:   time.Duration(r.Intn(86400)) * time.Second,
+			DoubleSignUnbondDuration: time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
+			SignedBlocksWindow:       int64(randIntBetween(r, 10, 1000)),
+			DowntimeUnbondDuration:   time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
 			MinSignedPerWindow:       sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
 			SlashFractionDoubleSign:  sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
 			SlashFractionDowntime:    sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
@@ -167,6 +167,10 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	return appState
 }
 
+func randIntBetween(r *rand.Rand, min, max int) int {
+	return r.Intn(max-min) + min
+}
+
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
@@ -215,7 +219,7 @@ func BenchmarkFullGaiaSimulation(b *testing.B) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil)
+	app := NewGaiaApp(logger, db, nil, true)
 
 	// Run randomized simulation
 	// TODO parameterize numbers, save for a later PR
@@ -257,7 +261,7 @@ func TestFullGaiaSimulation(t *testing.T) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, fauxMerkleModeOpt)
+	app := NewGaiaApp(logger, db, nil, true, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
@@ -298,7 +302,7 @@ func TestGaiaImportExport(t *testing.T) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, fauxMerkleModeOpt)
+	app := NewGaiaApp(logger, db, nil, true, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
@@ -334,7 +338,7 @@ func TestGaiaImportExport(t *testing.T) {
 		newDB.Close()
 		os.RemoveAll(newDir)
 	}()
-	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, fauxMerkleModeOpt)
+	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, true, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", newApp.Name())
 	var genesisState GenesisState
 	err = app.cdc.UnmarshalJSON(appState, &genesisState)
@@ -394,7 +398,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		db.Close()
 		os.RemoveAll(dir)
 	}()
-	app := NewGaiaApp(logger, db, nil, fauxMerkleModeOpt)
+	app := NewGaiaApp(logger, db, nil, true, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", app.Name())
 
 	// Run randomized simulation
@@ -436,7 +440,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 		newDB.Close()
 		os.RemoveAll(newDir)
 	}()
-	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, fauxMerkleModeOpt)
+	newApp := NewGaiaApp(log.NewNopLogger(), newDB, nil, true, fauxMerkleModeOpt)
 	require.Equal(t, "GaiaApp", newApp.Name())
 	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: appState,
@@ -471,7 +475,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			logger := log.NewNopLogger()
 			db := dbm.NewMemDB()
-			app := NewGaiaApp(logger, db, nil)
+			app := NewGaiaApp(logger, db, nil, true)
 
 			// Run randomized simulation
 			simulation.SimulateFromSeed(

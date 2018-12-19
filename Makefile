@@ -207,7 +207,7 @@ test_cover:
 
 test_lint:
 	gometalinter --config=tools/gometalinter.json ./...
-	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --exclude 'cmd/logjack/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)

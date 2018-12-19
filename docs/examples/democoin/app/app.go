@@ -85,9 +85,9 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	// Define the accountKeeper.
 	app.accountKeeper = auth.NewAccountKeeper(
 		cdc,
-		app.capKeyAccountStore, // target store
+		app.capKeyAccountStore,
 		app.paramsKeeper.Subspace(auth.DefaultParamspace),
-		types.ProtoAppAccount, // prototype
+		types.ProtoAppAccount,
 	)
 
 	// Add handlers.

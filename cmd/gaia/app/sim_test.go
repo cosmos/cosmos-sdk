@@ -76,7 +76,6 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		})
 	}
 
-	// Random genesis states
 	authGenesis := auth.GenesisState{
 		Params: auth.Params{
 			MemoCostPerByte:        uint64(r.Intn(10) + 1),

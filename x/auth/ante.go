@@ -325,8 +325,6 @@ func GetSignBytes(chainID string, stdTx StdTx, acc Account, genesis bool) []byte
 	}
 
 	return StdSignBytes(
-		chainID,
-		accNum, acc.GetSequence(),
-		stdTx.Fee, stdTx.Msgs, stdTx.Memo,
+		chainID, accNum, acc.GetSequence(), stdTx.Fee, stdTx.Msgs, stdTx.Memo,
 	)
 }

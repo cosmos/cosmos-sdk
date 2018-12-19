@@ -102,6 +102,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		keeper.DeleteProposal(ctx, proposalID)
 		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
 
+		resTags = resTags.AppendTag(tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID)))
 		resTags = resTags.AppendTag(tags.ProposalResult, tags.ActionProposalDropped)
 
 		logger.Info(
@@ -146,6 +147,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 			),
 		)
 
+		resTags = resTags.AppendTag(tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID)))
 		resTags = resTags.AppendTag(tags.ProposalResult, tagValue)
 	}
 

@@ -834,7 +834,7 @@ paths:
             items:
               $ref: "#/definitions/Redelegation"
         500:
-          description: Internal Server Error  
+          description: Internal Server Error
   /stake/delegators/{delegatorAddr}/redelegations:
     parameters:
     - in: path
@@ -2210,11 +2210,11 @@ definitions:
         type: string
         example: "Cosmos-Hub"
       account_number:
-        type: integer
-        example: 0
+        type: string
+        example: "0"
       sequence:
-        type: integer
-        example: 1
+        type: string
+        example: "1"
       gas:
         type: string
         example: "200000"

@@ -87,6 +87,13 @@ func (k Keeper) onDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddre
 // Withdrawal all validator distribution rewards and cleanup the distribution record
 func (k Keeper) onDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress) {
+	// Withdraw validator commission when validator self-bond is removed.
+	// Because we maintain the invariant that all delegations must be removed
+	// before a validator is deleted, this ensures that commission will be withdrawn
+	// before the validator is deleted (and the corresponding ValidatorDistInfo removed).
+	// If we change other parts of the code such that a self-delegation might remain after
+	// a validator is deleted, this logic will no longer be safe.
+	// TODO: Consider instead implementing this in a "BeforeValidatorRemoved" hook.
 	if valAddr.Equals(sdk.ValAddress(delAddr)) {
 		feePool, commission := k.withdrawValidatorCommission(ctx, valAddr)
 		k.WithdrawToDelegator(ctx, feePool, delAddr, commission)

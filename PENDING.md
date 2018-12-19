@@ -38,6 +38,9 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
+  * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation
+    for each module along with cleaning up a few existing tags in the governance,
+    slashing, and staking modules.
 
 * Tendermint
 

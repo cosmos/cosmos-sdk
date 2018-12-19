@@ -30,5 +30,5 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, sk Keeper) sdk.Ta
 		}
 	}
 
-	return sdk.Tags{}
+	return sdk.EmptyTags()
 }

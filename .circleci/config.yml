@@ -316,7 +316,7 @@ jobs:
           name: Install SDK
           command: |
             source $BASH_ENV
-            make get_tools
+            make tools
             make get_vendor_deps
             make install
       - run:

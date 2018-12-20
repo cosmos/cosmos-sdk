@@ -213,8 +213,7 @@ func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
 	return nil
 }
 
-// SetMinimumFees sets the minimum fees.
-func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
+func (app *BaseApp) setMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {

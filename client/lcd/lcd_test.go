@@ -555,6 +555,7 @@ func TestSubmitProposal(t *testing.T) {
 
 	proposer := getProposer(t, port, proposalID)
 	require.Equal(t, addr.String(), proposer.Proposer)
+	require.Equal(t, proposalID, proposer.ProposalID)
 }
 
 func TestDeposit(t *testing.T) {

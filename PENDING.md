@@ -31,6 +31,8 @@ FEATURES
 
 * Gaia CLI  (`gaiacli`)
   * \#2399 Implement `params` command to query slashing parameters.
+  * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
+  `query gov proposer [proposal-id]` to query for a proposal's proposer.
 
 * Gaia
     * [\#2182] [x/stake] Added querier for querying a single redelegation

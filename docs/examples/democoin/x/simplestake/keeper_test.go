@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	staketypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 type testInput struct {
@@ -87,10 +88,10 @@ func TestBonding(t *testing.T) {
 	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
 	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 
-	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
+	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin(staketypes.DefaultBondDenom, 10))
 	require.Nil(t, err)
 
-	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin("stake", 10))
+	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin(staketypes.DefaultBondDenom, 10))
 	require.Nil(t, err)
 	require.Equal(t, int64(20), power)
 

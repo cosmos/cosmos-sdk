@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -29,7 +30,7 @@ const (
 	FlagAccountNumber      = "account-number"
 	FlagSequence           = "sequence"
 	FlagMemo               = "memo"
-	FlagFee                = "fee"
+	FlagFees               = "fees"
 	FlagAsync              = "async"
 	FlagJson               = "json"
 	FlagPrintResponse      = "print-response"
@@ -78,7 +79,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Uint64(FlagAccountNumber, 0, "AccountNumber number to sign the tx")
 		c.Flags().Uint64(FlagSequence, 0, "Sequence number to sign the tx")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
-		c.Flags().String(FlagFee, "", "Fee to pay along with transaction")
+		c.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 10stake,1atom")
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
@@ -135,7 +136,7 @@ func (v *GasSetting) Type() string { return "string" }
 
 // Set parses and sets the value of the --gas flag.
 func (v *GasSetting) Set(s string) (err error) {
-	v.Simulate, v.Gas, err = ReadGasFlag(s)
+	v.Simulate, v.Gas, err = ParseGas(s)
 	return
 }
 
@@ -146,17 +147,17 @@ func (v *GasSetting) String() string {
 	return strconv.FormatUint(v.Gas, 10)
 }
 
-// ParseGasFlag parses the value of the --gas flag.
-func ReadGasFlag(s string) (simulate bool, gas uint64, err error) {
-	switch s {
+// ParseGas parses the value of the gas option.
+func ParseGas(gasStr string) (simulateAndExecute bool, gas uint64, err error) {
+	switch gasStr {
 	case "":
 		gas = DefaultGasLimit
 	case GasFlagSimulate:
-		simulate = true
+		simulateAndExecute = true
 	default:
-		gas, err = strconv.ParseUint(s, 10, 64)
+		gas, err = strconv.ParseUint(gasStr, 10, 64)
 		if err != nil {
-			err = fmt.Errorf("gas must be either integer or %q", GasFlagSimulate)
+			err = errors.New("gas must be a positive integer")
 			return
 		}
 	}

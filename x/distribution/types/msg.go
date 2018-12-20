@@ -5,9 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// name to identify transaction types
-const MsgRoute = "distr"
-
 // Verify interface at compile time
 var _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorRewardsAll{}
 var _, _ sdk.Msg = &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorRewardsAll{}
@@ -27,7 +24,7 @@ func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) MsgSetWithdr
 	}
 }
 
-func (msg MsgSetWithdrawAddress) Route() string { return MsgRoute }
+func (msg MsgSetWithdrawAddress) Route() string { return RouterKey }
 func (msg MsgSetWithdrawAddress) Type() string  { return "set_withdraw_address" }
 
 // Return address that must sign over msg.GetSignBytes()
@@ -68,7 +65,7 @@ func NewMsgWithdrawDelegatorRewardsAll(delAddr sdk.AccAddress) MsgWithdrawDelega
 	}
 }
 
-func (msg MsgWithdrawDelegatorRewardsAll) Route() string { return MsgRoute }
+func (msg MsgWithdrawDelegatorRewardsAll) Route() string { return RouterKey }
 func (msg MsgWithdrawDelegatorRewardsAll) Type() string  { return "withdraw_delegation_rewards_all" }
 
 // Return address that must sign over msg.GetSignBytes()
@@ -108,7 +105,7 @@ func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddres
 	}
 }
 
-func (msg MsgWithdrawDelegatorReward) Route() string { return MsgRoute }
+func (msg MsgWithdrawDelegatorReward) Route() string { return RouterKey }
 func (msg MsgWithdrawDelegatorReward) Type() string  { return "withdraw_delegation_reward" }
 
 // Return address that must sign over msg.GetSignBytes()
@@ -149,7 +146,7 @@ func NewMsgWithdrawValidatorRewardsAll(valAddr sdk.ValAddress) MsgWithdrawValida
 	}
 }
 
-func (msg MsgWithdrawValidatorRewardsAll) Route() string { return MsgRoute }
+func (msg MsgWithdrawValidatorRewardsAll) Route() string { return RouterKey }
 func (msg MsgWithdrawValidatorRewardsAll) Type() string  { return "withdraw_validator_rewards_all" }
 
 // Return address that must sign over msg.GetSignBytes()

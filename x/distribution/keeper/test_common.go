@@ -83,13 +83,13 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	communityTax sdk.Dec) (
 	sdk.Context, auth.AccountKeeper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
 
-	keyDistr := sdk.NewKVStoreKey("distr")
-	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
-	keyAcc := sdk.NewKVStoreKey("acc")
-	keyFeeCollection := sdk.NewKVStoreKey("fee")
-	keyParams := sdk.NewKVStoreKey("params")
-	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
+	keyStake := sdk.NewKVStoreKey(stake.StoreKey)
+	tkeyStake := sdk.NewTransientStoreKey(stake.TStoreKey)
+	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyFeeCollection := sdk.NewKVStoreKey(auth.FeeStoreKey)
+	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)

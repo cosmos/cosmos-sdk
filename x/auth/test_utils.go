@@ -2,15 +2,16 @@
 package auth
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 type testInput struct {
@@ -54,7 +55,7 @@ func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 
 func newStdFee() StdFee {
 	return NewStdFee(50000,
-		sdk.NewInt64Coin("atom", 150),
+		sdk.Coins{sdk.NewInt64Coin("atom", 150)},
 	)
 }
 

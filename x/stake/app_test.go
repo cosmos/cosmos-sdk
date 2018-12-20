@@ -19,13 +19,13 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 
 	RegisterCodec(mApp.Cdc)
 
-	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
+	keyStake := sdk.NewKVStoreKey(StoreKey)
+	tkeyStake := sdk.NewTransientStoreKey(TStoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper)
 	keeper := NewKeeper(mApp.Cdc, keyStake, tkeyStake, bankKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
-	mApp.Router().AddRoute("stake", NewHandler(keeper))
+	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper))
 

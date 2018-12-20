@@ -48,6 +48,9 @@ func ParamTypeTable() params.TypeTable {
 const (
 	// default paramspace for params keeper
 	DefaultParamspace = "mint"
+
+	// StoreKey is the default store key for mint
+	StoreKey = "mint"
 )
 
 //______________________________________________________________________

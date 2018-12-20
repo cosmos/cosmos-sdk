@@ -106,6 +106,10 @@ const (
 )
 
 const (
+	StoreKey              = types.StoreKey
+	TStoreKey             = types.TStoreKey
+	QuerierRoute            = types.QuerierRoute
+	RouterKey             = types.RouterKey
 	DefaultCodespace      = types.DefaultCodespace
 	CodeInvalidValidator  = types.CodeInvalidValidator
 	CodeInvalidDelegation = types.CodeInvalidDelegation

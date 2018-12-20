@@ -7,6 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	// StoreKey is the string store key for the param store
+	StoreKey = "params"
+
+	// TStoreKey is the string store key for the param transient store
+	TStoreKey = "transient_params"
+)
+
 // Individual parameter store for each keeper
 // Transient store persists for a block, so we use it for
 // recording whether the parameter has been changed or not

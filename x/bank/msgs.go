@@ -7,7 +7,7 @@ import (
 )
 
 // name to identify transaction routes
-const MsgRoute = "bank"
+const RouterKey = "bank"
 
 // MsgSend - high level transaction of the coin module
 type MsgSend struct {
@@ -24,7 +24,7 @@ func NewMsgSend(in []Input, out []Output) MsgSend {
 
 // Implements Msg.
 // nolint
-func (msg MsgSend) Route() string { return MsgRoute }
+func (msg MsgSend) Route() string { return RouterKey }
 func (msg MsgSend) Type() string  { return "send" }
 
 // Implements Msg.

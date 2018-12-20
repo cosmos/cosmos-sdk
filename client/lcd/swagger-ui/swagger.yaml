@@ -834,7 +834,7 @@ paths:
             items:
               $ref: "#/definitions/Redelegation"
         500:
-          description: Internal Server Error  
+          description: Internal Server Error
   /stake/delegators/{delegatorAddr}/redelegations:
     parameters:
     - in: path
@@ -2199,23 +2199,32 @@ definitions:
     properties:
       name:
         type: string
+        example: "my_name"
       password:
         type: string
         example: "12345678"
+      memo:
+        type: string
+        example: "Sent via Cosmos Voyager 🚀"
       chain_id:
         type: string
+        example: "Cosmos-Hub"
       account_number:
         type: string
         example: "0"
       sequence:
         type: string
-        example: "0"
+        example: "1"
       gas:
         type: string
         example: "200000"
       gas_adjustment:
         type: string
         example: "1.2"
+      fees:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
       generate_only:
         type: boolean
         example: false

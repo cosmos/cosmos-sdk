@@ -60,8 +60,8 @@ func NewApp() *App {
 	app := &App{
 		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
 		Cdc:              cdc,
-		KeyMain:          sdk.NewKVStoreKey("main"),
-		KeyAccount:       sdk.NewKVStoreKey("acc"),
+		KeyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
+		KeyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
 		TotalCoinsSupply: sdk.Coins{},
 		KeyFeeCollection: sdk.NewKVStoreKey("fee"),
 		KeyParams:        sdk.NewKVStoreKey("params"),

@@ -23,8 +23,8 @@ const (
 // Returns components for testing
 func DefaultTestComponents(t *testing.T, table TypeTable) (sdk.Context, Subspace, func() sdk.CommitID) {
 	cdc := codec.New()
-	key := sdk.NewKVStoreKey("params")
-	tkey := sdk.NewTransientStoreKey("tparams")
+	key := sdk.NewKVStoreKey(StoreKey)
+	tkey := sdk.NewTransientStoreKey(TStoreKey)
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.WithTracer(os.Stdout)

@@ -114,6 +114,20 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	/* Handle stake state. */
 
+	// iterate through redelegations, reset creation height
+	app.stakeKeeper.IterateRedelegations(ctx, func(_ int64, red stake.Redelegation) (stop bool) {
+		red.CreationHeight = 0
+		app.stakeKeeper.SetRedelegation(ctx, red)
+		return false
+	})
+
+	// iterate through unbonding delegations, reset creation height
+	app.stakeKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) (stop bool) {
+		ubd.CreationHeight = 0
+		app.stakeKeeper.SetUnbondingDelegation(ctx, ubd)
+		return false
+	})
+
 	// iterate through validators by power descending, reset bond height, update bond intra-tx counter
 	store := ctx.KVStore(app.keyStake)
 	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsKey)

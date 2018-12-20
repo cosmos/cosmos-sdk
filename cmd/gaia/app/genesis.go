@@ -143,6 +143,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
+		AuthData:     auth.DefaultGenesisState(),
 		StakeData:    stake.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
@@ -157,37 +158,32 @@ func NewDefaultGenesisState() GenesisState {
 // TODO: Error if there is a duplicate validator (#1708)
 // TODO: Ensure all state machine parameters are in genesis (#1704)
 func GaiaValidateGenesisState(genesisState GenesisState) error {
-	err := validateGenesisStateAccounts(genesisState.Accounts)
-	if err != nil {
+	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
 		return err
 	}
+
 	// skip stakeData validation as genesis is created from txs
 	if len(genesisState.GenTxs) > 0 {
 		return nil
 	}
 
-	err = stake.ValidateGenesis(genesisState.StakeData)
-	if err != nil {
+	if err := auth.ValidateGenesis(genesisState.AuthData); err != nil {
 		return err
 	}
-	err = mint.ValidateGenesis(genesisState.MintData)
-	if err != nil {
+	if err := stake.ValidateGenesis(genesisState.StakeData); err != nil {
 		return err
 	}
-	err = distr.ValidateGenesis(genesisState.DistrData)
-	if err != nil {
+	if err := mint.ValidateGenesis(genesisState.MintData); err != nil {
 		return err
 	}
-	err = gov.ValidateGenesis(genesisState.GovData)
-	if err != nil {
+	if err := distr.ValidateGenesis(genesisState.DistrData); err != nil {
 		return err
 	}
-	err = slashing.ValidateGenesis(genesisState.SlashingData)
-	if err != nil {
+	if err := gov.ValidateGenesis(genesisState.GovData); err != nil {
 		return err
 	}
 
-	return nil
+	return slashing.ValidateGenesis(genesisState.SlashingData)
 }
 
 // Ensures that there are no duplicate accounts in the genesis state,

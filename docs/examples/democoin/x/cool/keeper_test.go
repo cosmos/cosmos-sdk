@@ -13,26 +13,44 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
-	db := dbm.NewMemDB()
-	capKey := sdk.NewKVStoreKey("capkey")
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
-	ms.LoadLatestVersion()
-	return ms, capKey
+type testInput struct {
+	cdc    *codec.Codec
+	ctx    sdk.Context
+	capKey *sdk.KVStoreKey
+	bk     bank.BaseKeeper
 }
 
-func TestCoolKeeper(t *testing.T) {
-	ms, capKey := setupMultiStore()
+func setupTestInput() testInput {
+	db := dbm.NewMemDB()
+
 	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
-	am := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
+	capKey := sdk.NewKVStoreKey("capkey")
+	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
+	ms.LoadLatestVersion()
+
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	ak := auth.NewAccountKeeper(cdc, capKey, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	bk := bank.NewBaseKeeper(ak)
 	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
-	ck := bank.NewBaseKeeper(am)
-	keeper := NewKeeper(capKey, ck, DefaultCodespace)
+
+	return testInput{cdc: cdc, ctx: ctx, capKey: capKey, bk: bk}
+}
+
+func TestCoolKeeper(t *testing.T) {
+	input := setupTestInput()
+	keeper := NewKeeper(input.capKey, input.bk, DefaultCodespace)
+	ctx := input.ctx
 
 	err := InitGenesis(ctx, keeper, Genesis{"icy"})
 	require.Nil(t, err)

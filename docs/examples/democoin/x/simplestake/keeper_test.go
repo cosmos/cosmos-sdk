@@ -10,35 +10,52 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	staketypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey, *sdk.KVStoreKey) {
-	db := dbm.NewMemDB()
-	authKey := sdk.NewKVStoreKey("authkey")
-	capKey := sdk.NewKVStoreKey("capkey")
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(authKey, sdk.StoreTypeIAVL, db)
-	ms.LoadLatestVersion()
-	return ms, authKey, capKey
+type testInput struct {
+	cdc    *codec.Codec
+	ctx    sdk.Context
+	capKey *sdk.KVStoreKey
+	bk     bank.BaseKeeper
 }
 
-func TestKeeperGetSet(t *testing.T) {
-	ms, authKey, capKey := setupMultiStore()
+func setupTestInput() testInput {
+	db := dbm.NewMemDB()
+
 	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
-	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
-	stakeKeeper := NewKeeper(capKey, bank.NewBaseKeeper(accountKeeper), DefaultCodespace)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
+	capKey := sdk.NewKVStoreKey("capkey")
+	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(capKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
+	ms.LoadLatestVersion()
+
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	ak := auth.NewAccountKeeper(cdc, capKey, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
+	bk := bank.NewBaseKeeper(ak)
+	ctx := sdk.NewContext(ms, abci.Header{}, false, nil)
+
+	return testInput{cdc: cdc, ctx: ctx, capKey: capKey, bk: bk}
+}
+
+func TestKeeperGetSet(t *testing.T) {
+	input := setupTestInput()
+	ctx := input.ctx
+
+	stakeKeeper := NewKeeper(input.capKey, input.bk, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
 
 	bi := stakeKeeper.getBondInfo(ctx, addr)
@@ -60,15 +77,10 @@ func TestKeeperGetSet(t *testing.T) {
 }
 
 func TestBonding(t *testing.T) {
-	ms, authKey, capKey := setupMultiStore()
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
+	input := setupTestInput()
+	ctx := input.ctx
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-
-	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := bank.NewBaseKeeper(accountKeeper)
-	stakeKeeper := NewKeeper(capKey, bankKeeper, DefaultCodespace)
+	stakeKeeper := NewKeeper(input.capKey, input.bk, DefaultCodespace)
 	addr := sdk.AccAddress([]byte("some-address"))
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
@@ -76,10 +88,10 @@ func TestBonding(t *testing.T) {
 	_, _, err := stakeKeeper.unbondWithoutCoins(ctx, addr)
 	require.Equal(t, err, ErrInvalidUnbond(DefaultCodespace))
 
-	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
+	_, err = stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin(staketypes.DefaultBondDenom, 10))
 	require.Nil(t, err)
 
-	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
+	power, err := stakeKeeper.bondWithoutCoins(ctx, addr, pubKey, sdk.NewInt64Coin(staketypes.DefaultBondDenom, 10))
 	require.Nil(t, err)
 	require.Equal(t, int64(20), power)
 

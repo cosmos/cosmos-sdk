@@ -35,8 +35,7 @@ var (
 	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
 
-// Type declaration for parameters
-
+// Key declaration for parameters
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable(
 		ParamStoreKeyDepositParams, DepositParams{},

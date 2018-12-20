@@ -10,8 +10,6 @@ func NewHandler(k Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case MsgSend:
 			return handleMsgSend(ctx, k, msg)
-		case MsgIssue:
-			return handleMsgIssue(ctx, k, msg)
 		default:
 			errMsg := "Unrecognized bank Msg type: %s" + msg.Type()
 			return sdk.ErrUnknownRequest(errMsg).Result()
@@ -22,7 +20,6 @@ func NewHandler(k Keeper) sdk.Handler {
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
 	// NOTE: totalIn == totalOut should already have been checked
-
 	tags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
 	if err != nil {
 		return err.Result()
@@ -31,9 +28,4 @@ func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
 	return sdk.Result{
 		Tags: tags,
 	}
-}
-
-// Handle MsgIssue.
-func handleMsgIssue(ctx sdk.Context, k Keeper, msg MsgIssue) sdk.Result {
-	panic("not implemented yet")
 }

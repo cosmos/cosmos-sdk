@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -11,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/cosmos/cosmos-sdk/x/stake/tags"
-	"github.com/gorilla/mux"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
@@ -49,6 +50,50 @@ func queryTxs(node rpcclient.Client, cliCtx context.CLIContext, cdc *codec.Codec
 	return tx.FormatTxResults(cdc, res.Txs)
 }
 
+func queryRedelegations(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		bech32delegator := vars["delegatorAddr"]
+		bech32srcValidator := vars["srcValidatorAddr"]
+		bech32dstValidator := vars["dstValidatorAddr"]
+
+		delegatorAddr, err := sdk.AccAddressFromBech32(bech32delegator)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		srcValidatorAddr, err := sdk.ValAddressFromBech32(bech32srcValidator)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		dstValidatorAddr, err := sdk.ValAddressFromBech32(bech32dstValidator)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		params := stake.QueryRedelegationParams{
+			DelegatorAddr:    delegatorAddr,
+			SrcValidatorAddr: srcValidatorAddr,
+			DstValidatorAddr: dstValidatorAddr,
+		}
+
+		bz, err := cdc.MarshalJSON(params)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		res, err := cliCtx.QueryWithData(endpoint, bz)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+	}
+}
+
 func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -62,10 +107,7 @@ func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) ht
 			return
 		}
 
-		params := stake.QueryBondsParams{
-			DelegatorAddr: delegatorAddr,
-			ValidatorAddr: validatorAddr,
-		}
+		params := stake.NewQueryBondsParams(delegatorAddr, validatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -93,9 +135,7 @@ func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			return
 		}
 
-		params := stake.QueryDelegatorParams{
-			DelegatorAddr: delegatorAddr,
-		}
+		params := stake.NewQueryDelegatorParams(delegatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -123,9 +163,7 @@ func queryValidator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			return
 		}
 
-		params := stake.QueryValidatorParams{
-			ValidatorAddr: validatorAddr,
-		}
+		params := stake.NewQueryValidatorParams(validatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {

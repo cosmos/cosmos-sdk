@@ -3,15 +3,17 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	amino "github.com/tendermint/go-amino"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -21,6 +23,21 @@ var (
 	flagOnlyFromValidator = "only-from-validator"
 	flagIsValidator       = "is-validator"
 )
+
+// GetTxCmd returns the transaction commands for this module
+func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
+	distTxCmd := &cobra.Command{
+		Use:   "dist",
+		Short: "Distribution transactions subcommands",
+	}
+
+	distTxCmd.AddCommand(client.PostCommands(
+		GetCmdWithdrawRewards(cdc),
+		GetCmdSetWithdrawAddr(cdc),
+	)...)
+
+	return distTxCmd
+}
 
 // command to withdraw rewards
 func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
@@ -38,10 +55,10 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 					flagOnlyFromValidator, flagIsValidator)
 			}
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+				WithAccountDecoder(cdc)
 
 			var msg sdk.Msg
 			switch {
@@ -72,6 +89,10 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 				msg = types.NewMsgWithdrawDelegatorRewardsAll(delAddr)
 			}
 
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
+			}
+
 			// build and sign the transaction, then broadcast to Tendermint
 			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
 		},
@@ -89,10 +110,10 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
-				WithAccountDecoder(authcmd.GetAccountDecoder(cdc))
+				WithAccountDecoder(cdc)
 
 			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {

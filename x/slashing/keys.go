@@ -7,6 +7,17 @@ import (
 	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
+const (
+	// StoreKey is the store key string for slashing
+	StoreKey = "slashing"
+
+	// RouterKey is the message route for slashing
+	RouterKey = "slashing"
+
+	// QuerierRoute is the querier route for slashing
+	QuerierRoute = "slashing"
+)
+
 // key prefix bytes
 var (
 	ValidatorSigningInfoKey         = []byte{0x01} // Prefix for signing info
@@ -18,6 +29,15 @@ var (
 // stored by *Tendermint* address (not operator address)
 func GetValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 	return append(ValidatorSigningInfoKey, v.Bytes()...)
+}
+
+// extract the address from a validator signing info key
+func GetValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	return sdk.ConsAddress(addr)
 }
 
 // stored by *Tendermint* address (not operator address)

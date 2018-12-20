@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
@@ -50,12 +51,12 @@ func createTestCodec() *codec.Codec {
 }
 
 func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Subspace, Keeper) {
-	keyAcc := sdk.NewKVStoreKey("acc")
-	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
-	keySlashing := sdk.NewKVStoreKey("slashing")
-	keyParams := sdk.NewKVStoreKey("params")
-	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyStake := sdk.NewKVStoreKey(stake.StoreKey)
+	tkeyStake := sdk.NewTransientStoreKey(stake.TStoreKey)
+	keySlashing := sdk.NewKVStoreKey(StoreKey)
+	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
@@ -87,11 +88,11 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	}
 	require.Nil(t, err)
 	paramstore := paramsKeeper.Subspace(DefaultParamspace)
-	keeper := NewKeeper(cdc, keySlashing, sk, paramstore, DefaultCodespace)
-	sk = sk.WithHooks(keeper.Hooks())
+	keeper := NewKeeper(cdc, keySlashing, &sk, paramstore, DefaultCodespace)
+	sk.SetHooks(keeper.Hooks())
 
 	require.NotPanics(t, func() {
-		InitGenesis(ctx, keeper, GenesisState{defaults}, genesis)
+		InitGenesis(ctx, keeper, GenesisState{defaults, nil, nil, nil}, genesis)
 	})
 
 	return ctx, ck, sk, paramstore, keeper
@@ -120,7 +121,7 @@ func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt
 		DelegatorAddr: sdk.AccAddress(address),
 		ValidatorAddr: address,
 		PubKey:        pubKey,
-		Delegation:    sdk.NewCoin("steak", amt),
+		Delegation:    sdk.NewCoin(stakeTypes.DefaultBondDenom, amt),
 	}
 }
 
@@ -128,6 +129,6 @@ func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmoun
 	return stake.MsgDelegate{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewCoin("steak", delAmount),
+		Delegation:    sdk.NewCoin(stakeTypes.DefaultBondDenom, delAmount),
 	}
 }

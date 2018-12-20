@@ -5,12 +5,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 var (
@@ -25,7 +27,7 @@ func createValidators(t *testing.T, stakeHandler sdk.Handler, ctx sdk.Context, a
 
 	for i := 0; i < len(addrs); i++ {
 		valCreateMsg := stake.NewMsgCreateValidator(
-			addrs[i], pubkeys[i], sdk.NewInt64Coin("steak", coinAmt[i]), testDescription, testCommissionMsg,
+			addrs[i], pubkeys[i], sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, coinAmt[i]), testDescription, testCommissionMsg,
 		)
 
 		res := stakeHandler(ctx, valCreateMsg)
@@ -56,6 +58,32 @@ func TestTallyNoOneVotes(t *testing.T) {
 
 	require.False(t, passes)
 	require.True(t, tallyResults.Equals(EmptyTallyResult()))
+}
+
+func TestTallyNoQuorum(t *testing.T) {
+	mapp, keeper, sk, addrs, _, _ := getMockApp(t, 10)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+	stakeHandler := stake.NewHandler(sk)
+
+	valAddrs := make([]sdk.ValAddress, len(addrs[:2]))
+	for i, addr := range addrs[:2] {
+		valAddrs[i] = sdk.ValAddress(addr)
+	}
+
+	createValidators(t, stakeHandler, ctx, valAddrs, []int64{2, 5})
+	stake.EndBlocker(ctx, sk)
+
+	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	proposalID := proposal.GetProposalID()
+	proposal.SetStatus(StatusVotingPeriod)
+	keeper.SetProposal(ctx, proposal)
+
+	err := keeper.AddVote(ctx, proposalID, addrs[0], OptionYes)
+	require.Nil(t, err)
+
+	passes, _ := tally(ctx, keeper, keeper.GetProposal(ctx, proposalID))
+	require.False(t, passes)
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
@@ -289,7 +317,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{5, 6, 7})
 	stake.EndBlocker(ctx, sk)
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin("steak", 30))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 30))
 	stakeHandler(ctx, delegator1Msg)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -326,7 +354,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{5, 6, 7})
 	stake.EndBlocker(ctx, sk)
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin("steak", 30))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 30))
 	stakeHandler(ctx, delegator1Msg)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -361,9 +389,9 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{5, 6, 7})
 	stake.EndBlocker(ctx, sk)
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin("steak", 10))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
 	stakeHandler(ctx, delegator1Msg)
-	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewInt64Coin("steak", 10))
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
 	stakeHandler(ctx, delegator1Msg2)
 
 	proposal := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
@@ -393,24 +421,24 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	stakeHandler := stake.NewHandler(sk)
 
 	val1CreateMsg := stake.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[0]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 25), testDescription, testCommissionMsg,
+		sdk.ValAddress(addrs[0]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 25), testDescription, testCommissionMsg,
 	)
 	stakeHandler(ctx, val1CreateMsg)
 
 	val2CreateMsg := stake.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 6), testDescription, testCommissionMsg,
+		sdk.ValAddress(addrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 6), testDescription, testCommissionMsg,
 	)
 	stakeHandler(ctx, val2CreateMsg)
 
 	val3CreateMsg := stake.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin("steak", 7), testDescription, testCommissionMsg,
+		sdk.ValAddress(addrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 7), testDescription, testCommissionMsg,
 	)
 	stakeHandler(ctx, val3CreateMsg)
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin("steak", 10))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
 	stakeHandler(ctx, delegator1Msg)
 
-	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewInt64Coin("steak", 10))
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
 	stakeHandler(ctx, delegator1Msg2)
 
 	stake.EndBlocker(ctx, sk)
@@ -447,10 +475,10 @@ func TestTallyJailedValidator(t *testing.T) {
 	createValidators(t, stakeHandler, ctx, valAddrs, []int64{25, 6, 7})
 	stake.EndBlocker(ctx, sk)
 
-	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin("steak", 10))
+	delegator1Msg := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[2]), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
 	stakeHandler(ctx, delegator1Msg)
 
-	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewInt64Coin("steak", 10))
+	delegator1Msg2 := stake.NewMsgDelegate(addrs[3], sdk.ValAddress(addrs[1]), sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10))
 	stakeHandler(ctx, delegator1Msg2)
 
 	val2, found := sk.GetValidator(ctx, sdk.ValAddress(addrs[1]))

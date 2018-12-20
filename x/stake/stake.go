@@ -9,24 +9,25 @@ import (
 )
 
 type (
-	Keeper               = keeper.Keeper
-	Validator            = types.Validator
-	Description          = types.Description
-	Commission           = types.Commission
-	Delegation           = types.Delegation
-	UnbondingDelegation  = types.UnbondingDelegation
-	Redelegation         = types.Redelegation
-	Params               = types.Params
-	Pool                 = types.Pool
-	MsgCreateValidator   = types.MsgCreateValidator
-	MsgEditValidator     = types.MsgEditValidator
-	MsgDelegate          = types.MsgDelegate
-	MsgBeginUnbonding    = types.MsgBeginUnbonding
-	MsgBeginRedelegate   = types.MsgBeginRedelegate
-	GenesisState         = types.GenesisState
-	QueryDelegatorParams = querier.QueryDelegatorParams
-	QueryValidatorParams = querier.QueryValidatorParams
-	QueryBondsParams     = querier.QueryBondsParams
+	Keeper                  = keeper.Keeper
+	Validator               = types.Validator
+	Description             = types.Description
+	Commission              = types.Commission
+	Delegation              = types.Delegation
+	UnbondingDelegation     = types.UnbondingDelegation
+	Redelegation            = types.Redelegation
+	Params                  = types.Params
+	Pool                    = types.Pool
+	MsgCreateValidator      = types.MsgCreateValidator
+	MsgEditValidator        = types.MsgEditValidator
+	MsgDelegate             = types.MsgDelegate
+	MsgBeginUnbonding       = types.MsgBeginUnbonding
+	MsgBeginRedelegate      = types.MsgBeginRedelegate
+	GenesisState            = types.GenesisState
+	QueryDelegatorParams    = querier.QueryDelegatorParams
+	QueryValidatorParams    = querier.QueryValidatorParams
+	QueryBondsParams        = querier.QueryBondsParams
+	QueryRedelegationParams = querier.QueryRedelegationParams
 )
 
 var (
@@ -38,7 +39,6 @@ var (
 	GetDelegationKey             = keeper.GetDelegationKey
 	GetDelegationsKey            = keeper.GetDelegationsKey
 	PoolKey                      = keeper.PoolKey
-	IntraTxCounterKey            = keeper.IntraTxCounterKey
 	LastValidatorPowerKey        = keeper.LastValidatorPowerKey
 	LastTotalPowerKey            = keeper.LastTotalPowerKey
 	ValidatorsKey                = keeper.ValidatorsKey
@@ -57,6 +57,9 @@ var (
 	GetREDsToValDstIndexKey      = keeper.GetREDsToValDstIndexKey
 	GetREDsByDelToValDstIndexKey = keeper.GetREDsByDelToValDstIndexKey
 	TestingUpdateValidator       = keeper.TestingUpdateValidator
+	UnbondingQueueKey            = keeper.UnbondingQueueKey
+	RedelegationQueueKey         = keeper.RedelegationQueueKey
+	ValidatorQueueKey            = keeper.ValidatorQueueKey
 
 	DefaultParamspace = keeper.DefaultParamspace
 	KeyUnbondingTime  = types.KeyUnbondingTime
@@ -81,19 +84,21 @@ var (
 	NewMsgBeginUnbonding            = types.NewMsgBeginUnbonding
 	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
 
-	NewQuerier = querier.NewQuerier
+	NewQuerier              = querier.NewQuerier
+	NewQueryDelegatorParams = querier.NewQueryDelegatorParams
+	NewQueryValidatorParams = querier.NewQueryValidatorParams
+	NewQueryBondsParams     = querier.NewQueryBondsParams
 )
 
 const (
 	QueryValidators                    = querier.QueryValidators
 	QueryValidator                     = querier.QueryValidator
 	QueryValidatorUnbondingDelegations = querier.QueryValidatorUnbondingDelegations
-	QueryValidatorRedelegations        = querier.QueryValidatorRedelegations
 	QueryDelegation                    = querier.QueryDelegation
 	QueryUnbondingDelegation           = querier.QueryUnbondingDelegation
 	QueryDelegatorDelegations          = querier.QueryDelegatorDelegations
 	QueryDelegatorUnbondingDelegations = querier.QueryDelegatorUnbondingDelegations
-	QueryDelegatorRedelegations        = querier.QueryDelegatorRedelegations
+	QueryRedelegations                 = querier.QueryRedelegations
 	QueryDelegatorValidators           = querier.QueryDelegatorValidators
 	QueryDelegatorValidator            = querier.QueryDelegatorValidator
 	QueryPool                          = querier.QueryPool
@@ -101,6 +106,10 @@ const (
 )
 
 const (
+	StoreKey              = types.StoreKey
+	TStoreKey             = types.TStoreKey
+	QuerierRoute            = types.QuerierRoute
+	RouterKey             = types.RouterKey
 	DefaultCodespace      = types.DefaultCodespace
 	CodeInvalidValidator  = types.CodeInvalidValidator
 	CodeInvalidDelegation = types.CodeInvalidDelegation
@@ -112,15 +121,16 @@ const (
 )
 
 var (
-	ErrNilValidatorAddr      = types.ErrNilValidatorAddr
-	ErrNoValidatorFound      = types.ErrNoValidatorFound
-	ErrValidatorOwnerExists  = types.ErrValidatorOwnerExists
-	ErrValidatorPubKeyExists = types.ErrValidatorPubKeyExists
-	ErrValidatorJailed       = types.ErrValidatorJailed
-	ErrBadRemoveValidator    = types.ErrBadRemoveValidator
-	ErrDescriptionLength     = types.ErrDescriptionLength
-	ErrCommissionNegative    = types.ErrCommissionNegative
-	ErrCommissionHuge        = types.ErrCommissionHuge
+	ErrNilValidatorAddr               = types.ErrNilValidatorAddr
+	ErrNoValidatorFound               = types.ErrNoValidatorFound
+	ErrValidatorOwnerExists           = types.ErrValidatorOwnerExists
+	ErrValidatorPubKeyExists          = types.ErrValidatorPubKeyExists
+	ErrValidatorPubKeyTypeUnsupported = types.ErrValidatorPubKeyTypeNotSupported
+	ErrValidatorJailed                = types.ErrValidatorJailed
+	ErrBadRemoveValidator             = types.ErrBadRemoveValidator
+	ErrDescriptionLength              = types.ErrDescriptionLength
+	ErrCommissionNegative             = types.ErrCommissionNegative
+	ErrCommissionHuge                 = types.ErrCommissionHuge
 
 	ErrNilDelegatorAddr          = types.ErrNilDelegatorAddr
 	ErrBadDenom                  = types.ErrBadDenom
@@ -145,12 +155,7 @@ var (
 )
 
 var (
-	ActionCreateValidator      = tags.ActionCreateValidator
-	ActionEditValidator        = tags.ActionEditValidator
-	ActionDelegate             = tags.ActionDelegate
-	ActionBeginUnbonding       = tags.ActionBeginUnbonding
 	ActionCompleteUnbonding    = tags.ActionCompleteUnbonding
-	ActionBeginRedelegation    = tags.ActionBeginRedelegation
 	ActionCompleteRedelegation = tags.ActionCompleteRedelegation
 
 	TagAction       = tags.Action

@@ -2,21 +2,24 @@ package init
 
 import (
 	"bytes"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/tendermint/tendermint/libs/cli"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/mock"
+	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+
 	"github.com/stretchr/testify/require"
 	abciServer "github.com/tendermint/tendermint/abci/server"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server/mock"
 
 	"github.com/spf13/viper"
 )
@@ -28,12 +31,13 @@ func TestInitCmd(t *testing.T) {
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
+
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	appInit := server.AppInit{
-		AppGenState: mock.AppGenState,
-	}
-	cmd := InitCmd(ctx, cdc, appInit)
+	cmd := InitCmd(ctx, cdc)
+
+	viper.Set(flagMoniker, "gaianode-test")
+
 	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
 }
@@ -42,7 +46,6 @@ func setupClientHome(t *testing.T) func() {
 	clientDir, err := ioutil.TempDir("", "mock-sdk-cmd")
 	require.Nil(t, err)
 	viper.Set(flagClientHome, clientDir)
-	viper.Set(flagOverwriteKey, true)
 	return func() {
 		if err := os.RemoveAll(clientDir); err != nil {
 			// TODO: Handle with #870
@@ -54,15 +57,16 @@ func setupClientHome(t *testing.T) func() {
 func TestEmptyState(t *testing.T) {
 	defer server.SetupViper(t)()
 	defer setupClientHome(t)()
+
 	logger := log.NewNopLogger()
 	cfg, err := tcmd.ParseConfig()
 	require.Nil(t, err)
+
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	appInit := server.AppInit{
-		AppGenState: mock.AppGenStateEmpty,
-	}
-	cmd := InitCmd(ctx, cdc, appInit)
+	viper.Set(flagMoniker, "gaianode-test")
+
+	cmd := InitCmd(ctx, cdc)
 	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
 
@@ -70,6 +74,7 @@ func TestEmptyState(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 	cmd = server.ExportCmd(ctx, cdc, nil)
+
 	err = cmd.RunE(nil, nil)
 	require.NoError(t, err)
 
@@ -106,10 +111,7 @@ func TestStartStandAlone(t *testing.T) {
 	require.Nil(t, err)
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	appInit := server.AppInit{
-		AppGenState: mock.AppGenState,
-	}
-	initCmd := InitCmd(ctx, cdc, appInit)
+	initCmd := InitCmd(ctx, cdc)
 	err = initCmd.RunE(nil, nil)
 	require.NoError(t, err)
 

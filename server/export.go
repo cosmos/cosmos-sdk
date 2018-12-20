@@ -7,15 +7,22 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"io/ioutil"
 	"path"
+
+	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+)
+
+const (
+	flagHeight        = "height"
+	flagForZeroHeight = "for-zero-height"
 )
 
 // ExportCmd dumps app state to JSON.
 func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -45,7 +52,9 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 			if err != nil {
 				return err
 			}
-			appState, validators, err := appExporter(ctx.Logger, db, traceWriter)
+			height := viper.GetInt64(flagHeight)
+			forZeroHeight := viper.GetBool(flagForZeroHeight)
+			appState, validators, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight)
 			if err != nil {
 				return errors.Errorf("error exporting state: %v\n", err)
 			}
@@ -67,6 +76,9 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 			return nil
 		},
 	}
+	cmd.Flags().Int64(flagHeight, -1, "Export state from a particular height (-1 means latest height)")
+	cmd.Flags().Bool(flagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
+	return cmd
 }
 
 func isEmptyState(home string) (bool, error) {

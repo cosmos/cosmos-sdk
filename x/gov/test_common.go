@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/stake"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 // initialize the mock application for this module
@@ -26,25 +27,26 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	stake.RegisterCodec(mapp.Cdc)
 	RegisterCodec(mapp.Cdc)
 
-	keyGlobalParams := sdk.NewKVStoreKey("params")
-	tkeyGlobalParams := sdk.NewTransientStoreKey("transient_params")
-	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
-	keyGov := sdk.NewKVStoreKey("gov")
+	keyGlobalParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyGlobalParams := sdk.NewTransientStoreKey(params.TStoreKey)
+	keyStake := sdk.NewKVStoreKey(stake.StoreKey)
+	tkeyStake := sdk.NewTransientStoreKey(stake.TStoreKey)
+	keyGov := sdk.NewKVStoreKey(StoreKey)
 
 	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams, tkeyGlobalParams)
 	ck := bank.NewBaseKeeper(mapp.AccountKeeper)
-	sk := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), mapp.RegisterCodespace(stake.DefaultCodespace))
+	sk := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
 
-	mapp.Router().AddRoute("gov", NewHandler(keeper))
+	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
+	mapp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
 	require.NoError(t, mapp.CompleteSetup(keyStake, tkeyStake, keyGov, keyGlobalParams, tkeyGlobalParams))
 
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin("steak", 42)})
+	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)})
 
 	mock.SetGenesis(mapp, genAccs)
 

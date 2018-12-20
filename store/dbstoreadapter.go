@@ -3,8 +3,9 @@ package store
 import (
 	"io"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Wrapper type for dbm.Db with implementation of KVStore
@@ -39,3 +40,28 @@ func (dsa dbStoreAdapter) Gas(meter GasMeter, config GasConfig) KVStore {
 
 // dbm.DB implements KVStore so we can CacheKVStore it.
 var _ KVStore = dbStoreAdapter{}
+
+//----------------------------------------
+// commitDBStoreWrapper should only be used for simulation/debugging,
+// as it doesn't compute any commit hash, and it cannot load older state.
+
+// Wrapper type for dbm.Db with implementation of KVStore
+type commitDBStoreAdapter struct {
+	dbStoreAdapter
+}
+
+func (cdsa commitDBStoreAdapter) Commit() CommitID {
+	return CommitID{
+		Version: -1,
+		Hash:    []byte("FAKE_HASH"),
+	}
+}
+
+func (cdsa commitDBStoreAdapter) LastCommitID() CommitID {
+	return CommitID{
+		Version: -1,
+		Hash:    []byte("FAKE_HASH"),
+	}
+}
+
+func (cdsa commitDBStoreAdapter) SetPruning(_ PruningStrategy) {}

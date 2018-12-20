@@ -4,9 +4,10 @@ package baseapp
 import (
 	"fmt"
 
+	dbm "github.com/tendermint/tendermint/libs/db"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -101,6 +102,16 @@ func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
 	}
 	app.pubkeyPeerFilter = pf
 }
+
+func (app *BaseApp) SetFauxMerkleMode() {
+	if app.sealed {
+		panic("SetFauxMerkleMode() on sealed BaseApp")
+	}
+	app.fauxMerkleMode = true
+}
+
+//----------------------------------------
+// TODO: move these out of this file?
 
 func (app *BaseApp) Router() Router {
 	if app.sealed {

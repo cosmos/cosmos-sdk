@@ -19,6 +19,9 @@ const (
 	// if this is 1, the validator set at the end of a block will sign the block after the next.
 	// Constant as this should not change without a hard fork.
 	ValidatorUpdateDelay int64 = 1
+
+	// Default bondable coin denomination
+	DefaultBondDenom = "stake"
 )
 
 // nolint - Keys for parameter access
@@ -49,8 +52,8 @@ func (p *Params) ParamSetPairs() params.ParamSetPairs {
 
 // Equal returns a boolean determining if two Param types are identical.
 func (p Params) Equal(p2 Params) bool {
-	bz1 := MsgCdc.MustMarshalBinary(&p)
-	bz2 := MsgCdc.MustMarshalBinary(&p2)
+	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p)
+	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p2)
 	return bytes.Equal(bz1, bz2)
 }
 
@@ -59,7 +62,7 @@ func DefaultParams() Params {
 	return Params{
 		UnbondingTime: defaultUnbondingTime,
 		MaxValidators: 100,
-		BondDenom:     "steak",
+		BondDenom:     DefaultBondDenom,
 	}
 }
 
@@ -69,7 +72,7 @@ func (p Params) HumanReadableString() string {
 
 	resp := "Params \n"
 	resp += fmt.Sprintf("Unbonding Time: %s\n", p.UnbondingTime)
-	resp += fmt.Sprintf("Max Validators: %d: \n", p.MaxValidators)
+	resp += fmt.Sprintf("Max Validators: %d\n", p.MaxValidators)
 	resp += fmt.Sprintf("Bonded Coin Denomination: %s\n", p.BondDenom)
 	return resp
 }
@@ -85,7 +88,7 @@ func MustUnmarshalParams(cdc *codec.Codec, value []byte) Params {
 
 // unmarshal the current staking params value from store key
 func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) {
-	err = cdc.UnmarshalBinary(value, &params)
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &params)
 	if err != nil {
 		return
 	}

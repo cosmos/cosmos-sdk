@@ -18,57 +18,53 @@ func NewHandler(keeper Keeper) sdk.Handler {
 		case MsgVote:
 			return handleMsgVote(ctx, keeper, msg)
 		default:
-			errMsg := "Unrecognized gov msg type"
+			errMsg := fmt.Sprintf("Unrecognized gov msg type: %T", msg)
 			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }
 
 func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitProposal) sdk.Result {
-
 	proposal := keeper.NewTextProposal(ctx, msg.Title, msg.Description, msg.ProposalType)
+	proposalID := proposal.GetProposalID()
+	proposalIDBytes := []byte(fmt.Sprintf("%d", proposalID))
 
-	err, votingStarted := keeper.AddDeposit(ctx, proposal.GetProposalID(), msg.Proposer, msg.InitialDeposit)
+	err, votingStarted := keeper.AddDeposit(ctx, proposalID, msg.Proposer, msg.InitialDeposit)
 	if err != nil {
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(proposal.GetProposalID())
-
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionSubmitProposal,
+		tags.Action, tags.ActionProposalSubmitted,
 		tags.Proposer, []byte(msg.Proposer.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
 
 	if votingStarted {
-		resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
 	}
 
 	return sdk.Result{
-		Data: proposalIDBytes,
+		Data: keeper.cdc.MustMarshalBinaryLengthPrefixed(proposalID),
 		Tags: resTags,
 	}
 }
 
 func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result {
-
-	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositer, msg.Amount)
+	err, votingStarted := keeper.AddDeposit(ctx, msg.ProposalID, msg.Depositor, msg.Amount)
 	if err != nil {
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(msg.ProposalID)
-
-	// TODO: Add tag for if voting period started
+	proposalIDBytes := []byte(fmt.Sprintf("%d", msg.ProposalID))
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionDeposit,
-		tags.Depositer, []byte(msg.Depositer.String()),
+		tags.Action, tags.ActionProposalDeposit,
+		tags.Depositor, []byte(msg.Depositor.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
 
 	if votingStarted {
-		resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.VotingPeriodStart, proposalIDBytes)
 	}
 
 	return sdk.Result{
@@ -77,109 +73,85 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 }
 
 func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
-
 	err := keeper.AddVote(ctx, msg.ProposalID, msg.Voter, msg.Option)
 	if err != nil {
 		return err.Result()
 	}
 
-	proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(msg.ProposalID)
-
-	resTags := sdk.NewTags(
-		tags.Action, tags.ActionVote,
-		tags.Voter, []byte(msg.Voter.String()),
-		tags.ProposalID, proposalIDBytes,
-	)
 	return sdk.Result{
-		Tags: resTags,
+		Tags: sdk.NewTags(
+			tags.Action, tags.ActionProposalVote,
+			tags.Voter, []byte(msg.Voter.String()),
+			tags.ProposalID, []byte(fmt.Sprintf("%d", msg.ProposalID)),
+		),
 	}
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
-
+func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 	logger := ctx.Logger().With("module", "x/gov")
+	resTags := sdk.NewTags()
 
-	resTags = sdk.NewTags()
+	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	for ; inactiveIterator.Valid(); inactiveIterator.Next() {
+		var proposalID uint64
 
-	// Delete proposals that haven't met minDeposit
-	for shouldPopInactiveProposalQueue(ctx, keeper) {
-		inactiveProposal := keeper.InactiveProposalQueuePop(ctx)
-		if inactiveProposal.GetStatus() != StatusDepositPeriod {
-			continue
-		}
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
+		inactiveProposal := keeper.GetProposal(ctx, proposalID)
 
-		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(inactiveProposal.GetProposalID())
-		keeper.DeleteProposal(ctx, inactiveProposal)
-		resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
-		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
+		keeper.DeleteProposal(ctx, proposalID)
+		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
+
+		resTags = resTags.AppendTag(tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID)))
+		resTags = resTags.AppendTag(tags.ProposalResult, tags.ActionProposalDropped)
 
 		logger.Info(
-			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %v steak (had only %v steak); deleted",
+			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
 				inactiveProposal.GetProposalID(),
 				inactiveProposal.GetTitle(),
-				keeper.GetDepositProcedure(ctx).MinDeposit.AmountOf("steak"),
-				inactiveProposal.GetTotalDeposit().AmountOf("steak"),
+				keeper.GetDepositParams(ctx).MinDeposit,
+				inactiveProposal.GetTotalDeposit(),
 			),
 		)
 	}
 
-	// Check if earliest Active Proposal ended voting period yet
-	for shouldPopActiveProposalQueue(ctx, keeper) {
-		activeProposal := keeper.ActiveProposalQueuePop(ctx)
+	inactiveIterator.Close()
 
-		proposalStartTime := activeProposal.GetVotingStartTime()
-		votingPeriod := keeper.GetVotingProcedure(ctx).VotingPeriod
-		if ctx.BlockHeader().Time.Before(proposalStartTime.Add(votingPeriod)) {
-			continue
-		}
+	activeIterator := keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	for ; activeIterator.Valid(); activeIterator.Next() {
+		var proposalID uint64
 
+		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(activeIterator.Value(), &proposalID)
+		activeProposal := keeper.GetProposal(ctx, proposalID)
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
-		proposalIDBytes := keeper.cdc.MustMarshalBinaryBare(activeProposal.GetProposalID())
-		var action []byte
+
+		var tagValue []byte
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusPassed)
-			action = tags.ActionProposalPassed
+			tagValue = tags.ActionProposalPassed
 		} else {
 			keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusRejected)
-			action = tags.ActionProposalRejected
+			tagValue = tags.ActionProposalRejected
 		}
+
 		activeProposal.SetTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
+		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.GetVotingEndTime(), activeProposal.GetProposalID())
 
-		logger.Info(fmt.Sprintf("proposal %d (%s) tallied; passed: %v",
-			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
+		logger.Info(
+			fmt.Sprintf(
+				"proposal %d (%s) tallied; passed: %v",
+				activeProposal.GetProposalID(), activeProposal.GetTitle(), passes,
+			),
+		)
 
-		resTags.AppendTag(tags.Action, action)
-		resTags.AppendTag(tags.ProposalID, proposalIDBytes)
+		resTags = resTags.AppendTag(tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID)))
+		resTags = resTags.AppendTag(tags.ProposalResult, tagValue)
 	}
+
+	activeIterator.Close()
 
 	return resTags
-}
-func shouldPopInactiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	depositProcedure := keeper.GetDepositProcedure(ctx)
-	peekProposal := keeper.InactiveProposalQueuePeek(ctx)
-
-	if peekProposal == nil {
-		return false
-	} else if peekProposal.GetStatus() != StatusDepositPeriod {
-		return true
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetSubmitTime().Add(depositProcedure.MaxDepositPeriod)) {
-		return true
-	}
-	return false
-}
-
-func shouldPopActiveProposalQueue(ctx sdk.Context, keeper Keeper) bool {
-	votingProcedure := keeper.GetVotingProcedure(ctx)
-	peekProposal := keeper.ActiveProposalQueuePeek(ctx)
-
-	if peekProposal == nil {
-		return false
-	} else if !ctx.BlockHeader().Time.Before(peekProposal.GetVotingStartTime().Add(votingProcedure.VotingPeriod)) {
-		return true
-	}
-	return false
 }

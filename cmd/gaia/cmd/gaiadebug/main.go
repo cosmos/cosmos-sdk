@@ -10,15 +10,23 @@ import (
 	"strconv"
 	"strings"
 
-	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func init() {
+
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
+	config.Seal()
+
 	rootCmd.AddCommand(txCmd)
 	rootCmd.AddCommand(pubkeyCmd)
 	rootCmd.AddCommand(addrCmd)
@@ -185,8 +193,9 @@ func runAddrCmd(cmd *cobra.Command, args []string) error {
 	valAddr := sdk.ValAddress(addr)
 
 	fmt.Println("Address:", addr)
-	fmt.Println("Bech32 Acc:", accAddr)
-	fmt.Println("Bech32 Val:", valAddr)
+	fmt.Printf("Address (hex): %X\n", addr)
+	fmt.Printf("Bech32 Acc: %s\n", accAddr)
+	fmt.Printf("Bech32 Val: %s\n", valAddr)
 	return nil
 }
 
@@ -213,7 +222,7 @@ func runTxCmd(cmd *cobra.Command, args []string) error {
 	var tx = auth.StdTx{}
 	cdc := gaia.MakeCodec()
 
-	err = cdc.UnmarshalBinary(txBytes, &tx)
+	err = cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 	if err != nil {
 		return err
 	}

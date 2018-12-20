@@ -73,13 +73,13 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// calculate the new power bytes
 		newPower := validator.BondedTokens().RoundInt64()
-		newPowerBytes := k.cdc.MustMarshalBinary(sdk.NewInt(newPower))
+		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(sdk.NewInt(newPower))
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
 
-			// XXX Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
-			// XXX This hook probably shouldn't exist.  Maybe rethink the hook system.
+			// Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
+			// This hook is extremely useful, otherwise lazy accum bugs will be difficult to solve.
 			if k.hooks != nil {
 				k.hooks.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
 			}
@@ -107,11 +107,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// bonded to unbonding
 		k.bondedToUnbonding(ctx, validator)
-
-		// remove validator if it has no more tokens
-		if validator.Tokens.IsZero() {
-			k.RemoveValidator(ctx, validator.OperatorAddr)
-		}
 
 		// delete from the bonded validator index
 		k.DeleteLastValidatorPower(ctx, sdk.ValAddress(valAddrBytes))
@@ -165,10 +160,9 @@ func (k Keeper) jailValidator(ctx sdk.Context, validator types.Validator) {
 		panic(fmt.Sprintf("cannot jail already jailed validator, validator: %v\n", validator))
 	}
 
-	pool := k.GetPool(ctx)
 	validator.Jailed = true
 	k.SetValidator(ctx, validator)
-	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
+	k.DeleteValidatorByPowerIndex(ctx, validator)
 }
 
 // remove a validator from jail
@@ -177,29 +171,29 @@ func (k Keeper) unjailValidator(ctx sdk.Context, validator types.Validator) {
 		panic(fmt.Sprintf("cannot unjail already unjailed validator, validator: %v\n", validator))
 	}
 
-	pool := k.GetPool(ctx)
 	validator.Jailed = false
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByPowerIndex(ctx, validator, pool)
+	k.SetValidatorByPowerIndex(ctx, validator)
 }
 
 // perform all the store operations for when a validator status becomes bonded
 func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
-	pool := k.GetPool(ctx)
-
-	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
+	k.DeleteValidatorByPowerIndex(ctx, validator)
 
 	validator.BondHeight = ctx.BlockHeight()
 
 	// set the status
+	pool := k.GetPool(ctx)
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	k.SetPool(ctx, pool)
 
-	// save the now bonded validator record to the three referenced stores
+	// save the now bonded validator record to the two referenced stores
 	k.SetValidator(ctx, validator)
+	k.SetValidatorByPowerIndex(ctx, validator)
 
-	k.SetValidatorByPowerIndex(ctx, validator, pool)
+	// delete from queue if present
+	k.DeleteValidatorQueue(ctx, validator)
 
 	// call the bond hook if present
 	if k.hooks != nil {
@@ -212,10 +206,9 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 // perform all the store operations for when a validator status begins unbonding
 func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 
-	pool := k.GetPool(ctx)
 	params := k.GetParams(ctx)
 
-	k.DeleteValidatorByPowerIndex(ctx, validator, pool)
+	k.DeleteValidatorByPowerIndex(ctx, validator)
 
 	// sanity check
 	if validator.Status != sdk.Bonded {
@@ -223,16 +216,16 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	}
 
 	// set the status
+	pool := k.GetPool(ctx)
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
 	k.SetPool(ctx, pool)
 
 	validator.UnbondingMinTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
 	validator.UnbondingHeight = ctx.BlockHeader().Height
 
-	// save the now unbonded validator record
+	// save the now unbonded validator record and power index
 	k.SetValidator(ctx, validator)
-
-	k.SetValidatorByPowerIndex(ctx, validator, pool)
+	k.SetValidatorByPowerIndex(ctx, validator)
 
 	// Adds to unbonding validator queue
 	k.InsertValidatorQueue(ctx, validator)

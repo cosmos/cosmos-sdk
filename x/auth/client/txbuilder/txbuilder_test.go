@@ -6,10 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/tendermint/tendermint/crypto/ed25519"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 var (
@@ -19,15 +21,15 @@ var (
 
 func TestTxBuilderBuild(t *testing.T) {
 	type fields struct {
-		Codec         *codec.Codec
-		AccountNumber int64
-		Sequence      int64
-		Gas           int64
+		TxEncoder     sdk.TxEncoder
+		AccountNumber uint64
+		Sequence      uint64
+		Gas           uint64
 		GasAdjustment float64
 		SimulateGas   bool
 		ChainID       string
 		Memo          string
-		Fee           string
+		Fees          sdk.Coins
 	}
 	defaultMsg := []sdk.Msg{sdk.NewTestMsg(addr)}
 	tests := []struct {
@@ -38,40 +40,30 @@ func TestTxBuilderBuild(t *testing.T) {
 	}{
 		{
 			fields{
-				Codec:         codec.New(),
+				TxEncoder:     auth.DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
 				Gas:           100,
 				GasAdjustment: 1.1,
 				SimulateGas:   false,
 				ChainID:       "test-chain",
-				Memo:          "hello",
-				Fee:           "1steak",
+				Memo:          "hello from Voyager !",
+				Fees:          sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))},
 			},
 			defaultMsg,
 			StdSignMsg{
 				ChainID:       "test-chain",
 				AccountNumber: 1,
 				Sequence:      1,
-				Memo:          "hello",
+				Memo:          "hello from Voyager !",
 				Msgs:          defaultMsg,
-				Fee:           auth.NewStdFee(100, sdk.NewCoin("steak", sdk.NewInt(1))),
+				Fee:           auth.NewStdFee(100, sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},
 	}
 	for i, tc := range tests {
-		bldr := TxBuilder{
-			Codec:         tc.fields.Codec,
-			AccountNumber: tc.fields.AccountNumber,
-			Sequence:      tc.fields.Sequence,
-			Gas:           tc.fields.Gas,
-			GasAdjustment: tc.fields.GasAdjustment,
-			SimulateGas:   tc.fields.SimulateGas,
-			ChainID:       tc.fields.ChainID,
-			Memo:          tc.fields.Memo,
-			Fee:           tc.fields.Fee,
-		}
+		bldr := NewTxBuilder(tc.fields.TxEncoder, tc.fields.AccountNumber, tc.fields.Sequence, tc.fields.Gas, tc.fields.GasAdjustment, tc.fields.SimulateGas, tc.fields.ChainID, tc.fields.Memo, tc.fields.Fees)
 		got, err := bldr.Build(tc.msgs)
 		require.Equal(t, tc.wantErr, (err != nil), "TxBuilder.Build() error = %v, wantErr %v, tc %d", err, tc.wantErr, i)
 		if !reflect.DeepEqual(got, tc.want) {

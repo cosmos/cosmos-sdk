@@ -10,7 +10,7 @@ import (
 // Implements ValidatorSet
 var _ sdk.ValidatorSet = Keeper{}
 
-// iterate through the active validator set and perform the provided function
+// iterate through the validator set and perform the provided function
 func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
@@ -27,10 +27,32 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 	iterator.Close()
 }
 
-// iterate through the active validator set and perform the provided function
-func (k Keeper) IterateValidatorsBonded(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
+// iterate through the bonded validator set and perform the provided function
+func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
+	maxValidators := k.MaxValidators(ctx)
+
+	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
+	defer iterator.Close()
+
+	i := int64(0)
+	for ; iterator.Valid() && i < int64(maxValidators); iterator.Next() {
+		address := iterator.Value()
+		validator := k.mustGetValidator(ctx, address)
+
+		if validator.Status == sdk.Bonded {
+			stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
+			if stop {
+				break
+			}
+			i++
+		}
+	}
+}
+
+// iterate through the active validator set and perform the provided function
+func (k Keeper) IterateLastValidators(ctx sdk.Context, fn func(index int64, validator sdk.Validator) (stop bool)) {
+	iterator := k.LastValidatorsIterator(ctx)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
 		address := AddressFromLastValidatorPowerKey(iterator.Key())

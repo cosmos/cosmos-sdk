@@ -8,11 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func TestInitGenesis(t *testing.T) {
@@ -22,29 +23,28 @@ func TestInitGenesis(t *testing.T) {
 	pool.BondedTokens = sdk.NewDec(2)
 
 	params := keeper.GetParams(ctx)
+	validators := make([]Validator, 2)
 	var delegations []Delegation
 
-	validators := []Validator{
-		NewValidator(sdk.ValAddress(keep.Addrs[0]), keep.PKs[0], Description{Moniker: "hoop"}),
-		NewValidator(sdk.ValAddress(keep.Addrs[1]), keep.PKs[1], Description{Moniker: "bloop"}),
-	}
-	genesisState := types.NewGenesisState(pool, params, validators, delegations)
-	_, err := InitGenesis(ctx, keeper, genesisState)
-	require.Error(t, err)
-
 	// initialize the validators
+	validators[0].OperatorAddr = sdk.ValAddress(keep.Addrs[0])
+	validators[0].ConsPubKey = keep.PKs[0]
+	validators[0].Description = Description{Moniker: "hoop"}
 	validators[0].Status = sdk.Bonded
 	validators[0].Tokens = sdk.OneDec()
 	validators[0].DelegatorShares = sdk.OneDec()
+	validators[1].OperatorAddr = sdk.ValAddress(keep.Addrs[1])
+	validators[1].ConsPubKey = keep.PKs[1]
+	validators[1].Description = Description{Moniker: "bloop"}
 	validators[1].Status = sdk.Bonded
 	validators[1].Tokens = sdk.OneDec()
 	validators[1].DelegatorShares = sdk.OneDec()
 
-	genesisState = types.NewGenesisState(pool, params, validators, delegations)
+	genesisState := types.NewGenesisState(pool, params, validators, delegations)
 	vals, err := InitGenesis(ctx, keeper, genesisState)
 	require.NoError(t, err)
 
-	actualGenesis := WriteGenesis(ctx, keeper)
+	actualGenesis := ExportGenesis(ctx, keeper)
 	require.Equal(t, genesisState.Pool, actualGenesis.Pool)
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
 	require.Equal(t, genesisState.Bonds, actualGenesis.Bonds)
@@ -54,12 +54,10 @@ func TestInitGenesis(t *testing.T) {
 	resVal, found := keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[0]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
-	require.Equal(t, int16(0), resVal.BondIntraTxCounter)
 
 	resVal, found = keeper.GetValidator(ctx, sdk.ValAddress(keep.Addrs[1]))
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, resVal.Status)
-	require.Equal(t, int16(1), resVal.BondIntraTxCounter)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range validators {
@@ -125,10 +123,6 @@ func TestValidateGenesis(t *testing.T) {
 		{"duplicate validator", func(data *types.GenesisState) {
 			(*data).Validators = genValidators1
 			(*data).Validators = append((*data).Validators, genValidators1[0])
-		}, true},
-		{"no pool shares", func(data *types.GenesisState) {
-			(*data).Validators = genValidators1
-			(*data).Validators[0].Tokens = sdk.ZeroDec()
 		}, true},
 		{"no delegator shares", func(data *types.GenesisState) {
 			(*data).Validators = genValidators1

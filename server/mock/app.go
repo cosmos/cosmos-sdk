@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/tendermint/tendermint/types"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -24,13 +26,13 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	}
 
 	// Capabilities key to access the main KVStore.
-	capKeyMainStore := sdk.NewKVStoreKey("main")
+	capKeyMainStore := sdk.NewKVStoreKey(bam.MainStoreKey)
 
 	// Create BaseApp.
 	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
 
 	// Set mounts for BaseApp's MultiStore.
-	baseApp.MountStoresIAVL(capKeyMainStore)
+	baseApp.MountStores(capKeyMainStore)
 
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
@@ -102,7 +104,8 @@ func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci
 
 // AppGenState can be passed into InitCmd, returns a static string of a few
 // key-values that can be parsed by InitChainer
-func AppGenState(_ *codec.Codec, _ []json.RawMessage) (appState json.RawMessage, err error) {
+func AppGenState(_ *codec.Codec, _ types.GenesisDoc, _ []json.RawMessage) (appState json.
+	RawMessage, err error) {
 	appState = json.RawMessage(`{
   "values": [
     {
@@ -119,7 +122,8 @@ func AppGenState(_ *codec.Codec, _ []json.RawMessage) (appState json.RawMessage,
 }
 
 // AppGenStateEmpty returns an empty transaction state for mocking.
-func AppGenStateEmpty(_ *codec.Codec, _ []json.RawMessage) (appState json.RawMessage, err error) {
+func AppGenStateEmpty(_ *codec.Codec, _ types.GenesisDoc, _ []json.RawMessage) (
+	appState json.RawMessage, err error) {
 	appState = json.RawMessage(``)
 	return
 }

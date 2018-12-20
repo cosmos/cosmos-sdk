@@ -9,12 +9,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
+	"github.com/spf13/viper"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // TODO these next two functions feel kinda hacky based on their placement
@@ -38,10 +39,10 @@ func ValidatorCommand() *cobra.Command {
 
 // Validator output in bech32 format
 type ValidatorOutput struct {
-	Address     sdk.ValAddress `json:"address"` // in bech32
-	PubKey      string         `json:"pub_key"` // in bech32
-	Accum       int64          `json:"accum"`
-	VotingPower int64          `json:"voting_power"`
+	Address          sdk.ValAddress `json:"address"` // in bech32
+	PubKey           string         `json:"pub_key"` // in bech32
+	ProposerPriority int64          `json:"proposer_priority"`
+	VotingPower      int64          `json:"voting_power"`
 }
 
 // Validators at a certain height output in bech32 format
@@ -57,10 +58,10 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 	}
 
 	return ValidatorOutput{
-		Address:     sdk.ValAddress(validator.Address),
-		PubKey:      bechValPubkey,
-		Accum:       validator.Accum,
-		VotingPower: validator.VotingPower,
+		Address:          sdk.ValAddress(validator.Address),
+		PubKey:           bechValPubkey,
+		ProposerPriority: validator.ProposerPriority,
+		VotingPower:      validator.VotingPower,
 	}, nil
 }
 

@@ -34,7 +34,7 @@ func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			signingInfo := new(slashing.ValidatorSigningInfo)
-			cdc.MustUnmarshalBinary(res, signingInfo)
+			cdc.MustUnmarshalBinaryLengthPrefixed(res, signingInfo)
 
 			switch viper.Get(cli.OutputFlag) {
 
@@ -51,6 +51,28 @@ func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 				fmt.Println(string(output))
 			}
 
+			return nil
+		},
+	}
+
+	return cmd
+}
+
+// GetCmdQueryParams implements a command to fetch slashing parameters.
+func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "params",
+		Short: "Query the current slashing parameters",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			route := fmt.Sprintf("custom/%s/parameters", slashing.QuerierRoute)
+
+			res, err := cliCtx.QueryWithData(route, nil)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(res))
 			return nil
 		},
 	}

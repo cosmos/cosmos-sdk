@@ -1,4 +1,8 @@
-# Docs Build Workflow
+# Updating the docs
+
+If you want to open a PR on the Cosmos SDK to update the documentation, please follow the guidelines in the [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/master/CONTRIBUTING.md)
+
+## Docs Build Workflow
 
 The documentation for the Cosmos SDK is hosted at:
 
@@ -10,17 +14,12 @@ built from the files in this (`/docs`) directory for
 and [develop](https://github.com/cosmos/cosmos-sdk/tree/develop/docs),
 respectively.
 
-Besides, gaia-lite API docs are also provided by gaia-lite. The default API docs page is:
-```
-https://localhost:1317/swagger-ui/
-```
+### How It Works
 
-## How It Works
-
-There is a Jenkins job listening for changes in the `/docs` directory, on both
+There is a CircleCI job listening for changes in the `/docs` directory, on both
 the  `master` and `develop` branches. Any updates to files in this directory
 on those branches will automatically trigger a website deployment. Under the hood,
-a private website repository has make targets consumed by a standard Jenkins task.
+the private website repository has a `make build-docs` target consumed by a CircleCI job in that repo.
 
 ## README
 
@@ -94,22 +93,20 @@ python -m SimpleHTTPServer 8080
 
 then navigate to localhost:8080 in your browser.
 
+## Build RPC Docs
+
+First, run `make get_tools` from the root of repo, to install the swagger-ui tool.
+
+Then, edit the `swagger.yaml` manually; it is found [here](https://github.com/cosmos/cosmos-sdk/blob/develop/client/lcd/swagger-ui/swagger.yaml)
+
+Finally, run `make update_gaia_lite_docs` from the root of the repo.
+
+## Search
+
+We are using [Algolia](https://www.algolia.com) to power full-text search. This uses a public API search-only key in the `config.js` as well as a [cosmos_network.json](https://github.com/algolia/docsearch-configs/blob/master/configs/cosmos_network.json) configuration file that we can update with PRs.
+
 ## Consistency
 
 Because the build processes are identical (as is the information contained herein), this file should be kept in sync as
 much as possible with its [counterpart in the Tendermint Core repo](https://github.com/tendermint/tendermint/blob/develop/docs/DOCS_README.md).
 
-## Update and Build the RPC docs
-
-1. Execute the following command at the root directory to install the swagger-ui generate tool.
-    ```
-    make get_tools
-    ```
-2. Edit API docs
-    1. Directly Edit API docs manually: `client/lcd/swagger-ui/swagger.yaml`.
-    2. Edit API docs within [SwaggerHub](https://app.swaggerhub.com). Please refer to this [document](https://app.swaggerhub.com/help/index) for how to use the about website to edit API docs.
-3. Download `swagger.yaml` and replace the old `swagger.yaml` under fold `client/lcd/swagger-ui`.
-4. Compile gaiacli
-    ```
-    make install
-    ```

@@ -13,17 +13,16 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-)
 
-const ctxAccStoreName = "acc"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types"
+)
 
 var (
 	verifier tmlite.Verifier
@@ -46,7 +45,7 @@ type CLIContext struct {
 	JSON          bool
 	PrintResponse bool
 	Verifier      tmlite.Verifier
-	DryRun        bool
+	Simulate      bool
 	GenerateOnly  bool
 	fromAddress   types.AccAddress
 	fromName      string
@@ -75,7 +74,7 @@ func NewCLIContext() CLIContext {
 		Client:        rpc,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
-		AccountStore:  ctxAccStoreName,
+		AccountStore:  auth.StoreKey,
 		From:          viper.GetString(client.FlagFrom),
 		Height:        viper.GetInt64(client.FlagHeight),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
@@ -84,7 +83,7 @@ func NewCLIContext() CLIContext {
 		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
-		DryRun:        viper.GetBool(client.FlagDryRun),
+		Simulate:      viper.GetBool(client.FlagDryRun),
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
 		fromAddress:   fromAddress,
 		fromName:      fromName,
@@ -121,8 +120,13 @@ func createVerifier() tmlite.Verifier {
 		fmt.Printf("Must specify these options: %s when --trust-node is false\n", errMsg.String())
 		os.Exit(1)
 	}
+
 	node := rpcclient.NewHTTP(nodeURI, "/websocket")
-	verifier, err := tmliteProxy.NewVerifier(chainID, filepath.Join(home, ".gaialite"), node, log.NewNopLogger())
+	cacheSize := 10 // TODO: determine appropriate cache size
+	verifier, err := tmliteProxy.NewVerifier(
+		chainID, filepath.Join(home, ".gaialite"),
+		node, log.NewNopLogger(), cacheSize,
+	)
 
 	if err != nil {
 		fmt.Printf("Create verifier failed: %s\n", err.Error())
@@ -170,10 +174,22 @@ func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	return ctx
 }
 
+// GetAccountDecoder gets the account decoder for auth.DefaultAccount.
+func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
+	return func(accBytes []byte) (acct auth.Account, err error) {
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
+		if err != nil {
+			panic(err)
+		}
+
+		return acct, err
+	}
+}
+
 // WithAccountDecoder returns a copy of the context with an updated account
 // decoder.
-func (ctx CLIContext) WithAccountDecoder(decoder auth.AccountDecoder) CLIContext {
-	ctx.AccDecoder = decoder
+func (ctx CLIContext) WithAccountDecoder(cdc *codec.Codec) CLIContext {
+	ctx.AccDecoder = GetAccountDecoder(cdc)
 	return ctx
 }
 
@@ -224,5 +240,17 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 // WithVerifier - return a copy of the context with an updated Verifier
 func (ctx CLIContext) WithVerifier(verifier tmlite.Verifier) CLIContext {
 	ctx.Verifier = verifier
+	return ctx
+}
+
+// WithGenerateOnly returns a copy of the context with updated GenerateOnly value
+func (ctx CLIContext) WithGenerateOnly(generateOnly bool) CLIContext {
+	ctx.GenerateOnly = generateOnly
+	return ctx
+}
+
+// WithSimulation returns a copy of the context with updated Simulate value
+func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
+	ctx.Simulate = simulate
 	return ctx
 }

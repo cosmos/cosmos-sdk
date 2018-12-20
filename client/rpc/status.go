@@ -7,14 +7,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/spf13/viper"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
-	"github.com/spf13/viper"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-func statusCommand() *cobra.Command {
+// StatusCommand returns the status of the network
+func StatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Query remote node for status",

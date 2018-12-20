@@ -1,11 +1,9 @@
 package types
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"time"
-
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
@@ -36,6 +34,13 @@ func MustSortJSON(toSortJSON []byte) []byte {
 	return js
 }
 
+// Uint64ToBigEndian - marshals uint64 to a bigendian byte slice so it can be sorted
+func Uint64ToBigEndian(i uint64) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, i)
+	return b
+}
+
 // Slight modification of the RFC3339Nano but it right pads all zeros and drops the time zone info
 const SortableTimeFormat = "2006-01-02T15:04:05.000000000"
 
@@ -52,23 +57,4 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 		return t, err
 	}
 	return t.UTC().Round(0), nil
-}
-
-// DefaultChainID returns the chain ID from the genesis file if present. An
-// error is returned if the file cannot be read or parsed.
-//
-// TODO: This should be removed and the chainID should always be provided by
-// the end user.
-func DefaultChainID() (string, error) {
-	cfg, err := tcmd.ParseConfig()
-	if err != nil {
-		return "", err
-	}
-
-	doc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
-	if err != nil {
-		return "", err
-	}
-
-	return doc.ChainID, nil
 }

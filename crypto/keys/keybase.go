@@ -15,11 +15,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
 
 var _ Keybase = dbKeybase{}
@@ -273,7 +274,7 @@ func (kb dbKeybase) Sign(name, passphrase string, msg []byte) (sig []byte, pub t
 		if err != nil {
 			return nil, nil, err
 		}
-		cdc.MustUnmarshalBinary([]byte(signed), sig)
+		cdc.MustUnmarshalBinaryLengthPrefixed([]byte(signed), sig)
 		return sig, linfo.GetPubKey(), nil
 	}
 	sig, err = priv.Sign(msg)
@@ -367,34 +368,23 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 
 // Delete removes key forever, but we must present the
 // proper passphrase before deleting it (for security).
-// A passphrase of 'yes' is used to delete stored
-// references to offline and Ledger / HW wallet keys
-func (kb dbKeybase) Delete(name, passphrase string) error {
+// It returns an error if the key doesn't exist or
+// passphrases don't match.
+// Passphrase is ignored when deleting references to
+// offline and Ledger / HW wallet keys.
+func (kb dbKeybase) Delete(name, passphrase string, skipPass bool) error {
 	// verify we have the proper password before deleting
 	info, err := kb.Get(name)
 	if err != nil {
 		return err
 	}
-	switch info.(type) {
-	case localInfo:
-		linfo := info.(localInfo)
-		_, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase)
-		if err != nil {
+	if linfo, ok := info.(localInfo); ok && !skipPass {
+		if _, err = mintkey.UnarmorDecryptPrivKey(linfo.PrivKeyArmor, passphrase); err != nil {
 			return err
 		}
-		kb.db.DeleteSync(addrKey(linfo.GetAddress()))
-		kb.db.DeleteSync(infoKey(name))
-		return nil
-	case ledgerInfo:
-	case offlineInfo:
-		if passphrase != "yes" {
-			return fmt.Errorf("enter 'yes' exactly to delete the key - this cannot be undone")
-		}
-		kb.db.DeleteSync(addrKey(info.GetAddress()))
-		kb.db.DeleteSync(infoKey(name))
-		return nil
 	}
-
+	kb.db.DeleteSync(addrKey(info.GetAddress()))
+	kb.db.DeleteSync(infoKey(name))
 	return nil
 }
 

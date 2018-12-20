@@ -33,13 +33,13 @@ func (ibcm Mapper) PostIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error {
 	// write everything into the state
 	store := ctx.KVStore(ibcm.key)
 	index := ibcm.getEgressLength(store, packet.DestChain)
-	bz, err := ibcm.cdc.MarshalBinary(packet)
+	bz, err := ibcm.cdc.MarshalBinaryLengthPrefixed(packet)
 	if err != nil {
 		panic(err)
 	}
 
 	store.Set(EgressKey(packet.DestChain, index), bz)
-	bz, err = ibcm.cdc.MarshalBinary(index + 1)
+	bz, err = ibcm.cdc.MarshalBinaryLengthPrefixed(index + 1)
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +61,7 @@ func (ibcm Mapper) ReceiveIBCPacket(ctx sdk.Context, packet IBCPacket) sdk.Error
 // Functions for accessing the underlying KVStore.
 
 func marshalBinaryPanic(cdc *codec.Codec, value interface{}) []byte {
-	res, err := cdc.MarshalBinary(value)
+	res, err := cdc.MarshalBinaryLengthPrefixed(value)
 	if err != nil {
 		panic(err)
 	}
@@ -69,14 +69,14 @@ func marshalBinaryPanic(cdc *codec.Codec, value interface{}) []byte {
 }
 
 func unmarshalBinaryPanic(cdc *codec.Codec, bz []byte, ptr interface{}) {
-	err := cdc.UnmarshalBinary(bz, ptr)
+	err := cdc.UnmarshalBinaryLengthPrefixed(bz, ptr)
 	if err != nil {
 		panic(err)
 	}
 }
 
 // TODO add description
-func (ibcm Mapper) GetIngressSequence(ctx sdk.Context, srcChain string) int64 {
+func (ibcm Mapper) GetIngressSequence(ctx sdk.Context, srcChain string) uint64 {
 	store := ctx.KVStore(ibcm.key)
 	key := IngressSequenceKey(srcChain)
 
@@ -87,13 +87,13 @@ func (ibcm Mapper) GetIngressSequence(ctx sdk.Context, srcChain string) int64 {
 		return 0
 	}
 
-	var res int64
+	var res uint64
 	unmarshalBinaryPanic(ibcm.cdc, bz, &res)
 	return res
 }
 
 // TODO add description
-func (ibcm Mapper) SetIngressSequence(ctx sdk.Context, srcChain string, sequence int64) {
+func (ibcm Mapper) SetIngressSequence(ctx sdk.Context, srcChain string, sequence uint64) {
 	store := ctx.KVStore(ibcm.key)
 	key := IngressSequenceKey(srcChain)
 
@@ -102,20 +102,20 @@ func (ibcm Mapper) SetIngressSequence(ctx sdk.Context, srcChain string, sequence
 }
 
 // Retrieves the index of the currently stored outgoing IBC packets.
-func (ibcm Mapper) getEgressLength(store sdk.KVStore, destChain string) int64 {
+func (ibcm Mapper) getEgressLength(store sdk.KVStore, destChain string) uint64 {
 	bz := store.Get(EgressLengthKey(destChain))
 	if bz == nil {
 		zero := marshalBinaryPanic(ibcm.cdc, int64(0))
 		store.Set(EgressLengthKey(destChain), zero)
 		return 0
 	}
-	var res int64
+	var res uint64
 	unmarshalBinaryPanic(ibcm.cdc, bz, &res)
 	return res
 }
 
 // Stores an outgoing IBC packet under "egress/chain_id/index".
-func EgressKey(destChain string, index int64) []byte {
+func EgressKey(destChain string, index uint64) []byte {
 	return []byte(fmt.Sprintf("egress/%s/%d", destChain, index))
 }
 

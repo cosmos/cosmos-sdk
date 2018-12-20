@@ -4,10 +4,12 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // GetSignCommand returns the sign command
@@ -25,7 +27,8 @@ in place of an input filename, the command reads from standard input.`,
 			if err != nil {
 				return
 			}
-			txBytes, err := cliCtx.Codec.MarshalBinary(stdTx)
+
+			txBytes, err := cliCtx.Codec.MarshalBinaryLengthPrefixed(stdTx)
 			if err != nil {
 				return
 			}
@@ -35,7 +38,7 @@ in place of an input filename, the command reads from standard input.`,
 		},
 	}
 
-	return cmd
+	return client.PostCommands(cmd)[0]
 }
 
 func readAndUnmarshalStdTx(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {

@@ -33,6 +33,9 @@ const (
 	runTxModeSimulate runTxMode = iota
 	// Deliver a transaction
 	runTxModeDeliver runTxMode = iota
+
+	// MainStoreKey is the string representation of the main store
+	MainStoreKey = "main"
 )
 
 // BaseApp reflects the ABCI application implementation.
@@ -210,8 +213,7 @@ func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
 	return nil
 }
 
-// SetMinimumFees sets the minimum fees.
-func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
+func (app *BaseApp) setMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {

@@ -16,7 +16,7 @@
 set BRANCH=master
 set REPO=github.com/cosmos/cosmos-sdk
 
-set GO_VERSION=1.11.2
+set GO_VERSION=1.11.4
 
 sudo pkg update
 
@@ -47,7 +47,7 @@ cd $GOPATH/src/$REPO
 
 # build & install master
 git checkout $BRANCH
-gmake get_tools
+gmake tools
 gmake get_vendor_deps
 gmake install
 gmake install_examples

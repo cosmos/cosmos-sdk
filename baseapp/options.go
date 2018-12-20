@@ -37,7 +37,7 @@ func SetMinimumFees(minFees string) func(*BaseApp) {
 	if err != nil {
 		panic(fmt.Sprintf("invalid minimum fees: %v", err))
 	}
-	return func(bap *BaseApp) { bap.SetMinimumFees(fees) }
+	return func(bap *BaseApp) { bap.setMinimumFees(fees) }
 }
 
 func (app *BaseApp) SetName(name string) {

@@ -3,9 +3,10 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"io"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/common"
@@ -35,12 +36,12 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return err
 	}
 
-	if txBldr.SimulateGas || cliCtx.Simulate {
+	if txBldr.GetSimulateAndExecute() || cliCtx.Simulate {
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas)
+		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.GetGas())
 	}
 	if cliCtx.Simulate {
 		return nil
@@ -131,7 +132,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 			"The generated transaction's intended signer does not match the given signer: %q", name)
 	}
 
-	if !offline && txBldr.AccountNumber == 0 {
+	if !offline && txBldr.GetAccountNumber() == 0 {
 		accNum, err := cliCtx.GetAccountNumber(addr)
 		if err != nil {
 			return signedStdTx, err
@@ -139,7 +140,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 		txBldr = txBldr.WithAccountNumber(accNum)
 	}
 
-	if !offline && txBldr.Sequence == 0 {
+	if !offline && txBldr.GetSequence() == 0 {
 		accSeq, err := cliCtx.GetAccountSequence(addr)
 		if err != nil {
 			return signedStdTx, err
@@ -172,7 +173,7 @@ func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name stri
 	if err != nil {
 		return
 	}
-	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GasAdjustment)
+	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GetGasAdjustment())
 	return
 }
 
@@ -200,7 +201,7 @@ func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
-	if txBldr.AccountNumber == 0 {
+	if txBldr.GetAccountNumber() == 0 {
 		accNum, err := cliCtx.GetAccountNumber(from)
 		if err != nil {
 			return txBldr, err
@@ -210,7 +211,7 @@ func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 
 	// TODO: (ref #1903) Allow for user supplied account sequence without
 	// automatically doing a manual lookup.
-	if txBldr.Sequence == 0 {
+	if txBldr.GetSequence() == 0 {
 		accSeq, err := cliCtx.GetAccountSequence(from)
 		if err != nil {
 			return txBldr, err
@@ -231,7 +232,7 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 }
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
-	if txBldr.SimulateGas {
+	if txBldr.GetSimulateAndExecute() {
 		var name string
 		name, err = cliCtx.GetFromName()
 		if err != nil {
@@ -242,7 +243,7 @@ func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		if err != nil {
 			return
 		}
-		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas)
+		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.GetGas())
 	}
 	stdSignMsg, err := txBldr.Build(msgs)
 	if err != nil {

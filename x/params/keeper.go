@@ -7,6 +7,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
+const (
+	// StoreKey is the string key for the params store
+	StoreKey = subspace.StoreKey
+
+	// TStoreKey is the string key for the params transient store
+	TStoreKey = subspace.TStoreKey
+)
+
 // Keeper of the global paramstore
 type Keeper struct {
 	cdc  *codec.Codec

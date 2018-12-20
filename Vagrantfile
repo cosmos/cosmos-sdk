@@ -46,6 +46,6 @@ Vagrant.configure("2") do |config|
     chown vagrant:vagrant /home/vagrant/.bash_profile
 
     su - vagrant -c 'source /home/vagrant/.bash_profile'
-    su - vagrant -c 'cd /home/vagrant/go/src/github.com/cosmos/cosmos-sdk && make get_tools'
+    su - vagrant -c 'cd /home/vagrant/go/src/github.com/cosmos/cosmos-sdk && make tools'
   SHELL
 end

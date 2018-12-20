@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 func TestTakeFeePoolRewards(t *testing.T) {
@@ -27,7 +28,7 @@ func TestTakeFeePoolRewards(t *testing.T) {
 
 	// simulate adding some stake for inflation
 	height = 10
-	fp.ValPool = DecCoins{NewDecCoin("stake", 1000)}
+	fp.ValPool = DecCoins{NewDecCoin(stakeTypes.DefaultBondDenom, 1000)}
 
 	vi1, fp = vi1.TakeFeePoolRewards(NewWithdrawContext(
 		fp, height, totalBondedTokens, validatorTokens1, commissionRate1))
@@ -67,7 +68,7 @@ func TestWithdrawCommission(t *testing.T) {
 
 	// simulate adding some stake for inflation
 	height = 10
-	fp.ValPool = DecCoins{NewDecCoin("stake", 1000)}
+	fp.ValPool = DecCoins{NewDecCoin(stakeTypes.DefaultBondDenom, 1000)}
 
 	// for a more fun staring condition, have an non-withdraw update
 	vi, fp = vi.TakeFeePoolRewards(NewWithdrawContext(

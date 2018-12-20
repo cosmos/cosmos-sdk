@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -15,7 +16,12 @@ import (
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 	r.HandleFunc(
 		"/slashing/validators/{validatorPubKey}/signing_info",
-		signingInfoHandlerFn(cliCtx, "slashing", cdc),
+		signingInfoHandlerFn(cliCtx, slashing.StoreKey, cdc),
+	).Methods("GET")
+
+	r.HandleFunc(
+		"/slashing/parameters",
+		queryParamsHandlerFn(cdc, cliCtx),
 	).Methods("GET")
 }
 
@@ -53,5 +59,19 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 		}
 
 		utils.PostProcessResponse(w, cdc, signingInfo, cliCtx.Indent)
+	}
+}
+
+func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		route := fmt.Sprintf("custom/%s/parameters", slashing.QuerierRoute)
+
+		res, err := cliCtx.QueryWithData(route, nil)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

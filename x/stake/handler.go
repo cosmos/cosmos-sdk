@@ -2,6 +2,7 @@ package stake
 
 import (
 	"bytes"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/common"
@@ -34,7 +35,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 // Called every block, update validator set
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) (validatorUpdates []abci.ValidatorUpdate, endBlockerTags sdk.Tags) {
+func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.Tags) {
+	resTags := sdk.NewTags()
+
 	// Calculate validator set changes.
 	//
 	// NOTE: ApplyAndReturnValidatorSetUpdates has to come before
@@ -44,7 +47,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (validatorUpdates []abci.Valid
 	// unbonded after the Endblocker (go from Bonded -> Unbonding during
 	// ApplyAndReturnValidatorSetUpdates and then Unbonding -> Unbonded during
 	// UnbondAllMatureValidatorQueue).
-	validatorUpdates = k.ApplyAndReturnValidatorSetUpdates(ctx)
+	validatorUpdates := k.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// Unbond all mature validators from the unbonding queue.
 	k.UnbondAllMatureValidatorQueue(ctx)
@@ -56,7 +59,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (validatorUpdates []abci.Valid
 		if err != nil {
 			continue
 		}
-		endBlockerTags.AppendTags(sdk.NewTags(
+
+		resTags.AppendTags(sdk.NewTags(
 			tags.Action, ActionCompleteUnbonding,
 			tags.Delegator, []byte(dvPair.DelegatorAddr.String()),
 			tags.SrcValidator, []byte(dvPair.ValidatorAddr.String()),
@@ -70,14 +74,16 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) (validatorUpdates []abci.Valid
 		if err != nil {
 			continue
 		}
-		endBlockerTags.AppendTags(sdk.NewTags(
+
+		resTags.AppendTags(sdk.NewTags(
 			tags.Action, tags.ActionCompleteRedelegation,
 			tags.Delegator, []byte(dvvTriplet.DelegatorAddr.String()),
 			tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
 			tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
 		))
 	}
-	return
+
+	return validatorUpdates, resTags
 }
 
 //_____________________________________________________________________
@@ -215,12 +221,12 @@ func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k kee
 	}
 
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(ubd.MinTime)
-
 	tags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
-		tags.EndTime, finishTime,
+		tags.EndTime, []byte(ubd.MinTime.Format(time.RFC3339)),
 	)
+
 	return sdk.Result{Data: finishTime, Tags: tags}
 }
 
@@ -232,12 +238,12 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 	}
 
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(red.MinTime)
-
-	tags := sdk.NewTags(
+	resTags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
 		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
-		tags.EndTime, finishTime,
+		tags.EndTime, []byte(red.MinTime.Format(time.RFC3339)),
 	)
-	return sdk.Result{Data: finishTime, Tags: tags}
+
+	return sdk.Result{Data: finishTime, Tags: resTags}
 }

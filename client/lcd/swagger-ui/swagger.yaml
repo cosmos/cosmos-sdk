@@ -803,15 +803,25 @@ paths:
           description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/redelegations:
+  /stake/redelegations:
     parameters:
-    - in: path
-      name: delegatorAddr
-      description: Bech32 AccAddress of Delegator
-      required: true
-      type: string
+    - in: query
+        name: delegator
+        description: Bech32 AccAddress of Delegator
+        required: false
+        type: string
+    - in: query
+        name: validator_from
+        description: Bech32 ValAddress of SrcValidator
+        required: false
+        type: string
+    - in: query
+        name: validator_to
+        description: Bech32 ValAddress of DstValidator
+        required: false
+        type: string
     get:
-      summary: Get all redelegations from a delegator
+      summary: Get all redelegations (filter by query params)
       tags:
       - ICS21
       produces:
@@ -823,10 +833,15 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Redelegation"
-        400:
-          description: Invalid delegator address
         500:
           description: Internal Server Error
+  /stake/delegators/{delegatorAddr}/redelegations:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
     post:
       summary: Submit a redelegation
       parameters:
@@ -1037,30 +1052,6 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
-  /stake/validators/{validatorAddr}/redelegations:
-    parameters:
-    - in: path
-      name: validatorAddr
-      description: Bech32 OperatorAddress of validator
-      required: true
-      type: string
-    get:
-      summary: Get all outgoing redelegations from a validator
-      tags:
-      - ICS21
-      produces:
-      - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/Redelegation"
-        400:
-          description: Invalid validator address
-        500:
-          description: Internal Server Error
   /stake/pool:
     get:
       summary: Get the current state of the staking pool
@@ -1185,6 +1176,35 @@ paths:
           description: Invalid validator address or base_req
         401:
           description: Key password is wrong
+        500:
+          description: Internal Server Error
+  /slashing/parameters:
+    get:
+      summary: Get the current slashing parameters
+      tags:
+      - ICS23
+      produces:
+      - application/json
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            properties:
+              max_evidence_age:
+                type: integer
+              signed_blocks_window:
+                type: integer
+              min_signed_per_window:
+                type: integer
+              double_sign_unbond_duration:
+                type: integer
+              downtime_unbond_duration:
+                type: integer
+              slash_fraction_double_sign:
+                type: integer
+              slash_fraction_downtime:
+                type: integer
         500:
           description: Internal Server Error
   /gov/proposals:
@@ -2179,23 +2199,32 @@ definitions:
     properties:
       name:
         type: string
+        example: "my_name"
       password:
         type: string
         example: "12345678"
+      memo:
+        type: string
+        example: "Sent via Cosmos Voyager 🚀"
       chain_id:
         type: string
+        example: "Cosmos-Hub"
       account_number:
         type: string
         example: "0"
       sequence:
         type: string
-        example: "0"
+        example: "1"
       gas:
         type: string
         example: "200000"
       gas_adjustment:
         type: string
         example: "1.2"
+      fees:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
       generate_only:
         type: boolean
         example: false

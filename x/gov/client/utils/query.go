@@ -10,6 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
 
+// Proposer contains metadata of a governance proposal used for querying a
+// proposer.
+type Proposer struct {
+	ProposalID uint64 `json:"proposal_id"`
+	Proposer   string `json:"proposer"`
+}
+
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
 // will fetch and build deposits directly from the returned txs and return a
 // JSON marshalled result or any error that occurred.
@@ -133,8 +140,7 @@ func QueryVoteByTxQuery(
 		}
 	}
 
-	err = fmt.Errorf("address '%s' did not vote on proposalID %d", params.Voter, params.ProposalID)
-	return nil, err
+	return nil, fmt.Errorf("address '%s' did not vote on proposalID %d", params.Voter, params.ProposalID)
 }
 
 // QueryDepositByTxQuery will query for a single deposit via a direct txs tags
@@ -175,6 +181,44 @@ func QueryDepositByTxQuery(
 		}
 	}
 
-	err = fmt.Errorf("address '%s' did not deposit to proposalID %d", params.Depositor, params.ProposalID)
-	return nil, err
+	return nil, fmt.Errorf("address '%s' did not deposit to proposalID %d", params.Depositor, params.ProposalID)
+}
+
+// QueryProposerByTxQuery will query for a proposer of a governance proposal by
+// ID.
+func QueryProposerByTxQuery(
+	cdc *codec.Codec, cliCtx context.CLIContext, proposalID uint64,
+) ([]byte, error) {
+
+	tags := []string{
+		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalSubmitted),
+		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID))),
+	}
+
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, info := range infos {
+		for _, msg := range info.Tx.GetMsgs() {
+			// there should only be a single proposal under the given conditions
+			if msg.Type() == gov.TypeMsgSubmitProposal {
+				subMsg := msg.(gov.MsgSubmitProposal)
+
+				proposer := Proposer{
+					ProposalID: proposalID,
+					Proposer:   subMsg.Proposer.String(),
+				}
+
+				if cliCtx.Indent {
+					return cdc.MarshalJSONIndent(proposer, "", "  ")
+				}
+
+				return cdc.MarshalJSON(proposer)
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
 }

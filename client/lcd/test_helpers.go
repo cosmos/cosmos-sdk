@@ -15,13 +15,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
 	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -35,6 +36,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/spf13/viper"
@@ -1247,6 +1249,18 @@ func getVote(t *testing.T, port string, proposalID uint64, voterAddr sdk.AccAddr
 	err := cdc.UnmarshalJSON([]byte(body), &vote)
 	require.Nil(t, err)
 	return vote
+}
+
+// GET /gov/proposals/{proposalId}/proposer
+func getProposer(t *testing.T, port string, proposalID uint64) gcutils.Proposer {
+	res, body := Request(t, port, "GET", fmt.Sprintf("/gov/proposals/%d/proposer", proposalID), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var proposer gcutils.Proposer
+	err := cdc.UnmarshalJSON([]byte(body), &proposer)
+
+	require.Nil(t, err)
+	return proposer
 }
 
 // GET /gov/parameters/deposit Query governance deposit parameters

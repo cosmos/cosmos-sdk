@@ -1,26 +1,22 @@
 package rest
 
 import (
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 // SignBody defines the properties of a sign request's body.
 type SignBody struct {
-	Tx               auth.StdTx `json:"tx"`
-	LocalAccountName string     `json:"name"`
-	Password         string     `json:"password"`
-	ChainID          string     `json:"chain_id"`
-	AccountNumber    uint64     `json:"account_number"`
-	Sequence         uint64     `json:"sequence"`
-	AppendSig        bool       `json:"append_sig"`
+	Tx        auth.StdTx    `json:"tx"`
+	AppendSig bool          `json:"append_sig"`
+	BaseReq   utils.BaseReq `json:"base_req"`
 }
 
 // nolint: unparam
@@ -30,21 +26,34 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m SignBody
 
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-		err = cdc.UnmarshalJSON(body, &m)
-		if err != nil {
+		if err := utils.ReadRESTReq(w, r, cdc, &m); err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		txBldr := authtxb.NewTxBuilder(utils.GetTxEncoder(cdc), m.AccountNumber,
-			m.Sequence, m.Tx.Fee.Gas, 1.0, false, m.ChainID, m.Tx.GetMemo(), m.Tx.Fee.Amount)
+		if !m.BaseReq.ValidateBasic(w) {
+			return
+		}
 
-		signedTx, err := txBldr.SignStdTx(m.LocalAccountName, m.Password, m.Tx, m.AppendSig)
+		// validate tx
+		// discard error if it's CodeUnauthorized as the tx comes with no signatures
+		if err := m.Tx.ValidateBasic(); err != nil && err.Code() != sdk.CodeUnauthorized {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		txBldr := authtxb.NewTxBuilder(
+			utils.GetTxEncoder(cdc),
+			m.BaseReq.AccountNumber,
+			m.BaseReq.Sequence,
+			m.Tx.Fee.Gas,
+			1.0,
+			false,
+			m.BaseReq.ChainID,
+			m.Tx.GetMemo(),
+			m.Tx.Fee.Amount)
+
+		signedTx, err := txBldr.SignStdTx(m.BaseReq.Name, m.BaseReq.Password, m.Tx, m.AppendSig)
 		if keyerror.IsErrKeyNotFound(err) {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

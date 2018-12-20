@@ -645,12 +645,10 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 func doSign(t *testing.T, port, name, password, chainID string, accnum, sequence uint64, msg auth.StdTx) auth.StdTx {
 	var signedMsg auth.StdTx
 	payload := authrest.SignBody{
-		Tx:               msg,
-		LocalAccountName: name,
-		Password:         password,
-		ChainID:          chainID,
-		AccountNumber:    accnum,
-		Sequence:         sequence,
+		Tx: msg,
+		BaseReq: utils.NewBaseReq(
+			name, password, "", chainID, "", "", accnum, sequence, nil, false, false,
+		),
 	}
 	json, err := cdc.MarshalJSON(payload)
 	require.Nil(t, err)

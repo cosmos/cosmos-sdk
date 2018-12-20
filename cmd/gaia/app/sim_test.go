@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -74,6 +75,17 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 			Coins:   coins,
 		})
 	}
+
+	authGenesis := auth.GenesisState{
+		Params: auth.Params{
+			MemoCostPerByte:        uint64(r.Intn(10) + 1),
+			MaxMemoCharacters:      uint64(r.Intn(200-100) + 100),
+			TxSigLimit:             uint64(r.Intn(7) + 1),
+			SigVerifyCostED25519:   uint64(r.Intn(1000-500) + 500),
+			SigVerifyCostSecp256k1: uint64(r.Intn(1000-500) + 500),
+		},
+	}
+	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
 
 	// Random genesis states
 	vp := time.Duration(r.Intn(2*172800)) * time.Second
@@ -151,6 +163,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
+		AuthData:     authGenesis,
 		StakeData:    stakeGenesis,
 		MintData:     mintGenesis,
 		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),

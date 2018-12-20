@@ -39,7 +39,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
 
 	genState := NewGenesisState(
 		accounts,
-		auth.ExportGenesis(ctx, app.feeCollectionKeeper),
+		auth.ExportGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper),
 		stake.ExportGenesis(ctx, app.stakeKeeper),
 		mint.ExportGenesis(ctx, app.mintKeeper),
 		distr.ExportGenesis(ctx, app.distrKeeper),

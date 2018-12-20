@@ -1,7 +1,6 @@
 package client
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -16,7 +15,7 @@ const (
 	// occur between the tx simulation and the actual run.
 	DefaultGasAdjustment = 1.0
 	DefaultGasLimit      = 200000
-	GasFlagSimulate      = "simulate"
+	GasFlagAuto          = "auto"
 
 	FlagUseLedger          = "ledger"
 	FlagChainID            = "chain-id"
@@ -92,7 +91,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagGenerateOnly, false, "build an unsigned transaction and write it to STDOUT")
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
-			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagSimulate, DefaultGasLimit))
+			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
@@ -142,7 +141,7 @@ func (v *GasSetting) Set(s string) (err error) {
 
 func (v *GasSetting) String() string {
 	if v.Simulate {
-		return GasFlagSimulate
+		return GasFlagAuto
 	}
 	return strconv.FormatUint(v.Gas, 10)
 }
@@ -152,12 +151,12 @@ func ParseGas(gasStr string) (simulateAndExecute bool, gas uint64, err error) {
 	switch gasStr {
 	case "":
 		gas = DefaultGasLimit
-	case GasFlagSimulate:
+	case GasFlagAuto:
 		simulateAndExecute = true
 	default:
 		gas, err = strconv.ParseUint(gasStr, 10, 64)
 		if err != nil {
-			err = errors.New("gas must be a positive integer")
+			err = fmt.Errorf("gas must be either integer or %q", GasFlagAuto)
 			return
 		}
 	}

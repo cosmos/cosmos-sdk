@@ -57,7 +57,7 @@ jobs:
           name: tools
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_tools
+            make tools
       - run:
           name: dependencies
           command: |
@@ -91,8 +91,7 @@ jobs:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_tools
-            make get_dev_tools
+            make devtools
       - run:
           name: Lint source
           command: |
@@ -286,7 +285,7 @@ jobs:
               sudo mv go /usr/local
               popd
               set -x
-              make get_tools
+              make tools
               make get_vendor_deps
               make build-linux
               make localnet-start

@@ -91,11 +91,14 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
+
 	// define the accountKeeper
 	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
-		app.keyAccount,        // target store
-		auth.ProtoBaseAccount, // prototype
+		app.keyAccount,
+		app.paramsKeeper.Subspace(auth.DefaultParamspace),
+		auth.ProtoBaseAccount,
 	)
 
 	// add handlers
@@ -103,10 +106,6 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
 		app.cdc,
 		app.keyFeeCollection,
-	)
-	app.paramsKeeper = params.NewKeeper(
-		app.cdc,
-		app.keyParams, app.tkeyParams,
 	)
 	stakeKeeper := stake.NewKeeper(
 		app.cdc,
@@ -246,7 +245,7 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	}
 
 	// initialize module-specific stores
-	auth.InitGenesis(ctx, app.feeCollectionKeeper, genesisState.AuthData)
+	auth.InitGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper, genesisState.AuthData)
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)

@@ -165,16 +165,18 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 		tkeyParams:  sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
+
 	// define the accountKeeper
 	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
-		app.keyAccount,        // target store
+		app.keyAccount, // target store
+		app.paramsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount, // prototype
 	)
 
 	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
-	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), slashing.DefaultCodespace)
 

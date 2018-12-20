@@ -14,6 +14,8 @@ BREAKING CHANGES
 
 * Gaia
   * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
+  * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
+    in order to trigger a simulation of the tx before the actual execution.
 
 * SDK
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
@@ -34,6 +36,8 @@ FEATURES
     * [\#2182] [x/stake] Added querier for querying a single redelegation
 
 * SDK
+  * \#2996 Update the `AccountKeeper` to contain params used in the context of
+  the ante handler.
 
 * Tendermint
 
@@ -46,6 +50,8 @@ IMPROVEMENTS
 
 * Gaia
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
+  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees
+  in a local testnet.
 
 * SDK
   * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation
@@ -67,9 +73,10 @@ BUG FIXES
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
-
   * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version
   * \#3181 Correctly reset total accum update height and jailed-validator bond height / unbonding height on export-for-zero-height
+  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Fix parsing `gaiad.toml`
+  when it already exists.
 
 * SDK
 

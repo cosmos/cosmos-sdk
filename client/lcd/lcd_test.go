@@ -190,9 +190,22 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 	require.Nil(t, err)
 
+	// test failure with negative gas
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "-200", 0, false, false, fees)
+	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
+
 	// test failure with negative adjustment
 	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "10000", -0.1, true, false, fees)
 	require.Equal(t, http.StatusBadRequest, res.StatusCode, body)
+
+	// test failure with 0 gas
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "0", 0, false, false, fees)
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
+
+	// test failure with wrong adjustment
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, client.GasFlagAuto, 0.1, false, false, fees)
+
+	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
 	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees)
@@ -228,7 +241,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	acc := getAccount(t, port, addr)
 
 	// generate TX
-	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, "200000", 1, false, true, fees)
+	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1, false, true, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var msg auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))

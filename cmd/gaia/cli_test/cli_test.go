@@ -188,7 +188,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.False(t, success)
 
 	// Enable auto gas
-	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli tx send %v --json --gas=simulate --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli tx send %v --json --gas=auto --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 	// check that gas wanted == gas used
 	cdc := app.MakeCodec()
@@ -563,7 +563,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Test generate sendTx, estimate gas
 	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=simulate --generate-only",
+		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=auto --generate-only",
 		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
 	require.True(t, success)
 	require.NotEmpty(t, stderr)

@@ -1307,6 +1307,28 @@ paths:
           description: Invalid proposal id
         500:
           description: Internal Server Error
+  /gov/proposals/{proposalId}/proposer:
+    get:
+      summary: Query proposer
+      description: Query for the proposer for a proposal
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        name: proposalId
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Proposer"
+        400:
+          description: Invalid proposal ID
+        500:
+          description: Internal Server Error
   /gov/proposals/{proposalId}/deposits:
     get:
       summary: Query deposits
@@ -2267,6 +2289,13 @@ definitions:
         items:
           $ref: "#/definitions/Coin"
       voting_start_time:
+        type: string
+  Proposer:
+    type: object
+    properties:
+      proposal_id:
+        type: integer
+      proposer:
         type: string
   Deposit:
     type: object

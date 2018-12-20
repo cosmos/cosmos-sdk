@@ -498,6 +498,12 @@ gaiacli query gov proposals
 
 You can also query proposals filtered by `voter` or `depositor` by using the corresponding flags.
 
+To query for the proposer of a given governance proposal:
+
+```bash
+gaiacli query gov proposer <proposal_id>
+```
+
 #### Increase deposit
 
 In order for a proposal to be broadcasted to the network, the amount deposited must be above a `minDeposit` value (default: `10 steak`). If the proposal you previously created didn't meet this requirement, you can still increase the total amount deposited to activate it. Once the minimum deposit is reached, the proposal enters voting period:

@@ -48,6 +48,9 @@ IMPROVEMENTS
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
 
 * SDK
+  * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation
+    for each module along with cleaning up a few existing tags in the governance,
+    slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
 

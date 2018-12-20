@@ -92,6 +92,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	})
 	app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
 		valInfo.FeePoolWithdrawalHeight = 0
+		valInfo.DelAccum.UpdateHeight = 0
 		app.distrKeeper.SetValidatorDistInfo(ctx, valInfo)
 		return false
 	})
@@ -115,10 +116,10 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	// iterate through validators by power descending, reset bond height, update bond intra-tx counter
 	store := ctx.KVStore(app.keyStake)
-	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsByPowerIndexKey)
+	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsKey)
 	counter := int16(0)
 	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(iter.Value())
+		addr := sdk.ValAddress(iter.Key()[1:])
 		validator, found := app.stakeKeeper.GetValidator(ctx, addr)
 		if !found {
 			panic("expected validator, not found")

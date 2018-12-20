@@ -133,7 +133,7 @@ type StdFee struct {
 	Gas    uint64    `json:"gas"`
 }
 
-func NewStdFee(gas uint64, amount ...sdk.Coin) StdFee {
+func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
 	return StdFee{
 		Amount: amount,
 		Gas:    gas,

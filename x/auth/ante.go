@@ -270,7 +270,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	// - Make the gasPrice not a constant, and account for tx size.
 	// - Make Gas an unsigned integer and use tx basic validation
 	if stdTx.Fee.Gas <= 0 {
-		return sdk.ErrInternal(fmt.Sprintf("invalid gas supplied: %d", stdTx.Fee.Gas)).Result()
+		return sdk.ErrInternal(fmt.Sprintf("gas supplied must be a positive integer: %d", stdTx.Fee.Gas)).Result()
 	}
 	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
 

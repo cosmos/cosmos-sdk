@@ -23,7 +23,7 @@ func newTestMsg(addrs ...sdk.AccAddress) *sdk.TestMsg {
 
 func newStdFee() StdFee {
 	return NewStdFee(50000,
-		sdk.NewInt64Coin("atom", 150),
+		sdk.Coins{sdk.NewInt64Coin("atom", 150)},
 	)
 }
 
@@ -429,24 +429,24 @@ func TestAnteHandlerMemoGas(t *testing.T) {
 	var tx sdk.Tx
 	msg := newTestMsg(addr1)
 	privs, accnums, seqs := []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	fee := NewStdFee(0, sdk.NewInt64Coin("atom", 0))
+	fee := NewStdFee(0, sdk.Coins{sdk.NewInt64Coin("atom", 0)})
 
 	// tx does not have enough gas
 	tx = newTestTx(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// tx with memo doesn't have enough gas
-	fee = NewStdFee(801, sdk.NewInt64Coin("atom", 0))
+	fee = NewStdFee(801, sdk.Coins{sdk.NewInt64Coin("atom", 0)})
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, "abcininasidniandsinasindiansdiansdinaisndiasndiadninsd")
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeOutOfGas)
 
 	// memo too large
-	fee = NewStdFee(9000, sdk.NewInt64Coin("atom", 0))
+	fee = NewStdFee(9000, sdk.Coins{sdk.NewInt64Coin("atom", 0)})
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("01234567890", 500))
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeMemoTooLarge)
 
 	// tx with memo has enough gas
-	fee = NewStdFee(9000, sdk.NewInt64Coin("atom", 0))
+	fee = NewStdFee(9000, sdk.Coins{sdk.NewInt64Coin("atom", 0)})
 	tx = newTestTxWithMemo(ctx, []sdk.Msg{msg}, privs, accnums, seqs, fee, strings.Repeat("0123456789", 10))
 	checkValidTx(t, anteHandler, ctx, tx, false)
 }

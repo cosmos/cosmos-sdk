@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -19,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 var (
@@ -142,6 +143,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
+		AuthData:     auth.DefaultGenesisState(),
 		StakeData:    stake.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
@@ -155,20 +157,37 @@ func NewDefaultGenesisState() GenesisState {
 // TODO: No validators are both bonded and jailed (#2088)
 // TODO: Error if there is a duplicate validator (#1708)
 // TODO: Ensure all state machine parameters are in genesis (#1704)
-func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
-	err = validateGenesisStateAccounts(genesisState.Accounts)
-	if err != nil {
-		return
+func GaiaValidateGenesisState(genesisState GenesisState) error {
+	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
+		return err
 	}
+
 	// skip stakeData validation as genesis is created from txs
 	if len(genesisState.GenTxs) > 0 {
 		return nil
 	}
-	return stake.ValidateGenesis(genesisState.StakeData)
+
+	if err := auth.ValidateGenesis(genesisState.AuthData); err != nil {
+		return err
+	}
+	if err := stake.ValidateGenesis(genesisState.StakeData); err != nil {
+		return err
+	}
+	if err := mint.ValidateGenesis(genesisState.MintData); err != nil {
+		return err
+	}
+	if err := distr.ValidateGenesis(genesisState.DistrData); err != nil {
+		return err
+	}
+	if err := gov.ValidateGenesis(genesisState.GovData); err != nil {
+		return err
+	}
+
+	return slashing.ValidateGenesis(genesisState.SlashingData)
 }
 
 // Ensures that there are no duplicate accounts in the genesis state,
-func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
+func validateGenesisStateAccounts(accs []GenesisAccount) error {
 	addrMap := make(map[string]bool, len(accs))
 	for i := 0; i < len(accs); i++ {
 		acc := accs[i]
@@ -178,7 +197,7 @@ func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
 		}
 		addrMap[strAddr] = true
 	}
-	return
+	return nil
 }
 
 // GaiaAppGenState but with JSON
@@ -295,7 +314,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
 	coins := sdk.Coins{
-		sdk.NewCoin("fooToken", sdk.NewInt(1000)),
+		sdk.NewCoin("footoken", sdk.NewInt(1000)),
 		sdk.NewCoin(bondDenom, freeFermionsAcc),
 	}
 

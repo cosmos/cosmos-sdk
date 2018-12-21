@@ -3,12 +3,13 @@ package querier
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keep "github.com/cosmos/cosmos-sdk/x/stake/keeper"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var (
@@ -27,9 +28,8 @@ func TestNewQuerier(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = types.NewValidator(sdk.ValAddress(keep.Addrs[i]), keep.PKs[i], types.Description{})
 		validators[i], pool, _ = validators[i].AddTokensFromDel(pool, amt)
-		validators[i].BondIntraTxCounter = int16(i)
 		keeper.SetValidator(ctx, validators[i])
-		keeper.SetValidatorByPowerIndex(ctx, validators[i], pool)
+		keeper.SetValidatorByPowerIndex(ctx, validators[i])
 	}
 	keeper.SetPool(ctx, pool)
 
@@ -69,9 +69,6 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"validatorUnbondingDelegations"}, query)
 	require.Nil(t, err)
 
-	_, err = querier(ctx, []string{"validatorRedelegations"}, query)
-	require.Nil(t, err)
-
 	queryDelParams := NewQueryDelegatorParams(addrAcc2)
 	bz, errRes = cdc.MarshalJSON(queryDelParams)
 	require.Nil(t, errRes)
@@ -85,10 +82,14 @@ func TestNewQuerier(t *testing.T) {
 	_, err = querier(ctx, []string{"delegatorUnbondingDelegations"}, query)
 	require.Nil(t, err)
 
-	_, err = querier(ctx, []string{"delegatorRedelegations"}, query)
+	_, err = querier(ctx, []string{"delegatorValidators"}, query)
 	require.Nil(t, err)
 
-	_, err = querier(ctx, []string{"delegatorValidators"}, query)
+	bz, errRes = cdc.MarshalJSON(NewQueryRedelegationParams(nil, nil, nil))
+	require.Nil(t, errRes)
+	query.Data = bz
+
+	_, err = querier(ctx, []string{"redelegations"}, query)
 	require.Nil(t, err)
 }
 
@@ -170,13 +171,11 @@ func TestQueryDelegation(t *testing.T) {
 	// Create Validators and Delegation
 	val1 := types.NewValidator(addrVal1, pk1, types.Description{})
 	keeper.SetValidator(ctx, val1)
-	pool := keeper.GetPool(ctx)
-	keeper.SetValidatorByPowerIndex(ctx, val1, pool)
+	keeper.SetValidatorByPowerIndex(ctx, val1)
 
 	val2 := types.NewValidator(addrVal2, pk2, types.Description{})
 	keeper.SetValidator(ctx, val2)
-	pool = keeper.GetPool(ctx)
-	keeper.SetValidatorByPowerIndex(ctx, val2, pool)
+	keeper.SetValidatorByPowerIndex(ctx, val2)
 
 	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin(types.DefaultBondDenom, sdk.NewInt(20)), val1, true)
 
@@ -346,6 +345,27 @@ func TestQueryDelegation(t *testing.T) {
 
 	_, err = queryDelegatorUnbondingDelegations(ctx, cdc, query, keeper)
 	require.NotNil(t, err)
+
+	// Query redelegation
+	redel, err := keeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr, sdk.NewDec(10))
+	require.Nil(t, err)
+
+	bz, errRes = cdc.MarshalJSON(NewQueryRedelegationParams(addrAcc2, val1.OperatorAddr, val2.OperatorAddr))
+	require.Nil(t, errRes)
+
+	query = abci.RequestQuery{
+		Path: "/custom/stake/redelegations",
+		Data: bz,
+	}
+
+	res, err = queryRedelegations(ctx, cdc, query, keeper)
+	require.Nil(t, err)
+
+	var redelRes []types.Redelegation
+	errRes = cdc.UnmarshalJSON(res, &redelRes)
+	require.Nil(t, errRes)
+
+	require.Equal(t, redel, redelRes[0])
 }
 
 func TestQueryRedelegations(t *testing.T) {
@@ -373,11 +393,11 @@ func TestQueryRedelegations(t *testing.T) {
 	require.Nil(t, errRes)
 
 	query := abci.RequestQuery{
-		Path: "/custom/stake/delegatorRedelegations",
+		Path: "/custom/stake/redelegations",
 		Data: bz,
 	}
 
-	res, err := queryDelegatorRedelegations(ctx, cdc, query, keeper)
+	res, err := queryRedelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	var redsRes []types.Redelegation
@@ -392,11 +412,11 @@ func TestQueryRedelegations(t *testing.T) {
 	require.Nil(t, errRes)
 
 	query = abci.RequestQuery{
-		Path: "/custom/stake/validatorRedelegations",
+		Path: "/custom/stake/redelegations",
 		Data: bz,
 	}
 
-	res, err = queryValidatorRedelegations(ctx, cdc, query, keeper)
+	res, err = queryRedelegations(ctx, cdc, query, keeper)
 	require.Nil(t, err)
 
 	errRes = cdc.UnmarshalJSON(res, &redsRes)

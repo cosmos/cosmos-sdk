@@ -50,7 +50,7 @@ func QueryKeysRequestHandler(indent bool) http.HandlerFunc {
 		}
 		// an empty list will be JSONized as null, but we want to keep the empty list
 		if len(infos) == 0 {
-			PostProcessResponse(w, cdc, "[]", indent)
+			PostProcessResponse(w, cdc, []string{}, indent)
 			return
 		}
 		keysOutput, err := Bech32KeysOutput(infos)

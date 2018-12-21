@@ -6,15 +6,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 const (
@@ -27,6 +28,7 @@ type printInfo struct {
 	Moniker    string          `json:"moniker"`
 	ChainID    string          `json:"chain_id"`
 	NodeID     string          `json:"node_id"`
+	GenTxsDir  string          `json:"gentxs_dir"`
 	AppMessage json.RawMessage `json:"app_message"`
 }
 
@@ -76,12 +78,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			toPrint := printInfo{
-				ChainID:    chainID,
-				Moniker:    config.Moniker,
-				NodeID:     nodeID,
-				AppMessage: appState,
-			}
+			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 

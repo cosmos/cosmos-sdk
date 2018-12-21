@@ -426,7 +426,7 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
     app := bapp.NewBaseApp(app1Name, logger, db, tx1Decoder)
 
     // Create a capability key for accessing the account store.
-    keyAccount := sdk.NewKVStoreKey("acc")
+    keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
 
     // Register message routes.
     // Note the handler receives the keyAccount and thus

@@ -8,9 +8,10 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type MockLogger struct {
@@ -162,7 +163,7 @@ func TestContextWithCustom(t *testing.T) {
 	logger := NewMockLogger()
 	voteinfos := []abci.VoteInfo{{}}
 	meter := types.NewGasMeter(10000)
-	minFees := types.Coins{types.NewInt64Coin("feeCoin", 1)}
+	minFees := types.Coins{types.NewInt64Coin("feetoken", 1)}
 
 	ctx = types.NewContext(nil, header, ischeck, logger)
 	require.Equal(t, header, ctx.BlockHeader())
@@ -181,5 +182,5 @@ func TestContextWithCustom(t *testing.T) {
 	require.Equal(t, logger, ctx.Logger())
 	require.Equal(t, voteinfos, ctx.VoteInfos())
 	require.Equal(t, meter, ctx.GasMeter())
-	require.Equal(t, minFees, types.Coins{types.NewInt64Coin("feeCoin", 1)})
+	require.Equal(t, minFees, types.Coins{types.NewInt64Coin("feetoken", 1)})
 }

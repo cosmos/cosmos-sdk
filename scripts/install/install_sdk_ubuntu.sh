@@ -7,7 +7,7 @@
 BRANCH=master
 REPO=github.com/cosmos/cosmos-sdk
 
-GO_VERSION=1.11.2
+GO_VERSION=1.11.4
 
 sudo apt-get update -y
 sudo apt-get upgrade -y
@@ -34,7 +34,7 @@ cd $GOPATH/src/$REPO
 
 # build & install master
 git checkout $BRANCH
-LEDGER_ENABLED=false make get_tools
+LEDGER_ENABLED=false make tools
 LEDGER_ENABLED=false make get_vendor_deps
 LEDGER_ENABLED=false make install
 

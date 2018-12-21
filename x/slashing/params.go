@@ -89,7 +89,7 @@ func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
 	return
 }
 
-// Downtime slashing thershold - default 50% of the SignedBlocksWindow
+// Downtime slashing threshold - default 50% of the SignedBlocksWindow
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
 	k.paramspace.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
@@ -119,4 +119,10 @@ func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, KeySlashFractionDowntime, &res)
 	return
+}
+
+// GetParams returns the total set of slashing parameters.
+func (k Keeper) GetParams(ctx sdk.Context) (params Params) {
+	k.paramspace.GetParamSet(ctx, &params)
+	return params
 }

@@ -93,7 +93,15 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 		NoWithVeto: results[OptionNoWithVeto],
 	}
 
-	// If no one votes, proposal fails
+	// If there is no staked coins, the proposal fails
+	if keeper.vs.TotalPower(ctx).Equal(sdk.ZeroDec()) {
+		return false, tallyResults
+	}
+	// If there is not enough quorum of votes, the proposal fails
+	if totalVotingPower.Quo(keeper.vs.TotalPower(ctx)).LT(tallyParams.Quorum) {
+		return false, tallyResults
+	}
+	// If no one votes (everyone abstains), proposal fails
 	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroDec()) {
 		return false, tallyResults
 	}

@@ -12,26 +12,26 @@ import (
 )
 
 func newGasKVStore() KVStore {
-	meter := sdk.NewGasMeter(1000)
+	meter := sdk.NewGasMeter(10000)
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	return NewGasKVStore(meter, sdk.KVGasConfig(), mem)
 }
 
 func TestGasKVStoreBasic(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
-	meter := sdk.NewGasMeter(1000)
+	meter := sdk.NewGasMeter(10000)
 	st := NewGasKVStore(meter, sdk.KVGasConfig(), mem)
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	st.Delete(keyFmt(1))
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
-	require.Equal(t, meter.GasConsumed(), sdk.Gas(193))
+	require.Equal(t, meter.GasConsumed(), sdk.Gas(6429))
 }
 
 func TestGasKVStoreIterator(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
-	meter := sdk.NewGasMeter(1000)
+	meter := sdk.NewGasMeter(10000)
 	st := NewGasKVStore(meter, sdk.KVGasConfig(), mem)
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	require.Empty(t, st.Get(keyFmt(2)), "Expected `key2` to be empty")
@@ -50,7 +50,7 @@ func TestGasKVStoreIterator(t *testing.T) {
 	iterator.Next()
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, meter.GasConsumed(), sdk.Gas(384))
+	require.Equal(t, meter.GasConsumed(), sdk.Gas(6987))
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {
@@ -62,7 +62,7 @@ func TestGasKVStoreOutOfGasSet(t *testing.T) {
 
 func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
-	meter := sdk.NewGasMeter(200)
+	meter := sdk.NewGasMeter(20000)
 	st := NewGasKVStore(meter, sdk.KVGasConfig(), mem)
 	st.Set(keyFmt(1), valFmt(1))
 	iterator := st.Iterator(nil, nil)
@@ -71,7 +71,7 @@ func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 }
 
 func testGasKVStoreWrap(t *testing.T, store KVStore) {
-	meter := sdk.NewGasMeter(10000)
+	meter := sdk.NewGasMeter(100000)
 
 	store = store.Gas(meter, sdk.GasConfig{HasCost: 10})
 	require.Equal(t, uint64(0), meter.GasConsumed())

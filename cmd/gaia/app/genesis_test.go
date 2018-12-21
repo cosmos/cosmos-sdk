@@ -7,13 +7,14 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var (
@@ -126,6 +127,6 @@ func TestGaiaGenesisValidation(t *testing.T) {
 func TestNewDefaultGenesisAccount(t *testing.T) {
 	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
 	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
-	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("fooToken"))
+	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("footoken"))
 	require.Equal(t, sdk.NewInt(150), acc.Coins.AmountOf(bondDenom))
 }

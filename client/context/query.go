@@ -10,7 +10,6 @@ import (
 
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/store"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -18,6 +17,8 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/store"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an

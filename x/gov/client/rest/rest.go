@@ -9,10 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+
+	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
 // REST Variable names
@@ -24,7 +26,6 @@ const (
 	RestVoter          = "voter"
 	RestProposalStatus = "status"
 	RestNumLimit       = "limit"
-	storeName          = "gov"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -77,8 +78,8 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 
@@ -96,7 +97,7 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, baseReq, []sdk.Msg{msg}, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -122,8 +123,8 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 
@@ -135,7 +136,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 			return
 		}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, baseReq, []sdk.Msg{msg}, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -161,8 +162,8 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
-		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 
@@ -180,7 +181,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 			return
 		}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, baseReq, []sdk.Msg{msg}, cdc)
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -215,9 +216,7 @@ func queryProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		params := gov.QueryProposalParams{
-			ProposalID: proposalID,
-		}
+		params := gov.NewQueryProposalParams(proposalID)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -253,7 +252,27 @@ func queryDepositsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/deposits", bz)
+		res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		var proposal gov.Proposal
+		if err := cdc.UnmarshalJSON(res, &proposal); err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		// For inactive proposals we must query the txs directly to get the deposits
+		// as they're no longer in state.
+		propStatus := proposal.GetStatus()
+		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
+			res, err = gcutils.QueryDepositsByTxQuery(cdc, cliCtx, params)
+		} else {
+			res, err = cliCtx.QueryWithData("custom/gov/deposits", bz)
+		}
+
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -292,10 +311,7 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 			return
 		}
 
-		params := gov.QueryDepositParams{
-			ProposalID: proposalID,
-			Depositor:  depositorAddr,
-		}
+		params := gov.NewQueryDepositParams(proposalID, depositorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -311,16 +327,29 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 
 		var deposit gov.Deposit
 		cdc.UnmarshalJSON(res, &deposit)
+
+		// For an empty deposit, either the proposal does not exist or is inactive in
+		// which case the deposit would be removed from state and should be queried
+		// for directly via a txs query.
 		if deposit.Empty() {
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", cdc.MustMarshalBinaryLengthPrefixed(gov.QueryProposalParams{params.ProposalID}))
+			bz, err := cdc.MarshalJSON(gov.NewQueryProposalParams(proposalID))
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			res, err = cliCtx.QueryWithData("custom/gov/proposal", bz)
 			if err != nil || len(res) == 0 {
-				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+				err := fmt.Errorf("proposalID %d does not exist", proposalID)
 				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 				return
 			}
-			err = errors.Errorf("depositor [%s] did not deposit on proposalID [%d]", bechDepositorAddr, proposalID)
-			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-			return
+
+			res, err = gcutils.QueryDepositByTxQuery(cdc, cliCtx, params)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
 		}
 
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
@@ -356,10 +385,8 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 			return
 		}
 
-		params := gov.QueryVoteParams{
-			Voter:      voterAddr,
-			ProposalID: proposalID,
-		}
+		params := gov.NewQueryVoteParams(proposalID, voterAddr)
+
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -374,22 +401,31 @@ func queryVoteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Handle
 
 		var vote gov.Vote
 		cdc.UnmarshalJSON(res, &vote)
+
+		// For an empty vote, either the proposal does not exist or is inactive in
+		// which case the vote would be removed from state and should be queried for
+		// directly via a txs query.
 		if vote.Empty() {
-			bz, err := cdc.MarshalJSON(gov.QueryProposalParams{params.ProposalID})
+			bz, err := cdc.MarshalJSON(gov.NewQueryProposalParams(proposalID))
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
-			res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+
+			res, err = cliCtx.QueryWithData("custom/gov/proposal", bz)
 			if err != nil || len(res) == 0 {
-				err := errors.Errorf("proposalID [%d] does not exist", proposalID)
+				err := fmt.Errorf("proposalID %d does not exist", proposalID)
 				utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 				return
 			}
-			err = errors.Errorf("voter [%s] did not deposit on proposalID [%d]", bechVoterAddr, proposalID)
-			utils.WriteErrorResponse(w, http.StatusNotFound, err.Error())
-			return
+
+			res, err = gcutils.QueryVoteByTxQuery(cdc, cliCtx, params)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
 		}
+
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
@@ -419,7 +455,27 @@ func queryVotesOnProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) 
 			return
 		}
 
-		res, err := cliCtx.QueryWithData("custom/gov/votes", bz)
+		res, err := cliCtx.QueryWithData("custom/gov/proposal", bz)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		var proposal gov.Proposal
+		if err := cdc.UnmarshalJSON(res, &proposal); err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		// For inactive proposals we must query the txs directly to get the votes
+		// as they're no longer in state.
+		propStatus := proposal.GetStatus()
+		if !(propStatus == gov.StatusVotingPeriod || propStatus == gov.StatusDepositPeriod) {
+			res, err = gcutils.QueryVotesByTxQuery(cdc, cliCtx, params)
+		} else {
+			res, err = cliCtx.QueryWithData("custom/gov/votes", bz)
+		}
+
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // An Invariant is a function which tests a particular invariant.

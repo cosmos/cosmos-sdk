@@ -156,32 +156,34 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	var app = &GaiaApp{
 		BaseApp:     bApp,
 		cdc:         cdc,
-		keyMain:     sdk.NewKVStoreKey("main"),
-		keyAccount:  sdk.NewKVStoreKey("acc"),
-		keyStake:    sdk.NewKVStoreKey("stake"),
-		tkeyStake:   sdk.NewTransientStoreKey("transient_stake"),
-		keySlashing: sdk.NewKVStoreKey("slashing"),
-		keyParams:   sdk.NewKVStoreKey("params"),
-		tkeyParams:  sdk.NewTransientStoreKey("transient_params"),
+		keyMain:     sdk.NewKVStoreKey(bam.MainStoreKey),
+		keyAccount:  sdk.NewKVStoreKey(auth.StoreKey),
+		keyStake:    sdk.NewKVStoreKey(stake.StoreKey),
+		tkeyStake:   sdk.NewTransientStoreKey(stake.TStoreKey),
+		keySlashing: sdk.NewKVStoreKey(slashing.StoreKey),
+		keyParams:   sdk.NewKVStoreKey(params.StoreKey),
+		tkeyParams:  sdk.NewTransientStoreKey(params.TStoreKey),
 	}
+
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// define the accountKeeper
 	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
-		app.keyAccount,        // target store
+		app.keyAccount, // target store
+		app.paramsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount, // prototype
 	)
 
 	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
-	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), slashing.DefaultCodespace)
 
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+		AddRoute(stake.RouterKey, stake.NewHandler(app.stakeKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)

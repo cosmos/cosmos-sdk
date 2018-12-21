@@ -7,16 +7,18 @@ import (
 	"os"
 	"sort"
 
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const chainID = ""
@@ -26,13 +28,17 @@ const chainID = ""
 // capabilities aren't needed for testing.
 type App struct {
 	*bam.BaseApp
-	Cdc        *codec.Codec // Cdc is public since the codec is passed into the module anyways
-	KeyMain    *sdk.KVStoreKey
-	KeyAccount *sdk.KVStoreKey
+	Cdc              *codec.Codec // Cdc is public since the codec is passed into the module anyways
+	KeyMain          *sdk.KVStoreKey
+	KeyAccount       *sdk.KVStoreKey
+	KeyFeeCollection *sdk.KVStoreKey
+	KeyParams        *sdk.KVStoreKey
+	TKeyParams       *sdk.TransientStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
 	AccountKeeper       auth.AccountKeeper
 	FeeCollectionKeeper auth.FeeCollectionKeeper
+	ParamsKeeper        params.Keeper
 
 	GenesisAccounts  []auth.Account
 	TotalCoinsSupply sdk.Coins
@@ -54,16 +60,26 @@ func NewApp() *App {
 	app := &App{
 		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
 		Cdc:              cdc,
-		KeyMain:          sdk.NewKVStoreKey("main"),
-		KeyAccount:       sdk.NewKVStoreKey("acc"),
+		KeyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
+		KeyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
 		TotalCoinsSupply: sdk.Coins{},
+		KeyFeeCollection: sdk.NewKVStoreKey("fee"),
+		KeyParams:        sdk.NewKVStoreKey("params"),
+		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
 	}
+
+	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
 
 	// Define the accountKeeper
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,
+		app.ParamsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
+	)
+	app.FeeCollectionKeeper = auth.NewFeeCollectionKeeper(
+		app.Cdc,
+		app.KeyFeeCollection,
 	)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
@@ -79,8 +95,10 @@ func NewApp() *App {
 // CompleteSetup completes the application setup after the routes have been
 // registered.
 func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
-	newKeys = append(newKeys, app.KeyMain)
-	newKeys = append(newKeys, app.KeyAccount)
+	newKeys = append(
+		newKeys,
+		app.KeyMain, app.KeyAccount, app.KeyParams, app.TKeyParams, app.KeyFeeCollection,
+	)
 
 	for _, key := range newKeys {
 		switch key.(type) {
@@ -107,6 +125,8 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 		acc.SetCoins(genacc.GetCoins())
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
+
+	auth.InitGenesis(ctx, app.AccountKeeper, app.FeeCollectionKeeper, auth.DefaultGenesisState())
 
 	return abci.ResponseInitChain{}
 }

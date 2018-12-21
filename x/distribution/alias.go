@@ -49,6 +49,7 @@ var (
 	InitialFeePool = types.InitialFeePool
 
 	NewGenesisState              = types.NewGenesisState
+	ValidateGenesis              = types.ValidateGenesis
 	DefaultGenesisState          = types.DefaultGenesisState
 	DefaultGenesisWithValidators = types.DefaultGenesisWithValidators
 
@@ -67,6 +68,10 @@ var (
 const (
 	DefaultCodespace = types.DefaultCodespace
 	CodeInvalidInput = types.CodeInvalidInput
+	StoreKey         = types.StoreKey
+	TStoreKey        = types.TStoreKey
+	RouterKey        = types.RouterKey
+	QuerierRoute       = types.QuerierRoute
 )
 
 var (

@@ -134,7 +134,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsKey)
 	counter := int16(0)
 
-	var valAddrs []sdk.ValAddress
+	var valConsAddrs []sdk.ConsAddress
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(iter.Key()[1:])
 		validator, found := app.stakeKeeper.GetValidator(ctx, addr)
@@ -144,7 +144,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 		validator.BondHeight = 0
 		validator.UnbondingHeight = 0
-		valAddrs = append(valAddrs, validator.GetOperator())
+		valConsAddrs = append(valConsAddrs, validator.ConsAddress())
 
 		app.stakeKeeper.SetValidator(ctx, validator)
 		counter++
@@ -157,9 +157,9 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	// remove all existing slashing periods and recreate one for each validator
 	app.slashingKeeper.DeleteValidatorSlashingPeriods(ctx)
 
-	for _, valAddr := range valAddrs {
+	for _, valConsAddr := range valConsAddrs {
 		sp := slashing.ValidatorSlashingPeriod{
-			ValidatorAddr: sdk.ConsAddress(valAddr.Bytes()),
+			ValidatorAddr: valConsAddr,
 			StartHeight:   0,
 			EndHeight:     0,
 			SlashedSoFar:  sdk.ZeroDec(),

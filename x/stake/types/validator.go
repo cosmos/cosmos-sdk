@@ -415,7 +415,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 		// leave excess tokens in the validator
 		// however fully use all the delegator shares
 		issuedTokens = v.DelegatorShareExRate().Mul(delShares).TruncateInt()
-		issuedTokens = sdk.Min(issuedTokens, v.Tokens) // defensive should not occur
+		issuedTokens = sdk.MinInt(issuedTokens, v.Tokens) // defensive should not occur
 		v.Tokens = v.Tokens.Sub(issuedTokens)
 	}
 

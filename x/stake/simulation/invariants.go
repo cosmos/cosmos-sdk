@@ -129,7 +129,7 @@ func NonNegativePowerInvariant(k stake.Keeper) simulation.Invariant {
 					"\n\tkey should be: %v\n\tkey in store: %v", validator.GetPower(), powerKey, iterator.Key())
 			}
 
-			if validator.Tokens.LT(sdk.ZeroDec()) {
+			if validator.Tokens.IsNegative() {
 				return fmt.Errorf("negative tokens for validator: %v", validator)
 			}
 		}

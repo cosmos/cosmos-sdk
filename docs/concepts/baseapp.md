@@ -13,7 +13,7 @@ commitment, only the `DeliverTx` is persisted.
 The BaseApp requires stores to be mounted via capabilities keys - handlers can
 only access stores they're given the key to. The `baseApp` ensures all stores are
 properly loaded, cached, and committed. One mounted store is considered the
-"main" - it holds the latest block header, from which we can find and load the
+"main" (`baseApp.MainStoreKey`) - it holds the latest block header, from which we can find and load the
 most recent state.
 
 The BaseApp distinguishes between two handler types - the `AnteHandler` and the
@@ -116,9 +116,9 @@ otherwise a gas meter with `ConsensusParam.BlockSize.MaxGas` is initialized.
 
 Before the transaction logic is run, the `BlockGasMeter` is first checked to
 see if any gas remains. If no gas remains, then `DeliverTx` immediately returns
-an error. 
+an error.
 
 After the transaction has been processed, the used gas (up to the transaction
 gas limit) is deducted from the BlockGasMeter. If the remaining gas exceeds the
 meter's limits, then DeliverTx returns an error and the transaction is not
-committed. 
+committed.

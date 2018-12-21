@@ -23,7 +23,7 @@ cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 And run :
 
 ```
-make get_tools // run make update_tools if you already had it installed
+make tools // run make update_tools if you already had it installed
 make get_vendor_deps
 make install_examples
 ```

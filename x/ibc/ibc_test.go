@@ -15,27 +15,47 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 // AccountKeeper(/Keeper) and IBCMapper should use different StoreKey later
 
-func defaultContext(key sdk.StoreKey) sdk.Context {
+type testInput struct {
+	cdc    *codec.Codec
+	ctx    sdk.Context
+	ak     auth.AccountKeeper
+	bk     bank.BaseKeeper
+	ibcKey *sdk.KVStoreKey
+}
+
+func setupTestInput() testInput {
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
-	cms.MountStoreWithDB(key, sdk.StoreTypeIAVL, db)
-	cms.LoadLatestVersion()
-	ctx := sdk.NewContext(cms, abci.Header{}, false, log.NewNopLogger())
-	return ctx
-}
+	cdc := makeCodec()
 
-func newAddress() sdk.AccAddress {
-	return sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
-}
+	ibcKey := sdk.NewKVStoreKey("ibcCapKey")
+	authCapKey := sdk.NewKVStoreKey("authCapKey")
+	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
+	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("transient_params")
 
-func getCoins(ck bank.Keeper, ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, sdk.Error) {
-	zero := sdk.Coins(nil)
-	coins, _, err := ck.AddCoins(ctx, addr, zero)
-	return coins, err
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(ibcKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(fckCapKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
+	ms.LoadLatestVersion()
+
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	ak := auth.NewAccountKeeper(
+		cdc, authCapKey, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount,
+	)
+	bk := bank.NewBaseKeeper(ak)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
+
+	ak.SetParams(ctx, auth.DefaultParams())
+
+	return testInput{cdc: cdc, ctx: ctx, ak: ak, bk: bk, ibcKey: ibcKey}
 }
 
 func makeCodec() *codec.Codec {
@@ -57,14 +77,19 @@ func makeCodec() *codec.Codec {
 	return cdc
 }
 
+func newAddress() sdk.AccAddress {
+	return sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
+}
+
+func getCoins(ck bank.Keeper, ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, sdk.Error) {
+	zero := sdk.Coins(nil)
+	coins, _, err := ck.AddCoins(ctx, addr, zero)
+	return coins, err
+}
+
 func TestIBC(t *testing.T) {
-	cdc := makeCodec()
-
-	key := sdk.NewKVStoreKey("ibc")
-	ctx := defaultContext(key)
-
-	am := auth.NewAccountKeeper(cdc, key, auth.ProtoBaseAccount)
-	ck := bank.NewBaseKeeper(am)
+	input := setupTestInput()
+	ctx := input.ctx
 
 	src := newAddress()
 	dest := newAddress()
@@ -72,12 +97,12 @@ func TestIBC(t *testing.T) {
 	zero := sdk.Coins(nil)
 	mycoins := sdk.Coins{sdk.NewInt64Coin("mycoin", 10)}
 
-	coins, _, err := ck.AddCoins(ctx, src, mycoins)
+	coins, _, err := input.bk.AddCoins(ctx, src, mycoins)
 	require.Nil(t, err)
 	require.Equal(t, mycoins, coins)
 
-	ibcm := NewMapper(cdc, key, DefaultCodespace)
-	h := NewHandler(ibcm, ck)
+	ibcm := NewMapper(input.cdc, input.ibcKey, DefaultCodespace)
+	h := NewHandler(ibcm, input.bk)
 	packet := IBCPacket{
 		SrcAddr:   src,
 		DestAddr:  dest,
@@ -86,7 +111,7 @@ func TestIBC(t *testing.T) {
 		DestChain: chainid,
 	}
 
-	store := ctx.KVStore(key)
+	store := ctx.KVStore(input.ibcKey)
 
 	var msg sdk.Msg
 	var res sdk.Result
@@ -102,7 +127,7 @@ func TestIBC(t *testing.T) {
 	res = h(ctx, msg)
 	require.True(t, res.IsOK())
 
-	coins, err = getCoins(ck, ctx, src)
+	coins, err = getCoins(input.bk, ctx, src)
 	require.Nil(t, err)
 	require.Equal(t, zero, coins)
 
@@ -120,7 +145,7 @@ func TestIBC(t *testing.T) {
 	res = h(ctx, msg)
 	require.True(t, res.IsOK())
 
-	coins, err = getCoins(ck, ctx, dest)
+	coins, err = getCoins(input.bk, ctx, dest)
 	require.Nil(t, err)
 	require.Equal(t, mycoins, coins)
 

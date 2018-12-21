@@ -16,7 +16,7 @@ import (
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 	r.HandleFunc(
 		"/slashing/validators/{validatorPubKey}/signing_info",
-		signingInfoHandlerFn(cliCtx, "slashing", cdc),
+		signingInfoHandlerFn(cliCtx, slashing.StoreKey, cdc),
 	).Methods("GET")
 
 	r.HandleFunc(

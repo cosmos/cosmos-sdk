@@ -7,6 +7,17 @@ import (
 	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
+const (
+	// StoreKey is the store key string for slashing
+	StoreKey = "slashing"
+
+	// RouterKey is the message route for slashing
+	RouterKey = "slashing"
+
+	// QuerierRoute is the querier route for slashing
+	QuerierRoute = "slashing"
+)
+
 // key prefix bytes
 var (
 	ValidatorSigningInfoKey         = []byte{0x01} // Prefix for signing info

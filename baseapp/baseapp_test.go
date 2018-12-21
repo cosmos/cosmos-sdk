@@ -90,7 +90,7 @@ func TestLoadVersion(t *testing.T) {
 	app := NewBaseApp(name, logger, db, nil)
 
 	// make a cap key and mount the store
-	capKey := sdk.NewKVStoreKey("main")
+	capKey := sdk.NewKVStoreKey(MainStoreKey)
 	app.MountStores(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
@@ -160,7 +160,7 @@ func testChangeNameHelper(name string) func(*BaseApp) {
 	app := newBaseApp(t.Name())
 
 	// make a cap key and mount the store
-	capKey := sdk.NewKVStoreKey("main")
+	capKey := sdk.NewKVStoreKey(MainStoreKey)
 	app.MountStores(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
@@ -217,7 +217,7 @@ func TestInitChainer(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	app := NewBaseApp(name, logger, db, nil)
-	capKey := sdk.NewKVStoreKey("main")
+	capKey := sdk.NewKVStoreKey(MainStoreKey)
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
 

@@ -5,25 +5,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-
-	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
-	bank "github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 func TestPowHandler(t *testing.T) {
-	ms, capKey := setupMultiStore()
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
+	input := setupTestInput()
+	ctx := input.ctx
 
-	am := auth.NewAccountKeeper(cdc, capKey, auth.ProtoBaseAccount)
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
 	config := NewConfig("pow", int64(1))
-	ck := bank.NewBaseKeeper(am)
-	keeper := NewKeeper(capKey, config, ck, DefaultCodespace)
+	keeper := NewKeeper(input.capKey, config, input.bk, DefaultCodespace)
 
 	handler := keeper.Handler
 

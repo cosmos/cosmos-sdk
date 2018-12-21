@@ -78,7 +78,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// test simulation
 	success := executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fee=1footoken --dry-run", flags, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fees=1footoken --dry-run", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, port)
 	// ensure state didn't change
@@ -87,7 +87,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// insufficient funds (coins + fees)
 	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fee=1footoken", flags, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fees=1footoken", flags, barAddr), app.DefaultKeyPass)
 	require.False(t, success)
 	tests.WaitForNextNBlocksTM(1, port)
 	// ensure state didn't change
@@ -96,7 +96,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// test success (transfer = coins + fees)
 	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --fee=300footoken --amount=500footoken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --fees=300footoken --amount=500footoken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 	cleanupDirs(gaiadHome, gaiacliHome)
 }
@@ -188,7 +188,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.False(t, success)
 
 	// Enable auto gas
-	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli tx send %v --json --gas=simulate --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli tx send %v --json --gas=auto --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 	// check that gas wanted == gas used
 	cdc := app.MakeCodec()
@@ -563,7 +563,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Test generate sendTx, estimate gas
 	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=simulate --generate-only",
+		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=auto --generate-only",
 		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
 	require.True(t, success)
 	require.NotEmpty(t, stderr)

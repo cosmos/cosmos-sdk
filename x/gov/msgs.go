@@ -8,7 +8,6 @@ import (
 
 // Governance message types and routes
 const (
-	MsgRoute              = "gov"
 	TypeMsgDeposit        = "deposit"
 	TypeMsgVote           = "vote"
 	TypeMsgSubmitProposal = "submit_proposal"
@@ -37,7 +36,7 @@ func NewMsgSubmitProposal(title string, description string, proposalType Proposa
 }
 
 //nolint
-func (msg MsgSubmitProposal) Route() string { return MsgRoute }
+func (msg MsgSubmitProposal) Route() string { return RouterKey }
 func (msg MsgSubmitProposal) Type() string  { return TypeMsgSubmitProposal }
 
 // Implements Msg.
@@ -104,7 +103,7 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 
 // Implements Msg.
 // nolint
-func (msg MsgDeposit) Route() string { return MsgRoute }
+func (msg MsgDeposit) Route() string { return RouterKey }
 func (msg MsgDeposit) Type() string  { return TypeMsgDeposit }
 
 // Implements Msg.
@@ -165,7 +164,7 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) MsgV
 
 // Implements Msg.
 // nolint
-func (msg MsgVote) Route() string { return MsgRoute }
+func (msg MsgVote) Route() string { return RouterKey }
 func (msg MsgVote) Type() string  { return TypeMsgVote }
 
 // Implements Msg.

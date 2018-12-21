@@ -10,15 +10,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
+	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	staketypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	cfg "github.com/tendermint/tendermint/config"
+	tmconfig "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/types"
@@ -34,6 +35,7 @@ var (
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagNodeCliHome       = "node-cli-home"
 	flagStartingIPAddress = "starting-ip-address"
+	flagMinimumFees       = "minimum-fees"
 )
 
 const nodeDirPerm = 0755
@@ -76,13 +78,19 @@ Example:
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1",
 		"Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 
-	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(
+		client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created",
+	)
+	cmd.Flags().String(
+		flagMinimumFees, fmt.Sprintf("1%s", staketypes.DefaultBondDenom), "Validator minimum fees",
+	)
 
 	return cmd
 }
 
-func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
+func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 	var chainID string
+
 	outDir := viper.GetString(flagOutputDir)
 	numValidators := viper.GetInt(flagNumValidators)
 
@@ -94,6 +102,9 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 	monikers := make([]string, numValidators)
 	nodeIDs := make([]string, numValidators)
 	valPubKeys := make([]crypto.PubKey, numValidators)
+
+	gaiaConfig := srvconfig.DefaultConfig()
+	gaiaConfig.MinFees = viper.GetString(flagMinimumFees)
 
 	var (
 		accs     []app.GenesisAccount
@@ -181,14 +192,14 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 			Address: addr,
 			Coins: sdk.Coins{
 				sdk.NewInt64Coin(fmt.Sprintf("%stoken", nodeDirName), 1000),
-				sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 150),
+				sdk.NewInt64Coin(staketypes.DefaultBondDenom, 500),
 			},
 		})
 
 		msg := stake.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 100),
+			sdk.NewInt64Coin(staketypes.DefaultBondDenom, 100),
 			stake.NewDescription(nodeDirName, "", "", ""),
 			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
@@ -213,6 +224,9 @@ func initTestnet(config *cfg.Config, cdc *codec.Codec) error {
 			_ = os.RemoveAll(outDir)
 			return err
 		}
+
+		gaiaConfigFilePath := filepath.Join(nodeDir, "config/gaiad.toml")
+		srvconfig.WriteConfigFile(gaiaConfigFilePath, gaiaConfig)
 	}
 
 	if err := initGenFiles(cdc, chainID, accs, genFiles, numValidators); err != nil {
@@ -261,7 +275,7 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	cdc *codec.Codec, config *cfg.Config, chainID string,
+	cdc *codec.Codec, config *tmconfig.Config, chainID string,
 	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
 	numValidators int, outDir, nodeDirPrefix, nodeDaemonHomeName string,
 ) error {

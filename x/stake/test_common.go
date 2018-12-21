@@ -20,7 +20,7 @@ var (
 	coins = sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(10))}
 	fee   = auth.NewStdFee(
 		100000,
-		sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(0))}...,
+		sdk.Coins{sdk.NewCoin("foocoin", sdk.NewInt(0))},
 	)
 
 	commissionMsg = NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())

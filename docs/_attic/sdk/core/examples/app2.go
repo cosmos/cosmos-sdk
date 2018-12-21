@@ -15,6 +15,7 @@ import (
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
@@ -42,7 +43,7 @@ func NewApp2(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	app := bapp.NewBaseApp(app2Name, logger, db, tx2Decoder(cdc))
 
 	// Create a key for accessing the account store.
-	keyAccount := sdk.NewKVStoreKey("acc")
+	keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
 	// Create a key for accessing the issue store.
 	keyIssue := sdk.NewKVStoreKey("issue")
 

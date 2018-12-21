@@ -24,8 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-const ctxAccStoreName = "acc"
-
 var (
 	verifier tmlite.Verifier
 )
@@ -76,7 +74,7 @@ func NewCLIContext() CLIContext {
 		Client:        rpc,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
-		AccountStore:  ctxAccStoreName,
+		AccountStore:  auth.StoreKey,
 		From:          viper.GetString(client.FlagFrom),
 		Height:        viper.GetInt64(client.FlagHeight),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),

@@ -29,7 +29,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		SimulateGas   bool
 		ChainID       string
 		Memo          string
-		Fee           string
+		Fees          sdk.Coins
 	}
 	defaultMsg := []sdk.Msg{sdk.NewTestMsg(addr)}
 	tests := []struct {
@@ -47,33 +47,23 @@ func TestTxBuilderBuild(t *testing.T) {
 				GasAdjustment: 1.1,
 				SimulateGas:   false,
 				ChainID:       "test-chain",
-				Memo:          "hello",
-				Fee:           "1" + stakeTypes.DefaultBondDenom,
+				Memo:          "hello from Voyager !",
+				Fees:          sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))},
 			},
 			defaultMsg,
 			StdSignMsg{
 				ChainID:       "test-chain",
 				AccountNumber: 1,
 				Sequence:      1,
-				Memo:          "hello",
+				Memo:          "hello from Voyager !",
 				Msgs:          defaultMsg,
-				Fee:           auth.NewStdFee(100, sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))),
+				Fee:           auth.NewStdFee(100, sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},
 	}
 	for i, tc := range tests {
-		bldr := TxBuilder{
-			TxEncoder:     tc.fields.TxEncoder,
-			AccountNumber: tc.fields.AccountNumber,
-			Sequence:      tc.fields.Sequence,
-			Gas:           tc.fields.Gas,
-			GasAdjustment: tc.fields.GasAdjustment,
-			SimulateGas:   tc.fields.SimulateGas,
-			ChainID:       tc.fields.ChainID,
-			Memo:          tc.fields.Memo,
-			Fee:           tc.fields.Fee,
-		}
+		bldr := NewTxBuilder(tc.fields.TxEncoder, tc.fields.AccountNumber, tc.fields.Sequence, tc.fields.Gas, tc.fields.GasAdjustment, tc.fields.SimulateGas, tc.fields.ChainID, tc.fields.Memo, tc.fields.Fees)
 		got, err := bldr.Build(tc.msgs)
 		require.Equal(t, tc.wantErr, (err != nil), "TxBuilder.Build() error = %v, wantErr %v, tc %d", err, tc.wantErr, i)
 		if !reflect.DeepEqual(got, tc.want) {

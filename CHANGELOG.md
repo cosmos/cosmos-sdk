@@ -1,8 +1,19 @@
 # Changelog
 
+## 0.29.0
+
+BREAKING CHANGES
+
+* Gaia
+  * [\#3148](https://github.com/cosmos/cosmos-sdk/issues/3148) Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version
+
+* SDK
+  * [\#3163](https://github.com/cosmos/cosmos-sdk/issues/3163) Withdraw commission on self bond removal
+
+
 ## 0.28.1
 
-BREAKNG CHANGES
+BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
   * [lcd] [\#3045](https://github.com/cosmos/cosmos-sdk/pull/3045) Fix quoted json return on GET /keys (keys list)
@@ -25,11 +36,11 @@ FEATURES
 IMPROVEMENTS
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-  * \#2879, \#2880 Update deposit and vote endpoints to perform a direct txs query
+  * [\#2879](https://github.com/cosmos/cosmos-sdk/issues/2879), [\#2880](https://github.com/cosmos/cosmos-sdk/issues/2880) Update deposit and vote endpoints to perform a direct txs query
     when a given proposal is inactive and thus having votes and deposits removed
     from state.
 * Gaia CLI  (`gaiacli`)
-  * \#2879, \#2880 Update deposit and vote CLI commands to perform a direct txs query
+  * [\#2879](https://github.com/cosmos/cosmos-sdk/issues/2879), [\#2880](https://github.com/cosmos/cosmos-sdk/issues/2880) Update deposit and vote CLI commands to perform a direct txs query
     when a given proposal is inactive and thus having votes and deposits removed
     from state.
 * Gaia

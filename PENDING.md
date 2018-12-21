@@ -28,9 +28,13 @@ FEATURES
 * Gaia REST API (`gaiacli advanced rest-server`)
   * [\#3067](https://github.com/cosmos/cosmos-sdk/issues/3067) Add support for fees on transactions
   * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) Add a custom memo on transactions
+  * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
+  `/gov/proposals/{proposalID}/proposer` to query for a proposal's proposer.
 
 * Gaia CLI  (`gaiacli`)
   * \#2399 Implement `params` command to query slashing parameters.
+  * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
+  `query gov proposer [proposal-id]` to query for a proposal's proposer.
 
 * Gaia
     * [\#2182] [x/stake] Added querier for querying a single redelegation

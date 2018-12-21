@@ -566,10 +566,9 @@ func TestSubmitProposal(t *testing.T) {
 	proposal := getProposal(t, port, proposalID)
 	require.Equal(t, "Test", proposal.GetTitle())
 
-	// query tx
-	txs := getTransactions(t, port, fmt.Sprintf("action=submit_proposal&proposer=%s", addr))
-	require.Len(t, txs, 1)
-	require.Equal(t, resultTx.Height, txs[0].Height)
+	proposer := getProposer(t, port, proposalID)
+	require.Equal(t, addr.String(), proposer.Proposer)
+	require.Equal(t, proposalID, proposer.ProposalID)
 }
 
 func TestDeposit(t *testing.T) {

@@ -458,3 +458,31 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 
 	return cmd
 }
+
+// GetCmdQueryProposer implements the query proposer command.
+func GetCmdQueryProposer(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "proposer [proposal-id]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query the proposer of a governance proposal",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			// validate that the proposalID is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s is not a valid uint", args[0])
+			}
+
+			res, err := gcutils.QueryProposerByTxQuery(cdc, cliCtx, proposalID)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(res))
+			return nil
+		},
+	}
+
+	return cmd
+}

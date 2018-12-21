@@ -147,13 +147,22 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	/* Handle slashing state. */
 
-	// we have to clear the slashing periods, since they reference heights
-	app.slashingKeeper.DeleteValidatorSlashingPeriods(ctx)
+	// reset slashing periods
+	app.slashingKeeper.IterateValidatorSlashingPeriods(
+		ctx,
+		func(sp slashing.ValidatorSlashingPeriod) (stop bool) {
+			sp.StartHeight = 0
+			return false
+		},
+	)
 
 	// reset start height on signing infos
-	app.slashingKeeper.IterateValidatorSigningInfos(ctx, func(addr sdk.ConsAddress, info slashing.ValidatorSigningInfo) (stop bool) {
-		info.StartHeight = 0
-		app.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
-		return false
-	})
+	app.slashingKeeper.IterateValidatorSigningInfos(
+		ctx,
+		func(addr sdk.ConsAddress, info slashing.ValidatorSigningInfo) (stop bool) {
+			info.StartHeight = 0
+			app.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+			return false
+		},
+	)
 }

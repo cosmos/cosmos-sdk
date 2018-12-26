@@ -304,8 +304,7 @@ func InitializeTestLCD(
 	// XXX: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
-	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
-	viper.Set(client.FlagTrustNode, true)
+	viper.Set(client.FlagTrustNode, false)
 	dir, err := ioutil.TempDir("", "lcd_test")
 	require.NoError(t, err)
 	viper.Set(cli.HomeFlag, dir)

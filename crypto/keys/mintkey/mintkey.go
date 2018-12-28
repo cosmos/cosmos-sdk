@@ -75,8 +75,6 @@ func unarmorBytes(armorStr, blockType string) (bz []byte, err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println(armorStr)
-	fmt.Println(bType)
 	if bType != blockType {
 		err = fmt.Errorf("Unrecognized armor type %q, expected: %q", bType, blockType)
 		return
@@ -106,6 +104,7 @@ func EncryptArmorPrivKey(privKey crypto.PrivKey, passphrase string) string {
 // generated salt and the xsalsa20 cipher. returns the salt and the
 // encrypted priv key.
 func encryptPrivKey(privKey crypto.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
+	saltBytes = crypto.CRandBytes(16)
 	key, err := bcrypt.GenerateFromPassword([]byte(passphrase), BcryptSecurityParameter)
 	if err != nil {
 		cmn.Exit("Error generating bcrypt key from passphrase: " + err.Error())
@@ -136,6 +135,7 @@ func UnarmorDecryptPrivKey(armorStr string, passphrase string) (crypto.PrivKey, 
 		return privKey, fmt.Errorf("Error decoding salt: %v", err.Error())
 	}
 	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase)
+	fmt.Println("ddddddddddd")
 	return privKey, err
 }
 

@@ -87,9 +87,9 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 			"Insecure mode is temporarily disabled, please locally generate an " +
 				"SSL certificate to test. Support will be re-enabled soon!",
 		)
-		// listener, err = tmserver.StartHTTPServer(
+		// listener, err = rpcserver.StartHTTPServer(
 		// 	listenAddr, handler, logger,
-		// 	tmserver.Config{MaxOpenConnections: maxOpen},
+		// 	rpcserver.Config{MaxOpenConnections: maxOpen},
 		// )
 		// if err != nil {
 		// 	return
@@ -120,21 +120,27 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 			}()
 		}
 
-		rs.listener, err = tmserver.StartHTTPAndTLSServer(
-			listenAddr, rs.Mux,
-			certFile, keyFile,
-			rs.log,
+		rs.listener, err = tmserver.Listen(
+			listenAddr,
 			tmserver.Config{MaxOpenConnections: maxOpen},
 		)
 		if err != nil {
 			return
 		}
 
+		rs.log.Info("Starting Gaia Lite REST service...")
 		rs.log.Info(rs.fingerprint)
-		rs.log.Info("REST server started")
-	}
 
-	// logger.Info("REST server started")
+		err := tmserver.StartHTTPAndTLSServer(
+			rs.listener,
+			rs.Mux,
+			certFile, keyFile,
+			rs.log,
+		)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

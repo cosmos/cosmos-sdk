@@ -438,25 +438,26 @@ func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string
 	// make Info
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, privArmor)
-	kb.writeInfo(info, name)
+	kb.WriteInfo(info, name)
 	return info
 }
 
 func (kb dbKeybase) writeLedgerKey(pub tmcrypto.PubKey, path crypto.DerivationPath, name string) Info {
 	info := newLedgerInfo(name, pub, path)
-	kb.writeInfo(info, name)
+	kb.WriteInfo(info, name)
 	return info
 }
 
 func (kb dbKeybase) writeOfflineKey(pub tmcrypto.PubKey, name string) Info {
 	info := newOfflineInfo(name, pub)
-	kb.writeInfo(info, name)
+	kb.WriteInfo(info, name)
 	return info
 }
 
-func (kb dbKeybase) writeInfo(info Info, name string) {
+func (kb dbKeybase) WriteInfo(info Info, name string) {
 	// write the info by key
 	key := infoKey(name)
+	fmt.Println(name)
 	kb.db.SetSync(key, writeInfo(info))
 	// store a pointer to the infokey by address for fast lookup
 	kb.db.SetSync(addrKey(info.GetAddress()), key)

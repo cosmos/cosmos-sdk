@@ -1,6 +1,7 @@
 package keys
 
 import (
+	usercryto "github.com/chain-dev/bschain/crypto"
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
@@ -16,4 +17,6 @@ func init() {
 	cdc.RegisterConcrete(localInfo{}, "crypto/keys/localInfo", nil)
 	cdc.RegisterConcrete(ledgerInfo{}, "crypto/keys/ledgerInfo", nil)
 	cdc.RegisterConcrete(offlineInfo{}, "crypto/keys/offlineInfo", nil)
+	cdc.RegisterConcrete(usercryto.PrivKeySm2{}, usercryto.Sm2PrivKeyAminoRoute, nil)
+	cdc.RegisterConcrete(usercryto.PubKeySm2{}, usercryto.Sm2PubKeyAminoRoute, nil)
 }

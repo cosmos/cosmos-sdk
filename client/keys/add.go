@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cosmos/go-bip39"
+	bip39 "github.com/bartekn/go-bip39"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -18,9 +18,11 @@ import (
 	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
+	flagPublicKey   = "pubkey"
 	flagInteractive = "interactive"
 	flagBIP44Path   = "bip44-path"
 	flagRecover     = "recover"
@@ -46,6 +48,7 @@ If run with --dry-run, a key would be generated (or recovered) but not stored to
 		Args: cobra.ExactArgs(1),
 		RunE: runAddCmd,
 	}
+	cmd.Flags().String(FlagPublicKey, "cosmospub1....", "store only a public key. Useful for constructuing multisigs")
 	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
 	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	cmd.Flags().String(flagBIP44Path, "44'/118'/0'/0/0", "BIP44 path from which to derive a private key")
@@ -73,6 +76,12 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 	buf := client.BufferStdin()
 	name := args[0]
+
+	interactive := viper.GetBool(flagInteractive)
+	flags := cmd.Flags()
+
+	pubKeyFlag := flags.Lookup(flagPublicKey)
+
 	if viper.GetBool(flagDryRun) {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
@@ -94,18 +103,29 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		// ask for a password when generating a local key
-		if !viper.GetBool(client.FlagUseLedger) {
-			encryptPassword, err = client.GetCheckPassword(
-				"Enter a passphrase to encrypt your key to disk:",
-				"Repeat the passphrase:", buf)
-			if err != nil {
-				return err
+
+		if !pubKeyFlag.Changed {
+			if !viper.GetBool(client.FlagUseLedger) {
+				encryptPassword, err = client.GetCheckPassword(
+					"Enter a passphrase to encrypt your key to disk:",
+					"Repeat the passphrase:", buf)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 
-	interactive := viper.GetBool(flagInteractive)
-	flags := cmd.Flags()
+	if pubKeyFlag.Changed {
+
+		pk, err := sdk.GetAccPubKeyBech32(pubKeyFlag.Value.String())
+		if err != nil {
+			return err
+		}
+		kb.CreateOffline(name, pk)
+		return nil
+	}
+
 	bipFlag := flags.Lookup(flagBIP44Path)
 
 	bip44Params, err := getBIP44ParamsAndPath(bipFlag.Value.String(), bipFlag.Changed || !interactive)

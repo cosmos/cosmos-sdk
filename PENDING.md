@@ -51,6 +51,8 @@ IMPROVEMENTS
 * Gaia REST API (`gaiacli advanced rest-server`)
 
 * Gaia CLI  (`gaiacli`)
+  *[\#3203](https://github.com/cosmos/cosmos-sdk/pull/3202) Support adding offline public keys to the keystore
+
 
 * Gaia
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis

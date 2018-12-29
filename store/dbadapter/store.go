@@ -15,12 +15,12 @@ type Store struct {
 	dbm.DB
 }
 
-// Implements Store.
+// GetStoreType returns the type of the store.
 func (Store) GetStoreType() types.StoreType {
 	return types.StoreTypeDB
 }
 
-// Implements KVStore.
+// CacheWrap cache wraps the underlying store.
 func (dsa Store) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(dsa)
 }

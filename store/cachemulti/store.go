@@ -18,9 +18,9 @@ import (
 // NOTE: a Store (and MultiStores in general) should never expose the
 // keys for the substores.
 type Store struct {
-	db         types.CacheKVStore
-	stores     map[types.StoreKey]types.CacheWrap
-	keysByName map[string]types.StoreKey
+	db     types.CacheKVStore
+	stores map[types.StoreKey]types.CacheWrap
+	keys   map[string]types.StoreKey
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -28,11 +28,15 @@ type Store struct {
 
 var _ types.CacheMultiStore = Store{}
 
-func NewFromKVStore(store types.KVStore, stores map[types.StoreKey]types.CacheWrapper, keysByName map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext) Store {
+func NewFromKVStore(
+	store types.KVStore,
+	stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
+	traceWriter io.Writer, traceContext types.TraceContext,
+) Store {
 	cms := Store{
 		db:           cachekv.NewStore(store),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
-		keysByName:   keysByName,
+		keys:         keys,
 		traceWriter:  traceWriter,
 		traceContext: traceContext,
 	}
@@ -48,8 +52,12 @@ func NewFromKVStore(store types.KVStore, stores map[types.StoreKey]types.CacheWr
 	return cms
 }
 
-func NewStore(db dbm.DB, stores map[types.StoreKey]types.CacheWrapper, keysByName map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext) Store {
-	return NewFromKVStore(dbadapter.Store{db}, stores, keysByName, traceWriter, traceContext)
+func NewStore(
+	db dbm.DB,
+	stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
+	traceWriter io.Writer, traceContext types.TraceContext,
+) Store {
+	return NewFromKVStore(dbadapter.Store{db}, stores, keys, traceWriter, traceContext)
 }
 
 func newCacheMultiStoreFromCMS(cms Store) Store {
@@ -88,12 +96,12 @@ func (cms Store) TracingEnabled() bool {
 	return cms.traceWriter != nil
 }
 
-// Implements Store.
+// GetStoreType returns the type of the store.
 func (cms Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMulti
 }
 
-// Implements CacheMultiStore.
+// Write writes each underlying store.
 func (cms Store) Write() {
 	cms.db.Write()
 	for _, store := range cms.stores {
@@ -116,12 +124,12 @@ func (cms Store) CacheMultiStore() types.CacheMultiStore {
 	return newCacheMultiStoreFromCMS(cms)
 }
 
-// Implements MultiStore.
+// GetStore returns an underlying Store by key.
 func (cms Store) GetStore(key types.StoreKey) types.Store {
 	return cms.stores[key].(types.Store)
 }
 
-// Implements MultiStore.
+// GetKVStore returns an underlying KVStore by key.
 func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
 	return cms.stores[key].(types.KVStore)
 }

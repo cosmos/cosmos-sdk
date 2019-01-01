@@ -43,11 +43,11 @@ Doing this tombstone system and getting rid of the slashing period tracking, wil
 
 Another optimization that can be made is that if we assume that all ABCI faults for Tendermint consensus are slashed at the same level, we don't have to keep track of "max slash".  Once an ABCI fault happens once, we don't have to worry about comparing potential future ones to find the max.
 
-I believe current Tendermint ABCI faults are primarily:
+I believe current planned Tendermint ABCI faults are primarily:
 - Unjustified precommits (double signs)
 - Signing a precommit when you're in unbonding phase (can be used to trick light clients)
 
-Do we want to punish these two faults at different levels?  If not, we can enact the above change.  Note:  This change may make sense for current Tendermint consensus, but maybe not for a different consensus algorithm or future versions of Tendermint that may want to punish at different levels (for example, partial slashing).
+At the moment, the second one is not implemented, but needs to be implemented soon, in order to make light client bisection safe.  Do we want to punish these two faults at different levels?  If not, we can enact the above change.  Note:  This change may make sense for current Tendermint consensus, but maybe not for a different consensus algorithm or future versions of Tendermint that may want to punish at different levels (for example, partial slashing).
 
 ### Store infractions in state instead of iterating over unbonds/redelegations
 

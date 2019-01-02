@@ -286,6 +286,10 @@ func TestCoins(t *testing.T) {
 		{"gas", NewInt(1)},
 		{"mineral", NewInt(1)},
 	}
+	neg := Coins{
+		{"gas", NewInt(-1)},
+		{"mineral", NewInt(1)},
+	}
 
 	assert.True(t, good.IsValid(), "Coins are valid")
 	assert.False(t, mixedCase.IsValid(), "Coins denoms contain upper case characters")
@@ -298,6 +302,7 @@ func TestCoins(t *testing.T) {
 	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
 	assert.False(t, dup.IsValid(), "Duplicate coin")
+	assert.False(t, neg.IsValid(), "Negative first-denom coin")
 }
 
 func TestCoinsGT(t *testing.T) {

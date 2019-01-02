@@ -142,12 +142,13 @@ func (coins Coins) IsValid() bool {
 	case 0:
 		return true
 	case 1:
-		return coins[0].IsPositive()
-	default:
 		if strings.ToLower(coins[0].Denom) != coins[0].Denom {
 			return false
 		}
-		if !coins[0].IsPositive() {
+		return coins[0].IsPositive()
+	default:
+		// Check single coin case
+		if !(Coins{coins[0]}).IsValid() {
 			return false
 		}
 		lowDenom := coins[0].Denom

@@ -24,8 +24,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	ctx = ctx.WithBlockHeight(1 - types.ValidatorUpdateDelay)
 
 	// Params must be set before pool, as setting pool calls params in order to get the staking token denom
-	keeper.SetPool(ctx, data.Pool)
 	keeper.SetParams(ctx, data.Params)
+	keeper.SetPool(ctx, data.Pool)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
 	for _, validator := range data.Validators {

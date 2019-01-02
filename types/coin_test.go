@@ -255,10 +255,17 @@ func TestCoins(t *testing.T) {
 		{"mineral", NewInt(1)},
 		{"tree", NewInt(1)},
 	}
-	mixedCase := Coins{
+	mixedCase1 := Coins{
 		{"gAs", NewInt(1)},
 		{"MineraL", NewInt(1)},
 		{"TREE", NewInt(1)},
+	}
+	mixedCase2 := Coins{
+		{"gAs", NewInt(1)},
+		{"mineral", NewInt(1)},
+	}
+	mixedCase3 := Coins{
+		{"gAs", NewInt(1)},
 	}
 	empty := Coins{
 		{"gold", NewInt(0)},
@@ -292,7 +299,9 @@ func TestCoins(t *testing.T) {
 	}
 
 	assert.True(t, good.IsValid(), "Coins are valid")
-	assert.False(t, mixedCase.IsValid(), "Coins denoms contain upper case characters")
+	assert.False(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
+	assert.False(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
+	assert.False(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
 	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
 	assert.False(t, null.IsPositive(), "Expected coins to not be positive: %v", null)
 	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)

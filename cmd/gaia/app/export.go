@@ -37,7 +37,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
 
 	genState := NewGenesisState(
 		accounts,
-		auth.ExportGenesis(ctx, app.feeCollectionKeeper),
+		auth.ExportGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper),
 		stake.ExportGenesis(ctx, app.stakeKeeper),
 		mint.ExportGenesis(ctx, app.mintKeeper),
 		distr.ExportGenesis(ctx, app.distrKeeper),
@@ -67,12 +67,26 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	/* Handle stake state. */
 
+	// iterate through redelegations, reset creation height
+	app.stakeKeeper.IterateRedelegations(ctx, func(_ int64, red stake.Redelegation) (stop bool) {
+		red.CreationHeight = 0
+		app.stakeKeeper.SetRedelegation(ctx, red)
+		return false
+	})
+
+	// iterate through unbonding delegations, reset creation height
+	app.stakeKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) (stop bool) {
+		ubd.CreationHeight = 0
+		app.stakeKeeper.SetUnbondingDelegation(ctx, ubd)
+		return false
+	})
+
 	// iterate through validators by power descending, reset bond height, update bond intra-tx counter
 	store := ctx.KVStore(app.keyStake)
-	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsByPowerIndexKey)
+	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsKey)
 	counter := int16(0)
 	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(iter.Value())
+		addr := sdk.ValAddress(iter.Key()[1:])
 		validator, found := app.stakeKeeper.GetValidator(ctx, addr)
 		if !found {
 			panic("expected validator, not found")

@@ -43,7 +43,7 @@ var (
 	coins     = sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}
 	halfCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}
 	manyCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 1), sdk.NewInt64Coin("barcoin", 1)}
-	freeFee   = auth.NewStdFee(100000, sdk.Coins{sdk.NewInt64Coin("foocoin", 0)}...)
+	freeFee   = auth.NewStdFee(100000, sdk.Coins{sdk.NewInt64Coin("foocoin", 0)})
 
 	sendMsg1 = MsgSend{
 		Inputs:  []Input{NewInput(addr1, coins)},

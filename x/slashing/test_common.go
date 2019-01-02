@@ -51,12 +51,12 @@ func createTestCodec() *codec.Codec {
 }
 
 func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Subspace, Keeper) {
-	keyAcc := sdk.NewKVStoreKey("acc")
-	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
-	keySlashing := sdk.NewKVStoreKey("slashing")
-	keyParams := sdk.NewKVStoreKey("params")
-	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyStake := sdk.NewKVStoreKey(stake.StoreKey)
+	tkeyStake := sdk.NewTransientStoreKey(stake.TStoreKey)
+	keySlashing := sdk.NewKVStoreKey(StoreKey)
+	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
@@ -69,14 +69,14 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	require.Nil(t, err)
 	ctx := sdk.NewContext(ms, abci.Header{Time: time.Unix(0, 0)}, false, log.NewTMLogger(os.Stdout))
 	cdc := createTestCodec()
-	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, auth.ProtoBaseAccount)
+	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
+	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 
 	ck := bank.NewBaseKeeper(accountKeeper)
-	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
 	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	genesis := stake.DefaultGenesisState()
 
-	genesis.Pool.LooseTokens = sdk.NewDec(initCoins.MulRaw(int64(len(addrs))).Int64())
+	genesis.Pool.LooseTokens = sdk.NewInt(initCoins.MulRaw(int64(len(addrs))).Int64())
 
 	_, err = stake.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)

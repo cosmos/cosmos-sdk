@@ -10,8 +10,8 @@ import (
 
 // Pool - dynamic parameters of the current state
 type Pool struct {
-	LooseTokens  sdk.Dec `json:"loose_tokens"`  // tokens which are not bonded in a validator
-	BondedTokens sdk.Dec `json:"bonded_tokens"` // reserve of bonded tokens
+	LooseTokens  sdk.Int `json:"loose_tokens"`  // tokens which are not bonded in a validator
+	BondedTokens sdk.Int `json:"bonded_tokens"` // reserve of bonded tokens
 }
 
 // nolint
@@ -24,15 +24,15 @@ func (p Pool) Equal(p2 Pool) bool {
 // initial pool for testing
 func InitialPool() Pool {
 	return Pool{
-		LooseTokens:  sdk.ZeroDec(),
-		BondedTokens: sdk.ZeroDec(),
+		LooseTokens:  sdk.ZeroInt(),
+		BondedTokens: sdk.ZeroInt(),
 	}
 }
 
 //____________________________________________________________________
 
 // Sum total of all staking tokens in the pool
-func (p Pool) TokenSupply() sdk.Dec {
+func (p Pool) TokenSupply() sdk.Int {
 	return p.LooseTokens.Add(p.BondedTokens)
 }
 
@@ -41,27 +41,28 @@ func (p Pool) TokenSupply() sdk.Dec {
 // get the bond ratio of the global state
 func (p Pool) BondedRatio() sdk.Dec {
 	supply := p.TokenSupply()
-	if supply.GT(sdk.ZeroDec()) {
-		return p.BondedTokens.Quo(supply)
+	if supply.IsPositive() {
+		return sdk.NewDecFromInt(p.BondedTokens).
+			QuoInt(supply)
 	}
 	return sdk.ZeroDec()
 }
 
 //_______________________________________________________________________
 
-func (p Pool) looseTokensToBonded(bondedTokens sdk.Dec) Pool {
+func (p Pool) looseTokensToBonded(bondedTokens sdk.Int) Pool {
 	p.BondedTokens = p.BondedTokens.Add(bondedTokens)
 	p.LooseTokens = p.LooseTokens.Sub(bondedTokens)
-	if p.LooseTokens.LT(sdk.ZeroDec()) {
+	if p.LooseTokens.IsNegative() {
 		panic(fmt.Sprintf("sanity check: loose tokens negative, pool: %v", p))
 	}
 	return p
 }
 
-func (p Pool) bondedTokensToLoose(bondedTokens sdk.Dec) Pool {
+func (p Pool) bondedTokensToLoose(bondedTokens sdk.Int) Pool {
 	p.BondedTokens = p.BondedTokens.Sub(bondedTokens)
 	p.LooseTokens = p.LooseTokens.Add(bondedTokens)
-	if p.BondedTokens.LT(sdk.ZeroDec()) {
+	if p.BondedTokens.IsNegative() {
 		panic(fmt.Sprintf("sanity check: bonded tokens negative, pool: %v", p))
 	}
 	return p

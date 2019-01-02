@@ -24,7 +24,7 @@ func TestBeginBlocker(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
-	require.True(t, sdk.NewDecFromInt(amt).Equal(sk.Validator(ctx, addr).GetPower()))
+	require.True(sdk.IntEq(t, amt, sk.Validator(ctx, addr).GetPower()))
 
 	val := abci.Validator{
 		Address: pk.Address(),

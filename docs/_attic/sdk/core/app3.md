@@ -1,8 +1,8 @@
 # Modules
 
 In the previous app, we introduced a new `Msg` type and used Amino to encode
-transactions. We also introduced additional data to the `Tx`, and used a simple 
-`AnteHandler` to validate it. 
+transactions. We also introduced additional data to the `Tx`, and used a simple
+`AnteHandler` to validate it.
 
 Here, in `App3`, we introduce two built-in SDK modules to
 replace the `Msg`, `Tx`, `Handler`, and `AnteHandler` implementations we've seen
@@ -16,11 +16,11 @@ The `x/bank` module implements `Msg` and `Handler` - it has everything we need
 to transfer coins between accounts.
 
 Here, we'll introduce the important types from `x/auth` and `x/bank`, and use
-them to build `App3`, our shortest app yet. The complete code can be found in 
+them to build `App3`, our shortest app yet. The complete code can be found in
 [app3.go](examples/app3.go), and at the end of this section.
 
 For more details, see the
-[x/auth](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth) and 
+[x/auth](https://godoc.org/github.com/cosmos/cosmos-sdk/x/auth) and
 [x/bank](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank) API documentation.
 
 ## Accounts
@@ -102,7 +102,7 @@ the `BaseAccount` to store additional data without requiring another lookup from
 the store.
 
 Creating an AccountKeeper is easy - we just need to specify a codec, a
-capability key, and a prototype of the object being encoded 
+capability key, and a prototype of the object being encoded
 
 ```go
 accountKeeper := auth.NewAccountKeeper(cdc, keyAccount, auth.ProtoBaseAccount)
@@ -145,7 +145,7 @@ type StdTx struct {
 This is the standard form for a transaction in the SDK. Besides the Msgs, it
 includes:
 
-- a fee to be paid by the first signer 
+- a fee to be paid by the first signer
 - replay protecting nonces in the signature
 - a memo of prunable additional data
 
@@ -166,8 +166,8 @@ type StdSignature struct {
 }
 ```
 
-The signature includes both an `AccountNumber` and a `Sequence`. 
-The `Sequence` must match the one in the 
+The signature includes both an `AccountNumber` and a `Sequence`.
+The `Sequence` must match the one in the
 corresponding account when the transaction is processed, and will increment by
 one with every transaction. This prevents the same
 transaction from being replayed multiple times, resolving the insecurity that
@@ -200,10 +200,10 @@ transaction fee can be paid, and reject the transaction if not.
 The `StdTx` supports multiple messages and multiple signers.
 To sign the transaction, each signer must collect the following information:
 
-- the ChainID 
+- the ChainID
 - the AccountNumber and Sequence for the given signer's account (from the
   blockchain)
-- the transaction fee 
+- the transaction fee
 - the list of transaction messages
 - an optional memo
 
@@ -244,7 +244,7 @@ Note that validating
 signatures requires checking that the correct account number and sequence was
 used by each signer, as this information is required in the `StdSignBytes`.
 
-If any of the above are not satisfied, the AnteHandelr returns an error. 
+If any of the above are not satisfied, the AnteHandelr returns an error.
 
 If all of the above verifications pass, the AnteHandler makes the following
 changes to the state:
@@ -254,7 +254,7 @@ changes to the state:
 - deduct the fee from the first signer's account
 
 Recall that incrementing the `Sequence` prevents "replay attacks" where
-the same message could be executed over and over again. 
+the same message could be executed over and over again.
 
 The PubKey is required for signature verification, but it is only required in
 the StdSignature once. From that point on, it will be stored in the account.
@@ -267,13 +267,13 @@ Now that we've seen the `auth.AccountKeeper` and how its used to build a
 complete AnteHandler, it's time to look at how to build higher-level
 abstractions for taking action on accounts.
 
-Earlier, we noted that `Mappers` are abstactions over KVStores that handle 
-marshalling and unmarshalling data types to and from underlying stores. 
-We can build another abstraction on top of `Mappers` that we call `Keepers`, 
+Earlier, we noted that `Mappers` are abstactions over KVStores that handle
+marshalling and unmarshalling data types to and from underlying stores.
+We can build another abstraction on top of `Mappers` that we call `Keepers`,
 which expose only limitted functionality on the underlying types stored by the `Mapper`.
 
 For instance, the `x/bank` module defines the canonical versions of `MsgSend`
-and `MsgIssue` for the SDK, as well as a `Handler` for processing them. However, 
+and `MsgIssue` for the SDK, as well as a `Handler` for processing them. However,
 rather than passing a `KVStore` or even an `AccountKeeper` directly to the handler,
 we introduce a `bank.Keeper`, which can only be used to transfer coins in and out of accounts.
 This allows us to determine up front that the only effect the bank module's
@@ -302,21 +302,21 @@ docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank#Keeper) for the full
 
 Note we can refine the `bank.Keeper` by restricting it's method set. For
 instance, the
-[bank.ViewKeeper](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank#ViewKeeper) 
+[bank.ViewKeeper](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank#ViewKeeper)
 is a read-only version, while the
-[bank.SendKeeper](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank#SendKeeper) 
+[bank.SendKeeper](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank#SendKeeper)
 only executes transfers of coins from input accounts to output
 accounts.
 
 We use this `Keeper` paradigm extensively in the SDK as the way to define what
 kind of functionality each module gets access to. In particular, we try to
 follow the *principle of least authority*.
-Rather than providing full blown access to the `KVStore` or the `AccountKeeper`, 
+Rather than providing full blown access to the `KVStore` or the `AccountKeeper`,
 we restrict access to a small number of functions that do very specific things.
 
 ## App3
 
-With the `auth.AccountKeeper` and `bank.Keeper` in hand, 
+With the `auth.AccountKeeper` and `bank.Keeper` in hand,
 we're now ready to build `App3`.
 The `x/auth` and `x/bank` modules do all the heavy lifting:
 
@@ -330,8 +330,8 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	app := bapp.NewBaseApp(app3Name, logger, db, auth.DefaultTxDecoder(cdc))
 
 	// Create a key for accessing the account store.
-	keyAccount := sdk.NewKVStoreKey("acc")
-	keyFees := sdk.NewKVStoreKey("fee")  // TODO
+	keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
+	keyFees := sdk.NewKVStoreKey(auth.FeeStoreKey)  // TODO
 
 	// Set various mappers/keepers to interact easily with underlying stores
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAccount, auth.ProtoBaseAccount)
@@ -355,8 +355,8 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 }
 ```
 
-Note we use `bank.NewHandler`, which handles only `bank.MsgSend`, 
-and receives only the `bank.Keeper`. See the 
+Note we use `bank.NewHandler`, which handles only `bank.MsgSend`,
+and receives only the `bank.Keeper`. See the
 [x/bank API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank)
 for more details.
 
@@ -366,7 +366,7 @@ We also use the default txDecoder in `x/auth`, which decodes amino-encoded
 ## Conclusion
 
 Armed with native modules for authentication and coin transfer,
-emboldened by the paradigm of mappers and keepers, 
-and ever invigorated by the desire to build secure state-machines, 
+emboldened by the paradigm of mappers and keepers,
+and ever invigorated by the desire to build secure state-machines,
 we find ourselves here with a full-blown, all-checks-in-place, multi-asset
 cryptocurrency - the beating heart of the Cosmos-SDK.

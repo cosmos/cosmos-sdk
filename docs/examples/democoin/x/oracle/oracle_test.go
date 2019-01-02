@@ -110,9 +110,9 @@ func TestOracle(t *testing.T) {
 	addr3 := []byte("addr3")
 	addr4 := []byte("addr4")
 	valset := &mock.ValidatorSet{[]mock.Validator{
-		{addr1, sdk.NewDec(7)},
-		{addr2, sdk.NewDec(7)},
-		{addr3, sdk.NewDec(1)},
+		{addr1, sdk.NewInt(7)},
+		{addr2, sdk.NewInt(7)},
+		{addr3, sdk.NewInt(1)},
 	}}
 
 	key := sdk.NewKVStoreKey("testkey")
@@ -174,7 +174,7 @@ func TestOracle(t *testing.T) {
 	require.Equal(t, 1, getSequence(ctx, key))
 
 	// Should handle mock.Validator set change
-	valset.AddValidator(mock.Validator{addr4, sdk.NewDec(12)})
+	valset.AddValidator(mock.Validator{addr4, sdk.NewInt(12)})
 	bz, err = json.Marshal(valset)
 	require.Nil(t, err)
 	ctx = ctx.WithBlockHeader(abci.Header{ValidatorsHash: bz})

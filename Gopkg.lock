@@ -452,7 +452,7 @@
   version = "v0.12.0"
 
 [[projects]]
-  digest = "1:23c49a2a0f3f8a8258982bbb1567d60d74253c18a454dbe4189126f7e94834e6"
+  digest = "1:f94f468c7cd1fc3693ebc16011f26ec26538761cdcd182b3a28faa649a7d55e2"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -517,7 +517,7 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "v0.27.0"
+  revision = "v0.27.3"
 
 [[projects]]
   digest = "1:a7485b2a69f996923f9d3406a9a853fd8eb31818515e985a830d71f88f6a925b"
@@ -695,6 +695,7 @@
     "github.com/tendermint/tendermint/crypto/secp256k1",
     "github.com/tendermint/tendermint/crypto/tmhash",
     "github.com/tendermint/tendermint/crypto/xsalsa20symmetric",
+    "github.com/tendermint/tendermint/libs/autofile",
     "github.com/tendermint/tendermint/libs/bech32",
     "github.com/tendermint/tendermint/libs/cli",
     "github.com/tendermint/tendermint/libs/cli/flags",

@@ -11,9 +11,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const custom = "custom"
+
 func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (DepositParams, VotingParams, TallyParams) {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryParams, ParamDeposit}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryParams, ParamDeposit}, "/"),
 		Data: []byte{},
 	}
 
@@ -26,7 +28,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	require.Nil(t, err2)
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryParams, ParamVoting}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryParams, ParamVoting}, "/"),
 		Data: []byte{},
 	}
 
@@ -39,7 +41,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	require.Nil(t, err2)
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryParams, ParamTallying}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryParams, ParamTallying}, "/"),
 		Data: []byte{},
 	}
 
@@ -56,7 +58,7 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 
 func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) Proposal {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryProposal}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryProposal}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalParams(proposalID)),
 	}
 
@@ -72,7 +74,7 @@ func getQueriedProposal(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier
 
 func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, depositor, voter sdk.AccAddress, status ProposalStatus, limit uint64) []Proposal {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryProposals}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryProposals}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalsParams(status, limit, voter, depositor)),
 	}
 
@@ -88,7 +90,7 @@ func getQueriedProposals(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querie
 
 func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64, depositor sdk.AccAddress) Deposit {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryDeposit}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryDeposit}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryDepositParams(proposalID, depositor)),
 	}
 
@@ -104,7 +106,7 @@ func getQueriedDeposit(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier 
 
 func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) []Deposit {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryDeposits}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryDeposits}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalParams(proposalID)),
 	}
 
@@ -120,7 +122,7 @@ func getQueriedDeposits(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier
 
 func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64, voter sdk.AccAddress) Vote {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryVote}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryVote}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryVoteParams(proposalID, voter)),
 	}
 
@@ -136,7 +138,7 @@ func getQueriedVote(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk
 
 func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) []Vote {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryVote}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryVote}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalParams(proposalID)),
 	}
 
@@ -152,7 +154,7 @@ func getQueriedVotes(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 
 func getQueriedTally(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier, proposalID uint64) TallyResult {
 	query := abci.RequestQuery{
-		Path: strings.Join([]string{"custom", "gov", QueryTally}, "/"),
+		Path: strings.Join([]string{custom, QuerierRoute, QueryTally}, "/"),
 		Data: cdc.MustMarshalJSON(NewQueryProposalParams(proposalID)),
 	}
 

@@ -11,7 +11,7 @@ import (
 // Validator implements sdk.Validator
 type Validator struct {
 	Address sdk.ValAddress
-	Power   sdk.Dec
+	Power   sdk.Int
 }
 
 // Implements sdk.Validator
@@ -35,12 +35,12 @@ func (v Validator) GetConsAddr() sdk.ConsAddress {
 }
 
 // Implements sdk.Validator
-func (v Validator) GetTokens() sdk.Dec {
-	return sdk.ZeroDec()
+func (v Validator) GetTokens() sdk.Int {
+	return sdk.ZeroInt()
 }
 
 // Implements sdk.Validator
-func (v Validator) GetPower() sdk.Dec {
+func (v Validator) GetPower() sdk.Int {
 	return v.Power
 }
 
@@ -114,8 +114,8 @@ func (vs *ValidatorSet) ValidatorByConsAddr(_ sdk.Context, _ sdk.ConsAddress) sd
 }
 
 // TotalPower implements sdk.ValidatorSet
-func (vs *ValidatorSet) TotalPower(ctx sdk.Context) sdk.Dec {
-	res := sdk.ZeroDec()
+func (vs *ValidatorSet) TotalPower(ctx sdk.Context) sdk.Int {
+	res := sdk.ZeroInt()
 	for _, val := range vs.Validators {
 		res = res.Add(val.Power)
 	}

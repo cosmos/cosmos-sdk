@@ -26,6 +26,10 @@ type (
 const (
 	DefaultCodespace = types.DefaultCodespace
 	CodeInvalidInput = types.CodeInvalidInput
+	StoreKey         = types.StoreKey
+	TStoreKey        = types.TStoreKey
+	RouterKey        = types.RouterKey
+	QuerierRoute       = types.QuerierRoute
 )
 
 var (

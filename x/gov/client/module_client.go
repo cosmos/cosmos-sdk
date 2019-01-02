@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	govCli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	govCli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
 // ModuleClient exports all client functionality from this module
@@ -31,6 +32,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 		govCli.GetCmdQueryVote(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryVotes(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryParams(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryProposer(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryDeposit(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryDeposits(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryTally(mc.storeKey, mc.cdc))...)

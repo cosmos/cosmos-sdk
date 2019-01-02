@@ -41,11 +41,8 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		txBldr := authtxb.TxBuilder{
-			ChainID:       m.ChainID,
-			AccountNumber: m.AccountNumber,
-			Sequence:      m.Sequence,
-		}
+		txBldr := authtxb.NewTxBuilder(utils.GetTxEncoder(cdc), m.AccountNumber,
+			m.Sequence, m.Tx.Fee.Gas, 1.0, false, m.ChainID, m.Tx.GetMemo(), m.Tx.Fee.Amount)
 
 		signedTx, err := txBldr.SignStdTx(m.LocalAccountName, m.Password, m.Tx, m.AppendSig)
 		if keyerror.IsErrKeyNotFound(err) {

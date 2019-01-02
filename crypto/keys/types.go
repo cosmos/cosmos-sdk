@@ -1,8 +1,9 @@
 package keys
 
 import (
-	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/tendermint/tendermint/crypto"
+
+	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"

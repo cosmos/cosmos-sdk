@@ -77,12 +77,12 @@ func MakeTestCodec() *codec.Codec {
 // hogpodge of all sorts of input required for testing
 func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
-	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
-	keyAcc := sdk.NewKVStoreKey("acc")
-	keyBank := sdk.NewKVStoreKey("bank")
-	keyParams := sdk.NewKVStoreKey("params")
-	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+	keyStake := sdk.NewKVStoreKey(types.StoreKey)
+	tkeyStake := sdk.NewTransientStoreKey(types.TStoreKey)
+	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
+	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
@@ -98,15 +98,18 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}}})
 	cdc := MakeTestCodec()
+
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+
 	accountKeeper := auth.NewAccountKeeper(
-		cdc,                   // amino codec
-		keyAcc,                // target store
+		cdc,    // amino codec
+		keyAcc, // target store
+		pk.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount, // prototype
 	)
 
 	ck := bank.NewBaseKeeper(cdc, accountKeeper, keyBank)
 
-	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
 	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	// Params must be set before pool, as setting pool calls params in order to get the staking token denom
 	keeper.SetParams(ctx, types.DefaultParams())
@@ -204,11 +207,36 @@ func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) b
 }
 
 // update validator for testing
-func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator) types.Validator {
+func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Validator, apply bool) types.Validator {
 	keeper.SetValidator(ctx, validator)
+	{ // Remove any existing power key for validator.
+		store := ctx.KVStore(keeper.storeKey)
+		iterator := sdk.KVStorePrefixIterator(store, ValidatorsByPowerIndexKey)
+		deleted := false
+		for ; iterator.Valid(); iterator.Next() {
+			valAddr := parseValidatorPowerRankKey(iterator.Key())
+			if bytes.Equal(valAddr, validator.OperatorAddr) {
+				if deleted {
+					panic("found duplicate power index key")
+				} else {
+					deleted = true
+				}
+				store.Delete(iterator.Key())
+			}
+		}
+	}
 	keeper.SetValidatorByPowerIndex(ctx, validator)
-	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
+	if apply {
+		keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+		validator, found := keeper.GetValidator(ctx, validator.OperatorAddr)
+		if !found {
+			panic("validator expected but not found")
+		}
+		return validator
+	}
+	cachectx, _ := ctx.CacheContext()
+	keeper.ApplyAndReturnValidatorSetUpdates(cachectx)
+	validator, found := keeper.GetValidator(cachectx, validator.OperatorAddr)
 	if !found {
 		panic("validator expected but not found")
 	}

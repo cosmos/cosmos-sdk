@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (app *GaiaApp) runtimeInvariants() []simulation.Invariant {

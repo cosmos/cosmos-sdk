@@ -15,11 +15,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
 
 var _ Keybase = dbKeybase{}

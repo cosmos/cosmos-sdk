@@ -4,15 +4,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
+
 	"github.com/tendermint/tendermint/crypto"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	clkeys "github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // SimpleGenTx is a simple genesis tx

@@ -4,9 +4,10 @@ package baseapp
 import (
 	"fmt"
 
+	dbm "github.com/tendermint/tendermint/libs/db"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -36,7 +37,7 @@ func SetMinimumFees(minFees string) func(*BaseApp) {
 	if err != nil {
 		panic(fmt.Sprintf("invalid minimum fees: %v", err))
 	}
-	return func(bap *BaseApp) { bap.SetMinimumFees(fees) }
+	return func(bap *BaseApp) { bap.setMinimumFees(fees) }
 }
 
 func (app *BaseApp) SetName(name string) {

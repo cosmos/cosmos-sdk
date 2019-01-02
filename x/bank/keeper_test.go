@@ -3,46 +3,66 @@ package bank
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
-
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
-func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
-	db := dbm.NewMemDB()
-	authKey := sdk.NewKVStoreKey("authkey")
-	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(authKey, sdk.StoreTypeIAVL, db)
-	ms.LoadLatestVersion()
-	return ms, authKey
+type testInput struct {
+	cdc      *codec.Codec
+	ctx      sdk.Context
+	ak       auth.AccountKeeper
+	storeKey sdk.StoreKey
 }
 
-func TestKeeper(t *testing.T) {
-	ms, authKey := setupMultiStore()
+func setupTestInput() testInput {
+	db := dbm.NewMemDB()
 
 	cdc := codec.New()
 	auth.RegisterBaseAccount(cdc)
 
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := NewBaseKeeper(cdc, accountKeeper, sdk.NewKVStoreKey("bank"))
+	authCapKey := sdk.NewKVStoreKey("authCapKey")
+	bankCapKey := sdk.NewKVStoreKey("bankCapKey")
+	fckCapKey := sdk.NewKVStoreKey("fckCapKey")
+	keyParams := sdk.NewKVStoreKey("params")
+	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+
+	ms := store.NewCommitMultiStore(db)
+	ms.MountStoreWithDB(authCapKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(fckCapKey, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
+	ms.LoadLatestVersion()
+
+	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
+	ak := auth.NewAccountKeeper(
+		cdc, authCapKey, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount,
+	)
+	ctx := sdk.NewContext(ms, abci.Header{ChainID: "test-chain-id"}, false, log.NewNopLogger())
+
+	ak.SetParams(ctx, auth.DefaultParams())
+
+	return testInput{cdc: cdc, ctx: ctx, ak: ak, storeKey: bankCapKey}
+}
+
+func TestKeeper(t *testing.T) {
+	input := setupTestInput()
+	ctx := input.ctx
+	bankKeeper := NewBaseKeeper(input.cdc, input.ak, input.storeKey)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 	addr3 := sdk.AccAddress([]byte("addr3"))
-	acc := accountKeeper.NewAccountWithAddress(ctx, addr)
+	acc := input.ak.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
-	accountKeeper.SetAccount(ctx, acc)
+	input.ak.SetAccount(ctx, acc)
 	require.True(t, bankKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{}))
 
 	bankKeeper.SetCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)})
@@ -79,7 +99,7 @@ func TestKeeper(t *testing.T) {
 	require.True(t, bankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
 
 	_, err2 := bankKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 50)})
-	assert.Implements(t, (*sdk.Error)(nil), err2)
+	require.Implements(t, (*sdk.Error)(nil), err2)
 	require.True(t, bankKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}))
 	require.True(t, bankKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
 
@@ -112,22 +132,17 @@ func TestKeeper(t *testing.T) {
 }
 
 func TestSendKeeper(t *testing.T) {
-	ms, authKey := setupMultiStore()
-
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
-
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := NewBaseKeeper(cdc, accountKeeper, sdk.NewKVStoreKey("bank"))
-	sendKeeper := NewBaseSendKeeper(cdc, accountKeeper, sdk.NewKVStoreKey("bank"))
+	input := setupTestInput()
+	ctx := input.ctx
+	bankKeeper := NewBaseKeeper(input.cdc, input.ak, input.storeKey)
+	sendKeeper := NewBaseSendKeeper(input.cdc, input.ak, input.storeKey)
 
 	addr := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
-	acc := accountKeeper.NewAccountWithAddress(ctx, addr)
+	acc := input.ak.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
-	accountKeeper.SetAccount(ctx, acc)
+	input.ak.SetAccount(ctx, acc)
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{}))
 
 	bankKeeper.SetCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)})
@@ -147,7 +162,7 @@ func TestSendKeeper(t *testing.T) {
 	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
 
 	_, err2 := sendKeeper.SendCoins(ctx, addr, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 50)})
-	assert.Implements(t, (*sdk.Error)(nil), err2)
+	require.Implements(t, (*sdk.Error)(nil), err2)
 	require.True(t, sendKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 10)}))
 	require.True(t, sendKeeper.GetCoins(ctx, addr2).IsEqual(sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
 
@@ -159,21 +174,16 @@ func TestSendKeeper(t *testing.T) {
 }
 
 func TestViewKeeper(t *testing.T) {
-	ms, authKey := setupMultiStore()
-
-	cdc := codec.New()
-	auth.RegisterBaseAccount(cdc)
-
-	ctx := sdk.NewContext(ms, abci.Header{}, false, log.NewNopLogger())
-	accountKeeper := auth.NewAccountKeeper(cdc, authKey, auth.ProtoBaseAccount)
-	bankKeeper := NewBaseKeeper(cdc, accountKeeper, sdk.NewKVStoreKey("bank"))
-	viewKeeper := NewBaseViewKeeper(cdc, accountKeeper, sdk.NewKVStoreKey("bank"))
+	input := setupTestInput()
+	ctx := input.ctx
+	bankKeeper := NewBaseKeeper(input.cdc, input.ak, input.storeKey)
+	viewKeeper := NewBaseViewKeeper(input.cdc, input.ak, input.storeKey)
 
 	addr := sdk.AccAddress([]byte("addr1"))
-	acc := accountKeeper.NewAccountWithAddress(ctx, addr)
+	acc := input.ak.NewAccountWithAddress(ctx, addr)
 
 	// Test GetCoins/SetCoins
-	accountKeeper.SetAccount(ctx, acc)
+	input.ak.SetAccount(ctx, acc)
 	require.True(t, viewKeeper.GetCoins(ctx, addr).IsEqual(sdk.Coins{}))
 
 	bankKeeper.SetCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 10)})

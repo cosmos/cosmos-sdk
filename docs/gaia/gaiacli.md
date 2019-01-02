@@ -134,7 +134,7 @@ The `--amount` flag accepts the format `--amount=<value|coin_name>`.
 
 ::: tip Note
 You may want to cap the maximum gas that can be consumed by the transaction via the `--gas` flag.
-If you pass `--gas=simulate`, the gas limit will be automatically estimated.
+If you pass `--gas=auto`, the gas supply will be automatically estimated before executing the transaction.
 Gas estimate might be inaccurate as state changes could occur in between the end of the simulation and the actual execution of a transaction, thus an adjustment is applied on top of the original estimate in order to ensure the transaction is broadcasted successfully. The adjustment can be controlled via the `--gas-adjustment` flag, whose default value is 1.0.
 :::
 
@@ -234,6 +234,32 @@ You can also query a single transaction by its hash using the following command:
 
 ```bash
 gaiacli query tx [hash]
+```
+
+### Slashing
+
+#### Unjailing
+
+To unjail your jailed validator
+
+```bash
+gaiacli tx slashing unjail --from <validator-operator-addr>
+```
+
+#### Signing Info
+
+To retrieve a validator's signing info:
+
+```bash
+gaiacli query slashing signing-info <validator-pubkey>
+```
+
+#### Query Parameters
+
+You can get the current slashing parameters via:
+
+```bash
+gaiacli query slashing params
 ```
 
 ### Staking
@@ -471,6 +497,12 @@ gaiacli query gov proposals
 ```
 
 You can also query proposals filtered by `voter` or `depositor` by using the corresponding flags.
+
+To query for the proposer of a given governance proposal:
+
+```bash
+gaiacli query gov proposer <proposal_id>
+```
 
 #### Increase deposit
 

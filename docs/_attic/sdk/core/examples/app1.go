@@ -9,6 +9,7 @@ import (
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
@@ -22,7 +23,7 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	app := bapp.NewBaseApp(app1Name, logger, db, tx1Decoder)
 
 	// Create a key for accessing the account store.
-	keyAccount := sdk.NewKVStoreKey("acc")
+	keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
 
 	// Register message routes.
 	// Note the handler gets access to the account store.

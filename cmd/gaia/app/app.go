@@ -6,6 +6,11 @@ import (
 	"os"
 	"sort"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
+	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
+
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,10 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	abci "github.com/tendermint/tendermint/abci/types"
-	cmn "github.com/tendermint/tendermint/libs/common"
-	dbm "github.com/tendermint/tendermint/libs/db"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 const (
@@ -68,7 +69,7 @@ type GaiaApp struct {
 }
 
 // NewGaiaApp returns a reference to an initialized GaiaApp.
-func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
+func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, baseAppOptions ...func(*bam.BaseApp)) *GaiaApp {
 	cdc := MakeCodec()
 
 	bApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
@@ -77,26 +78,29 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	var app = &GaiaApp{
 		BaseApp:          bApp,
 		cdc:              cdc,
-		keyMain:          sdk.NewKVStoreKey("main"),
-		keyAccount:       sdk.NewKVStoreKey("acc"),
-		keyBank:          sdk.NewKVStoreKey("bank"),
-		keyStake:         sdk.NewKVStoreKey("stake"),
-		tkeyStake:        sdk.NewTransientStoreKey("transient_stake"),
-		keyMint:          sdk.NewKVStoreKey("mint"),
-		keyDistr:         sdk.NewKVStoreKey("distr"),
-		tkeyDistr:        sdk.NewTransientStoreKey("transient_distr"),
-		keySlashing:      sdk.NewKVStoreKey("slashing"),
-		keyGov:           sdk.NewKVStoreKey("gov"),
-		keyFeeCollection: sdk.NewKVStoreKey("fee"),
-		keyParams:        sdk.NewKVStoreKey("params"),
-		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
+		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
+		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
+		keyBank:          sdk.NewKVStoreKey(bank.StoreKey),
+		keyStake:         sdk.NewKVStoreKey(stake.StoreKey),
+		tkeyStake:        sdk.NewTransientStoreKey(stake.TStoreKey),
+		keyMint:          sdk.NewKVStoreKey(mint.StoreKey),
+		keyDistr:         sdk.NewKVStoreKey(distr.StoreKey),
+		tkeyDistr:        sdk.NewTransientStoreKey(distr.TStoreKey),
+		keySlashing:      sdk.NewKVStoreKey(slashing.StoreKey),
+		keyGov:           sdk.NewKVStoreKey(gov.StoreKey),
+		keyFeeCollection: sdk.NewKVStoreKey(auth.FeeStoreKey),
+		keyParams:        sdk.NewKVStoreKey(params.StoreKey),
+		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
+
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// define the accountKeeper
 	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
-		app.keyAccount,        // target store
-		auth.ProtoBaseAccount, // prototype
+		app.keyAccount,
+		app.paramsKeeper.Subspace(auth.DefaultParamspace),
+		auth.ProtoBaseAccount,
 	)
 
 	// add handlers
@@ -104,10 +108,6 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(
 		app.cdc,
 		app.keyFeeCollection,
-	)
-	app.paramsKeeper = params.NewKeeper(
-		app.cdc,
-		app.keyParams, app.tkeyParams,
 	)
 	stakeKeeper := stake.NewKeeper(
 		app.cdc,
@@ -148,15 +148,16 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 
 	// register message routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper)).
-		AddRoute("distr", distr.NewHandler(app.distrKeeper)).
-		AddRoute("slashing", slashing.NewHandler(app.slashingKeeper)).
-		AddRoute("gov", gov.NewHandler(app.govKeeper))
+		AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
+		AddRoute(stake.RouterKey, stake.NewHandler(app.stakeKeeper)).
+		AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
+		AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
+		AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
 
 	app.QueryRouter().
-		AddRoute("gov", gov.NewQuerier(app.govKeeper)).
-		AddRoute("stake", stake.NewQuerier(app.stakeKeeper, app.cdc))
+		AddRoute(gov.QuerierRoute, gov.NewQuerier(app.govKeeper)).
+		AddRoute(slashing.QuerierRoute, slashing.NewQuerier(app.slashingKeeper, app.cdc)).
+		AddRoute(stake.QuerierRoute, stake.NewQuerier(app.stakeKeeper, app.cdc))
 
 	// initialize BaseApp
 	app.MountStores(app.keyMain, app.keyAccount, app.keyBank, app.keyStake, app.keyMint, app.keyDistr,
@@ -167,9 +168,11 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, baseAppOptio
 	app.MountStoresTransient(app.tkeyParams, app.tkeyStake, app.tkeyDistr)
 	app.SetEndBlocker(app.EndBlocker)
 
-	err := app.LoadLatestVersion(app.keyMain)
-	if err != nil {
-		cmn.Exit(err.Error())
+	if loadLatest {
+		err := app.LoadLatestVersion(app.keyMain)
+		if err != nil {
+			cmn.Exit(err.Error())
+		}
 	}
 
 	return app
@@ -191,7 +194,6 @@ func MakeCodec() *codec.Codec {
 
 // application updates every end block
 func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-
 	// mint new tokens for the previous block
 	mint.BeginBlocker(ctx, app.mintKeeper)
 
@@ -213,7 +215,6 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-
 	tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates, endBlockerTags := stake.EndBlocker(ctx, app.stakeKeeper)
 	tags = append(tags, endBlockerTags...)
@@ -246,7 +247,7 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	}
 
 	// initialize module-specific stores
-	auth.InitGenesis(ctx, app.feeCollectionKeeper, genesisState.AuthData)
+	auth.InitGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper, genesisState.AuthData)
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)

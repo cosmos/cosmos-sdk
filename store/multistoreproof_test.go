@@ -3,10 +3,11 @@ package store
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {

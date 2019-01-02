@@ -24,6 +24,7 @@ type VotingParams struct {
 
 ```go
 type TallyParams struct {
+  Quorum            sdk.Dec  //  Minimum percentage of stake that needs to vote for a proposal to be considered valid
   Threshold         sdk.Dec  //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5
   Veto              sdk.Dec  //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
   GovernancePenalty sdk.Dec  //  Penalty if validator does not vote

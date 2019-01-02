@@ -1,9 +1,10 @@
 package keys
 
 import (
-	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	amino "github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
+
+	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 )
 
 var cdc = amino.NewCodec()

@@ -11,11 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-// InitGenesis sets the pool and parameters for the provided keeper and
-// initializes the IntraTxCounter. For each validator in data, it sets that
-// validator in the keeper along with manually setting the indexes. In
-// addition, it also sets any delegations found in data. Finally, it updates
-// the bonded validators.
+// InitGenesis sets the pool and parameters for the provided keeper.  For each
+// validator in data, it sets that validator in the keeper along with manually
+// setting the indexes. In addition, it also sets any delegations found in
+// data. Finally, it updates the bonded validators.
 // Returns final validator set after applying all declaration and delegations
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.ValidatorUpdate, err error) {
 
@@ -25,16 +24,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	ctx = ctx.WithBlockHeight(1 - types.ValidatorUpdateDelay)
 
 	// Params must be set before pool, as setting pool calls params in order to get the staking token denom
-	keeper.SetParams(ctx, data.Params)
 	keeper.SetPool(ctx, data.Pool)
-	keeper.SetIntraTxCounter(ctx, data.IntraTxCounter)
+	keeper.SetParams(ctx, data.Params)
 	keeper.SetLastTotalPower(ctx, data.LastTotalPower)
 
-	for i, validator := range data.Validators {
-		// set the intra-tx counter to the order the validators are presented, if necessary
-		if !data.Exported {
-			validator.BondIntraTxCounter = int16(i)
-		}
+	for _, validator := range data.Validators {
 		keeper.SetValidator(ctx, validator)
 
 		// Manually set indices for the first time
@@ -94,7 +88,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	pool := keeper.GetPool(ctx)
 	params := keeper.GetParams(ctx)
-	intraTxCounter := keeper.GetIntraTxCounter(ctx)
 	lastTotalPower := keeper.GetLastTotalPower(ctx)
 	validators := keeper.GetAllValidators(ctx)
 	bonds := keeper.GetAllDelegations(ctx)
@@ -117,7 +110,6 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	return types.GenesisState{
 		Pool:                 pool,
 		Params:               params,
-		IntraTxCounter:       intraTxCounter,
 		LastTotalPower:       lastTotalPower,
 		LastValidatorPowers:  lastValidatorPowers,
 		Validators:           validators,

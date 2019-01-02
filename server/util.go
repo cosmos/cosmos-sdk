@@ -13,15 +13,16 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/version"
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // server context
@@ -102,18 +103,15 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 		conf, err = tcmd.ParseConfig() // NOTE: ParseConfig() creates dir/files as necessary.
 	}
 
-	cosmosConfigFilePath := filepath.Join(rootDir, "config/gaiad.toml")
-	viper.SetConfigName("cosmos")
-	_ = viper.MergeInConfig()
-	var cosmosConf *config.Config
-	if _, err := os.Stat(cosmosConfigFilePath); os.IsNotExist(err) {
-		cosmosConf, _ := config.ParseConfig()
-		config.WriteConfigFile(cosmosConfigFilePath, cosmosConf)
+	// create a default gaia config file if it does not exist
+	gaiaConfigFilePath := filepath.Join(rootDir, "config/gaiad.toml")
+	if _, err := os.Stat(gaiaConfigFilePath); os.IsNotExist(err) {
+		gaiaConf, _ := config.ParseConfig()
+		config.WriteConfigFile(gaiaConfigFilePath, gaiaConf)
 	}
 
-	if cosmosConf == nil {
-		_, err = config.ParseConfig()
-	}
+	viper.SetConfigName("gaiad")
+	err = viper.MergeInConfig()
 
 	return
 }

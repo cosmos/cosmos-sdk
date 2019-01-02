@@ -6,15 +6,16 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/tendermint/go-amino"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/tendermint/go-amino"
 )
 
 const (
@@ -74,7 +75,7 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		if viper.GetBool(flagValidateSigs) {
-			if !printAndValidateSigs(cliCtx, txBldr.ChainID, stdTx, offline) {
+			if !printAndValidateSigs(cliCtx, txBldr.GetChainID(), stdTx, offline) {
 				return fmt.Errorf("signatures validation failed")
 			}
 

@@ -10,6 +10,7 @@ type Config struct {
 	mtx                 sync.RWMutex
 	sealed              bool
 	bech32AddressPrefix map[string]string
+	txEncoder           TxEncoder
 }
 
 var (
@@ -24,6 +25,7 @@ var (
 			"validator_pub":  Bech32PrefixValPub,
 			"consensus_pub":  Bech32PrefixConsPub,
 		},
+		txEncoder: nil,
 	}
 )
 
@@ -65,6 +67,12 @@ func (config *Config) SetBech32PrefixForConsensusNode(addressPrefix, pubKeyPrefi
 	config.bech32AddressPrefix["consensus_pub"] = pubKeyPrefix
 }
 
+// SetTxEncoder builds the Config with TxEncoder used to marshal StdTx to bytes
+func (config *Config) SetTxEncoder(encoder TxEncoder) {
+	config.assertNotSealed()
+	config.txEncoder = encoder
+}
+
 // Seal seals the config such that the config state could not be modified further
 func (config *Config) Seal() *Config {
 	config.mtx.Lock()
@@ -102,4 +110,9 @@ func (config *Config) GetBech32ValidatorPubPrefix() string {
 // GetBech32ConsensusPubPrefix returns the Bech32 prefix for consensus node public key
 func (config *Config) GetBech32ConsensusPubPrefix() string {
 	return config.bech32AddressPrefix["consensus_pub"]
+}
+
+// GetTxEncoder return function to encode transactions
+func (config *Config) GetTxEncoder() TxEncoder {
+	return config.txEncoder
 }

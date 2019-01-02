@@ -16,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
@@ -46,8 +48,11 @@ type DemocoinApp struct {
 	capKeyPowStore     *sdk.KVStoreKey
 	capKeyIBCStore     *sdk.KVStoreKey
 	capKeyStakingStore *sdk.KVStoreKey
+	keyParams          *sdk.KVStoreKey
+	tkeyParams         *sdk.TransientStoreKey
 
 	// keepers
+	paramsKeeper        params.Keeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
 	coolKeeper          cool.Keeper
@@ -68,19 +73,24 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	var app = &DemocoinApp{
 		BaseApp:            bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc)),
 		cdc:                cdc,
-		capKeyMainStore:    sdk.NewKVStoreKey("main"),
-		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
-		capKeyBankStore:    sdk.NewKVStoreKey("bank"),
+		capKeyMainStore:    sdk.NewKVStoreKey(bam.MainStoreKey),
+		capKeyAccountStore: sdk.NewKVStoreKey(auth.StoreKey),
+		capKeyBankStore:    sdk.NewKVStoreKey(bank.StoreKey),
 		capKeyPowStore:     sdk.NewKVStoreKey("pow"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
-		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
+		capKeyStakingStore: sdk.NewKVStoreKey(stake.StoreKey),
+		keyParams:          sdk.NewKVStoreKey("params"),
+		tkeyParams:         sdk.NewTransientStoreKey("transient_params"),
 	}
+
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// Define the accountKeeper.
 	app.accountKeeper = auth.NewAccountKeeper(
 		cdc,
-		app.capKeyAccountStore, // target store
-		types.ProtoAppAccount,  // prototype
+		app.capKeyAccountStore,
+		app.paramsKeeper.Subspace(auth.DefaultParamspace),
+		types.ProtoAppAccount,
 	)
 
 	// Add handlers.

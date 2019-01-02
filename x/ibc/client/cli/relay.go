@@ -4,6 +4,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/utils"
+
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -43,8 +46,8 @@ func IBCRelayCmd(cdc *codec.Codec) *cobra.Command {
 		cdc:       cdc,
 		decoder:   context.GetAccountDecoder(cdc),
 		ibcStore:  "ibc",
-		mainStore: "main",
-		accStore:  "acc",
+		mainStore: bam.MainStoreKey,
+		accStore:  auth.StoreKey,
 
 		logger: log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 	}
@@ -201,7 +204,7 @@ func (c relayCommander) refine(bz []byte, ibcSeq, accSeq uint64, passphrase stri
 		Sequence:  ibcSeq,
 	}
 
-	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(accSeq).WithCodec(c.cdc)
+	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(accSeq).WithTxEncoder(utils.GetTxEncoder(c.cdc))
 	cliCtx := context.NewCLIContext()
 
 	name, err := cliCtx.GetFromName()

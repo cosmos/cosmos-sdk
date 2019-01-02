@@ -9,8 +9,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// Parameter store default namestore
 const (
+	// StoreKey is the store key string for gov
+	StoreKey = "gov"
+
+	// RouterKey is the message route for gov
+	RouterKey = "gov"
+
+	// QuerierRoute is the querier route for gov
+	QuerierRoute = "gov"
+
+	// Parameter store default namestore
 	DefaultParamspace = "gov"
 )
 

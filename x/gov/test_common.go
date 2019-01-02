@@ -6,8 +6,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/params"
-
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -27,25 +25,23 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 	stake.RegisterCodec(mapp.Cdc)
 	RegisterCodec(mapp.Cdc)
 
-	keyGlobalParams := sdk.NewKVStoreKey("params")
-	tkeyGlobalParams := sdk.NewTransientStoreKey("transient_params")
-	keyBank := sdk.NewKVStoreKey("bank")
-	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
-	keyGov := sdk.NewKVStoreKey("gov")
+	keyBank := sdk.NewKVStoreKey(bank.StoreKey)
+	keyStake := sdk.NewKVStoreKey(stake.StoreKey)
+	tkeyStake := sdk.NewTransientStoreKey(stake.TStoreKey)
+	keyGov := sdk.NewKVStoreKey(StoreKey)
 
-	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams, tkeyGlobalParams)
+	pk := mapp.ParamsKeeper
 	ck := bank.NewBaseKeeper(mapp.Cdc, mapp.AccountKeeper, keyBank)
 	sk := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
 	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
 
-	mapp.Router().AddRoute("gov", NewHandler(keeper))
-	mapp.QueryRouter().AddRoute("gov", NewQuerier(keeper))
+	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
+	mapp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
 
-	require.NoError(t, mapp.CompleteSetup(keyStake, keyBank, tkeyStake, keyGov, keyGlobalParams, tkeyGlobalParams))
+	require.NoError(t, mapp.CompleteSetup(keyStake, keyBank, tkeyStake, keyGov))
 
 	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)})
 

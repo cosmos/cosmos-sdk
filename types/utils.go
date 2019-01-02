@@ -4,9 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"time"
-
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
@@ -60,23 +57,4 @@ func ParseTimeBytes(bz []byte) (time.Time, error) {
 		return t, err
 	}
 	return t.UTC().Round(0), nil
-}
-
-// DefaultChainID returns the chain ID from the genesis file if present. An
-// error is returned if the file cannot be read or parsed.
-//
-// TODO: This should be removed and the chainID should always be provided by
-// the end user.
-func DefaultChainID() (string, error) {
-	cfg, err := tcmd.ParseConfig()
-	if err != nil {
-		return "", err
-	}
-
-	doc, err := tmtypes.GenesisDocFromFile(cfg.GenesisFile())
-	if err != nil {
-		return "", err
-	}
-
-	return doc.ChainID, nil
 }

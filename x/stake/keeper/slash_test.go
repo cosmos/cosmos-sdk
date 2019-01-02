@@ -6,9 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/stake/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // TODO integrate with test_common.go helper (CreateTestInput)
@@ -26,10 +27,9 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	for i := 0; i < numVals; i++ {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
 		validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(amt))
-		validator.BondIntraTxCounter = int16(i)
 		pool.BondedTokens = pool.BondedTokens.Add(sdk.NewDec(amt))
 		keeper.SetPool(ctx, pool)
-		validator = TestingUpdateValidator(keeper, ctx, validator)
+		validator = TestingUpdateValidator(keeper, ctx, validator, true)
 		keeper.SetValidatorByConsAddr(ctx, validator)
 	}
 	pool = keeper.GetPool(ctx)

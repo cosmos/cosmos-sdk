@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,7 +23,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -61,9 +62,9 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
-		Short: "edit and existing validator account",
+		Short: "edit an existing validator account",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -113,9 +114,9 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delegate",
-		Short: "delegate liquid tokens to an validator",
+		Short: "delegate liquid tokens to a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -157,7 +158,7 @@ func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 		Use:   "redelegate",
 		Short: "redelegate illiquid tokens from one validator to another",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -212,7 +213,7 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 		Use:   "unbond",
 		Short: "unbond shares from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)

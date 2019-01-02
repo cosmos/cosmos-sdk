@@ -5,7 +5,6 @@
 BUG FIXES
 
 * SDK
-  * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
   * [\#3207](https://github.com/cosmos/cosmos-sdk/issues/3207) - Fix token printing bug
 
 ## 0.29.0

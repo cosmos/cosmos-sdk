@@ -16,12 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
-type testInput struct {
-	cdc *codec.Codec
-	ctx sdk.Context
-	ak  auth.AccountKeeper
-}
-
 func setupMultiStore() (sdk.MultiStore, *sdk.KVStoreKey) {
 	db := dbm.NewMemDB()
 	authKey := sdk.NewKVStoreKey("authkey")

@@ -73,9 +73,6 @@ func (keeper BaseKeeper) InputOutputCoins(
 
 // SendKeeper defines a module interface that facilitates the transfer of coins
 // between accounts without the possibility of creating coins.
-//
-// TODO: If InputOutputCoins is favored over SendCoins in order to maintain
-// safety and supply invariants, then there will be no need for a SendKeeper.
 type SendKeeper interface {
 	ViewKeeper
 

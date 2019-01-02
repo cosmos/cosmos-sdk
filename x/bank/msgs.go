@@ -37,25 +37,8 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 	if len(msg.Outputs) == 0 {
 		return ErrNoOutputs(DefaultCodespace).TraceSDK("")
 	}
-	// make sure all inputs and outputs are individually valid
-	var totalIn, totalOut sdk.Coins
-	for _, in := range msg.Inputs {
-		if err := in.ValidateBasic(); err != nil {
-			return err.TraceSDK("")
-		}
-		totalIn = totalIn.Plus(in.Coins)
-	}
-	for _, out := range msg.Outputs {
-		if err := out.ValidateBasic(); err != nil {
-			return err.TraceSDK("")
-		}
-		totalOut = totalOut.Plus(out.Coins)
-	}
-	// make sure inputs and outputs match
-	if !totalIn.IsEqual(totalOut) {
-		return sdk.ErrInvalidCoins(totalIn.String()).TraceSDK("inputs and outputs don't match")
-	}
-	return nil
+
+	return ValidateInputsOutputs(msg.Inputs, msg.Outputs)
 }
 
 // Implements Msg.
@@ -169,4 +152,34 @@ func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
 		Coins:   coins,
 	}
 	return output
+}
+
+// ----------------------------------------------------------------------------
+// Auxiliary
+
+// ValidateInputsOutputs validates that each respective input and output is
+// valid and that the sum of inputs is equal to the sum of outputs.
+func ValidateInputsOutputs(inputs []Input, outputs []Output) sdk.Error {
+	var totalIn, totalOut sdk.Coins
+
+	for _, in := range inputs {
+		if err := in.ValidateBasic(); err != nil {
+			return err.TraceSDK("")
+		}
+		totalIn = totalIn.Plus(in.Coins)
+	}
+
+	for _, out := range outputs {
+		if err := out.ValidateBasic(); err != nil {
+			return err.TraceSDK("")
+		}
+		totalOut = totalOut.Plus(out.Coins)
+	}
+
+	// make sure inputs and outputs match
+	if !totalIn.IsEqual(totalOut) {
+		return sdk.ErrInvalidCoins(totalIn.String()).TraceSDK("inputs and outputs don't match")
+	}
+
+	return nil
 }

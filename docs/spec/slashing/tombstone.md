@@ -26,16 +26,17 @@ However, while infractions are grouped based off of the slashing periods, becaus
    
 We are now in a new slashing period, however we still have to keep the door open for the previous infraction, as the evidence for Infraction 2 may still come in. As the number of slashing periods increase, it creates more complexity as we have to keep track of the highest infraction amount for every single slashing period.
 
-> Note:  Currently, according to the `slashing` module spec, a new slashing period is created everytime a validator is unbonded then rebonded.  This should probably be changed to jailed/unjailed, as in the current system, let's say I compromised the key of the rank 100 validator, I could bond my own validator into and out of the validator set many times, in order to create as many slashing periods I want for the validator.  Then I can create infractions for each of the slashing periods I created for the validator, allowing me to get them multiply slashed. I'm not sure if this is how it is implemented in the code, or is just a mistake in the spec.  For the remainder of this, I will assume that we only start a new slashing period when a validator gets unjailed.
+> Note:  Currently, according to the `slashing` module spec, a new slashing period is created everytime a validator is unbonded then rebonded.  This should probably be changed to jailed/unjailed.  See issue #3205 for further details.  For the remainder of this, I will assume that we only start a new slashing period when a validator gets unjailed.
 
 The maximum number of slashing periods is the `len(UnbondingPeriod) / len(JailPeriod)`.  The current defaults in Gaia for the `UnbondingPeriod` and `JailPeriod` are 3 weeks and 2 days, respectively.  This means there could potentially be up to 11 slashing periods concurrently being tracked per validator.  If we set the `JailPeriod >= UnbondingPeriod`, we only have to track 1 slashing period (i.e not have to track slashing periods).
 
 Currently, in the jail period implementation, once a validator unjails, all of their delegators who are delegated to them (haven't unbonded / redelegated away), stay with them.  Given that consensus safety faults, are so egregious (way more so than liveness faults), it is probably prudent to have delegators not "auto-rebond" to the validator. Thus, we propose that instead of being put in a "jailed state" after evidence for a consensus safety fault, validators are instead put into a "tombstone state", which means the validator is kicked out of the validator set and not allowed to rejoin.  All of the stake that was delegated to it is put into an unbonding period.  The validator operator can create a new validator if they would like, preferably with a new consensus key (do we need to enforce this?  No rational validator should reuse the same compromised key lol), but they have to "reearn" their delegations back.
 
-Doing this tombstone system and getting rid of the slashing period tracking, will make the `slashing` module way simpler, especially because we can remove the hooks between the `stake` and `slashing` modules.
+Given that in the current state machine, an unbonding validator cannot "rebond" and re-enter the validator set, the easiest way to accomplish the tombstone, is to just put the validator into the unbonding state.  This way, the validator cannot re-enter the validator set.  The validator operator can rejoin the validator set using a new Operator account, or wait for the unbonding to finish, and rebond with the same Operator Key.  Either way, however, their old delegations do not carry over.
+
+Doing this tombstone system and getting rid of the slashing period tracking, will make the `slashing` module way simpler, especially because we can remove all of the hooks defined in the `slashing` module.
 
 > Note: The tombstone concept, only applies to byzantine faults reported over ABCI.  For slashable offenses tracked by the state machine (such as liveness faults), as there is not a delay between infraction and slashing, no slashing period tracking is needed. Also, a liveness bug probably isn't so egregious that it mandates force unbonding all delegations, and so the current jail system is adequate.
-
 
 ## Further improvements / Related proposals:
 
@@ -51,7 +52,11 @@ At the moment, the second one is not implemented, but needs to be implemented so
 
 ### Store infractions in state instead of iterating over unbonds/redelegations
 
-Currently, every time evidence of a new fault comes in, we currently iterate over all of the unbonds/redelegations away from a validator to see if the slash affects them or not.  If it does, we decrease the "balance" of the `ubd` or `red`.  However, as the number of unbonds or redelegations can be very high, this might be very expensive.  Instead, we can store evidences for all infractions that happened in the last `Unbonding Period` in state, and then whenever a ubd or red hits maturity, it can check if it needs to be slashed by checking it against the last infraction that happened before they started unbonding/redelegating away.  Because we only need to store the infractions from the last unbon  
+Pending discussion on #3206.
+
+<!-- Currently, every time evidence of a new fault comes in, we currently iterate over all of the unbonds/redelegations away from a validator to see if the slash affects them or not.  If it does, we decrease the "balance" of the `ubd` or `red`.  However, as the number of unbonds or redelegations can be very high, this might be very expensive.  Instead, we can store evidences for all infractions that happened in the last `Unbonding Period` in state, and then whenever a ubd or red hits maturity, it can check if it needs to be slashed by checking it against the last infraction that happened before they started unbonding/redelegating away.  Because we only need to store the infractions from the last unbon -->
+
+
 
 
 <!-- 

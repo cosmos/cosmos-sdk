@@ -74,8 +74,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	validator, found = keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, sdk.Unbonding, validator.Status)              // ensure is unbonding
-	require.Equal(t, int64(500000), validator.Tokens.RoundInt64()) // ensure tokens slashed
+	require.Equal(t, sdk.Unbonding, validator.Status)         // ensure is unbonding
+	require.Equal(t, int64(500000), validator.Tokens.Int64()) // ensure tokens slashed
 	keeper.Unjail(ctx, consAddr0)
 
 	// the old power record should have been deleted as the power changed
@@ -125,7 +125,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr1, validator.OperatorAddr)
 	assert.Equal(t, pk1, validator.ConsPubKey)
-	assert.Equal(t, sdk.NewDec(10), validator.BondedTokens())
+	assert.Equal(t, int64(10), validator.BondedTokens().Int64())
 	assert.Equal(t, sdk.NewDec(10), validator.DelegatorShares)
 	assert.Equal(t, Description{}, validator.Description)
 
@@ -154,7 +154,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, addr2, validator.OperatorAddr)
 	assert.Equal(t, pk2, validator.ConsPubKey)
-	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
+	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
 }
@@ -198,7 +198,7 @@ func TestDuplicatesMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	assert.Equal(t, sdk.Bonded, validator.Status)
 	assert.Equal(t, validatorAddr, validator.OperatorAddr)
 	assert.Equal(t, pk, validator.ConsPubKey)
-	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
+	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 	assert.Equal(t, Description{}, validator.Description)
 
@@ -232,7 +232,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt64())
-	require.Equal(t, bondAmount, validator.BondedTokens().RoundInt64())
+	require.Equal(t, bondAmount, validator.BondedTokens().Int64())
 
 	// delegate tokens to the validator
 	msgDelegate := NewTestMsgDelegate(delAddr, valAddr, bondAmount)
@@ -243,7 +243,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
 	require.Equal(t, bondAmount*2, validator.DelegatorShares.RoundInt64())
-	require.Equal(t, bondAmount*2, validator.BondedTokens().RoundInt64())
+	require.Equal(t, bondAmount*2, validator.BondedTokens().Int64())
 
 	// unbond validator total self-delegations (which should jail the validator)
 	unbondShares := sdk.NewDec(10)
@@ -261,7 +261,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
 	require.True(t, validator.Jailed)
-	require.Equal(t, sdk.NewDec(10), validator.Tokens)
+	require.Equal(t, int64(10), validator.Tokens.Int64())
 
 	// verify delegation still exists
 	bond, found := keeper.GetDelegation(ctx, delAddr, valAddr)
@@ -283,7 +283,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
 	require.Equal(t, bondAmount*2, validator.DelegatorShares.RoundInt64())
-	require.Equal(t, bondAmount*2, validator.Tokens.RoundInt64())
+	require.Equal(t, bondAmount*2, validator.Tokens.Int64())
 
 	// unjail the validator now that is has non-zero self-delegated shares
 	keeper.Unjail(ctx, valConsAddr)
@@ -297,7 +297,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	validator, found = keeper.GetValidator(ctx, valAddr)
 	require.True(t, found)
 	require.Equal(t, bondAmount*3, validator.DelegatorShares.RoundInt64())
-	require.Equal(t, bondAmount*3, validator.Tokens.RoundInt64())
+	require.Equal(t, bondAmount*3, validator.Tokens.Int64())
 
 	// verify new delegation
 	bond, found = keeper.GetDelegation(ctx, delAddr, valAddr)
@@ -326,7 +326,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status)
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt64())
-	require.Equal(t, bondAmount, validator.BondedTokens().RoundInt64(), "validator: %v", validator)
+	require.Equal(t, bondAmount, validator.BondedTokens().Int64(), "validator: %v", validator)
 
 	_, found = keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	require.False(t, found)
@@ -338,7 +338,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	exRate := validator.DelegatorShareExRate()
 	require.True(t, exRate.Equal(sdk.OneDec()), "expected exRate 1 got %v", exRate)
-	require.Equal(t, bondAmount, pool.BondedTokens.RoundInt64())
+	require.Equal(t, bondAmount, pool.BondedTokens.Int64())
 
 	// just send the same msgbond multiple times
 	msgDelegate := NewTestMsgDelegate(delegatorAddr, validatorAddr, bondAmount)
@@ -408,7 +408,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.Equal(t, initBond*2, validator.DelegatorShares.RoundInt64())
-	require.Equal(t, initBond*2, validator.BondedTokens().RoundInt64())
+	require.Equal(t, initBond*2, validator.BondedTokens().Int64())
 
 	// just send the same msgUnbond multiple times
 	// TODO use decimals here
@@ -1008,7 +1008,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// validator power should have been reduced by half
 	validator, found := keeper.GetValidator(ctx, valA)
 	require.True(t, found)
-	require.Equal(t, sdk.NewDec(5), validator.GetPower())
+	require.Equal(t, int64(5), validator.GetPower().Int64())
 
 	// slash the validator for an infraction committed after the unbonding and redelegation begin
 	ctx = ctx.WithBlockHeight(3)

@@ -42,8 +42,8 @@ type Validator interface {
 	GetOperator() ValAddress      // operator address to receive/return validators coins
 	GetConsPubKey() crypto.PubKey // validation consensus pubkey
 	GetConsAddr() ConsAddress     // validation consensus address
-	GetPower() Dec                // validation power
-	GetTokens() Dec               // validation tokens
+	GetPower() Int                // validation power
+	GetTokens() Int               // validation tokens
 	GetCommission() Dec           // validator commission rate
 	GetDelegatorShares() Dec      // Total out standing delegator shares
 	GetBondHeight() int64         // height in which the validator became active
@@ -53,7 +53,7 @@ type Validator interface {
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
 		Address: v.GetConsPubKey().Address(),
-		Power:   v.GetPower().RoundInt64(),
+		Power:   v.GetPower().Int64(),
 	}
 }
 
@@ -73,7 +73,7 @@ type ValidatorSet interface {
 
 	Validator(Context, ValAddress) Validator            // get a particular validator by operator address
 	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
-	TotalPower(Context) Dec                             // total power of the validator set
+	TotalPower(Context) Int                             // total power of the validator set
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, ConsAddress, int64, int64, Dec)

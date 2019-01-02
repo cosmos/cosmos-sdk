@@ -20,7 +20,7 @@ func TestInitGenesis(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = sdk.NewDec(2)
+	pool.BondedTokens = sdk.NewInt(2)
 
 	params := keeper.GetParams(ctx)
 	validators := make([]Validator, 2)
@@ -31,13 +31,13 @@ func TestInitGenesis(t *testing.T) {
 	validators[0].ConsPubKey = keep.PKs[0]
 	validators[0].Description = Description{Moniker: "hoop"}
 	validators[0].Status = sdk.Bonded
-	validators[0].Tokens = sdk.OneDec()
+	validators[0].Tokens = sdk.OneInt()
 	validators[0].DelegatorShares = sdk.OneDec()
 	validators[1].OperatorAddr = sdk.ValAddress(keep.Addrs[1])
 	validators[1].ConsPubKey = keep.PKs[1]
 	validators[1].Description = Description{Moniker: "bloop"}
 	validators[1].Status = sdk.Bonded
-	validators[1].Tokens = sdk.OneDec()
+	validators[1].Tokens = sdk.OneInt()
 	validators[1].DelegatorShares = sdk.OneDec()
 
 	genesisState := types.NewGenesisState(pool, params, validators, delegations)
@@ -75,7 +75,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// Assigning 2 to the first 100 vals, 1 to the rest
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = sdk.NewDec(int64(200 + (size - 100)))
+	pool.BondedTokens = sdk.NewInt(int64(200 + (size - 100)))
 
 	params := keeper.GetParams(ctx)
 	delegations := []Delegation{}
@@ -86,10 +86,10 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 		validators[i].Status = sdk.Bonded
 		if i < 100 {
-			validators[i].Tokens = sdk.NewDec(2)
+			validators[i].Tokens = sdk.NewInt(2)
 			validators[i].DelegatorShares = sdk.NewDec(2)
 		} else {
-			validators[i].Tokens = sdk.OneDec()
+			validators[i].Tokens = sdk.OneInt()
 			validators[i].DelegatorShares = sdk.OneDec()
 		}
 	}
@@ -110,7 +110,7 @@ func TestValidateGenesis(t *testing.T) {
 	genValidators1 := make([]types.Validator, 1, 5)
 	pk := ed25519.GenPrivKey().PubKey()
 	genValidators1[0] = types.NewValidator(sdk.ValAddress(pk.Address()), pk, types.NewDescription("", "", "", ""))
-	genValidators1[0].Tokens = sdk.OneDec()
+	genValidators1[0].Tokens = sdk.OneInt()
 	genValidators1[0].DelegatorShares = sdk.OneDec()
 
 	tests := []struct {

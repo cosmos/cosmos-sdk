@@ -232,7 +232,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	defaultParams := stake.DefaultParams()
 	initialPool := stake.InitialPool()
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100)) // Delegate tx on GaiaAppGenState
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(100)) // Delegate tx on GaiaAppGenState
 
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli tx stake create-validator %v", flags)
@@ -244,7 +244,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	cvStr += fmt.Sprintf(" --commission-max-rate=%v", "0.20")
 	cvStr += fmt.Sprintf(" --commission-max-change-rate=%v", "0.10")
 
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(1))
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(1))
 
 	// Test --generate-only
 	success, stdout, stderr := executeWriteRetStdStreams(t, cvStr+" --generate-only", app.DefaultKeyPass)
@@ -268,7 +268,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli query stake validator %s %v", sdk.ValAddress(barAddr), flags))
 	require.Equal(t, validator.OperatorAddr, sdk.ValAddress(barAddr))
-	require.True(sdk.DecEq(t, sdk.NewDec(2), validator.Tokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(2), validator.Tokens))
 
 	validatorDelegations := executeGetValidatorDelegations(t, fmt.Sprintf("gaiacli query stake delegations-to %s %v", sdk.ValAddress(barAddr), flags))
 	require.Len(t, validatorDelegations, 1)
@@ -289,7 +289,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64(), "%v", barAcc)
 	*/
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli query stake validator %s %v", sdk.ValAddress(barAddr), flags))
-	require.Equal(t, "1.0000000000", validator.Tokens.String())
+	require.Equal(t, "1", validator.Tokens.String())
 
 	validatorUbds := executeGetValidatorUnbondingDelegations(t,
 		fmt.Sprintf("gaiacli query stake unbonding-delegations-from %s %v", sdk.ValAddress(barAddr), flags))

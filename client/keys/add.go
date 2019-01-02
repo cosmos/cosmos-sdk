@@ -7,8 +7,7 @@ import (
 	"net/http"
 	"os"
 
-    "github.com/cosmos/go-bip39"		
-    "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -38,17 +37,18 @@ func addKeyCommand() *cobra.Command {
 		Short: "Add an encrypted private key (either newly generated or recovered), encrypt it, and save to disk",
 		Long: `Derive a new private key and encrypt to disk.
 Optionally specify a BIP39 mnemonic, a BIP39 passphrase to further secure the mnemonic,
-and a bip32 HD path to derive a specific account. The key will be stored under the given name 
+and a bip32 HD path to derive a specific account. The key will be stored under the given name
 and encrypted with the given password. The only input that is required is the encryption password.
 
 If run with -i, it will prompt the user for BIP44 path, BIP39 mnemonic, and passphrase.
 The flag --recover allows one to recover a key from a seed passphrase.
 If run with --dry-run, a key would be generated (or recovered) but not stored to the local keystore.
+Use the --pubkey flag to add arbitrary public keys to the keystore for constructing multisignature transactions
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: runAddCmd,
 	}
-	cmd.Flags().String(FlagPublicKey, "cosmospub1....", "Store only a public key (useful for constructing multisigs)")
+	cmd.Flags().String(FlagPublicKey, "", "Store only a public key (useful for constructing multisigs) e.g.  cosmospub1...")
 	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
 	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	cmd.Flags().String(flagBIP44Path, "44'/118'/0'/0/0", "BIP44 path from which to derive a private key")
@@ -78,9 +78,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	interactive := viper.GetBool(flagInteractive)
-	flags := cmd.Flags()
-
-	pubKeyFlag := flags.Lookup(flagPublicKey)
 
 	if viper.GetBool(flagDryRun) {
 		// we throw this away, so don't enforce args,
@@ -103,21 +100,18 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		// ask for a password when generating a local key
-
-		if !pubKeyFlag.Changed {
-			if !viper.GetBool(client.FlagUseLedger) {
-				encryptPassword, err = client.GetCheckPassword(
-					"Enter a passphrase to encrypt your key to disk:",
-					"Repeat the passphrase:", buf)
-				if err != nil {
-					return err
-				}
+		if viper.GetString(flagPublicKey) == "" && !viper.GetBool(client.FlagUseLedger) {
+			encryptPassword, err = client.GetCheckPassword(
+				"Enter a passphrase to encrypt your key to disk:",
+				"Repeat the passphrase:", buf)
+			if err != nil {
+				return err
 			}
 		}
 	}
 
-	if pubKeyFlag.Changed {
-		pk, err := sdk.GetAccPubKeyBech32(pubKeyFlag.Value.String())
+	if viper.GetString(flagPublicKey) != "" {
+		pk, err := sdk.GetAccPubKeyBech32(viper.GetString(flagPublicKey))
 		if err != nil {
 			return err
 		}
@@ -125,8 +119,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	bipFlag := flags.Lookup(flagBIP44Path)
-
+	bipFlag := cmd.Flags().Lookup(flagBIP44Path)
 	bip44Params, err := getBIP44ParamsAndPath(bipFlag.Value.String(), bipFlag.Changed || !interactive)
 	if err != nil {
 		return err

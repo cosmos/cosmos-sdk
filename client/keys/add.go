@@ -117,7 +117,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if pubKeyFlag.Changed {
-
 		pk, err := sdk.GetAccPubKeyBech32(pubKeyFlag.Value.String())
 		if err != nil {
 			return err

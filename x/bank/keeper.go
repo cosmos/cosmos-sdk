@@ -220,6 +220,12 @@ func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, 
 // InputOutputCoins handles a list of inputs and outputs
 // NOTE: Make sure to revert state changes from tx on error
 func inputOutputCoins(ctx sdk.Context, am auth.AccountKeeper, inputs []Input, outputs []Output) (sdk.Tags, sdk.Error) {
+	// Safety check ensuring that when sending coins the keeper must maintain the
+	// supply invariant.
+	if err := ValidateInputsOutputs(inputs, outputs); err != nil {
+		return nil, err
+	}
+
 	allTags := sdk.EmptyTags()
 
 	for _, in := range inputs {

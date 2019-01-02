@@ -19,7 +19,7 @@ func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 		EndHeight:     height + 10,
 		SlashedSoFar:  sdk.ZeroDec(),
 	}
-	keeper.addOrUpdateValidatorSlashingPeriod(ctx, newPeriod)
+	keeper.SetValidatorSlashingPeriod(ctx, newPeriod)
 
 	// Get at start height
 	retrieved := keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height)
@@ -34,12 +34,12 @@ func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 
 	// Get after end height (panic)
 	newPeriod.EndHeight = int64(4)
-	keeper.addOrUpdateValidatorSlashingPeriod(ctx, newPeriod)
+	keeper.SetValidatorSlashingPeriod(ctx, newPeriod)
 	require.Panics(t, func() { keeper.capBySlashingPeriod(ctx, addr, sdk.ZeroDec(), height) })
 
 	// Back to old end height
 	newPeriod.EndHeight = height + 10
-	keeper.addOrUpdateValidatorSlashingPeriod(ctx, newPeriod)
+	keeper.SetValidatorSlashingPeriod(ctx, newPeriod)
 
 	// Set a new, later period
 	anotherPeriod := ValidatorSlashingPeriod{
@@ -48,7 +48,7 @@ func TestGetSetValidatorSlashingPeriod(t *testing.T) {
 		EndHeight:     height + 11,
 		SlashedSoFar:  sdk.ZeroDec(),
 	}
-	keeper.addOrUpdateValidatorSlashingPeriod(ctx, anotherPeriod)
+	keeper.SetValidatorSlashingPeriod(ctx, anotherPeriod)
 
 	// Old period retrieved for prior height
 	retrieved = keeper.getValidatorSlashingPeriodForHeight(ctx, addr, height)
@@ -69,7 +69,7 @@ func TestValidatorSlashingPeriodCap(t *testing.T) {
 		EndHeight:     height + 10,
 		SlashedSoFar:  sdk.ZeroDec(),
 	}
-	keeper.addOrUpdateValidatorSlashingPeriod(ctx, newPeriod)
+	keeper.SetValidatorSlashingPeriod(ctx, newPeriod)
 	half := sdk.NewDec(1).Quo(sdk.NewDec(2))
 
 	// First slash should be full

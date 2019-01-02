@@ -155,7 +155,7 @@ func (coins Coins) IsValid() bool {
 			if strings.ToLower(coin.Denom) != coin.Denom {
 				return false
 			}
-			if coin.Denom <= lowDenom {
+			if coin.Denom < lowDenom {
 				return false
 			}
 			if !coin.IsPositive() {

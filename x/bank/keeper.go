@@ -73,6 +73,9 @@ func (keeper BaseKeeper) InputOutputCoins(
 
 // SendKeeper defines a module interface that facilitates the transfer of coins
 // between accounts without the possibility of creating coins.
+//
+// TODO: If InputOutputCoins is favored over SendCoins in order to maintain
+// safety and supply invariants, then there will be no need for a SendKeeper.
 type SendKeeper interface {
 	ViewKeeper
 
@@ -194,8 +197,13 @@ func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 }
 
 // SendCoins moves coins from one account to another
-// NOTE: Make sure to revert state changes from tx on error
 func sendCoins(ctx sdk.Context, am auth.AccountKeeper, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error) {
+	// Safety check ensuring that when sending coins the keeper must maintain the
+	// supply invariant.
+	if !amt.IsValid() {
+		return nil, sdk.ErrInvalidCoins(amt.String())
+	}
+
 	_, subTags, err := subtractCoins(ctx, am, fromAddr, amt)
 	if err != nil {
 		return nil, err

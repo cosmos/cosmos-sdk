@@ -144,13 +144,15 @@ func (coins Coins) IsValid() bool {
 	case 1:
 		return coins[0].IsPositive()
 	default:
-		if strings.ToLower(coins[0].Denom) != coins[0].Denom {
+		lowDenom := coins[0].Denom
+
+		if strings.ToLower(lowDenom) != coins[0].Denom {
 			return false
 		}
 		if !coins[0].IsPositive() {
 			return false
 		}
-		lowDenom := coins[0].Denom
+
 		for _, coin := range coins[1:] {
 			if strings.ToLower(coin.Denom) != coin.Denom {
 				return false

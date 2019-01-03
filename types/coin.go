@@ -140,8 +140,12 @@ func (coins Coins) IsValid() bool {
 	case 1:
 		return coins[0].IsPositive()
 	default:
-		lowDenom := coins[0].Denom
+		// check single coin case
+		if !(Coins{coins[0]}).IsValid() {
+			return false
+		}
 
+		lowDenom := coins[0].Denom
 		for _, coin := range coins[1:] {
 			if coin.Denom <= lowDenom {
 				return false

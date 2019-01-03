@@ -251,8 +251,13 @@ func TestMinusCoins(t *testing.T) {
 
 func TestCoins(t *testing.T) {
 	good := Coins{
-		{"GAS", NewInt(1)},
-		{"MINERAL", NewInt(1)},
+		{"gas", NewInt(1)},
+		{"mineral", NewInt(1)},
+		{"tree", NewInt(1)},
+	}
+	mixedCase1 := Coins{
+		{"gAs", NewInt(1)},
+		{"MineraL", NewInt(1)},
 		{"TREE", NewInt(1)},
 	}
 	empty := Coins{
@@ -281,8 +286,13 @@ func TestCoins(t *testing.T) {
 		{"GAS", NewInt(1)},
 		{"MINERAL", NewInt(1)},
 	}
+	neg := Coins{
+		{"gas", NewInt(-1)},
+		{"mineral", NewInt(1)},
+	}
 
 	assert.True(t, good.IsValid(), "Coins are valid")
+	assert.False(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
 	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
 	assert.False(t, null.IsPositive(), "Expected coins to not be positive: %v", null)
 	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
@@ -292,6 +302,7 @@ func TestCoins(t *testing.T) {
 	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
 	assert.False(t, dup.IsValid(), "Duplicate coin")
+	assert.False(t, neg.IsValid(), "Negative first-denom coin")
 }
 
 func TestCoinsGT(t *testing.T) {

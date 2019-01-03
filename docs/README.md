@@ -1,18 +1,11 @@
-# Welcome to the SDK Docs!
+# Cosmos SDK Documentation
 
-Welcome to the SDK docs!
+## Get Started
 
-## Learn the SDK
+-  **[SDK Intro](./intro/README.md)**: Intro material to the Cosmos SDK.
+-  **[SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial)**: A tutorial to learn the SDK. It showcases how to build an SDK-based blockchain from scratch, and explains the basic principles of the SDK in the process.
 
-### SDK Intro
-
-If you are a newcomer and would like to learn more about the Cosmos SDK, this **[intro](./intro/README.md)** is a good starting place.
-
-### SDK tutorial
-
-If you like to learn by doing, you can follow the **[SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial)**. It showcases how to build an SDK-based blockchain from scratch, and teaches you about the basic principles the SDK in the process.
-
-### Resources
+## Resources
 
 - [Specifications](./spec/README.md): Specifications of modules and other parts of the Cosmos SDK. 
 - [SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk): Godocs of the Cosmos SDK.

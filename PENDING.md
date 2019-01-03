@@ -23,7 +23,6 @@ BREAKING CHANGES
 * SDK
   * [stake] \#2513 Validator power type from Dec -> Int 
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
-  * \#3207 - Fix token printing bug
 
 * Tendermint
 

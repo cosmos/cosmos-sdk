@@ -19,7 +19,7 @@ func TestAllocateTokensBasic(t *testing.T) {
 
 	//first make a validator
 	totalPower := int64(10)
-	totalPowerDec := sdk.NewDec(totalPower)
+	totalPowerInt := sdk.NewInt(totalPower)
 	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
 	got := stakeHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
@@ -29,10 +29,10 @@ func TestAllocateTokensBasic(t *testing.T) {
 	validator, found := sk.GetValidator(ctx, valOpAddr1)
 	require.True(t, found)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	assert.True(sdk.DecEq(t, totalPowerDec, validator.Tokens))
-	assert.True(sdk.DecEq(t, totalPowerDec, validator.DelegatorShares))
+	assert.True(sdk.IntEq(t, totalPowerInt, validator.Tokens))
+	assert.True(sdk.DecEq(t, sdk.NewDec(totalPower), validator.DelegatorShares))
 	bondedTokens := sk.TotalPower(ctx)
-	assert.True(sdk.DecEq(t, totalPowerDec, bondedTokens))
+	assert.True(sdk.IntEq(t, totalPowerInt, bondedTokens))
 
 	// initial fee pool should be empty
 	feePool := keeper.GetFeePool(ctx)

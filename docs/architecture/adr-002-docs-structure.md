@@ -23,7 +23,7 @@ docs/
 │   ├── validator-node.md
 │   ├── validator-faq.md
 │   └── delegator-faq.md    
-├── reference/
+├── concepts/
 │   ├── baseapp
 │   ├── types
 │   ├── store
@@ -49,7 +49,7 @@ The files in each sub-folders do not matter and will likely change. What matters
 - `README`: Landing page of the docs. 
 - `into`: Introductory material. Goal is to have a short explainer of the SDK and then channel people to the resource they need. The [sdk-tutorial](https://github.com/cosmos/sdk-application-tutorial/) will be highlighted, as well as the `godocs`.
 - `gaia`: Contains all docs related to the `gaia` application. Will later be renamed to `cosmos-hub` or `chub` and probably moved to its own repository.
-- `reference`: Contains high-level explanations of the abstractions of the SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`. 
+- `concepts`: Contains high-level explanations of the abstractions of the SDK. It does not contain specific code implementation and does not need to be updated often. **It is not an API specification of the interfaces**. API spec is the `godoc`. 
 - `examples`: Contain a couple examples of sdk application like `basecoin` and `democoin`. Developers need to maintain them up-to-date and make sure they compile as the SDK gets upgraded.
 - `clients`: Contains specs and info about the various SDK clients.
 - `spec`: Contains specs of modules, and others.
@@ -60,14 +60,14 @@ Website docs sidebar will only include the following sections:
 - `README`
 - `intro`
 - `gaia`
-- `reference`
+- `concepts`
 - `clients`
 
 `architecture` and `examples` need not be displayed on the website. As for `modules`, we might need to think about creating a modules manager, but this is out of scope for this document.
 
 ## Status
 
-Proposed
+Accepted
 
 ## Consequences
 
@@ -83,7 +83,7 @@ Proposed
 ### Neutral
 
 - We need to move a bunch of deprecated stuff to `/_attic` folder. 
-- We need to integrate content in `docs/sdk/docs/core` in `reference`.
+- We need to integrate content in `docs/sdk/docs/core` in `concepts`.
 - We need to move all the content that currently lives in `docs` and does not fit in new structure (like `lotion`, intro material, whitepaper) to the website repository.
 - Update `DOCS_README.md`
 

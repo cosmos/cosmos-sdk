@@ -15,6 +15,9 @@ build
 tools/bin/*
 examples/build/*
 docs/_build
+docs/tutorial
+dist
+devtools-stamp
 
 # Data - ideally these don't exist
 examples/basecoin/app/data

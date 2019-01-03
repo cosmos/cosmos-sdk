@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/cosmos/cosmos-sdk/x/params"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
@@ -20,22 +19,17 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 
 	RegisterCodec(mApp.Cdc)
 
-	keyStake := sdk.NewKVStoreKey("stake")
-
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
-	keyParams := sdk.NewKVStoreKey("params")
-	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+	keyStake := sdk.NewKVStoreKey(StoreKey)
+	tkeyStake := sdk.NewTransientStoreKey(TStoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper)
-	pk := params.NewKeeper(mApp.Cdc, keyParams, tkeyParams)
+	keeper := NewKeeper(mApp.Cdc, keyStake, tkeyStake, bankKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
-	keeper := NewKeeper(mApp.Cdc, keyStake, tkeyStake, bankKeeper, pk.Subspace(DefaultParamspace), DefaultCodespace)
-
-	mApp.Router().AddRoute("stake", NewHandler(keeper))
+	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper))
 
-	require.NoError(t, mApp.CompleteSetup(keyStake, tkeyStake, keyParams, tkeyParams))
+	require.NoError(t, mApp.CompleteSetup(keyStake, tkeyStake))
 	return mApp, keeper
 }
 
@@ -58,7 +52,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 		mapp.InitChainer(ctx, req)
 
 		stakeGenesis := DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = sdk.NewDec(100000)
+		stakeGenesis.Pool.LooseTokens = sdk.NewInt(100000)
 
 		validators, err := InitGenesis(ctx, keeper, stakeGenesis)
 		if err != nil {
@@ -133,7 +127,7 @@ func TestStakeMsgs(t *testing.T) {
 	validator := checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
+	require.True(sdk.IntEq(t, sdk.NewInt(10), validator.BondedTokens()))
 
 	// addr1 create validator on behalf of addr2
 	createValidatorMsgOnBehalfOf := NewMsgCreateValidatorOnBehalfOf(
@@ -147,7 +141,7 @@ func TestStakeMsgs(t *testing.T) {
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr2), true)
 	require.Equal(t, sdk.ValAddress(addr2), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 
 	// check the bond that should have been created as well
 	checkDelegation(t, mApp, keeper, addr1, sdk.ValAddress(addr1), true, sdk.NewDec(10))

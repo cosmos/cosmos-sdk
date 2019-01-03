@@ -55,7 +55,7 @@ func main() {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-	return app.NewGaiaApp(logger, db, traceStore,
+	return app.NewGaiaApp(logger, db, traceStore, true,
 		baseapp.SetPruning(viper.GetString("pruning")),
 		baseapp.SetMinimumFees(viper.GetString("minimum_fees")),
 	)
@@ -64,7 +64,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application
 func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
-	gApp := app.NewGaiaApp(logger, db, traceStore)
+	gApp := app.NewGaiaApp(logger, db, traceStore, false)
 	if height != -1 {
 		err := gApp.LoadHeight(height)
 		if err != nil {

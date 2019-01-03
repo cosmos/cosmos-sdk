@@ -43,7 +43,7 @@ func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 		acc := auth.NewBaseAccountWithAddress(sdk.AccAddress(msg.ValidatorAddr))
 		acc.Coins = sdk.Coins{sdk.NewInt64Coin(bondDenom, 150)}
 		genAccs[i] = NewGenesisAccount(&acc)
-		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewDec(150)) // increase the supply
+		stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.Add(sdk.NewInt(150)) // increase the supply
 	}
 
 	// create the final app state
@@ -127,6 +127,6 @@ func TestGaiaGenesisValidation(t *testing.T) {
 func TestNewDefaultGenesisAccount(t *testing.T) {
 	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
 	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
-	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("fooToken"))
+	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("footoken"))
 	require.Equal(t, sdk.NewInt(150), acc.Coins.AmountOf(bondDenom))
 }

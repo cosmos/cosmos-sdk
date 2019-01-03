@@ -28,14 +28,14 @@ func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sd
 		EndHeight:     0,
 		SlashedSoFar:  sdk.ZeroDec(),
 	}
-	k.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
+	k.SetValidatorSlashingPeriod(ctx, slashingPeriod)
 }
 
 // Mark the slashing period as having ended when a validator begins unbonding
 func (k Keeper) onValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, ctx.BlockHeight())
 	slashingPeriod.EndHeight = ctx.BlockHeight()
-	k.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
+	k.SetValidatorSlashingPeriod(ctx, slashingPeriod)
 }
 
 // When a validator is created, add the address-pubkey relation.

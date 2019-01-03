@@ -78,7 +78,7 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 	potentialPower := validator.Tokens
 
 	// todo: deal with cases above 2**64, ref https://github.com/cosmos/cosmos-sdk/issues/2439#issuecomment-427167556
-	tendermintPower := potentialPower.RoundInt64()
+	tendermintPower := potentialPower.Int64()
 	tendermintPowerBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(tendermintPowerBytes[:], uint64(tendermintPower))
 

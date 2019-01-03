@@ -2,7 +2,6 @@ package auth
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -61,14 +61,14 @@ func TestTxValidateBasic(t *testing.T) {
 	ctx := sdk.NewContext(nil, abci.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
-	priv1, addr1 := privAndAddr()
-	priv2, addr2 := privAndAddr()
-	priv3, addr3 := privAndAddr()
-	priv4, addr4 := privAndAddr()
-	priv5, addr5 := privAndAddr()
-	priv6, addr6 := privAndAddr()
-	priv7, addr7 := privAndAddr()
-	priv8, addr8 := privAndAddr()
+	priv1, _, addr1 := keyPubAddr()
+	priv2, _, addr2 := keyPubAddr()
+	priv3, _, addr3 := keyPubAddr()
+	priv4, _, addr4 := keyPubAddr()
+	priv5, _, addr5 := keyPubAddr()
+	priv6, _, addr6 := keyPubAddr()
+	priv7, _, addr7 := keyPubAddr()
+	priv8, _, addr8 := keyPubAddr()
 
 	// msg and signatures
 	msg1 := newTestMsg(addr1, addr2)
@@ -101,15 +101,6 @@ func TestTxValidateBasic(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, sdk.CodeUnauthorized, err.Result().Code)
 
-	// require to fail validation when memo is too large
-	badMemo := strings.Repeat("bad memo", 50)
-	privs, accNums, seqs = []crypto.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}
-	tx = newTestTxWithMemo(ctx, msgs, privs, accNums, seqs, fee, badMemo)
-
-	err = tx.ValidateBasic()
-	require.Error(t, err)
-	require.Equal(t, sdk.CodeMemoTooLarge, err.Result().Code)
-
 	// require to fail validation when there are too many signatures
 	privs = []crypto.PrivKey{priv1, priv2, priv3, priv4, priv5, priv6, priv7, priv8}
 	accNums, seqs = []uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
@@ -136,4 +127,26 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.NoError(t, err)
+}
+
+func TestDefaultTxEncoder(t *testing.T) {
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	RegisterCodec(cdc)
+	cdc.RegisterConcrete(sdk.TestMsg{}, "cosmos-sdk/Test", nil)
+	encoder := DefaultTxEncoder(cdc)
+
+	msgs := []sdk.Msg{sdk.NewTestMsg(addr)}
+	fee := newStdFee()
+	sigs := []StdSignature{}
+
+	tx := NewStdTx(msgs, fee, sigs, "")
+
+	cdcBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
+
+	require.NoError(t, err)
+	encoderBytes, err := encoder(tx)
+
+	require.NoError(t, err)
+	require.Equal(t, cdcBytes, encoderBytes)
 }

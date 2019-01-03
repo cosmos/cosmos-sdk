@@ -6,24 +6,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
-	codec "github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	testDenom = "steak"
-)
-
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
-	key := ed25519.GenPrivKey()
-	pub := key.PubKey()
-	addr := sdk.AccAddress(pub.Address())
-	return key, pub, addr
-}
+var testDenom = "testdenom"
 
 func TestBaseAddressPubKey(t *testing.T) {
 	_, pub1, addr1 := keyPubAddr()

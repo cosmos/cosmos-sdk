@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const (
@@ -41,12 +42,15 @@ type BasecoinApp struct {
 	keyMain    *sdk.KVStoreKey
 	keyAccount *sdk.KVStoreKey
 	keyIBC     *sdk.KVStoreKey
+	keyParams  *sdk.KVStoreKey
+	tkeyParams *sdk.TransientStoreKey
 
 	// manage getting and setting accounts
 	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
 	ibcMapper           ibc.Mapper
+	paramsKeeper        params.Keeper
 }
 
 // NewBasecoinApp returns a reference to a new BasecoinApp given a logger and
@@ -62,15 +66,20 @@ func NewBasecoinApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.Ba
 	var app = &BasecoinApp{
 		cdc:        cdc,
 		BaseApp:    bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...),
-		keyMain:    sdk.NewKVStoreKey("main"),
-		keyAccount: sdk.NewKVStoreKey("acc"),
+		keyMain:    sdk.NewKVStoreKey(bam.MainStoreKey),
+		keyAccount: sdk.NewKVStoreKey(auth.StoreKey),
 		keyIBC:     sdk.NewKVStoreKey("ibc"),
+		keyParams:  sdk.NewKVStoreKey("params"),
+		tkeyParams: sdk.NewTransientStoreKey("transient_params"),
 	}
+
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// define and attach the mappers and keepers
 	app.accountKeeper = auth.NewAccountKeeper(
 		cdc,
 		app.keyAccount, // target store
+		app.paramsKeeper.Subspace(auth.DefaultParamspace),
 		func() auth.Account {
 			return &types.AppAccount{}
 		},

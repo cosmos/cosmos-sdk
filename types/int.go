@@ -162,6 +162,16 @@ func (i Int) IsZero() bool {
 	return i.i.Sign() == 0
 }
 
+// IsNegative returns true if Int is negative
+func (i Int) IsNegative() bool {
+	return i.i.Sign() == -1
+}
+
+// IsPositive returns true if Int is positive
+func (i Int) IsPositive() bool {
+	return i.i.Sign() == 1
+}
+
 // Sign returns sign of Int
 func (i Int) Sign() int {
 	return i.i.Sign()
@@ -263,7 +273,7 @@ func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
 }
 
-// Return the minimum of the ints
+// return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
 }

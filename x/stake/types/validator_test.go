@@ -59,7 +59,7 @@ func TestABCIValidatorUpdate(t *testing.T) {
 
 	abciVal := validator.ABCIValidatorUpdate()
 	require.Equal(t, tmtypes.TM2PB.PubKey(validator.ConsPubKey), abciVal.PubKey)
-	require.Equal(t, validator.BondedTokens().RoundInt64(), abciVal.Power)
+	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
 }
 
 func TestABCIValidatorUpdateZero(t *testing.T) {
@@ -76,38 +76,38 @@ func TestRemoveTokens(t *testing.T) {
 		OperatorAddr:    addr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
-		Tokens:          sdk.NewDec(100),
+		Tokens:          sdk.NewInt(100),
 		DelegatorShares: sdk.NewDec(100),
 	}
 
 	pool := InitialPool()
-	pool.LooseTokens = sdk.NewDec(10)
+	pool.LooseTokens = sdk.NewInt(10)
 	pool.BondedTokens = validator.BondedTokens()
 
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	require.Equal(t, sdk.Bonded, validator.Status)
 
 	// remove tokens and test check everything
-	validator, pool = validator.RemoveTokens(pool, sdk.NewDec(10))
-	require.Equal(t, int64(90), validator.Tokens.RoundInt64())
-	require.Equal(t, int64(90), pool.BondedTokens.RoundInt64())
-	require.Equal(t, int64(20), pool.LooseTokens.RoundInt64())
+	validator, pool = validator.RemoveTokens(pool, sdk.NewInt(10))
+	require.Equal(t, int64(90), validator.Tokens.Int64())
+	require.Equal(t, int64(90), pool.BondedTokens.Int64())
+	require.Equal(t, int64(20), pool.LooseTokens.Int64())
 
 	// update validator to unbonded and remove some more tokens
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
 	require.Equal(t, sdk.Unbonded, validator.Status)
-	require.Equal(t, int64(0), pool.BondedTokens.RoundInt64())
-	require.Equal(t, int64(110), pool.LooseTokens.RoundInt64())
+	require.Equal(t, int64(0), pool.BondedTokens.Int64())
+	require.Equal(t, int64(110), pool.LooseTokens.Int64())
 
-	validator, pool = validator.RemoveTokens(pool, sdk.NewDec(10))
-	require.Equal(t, int64(80), validator.Tokens.RoundInt64())
-	require.Equal(t, int64(0), pool.BondedTokens.RoundInt64())
-	require.Equal(t, int64(110), pool.LooseTokens.RoundInt64())
+	validator, pool = validator.RemoveTokens(pool, sdk.NewInt(10))
+	require.Equal(t, int64(80), validator.Tokens.Int64())
+	require.Equal(t, int64(0), pool.BondedTokens.Int64())
+	require.Equal(t, int64(110), pool.LooseTokens.Int64())
 }
 
 func TestAddTokensValidatorBonded(t *testing.T) {
 	pool := InitialPool()
-	pool.LooseTokens = sdk.NewDec(10)
+	pool.LooseTokens = sdk.NewInt(10)
 	validator := NewValidator(addr1, pk1, Description{})
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
@@ -115,12 +115,12 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 	require.Equal(t, sdk.OneDec(), validator.DelegatorShareExRate())
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
-	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
+	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.BondedTokens()))
 }
 
 func TestAddTokensValidatorUnbonding(t *testing.T) {
 	pool := InitialPool()
-	pool.LooseTokens = sdk.NewDec(10)
+	pool.LooseTokens = sdk.NewInt(10)
 	validator := NewValidator(addr1, pk1, Description{})
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
@@ -129,12 +129,12 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
 	assert.Equal(t, sdk.Unbonding, validator.Status)
-	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
+	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 }
 
 func TestAddTokensValidatorUnbonded(t *testing.T) {
 	pool := InitialPool()
-	pool.LooseTokens = sdk.NewDec(10)
+	pool.LooseTokens = sdk.NewInt(10)
 	validator := NewValidator(addr1, pk1, Description{})
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonded)
 	validator, pool, delShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
@@ -143,7 +143,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
 	assert.Equal(t, sdk.Unbonded, validator.Status)
-	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
+	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 }
 
 // TODO refactor to make simpler like the AddToken tests above
@@ -152,29 +152,29 @@ func TestRemoveDelShares(t *testing.T) {
 		OperatorAddr:    addr1,
 		ConsPubKey:      pk1,
 		Status:          sdk.Bonded,
-		Tokens:          sdk.NewDec(100),
+		Tokens:          sdk.NewInt(100),
 		DelegatorShares: sdk.NewDec(100),
 	}
 	poolA := InitialPool()
-	poolA.LooseTokens = sdk.NewDec(10)
+	poolA.LooseTokens = sdk.NewInt(10)
 	poolA.BondedTokens = valA.BondedTokens()
 	require.Equal(t, valA.DelegatorShareExRate(), sdk.OneDec())
 
 	// Remove delegator shares
 	valB, poolB, coinsB := valA.RemoveDelShares(poolA, sdk.NewDec(10))
-	assert.Equal(t, int64(10), coinsB.RoundInt64())
-	assert.Equal(t, int64(90), valB.DelegatorShares.RoundInt64())
-	assert.Equal(t, int64(90), valB.BondedTokens().RoundInt64())
-	assert.Equal(t, int64(90), poolB.BondedTokens.RoundInt64())
-	assert.Equal(t, int64(20), poolB.LooseTokens.RoundInt64())
+	require.Equal(t, int64(10), coinsB.Int64())
+	require.Equal(t, int64(90), valB.DelegatorShares.RoundInt64())
+	require.Equal(t, int64(90), valB.BondedTokens().Int64())
+	require.Equal(t, int64(90), poolB.BondedTokens.Int64())
+	require.Equal(t, int64(20), poolB.LooseTokens.Int64())
 
 	// conservation of tokens
-	require.True(sdk.DecEq(t,
+	require.True(sdk.IntEq(t,
 		poolB.LooseTokens.Add(poolB.BondedTokens),
 		poolA.LooseTokens.Add(poolA.BondedTokens)))
 
 	// specific case from random tests
-	poolTokens := sdk.NewDec(5102)
+	poolTokens := sdk.NewInt(5102)
 	delShares := sdk.NewDec(115)
 	validator := Validator{
 		OperatorAddr:    addr1,
@@ -184,48 +184,45 @@ func TestRemoveDelShares(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
-		BondedTokens: sdk.NewDec(248305),
-		LooseTokens:  sdk.NewDec(232147),
+		BondedTokens: sdk.NewInt(248305),
+		LooseTokens:  sdk.NewInt(232147),
 	}
 	shares := sdk.NewDec(29)
 	_, newPool, tokens := validator.RemoveDelShares(pool, shares)
 
-	exp, err := sdk.NewDecFromStr("1286.5913043477")
-	require.NoError(t, err)
+	require.True(sdk.IntEq(t, sdk.NewInt(1286), tokens))
 
-	require.True(sdk.DecEq(t, exp, tokens))
-
-	require.True(sdk.DecEq(t,
+	require.True(sdk.IntEq(t,
 		newPool.LooseTokens.Add(newPool.BondedTokens),
 		pool.LooseTokens.Add(pool.BondedTokens)))
 }
 
 func TestUpdateStatus(t *testing.T) {
 	pool := InitialPool()
-	pool.LooseTokens = sdk.NewDec(100)
+	pool.LooseTokens = sdk.NewInt(100)
 
 	validator := NewValidator(addr1, pk1, Description{})
 	validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(100))
 	require.Equal(t, sdk.Unbonded, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
-	require.Equal(t, int64(0), pool.BondedTokens.RoundInt64())
-	require.Equal(t, int64(100), pool.LooseTokens.RoundInt64())
+	require.Equal(t, int64(100), validator.Tokens.Int64())
+	require.Equal(t, int64(0), pool.BondedTokens.Int64())
+	require.Equal(t, int64(100), pool.LooseTokens.Int64())
 
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
-	require.Equal(t, int64(100), pool.BondedTokens.RoundInt64())
-	require.Equal(t, int64(0), pool.LooseTokens.RoundInt64())
+	require.Equal(t, int64(100), validator.Tokens.Int64())
+	require.Equal(t, int64(100), pool.BondedTokens.Int64())
+	require.Equal(t, int64(0), pool.LooseTokens.Int64())
 
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
 	require.Equal(t, sdk.Unbonding, validator.Status)
-	require.Equal(t, int64(100), validator.Tokens.RoundInt64())
-	require.Equal(t, int64(0), pool.BondedTokens.RoundInt64())
-	require.Equal(t, int64(100), pool.LooseTokens.RoundInt64())
+	require.Equal(t, int64(100), validator.Tokens.Int64())
+	require.Equal(t, int64(0), pool.BondedTokens.Int64())
+	require.Equal(t, int64(100), pool.LooseTokens.Int64())
 }
 
 func TestPossibleOverflow(t *testing.T) {
-	poolTokens := sdk.NewDec(2159)
+	poolTokens := sdk.NewInt(2159)
 	delShares := sdk.NewDec(391432570689183511).Quo(sdk.NewDec(40113011844664))
 	validator := Validator{
 		OperatorAddr:    addr1,
@@ -235,7 +232,7 @@ func TestPossibleOverflow(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
-		LooseTokens:  sdk.NewDec(100),
+		LooseTokens:  sdk.NewInt(100),
 		BondedTokens: poolTokens,
 	}
 	tokens := int64(71)

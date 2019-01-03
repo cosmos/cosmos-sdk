@@ -29,8 +29,6 @@ const (
 	FlagGenesisFormat = "genesis-format"
 	FlagNodeID        = "node-id"
 	FlagIP            = "ip"
-
-	FlagOutputDocument = "output-document" // inspired by wget -O
 )
 
 // common flagsets to add to various functions

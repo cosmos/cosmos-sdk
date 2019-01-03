@@ -80,7 +80,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -179,10 +179,10 @@ func GetCmdDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Submit a deposit for an acive proposal. You can find the proposal-id by running gaiacli query gov proposals:
 
-$ gaiacli tx gov deposit 1 10STAKE --from mykey
+$ gaiacli tx gov deposit 1 10stake --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -252,7 +252,7 @@ Submit a vote for an acive proposal. You can find the proposal-id by running gai
 $ gaiacli tx gov vote 1 yes --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)

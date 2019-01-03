@@ -26,8 +26,12 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 		Short: "Querying commands for the slashing module",
 	}
 
-	slashingQueryCmd.AddCommand(client.GetCommands(
-		cli.GetCmdQuerySigningInfo(mc.storeKey, mc.cdc))...)
+	slashingQueryCmd.AddCommand(
+		client.GetCommands(
+			cli.GetCmdQuerySigningInfo(mc.storeKey, mc.cdc),
+			cli.GetCmdQueryParams(mc.cdc),
+		)...,
+	)
 
 	return slashingQueryCmd
 

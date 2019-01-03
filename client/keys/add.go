@@ -43,12 +43,12 @@ and encrypted with the given password. The only input that is required is the en
 If run with -i, it will prompt the user for BIP44 path, BIP39 mnemonic, and passphrase.
 The flag --recover allows one to recover a key from a seed passphrase.
 If run with --dry-run, a key would be generated (or recovered) but not stored to the local keystore.
-Use the --pubkey flag to add arbitrary public keys to the keystore for constructing multisignature transactions
+Use the --pubkey flag to add arbitrary public keys to the keystore for constructing multisig transactions
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: runAddCmd,
 	}
-	cmd.Flags().String(FlagPublicKey, "", "Store only a public key (useful for constructing multisigs) e.g.  cosmospub1...")
+	cmd.Flags().String(FlagPublicKey, "", "Store only a public key (useful for constructing multisigs e.g.  cosmospub1...)")
 	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
 	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	cmd.Flags().String(flagBIP44Path, "44'/118'/0'/0/0", "BIP44 path from which to derive a private key")

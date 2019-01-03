@@ -13,9 +13,8 @@
 
 ## Cosmos Hub testnet
 
-To install the latest version of the `gaia` application (application of the Cosmos Hub) and join the public testnet, **click [here](./gaia/join-testnet.md)**
-
-To start your own `gaia` testnet, **click [here](./gaia/deploy-testnet.md)**
+- [Join the public testnet](./gaia/join-testnet.md) of the Cosmos Hub.
+- [Start your own `gaia` testnet](./gaia/deploy-testnet.md).
 
 ## Creating a new SDK project
 

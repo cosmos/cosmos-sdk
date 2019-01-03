@@ -163,7 +163,7 @@ jobs:
             export PATH="$GOBIN:$PATH"
             make test_sim_gaia_simulation_after_import
 
-  test_sim_gaia_multi_seed:
+  test_sim_gaia_multi_seed_long:
     <<: *linux_defaults
     parallelism: 1
     steps:
@@ -177,7 +177,7 @@ jobs:
             export PATH="$GOBIN:$PATH"
             scripts/multisim.sh 800 TestFullGaiaSimulation
 
-  test_sim_gaia_multi_seed_short:
+  test_sim_gaia_multi_seed:
     <<: *linux_defaults
     parallelism: 1
     steps:
@@ -341,10 +341,10 @@ workflows:
       - test_sim_gaia_simulation_after_import:
           requires:
             - setup_dependencies
-      - test_sim_gaia_multi_seed_short:
+      - test_sim_gaia_multi_seed:
           requires:
             - setup_dependencies
-      - test_sim_gaia_multi_seed:
+      - test_sim_gaia_multi_seed_long:
           requires:
             - setup_dependencies
           filters:

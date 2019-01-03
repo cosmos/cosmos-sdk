@@ -71,7 +71,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 	require.Equal(t, expectedSigners, stdTx.GetSigners())
 
 	// Check no signatures fails
-	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeUnauthorized)
+	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeNoSignatures)
 
 	// test num sigs dont match GetSigners
 	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0}, []uint64{0}

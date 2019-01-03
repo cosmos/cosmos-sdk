@@ -1,18 +1,11 @@
-# Welcome to the SDK Docs!
+# Cosmos SDK Documentation
 
-Welcome to the SDK docs!
+## Get Started
 
-## Learn the SDK
+-  **[SDK Intro](./intro/README.md)**: High-level overview of the Cosmos SDK.
+-  **[SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial)**: A tutorial to learn the SDK. It showcases how to build an SDK-based blockchain from scratch, and explains the basic principles of the SDK in the process.
 
-### SDK Intro
-
-If you are a newcomer and would like to learn more about the Cosmos SDK, this **[intro](./intro/README.md)** is a good starting place.
-
-### SDK tutorial
-
-If you like to learn by doing, you can follow the **[SDK application tutorial](https://github.com/cosmos/sdk-application-tutorial)**. It showcases how to build an SDK-based blockchain from scratch, and teaches you about the basic principles the SDK in the process.
-
-### Resources
+## Resources
 
 - [Specifications](./spec/README.md): Specifications of modules and other parts of the Cosmos SDK. 
 - [SDK API Reference](https://godoc.org/github.com/cosmos/cosmos-sdk): Godocs of the Cosmos SDK.
@@ -20,9 +13,8 @@ If you like to learn by doing, you can follow the **[SDK application tutorial](h
 
 ## Cosmos Hub testnet
 
-To install the latest version of the `gaia` application (application of the Cosmos Hub) and join the public testnet, **click [here](./gaia/join-testnet.md)**
-
-To start your own `gaia` testnet, **click [here](./gaia/deploy-testnet.md)**
+- [Join the public testnet](./gaia/join-testnet.md) of the Cosmos Hub.
+- [Start your own `gaia` testnet](./gaia/deploy-testnet.md).
 
 ## Creating a new SDK project
 

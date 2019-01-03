@@ -286,20 +286,10 @@ paths:
         schema:
           type: object
           properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
             tx:
               $ref: "#/definitions/StdTx"
-            name:
-              type: string
-            password:
-              type: string
-            chain_id:
-              type: string
-            account_number:
-              type: string
-              example: "0"
-            sequence:
-              type: string
-              example: "0"
             append_sig:
               type: boolean
               example: true

@@ -175,7 +175,7 @@ jobs:
           name: Test multi-seed Gaia simulation
           command: |
             export PATH="$GOBIN:$PATH"
-            scripts/multisim.sh 700 TestFullGaiaSimulation
+            scripts/multisim.sh 800 TestFullGaiaSimulation
 
   test_cover:
     <<: *linux_defaults
@@ -335,7 +335,6 @@ workflows:
               only:
                 - master
                 - develop
-                - mircea/devops142
       - test_cover:
           requires:
             - setup_dependencies

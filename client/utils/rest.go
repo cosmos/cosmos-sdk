@@ -189,7 +189,7 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 
 	err = cdc.UnmarshalJSON(body, req)
 	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to decode JSON payload: %s", err))
 		return err
 	}
 

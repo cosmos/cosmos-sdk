@@ -17,6 +17,9 @@ BREAKING CHANGES
   * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
     in order to trigger a simulation of the tx before the actual execution.
 
+* Gaia REST API
+  * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
+
 * SDK
   * [stake] \#2513 Validator power type from Dec -> Int 
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
@@ -44,13 +47,16 @@ FEATURES
 * SDK
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
   the ante handler.
+  * [\#3179](https://github.com/cosmos/cosmos-sdk/pull/3179) New CodeNoSignatures error code.
+
 
 * Tendermint
 
 
 IMPROVEMENTS
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
+  * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) Validate tx/sign endpoint POST body.
 
 * Gaia CLI  (`gaiacli`)
 
@@ -74,7 +80,7 @@ IMPROVEMENTS
 
 BUG FIXES
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
 
 * Gaia CLI  (`gaiacli`)
   * \#3141 Fix the bug in GetAccount when `len(res) == 0` and `err == nil`

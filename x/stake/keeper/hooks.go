@@ -59,3 +59,15 @@ func (k Keeper) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, val
 		k.hooks.OnDelegationRemoved(ctx, delAddr, valAddr)
 	}
 }
+
+func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	if k.hooks != nil {
+		k.hooks.AfterDelegationModified(ctx, delAddr, valAddr)
+	}
+}
+
+func (k Keeper) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	if k.hooks != nil {
+		k.hooks.BeforeValidatorSlashed(ctx, valAddr, fraction)
+	}
+}

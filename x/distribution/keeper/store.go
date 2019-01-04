@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -73,6 +75,8 @@ func (k Keeper) GetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, de
 
 // set the starting period associated with a delegator
 func (k Keeper) setDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress, period types.DelegatorStartingInfo) {
+	fmt.Printf("Set delegator starting info: val %v, del %v, period %v\n",
+		val, del, period)
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(period)
 	store.Set(GetDelegatorStartingInfoKey(val, del), b)
@@ -88,6 +92,8 @@ func (k Keeper) GetValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddres
 
 // set historical rewards for a particular period
 func (k Keeper) setValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddress, period uint64, rewards types.ValidatorHistoricalRewards) {
+	fmt.Printf("Set validator historical rewards: val %v, period %v, rewards %v\n",
+		val, period, rewards)
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(rewards)
 	store.Set(GetValidatorHistoricalRewardsKey(val, period), b)
@@ -136,4 +142,40 @@ func (k Keeper) SetOutstandingRewards(ctx sdk.Context, rewards types.Outstanding
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(rewards)
 	store.Set(OutstandingRewardsKey, b)
+}
+
+// get slash event for height
+func (k Keeper) GetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height uint64) (event types.ValidatorSlashEvent, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(GetValidatorSlashEventKey(val, height))
+	if b == nil {
+		return types.ValidatorSlashEvent{}, false
+	}
+	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &event)
+	return event, true
+}
+
+// set slash event for height
+func (k Keeper) setValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, height uint64, event types.ValidatorSlashEvent) {
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshalBinaryLengthPrefixed(event)
+	store.Set(GetValidatorSlashEventKey(val, height), b)
+}
+
+// iterate over slash events between heights, inclusive
+func (k Keeper) IterateValidatorSlashEvents(ctx sdk.Context, val sdk.ValAddress, startingHeight uint64, endingHeight uint64,
+	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iter := store.Iterator(
+		GetValidatorSlashEventKey(val, startingHeight),
+		GetValidatorSlashEventKey(val, endingHeight+1),
+	)
+	for ; iter.Valid(); iter.Next() {
+		var event types.ValidatorSlashEvent
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &event)
+		height := GetValidatorSlashEventHeight(iter.Key())
+		if handler(height, event) {
+			break
+		}
+	}
 }

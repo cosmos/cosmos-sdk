@@ -22,6 +22,7 @@ var (
 	ValidatorHistoricalRewardsPrefix     = []byte{0x05} // key for historical validators rewards / stake
 	ValidatorCurrentRewardsPrefix        = []byte{0x06} // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = []byte{0x07} // key for accumulated validator commission
+	ValidatorSlashEventPrefix            = []byte{0x08} // key for validator slash fraction
 
 	ParamStoreKeyCommunityTax        = []byte("communitytax")
 	ParamStoreKeyBaseProposerReward  = []byte("baseproposerreward")
@@ -40,6 +41,15 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 		panic("unexpected key length")
 	}
 	return sdk.AccAddress(addr)
+}
+
+// gets the height from a validator's slash fraction key
+func GetValidatorSlashEventHeight(key []byte) (height uint64) {
+	b := key[1+sdk.AddrLen:]
+	if len(b) != 8 {
+		panic("unexpected key length")
+	}
+	return binary.BigEndian.Uint64(b)
 }
 
 // gets the key for a delegator's starting info
@@ -62,4 +72,11 @@ func GetValidatorCurrentRewardsKey(v sdk.ValAddress) []byte {
 // gets the key for a validator's current commission
 func GetValidatorAccumulatedCommissionKey(v sdk.ValAddress) []byte {
 	return append(ValidatorAccumulatedCommissionPrefix, v.Bytes()...)
+}
+
+// gets the key for a validator's slash fraction
+func GetValidatorSlashEventKey(v sdk.ValAddress, height uint64) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, height)
+	return append(append(ValidatorSlashEventPrefix, v.Bytes()...), b...)
 }

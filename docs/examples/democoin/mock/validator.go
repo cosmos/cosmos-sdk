@@ -70,6 +70,11 @@ func (v Validator) GetMoniker() string {
 }
 
 // Implements sdk.Validator
+func (v Validator) GetDelegatorShareExRate() sdk.Dec {
+	return sdk.ZeroDec()
+}
+
+// Implements sdk.Validator
 type ValidatorSet struct {
 	Validators []Validator
 }

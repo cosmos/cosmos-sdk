@@ -19,8 +19,15 @@ type ValidatorAccumulatedCommission = sdk.DecCoins
 // starting info for a delegator reward period
 type DelegatorStartingInfo struct {
 	PreviousPeriod uint64  `json:"previous_period"`
-	Stake          sdk.Int `json:"stake"`
+	Stake          sdk.Dec `json:"stake"`
+	Height         uint64  `json:"height"`
 }
 
 // outstanding rewards for everyone
 type OutstandingRewards = sdk.DecCoins
+
+// slash event
+type ValidatorSlashEvent struct {
+	ValidatorPeriod uint64  `json:"validator_period"`
+	Fraction        sdk.Dec `json:"fraction"`
+}

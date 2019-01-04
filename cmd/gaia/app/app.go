@@ -154,7 +154,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 	app.QueryRouter().
 		AddRoute(gov.QuerierRoute, gov.NewQuerier(app.govKeeper)).
-    AddRoute(slashing.QuerierRoute, slashing.NewQuerier(app.slashingKeeper, app.cdc)).
+		AddRoute(slashing.QuerierRoute, slashing.NewQuerier(app.slashingKeeper, app.cdc)).
 		AddRoute(stake.QuerierRoute, stake.NewQuerier(app.stakeKeeper, app.cdc))
 
 	// initialize BaseApp
@@ -369,4 +369,12 @@ func (h StakingHooks) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.Ac
 func (h StakingHooks) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.OnDelegationRemoved(ctx, delAddr, valAddr)
 	h.sh.OnDelegationRemoved(ctx, delAddr, valAddr)
+}
+func (h StakingHooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.dh.AfterDelegationModified(ctx, delAddr, valAddr)
+	h.sh.AfterDelegationModified(ctx, delAddr, valAddr)
+}
+func (h StakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	h.dh.BeforeValidatorSlashed(ctx, valAddr, fraction)
+	h.sh.BeforeValidatorSlashed(ctx, valAddr, fraction)
 }

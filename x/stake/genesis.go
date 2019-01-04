@@ -42,8 +42,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	}
 
 	for _, delegation := range data.Bonds {
-		keeper.SetDelegation(ctx, delegation)
 		keeper.OnDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+		keeper.SetDelegation(ctx, delegation)
+		keeper.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
 	sort.SliceStable(data.UnbondingDelegations[:], func(i, j int) bool {

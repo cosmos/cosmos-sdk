@@ -9,28 +9,23 @@ import (
 // allocate fees handles distribution of the collected fees
 func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower int64, totalPower int64, proposer sdk.ConsAddress, votes []abci.VoteInfo) {
 
-	// Fetch collected fees & fee pool
+	// fetch collected fees & fee pool
 	feesCollectedInt := k.feeCollectionKeeper.GetCollectedFees(ctx)
 	feesCollected := sdk.NewDecCoins(feesCollectedInt)
 	feePool := k.GetFeePool(ctx)
 
-	// Clear collected fees, which will now be distributed
+	// clear collected fees, which will now be distributed
 	k.feeCollectionKeeper.ClearCollectedFees(ctx)
 
-	// Update outstanding rewards
-	outstanding := k.GetOutstandingRewards(ctx)
-	outstanding = outstanding.Plus(feesCollected)
-	k.SetOutstandingRewards(ctx, outstanding)
-
-	// Temporary workaround to keep CanWithdrawInvariant happy.
-	// General discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
+	// temporary workaround to keep CanWithdrawInvariant happy
+	// general discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
 	if totalPower == 0 {
 		feePool.CommunityPool = feePool.CommunityPool.Plus(feesCollected)
 		k.SetFeePool(ctx, feePool)
 		return
 	}
 
-	// Calculate fraction votes
+	// calculate fraction votes
 	fractionVotes := sdk.NewDec(sumPrecommitPower).Quo(sdk.NewDec(totalPower))
 
 	// calculate proposer reward
@@ -52,7 +47,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower int64, totalPo
 	for _, vote := range votes {
 		validator := k.stakeKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
-		// TODO Likely we should only reward validators who actually signed the block.
+		// TODO likely we should only reward validators who actually signed the block.
+		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
 		powerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(totalPower))
 		reward := feesCollected.MulDec(voteMultiplier).MulDec(powerFraction)
 		k.AllocateTokensToValidator(ctx, validator, reward)
@@ -61,6 +57,12 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower int64, totalPo
 
 	// allocate community funding
 	feePool.CommunityPool = feePool.CommunityPool.Plus(remaining)
+	k.SetFeePool(ctx, feePool)
+
+	// update outstanding rewards
+	outstanding := k.GetOutstandingRewards(ctx)
+	outstanding = outstanding.Plus(feesCollected.Minus(remaining))
+	k.SetOutstandingRewards(ctx, outstanding)
 
 }
 

@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// Type declaration for parameters
+// type declaration for parameters
 func ParamTypeTable() params.TypeTable {
 	return params.NewTypeTable(
 		ParamStoreKeyCommunityTax, sdk.Dec{},
@@ -14,7 +14,7 @@ func ParamTypeTable() params.TypeTable {
 	)
 }
 
-// Returns the current CommunityTax rate from the global param store
+// returns the current CommunityTax rate from the global param store
 // nolint: errcheck
 func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
 	var percent sdk.Dec
@@ -27,7 +27,7 @@ func (k Keeper) SetCommunityTax(ctx sdk.Context, percent sdk.Dec) {
 	k.paramSpace.Set(ctx, ParamStoreKeyCommunityTax, &percent)
 }
 
-// Returns the current BaseProposerReward rate from the global param store
+// returns the current BaseProposerReward rate from the global param store
 // nolint: errcheck
 func (k Keeper) GetBaseProposerReward(ctx sdk.Context) sdk.Dec {
 	var percent sdk.Dec
@@ -40,7 +40,7 @@ func (k Keeper) SetBaseProposerReward(ctx sdk.Context, percent sdk.Dec) {
 	k.paramSpace.Set(ctx, ParamStoreKeyBaseProposerReward, &percent)
 }
 
-// Returns the current BaseProposerReward rate from the global param store
+// returns the current BaseProposerReward rate from the global param store
 // nolint: errcheck
 func (k Keeper) GetBonusProposerReward(ctx sdk.Context) sdk.Dec {
 	var percent sdk.Dec

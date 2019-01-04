@@ -49,7 +49,7 @@ Use the --pubkey flag to add arbitrary public keys to the keystore for construct
 		Args: cobra.ExactArgs(1),
 		RunE: runAddCmd,
 	}
-	cmd.Flags().String(FlagPublicKey, "", "Store only a public key (useful for constructing multisigs e.g.  cosmospub1...)")
+	cmd.Flags().String(FlagPublicKey, "", "Store only a public key (useful for constructing multisigs e.g. cosmospub1...)")
 	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
 	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
 	cmd.Flags().String(flagBIP44Path, "44'/118'/0'/0/0", "BIP44 path from which to derive a private key")

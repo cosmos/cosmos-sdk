@@ -42,6 +42,11 @@ type Address interface {
 	Format(s fmt.State, verb rune)
 }
 
+// Ensure that different address types implement the interface
+var _ Address = AccAddress{}
+var _ Address = ValAddress{}
+var _ Address = ConsAddress{}
+
 // ----------------------------------------------------------------------------
 // account
 // ----------------------------------------------------------------------------

@@ -110,8 +110,7 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)
 	}
 	for _, proposal := range data.Proposals {
-		status := proposal.GetStatus()
-		switch status {
+		switch proposal.GetStatus() {
 		case StatusDepositPeriod:
 			k.InsertInactiveProposalQueue(ctx, proposal.GetDepositEndTime(), proposal.GetProposalID())
 		case StatusVotingPeriod:

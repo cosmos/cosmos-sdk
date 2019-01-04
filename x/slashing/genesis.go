@@ -10,10 +10,9 @@ import (
 
 // GenesisState - all slashing state that must be provided at genesis
 type GenesisState struct {
-	Params          Params                          `json:"params"`
-	SigningInfos    map[string]ValidatorSigningInfo `json:"signing_infos"`
-	MissedBlocks    map[string][]MissedBlock        `json:"missed_blocks"`
-	SlashingPeriods []ValidatorSlashingPeriod       `json:"slashing_periods"`
+	Params       Params                          `json:"params"`
+	SigningInfos map[string]ValidatorSigningInfo `json:"signing_infos"`
+	MissedBlocks map[string][]MissedBlock        `json:"missed_blocks"`
 }
 
 // MissedBlock
@@ -25,10 +24,9 @@ type MissedBlock struct {
 // HubDefaultGenesisState - default GenesisState used by Cosmos Hub
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Params:          DefaultParams(),
-		SigningInfos:    make(map[string]ValidatorSigningInfo),
-		MissedBlocks:    make(map[string][]MissedBlock),
-		SlashingPeriods: []ValidatorSlashingPeriod{},
+		Params:       DefaultParams(),
+		SigningInfos: make(map[string]ValidatorSigningInfo),
+		MissedBlocks: make(map[string][]MissedBlock),
 	}
 }
 
@@ -54,14 +52,9 @@ func ValidateGenesis(data GenesisState) error {
 		return fmt.Errorf("Max evidence age must be at least 1 minute, is %s", maxEvidence.String())
 	}
 
-	dblSignUnbond := data.Params.DoubleSignUnbondDuration
-	if dblSignUnbond < 1*time.Minute {
-		return fmt.Errorf("Double sign unblond duration must be at least 1 minute, is %s", dblSignUnbond.String())
-	}
-
-	downtimeUnbond := data.Params.DowntimeUnbondDuration
-	if downtimeUnbond < 1*time.Minute {
-		return fmt.Errorf("Downtime unblond duration must be at least 1 minute, is %s", downtimeUnbond.String())
+	downtimeJail := data.Params.DowntimeJailDuration
+	if downtimeJail < 1*time.Minute {
+		return fmt.Errorf("Downtime unblond duration must be at least 1 minute, is %s", downtimeJail.String())
 	}
 
 	signedWindow := data.Params.SignedBlocksWindow
@@ -97,10 +90,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 		}
 	}
 
-	for _, slashingPeriod := range data.SlashingPeriods {
-		keeper.SetValidatorSlashingPeriod(ctx, slashingPeriod)
-	}
-
 	keeper.paramspace.SetParamSet(ctx, &data.Params)
 }
 
@@ -127,16 +116,9 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 		return false
 	})
 
-	slashingPeriods := []ValidatorSlashingPeriod{}
-	keeper.IterateValidatorSlashingPeriods(ctx, func(slashingPeriod ValidatorSlashingPeriod) (stop bool) {
-		slashingPeriods = append(slashingPeriods, slashingPeriod)
-		return false
-	})
-
 	return GenesisState{
-		Params:          params,
-		SigningInfos:    signingInfos,
-		MissedBlocks:    missedBlocks,
-		SlashingPeriods: slashingPeriods,
+		Params:       params,
+		SigningInfos: signingInfos,
+		MissedBlocks: missedBlocks,
 	}
 }

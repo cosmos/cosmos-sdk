@@ -72,11 +72,8 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
 	distributionHeight := infractionHeight - stake.ValidatorUpdateDelay
 
-	// Cap the amount slashed to the penalty for the worst infraction
-	// within the slashing period when this infraction was committed
+	// Get the percentage slash penalty fraction
 	fraction := k.SlashFractionDoubleSign(ctx)
-	revisedFraction := k.capBySlashingPeriod(ctx, consAddr, fraction, distributionHeight)
-	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
 
 	// Slash validator
 	// `power` is the int64 power of the validator as provided to/by
@@ -84,20 +81,12 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// ABCI, and now received as evidence.
 	// The revisedFraction (which is the new fraction to be slashed) is passed
 	// in separately to separately slash unbonding and rebonding delegations.
-	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, revisedFraction)
+	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
-	// Jail validator if not already jailed
-	if !validator.GetJailed() {
-		k.validatorSet.Jail(ctx, consAddr)
+	// Begin unbonding validator if not already unbonding (tombstone)
+	if validator.GetStatus() == sdk.Bonded {
+		k.validatorSet.Unbond(ctx, consAddr)
 	}
-
-	// Set or updated validator jail duration
-	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
-	if !found {
-		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
-	}
-	signInfo.JailedUntil = time.Add(k.DoubleSignUnbondDuration(ctx))
-	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
 // handle a validator signature, must be called once per validator per block
@@ -156,7 +145,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			distributionHeight := height - stake.ValidatorUpdateDelay - 1
 			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
-			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
+			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0

@@ -20,22 +20,6 @@ func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sd
 		}
 		k.SetValidatorSigningInfo(ctx, address, signingInfo)
 	}
-
-	// Create a new slashing period when a validator is bonded
-	slashingPeriod := ValidatorSlashingPeriod{
-		ValidatorAddr: address,
-		StartHeight:   ctx.BlockHeight(),
-		EndHeight:     0,
-		SlashedSoFar:  sdk.ZeroDec(),
-	}
-	k.SetValidatorSlashingPeriod(ctx, slashingPeriod)
-}
-
-// Mark the slashing period as having ended when a validator begins unbonding
-func (k Keeper) onValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
-	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, ctx.BlockHeight())
-	slashingPeriod.EndHeight = ctx.BlockHeight()
-	k.SetValidatorSlashingPeriod(ctx, slashingPeriod)
 }
 
 // When a validator is created, add the address-pubkey relation.
@@ -69,11 +53,6 @@ func (h Hooks) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valA
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.k.onValidatorBeginUnbonding(ctx, consAddr, valAddr)
-}
-
-// Implements sdk.ValidatorHooks
 func (h Hooks) OnValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) {
 	h.k.onValidatorRemoved(ctx, consAddr)
 }
@@ -84,6 +63,8 @@ func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 }
 
 // nolint - unused hooks
+func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+}
 func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
 func (h Hooks) OnValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}

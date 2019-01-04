@@ -119,6 +119,14 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	return
 }
 
+// unbond a validator
+func (k Keeper) Unbond(ctx sdk.Context, consAddr sdk.ConsAddress) {
+	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
+	k.beginUnbondingValidator(ctx, validator)
+	logger := ctx.Logger().With("module", "x/stake")
+	logger.Info(fmt.Sprintf("validator %s unbonded", consAddr))
+}
+
 // jail a validator
 func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)

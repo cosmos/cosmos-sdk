@@ -33,7 +33,7 @@ const (
 
 // Address is a common interface for different types of addresses used by the SDK
 type Address interface {
-	Equals([]byte) bool
+	Equals(Address) bool
 	Empty() bool
 	Marshal() ([]byte, error)
 	MarshalJSON() ([]byte, error)
@@ -76,7 +76,7 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 }
 
 // Returns boolean for whether two AccAddresses are Equal
-func (aa AccAddress) Equals(aa2 AccAddress) bool {
+func (aa AccAddress) Equals(aa2 Address) bool {
 	if aa.Empty() && aa2.Empty() {
 		return true
 	}
@@ -192,7 +192,7 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 }
 
 // Returns boolean for whether two ValAddresses are Equal
-func (va ValAddress) Equals(va2 ValAddress) bool {
+func (va ValAddress) Equals(va2 Address) bool {
 	if va.Empty() && va2.Empty() {
 		return true
 	}
@@ -314,7 +314,7 @@ func GetConsAddress(pubkey crypto.PubKey) ConsAddress {
 }
 
 // Returns boolean for whether two ConsAddress are Equal
-func (ca ConsAddress) Equals(ca2 ConsAddress) bool {
+func (ca ConsAddress) Equals(ca2 Address) bool {
 	if ca.Empty() && ca2.Empty() {
 		return true
 	}

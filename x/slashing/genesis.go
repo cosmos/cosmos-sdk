@@ -98,7 +98,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 	}
 
 	for _, slashingPeriod := range data.SlashingPeriods {
-		keeper.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
+		keeper.SetValidatorSlashingPeriod(ctx, slashingPeriod)
 	}
 
 	keeper.paramspace.SetParamSet(ctx, &data.Params)

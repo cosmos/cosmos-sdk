@@ -128,32 +128,52 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 		return false
 	})
 
-	// iterate through validators by power descending, reset bond height, update bond intra-tx counter
+	// Iterate through validators by power descending, reset bond heights, and
+	// update bond intra-tx counters.
 	store := ctx.KVStore(app.keyStake)
 	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsKey)
 	counter := int16(0)
+
+	var valConsAddrs []sdk.ConsAddress
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(iter.Key()[1:])
 		validator, found := app.stakeKeeper.GetValidator(ctx, addr)
 		if !found {
 			panic("expected validator, not found")
 		}
+
 		validator.BondHeight = 0
 		validator.UnbondingHeight = 0
+		valConsAddrs = append(valConsAddrs, validator.ConsAddress())
+
 		app.stakeKeeper.SetValidator(ctx, validator)
 		counter++
 	}
+
 	iter.Close()
 
 	/* Handle slashing state. */
 
-	// we have to clear the slashing periods, since they reference heights
+	// remove all existing slashing periods and recreate one for each validator
 	app.slashingKeeper.DeleteValidatorSlashingPeriods(ctx)
 
+	for _, valConsAddr := range valConsAddrs {
+		sp := slashing.ValidatorSlashingPeriod{
+			ValidatorAddr: valConsAddr,
+			StartHeight:   0,
+			EndHeight:     0,
+			SlashedSoFar:  sdk.ZeroDec(),
+		}
+		app.slashingKeeper.SetValidatorSlashingPeriod(ctx, sp)
+	}
+
 	// reset start height on signing infos
-	app.slashingKeeper.IterateValidatorSigningInfos(ctx, func(addr sdk.ConsAddress, info slashing.ValidatorSigningInfo) (stop bool) {
-		info.StartHeight = 0
-		app.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
-		return false
-	})
+	app.slashingKeeper.IterateValidatorSigningInfos(
+		ctx,
+		func(addr sdk.ConsAddress, info slashing.ValidatorSigningInfo) (stop bool) {
+			info.StartHeight = 0
+			app.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+			return false
+		},
+	)
 }

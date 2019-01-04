@@ -42,4 +42,4 @@ $ gaiacli version
 
 ### Next
 
-Now you can [join the public testnet](./join-testnet.md) or [create you own private testnet](./private-testnet.md)
+Now you can [join the public testnet](./join-testnet.md) or [create you own  testnet](./deploy-testnet.md)

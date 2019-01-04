@@ -1,4 +1,4 @@
-# Run a Validator on Public Testnet
+# Run a Validator on the public testnet
 
 ::: tip
 Information on how to join the current testnet (`genesis.json` file and seeds) is held [in our `testnet` repo](https://github.com/cosmos/testnets/tree/master/latest). Please check there if you are looking to join our latest testnet. 
@@ -6,17 +6,17 @@ Information on how to join the current testnet (`genesis.json` file and seeds) i
 
 __Note__: This documentation is only intended for validators of the **public testnet**
 
-Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/docs/getting-started/full-node.md) guide.
+Before setting up your validator node, make sure you've already gone through the [Full Node Setup](../join-testnet.md) guide.
 
 ## What is a Validator?
 
-[Validators](/validators/overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](/validators/validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
+[Validators](./overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](./validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
 
 ::: danger Warning
-If you want to become a validator for the Hub's `mainnet`, you should [research security](/validators/security.md).
+If you want to become a validator for the Hub's `mainnet`, you should [research security](./security.md).
 :::
 
-You may want to skip the next section if you have already [set up a full-node](/join-testnet.md).
+You may want to skip the next section if you have already [set up a full-node](../join-testnet.md).
 
 ## Create Your Validator
 
@@ -29,7 +29,7 @@ gaiad tendermint show-validator
 Next, craft your `gaiad gentx` command:
 
 ::: warning Note
-Don't use more `STAKE` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
+Don't use more `STAKE` thank you have! You can always get more by using the [Faucet](https://faucet.cosmos.network/)!
 :::
 
 ```bash

@@ -56,6 +56,7 @@ IMPROVEMENTS
 
 * Gaia REST API
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) Validate tx/sign endpoint POST body.
+  * [\#2948](https://github.com/cosmos/cosmos-sdk/issues/2948) Swagger UI now makes requests to light client node
 
 * Gaia CLI  (`gaiacli`)
 

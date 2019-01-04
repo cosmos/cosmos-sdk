@@ -23,6 +23,7 @@ tags:
   description: Query app version
 schemes:
 - https
+host: lcd.nylira.net
 securityDefinitions:
   kms:
     type: basic

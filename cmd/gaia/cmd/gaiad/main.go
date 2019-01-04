@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/store"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/store"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

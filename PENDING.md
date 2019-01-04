@@ -21,7 +21,7 @@ BREAKING CHANGES
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
 
 * SDK
-  * [stake] \#2513 Validator power type from Dec -> Int 
+  * [stake] \#2513 Validator power type from Dec -> Int
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
 
 * Tendermint
@@ -58,6 +58,7 @@ IMPROVEMENTS
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) Validate tx/sign endpoint POST body.
 
 * Gaia CLI  (`gaiacli`)
+  * [\#3224](https://github.com/cosmos/cosmos-sdk/pull/3224) Support adding offline public keys to the keystore
 
 * Gaia
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
@@ -83,7 +84,7 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
   * \#3141 Fix the bug in GetAccount when `len(res) == 0` and `err == nil`
-  
+
 * Gaia
   * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version
   * \#3181 Correctly reset total accum update height and jailed-validator bond height / unbonding height on export-for-zero-height

@@ -41,15 +41,12 @@ type delegationValue struct {
 
 // return the delegation without fields contained within the key for the store
 func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
-	val := delegationValue{
-		delegation.Shares,
-	}
-	return cdc.MustMarshalBinaryLengthPrefixed(val)
+	return cdc.MustMarshalBinaryLengthPrefixed(delegation)
 }
 
 // return the delegation without fields contained within the key for the store
-func MustUnmarshalDelegation(cdc *codec.Codec, key, value []byte) Delegation {
-	delegation, err := UnmarshalDelegation(cdc, key, value)
+func MustUnmarshalDelegation(cdc *codec.Codec, value []byte) Delegation {
+	delegation, err := UnmarshalDelegation(cdc, value)
 	if err != nil {
 		panic(err)
 	}
@@ -57,28 +54,9 @@ func MustUnmarshalDelegation(cdc *codec.Codec, key, value []byte) Delegation {
 }
 
 // return the delegation without fields contained within the key for the store
-func UnmarshalDelegation(cdc *codec.Codec, key, value []byte) (delegation Delegation, err error) {
-	var storeValue delegationValue
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &storeValue)
-	if err != nil {
-		err = fmt.Errorf("%v: %v", ErrNoDelegation(DefaultCodespace).Data(), err)
-		return
-	}
-
-	addrs := key[1:] // remove prefix bytes
-	if len(addrs) != 2*sdk.AddrLen {
-		err = fmt.Errorf("%v", ErrBadDelegationAddr(DefaultCodespace).Data())
-		return
-	}
-
-	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
-	valAddr := sdk.ValAddress(addrs[sdk.AddrLen:])
-
-	return Delegation{
-		DelegatorAddr: delAddr,
-		ValidatorAddr: valAddr,
-		Shares:        storeValue.Shares,
-	}, nil
+func UnmarshalDelegation(cdc *codec.Codec, value []byte) (delegation Delegation, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &delegation)
+	return delegation, err
 }
 
 // nolint
@@ -127,18 +105,12 @@ type ubdValue struct {
 
 // return the unbonding delegation without fields contained within the key for the store
 func MustMarshalUBD(cdc *codec.Codec, ubd UnbondingDelegation) []byte {
-	val := ubdValue{
-		ubd.CreationHeight,
-		ubd.MinTime,
-		ubd.InitialBalance,
-		ubd.Balance,
-	}
-	return cdc.MustMarshalBinaryLengthPrefixed(val)
+	return cdc.MustMarshalBinaryLengthPrefixed(ubd)
 }
 
 // unmarshal a unbonding delegation from a store key and value
-func MustUnmarshalUBD(cdc *codec.Codec, key, value []byte) UnbondingDelegation {
-	ubd, err := UnmarshalUBD(cdc, key, value)
+func MustUnmarshalUBD(cdc *codec.Codec, value []byte) UnbondingDelegation {
+	ubd, err := UnmarshalUBD(cdc, value)
 	if err != nil {
 		panic(err)
 	}
@@ -146,29 +118,9 @@ func MustUnmarshalUBD(cdc *codec.Codec, key, value []byte) UnbondingDelegation {
 }
 
 // unmarshal a unbonding delegation from a store key and value
-func UnmarshalUBD(cdc *codec.Codec, key, value []byte) (ubd UnbondingDelegation, err error) {
-	var storeValue ubdValue
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &storeValue)
-	if err != nil {
-		return
-	}
-
-	addrs := key[1:] // remove prefix bytes
-	if len(addrs) != 2*sdk.AddrLen {
-		err = fmt.Errorf("%v", ErrBadDelegationAddr(DefaultCodespace).Data())
-		return
-	}
-	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
-	valAddr := sdk.ValAddress(addrs[sdk.AddrLen:])
-
-	return UnbondingDelegation{
-		DelegatorAddr:  delAddr,
-		ValidatorAddr:  valAddr,
-		CreationHeight: storeValue.CreationHeight,
-		MinTime:        storeValue.MinTime,
-		InitialBalance: storeValue.InitialBalance,
-		Balance:        storeValue.Balance,
-	}, nil
+func UnmarshalUBD(cdc *codec.Codec, value []byte) (ubd UnbondingDelegation, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &ubd)
+	return ubd, err
 }
 
 // nolint
@@ -217,20 +169,12 @@ type redValue struct {
 
 // return the redelegation without fields contained within the key for the store
 func MustMarshalRED(cdc *codec.Codec, red Redelegation) []byte {
-	val := redValue{
-		red.CreationHeight,
-		red.MinTime,
-		red.InitialBalance,
-		red.Balance,
-		red.SharesSrc,
-		red.SharesDst,
-	}
-	return cdc.MustMarshalBinaryLengthPrefixed(val)
+	return cdc.MustMarshalBinaryLengthPrefixed(red)
 }
 
 // unmarshal a redelegation from a store key and value
-func MustUnmarshalRED(cdc *codec.Codec, key, value []byte) Redelegation {
-	red, err := UnmarshalRED(cdc, key, value)
+func MustUnmarshalRED(cdc *codec.Codec, value []byte) Redelegation {
+	red, err := UnmarshalRED(cdc, value)
 	if err != nil {
 		panic(err)
 	}
@@ -238,33 +182,9 @@ func MustUnmarshalRED(cdc *codec.Codec, key, value []byte) Redelegation {
 }
 
 // unmarshal a redelegation from a store key and value
-func UnmarshalRED(cdc *codec.Codec, key, value []byte) (red Redelegation, err error) {
-	var storeValue redValue
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &storeValue)
-	if err != nil {
-		return
-	}
-
-	addrs := key[1:] // remove prefix bytes
-	if len(addrs) != 3*sdk.AddrLen {
-		err = fmt.Errorf("%v", ErrBadRedelegationAddr(DefaultCodespace).Data())
-		return
-	}
-	delAddr := sdk.AccAddress(addrs[:sdk.AddrLen])
-	valSrcAddr := sdk.ValAddress(addrs[sdk.AddrLen : 2*sdk.AddrLen])
-	valDstAddr := sdk.ValAddress(addrs[2*sdk.AddrLen:])
-
-	return Redelegation{
-		DelegatorAddr:    delAddr,
-		ValidatorSrcAddr: valSrcAddr,
-		ValidatorDstAddr: valDstAddr,
-		CreationHeight:   storeValue.CreationHeight,
-		MinTime:          storeValue.MinTime,
-		InitialBalance:   storeValue.InitialBalance,
-		Balance:          storeValue.Balance,
-		SharesSrc:        storeValue.SharesSrc,
-		SharesDst:        storeValue.SharesDst,
-	}, nil
+func UnmarshalRED(cdc *codec.Codec, value []byte) (red Redelegation, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &red)
+	return red, err
 }
 
 // nolint

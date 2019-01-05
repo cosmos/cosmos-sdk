@@ -8,8 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const useDebugDB = false
@@ -158,18 +157,18 @@ func TestMultiStoreQuery(t *testing.T) {
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
 	require.EqualValues(t, types.CodeUnknownRequest, qres.Code)
-	require.EqualValues(t, types.CodespaceRoot, qres.Codespace)
+	require.EqualValues(t, types.CodespaceQuery, qres.Codespace)
 
 	query.Path = "h897fy32890rf63296r92"
 	qres = multi.Query(query)
 	require.EqualValues(t, types.CodeUnknownRequest, qres.Code)
-	require.EqualValues(t, types.CodespaceRoot, qres.Codespace)
+	require.EqualValues(t, types.CodespaceQuery, qres.Codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
 	qres = multi.Query(query)
 	require.EqualValues(t, types.CodeUnknownRequest, qres.Code)
-	require.EqualValues(t, types.CodespaceRoot, qres.Codespace)
+	require.EqualValues(t, types.CodespaceQuery, qres.Codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"

@@ -223,7 +223,12 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 	kp = kp.AppendKey([]byte(storeName), merkle.KeyEncodingURL)
 	kp = kp.AppendKey(resp.Key, merkle.KeyEncodingURL)
 
-	err = prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value)
+	if len(resp.Value) == 0 {
+		err = prt.VerifyAbsence(resp.Proof, commit.Header.AppHash, kp.String())
+	} else {
+		err = prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value)
+	}
+
 	if err != nil {
 		return errors.Wrap(err, "failed to prove merkle proof")
 	}

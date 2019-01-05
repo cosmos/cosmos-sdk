@@ -302,7 +302,7 @@ func (coins Coins) IsAnyGTE(coinsB Coins) bool {
 	}
 
 	for _, coin := range coins {
-		if coin.IsPositive() {
+		if coin.IsNotNegative() {
 			return true
 		}
 	}

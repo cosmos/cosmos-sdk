@@ -45,7 +45,7 @@ func TestGasMeter(t *testing.T) {
 	}
 }
 
-func TestAddUint64Overflow(t *testing.T) {
+func TestaddUint64Overflow(t *testing.T) {
 	testCases := []struct {
 		a, b     uint64
 		result   uint64
@@ -58,7 +58,7 @@ func TestAddUint64Overflow(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		res, overflow := AddUint64Overflow(tc.a, tc.b)
+		res, overflow := addUint64Overflow(tc.a, tc.b)
 		require.Equal(
 			t, tc.overflow, overflow,
 			"invalid overflow result; tc: #%d, a: %d, b: %d", i, tc.a, tc.b,

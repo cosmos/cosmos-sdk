@@ -21,9 +21,9 @@ tags:
   description: Fee distribution module APIs
 - name: version
   description: Query app version
-host: fabo.interblock.io:26657
 schemes:
 - https
+host: fabo.interblock.io:26657
 securityDefinitions:
   kms:
     type: basic

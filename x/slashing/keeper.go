@@ -47,6 +47,13 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
 
+	// Double sign too old
+	maxEvidenceAge := k.MaxEvidenceAge(ctx)
+	if age > maxEvidenceAge {
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
+		return
+	}
+
 	// Get validator.
 	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 	if validator == nil || validator.GetStatus() == sdk.Unbonded {
@@ -55,11 +62,14 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		// Tendermint might break this assumption at some point.
 		return
 	}
+	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
+	if !found {
+		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
+	}
 
-	// Double sign too old
-	maxEvidenceAge := k.MaxEvidenceAge(ctx)
-	if age > maxEvidenceAge {
-		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
+	// Validator is already tombstoned
+	if signInfo.Tombstoned {
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, validator already tombstoned", pubkey.Address(), infractionHeight))
 		return
 	}
 
@@ -89,13 +99,13 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		k.validatorSet.Jail(ctx, consAddr)
 	}
 
-	// Set or updated validator jail duration
-	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
-	if !found {
-		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
-	}
+	// Set slashed so far to total slash
+	signInfo.Tombstoned = true
+
 	// Set jailed until to be forever (max time)
 	signInfo.JailedUntil = DoubleSignJailEndTime
+
+	// Set validator signing info
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 

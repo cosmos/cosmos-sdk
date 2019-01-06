@@ -53,7 +53,14 @@ func TestHandleDoubleSign(t *testing.T) {
 	require.True(t, sk.Validator(ctx, operatorAddr).GetJailed())
 
 	// tokens should be decreased
-	require.True(t, sk.Validator(ctx, operatorAddr).GetTokens().LT(oldTokens))
+	newTokens := sk.Validator(ctx, operatorAddr).GetTokens()
+	require.True(t, newTokens.LT(oldTokens))
+
+	// New evidence
+	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
+
+	// tokens should be the same (capped slash)
+	require.True(t, sk.Validator(ctx, operatorAddr).GetTokens().Equal(newTokens))
 
 	// Jump to past the unbonding period
 	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(sk.GetParams(ctx).UnbondingTime)})
@@ -220,7 +227,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	pool = sk.GetPool(ctx)
 	require.Equal(t, amtInt64-slashAmt, pool.BondedTokens.Int64())
 
-	// validator start height should not have been changed
+	// Validator start height should not have been changed
 	info, found = keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)

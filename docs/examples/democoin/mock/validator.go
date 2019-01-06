@@ -148,11 +148,6 @@ func (vs *ValidatorSet) Slash(_ sdk.Context, _ sdk.ConsAddress, _ int64, _ int64
 }
 
 // Implements sdk.ValidatorSet
-func (vs *ValidatorSet) Unbond(_ sdk.Context, _ sdk.ConsAddress) {
-	panic("not implemented")
-}
-
-// Implements sdk.ValidatorSet
 func (vs *ValidatorSet) Jail(_ sdk.Context, _ sdk.ConsAddress) {
 	panic("not implemented")
 }

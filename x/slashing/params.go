@@ -12,6 +12,11 @@ const (
 	DefaultParamspace = "slashing"
 )
 
+// The Double Sign Jail period ends at Max Time (tombstone)
+var (
+	DoubleSignJailEndTime = time.Unix(253402300799, 0)
+)
+
 // Parameter store key
 var (
 	KeyMaxEvidenceAge          = []byte("MaxEvidenceAge")

@@ -83,10 +83,20 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// in separately to separately slash unbonding and rebonding delegations.
 	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
+	// Jail validator if not already jailed
 	// Begin unbonding validator if not already unbonding (tombstone)
-	if validator.GetStatus() == sdk.Bonded {
-		k.validatorSet.Unbond(ctx, consAddr)
+	if !validator.GetJailed() {
+		k.validatorSet.Jail(ctx, consAddr)
 	}
+
+	// Set or updated validator jail duration
+	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
+	if !found {
+		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
+	}
+	// Set jailed until to be forever (max time)
+	signInfo.JailedUntil = DoubleSignJailEndTime
+	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
 // handle a validator signature, must be called once per validator per block

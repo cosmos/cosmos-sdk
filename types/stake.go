@@ -77,7 +77,6 @@ type ValidatorSet interface {
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, ConsAddress, int64, int64, Dec)
-	Unbond(Context, ConsAddress)
 	Jail(Context, ConsAddress)   // jail a validator
 	Unjail(Context, ConsAddress) // unjail a validator
 

@@ -49,11 +49,25 @@ func TestHandleDoubleSign(t *testing.T) {
 	// double sign less than max age
 	keeper.handleDoubleSign(ctx, val.Address(), 0, time.Unix(0, 0), amtInt)
 
-	// should be unbonding
-	require.True(t, sk.Validator(ctx, operatorAddr).GetStatus() == sdk.Unbonding)
+	// should be jailed
+	require.True(t, sk.Validator(ctx, operatorAddr).GetJailed())
 
 	// tokens should be decreased
 	require.True(t, sk.Validator(ctx, operatorAddr).GetTokens().LT(oldTokens))
+
+	// Jump to past the unbonding period
+	ctx = ctx.WithBlockHeader(abci.Header{Time: time.Unix(1, 0).Add(sk.GetParams(ctx).UnbondingTime)})
+
+	// Still shouldn't be able to unjail
+	msgUnjail := NewMsgUnjail(operatorAddr)
+	res := handleMsgUnjail(ctx, msgUnjail, keeper)
+	require.False(t, res.IsOK())
+
+	// Should be able to unbond now
+	del, _ := sk.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
+	msgUnbond := stake.NewMsgBeginUnbonding(sdk.AccAddress(operatorAddr), operatorAddr, del.GetShares())
+	res = stake.NewHandler(sk)(ctx, msgUnbond)
+	require.True(t, res.IsOK())
 }
 
 // ______________________________________________________________

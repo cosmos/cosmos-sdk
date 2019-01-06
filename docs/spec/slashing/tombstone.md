@@ -26,7 +26,7 @@ However, while infractions are grouped based off of the slashing periods, becaus
    
 We are now in a new slashing period, however we still have to keep the door open for the previous infraction, as the evidence for Infraction 2 may still come in. As the number of slashing periods increase, it creates more complexity as we have to keep track of the highest infraction amount for every single slashing period.
 
-> Note:  Currently, according to the `slashing` module spec, a new slashing period is created everytime a validator is unbonded then rebonded.  This should probably be changed to jailed/unjailed.  See issue #3205 for further details.  For the remainder of this, I will assume that we only start a new slashing period when a validator gets unjailed.
+> Note:  Currently, according to the `slashing` module spec, a new slashing period is created every time a validator is unbonded then rebonded.  This should probably be changed to jailed/unjailed.  See issue [#3205](https://github.com/cosmos/cosmos-sdk/issues/3205) for further details.  For the remainder of this, I will assume that we only start a new slashing period when a validator gets unjailed.
 
 The maximum number of slashing periods is the `len(UnbondingPeriod) / len(JailPeriod)`.  The current defaults in Gaia for the `UnbondingPeriod` and `JailPeriod` are 3 weeks and 2 days, respectively.  This means there could potentially be up to 11 slashing periods concurrently being tracked per validator.  If we set the `JailPeriod >= UnbondingPeriod`, we only have to track 1 slashing period (i.e not have to track slashing periods).
 

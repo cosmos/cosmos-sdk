@@ -514,9 +514,10 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 }
 
 // begin unbonding an unbonding record
-func (k Keeper) BeginUnbonding(ctx sdk.Context,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec) (types.UnbondingDelegation, sdk.Error) {
+func (k Keeper) BeginUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress, sharesAmount sdk.Dec) (types.UnbondingDelegation, sdk.Error) {
 
+	// XXX remove this quickfix before merge
 	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
 	_, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if found {
@@ -550,7 +551,8 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 
 // complete unbonding an unbonding record
 // CONTRACT: Expects unbonding passed in has finished the unbonding period
-func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) sdk.Error {
+func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress, currentTime time.Time) sdk.Error {
 
 	ubd, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if !found {

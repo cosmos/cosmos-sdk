@@ -26,6 +26,8 @@ type DVVTriplet struct {
 	ValidatorDstAddr sdk.ValAddress
 }
 
+//_______________________________________________________________________
+
 // Delegation represents the bond with tokens held by an account.  It is
 // owned by one delegator, and is associated with the voting power of one
 // pubKey.
@@ -82,17 +84,14 @@ func (d Delegation) HumanReadableString() (string, error) {
 	return resp, nil
 }
 
-// UnbondingDelegations - all UnbondingDelegation from a delegation to a validator
-type UnbondingDelegations []UnbondingDelegation
+//________________________________________________________________________
 
 // UnbondingDelegation reflects a delegation's passive unbonding queue.
+// it may hold multiple entries between the same delegator/validator
 type UnbondingDelegation struct {
-	DelegatorAddr  sdk.AccAddress `json:"delegator_addr"`  // delegator
-	ValidatorAddr  sdk.ValAddress `json:"validator_addr"`  // validator unbonding from operator addr
-	CreationHeight int64          `json:"creation_height"` // height which the unbonding took place
-	MinTime        time.Time      `json:"min_time"`        // unix time for unbonding completion
-	InitialBalance sdk.Coin       `json:"initial_balance"` // atoms initially scheduled to receive at completion
-	Balance        sdk.Coin       `json:"balance"`         // atoms to receive at completion
+	DelegatorAddr sdk.AccAddress             `json:"delegator_addr"` // delegator
+	ValidatorAddr sdk.ValAddress             `json:"validator_addr"` // validator unbonding from operator addr
+	Entries       []UnbondingDelegationEntry `json:"entries"`        // unbonding delegation entries
 }
 
 // NewUnbondingDelegation - create a new unbonding delegation object
@@ -100,9 +99,27 @@ func NewUnbondingDelegation(delegatorAddr sdk.AccAddress,
 	validatorAddr sdk.ValAddress, creationHeight int64, minTime time.Time,
 	balance sdk.Coin) UnbondingDelegation {
 
+	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
 	return UnbondingDelegation{
-		DelegatorAddr:  delegatorAddr,
-		ValidatorAddr:  validatorAddr,
+		DelegatorAddr: delegatorAddr,
+		ValidatorAddr: validatorAddr,
+		Entries:       []UnbondingDelegationEntry{entry},
+	}
+}
+
+// UnbondingDelegationEntry - entry to an UnbondingDelegation
+type UnbondingDelegationEntry struct {
+	CreationHeight int64     `json:"creation_height"` // height which the unbonding took place
+	MinTime        time.Time `json:"min_time"`        // unix time for unbonding completion
+	InitialBalance sdk.Coin  `json:"initial_balance"` // atoms initially scheduled to receive at completion
+	Balance        sdk.Coin  `json:"balance"`         // atoms to receive at completion
+}
+
+// NewUnbondingDelegation - create a new unbonding delegation object
+func NewUnbondingDelegationEntry(creationHeight int64, minTime time.Time,
+	balance sdk.Coin) UnbondingDelegation {
+
+	return UnbondingDelegationEntry{
 		CreationHeight: creationHeight,
 		MinTime:        minTime,
 		InitialBalance: balance,
@@ -157,15 +174,10 @@ type Redelegations []Redelegation
 
 // Redelegation reflects a delegation's passive re-delegation queue.
 type Redelegation struct {
-	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // delegator
-	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // validator redelegation source operator addr
-	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // validator redelegation destination operator addr
-	CreationHeight   int64          `json:"creation_height"`    // height which the redelegation took place
-	MinTime          time.Time      `json:"min_time"`           // unix time for redelegation completion
-	InitialBalance   sdk.Coin       `json:"initial_balance"`    // initial balance when redelegation started
-	Balance          sdk.Coin       `json:"balance"`            // current balance
-	SharesSrc        sdk.Dec        `json:"shares_src"`         // amount of source shares redelegating
-	SharesDst        sdk.Dec        `json:"shares_dst"`         // amount of destination shares redelegating
+	DelegatorAddr    sdk.AccAddress      `json:"delegator_addr"`     // delegator
+	ValidatorSrcAddr sdk.ValAddress      `json:"validator_src_addr"` // validator redelegation source operator addr
+	ValidatorDstAddr sdk.ValAddress      `json:"validator_dst_addr"` // validator redelegation destination operator addr
+	Entries          []RedelegationEntry `json:"entries"`            // redelegation entries
 }
 
 // NewRedelegation - create a new redelegation object
@@ -174,16 +186,39 @@ func NewRedelegation(delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	minTime time.time, balance sdk.Coin,
 	sharesSrc, sharesDst sdk.Dec) Redelegation {
 
+	entry := NewRedelegationEntry(creationHeight,
+		minTime, balance, sharesSrc, sharesDst)
+
 	return Redelegation{
 		DelegatorAddr:    delegatorAddr,
 		ValidatorSrcAddr: validatorSrcAddr,
 		ValidatorDstAddr: validatorDstAddr,
-		CreationHeight:   creationHeight,
-		MinTime:          minTime,
-		InitialBalance:   balance,
-		Balance:          balance,
-		SharesSrc:        sharesSrc,
-		SharesDst:        sharesDst,
+		Entries:          []EntriesRedelegationEntry{entries},
+	}
+}
+
+// RedelegationEntry - entry to a Redelegation
+type RedelegationEntry struct {
+	CreationHeight int64     `json:"creation_height"` // height which the redelegation took place
+	MinTime        time.Time `json:"min_time"`        // unix time for redelegation completion
+	InitialBalance sdk.Coin  `json:"initial_balance"` // initial balance when redelegation started
+	Balance        sdk.Coin  `json:"balance"`         // current balance
+	SharesSrc      sdk.Dec   `json:"shares_src"`      // amount of source shares redelegating
+	SharesDst      sdk.Dec   `json:"shares_dst"`      // amount of destination shares redelegating
+}
+
+// NewRedelegation - create a new redelegation object
+func NewRedelegationEntry(creationHeight int64,
+	minTime time.time, balance sdk.Coin,
+	sharesSrc, sharesDst sdk.Dec) Redelegation {
+
+	return RedelegationEntry{
+		CreationHeight: creationHeight,
+		MinTime:        minTime,
+		InitialBalance: balance,
+		Balance:        balance,
+		SharesSrc:      sharesSrc,
+		SharesDst:      sharesDst,
 	}
 }
 

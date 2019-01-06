@@ -6,7 +6,7 @@ In the current implementation of the `slashing` module, when the consensus engin
 
 In the current system design, once a validator is put in the jail for a consensus fault, after the `JailPeriod` they are allowed to send a transaction to `unjail` themselves, and thus rejoin the validator set.
 
-One of the "design desires" of `slashing` module is that if multiple infractions occur before evidence is executed (and a validator is put in jail), they should only be punished for single worst infraction, but not cumulatively.  For example, if the sequence of events is:
+One of the "design desires" of the `slashing` module is that if multiple infractions occur before evidence is executed (and a validator is put in jail), they should only be punished for single worst infraction, but not cumulatively.  For example, if the sequence of events is:
 1. Validator A commits Infraction 1 (worth 30% slash)
 2. Validator A commits Infraction 2 (worth 40% slash)
 3. Validator A commits Infraction 3 (worth 35% slash)

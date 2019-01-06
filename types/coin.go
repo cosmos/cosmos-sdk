@@ -293,7 +293,7 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 }
 
 // IsAnyGTE returns true if for any denom in coins, the denom is present at a
-//an  equal or greater amount in coinsB
+// an equal or greater amount in coinsB.
 func (coins Coins) IsAnyGTE(coinsB Coins) bool {
 	diff, _ := coins.SafeMinus(coinsB)
 	if len(diff) == 0 {

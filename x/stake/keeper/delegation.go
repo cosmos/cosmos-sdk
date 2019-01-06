@@ -170,9 +170,12 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 	store.Delete(GetUBDByValIndexKey(ubd.DelegatorAddr, ubd.ValidatorAddr))
 }
 
-// gets a specific unbonding queue timeslice. A timeslice is a slice of DVPairs corresponding to unbonding delegations
-// that expire at a certain time.
-func (k Keeper) GetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPairs []types.DVPair) {
+//________________________________________________
+// unbonding delegation queue timeslice operations
+
+// gets a specific unbonding queue timeslice. A timeslice is a slice of DVPairs
+// corresponding to unbonding delegations that expire at a certain time.
+func (k Keeper) GetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPairs []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetUnbondingDelegationTimeKey(timestamp))
 	if bz == nil {
@@ -183,38 +186,42 @@ func (k Keeper) GetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time)
 }
 
 // Sets a specific unbonding queue timeslice.
-func (k Keeper) SetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVPair) {
+func (k Keeper) SetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(keys)
 	store.Set(GetUnbondingDelegationTimeKey(timestamp), bz)
 }
 
 // Insert an unbonding delegation to the appropriate timeslice in the unbonding queue
-func (k Keeper) InsertUnbondingQueue(ctx sdk.Context, ubd types.UnbondingDelegation) {
-	timeSlice := k.GetUnbondingQueueTimeSlice(ctx, ubd.MinTime)
+func (k Keeper) InsertUBDQueue(ctx sdk.Context, ubd types.UnbondingDelegation) {
+	timeSlice := k.GetUBDQueueTimeSlice(ctx, ubd.MinTime)
 	dvPair := types.DVPair{ubd.DelegatorAddr, ubd.ValidatorAddr}
 	if len(timeSlice) == 0 {
-		k.SetUnbondingQueueTimeSlice(ctx, ubd.MinTime, []types.DVPair{dvPair})
+		k.SetUBDQueueTimeSlice(ctx, ubd.MinTime, []types.DVPair{dvPair})
 	} else {
 		timeSlice = append(timeSlice, dvPair)
-		k.SetUnbondingQueueTimeSlice(ctx, ubd.MinTime, timeSlice)
+		k.SetUBDQueueTimeSlice(ctx, ubd.MinTime, timeSlice)
 	}
 }
 
 // Returns all the unbonding queue timeslices from time 0 until endTime
-func (k Keeper) UnbondingQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+func (k Keeper) UBDQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(UnbondingQueueKey, sdk.InclusiveEndBytes(GetUnbondingDelegationTimeKey(endTime)))
+	return store.Iterator(UnbondingQueueKey,
+		sdk.InclusiveEndBytes(GetUnbondingDelegationTimeKey(endTime)))
 }
 
 // Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
-func (k Keeper) DequeueAllMatureUnbondingQueue(ctx sdk.Context, currTime time.Time) (matureUnbonds []types.DVPair) {
+func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context,
+	currTime time.Time) (matureUnbonds []types.DVPair) {
+
 	store := ctx.KVStore(k.storeKey)
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
-	unbondingTimesliceIterator := k.UnbondingQueueIterator(ctx, ctx.BlockHeader().Time)
+	unbondingTimesliceIterator := k.UBDQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
 		timeslice := []types.DVPair{}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(unbondingTimesliceIterator.Value(), &timeslice)
+		value := unbondingTimesliceIterator.Value()
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(value, &timeslice)
 		matureUnbonds = append(matureUnbonds, timeslice...)
 		store.Delete(unbondingTimesliceIterator.Key())
 	}
@@ -322,6 +329,9 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Delete(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr))
 }
 
+//________________________________________________
+// redelegation queue timeslice operations
+
 // Gets a specific redelegation queue timeslice. A timeslice is a slice of DVVTriplets corresponding to redelegations
 // that expire at a certain time.
 func (k Keeper) GetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvvTriplets []types.DVVTriplet) {
@@ -366,7 +376,8 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 	redelegationTimesliceIterator := k.RedelegationQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
 		timeslice := []types.DVVTriplet{}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(redelegationTimesliceIterator.Value(), &timeslice)
+		value := redelegationTimesliceIterator.Value()
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(value, &timeslice)
 		matureRedelegations = append(matureRedelegations, timeslice...)
 		store.Delete(redelegationTimesliceIterator.Key())
 	}
@@ -530,16 +541,9 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 		return types.UnbondingDelegation{MinTime: minTime}, nil
 	}
 
-	ubd := types.UnbondingDelegation{
-		DelegatorAddr:  delAddr,
-		ValidatorAddr:  valAddr,
-		CreationHeight: height,
-		MinTime:        minTime,
-		Balance:        balance,
-		InitialBalance: balance,
-	}
+	ubd := NewUnbondingDelegation(delAddr, valAddr, height, minTime, balance)
 	k.SetUnbondingDelegation(ctx, ubd)
-	k.InsertUnbondingQueue(ctx, ubd)
+	k.InsertUBDQueue(ctx, ubd)
 
 	return ubd, nil
 }
@@ -608,17 +612,8 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return types.Redelegation{MinTime: minTime}, nil
 	}
 
-	red := types.Redelegation{
-		DelegatorAddr:    delAddr,
-		ValidatorSrcAddr: valSrcAddr,
-		ValidatorDstAddr: valDstAddr,
-		CreationHeight:   height,
-		MinTime:          minTime,
-		SharesDst:        sharesCreated,
-		SharesSrc:        sharesAmount,
-		Balance:          returnCoin,
-		InitialBalance:   returnCoin,
-	}
+	red := NewRedelegation(delAddr, valSrcAddr, valDstAddr, height, minTime,
+		returnCoin, sharesAmount, sharesCreated)
 	k.SetRedelegation(ctx, red)
 	k.InsertRedelegationQueue(ctx, red)
 	return red, nil

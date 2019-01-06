@@ -82,6 +82,7 @@ func (d Delegation) HumanReadableString() (string, error) {
 	return resp, nil
 }
 
+// UnbondingDelegations - all UnbondingDelegation from a delegation to a validator
 type UnbondingDelegations []UnbondingDelegation
 
 // UnbondingDelegation reflects a delegation's passive unbonding queue.
@@ -92,6 +93,21 @@ type UnbondingDelegation struct {
 	MinTime        time.Time      `json:"min_time"`        // unix time for unbonding completion
 	InitialBalance sdk.Coin       `json:"initial_balance"` // atoms initially scheduled to receive at completion
 	Balance        sdk.Coin       `json:"balance"`         // atoms to receive at completion
+}
+
+// NewUnbondingDelegation - create a new unbonding delegation object
+func NewUnbondingDelegation(delegatorAddr sdk.AccAddress,
+	validatorAddr sdk.ValAddress, creationHeight int64, minTime time.Time,
+	balance sdk.Coin) UnbondingDelegation {
+
+	return UnbondingDelegation{
+		DelegatorAddr:  delegatorAddr,
+		ValidatorAddr:  validatorAddr,
+		CreationHeight: creationHeight,
+		MinTime:        minTime,
+		InitialBalance: balance,
+		Balance:        balance,
+	}
 }
 
 // return the unbonding delegation
@@ -136,6 +152,7 @@ func (d UnbondingDelegation) HumanReadableString() (string, error) {
 
 }
 
+// Redelegations - all Redelegation from a delegation to a validator src/dst
 type Redelegations []Redelegation
 
 // Redelegation reflects a delegation's passive re-delegation queue.
@@ -149,6 +166,25 @@ type Redelegation struct {
 	Balance          sdk.Coin       `json:"balance"`            // current balance
 	SharesSrc        sdk.Dec        `json:"shares_src"`         // amount of source shares redelegating
 	SharesDst        sdk.Dec        `json:"shares_dst"`         // amount of destination shares redelegating
+}
+
+// NewRedelegation - create a new redelegation object
+func NewRedelegation(delegatorAddr sdk.AccAddress, validatorSrcAddr,
+	validatorDstAddr sdk.ValAddress, creationHeight int64,
+	minTime time.time, balance sdk.Coin,
+	sharesSrc, sharesDst sdk.Dec) Redelegation {
+
+	return Redelegation{
+		DelegatorAddr:    delegatorAddr,
+		ValidatorSrcAddr: validatorSrcAddr,
+		ValidatorDstAddr: validatorDstAddr,
+		CreationHeight:   creationHeight,
+		MinTime:          minTime,
+		InitialBalance:   balance,
+		Balance:          balance,
+		SharesSrc:        sharesSrc,
+		SharesDst:        sharesDst,
+	}
 }
 
 // return the redelegation

@@ -96,19 +96,12 @@ type UnbondingDelegation struct {
 	Balance        sdk.Coin       `json:"balance"`         // atoms to receive at completion
 }
 
-type ubdValue struct {
-	CreationHeight int64
-	MinTime        time.Time
-	InitialBalance sdk.Coin
-	Balance        sdk.Coin
-}
-
 // return the unbonding delegation without fields contained within the key for the store
 func MustMarshalUBD(cdc *codec.Codec, ubd UnbondingDelegation) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(ubd)
 }
 
-// unmarshal a unbonding delegation from a store key and value
+// unmarshal a unbonding delegation from a store value
 func MustUnmarshalUBD(cdc *codec.Codec, value []byte) UnbondingDelegation {
 	ubd, err := UnmarshalUBD(cdc, value)
 	if err != nil {
@@ -117,7 +110,7 @@ func MustUnmarshalUBD(cdc *codec.Codec, value []byte) UnbondingDelegation {
 	return ubd
 }
 
-// unmarshal a unbonding delegation from a store key and value
+// unmarshal a unbonding delegation from a store value
 func UnmarshalUBD(cdc *codec.Codec, value []byte) (ubd UnbondingDelegation, err error) {
 	err = cdc.UnmarshalBinaryLengthPrefixed(value, &ubd)
 	return ubd, err
@@ -158,21 +151,12 @@ type Redelegation struct {
 	SharesDst        sdk.Dec        `json:"shares_dst"`         // amount of destination shares redelegating
 }
 
-type redValue struct {
-	CreationHeight int64
-	MinTime        time.Time
-	InitialBalance sdk.Coin
-	Balance        sdk.Coin
-	SharesSrc      sdk.Dec
-	SharesDst      sdk.Dec
-}
-
 // return the redelegation without fields contained within the key for the store
 func MustMarshalRED(cdc *codec.Codec, red Redelegation) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(red)
 }
 
-// unmarshal a redelegation from a store key and value
+// unmarshal a redelegation from a store value
 func MustUnmarshalRED(cdc *codec.Codec, value []byte) Redelegation {
 	red, err := UnmarshalRED(cdc, value)
 	if err != nil {
@@ -181,7 +165,7 @@ func MustUnmarshalRED(cdc *codec.Codec, value []byte) Redelegation {
 	return red
 }
 
-// unmarshal a redelegation from a store key and value
+// unmarshal a redelegation from a store value
 func UnmarshalRED(cdc *codec.Codec, value []byte) (red Redelegation, err error) {
 	err = cdc.UnmarshalBinaryLengthPrefixed(value, &red)
 	return red, err

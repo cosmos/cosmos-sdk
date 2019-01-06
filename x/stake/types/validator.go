@@ -60,7 +60,7 @@ func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(validator)
 }
 
-// unmarshal a redelegation from a store key and value
+// unmarshal a redelegation from a store value
 func MustUnmarshalValidator(cdc *codec.Codec, value []byte) Validator {
 	validator, err := UnmarshalValidator(cdc, value)
 	if err != nil {
@@ -69,7 +69,7 @@ func MustUnmarshalValidator(cdc *codec.Codec, value []byte) Validator {
 	return validator
 }
 
-// unmarshal a redelegation from a store key and value
+// unmarshal a redelegation from a store value
 func UnmarshalValidator(cdc *codec.Codec, value []byte) (validator Validator, err error) {
 	err = cdc.UnmarshalBinaryLengthPrefixed(value, &validator)
 	return validator, err

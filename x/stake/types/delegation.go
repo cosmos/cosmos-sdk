@@ -82,6 +82,8 @@ func (d Delegation) HumanReadableString() (string, error) {
 	return resp, nil
 }
 
+type UnbondingDelegations []UnbondingDelegation
+
 // UnbondingDelegation reflects a delegation's passive unbonding queue.
 type UnbondingDelegation struct {
 	DelegatorAddr  sdk.AccAddress `json:"delegator_addr"`  // delegator
@@ -133,6 +135,8 @@ func (d UnbondingDelegation) HumanReadableString() (string, error) {
 	return resp, nil
 
 }
+
+type Redelegations []Redelegation
 
 // Redelegation reflects a delegation's passive re-delegation queue.
 type Redelegation struct {

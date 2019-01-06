@@ -14,7 +14,7 @@ One of the "design desires" of `slashing` module is that if multiple infractions
 5. Evidence for Infraction 2 reaches state machine
 6. Evidence for Infraction 3 reaches state machine
    
-Only Infraction 2 should have it's slash take effect, as it is the highest.  This is done, so that in the case of the compromise of a validator's consensus key, they will only be punished once, even if the hacker double-signs many blocks.  Because, the unjailing has to be done with the validator's operator key, they have a chance to re-secure their consensus key, and then signal that they are ready using their operator key.  We call this period during which we track only the max infraction, the "slashing period".
+Only Infraction 2 should have its slash take effect, as it is the highest.  This is done, so that in the case of the compromise of a validator's consensus key, they will only be punished once, even if the hacker double-signs many blocks.  Because, the unjailing has to be done with the validator's operator key, they have a chance to re-secure their consensus key, and then signal that they are ready using their operator key.  We call this period during which we track only the max infraction, the "slashing period".
 
 Once, a validator rejoins by unjailing themselves, we begin a new slashing period; if they commit a new infraction after unjailing, it gets slashed cumulatively on top of the worst infraction from the previous slashing period.
 
@@ -34,7 +34,7 @@ Currently, in the jail period implementation, once a validator unjails, all of t
 
 Given that in the current state machine, an unbonding validator cannot "rebond" and re-enter the validator set, the easiest way to accomplish the tombstone, is to just put the validator into the unbonding state.  This way, the validator cannot re-enter the validator set.  The validator operator can rejoin the validator set using a new Operator account, or wait for the unbonding to finish, and rebond with the same Operator Key.  Either way, however, their old delegations do not carry over.
 
-Doing this tombstone system and getting rid of the slashing period tracking, will make the `slashing` module way simpler, especially because we can remove all of the hooks defined in the `slashing` module.
+By implementing the tombstone system and getting rid of the slashing period tracking, will make the `slashing` module way simpler, especially because we can remove all of the hooks defined in the `slashing` module.
 
 > Note: The tombstone concept, only applies to byzantine faults reported over ABCI.  For slashable offenses tracked by the state machine (such as liveness faults), as there is not a delay between infraction and slashing, no slashing period tracking is needed. Also, a liveness bug probably isn't so egregious that it mandates force unbonding all delegations, and so the current jail system is adequate.
 

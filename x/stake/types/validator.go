@@ -55,7 +55,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 	}
 }
 
-// return the redelegation without fields contained within the key for the store
+// return the redelegation
 func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(validator)
 }

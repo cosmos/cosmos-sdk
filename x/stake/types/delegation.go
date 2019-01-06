@@ -35,16 +35,12 @@ type Delegation struct {
 	Shares        sdk.Dec        `json:"shares"`
 }
 
-type delegationValue struct {
-	Shares sdk.Dec
-}
-
-// return the delegation without fields contained within the key for the store
+// return the delegation
 func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(delegation)
 }
 
-// return the delegation without fields contained within the key for the store
+// return the delegation
 func MustUnmarshalDelegation(cdc *codec.Codec, value []byte) Delegation {
 	delegation, err := UnmarshalDelegation(cdc, value)
 	if err != nil {
@@ -53,7 +49,7 @@ func MustUnmarshalDelegation(cdc *codec.Codec, value []byte) Delegation {
 	return delegation
 }
 
-// return the delegation without fields contained within the key for the store
+// return the delegation
 func UnmarshalDelegation(cdc *codec.Codec, value []byte) (delegation Delegation, err error) {
 	err = cdc.UnmarshalBinaryLengthPrefixed(value, &delegation)
 	return delegation, err
@@ -96,7 +92,7 @@ type UnbondingDelegation struct {
 	Balance        sdk.Coin       `json:"balance"`         // atoms to receive at completion
 }
 
-// return the unbonding delegation without fields contained within the key for the store
+// return the unbonding delegation
 func MustMarshalUBD(cdc *codec.Codec, ubd UnbondingDelegation) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(ubd)
 }
@@ -151,7 +147,7 @@ type Redelegation struct {
 	SharesDst        sdk.Dec        `json:"shares_dst"`         // amount of destination shares redelegating
 }
 
-// return the redelegation without fields contained within the key for the store
+// return the redelegation
 func MustMarshalRED(cdc *codec.Codec, red Redelegation) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(red)
 }

@@ -8,7 +8,7 @@ In the current implementation of the `slashing` module, when the consensus engin
 
 In the current system design, once a validator is put in the jail for a consensus fault, after the `JailPeriod` they are allowed to send a transaction to `unjail` themselves, and thus rejoin the validator set.
 
-One of the "design desires" of `slashing` module is that if multiple infractions occur before evidence is executed (and a validator is put in jail), they should only be punished for single worst infraction, but not cumulatively.  For example, if the sequence of events is:
+One of the "design desires" of the `slashing` module is that if multiple infractions occur before evidence is executed (and a validator is put in jail), they should only be punished for single worst infraction, but not cumulatively.  For example, if the sequence of events is:
 1. Validator A commits Infraction 1 (worth 30% slash)
 2. Validator A commits Infraction 2 (worth 40% slash)
 3. Validator A commits Infraction 3 (worth 35% slash)
@@ -28,11 +28,17 @@ However, while infractions are grouped based off of the slashing periods, becaus
    
 We are now in a new slashing period, however we still have to keep the door open for the previous infraction, as the evidence for Infraction 2 may still come in. As the number of slashing periods increase, it creates more complexity as we have to keep track of the highest infraction amount for every single slashing period.
 
-> Note:  Currently, according to the `slashing` module spec, a new slashing period is created everytime a validator is unbonded then rebonded.  This should probably be changed to jailed/unjailed.  See issue #3205 for further details.  For the remainder of this, I will assume that we only start a new slashing period when a validator gets unjailed.
+> Note:  Currently, according to the `slashing` module spec, a new slashing period is created every time a validator is unbonded then rebonded.  This should probably be changed to jailed/unjailed.  See issue [#3205](https://github.com/cosmos/cosmos-sdk/issues/3205) for further details.  For the remainder of this, I will assume that we only start a new slashing period when a validator gets unjailed.
 
 The maximum number of slashing periods is the `len(UnbondingPeriod) / len(JailPeriod)`.  The current defaults in Gaia for the `UnbondingPeriod` and `JailPeriod` are 3 weeks and 2 days, respectively.  This means there could potentially be up to 11 slashing periods concurrently being tracked per validator.  If we set the `JailPeriod >= UnbondingPeriod`, we only have to track 1 slashing period (i.e not have to track slashing periods).
 
+<<<<<<< HEAD
 Currently, in the jail period implementation, once a validator unjails, all of their delegators who are delegated to them (haven't unbonded / redelegated away), stay with them.  Given that consensus safety faults, are so egregious (way more so than liveness faults), it is probably prudent to have delegators not "auto-rebond" to the validator. Thus, we propose setting the "jail time" for a validator who commits a consensus safety fault, to `infite` (i.e. a tombstone state).  This essentially kicks the validator out of the validator set and does not allow them to re-enter the validator set.  All of their delegators (including the operator themselves) have to either unbond or redelegate away.  The validator operator can create a new validator if they would like, with a new operator key and consensus key, but they have to "re-earn" their delegations back.  To put the validator in the tombstone state, we set `DoubleSignJailEndTime` to `time.Unix(253402300800)`, the MAX time supported by Amino.
+=======
+Currently, in the jail period implementation, once a validator unjails, all of their delegators who are delegated to them (haven't unbonded / redelegated away), stay with them.  Given that consensus safety faults are so egregious (way more so than liveness faults), it is probably prudent to have delegators not "auto-rebond" to the validator. Thus, we propose that instead of being put in a "jailed state" after evidence for a consensus safety fault, validators are instead put into a "tombstone state", which means the validator is kicked out of the validator set and not allowed to rejoin.  All of the stake that was delegated to it is put into an unbonding period.  The validator operator can create a new validator if they would like, preferably with a new consensus key (do we need to enforce this?  No rational validator should reuse the same compromised key), but they have to "re-earn" their delegations back.
+
+Given that in the current state machine, an unbonding validator cannot "rebond" and re-enter the validator set, the easiest way to accomplish the tombstone, is to just put the validator into the unbonding state.  This way, the validator cannot re-enter the validator set.  The validator operator can rejoin the validator set using a new Operator account, or wait for the unbonding to finish, and rebond with the same Operator Key.  Either way, however, their old delegations do not carry over.
+>>>>>>> 8a4499f3fb1d9c7d14852c8809a9fe11536c37a7
 
 By implementing the tombstone system and getting rid of the slashing period tracking, will make the `slashing` module way simpler, especially because we can remove all of the hooks defined in the `slashing` module.
 

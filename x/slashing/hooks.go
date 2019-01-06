@@ -16,6 +16,7 @@ func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sd
 			StartHeight:         ctx.BlockHeight(),
 			IndexOffset:         0,
 			JailedUntil:         time.Unix(0, 0),
+			Tombstoned:          false,
 			MissedBlocksCounter: 0,
 		}
 		k.SetValidatorSigningInfo(ctx, address, signingInfo)

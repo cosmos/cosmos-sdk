@@ -59,7 +59,7 @@ for redel in redels {
 }
 ```
 
-We then slash the validator:
+We then slash the validator and tombstone them:
 
 ```
 curVal := validator
@@ -70,13 +70,16 @@ slashAmount -= slashAmountUnbondings
 slashAmount -= slashAmountRedelegations
 
 curVal.Shares = max(0, curVal.Shares - slashAmount)
+
+signInfo = SigningInfo.Get(val.Address)
+signInfo.JailedUntil = MAX_TIME
+signInfo.Tombstoned = true
+SigningInfo.Set(val.Address, signInfo)
 ```
 
 This ensures that offending validators are punished the same amount whether they
 act as a single validator with X stake or as N validators with collectively X
 stake.
-
-The amount slashed for all double signature infractions committed within a single slashing period is capped as described in [state-machine.md](state-machine.md).
 
 ## Uptime tracking
 
@@ -118,5 +121,3 @@ for val in block.Validators:
 
   SigningInfo.Set(val.Address, signInfo)
 ```
-
-The amount slashed for downtime slashes is *not* capped by the slashing period in which they are committed, although they do reset it (since the validator is unbonded).

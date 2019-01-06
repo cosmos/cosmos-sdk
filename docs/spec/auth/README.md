@@ -27,4 +27,4 @@ This module will be used in the Cosmos Hub.
     1. [AccountKeeper](keepers.md#account-keeper)
 1. **[Handlers](handlers.md)**
     1. [Ante Handler](handlers.md#ante-handler)
-1. **[Minimum_fees](min_fee.md)**
+1. **[Minimum Fees](min_fee.md)**

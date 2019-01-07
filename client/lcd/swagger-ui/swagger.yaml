@@ -18,7 +18,7 @@ tags:
 - name: ICS23
   description: Slashing module APIs
 - name: ICS24
-  description: Fee distribution module APIs
+  description: WIP - Fee distribution module APIs
 - name: version
   description: Query app version
 schemes:

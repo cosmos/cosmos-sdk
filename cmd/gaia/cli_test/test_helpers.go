@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/tendermint/tendermint/types"
@@ -28,6 +29,18 @@ import (
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
+const (
+	denom    = stakeTypes.DefaultBondDenom
+	fooDenom = "footoken"
+	feeDenom = "feetoken"
+)
+
+var startCoins = sdk.Coins{
+	sdk.NewInt64Coin(feeDenom, 1000),
+	sdk.NewInt64Coin(fooDenom, 1000),
+	sdk.NewInt64Coin(denom, 150),
+}
+
 // Fixtures is used to setup the testing environment
 type Fixtures struct {
 	ChainID  string
@@ -39,14 +52,21 @@ type Fixtures struct {
 	T        *testing.T
 }
 
-func NewFixtures(t *testing.T) Fixtures {
+func NewFixtures(t *testing.T) *Fixtures {
 	tmpDir := os.TempDir()
 	gaiadHome := fmt.Sprintf("%s%s%s%s.test_gaiad", tmpDir, string(os.PathSeparator), t.Name(), string(os.PathSeparator))
 	gaiacliHome := fmt.Sprintf("%s%s%s%s.test_gaiacli", tmpDir, string(os.PathSeparator), t.Name(), string(os.PathSeparator))
-	return Fixtures{
+	servAddr, port, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+	p2pAddr, _, err := server.FreeTCPAddr()
+	require.NoError(t, err)
+	return &Fixtures{
 		T:        t,
 		GDHome:   gaiadHome,
 		GCLIHome: gaiacliHome,
+		RPCAddr:  servAddr,
+		P2PAddr:  p2pAddr,
+		Port:     port,
 	}
 }
 
@@ -57,32 +77,112 @@ func getTestingHomeDirs(name string) (string, string) {
 	return gaiadHome, gaiacliHome
 }
 
-func initializeFixtures(t *testing.T) Fixtures {
-	f := NewFixtures(t)
-	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", f.GDHome), "")
+// UnsafeResetAll is gaiad unsafe-reset-all
+func (f *Fixtures) UnsafeResetAll(flags ...string) {
+	cmd := fmt.Sprintf("gaiad --home=%s unsafe-reset-all", f.GDHome)
+	executeWrite(f.T, addFlags(cmd, flags))
 	os.RemoveAll(filepath.Join(f.GDHome, "config", "gentx"))
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", f.GCLIHome), app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", f.GCLIHome), app.DefaultKeyPass)
-	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", f.GCLIHome), app.DefaultKeyPass)
-	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", f.GCLIHome), app.DefaultKeyPass)
-	executeWriteCheckErr(t, fmt.Sprintf("gaiacli config --home=%s output json", f.GCLIHome))
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", f.GCLIHome))
-	f.ChainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", f.GDHome))
+}
 
-	executeWriteCheckErr(t, fmt.Sprintf(
-		"gaiad add-genesis-account %s 150%s,1000footoken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, f.GDHome))
+// KeysDelete is gaiacli keys delete
+func (f *Fixtures) KeysDelete(name string, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli keys delete --home=%s %s", f.GCLIHome, name)
+	executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// KeysAdd is gaiacli keys add
+func (f *Fixtures) KeysAdd(name string, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli keys add --home=%s %s", f.GCLIHome, name)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// KeysShow is gaiacli keys show
+func (f *Fixtures) KeysShow(name string, flags ...string) keys.KeyOutput {
+	cmd := fmt.Sprintf("gaiacli keys show --home=%s %s", f.GCLIHome, name)
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var ko keys.KeyOutput
+	err := keys.UnmarshalJSON([]byte(out), &ko)
+	require.NoError(f.T, err)
+	return ko
+}
+
+// KeyAddress returns the SDK account address from the key
+func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
+	ko := f.KeysShow(name)
+	accAddr, err := sdk.AccAddressFromBech32(ko.Address)
+	require.NoError(f.T, err)
+	return accAddr
+}
+
+// CLIConfig is gaiacli config
+func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli config --home=%s %s %s", f.GCLIHome, key, value)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags))
+}
+
+// GDInit is gaiad init
+// NOTE: GDInit sets the ChainID for the Fixtures instance
+func (f *Fixtures) GDInit(moniker string, flags ...string) {
+	cmd := fmt.Sprintf("gaiad init -o --moniker=%s --home=%s", moniker, f.GDHome)
+	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+
+	var chainID string
+	var initRes map[string]json.RawMessage
+
+	err := json.Unmarshal([]byte(stderr), &initRes)
+	require.NoError(f.T, err)
+
+	err = json.Unmarshal(initRes["chain_id"], &chainID)
+	require.NoError(f.T, err)
+
+	f.ChainID = chainID
+}
+
+func addFlags(cmd string, flags []string) string {
+	for _, f := range flags {
+		cmd += " " + f
+	}
+	return strings.TrimSpace(cmd)
+}
+
+// AddGenesisAccount is gaiad add-genesis-account
+func (f *Fixtures) AddGenesisAccount(address sdk.AccAddress, coins sdk.Coins, flags ...string) {
+	cmd := fmt.Sprintf("gaiad add-genesis-account %s %s --home=%s", address, coins, f.GDHome)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags))
+}
+
+// GenTx is gaiad gentx
+func (f *Fixtures) GenTx(name string, flags ...string) {
+	cmd := fmt.Sprintf("gaiad gentx --name=%s --home=%s --home-client=%s", name, f.GDHome, f.GCLIHome)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// CollectGenTxs is gaiad collect-gentxs
+func (f *Fixtures) CollectGenTxs(flags ...string) {
+	cmd := fmt.Sprintf("gaiad collect-gentxs --home=%s", f.GDHome)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+func initializeFixtures(t *testing.T) *Fixtures {
+	f := NewFixtures(t)
+
+	// Reset test state
+	f.UnsafeResetAll()
+	// Ensure keystore has foo and bar keys
+	f.KeysDelete("foo")
+	f.KeysDelete("bar")
+	f.KeysAdd("foo")
+	f.KeysAdd("bar")
+
+	f.CLIConfig("output", "json")
+	fooAddr := f.KeyAddress("foo")
+
+	// NOTE: GDInit sets the ChainID
+	f.GDInit("foo")
+	f.AddGenesisAccount(fooAddr, startCoins)
+	f.GenTx("foo")
 	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", f.GDHome, string(os.PathSeparator), string(os.PathSeparator)))
-	executeWriteCheckErr(t, fmt.Sprintf(
-		"gaiad gentx --name=foo --home=%s --home-client=%s", f.GDHome, f.GCLIHome), app.DefaultKeyPass)
-	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", f.GDHome), app.DefaultKeyPass)
-	// get a free port, also setup some common flags
-	servAddr, port, err := server.FreeTCPAddr()
-	require.NoError(t, err)
-	f.RPCAddr = servAddr
-	f.Port = port
-	p2pAddr, _, err := server.FreeTCPAddr()
-	require.NoError(t, err)
-	f.P2PAddr = p2pAddr
+	f.CollectGenTxs()
 	return f
 }
 

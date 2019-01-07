@@ -49,7 +49,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 	// Reject evidence if the double is too old
 	if age > k.MaxEvidenceAge(ctx) {
-		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, k.MaxEvidenceAge(ctx)))
 		return
 	}
 
@@ -73,7 +73,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	}
 
 	// Double sign confirmed
-	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
+	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d", pubkey.Address(), infractionHeight, age))
 
 	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
 	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,

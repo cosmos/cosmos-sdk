@@ -66,25 +66,25 @@ to send users to the GitHub.
 
 To build and serve the documentation locally, run:
 
-```
+```bash
 npm install -g vuepress
 ```
 
 then change the following line in the `config.js`:
 
-```
+```js
 base: "/docs/",
 ```
 
 to:
 
-```
+```js
 base: "/",
 ```
 
 Finally, go up one directory to the root of the repo and run:
 
-```
+```bash
 # from root of repo
 vuepress build docs
 cd dist/docs
@@ -113,14 +113,14 @@ much as possible with its [counterpart in the Tendermint Core repo](https://gith
 ### Update and Build the RPC docs
 
 1. Execute the following command at the root directory to install the swagger-ui generate tool.
-    ```
+    ```bash
     make tools
     ```
 2. Edit API docs
     1. Directly Edit API docs manually: `client/lcd/swagger-ui/swagger.yaml`.
-    2. Edit API docs within [SwaggerHub](https://app.swaggerhub.com). Please refer to this [document](https://app.swaggerhub.com/help/index) for how to use the about website to edit API docs.
+    2. Edit API docs within the [Swagger Editor](https://editor.swagger.io/). Please refer to this [document](https://swagger.io/docs/specification/2-0/basic-structure/) for the correct structure in `.yaml`.
 3. Download `swagger.yaml` and replace the old `swagger.yaml` under fold `client/lcd/swagger-ui`.
 4. Compile gaiacli
-    ```
+    ```bash
     make install
     ```

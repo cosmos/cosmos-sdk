@@ -85,7 +85,7 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 }
 
 // nolint - unused hooks
-func (h Hooks) AfterValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+ func (h Hooks) AfterValidatorPowerDidChange(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) {
 }
 func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
 func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}

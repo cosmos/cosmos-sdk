@@ -503,6 +503,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	} else {
 		gasMeter = sdk.NewInfiniteGasMeter()
 	}
+
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
 
 	if app.beginBlocker != nil {
@@ -732,7 +733,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	defer func() {
 		if mode == runTxModeDeliver {
 			ctx.BlockGasMeter().ConsumeGas(
-				ctx.GasMeter().GasConsumedToLimit(), "block gas meter")
+				ctx.GasMeter().GasConsumedToLimit(),
+				"block gas meter",
+			)
+
 			if ctx.BlockGasMeter().GasConsumed() < startingGas {
 				panic(sdk.ErrorGasOverflow{"tx gas summation"})
 			}

@@ -170,6 +170,22 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 	store.Delete(GetUBDByValIndexKey(ubd.DelegatorAddr, ubd.ValidatorAddr))
 }
 
+// SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
+// the given addresses. It creates the unbonding delegation if it does not exist
+func (k Keeper) SetUnbondingDelegationEntry(ctx sdk.Context,
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	creationHeight int64, minTime time.Time, balance sdk.Coin) types.UnbondingDelegation {
+
+	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	if found {
+		ubd.AddEntry(creationHeight, minTime, balance)
+	} else {
+		ubd = NewUnbondingDelegation(delegationAddr, validatorAddr, creationHeight, minTime, balance)
+	}
+	k.SetUnbondingDelegation(ctx, ubd)
+	return ubd
+}
+
 //________________________________________________
 // unbonding delegation queue timeslice operations
 
@@ -303,6 +319,26 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Set(key, bz)
 	store.Set(GetREDByValSrcIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})
 	store.Set(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})
+}
+
+// SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
+// the given addresses. It creates the unbonding delegation if it does not exist
+func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
+	delegatorAddr sdk.AccAddress, validatorSrcAddr,
+	validatorDstAddr sdk.ValAddress, creationHeight int64,
+	minTime time.time, balance sdk.Coin,
+	sharesSrc, sharesDst sdk.Dec) Redelegation {
+
+	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
+	if found {
+		red.AddEntry(creationHeight, minTime, balance, sharesSrc, sharesDst)
+	} else {
+		red = NewRedelegation(delegatorAddr, validatorSrcAddr,
+			validatorDstAddr, creationHeight, minTime, balance, sharesSrc,
+			sharesDst)
+	}
+	k.SetRedelegation(ctx, red)
+	return red
 }
 
 // iterate through all redelegations
@@ -517,13 +553,6 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 func (k Keeper) BeginUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress, sharesAmount sdk.Dec) (types.UnbondingDelegation, sdk.Error) {
 
-	// XXX remove this quickfix before merge
-	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
-	_, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
-	if found {
-		return types.UnbondingDelegation{}, types.ErrExistingUnbondingDelegation(k.Codespace())
-	}
-
 	// create the unbonding delegation
 	minTime, height, completeNow := k.getBeginInfo(ctx, valAddr)
 
@@ -542,28 +571,39 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 		return types.UnbondingDelegation{MinTime: minTime}, nil
 	}
 
-	ubd := NewUnbondingDelegation(delAddr, valAddr, height, minTime, balance)
-	k.SetUnbondingDelegation(ctx, ubd)
+	ubd := k.SetUnbondingDelegationEntry(ctx, delAddr, valAddr, height, minTime, balance)
 	k.InsertUBDQueue(ctx, ubd)
-
 	return ubd, nil
 }
 
-// complete unbonding an unbonding record
-// CONTRACT: Expects unbonding passed in has finished the unbonding period
+// CompleteUnbonding completes the unbonding of all mature entries in the
+// retrieved unbonding delegation object.
 func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
-	valAddr sdk.ValAddress, currentTime time.Time) sdk.Error {
+	valAddr sdk.ValAddress) sdk.Error {
 
 	ubd, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return types.ErrNoUnbondingDelegation(k.Codespace())
 	}
 
-	_, _, err := k.bankKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{ubd.Balance})
-	if err != nil {
-		return err
+	ctxTime := ctx.BlockHeader().Time
+
+	// loop through all the entries and complete unbonding mature entries
+	for i, entry := range ubd.Entries {
+		if entry.IsMature(ctxTime) {
+			_, _, err := k.bankKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{ubd.Balance})
+			if err != nil {
+				return err
+			}
+			ubd.RemoveEntry(i)
+
+			// remove the ubd if there are no more entries
+			if len(Entries) == 0 {
+				k.RemoveUnbondingDelegation(ctx, ubd)
+			}
+		}
 	}
-	k.RemoveUnbondingDelegation(ctx, ubd)
+
 	return nil
 }
 
@@ -573,13 +613,6 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 
 	if bytes.Equal(valSrcAddr, valDstAddr) {
 		return types.Redelegation{}, types.ErrSelfRedelegation(k.Codespace())
-	}
-
-	// check if there is already a redelgation in progress from src to dst
-	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
-	_, found := k.GetRedelegation(ctx, delAddr, valSrcAddr, valDstAddr)
-	if found {
-		return types.Redelegation{}, types.ErrConflictingRedelegation(k.Codespace())
 	}
 
 	// check if this is a transitive redelegation
@@ -614,14 +647,14 @@ func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return types.Redelegation{MinTime: minTime}, nil
 	}
 
-	red := NewRedelegation(delAddr, valSrcAddr, valDstAddr, height, minTime,
-		returnCoin, sharesAmount, sharesCreated)
-	k.SetRedelegation(ctx, red)
+	red := k.SetUnbondingDelegationEntry(ctx, delAddr, valSrcAddr, valDstAddr,
+		height, minTime, returnCoin, sharesAmount, sharesCreated)
 	k.InsertRedelegationQueue(ctx, red)
 	return red, nil
 }
 
-// complete unbonding an ongoing redelegation
+// CompleteRedelegation completes the unbonding of all mature entries in the
+// retrieved unbonding delegation object.
 func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	valSrcAddr, valDstAddr sdk.ValAddress) sdk.Error {
 
@@ -630,12 +663,19 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return types.ErrNoRedelegation(k.Codespace())
 	}
 
-	// ensure that enough time has passed
 	ctxTime := ctx.BlockHeader().Time
-	if red.MinTime.After(ctxTime) {
-		return types.ErrNotMature(k.Codespace(), "redelegation", "unit-time", red.MinTime, ctxTime)
+
+	// loop through all the entries and complete mature redelegation entries
+	for i, entry := range red.Entries {
+		if entry.IsMature(ctxTime) {
+			red.RemoveEntry(i)
+
+			// remove the redelegation if there are no more entries
+			if len(red.Entries) == 0 {
+				k.RemoveRedelegation(ctx, red)
+			}
+		}
 	}
 
-	k.RemoveRedelegation(ctx, red)
 	return nil
 }

@@ -12,6 +12,11 @@ type DepositParams struct {
 	MaxDepositPeriod time.Duration `json:"max_deposit_period"` //  Maximum period for Atom holders to deposit on a proposal. Initial value: 2 months
 }
 
+// Checks equality of DepositParams
+func (dp DepositParams) Equal(dp2 DepositParams) bool {
+	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+}
+
 // Param around Tallying votes in governance
 type TallyParams struct {
 	Quorum            sdk.Dec `json:"quorum"`             //  Minimum percentage of total stake needed to vote for a result to be considered valid

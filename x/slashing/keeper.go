@@ -47,14 +47,13 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
 
-	// Double sign too old
-	maxEvidenceAge := k.MaxEvidenceAge(ctx)
-	if age > maxEvidenceAge {
+	// Reject evidence if the double is too old
+	if age > k.MaxEvidenceAge(ctx) {
 		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
 		return
 	}
 
-	// Get validator.
+	// Get validator and signing info
 	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 	if validator == nil || validator.GetStatus() == sdk.Unbonded {
 		// Defensive.

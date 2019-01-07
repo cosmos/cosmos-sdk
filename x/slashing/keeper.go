@@ -82,7 +82,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
 	distributionHeight := infractionHeight - stake.ValidatorUpdateDelay
 
-	// Get the percentage slash penalty fraction
+	// get the percentage slash penalty fraction
 	fraction := k.SlashFractionDoubleSign(ctx)
 
 	// Slash validator
@@ -94,7 +94,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
 	// Jail validator if not already jailed
-	// Begin unbonding validator if not already unbonding (tombstone)
+	// begin unbonding validator if not already unbonding (tombstone)
 	if !validator.GetJailed() {
 		k.validatorSet.Jail(ctx, consAddr)
 	}

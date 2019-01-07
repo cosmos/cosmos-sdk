@@ -56,10 +56,12 @@ IMPROVEMENTS
 
 * Gaia REST API
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) Validate tx/sign endpoint POST body.
+  * [\#2948](https://github.com/cosmos/cosmos-sdk/issues/2948) Swagger UI now makes requests to light client node
 
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [\#2186](https://github.com/cosmos/cosmos-sdk/issues/2186) Add Address Interface
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
   * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees
   in a local testnet.

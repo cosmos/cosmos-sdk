@@ -40,17 +40,6 @@ func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParam
 	}
 }
 
-// // GenesisState - all staking state that must be provided at genesis
-// type GenesisState struct {
-// 	StartingProposalID uint64                `json:"starting_proposal_id"`
-// 	Deposits           []DepositWithMetadata `json:"deposits"`
-// 	Votes              []VoteWithMetadata    `json:"votes"`
-// 	Proposals          []Proposal            `json:"proposals"`
-// 	DepositParams      DepositParams         `json:"deposit_params"`
-// 	VotingParams       VotingParams          `json:"voting_params"`
-// 	TallyParams        TallyParams           `json:"tally_params"`
-// }
-
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
 	return GenesisState{

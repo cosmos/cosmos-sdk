@@ -1,6 +1,6 @@
 # Minimum Fees specifications
 
-Fees serve two purposes for the operator the network.
+Fees serve two purposes for an operator of the network.
 
 Fees limit the growth of the state stored by every full node.and the allows for a general purpose for censorship of transactions of little economic value. Fees are best suited as an antispam mechanism where validators are disinterested in the use of the network and idenities of users.
 

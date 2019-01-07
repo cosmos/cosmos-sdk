@@ -59,12 +59,12 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 
 	// Ensure tx with correct fees (stake) pass
 	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --fees=2%s", flags, stakeTypes.DefaultBondDenom, barAddr, stakeTypes.DefaultBondDenom), app.DefaultKeyPass)
+		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --fees=23%s", flags, stakeTypes.DefaultBondDenom, barAddr, stakeTypes.DefaultBondDenom), app.DefaultKeyPass)
 	require.True(t, success)
 
 	// Ensure tx with correct fees (feetoken) pass
 	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --fees=2feetoken", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+		"gaiacli tx send %v --amount=10feetoken --to=%s --from=foo --fees=23feetoken", flags, barAddr), app.DefaultKeyPass)
 	require.True(t, success)
 
 	// Ensure tx with improper fees fails

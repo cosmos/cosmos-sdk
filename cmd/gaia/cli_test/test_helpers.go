@@ -28,8 +28,27 @@ import (
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
-//___________________________________________________________________________________
-// helper methods
+// Fixtures is used to setup the testing environment
+type Fixtures struct {
+	ChainID  string
+	RPCAddr  string
+	Port     string
+	GDHome   string
+	GCLIHome string
+	P2PAddr  string
+	T        *testing.T
+}
+
+func NewFixtures(t *testing.T) Fixtures {
+	tmpDir := os.TempDir()
+	gaiadHome := fmt.Sprintf("%s%s%s%s.test_gaiad", tmpDir, string(os.PathSeparator), t.Name(), string(os.PathSeparator))
+	gaiacliHome := fmt.Sprintf("%s%s%s%s.test_gaiacli", tmpDir, string(os.PathSeparator), t.Name(), string(os.PathSeparator))
+	return Fixtures{
+		T:        t,
+		GDHome:   gaiadHome,
+		GCLIHome: gaiacliHome,
+	}
+}
 
 func getTestingHomeDirs(name string) (string, string) {
 	tmpDir := os.TempDir()
@@ -38,30 +57,33 @@ func getTestingHomeDirs(name string) (string, string) {
 	return gaiadHome, gaiacliHome
 }
 
-func initializeFixtures(t *testing.T) (chainID, servAddr, port, gaiadHome, gaiacliHome, p2pAddr string) {
-	gaiadHome, gaiacliHome = getTestingHomeDirs(t.Name())
-	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", gaiadHome), "")
-	os.RemoveAll(filepath.Join(gaiadHome, "config", "gentx"))
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", gaiacliHome), app.DefaultKeyPass)
-	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", gaiacliHome), app.DefaultKeyPass)
-	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", gaiacliHome), app.DefaultKeyPass)
-	executeWriteCheckErr(t, fmt.Sprintf("gaiacli config --home=%s output json", gaiacliHome))
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", gaiacliHome))
-	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
+func initializeFixtures(t *testing.T) Fixtures {
+	f := NewFixtures(t)
+	tests.ExecuteT(t, fmt.Sprintf("gaiad --home=%s unsafe-reset-all", f.GDHome), "")
+	os.RemoveAll(filepath.Join(f.GDHome, "config", "gentx"))
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s foo", f.GCLIHome), app.DefaultKeyPass)
+	executeWrite(t, fmt.Sprintf("gaiacli keys delete --home=%s bar", f.GCLIHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s foo", f.GCLIHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli keys add --home=%s bar", f.GCLIHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiacli config --home=%s output json", f.GCLIHome))
+	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", f.GCLIHome))
+	f.ChainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", f.GDHome))
 
 	executeWriteCheckErr(t, fmt.Sprintf(
-		"gaiad add-genesis-account %s 150%s,1000footoken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
-	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", gaiadHome, string(os.PathSeparator), string(os.PathSeparator)))
+		"gaiad add-genesis-account %s 150%s,1000footoken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, f.GDHome))
+	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", f.GDHome, string(os.PathSeparator), string(os.PathSeparator)))
 	executeWriteCheckErr(t, fmt.Sprintf(
-		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome), app.DefaultKeyPass)
-	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", gaiadHome), app.DefaultKeyPass)
+		"gaiad gentx --name=foo --home=%s --home-client=%s", f.GDHome, f.GCLIHome), app.DefaultKeyPass)
+	executeWriteCheckErr(t, fmt.Sprintf("gaiad collect-gentxs --home=%s", f.GDHome), app.DefaultKeyPass)
 	// get a free port, also setup some common flags
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
-	p2pAddr, _, err = server.FreeTCPAddr()
+	f.RPCAddr = servAddr
+	f.Port = port
+	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
-	return
+	f.P2PAddr = p2pAddr
+	return f
 }
 
 func marshalStdTx(t *testing.T, stdTx auth.StdTx) []byte {

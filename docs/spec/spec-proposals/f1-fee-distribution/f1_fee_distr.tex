@@ -2,7 +2,7 @@
 \usepackage{hyperref}
 
 %opening
-\title{F1 Fee Distribution Draft-01}
+\title{F1 Fee Distribution Draft-02}
 \author{Dev Ojha}
 
 \begin{document}
@@ -12,7 +12,7 @@
 \begin{abstract}
 	In a proof of stake blockchain, validators need to split the rewards gained from transaction fees each block. Furthermore, these fees must be fairly distributed to each of a validator's constituent delegators. They accrue this reward throughout the entire time they are delegated, and they have a special operation to withdraw accrued rewards.
 	
-	The F1 fee distribution scheme works for any algorithm to split funds between validators each block, with minimal iteration, and the only approximations being due to finite decimal precision. Per block there is a single iteration over the validator set, which enables only rewarding validators who signed a given block. No iteration is required to delegate, and withdrawing only requires iterating over all of that validators slashes since delegation it began. State usage is minimal as well, one state update per validator per block, and one state record per delegator.
+	The F1 fee distribution scheme works for any algorithm to split funds between validators each block, with minimal iteration, and the only approximations being due to finite decimal precision. Per block there is a single iteration over the validator set, to enable reward algorithms that differ by validator. No iteration is required to delegate, or withdraw. The state usage is one state update per validator per block, and one state entry per active delegation. It can optionally handle arbitrary inflation schemes, and auto-bonding of rewards.
 \end{abstract}
 
 \section{F1 Fee Distribution}
@@ -22,13 +22,11 @@ In a proof of stake blockchain, each validator has an associated stake.
 Transaction fees get rewarded to validators based on the incentive scheme of the underlying proof of stake model.
 The fee distribution problem occurs in proof of stake blockchains supporting delegation, as there is a need to distribute a validator's fee rewards to its delegators.
 The trivial solution of just giving the rewards to each delegator every block is too expensive to perform on-chain.
-So instead fee distribution algorithms have delegators perform an explicit withdraw transaction, which when performed yields the same total amount of fees as if they had received them at every block. 
+So instead fee distribution algorithms have delegators perform a withdraw action, which when performed yields the same total amount of fees as if they had received them at every block. 
 
 This details F1, an approximation-free, slash-tolerant fee distribution algorithm which allows validator commission-rates, inflation rates, and fee proportions, which can all efficiently change per validator, every block.
-The algorithm requires iterating over the validators every block, and withdraws require iterating over all of the corresponding validator's slashes whilst the delegator was bonded.
-The former iteration is cheap, due to staking logic already requiring iteration over all validators, which causes the expensive state-reads to be cached.
-The number of slashes is expected to be 0 or 1 for most validators,
-so the latter term also meets the blockchain's efficiency needs.
+The algorithm requires iterating over the bonded validators every block, and withdraws require no iteration.
+This is cheap, due to staking logic already requiring iteration over all validators, which causes the expensive state-reads to be cached.
 
 The key point of how F1 works is that it tracks how much rewards a delegator with 1 stake for a given validator would be entitled to if it had bonded at block 0 until the latest block.
 When a delegator bonds at block $b$, the amount of rewards a delegator with 1 stake would have if bonded at block 0 until block $b$ is also persisted to state.
@@ -98,17 +96,21 @@ More generally, each validator could have a function which takes their fees as i
 \label{ssec:slashing}
 Slashing is distinct from withdrawals, since it lowers the stake of all of the delegator's by a fixed percentage.
 Since no one is charged gas for slashes, a slash cannot iterate over all delegators.
-Thus we can no longer just multiply by $x$ over the difference in stake. 
+Thus we can no longer just multiply by $x$ over the difference in stake.
+This section describes a simple solution that should suffice for most chains needs. An asymptotically optimal solution is provided in section 2.4.
+TODO: Consider removing this section in favor of just using the current section 2.4?
+
 The solution here is to instead store each period created by a slash in the validators state.
 Then when withdrawing, you must iterate over all slashes between when you started and ended.
-Suppose you delegated at period $0$, a y\% slash occured at period $2$, and your withdrawal is period $4$.
-Then you receive funds from $0$ to $2$ as normal.
-The equations for funds you receive for $2$ to $4$ now uses $(1 - y)x$ for your stake instead of just $x$ stake.
+Suppose you delegated at period $0$, a y\% slash occured at period $2$, and your withdrawal creates period $4$.
+Then you receive funds from periods $0$ to $2$ as normal.
+The equations for funds you receive for periods $2$ to $4$ now uses $(1 - y)x$ for your stake instead of just $x$ stake.
 When there are multiple slashes, you just account for the accumulated slash factor.
 
-In practice this will not really be an efficiency hit, as we can expect most validators to have no slashes.
-Validators that get slashed a lot will naturally lose their delegators.
-A malicious validator that gets itself slashed many times would increase the gas to withdraw linearly, but the economic loss of funds due to the slashes should far out-weigh the extra overhead the honest withdrawer must pay for due to the gas.
+In practice this will not really be an efficiency hit, as the number of slashes is expected to be 0 or 1 for most validators.
+Validators that get slashed more will naturally lose their delegators.
+A malicious validator that gets itself slashed many times would increase the gas to withdraw linearly, but the economic loss of funds due to the slashes is expected to far out-weigh the extra overhead the honest withdrawer must pay for due to the gas.
+(TODO: frame that above sentence in terms of griefing factors, as thats more correct)
 
 \subsection{Inflation}
 Inflation is the idea that we want every staked coin to create more staking tokens as time progresses.
@@ -158,7 +160,7 @@ $$\sum_{i = start(f)}^{end(f)}\left(\prod_{j = 0}^{i} 1 + x_j \right) \frac{R_i}
 
 Thus every block, each validator just has to add the total amount of fees (The $R_i$ term) that goes to delegates to some per-period term.
 When creating a new period, $n_{start(f)}$ can be cached in state, and the product is already stored in the previous periods state entry.
-You then get the next period's $n_{start(f)}$ from the current tm-power entry. 
+You then get the next period's $n_{start(f)}$ from the consensus' power entry for this validator. 
 This is thus extremely efficient per block.
 
 When withdrawing, you take the difference as before,
@@ -166,20 +168,20 @@ which yields the amount of rewards you would have obtained with $(\prod_0^{begin
 $(\prod_0^{begin\ bonding\ period}1 + x)$ is known, since its included in the state entry for when you bonded.
 You then divide the entitled fees by $(\prod_0^{begin\ bonding\ period}1 + x)$ to normalize it to being the amount of rewards you're entitled to from 1 stake at that block to now.
 Then as before, you multiply by the amount of stake you had initially bonded.
-TODO: (Does the difference equating to that make sense, or should it be shown explicitly)
+\\TODO: (Does the difference equating to that make sense, or should it be shown explicitly)
+\\TODO: Does this need to explain how the originally bonded tokens are refunded, or is that clear?
 
-Note that the inflation function could vary per block,
+The inflation function could vary per block,
 and per validator if ever a need rose. 
 If the inflation rate is the same for everyone then there can be a single global store for the entries corresponding to the product of inflations.
 Inflation creation can trivially be epoched as long as inflation isn't required within the epoch, through changes to the $inflation$ function.
 
-Again note that this process is extremely efficient.
-
 \subsection{Withdrawing with no iteration over slashes}
-TODO: Fill this out. 
-Core idea: you use the same mechanism as previously, but you just make that blocks $x_j$ term negative.
-(So a $20\%$ slash would be equivalent to an inflation on that validator of $-20\%$)
-This foregoes the constant inflation per validator, may or may not be worth it depending on expected number of slashes
+Notice that a slash is the same as a negative inflation rate for a validator in one block.
+For example a $20\%$ slash is equivalent to a $-20\%$ inflation for a validator in a block.
+Given correctness of auto-bonding inflation with different inflation rates per-validator,
+it follows that handling slashes can be correctly done by simply subtracting the validators inflation factor in that block to be the negative of the slash factor.
+This significantly simplifies the withdrawal procedure.
 
 \subsection{Auto bonding fees}
 TODO: Fill this out. 
@@ -197,28 +199,22 @@ In each block you only iterate over the currently bonded validators.
 So you simply don't update the "total accrued fees this period" variable for jailed / non-bonded validators.
 Withdrawing requires \textit{no} special casing here!
 
-\section{State pruning}
-You will notice that in the main scheme there was no note for pruning entries from state.
-We can in fact prune quite effectively.
+\section{State Requirements}
+State entries can be pruned quite effectively.
 Suppose for the sake of exposition that there is at most one delegation / withdrawal to a particular validator in any given block.
 Then each delegation is responsible for one addition to state.
 Only the next period, and this delegator's withdrawal could depend on this entry. Thus once this delegator withdraws, this state entry can be pruned.
 For the entry created by the delegator's withdrawal, that is only required by the creation of the next period.
 Thus once the next period is created, that withdrawal's period can be deleted.
 
-This can be easily adapted to the case where there are multiple delegations / withdrawals per block.
-Keep a counter per state entry for how many delegations need to be cleared.
-(So 1 for each delegation in that block which created that period, 0 for each withdrawal)
-When creating a new period, check that the previous period (which had to be read anyway) doesn't have a count of 0.
-If it does have a count of 0, delete it.
-When withdrawing, decrement the period which created this delegation's counter by 1.
-If that counter is now 0, delete that period.
+This can be easily adapted to the case where there are multiple delegations / withdrawals per block, by maintaining a reference count in each period starting state entry.
 
 The slash entries for a validator can only be pruned when all of that validator's delegators have their bonding period starting after the slash.
 This seems ineffective to keep track of, thus it is not worth it.
 Each slash should instead remain in state until the validator unbonds and all delegators have their fees withdrawn.
 
 \section{Implementers Considerations}
+TODO: Convert this section into a proper conclusion
 
 This is an extremely simple scheme with many nice benefits. 
 \begin{itemize}
@@ -238,11 +234,11 @@ Thus this scheme has efficiency improvements, simplicity improvements, and expre
 
 \begin{itemize}
 	\item A global fee pool can be described.
-	\item Determine if auto-bonding fees is compatible with inflation and comission rates in conjunction
-	\item mention storage optimization in the uniform inflation and iteration over slashing case: only have one storage location w/ refcount of the product of inflation results
-	\item Remove iteration over slashes by the same normalization trick used in inflation
+	\item Mention storage optimization for how to prune slashing entries in the uniform inflation and iteration over slashing case
 	\item Add equation numbers
 	\item perhaps re-organize so that the no iteration
+ 	\item Section on decimal precision considerations (would unums help?), and mitigating errors in calculation with floats and decimals. -- This probably belongs in a corrollary markdown file in the implementation
+ 	\item Consider indicating that the withdraw action need not be a tx type and could instead happen 'transparently' when more coins are needed, if a chain desired this for UX / p2p efficiency.
 \end{itemize}
 
 

@@ -221,3 +221,31 @@ func TestConfiguredPrefix(t *testing.T) {
 
 	}
 }
+
+func TestAddressInterface(t *testing.T) {
+	var pub ed25519.PubKeyEd25519
+	rand.Read(pub[:])
+
+	addrs := []types.Address{
+		types.ConsAddress(pub.Address()),
+		types.ValAddress(pub.Address()),
+		types.AccAddress(pub.Address()),
+	}
+
+	for _, addr := range addrs {
+		switch addr := addr.(type) {
+		case types.AccAddress:
+			_, err := types.AccAddressFromBech32(addr.String())
+			require.Nil(t, err)
+		case types.ValAddress:
+			_, err := types.ValAddressFromBech32(addr.String())
+			require.Nil(t, err)
+		case types.ConsAddress:
+			_, err := types.ConsAddressFromBech32(addr.String())
+			require.Nil(t, err)
+		default:
+			t.Fail()
+		}
+	}
+
+}

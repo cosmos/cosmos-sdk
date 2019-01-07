@@ -23,6 +23,7 @@ tags:
   description: Query app version
 schemes:
 - https
+host: fabo.interblock.io:26657
 securityDefinitions:
   kms:
     type: basic

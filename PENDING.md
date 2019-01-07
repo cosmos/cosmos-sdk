@@ -57,10 +57,12 @@ IMPROVEMENTS
 
 * Gaia REST API
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) Validate tx/sign endpoint POST body.
+  * [\#2948](https://github.com/cosmos/cosmos-sdk/issues/2948) Swagger UI now makes requests to light client node
 
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [\#2186](https://github.com/cosmos/cosmos-sdk/issues/2186) Add Address Interface
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
   * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees
   in a local testnet.
@@ -76,8 +78,8 @@ IMPROVEMENTS
 * Tendermint
 
 * CI
-    * \#2498 Added macos CI job to CircleCI
-
+  * \#2498 Added macos CI job to CircleCI
+  * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim 
 
 BUG FIXES
 

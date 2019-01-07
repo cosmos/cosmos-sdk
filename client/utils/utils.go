@@ -57,6 +57,7 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 	if err != nil {
 		return err
 	}
+
 	// broadcast to a Tendermint node
 	_, err = cliCtx.BroadcastTx(txBytes)
 	return err

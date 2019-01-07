@@ -4,7 +4,7 @@ Fees serve two purposes for an operator of the network.
 
 Fees limit the growth of the state stored by every full node and the allows for a general purpose for censorship of transactions of little economic value. Fees are best suited as an antispam mechanism where validators are disinterested in the use of the network and identities of users.
 
-Node operators should set minimum fees and unit costs of gas in each token denomination they wish to support like.
+Operators should set minimum fees when starting their nodes. They will set the unit costs of gas in each token denomination they wish to support:
 
 `--minimum-fees=1steak,5photinos --gas_unit_cost=0.0001`
 

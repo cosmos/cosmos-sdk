@@ -73,7 +73,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 10))
+		time.Unix(5, 0), sdk.NewInt64Coin(params.BondDenom, 10))
 
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
@@ -114,7 +114,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 10), sdk.NewDec(10),
+		time.Unix(5, 0), sdk.NewInt64Coin(params.BondDenom, 10), sdk.NewDec(10),
 		sdk.NewDec(10))
 
 	keeper.SetRedelegation(ctx, rd)

@@ -63,7 +63,9 @@ func TestRedelegationEqual(t *testing.T) {
 	r1 := NewRedelegation(sdk.AccAddress(addr1), addr2, addr3, 0,
 		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0),
 		sdk.NewDec(0), sdk.NewDec(0))
-	r2 := r1
+	r2 := NewRedelegation(sdk.AccAddress(addr1), addr2, addr3, 0,
+		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0),
+		sdk.NewDec(0), sdk.NewDec(0))
 
 	ok := r1.Equal(r2)
 	require.True(t, ok)

@@ -849,7 +849,7 @@ func TestTransitiveRedelegation(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error")
 }
 
-func TestConflictingRedelegation(t *testing.T) {
+func TestMultipleRedelegation(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
 	validatorAddr := sdk.ValAddress(keep.Addrs[0])
 	validatorAddr2 := sdk.ValAddress(keep.Addrs[1])
@@ -876,19 +876,11 @@ func TestConflictingRedelegation(t *testing.T) {
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
-	// cannot redelegate again while first redelegation still exists
+	// should be able to redelegate again while first redelegation still exists
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
-	require.True(t, !got.IsOK(), "expected an error, msg: %v", msgBeginRedelegate)
+	require.True(t, got.IsOK(), "expected no error, msg: %v", msgBeginRedelegate)
 
-	// progress forward in time
-	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(10 * time.Second))
-
-	// complete first redelegation
-	EndBlocker(ctx, keeper)
-
-	// now should be able to redelegate again
-	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
-	require.True(t, got.IsOK(), "expected no error")
+	// XXX add more test
 }
 
 func TestUnbondingWhenExcessValidators(t *testing.T) {

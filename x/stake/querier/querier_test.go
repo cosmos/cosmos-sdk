@@ -382,8 +382,7 @@ func TestQueryRedelegations(t *testing.T) {
 	keeper.SetValidator(ctx, val2)
 
 	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin(types.DefaultBondDenom, sdk.NewInt(100)), val1, true)
-	_, err := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	require.NoError(t, err)
+	_ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), sdk.NewDec(20))
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)

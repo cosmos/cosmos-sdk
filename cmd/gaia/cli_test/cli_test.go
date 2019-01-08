@@ -294,7 +294,8 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	validatorUbds := executeGetValidatorUnbondingDelegations(t,
 		fmt.Sprintf("gaiacli query stake unbonding-delegations-from %s %v", sdk.ValAddress(barAddr), flags))
 	require.Len(t, validatorUbds, 1)
-	require.Equal(t, "1", validatorUbds[0].Balance.Amount.String())
+	require.Len(t, validatorUbds[0].Entries, 1)
+	require.Equal(t, "1", validatorUbds[0].Entries[0].Balance.Amount.String())
 
 	params := executeGetParams(t, fmt.Sprintf("gaiacli query stake parameters %v", flags))
 	require.True(t, defaultParams.Equal(params))

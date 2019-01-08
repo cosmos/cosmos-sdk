@@ -37,6 +37,17 @@ type Delegation struct {
 	Shares        sdk.Dec        `json:"shares"`
 }
 
+// NewDelegation creates a new delegation object
+func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	shares sdk.Dec) Delegation {
+
+	return Delegation{
+		DelegatorAddr: delegatorAddr,
+		ValidatorAddr: validatorAddr,
+		Shares:        shares,
+	}
+}
+
 // return the delegation
 func MustMarshalDelegation(cdc *codec.Codec, delegation Delegation) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(delegation)

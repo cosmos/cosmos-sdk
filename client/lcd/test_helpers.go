@@ -942,8 +942,13 @@ func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, vali
 }
 
 // GET /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr} Query all unbonding delegations between a delegator and a validator
-func getUndelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) stake.UnbondingDelegation {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/stake/delegators/%s/unbonding_delegations/%s", delegatorAddr, validatorAddr), nil)
+func getUnbondingDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress,
+	validatorAddr sdk.ValAddress) stake.UnbondingDelegation {
+
+	res, body := Request(t, port, "GET",
+		fmt.Sprintf("/stake/delegators/%s/unbonding_delegations/%s",
+			delegatorAddr, validatorAddr), nil)
+
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var unbond stake.UnbondingDelegation

@@ -991,14 +991,16 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	keeper.Slash(ctx, consAddr0, 0, 20, sdk.NewDecWithPrec(5, 1))
 
 	// unbonding delegation should have been slashed by half
-	unbonding, found := keeper.GetUnbondingDelegation(ctx, del, valA)
+	ubd, found := keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
-	require.Equal(t, int64(2), unbonding.Balance.Amount.Int64())
+	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, int64(2), ubd.Entries[0].Balance.Amount.Int64())
 
 	// redelegation should have been slashed by half
 	redelegation, found := keeper.GetRedelegation(ctx, del, valA, valB)
 	require.True(t, found)
-	require.Equal(t, int64(3), redelegation.Balance.Amount.Int64())
+	require.Len(t, redelegation.Entries, 1)
+	require.Equal(t, int64(3), redelegation.Entries[0].Balance.Amount.Int64())
 
 	// destination delegation should have been slashed by half
 	delegation, found = keeper.GetDelegation(ctx, del, valB)
@@ -1015,14 +1017,16 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	keeper.Slash(ctx, consAddr0, 2, 10, sdk.NewDecWithPrec(5, 1))
 
 	// unbonding delegation should be unchanged
-	unbonding, found = keeper.GetUnbondingDelegation(ctx, del, valA)
+	ubd, found = keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
-	require.Equal(t, int64(2), unbonding.Balance.Amount.Int64())
+	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, int64(2), ubd.Entries[0].Balance.Amount.Int64())
 
 	// redelegation should be unchanged
 	redelegation, found = keeper.GetRedelegation(ctx, del, valA, valB)
 	require.True(t, found)
-	require.Equal(t, int64(3), redelegation.Balance.Amount.Int64())
+	require.Len(t, redelegation.Entries, 1)
+	require.Equal(t, int64(3), redelegation.Entries[0].Balance.Amount.Int64())
 
 	// destination delegation should be unchanged
 	delegation, found = keeper.GetDelegation(ctx, del, valB)

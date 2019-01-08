@@ -572,10 +572,11 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\t[OK]\n\n", fooAddr.String(),
 		fooAddr.String()), stdout)
 
-	// Test broadcast
+	// Ensure foo has right amount of funds
 	fooAcc := f.QueryAccount(fooAddr)
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
+	// Test broadcast
 	success, stdout, _ = f.TxBroadcast(signedTxFile.Name())
 	require.True(t, success)
 
@@ -583,15 +584,16 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 		Response abci.ResponseDeliverTx
 	}
 
+	// Unmarshal the response and ensure that gas was properly used
 	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
 	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasUsed))
 	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
+	// Ensure account state
 	barAcc := f.QueryAccount(barAddr)
-	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(denom).Int64())
-
 	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(denom).Int64())
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	f.Cleanup()

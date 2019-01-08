@@ -74,7 +74,7 @@ func NewFixtures(t *testing.T) *Fixtures {
 }
 
 // InitFixtures is called at the beginning of a test
-// and initalizes a chain with 1 validator
+// and initializes a chain with 1 validator
 func InitFixtures(t *testing.T) (f *Fixtures) {
 	f = NewFixtures(t)
 

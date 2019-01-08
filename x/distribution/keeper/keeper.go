@@ -60,10 +60,23 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 
 // withdraw validator commission
 func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Error {
+
+	// fetch validator accumulated commission
+	commission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
+	if commission.IsZero() {
+		return types.ErrNoValidatorCommission(k.codespace)
+	}
+
+	coins, remainder := commission.TruncateDecimal()
+
+	// leave remainder to withdraw later
+	k.SetValidatorAccumulatedCommission(ctx, valAddr, remainder)
+
+	// update outstanding
+	outstanding := k.GetOutstandingRewards(ctx)
+	k.SetOutstandingRewards(ctx, outstanding.Minus(sdk.NewDecCoins(coins)))
+
 	accAddr := sdk.AccAddress(valAddr)
-
-	var coins sdk.Coins
-
 	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
 
 	if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {

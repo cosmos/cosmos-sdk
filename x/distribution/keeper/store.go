@@ -167,6 +167,9 @@ func (k Keeper) IterateValidatorCurrentRewards(ctx sdk.Context, handler func(val
 func (k Keeper) GetValidatorAccumulatedCommission(ctx sdk.Context, val sdk.ValAddress) (commission types.ValidatorAccumulatedCommission) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(GetValidatorAccumulatedCommissionKey(val))
+	if b == nil {
+		return types.ValidatorAccumulatedCommission{}
+	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &commission)
 	return
 }

@@ -36,7 +36,7 @@ type ValidatorCurrentRewardsRecord struct {
 type DelegatorStartingInfoRecord struct {
 	DelegatorAddr sdk.AccAddress        `json:"delegator_addr"`
 	ValidatorAddr sdk.ValAddress        `json:"validator_addr"`
-	StartingInfo  DelegatorStartingInfo `json:"starting_info'`
+	StartingInfo  DelegatorStartingInfo `json:"starting_info"`
 }
 
 // used for import / export via genesis json

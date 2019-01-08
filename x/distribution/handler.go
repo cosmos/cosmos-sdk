@@ -23,7 +23,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 	}
 }
 
-// These functions assume everything has been authenticated
+// These functions assume everything has been authenticated (ValidateBasic passed, and signatures checked)
 
 func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAddress, k keeper.Keeper) sdk.Result {
 

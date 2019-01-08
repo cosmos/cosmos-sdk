@@ -55,5 +55,6 @@ func (h Hooks) OnValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk
 func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	// record the slash event
 	h.k.updateValidatorSlashFraction(ctx, valAddr, fraction)
 }

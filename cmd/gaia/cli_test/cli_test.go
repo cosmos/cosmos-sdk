@@ -33,16 +33,13 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	proc := f.GDStart(fmt.Sprintf("--minimum_fees=%s", sdk.NewInt64Coin(feeDenom, 2)))
 	defer proc.Stop(false)
 
-	// Wait for the chain to start
-	tests.WaitForTMStart(f.Port)
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
 	// Check the amount of coins in the foo account to ensure that the right amount exists
 	fooAcc := f.QueryAccount(f.KeyAddress(keyFoo))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
-	// Send a transaction
-	f.TxSend(keyFoo, f.KeyAddress(keyBar), sdk.NewInt64Coin(denom, 10))
+	// Send a transaction that will get rejected
+	success := f.TxSend(keyFoo, f.KeyAddress(keyBar), sdk.NewInt64Coin(denom, 10))
+	require.False(f.T, success)
 
 	// Cleanup testing directories
 	f.Cleanup()

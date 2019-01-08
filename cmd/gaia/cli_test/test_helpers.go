@@ -178,7 +178,10 @@ func (f *Fixtures) CollectGenTxs(flags ...string) {
 // GDStart runs gaiad start with the appropriate flags and returns a process
 func (f *Fixtures) GDStart(flags ...string) *tests.Process {
 	cmd := fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GDHome, f.RPCAddr, f.P2PAddr)
-	return tests.GoExecuteTWithStdout(f.T, addFlags(cmd, flags))
+	proc := tests.GoExecuteTWithStdout(f.T, addFlags(cmd, flags))
+	tests.WaitForTMStart(f.Port)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+	return proc
 }
 
 func initializeFixtures(t *testing.T) (f *Fixtures) {
@@ -207,10 +210,9 @@ func initializeFixtures(t *testing.T) (f *Fixtures) {
 }
 
 // TxSend is gaiacli tx send
-func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) {
+func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) bool {
 	cmd := fmt.Sprintf("gaiacli tx send %v --amount=%s --to=%s --from=%s", f.Flags(), amount, to, from)
-	success := executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
-	require.False(f.T, success)
+	return executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
 // NEW

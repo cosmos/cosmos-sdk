@@ -223,6 +223,8 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 	kp = kp.AppendKey([]byte(storeName), merkle.KeyEncodingURL)
 	kp = kp.AppendKey(resp.Key, merkle.KeyEncodingURL)
 
+	// if the value is empty verify without value
+	// else verify with value
 	if len(resp.Value) == 0 {
 		err = prt.VerifyAbsence(resp.Proof, commit.Header.AppHash, kp.String())
 	} else {

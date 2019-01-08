@@ -7,8 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"testing"
-
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"time"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
@@ -27,7 +26,7 @@ import (
 
 func TestGaiaCLIMinimumFees(t *testing.T) {
 	t.Parallel()
-	f := initializeFixtures(t)
+	f := InitFixtures(t)
 
 	// start gaiad server with minimum fees
 	fees := fmt.Sprintf("--minimum_fees=%s,%s", sdk.NewInt64Coin(feeDenom, 2), sdk.NewInt64Coin(denom, 2))
@@ -70,7 +69,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 
 func TestGaiaCLIFeesDeduction(t *testing.T) {
 	t.Parallel()
-	f := initializeFixtures(t)
+	f := InitFixtures(t)
 
 	// start gaiad server with minimum fees
 	proc := f.GDStart(fmt.Sprintf("--minimum_fees=%s", sdk.NewInt64Coin(fooDenom, 1)))
@@ -120,7 +119,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 func TestGaiaCLISend(t *testing.T) {
 	t.Parallel()
-	f := initializeFixtures(t)
+	f := InitFixtures(t)
 
 	// start gaiad server
 	proc := f.GDStart()
@@ -176,7 +175,7 @@ func TestGaiaCLISend(t *testing.T) {
 
 func TestGaiaCLIGasAuto(t *testing.T) {
 	t.Parallel()
-	f := initializeFixtures(t)
+	f := InitFixtures(t)
 
 	// start gaiad server
 	proc := f.GDStart()
@@ -236,7 +235,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 
 func TestGaiaCLICreateValidator(t *testing.T) {
 	t.Parallel()
-	f := initializeFixtures(t)
+	f := InitFixtures(t)
 
 	// start gaiad server
 	proc := f.GDStart()
@@ -319,7 +318,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 func TestGaiaCLISubmitProposal(t *testing.T) {
 	t.Parallel()
-	f := initializeFixtures(t)
+	f := InitFixtures(t)
 
 	// start gaiad server
 	proc := f.GDStart()
@@ -460,7 +459,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 func TestGaiaCLIValidateSignatures(t *testing.T) {
 	t.Parallel()
-	f := initializeFixtures(t)
+	f := InitFixtures(t)
 
 	// start gaiad server
 	proc := f.GDStart()
@@ -510,7 +509,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 
 func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	t.Parallel()
-	f := initializeFixtures(t)
+	f := InitFixtures(t)
 
 	// start gaiad server
 	proc := f.GDStart()
@@ -601,7 +600,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 func TestGaiaCLIConfig(t *testing.T) {
 	t.Parallel()
-	f := initializeFixtures(t)
+	f := InitFixtures(t)
 	node := fmt.Sprintf("%s:%s", f.RPCAddr, f.Port)
 
 	// Set available configuration options
@@ -620,7 +619,8 @@ trace = false
 trust-node = true
 `, f.ChainID, node)
 	require.Equal(t, expectedConfig, string(config))
-	cleanupDirs(f.GDHome, f.GCLIHome)
+
+	f.Cleanup()
 }
 
 func TestGaiadCollectGentxs(t *testing.T) {
@@ -659,32 +659,16 @@ func TestGaiadCollectGentxs(t *testing.T) {
 	f.Cleanup(gentxDir)
 }
 
-// ---------------------------------------------------------------------------
-// Slashing
-
 func TestSlashingGetParams(t *testing.T) {
 	t.Parallel()
-	cdc := app.MakeCodec()
-	f := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", f.GCLIHome, f.RPCAddr, f.ChainID)
+	f := InitFixtures(t)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(
-		t,
-		fmt.Sprintf(
-			"gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v",
-			f.GDHome, f.RPCAddr, f.P2PAddr,
-		),
-	)
-
+	proc := f.GDStart()
 	defer proc.Stop(false)
-	tests.WaitForTMStart(f.Port)
-	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	res, errStr := tests.ExecuteT(t, fmt.Sprintf("gaiacli query slashing params %s", flags), "")
-	require.Empty(t, errStr)
-
-	var params slashing.Params
-	err := cdc.UnmarshalJSON([]byte(res), &params)
-	require.NoError(t, err)
+	params := f.QuerySlashingParams()
+	require.Equal(t, time.Duration(120000000000), params.MaxEvidenceAge)
+	require.Equal(t, int64(100), params.SignedBlocksWindow)
+	require.Equal(t, sdk.NewDecWithPrec(5, 1), params.MinSignedPerWindow)
 }

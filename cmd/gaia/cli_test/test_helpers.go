@@ -9,11 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tendermint/tendermint/types"
-
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -25,12 +22,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
 )
 
 const (
-	denom    = stakeTypes.DefaultBondDenom
+	denom    = "stake"
 	keyFoo   = "foo"
 	keyBar   = "bar"
 	fooDenom = "footoken"
@@ -43,6 +40,9 @@ var startCoins = sdk.Coins{
 	sdk.NewInt64Coin(denom, 150),
 }
 
+//___________________________________________________________________________________
+// Fixtures
+
 // Fixtures is used to setup the testing environment
 type Fixtures struct {
 	ChainID  string
@@ -54,6 +54,7 @@ type Fixtures struct {
 	T        *testing.T
 }
 
+// NewFixtures creates a new instance of Fixtures with many vars set
 func NewFixtures(t *testing.T) *Fixtures {
 	tmpDir := os.TempDir()
 	gaiadHome := fmt.Sprintf("%s%s%s%s.test_gaiad", tmpDir, string(os.PathSeparator), t.Name(), string(os.PathSeparator))
@@ -72,10 +73,39 @@ func NewFixtures(t *testing.T) *Fixtures {
 	}
 }
 
+// InitFixtures is called at the beginning of a test
+// and initalizes a chain with 1 validator
+func InitFixtures(t *testing.T) (f *Fixtures) {
+	f = NewFixtures(t)
+
+	// Reset test state
+	f.UnsafeResetAll()
+
+	// Ensure keystore has foo and bar keys
+	f.KeysDelete(keyFoo)
+	f.KeysDelete(keyBar)
+	f.KeysAdd(keyFoo)
+	f.KeysAdd(keyBar)
+
+	// Ensure that CLI output is in JSON format
+	f.CLIConfig("output", "json")
+
+	// NOTE: GDInit sets the ChainID
+	f.GDInit(keyFoo)
+
+	// Start an account with tokens
+	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
+	f.GenTx(keyFoo)
+	f.CollectGenTxs()
+	return
+}
+
 // Cleanup is meant to be run at the end of a test to clean up an remaining test state
 func (f *Fixtures) Cleanup(dirs ...string) {
 	clean := append(dirs, f.GDHome, f.GCLIHome)
-	cleanupDirs(clean...)
+	for _, d := range clean {
+		os.RemoveAll(d)
+	}
 }
 
 // Flags returns the flags necessary for making most CLI calls
@@ -83,12 +113,63 @@ func (f *Fixtures) Flags() string {
 	return fmt.Sprintf("--home=%s --node=%s --chain-id=%s", f.GCLIHome, f.RPCAddr, f.ChainID)
 }
 
+//___________________________________________________________________________________
+// gaiad
+
 // UnsafeResetAll is gaiad unsafe-reset-all
 func (f *Fixtures) UnsafeResetAll(flags ...string) {
 	cmd := fmt.Sprintf("gaiad --home=%s unsafe-reset-all", f.GDHome)
 	executeWrite(f.T, addFlags(cmd, flags))
 	os.RemoveAll(filepath.Join(f.GDHome, "config", "gentx"))
 }
+
+// GDInit is gaiad init
+// NOTE: GDInit sets the ChainID for the Fixtures instance
+func (f *Fixtures) GDInit(moniker string, flags ...string) {
+	cmd := fmt.Sprintf("gaiad init -o --moniker=%s --home=%s", moniker, f.GDHome)
+	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+
+	var chainID string
+	var initRes map[string]json.RawMessage
+
+	err := json.Unmarshal([]byte(stderr), &initRes)
+	require.NoError(f.T, err)
+
+	err = json.Unmarshal(initRes["chain_id"], &chainID)
+	require.NoError(f.T, err)
+
+	f.ChainID = chainID
+}
+
+// AddGenesisAccount is gaiad add-genesis-account
+func (f *Fixtures) AddGenesisAccount(address sdk.AccAddress, coins sdk.Coins, flags ...string) {
+	cmd := fmt.Sprintf("gaiad add-genesis-account %s %s --home=%s", address, coins, f.GDHome)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags))
+}
+
+// GenTx is gaiad gentx
+func (f *Fixtures) GenTx(name string, flags ...string) {
+	cmd := fmt.Sprintf("gaiad gentx --name=%s --home=%s --home-client=%s", name, f.GDHome, f.GCLIHome)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// CollectGenTxs is gaiad collect-gentxs
+func (f *Fixtures) CollectGenTxs(flags ...string) {
+	cmd := fmt.Sprintf("gaiad collect-gentxs --home=%s", f.GDHome)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// GDStart runs gaiad start with the appropriate flags and returns a process
+func (f *Fixtures) GDStart(flags ...string) *tests.Process {
+	cmd := fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GDHome, f.RPCAddr, f.P2PAddr)
+	proc := tests.GoExecuteTWithStdout(f.T, addFlags(cmd, flags))
+	tests.WaitForTMStart(f.Port)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+	return proc
+}
+
+//___________________________________________________________________________________
+// gaiacli keys
 
 // KeysDelete is gaiacli keys delete
 func (f *Fixtures) KeysDelete(name string, flags ...string) {
@@ -120,88 +201,17 @@ func (f *Fixtures) KeyAddress(name string) sdk.AccAddress {
 	return accAddr
 }
 
+//___________________________________________________________________________________
+// gaiacli config
+
 // CLIConfig is gaiacli config
 func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 	cmd := fmt.Sprintf("gaiacli config --home=%s %s %s", f.GCLIHome, key, value)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags))
 }
 
-// GDInit is gaiad init
-// NOTE: GDInit sets the ChainID for the Fixtures instance
-func (f *Fixtures) GDInit(moniker string, flags ...string) {
-	cmd := fmt.Sprintf("gaiad init -o --moniker=%s --home=%s", moniker, f.GDHome)
-	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
-
-	var chainID string
-	var initRes map[string]json.RawMessage
-
-	err := json.Unmarshal([]byte(stderr), &initRes)
-	require.NoError(f.T, err)
-
-	err = json.Unmarshal(initRes["chain_id"], &chainID)
-	require.NoError(f.T, err)
-
-	f.ChainID = chainID
-}
-
-func addFlags(cmd string, flags []string) string {
-	for _, f := range flags {
-		cmd += " " + f
-	}
-	return strings.TrimSpace(cmd)
-}
-
-// AddGenesisAccount is gaiad add-genesis-account
-func (f *Fixtures) AddGenesisAccount(address sdk.AccAddress, coins sdk.Coins, flags ...string) {
-	cmd := fmt.Sprintf("gaiad add-genesis-account %s %s --home=%s", address, coins, f.GDHome)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags))
-}
-
-// GenTx is gaiad gentx
-func (f *Fixtures) GenTx(name string, flags ...string) {
-	cmd := fmt.Sprintf("gaiad gentx --name=%s --home=%s --home-client=%s", name, f.GDHome, f.GCLIHome)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
-}
-
-// CollectGenTxs is gaiad collect-gentxs
-func (f *Fixtures) CollectGenTxs(flags ...string) {
-	cmd := fmt.Sprintf("gaiad collect-gentxs --home=%s", f.GDHome)
-	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
-}
-
-// GDStart runs gaiad start with the appropriate flags and returns a process
-func (f *Fixtures) GDStart(flags ...string) *tests.Process {
-	cmd := fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GDHome, f.RPCAddr, f.P2PAddr)
-	proc := tests.GoExecuteTWithStdout(f.T, addFlags(cmd, flags))
-	tests.WaitForTMStart(f.Port)
-	tests.WaitForNextNBlocksTM(1, f.Port)
-	return proc
-}
-
-func initializeFixtures(t *testing.T) (f *Fixtures) {
-	f = NewFixtures(t)
-
-	// Reset test state
-	f.UnsafeResetAll()
-
-	// Ensure keystore has foo and bar keys
-	f.KeysDelete(keyFoo)
-	f.KeysDelete(keyBar)
-	f.KeysAdd(keyFoo)
-	f.KeysAdd(keyBar)
-
-	// Ensure that CLI output is in JSON format
-	f.CLIConfig("output", "json")
-
-	// NOTE: GDInit sets the ChainID
-	f.GDInit(keyFoo)
-
-	// Start an account with tokens
-	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
-	f.GenTx(keyFoo)
-	f.CollectGenTxs()
-	return
-}
+//___________________________________________________________________________________
+// gaiacli tx send/sign/broadcast
 
 // TxSend is gaiacli tx send
 func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
@@ -221,6 +231,9 @@ func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, 
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
+//___________________________________________________________________________________
+// gaiacli tx stake
+
 // TxStakeCreateValidator is gaiacli tx stake create-validator
 func (f *Fixtures) TxStakeCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("gaiacli tx stake create-validator %v --from=%s --pubkey=%s", f.Flags(), from, consPubKey)
@@ -234,6 +247,9 @@ func (f *Fixtures) TxStakeUnbond(from, shares string, validator sdk.ValAddress, 
 	cmd := fmt.Sprintf("gaiacli tx stake unbond %v --from=%s --validator=%s --shares-amount=%v", f.Flags(), from, validator, shares)
 	return executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
+
+//___________________________________________________________________________________
+// gaiacli tx gov
 
 // TxGovSubmitProposal is gaiacli tx gov submit-proposal
 func (f *Fixtures) TxGovSubmitProposal(from, typ, title, description string, deposit sdk.Coin, flags ...string) (bool, string, string) {
@@ -254,104 +270,8 @@ func (f *Fixtures) TxGovVote(proposalID int, option gov.VoteOption, from string,
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
-// NEW
-// -------------------------------------------
-// OLD
-
-func marshalStdTx(t *testing.T, stdTx auth.StdTx) []byte {
-	cdc := app.MakeCodec()
-	bz, err := cdc.MarshalBinaryBare(stdTx)
-	require.NoError(t, err)
-	return bz
-}
-
-func unmarshalStdTx(t *testing.T, s string) (stdTx auth.StdTx) {
-	cdc := app.MakeCodec()
-	require.Nil(t, cdc.UnmarshalJSON([]byte(s), &stdTx))
-	return
-}
-
-func writeToNewTempFile(t *testing.T, s string) *os.File {
-	fp, err := ioutil.TempFile(os.TempDir(), "cosmos_cli_test_")
-	require.Nil(t, err)
-	_, err = fp.WriteString(s)
-	require.Nil(t, err)
-	return fp
-}
-
-func readGenesisFile(t *testing.T, genFile string) types.GenesisDoc {
-	var genDoc types.GenesisDoc
-	fp, err := os.Open(genFile)
-	require.NoError(t, err)
-	fileContents, err := ioutil.ReadAll(fp)
-	require.NoError(t, err)
-	defer fp.Close()
-	err = codec.Cdc.UnmarshalJSON(fileContents, &genDoc)
-	require.NoError(t, err)
-	return genDoc
-}
-
 //___________________________________________________________________________________
-// executors
-
-func executeWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {
-	require.True(t, executeWrite(t, cmdStr, writes...))
-}
-
-func executeWrite(t *testing.T, cmdStr string, writes ...string) (exitSuccess bool) {
-	exitSuccess, _, _ = executeWriteRetStdStreams(t, cmdStr, writes...)
-	return
-}
-
-func executeWriteRetStdStreams(t *testing.T, cmdStr string, writes ...string) (bool, string, string) {
-	proc := tests.GoExecuteT(t, cmdStr)
-
-	for _, write := range writes {
-		_, err := proc.StdinPipe.Write([]byte(write + "\n"))
-		require.NoError(t, err)
-	}
-	stdout, stderr, err := proc.ReadAll()
-	if err != nil {
-		fmt.Println("Err on proc.ReadAll()", err, cmdStr)
-	}
-	// Log output.
-	if len(stdout) > 0 {
-		t.Log("Stdout:", cmn.Green(string(stdout)))
-	}
-	if len(stderr) > 0 {
-		t.Log("Stderr:", cmn.Red(string(stderr)))
-	}
-
-	proc.Wait()
-	return proc.ExitState.Success(), string(stdout), string(stderr)
-}
-
-func executeInit(t *testing.T, cmdStr string) (chainID string) {
-	_, stderr := tests.ExecuteT(t, cmdStr, app.DefaultKeyPass)
-
-	var initRes map[string]json.RawMessage
-	err := json.Unmarshal([]byte(stderr), &initRes)
-	require.NoError(t, err)
-
-	err = json.Unmarshal(initRes["chain_id"], &chainID)
-	require.NoError(t, err)
-
-	return
-}
-
-func executeGetAddrPK(t *testing.T, cmdStr string) (sdk.AccAddress, crypto.PubKey) {
-	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var ko keys.KeyOutput
-	keys.UnmarshalJSON([]byte(out), &ko)
-
-	pk, err := sdk.GetAccPubKeyBech32(ko.PubKey)
-	require.NoError(t, err)
-
-	accAddr, err := sdk.AccAddressFromBech32(ko.Address)
-	require.NoError(t, err)
-
-	return accAddr, pk
-}
+// gaiacli query account
 
 // QueryAccount is gaiacli query account
 func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.BaseAccount {
@@ -369,23 +289,8 @@ func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.Ba
 	return acc
 }
 
-// TODO: Delete
-func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
-	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var initRes map[string]json.RawMessage
-	err := json.Unmarshal([]byte(out), &initRes)
-	require.NoError(t, err, "out %v, err %v", out, err)
-	value := initRes["value"]
-	var acc auth.BaseAccount
-	cdc := codec.New()
-	codec.RegisterCrypto(cdc)
-	err = cdc.UnmarshalJSON(value, &acc)
-	require.NoError(t, err, "value %v, err %v", string(value), err)
-	return acc
-}
-
 //___________________________________________________________________________________
-// txs
+// gaiacli query txs
 
 // QueryTxs is gaiacli query txs
 func (f *Fixtures) QueryTxs(tags ...string) []tx.Info {
@@ -398,15 +303,8 @@ func (f *Fixtures) QueryTxs(tags ...string) []tx.Info {
 	return txs
 }
 
-func queryTags(tags []string) (out string) {
-	for _, tag := range tags {
-		out += tag + "&"
-	}
-	return strings.TrimSuffix(out, "&")
-}
-
 //___________________________________________________________________________________
-// stake
+// gaiacli query stake
 
 // QueryStakeValidator is gaiacli query stake validator
 func (f *Fixtures) QueryStakeValidator(valAddr sdk.ValAddress, flags ...string) stake.Validator {
@@ -428,15 +326,6 @@ func (f *Fixtures) QueryStakeUnbondingDelegationsFrom(valAddr sdk.ValAddress, fl
 	err := cdc.UnmarshalJSON([]byte(out), &ubds)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return ubds
-}
-
-func executeGetValidatorRedelegations(t *testing.T, cmdStr string) []stake.Redelegation {
-	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var reds []stake.Redelegation
-	cdc := app.MakeCodec()
-	err := cdc.UnmarshalJSON([]byte(out), &reds)
-	require.NoError(t, err, "out %v\n, err %v", out, err)
-	return reds
 }
 
 // QueryStakeDelegationsTo is gaiacli query stake delegations-to
@@ -473,7 +362,7 @@ func (f *Fixtures) QueryStakeParameters(flags ...string) stake.Params {
 }
 
 //___________________________________________________________________________________
-// gov
+// gaiacli query gov
 
 // QueryGovParamDeposit is gaiacli query gov param deposit
 func (f *Fixtures) QueryGovParamDeposit() gov.DepositParams {
@@ -571,18 +460,97 @@ func (f *Fixtures) QueryGovDeposits(propsalID int, flags ...string) []gov.Deposi
 	return deposits
 }
 
-// TODO: Delete
-func executeGetDeposits(t *testing.T, cmdStr string) []gov.Deposit {
-	out, _ := tests.ExecuteT(t, cmdStr, "")
-	var deposits []gov.Deposit
+//___________________________________________________________________________________
+// query slashing
+
+// QuerySlashingParams is gaiacli query slashing params
+func (f *Fixtures) QuerySlashingParams() slashing.Params {
+	cmd := fmt.Sprintf("gaiacli query slashing params %s", f.Flags())
+	res, errStr := tests.ExecuteT(f.T, cmd, "")
+	require.Empty(f.T, errStr)
 	cdc := app.MakeCodec()
-	err := cdc.UnmarshalJSON([]byte(out), &deposits)
-	require.NoError(t, err, "out %v\n, err %v", out, err)
-	return deposits
+	var params slashing.Params
+	err := cdc.UnmarshalJSON([]byte(res), &params)
+	require.NoError(f.T, err)
+	return params
 }
 
-func cleanupDirs(dirs ...string) {
-	for _, d := range dirs {
-		os.RemoveAll(d)
+//___________________________________________________________________________________
+// executors
+
+func executeWriteCheckErr(t *testing.T, cmdStr string, writes ...string) {
+	require.True(t, executeWrite(t, cmdStr, writes...))
+}
+
+func executeWrite(t *testing.T, cmdStr string, writes ...string) (exitSuccess bool) {
+	exitSuccess, _, _ = executeWriteRetStdStreams(t, cmdStr, writes...)
+	return
+}
+
+func executeWriteRetStdStreams(t *testing.T, cmdStr string, writes ...string) (bool, string, string) {
+	proc := tests.GoExecuteT(t, cmdStr)
+
+	// Enables use of interactive commands
+	for _, write := range writes {
+		_, err := proc.StdinPipe.Write([]byte(write + "\n"))
+		require.NoError(t, err)
 	}
+
+	// Read both stdout and stderr from the process
+	stdout, stderr, err := proc.ReadAll()
+	if err != nil {
+		fmt.Println("Err on proc.ReadAll()", err, cmdStr)
+	}
+
+	// Log output.
+	if len(stdout) > 0 {
+		t.Log("Stdout:", cmn.Green(string(stdout)))
+	}
+	if len(stderr) > 0 {
+		t.Log("Stderr:", cmn.Red(string(stderr)))
+	}
+
+	// Wait for process to exit
+	proc.Wait()
+
+	// Return succes, stdout, stderr
+	return proc.ExitState.Success(), string(stdout), string(stderr)
+}
+
+//___________________________________________________________________________________
+// utils
+
+func addFlags(cmd string, flags []string) string {
+	for _, f := range flags {
+		cmd += " " + f
+	}
+	return strings.TrimSpace(cmd)
+}
+
+func queryTags(tags []string) (out string) {
+	for _, tag := range tags {
+		out += tag + "&"
+	}
+	return strings.TrimSuffix(out, "&")
+}
+
+func writeToNewTempFile(t *testing.T, s string) *os.File {
+	fp, err := ioutil.TempFile(os.TempDir(), "cosmos_cli_test_")
+	require.Nil(t, err)
+	_, err = fp.WriteString(s)
+	require.Nil(t, err)
+	return fp
+}
+
+func marshalStdTx(t *testing.T, stdTx auth.StdTx) []byte {
+	cdc := app.MakeCodec()
+	bz, err := cdc.MarshalBinaryBare(stdTx)
+	require.NoError(t, err)
+	return bz
+}
+
+func unmarshalStdTx(t *testing.T, s string) (stdTx auth.StdTx) {
+	cdc := app.MakeCodec()
+	require.Nil(t, cdc.UnmarshalJSON([]byte(s), &stdTx))
+	return
 }

@@ -13,28 +13,74 @@ type DelegatorWithdrawInfo struct {
 	WithdrawAddr  sdk.AccAddress `json:"withdraw_addr"`
 }
 
+// used for import / export via genesis json
+type ValidatorAccumulatedCommissionRecord struct {
+	ValidatorAddr sdk.ValAddress                 `json:"validator_addr"`
+	Accumulated   ValidatorAccumulatedCommission `json:"accumulated"`
+}
+
+// used for import / export via genesis json
+type ValidatorHistoricalRewardsRecord struct {
+	ValidatorAddr sdk.ValAddress             `json:"validator_addr"`
+	Period        uint64                     `json:"period"`
+	Rewards       ValidatorHistoricalRewards `json:"rewards"`
+}
+
+// used for import / export via genesis json
+type ValidatorCurrentRewardsRecord struct {
+	ValidatorAddr sdk.ValAddress          `json:"validator_addr"`
+	Rewards       ValidatorCurrentRewards `json:"rewards"`
+}
+
+// used for import / export via genesis json
+type DelegatorStartingInfoRecord struct {
+	DelegatorAddr sdk.AccAddress        `json:"delegator_addr"`
+	ValidatorAddr sdk.ValAddress        `json:"validator_addr"`
+	StartingInfo  DelegatorStartingInfo `json:"starting_info'`
+}
+
+// used for import / export via genesis json
+type ValidatorSlashEventRecord struct {
+	ValidatorAddr sdk.ValAddress      `json:"validator_addr"`
+	Height        uint64              `json:"height"`
+	Event         ValidatorSlashEvent `json:"validator_slash_event"`
+}
+
 // GenesisState - all distribution state that must be provided at genesis
 type GenesisState struct {
-	FeePool                FeePool                 `json:"fee_pool"`
-	CommunityTax           sdk.Dec                 `json:"community_tax"`
-	BaseProposerReward     sdk.Dec                 `json:"base_proposer_reward"`
-	BonusProposerReward    sdk.Dec                 `json:"bonus_proposer_reward"`
-	DelegatorWithdrawInfos []DelegatorWithdrawInfo `json:"delegator_withdraw_infos"`
-	PreviousProposer       sdk.ConsAddress         `json:"previous_proposer"`
-	OutstandingRewards     sdk.DecCoins            `json:"outstanding_rewards"`
+	FeePool                         FeePool                                `json:"fee_pool"`
+	CommunityTax                    sdk.Dec                                `json:"community_tax"`
+	BaseProposerReward              sdk.Dec                                `json:"base_proposer_reward"`
+	BonusProposerReward             sdk.Dec                                `json:"bonus_proposer_reward"`
+	DelegatorWithdrawInfos          []DelegatorWithdrawInfo                `json:"delegator_withdraw_infos"`
+	PreviousProposer                sdk.ConsAddress                        `json:"previous_proposer"`
+	OutstandingRewards              sdk.DecCoins                           `json:"outstanding_rewards"`
+	ValidatorAccumulatedCommissions []ValidatorAccumulatedCommissionRecord `json:"validator_accumulated_commissions"`
+	ValidatorHistoricalRewards      []ValidatorHistoricalRewardsRecord     `json:"validator_historical_rewards"`
+	ValidatorCurrentRewards         []ValidatorCurrentRewardsRecord        `json:"validator_current_rewards"`
+	DelegatorStartingInfos          []DelegatorStartingInfoRecord          `json:"delegator_starting_infos"`
+	ValidatorSlashEvents            []ValidatorSlashEventRecord            `json:"validator_slash_events"`
 }
 
 func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
-	dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r OutstandingRewards) GenesisState {
+	dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r OutstandingRewards,
+	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
+	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord,
+	slashes []ValidatorSlashEventRecord) GenesisState {
 
 	return GenesisState{
-		FeePool:                feePool,
-		CommunityTax:           communityTax,
-		BaseProposerReward:     baseProposerReward,
-		BonusProposerReward:    bonusProposerReward,
-		DelegatorWithdrawInfos: dwis,
-		PreviousProposer:       pp,
-		OutstandingRewards:     r,
+		FeePool:                         feePool,
+		CommunityTax:                    communityTax,
+		BaseProposerReward:              baseProposerReward,
+		BonusProposerReward:             bonusProposerReward,
+		DelegatorWithdrawInfos:          dwis,
+		PreviousProposer:                pp,
+		OutstandingRewards:              r,
+		ValidatorAccumulatedCommissions: acc,
+		ValidatorHistoricalRewards:      historical,
+		ValidatorCurrentRewards:         cur,
+		DelegatorStartingInfos:          dels,
+		ValidatorSlashEvents:            slashes,
 	}
 }
 

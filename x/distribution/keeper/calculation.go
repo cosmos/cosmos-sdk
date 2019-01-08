@@ -9,16 +9,16 @@ import (
 // initialize rewards for a new validator
 func (k Keeper) initializeValidator(ctx sdk.Context, val sdk.Validator) {
 	// set initial historical rewards (period 0)
-	k.setValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.ValidatorHistoricalRewards{})
+	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.ValidatorHistoricalRewards{})
 
 	// set current rewards (starting at period 1)
-	k.setValidatorCurrentRewards(ctx, val.GetOperator(), types.ValidatorCurrentRewards{
+	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.ValidatorCurrentRewards{
 		Rewards: sdk.DecCoins{},
 		Period:  1,
 	})
 
 	// set accumulated commission
-	k.setValidatorAccumulatedCommission(ctx, val.GetOperator(), types.ValidatorAccumulatedCommission{})
+	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), types.ValidatorAccumulatedCommission{})
 }
 
 // increment validator period, returning the period just ended
@@ -40,11 +40,11 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1)
 
 	// Set new historical rewards
-	k.setValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, historical.Plus(current))
+	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, historical.Plus(current))
 
 	// Set current rewards, incrementing period by 1
 	newPeriod := rewards.Period + 1
-	k.setValidatorCurrentRewards(ctx, val.GetOperator(), types.ValidatorCurrentRewards{
+	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.ValidatorCurrentRewards{
 		Rewards: sdk.DecCoins{},
 		Period:  newPeriod,
 	})
@@ -61,7 +61,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	// calculate delegation stake in tokens
 	// TODO need to make sure this truncates instead of rounding
 	stake := delegation.GetShares().Mul(validator.GetDelegatorShareExRate())
-	k.setDelegatorStartingInfo(ctx, val, del, types.DelegatorStartingInfo{
+	k.SetDelegatorStartingInfo(ctx, val, del, types.DelegatorStartingInfo{
 		PreviousPeriod: period - 1,
 		Stake:          stake,
 		Height:         uint64(ctx.BlockHeight()),
@@ -95,7 +95,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	endingHeight := uint64(ctx.BlockHeight())
 	// if we're still in the same block, no slashes can yet have happened
 	if endingHeight > startingHeight {
-		k.IterateValidatorSlashEvents(ctx, del.GetValidatorAddr(), startingHeight, endingHeight, func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
+		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight, func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 			stake = stake.Mul(sdk.OneDec().Sub(event.Fraction))
 			endingPeriod := event.ValidatorPeriod
 			rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
@@ -141,7 +141,7 @@ func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAdd
 		currentFraction = current.Fraction
 	}
 	updatedFraction := sdk.OneDec().Sub(sdk.OneDec().Sub(currentFraction).Mul(sdk.OneDec().Sub(fraction)))
-	k.setValidatorSlashEvent(ctx, valAddr, height, types.ValidatorSlashEvent{
+	k.SetValidatorSlashEvent(ctx, valAddr, height, types.ValidatorSlashEvent{
 		ValidatorPeriod: currentPeriod,
 		Fraction:        updatedFraction,
 	})

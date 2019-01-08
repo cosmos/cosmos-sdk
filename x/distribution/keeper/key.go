@@ -29,11 +29,6 @@ var (
 	ParamStoreKeyBonusProposerReward = []byte("bonusproposerreward")
 )
 
-// gets the key for a delegator's withdraw info
-func GetDelegatorWithdrawAddrKey(delAddr sdk.AccAddress) []byte {
-	return append(DelegatorWithdrawAddrPrefix, delAddr.Bytes()...)
-}
-
 // gets an address from a delegator's withdraw info key
 func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 	addr := key[1:]
@@ -43,13 +38,72 @@ func GetDelegatorWithdrawInfoAddress(key []byte) (delAddr sdk.AccAddress) {
 	return sdk.AccAddress(addr)
 }
 
-// gets the height from a validator's slash fraction key
-func GetValidatorSlashEventHeight(key []byte) (height uint64) {
+// gets the addresses from a delegator starting info key
+func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delAddr sdk.AccAddress) {
+	addr := key[1 : 1+sdk.AddrLen]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	valAddr = sdk.ValAddress(addr)
+	addr = key[1+sdk.AddrLen:]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	delAddr = sdk.AccAddress(addr)
+	return
+}
+
+// gets the address & period from a validator's historical rewards key
+func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddress, period uint64) {
+	addr := key[1 : 1+sdk.AddrLen]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	valAddr = sdk.ValAddress(addr)
 	b := key[1+sdk.AddrLen:]
 	if len(b) != 8 {
 		panic("unexpected key length")
 	}
-	return binary.BigEndian.Uint64(b)
+	period = binary.LittleEndian.Uint64(b)
+	return
+}
+
+// gets the address from a validator's current rewards key
+func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	return sdk.ValAddress(addr)
+}
+
+// gets the address from a validator's accumulated commission key
+func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddress) {
+	addr := key[1:]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	return sdk.ValAddress(addr)
+}
+
+// gets the height from a validator's slash event key
+func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, height uint64) {
+	addr := key[1 : 1+sdk.AddrLen]
+	if len(addr) != sdk.AddrLen {
+		panic("unexpected key length")
+	}
+	valAddr = sdk.ValAddress(addr)
+	b := key[1+sdk.AddrLen:]
+	if len(b) != 8 {
+		panic("unexpected key length")
+	}
+	height = binary.BigEndian.Uint64(b)
+	return
+}
+
+// gets the key for a delegator's withdraw addr
+func GetDelegatorWithdrawAddrKey(delAddr sdk.AccAddress) []byte {
+	return append(DelegatorWithdrawAddrPrefix, delAddr.Bytes()...)
 }
 
 // gets the key for a delegator's starting info

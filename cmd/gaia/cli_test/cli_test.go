@@ -28,26 +28,24 @@ import (
 func TestGaiaCLIMinimumFees(t *testing.T) {
 	t.Parallel()
 	f := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", f.GCLIHome, f.RPCAddr, f.ChainID)
 
 	// start gaiad server with minimum fees
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=2feetoken", f.GDHome, f.RPCAddr, f.P2PAddr))
-
+	proc := f.GDStart(fmt.Sprintf("--minimum_fees=%s", sdk.NewInt64Coin(feeDenom, 2)))
 	defer proc.Stop(false)
+
+	// Wait for the chain to start
 	tests.WaitForTMStart(f.Port)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", f.GCLIHome))
-	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", f.GCLIHome))
-
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
+	// Check the amount of coins in the foo account to ensure that the right amount exists
+	fooAcc := f.QueryAccount(f.KeyAddress(keyFoo))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
-	// Ensure that a tx with no fees fails
-	success := executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
-	require.False(t, success)
-	cleanupDirs(f.GDHome, f.GCLIHome)
+	// Send a transaction
+	f.TxSend(keyFoo, f.KeyAddress(keyBar), sdk.NewInt64Coin(denom, 10))
+
+	// Cleanup testing directories
+	f.Cleanup()
 }
 
 func TestGaiaCLIFeesDeduction(t *testing.T) {

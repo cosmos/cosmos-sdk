@@ -31,6 +31,8 @@ import (
 
 const (
 	denom    = stakeTypes.DefaultBondDenom
+	keyFoo   = "foo"
+	keyBar   = "bar"
 	fooDenom = "footoken"
 	feeDenom = "feetoken"
 )
@@ -68,6 +70,16 @@ func NewFixtures(t *testing.T) *Fixtures {
 		P2PAddr:  p2pAddr,
 		Port:     port,
 	}
+}
+
+// Cleanup is meant to be run at the end of a test to clean up an remaining test state
+func (f *Fixtures) Cleanup() {
+	cleanupDirs(f.GDHome, f.GCLIHome)
+}
+
+// Flags returns the flags necessary for making most CLI calls
+func (f *Fixtures) Flags() string {
+	return fmt.Sprintf("--home=%s --node=%s --chain-id=%s", f.GCLIHome, f.RPCAddr, f.ChainID)
 }
 
 func getTestingHomeDirs(name string) (string, string) {
@@ -163,28 +175,47 @@ func (f *Fixtures) CollectGenTxs(flags ...string) {
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
-func initializeFixtures(t *testing.T) *Fixtures {
-	f := NewFixtures(t)
+// GDStart runs gaiad start with the appropriate flags and returns a process
+func (f *Fixtures) GDStart(flags ...string) *tests.Process {
+	cmd := fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GDHome, f.RPCAddr, f.P2PAddr)
+	return tests.GoExecuteTWithStdout(f.T, addFlags(cmd, flags))
+}
+
+func initializeFixtures(t *testing.T) (f *Fixtures) {
+	f = NewFixtures(t)
 
 	// Reset test state
 	f.UnsafeResetAll()
-	// Ensure keystore has foo and bar keys
-	f.KeysDelete("foo")
-	f.KeysDelete("bar")
-	f.KeysAdd("foo")
-	f.KeysAdd("bar")
 
+	// Ensure keystore has foo and bar keys
+	f.KeysDelete(keyFoo)
+	f.KeysDelete(keyBar)
+	f.KeysAdd(keyFoo)
+	f.KeysAdd(keyBar)
+
+	// Ensure that CLI output is in JSON format
 	f.CLIConfig("output", "json")
-	fooAddr := f.KeyAddress("foo")
 
 	// NOTE: GDInit sets the ChainID
-	f.GDInit("foo")
-	f.AddGenesisAccount(fooAddr, startCoins)
-	f.GenTx("foo")
-	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", f.GDHome, string(os.PathSeparator), string(os.PathSeparator)))
+	f.GDInit(keyFoo)
+
+	// Start an account with tokens
+	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
+	f.GenTx(keyFoo)
 	f.CollectGenTxs()
-	return f
+	return
 }
+
+// TxSend is gaiacli tx send
+func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli tx send %v --amount=%s --to=%s --from=%s", f.Flags(), amount, to, from)
+	success := executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	require.False(f.T, success)
+}
+
+// NEW
+// -------------------------------------------
+// OLD
 
 func marshalStdTx(t *testing.T, stdTx auth.StdTx) []byte {
 	cdc := app.MakeCodec()
@@ -281,6 +312,23 @@ func executeGetAddrPK(t *testing.T, cmdStr string) (sdk.AccAddress, crypto.PubKe
 	return accAddr, pk
 }
 
+// QueryAccount is gaiacli query account
+func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.BaseAccount {
+	cmd := fmt.Sprintf("gaiacli query account %s %v", address, f.Flags())
+	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	var initRes map[string]json.RawMessage
+	err := json.Unmarshal([]byte(out), &initRes)
+	require.NoError(f.T, err, "out %v, err %v", out, err)
+	value := initRes["value"]
+	var acc auth.BaseAccount
+	cdc := codec.New()
+	codec.RegisterCrypto(cdc)
+	err = cdc.UnmarshalJSON(value, &acc)
+	require.NoError(f.T, err, "value %v, err %v", string(value), err)
+	return acc
+}
+
+// TODO: Remove
 func executeGetAccount(t *testing.T, cmdStr string) auth.BaseAccount {
 	out, _ := tests.ExecuteT(t, cmdStr, "")
 	var initRes map[string]json.RawMessage

@@ -36,7 +36,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	}
 
 	// amino bytes weren't found in cache, so amino unmarshal and add it to the cache
-	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
+	validator = types.MustUnmarshalValidator(k.cdc, value)
 	cachedVal := cachedValidator{validator, strValue}
 	k.validatorCache[strValue] = cachedValidator{validator, strValue}
 	k.validatorCacheList.PushBack(cachedVal)
@@ -47,7 +47,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 		delete(k.validatorCache, valToRemove.marshalled)
 	}
 
-	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
+	validator = types.MustUnmarshalValidator(k.cdc, value)
 	return validator, true
 }
 
@@ -217,8 +217,7 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		addr := iterator.Key()[1:]
-		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
+		validator := types.MustUnmarshalValidator(k.cdc, iterator.Value())
 		validators = append(validators, validator)
 	}
 	return validators
@@ -234,8 +233,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators [
 
 	i := 0
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
-		addr := iterator.Key()[1:]
-		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
+		validator := types.MustUnmarshalValidator(k.cdc, iterator.Value())
 		validators[i] = validator
 		i++
 	}

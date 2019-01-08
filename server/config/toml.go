@@ -8,13 +8,16 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
-const defaultConfigTemplate = `# This is a TOML config file.
+const defaultConfigTemplate = `
+# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
 ##### main base config options #####
 
-# Validators reject any tx from the mempool with less than the minimum fee per gas.
-minimum_fees = "{{ .BaseConfig.MinFees }}"
+# The minimum disparate gas prices a validator is willing to accept for
+# processing a transaction. A transaction must only provide fees that meet
+# any of the minimum gas prices, but not necessarily all of them.
+minimum_gas_prices = "{{ .BaseConfig.MinGasPrices }}"
 `
 
 var configTemplate *template.Template
@@ -34,7 +37,8 @@ func ParseConfig() (*Config, error) {
 	return conf, err
 }
 
-// WriteConfigFile renders config using the template and writes it to configFilePath.
+// WriteConfigFile renders config using the template and writes it to
+// configFilePath.
 func WriteConfigFile(configFilePath string, config *Config) {
 	var buffer bytes.Buffer
 

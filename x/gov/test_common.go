@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/stake"
@@ -19,8 +20,8 @@ import (
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
-	mapp := mock.NewApp()
+func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) (mapp *mock.App, keeper Keeper, sk stake.Keeper, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+	mapp = mock.NewApp()
 
 	stake.RegisterCodec(mapp.Cdc)
 	RegisterCodec(mapp.Cdc)
@@ -31,18 +32,20 @@ func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, 
 
 	pk := mapp.ParamsKeeper
 	ck := bank.NewBaseKeeper(mapp.AccountKeeper)
-	sk := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
-	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
+	sk = stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
+	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
 
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mapp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
-	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
+	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk, genState))
 
 	require.NoError(t, mapp.CompleteSetup(keyStake, tkeyStake, keyGov))
 
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)})
+	if genAccs == nil || len(genAccs) == 0 {
+		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)})
+	}
 
 	mock.SetGenesis(mapp, genAccs)
 
@@ -60,7 +63,7 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 }
 
 // gov and stake initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk.InitChainer {
+func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper, genState GenesisState) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
@@ -71,7 +74,11 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk
 		if err != nil {
 			panic(err)
 		}
-		InitGenesis(ctx, keeper, DefaultGenesisState())
+		if genState.IsEmpty() {
+			InitGenesis(ctx, keeper, DefaultGenesisState())
+		} else {
+			InitGenesis(ctx, keeper, genState)
+		}
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}

@@ -265,7 +265,29 @@ func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
 	return diff, !diff.IsNotNegative()
 }
 
-// IsAllGT returns true iff for every denom in coins, the denom is present at a
+// IsAnyGT returns true if coins contains at least one denom
+// that is present at a smaller amount in coinsB; it
+// returns false otherwise.
+func (coins Coins) IsAnyGT(coinsB Coins) bool {
+	intersection := coins.intersect(coinsB)
+	if intersection.Empty() {
+		return false
+	}
+
+	diff, _ := intersection.SafeMinus(coinsB)
+	if len(diff) == 0 {
+		return false
+	}
+
+	for _, coin := range diff {
+		if coin.IsPositive() {
+			return true
+		}
+	}
+	return false
+}
+
+// IsAllGT returns true if for every denom in coins, the denom is present at a
 // greater amount in coinsB.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
 	diff, _ := coins.SafeMinus(coinsB)
@@ -274,6 +296,28 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 	}
 
 	return diff.IsPositive()
+}
+
+// IsAnyGT returns true if coins contains at least one denom
+// that is present at a smaller or equal amount in coinsB; it
+// returns false otherwise.
+func (coins Coins) IsAnyGTE(coinsB Coins) bool {
+	intersection := coins.intersect(coinsB)
+	if intersection.Empty() {
+		return false
+	}
+
+	diff, _ := intersection.SafeMinus(coinsB)
+	if len(diff) == 0 || len(diff) < len(intersection) { // zero diff is removed from the diff set
+		return true
+	}
+
+	for _, coin := range diff {
+		if coin.IsNotNegative() {
+			return true
+		}
+	}
+	return false
 }
 
 // IsAllGTE returns true iff for every denom in coins, the denom is present at
@@ -428,6 +472,20 @@ func removeZeroCoins(coins Coins) Coins {
 	}
 
 	return coins[:i]
+}
+
+func (coins Coins) intersect(coinsB Coins) Coins {
+	intersection := Coins{}
+	for _, coin := range coins {
+		for _, bCoin := range coinsB {
+			if coin.Denom == bCoin.Denom {
+				intersection = append(intersection, coin)
+				break
+			}
+		}
+	}
+
+	return intersection
 }
 
 //-----------------------------------------------------------------------------

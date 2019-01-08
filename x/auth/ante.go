@@ -234,19 +234,6 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey, p
 	}
 }
 
-func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
-	gasCost := gas / gasPerUnitCost
-	gasFees := make(sdk.Coins, len(fees))
-
-	// TODO: Make this not price all coins in the same way
-	// TODO: Undo int64 casting once unsigned integers are supported for coins
-	for i := 0; i < len(fees); i++ {
-		gasFees[i] = sdk.NewInt64Coin(fees[i].Denom, int64(gasCost))
-	}
-
-	return fees.Plus(gasFees)
-}
-
 // DeductFees deducts fees from the given account.
 //
 // NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
@@ -278,27 +265,24 @@ func DeductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 // enough fees to cover a proposer's minimum fees. An result object is returned
 // indicating success or failure.
 //
-// NOTE: This should only be called during CheckTx as it cannot be part of
+// TODO: Account for transaction size.
+//
+// Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
 func EnsureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
-	// Currently we use a very primitive gas pricing model with a constant
-	// gasPrice where adjustFeesByGas handles calculating the amount of fees
-	// required based on the provided gas.
-	//
-	// TODO:
-	// - Make the gasPrice not a constant, and account for tx size.
-	// - Make Gas an unsigned integer and use tx basic validation
-	if stdTx.Fee.Gas <= 0 {
-		return sdk.ErrInternal(fmt.Sprintf("gas supplied must be a positive integer: %d", stdTx.Fee.Gas)).Result()
+	gasPrices := make(sdk.Coins, len(stdTx.Fee.Amount))
+	for i, fee := range stdTx.Fee.Amount {
+		gasPrice := fee.Amount.DivRaw(int64(stdTx.Fee.Gas))
+		gasPrices[i] = sdk.NewCoin(fee.Denom, gasPrice)
 	}
-	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
 
-	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
-	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {
-		// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
+	// Validators reject any tx from the mempool with: gasPrices < minGasPrices
+	// where gasPrices must be a subset of minGasPrices.
+	minGasPrices := ctx.MinGasPrices()
+	if !minGasPrices.IsZero() && !gasPrices.IsAnyGTE(minGasPrices) {
 		return sdk.ErrInsufficientFee(
 			fmt.Sprintf(
-				"insufficient fee, got: %q required: %q", stdTx.Fee.Amount, requiredFees),
+				"insufficient fees; received gas prices: %q do not meet minimum: %q", gasPrices, minGasPrices),
 		).Result()
 	}
 

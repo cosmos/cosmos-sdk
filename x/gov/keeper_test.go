@@ -13,7 +13,7 @@ import (
 )
 
 func TestGetSetProposal(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
+	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
@@ -26,7 +26,7 @@ func TestGetSetProposal(t *testing.T) {
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
+	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
@@ -41,7 +41,7 @@ func TestIncrementProposalNumber(t *testing.T) {
 }
 
 func TestActivateVotingPeriod(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
+	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 
@@ -62,7 +62,7 @@ func TestActivateVotingPeriod(t *testing.T) {
 }
 
 func TestDeposits(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2)
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
@@ -149,7 +149,7 @@ func TestDeposits(t *testing.T) {
 }
 
 func TestVotes(t *testing.T) {
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2)
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
 	SortAddresses(addrs)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
@@ -205,7 +205,7 @@ func TestVotes(t *testing.T) {
 }
 
 func TestProposalQueues(t *testing.T) {
-	mapp, keeper, _, _, _, _ := getMockApp(t, 0)
+	mapp, keeper, _, _, _, _ := getMockApp(t, 0, GenesisState{}, nil)
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
 	mapp.InitChainer(ctx, abci.RequestInitChain{})

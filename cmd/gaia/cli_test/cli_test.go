@@ -154,54 +154,51 @@ func TestGaiaCLISend(t *testing.T) {
 func TestGaiaCLIGasAuto(t *testing.T) {
 	t.Parallel()
 	f := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", f.GCLIHome, f.RPCAddr, f.ChainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GDHome, f.RPCAddr, f.P2PAddr))
-
+	proc := f.GDStart()
 	defer proc.Stop(false)
-	tests.WaitForTMStart(f.Port)
-	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", f.GCLIHome))
-	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", f.GCLIHome))
+	fooAddr := f.KeyAddress(keyFoo)
+	barAddr := f.KeyAddress(keyBar)
 
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	fooAcc := f.QueryAccount(fooAddr)
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test failure with auto gas disabled and very little gas set by hand
-	success := executeWrite(t, fmt.Sprintf("gaiacli tx send %v --gas=10 --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	success := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=10")
 	require.False(t, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+
 	// Check state didn't change
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test failure with negative gas
-	success = executeWrite(t, fmt.Sprintf("gaiacli tx send %v --gas=-100 --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=-100")
 	require.False(t, success)
+
+	// Check state didn't change
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test failure with 0 gas
-	success = executeWrite(t, fmt.Sprintf("gaiacli tx send %v --gas=0 --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=0")
 	require.False(t, success)
 
+	// Check state didn't change
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
+
 	// Enable auto gas
-	success, stdout, _ := executeWriteRetStdStreams(t, fmt.Sprintf("gaiacli tx send %v --json --gas=auto --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
-	require.True(t, success)
-	// check that gas wanted == gas used
-	cdc := app.MakeCodec()
-	jsonOutput := struct {
-		Height   int64
-		TxHash   string
-		Response abci.ResponseDeliverTx
-	}{}
-	require.Nil(t, cdc.UnmarshalJSON([]byte(stdout), &jsonOutput))
-	require.Equal(t, jsonOutput.Response.GasWanted, jsonOutput.Response.GasUsed)
+	sendResp := f.TxSendWResponse(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=auto")
+	require.Equal(t, sendResp.Response.GasWanted, sendResp.Response.GasUsed)
 	tests.WaitForNextNBlocksTM(1, f.Port)
+
 	// Check state has changed accordingly
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-	cleanupDirs(f.GDHome, f.GCLIHome)
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
+
+	f.Cleanup()
 }
 
 func TestGaiaCLICreateValidator(t *testing.T) {

@@ -13,6 +13,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 
@@ -213,6 +214,24 @@ func initializeFixtures(t *testing.T) (f *Fixtures) {
 func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) bool {
 	cmd := fmt.Sprintf("gaiacli tx send %v --amount=%s --to=%s --from=%s", f.Flags(), amount, to, from)
 	return executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+type sendResponse struct {
+	Height   int64
+	TxHash   string
+	Response abci.ResponseDeliverTx
+}
+
+// TxSendWResponse is gaiacli tx send an also returns the complete response
+func (f *Fixtures) TxSendWResponse(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) sendResponse {
+	cmd := fmt.Sprintf("gaiacli tx send --json %v --amount=%s --to=%s --from=%s", f.Flags(), amount, to, from)
+	success, stdout, _ := executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	require.True(f.T, success)
+	cdc := app.MakeCodec()
+	var jsonOutput sendResponse
+	err := cdc.UnmarshalJSON([]byte(stdout), &jsonOutput)
+	require.Nil(f.T, err)
+	return jsonOutput
 }
 
 // NEW

@@ -265,10 +265,16 @@ func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
 	return diff, !diff.IsNotNegative()
 }
 
-// IsAnyGT returns true if any denom in coins, the denom is present at a
-// greater amount in coinsA.
+// IsAnyGT returns true if coins contains at least one denom
+// that is present at a smaller amount in coinsB; it
+// returns false otherwise.
 func (coins Coins) IsAnyGT(coinsB Coins) bool {
-	diff, _ := coins.SafeMinus(coinsB)
+	intersection := coins.denomsIntersection(coinsB)
+	if intersection.Empty() {
+		return false
+	}
+
+	diff, _ := intersection.SafeMinus(coinsB)
 	if len(diff) == 0 {
 		return false
 	}
@@ -292,12 +298,18 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 	return diff.IsPositive()
 }
 
-// IsAnyGTE returns true if for any denom in coins, the denom is present at a
-// an equal or greater amount in coinsB.
+// IsAnyGT returns true if coins contains at least one denom
+// that is present at a smaller or equal amount in coinsB; it
+// returns false otherwise.
 func (coins Coins) IsAnyGTE(coinsB Coins) bool {
-	diff, _ := coins.SafeMinus(coinsB)
-	if len(diff) == 0 {
+	intersection := coins.denomsIntersection(coinsB)
+	if intersection.Empty() {
 		return false
+	}
+
+	diff, _ := intersection.SafeMinus(coinsB)
+	if len(diff) == 0 || len(diff) < len(intersection) { // zero diff is removed from the diff set
+		return true
 	}
 
 	for _, coin := range diff {
@@ -460,6 +472,20 @@ func removeZeroCoins(coins Coins) Coins {
 	}
 
 	return coins[:i]
+}
+
+func (coins Coins) denomsIntersection(coinsB Coins) Coins {
+	intersection := Coins{}
+	for _, coin := range coins {
+		for _, bCoin := range coinsB {
+			if coin.Denom == bCoin.Denom {
+				intersection = append(intersection, coin)
+				break
+			}
+		}
+	}
+
+	return intersection
 }
 
 //-----------------------------------------------------------------------------

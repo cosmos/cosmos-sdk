@@ -120,19 +120,6 @@ func NewUnbondingDelegation(delegatorAddr sdk.AccAddress,
 	}
 }
 
-// return the unbonding delegation
-func MustMarshalUBD(cdc *codec.Codec, ubd UnbondingDelegation) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(ubd)
-}
-
-// unmarshal a unbonding delegation from a store value
-func MustUnmarshalUBD(cdc *codec.Codec, value []byte) UnbondingDelegation {
-	ubd, err := UnmarshalUBD(cdc, value)
-	if err != nil {
-		panic(err)
-	}
-}
-
 // NewUnbondingDelegation - create a new unbonding delegation object
 func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 	balance sdk.Coin) UnbondingDelegationEntry {
@@ -234,19 +221,6 @@ func NewRedelegation(delegatorAddr sdk.AccAddress, validatorSrcAddr,
 		ValidatorSrcAddr: validatorSrcAddr,
 		ValidatorDstAddr: validatorDstAddr,
 		Entries:          []RedelegationEntry{entry},
-	}
-}
-
-// return the redelegation
-func MustMarshalRED(cdc *codec.Codec, red Redelegation) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(red)
-}
-
-// unmarshal a redelegation from a store value
-func MustUnmarshalRED(cdc *codec.Codec, value []byte) Redelegation {
-	red, err := UnmarshalRED(cdc, value)
-	if err != nil {
-		panic(err)
 	}
 }
 

@@ -116,14 +116,18 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	// iterate through redelegations, reset creation height
 	app.stakeKeeper.IterateRedelegations(ctx, func(_ int64, red stake.Redelegation) (stop bool) {
-		red.CreationHeight = 0
+		for i := range red.Entries {
+			red.Entries[i].CreationHeight = 0
+		}
 		app.stakeKeeper.SetRedelegation(ctx, red)
 		return false
 	})
 
 	// iterate through unbonding delegations, reset creation height
 	app.stakeKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) (stop bool) {
-		ubd.CreationHeight = 0
+		for i := range ubd.Entries {
+			ubd.Entries[i].CreationHeight = 0
+		}
 		app.stakeKeeper.SetUnbondingDelegation(ctx, ubd)
 		return false
 	})

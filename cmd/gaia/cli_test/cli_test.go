@@ -42,7 +42,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Send a transaction that will get rejected
-	success := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10))
+	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10))
 	require.False(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
@@ -84,7 +84,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// test simulation
-	success := f.TxSend(
+	success, _, _ := f.TxSend(
 		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 1000),
 		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 1)), "--dry-run")
 	require.True(t, success)
@@ -97,7 +97,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// insufficient funds (coins + fees) tx fails
-	success = f.TxSend(
+	success, _, _ = f.TxSend(
 		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 1000),
 		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 1)))
 	require.False(t, success)
@@ -110,7 +110,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// test success (transfer = coins + fees)
-	success = f.TxSend(
+	success, _, _ = f.TxSend(
 		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 500),
 		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 300)))
 	require.True(t, success)
@@ -144,7 +144,7 @@ func TestGaiaCLISend(t *testing.T) {
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test --dry-run
-	success := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--dry-run")
+	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--dry-run")
 	require.True(t, success)
 
 	// Check state didn't change
@@ -189,7 +189,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test failure with auto gas disabled and very little gas set by hand
-	success := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=10")
+	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=10")
 	require.False(t, success)
 
 	// Check state didn't change
@@ -197,7 +197,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test failure with negative gas
-	success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=-100")
+	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=-100")
 	require.False(t, success)
 
 	// Check state didn't change
@@ -205,7 +205,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test failure with 0 gas
-	success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=0")
+	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=0")
 	require.False(t, success)
 
 	// Check state didn't change
@@ -213,7 +213,17 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Enable auto gas
-	sendResp := f.TxSendWResponse(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=auto")
+	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=auto", "--json")
+	require.NotEmpty(t, stderr)
+	require.True(t, success)
+	cdc := app.MakeCodec()
+	sendResp := struct {
+		Height   int64
+		TxHash   string
+		Response abci.ResponseDeliverTx
+	}{}
+	err := cdc.UnmarshalJSON([]byte(stdout), &sendResp)
+	require.Nil(t, err)
 	require.Equal(t, sendResp.Response.GasWanted, sendResp.Response.GasUsed)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
@@ -451,30 +461,16 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 func TestGaiaCLIValidateSignatures(t *testing.T) {
 	t.Parallel()
 	f := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", f.GCLIHome, f.RPCAddr, f.ChainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(
-		t, fmt.Sprintf(
-			"gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GDHome, f.RPCAddr, f.P2PAddr,
-		),
-	)
-
+	proc := f.GDStart()
 	defer proc.Stop(false)
-	tests.WaitForTMStart(f.Port)
-	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", f.GCLIHome))
-	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", f.GCLIHome))
+	fooAddr := f.KeyAddress(keyFoo)
+	barAddr := f.KeyAddress(keyBar)
 
 	// generate sendTx with default gas
-	success, stdout, stderr := executeWriteRetStdStreams(
-		t, fmt.Sprintf(
-			"gaiacli tx send %v --amount=10%s --to=%s --from=foo --generate-only",
-			flags, stakeTypes.DefaultBondDenom, barAddr,
-		),
-		[]string{}...,
-	)
+	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 
@@ -483,12 +479,9 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	defer os.Remove(unsignedTxFile.Name())
 
 	// validate we can successfully sign
-	success, stdout, _ = executeWriteRetStdStreams(
-		t, fmt.Sprintf("gaiacli tx sign %v --name=foo %v", flags, unsignedTxFile.Name()),
-		app.DefaultKeyPass,
-	)
+	success, stdout, stderr = f.TxSign(keyFoo, unsignedTxFile.Name())
 	require.True(t, success)
-
+	require.Empty(t, stderr)
 	stdTx := unmarshalStdTx(t, stdout)
 	require.Equal(t, len(stdTx.Msgs), 1)
 	require.Equal(t, 1, len(stdTx.GetSignatures()))
@@ -499,9 +492,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// validate signatures
-	success, _, _ = executeWriteRetStdStreams(
-		t, fmt.Sprintf("gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()),
-	)
+	success, _, _ = f.TxSign(keyFoo, signedTxFile.Name(), "--validate-signatures")
 	require.True(t, success)
 
 	// modify the transaction
@@ -511,10 +502,10 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	defer os.Remove(modSignedTxFile.Name())
 
 	// validate signature validation failure due to different transaction sig bytes
-	success, _, _ = executeWriteRetStdStreams(
-		t, fmt.Sprintf("gaiacli tx sign %v --validate-signatures %v", flags, modSignedTxFile.Name()),
-	)
+	success, _, _ = f.TxSign(keyFoo, modSignedTxFile.Name(), "--validate-signatures")
 	require.False(t, success)
+
+	f.Cleanup()
 }
 
 func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {

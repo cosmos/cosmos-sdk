@@ -35,7 +35,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 
 	// Check the amount of coins in the foo account to ensure that the right amount exists
 	fooAcc := f.QueryAccount(f.KeyAddress(keyFoo))
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Send a transaction that will get rejected
 	success := f.TxSend(keyFoo, f.KeyAddress(keyBar), sdk.NewInt64Coin(denom, 10))
@@ -48,44 +48,50 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 func TestGaiaCLIFeesDeduction(t *testing.T) {
 	t.Parallel()
 	f := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", f.GCLIHome, f.RPCAddr, f.ChainID)
 
 	// start gaiad server with minimum fees
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=1footoken", f.GDHome, f.RPCAddr, f.P2PAddr))
-
+	proc := f.GDStart(fmt.Sprintf("--minimum_fees=%s", sdk.NewInt64Coin(fooDenom, 1)))
 	defer proc.Stop(false)
-	tests.WaitForTMStart(f.Port)
-	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", f.GCLIHome))
-	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", f.GCLIHome))
+	fooAddr := f.KeyAddress(keyFoo)
+	barAddr := f.KeyAddress(keyBar)
 
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("footoken").Int64())
+	fooAcc := f.QueryAccount(fooAddr)
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// test simulation
-	success := executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fees=1footoken --dry-run", flags, barAddr), app.DefaultKeyPass)
+	success := f.TxSend(
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 1000),
+		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 1)), "--dry-run")
 	require.True(t, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
-	// ensure state didn't change
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("footoken").Int64())
 
-	// insufficient funds (coins + fees)
-	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=1000footoken --to=%s --from=foo --fees=1footoken", flags, barAddr), app.DefaultKeyPass)
-	require.False(t, success)
+	// Wait for a block
 	tests.WaitForNextNBlocksTM(1, f.Port)
+
 	// ensure state didn't change
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf("footoken").Int64())
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
+
+	// insufficient funds (coins + fees) tx fails
+	success = f.TxSend(
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 1000),
+		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 1)))
+	require.False(t, success)
+
+	// Wait for a block
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// ensure state didn't change
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// test success (transfer = coins + fees)
-	success = executeWrite(t, fmt.Sprintf(
-		"gaiacli tx send %v --fees=300footoken --amount=500footoken --to=%s --from=foo", flags, barAddr), app.DefaultKeyPass)
+	success = f.TxSend(
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 500),
+		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 300)))
 	require.True(t, success)
-	cleanupDirs(f.GDHome, f.GCLIHome)
+
+	f.Cleanup()
 }
 
 func TestGaiaCLISend(t *testing.T) {

@@ -12,12 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	// TODO: Allow this to be configurable in the same way as minimum fees.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/3101
-	gasPerUnitCost uint64 = 10000 // how much gas = 1 atom
-)
-
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.

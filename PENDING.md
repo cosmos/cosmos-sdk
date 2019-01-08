@@ -60,6 +60,7 @@ IMPROVEMENTS
   * [\#2948](https://github.com/cosmos/cosmos-sdk/issues/2948) Swagger UI now makes requests to light client node
 
 * Gaia CLI  (`gaiacli`)
+  * [\#3224](https://github.com/cosmos/cosmos-sdk/pull/3224) Support adding offline public keys to the keystore
 
 * Gaia
   * [\#2186](https://github.com/cosmos/cosmos-sdk/issues/2186) Add Address Interface

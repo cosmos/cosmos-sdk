@@ -104,7 +104,8 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 func (f *Fixtures) Cleanup(dirs ...string) {
 	clean := append(dirs, f.GDHome, f.GCLIHome)
 	for _, d := range clean {
-		os.RemoveAll(d)
+		err := os.RemoveAll(d)
+		require.NoError(f.T, err)
 	}
 }
 
@@ -120,7 +121,8 @@ func (f *Fixtures) Flags() string {
 func (f *Fixtures) UnsafeResetAll(flags ...string) {
 	cmd := fmt.Sprintf("gaiad --home=%s unsafe-reset-all", f.GDHome)
 	executeWrite(f.T, addFlags(cmd, flags))
-	os.RemoveAll(filepath.Join(f.GDHome, "config", "gentx"))
+	err := os.RemoveAll(filepath.Join(f.GDHome, "config", "gentx"))
+	require.NoError(f.T, err)
 }
 
 // GDInit is gaiad init

@@ -53,6 +53,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	proc := f.GDStart(fmt.Sprintf("--minimum_fees=%s", sdk.NewInt64Coin(fooDenom, 1)))
 	defer proc.Stop(false)
 
+	// Save key addresses for later use
 	fooAddr := f.KeyAddress(keyFoo)
 	barAddr := f.KeyAddress(keyBar)
 
@@ -97,53 +98,57 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 func TestGaiaCLISend(t *testing.T) {
 	t.Parallel()
 	f := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", f.GCLIHome, f.RPCAddr, f.ChainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GDHome, f.RPCAddr, f.P2PAddr))
+	proc := f.GDStart()
 	defer proc.Stop(false)
-	tests.WaitForTMStart(f.Port)
+
+	// Save key addresses for later use
+	fooAddr := f.KeyAddress(keyFoo)
+	barAddr := f.KeyAddress(keyBar)
+
+	fooAcc := f.QueryAccount(fooAddr)
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
+
+	// Send some tokens from one account to the other
+	f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", f.GCLIHome))
-	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", f.GCLIHome))
-
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-
-	executeWrite(t, fmt.Sprintf("gaiacli tx send %v --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
-	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	// Ensure account balances match expected
+	barAcc := f.QueryAccount(barAddr)
+	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(denom).Int64())
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Test --dry-run
-	success := executeWrite(t, fmt.Sprintf("gaiacli tx send %v --amount=10%s --to=%s --from=foo --dry-run", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	success := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--dry-run")
 	require.True(t, success)
+
 	// Check state didn't change
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// test autosequencing
-	executeWrite(t, fmt.Sprintf("gaiacli tx send %v --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
-	require.Equal(t, int64(20), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(30), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	// Ensure account balances match expected
+	barAcc = f.QueryAccount(barAddr)
+	require.Equal(t, int64(20), barAcc.GetCoins().AmountOf(denom).Int64())
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(30), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// test memo
-	executeWrite(t, fmt.Sprintf("gaiacli tx send %v --amount=10%s --to=%s --from=foo --memo 'testmemo'", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--memo='testmemo'")
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
-	require.Equal(t, int64(30), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(20), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-	cleanupDirs(f.GDHome, f.GCLIHome)
+	// Ensure account balances match expected
+	barAcc = f.QueryAccount(barAddr)
+	require.Equal(t, int64(30), barAcc.GetCoins().AmountOf(denom).Int64())
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(20), fooAcc.GetCoins().AmountOf(denom).Int64())
+
+	f.Cleanup()
 }
 
 func TestGaiaCLIGasAuto(t *testing.T) {

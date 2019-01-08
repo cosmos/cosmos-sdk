@@ -30,16 +30,39 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	f := initializeFixtures(t)
 
 	// start gaiad server with minimum fees
-	proc := f.GDStart(fmt.Sprintf("--minimum_fees=%s", sdk.NewInt64Coin(feeDenom, 2)))
+	fees := fmt.Sprintf("--minimum_fees=%s,%s", sdk.NewInt64Coin(feeDenom, 2), sdk.NewInt64Coin(denom, 2))
+	proc := f.GDStart(fees)
 	defer proc.Stop(false)
+
+	barAddr := f.KeyAddress(keyBar)
+	// fooAddr := f.KeyAddress(keyFoo)
 
 	// Check the amount of coins in the foo account to ensure that the right amount exists
 	fooAcc := f.QueryAccount(f.KeyAddress(keyFoo))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Send a transaction that will get rejected
-	success := f.TxSend(keyFoo, f.KeyAddress(keyBar), sdk.NewInt64Coin(denom, 10))
+	success := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10))
 	require.False(f.T, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// TODO: Make this work
+	// // Ensure tx w/ correct fees (stake) pass
+	// txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(denom, 23))
+	// success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), txFees)
+	// require.True(f.T, success)
+	// tests.WaitForNextNBlocksTM(1, f.Port)
+	//
+	// // Ensure tx w/ correct fees (feetoken) pass
+	// txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 23))
+	// success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(feeDenom, 10), txFees)
+	// require.True(f.T, success)
+	// tests.WaitForNextNBlocksTM(1, f.Port)
+	//
+	// // Ensure tx w/ improper fees (footoken) fails
+	// txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 23))
+	// success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 10), txFees)
+	// require.False(f.T, success)
 
 	// Cleanup testing directories
 	f.Cleanup()

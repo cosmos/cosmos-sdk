@@ -73,20 +73,14 @@ func NewFixtures(t *testing.T) *Fixtures {
 }
 
 // Cleanup is meant to be run at the end of a test to clean up an remaining test state
-func (f *Fixtures) Cleanup() {
-	cleanupDirs(f.GDHome, f.GCLIHome)
+func (f *Fixtures) Cleanup(dirs ...string) {
+	clean := append(dirs, f.GDHome, f.GCLIHome)
+	cleanupDirs(clean...)
 }
 
 // Flags returns the flags necessary for making most CLI calls
 func (f *Fixtures) Flags() string {
 	return fmt.Sprintf("--home=%s --node=%s --chain-id=%s", f.GCLIHome, f.RPCAddr, f.ChainID)
-}
-
-func getTestingHomeDirs(name string) (string, string) {
-	tmpDir := os.TempDir()
-	gaiadHome := fmt.Sprintf("%s%s%s%s.test_gaiad", tmpDir, string(os.PathSeparator), name, string(os.PathSeparator))
-	gaiacliHome := fmt.Sprintf("%s%s%s%s.test_gaiacli", tmpDir, string(os.PathSeparator), name, string(os.PathSeparator))
-	return gaiadHome, gaiacliHome
 }
 
 // UnsafeResetAll is gaiad unsafe-reset-all

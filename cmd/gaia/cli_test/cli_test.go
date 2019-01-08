@@ -603,11 +603,14 @@ func TestGaiaCLIConfig(t *testing.T) {
 	t.Parallel()
 	f := initializeFixtures(t)
 	node := fmt.Sprintf("%s:%s", f.RPCAddr, f.Port)
-	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config node %s`, f.GCLIHome, node))
-	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config output text`, f.GCLIHome))
-	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config trust-node true`, f.GCLIHome))
-	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config chain-id %s`, f.GCLIHome, f.ChainID))
-	executeWrite(t, fmt.Sprintf(`gaiacli --home=%s config trace false`, f.GCLIHome))
+
+	// Set available configuration options
+	f.CLIConfig("node", node)
+	f.CLIConfig("output", "text")
+	f.CLIConfig("trust-node", "true")
+	f.CLIConfig("chain-id", f.ChainID)
+	f.CLIConfig("trace", "false")
+
 	config, err := ioutil.ReadFile(path.Join(f.GCLIHome, "config", "config.toml"))
 	require.NoError(t, err)
 	expectedConfig := fmt.Sprintf(`chain-id = "%s"

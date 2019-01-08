@@ -221,6 +221,12 @@ func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, strin
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
+// TxBroadcast is gaiacli tx sign
+func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("gaiacli tx broadcast %v --json %v", f.Flags(), fileName)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
 // TxStakeCreateValidator is gaiacli tx stake create-validator
 func (f *Fixtures) TxStakeCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("gaiacli tx stake create-validator %v --from=%s --pubkey=%s", f.Flags(), from, consPubKey)

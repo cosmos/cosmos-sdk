@@ -511,22 +511,16 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	t.Parallel()
 	f := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", f.GCLIHome, f.RPCAddr, f.ChainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GDHome, f.RPCAddr, f.P2PAddr))
-
+	proc := f.GDStart()
 	defer proc.Stop(false)
-	tests.WaitForTMStart(f.Port)
-	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", f.GCLIHome))
-	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", f.GCLIHome))
+	fooAddr := f.KeyAddress(keyFoo)
+	barAddr := f.KeyAddress(keyBar)
 
 	// Test generate sendTx with default gas
-	success, stdout, stderr := executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --generate-only",
-		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
+	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg := unmarshalStdTx(t, stdout)
@@ -535,9 +529,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx with --gas=$amount
-	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=100 --generate-only",
-		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
+	success, stdout, stderr = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=100", "--generate-only")
 	require.True(t, success)
 	require.Empty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
@@ -546,9 +538,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test generate sendTx, estimate gas
-	success, stdout, stderr = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --gas=auto --generate-only",
-		flags, stakeTypes.DefaultBondDenom, barAddr), []string{}...)
+	success, stdout, stderr = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=auto", "--generate-only")
 	require.True(t, success)
 	require.NotEmpty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
@@ -560,14 +550,12 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Test sign --validate-signatures
-	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx sign %v --validate-signatures %v", flags, unsignedTxFile.Name()))
+	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--validate-signatures", "--json")
 	require.False(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
 
 	// Test sign
-	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx sign %v --name=foo %v", flags, unsignedTxFile.Name()), app.DefaultKeyPass)
+	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name())
 	require.True(t, success)
 	msg = unmarshalStdTx(t, stdout)
 	require.Equal(t, len(msg.Msgs), 1)
@@ -578,19 +566,17 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	signedTxFile := writeToNewTempFile(t, stdout)
 	defer os.Remove(signedTxFile.Name())
 
-	// Test sign --print-signatures
-	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx sign %v --validate-signatures %v", flags, signedTxFile.Name()))
+	// Test sign --validate-signatures
+	success, stdout, _ = f.TxSign(keyFoo, signedTxFile.Name(), "--validate-signatures", "--json")
 	require.True(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\t[OK]\n\n", fooAddr.String(),
 		fooAddr.String()), stdout)
 
 	// Test broadcast
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	fooAcc := f.QueryAccount(fooAddr)
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
-	success, stdout, _ = executeWriteRetStdStreams(t, fmt.Sprintf(
-		"gaiacli tx broadcast %v --json %v", flags, signedTxFile.Name()))
+	success, stdout, _ = f.TxBroadcast(signedTxFile.Name())
 	require.True(t, success)
 
 	var result struct {
@@ -602,12 +588,13 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
-	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	barAcc := f.QueryAccount(barAddr)
+	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(denom).Int64())
 
-	fooAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-	cleanupDirs(f.GDHome, f.GCLIHome)
+	fooAcc = f.QueryAccount(fooAddr)
+	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
+
+	f.Cleanup()
 }
 
 func TestGaiaCLIConfig(t *testing.T) {

@@ -269,7 +269,7 @@ func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
 // that is present at a smaller amount in coinsB; it
 // returns false otherwise.
 func (coins Coins) IsAnyGT(coinsB Coins) bool {
-	intersection := coins.denomsIntersection(coinsB)
+	intersection := coins.intersect(coinsB)
 	if intersection.Empty() {
 		return false
 	}
@@ -302,7 +302,7 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 // that is present at a smaller or equal amount in coinsB; it
 // returns false otherwise.
 func (coins Coins) IsAnyGTE(coinsB Coins) bool {
-	intersection := coins.denomsIntersection(coinsB)
+	intersection := coins.intersect(coinsB)
 	if intersection.Empty() {
 		return false
 	}
@@ -474,7 +474,7 @@ func removeZeroCoins(coins Coins) Coins {
 	return coins[:i]
 }
 
-func (coins Coins) denomsIntersection(coinsB Coins) Coins {
+func (coins Coins) intersect(coinsB Coins) Coins {
 	intersection := Coins{}
 	for _, coin := range coins {
 		for _, bCoin := range coinsB {

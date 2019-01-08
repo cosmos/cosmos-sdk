@@ -204,99 +204,84 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 func TestGaiaCLICreateValidator(t *testing.T) {
 	t.Parallel()
 	f := initializeFixtures(t)
-	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", f.GCLIHome, f.RPCAddr, f.ChainID)
 
 	// start gaiad server
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v", f.GDHome, f.RPCAddr, f.P2PAddr))
-
+	proc := f.GDStart()
 	defer proc.Stop(false)
-	tests.WaitForTMStart(f.Port)
-	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	fooAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show foo --home=%s", f.GCLIHome))
-	barAddr, _ := executeGetAddrPK(t, fmt.Sprintf("gaiacli keys show bar --home=%s", f.GCLIHome))
+	fooAddr := f.KeyAddress(keyFoo)
+	barAddr := f.KeyAddress(keyBar)
+	barVal := sdk.ValAddress(barAddr)
+
 	consPubKey := sdk.MustBech32ifyConsPub(ed25519.GenPrivKey().PubKey())
 
-	executeWrite(t, fmt.Sprintf("gaiacli tx send %v --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	barAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
-	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
-	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
-	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	barAcc := f.QueryAccount(barAddr)
+	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(denom).Int64())
+	fooAcc := f.QueryAccount(fooAddr)
+	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	defaultParams := stake.DefaultParams()
 	initialPool := stake.InitialPool()
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(100)) // Delegate tx on GaiaAppGenState
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(101)) // Delegate tx on GaiaAppGenState
 
-	// create validator
-	cvStr := fmt.Sprintf("gaiacli tx stake create-validator %v", flags)
-	cvStr += fmt.Sprintf(" --from=%s", "bar")
-	cvStr += fmt.Sprintf(" --pubkey=%s", consPubKey)
-	cvStr += fmt.Sprintf(" --amount=%v", fmt.Sprintf("2%s", stakeTypes.DefaultBondDenom))
-	cvStr += fmt.Sprintf(" --moniker=%v", "bar-vally")
-	cvStr += fmt.Sprintf(" --commission-rate=%v", "0.05")
-	cvStr += fmt.Sprintf(" --commission-max-rate=%v", "0.20")
-	cvStr += fmt.Sprintf(" --commission-max-change-rate=%v", "0.10")
+	// Generate a create validator transaction and ensure correctness
+	success, stdout, stderr := f.TxStakeCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--generate-only")
 
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(1))
-
-	// Test --generate-only
-	success, stdout, stderr := executeWriteRetStdStreams(t, cvStr+" --generate-only", app.DefaultKeyPass)
-	require.True(t, success)
-	require.True(t, success)
-	require.Empty(t, stderr)
-	msg := unmarshalStdTx(t, stdout)
+	require.True(f.T, success)
+	require.Empty(f.T, stderr)
+	msg := unmarshalStdTx(f.T, stdout)
 	require.NotZero(t, msg.Fee.Gas)
 	require.Equal(t, len(msg.Msgs), 1)
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
-	success = executeWrite(t, cvStr+" --dry-run", app.DefaultKeyPass)
+	success, _, _ = f.TxStakeCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--dry-run")
 	require.True(t, success)
 
-	executeWrite(t, cvStr, app.DefaultKeyPass)
+	// Create the validator
+	f.TxStakeCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", barAddr, flags))
-	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64(), "%v", barAcc)
+	// Ensure funds were deducted properly
+	barAcc = f.QueryAccount(barAddr)
+	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf(denom).Int64())
 
-	validator := executeGetValidator(t, fmt.Sprintf("gaiacli query stake validator %s %v", sdk.ValAddress(barAddr), flags))
-	require.Equal(t, validator.OperatorAddr, sdk.ValAddress(barAddr))
+	// Ensure that validator state is as expected
+	validator := f.QueryStakeValidator(barVal)
+	require.Equal(t, validator.OperatorAddr, barVal)
 	require.True(sdk.IntEq(t, sdk.NewInt(2), validator.Tokens))
 
-	validatorDelegations := executeGetValidatorDelegations(t, fmt.Sprintf("gaiacli query stake delegations-to %s %v", sdk.ValAddress(barAddr), flags))
+	// Query delegations to the validator
+	validatorDelegations := f.QueryStakeDelegationsTo(barVal)
 	require.Len(t, validatorDelegations, 1)
 	require.NotZero(t, validatorDelegations[0].Shares)
 
 	// unbond a single share
-	unbondStr := fmt.Sprintf("gaiacli tx stake unbond %v", flags)
-	unbondStr += fmt.Sprintf(" --from=%s", "bar")
-	unbondStr += fmt.Sprintf(" --validator=%s", sdk.ValAddress(barAddr))
-	unbondStr += fmt.Sprintf(" --shares-amount=%v", "1")
-
-	success = executeWrite(t, unbondStr, app.DefaultKeyPass)
+	success = f.TxStakeUnbond(keyBar, "1", barVal)
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	/* // this won't be what we expect because we've only started unbonding, haven't completed
-	barAcc = executeGetAccount(t, fmt.Sprintf("gaiacli query account %v %v", barCech, flags))
-	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64(), "%v", barAcc)
-	*/
-	validator = executeGetValidator(t, fmt.Sprintf("gaiacli query stake validator %s %v", sdk.ValAddress(barAddr), flags))
+	// Ensure bonded stake is correct
+	validator = f.QueryStakeValidator(barVal)
 	require.Equal(t, "1", validator.Tokens.String())
 
-	validatorUbds := executeGetValidatorUnbondingDelegations(t,
-		fmt.Sprintf("gaiacli query stake unbonding-delegations-from %s %v", sdk.ValAddress(barAddr), flags))
+	// Get unbonding delegations from the validator
+	validatorUbds := f.QueryStakeUnbondingDelegationsFrom(barVal)
 	require.Len(t, validatorUbds, 1)
 	require.Equal(t, "1", validatorUbds[0].Balance.Amount.String())
 
-	params := executeGetParams(t, fmt.Sprintf("gaiacli query stake parameters %v", flags))
+	// Query staking parameters
+	params := f.QueryStakeParameters()
 	require.True(t, defaultParams.Equal(params))
 
-	pool := executeGetPool(t, fmt.Sprintf("gaiacli query stake pool %v", flags))
+	// Query staking pool
+	pool := f.QueryStakePool()
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
-	cleanupDirs(f.GDHome, f.GCLIHome)
+
+	f.Cleanup()
 }
 
 func TestGaiaCLISubmitProposal(t *testing.T) {

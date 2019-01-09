@@ -68,8 +68,8 @@ IMPROVEMENTS
 * Gaia
   * [\#2186](https://github.com/cosmos/cosmos-sdk/issues/2186) Add Address Interface
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
-  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees
-  in a local testnet.
+  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees in a local testnet.
+  * [\#3250](https://github.com/cosmos/cosmos-sdk/pull/3250) Refactor integration tests and increase coverage
 
 * SDK
   * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation
@@ -82,7 +82,7 @@ IMPROVEMENTS
 
 * CI
   * \#2498 Added macos CI job to CircleCI
-  * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim 
+  * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim
 
 BUG FIXES
 

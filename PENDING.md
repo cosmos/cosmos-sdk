@@ -27,7 +27,7 @@ BREAKING CHANGES
   * [\#3195](https://github.com/cosmos/cosmos-sdk/issues/3195) Allows custom configuration for syncable strategy
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
   meter utilization during aborted ante handler executions.
-  
+
 * Tendermint
 
 
@@ -36,8 +36,8 @@ FEATURES
 * Gaia REST API (`gaiacli advanced rest-server`)
   * [\#3067](https://github.com/cosmos/cosmos-sdk/issues/3067) Add support for fees on transactions
   * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) Add a custom memo on transactions
-  * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
-  `/gov/proposals/{proposalID}/proposer` to query for a proposal's proposer.
+  * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement `/gov/proposals/{proposalID}/proposer` to query for a proposal's proposer.
+  * [\#3267](https://github.com/cosmos/cosmos-sdk/pull/3267) Enable CORS requests to rest interface
 
 * Gaia CLI  (`gaiacli`)
   * \#2399 Implement `params` command to query slashing parameters.

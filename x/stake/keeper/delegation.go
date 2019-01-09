@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -676,9 +675,6 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	// loop through all the entries and complete mature redelegation entries
 	for i := 0; i < len(red.Entries); i++ {
 		entry := red.Entries[i]
-		fmt.Printf("debug i: %v\n", i)
-		fmt.Printf("debug entry: %v\n", entry)
-		fmt.Printf("debug entry.IsMature(ctxTime): %v\n", entry.IsMature(ctxTime))
 		if entry.IsMature(ctxTime) {
 			red.RemoveEntry(int64(i))
 			i--

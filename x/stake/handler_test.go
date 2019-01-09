@@ -1,7 +1,6 @@
 package stake
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -857,7 +856,7 @@ func TestMultipleRedelegationAtSameTime(t *testing.T) {
 
 	// set the unbonding time
 	params := keeper.GetParams(ctx)
-	params.UnbondingTime = 1
+	params.UnbondingTime = 1 * time.Second
 	keeper.SetParams(ctx, params)
 
 	// create the validators
@@ -941,7 +940,6 @@ func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
 	require.Len(t, rd.Entries, 2)
 
 	// move forward in time, should complete the first redelegation, but not the second
-	fmt.Println("_________________________")
 	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(5 * time.Second))
 	EndBlocker(ctx, keeper)
 	rd, found = keeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
@@ -952,6 +950,103 @@ func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
 	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(5 * time.Second))
 	EndBlocker(ctx, keeper)
 	rd, found = keeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
+	require.False(t, found)
+}
+
+func TestMultipleUnbondingDelegationAtSameTime(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	valAddr := sdk.ValAddress(keep.Addrs[0])
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 1 * time.Second
+	keeper.SetParams(ctx, params)
+
+	// create the validator
+	msgCreateValidator := NewTestMsgCreateValidator(valAddr, keep.PKs[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// end block to bond
+	EndBlocker(ctx, keeper)
+
+	// begin an unbonding delegation
+	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
+	msgBeginUnbonding := NewMsgBeginUnbonding(selfDelAddr, valAddr, sdk.NewDec(5))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error, %v", got)
+
+	// there should only be one entry in the ubd object
+	ubd, found := keeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 1)
+
+	// start a second ubd at this same time as the first
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error, msg: %v", msgBeginUnbonding)
+
+	// now there should be two entries
+	ubd, found = keeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 2)
+
+	// move forwaubd in time, should complete both ubds
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(1 * time.Second))
+	EndBlocker(ctx, keeper)
+
+	ubd, found = keeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
+	require.False(t, found)
+}
+
+func TestMultipleUnbondingDelegationAtUniqueTimes(t *testing.T) {
+	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
+	valAddr := sdk.ValAddress(keep.Addrs[0])
+
+	// set the unbonding time
+	params := keeper.GetParams(ctx)
+	params.UnbondingTime = 10 * time.Second
+	keeper.SetParams(ctx, params)
+
+	// create the validator
+	msgCreateValidator := NewTestMsgCreateValidator(valAddr, keep.PKs[0], 10)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
+
+	// end block to bond
+	EndBlocker(ctx, keeper)
+
+	// begin an unbonding delegation
+	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
+	msgBeginUnbonding := NewMsgBeginUnbonding(selfDelAddr, valAddr, sdk.NewDec(5))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error, %v", got)
+
+	// there should only be one entry in the ubd object
+	ubd, found := keeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 1)
+
+	// move forwaubd in time and start a second redelegation
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(5 * time.Second))
+	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
+	require.True(t, got.IsOK(), "expected no error, msg: %v", msgBeginUnbonding)
+
+	// now there should be two entries
+	ubd, found = keeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 2)
+
+	// move forwaubd in time, should complete the first redelegation, but not the second
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(5 * time.Second))
+	EndBlocker(ctx, keeper)
+	ubd, found = keeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
+	require.True(t, found)
+	require.Len(t, ubd.Entries, 1)
+
+	// move forwaubd in time, should complete the second redelegation
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(5 * time.Second))
+	EndBlocker(ctx, keeper)
+	ubd, found = keeper.GetUnbondingDelegation(ctx, selfDelAddr, valAddr)
 	require.False(t, found)
 }
 

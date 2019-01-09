@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/store"
 	"os"
 	"testing"
 
@@ -85,9 +86,10 @@ func TestMountStores(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
+	pruningOpt := SetPruning(store.PruneSyncable)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil)
+	app := NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// make a cap key and mount the store
 	capKey := sdk.NewKVStoreKey(MainStoreKey)
@@ -116,7 +118,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := sdk.CommitID{2, res.Data}
 
 	// reload with LoadLatestVersion
-	app = NewBaseApp(name, logger, db, nil)
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
 	err = app.LoadLatestVersion(capKey)
 	require.Nil(t, err)
@@ -124,7 +126,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseApp(name, logger, db, nil)
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
 	err = app.LoadVersion(1, capKey)
 	require.Nil(t, err)

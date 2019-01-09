@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/store"
 	"io"
 	"os"
 
@@ -122,7 +123,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 }
 
 func newApp(logger log.Logger, db dbm.DB, storeTracer io.Writer) abci.Application {
-	return app.NewBasecoinApp(logger, db, baseapp.SetPruning(viper.GetString("pruning")))
+	return app.NewBasecoinApp(logger, db, baseapp.SetPruning(store.NewPruningOptions(viper.GetString("pruning"))))
 }
 
 func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, storeTracer io.Writer, _ int64, _ bool) (

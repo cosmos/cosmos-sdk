@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/store"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -56,7 +57,7 @@ func main() {
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
 	return app.NewGaiaApp(logger, db, traceStore, true,
-		baseapp.SetPruning(viper.GetString("pruning")),
+		baseapp.SetPruning(store.NewPruningOptions(viper.GetString("pruning"))),
 		baseapp.SetMinimumFees(viper.GetString("minimum_fees")),
 	)
 }

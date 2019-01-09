@@ -5,6 +5,7 @@ import (
 )
 
 // historical rewards for a validator
+// TODO add reference counter, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r245747051
 type ValidatorHistoricalRewards = sdk.DecCoins
 
 // current rewards for a validator

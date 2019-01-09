@@ -44,6 +44,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower int64, totalPo
 	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
 
 	// allocate tokens proportionally to voting power
+	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range votes {
 		validator := k.stakeKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 

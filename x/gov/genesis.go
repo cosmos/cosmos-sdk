@@ -60,6 +60,58 @@ func DefaultGenesisState() GenesisState {
 	}
 }
 
+// Checks whether 2 GenesisState structs are equivalent.
+func (data GenesisState) Equal(data2 GenesisState) bool {
+	if data.StartingProposalID != data.StartingProposalID ||
+		!data.DepositParams.Equal(data2.DepositParams) ||
+		data.VotingParams != data2.VotingParams ||
+		data.TallyParams != data2.TallyParams {
+		return false
+	}
+
+	if len(data.Deposits) != len(data2.Deposits) {
+		return false
+	}
+	for i := range data.Deposits {
+		deposit1 := data.Deposits[i]
+		deposit2 := data2.Deposits[i]
+		if deposit1.ProposalID != deposit2.ProposalID ||
+			!deposit1.Deposit.Equals(deposit2.Deposit) {
+			return false
+		}
+	}
+
+	if len(data.Votes) != len(data2.Votes) {
+		return false
+	}
+	for i := range data.Votes {
+		vote1 := data.Votes[i]
+		vote2 := data2.Votes[i]
+		if vote1.ProposalID != vote2.ProposalID ||
+			!vote1.Vote.Equals(vote2.Vote) {
+			return false
+		}
+	}
+
+	if len(data.Proposals) != len(data2.Proposals) {
+		return false
+	}
+	for i := range data.Proposals {
+		if data.Proposals[i] != data.Proposals[i] {
+			return false
+		}
+	}
+
+	return true
+
+}
+
+// Returns if a GenesisState is empty or has data in it
+func (data GenesisState) IsEmpty() bool {
+	emptyGenState := GenesisState{}
+	return data.Equal(emptyGenState)
+}
+
 // ValidateGenesis TODO https://github.com/cosmos/cosmos-sdk/issues/3007
 func ValidateGenesis(data GenesisState) error {
 	threshold := data.TallyParams.Threshold
@@ -110,6 +162,12 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)
 	}
 	for _, proposal := range data.Proposals {
+		switch proposal.GetStatus() {
+		case StatusDepositPeriod:
+			k.InsertInactiveProposalQueue(ctx, proposal.GetDepositEndTime(), proposal.GetProposalID())
+		case StatusVotingPeriod:
+			k.InsertActiveProposalQueue(ctx, proposal.GetVotingEndTime(), proposal.GetProposalID())
+		}
 		k.SetProposal(ctx, proposal)
 	}
 }

@@ -195,6 +195,7 @@ func TestMultiStoreQuery(t *testing.T) {
 
 func newMultiStoreWithMounts(db dbm.DB) *rootMultiStore {
 	store := NewCommitMultiStore(db)
+	store.pruningOpts = PruneSyncable
 	store.MountStoreWithDB(
 		sdk.NewKVStoreKey("store1"), sdk.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(

@@ -55,71 +55,24 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 	}
 }
 
-// what's kept in the store value
-type validatorValue struct {
-	ConsPubKey       crypto.PubKey
-	Jailed           bool
-	Status           sdk.BondStatus
-	Tokens           sdk.Int
-	DelegatorShares  sdk.Dec
-	Description      Description
-	BondHeight       int64
-	UnbondingHeight  int64
-	UnbondingMinTime time.Time
-	Commission       Commission
-}
-
-// return the redelegation without fields contained within the key for the store
+// return the redelegation
 func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
-	val := validatorValue{
-		ConsPubKey:       validator.ConsPubKey,
-		Jailed:           validator.Jailed,
-		Status:           validator.Status,
-		Tokens:           validator.Tokens,
-		DelegatorShares:  validator.DelegatorShares,
-		Description:      validator.Description,
-		BondHeight:       validator.BondHeight,
-		UnbondingHeight:  validator.UnbondingHeight,
-		UnbondingMinTime: validator.UnbondingMinTime,
-		Commission:       validator.Commission,
-	}
-	return cdc.MustMarshalBinaryLengthPrefixed(val)
+	return cdc.MustMarshalBinaryLengthPrefixed(validator)
 }
 
-// unmarshal a redelegation from a store key and value
-func MustUnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) Validator {
-	validator, err := UnmarshalValidator(cdc, operatorAddr, value)
+// unmarshal a redelegation from a store value
+func MustUnmarshalValidator(cdc *codec.Codec, value []byte) Validator {
+	validator, err := UnmarshalValidator(cdc, value)
 	if err != nil {
 		panic(err)
 	}
 	return validator
 }
 
-// unmarshal a redelegation from a store key and value
-func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator Validator, err error) {
-	if len(operatorAddr) != sdk.AddrLen {
-		err = fmt.Errorf("%v", ErrBadValidatorAddr(DefaultCodespace).Data())
-		return
-	}
-	var storeValue validatorValue
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &storeValue)
-	if err != nil {
-		return
-	}
-
-	return Validator{
-		OperatorAddr:     operatorAddr,
-		ConsPubKey:       storeValue.ConsPubKey,
-		Jailed:           storeValue.Jailed,
-		Tokens:           storeValue.Tokens,
-		Status:           storeValue.Status,
-		DelegatorShares:  storeValue.DelegatorShares,
-		Description:      storeValue.Description,
-		BondHeight:       storeValue.BondHeight,
-		UnbondingHeight:  storeValue.UnbondingHeight,
-		UnbondingMinTime: storeValue.UnbondingMinTime,
-		Commission:       storeValue.Commission,
-	}, nil
+// unmarshal a redelegation from a store value
+func UnmarshalValidator(cdc *codec.Codec, value []byte) (validator Validator, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &validator)
+	return validator, err
 }
 
 // HumanReadableString returns a human readable string representation of a

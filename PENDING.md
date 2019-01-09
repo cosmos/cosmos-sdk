@@ -21,9 +21,13 @@ BREAKING CHANGES
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
 
 * SDK
-  * [stake] \#2513 Validator power type from Dec -> Int 
+  * [stake] \#2513 Validator power type from Dec -> Int
+  * [stake] \#3233 key and value now contain duplicate fields to simplify code
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
-
+  * [\#3195](https://github.com/cosmos/cosmos-sdk/issues/3195) Allows custom configuration for syncable strategy
+  * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
+  meter utilization during aborted ante handler executions.
+  
 * Tendermint
 
 
@@ -56,13 +60,16 @@ IMPROVEMENTS
 
 * Gaia REST API
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) Validate tx/sign endpoint POST body.
+  * [\#2948](https://github.com/cosmos/cosmos-sdk/issues/2948) Swagger UI now makes requests to light client node
 
 * Gaia CLI  (`gaiacli`)
+  * [\#3224](https://github.com/cosmos/cosmos-sdk/pull/3224) Support adding offline public keys to the keystore
 
 * Gaia
+  * [\#2186](https://github.com/cosmos/cosmos-sdk/issues/2186) Add Address Interface
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
-  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees
-  in a local testnet.
+  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees in a local testnet.
+  * [\#3250](https://github.com/cosmos/cosmos-sdk/pull/3250) Refactor integration tests and increase coverage
 
 * SDK
   * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation
@@ -74,8 +81,8 @@ IMPROVEMENTS
 * Tendermint
 
 * CI
-    * \#2498 Added macos CI job to CircleCI
-
+  * \#2498 Added macos CI job to CircleCI
+  * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim
 
 BUG FIXES
 
@@ -83,12 +90,13 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
   * \#3141 Fix the bug in GetAccount when `len(res) == 0` and `err == nil`
-  
+
 * Gaia
   * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version
   * \#3181 Correctly reset total accum update height and jailed-validator bond height / unbonding height on export-for-zero-height
   * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Fix parsing `gaiad.toml`
   when it already exists.
+  * \#3223 Fix unset governance proposal queues when importing state from old chain
   * [#3187](https://github.com/cosmos/cosmos-sdk/issues/3187) Fix `gaiad export`
   by resetting each validator's slashing period.
 

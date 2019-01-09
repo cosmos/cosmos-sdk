@@ -28,9 +28,17 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 
 	// Calculate current ratio
 	var current sdk.DecCoins
-	if val.GetPower().IsZero() {
-		// this can happen after redelegations are slashed
-		// TODO add to the community pool?
+	if val.GetTokens().IsZero() {
+
+		// can't calculate ratio for zero-token validators
+		// ergo we instead add to the community pool
+		feePool := k.GetFeePool(ctx)
+		outstanding := k.GetOutstandingRewards(ctx)
+		feePool.CommunityPool = feePool.CommunityPool.Plus(rewards.Rewards)
+		outstanding = outstanding.Minus(rewards.Rewards)
+		k.SetFeePool(ctx, feePool)
+		k.SetOutstandingRewards(ctx, outstanding)
+
 		current = sdk.DecCoins{}
 	} else {
 		current = rewards.Rewards.QuoDec(sdk.NewDecFromInt(val.GetTokens()))

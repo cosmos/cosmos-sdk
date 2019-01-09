@@ -13,6 +13,9 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
 	sh := stake.NewHandler(sk)
 
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
+
 	// create validator with 50% commission
 	commission := stake.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := stake.NewMsgCreateValidator(valOpAddr1, valConsPk1,

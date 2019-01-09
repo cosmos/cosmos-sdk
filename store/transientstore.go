@@ -26,7 +26,7 @@ func (ts *transientStore) Commit() (id CommitID) {
 }
 
 // Implements CommitStore
-func (ts *transientStore) SetPruning(pruning PruningStrategy) {
+func (ts *transientStore) SetPruning(opts PruningOptions) {
 }
 
 // Implements CommitStore

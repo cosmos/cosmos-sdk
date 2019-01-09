@@ -18,12 +18,12 @@ tags:
 - name: ICS23
   description: Slashing module APIs
 - name: ICS24
-  description: Fee distribution module APIs
+  description: WIP - Fee distribution module APIs
 - name: version
   description: Query app version
 schemes:
 - https
-host: fabo.interblock.io:26657
+host: fabo.interblock.io:1317
 securityDefinitions:
   kms:
     type: basic
@@ -797,20 +797,20 @@ paths:
   /stake/redelegations:
     parameters:
     - in: query
-        name: delegator
-        description: Bech32 AccAddress of Delegator
-        required: false
-        type: string
+      name: delegator
+      description: Bech32 AccAddress of Delegator
+      required: false
+      type: string
     - in: query
-        name: validator_from
-        description: Bech32 ValAddress of SrcValidator
-        required: false
-        type: string
+      name: validator_from
+      description: Bech32 ValAddress of SrcValidator
+      required: false
+      type: string
     - in: query
-        name: validator_to
-        description: Bech32 ValAddress of DstValidator
-        required: false
-        type: string
+      name: validator_to
+      description: Bech32 ValAddress of DstValidator
+      required: false
+      type: string
     get:
       summary: Get all redelegations (filter by query params)
       tags:

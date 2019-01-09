@@ -104,9 +104,9 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	// if we're still in the same block, no slashes can yet have happened
 	if endingHeight > startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight, func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
-			stake = stake.Mul(sdk.OneDec().Sub(event.Fraction))
-			endingPeriod := event.ValidatorPeriod
+			endingPeriod := event.ValidatorPeriod - 1
 			rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+			stake = stake.Mul(sdk.OneDec().Sub(event.Fraction))
 			startingPeriod = endingPeriod
 			return false
 		})
@@ -114,6 +114,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 
 	// calculate rewards for final period
 	rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+
 	return
 }
 

@@ -42,7 +42,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 		// cache, we don't want to write changes
 		ctx, _ = ctx.CacheContext()
 
-		// outstanding := k.GetOutstandingRewards(ctx)
+		outstanding := k.GetOutstandingRewards(ctx)
 
 		// iterate over all bonded validators, withdraw commission
 		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
@@ -62,10 +62,10 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 			return fmt.Errorf("Negative remaining coins: %v", remaining)
 		}
 
-		// TODO somehow cap error, perhaps instead in a test vs. the dumb iteration implementation
-		// if len(remaining) > 0 && remaining[0].Amount.Quo(outstanding[0].Amount).GT(sdk.OneDec().Quo(sdk.NewDec(100))) {
-		//	return fmt.Errorf("High error - outstanding %v, remaining %v", outstanding, remaining)
-		//}
+		// bound at 0.1% error
+		if len(remaining) > 0 && remaining[0].Amount.Quo(outstanding[0].Amount).GT(sdk.OneDec().Quo(sdk.NewDec(1000))) {
+			return fmt.Errorf("High error - outstanding %v, remaining %v", outstanding, remaining)
+		}
 
 		return nil
 	}

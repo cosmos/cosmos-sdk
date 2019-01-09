@@ -47,10 +47,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.OnDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
-	// XXX fix or delete this section
-	//sort.SliceStable(data.UnbondingDelegations[:], func(i, j int) bool {
-	//return data.UnbondingDelegations[i].CreationHeight < data.UnbondingDelegations[j].CreationHeight
-	//})
 	for _, ubd := range data.UnbondingDelegations {
 		keeper.SetUnbondingDelegation(ctx, ubd)
 		for _, entry := range ubd.Entries {
@@ -58,10 +54,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		}
 	}
 
-	// XXX fix or delete this section
-	//sort.SliceStable(data.Redelegations[:], func(i, j int) bool {
-	//return data.Redelegations[i].CreationHeight < data.Redelegations[j].CreationHeight
-	//})
 	for _, red := range data.Redelegations {
 		keeper.SetRedelegation(ctx, red)
 		for _, entry := range red.Entries {

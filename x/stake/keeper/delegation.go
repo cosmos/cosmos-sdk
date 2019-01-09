@@ -605,7 +605,7 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 
 	// remove the redelegation if there are no more entries
 	if len(ubd.Entries) == 0 {
-		k.RemoveRedelegation(ctx, ubd)
+		k.RemoveUnbondingDelegation(ctx, ubd)
 	}
 
 	return nil

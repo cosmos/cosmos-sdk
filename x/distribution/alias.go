@@ -29,7 +29,7 @@ const (
 	StoreKey         = types.StoreKey
 	TStoreKey        = types.TStoreKey
 	RouterKey        = types.RouterKey
-	QuerierRoute       = types.QuerierRoute
+	QuerierRoute     = types.QuerierRoute
 )
 
 var (

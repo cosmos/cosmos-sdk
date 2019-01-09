@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 

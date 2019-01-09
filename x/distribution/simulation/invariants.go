@@ -63,7 +63,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 		}
 
 		// bound at 0.1% error
-		if len(remaining) > 0 && remaining[0].Amount.Quo(outstanding[0].Amount).GT(sdk.OneDec().Quo(sdk.NewDec(1000))) {
+		if len(remaining) > 0 && remaining[0].Amount.Quo(outstanding[0].Amount).GT(sdk.OneDec().Quo(sdk.NewDec(100))) {
 			return fmt.Errorf("High error - outstanding %v, remaining %v", outstanding, remaining)
 		}
 

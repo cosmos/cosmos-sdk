@@ -3,10 +3,11 @@ package keeper
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
@@ -81,11 +82,11 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	}
 	fck.SetCollectedFees(fees)
 	votes := []abci.VoteInfo{
-		abci.VoteInfo{
+		{
 			Validator:       abciValA,
 			SignedLastBlock: true,
 		},
-		abci.VoteInfo{
+		{
 			Validator:       abciValB,
 			SignedLastBlock: true,
 		},

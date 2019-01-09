@@ -33,7 +33,7 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 		// TODO add to the community pool?
 		current = sdk.DecCoins{}
 	} else {
-		current = rewards.Rewards.QuoDec(sdk.NewDecFromInt(val.GetPower()))
+		current = rewards.Rewards.QuoDec(sdk.NewDecFromInt(val.GetTokens()))
 	}
 
 	// Fetch historical rewards for last period

@@ -20,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/rs/cors"
 
 	// Import statik for light client stuff
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
@@ -129,7 +130,7 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 
 		err := rpcserver.StartHTTPAndTLSServer(
 			rs.listener,
-			rs.Mux,
+			cors.Default().Handler(rs.Mux),
 			certFile, keyFile,
 			rs.log,
 		)

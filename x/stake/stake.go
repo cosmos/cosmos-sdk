@@ -67,6 +67,7 @@ var (
 	KeyBondDenom      = types.KeyBondDenom
 
 	DefaultParams         = types.DefaultParams
+	DefaultBondDenom      = types.DefaultBondDenom
 	InitialPool           = types.InitialPool
 	NewValidator          = types.NewValidator
 	NewDescription        = types.NewDescription
@@ -108,7 +109,7 @@ const (
 const (
 	StoreKey              = types.StoreKey
 	TStoreKey             = types.TStoreKey
-	QuerierRoute            = types.QuerierRoute
+	QuerierRoute          = types.QuerierRoute
 	RouterKey             = types.RouterKey
 	DefaultCodespace      = types.DefaultCodespace
 	CodeInvalidValidator  = types.CodeInvalidValidator

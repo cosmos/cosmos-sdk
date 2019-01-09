@@ -27,7 +27,7 @@ type DelegatorStartingInfo struct {
 // outstanding rewards for everyone
 type OutstandingRewards = sdk.DecCoins
 
-// slash event
+// validator slash event
 type ValidatorSlashEvent struct {
 	ValidatorPeriod uint64  `json:"validator_period"`
 	Fraction        sdk.Dec `json:"fraction"`

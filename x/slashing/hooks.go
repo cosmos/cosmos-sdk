@@ -1,3 +1,4 @@
+// nolint
 package slashing
 
 import (
@@ -8,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-//nolint
 func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	// Update the signing info start height or create a new signing info
 	_, found := k.getValidatorSigningInfo(ctx, address)
@@ -85,7 +85,7 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 }
 
 // nolint - unused hooks
- func (h Hooks) AfterValidatorPowerDidChange(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) {
+func (h Hooks) AfterValidatorPowerDidChange(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) {
 }
 func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
 func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}

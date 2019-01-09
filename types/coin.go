@@ -299,19 +299,20 @@ func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	return coinsB.IsAllGTE(coins)
 }
 
-// IsAnyGT returns true if coins contains at least one denom that is present at
-// a smaller or equal amount in coinsB; it returns false otherwise.
+// IsAnyGTE returns true iff coins contains at least one denom that is present
+// at a greater or equal amount in coinsB; it returns false otherwise.
 //
 // NOTE: IsAnyGTE operates under the invariant that coins are sorted by
 // denominations.
 func (coins Coins) IsAnyGTE(coinsB Coins) bool {
-	if len(coins) == 0 || len(coinsB) == 0 {
+	if len(coinsB) == 0 {
 		return false
 	}
 
 	j := 0
 	for _, coin := range coins {
-		searchOther := true
+		searchOther := true // terminator in case coins breaks the sorted invariant
+
 		for j < len(coinsB) && searchOther {
 			switch strings.Compare(coin.Denom, coinsB[j].Denom) {
 			case -1:
@@ -322,7 +323,7 @@ func (coins Coins) IsAnyGTE(coinsB Coins) bool {
 					return true
 				}
 
-				fallthrough
+				fallthrough // skip to next other coin
 			case 1:
 				// coin denom is greater than the current other coin, so move to next other coin
 				j++

@@ -168,8 +168,9 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		if err != nil {
 			return err.Result()
 		}
-		validator.Commission = commission
+
 		k.BeforeValidatorModified(ctx, msg.ValidatorAddr)
+		validator.Commission = commission
 	}
 
 	k.SetValidator(ctx, validator)

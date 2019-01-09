@@ -82,7 +82,8 @@ Example:
 		client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created",
 	)
 	cmd.Flags().String(
-		flagMinimumFees, fmt.Sprintf("1%s", staketypes.DefaultBondDenom), "Validator minimum fees",
+		server.FlagMinGasPrices, fmt.Sprintf("1%s", staketypes.DefaultBondDenom),
+		"Minimum disparate gas prices validator will accept for transactions",
 	)
 
 	return cmd
@@ -104,7 +105,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 	valPubKeys := make([]crypto.PubKey, numValidators)
 
 	gaiaConfig := srvconfig.DefaultConfig()
-	gaiaConfig.MinFees = viper.GetString(flagMinimumFees)
+	gaiaConfig.MinGasPrices = viper.GetString(server.FlagMinGasPrices)
 
 	var (
 		accs     []app.GenesisAccount

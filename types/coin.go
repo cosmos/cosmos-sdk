@@ -305,7 +305,7 @@ func (coins Coins) IsAllLTE(coinsB Coins) bool {
 // NOTE: IsAnyGTE operates under the invariant that coins are sorted by
 // denominations.
 func (coins Coins) IsAnyGTE(coinsB Coins) bool {
-	if len(coins) == 0 || len(coinsB) == 0 {
+	if len(coinsB) == 0 {
 		return false
 	}
 

@@ -311,7 +311,8 @@ func (coins Coins) IsAnyGTE(coinsB Coins) bool {
 
 	j := 0
 	for _, coin := range coins {
-		searchOther := true
+		searchOther := true // terminator in case coins breaks the sorted invariant
+
 		for j < len(coinsB) && searchOther {
 			switch strings.Compare(coin.Denom, coinsB[j].Denom) {
 			case -1:

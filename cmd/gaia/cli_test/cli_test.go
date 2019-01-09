@@ -45,23 +45,22 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	require.False(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	// TODO: Make this work
-	// // Ensure tx w/ correct fees (stake) pass
-	// txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(denom, 23))
-	// success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), txFees)
-	// require.True(f.T, success)
-	// tests.WaitForNextNBlocksTM(1, f.Port)
-	//
-	// // Ensure tx w/ correct fees (feetoken) pass
-	// txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 23))
-	// success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(feeDenom, 10), txFees)
-	// require.True(f.T, success)
-	// tests.WaitForNextNBlocksTM(1, f.Port)
-	//
-	// // Ensure tx w/ improper fees (footoken) fails
-	// txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 23))
-	// success = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 10), txFees)
-	// require.False(f.T, success)
+	// Ensure tx w/ correct fees (stake) pass
+	txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(denom, 23))
+	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), txFees)
+	require.True(f.T, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// Ensure tx w/ correct fees (feetoken) pass
+	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 23))
+	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(feeDenom, 10), txFees)
+	require.True(f.T, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// Ensure tx w/ improper fees (footoken) fails
+	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 23))
+	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 10), txFees)
+	require.False(f.T, success)
 
 	// Cleanup testing directories
 	f.Cleanup()

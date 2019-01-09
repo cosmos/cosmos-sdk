@@ -849,10 +849,10 @@ func TestTransitiveRedelegation(t *testing.T) {
 	require.True(t, got.IsOK(), "expected no error")
 }
 
-func TestMultipleRedelegation(t *testing.T) {
+func TestMultipleRedelegationAtSameTime(t *testing.T) {
 	ctx, _, keeper := keep.CreateTestInput(t, false, 1000)
-	validatorAddr := sdk.ValAddress(keep.Addrs[0])
-	validatorAddr2 := sdk.ValAddress(keep.Addrs[1])
+	valAddr := sdk.ValAddress(keep.Addrs[0])
+	valAddr2 := sdk.ValAddress(keep.Addrs[1])
 
 	// set the unbonding time
 	params := keeper.GetParams(ctx)
@@ -860,27 +860,48 @@ func TestMultipleRedelegation(t *testing.T) {
 	keeper.SetParams(ctx, params)
 
 	// create the validators
-	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], 10)
+	msgCreateValidator := NewTestMsgCreateValidator(valAddr, keep.PKs[0], 10)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
-	msgCreateValidator = NewTestMsgCreateValidator(validatorAddr2, keep.PKs[1], 10)
+	msgCreateValidator = NewTestMsgCreateValidator(valAddr2, keep.PKs[1], 10)
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
 	// end block to bond them
 	EndBlocker(ctx, keeper)
 
-	// begin redelegate
-	msgBeginRedelegate := NewMsgBeginRedelegate(sdk.AccAddress(validatorAddr), validatorAddr, validatorAddr2, sdk.NewDec(5))
+	// begin a redelegate
+	selfDelAddr := sdk.AccAddress(valAddr) // (the validator is it's own delegator)
+	msgBeginRedelegate := NewMsgBeginRedelegate(selfDelAddr,
+		valAddr, valAddr2, sdk.NewDec(5))
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, %v", got)
 
-	// should be able to redelegate again while first redelegation still exists
+	// there should only be one entry in the redelegation object
+	rd, found := keeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
+	require.True(t, found)
+	require.Len(t, rd.Entries, 1)
+
+	// start a second redelegation at this same time as the first
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error, msg: %v", msgBeginRedelegate)
 
-	// XXX add more test
+	// now there should be two entries
+	rd, found = keeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
+	require.True(t, found)
+	require.Len(t, rd.Entries, 2)
+
+	// move forward in time, should complete both redelegations
+	ctx = ctx.WithBlockTime(ctx.BlockHeader().Time.Add(1 * time.Second))
+	EndBlocker(ctx, keeper)
+
+	rd, found = keeper.GetRedelegation(ctx, selfDelAddr, valAddr, valAddr2)
+	require.False(t, found)
+}
+
+func TestMultipleRedelegationAtUniqueTimes(t *testing.T) {
+	// XXX
 }
 
 func TestUnbondingWhenExcessValidators(t *testing.T) {

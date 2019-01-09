@@ -595,19 +595,17 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 	ctxTime := ctx.BlockHeader().Time
 
 	// loop through all the entries and complete unbonding mature entries
-	for i, entry := range ubd.Entries {
+	for i := 0; i < len(ubd.Entries); i++ {
+		entry := ubd.Entries[i]
 		if entry.IsMature(ctxTime) {
-			_, _, err := k.bankKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{entry.Balance})
-			if err != nil {
-				return err
-			}
 			ubd.RemoveEntry(int64(i))
-
-			// remove the ubd if there are no more entries
-			if len(ubd.Entries) == 0 {
-				k.RemoveUnbondingDelegation(ctx, ubd)
-			}
+			i--
 		}
+	}
+
+	// remove the redelegation if there are no more entries
+	if len(ubd.Entries) == 0 {
+		k.RemoveRedelegation(ctx, ubd)
 	}
 
 	return nil
@@ -673,15 +671,17 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	ctxTime := ctx.BlockHeader().Time
 
 	// loop through all the entries and complete mature redelegation entries
-	for i, entry := range red.Entries {
+	for i := 0; i < len(red.Entries); i++ {
+		entry := red.Entries[i]
 		if entry.IsMature(ctxTime) {
 			red.RemoveEntry(int64(i))
-
-			// remove the redelegation if there are no more entries
-			if len(red.Entries) == 0 {
-				k.RemoveRedelegation(ctx, red)
-			}
+			i--
 		}
+	}
+
+	// remove the redelegation if there are no more entries
+	if len(red.Entries) == 0 {
+		k.RemoveRedelegation(ctx, red)
 	}
 
 	return nil

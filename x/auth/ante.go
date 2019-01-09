@@ -12,6 +12,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: Remove this and its usage once nano-atoms are enabled.
+var gasUnitPerCost uint64 = 10000
+
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
@@ -32,7 +35,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// if this is a CheckTx. This is only for local mempool purposes, and thus
 		// is only ran on check tx.
 		if ctx.IsCheckTx() && !simulate {
-			res := EnsureSufficientMempoolFees(ctx, stdTx)
+			res := EnsureSufficientMempoolFees(ctx, stdTx.Fee)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -263,10 +266,12 @@ func DeductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 //
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
-func EnsureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
-	gasPrices := make(sdk.Coins, len(stdTx.Fee.Amount))
-	for i, fee := range stdTx.Fee.Amount {
-		gasPrice := fee.Amount.DivRaw(int64(stdTx.Fee.Gas))
+func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
+	normalizedGas := stdFee.Gas / gasUnitPerCost
+
+	gasPrices := make(sdk.Coins, len(stdFee.Amount))
+	for i, fee := range stdFee.Amount {
+		gasPrice := fee.Amount.DivRaw(int64(normalizedGas))
 		gasPrices[i] = sdk.NewCoin(fee.Denom, gasPrice)
 	}
 
@@ -276,7 +281,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	if !minGasPrices.IsZero() && !gasPrices.IsAnyGTE(minGasPrices) {
 		return sdk.ErrInsufficientFee(
 			fmt.Sprintf(
-				"insufficient fees; received gas prices: %q do not meet minimum: %q", gasPrices, minGasPrices),
+				"insufficient fees; received gas prices: %q does not meet minimum: %q", gasPrices, minGasPrices),
 		).Result()
 	}
 

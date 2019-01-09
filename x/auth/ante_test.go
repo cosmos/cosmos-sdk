@@ -660,3 +660,33 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
 }
+
+func TestEnsureSufficientMempoolFees(t *testing.T) {
+	// setup
+	input := setupTestInput()
+	ctx := input.ctx.WithMinGasPrices(
+		sdk.Coins{
+			sdk.NewInt64Coin("photino", 5),
+			sdk.NewInt64Coin("stake", 2),
+		},
+	)
+
+	testCases := []struct {
+		input      StdFee
+		expectedOK bool
+	}{
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 40)}), true},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 39)}), false},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 100)}), true},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 99)}), false},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 40), sdk.NewInt64Coin("photino", 100)}), true},
+	}
+
+	for i, tc := range testCases {
+		res := EnsureSufficientMempoolFees(ctx, tc.input)
+		require.Equal(
+			t, tc.expectedOK, res.IsOK(),
+			"unexpected result; tc #%d, input: %v, log: %v", i, tc.input, res.Log,
+		)
+	}
+}

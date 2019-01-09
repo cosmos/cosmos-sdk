@@ -45,7 +45,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant 
 		// outstanding := k.GetOutstandingRewards(ctx)
 
 		// iterate over all bonded validators, withdraw commission
-		sk.IterateBondedValidatorsByPower(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
 			_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
 			return false
 		})

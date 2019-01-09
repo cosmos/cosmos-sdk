@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -603,9 +604,11 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 		}
 	}
 
-	// remove the redelegation if there are no more entries
+	// set the unbonding delegation or remove it if there are no more entries
 	if len(ubd.Entries) == 0 {
 		k.RemoveUnbondingDelegation(ctx, ubd)
+	} else {
+		k.SetUnbondingDelegation(ctx, ubd)
 	}
 
 	return nil
@@ -673,15 +676,20 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	// loop through all the entries and complete mature redelegation entries
 	for i := 0; i < len(red.Entries); i++ {
 		entry := red.Entries[i]
+		fmt.Printf("debug i: %v\n", i)
+		fmt.Printf("debug entry: %v\n", entry)
+		fmt.Printf("debug entry.IsMature(ctxTime): %v\n", entry.IsMature(ctxTime))
 		if entry.IsMature(ctxTime) {
 			red.RemoveEntry(int64(i))
 			i--
 		}
 	}
 
-	// remove the redelegation if there are no more entries
+	// set the redelegation or remove it if there are no more entries
 	if len(red.Entries) == 0 {
 		k.RemoveRedelegation(ctx, red)
+	} else {
+		k.SetRedelegation(ctx, red)
 	}
 
 	return nil

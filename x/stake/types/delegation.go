@@ -252,6 +252,8 @@ func NewRedelegationEntry(creationHeight int64,
 
 // IsMature - is the current entry mature
 func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
+	fmt.Printf("debug CompletionTime: \t%v\n", e.CompletionTime)
+	fmt.Printf("debug currentTime: \t%v\n", currentTime)
 	return !e.CompletionTime.After(currentTime)
 }
 

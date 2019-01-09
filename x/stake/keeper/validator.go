@@ -36,7 +36,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	}
 
 	// amino bytes weren't found in cache, so amino unmarshal and add it to the cache
-	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
+	validator = types.MustUnmarshalValidator(k.cdc, value)
 	cachedVal := cachedValidator{validator, strValue}
 	k.validatorCache[strValue] = cachedValidator{validator, strValue}
 	k.validatorCacheList.PushBack(cachedVal)
@@ -47,7 +47,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 		delete(k.validatorCache, valToRemove.marshalled)
 	}
 
-	validator = types.MustUnmarshalValidator(k.cdc, addr, value)
+	validator = types.MustUnmarshalValidator(k.cdc, value)
 	return validator, true
 }
 
@@ -132,7 +132,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Dec) {
+	sharesToRemove sdk.Dec) (valOut types.Validator, removedTokens sdk.Int) {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	pool := k.GetPool(ctx)
@@ -144,7 +144,8 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 }
 
 // Update the tokens of an existing validator, update the validators power index key
-func (k Keeper) RemoveValidatorTokens(ctx sdk.Context, validator types.Validator, tokensToRemove sdk.Dec) types.Validator {
+func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
+	validator types.Validator, tokensToRemove sdk.Int) types.Validator {
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	pool := k.GetPool(ctx)
@@ -157,7 +158,9 @@ func (k Keeper) RemoveValidatorTokens(ctx sdk.Context, validator types.Validator
 
 // UpdateValidatorCommission attempts to update a validator's commission rate.
 // An error is returned if the new commission rate is invalid.
-func (k Keeper) UpdateValidatorCommission(ctx sdk.Context, validator types.Validator, newRate sdk.Dec) (types.Commission, sdk.Error) {
+func (k Keeper) UpdateValidatorCommission(ctx sdk.Context,
+	validator types.Validator, newRate sdk.Dec) (types.Commission, sdk.Error) {
+
 	commission := validator.Commission
 	blockTime := ctx.BlockHeader().Time
 
@@ -199,7 +202,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 
 	// call hook if present
 	if k.hooks != nil {
-		k.hooks.OnValidatorRemoved(ctx, validator.ConsAddress(), validator.OperatorAddr)
+		k.hooks.AfterValidatorRemoved(ctx, validator.ConsAddress(), validator.OperatorAddr)
 	}
 
 }
@@ -214,8 +217,7 @@ func (k Keeper) GetAllValidators(ctx sdk.Context) (validators []types.Validator)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		addr := iterator.Key()[1:]
-		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
+		validator := types.MustUnmarshalValidator(k.cdc, iterator.Value())
 		validators = append(validators, validator)
 	}
 	return validators
@@ -231,8 +233,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, maxRetrieve uint16) (validators [
 
 	i := 0
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
-		addr := iterator.Key()[1:]
-		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
+		validator := types.MustUnmarshalValidator(k.cdc, iterator.Value())
 		validators[i] = validator
 		i++
 	}
@@ -330,12 +331,13 @@ func (k Keeper) DeleteValidatorQueueTimeSlice(ctx sdk.Context, timestamp time.Ti
 // Insert an validator address to the appropriate timeslice in the validator queue
 func (k Keeper) InsertValidatorQueue(ctx sdk.Context, val types.Validator) {
 	timeSlice := k.GetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime)
+	var keys []sdk.ValAddress
 	if len(timeSlice) == 0 {
-		k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, []sdk.ValAddress{val.OperatorAddr})
+		keys = []sdk.ValAddress{val.OperatorAddr}
 	} else {
-		timeSlice = append(timeSlice, val.OperatorAddr)
-		k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, timeSlice)
+		keys = append(timeSlice, val.OperatorAddr)
 	}
+	k.SetValidatorQueueTimeSlice(ctx, val.UnbondingMinTime, keys)
 }
 
 // Delete a validator address from the validator queue
@@ -357,7 +359,8 @@ func (k Keeper) DeleteValidatorQueue(ctx sdk.Context, val types.Validator) {
 // Returns all the validator queue timeslices from time 0 until endTime
 func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(ValidatorQueueKey, sdk.InclusiveEndBytes(GetValidatorQueueTimeKey(endTime)))
+	return store.Iterator(ValidatorQueueKey,
+		sdk.InclusiveEndBytes(GetValidatorQueueTimeKey(endTime)))
 }
 
 // Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue

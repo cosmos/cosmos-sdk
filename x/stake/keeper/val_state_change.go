@@ -49,8 +49,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// if we get to a zero-power validator (which we don't bond),
 		// there are no more possible bonded validators
-		// note: we must check the ABCI power, since we round before sending to Tendermint
-		if validator.Tokens.RoundInt64() == int64(0) {
+		if validator.Tokens.IsZero() {
 			break
 		}
 
@@ -72,7 +71,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		oldPowerBytes, found := last[valAddrBytes]
 
 		// calculate the new power bytes
-		newPower := validator.BondedTokens().RoundInt64()
+		newPower := validator.BondedTokens().Int64()
 		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(sdk.NewInt(newPower))
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
@@ -81,7 +80,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 			// Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
 			// This hook is extremely useful, otherwise lazy accum bugs will be difficult to solve.
 			if k.hooks != nil {
-				k.hooks.OnValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
+				k.hooks.AfterValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
 			}
 
 			// set validator power on lookup index.
@@ -197,7 +196,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	// call the bond hook if present
 	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
+		k.hooks.AfterValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
 	}
 
 	return validator
@@ -232,7 +231,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 
 	// call the unbond hook if present
 	if k.hooks != nil {
-		k.hooks.OnValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddr)
+		k.hooks.AfterValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddr)
 	}
 
 	return validator

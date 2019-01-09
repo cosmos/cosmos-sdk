@@ -40,7 +40,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	flags := fmt.Sprintf("--home=%s --node=%v --chain-id=%v", gaiacliHome, servAddr, chainID)
 
 	// start gaiad server with minimum fees
-	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=2feetoken", gaiadHome, servAddr, p2pAddr))
+	proc := tests.GoExecuteTWithStdout(t, fmt.Sprintf("gaiad start --home=%s --rpc.laddr=%v --p2p.laddr=%v --minimum_fees=2%s,2feetoken", gaiadHome, servAddr, p2pAddr, stakeTypes.DefaultBondDenom))
 
 	defer proc.Stop(false)
 	tests.WaitForTMStart(port)
@@ -52,9 +52,28 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	fooAcc := executeGetAccount(t, fmt.Sprintf("gaiacli query account %s %v", fooAddr, flags))
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
 
+	// Ensure that a tx with no fees fails
 	success := executeWrite(t, fmt.Sprintf(
 		"gaiacli tx send %v --amount=10%s --to=%s --from=foo", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
 	require.False(t, success)
+
+	// Ensure tx with correct fees (stake) pass
+	success = executeWrite(t, fmt.Sprintf(
+		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --fees=23%s", flags, stakeTypes.DefaultBondDenom, barAddr, stakeTypes.DefaultBondDenom), app.DefaultKeyPass)
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(1, port)
+
+	// Ensure tx with correct fees (feetoken) pass
+	success = executeWrite(t, fmt.Sprintf(
+		"gaiacli tx send %v --amount=10feetoken --to=%s --from=foo --fees=23feetoken", flags, barAddr), app.DefaultKeyPass)
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(1, port)
+
+	// Ensure tx with improper fees fails
+	success = executeWrite(t, fmt.Sprintf(
+		"gaiacli tx send %v --amount=10%s --to=%s --from=foo --fees=2footoken", flags, stakeTypes.DefaultBondDenom, barAddr), app.DefaultKeyPass)
+	require.False(t, success)
+
 	cleanupDirs(gaiadHome, gaiacliHome)
 }
 
@@ -232,7 +251,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	defaultParams := stake.DefaultParams()
 	initialPool := stake.InitialPool()
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(100)) // Delegate tx on GaiaAppGenState
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(100)) // Delegate tx on GaiaAppGenState
 
 	// create validator
 	cvStr := fmt.Sprintf("gaiacli tx stake create-validator %v", flags)
@@ -244,7 +263,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	cvStr += fmt.Sprintf(" --commission-max-rate=%v", "0.20")
 	cvStr += fmt.Sprintf(" --commission-max-change-rate=%v", "0.10")
 
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewDec(1))
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(1))
 
 	// Test --generate-only
 	success, stdout, stderr := executeWriteRetStdStreams(t, cvStr+" --generate-only", app.DefaultKeyPass)
@@ -268,7 +287,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	validator := executeGetValidator(t, fmt.Sprintf("gaiacli query stake validator %s %v", sdk.ValAddress(barAddr), flags))
 	require.Equal(t, validator.OperatorAddr, sdk.ValAddress(barAddr))
-	require.True(sdk.DecEq(t, sdk.NewDec(2), validator.Tokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(2), validator.Tokens))
 
 	validatorDelegations := executeGetValidatorDelegations(t, fmt.Sprintf("gaiacli query stake delegations-to %s %v", sdk.ValAddress(barAddr), flags))
 	require.Len(t, validatorDelegations, 1)
@@ -289,7 +308,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, int64(9), barAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64(), "%v", barAcc)
 	*/
 	validator = executeGetValidator(t, fmt.Sprintf("gaiacli query stake validator %s %v", sdk.ValAddress(barAddr), flags))
-	require.Equal(t, "1.0000000000", validator.Tokens.String())
+	require.Equal(t, "1", validator.Tokens.String())
 
 	validatorUbds := executeGetValidatorUnbondingDelegations(t,
 		fmt.Sprintf("gaiacli query stake unbonding-delegations-from %s %v", sdk.ValAddress(barAddr), flags))
@@ -732,7 +751,7 @@ func initializeFixtures(t *testing.T) (chainID, servAddr, port, gaiadHome, gaiac
 	chainID = executeInit(t, fmt.Sprintf("gaiad init -o --moniker=foo --home=%s", gaiadHome))
 
 	executeWriteCheckErr(t, fmt.Sprintf(
-		"gaiad add-genesis-account %s 150%s,1000footoken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
+		"gaiad add-genesis-account %s 150%s,1000footoken,1000feetoken --home=%s", fooAddr, stakeTypes.DefaultBondDenom, gaiadHome))
 	executeWrite(t, fmt.Sprintf("cat %s%sconfig%sgenesis.json", gaiadHome, string(os.PathSeparator), string(os.PathSeparator)))
 	executeWriteCheckErr(t, fmt.Sprintf(
 		"gaiad gentx --name=foo --home=%s --home-client=%s", gaiadHome, gaiacliHome), app.DefaultKeyPass)

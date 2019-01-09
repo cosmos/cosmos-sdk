@@ -291,7 +291,7 @@ func InitializeTestLCD(
 		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewDec(100))
+		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewInt(100))
 	}
 
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)
@@ -644,12 +644,10 @@ func getAccount(t *testing.T, port string, addr sdk.AccAddress) auth.Account {
 func doSign(t *testing.T, port, name, password, chainID string, accnum, sequence uint64, msg auth.StdTx) auth.StdTx {
 	var signedMsg auth.StdTx
 	payload := authrest.SignBody{
-		Tx:               msg,
-		LocalAccountName: name,
-		Password:         password,
-		ChainID:          chainID,
-		AccountNumber:    accnum,
-		Sequence:         sequence,
+		Tx: msg,
+		BaseReq: utils.NewBaseReq(
+			name, password, "", chainID, "", "", accnum, sequence, nil, false, false,
+		),
 	}
 	json, err := cdc.MarshalJSON(payload)
 	require.Nil(t, err)

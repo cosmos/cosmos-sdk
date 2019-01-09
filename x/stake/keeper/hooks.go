@@ -6,56 +6,56 @@ import (
 )
 
 // Expose the hooks if present
-func (k Keeper) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorCreated(ctx, valAddr)
+		k.hooks.AfterValidatorCreated(ctx, valAddr)
 	}
 }
 
-func (k Keeper) OnValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (k Keeper) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorModified(ctx, valAddr)
+		k.hooks.BeforeValidatorModified(ctx, valAddr)
 	}
 }
 
-func (k Keeper) OnValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorRemoved(ctx, consAddr, valAddr)
+		k.hooks.AfterValidatorRemoved(ctx, consAddr, valAddr)
 	}
 }
 
-func (k Keeper) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (k Keeper) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorBonded(ctx, consAddr, valAddr)
+		k.hooks.AfterValidatorBonded(ctx, consAddr, valAddr)
 	}
 }
 
-func (k Keeper) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (k Keeper) AfterValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorPowerDidChange(ctx, consAddr, valAddr)
+		k.hooks.AfterValidatorPowerDidChange(ctx, consAddr, valAddr)
 	}
 }
 
-func (k Keeper) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (k Keeper) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnValidatorBeginUnbonding(ctx, consAddr, valAddr)
+		k.hooks.AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)
 	}
 }
 
-func (k Keeper) OnDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (k Keeper) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnDelegationCreated(ctx, delAddr, valAddr)
+		k.hooks.BeforeDelegationCreated(ctx, delAddr, valAddr)
 	}
 }
 
-func (k Keeper) OnDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (k Keeper) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnDelegationSharesModified(ctx, delAddr, valAddr)
+		k.hooks.BeforeDelegationSharesModified(ctx, delAddr, valAddr)
 	}
 }
 
-func (k Keeper) OnDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+func (k Keeper) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
-		k.hooks.OnDelegationRemoved(ctx, delAddr, valAddr)
+		k.hooks.BeforeDelegationRemoved(ctx, delAddr, valAddr)
 	}
 }

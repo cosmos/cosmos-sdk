@@ -52,7 +52,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 		mapp.InitChainer(ctx, req)
 
 		stakeGenesis := DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = sdk.NewDec(100000)
+		stakeGenesis.Pool.LooseTokens = sdk.NewInt(100000)
 
 		validators, err := InitGenesis(ctx, keeper, stakeGenesis)
 		if err != nil {
@@ -127,7 +127,7 @@ func TestStakeMsgs(t *testing.T) {
 	validator := checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.BondedTokens()))
+	require.True(sdk.IntEq(t, sdk.NewInt(10), validator.BondedTokens()))
 
 	// addr1 create validator on behalf of addr2
 	createValidatorMsgOnBehalfOf := NewMsgCreateValidatorOnBehalfOf(
@@ -141,7 +141,7 @@ func TestStakeMsgs(t *testing.T) {
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr2), true)
 	require.Equal(t, sdk.ValAddress(addr2), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.True(sdk.DecEq(t, sdk.NewDec(10), validator.Tokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 
 	// check the bond that should have been created as well
 	checkDelegation(t, mApp, keeper, addr1, sdk.ValAddress(addr1), true, sdk.NewDec(10))

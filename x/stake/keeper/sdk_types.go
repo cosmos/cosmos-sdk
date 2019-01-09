@@ -16,8 +16,7 @@ func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validato
 	iterator := sdk.KVStorePrefixIterator(store, ValidatorsKey)
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
-		addr := iterator.Key()[1:]
-		validator := types.MustUnmarshalValidator(k.cdc, addr, iterator.Value())
+		validator := types.MustUnmarshalValidator(k.cdc, iterator.Value())
 		stop := fn(i, validator) // XXX is this safe will the validator unexposed fields be able to get written to?
 		if stop {
 			break
@@ -89,7 +88,7 @@ func (k Keeper) ValidatorByConsAddr(ctx sdk.Context, addr sdk.ConsAddress) sdk.V
 }
 
 // total power from the bond (not last, but current)
-func (k Keeper) TotalPower(ctx sdk.Context) sdk.Dec {
+func (k Keeper) TotalPower(ctx sdk.Context) sdk.Int {
 	pool := k.GetPool(ctx)
 	return pool.BondedTokens
 }
@@ -101,7 +100,7 @@ func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 }
 
 // when minting new tokens
-func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Dec) {
+func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Int) {
 	pool := k.GetPool(ctx)
 	pool.LooseTokens = pool.LooseTokens.Add(newTokens)
 	k.SetPool(ctx, pool)
@@ -136,7 +135,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 	delegatorPrefixKey := GetDelegationsKey(delAddr)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
 	for i := int64(0); iterator.Valid(); iterator.Next() {
-		del := types.MustUnmarshalDelegation(k.cdc, iterator.Key(), iterator.Value())
+		del := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
 		stop := fn(i, del)
 		if stop {
 			break

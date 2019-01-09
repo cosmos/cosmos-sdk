@@ -26,7 +26,7 @@ type Validator struct {
 	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
-	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
+	Tokens          sdk.Int        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
 	Description Description `json:"description"` // description terms for the validator
@@ -45,7 +45,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		ConsPubKey:       pubKey,
 		Jailed:           false,
 		Status:           sdk.Unbonded,
-		Tokens:           sdk.ZeroDec(),
+		Tokens:           sdk.ZeroInt(),
 		DelegatorShares:  sdk.ZeroDec(),
 		Description:      description,
 		BondHeight:       int64(0),
@@ -55,71 +55,24 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 	}
 }
 
-// what's kept in the store value
-type validatorValue struct {
-	ConsPubKey       crypto.PubKey
-	Jailed           bool
-	Status           sdk.BondStatus
-	Tokens           sdk.Dec
-	DelegatorShares  sdk.Dec
-	Description      Description
-	BondHeight       int64
-	UnbondingHeight  int64
-	UnbondingMinTime time.Time
-	Commission       Commission
-}
-
-// return the redelegation without fields contained within the key for the store
+// return the redelegation
 func MustMarshalValidator(cdc *codec.Codec, validator Validator) []byte {
-	val := validatorValue{
-		ConsPubKey:       validator.ConsPubKey,
-		Jailed:           validator.Jailed,
-		Status:           validator.Status,
-		Tokens:           validator.Tokens,
-		DelegatorShares:  validator.DelegatorShares,
-		Description:      validator.Description,
-		BondHeight:       validator.BondHeight,
-		UnbondingHeight:  validator.UnbondingHeight,
-		UnbondingMinTime: validator.UnbondingMinTime,
-		Commission:       validator.Commission,
-	}
-	return cdc.MustMarshalBinaryLengthPrefixed(val)
+	return cdc.MustMarshalBinaryLengthPrefixed(validator)
 }
 
-// unmarshal a redelegation from a store key and value
-func MustUnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) Validator {
-	validator, err := UnmarshalValidator(cdc, operatorAddr, value)
+// unmarshal a redelegation from a store value
+func MustUnmarshalValidator(cdc *codec.Codec, value []byte) Validator {
+	validator, err := UnmarshalValidator(cdc, value)
 	if err != nil {
 		panic(err)
 	}
 	return validator
 }
 
-// unmarshal a redelegation from a store key and value
-func UnmarshalValidator(cdc *codec.Codec, operatorAddr, value []byte) (validator Validator, err error) {
-	if len(operatorAddr) != sdk.AddrLen {
-		err = fmt.Errorf("%v", ErrBadValidatorAddr(DefaultCodespace).Data())
-		return
-	}
-	var storeValue validatorValue
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &storeValue)
-	if err != nil {
-		return
-	}
-
-	return Validator{
-		OperatorAddr:     operatorAddr,
-		ConsPubKey:       storeValue.ConsPubKey,
-		Jailed:           storeValue.Jailed,
-		Tokens:           storeValue.Tokens,
-		Status:           storeValue.Status,
-		DelegatorShares:  storeValue.DelegatorShares,
-		Description:      storeValue.Description,
-		BondHeight:       storeValue.BondHeight,
-		UnbondingHeight:  storeValue.UnbondingHeight,
-		UnbondingMinTime: storeValue.UnbondingMinTime,
-		Commission:       storeValue.Commission,
-	}, nil
+// unmarshal a redelegation from a store value
+func UnmarshalValidator(cdc *codec.Codec, value []byte) (validator Validator, err error) {
+	err = cdc.UnmarshalBinaryLengthPrefixed(value, &validator)
+	return validator, err
 }
 
 // HumanReadableString returns a human readable string representation of a
@@ -137,7 +90,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Jailed: %v\n", v.Jailed)
 	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
 	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens)
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares)
+	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Unbonding Height: %d\n", v.UnbondingHeight)
@@ -156,7 +109,7 @@ type bechValidator struct {
 	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
 
 	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
-	Tokens          sdk.Dec        `json:"tokens"`           // delegated tokens (incl. self-delegation)
+	Tokens          sdk.Int        `json:"tokens"`           // delegated tokens (incl. self-delegation)
 	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
 	Description Description `json:"description"` // description terms for the validator
@@ -302,7 +255,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Power:  v.BondedTokens().RoundInt64(),
+		Power:  v.BondedTokens().Int64(),
 	}
 }
 
@@ -351,7 +304,7 @@ func (v Validator) UpdateStatus(pool Pool, NewStatus sdk.BondStatus) (Validator,
 }
 
 // removes tokens from a validator
-func (v Validator) RemoveTokens(pool Pool, tokens sdk.Dec) (Validator, Pool) {
+func (v Validator) RemoveTokens(pool Pool, tokens sdk.Int) (Validator, Pool) {
 	if tokens.IsNegative() {
 		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
 	}
@@ -383,29 +336,50 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 
 	// bondedShare/delegatedShare
 	exRate := v.DelegatorShareExRate()
-	amountDec := sdk.NewDecFromInt(amount)
-
-	if v.Status == sdk.Bonded {
-		pool = pool.looseTokensToBonded(amountDec)
-	}
-
 	if exRate.IsZero() {
 		panic("zero exRate should not happen")
 	}
-	v.Tokens = v.Tokens.Add(amountDec)
-	issuedShares := amountDec.Quo(exRate)
+
+	if v.Status == sdk.Bonded {
+		pool = pool.looseTokensToBonded(amount)
+	}
+
+	v.Tokens = v.Tokens.Add(amount)
+	issuedShares := sdk.NewDecFromInt(amount).Quo(exRate)
 	v.DelegatorShares = v.DelegatorShares.Add(issuedShares)
 
 	return v, pool, issuedShares
 }
 
 // RemoveDelShares removes delegator shares from a validator.
-func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Dec) {
-	delTokens := v.DelegatorShareExRate().Mul(delShares)
-	delTokens = sdk.MinDec(delTokens, v.Tokens)
-	v, pool = v.RemoveTokens(pool, delTokens)
-	v.DelegatorShares = v.DelegatorShares.Sub(delShares)
-	return v, pool, delTokens
+// NOTE: because token fractions are left in the valiadator,
+//       the exchange rate of future shares of this validator can increase.
+func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Int) {
+
+	remainingShares := v.DelegatorShares.Sub(delShares)
+	var issuedTokens sdk.Int
+	if remainingShares.IsZero() {
+
+		// last delegation share gets any trimmings
+		issuedTokens = v.Tokens
+		v.Tokens = sdk.ZeroInt()
+	} else {
+
+		// leave excess tokens in the validator
+		// however fully use all the delegator shares
+		issuedTokens = v.DelegatorShareExRate().Mul(delShares).TruncateInt()
+		v.Tokens = v.Tokens.Sub(issuedTokens)
+		if v.Tokens.IsNegative() {
+			panic("attempting to remove more tokens than available in validator")
+		}
+	}
+
+	v.DelegatorShares = remainingShares
+	if v.Status == sdk.Bonded {
+		pool = pool.bondedTokensToLoose(issuedTokens)
+	}
+
+	return v, pool, issuedTokens
 }
 
 // DelegatorShareExRate gets the exchange rate of tokens over delegator shares.
@@ -414,15 +388,15 @@ func (v Validator) DelegatorShareExRate() sdk.Dec {
 	if v.DelegatorShares.IsZero() {
 		return sdk.OneDec()
 	}
-	return v.Tokens.Quo(v.DelegatorShares)
+	return sdk.NewDecFromInt(v.Tokens).Quo(v.DelegatorShares)
 }
 
 // Get the bonded tokens which the validator holds
-func (v Validator) BondedTokens() sdk.Dec {
+func (v Validator) BondedTokens() sdk.Int {
 	if v.Status == sdk.Bonded {
 		return v.Tokens
 	}
-	return sdk.ZeroDec()
+	return sdk.ZeroInt()
 }
 
 //______________________________________________________________________
@@ -437,8 +411,8 @@ func (v Validator) GetStatus() sdk.BondStatus    { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress  { return v.OperatorAddr }
 func (v Validator) GetConsPubKey() crypto.PubKey { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress { return sdk.ConsAddress(v.ConsPubKey.Address()) }
-func (v Validator) GetPower() sdk.Dec            { return v.BondedTokens() }
-func (v Validator) GetTokens() sdk.Dec           { return v.Tokens }
+func (v Validator) GetPower() sdk.Int            { return v.BondedTokens() }
+func (v Validator) GetTokens() sdk.Int           { return v.Tokens }
 func (v Validator) GetCommission() sdk.Dec       { return v.Commission.Rate }
 func (v Validator) GetDelegatorShares() sdk.Dec  { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64         { return v.BondHeight }

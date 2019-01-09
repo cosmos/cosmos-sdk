@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.29.1
+
+BUG FIXES
+
+* SDK
+  * [\#3207](https://github.com/cosmos/cosmos-sdk/issues/3207) - Fix token printing bug
+
 ## 0.29.0
 
 BREAKING CHANGES

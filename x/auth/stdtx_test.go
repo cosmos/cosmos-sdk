@@ -91,7 +91,7 @@ func TestTxValidateBasic(t *testing.T) {
 
 	err = tx.ValidateBasic()
 	require.Error(t, err)
-	require.Equal(t, sdk.CodeUnauthorized, err.Result().Code)
+	require.Equal(t, sdk.CodeNoSignatures, err.Result().Code)
 
 	// require to fail validation when signatures do not match expected signers
 	privs, accNums, seqs = []crypto.PrivKey{priv1}, []uint64{0, 1}, []uint64{0, 0}

@@ -255,10 +255,17 @@ func TestCoins(t *testing.T) {
 		{"mineral", NewInt(1)},
 		{"tree", NewInt(1)},
 	}
-	mixedCase := Coins{
+	mixedCase1 := Coins{
 		{"gAs", NewInt(1)},
 		{"MineraL", NewInt(1)},
 		{"TREE", NewInt(1)},
+	}
+	mixedCase2 := Coins{
+		{"gAs", NewInt(1)},
+		{"mineral", NewInt(1)},
+	}
+	mixedCase3 := Coins{
+		{"gAs", NewInt(1)},
 	}
 	empty := Coins{
 		{"gold", NewInt(0)},
@@ -286,9 +293,15 @@ func TestCoins(t *testing.T) {
 		{"gas", NewInt(1)},
 		{"mineral", NewInt(1)},
 	}
+	neg := Coins{
+		{"gas", NewInt(-1)},
+		{"mineral", NewInt(1)},
+	}
 
 	assert.True(t, good.IsValid(), "Coins are valid")
-	assert.False(t, mixedCase.IsValid(), "Coins denoms contain upper case characters")
+	assert.False(t, mixedCase1.IsValid(), "Coins denoms contain upper case characters")
+	assert.False(t, mixedCase2.IsValid(), "First Coins denoms contain upper case characters")
+	assert.False(t, mixedCase3.IsValid(), "Single denom in Coins contains upper case characters")
 	assert.True(t, good.IsPositive(), "Expected coins to be positive: %v", good)
 	assert.False(t, null.IsPositive(), "Expected coins to not be positive: %v", null)
 	assert.True(t, good.IsAllGTE(empty), "Expected %v to be >= %v", good, empty)
@@ -298,6 +311,7 @@ func TestCoins(t *testing.T) {
 	assert.False(t, badSort2.IsValid(), "Coins are not sorted")
 	assert.False(t, badAmt.IsValid(), "Coins cannot include 0 amounts")
 	assert.False(t, dup.IsValid(), "Duplicate coin")
+	assert.False(t, neg.IsValid(), "Negative first-denom coin")
 }
 
 func TestCoinsGT(t *testing.T) {
@@ -352,6 +366,32 @@ func TestCoinsLTE(t *testing.T) {
 	assert.True(t, Coins{{"a", one}, {"b", one}}.IsAllLTE(Coins{{"a", one}, {"b", one}}))
 	assert.True(t, Coins{{"a", one}, {"b", one}}.IsAllLTE(Coins{{"a", one}, {"b", two}}))
 	assert.True(t, Coins{}.IsAllLTE(Coins{{"a", one}}))
+}
+
+func TestCoinsIsAnyGT(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+	assert.False(t, Coins{}.IsAnyGT(Coins{}))
+	assert.False(t, Coins{{"a", one}}.IsAnyGT(Coins{}))
+	assert.False(t, Coins{}.IsAnyGT(Coins{{"a", one}}))
+	assert.False(t, Coins{{"a", one}}.IsAnyGT(Coins{{"a", one}}))
+	assert.False(t, Coins{{"a", one}}.IsAnyGT(Coins{{"a", two}}))
+	assert.True(t, Coins{{"a", two}}.IsAnyGT(Coins{{"a", one}}))
+	assert.True(t, Coins{{"a", one}, {"b", two}}.IsAnyGT(Coins{{"a", one}, {"b", one}}))
+	assert.True(t, Coins{{"a", two}, {"b", one}}.IsAnyGT(Coins{{"a", one}, {"b", two}}))
+}
+
+func TestCoinsIsAnyGTE(t *testing.T) {
+	one := NewInt(1)
+	two := NewInt(2)
+	assert.False(t, Coins{}.IsAnyGTE(Coins{}))
+	assert.False(t, Coins{{"a", one}}.IsAnyGTE(Coins{}))
+	assert.False(t, Coins{}.IsAnyGTE(Coins{{"a", one}}))
+	assert.False(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", two}}))
+	assert.True(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", one}}))
+	assert.True(t, Coins{{"a", two}}.IsAnyGTE(Coins{{"a", one}}))
+	assert.True(t, Coins{{"a", one}, {"b", two}}.IsAnyGTE(Coins{{"a", one}, {"b", one}}))
+	assert.True(t, Coins{{"a", one}, {"b", one}}.IsAnyGTE(Coins{{"a", one}, {"b", two}}))
 }
 
 func TestParse(t *testing.T) {

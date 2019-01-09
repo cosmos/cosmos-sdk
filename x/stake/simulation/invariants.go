@@ -65,11 +65,9 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
 			switch validator.GetStatus() {
 			case sdk.Bonded:
-				bonded = bonded.Add(validator.GetPower())
-			case sdk.Unbonding:
-				loose = loose.Add(validator.GetTokens())
-			case sdk.Unbonded:
-				loose = loose.Add(validator.GetTokens())
+				bonded = bonded.Add(sdk.NewDecFromInt(validator.GetPower()))
+			case sdk.Unbonding, sdk.Unbonded:
+				loose = loose.Add(sdk.NewDecFromInt(validator.GetTokens()))
 			}
 			return false
 		})
@@ -96,15 +94,17 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 
 		// Loose tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators
-		if !pool.LooseTokens.Equal(loose) {
-			return fmt.Errorf("loose token invariance:\n\tpool.LooseTokens: %v"+
-				"\n\tsum of account tokens: %v", pool.LooseTokens, loose)
+		if !sdk.NewDecFromInt(pool.LooseTokens).Equal(loose) {
+			return fmt.Errorf("loose token invariance:\n"+
+				"\tpool.LooseTokens: %v\n"+
+				"\tsum of account tokens: %v", pool.LooseTokens, loose)
 		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators
-		if !pool.BondedTokens.Equal(bonded) {
-			return fmt.Errorf("bonded token invariance:\n\tpool.BondedTokens: %v"+
-				"\n\tsum of account tokens: %v", pool.BondedTokens, bonded)
+		if !sdk.NewDecFromInt(pool.BondedTokens).Equal(bonded) {
+			return fmt.Errorf("bonded token invariance:\n"+
+				"\tpool.BondedTokens: %v\n"+
+				"\tsum of account tokens: %v", pool.BondedTokens, bonded)
 		}
 
 		return nil
@@ -129,7 +129,7 @@ func NonNegativePowerInvariant(k stake.Keeper) simulation.Invariant {
 					"\n\tkey should be: %v\n\tkey in store: %v", validator.GetPower(), powerKey, iterator.Key())
 			}
 
-			if validator.Tokens.LT(sdk.ZeroDec()) {
+			if validator.Tokens.IsNegative() {
 				return fmt.Errorf("negative tokens for validator: %v", validator)
 			}
 		}

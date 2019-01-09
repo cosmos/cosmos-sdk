@@ -1,3 +1,4 @@
+// nolint
 package slashing
 
 import (
@@ -8,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
+func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	// Update the signing info start height or create a new signing info
 	_, found := k.getValidatorSigningInfo(ctx, address)
 	if !found {
@@ -32,20 +33,20 @@ func (k Keeper) onValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _ sd
 }
 
 // Mark the slashing period as having ended when a validator begins unbonding
-func (k Keeper) onValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
+func (k Keeper) AfterValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
 	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, ctx.BlockHeight())
 	slashingPeriod.EndHeight = ctx.BlockHeight()
 	k.SetValidatorSlashingPeriod(ctx, slashingPeriod)
 }
 
 // When a validator is created, add the address-pubkey relation.
-func (k Keeper) onValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+func (k Keeper) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	validator := k.validatorSet.Validator(ctx, valAddr)
 	k.addPubkey(ctx, validator.GetConsPubKey())
 }
 
 // When a validator is removed, delete the address-pubkey relation.
-func (k Keeper) onValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) {
+func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, address sdk.ConsAddress) {
 	k.deleteAddrPubkeyRelation(ctx, crypto.Address(address))
 }
 
@@ -64,29 +65,29 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) OnValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.k.onValidatorBonded(ctx, consAddr, valAddr)
+func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.k.AfterValidatorBonded(ctx, consAddr, valAddr)
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) OnValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.k.onValidatorBeginUnbonding(ctx, consAddr, valAddr)
+func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+	h.k.AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) OnValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) {
-	h.k.onValidatorRemoved(ctx, consAddr)
+func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) {
+	h.k.AfterValidatorRemoved(ctx, consAddr)
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) OnValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
-	h.k.onValidatorCreated(ctx, valAddr)
+func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
+	h.k.AfterValidatorCreated(ctx, valAddr)
 }
 
 // nolint - unused hooks
-func (h Hooks) OnValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
+func (h Hooks) AfterValidatorPowerDidChange(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) {
 }
-func (h Hooks) OnValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
-func (h Hooks) OnDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
-func (h Hooks) OnDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) {}
-func (h Hooks) OnDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
+func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
+func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
+func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) {}
+func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}

@@ -2,8 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -28,7 +29,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			cliCtx, txBldr, msg, err := BuildCreateValidatorMsg(cliCtx, txBldr)
+			txBldr, msg, err := BuildCreateValidatorMsg(cliCtx, txBldr)
 			if err != nil {
 				return err
 			}
@@ -48,8 +49,9 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(FsCommissionCreate)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	cmd.Flags().Bool(FlagGenesisFormat, false, "Export the transaction in gen-tx format; it implies --generate-only")
-	cmd.Flags().String(FlagIP, "", fmt.Sprintf("Node's public IP. It takes effect only when used in combination with --%s", FlagGenesisFormat))
-	cmd.Flags().String(FlagNodeID, "", "Node's ID")
+	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", FlagGenesisFormat))
+	cmd.Flags().String(FlagNodeID, "", "The node's ID")
+
 	cmd.MarkFlagRequired(client.FlagFrom)
 	cmd.MarkFlagRequired(FlagAmount)
 	cmd.MarkFlagRequired(FlagPubKey)
@@ -256,22 +258,22 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder) (context.CLIContext, authtxb.TxBuilder, sdk.Msg, error) {
+func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder) (authtxb.TxBuilder, sdk.Msg, error) {
 	amounstStr := viper.GetString(FlagAmount)
 	amount, err := sdk.ParseCoin(amounstStr)
 	if err != nil {
-		return cliCtx, txBldr, nil, err
+		return txBldr, nil, err
 	}
 
 	valAddr, err := cliCtx.GetFromAddress()
 	if err != nil {
-		return cliCtx, txBldr, nil, err
+		return txBldr, nil, err
 	}
 
 	pkStr := viper.GetString(FlagPubKey)
 	pk, err := sdk.GetConsPubKeyBech32(pkStr)
 	if err != nil {
-		return cliCtx, txBldr, nil, err
+		return txBldr, nil, err
 	}
 
 	description := stake.NewDescription(
@@ -287,14 +289,16 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 	maxChangeRateStr := viper.GetString(FlagCommissionMaxChangeRate)
 	commissionMsg, err := buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr)
 	if err != nil {
-		return cliCtx, txBldr, nil, err
+		return txBldr, nil, err
 	}
 
+	delAddr := viper.GetString(FlagAddressDelegator)
+
 	var msg sdk.Msg
-	if viper.GetString(FlagAddressDelegator) != "" {
-		delAddr, err := sdk.AccAddressFromBech32(viper.GetString(FlagAddressDelegator))
+	if delAddr != "" {
+		delAddr, err := sdk.AccAddressFromBech32(delAddr)
 		if err != nil {
-			return cliCtx, txBldr, nil, err
+			return txBldr, nil, err
 		}
 
 		msg = stake.NewMsgCreateValidatorOnBehalfOf(
@@ -313,5 +317,5 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 			txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
 		}
 	}
-	return cliCtx, txBldr, msg, nil
+	return txBldr, msg, nil
 }

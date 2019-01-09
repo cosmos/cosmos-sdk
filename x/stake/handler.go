@@ -128,7 +128,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	k.SetValidatorByConsAddr(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
-	k.OnValidatorCreated(ctx, validator.OperatorAddr)
+	k.AfterValidatorCreated(ctx, validator.OperatorAddr)
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
@@ -168,8 +168,9 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		if err != nil {
 			return err.Result()
 		}
+
+		k.BeforeValidatorModified(ctx, msg.ValidatorAddr)
 		validator.Commission = commission
-		k.OnValidatorModified(ctx, msg.ValidatorAddr)
 	}
 
 	k.SetValidator(ctx, validator)

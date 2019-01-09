@@ -170,7 +170,7 @@ func getQueriedTally(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sd
 
 func testQueryParams(t *testing.T) {
 	cdc := codec.New()
-	mapp, keeper, _, _, _, _ := getMockApp(t, 1000)
+	mapp, keeper, _, _, _, _ := getMockApp(t, 1000, GenesisState{}, nil)
 	querier := NewQuerier(keeper)
 	ctx := mapp.NewContext(false, abci.Header{})
 
@@ -179,7 +179,7 @@ func testQueryParams(t *testing.T) {
 
 func testQueries(t *testing.T) {
 	cdc := codec.New()
-	mapp, keeper, _, addrs, _, _ := getMockApp(t, 1000)
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 1000, GenesisState{}, nil)
 	querier := NewQuerier(keeper)
 	handler := NewHandler(keeper)
 	ctx := mapp.NewContext(false, abci.Header{})

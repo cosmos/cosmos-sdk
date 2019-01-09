@@ -53,7 +53,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	operatorAddress := validator.GetOperator()
-	k.OnValidatorModified(ctx, operatorAddress)
+	k.BeforeValidatorModified(ctx, operatorAddress)
 
 	k.BeforeValidatorSlashed(ctx, operatorAddress, slashFactor)
 

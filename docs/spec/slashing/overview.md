@@ -10,8 +10,10 @@ Validators who are *bonded* are *at stake*, meaning that part or all of their st
 
 In order to mitigate the impact of initially likely categories of non-malicious protocol faults, the Cosmos Hub implements for each validator
 a *tombstone* cap, which only allows a validator to be slashed once for a double sign fault. For example, if you misconfigure your HSM and double-sign
-a bunch of old blocks, you'll only be punished for the first double-sign (and then immediately jailed, so that you have a chance to reconfigure your setup).
-This will still be quite expensive and desirable to avoid, but tombstone caps somewhat blunt the economic impact of unintentional misconfiguration.
+a bunch of old blocks, you'll only be punished for the first double-sign (and then immediately tombstombed).  This will still be quite expensive and desirable
+to avoid, but tombstone caps somewhat blunt the economic impact of unintentional misconfiguration.
+
+Liveness faults do not have caps, as they can't stack upon each other.  Liveness bugs are "detected" as soon as the infraction occurs, and the validators are immediately put in jail, so it is not possible for them to commit multiple liveness faults without unjailing in between.
 
 #### ASCII timelines
 

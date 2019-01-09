@@ -79,11 +79,12 @@ SigningInfo.Set(val.Address, signInfo)
 
 This ensures that offending validators are punished the same amount whether they
 act as a single validator with X stake or as N validators with collectively X
-stake.
+stake.  The amount slashed for all double signature infractions committed within a
+single slashing period is capped as described in [overview.md](overview.md) under Tombstone Caps.
 
 ## Uptime tracking
 
-At the beginning of each block, we update the signing info for each validator and check if they should be automatically unbonded:
+At the beginning of each block, we update the signing info for each validator and check if they've dipped below the liveness threshhold over the tracked window.  If so, they will be slashed by `LivenessSlashAmount` and will be Jailed for `LivenessJailPeriod`.  Liveness slashes do NOT lead to a tombstombing.
 
 ```
 height := block.Height
@@ -117,7 +118,7 @@ for val in block.Validators:
     signInfo.IndexOffset = 0
     signInfo.MissedBlocksCounter = 0
     clearMissedBlockBitArray()
-    slash & unbond the validator
+    slash & jail the validator
 
   SigningInfo.Set(val.Address, signInfo)
 ```

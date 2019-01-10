@@ -163,6 +163,10 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 			)
 		}
 
+		if ctx.ResponseHandler != nil {
+			ctx.ResponseHandler(res)
+		}
+
 		io.WriteString(ctx.Output, resStr)
 	}
 

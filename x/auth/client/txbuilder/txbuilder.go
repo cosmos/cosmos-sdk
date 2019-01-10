@@ -23,6 +23,7 @@ type TxBuilder struct {
 	chainID            string
 	memo               string
 	fees               sdk.Coins
+	gasPrices          sdk.Coins
 }
 
 // NewTxBuilder returns a new initialized TxBuilder
@@ -52,7 +53,11 @@ func NewTxBuilderFromCLI() TxBuilder {
 		chainID:            viper.GetString(client.FlagChainID),
 		memo:               viper.GetString(client.FlagMemo),
 	}
-	return txbldr.WithFees(viper.GetString(client.FlagFees))
+
+	txbldr = txbldr.WithFees(viper.GetString(client.FlagFees))
+	txbldr = txbldr.WithGasPrices(viper.GetString(client.FlagGasPrices))
+
+	return txbldr
 }
 
 // GetTxEncoder returns the transaction encoder
@@ -83,6 +88,9 @@ func (bldr TxBuilder) GetMemo() string { return bldr.memo }
 // GetFees returns the fees for the transaction
 func (bldr TxBuilder) GetFees() sdk.Coins { return bldr.fees }
 
+// GetGasPrices returns the gas prices set for the transaction, if any.
+func (bldr TxBuilder) GetGasPrices() sdk.Coins { return bldr.gasPrices }
+
 // WithTxEncoder returns a copy of the context with an updated codec.
 func (bldr TxBuilder) WithTxEncoder(txEncoder sdk.TxEncoder) TxBuilder {
 	bldr.txEncoder = txEncoder
@@ -107,7 +115,19 @@ func (bldr TxBuilder) WithFees(fees string) TxBuilder {
 	if err != nil {
 		panic(err)
 	}
+
 	bldr.fees = parsedFees
+	return bldr
+}
+
+// WithGasPrices returns a copy of the context with updated gas prices.
+func (bldr TxBuilder) WithGasPrices(gasPrices string) TxBuilder {
+	parsedGasPrices, err := sdk.ParseCoins(gasPrices)
+	if err != nil {
+		panic(err)
+	}
+
+	bldr.gasPrices = parsedGasPrices
 	return bldr
 }
 
@@ -137,13 +157,28 @@ func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 		return StdSignMsg{}, errors.Errorf("chain ID required but not specified")
 	}
 
+	fees := bldr.fees
+	if !bldr.gasPrices.IsZero() {
+		if !fees.IsZero() {
+			return StdSignMsg{}, errors.New("cannot provide both fees and gas prices")
+		}
+
+		normalizedGas := bldr.gas / auth.GasNormalizer
+
+		// compute fee based on the given gas prices
+		fees = make(sdk.Coins, len(bldr.gasPrices))
+		for i, gp := range bldr.gasPrices {
+			fees[i] = sdk.NewCoin(gp.Denom, gp.Amount.MulRaw(int64(normalizedGas)))
+		}
+	}
+
 	return StdSignMsg{
 		ChainID:       bldr.chainID,
 		AccountNumber: bldr.accountNumber,
 		Sequence:      bldr.sequence,
 		Memo:          bldr.memo,
 		Msgs:          msgs,
-		Fee:           auth.NewStdFee(bldr.gas, bldr.fees),
+		Fee:           auth.NewStdFee(bldr.gas, fees),
 	}, nil
 }
 

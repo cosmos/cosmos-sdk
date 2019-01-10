@@ -13,7 +13,7 @@ import (
 )
 
 // TODO: Remove this and its usage once nano-atoms are enabled.
-var gasUnitPerCost uint64 = 10000
+var GasNormalizer uint64 = 10000
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
@@ -270,7 +270,7 @@ func DeductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
 func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
-	normalizedGas := stdFee.Gas / gasUnitPerCost
+	normalizedGas := stdFee.Gas / GasNormalizer
 
 	gasPrices := make(sdk.Coins, len(stdFee.Amount))
 	for i, fee := range stdFee.Amount {

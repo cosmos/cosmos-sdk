@@ -30,6 +30,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		ChainID       string
 		Memo          string
 		Fees          sdk.Coins
+		GasPrices     sdk.Coins
 	}
 	defaultMsg := []sdk.Msg{sdk.NewTestMsg(addr)}
 	tests := []struct {
@@ -47,7 +48,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				GasAdjustment: 1.1,
 				SimulateGas:   false,
 				ChainID:       "test-chain",
-				Memo:          "hello from Voyager !",
+				Memo:          "hello from Voyager 1!",
 				Fees:          sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))},
 			},
 			defaultMsg,
@@ -55,15 +56,44 @@ func TestTxBuilderBuild(t *testing.T) {
 				ChainID:       "test-chain",
 				AccountNumber: 1,
 				Sequence:      1,
-				Memo:          "hello from Voyager !",
+				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
 				Fee:           auth.NewStdFee(100, sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},
+		{
+			fields{
+				TxEncoder:     auth.DefaultTxEncoder(codec.New()),
+				AccountNumber: 1,
+				Sequence:      1,
+				Gas:           200000,
+				GasAdjustment: 1.1,
+				SimulateGas:   false,
+				ChainID:       "test-chain",
+				Memo:          "hello from Voyager 2!",
+				GasPrices:     sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))},
+			},
+			defaultMsg,
+			StdSignMsg{
+				ChainID:       "test-chain",
+				AccountNumber: 1,
+				Sequence:      1,
+				Memo:          "hello from Voyager 2!",
+				Msgs:          defaultMsg,
+				Fee:           auth.NewStdFee(200000, sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(20))}),
+			},
+			false,
+		},
 	}
+
 	for i, tc := range tests {
-		bldr := NewTxBuilder(tc.fields.TxEncoder, tc.fields.AccountNumber, tc.fields.Sequence, tc.fields.Gas, tc.fields.GasAdjustment, tc.fields.SimulateGas, tc.fields.ChainID, tc.fields.Memo, tc.fields.Fees)
+		bldr := NewTxBuilder(
+			tc.fields.TxEncoder, tc.fields.AccountNumber, tc.fields.Sequence,
+			tc.fields.Gas, tc.fields.GasAdjustment, tc.fields.SimulateGas,
+			tc.fields.ChainID, tc.fields.Memo, tc.fields.Fees, tc.fields.GasPrices,
+		)
+
 		got, err := bldr.Build(tc.msgs)
 		require.Equal(t, tc.wantErr, (err != nil), "TxBuilder.Build() error = %v, wantErr %v, tc %d", err, tc.wantErr, i)
 		if !reflect.DeepEqual(got, tc.want) {

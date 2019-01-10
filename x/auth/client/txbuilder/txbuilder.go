@@ -26,8 +26,12 @@ type TxBuilder struct {
 	gasPrices          sdk.Coins
 }
 
-// NewTxBuilder returns a new initialized TxBuilder
-func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64, simulateAndExecute bool, chainID, memo string, fees sdk.Coins) TxBuilder {
+// NewTxBuilder returns a new initialized TxBuilder.
+func NewTxBuilder(
+	txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64,
+	simulateAndExecute bool, chainID, memo string, fees, gasPrices sdk.Coins,
+) TxBuilder {
+
 	return TxBuilder{
 		txEncoder:          txEncoder,
 		accountNumber:      accNumber,
@@ -38,6 +42,7 @@ func NewTxBuilder(txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj fl
 		chainID:            chainID,
 		memo:               memo,
 		fees:               fees,
+		gasPrices:          gasPrices,
 	}
 }
 

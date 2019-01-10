@@ -229,7 +229,8 @@ func (k Keeper) UBDQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterato
 		sdk.InclusiveEndBytes(GetUnbondingDelegationTimeKey(endTime)))
 }
 
-// Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
+// Returns a concatenated list of all the timeslices inclusively previous to
+// currTime, and deletes the timeslices from the queue
 func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context,
 	currTime time.Time) (matureUnbonds []types.DVPair) {
 
@@ -409,7 +410,8 @@ func (k Keeper) RedelegationQueueIterator(ctx sdk.Context, endTime time.Time) sd
 	return store.Iterator(RedelegationQueueKey, sdk.InclusiveEndBytes(GetRedelegationTimeKey(endTime)))
 }
 
-// Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
+// Returns a concatenated list of all the timeslices inclusively previous to
+// currTime, and deletes the timeslices from the queue
 func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time

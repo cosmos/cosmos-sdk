@@ -68,6 +68,37 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	f.Cleanup()
 }
 
+func TestGaiaCLIGasPrices(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server with minimum fees
+	proc := f.GDStart(fmt.Sprintf("--minimum_gas_prices=%s", sdk.NewInt64Coin(feeDenom, 5)))
+	defer proc.Stop(false)
+
+	barAddr := f.KeyAddress(keyBar)
+
+	// insufficient gas prices (tx fails)
+	success, _, _ := f.TxSend(
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 50),
+		fmt.Sprintf("--gas-prices=%s", sdk.NewInt64Coin(feeDenom, 1)))
+	require.False(t, success)
+
+	// wait for a block confirmation
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// sufficient gas prices (tx passes)
+	success, _, _ = f.TxSend(
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 50),
+		fmt.Sprintf("--gas-prices=%s", sdk.NewInt64Coin(feeDenom, 5)))
+	require.True(t, success)
+
+	// wait for a block confirmation
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	f.Cleanup()
+}
+
 func TestGaiaCLIFeesDeduction(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)

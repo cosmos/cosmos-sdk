@@ -2,6 +2,7 @@ package bank
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -157,6 +158,7 @@ func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 }
 
 //-----------------------------------------------------------------------------
+// Auxiliary
 
 func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
 	acc := am.GetAccount(ctx, addr)
@@ -301,7 +303,10 @@ func delegateCoins(
 		return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
 	}
 
-	acc.TrackDelegation(ctx.BlockHeader().Time, amt)
+	if err := trackDelegation(acc, ctx.BlockHeader().Time, amt); err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track delegation: %v", err))
+	}
+
 	setAccount(ctx, ak, acc)
 
 	return sdk.NewTags(
@@ -319,11 +324,34 @@ func undelegateCoins(
 		return nil, sdk.ErrUnknownAddress(fmt.Sprintf("account %s does not exist", addr))
 	}
 
-	acc.TrackUndelegation(amt)
+	if err := trackUndelegation(acc, amt); err != nil {
+		return nil, sdk.ErrInternal(fmt.Sprintf("failed to track undelegation: %v", err))
+	}
+
 	setAccount(ctx, ak, acc)
 
 	return sdk.NewTags(
 		sdk.TagAction, TagActionUndelegateCoins,
 		sdk.TagDelegator, []byte(addr.String()),
 	), nil
+}
+
+func trackDelegation(acc auth.Account, blockTime time.Time, amount sdk.Coins) error {
+	vacc, ok := acc.(auth.VestingAccount)
+	if ok {
+		vacc.TrackDelegation(blockTime, amount)
+		return nil
+	}
+
+	return acc.SetCoins(acc.GetCoins().Minus(amount))
+}
+
+func trackUndelegation(acc auth.Account, amount sdk.Coins) error {
+	vacc, ok := acc.(auth.VestingAccount)
+	if ok {
+		vacc.TrackUndelegation(amount)
+		return nil
+	}
+
+	return acc.SetCoins(acc.GetCoins().Plus(amount))
 }

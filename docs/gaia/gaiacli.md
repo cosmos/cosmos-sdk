@@ -106,7 +106,7 @@ the transaction being included in the ledger.
 Validator's have a minimum gas price (multi-denom) configuration and they use
 this value when when determining if they should include the transaction in a block
 during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must
-supply at fees of at least one denomination the validator requires.
+supply fees of at least one denomination the validator requires.
 
 __Note__: With such a mechanism in place, validators may start to prioritize
 txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield

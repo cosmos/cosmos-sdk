@@ -63,7 +63,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	// withdraw all validator commission
 	app.stakeKeeper.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
-		app.distrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
+		_ = app.distrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
 		return false
 	})
 

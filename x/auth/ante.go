@@ -12,9 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TODO: Remove this and its usage once nano-atoms are enabled.
-var GasNormalizer uint64 = 10000
-
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
@@ -270,11 +267,9 @@ func DeductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
 func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
-	normalizedGas := stdFee.Gas / GasNormalizer
-
 	gasPrices := make(sdk.Coins, len(stdFee.Amount))
 	for i, fee := range stdFee.Amount {
-		gasPrice := fee.Amount.DivRaw(int64(normalizedGas))
+		gasPrice := fee.Amount.DivRaw(int64(stdFee.Gas))
 		gasPrices[i] = sdk.NewCoin(fee.Denom, gasPrice)
 	}
 

@@ -168,12 +168,10 @@ func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 			return StdSignMsg{}, errors.New("cannot provide both fees and gas prices")
 		}
 
-		normalizedGas := bldr.gas / auth.GasNormalizer
-
 		// compute fee based on the given gas prices
 		fees = make(sdk.Coins, len(bldr.gasPrices))
 		for i, gp := range bldr.gasPrices {
-			fees[i] = sdk.NewCoin(gp.Denom, gp.Amount.MulRaw(int64(normalizedGas)))
+			fees[i] = sdk.NewCoin(gp.Denom, gp.Amount.MulRaw(int64(bldr.gas)))
 		}
 	}
 

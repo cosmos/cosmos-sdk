@@ -61,9 +61,36 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	/* Handle fee distribution state. */
 
-	// withdraw all delegator & validator rewards
-	// TODO
+	// withdraw all validator commission
+	app.stakeKeeper.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+		app.distrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
+		return false
+	})
 
+	// withdraw all delegator rewards
+	dels := app.stakeKeeper.GetAllDelegations(ctx)
+	for _, delegation := range dels {
+		_ = app.distrKeeper.WithdrawDelegationRewards(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+	}
+
+	// clear validator slash events
+	app.distrKeeper.DeleteValidatorSlashEvents(ctx)
+
+	// clear validator historical rewards
+	app.distrKeeper.DeleteValidatorHistoricalRewards(ctx)
+
+	// reinitialize all validators
+	app.stakeKeeper.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+		app.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		return false
+	})
+
+	// reinitialize all delegations
+	for _, del := range dels {
+		app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, del.DelegatorAddr, del.ValidatorAddr)
+	}
+
+	// assert runtime invariants again
 	app.assertRuntimeInvariantsOnContext(ctx)
 
 	/* Handle stake state. */

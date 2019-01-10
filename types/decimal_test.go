@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -22,7 +23,7 @@ func mustNewDecFromStr(t *testing.T, str string) (d Dec) {
 
 func TestPrecisionMultiplier(t *testing.T) {
 	res := precisionMultiplier(5)
-	exp := big.NewInt(100000)
+	exp := big.NewInt(10000000000000)
 	require.Equal(t, 0, res.Cmp(exp), "equality was incorrect, res %v, exp %v", res, exp)
 }
 
@@ -173,6 +174,7 @@ func TestArithmetic(t *testing.T) {
 		if tc.d2.IsZero() { // panic for divide by zero
 			require.Panics(t, func() { tc.d1.Quo(tc.d2) })
 		} else {
+			fmt.Printf("tc: %s %s %s %s\n", tc.d1, tc.d2, tc.expMul, tc.expDiv)
 			resDiv := tc.d1.Quo(tc.d2)
 			require.True(t, tc.expDiv.Equal(resDiv), "exp %v, res %v, tc %d", tc.expDiv.String(), resDiv.String(), tcIndex)
 		}

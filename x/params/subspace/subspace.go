@@ -116,7 +116,6 @@ func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 // Also set to the transient store to record change
 func (s Subspace) Set(ctx sdk.Context, key []byte, param interface{}) {
 	store := s.kvStore(ctx)
-
 	ty, ok := s.table.m[string(key)]
 	if !ok {
 		panic("Parameter not registered")

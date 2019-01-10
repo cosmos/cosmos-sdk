@@ -94,7 +94,7 @@ func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
 	comm := stakeTypes.CommissionMsg{}
 	msg := stake.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin(bondDenom,
 		50), desc, comm)
-	return auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
+	return auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "", nil)
 }
 
 func TestGaiaGenesisValidation(t *testing.T) {

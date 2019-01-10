@@ -22,6 +22,7 @@ type TxBuilder struct {
 	ChainID       string
 	Memo          string
 	Fee           string
+	Cert          []byte
 }
 
 // NewTxBuilderFromCLI returns a new initialized TxBuilder with parameters from
@@ -115,6 +116,7 @@ func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 		Memo:          bldr.Memo,
 		Msgs:          msgs,
 		Fee:           auth.NewStdFee(bldr.Gas, fee),
+		Cert:          bldr.Cert,
 	}, nil
 }
 
@@ -126,7 +128,7 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 		return nil, err
 	}
 
-	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo))
+	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, []auth.StdSignature{sig}, msg.Memo, msg.Cert))
 }
 
 // BuildAndSign builds a single message to be signed, and signs a transaction
@@ -167,7 +169,7 @@ func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, erro
 		PubKey:        info.GetPubKey(),
 	}}
 
-	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	return bldr.Codec.MarshalBinaryLengthPrefixed(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo, msg.Cert))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If append
@@ -191,7 +193,7 @@ func (bldr TxBuilder) SignStdTx(name, passphrase string, stdTx auth.StdTx, appen
 	} else {
 		sigs = append(sigs, stdSignature)
 	}
-	signedStdTx = auth.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo())
+	signedStdTx = auth.NewStdTx(stdTx.GetMsgs(), stdTx.Fee, sigs, stdTx.GetMemo(), stdTx.Cert)
 	return
 }
 

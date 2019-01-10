@@ -19,14 +19,16 @@ type StdTx struct {
 	Fee        StdFee         `json:"fee"`
 	Signatures []StdSignature `json:"signatures"`
 	Memo       string         `json:"memo"`
+	Cert       []byte         `json:"cert"`
 }
 
-func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
+func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string, cert []byte) StdTx {
 	return StdTx{
 		Msgs:       msgs,
 		Fee:        fee,
 		Signatures: sigs,
 		Memo:       memo,
+		Cert:       cert,
 	}
 }
 

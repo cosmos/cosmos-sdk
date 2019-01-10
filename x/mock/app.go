@@ -209,7 +209,7 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 		}
 	}
 
-	return auth.NewStdTx(msgs, fee, sigs, memo)
+	return auth.NewStdTx(msgs, fee, sigs, memo, nil)
 }
 
 // GeneratePrivKeys generates a total n Ed25519 private keys.

@@ -255,7 +255,7 @@ func InitializeTestLCD(
 		}
 		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
 		require.Nil(t, err)
-		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "", nil)
 		txBytes, err := cdc.MarshalJSON(tx)
 		require.Nil(t, err)
 		genTxs = append(genTxs, txBytes)

@@ -416,6 +416,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 	msgBeginUnbonding := NewMsgBeginUnbonding(delegatorAddr, validatorAddr, unbondShares)
 	numUnbonds := 5
 	for i := 0; i < numUnbonds; i++ {
+
 		got := handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 		require.True(t, got.IsOK(), "expected msg %d to be ok, got %v", i, got)
 		var finishTime time.Time
@@ -423,7 +424,7 @@ func TestIncrementsMsgUnbond(t *testing.T) {
 		ctx = ctx.WithBlockTime(finishTime)
 		EndBlocker(ctx, keeper)
 
-		//Check that the accounts and the bond account have the appropriate values
+		// check that the accounts and the bond account have the appropriate values
 		validator, found = keeper.GetValidator(ctx, validatorAddr)
 		require.True(t, found)
 		bond, found := keeper.GetDelegation(ctx, delegatorAddr, validatorAddr)

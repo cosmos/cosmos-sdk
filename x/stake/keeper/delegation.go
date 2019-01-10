@@ -600,6 +600,11 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 		if entry.IsMature(ctxTime) {
 			ubd.RemoveEntry(int64(i))
 			i--
+
+			_, _, err := k.bankKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{entry.Balance})
+			if err != nil {
+				return err
+			}
 		}
 	}
 

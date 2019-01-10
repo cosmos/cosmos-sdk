@@ -158,13 +158,13 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 		resStr := fmt.Sprintf("Committed at block %d (tx hash: %s)\n", res.Height, res.Hash.String())
 
 		if ctx.PrintResponse {
-			resStr = fmt.Sprintf("Committed at block %d (tx hash: %s, response: %+v)\n",
-				res.Height, res.Hash.String(), res.DeliverTx,
-			)
-		}
-
-		if ctx.ResponseHandler != nil {
-			ctx.ResponseHandler(res)
+			if ctx.ResponsePrinter != nil {
+				resStr = ctx.ResponsePrinter(res)
+			} else {
+				resStr = fmt.Sprintf("Committed at block %d (tx hash: %s, response: %+v)\n",
+					res.Height, res.Hash.String(), res.DeliverTx,
+				)
+			}
 		}
 
 		io.WriteString(ctx.Output, resStr)

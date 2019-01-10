@@ -191,8 +191,8 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 		accs = append(accs, app.GenesisAccount{
 			Address: addr,
 			Coins: sdk.Coins{
-				sdk.NewInt64Coin(fmt.Sprintf("%stoken", nodeDirName), 1000),
-				sdk.NewInt64Coin(staketypes.DefaultBondDenom, 500),
+				sdk.NewInt64Coin(fmt.Sprintf("%stoken", nodeDirName), 10000000),
+				sdk.NewInt64Coin(staketypes.DefaultBondDenom, 2000000),
 			},
 		})
 

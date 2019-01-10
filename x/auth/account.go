@@ -35,16 +35,16 @@ type Account interface {
 	// Calculates the amount of coins that can be sent to other accounts given
 	// the current time.
 	SpendableCoins(blockTime time.Time) sdk.Coins
-
-	// Delegation and undelegation accounting that returns the resulting base
-	// coins amount.
-	TrackDelegation(blockTime time.Time, amount sdk.Coins)
-	TrackUndelegation(amount sdk.Coins)
 }
 
 // VestingAccount defines an account type that vests coins via a vesting schedule.
 type VestingAccount interface {
 	Account
+
+	// Delegation and undelegation accounting that returns the resulting base
+	// coins amount.
+	TrackDelegation(blockTime time.Time, amount sdk.Coins)
+	TrackUndelegation(amount sdk.Coins)
 
 	GetVestedCoins(blockTime time.Time) sdk.Coins
 	GetVestingCoins(blockTime time.Time) sdk.Coins
@@ -144,18 +144,6 @@ func (acc *BaseAccount) SetSequence(seq uint64) error {
 // this is simply the base coins.
 func (acc *BaseAccount) SpendableCoins(_ time.Time) sdk.Coins {
 	return acc.GetCoins()
-}
-
-// TrackDelegation performs delegation accounting. For a base account it simply
-// sets the base coins minus the desired delegation amount.
-func (acc *BaseAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
-	acc.Coins = acc.Coins.Minus(amount)
-}
-
-// TrackUndelegation performs undelegation accounting. For a base account it
-// simply sets the base coins plus the undelegation amount.
-func (acc *BaseAccount) TrackUndelegation(amount sdk.Coins) {
-	acc.Coins = acc.Coins.Plus(amount)
 }
 
 //-----------------------------------------------------------------------------

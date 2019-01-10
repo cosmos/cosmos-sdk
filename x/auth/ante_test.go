@@ -675,11 +675,11 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 		input      StdFee
 		expectedOK bool
 	}{
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 40)}), true},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 400000)}), true},
 		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 39)}), false},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 100)}), true},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 1000000)}), true},
 		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 99)}), false},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 40), sdk.NewInt64Coin("photino", 100)}), true},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 400000), sdk.NewInt64Coin("photino", 1000000)}), true},
 	}
 
 	for i, tc := range testCases {

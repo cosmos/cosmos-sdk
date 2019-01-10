@@ -136,7 +136,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 			tagValue = tags.ActionProposalRejected
 		}
 
-		activeProposal.SetTallyResult(tallyResults)
+		activeProposal.SetFinalTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
 		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.GetVotingEndTime(), activeProposal.GetProposalID())
 

@@ -36,7 +36,7 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 
 	resTags := sdk.NewTags(
 		tags.Action, tags.ActionProposalSubmitted,
-		tags.Proposer, []byte(msg.Proposer.String()),
+		tags.Proposer, msg.Proposer.String(),
 		tags.ProposalID, proposalIDStr,
 	)
 
@@ -59,7 +59,7 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 	proposalIDStr := fmt.Sprintf("%d", msg.ProposalID)
 	resTags := sdk.NewTags(
 		tags.Action, tags.ActionProposalDeposit,
-		tags.Depositor, []byte(msg.Depositor.String()),
+		tags.Depositor, msg.Depositor.String(),
 		tags.ProposalID, proposalIDStr,
 	)
 

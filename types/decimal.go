@@ -17,11 +17,11 @@ type Dec struct {
 
 // number of decimal places
 const (
-	Precision = 10
+	Precision = 18
 
 	// bytes required to represent the above precision
 	// ceil(log2(9999999999))
-	DecimalPrecisionBits = 34
+	DecimalPrecisionBits = 60
 )
 
 var (
@@ -284,23 +284,23 @@ func (d Dec) String() string {
 	inputSize := len(bz)
 	// TODO: Remove trailing zeros
 	// case 1, purely decimal
-	if inputSize <= 10 {
-		bzWDec = make([]byte, 12)
+	if inputSize <= Precision {
+		bzWDec = make([]byte, Precision+2)
 		// 0. prefix
 		bzWDec[0] = byte('0')
 		bzWDec[1] = byte('.')
 		// set relevant digits to 0
-		for i := 0; i < 10-inputSize; i++ {
+		for i := 0; i < Precision-inputSize; i++ {
 			bzWDec[i+2] = byte('0')
 		}
 		// set last few digits
-		copy(bzWDec[2+(10-inputSize):], bz)
+		copy(bzWDec[2+(Precision-inputSize):], bz)
 	} else {
 		// inputSize + 1 to account for the decimal point that is being added
 		bzWDec = make([]byte, inputSize+1)
-		copy(bzWDec, bz[:inputSize-10])
-		bzWDec[inputSize-10] = byte('.')
-		copy(bzWDec[inputSize-9:], bz[inputSize-10:])
+		copy(bzWDec, bz[:inputSize-Precision])
+		bzWDec[inputSize-Precision] = byte('.')
+		copy(bzWDec[inputSize-Precision-1:], bz[inputSize-Precision:])
 	}
 	if isNeg {
 		return "-" + string(bzWDec)

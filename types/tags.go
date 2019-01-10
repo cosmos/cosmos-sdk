@@ -16,7 +16,7 @@ func EmptyTags() Tags {
 }
 
 // Append a single tag
-func (t Tags) AppendTag(k string, v []byte) Tags {
+func (t Tags) AppendTag(k string, v string) Tags {
 	return append(t, MakeTag(k, v))
 }
 
@@ -30,7 +30,7 @@ func (t Tags) ToKVPairs() []cmn.KVPair {
 	return []cmn.KVPair(t)
 }
 
-// New variadic tags, must be k string, v []byte repeating
+// New variadic tags, must be k string, v string repeating
 func NewTags(tags ...interface{}) Tags {
 	var ret Tags
 	if len(tags)%2 != 0 {
@@ -41,15 +41,15 @@ func NewTags(tags ...interface{}) Tags {
 		if i == len(tags) {
 			break
 		}
-		ret = append(ret, Tag{Key: []byte(tags[i].(string)), Value: tags[i+1].([]byte)})
+		ret = append(ret, Tag{Key: []byte(tags[i].(string)), Value: []byte(tags[i+1].(string))})
 		i += 2
 	}
 	return ret
 }
 
 // Make a tag from a key and a value
-func MakeTag(k string, v []byte) Tag {
-	return Tag{Key: []byte(k), Value: v}
+func MakeTag(k string, v string) Tag {
+	return Tag{Key: []byte(k), Value: []byte(v)}
 }
 
 //__________________________________________________

@@ -345,3 +345,70 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	// commission should be the other half
 	require.Equal(t, sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDec(10)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 }
+
+func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	sh := stake.NewHandler(sk)
+
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
+
+	// create validator with 50% commission
+	commission := stake.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := stake.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(stake.DefaultBondDenom, sdk.NewInt(100)), stake.Description{}, commission)
+	require.True(t, sh(ctx, msg).IsOK())
+
+	// end block to bond validator
+	stake.EndBlocker(ctx, sk)
+
+	// fetch validator and delegation
+	val := sk.Validator(ctx, valOpAddr1)
+	del1 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
+
+	// allocate some rewards
+	tokens := sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDec(30)}}
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// slash the validator
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	sk.Slash(ctx, valConsAddr1, ctx.BlockHeight(), 100, sdk.NewDecWithPrec(5, 1))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// second delegation
+	msg2 := stake.NewMsgDelegate(sdk.AccAddress(valOpAddr2), valOpAddr1, sdk.NewCoin(stake.DefaultBondDenom, sdk.NewInt(100)))
+	require.True(t, sh(ctx, msg2).IsOK())
+	del2 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr2), valOpAddr1)
+
+	// end block
+	stake.EndBlocker(ctx, sk)
+
+	// allocate some more rewards
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// slash the validator again
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	sk.Slash(ctx, valConsAddr1, ctx.BlockHeight(), 100, sdk.NewDecWithPrec(5, 1))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// fetch updated validator
+	val = sk.Validator(ctx, valOpAddr1)
+
+	// end period
+	endingPeriod := k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards for del1
+	rewards := k.calculateDelegationRewards(ctx, val, del1, endingPeriod)
+
+	// rewards for del1 should be 20 (15 + 5)
+	require.Equal(t, sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDecWithPrec(20, 0)}}, rewards)
+
+	// calculate delegation rewards for del2
+	rewards = k.calculateDelegationRewards(ctx, val, del2, endingPeriod)
+
+	// rewards for del2 should be 10
+	require.Equal(t, sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDecWithPrec(10, 0)}}, rewards)
+
+	// commission should be 30 (unaffected by slashing)
+	require.Equal(t, sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDec(30)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
+}

@@ -7,7 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -436,8 +438,54 @@ $ gaiacli query gov tally 1
 	return cmd
 }
 
-// GetCmdQueryProposal implements the query proposal command.
+// GetCmdQueryParams returns a cli command to query all goverance params
 func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "params",
+		Short: "Query all parameters of the governance process",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			tp, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/tallying", queryRoute), nil)
+			if err != nil {
+				return err
+			}
+			dp, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/deposit", queryRoute), nil)
+			if err != nil {
+				return err
+			}
+			vp, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/voting", queryRoute), nil)
+			if err != nil {
+				return err
+			}
+
+			var tallyParams gov.TallyParams
+			cdc.MustUnmarshalJSON(tp, &tallyParams)
+			var depositParams gov.DepositParams
+			cdc.MustUnmarshalJSON(dp, &depositParams)
+			var votingParams gov.VotingParams
+			cdc.MustUnmarshalJSON(vp, &votingParams)
+
+			out := gov.AllGovParams{depositParams, tallyParams, votingParams}
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				fmt.Println(out.HumanReadableString())
+			case "json":
+				if viper.GetBool(client.FlagIndentResponse) {
+					out, _ := codec.MarshalJSONIndent(cdc, out)
+					fmt.Println(string(out))
+				} else {
+					fmt.Println(string(cdc.MustMarshalJSON(out)))
+				}
+			}
+
+			return nil
+		},
+	}
+	return cmd
+}
+
+// GetCmdQueryProposal implements the query proposal command.
+func GetCmdQueryParam(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "param [param-type]",
 		Args:  cobra.ExactArgs(1),
@@ -450,12 +498,38 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			var out gov.GovParams
+			switch args[0] {
+			case "voting":
+				var param gov.VotingParams
+				cdc.MustUnmarshalJSON(res, &param)
+				out = param
+			case "tallying":
+				var param gov.TallyParams
+				cdc.MustUnmarshalJSON(res, &param)
+				out = param
+			case "deposit":
+				var param gov.DepositParams
+				cdc.MustUnmarshalJSON(res, &param)
+				out = param
+			default:
+				return fmt.Errorf("Arguement must be one of (voting|tallying|deposit), was %s", args[0])
+			}
 
-			fmt.Println(string(res))
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				fmt.Println(out.HumanReadableString())
+			case "json":
+				if viper.GetBool(client.FlagIndentResponse) {
+					out, _ := codec.MarshalJSONIndent(cdc, out)
+					fmt.Println(string(out))
+				} else {
+					fmt.Println(string(cdc.MustMarshalJSON(out)))
+				}
+			}
 			return nil
 		},
 	}
-
 	return cmd
 }
 

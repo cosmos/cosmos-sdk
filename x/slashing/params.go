@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,6 +38,21 @@ type Params struct {
 	DowntimeUnbondDuration   time.Duration `json:"downtime-unbond-duration"`
 	SlashFractionDoubleSign  sdk.Dec       `json:"slash-fraction-double-sign"`
 	SlashFractionDowntime    sdk.Dec       `json:"slash-fraction-downtime"`
+}
+
+// HumanReadableString returns a string for printing to the CLI
+func (p Params) HumanReadableString() string {
+	return fmt.Sprintf(`Params:
+  Max Evidence Age:            %s
+  Signed Blocks Window:        %d
+  Min Signed Per Window:       %s
+  Double Sign Unbond Duration: %s
+  Downtime Unbond Duration:    %s
+  Slash Fraction Double Sign:  %s
+  Slash Fraction Downtime:     %s
+`, p.MaxEvidenceAge, p.SignedBlocksWindow, p.MinSignedPerWindow,
+		p.DoubleSignUnbondDuration, p.DowntimeUnbondDuration,
+		p.SlashFractionDoubleSign, p.SlashFractionDowntime)
 }
 
 // Implements params.ParamStruct

@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec" // XXX fix
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,18 +40,15 @@ func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 			switch viper.Get(cli.OutputFlag) {
 
 			case "text":
-				human := signingInfo.HumanReadableString()
-				fmt.Println(human)
-
+				fmt.Println(signingInfo.HumanReadableString())
 			case "json":
-				// parse out the signing info
-				output, err := codec.MarshalJSONIndent(cdc, signingInfo)
-				if err != nil {
-					return err
+				if viper.GetBool(client.FlagIndentResponse) {
+					out, _ := codec.MarshalJSONIndent(cdc, signingInfo)
+					fmt.Println(string(out))
+				} else {
+					fmt.Println(string(cdc.MustMarshalJSON(signingInfo)))
 				}
-				fmt.Println(string(output))
 			}
-
 			return nil
 		},
 	}
@@ -72,7 +70,21 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println(string(res))
+			var params slashing.Params
+			cdc.MustUnmarshalJSON(res, &params)
+
+			switch viper.Get(cli.OutputFlag) {
+			case "text":
+				fmt.Println(params.HumanReadableString())
+			case "json":
+				if viper.GetBool(client.FlagIndentResponse) {
+					out, _ := codec.MarshalJSONIndent(cdc, params)
+					fmt.Println(string(out))
+				} else {
+					fmt.Println(string(cdc.MustMarshalJSON(params)))
+				}
+			}
+
 			return nil
 		},
 	}

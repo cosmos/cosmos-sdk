@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -531,7 +532,6 @@ func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := stake.PoolKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
 				return err
@@ -541,18 +541,14 @@ func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 
 			switch viper.Get(cli.OutputFlag) {
 			case "text":
-				human := pool.HumanReadableString()
-
-				fmt.Println(human)
-
+				fmt.Println(pool.HumanReadableString())
 			case "json":
-				// parse out the pool
-				output, err := codec.MarshalJSONIndent(cdc, pool)
-				if err != nil {
-					return err
+				if viper.GetBool(client.FlagIndentResponse) {
+					out, _ := codec.MarshalJSONIndent(cdc, pool)
+					fmt.Println(string(out))
+				} else {
+					fmt.Println(string(cdc.MustMarshalJSON(pool)))
 				}
-
-				fmt.Println(string(output))
 			}
 			return nil
 		},
@@ -564,36 +560,31 @@ func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 // GetCmdQueryPool implements the params query command.
 func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "parameters",
+		Use:   "params",
 		Short: "Query the current staking parameters information",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			bz, err := cliCtx.QueryWithData("custom/stake/"+stake.QueryParameters, nil)
+			route := fmt.Sprintf("custom/%s/parameters", stake.QuerierRoute)
+			bz, err := cliCtx.QueryWithData(route, nil)
 			if err != nil {
 				return err
 			}
 
+			// Must unmarshal those
 			var params stake.Params
-			err = cdc.UnmarshalJSON(bz, &params)
-			if err != nil {
-				return err
-			}
+			cdc.MustUnmarshalJSON(bz, &params)
 
 			switch viper.Get(cli.OutputFlag) {
 			case "text":
-				human := params.HumanReadableString()
-
-				fmt.Println(human)
-
+				fmt.Println(params.HumanReadableString())
 			case "json":
-				// parse out the params
-				output, err := codec.MarshalJSONIndent(cdc, params)
-				if err != nil {
-					return err
+				if viper.GetBool(client.FlagIndentResponse) {
+					out, _ := codec.MarshalJSONIndent(cdc, params)
+					fmt.Println(string(out))
+				} else {
+					fmt.Println(string(cdc.MustMarshalJSON(params)))
 				}
-
-				fmt.Println(string(output))
 			}
 			return nil
 		},

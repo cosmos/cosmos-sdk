@@ -69,12 +69,11 @@ func DefaultParams() Params {
 // HumanReadableString returns a human readable string representation of the
 // parameters.
 func (p Params) HumanReadableString() string {
-
-	resp := "Params \n"
-	resp += fmt.Sprintf("Unbonding Time: %s\n", p.UnbondingTime)
-	resp += fmt.Sprintf("Max Validators: %d\n", p.MaxValidators)
-	resp += fmt.Sprintf("Bonded Coin Denomination: %s\n", p.BondDenom)
-	return resp
+	return fmt.Sprintf(`Params:
+  Unbonding Time: %s
+  Max Validators: %d
+  Bonded Coin Denom: %s
+`, p.UnbondingTime, p.MaxValidators, p.BondDenom)
 }
 
 // unmarshal the current staking params value from store key or panic

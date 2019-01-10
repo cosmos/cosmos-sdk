@@ -29,7 +29,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	f := InitFixtures(t)
 
 	// start gaiad server with minimum fees
-	fees := fmt.Sprintf("--minimum-gas-prices=%s,%s", sdk.NewInt64Coin(feeDenom, 5), sdk.NewInt64Coin(denom, 2))
+	fees := fmt.Sprintf("--minimum_gas_prices=%s,%s", sdk.NewInt64Coin(feeDenom, 5), sdk.NewInt64Coin(denom, 2))
 	proc := f.GDStart(fees)
 	defer proc.Stop(false)
 
@@ -73,7 +73,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	f := InitFixtures(t)
 
 	// start gaiad server with minimum fees
-	proc := f.GDStart(fmt.Sprintf("--minimum-gas-prices=%s", sdk.NewInt64Coin(feeDenom, 1)))
+	proc := f.GDStart(fmt.Sprintf("--minimum_gas_prices=%s", sdk.NewInt64Coin(feeDenom, 1)))
 	defer proc.Stop(false)
 
 	// Save key addresses for later use

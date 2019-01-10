@@ -21,7 +21,7 @@ const (
 	flagAddress        = "address"
 	flagTraceStore     = "trace-store"
 	flagPruning        = "pruning"
-	FlagMinGasPrices   = "minimum-gas-prices"
+	FlagMinGasPrices   = "minimum_gas_prices"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with

@@ -8,8 +8,7 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
-const defaultConfigTemplate = `
-# This is a TOML config file.
+const defaultConfigTemplate = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 
 ##### main base config options #####

@@ -35,7 +35,6 @@ var (
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagNodeCliHome       = "node-cli-home"
 	flagStartingIPAddress = "starting-ip-address"
-	flagMinimumFees       = "minimum-fees"
 )
 
 const nodeDirPerm = 0755

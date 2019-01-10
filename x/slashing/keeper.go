@@ -88,7 +88,7 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// `power` is the int64 power of the validator as provided to/by
 	// Tendermint. This value is validator.Tokens as sent to Tendermint via
 	// ABCI, and now received as evidence.
-	// The fraction is passed in to seperately to slash unbonding and rebonding delegations.
+	// The fraction is passed in to separately to slash unbonding and rebonding delegations.
 	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
 	// Jail validator if not already jailed

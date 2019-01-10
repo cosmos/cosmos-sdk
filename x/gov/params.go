@@ -22,8 +22,7 @@ type DepositParams struct {
 func (dp DepositParams) HumanReadableString() string {
 	return fmt.Sprintf(`Deposit Params:
   Min Deposit:         %s
-  Max Deposit Period:  %s
-`, dp.MinDeposit, dp.MaxDepositPeriod)
+  Max Deposit Period:  %s`, dp.MinDeposit, dp.MaxDepositPeriod)
 }
 
 // Checks equality of DepositParams
@@ -45,8 +44,8 @@ func (tp TallyParams) HumanReadableString() string {
   Quorum:              %s
   Threshold:           %s
   Veto:                %s
-  Goverance Penalty:   %s
-`, tp.Quorum, tp.Threshold, tp.Veto, tp.GovernancePenalty)
+  Goverance Penalty:   %s`, tp.Quorum, tp.Threshold,
+		tp.Veto, tp.GovernancePenalty)
 }
 
 // Param around Voting in governance
@@ -57,8 +56,7 @@ type VotingParams struct {
 // HumanReadableString satisfies GovParams
 func (vp VotingParams) HumanReadableString() string {
 	return fmt.Sprintf(`Voting Params:
-  Voting Period:       %s
-`, vp.VotingPeriod)
+  Voting Period:       %s`, vp.VotingPeriod)
 }
 
 // AllGovParams contains all the different params used by governance
@@ -70,7 +68,7 @@ type AllGovParams struct {
 
 // HumanReadableString satisfies GovParams
 func (ap AllGovParams) HumanReadableString() string {
-	return ap.DepositParams.HumanReadableString() +
-		ap.TallyParams.HumanReadableString() +
+	return ap.DepositParams.HumanReadableString() + "\n" +
+		ap.TallyParams.HumanReadableString() + "\n" +
 		ap.VotingParams.HumanReadableString()
 }

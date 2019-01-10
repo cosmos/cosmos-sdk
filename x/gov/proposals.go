@@ -3,6 +3,7 @@ package gov
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -45,6 +46,21 @@ type Proposal interface {
 
 	GetVotingEndTime() time.Time
 	SetVotingEndTime(time.Time)
+
+	HumanReadableString() string
+}
+
+// Proposals is an array of proposal
+type Proposals []Proposal
+
+// HumanReadableString implements client.Printable
+func (p Proposals) HumanReadableString() string {
+	var out string
+	for _, proposal := range p {
+		out += fmt.Sprintf("%d - %s\n",
+			proposal.GetProposalID(), proposal.GetTitle())
+	}
+	return strings.TrimSpace(out)
 }
 
 // checks if two proposals are equal
@@ -86,6 +102,21 @@ type TextProposal struct {
 
 // Implements Proposal Interface
 var _ Proposal = (*TextProposal)(nil)
+
+// HumanReadableString implements client.Printable
+func (tp TextProposal) HumanReadableString() string {
+	return fmt.Sprintf(`Proposal %d:
+  Title:              %s
+  Type:               %s
+  Status:             %s
+  Submit Time:        %s
+  Deposit End Time:   %s
+  Total Deposit:      %s
+  Voting Start Time:  %s
+  Voting End Time:    %s`, tp.ProposalID, tp.Title, tp.ProposalType,
+		tp.Status, tp.SubmitTime, tp.DepositEndTime,
+		tp.TotalDeposit, tp.VotingStartTime, tp.VotingEndTime)
+}
 
 // nolint
 func (tp TextProposal) GetProposalID() uint64                      { return tp.ProposalID }
@@ -330,6 +361,15 @@ type TallyResult struct {
 	Abstain    sdk.Dec `json:"abstain"`
 	No         sdk.Dec `json:"no"`
 	NoWithVeto sdk.Dec `json:"no_with_veto"`
+}
+
+// HumanReadableString implements client.Printable
+func (tr TallyResult) HumanReadableString() string {
+	return fmt.Sprintf(`Tally Result:
+  Yes:          %d
+  Abstain:      %d
+  No:           %d
+  No With Veto: %d`, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
 }
 
 // checks if two proposals are equal

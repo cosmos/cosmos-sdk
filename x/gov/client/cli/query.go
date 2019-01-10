@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -43,7 +42,9 @@ $ gaiacli query gov proposal 1
 				return err
 			}
 
-			fmt.Println(string(res))
+			var proposal gov.Proposal
+			cdc.UnmarshalJSON(res, &proposal)
+			client.PrintOutput(cdc, proposal)
 			return nil
 		},
 	}
@@ -127,21 +128,17 @@ $ gaiacli query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Reject
 				return err
 			}
 
-			var matchingProposals []gov.Proposal
+			var matchingProposals gov.Proposals
 			err = cdc.UnmarshalJSON(res, &matchingProposals)
 			if err != nil {
 				return err
 			}
 
 			if len(matchingProposals) == 0 {
-				fmt.Println("No matching proposals found")
-				return nil
+				return fmt.Errorf("No matching proposals found")
 			}
 
-			for _, proposal := range matchingProposals {
-				fmt.Printf("  %d - %s\n", proposal.GetProposalID(), proposal.GetTitle())
-			}
-
+			client.PrintOutput(cdc, matchingProposals)
 			return nil
 		},
 	}
@@ -208,7 +205,12 @@ $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				}
 			}
 
-			fmt.Println(string(res))
+			cdc.UnmarshalJSON(res, &vote)
+			if vote.Empty() {
+				return fmt.Errorf("Unable to find vote for proposal %d from voter %s", proposalID, voterAddr)
+			}
+
+			client.PrintOutput(cdc, vote)
 			return nil
 		},
 	}
@@ -265,7 +267,9 @@ $ gaiacli query gov votes 1
 				return err
 			}
 
-			fmt.Println(string(res))
+			var votes gov.Votes
+			cdc.MustUnmarshalJSON(res, &votes)
+			client.PrintOutput(cdc, votes)
 			return nil
 		},
 	}
@@ -319,7 +323,6 @@ $ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 
 			var deposit gov.Deposit
 			cdc.UnmarshalJSON(res, &deposit)
-
 			if deposit.Empty() {
 				res, err = gcutils.QueryDepositByTxQuery(cdc, cliCtx, params)
 				if err != nil {
@@ -327,7 +330,12 @@ $ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 				}
 			}
 
-			fmt.Println(string(res))
+			cdc.UnmarshalJSON(res, &deposit)
+			if deposit.Empty() {
+				return fmt.Errorf("Unable to find deposit for proposal %d from depositor %s", proposalID, depositorAddr)
+			}
+
+			client.PrintOutput(cdc, deposit)
 			return nil
 		},
 	}
@@ -383,7 +391,9 @@ $ gaiacli query gov deposits 1
 				return err
 			}
 
-			fmt.Println(string(res))
+			var deposits gov.Deposits
+			cdc.MustUnmarshalJSON(res, &deposits)
+			client.PrintOutput(cdc, deposits)
 			return nil
 		},
 	}
@@ -430,7 +440,9 @@ $ gaiacli query gov tally 1
 				return err
 			}
 
-			fmt.Println(string(res))
+			var tally gov.TallyResult
+			cdc.MustUnmarshalJSON(res, &tally)
+			client.PrintOutput(cdc, tally)
 			return nil
 		},
 	}
@@ -465,19 +477,7 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			var votingParams gov.VotingParams
 			cdc.MustUnmarshalJSON(vp, &votingParams)
 
-			out := gov.AllGovParams{depositParams, tallyParams, votingParams}
-			switch viper.Get(cli.OutputFlag) {
-			case "text":
-				fmt.Println(out.HumanReadableString())
-			case "json":
-				if viper.GetBool(client.FlagIndentResponse) {
-					out, _ := codec.MarshalJSONIndent(cdc, out)
-					fmt.Println(string(out))
-				} else {
-					fmt.Println(string(cdc.MustMarshalJSON(out)))
-				}
-			}
-
+			client.PrintOutput(cdc, gov.AllGovParams{depositParams, tallyParams, votingParams})
 			return nil
 		},
 	}
@@ -516,17 +516,7 @@ func GetCmdQueryParam(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("Arguement must be one of (voting|tallying|deposit), was %s", args[0])
 			}
 
-			switch viper.Get(cli.OutputFlag) {
-			case "text":
-				fmt.Println(out.HumanReadableString())
-			case "json":
-				if viper.GetBool(client.FlagIndentResponse) {
-					out, _ := codec.MarshalJSONIndent(cdc, out)
-					fmt.Println(string(out))
-				} else {
-					fmt.Println(string(cdc.MustMarshalJSON(out)))
-				}
-			}
+			client.PrintOutput(cdc, out)
 			return nil
 		},
 	}
@@ -548,12 +538,12 @@ func GetCmdQueryProposer(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("proposal-id %s is not a valid uint", args[0])
 			}
 
-			res, err := gcutils.QueryProposerByTxQuery(cdc, cliCtx, proposalID)
+			proposor, err := gcutils.QueryProposerByTxQuery(cdc, cliCtx, proposalID)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(string(res))
+			client.PrintOutput(cdc, proposor)
 			return nil
 		},
 	}

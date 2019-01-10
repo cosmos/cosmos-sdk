@@ -13,8 +13,13 @@ import (
 // Proposer contains metadata of a governance proposal used for querying a
 // proposer.
 type Proposer struct {
-	ProposalID uint64 `json:"proposal_id"`
-	Proposer   string `json:"proposer"`
+	ProposalID uint64 `json:"proposal_id,omitempty"`
+	Proposer   string `json:"proposer,omitempty"`
+}
+
+// HumanReadableOutput statisfies client.Printable
+func (p Proposer) HumanReadableString() string {
+	return fmt.Sprintf(`%s is the proposer for proposal %d...`, p.Proposer, p.ProposalID)
 }
 
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
@@ -188,7 +193,7 @@ func QueryDepositByTxQuery(
 // ID.
 func QueryProposerByTxQuery(
 	cdc *codec.Codec, cliCtx context.CLIContext, proposalID uint64,
-) ([]byte, error) {
+) (Proposer, error) {
 
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalSubmitted),
@@ -197,7 +202,7 @@ func QueryProposerByTxQuery(
 
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
 	if err != nil {
-		return nil, err
+		return Proposer{}, err
 	}
 
 	for _, info := range infos {
@@ -206,19 +211,13 @@ func QueryProposerByTxQuery(
 			if msg.Type() == gov.TypeMsgSubmitProposal {
 				subMsg := msg.(gov.MsgSubmitProposal)
 
-				proposer := Proposer{
+				return Proposer{
 					ProposalID: proposalID,
 					Proposer:   subMsg.Proposer.String(),
-				}
-
-				if cliCtx.Indent {
-					return cdc.MarshalJSONIndent(proposer, "", "  ")
-				}
-
-				return cdc.MarshalJSON(proposer)
+				}, nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
+	return Proposer{}, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
 }

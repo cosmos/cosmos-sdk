@@ -107,7 +107,7 @@ Given a vesting account, we define the following in the proceeding operations:
 - `V'`: The number of `OV` coins that are _vested_ (unlocked). This value is computed on demand and not a per-block basis.
 - `DV`: The number of delegated _vesting_ coins. It is a variable value. It is stored and modified directly in the vesting account.
 - `DF`: The number of delegated _vested_ (unlocked) coins. It is a variable value. It is stored and modified directly in the vesting account.
-- `BC`: The number of `OV` coins less any coins that are transferred, which can be negative, or delegated (`DV + DF`). It is considered to be balance of the embedded base account. It is stored and modified directly in the vesting account.
+- `BC`: The number of `OV` coins less any coins that are transferred (which can be negative or delegated). It is considered to be balance of the embedded base account. It is stored and modified directly in the vesting account.
 
 ### Determining Vesting & Vested Amounts
 

@@ -511,40 +511,30 @@ func TestAmountOf(t *testing.T) {
 
 func TestCoinsAddCoin(t *testing.T) {
 	testCases := []struct {
-		coins       Coins
-		other       Coin
-		expected    Coins
-		shouldPanic bool
+		coins    Coins
+		other    Coin
+		expected Coins
 	}{
 		{
 			Coins{NewInt64Coin("a", 10), NewInt64Coin("b", 5)},
 			NewInt64Coin("a", 5),
 			Coins{NewInt64Coin("a", 15), NewInt64Coin("b", 5)},
-			false,
 		},
 		{
 			Coins{NewInt64Coin("a", 10), NewInt64Coin("b", 5)},
 			NewInt64Coin("c", 5),
 			Coins{NewInt64Coin("a", 10), NewInt64Coin("b", 5)},
-			true,
 		},
 		{
 			Coins{},
 			NewInt64Coin("c", 5),
 			Coins{NewInt64Coin("c", 5)},
-			false,
 		},
 	}
 
 	for i, tc := range testCases {
-		if tc.shouldPanic {
-			require.Panics(t, func() {
-				tc.coins.AddCoinByDenom(tc.other)
-			})
-		} else {
-			coins := tc.coins.AddCoinByDenom(tc.other)
-			require.Equal(t, tc.expected, coins, "invalid coins after adding a coin; tc #%d", i)
-		}
+		coins := tc.coins.AddCoinByDenom(tc.other)
+		require.Equal(t, tc.expected, coins, "invalid coins after adding a coin; tc #%d", i)
 	}
 }
 

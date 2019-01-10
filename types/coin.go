@@ -175,7 +175,8 @@ func (coins Coins) IsValid() bool {
 // AddCoinByDenom looks for a matching coin in coins that has the same denom as
 // other. Upon matching, the other coin is added to the matching coin. If the
 // coins are empty, the coin is simply added to the empty set. If the denom of
-// the coin to be added does not exist in coins, the function will panic.
+// the other coin to be added does not exist in coins, the function returns the
+// original coins.
 func (coins Coins) AddCoinByDenom(other Coin) Coins {
 	res := copyCoins(coins)
 
@@ -192,7 +193,7 @@ func (coins Coins) AddCoinByDenom(other Coin) Coins {
 		}
 	}
 
-	panic(fmt.Sprintf("coin denom %s not found in coins", other.Denom))
+	return res
 }
 
 // Plus adds two sets of coins.

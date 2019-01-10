@@ -24,6 +24,7 @@ BREAKING CHANGES
   * [stake] \#2513 Validator power type from Dec -> Int
   * [stake] \#3233 key and value now contain duplicate fields to simplify code
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
+  * [\#3195](https://github.com/cosmos/cosmos-sdk/issues/3195) Allows custom configuration for syncable strategy
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
   meter utilization during aborted ante handler executions.
   * [x/stake] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
@@ -69,8 +70,8 @@ IMPROVEMENTS
 * Gaia
   * [\#2186](https://github.com/cosmos/cosmos-sdk/issues/2186) Add Address Interface
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
-  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees
-  in a local testnet.
+  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees in a local testnet.
+  * [\#3250](https://github.com/cosmos/cosmos-sdk/pull/3250) Refactor integration tests and increase coverage
 
 * SDK
   * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation
@@ -84,7 +85,7 @@ IMPROVEMENTS
 
 * CI
   * \#2498 Added macos CI job to CircleCI
-  * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim 
+  * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim
 
 BUG FIXES
 

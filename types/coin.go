@@ -265,28 +265,6 @@ func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
 	return diff, !diff.IsNotNegative()
 }
 
-// IsAnyGT returns true if coins contains at least one denom
-// that is present at a smaller amount in coinsB; it
-// returns false otherwise.
-func (coins Coins) IsAnyGT(coinsB Coins) bool {
-	intersection := coins.intersect(coinsB)
-	if intersection.Empty() {
-		return false
-	}
-
-	diff, _ := intersection.SafeMinus(coinsB)
-	if len(diff) == 0 {
-		return false
-	}
-
-	for _, coin := range diff {
-		if coin.IsPositive() {
-			return true
-		}
-	}
-	return false
-}
-
 // IsAllGT returns true if for every denom in coins, the denom is present at a
 // greater amount in coinsB.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
@@ -296,28 +274,6 @@ func (coins Coins) IsAllGT(coinsB Coins) bool {
 	}
 
 	return diff.IsPositive()
-}
-
-// IsAnyGT returns true if coins contains at least one denom
-// that is present at a smaller or equal amount in coinsB; it
-// returns false otherwise.
-func (coins Coins) IsAnyGTE(coinsB Coins) bool {
-	intersection := coins.intersect(coinsB)
-	if intersection.Empty() {
-		return false
-	}
-
-	diff, _ := intersection.SafeMinus(coinsB)
-	if len(diff) == 0 || len(diff) < len(intersection) { // zero diff is removed from the diff set
-		return true
-	}
-
-	for _, coin := range diff {
-		if coin.IsNotNegative() {
-			return true
-		}
-	}
-	return false
 }
 
 // IsAllGTE returns true iff for every denom in coins, the denom is present at
@@ -341,6 +297,41 @@ func (coins Coins) IsAllLT(coinsB Coins) bool {
 // a smaller or equal amount in coinsB.
 func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	return coinsB.IsAllGTE(coins)
+}
+
+// IsAnyGTE returns true iff coins contains at least one denom that is present
+// at a greater or equal amount in coinsB; it returns false otherwise.
+//
+// NOTE: IsAnyGTE operates under the invariant that coins are sorted by
+// denominations.
+func (coins Coins) IsAnyGTE(coinsB Coins) bool {
+	if len(coinsB) == 0 {
+		return false
+	}
+
+	j := 0
+	for _, coin := range coins {
+		searchOther := true // terminator in case coins breaks the sorted invariant
+
+		for j < len(coinsB) && searchOther {
+			switch strings.Compare(coin.Denom, coinsB[j].Denom) {
+			case -1:
+				// coin denom in less than the current other coin, so move to next coin
+				searchOther = false
+			case 0:
+				if coin.IsGTE(coinsB[j]) {
+					return true
+				}
+
+				fallthrough // skip to next other coin
+			case 1:
+				// coin denom is greater than the current other coin, so move to next other coin
+				j++
+			}
+		}
+	}
+
+	return false
 }
 
 // IsZero returns true if there are no coins or all coins are zero.
@@ -472,20 +463,6 @@ func removeZeroCoins(coins Coins) Coins {
 	}
 
 	return coins[:i]
-}
-
-func (coins Coins) intersect(coinsB Coins) Coins {
-	intersection := Coins{}
-	for _, coin := range coins {
-		for _, bCoin := range coinsB {
-			if coin.Denom == bCoin.Denom {
-				intersection = append(intersection, coin)
-				break
-			}
-		}
-	}
-
-	return intersection
 }
 
 //-----------------------------------------------------------------------------

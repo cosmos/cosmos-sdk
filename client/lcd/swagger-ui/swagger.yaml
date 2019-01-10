@@ -2271,7 +2271,7 @@ definitions:
         type: string
       proposal_status:
         type: string
-      tally_result:
+      final_tally_result:
          $ref: "#/definitions/TallyResult"
       submit_time:
         type: string

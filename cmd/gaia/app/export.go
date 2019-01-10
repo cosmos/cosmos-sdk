@@ -79,6 +79,10 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	// clear validator historical rewards
 	app.distrKeeper.DeleteValidatorHistoricalRewards(ctx)
 
+	// set context height to zero
+	height := ctx.BlockHeight()
+	ctx = ctx.WithBlockHeight(0)
+
 	// reinitialize all validators
 	app.stakeKeeper.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
 		app.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
@@ -90,8 +94,8 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 		app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, del.DelegatorAddr, del.ValidatorAddr)
 	}
 
-	// assert runtime invariants again
-	app.assertRuntimeInvariantsOnContext(ctx)
+	// reset context height
+	ctx = ctx.WithBlockHeight(height)
 
 	/* Handle stake state. */
 

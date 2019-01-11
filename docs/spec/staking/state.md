@@ -2,9 +2,8 @@
 
 ### Pool
 
-The pool is a space for all dynamic global state of the Cosmos Hub.  It tracks
-information about the total amounts of Atoms in all states, moving Atom
-inflation information, etc.
+The pool dynamically tracks information about the total amounts of staking
+tokens and their states (bonded or loose). 
 
  - Pool: `0x01 -> amino(pool)`
 
@@ -152,10 +151,12 @@ type UnbondingDelegationEntry struct {
 
 ### Redelegation
 
-Shares in a `Delegation` can be rebonded to a different validator, but they must
-for some time exist as a `Redelegation`, where shares can be reduced if Byzantine
-behavior is detected. This is tracked as moving a delegation from a `ValidatorSrcAddr`
-to a `ValidatorDstAddr`.
+The bonded tokens worth of a `Delegation` may be instantly redelegated from a
+source validator to a different validator (destination validator). However when
+this occurs they must be tracked in a `Redelegation` object, whereby their
+shares can be slashed if their tokens were found to contribute to Byzantine
+behavior in the source validator.  This is tracked as moving a delegation from
+a `ValidatorSrcAddr` to a `ValidatorDstAddr`.
 
 `Redelegation` are indexed in the store as:
 

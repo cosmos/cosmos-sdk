@@ -61,8 +61,8 @@ If you want to participate in genesis as a validator, you need to justify that y
 
 We thus need to distinguish two cases:
 
-- Case 1: You want to bond the initial staking from your validator's address.
-- Case 2: You want to bond the initial staking from a delegator's address.
+- Case 1: You want to bond the initial stake from your validator's address.
+- Case 2: You want to bond the initial stake from a delegator's address.
 
 ### Case 1: The initial stake comes from your validator's address
 

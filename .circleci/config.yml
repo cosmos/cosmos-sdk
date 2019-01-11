@@ -39,30 +39,28 @@ docs_update: &docs_deploy
   environment:
     AWS_REGION: us-east-1
 
-
 ############
 
-jobs:
+deps: &dependencies
+  run:
+    name: dependencies
+    command: |
+      export PATH="$GOBIN:$PATH"
+      make get_vendor_deps
 
+jobs:
   setup_dependencies:
     <<: *linux_defaults
     steps:
       - run: mkdir -p /tmp/workspace/bin
       - run: mkdir -p /tmp/workspace/profiles
       - checkout
-      - restore_cache:
-          keys:
-            - v1-pkg-cache
       - run:
           name: tools
           command: |
             export PATH="$GOBIN:$PATH"
             make tools
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: binaries
           command: |
@@ -82,11 +80,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Get metalinter
           command: |
@@ -105,11 +99,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test cli
           command: |
@@ -124,11 +114,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test individual module simulations
           command: |
@@ -142,11 +128,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test full Gaia simulation
           command: |
@@ -160,11 +142,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test Gaia import/export simulation
           command: |
@@ -178,16 +156,26 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test Gaia import/export simulation
           command: |
             export PATH="$GOBIN:$PATH"
             make test_sim_gaia_simulation_after_import
+
+  test_sim_gaia_multi_seed_long:
+    <<: *linux_defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - *dependencies
+      - run:
+          name: Test multi-seed Gaia simulation long
+          command: |
+            export PATH="$GOBIN:$PATH"
+            scripts/multisim.sh 800 50 TestFullGaiaSimulation
 
   test_sim_gaia_multi_seed:
     <<: *linux_defaults
@@ -196,16 +184,12 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
+      - *dependencies
       - run:
-          name: dependencies
+          name: Test multi-seed Gaia simulation short
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
-      - run:
-          name: Test multi-seed Gaia simulation
-          command: |
-            export PATH="$GOBIN:$PATH"
-            scripts/multisim.sh 25 TestFullGaiaSimulation
+            scripts/multisim.sh 50 10 TestFullGaiaSimulation
 
   test_cover:
     <<: *linux_defaults
@@ -214,11 +198,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run: mkdir -p /tmp/logs
       - run:
           name: Run tests
@@ -244,11 +224,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: gather
           command: |
@@ -368,6 +344,14 @@ workflows:
       - test_sim_gaia_multi_seed:
           requires:
             - setup_dependencies
+      - test_sim_gaia_multi_seed_long:
+          requires:
+            - setup_dependencies
+          filters:
+            branches:
+              only:
+                - master
+                - develop
       - test_cover:
           requires:
             - setup_dependencies

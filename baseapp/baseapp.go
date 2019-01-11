@@ -503,6 +503,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	} else {
 		gasMeter = sdk.NewInfiniteGasMeter()
 	}
+
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
 
 	if app.beginBlocker != nil {
@@ -732,7 +733,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	defer func() {
 		if mode == runTxModeDeliver {
 			ctx.BlockGasMeter().ConsumeGas(
-				ctx.GasMeter().GasConsumedToLimit(), "block gas meter")
+				ctx.GasMeter().GasConsumedToLimit(),
+				"block gas meter",
+			)
+
 			if ctx.BlockGasMeter().GasConsumed() < startingGas {
 				panic(sdk.ErrorGasOverflow{"tx gas summation"})
 			}
@@ -751,23 +755,29 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 		// Cache wrap context before anteHandler call in case it aborts.
 		// This is required for both CheckTx and DeliverTx.
-		// https://github.com/cosmos/cosmos-sdk/issues/2772
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2772
+		//
 		// NOTE: Alternatively, we could require that anteHandler ensures that
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
 		newCtx, result, abort := app.anteHandler(anteCtx, tx, (mode == runTxModeSimulate))
+		if !newCtx.IsZero() {
+			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
+			// replaced by the ante handler. We want the original multistore, not one
+			// which was cache-wrapped for the ante handler.
+			//
+			// Also, in the case of the tx aborting, we need to track gas consumed via
+			// the instantiated gas meter in the ante handler, so we update the context
+			// prior to returning.
+			ctx = newCtx.WithMultiStore(ms)
+		}
+
 		if abort {
 			return result
 		}
-		if !newCtx.IsZero() {
-			// At this point, newCtx.MultiStore() is cache wrapped,
-			// or something else replaced by anteHandler.
-			// We want the original ms, not one which was cache-wrapped
-			// for the ante handler.
-			ctx = newCtx.WithMultiStore(ms)
-		}
+
 		msCache.Write()
 		gasWanted = result.GasWanted
 	}

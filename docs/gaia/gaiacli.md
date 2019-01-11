@@ -221,7 +221,7 @@ The action tag always equals the message type returned by the `Type()` function 
 You can find a list of available `tags` on each of the SDK modules:
 
 - [Common tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/types/tags.go#L57-L63)
-- [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/stake/tags/tags.go#L8-L24)
+- [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/staking/tags/tags.go#L8-L24)
 - [Governance tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/gov/tags/tags.go#L8-L22)
 - [Slashing tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/slashing/handler.go#L52)
 - [Distribution tags](https://github.com/cosmos/cosmos-sdk/blob/develop/x/distribution/tags/tags.go#L8-L17)
@@ -277,13 +277,13 @@ On the upcoming mainnet, you can delegate `atom` to a validator. These [delegato
 You can query the list of all validators of a specific chain:
 
 ```bash
-gaiacli query stake validators
+gaiacli query staking validators
 ```
 
 If you want to get the information of a single validator you can check it with:
 
 ```bash
-gaiacli query stake validator <account_cosmosval>
+gaiacli query staking validator <account_cosmosval>
 ```
 
 #### Bond Tokens
@@ -291,7 +291,7 @@ gaiacli query stake validator <account_cosmosval>
 On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
 
 ```bash
-gaiacli tx stake delegate \
+gaiacli tx staking delegate \
   --amount=10steak \
   --validator=<validator> \
   --from=<key_name> \
@@ -317,7 +317,7 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 Once submitted a delegation to a validator, you can see it's information by using the following command:
 
 ```bash
-gaiacli query stake delegation \
+gaiacli query staking delegation \
 	--address-delegator=<account_cosmos> \
 	--validator=<account_cosmosval>
 ```
@@ -325,7 +325,7 @@ gaiacli query stake delegation \
 Or if you want to check all your current delegations with disctinct validators:
 
 ```bash
-gaiacli query stake delegations <account_cosmos>
+gaiacli query staking delegations <account_cosmos>
 ```
 
 You can also get previous delegation(s) status by adding the `--height` flag.
@@ -335,7 +335,7 @@ You can also get previous delegation(s) status by adding the `--height` flag.
 If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-fraction` (eg:`0.25`) with the corresponding flags.
 
 ```bash
-gaiacli tx stake unbond \
+gaiacli tx staking unbond \
   --validator=<account_cosmosval> \
   --shares-fraction=0.5 \
   --from=<key_name> \
@@ -349,7 +349,7 @@ The unbonding will be automatically completed when the unbonding period has pass
 Once you begin an unbonding-delegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query stake unbonding-delegation \
+gaiacli query staking unbonding-delegation \
 	--address-delegator=<account_cosmos> \
 	--validator=<account_cosmosval> \
 ```
@@ -357,13 +357,13 @@ gaiacli query stake unbonding-delegation \
 Or if you want to check all your current unbonding-delegations with disctinct validators:
 
 ```bash
-gaiacli query stake unbonding-delegations <account_cosmos>
+gaiacli query staking unbonding-delegations <account_cosmos>
 ```
 
 Additionally, as you can get all the unbonding-delegations from a particular validator:
 
 ```bash
-  gaiacli query stake unbonding-delegations-from <account_cosmosval>
+  gaiacli query staking unbonding-delegations-from <account_cosmosval>
 ```
 
 To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
@@ -373,7 +373,7 @@ To get previous unbonding-delegation(s) status on past blocks, try adding the `-
 A redelegation is a type delegation that allows you to bond illiquid tokens from one validator to another:
 
 ```bash
-gaiacli tx stake redelegate \
+gaiacli tx staking redelegate \
   --addr-validator-source=<account_cosmosval> \
   --addr-validator-dest=<account_cosmosval> \
   --shares-fraction=50 \
@@ -390,7 +390,7 @@ The redelegation will be automatically completed when the unbonding period has p
 Once you begin an redelegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query stake redelegation \
+gaiacli query staking redelegation \
 	--address-delegator=<account_cosmos> \
 	--addr-validator-source=<account_cosmosval> \
 	--addr-validator-dest=<account_cosmosval> \
@@ -399,13 +399,13 @@ gaiacli query stake redelegation \
 Or if you want to check all your current unbonding-delegations with disctinct validators:
 
 ```bash
-gaiacli query stake redelegations <account_cosmos>
+gaiacli query staking redelegations <account_cosmos>
 ```
 
 Additionally, as you can get all the outgoing redelegations from a particular validator:
 
 ```bash
-  gaiacli query stake redelegations-from <account_cosmosval>
+  gaiacli query staking redelegations-from <account_cosmosval>
 ```
 
 To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
@@ -415,7 +415,7 @@ To get previous redelegation(s) status on past blocks, try adding the `--height`
 Parameters define high level settings for staking. You can get the current values by using:
 
 ```bash
-gaiacli query stake parameters
+gaiacli query staking parameters
 ```
 
 With the above command you will get the values for:
@@ -431,7 +431,7 @@ All these values will be subject to updates though a `governance` process by `Pa
 A staking `Pool` defines the dynamic parameters of the current state. You can query them with the following command:
 
 ```bash
-gaiacli query stake pool
+gaiacli query staking pool
 ```
 
 With the `pool` command you will get the values for:

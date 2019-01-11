@@ -30,7 +30,10 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// all transactions must be of type auth.StdTx
 		stdTx, ok := tx.(StdTx)
 		if !ok {
-			return ctx, sdk.ErrInternal("tx must be StdTx").Result(), true
+			// Set a gas meter with limit 0 as to prevent an infinite gas meter attack
+			// during runTx.
+			newCtx = SetGasMeter(simulate, ctx, 0)
+			return newCtx, sdk.ErrInternal("tx must be StdTx").Result(), true
 		}
 
 		params := ak.GetParams(ctx)
@@ -45,7 +48,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			}
 		}
 
-		newCtx = SetGasMeter(simulate, ctx, stdTx)
+		newCtx = SetGasMeter(simulate, ctx, stdTx.Fee.Gas)
 
 		// AnteHandlers must have their own defer/recover in order for the BaseApp
 		// to know how much gas was used! This is because the GasMeter is created in
@@ -303,7 +306,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
 
 	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
-	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAllGTE(requiredFees) {
+	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAnyGTE(requiredFees) {
 		// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
 		return sdk.ErrInsufficientFee(
 			fmt.Sprintf(
@@ -315,14 +318,14 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
 }
 
 // SetGasMeter returns a new context with a gas meter set from a given context.
-func SetGasMeter(simulate bool, ctx sdk.Context, stdTx StdTx) sdk.Context {
+func SetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
 	if simulate || ctx.BlockHeight() == 0 {
 		return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	}
 
-	return ctx.WithGasMeter(sdk.NewGasMeter(stdTx.Fee.Gas))
+	return ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
 }
 
 // GetSignBytes returns a slice of bytes to sign over for a given transaction

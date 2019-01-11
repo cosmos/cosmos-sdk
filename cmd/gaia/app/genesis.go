@@ -19,22 +19,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
 	// bonded tokens given to genesis validators/accounts
 	freeFermionVal  = int64(100)
 	freeFermionsAcc = sdk.NewInt(150)
-	bondDenom       = stakeTypes.DefaultBondDenom
+	bondDenom       = stakingTypes.DefaultBondDenom
 )
 
 // State to Unmarshal
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`
 	AuthData     auth.GenesisState     `json:"auth"`
-	StakeData    stake.GenesisState    `json:"stake"`
+	StakingData    staking.GenesisState  `json:"staking"`
 	MintData     mint.GenesisState     `json:"mint"`
 	DistrData    distr.GenesisState    `json:"distr"`
 	GovData      gov.GenesisState      `json:"gov"`
@@ -43,14 +43,14 @@ type GenesisState struct {
 }
 
 func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
-	stakeData stake.GenesisState, mintData mint.GenesisState,
+	stakingData staking.GenesisState, mintData mint.GenesisState,
 	distrData distr.GenesisState, govData gov.GenesisState,
 	slashingData slashing.GenesisState) GenesisState {
 
 	return GenesisState{
 		Accounts:     accounts,
 		AuthData:     authData,
-		StakeData:    stakeData,
+		StakingData:    stakingData,
 		MintData:     mintData,
 		DistrData:    distrData,
 		GovData:      govData,
@@ -108,7 +108,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		return genesisState, errors.New("there must be at least one genesis tx")
 	}
 
-	stakeData := genesisState.StakeData
+	stakingData := genesisState.StakingData
 	for i, genTx := range appGenTxs {
 		var tx auth.StdTx
 		if err := cdc.UnmarshalJSON(genTx, &tx); err != nil {
@@ -119,7 +119,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 			return genesisState, errors.New(
 				"must provide genesis StdTx with exactly 1 CreateValidator message")
 		}
-		if _, ok := msgs[0].(stake.MsgCreateValidator); !ok {
+		if _, ok := msgs[0].(staking.MsgCreateValidator); !ok {
 			return genesisState, fmt.Errorf(
 				"Genesis transaction %v does not contain a MsgCreateValidator", i)
 		}
@@ -129,12 +129,12 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		// create the genesis account, give'm few steaks and a buncha token with there name
 		for _, coin := range acc.Coins {
 			if coin.Denom == bondDenom {
-				stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.
+				stakingData.Pool.LooseTokens = stakingData.Pool.LooseTokens.
 					Add(coin.Amount) // increase the supply
 			}
 		}
 	}
-	genesisState.StakeData = stakeData
+	genesisState.StakingData = stakingData
 	genesisState.GenTxs = appGenTxs
 	return genesisState, nil
 }
@@ -144,7 +144,7 @@ func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
 		AuthData:     auth.DefaultGenesisState(),
-		StakeData:    stake.DefaultGenesisState(),
+		StakingData:    staking.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
 		GovData:      gov.DefaultGenesisState(),
@@ -162,7 +162,7 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 		return err
 	}
 
-	// skip stakeData validation as genesis is created from txs
+	// skip stakingData validation as genesis is created from txs
 	if len(genesisState.GenTxs) > 0 {
 		return nil
 	}
@@ -170,7 +170,7 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 	if err := auth.ValidateGenesis(genesisState.AuthData); err != nil {
 		return err
 	}
-	if err := stake.ValidateGenesis(genesisState.StakeData); err != nil {
+	if err := staking.ValidateGenesis(genesisState.StakingData); err != nil {
 		return err
 	}
 	if err := mint.ValidateGenesis(genesisState.MintData); err != nil {
@@ -272,7 +272,7 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 				"each genesis transaction must provide a single genesis message")
 		}
 
-		msg := msgs[0].(stake.MsgCreateValidator)
+		msg := msgs[0].(staking.MsgCreateValidator)
 		// validate delegator and validator addresses and funds against the accounts in the state
 		delAddr := msg.DelegatorAddr.String()
 		valAddr := sdk.AccAddress(msg.ValidatorAddr).String()

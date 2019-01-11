@@ -28,8 +28,8 @@ type Proposal interface {
 	GetStatus() ProposalStatus
 	SetStatus(ProposalStatus)
 
-	GetTallyResult() TallyResult
-	SetTallyResult(TallyResult)
+	GetFinalTallyResult() TallyResult
+	SetFinalTallyResult(TallyResult)
 
 	GetSubmitTime() time.Time
 	SetSubmitTime(time.Time)
@@ -54,7 +54,7 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 		proposalA.GetDescription() == proposalB.GetDescription() &&
 		proposalA.GetProposalType() == proposalB.GetProposalType() &&
 		proposalA.GetStatus() == proposalB.GetStatus() &&
-		proposalA.GetTallyResult().Equals(proposalB.GetTallyResult()) &&
+		proposalA.GetFinalTallyResult().Equals(proposalB.GetFinalTallyResult()) &&
 		proposalA.GetSubmitTime().Equal(proposalB.GetSubmitTime()) &&
 		proposalA.GetDepositEndTime().Equal(proposalB.GetDepositEndTime()) &&
 		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
@@ -73,8 +73,8 @@ type TextProposal struct {
 	Description  string       `json:"description"`   //  Description of the proposal
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 
-	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
-	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
+	Status           ProposalStatus `json:"proposal_status"`    //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	FinalTallyResult TallyResult    `json:"final_tally_result"` //  Result of Tallys
 
 	SubmitTime     time.Time `json:"submit_time"`      //  Time of the block where TxGovSubmitProposal was included
 	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
@@ -98,11 +98,13 @@ func (tp TextProposal) GetProposalType() ProposalKind              { return tp.P
 func (tp *TextProposal) SetProposalType(proposalType ProposalKind) { tp.ProposalType = proposalType }
 func (tp TextProposal) GetStatus() ProposalStatus                  { return tp.Status }
 func (tp *TextProposal) SetStatus(status ProposalStatus)           { tp.Status = status }
-func (tp TextProposal) GetTallyResult() TallyResult                { return tp.TallyResult }
-func (tp *TextProposal) SetTallyResult(tallyResult TallyResult)    { tp.TallyResult = tallyResult }
-func (tp TextProposal) GetSubmitTime() time.Time                   { return tp.SubmitTime }
-func (tp *TextProposal) SetSubmitTime(submitTime time.Time)        { tp.SubmitTime = submitTime }
-func (tp TextProposal) GetDepositEndTime() time.Time               { return tp.DepositEndTime }
+func (tp TextProposal) GetFinalTallyResult() TallyResult           { return tp.FinalTallyResult }
+func (tp *TextProposal) SetFinalTallyResult(tallyResult TallyResult) {
+	tp.FinalTallyResult = tallyResult
+}
+func (tp TextProposal) GetSubmitTime() time.Time            { return tp.SubmitTime }
+func (tp *TextProposal) SetSubmitTime(submitTime time.Time) { tp.SubmitTime = submitTime }
+func (tp TextProposal) GetDepositEndTime() time.Time        { return tp.DepositEndTime }
 func (tp *TextProposal) SetDepositEndTime(depositEndTime time.Time) {
 	tp.DepositEndTime = depositEndTime
 }

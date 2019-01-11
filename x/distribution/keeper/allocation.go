@@ -9,7 +9,7 @@ import (
 func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer sdk.ConsAddress) {
 
 	// get the proposer of this block
-	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposer)
+	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
 
 	proposerDist := k.GetValidatorDistInfo(ctx, proposerValidator.GetOperator())
 
@@ -21,7 +21,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 	feePool := k.GetFeePool(ctx)
 	// Temporary workaround to keep CanWithdrawInvariant happy.
 	// General discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
-	if k.stakeKeeper.GetLastTotalPower(ctx).IsZero() {
+	if k.stakingKeeper.GetLastTotalPower(ctx).IsZero() {
 		feePool.CommunityPool = feePool.CommunityPool.Plus(feesCollectedDec)
 		k.SetFeePool(ctx, feePool)
 		k.feeCollectionKeeper.ClearCollectedFees(ctx)

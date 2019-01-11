@@ -7,13 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// keeper of the stake store
+// keeper of the staking store
 type Keeper struct {
 	storeKey            sdk.StoreKey
 	cdc                 *codec.Codec
 	paramSpace          params.Subspace
 	bankKeeper          types.BankKeeper
-	stakeKeeper         types.StakeKeeper
+	stakingKeeper       types.StakingKeeper
 	feeCollectionKeeper types.FeeCollectionKeeper
 
 	// codespace
@@ -21,14 +21,14 @@ type Keeper struct {
 }
 
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
-	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
+	sk types.StakingKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{
 		storeKey:            key,
 		cdc:                 cdc,
 		paramSpace:          paramSpace.WithTypeTable(ParamTypeTable()),
 		bankKeeper:          ck,
-		stakeKeeper:         sk,
+		stakingKeeper:       sk,
 		feeCollectionKeeper: fck,
 		codespace:           codespace,
 	}
@@ -61,7 +61,7 @@ func (k Keeper) GetFeePoolValAccum(ctx sdk.Context) sdk.Dec {
 
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
-	totalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
+	totalPower := sdk.NewDecFromInt(k.stakingKeeper.GetLastTotalPower(ctx))
 	fp := k.GetFeePool(ctx)
 	return fp.GetTotalValAccum(height, totalPower)
 }
@@ -96,9 +96,9 @@ func (k Keeper) GetWithdrawContext(ctx sdk.Context,
 
 	feePool := k.GetFeePool(ctx)
 	height := ctx.BlockHeight()
-	validator := k.stakeKeeper.Validator(ctx, valOperatorAddr)
-	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, valOperatorAddr)
-	lastTotalPower := sdk.NewDecFromInt(k.stakeKeeper.GetLastTotalPower(ctx))
+	validator := k.stakingKeeper.Validator(ctx, valOperatorAddr)
+	lastValPower := k.stakingKeeper.GetLastValidatorPower(ctx, valOperatorAddr)
+	lastTotalPower := sdk.NewDecFromInt(k.stakingKeeper.GetLastTotalPower(ctx))
 
 	return types.NewWithdrawContext(
 		feePool, height, lastTotalPower, sdk.NewDecFromInt(lastValPower),

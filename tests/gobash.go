@@ -93,18 +93,21 @@ func GoExecuteTWithStdout(t *testing.T, cmd string) (proc *Process) {
 
 	// Without this, the test halts ?!
 	// (theory: because stdout and/or err aren't connected to anything the process halts)
-	go func() {
+	go func(proc *Process) {
 		_, err := ioutil.ReadAll(proc.StdoutPipe)
 		if err != nil {
 			fmt.Println("-------------ERR-----------------------", err)
 			return
 		}
-		_, err = ioutil.ReadAll(proc.StderrPipe)
+	}(proc)
+
+	go func(proc *Process) {
+		_, err := ioutil.ReadAll(proc.StderrPipe)
 		if err != nil {
 			fmt.Println("-------------ERR-----------------------", err)
 			return
 		}
-	}()
+	}(proc)
 
 	err = proc.Cmd.Start()
 	require.NoError(t, err)

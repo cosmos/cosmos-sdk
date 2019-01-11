@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/app"
 	coolcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool/client/cli"
 	powcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow/client/cli"
-	simplestakingcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake/client/cli"
+	simplestakingcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestaking/client/cli"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

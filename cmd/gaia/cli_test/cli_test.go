@@ -281,12 +281,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Ensure that validator state is as expected
-	validator := f.QueryStakeValidator(barVal)
+	validator := f.QueryStakingValidator(barVal)
 	require.Equal(t, validator.OperatorAddr, barVal)
 	require.True(sdk.IntEq(t, sdk.NewInt(2), validator.Tokens))
 
 	// Query delegations to the validator
-	validatorDelegations := f.QueryStakeDelegationsTo(barVal)
+	validatorDelegations := f.QueryStakingDelegationsTo(barVal)
 	require.Len(t, validatorDelegations, 1)
 	require.NotZero(t, validatorDelegations[0].Shares)
 
@@ -296,20 +296,20 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure bonded staking is correct
-	validator = f.QueryStakeValidator(barVal)
+	validator = f.QueryStakingValidator(barVal)
 	require.Equal(t, "1", validator.Tokens.String())
 
 	// Get unbonding delegations from the validator
-	validatorUbds := f.QueryStakeUnbondingDelegationsFrom(barVal)
+	validatorUbds := f.QueryStakingUnbondingDelegationsFrom(barVal)
 	require.Len(t, validatorUbds, 1)
 	require.Equal(t, "1", validatorUbds[0].Balance.Amount.String())
 
 	// Query staking parameters
-	params := f.QueryStakeParameters()
+	params := f.QueryStakingParameters()
 	require.True(t, defaultParams.Equal(params))
 
 	// Query staking pool
-	pool := f.QueryStakePool()
+	pool := f.QueryStakingPool()
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 
 	f.Cleanup()

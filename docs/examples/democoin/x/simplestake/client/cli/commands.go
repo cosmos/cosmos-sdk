@@ -68,8 +68,8 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagStake, "", "Amount of coins to staking")
-	cmd.Flags().String(flagValidator, "", "Validator address to staking")
+	cmd.Flags().String(flagStake, "", "Amount of coins to stake")
+	cmd.Flags().String(flagValidator, "", "Validator address to stake")
 
 	return cmd
 }

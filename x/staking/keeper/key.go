@@ -14,7 +14,7 @@ import (
 var (
 	// Keys for store prefixes
 	// TODO DEPRECATED: delete in next release and reorder keys
-	// ParamKey                         = []byte{0x00} // key for parameters relating to staking
+	// ParamKey                         = []byte{0x00} // key for parameters relating to stake
 	PoolKey = []byte{0x01} // key for the staking pools
 
 	// Last* values are const during a block.

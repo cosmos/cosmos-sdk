@@ -178,7 +178,7 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 			// Ensure account contains enough funds of default bond denom
 			if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
 				return fmt.Errorf(
-					"Account %v is in genesis, but the only has %v%v available to staking, not %v%v",
+					"Account %v is in genesis, but the only has %v%v available to stake, not %v%v",
 					key, acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
 				)
 			}

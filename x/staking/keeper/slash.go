@@ -160,14 +160,14 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		return sdk.ZeroInt()
 	}
 
-	// Calculate slash amount proportional to staking contributing to infraction
+	// Calculate slash amount proportional to stake contributing to infraction
 	slashAmountDec := slashFactor.MulInt(unbondingDelegation.InitialBalance.Amount)
 	slashAmount = slashAmountDec.TruncateInt()
 
 	// Don't slash more tokens than held
 	// Possible since the unbonding delegation may already
 	// have been slashed, and slash amounts are calculated
-	// according to staking held at time of infraction
+	// according to stake held at time of infraction
 	unbondingSlashAmount := sdk.MinInt(slashAmount, unbondingDelegation.Balance.Amount)
 
 	// Update unbonding delegation if necessary
@@ -207,14 +207,14 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		return sdk.ZeroInt()
 	}
 
-	// Calculate slash amount proportional to staking contributing to infraction
+	// Calculate slash amount proportional to stake contributing to infraction
 	slashAmountDec := slashFactor.MulInt(redelegation.InitialBalance.Amount)
 	slashAmount = slashAmountDec.TruncateInt()
 
 	// Don't slash more tokens than held
 	// Possible since the redelegation may already
 	// have been slashed, and slash amounts are calculated
-	// according to staking held at time of infraction
+	// according to stake held at time of infraction
 	redelegationSlashAmount := sdk.MinInt(slashAmount, redelegation.Balance.Amount)
 
 	// Update redelegation if necessary

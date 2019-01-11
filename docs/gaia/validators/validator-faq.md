@@ -26,7 +26,7 @@ Of course, it is possible and encouraged for any user to run full-nodes even if 
 
 ### What is a delegator?
 
-Delegators are Atom holders who cannot, or do not want to run validator operations themselves. Through [Cosmos Voyager](/getting-started/voyager.md), a user can delegate Atoms to a validator and obtain a part of its revenue in exchange (for more detail on how revenue is distributed, see **What is the incentive to staking?** and **What is a validator's commission?** sections below).
+Delegators are Atom holders who cannot, or do not want to run validator operations themselves. Through [Cosmos Voyager](/getting-started/voyager.md), a user can delegate Atoms to a validator and obtain a part of its revenue in exchange (for more detail on how revenue is distributed, see **What is the incentive to stake?** and **What is a validator's commission?** sections below).
 
 Because they share revenue with their validators, delegators also share responsibility. Should a validator misbehave, each of its delegators will be partially slashed in proportion to their staking. This is why delegators should perform due diligence on validators before delegating, as well as spreading their staking over multiple validators.
 
@@ -163,7 +163,7 @@ Yes, they will. Initially, validators of the Cosmos hub will also validate the f
 
 ## Incentives
 
-### What is the incentive to staking?
+### What is the incentive to stake?
 
 Each member of a validator's staking pool earns different types of revenue:
 

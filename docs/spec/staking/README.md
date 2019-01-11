@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This paper specifies the Staking module of the Cosmos-SDK, which was first
+This folder specifies the staking module of the Cosmos-SDK, which was first
 described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper)
 in June 2016. 
 

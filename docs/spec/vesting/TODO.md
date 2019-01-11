@@ -1,2 +1,1 @@
-- reserve pool
-- AiB vesting
+I believe this spec already exists somewhere

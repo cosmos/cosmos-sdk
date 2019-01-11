@@ -23,9 +23,9 @@ import (
 	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	st "github.com/cosmos/cosmos-sdk/x/stake"
-	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
-	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
+	st "github.com/cosmos/cosmos-sdk/x/staking"
+	stakingcmd "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 )
 
 // rootCmd is the entry point for this binary
@@ -65,20 +65,20 @@ func main() {
 
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
-		stakecmd.GetCmdQueryValidator(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryValidators(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryValidatorUnbondingDelegations(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryValidatorRedelegations(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryDelegation(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryDelegations(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryPool(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryParams(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryUnbondingDelegation(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryUnbondingDelegations(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryRedelegation(st.StoreKey, cdc),
-		stakecmd.GetCmdQueryRedelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryValidator(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryValidators(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryValidatorUnbondingDelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryValidatorRedelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryDelegation(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryDelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryPool(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryParams(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryUnbondingDelegation(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryUnbondingDelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryRedelegation(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryRedelegations(st.StoreKey, cdc),
 		slashingcmd.GetCmdQuerySigningInfo(sl.StoreKey, cdc),
-		stakecmd.GetCmdQueryValidatorDelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryValidatorDelegations(st.StoreKey, cdc),
 		authcmd.GetAccountCmd(at.StoreKey, cdc),
 	)
 
@@ -86,11 +86,11 @@ func main() {
 		bankcmd.SendTxCmd(cdc),
 		ibccmd.IBCTransferCmd(cdc),
 		ibccmd.IBCRelayCmd(cdc),
-		stakecmd.GetCmdCreateValidator(cdc),
-		stakecmd.GetCmdEditValidator(cdc),
-		stakecmd.GetCmdDelegate(cdc),
-		stakecmd.GetCmdUnbond(st.StoreKey, cdc),
-		stakecmd.GetCmdRedelegate(st.StoreKey, cdc),
+		stakingcmd.GetCmdCreateValidator(cdc),
+		stakingcmd.GetCmdEditValidator(cdc),
+		stakingcmd.GetCmdDelegate(cdc),
+		stakingcmd.GetCmdUnbond(st.StoreKey, cdc),
+		stakingcmd.GetCmdRedelegate(st.StoreKey, cdc),
 		slashingcmd.GetCmdUnjail(cdc),
 	)
 
@@ -118,6 +118,6 @@ func registerRoutes(rs *lcd.RestServer) {
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, at.StoreKey)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	stake.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	staking.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 }

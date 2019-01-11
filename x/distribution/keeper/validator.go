@@ -87,7 +87,7 @@ func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) 
 
 	// withdraw self-delegation
 	height := ctx.BlockHeight()
-	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, operatorAddr)
+	lastValPower := k.stakingKeeper.GetLastValidatorPower(ctx, operatorAddr)
 	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
 	accum := valInfo.GetValAccum(height, sdk.NewDecFromInt(lastValPower))
 

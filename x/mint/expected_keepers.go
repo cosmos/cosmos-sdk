@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// expected stake keeper
-type StakeKeeper interface {
+// expected staking keeper
+type StakingKeeper interface {
 	TotalPower(ctx sdk.Context) sdk.Int
 	BondedRatio(ctx sdk.Context) sdk.Dec
 	InflateSupply(ctx sdk.Context, newTokens sdk.Int)

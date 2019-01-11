@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GenesisState - all slashing state that must be provided at genesis

@@ -29,9 +29,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
-	stake "github.com/cosmos/cosmos-sdk/x/stake"
-	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking"
+	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -69,7 +69,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
-		coins := sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(amount))}
+		coins := sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))}
 		genesisAccounts = append(genesisAccounts, GenesisAccount{
 			Address: acc.Address,
 			Coins:   coins,
@@ -92,7 +92,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	govGenesis := gov.GenesisState{
 		StartingProposalID: uint64(r.Intn(100)),
 		DepositParams: gov.DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, int64(r.Intn(1e3)))},
+			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, int64(r.Intn(1e3)))},
 			MaxDepositPeriod: vp,
 		},
 		VotingParams: gov.VotingParams{
@@ -106,19 +106,19 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	}
 	fmt.Printf("Selected randomly generated governance parameters:\n\t%+v\n", govGenesis)
 
-	stakeGenesis := stake.GenesisState{
-		Pool: stake.InitialPool(),
-		Params: stake.Params{
+	stakingGenesis := staking.GenesisState{
+		Pool: staking.InitialPool(),
+		Params: staking.Params{
 			UnbondingTime: time.Duration(randIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
 			MaxValidators: uint16(r.Intn(250)),
-			BondDenom:     stakeTypes.DefaultBondDenom,
+			BondDenom:     stakingTypes.DefaultBondDenom,
 		},
 	}
-	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakeGenesis)
+	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakingGenesis)
 
 	slashingGenesis := slashing.GenesisState{
 		Params: slashing.Params{
-			MaxEvidenceAge:          stakeGenesis.Params.UnbondingTime,
+			MaxEvidenceAge:          stakingGenesis.Params.UnbondingTime,
 			SignedBlocksWindow:      int64(randIntBetween(r, 10, 1000)),
 			DowntimeJailDuration:    time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
 			MinSignedPerWindow:      sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
@@ -132,7 +132,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		Minter: mint.InitialMinter(
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
 		Params: mint.NewParams(
-			stakeTypes.DefaultBondDenom,
+			stakingTypes.DefaultBondDenom,
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
 			sdk.NewDecWithPrec(20, 2),
 			sdk.NewDecWithPrec(7, 2),
@@ -141,29 +141,29 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	}
 	fmt.Printf("Selected randomly generated minting parameters:\n\t%+v\n", mintGenesis)
 
-	var validators []stake.Validator
-	var delegations []stake.Delegation
+	var validators []staking.Validator
+	var delegations []staking.Delegation
 
 	valAddrs := make([]sdk.ValAddress, numInitiallyBonded)
 	for i := 0; i < int(numInitiallyBonded); i++ {
 		valAddr := sdk.ValAddress(accs[i].Address)
 		valAddrs[i] = valAddr
 
-		validator := stake.NewValidator(valAddr, accs[i].PubKey, stake.Description{})
+		validator := staking.NewValidator(valAddr, accs[i].PubKey, staking.Description{})
 		validator.Tokens = sdk.NewInt(amount)
 		validator.DelegatorShares = sdk.NewDec(amount)
-		delegation := stake.Delegation{accs[i].Address, valAddr, sdk.NewDec(amount)}
+		delegation := staking.Delegation{accs[i].Address, valAddr, sdk.NewDec(amount)}
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakeGenesis.Pool.LooseTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
-	stakeGenesis.Validators = validators
-	stakeGenesis.Bonds = delegations
+	stakingGenesis.Pool.LooseTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
+	stakingGenesis.Validators = validators
+	stakingGenesis.Bonds = delegations
 
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		AuthData:     authGenesis,
-		StakeData:    stakeGenesis,
+		StakingData:    stakingGenesis,
 		MintData:     mintGenesis,
 		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),
 		SlashingData: slashingGenesis,
@@ -191,13 +191,13 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 		{50, distrsim.SimulateMsgWithdrawDelegatorRewardsAll(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountKeeper, app.distrKeeper)},
-		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakeKeeper)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakingKeeper)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper)},
-		{100, stakesim.SimulateMsgCreateValidator(app.accountKeeper, app.stakeKeeper)},
-		{5, stakesim.SimulateMsgEditValidator(app.stakeKeeper)},
-		{100, stakesim.SimulateMsgDelegate(app.accountKeeper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgBeginUnbonding(app.accountKeeper, app.stakeKeeper)},
-		{100, stakesim.SimulateMsgBeginRedelegate(app.accountKeeper, app.stakeKeeper)},
+		{100, stakingsim.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper)},
+		{5, stakingsim.SimulateMsgEditValidator(app.stakingKeeper)},
+		{100, stakingsim.SimulateMsgDelegate(app.accountKeeper, app.stakingKeeper)},
+		{100, stakingsim.SimulateMsgBeginUnbonding(app.accountKeeper, app.stakingKeeper)},
+		{100, stakingsim.SimulateMsgBeginRedelegate(app.accountKeeper, app.stakingKeeper)},
 		{100, slashingsim.SimulateMsgUnjail(app.slashingKeeper)},
 	}
 }
@@ -206,8 +206,8 @@ func invariants(app *GaiaApp) []simulation.Invariant {
 	return []simulation.Invariant{
 		simulation.PeriodicInvariant(banksim.NonnegativeBalanceInvariant(app.accountKeeper), period, 0),
 		simulation.PeriodicInvariant(govsim.AllInvariants(), period, 0),
-		simulation.PeriodicInvariant(distrsim.AllInvariants(app.distrKeeper, app.stakeKeeper), period, 0),
-		simulation.PeriodicInvariant(stakesim.AllInvariants(app.bankKeeper, app.stakeKeeper,
+		simulation.PeriodicInvariant(distrsim.AllInvariants(app.distrKeeper, app.stakingKeeper), period, 0),
+		simulation.PeriodicInvariant(stakingsim.AllInvariants(app.bankKeeper, app.stakingKeeper,
 			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper), period, 0),
 		simulation.PeriodicInvariant(slashingsim.AllInvariants(), period, 0),
 	}
@@ -370,7 +370,7 @@ func TestGaiaImportExport(t *testing.T) {
 	storeKeysPrefixes := []StoreKeysPrefixes{
 		{app.keyMain, newApp.keyMain, [][]byte{}},
 		{app.keyAccount, newApp.keyAccount, [][]byte{}},
-		{app.keyStake, newApp.keyStake, [][]byte{stake.UnbondingQueueKey, stake.RedelegationQueueKey, stake.ValidatorQueueKey}}, // ordering may change but it doesn't matter
+		{app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey, staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
 		{app.keySlashing, newApp.keySlashing, [][]byte{}},
 		{app.keyMint, newApp.keyMint, [][]byte{}},
 		{app.keyDistr, newApp.keyDistr, [][]byte{}},

@@ -15,24 +15,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) (mapp *mock.App, keeper Keeper, sk stake.Keeper, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) (mapp *mock.App, keeper Keeper, sk staking.Keeper, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
 	mapp = mock.NewApp()
 
-	stake.RegisterCodec(mapp.Cdc)
+	staking.RegisterCodec(mapp.Cdc)
 	RegisterCodec(mapp.Cdc)
 
-	keyStake := sdk.NewKVStoreKey(stake.StoreKey)
-	tkeyStake := sdk.NewTransientStoreKey(stake.TStoreKey)
+	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyGov := sdk.NewKVStoreKey(StoreKey)
 
 	pk := mapp.ParamsKeeper
 	ck := bank.NewBaseKeeper(mapp.AccountKeeper)
-	sk = stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
+	sk = staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
 
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
@@ -41,10 +41,10 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk, genState))
 
-	require.NoError(t, mapp.CompleteSetup(keyStake, tkeyStake, keyGov))
+	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keyGov))
 
 	if genAccs == nil || len(genAccs) == 0 {
-		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)})
+		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)})
 	}
 
 	mock.SetGenesis(mapp, genAccs)
@@ -52,7 +52,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	return mapp, keeper, sk, addrs, pubKeys, privKeys
 }
 
-// gov and stake endblocker
+// gov and staking endblocker
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		tags := EndBlocker(ctx, keeper)
@@ -62,15 +62,15 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	}
 }
 
-// gov and stake initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper, genState GenesisState) sdk.InitChainer {
+// gov and staking initchainer
+func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, genState GenesisState) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
-		stakeGenesis := stake.DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = sdk.NewInt(100000)
+		stakingGenesis := staking.DefaultGenesisState()
+		stakingGenesis.Pool.LooseTokens = sdk.NewInt(100000)
 
-		validators, err := stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
+		validators, err := staking.InitGenesis(ctx, stakingKeeper, stakingGenesis)
 		if err != nil {
 			panic(err)
 		}

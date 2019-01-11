@@ -40,7 +40,7 @@ func (k Keeper) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress)
 
 // Withdraw all validator rewards
 func (k Keeper) AfterValidatorBonded(ctx sdk.Context, valAddr sdk.ValAddress) {
-	lastPower := k.stakeKeeper.GetLastValidatorPower(ctx, valAddr)
+	lastPower := k.stakingKeeper.GetLastValidatorPower(ctx, valAddr)
 	if !lastPower.Equal(sdk.ZeroInt()) {
 		panic("expected last power to be 0 for validator entering bonded state")
 	}

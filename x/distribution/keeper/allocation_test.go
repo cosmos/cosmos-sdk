@@ -7,21 +7,21 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestAllocateTokensBasic(t *testing.T) {
 
 	// no community tax on inputs
 	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
+	stakingHandler := staking.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
 	//first make a validator
 	totalPower := int64(10)
 	totalPowerInt := sdk.NewInt(totalPower)
-	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
-	got := stakeHandler(ctx, msgCreateValidator)
+	msgCreateValidator := staking.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
+	got := stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
@@ -56,13 +56,13 @@ func TestAllocateTokensBasic(t *testing.T) {
 func TestAllocateTokensWithCommunityTax(t *testing.T) {
 	communityTax := sdk.NewDecWithPrec(1, 2) //1%
 	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, communityTax)
-	stakeHandler := stake.NewHandler(sk)
+	stakingHandler := staking.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
 	//first make a validator
 	totalPower := int64(10)
-	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
-	got := stakeHandler(ctx, msgCreateValidator)
+	msgCreateValidator := staking.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
+	got := stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
@@ -84,13 +84,13 @@ func TestAllocateTokensWithCommunityTax(t *testing.T) {
 func TestAllocateTokensWithPartialPrecommitPower(t *testing.T) {
 	communityTax := sdk.NewDecWithPrec(1, 2)
 	ctx, _, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, communityTax)
-	stakeHandler := stake.NewHandler(sk)
+	stakingHandler := staking.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
 	//first make a validator
 	totalPower := int64(100)
-	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
-	got := stakeHandler(ctx, msgCreateValidator)
+	msgCreateValidator := staking.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, totalPower)
+	got := stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 

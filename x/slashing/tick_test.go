@@ -9,7 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestBeginBlocker(t *testing.T) {
@@ -17,9 +17,9 @@ func TestBeginBlocker(t *testing.T) {
 	addr, pk, amt := addrs[2], pks[2], sdk.NewInt(100)
 
 	// bond the validator
-	got := stake.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt))
+	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt))
 	require.True(t, got.IsOK())
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
@@ -80,7 +80,7 @@ func TestBeginBlocker(t *testing.T) {
 	}
 
 	// end block
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	// validator should be jailed
 	validator, found := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk))

@@ -6,23 +6,23 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestWithdrawDelegationRewardBasic(t *testing.T) {
 	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
+	stakingHandler := staking.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
 	//first make a validator
-	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, 10)
-	got := stakeHandler(ctx, msgCreateValidator)
+	msgCreateValidator := staking.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, 10)
+	got := stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// delegate
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
+	msgDelegate := staking.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
+	got = stakingHandler(ctx, msgDelegate)
 	require.True(t, got.IsOK())
 	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(90), amt.Int64())
@@ -46,19 +46,19 @@ func TestWithdrawDelegationRewardBasic(t *testing.T) {
 
 func TestWithdrawDelegationRewardWithCommission(t *testing.T) {
 	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
+	stakingHandler := staking.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
 	//first make a validator with 10% commission
-	msgCreateValidator := stake.NewTestMsgCreateValidatorWithCommission(
+	msgCreateValidator := staking.NewTestMsgCreateValidatorWithCommission(
 		valOpAddr1, valConsPk1, 10, sdk.NewDecWithPrec(1, 1))
-	got := stakeHandler(ctx, msgCreateValidator)
+	got := stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// delegate
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
+	msgDelegate := staking.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
+	got = stakingHandler(ctx, msgDelegate)
 	require.True(t, got.IsOK())
 	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(90), amt.Int64())
@@ -80,25 +80,25 @@ func TestWithdrawDelegationRewardWithCommission(t *testing.T) {
 
 func TestWithdrawDelegationRewardTwoDelegators(t *testing.T) {
 	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
+	stakingHandler := staking.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
 	//first make a validator with 10% commission
-	msgCreateValidator := stake.NewTestMsgCreateValidatorWithCommission(
+	msgCreateValidator := staking.NewTestMsgCreateValidatorWithCommission(
 		valOpAddr1, valConsPk1, 10, sdk.NewDecWithPrec(1, 1))
-	got := stakeHandler(ctx, msgCreateValidator)
+	got := stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// delegate
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
+	msgDelegate := staking.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
+	got = stakingHandler(ctx, msgDelegate)
 	require.True(t, got.IsOK())
 	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(90), amt.Int64())
 
-	msgDelegate = stake.NewTestMsgDelegate(delAddr2, valOpAddr1, 20)
-	got = stakeHandler(ctx, msgDelegate)
+	msgDelegate = staking.NewTestMsgDelegate(delAddr2, valOpAddr1, 20)
+	got = stakingHandler(ctx, msgDelegate)
 	require.True(t, got.IsOK())
 	amt = accMapper.GetAccount(ctx, delAddr2).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(80), amt.Int64())
@@ -122,25 +122,25 @@ func TestWithdrawDelegationRewardTwoDelegators(t *testing.T) {
 // with different rewards in the end
 func TestWithdrawDelegationRewardTwoDelegatorsUneven(t *testing.T) {
 	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
+	stakingHandler := staking.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
 	//first make a validator with no commission
-	msgCreateValidator := stake.NewTestMsgCreateValidatorWithCommission(
+	msgCreateValidator := staking.NewTestMsgCreateValidatorWithCommission(
 		valOpAddr1, valConsPk1, 10, sdk.ZeroDec())
-	got := stakeHandler(ctx, msgCreateValidator)
+	got := stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	// delegate
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
+	msgDelegate := staking.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
+	got = stakingHandler(ctx, msgDelegate)
 	require.True(t, got.IsOK())
 	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(90), amt.Int64())
 
-	msgDelegate = stake.NewTestMsgDelegate(delAddr2, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
+	msgDelegate = staking.NewTestMsgDelegate(delAddr2, valOpAddr1, 10)
+	got = stakingHandler(ctx, msgDelegate)
 	require.True(t, got.IsOK())
 	amt = accMapper.GetAccount(ctx, delAddr2).GetCoins().AmountOf(denom)
 	require.Equal(t, int64(90), amt.Int64())
@@ -188,32 +188,32 @@ func TestWithdrawDelegationRewardTwoDelegatorsUneven(t *testing.T) {
 
 func TestWithdrawDelegationRewardsAll(t *testing.T) {
 	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
+	stakingHandler := staking.NewHandler(sk)
 	denom := sk.GetParams(ctx).BondDenom
 
 	//make some  validators with different commissions
-	msgCreateValidator := stake.NewTestMsgCreateValidatorWithCommission(
+	msgCreateValidator := staking.NewTestMsgCreateValidatorWithCommission(
 		valOpAddr1, valConsPk1, 10, sdk.NewDecWithPrec(1, 1))
-	got := stakeHandler(ctx, msgCreateValidator)
+	got := stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 
-	msgCreateValidator = stake.NewTestMsgCreateValidatorWithCommission(
+	msgCreateValidator = staking.NewTestMsgCreateValidatorWithCommission(
 		valOpAddr2, valConsPk2, 50, sdk.NewDecWithPrec(2, 1))
-	got = stakeHandler(ctx, msgCreateValidator)
+	got = stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 
-	msgCreateValidator = stake.NewTestMsgCreateValidatorWithCommission(
+	msgCreateValidator = staking.NewTestMsgCreateValidatorWithCommission(
 		valOpAddr3, valConsPk3, 40, sdk.NewDecWithPrec(3, 1))
-	got = stakeHandler(ctx, msgCreateValidator)
+	got = stakingHandler(ctx, msgCreateValidator)
 	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
 
 	// delegate to all the validators
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	require.True(t, stakeHandler(ctx, msgDelegate).IsOK())
-	msgDelegate = stake.NewTestMsgDelegate(delAddr1, valOpAddr2, 20)
-	require.True(t, stakeHandler(ctx, msgDelegate).IsOK())
-	msgDelegate = stake.NewTestMsgDelegate(delAddr1, valOpAddr3, 30)
-	require.True(t, stakeHandler(ctx, msgDelegate).IsOK())
+	msgDelegate := staking.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
+	require.True(t, stakingHandler(ctx, msgDelegate).IsOK())
+	msgDelegate = staking.NewTestMsgDelegate(delAddr1, valOpAddr2, 20)
+	require.True(t, stakingHandler(ctx, msgDelegate).IsOK())
+	msgDelegate = staking.NewTestMsgDelegate(delAddr1, valOpAddr3, 30)
+	require.True(t, stakingHandler(ctx, msgDelegate).IsOK())
 
 	// Update sk's LastValidatorPower/LastTotalPowers.
 	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)

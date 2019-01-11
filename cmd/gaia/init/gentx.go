@@ -26,12 +26,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/stake/client/cli"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
-	defaultAmount                  = "100" + stakeTypes.DefaultBondDenom
+	defaultAmount                  = "100" + stakingTypes.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
@@ -168,7 +168,7 @@ following delegation and commission default parameters:
 
 func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins) error {
 	accountIsInGenesis := false
-	bondDenom := genesisState.StakeData.Params.BondDenom
+	bondDenom := genesisState.StakingData.Params.BondDenom
 
 	// Check if the account is in genesis
 	for _, acc := range genesisState.Accounts {

@@ -18,7 +18,7 @@ type Pool struct {
 ### Params
 
 Params is global data structure that stores system parameters and defines
-overall functioning of the stake module. 
+overall functioning of the staking module. 
 
  - Params: `0x00 -> amino(params)`
 

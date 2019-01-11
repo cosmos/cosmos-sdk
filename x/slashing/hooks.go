@@ -17,26 +17,11 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, address sdk.ConsAddress, _
 			StartHeight:         ctx.BlockHeight(),
 			IndexOffset:         0,
 			JailedUntil:         time.Unix(0, 0),
+			Tombstoned:          false,
 			MissedBlocksCounter: 0,
 		}
 		k.SetValidatorSigningInfo(ctx, address, signingInfo)
 	}
-
-	// Create a new slashing period when a validator is bonded
-	slashingPeriod := ValidatorSlashingPeriod{
-		ValidatorAddr: address,
-		StartHeight:   ctx.BlockHeight(),
-		EndHeight:     0,
-		SlashedSoFar:  sdk.ZeroDec(),
-	}
-	k.SetValidatorSlashingPeriod(ctx, slashingPeriod)
-}
-
-// Mark the slashing period as having ended when a validator begins unbonding
-func (k Keeper) AfterValidatorBeginUnbonding(ctx sdk.Context, address sdk.ConsAddress, _ sdk.ValAddress) {
-	slashingPeriod := k.getValidatorSlashingPeriodForHeight(ctx, address, ctx.BlockHeight())
-	slashingPeriod.EndHeight = ctx.BlockHeight()
-	k.SetValidatorSlashingPeriod(ctx, slashingPeriod)
 }
 
 // When a validator is created, add the address-pubkey relation.
@@ -70,11 +55,6 @@ func (h Hooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, v
 }
 
 // Implements sdk.ValidatorHooks
-func (h Hooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.k.AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)
-}
-
-// Implements sdk.ValidatorHooks
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, _ sdk.ValAddress) {
 	h.k.AfterValidatorRemoved(ctx, consAddr)
 }
@@ -85,8 +65,8 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 }
 
 // nolint - unused hooks
-func (h Hooks) AfterValidatorPowerDidChange(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) {
-}
+func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress)  {}
+func (h Hooks) AfterValidatorPowerDidChange(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress)  {}
 func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)                          {}
 func (h Hooks) BeforeDelegationCreated(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)        {}
 func (h Hooks) BeforeDelegationSharesModified(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress) {}

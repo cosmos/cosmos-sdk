@@ -105,8 +105,8 @@ func (k Keeper) withdrawDelegationReward(ctx sdk.Context,
 	wc := k.GetWithdrawContext(ctx, valAddr)
 	valInfo := k.GetValidatorDistInfo(ctx, valAddr)
 	delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
-	validator := k.stakeKeeper.Validator(ctx, valAddr)
-	delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
+	validator := k.stakingKeeper.Validator(ctx, valAddr)
+	delegation := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 
 	delInfo, valInfo, feePool, withdraw := delInfo.WithdrawRewards(wc, valInfo,
 		validator.GetDelegatorShares(), delegation.GetShares())
@@ -122,8 +122,8 @@ func (k Keeper) currentDelegationReward(ctx sdk.Context, delAddr sdk.AccAddress,
 
 	valInfo := k.GetValidatorDistInfo(ctx, valAddr)
 	delInfo := k.GetDelegationDistInfo(ctx, delAddr, valAddr)
-	validator := k.stakeKeeper.Validator(ctx, valAddr)
-	delegation := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
+	validator := k.stakingKeeper.Validator(ctx, valAddr)
+	delegation := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 
 	estimation := delInfo.CurrentRewards(wc, valInfo,
 		validator.GetDelegatorShares(), delegation.GetShares())
@@ -209,7 +209,7 @@ func (k Keeper) withdrawDelegationRewardsAll(ctx sdk.Context,
 		return false
 	}
 
-	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
+	k.stakingKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
 	return withdraw
 }
 
@@ -225,6 +225,6 @@ func (k Keeper) CurrentDelegationRewardsAll(ctx sdk.Context,
 		total = total.Plus(est)
 		return false
 	}
-	k.stakeKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
+	k.stakingKeeper.IterateDelegations(ctx, delAddr, operationAtDelegation)
 	return total
 }

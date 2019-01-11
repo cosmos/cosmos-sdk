@@ -92,7 +92,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	sk.SetHooks(keeper.Hooks())
 
 	require.NotPanics(t, func() {
-		InitGenesis(ctx, keeper, GenesisState{defaults, nil, nil, nil}, genesis)
+		InitGenesis(ctx, keeper, GenesisState{defaults, nil, nil}, genesis)
 	})
 
 	return ctx, ck, sk, paramstore, keeper

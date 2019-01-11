@@ -42,6 +42,10 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
+	if info.Tombstoned {
+		return ErrValidatorJailed(k.codespace).Result()
+	}
+
 	// cannot be unjailed until out of jail
 	if ctx.BlockHeader().Time.Before(info.JailedUntil) {
 		return ErrValidatorJailed(k.codespace).Result()

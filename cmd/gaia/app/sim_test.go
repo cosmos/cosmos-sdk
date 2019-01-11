@@ -118,13 +118,12 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 
 	slashingGenesis := slashing.GenesisState{
 		Params: slashing.Params{
-			MaxEvidenceAge:           stakeGenesis.Params.UnbondingTime,
-			DoubleSignUnbondDuration: time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
-			SignedBlocksWindow:       int64(randIntBetween(r, 10, 1000)),
-			DowntimeUnbondDuration:   time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
-			MinSignedPerWindow:       sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
-			SlashFractionDoubleSign:  sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
-			SlashFractionDowntime:    sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
+			MaxEvidenceAge:          stakeGenesis.Params.UnbondingTime,
+			SignedBlocksWindow:      int64(randIntBetween(r, 10, 1000)),
+			DowntimeJailDuration:    time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
+			MinSignedPerWindow:      sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
+			SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
+			SlashFractionDowntime:   sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
 		},
 	}
 	fmt.Printf("Selected randomly generated slashing parameters:\n\t%+v\n", slashingGenesis)

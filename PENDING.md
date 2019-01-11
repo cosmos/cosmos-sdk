@@ -3,7 +3,9 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-  * [gaia-lite] [\#2182] Renamed and merged all redelegations endpoints into `/stake/redelegations`
+  * [gaia-lite] [\#2182] Renamed and merged all redelegations endpoints into `/staking/redelegations`
+  * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
+  * [\#2222] [x/staking] all endpoints renamed from `/stake` -> `/staking`
 
 * Gaia CLI  (`gaiacli`)
   * [\#810](https://github.com/cosmos/cosmos-sdk/issues/810) Don't fallback to any default values for chain ID.
@@ -17,16 +19,15 @@ BREAKING CHANGES
   * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
     in order to trigger a simulation of the tx before the actual execution.
 
-* Gaia REST API
-  * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
 
 * SDK
-  * [stake] \#2513 Validator power type from Dec -> Int
-  * [stake] \#3233 key and value now contain duplicate fields to simplify code
+  * [staking] \#2513 Validator power type from Dec -> Int
+  * [staking] \#3233 key and value now contain duplicate fields to simplify code
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
   * [\#3195](https://github.com/cosmos/cosmos-sdk/issues/3195) Allows custom configuration for syncable strategy
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
   meter utilization during aborted ante handler executions.
+  * [\#2222] [x/staking] `/stake` -> `/staking` module rename
   
 * Tendermint
 
@@ -45,7 +46,7 @@ FEATURES
   `query gov proposer [proposal-id]` to query for a proposal's proposer.
 
 * Gaia
-    * [\#2182] [x/stake] Added querier for querying a single redelegation
+    * [\#2182] [x/staking] Added querier for querying a single redelegation
 
 * SDK
   * \#2996 Update the `AccountKeeper` to contain params used in the context of

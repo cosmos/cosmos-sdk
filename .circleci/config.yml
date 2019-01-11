@@ -40,6 +40,14 @@ docs_update: &docs_deploy
     AWS_REGION: us-east-1
 
 ############
+#
+# Configure gaiad docker image build
+
+docker_img: &docker_build
+  docker:
+    - image: tendermint/awscli
+  environment:
+    AWS_REGION: us-east-1
 
 deps: &dependencies
   run:
@@ -266,6 +274,7 @@ jobs:
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
+
   deploy_docs:
     <<: *docs_deploy
     steps:
@@ -306,58 +315,70 @@ jobs:
             source $BASH_ENV
             make test_sim_gaia_fast
 
+  docker_image:
+    <<: *docker_build
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: |
+          docker build -t tendermint/gaia:$CIRCLE_SHA1 .
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push tendermint/gaia:$CIRCLE_SHA1
+
 workflows:
   version: 2
   test-suite:
     jobs:
-      - macos_ci:
-          filters:
-            branches:
-              only:
-                - master
-                - develop
-      - deploy_docs:
-          filters:
-            branches:
-              only:
-                - master
-                - develop
-      - setup_dependencies
-      - lint:
-          requires:
-            - setup_dependencies
-      - integration_tests:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_nondeterminism:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_fast:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_import_export:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_simulation_after_import:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_multi_seed:
-          requires:
-            - setup_dependencies
-      - test_sim_gaia_multi_seed_long:
-          requires:
-            - setup_dependencies
-          filters:
-            branches:
-              only:
-                - master
-                - develop
-      - test_cover:
-          requires:
-            - setup_dependencies
-      - localnet:
-          requires:
-            - setup_dependencies
-      - upload_coverage:
-          requires:
-            - test_cover
+      - docker_image
+#      - macos_ci:
+#          filters:
+#            branches:
+#              only:
+#                - master
+#                - develop
+#      - deploy_docs:
+#          filters:
+#            branches:
+#              only:
+#                - master
+#                - develop
+#      - setup_dependencies
+#      - lint:
+#          requires:
+#            - setup_dependencies
+#      - integration_tests:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_nondeterminism:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_fast:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_import_export:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_simulation_after_import:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_multi_seed:
+#          requires:
+#            - setup_dependencies
+#      - test_sim_gaia_multi_seed_long:
+#          requires:
+#            - setup_dependencies
+#          filters:
+#            branches:
+#              only:
+#                - master
+#                - develop
+#      - test_cover:
+#          requires:
+#            - setup_dependencies
+#      - localnet:
+#          requires:
+#            - setup_dependencies
+#      - upload_coverage:
+#          requires:
+#            - test_cover

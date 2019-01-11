@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	stake "github.com/cosmos/cosmos-sdk/x/stake"
+	staking "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // export the state of gaia for a genesis file
@@ -40,7 +40,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
 	genState := NewGenesisState(
 		accounts,
 		auth.ExportGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper),
-		stake.ExportGenesis(ctx, app.stakeKeeper),
+		staking.ExportGenesis(ctx, app.stakingKeeper),
 		mint.ExportGenesis(ctx, app.mintKeeper),
 		distr.ExportGenesis(ctx, app.distrKeeper),
 		gov.ExportGenesis(ctx, app.govKeeper),
@@ -50,7 +50,7 @@ func (app *GaiaApp) ExportAppStateAndValidators(forZeroHeight bool) (
 	if err != nil {
 		return nil, nil, err
 	}
-	validators = stake.WriteValidators(ctx, app.stakeKeeper)
+	validators = staking.WriteValidators(ctx, app.stakingKeeper)
 	return appState, validators, nil
 }
 
@@ -102,7 +102,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	if !feePool.TotalValAccum.Accum.IsZero() {
 		panic("unexpected leftover validator accum")
 	}
-	bondDenom := app.stakeKeeper.GetParams(ctx).BondDenom
+	bondDenom := app.stakingKeeper.GetParams(ctx).BondDenom
 	if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
 		panic(fmt.Sprintf("unexpected leftover validator pool coins: %v",
 			feePool.ValPool.AmountOf(bondDenom).String()))
@@ -112,32 +112,32 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	feePool.TotalValAccum = distr.NewTotalAccum(0)
 	app.distrKeeper.SetFeePool(ctx, feePool)
 
-	/* Handle stake state. */
+	/* Handle staking state. */
 
 	// iterate through redelegations, reset creation height
-	app.stakeKeeper.IterateRedelegations(ctx, func(_ int64, red stake.Redelegation) (stop bool) {
+	app.stakingKeeper.IterateRedelegations(ctx, func(_ int64, red staking.Redelegation) (stop bool) {
 		red.CreationHeight = 0
-		app.stakeKeeper.SetRedelegation(ctx, red)
+		app.stakingKeeper.SetRedelegation(ctx, red)
 		return false
 	})
 
 	// iterate through unbonding delegations, reset creation height
-	app.stakeKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) (stop bool) {
+	app.stakingKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd staking.UnbondingDelegation) (stop bool) {
 		ubd.CreationHeight = 0
-		app.stakeKeeper.SetUnbondingDelegation(ctx, ubd)
+		app.stakingKeeper.SetUnbondingDelegation(ctx, ubd)
 		return false
 	})
 
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
-	store := ctx.KVStore(app.keyStake)
-	iter := sdk.KVStoreReversePrefixIterator(store, stake.ValidatorsKey)
+	store := ctx.KVStore(app.keyStaking)
+	iter := sdk.KVStoreReversePrefixIterator(store, staking.ValidatorsKey)
 	counter := int16(0)
 
 	var valConsAddrs []sdk.ConsAddress
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(iter.Key()[1:])
-		validator, found := app.stakeKeeper.GetValidator(ctx, addr)
+		validator, found := app.stakingKeeper.GetValidator(ctx, addr)
 		if !found {
 			panic("expected validator, not found")
 		}
@@ -146,7 +146,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 		validator.UnbondingHeight = 0
 		valConsAddrs = append(valConsAddrs, validator.ConsAddress())
 
-		app.stakeKeeper.SetValidator(ctx, validator)
+		app.stakingKeeper.SetValidator(ctx, validator)
 		counter++
 	}
 

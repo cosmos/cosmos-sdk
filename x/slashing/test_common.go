@@ -20,8 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
@@ -45,23 +45,23 @@ func createTestCodec() *codec.Codec {
 	sdk.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
 	bank.RegisterCodec(cdc)
-	stake.RegisterCodec(cdc)
+	staking.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	return cdc
 }
 
-func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, stake.Keeper, params.Subspace, Keeper) {
+func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, staking.Keeper, params.Subspace, Keeper) {
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
-	keyStake := sdk.NewKVStoreKey(stake.StoreKey)
-	tkeyStake := sdk.NewTransientStoreKey(stake.TStoreKey)
+	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keySlashing := sdk.NewKVStoreKey(StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
-	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
+	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keySlashing, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
@@ -73,12 +73,12 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 
 	ck := bank.NewBaseKeeper(accountKeeper)
-	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
-	genesis := stake.DefaultGenesisState()
+	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	genesis := staking.DefaultGenesisState()
 
 	genesis.Pool.LooseTokens = sdk.NewInt(initCoins.MulRaw(int64(len(addrs))).Int64())
 
-	_, err = stake.InitGenesis(ctx, sk, genesis)
+	_, err = staking.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)
 
 	for _, addr := range addrs {
@@ -113,22 +113,22 @@ func testAddr(addr string) sdk.AccAddress {
 	return res
 }
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) stake.MsgCreateValidator {
-	commission := stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	return stake.MsgCreateValidator{
-		Description:   stake.Description{},
+func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
+	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	return staking.MsgCreateValidator{
+		Description:   staking.Description{},
 		Commission:    commission,
 		DelegatorAddr: sdk.AccAddress(address),
 		ValidatorAddr: address,
 		PubKey:        pubKey,
-		Delegation:    sdk.NewCoin(stakeTypes.DefaultBondDenom, amt),
+		Delegation:    sdk.NewCoin(stakingTypes.DefaultBondDenom, amt),
 	}
 }
 
-func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) stake.MsgDelegate {
-	return stake.MsgDelegate{
+func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) staking.MsgDelegate {
+	return staking.MsgDelegate{
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewCoin(stakeTypes.DefaultBondDenom, delAmount),
+		Delegation:    sdk.NewCoin(stakingTypes.DefaultBondDenom, delAmount),
 	}
 }

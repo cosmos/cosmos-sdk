@@ -160,14 +160,14 @@ And the pseudocode for the `ProposalProcessingQueue`:
       // Tally
       voterIterator = rangeQuery(Governance, <proposalID|'addresses'>) //return all the addresses that voted on the proposal
       for each (voterAddress, vote) in voterIterator
-        delegations = stakeKeeper.getDelegations(voterAddress) // get all delegations for current voter
+        delegations = stakingKeeper.getDelegations(voterAddress) // get all delegations for current voter
 
         for each delegation in delegations
           // make sure delegation.Shares does NOT include shares being unbonded
           tmpValMap(delegation.ValidatorAddr).Minus += delegation.Shares
           proposal.updateTally(vote, delegation.Shares)
 
-        _, isVal = stakeKeeper.getValidator(voterAddress)
+        _, isVal = stakingKeeper.getValidator(voterAddress)
         if (isVal)
           tmpValMap(voterAddress).Vote = vote
 

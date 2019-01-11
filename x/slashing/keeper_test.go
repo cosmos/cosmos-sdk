@@ -8,7 +8,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // Have to change these parameters for tests
@@ -32,9 +32,9 @@ func TestHandleDoubleSign(t *testing.T) {
 	ctx = ctx.WithBlockHeight(-1)
 	amtInt := int64(100)
 	operatorAddr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
-	got := stake.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
+	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
@@ -72,8 +72,8 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// Should be able to unbond now
 	del, _ := sk.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
-	msgUnbond := stake.NewMsgBeginUnbonding(sdk.AccAddress(operatorAddr), operatorAddr, del.GetShares())
-	res = stake.NewHandler(sk)(ctx, msgUnbond)
+	msgUnbond := staking.NewMsgBeginUnbonding(sdk.AccAddress(operatorAddr), operatorAddr, del.GetShares())
+	res = staking.NewHandler(sk)(ctx, msgUnbond)
 	require.True(t, res.IsOK())
 }
 
@@ -89,9 +89,9 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	ctx = ctx.WithBlockHeight(-1)
 	amtInt := int64(100)
 	operatorAddr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
-	got := stake.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
+	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
@@ -123,11 +123,11 @@ func TestHandleAbsentValidator(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	amtInt64 := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt64)
-	sh := stake.NewHandler(sk)
+	sh := staking.NewHandler(sk)
 	slh := NewHandler(keeper)
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
@@ -180,7 +180,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(0), info.MissedBlocksCounter)
 
 	// end block
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	// validator should have been jailed
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
@@ -201,7 +201,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.Equal(t, int64(1), info.MissedBlocksCounter)
 
 	// end block
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	// validator should not have been slashed any more, since it was already jailed
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
@@ -217,7 +217,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	require.True(t, got.IsOK())
 
 	// end block
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	// validator should be rebonded now
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
@@ -249,7 +249,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	}
 
 	// end block
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	// validator should be jailed again after 500 unsigned blocks
 	nextHeight = height + keeper.MinSignedPerWindow(ctx) + 1
@@ -259,7 +259,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 	}
 
 	// end block
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	validator, _ = sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
 	require.Equal(t, sdk.Unbonding, validator.GetStatus())
@@ -272,7 +272,7 @@ func TestHandleNewValidator(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	addr, val, amt := addrs[0], pks[0], int64(100)
-	sh := stake.NewHandler(sk)
+	sh := staking.NewHandler(sk)
 
 	// 1000 first blocks not a validator
 	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 1)
@@ -280,7 +280,7 @@ func TestHandleNewValidator(t *testing.T) {
 	// Validator created
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, sdk.NewInt(amt)))
 	require.True(t, got.IsOK())
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
@@ -315,10 +315,10 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	ctx, _, sk, _, keeper := createTestInput(t, DefaultParams())
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
-	sh := stake.NewHandler(sk)
+	sh := staking.NewHandler(sk)
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	// 1000 first blocks OK
 	height := int64(0)
@@ -334,7 +334,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 	}
 
 	// end block
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	// validator should have been jailed and slashed
 	validator, _ := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
@@ -367,10 +367,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	consAddr := sdk.ConsAddress(addr)
-	sh := stake.NewHandler(sk)
+	sh := staking.NewHandler(sk)
 	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amt))
 	require.True(t, got.IsOK())
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 
 	// 100 first blocks OK
 	height := int64(0)
@@ -383,7 +383,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	newAmt := int64(101)
 	got = sh(ctx, NewTestMsgCreateValidator(addrs[1], pks[1], sdk.NewInt(newAmt)))
 	require.True(t, got.IsOK())
-	validatorUpdates, _ := stake.EndBlocker(ctx, sk)
+	validatorUpdates, _ := staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ := sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Unbonding, validator.Status)
@@ -395,7 +395,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// validator added back in
 	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], sdk.NewInt(3)))
 	require.True(t, got.IsOK())
-	validatorUpdates, _ = stake.EndBlocker(ctx, sk)
+	validatorUpdates, _ = staking.EndBlocker(ctx, sk)
 	require.Equal(t, 2, len(validatorUpdates))
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)
@@ -417,7 +417,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	}
 
 	// should now be jailed & kicked
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Unbonding, validator.Status)
 
@@ -442,7 +442,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	height++
 
 	// validator should not be kicked since we reset counter/array when it was jailed
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Bonded, validator.Status)
 
@@ -454,7 +454,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	}
 
 	// validator should now be jailed & kicked
-	stake.EndBlocker(ctx, sk)
+	staking.EndBlocker(ctx, sk)
 	validator, _ = sk.GetValidator(ctx, addr)
 	require.Equal(t, sdk.Unbonding, validator.Status)
 

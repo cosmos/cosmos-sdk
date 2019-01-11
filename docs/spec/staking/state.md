@@ -3,7 +3,8 @@
 ### Pool
 
 The pool dynamically tracks information about the total amounts of staking
-tokens and their states (bonded or loose). 
+tokens and their states (bonded or loose). Note that `NotBondedTokens` _does_
+include both `unbonding` tokens, and fully `unbonded` tokens. 
 
  - Pool: `0x01 -> amino(pool)`
 
@@ -13,19 +14,19 @@ type Pool struct {
     BondedTokens    sdk.Int   // reserve of bonded tokens
 }
 ```
-Note that `NotBondedTokens` _does_ include both `unbonding` tokens, and fully `unbonded` tokens. 
 
 ### Params
 
 Params is global data structure that stores system parameters and defines
-overall functioning of the stake module. 
+overall functioning of the staking module. 
 
  - Params: `0x00 -> amino(params)`
 
 ```golang
 type Params struct {
-    MaxValidators uint16 // maximum number of validators
-    BondDenom     string // bondable coin denomination
+	UnbondingTime time.Duration // time duration of unbonding
+    MaxValidators uint16        // maximum number of validators
+    BondDenom     string        // bondable coin denomination
 }
 ```
 
@@ -33,7 +34,6 @@ type Params struct {
 
 Validators are identified according to the `OperatorAddr`, an SDK validator
 address for the operator of the validator.
-
 Validators also have a `ConsPubKey`, the public key of the validator used in
 Tendermint consensus. The validator can be retrieved from it's `ConsPubKey`
 once it can be converted into the corresponding `ConsAddr`. Validators are
@@ -56,11 +56,11 @@ map is needed to find the operator.
 potential validators to quickly determine the current active set. For instance,
 the first 100 validators in this list can be returned with every EndBlock.
 
-The `Validator` holds the current state and some historical actions of the
-validator.
+The `Validator` holds the current state of the validator.
 
 ```golang
 type Validator struct {
+	OperatorAddr    sdk.ValAddress // address of the validator's operator; bech encoded in JSON
     ConsPubKey      crypto.PubKey  // Tendermint consensus pubkey of validator
     Jailed          bool           // has the validator been jailed?
 
@@ -68,21 +68,20 @@ type Validator struct {
     Tokens          sdk.Int        // delegated tokens (incl. self-delegation)
     DelegatorShares sdk.Dec        // total shares issued to a validator's delegators
 
-    Description        Description  // description terms for the validator
+    Description Description  // description terms for the validator
 
     // Needed for ordering vals in the by-power key
-    BondHeight         int64        // earliest height as a bonded validator
-    BondIntraTxCounter int16        // block-local tx index of validator change
+	UnbondingHeight  int64     // if unbonding, height at which this validator has begun unbonding
+	UnbondingMinTime time.Time // if unbonding, min time for the validator to complete unbonding
 
-    CommissionInfo     CommissionInfo // info about the validator's commission
+    Commission Commission // info about the validator's commission
 }
 
-type CommissionInfo struct {
-    Rate        sdk.Dec  // the commission rate of fees charged to any delegators
-    Max         sdk.Dec  // maximum commission rate which this validator can ever charge
-    ChangeRate  sdk.Dec  // maximum daily increase of the validator commission
-    ChangeToday sdk.Dec  // commission rate change today, reset each day (UTC time)
-    LastChange  int64    // unix timestamp of last commission change
+Commission struct {
+	Rate          sdk.Dec   // the commission rate charged to delegators
+	MaxRate       sdk.Dec   // maximum commission rate which this validator can ever charge
+	MaxChangeRate sdk.Dec   // maximum daily increase of the validator commission
+	UpdateTime    time.Time // the last time the commission rate was changed
 }
 
 type Description struct {

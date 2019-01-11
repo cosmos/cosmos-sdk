@@ -35,10 +35,9 @@ var _ params.ParamSet = (*Params)(nil)
 
 // Params defines the high level settings for staking
 type Params struct {
-	UnbondingTime time.Duration `json:"unbonding_time"`
-
-	MaxValidators uint16 `json:"max_validators"` // maximum number of validators
-	BondDenom     string `json:"bond_denom"`     // bondable coin denomination
+	UnbondingTime time.Duration `json:"unbonding_time"` // time duration of unbonding
+	MaxValidators uint16        `json:"max_validators"` // maximum number of validators
+	BondDenom     string        `json:"bond_denom"`     // bondable coin denomination
 }
 
 // Implements params.ParamSet

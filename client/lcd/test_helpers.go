@@ -291,7 +291,7 @@ func InitializeTestLCD(
 		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakingData.Pool.LooseTokens = genesisState.StakingData.Pool.LooseTokens.Add(sdk.NewInt(100))
+		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(sdk.NewInt(100))
 	}
 
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)

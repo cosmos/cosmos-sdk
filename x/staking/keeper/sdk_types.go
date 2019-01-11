@@ -102,7 +102,7 @@ func (k Keeper) BondedRatio(ctx sdk.Context) sdk.Dec {
 // when minting new tokens
 func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Int) {
 	pool := k.GetPool(ctx)
-	pool.LooseTokens = pool.LooseTokens.Add(newTokens)
+	pool.NotBondedTokens = pool.NotBondedTokens.Add(newTokens)
 	k.SetPool(ctx, pool)
 }
 

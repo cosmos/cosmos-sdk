@@ -848,7 +848,7 @@ BUG FIXES
 * [x/stake] [\#1513](https://github.com/cosmos/cosmos-sdk/issues/1513) Validators slashed to zero power are unbonded and removed from the store
 * [x/stake] [\#1567](https://github.com/cosmos/cosmos-sdk/issues/1567) Validators decreased in power but not unbonded are now updated in Tendermint
 * [x/stake] error strings lower case
-* [x/stake] pool loose tokens now accounts for unbonding and unbonding tokens not associated with any validator
+* [x/stake] pool not-bonded tokens now accounts for unbonding and unbonding tokens not associated with any validator
 * [x/stake] fix revoke bytes ordering (was putting revoked candidates at the top of the list)
 * [x/stake] bond count was counting revoked validators as bonded, fixed
 * [gaia] Added self delegation for validators in the genesis creation

@@ -9,10 +9,11 @@ tokens and their states (bonded or loose).
 
 ```golang
 type Pool struct {
-    LooseTokens         sdk.Int   // tokens not associated with any bonded validator
-    BondedTokens        sdk.Int   // reserve of bonded tokens
+    NotBondedTokens sdk.Int   // tokens not associated with any bonded validator
+    BondedTokens    sdk.Int   // reserve of bonded tokens
 }
 ```
+Note that `NotBondedTokens` _does_ include both `unbonding` tokens, and fully `unbonded` tokens. 
 
 ### Params
 

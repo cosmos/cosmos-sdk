@@ -191,7 +191,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	// this happens if shares are zero but tokens are not.
 	// TODO: Remove once https://github.com/cosmos/cosmos-sdk/pull/2958 is merged
 	pool := k.GetPool(ctx)
-	pool.LooseTokens = pool.LooseTokens.Sub(validator.Tokens)
+	pool.NotBondedTokens = pool.NotBondedTokens.Sub(validator.Tokens)
 	k.SetPool(ctx, pool)
 
 	// delete the old validator record

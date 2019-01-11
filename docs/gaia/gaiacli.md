@@ -436,7 +436,7 @@ gaiacli query staking pool
 
 With the `pool` command you will get the values for:
 
-- Loose and bonded tokens
+- Not-bonded and bonded tokens
 - Token supply
 - Current anual inflation and the block in which the last inflation was processed
 - Last recorded bonded shares

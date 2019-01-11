@@ -250,7 +250,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 	return d, nil
 }
 
-// ABCIValidatorUpdate returns an abci.ValidatorUpdate from a stakingd validator type
+// ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staked validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
@@ -259,7 +259,7 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	}
 }
 
-// ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a stakingd validator type
+// ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staked validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{

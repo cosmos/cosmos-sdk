@@ -34,7 +34,7 @@ var (
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`
 	AuthData     auth.GenesisState     `json:"auth"`
-	StakeData    staking.GenesisState    `json:"staking"`
+	StakeData    staking.GenesisState  `json:"staking"`
 	MintData     mint.GenesisState     `json:"mint"`
 	DistrData    distr.GenesisState    `json:"distr"`
 	GovData      gov.GenesisState      `json:"gov"`

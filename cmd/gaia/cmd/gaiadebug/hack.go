@@ -4,9 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store"
 	"os"
 	"path"
+
+	"github.com/cosmos/cosmos-sdk/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
@@ -142,7 +143,7 @@ type GaiaApp struct {
 	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
-	stakingKeeper         staking.Keeper
+	stakingKeeper       staking.Keeper
 	slashingKeeper      slashing.Keeper
 	paramsKeeper        params.Keeper
 }

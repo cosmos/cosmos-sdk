@@ -12,11 +12,11 @@ The [Cosmos Hub](/introduction/cosmos-hub.md) is based on [Tendermint](/introduc
 
 ### What is 'staking'?
 
-The Cosmos Hub is a public Proof-Of-Stake (PoS) blockchain, meaning that validator's weight is determined by the amount of staking tokens (Atoms) bonded as collateral. These Atoms can be stakingd directly by the validator or delegated to them by Atom holders.
+The Cosmos Hub is a public Proof-Of-Stake (PoS) blockchain, meaning that validator's weight is determined by the amount of staking tokens (Atoms) bonded as collateral. These Atoms can be staked directly by the validator or delegated to them by Atom holders.
 
 Any user in the system can declare its intention to become a validator by sending a `create-validator` transaction. From there, they become validators.
 
-The weight (i.e. total staking) of a validator determines wether or not it is an active validator, and also how frequently this node will have to propose a block and how much revenue it will obtain. Initially, only the top 100 validators with the most weight will be active validators. If validators double sign, are frequently offline or do not participate in governance, their stakingd Atoms (including Atoms of users that delegated to them) can be destroyed, or 'slashed'.
+The weight (i.e. total staking) of a validator determines wether or not it is an active validator, and also how frequently this node will have to propose a block and how much revenue it will obtain. Initially, only the top 100 validators with the most weight will be active validators. If validators double sign, are frequently offline or do not participate in governance, their staked Atoms (including Atoms of users that delegated to them) can be destroyed, or 'slashed'.
 
 ### What is a full-node?
 
@@ -105,7 +105,7 @@ Delegators have the same state as their validator.
 
 If you want to obtain coins for the testnet, you can do so by using [this faucet](https://gaia.faucetcosmos.network/)
 
-### Is there a minimum amount of Atoms that must be stakingd to be an active (=bonded) validator?
+### Is there a minimum amount of Atoms that must be staked to be an active (=bonded) validator?
 
 There is no minimum. The top 100 validators with the highest total staking (where total staking = self-bonded staking + delegators staking) are the active validators.
 
@@ -153,7 +153,7 @@ By delegating to a validator, a user delegates staking power. The more staking p
 
 Even though delegated funds cannot be stolen by their validators, delegators are still liable if their validators misbehave. In such case, each delegators' staking will be partially slashed in proportion to their relative staking.
 
-### How often will a validator be chosen to propose the next block? Does it go up with the quantity of Atoms stakingd?
+### How often will a validator be chosen to propose the next block? Does it go up with the quantity of Atoms staked?
 
 The validator that is selected to propose the next block is called proposer. Each proposer is selected deterministically, and the frequency of being chosen is equal to the relative total staking (where total staking = self-bonded staking + delegators staking) of the validator. For example, if the total bonded staking across all validators is 100 Atoms and a validator's total staking is 10 Atoms, then this validator will be chosen 10% of the time as the next proposer.
 

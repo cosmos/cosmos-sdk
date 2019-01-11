@@ -98,7 +98,7 @@ following delegation and commission default parameters:
 			// Set flags for creating gentx
 			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey)
 
-			// Fetch the amount of coins stakingd
+			// Fetch the amount of coins staked
 			amount := viper.GetString(cli.FlagAmount)
 			coins, err := sdk.ParseCoins(amount)
 			if err != nil {

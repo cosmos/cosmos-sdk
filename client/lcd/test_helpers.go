@@ -227,8 +227,8 @@ func InitializeTestLCD(
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	logger = log.NewFilter(logger, log.AllowError())
 
-	privValidatorFile := config.PrivValidatorFile()
-	privVal := pvm.LoadOrGenFilePV(privValidatorFile)
+	privVal := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(),
+		config.PrivValidatorStateFile())
 	privVal.Reset()
 
 	db := dbm.NewMemDB()
@@ -247,7 +247,7 @@ func InitializeTestLCD(
 	for i := 0; i < nValidators; i++ {
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
-		pubKey := privVal.PubKey
+		pubKey := privVal.GetPubKey()
 		delegation := 100
 		if i > 0 {
 			pubKey = ed25519.GenPrivKey().PubKey()

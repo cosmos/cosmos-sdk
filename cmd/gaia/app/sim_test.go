@@ -156,14 +156,16 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
+	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) +
+		(numInitiallyBonded * amount))
+
 	stakingGenesis.Validators = validators
 	stakingGenesis.Bonds = delegations
 
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		AuthData:     authGenesis,
-		StakingData:    stakingGenesis,
+		StakingData:  stakingGenesis,
 		MintData:     mintGenesis,
 		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),
 		SlashingData: slashingGenesis,

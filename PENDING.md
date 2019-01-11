@@ -31,7 +31,7 @@ BREAKING CHANGES
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
   
 * Tendermint
-
+  * \#3279 Upgrade to Tendermint 0.28.0-dev0
 
 FEATURES
 

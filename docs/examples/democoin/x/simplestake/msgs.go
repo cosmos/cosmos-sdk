@@ -17,10 +17,10 @@ type MsgBond struct {
 	PubKey  crypto.PubKey  `json:"pub_key"`
 }
 
-func NewMsgBond(addr sdk.AccAddress, staking sdk.Coin, pubKey crypto.PubKey) MsgBond {
+func NewMsgBond(addr sdk.AccAddress, stake sdk.Coin, pubKey crypto.PubKey) MsgBond {
 	return MsgBond{
 		Address: addr,
-		Stake:   staking,
+		Stake:   stake,
 		PubKey:  pubKey,
 	}
 }

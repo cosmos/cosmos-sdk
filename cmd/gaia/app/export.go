@@ -154,19 +154,6 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	/* Handle slashing state. */
 
-	// remove all existing slashing periods and recreate one for each validator
-	app.slashingKeeper.DeleteValidatorSlashingPeriods(ctx)
-
-	for _, valConsAddr := range valConsAddrs {
-		sp := slashing.ValidatorSlashingPeriod{
-			ValidatorAddr: valConsAddr,
-			StartHeight:   0,
-			EndHeight:     0,
-			SlashedSoFar:  sdk.ZeroDec(),
-		}
-		app.slashingKeeper.SetValidatorSlashingPeriod(ctx, sp)
-	}
-
 	// reset start height on signing infos
 	app.slashingKeeper.IterateValidatorSigningInfos(
 		ctx,

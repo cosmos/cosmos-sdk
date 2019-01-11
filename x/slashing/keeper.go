@@ -47,7 +47,13 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))
 	}
 
-	// Get validator.
+	// Reject evidence if the double is too old
+	if age > k.MaxEvidenceAge(ctx) {
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, k.MaxEvidenceAge(ctx)))
+		return
+	}
+
+	// Get validator and signing info
 	validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 	if validator == nil || validator.GetStatus() == sdk.Unbonded {
 		// Defensive.
@@ -55,16 +61,19 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 		// Tendermint might break this assumption at some point.
 		return
 	}
+	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
+	if !found {
+		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
+	}
 
-	// Double sign too old
-	maxEvidenceAge := k.MaxEvidenceAge(ctx)
-	if age > maxEvidenceAge {
-		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
+	// Validator is already tombstoned
+	if signInfo.Tombstoned {
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, validator already tombstoned", pubkey.Address(), infractionHeight))
 		return
 	}
 
 	// Double sign confirmed
-	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d less than max age of %d", pubkey.Address(), infractionHeight, age, maxEvidenceAge))
+	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d", pubkey.Address(), infractionHeight, age))
 
 	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
 	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,
@@ -72,31 +81,29 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
 	distributionHeight := infractionHeight - stake.ValidatorUpdateDelay
 
-	// Cap the amount slashed to the penalty for the worst infraction
-	// within the slashing period when this infraction was committed
+	// get the percentage slash penalty fraction
 	fraction := k.SlashFractionDoubleSign(ctx)
-	revisedFraction := k.capBySlashingPeriod(ctx, consAddr, fraction, distributionHeight)
-	logger.Info(fmt.Sprintf("Fraction slashed capped by slashing period from %v to %v", fraction, revisedFraction))
 
 	// Slash validator
 	// `power` is the int64 power of the validator as provided to/by
 	// Tendermint. This value is validator.Tokens as sent to Tendermint via
 	// ABCI, and now received as evidence.
-	// The revisedFraction (which is the new fraction to be slashed) is passed
-	// in separately to separately slash unbonding and rebonding delegations.
-	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, revisedFraction)
+	// The fraction is passed in to separately to slash unbonding and rebonding delegations.
+	k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, fraction)
 
 	// Jail validator if not already jailed
+	// begin unbonding validator if not already unbonding (tombstone)
 	if !validator.GetJailed() {
 		k.validatorSet.Jail(ctx, consAddr)
 	}
 
-	// Set or updated validator jail duration
-	signInfo, found := k.getValidatorSigningInfo(ctx, consAddr)
-	if !found {
-		panic(fmt.Sprintf("Expected signing info for validator %s but not found", consAddr))
-	}
-	signInfo.JailedUntil = time.Add(k.DoubleSignUnbondDuration(ctx))
+	// Set slashed so far to total slash
+	signInfo.Tombstoned = true
+
+	// Set jailed until to be forever (max time)
+	signInfo.JailedUntil = DoubleSignJailEndTime
+
+	// Set validator signing info
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
@@ -156,7 +163,7 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			distributionHeight := height - stake.ValidatorUpdateDelay - 1
 			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
-			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeUnbondDuration(ctx))
+			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0

@@ -12,15 +12,19 @@ const (
 	DefaultParamspace = "slashing"
 )
 
+// The Double Sign Jail period ends at Max Time supported by Amino (Dec 31, 9999 - 23:59:59 GMT)
+var (
+	DoubleSignJailEndTime = time.Unix(253402300799, 0)
+)
+
 // Parameter store key
 var (
-	KeyMaxEvidenceAge           = []byte("MaxEvidenceAge")
-	KeySignedBlocksWindow       = []byte("SignedBlocksWindow")
-	KeyMinSignedPerWindow       = []byte("MinSignedPerWindow")
-	KeyDoubleSignUnbondDuration = []byte("DoubleSignUnbondDuration")
-	KeyDowntimeUnbondDuration   = []byte("DowntimeUnbondDuration")
-	KeySlashFractionDoubleSign  = []byte("SlashFractionDoubleSign")
-	KeySlashFractionDowntime    = []byte("SlashFractionDowntime")
+	KeyMaxEvidenceAge          = []byte("MaxEvidenceAge")
+	KeySignedBlocksWindow      = []byte("SignedBlocksWindow")
+	KeyMinSignedPerWindow      = []byte("MinSignedPerWindow")
+	KeyDowntimeJailDuration    = []byte("DowntimeJailDuration")
+	KeySlashFractionDoubleSign = []byte("SlashFractionDoubleSign")
+	KeySlashFractionDowntime   = []byte("SlashFractionDowntime")
 )
 
 // ParamTypeTable for slashing module
@@ -30,13 +34,12 @@ func ParamTypeTable() params.TypeTable {
 
 // Params - used for initializing default parameter for slashing at genesis
 type Params struct {
-	MaxEvidenceAge           time.Duration `json:"max-evidence-age"`
-	SignedBlocksWindow       int64         `json:"signed-blocks-window"`
-	MinSignedPerWindow       sdk.Dec       `json:"min-signed-per-window"`
-	DoubleSignUnbondDuration time.Duration `json:"double-sign-unbond-duration"`
-	DowntimeUnbondDuration   time.Duration `json:"downtime-unbond-duration"`
-	SlashFractionDoubleSign  sdk.Dec       `json:"slash-fraction-double-sign"`
-	SlashFractionDowntime    sdk.Dec       `json:"slash-fraction-downtime"`
+	MaxEvidenceAge          time.Duration `json:"max-evidence-age"`
+	SignedBlocksWindow      int64         `json:"signed-blocks-window"`
+	MinSignedPerWindow      sdk.Dec       `json:"min-signed-per-window"`
+	DowntimeJailDuration    time.Duration `json:"downtime-jail-duration"`
+	SlashFractionDoubleSign sdk.Dec       `json:"slash-fraction-double-sign"`
+	SlashFractionDowntime   sdk.Dec       `json:"slash-fraction-downtime"`
 }
 
 // Implements params.ParamStruct
@@ -45,8 +48,7 @@ func (p *Params) KeyValuePairs() params.KeyValuePairs {
 		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},
 		{KeySignedBlocksWindow, &p.SignedBlocksWindow},
 		{KeyMinSignedPerWindow, &p.MinSignedPerWindow},
-		{KeyDoubleSignUnbondDuration, &p.DoubleSignUnbondDuration},
-		{KeyDowntimeUnbondDuration, &p.DowntimeUnbondDuration},
+		{KeyDowntimeJailDuration, &p.DowntimeJailDuration},
 		{KeySlashFractionDoubleSign, &p.SlashFractionDoubleSign},
 		{KeySlashFractionDowntime, &p.SlashFractionDowntime},
 	}
@@ -59,14 +61,11 @@ func DefaultParams() Params {
 		// TODO Temporarily set to 2 minutes for testnets.
 		MaxEvidenceAge: 60 * 2 * time.Second,
 
-		// TODO Temporarily set to five minutes for testnets
-		DoubleSignUnbondDuration: 60 * 5 * time.Second,
-
 		// TODO Temporarily set to 100 blocks for testnets
 		SignedBlocksWindow: 100,
 
 		// TODO Temporarily set to 10 minutes for testnets
-		DowntimeUnbondDuration: 60 * 10 * time.Second,
+		DowntimeJailDuration: 60 * 10 * time.Second,
 
 		MinSignedPerWindow: sdk.NewDecWithPrec(5, 1),
 
@@ -97,15 +96,9 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	return sdk.NewDec(signedBlocksWindow).Mul(minSignedPerWindow).RoundInt64()
 }
 
-// Double-sign unbond duration
-func (k Keeper) DoubleSignUnbondDuration(ctx sdk.Context) (res time.Duration) {
-	k.paramspace.Get(ctx, KeyDoubleSignUnbondDuration, &res)
-	return
-}
-
 // Downtime unbond duration
-func (k Keeper) DowntimeUnbondDuration(ctx sdk.Context) (res time.Duration) {
-	k.paramspace.Get(ctx, KeyDowntimeUnbondDuration, &res)
+func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
+	k.paramspace.Get(ctx, KeyDowntimeJailDuration, &res)
 	return
 }
 

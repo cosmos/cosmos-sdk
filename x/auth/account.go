@@ -197,7 +197,11 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 		spendableCoin := sdk.NewCoin(coin.Denom, min)
 
 		if !spendableCoin.IsZero() {
-			spendableCoins = spendableCoins.AddCoinByDenom(spendableCoin)
+			if spendableCoins.Empty() {
+				spendableCoins = sdk.Coins{spendableCoin}
+			} else {
+				spendableCoins = spendableCoins.AddCoinByDenom(spendableCoin)
+			}
 		}
 	}
 
@@ -255,15 +259,27 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedVesting = bva.DelegatedVesting.AddCoinByDenom(xCoin)
+			if bva.DelegatedVesting.Empty() {
+				bva.DelegatedVesting = sdk.Coins{xCoin}
+			} else {
+				bva.DelegatedVesting = bva.DelegatedVesting.AddCoinByDenom(xCoin)
+			}
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedFree = bva.DelegatedFree.AddCoinByDenom(yCoin)
+			if bva.DelegatedFree.Empty() {
+				bva.DelegatedFree = sdk.Coins{yCoin}
+			} else {
+				bva.DelegatedFree = bva.DelegatedFree.AddCoinByDenom(yCoin)
+			}
 		}
 
-		bva.Coins = bva.Coins.SubCoinByDenom(coin)
+		if bva.Coins.Empty() {
+			bva.Coins = sdk.Coins{coin}
+		} else {
+			bva.Coins = bva.Coins.SubCoinByDenom(coin)
+		}
 	}
 }
 
@@ -298,15 +314,27 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			bva.DelegatedFree = bva.DelegatedFree.SubCoinByDenom(xCoin)
+			if bva.DelegatedFree.Empty() {
+				bva.DelegatedFree = sdk.Coins{xCoin}
+			} else {
+				bva.DelegatedFree = bva.DelegatedFree.SubCoinByDenom(xCoin)
+			}
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			bva.DelegatedVesting = bva.DelegatedVesting.SubCoinByDenom(yCoin)
+			if bva.DelegatedVesting.Empty() {
+				bva.DelegatedVesting = sdk.Coins{yCoin}
+			} else {
+				bva.DelegatedVesting = bva.DelegatedVesting.SubCoinByDenom(yCoin)
+			}
 		}
 
-		bva.Coins = bva.Coins.AddCoinByDenom(coin)
+		if bva.Coins.Empty() {
+			bva.Coins = sdk.Coins{coin}
+		} else {
+			bva.Coins = bva.Coins.AddCoinByDenom(coin)
+		}
 	}
 }
 

@@ -528,7 +528,7 @@ func TestCoinsAddCoin(t *testing.T) {
 		{
 			Coins{},
 			NewInt64Coin("c", 5),
-			Coins{NewInt64Coin("c", 5)},
+			Coins{},
 		},
 	}
 
@@ -572,8 +572,8 @@ func TestCoinsSubCoin(t *testing.T) {
 		{
 			Coins{},
 			NewInt64Coin("c", 5),
-			Coins{NewInt64Coin("c", 5)},
-			false,
+			Coins{},
+			true,
 		},
 		{
 			Coins{NewInt64Coin("a", 10), NewInt64Coin("b", 5)},

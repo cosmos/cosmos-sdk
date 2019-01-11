@@ -10,10 +10,10 @@ import (
 
 // Default parameter namespace
 const (
-	DefaultParamspace = "stake"
+	DefaultParamspace = "staking"
 )
 
-// ParamTable for stake module
+// ParamTable for staking module
 func ParamTypeTable() params.TypeTable {
 	return params.NewTypeTable().RegisterParamSet(&types.Params{})
 }

@@ -18,11 +18,11 @@ In this paper, we define a process of posting block headers and Merkle tree proo
 
 *Module* - We assume that the state machine of each blockchain is comprised of multiple components that have limited rights to execute some particular set of state transfers (these are modules in the Cosmos SDK or smart contracts in Ethereum).
 
-*Finality* - The guarantee that a given block will not be reverted within some predefined conditions of a consensus algorithm. All proof-of-work systems offer probabilistic finality, which means that the difficulty of reverting a block increases as the block is embedded more deeply in the chain. Many proof-of-stake systems offer much weaker guarantees, based only on the honesty of the block producers. BFT algorithms such as Tendermint guarantee complete finality upon production of a block (unless over two thirds of the validators collude to break consensus, in which case the offenders can be identified and punished - further discussion of that scenario is outside the scope of this document).
+*Finality* - The guarantee that a given block will not be reverted within some predefined conditions of a consensus algorithm. All proof-of-work systems offer probabilistic finality, which means that the difficulty of reverting a block increases as the block is embedded more deeply in the chain. Many proof-of-staking systems offer much weaker guarantees, based only on the honesty of the block producers. BFT algorithms such as Tendermint guarantee complete finality upon production of a block (unless over two thirds of the validators collude to break consensus, in which case the offenders can be identified and punished - further discussion of that scenario is outside the scope of this document).
 
 *Attributable* - Knowledge of the pseudonymous identity which made a statement, whom we can punish with some deduction of value (slashing) if the statement is false. Synonymous with accountability.
 
-*Unbonding period* - Proof-of-stake algorithms need to lock the stake (prevent transfers) for some time to provide a lower bound for the length of a long-range attack [[3](./references.md#3)]. Complete finality is associated with a subset of the proof-of-stake class of consensus algorithms. We assume the proof-of-stake algorithms utilized by the two blockchains have some unbonding period P.
+*Unbonding period* - Proof-of-staking algorithms need to lock the staking (prevent transfers) for some time to provide a lower bound for the length of a long-range attack [[3](./references.md#3)]. Complete finality is associated with a subset of the proof-of-staking class of consensus algorithms. We assume the proof-of-staking algorithms utilized by the two blockchains have some unbonding period P.
 
 ### 1.3 Threat Models
 

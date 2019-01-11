@@ -58,7 +58,7 @@ func NewQuerier(k keep.Keeper, cdc *codec.Codec) sdk.Querier {
 		case QueryParameters:
 			return queryParameters(ctx, cdc, k)
 		default:
-			return nil, sdk.ErrUnknownRequest("unknown stake query endpoint")
+			return nil, sdk.ErrUnknownRequest("unknown staking query endpoint")
 		}
 	}
 }
@@ -126,8 +126,8 @@ func NewQueryRedelegationParams(delegatorAddr sdk.AccAddress, srcValidatorAddr s
 }
 
 func queryValidators(ctx sdk.Context, cdc *codec.Codec, k keep.Keeper) (res []byte, err sdk.Error) {
-	stakeParams := k.GetParams(ctx)
-	validators := k.GetValidators(ctx, stakeParams.MaxValidators)
+	stakingParams := k.GetParams(ctx)
+	validators := k.GetValidators(ctx, stakingParams.MaxValidators)
 
 	res, errRes := codec.MarshalJSONIndent(cdc, validators)
 	if err != nil {
@@ -227,14 +227,14 @@ func queryDelegatorUnbondingDelegations(ctx sdk.Context, cdc *codec.Codec, req a
 func queryDelegatorValidators(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k keep.Keeper) (res []byte, err sdk.Error) {
 	var params QueryDelegatorParams
 
-	stakeParams := k.GetParams(ctx)
+	stakingParams := k.GetParams(ctx)
 
 	errRes := cdc.UnmarshalJSON(req.Data, &params)
 	if errRes != nil {
 		return []byte{}, sdk.ErrUnknownAddress("")
 	}
 
-	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr, stakeParams.MaxValidators)
+	validators := k.GetDelegatorValidators(ctx, params.DelegatorAddr, stakingParams.MaxValidators)
 
 	res, errRes = codec.MarshalJSONIndent(cdc, validators)
 	if errRes != nil {

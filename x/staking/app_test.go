@@ -1,4 +1,4 @@
-package stake
+package staking
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // getMockApp returns an initialized mock application for this module.
@@ -33,7 +33,7 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 	return mApp, keeper
 }
 
-// getEndBlocker returns a stake endblocker.
+// getEndBlocker returns a staking endblocker.
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		validatorUpdates, tags := EndBlocker(ctx, keeper)
@@ -51,10 +51,10 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
-		stakeGenesis := DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = sdk.NewInt(100000)
+		stakingGenesis := DefaultGenesisState()
+		stakingGenesis.Pool.LooseTokens = sdk.NewInt(100000)
 
-		validators, err := InitGenesis(ctx, keeper, stakeGenesis)
+		validators, err := InitGenesis(ctx, keeper, stakingGenesis)
 		if err != nil {
 			panic(err)
 		}
@@ -97,8 +97,8 @@ func checkDelegation(
 func TestStakeMsgs(t *testing.T) {
 	mApp, keeper := getMockApp(t)
 
-	genCoin := sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)
-	bondCoin := sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10)
+	genCoin := sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)
+	bondCoin := sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 10)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,

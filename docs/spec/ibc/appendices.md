@@ -87,7 +87,7 @@ From this signed header, one can check the validator set against the validator h
 
 Once we have a trusted header with a known validator set, we can quickly validate any new header with the same validator set. To validate a new header, simply verifying that the validator hash has not changed, and that over 2/3 of the voting power in that set has properly signed a commit for that header. We can skip all intervening headers, as we have complete finality (no forks) and accountability (to punish a double-sign).
 
-This is safe as long as we have a valid signed header by the trusted validator set that is within the unbonding period for staking. In that case, if we were given a false (forked) header, we could use this as proof to slash the stake of all the double-signing validators. This demonstrates the importance of attribution and is the same security guarantee of any non-validating full node. Even in the presence of some ultra-powerful malicious actors, this makes the cost of creating a fake proof for a header equal to at least one third of all staked tokens, which should be significantly higher than any gain of a false message.
+This is safe as long as we have a valid signed header by the trusted validator set that is within the unbonding period for staking. In that case, if we were given a false (forked) header, we could use this as proof to slash the staking of all the double-signing validators. This demonstrates the importance of attribution and is the same security guarantee of any non-validating full node. Even in the presence of some ultra-powerful malicious actors, this makes the cost of creating a fake proof for a header equal to at least one third of all stakingd tokens, which should be significantly higher than any gain of a false message.
 
 **UPDATING VALIDATORS SET**
 
@@ -101,4 +101,4 @@ A validator change in Tendermint can be securely verified with the following che
 *   Second, that the new header is also valid in the eyes of our trust set
     *   Verify at least 2/3 of the voting power of our trusted set, which are also in the new set, properly signed a commit to the new header
 
-In that case, we can update to this header, and update the trusted validator set, with the same guarantees as above (the ability to slash at least one third of all staked tokens on any false proof).
+In that case, we can update to this header, and update the trusted validator set, with the same guarantees as above (the ability to slash at least one third of all stakingd tokens on any false proof).

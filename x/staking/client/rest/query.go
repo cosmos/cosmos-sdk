@@ -149,18 +149,18 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 
 		switch {
 		case isBondTx:
-			actions = append(actions, stake.MsgDelegate{}.Type())
+			actions = append(actions, staking.MsgDelegate{}.Type())
 		case isUnbondTx:
-			actions = append(actions, stake.MsgBeginUnbonding{}.Type())
+			actions = append(actions, staking.MsgBeginUnbonding{}.Type())
 			actions = append(actions, string(tags.ActionCompleteUnbonding))
 		case isRedTx:
-			actions = append(actions, stake.MsgBeginRedelegate{}.Type())
+			actions = append(actions, staking.MsgBeginRedelegate{}.Type())
 			actions = append(actions, string(tags.ActionCompleteRedelegation))
 		case noQuery:
-			actions = append(actions, stake.MsgDelegate{}.Type())
-			actions = append(actions, stake.MsgBeginUnbonding{}.Type())
+			actions = append(actions, staking.MsgDelegate{}.Type())
+			actions = append(actions, staking.MsgBeginUnbonding{}.Type())
 			actions = append(actions, string(tags.ActionCompleteUnbonding))
-			actions = append(actions, stake.MsgBeginRedelegate{}.Type())
+			actions = append(actions, staking.MsgBeginRedelegate{}.Type())
 			actions = append(actions, string(tags.ActionCompleteRedelegation))
 		default:
 			w.WriteHeader(http.StatusNoContent)
@@ -192,7 +192,7 @@ func unbondingDelegationHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) h
 // HTTP request handler to query redelegations
 func redelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var params stake.QueryRedelegationParams
+		var params staking.QueryRedelegationParams
 
 		bechDelegatorAddr := r.URL.Query().Get("delegator")
 		bechSrcValidatorAddr := r.URL.Query().Get("validator_from")

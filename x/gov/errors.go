@@ -43,7 +43,7 @@ func ErrAlreadyFinishedProposal(codespace sdk.CodespaceType, proposalID uint64) 
 }
 
 func ErrAddressNotStaked(codespace sdk.CodespaceType, address sdk.AccAddress) sdk.Error {
-	return sdk.NewError(codespace, CodeAddressNotStaked, fmt.Sprintf("Address %s is not staked and is thus ineligible to vote", address))
+	return sdk.NewError(codespace, CodeAddressNotStaked, fmt.Sprintf("Address %s is not stakingd and is thus ineligible to vote", address))
 }
 
 func ErrInvalidTitle(codespace sdk.CodespaceType, title string) sdk.Error {

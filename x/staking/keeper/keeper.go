@@ -13,7 +13,7 @@ import (
 
 const aminoCacheSize = 500
 
-// keeper of the stake store
+// keeper of the staking store
 type Keeper struct {
 	storeKey           sdk.StoreKey
 	storeTKey          sdk.StoreKey

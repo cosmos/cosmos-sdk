@@ -8,7 +8,7 @@ import (
 )
 
 // Slash a validator for an infraction committed at a known height
-// Find the contributing stake at that height and burn the specified slashFactor
+// Find the contributing staking at that height and burn the specified slashFactor
 // of it, updating unbonding delegation & redelegations appropriately
 //
 // CONTRACT:
@@ -57,7 +57,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
-	// redelegations, as that stake has since unbonded
+	// redelegations, as that staking has since unbonded
 	remainingSlashAmount := slashAmount
 
 	switch {
@@ -141,15 +141,15 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 
 // slash an unbonding delegation and update the pool
 // return the amount that would have been slashed assuming
-// the unbonding delegation had enough stake to slash
+// the unbonding delegation had enough staking to slash
 // (the amount actually slashed may be less if there's
-// insufficient stake remaining)
+// insufficient staking remaining)
 func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (slashAmount sdk.Int) {
 
 	now := ctx.BlockHeader().Time
 
-	// If unbonding started before this height, stake didn't contribute to infraction
+	// If unbonding started before this height, staking didn't contribute to infraction
 	if unbondingDelegation.CreationHeight < infractionHeight {
 		return sdk.ZeroInt()
 	}
@@ -160,14 +160,14 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		return sdk.ZeroInt()
 	}
 
-	// Calculate slash amount proportional to stake contributing to infraction
+	// Calculate slash amount proportional to staking contributing to infraction
 	slashAmountDec := slashFactor.MulInt(unbondingDelegation.InitialBalance.Amount)
 	slashAmount = slashAmountDec.TruncateInt()
 
 	// Don't slash more tokens than held
 	// Possible since the unbonding delegation may already
 	// have been slashed, and slash amounts are calculated
-	// according to stake held at time of infraction
+	// according to staking held at time of infraction
 	unbondingSlashAmount := sdk.MinInt(slashAmount, unbondingDelegation.Balance.Amount)
 
 	// Update unbonding delegation if necessary
@@ -187,16 +187,16 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 
 // slash a redelegation and update the pool
 // return the amount that would have been slashed assuming
-// the unbonding delegation had enough stake to slash
+// the unbonding delegation had enough staking to slash
 // (the amount actually slashed may be less if there's
-// insufficient stake remaining)
+// insufficient staking remaining)
 // nolint: unparam
 func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec) (slashAmount sdk.Int) {
 
 	now := ctx.BlockHeader().Time
 
-	// If redelegation started before this height, stake didn't contribute to infraction
+	// If redelegation started before this height, staking didn't contribute to infraction
 	if redelegation.CreationHeight < infractionHeight {
 		return sdk.ZeroInt()
 	}
@@ -207,14 +207,14 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		return sdk.ZeroInt()
 	}
 
-	// Calculate slash amount proportional to stake contributing to infraction
+	// Calculate slash amount proportional to staking contributing to infraction
 	slashAmountDec := slashFactor.MulInt(redelegation.InitialBalance.Amount)
 	slashAmount = slashAmountDec.TruncateInt()
 
 	// Don't slash more tokens than held
 	// Possible since the redelegation may already
 	// have been slashed, and slash amounts are calculated
-	// according to stake held at time of infraction
+	// according to staking held at time of infraction
 	redelegationSlashAmount := sdk.MinInt(slashAmount, redelegation.Balance.Amount)
 
 	// Update redelegation if necessary

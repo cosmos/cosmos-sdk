@@ -25,7 +25,7 @@ See the
 # Provisions
 
 The `x/provisions` module is for distributing fees and inflation across bonded
-stakeholders.
+stakingholders.
 
 See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/provisions)
 
@@ -34,7 +34,7 @@ See the
 
 # Governance
 
-The `x/gov` module is for bonded stakeholders to make proposals and vote on them.
+The `x/gov` module is for bonded stakingholders to make proposals and vote on them.
 
 See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/gov)
 

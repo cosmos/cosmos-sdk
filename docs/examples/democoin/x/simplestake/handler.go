@@ -1,10 +1,10 @@
-package simplestake
+package simplestaking
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// NewHandler returns a handler for "simplestake" type messages.
+// NewHandler returns a handler for "simplestaking" type messages.
 func NewHandler(k Keeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		switch msg.(type) {

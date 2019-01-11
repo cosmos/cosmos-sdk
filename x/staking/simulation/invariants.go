@@ -11,12 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// AllInvariants runs all invariants of the stake module.
+// AllInvariants runs all invariants of the staking module.
 // Currently: total supply, positive power
-func AllInvariants(ck bank.Keeper, k stake.Keeper,
+func AllInvariants(ck bank.Keeper, k staking.Keeper,
 	f auth.FeeCollectionKeeper, d distribution.Keeper,
 	am auth.AccountKeeper) simulation.Invariant {
 
@@ -47,7 +47,7 @@ func AllInvariants(ck bank.Keeper, k stake.Keeper,
 
 // SupplyInvariants checks that the total supply reflects all held loose tokens, bonded tokens, and unbonding delegations
 // nolint: unparam
-func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
+func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 	f auth.FeeCollectionKeeper, d distribution.Keeper, am auth.AccountKeeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		pool := k.GetPool(ctx)
@@ -55,10 +55,10 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		loose := sdk.ZeroDec()
 		bonded := sdk.ZeroDec()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom)))
+			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom)))
 			return false
 		})
-		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd stake.UnbondingDelegation) bool {
+		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd staking.UnbondingDelegation) bool {
 			loose = loose.Add(sdk.NewDecFromInt(ubd.Balance.Amount))
 			return false
 		})
@@ -75,19 +75,19 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 		feePool := d.GetFeePool(ctx)
 
 		// add outstanding fees
-		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(stakeTypes.DefaultBondDenom)))
+		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(stakingTypes.DefaultBondDenom)))
 
 		// add community pool
-		loose = loose.Add(feePool.CommunityPool.AmountOf(stakeTypes.DefaultBondDenom))
+		loose = loose.Add(feePool.CommunityPool.AmountOf(stakingTypes.DefaultBondDenom))
 
 		// add validator distribution pool
-		loose = loose.Add(feePool.ValPool.AmountOf(stakeTypes.DefaultBondDenom))
+		loose = loose.Add(feePool.ValPool.AmountOf(stakingTypes.DefaultBondDenom))
 
 		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
 		d.IterateValidatorDistInfos(ctx,
 			func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
-				loose = loose.Add(distInfo.DelPool.AmountOf(stakeTypes.DefaultBondDenom))
-				loose = loose.Add(distInfo.ValCommission.AmountOf(stakeTypes.DefaultBondDenom))
+				loose = loose.Add(distInfo.DelPool.AmountOf(stakingTypes.DefaultBondDenom))
+				loose = loose.Add(distInfo.ValCommission.AmountOf(stakingTypes.DefaultBondDenom))
 				return false
 			},
 		)
@@ -112,7 +112,7 @@ func SupplyInvariants(ck bank.Keeper, k stake.Keeper,
 }
 
 // NonNegativePowerInvariant checks that all stored validators have >= 0 power.
-func NonNegativePowerInvariant(k stake.Keeper) simulation.Invariant {
+func NonNegativePowerInvariant(k staking.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		iterator := k.ValidatorsPowerStoreIterator(ctx)
 
@@ -139,7 +139,7 @@ func NonNegativePowerInvariant(k stake.Keeper) simulation.Invariant {
 }
 
 // PositiveDelegationInvariant checks that all stored delegations have > 0 shares.
-func PositiveDelegationInvariant(k stake.Keeper) simulation.Invariant {
+func PositiveDelegationInvariant(k staking.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		delegations := k.GetAllDelegations(ctx)
 		for _, delegation := range delegations {
@@ -158,7 +158,7 @@ func PositiveDelegationInvariant(k stake.Keeper) simulation.Invariant {
 // DelegatorSharesInvariant checks whether all the delegator shares which persist
 // in the delegator object add up to the correct total delegator shares
 // amount stored in each validator
-func DelegatorSharesInvariant(k stake.Keeper) simulation.Invariant {
+func DelegatorSharesInvariant(k staking.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		validators := k.GetAllValidators(ctx)
 		for _, validator := range validators {

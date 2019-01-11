@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestWithdrawRewards(t *testing.T) {
@@ -26,9 +26,9 @@ func TestWithdrawRewards(t *testing.T) {
 	di2 := NewDelegationDistInfo(delAddr2, valAddr1, height)
 	di2Shares := sdk.NewDec(5)
 
-	// simulate adding some stake for inflation
+	// simulate adding some staking for inflation
 	height = 10
-	fp.ValPool = DecCoins{NewDecCoin(stakeTypes.DefaultBondDenom, 1000)}
+	fp.ValPool = DecCoins{NewDecCoin(stakingTypes.DefaultBondDenom, 1000)}
 
 	// withdraw rewards
 	wc := NewWithdrawContext(fp, height,

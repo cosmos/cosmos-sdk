@@ -79,7 +79,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 			return
 		}
 
-		msg := stake.NewMsgDelegate(req.DelegatorAddr, req.ValidatorAddr, req.Delegation)
+		msg := staking.NewMsgDelegate(req.DelegatorAddr, req.ValidatorAddr, req.Delegation)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -116,7 +116,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 			return
 		}
 
-		msg := stake.NewMsgBeginRedelegate(req.DelegatorAddr, req.ValidatorSrcAddr, req.ValidatorDstAddr, req.SharesAmount)
+		msg := staking.NewMsgBeginRedelegate(req.DelegatorAddr, req.ValidatorSrcAddr, req.ValidatorDstAddr, req.SharesAmount)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -153,7 +153,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		msg := stake.NewMsgBeginUnbonding(req.DelegatorAddr, req.ValidatorAddr, req.SharesAmount)
+		msg := staking.NewMsgBeginUnbonding(req.DelegatorAddr, req.ValidatorAddr, req.SharesAmount)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

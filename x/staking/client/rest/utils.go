@@ -73,7 +73,7 @@ func queryRedelegations(cliCtx context.CLIContext, cdc *codec.Codec, endpoint st
 			return
 		}
 
-		params := stake.QueryRedelegationParams{
+		params := staking.QueryRedelegationParams{
 			DelegatorAddr:    delegatorAddr,
 			SrcValidatorAddr: srcValidatorAddr,
 			DstValidatorAddr: dstValidatorAddr,
@@ -107,7 +107,7 @@ func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) ht
 			return
 		}
 
-		params := stake.NewQueryBondsParams(delegatorAddr, validatorAddr)
+		params := staking.NewQueryBondsParams(delegatorAddr, validatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -135,7 +135,7 @@ func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			return
 		}
 
-		params := stake.NewQueryDelegatorParams(delegatorAddr)
+		params := staking.NewQueryDelegatorParams(delegatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
@@ -163,7 +163,7 @@ func queryValidator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string
 			return
 		}
 
-		params := stake.NewQueryValidatorParams(validatorAddr)
+		params := staking.NewQueryValidatorParams(validatorAddr)
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {

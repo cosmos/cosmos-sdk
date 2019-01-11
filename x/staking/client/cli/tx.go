@@ -76,7 +76,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			description := stake.Description{
+			description := staking.Description{
 				Moniker:  viper.GetString(FlagMoniker),
 				Identity: viper.GetString(FlagIdentity),
 				Website:  viper.GetString(FlagWebsite),
@@ -95,7 +95,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				newRate = &rate
 			}
 
-			msg := stake.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
+			msg := staking.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
 
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
@@ -138,7 +138,7 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := stake.NewMsgDelegate(delAddr, valAddr, amount)
+			msg := staking.NewMsgDelegate(delAddr, valAddr, amount)
 
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
@@ -193,7 +193,7 @@ func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := stake.NewMsgBeginRedelegate(delAddr, valSrcAddr, valDstAddr, sharesAmount)
+			msg := staking.NewMsgBeginRedelegate(delAddr, valSrcAddr, valDstAddr, sharesAmount)
 
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
@@ -241,7 +241,7 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := stake.NewMsgBeginUnbonding(delAddr, valAddr, sharesAmount)
+			msg := staking.NewMsgBeginUnbonding(delAddr, valAddr, sharesAmount)
 
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
@@ -276,7 +276,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		return txBldr, nil, err
 	}
 
-	description := stake.NewDescription(
+	description := staking.NewDescription(
 		viper.GetString(FlagMoniker),
 		viper.GetString(FlagIdentity),
 		viper.GetString(FlagWebsite),
@@ -301,11 +301,11 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 			return txBldr, nil, err
 		}
 
-		msg = stake.NewMsgCreateValidatorOnBehalfOf(
+		msg = staking.NewMsgCreateValidatorOnBehalfOf(
 			delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
 		)
 	} else {
-		msg = stake.NewMsgCreateValidator(
+		msg = staking.NewMsgCreateValidator(
 			sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
 		)
 	}

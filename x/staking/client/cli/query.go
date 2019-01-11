@@ -26,7 +26,7 @@ func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			key := stake.GetValidatorKey(addr)
+			key := staking.GetValidatorKey(addr)
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			res, err := cliCtx.QueryStore(key, storeName)
@@ -70,7 +70,7 @@ func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
 		Use:   "validators",
 		Short: "Query for all validators",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			key := stake.ValidatorsKey
+			key := staking.ValidatorsKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			resKVs, err := cliCtx.QuerySubspace(key, storeName)
@@ -79,7 +79,7 @@ func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			// parse out the validators
-			var validators []stake.Validator
+			var validators []staking.Validator
 			for _, kv := range resKVs {
 				validator := types.MustUnmarshalValidator(cdc, kv.Value)
 				validators = append(validators, validator)
@@ -126,7 +126,7 @@ func GetCmdQueryValidatorUnbondingDelegations(storeKey string, cdc *codec.Codec)
 			}
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			params := stake.NewQueryValidatorParams(valAddr)
+			params := staking.NewQueryValidatorParams(valAddr)
 
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
@@ -161,7 +161,7 @@ func GetCmdQueryValidatorRedelegations(storeKey string, cdc *codec.Codec) *cobra
 			}
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			params := stake.NewQueryValidatorParams(valAddr)
+			params := staking.NewQueryValidatorParams(valAddr)
 
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
@@ -199,7 +199,7 @@ func GetCmdQueryDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			key := stake.GetDelegationKey(delAddr, valAddr)
+			key := staking.GetDelegationKey(delAddr, valAddr)
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			res, err := cliCtx.QueryStore(key, storeName)
@@ -254,7 +254,7 @@ func GetCmdQueryDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			key := stake.GetDelegationsKey(delegatorAddr)
+			key := staking.GetDelegationsKey(delegatorAddr)
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			resKVs, err := cliCtx.QuerySubspace(key, storeName)
@@ -263,7 +263,7 @@ func GetCmdQueryDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 			}
 
 			// parse out the validators
-			var delegations []stake.Delegation
+			var delegations []staking.Delegation
 			for _, kv := range resKVs {
 				delegation := types.MustUnmarshalDelegation(cdc, kv.Value)
 				delegations = append(delegations, delegation)
@@ -297,7 +297,7 @@ func GetCmdQueryValidatorDelegations(storeKey string, cdc *codec.Codec) *cobra.C
 				return err
 			}
 
-			params := stake.NewQueryValidatorParams(validatorAddr)
+			params := staking.NewQueryValidatorParams(validatorAddr)
 
 			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
@@ -336,7 +336,7 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *codec.Codec) *cobra.C
 				return err
 			}
 
-			key := stake.GetUBDKey(delAddr, valAddr)
+			key := staking.GetUBDKey(delAddr, valAddr)
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			res, err := cliCtx.QueryStore(key, storeName)
@@ -388,7 +388,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.
 				return err
 			}
 
-			key := stake.GetUBDsKey(delegatorAddr)
+			key := staking.GetUBDsKey(delegatorAddr)
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			resKVs, err := cliCtx.QuerySubspace(key, storeName)
@@ -397,7 +397,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.
 			}
 
 			// parse out the unbonding delegations
-			var ubds []stake.UnbondingDelegation
+			var ubds []staking.UnbondingDelegation
 			for _, kv := range resKVs {
 				ubd := types.MustUnmarshalUBD(cdc, kv.Value)
 				ubds = append(ubds, ubd)
@@ -440,7 +440,7 @@ func GetCmdQueryRedelegation(storeName string, cdc *codec.Codec) *cobra.Command 
 				return err
 			}
 
-			key := stake.GetREDKey(delAddr, valSrcAddr, valDstAddr)
+			key := staking.GetREDKey(delAddr, valSrcAddr, valDstAddr)
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			res, err := cliCtx.QueryStore(key, storeName)
@@ -492,7 +492,7 @@ func GetCmdQueryRedelegations(storeName string, cdc *codec.Codec) *cobra.Command
 				return err
 			}
 
-			key := stake.GetREDsKey(delegatorAddr)
+			key := staking.GetREDsKey(delegatorAddr)
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			resKVs, err := cliCtx.QuerySubspace(key, storeName)
@@ -501,7 +501,7 @@ func GetCmdQueryRedelegations(storeName string, cdc *codec.Codec) *cobra.Command
 			}
 
 			// parse out the validators
-			var reds []stake.Redelegation
+			var reds []staking.Redelegation
 			for _, kv := range resKVs {
 				red := types.MustUnmarshalRED(cdc, kv.Value)
 				reds = append(reds, red)
@@ -529,7 +529,7 @@ func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current staking pool values",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			key := stake.PoolKey
+			key := staking.PoolKey
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
 			res, err := cliCtx.QueryStore(key, storeName)
@@ -569,12 +569,12 @@ func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			bz, err := cliCtx.QueryWithData("custom/staking/"+stake.QueryParameters, nil)
+			bz, err := cliCtx.QueryWithData("custom/staking/"+staking.QueryParameters, nil)
 			if err != nil {
 				return err
 			}
 
-			var params stake.Params
+			var params staking.Params
 			err = cdc.UnmarshalJSON(bz, &params)
 			if err != nil {
 				return err

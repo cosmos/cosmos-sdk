@@ -1,4 +1,4 @@
-package stake
+package staking
 
 import (
 	"testing"
@@ -956,7 +956,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	got = handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgCreateValidator")
 
-	// delegate 10 stake
+	// delegate 10 staking
 	msgDelegate := NewTestMsgDelegate(del, valA, 10)
 	got = handleMsgDelegate(ctx, msgDelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgDelegate")
@@ -968,12 +968,12 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// a block passes
 	ctx = ctx.WithBlockHeight(1)
 
-	// begin unbonding 4 stake
+	// begin unbonding 4 staking
 	msgBeginUnbonding := NewMsgBeginUnbonding(del, valA, sdk.NewDec(4))
 	got = handleMsgBeginUnbonding(ctx, msgBeginUnbonding, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginUnbonding")
 
-	// begin redelegate 6 stake
+	// begin redelegate 6 staking
 	msgBeginRedelegate := NewMsgBeginRedelegate(del, valA, valB, sdk.NewDec(6))
 	got = handleMsgBeginRedelegate(ctx, msgBeginRedelegate, keeper)
 	require.True(t, got.IsOK(), "expected no error on runMsgBeginRedelegate")

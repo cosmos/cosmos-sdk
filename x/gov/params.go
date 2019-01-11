@@ -19,7 +19,7 @@ func (dp DepositParams) Equal(dp2 DepositParams) bool {
 
 // Param around Tallying votes in governance
 type TallyParams struct {
-	Quorum            sdk.Dec `json:"quorum"`             //  Minimum percentage of total stake needed to vote for a result to be considered valid
+	Quorum            sdk.Dec `json:"quorum"`             //  Minimum percentage of total staking needed to vote for a result to be considered valid
 	Threshold         sdk.Dec `json:"threshold"`          //  Minimum propotion of Yes votes for proposal to pass. Initial value: 0.5
 	Veto              sdk.Dec `json:"veto"`               //  Minimum value of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
 	GovernancePenalty sdk.Dec `json:"governance_penalty"` //  Penalty if validator does not vote

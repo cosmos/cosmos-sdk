@@ -11,7 +11,7 @@ import (
 
 // AllInvariants runs all invariants of the distribution module
 // Currently: total supply, positive power
-func AllInvariants(d distr.Keeper, stk stake.Keeper) simulation.Invariant {
+func AllInvariants(d distr.Keeper, stk staking.Keeper) simulation.Invariant {
 	sk := distr.StakeKeeper(stk)
 	return func(ctx sdk.Context) error {
 		err := ValAccumInvariants(d, sk)(ctx)
@@ -133,7 +133,7 @@ func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 }
 
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
-func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant {
+func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		// we don't want to write the changes
 		ctx, _ = ctx.CacheContext()

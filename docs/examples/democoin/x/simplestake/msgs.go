@@ -1,4 +1,4 @@
-package simplestake
+package simplestaking
 
 import (
 	"encoding/json"
@@ -17,16 +17,16 @@ type MsgBond struct {
 	PubKey  crypto.PubKey  `json:"pub_key"`
 }
 
-func NewMsgBond(addr sdk.AccAddress, stake sdk.Coin, pubKey crypto.PubKey) MsgBond {
+func NewMsgBond(addr sdk.AccAddress, staking sdk.Coin, pubKey crypto.PubKey) MsgBond {
 	return MsgBond{
 		Address: addr,
-		Stake:   stake,
+		Stake:   staking,
 		PubKey:  pubKey,
 	}
 }
 
 //nolint
-func (msg MsgBond) Route() string                { return moduleName } //TODO update "stake/createvalidator"
+func (msg MsgBond) Route() string                { return moduleName } //TODO update "staking/createvalidator"
 func (msg MsgBond) Type() string                 { return "bond" }
 func (msg MsgBond) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Address} }
 
@@ -66,7 +66,7 @@ func NewMsgUnbond(addr sdk.AccAddress) MsgUnbond {
 }
 
 //nolint
-func (msg MsgUnbond) Route() string                { return moduleName } //TODO update "stake/createvalidator"
+func (msg MsgUnbond) Route() string                { return moduleName } //TODO update "staking/createvalidator"
 func (msg MsgUnbond) Type() string                 { return "unbond" }
 func (msg MsgUnbond) GetSigners() []sdk.AccAddress { return []sdk.AccAddress{msg.Address} }
 func (msg MsgUnbond) ValidateBasic() sdk.Error     { return nil }

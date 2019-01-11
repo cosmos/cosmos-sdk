@@ -40,7 +40,7 @@ var (
 const maxDigitsForAccount = 12 // ~220,000,000 atoms created at launch
 
 // gets the key for the validator with address
-// VALUE: stake/types.Validator
+// VALUE: staking/types.Validator
 func GetValidatorKey(operatorAddr sdk.ValAddress) []byte {
 	return append(ValidatorsKey, operatorAddr.Bytes()...)
 }
@@ -120,7 +120,7 @@ func GetValidatorQueueTimeKey(timestamp time.Time) []byte {
 //______________________________________________________________________________
 
 // gets the key for delegator bond with validator
-// VALUE: stake/types.Delegation
+// VALUE: staking/types.Delegation
 func GetDelegationKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(delAddr), valAddr.Bytes()...)
 }
@@ -133,7 +133,7 @@ func GetDelegationsKey(delAddr sdk.AccAddress) []byte {
 //______________________________________________________________________________
 
 // gets the key for an unbonding delegation by delegator and validator addr
-// VALUE: stake/types.UnbondingDelegation
+// VALUE: staking/types.UnbondingDelegation
 func GetUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(
 		GetUBDsKey(delAddr.Bytes()),
@@ -178,7 +178,7 @@ func GetUnbondingDelegationTimeKey(timestamp time.Time) []byte {
 //________________________________________________________________________________
 
 // gets the key for a redelegation
-// VALUE: stake/types.RedelegationKey
+// VALUE: staking/types.RedelegationKey
 func GetREDKey(delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress) []byte {
 	key := make([]byte, 1+sdk.AddrLen*3)
 

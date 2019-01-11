@@ -4,7 +4,7 @@
 
 At any given time, there are any number of validators registered in the state machine.
 Each block, the top `n = MaximumBondedValidators` validators who are not jailed become *bonded*, meaning that they may propose and vote on blocks.
-Validators who are *bonded* are *at stake*, meaning that part or all of their stake and their delegators' stake is at risk if they commit a protocol fault.
+Validators who are *bonded* are *at staking*, meaning that part or all of their staking and their delegators' staking is at risk if they commit a protocol fault.
 
 ### Tombstone Caps
 

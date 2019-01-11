@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestTakeFeePoolRewards(t *testing.T) {
@@ -26,9 +26,9 @@ func TestTakeFeePoolRewards(t *testing.T) {
 	validatorTokens3 := sdk.NewDec(50)
 	totalBondedTokens := validatorTokens1.Add(validatorTokens2).Add(validatorTokens3)
 
-	// simulate adding some stake for inflation
+	// simulate adding some staking for inflation
 	height = 10
-	fp.ValPool = DecCoins{NewDecCoin(stakeTypes.DefaultBondDenom, 1000)}
+	fp.ValPool = DecCoins{NewDecCoin(stakingTypes.DefaultBondDenom, 1000)}
 
 	vi1, fp = vi1.TakeFeePoolRewards(NewWithdrawContext(
 		fp, height, totalBondedTokens, validatorTokens1, commissionRate1))
@@ -66,9 +66,9 @@ func TestWithdrawCommission(t *testing.T) {
 	validatorTokens := sdk.NewDec(10)
 	totalBondedTokens := validatorTokens.Add(sdk.NewDec(90)) // validator-1 is 10% of total power
 
-	// simulate adding some stake for inflation
+	// simulate adding some staking for inflation
 	height = 10
-	fp.ValPool = DecCoins{NewDecCoin(stakeTypes.DefaultBondDenom, 1000)}
+	fp.ValPool = DecCoins{NewDecCoin(stakingTypes.DefaultBondDenom, 1000)}
 
 	// for a more fun staring condition, have an non-withdraw update
 	vi, fp = vi.TakeFeePoolRewards(NewWithdrawContext(

@@ -21,7 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestGaiaCLIMinimumFees(t *testing.T) {
@@ -45,7 +45,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	require.False(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	// Ensure tx w/ correct fees (stake) pass
+	// Ensure tx w/ correct fees (staking) pass
 	txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(denom, 23))
 	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), txFees)
 	require.True(f.T, success)
@@ -254,8 +254,8 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	fooAcc := f.QueryAccount(fooAddr)
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
 
-	defaultParams := stake.DefaultParams()
-	initialPool := stake.InitialPool()
+	defaultParams := staking.DefaultParams()
+	initialPool := staking.InitialPool()
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(101)) // Delegate tx on GaiaAppGenState
 
 	// Generate a create validator transaction and ensure correctness
@@ -295,7 +295,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	// Ensure bonded stake is correct
+	// Ensure bonded staking is correct
 	validator = f.QueryStakeValidator(barVal)
 	require.Equal(t, "1", validator.Tokens.String())
 
@@ -330,7 +330,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAddr := f.KeyAddress(keyFoo)
 
 	fooAcc := f.QueryAccount(fooAddr)
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom).Int64())
 
 	proposalsQuery := f.QueryGovProposals()
 	require.Equal(t, "No matching proposals found", proposalsQuery)

@@ -1,4 +1,4 @@
-package simplestake
+package simplestaking
 
 import (
 	"testing"

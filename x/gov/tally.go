@@ -93,7 +93,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 		NoWithVeto: results[OptionNoWithVeto],
 	}
 
-	// If there is no staked coins, the proposal fails
+	// If there is no stakingd coins, the proposal fails
 	if keeper.vs.TotalPower(ctx).IsZero() {
 		return false, tallyResults
 	}

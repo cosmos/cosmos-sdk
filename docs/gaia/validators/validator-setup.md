@@ -10,7 +10,7 @@ Before setting up your validator node, make sure you've already gone through the
 
 ## What is a Validator?
 
-[Validators](./overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](./validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
+[Validators](./overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's staking is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](./validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
 
 ::: danger Warning
 If you want to become a validator for the Hub's `mainnet`, you should [research security](./security.md).
@@ -33,7 +33,7 @@ Don't use more `STAKE` thank you have! You can always get more by using the [Fau
 :::
 
 ```bash
-gaiacli tx stake create-validator \
+gaiacli tx staking create-validator \
   --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
@@ -55,16 +55,16 @@ __Note__: If unspecified, `consensus_pubkey` will default to the output of `gaia
 
 __Note__: This section only concerns validators that want to be in the genesis file. If the chain you want to validate is already live, skip this section.
 
-__Note__: `Gaia-9002` and `Game of stakes` will not use this process. They will be bootsrapped using Tendermint seed validators. You will just need to use the [create-validator](#create-your-validator) command in order to join as a validator for these networks.
+__Note__: `Gaia-9002` and `Game of stakings` will not use this process. They will be bootsrapped using Tendermint seed validators. You will just need to use the [create-validator](#create-your-validator) command in order to join as a validator for these networks.
 
-If you want to participate in genesis as a validator, you need to justify that you (or a delegator) have some stake at genesis, create one (or multiple) transaction to bond this stake to your validator address, and include this transaction in the genesis file. 
+If you want to participate in genesis as a validator, you need to justify that you (or a delegator) have some staking at genesis, create one (or multiple) transaction to bond this staking to your validator address, and include this transaction in the genesis file. 
 
 We thus need to distinguish two cases:
 
-- Case 1: You want to bond the initial stake from your validator's address.
-- Case 2: You want to bond the initial stake from a delegator's address.
+- Case 1: You want to bond the initial staking from your validator's address.
+- Case 2: You want to bond the initial staking from a delegator's address.
 
-### Case 1: The initial stake comes from your validator's address
+### Case 1: The initial staking comes from your validator's address
 
 In this case, you will create a `gentx`:
 
@@ -86,12 +86,12 @@ Consult `gaiad gentx --help` for more information on the flags defaults.
 
 A `gentx` is a JSON file carrying a self-delegation. All genesis transactions are collected by a `genesis coordinator` and validated against an initial `genesis.json`. Such initial `genesis.json` contains only a list of accounts and their coins. Once the transactions are processed, they are merged in the `genesis.json`'s `gentxs` field.
 
-### Case 2: The initial stake comes from a delegator's address
+### Case 2: The initial staking comes from a delegator's address
 
 In this case, you need both the signature of the validator and the delegator. Start by creating an unsigned `create-validator` transaction, and save it in a file called `unsignedValTx`: 
 
 ```bash
-gaiacli tx stake create-validator \
+gaiacli tx staking create-validator \
   --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
@@ -150,12 +150,12 @@ gaiad start
 
 ## Edit Validator Description
 
-You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to stake to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
+You can edit your validator's public description. This info is to identify your validator, and will be relied on by delegators to decide which validators to staking to. Make sure to provide input for every flag below, otherwise the field will default to empty (`--moniker` defaults to the machine name).
 
 The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
-gaiacli tx stake edit-validator
+gaiacli tx staking edit-validator
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E \
@@ -177,7 +177,7 @@ __Note__: The `commission-rate` value must adhere to the following invariants:
 View the validator's information with this command:
 
 ```bash
-gaiacli query stake validator <account_cosmos>
+gaiacli query staking validator <account_cosmos>
 ```
 
 ## Track Validator Signing Information

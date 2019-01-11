@@ -1,4 +1,4 @@
-package simplestake
+package simplestaking
 
 import (
 	"github.com/tendermint/tendermint/crypto"
@@ -6,12 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const moduleName = "simplestake"
+const moduleName = "simplestaking"
 
-// simple stake keeper
+// simple staking keeper
 type Keeper struct {
 	ck bank.Keeper
 
@@ -60,12 +60,12 @@ func (k Keeper) deleteBondInfo(ctx sdk.Context, addr sdk.AccAddress) {
 }
 
 // register a bond with the keeper
-func (k Keeper) Bond(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
-	if stake.Denom != stakeTypes.DefaultBondDenom {
+func (k Keeper) Bond(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, staking sdk.Coin) (int64, sdk.Error) {
+	if staking.Denom != stakingTypes.DefaultBondDenom {
 		return 0, ErrIncorrectStakingToken(k.codespace)
 	}
 
-	_, _, err := k.ck.SubtractCoins(ctx, addr, []sdk.Coin{stake})
+	_, _, err := k.ck.SubtractCoins(ctx, addr, []sdk.Coin{staking})
 	if err != nil {
 		return 0, err
 	}
@@ -78,7 +78,7 @@ func (k Keeper) Bond(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey,
 		}
 	}
 
-	bi.Power = bi.Power + stake.Amount.Int64()
+	bi.Power = bi.Power + staking.Amount.Int64()
 
 	k.setBondInfo(ctx, addr, bi)
 	return bi.Power, nil
@@ -92,7 +92,7 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, int
 	}
 	k.deleteBondInfo(ctx, addr)
 
-	returnedBond := sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, bi.Power)
+	returnedBond := sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, bi.Power)
 
 	_, _, err := k.ck.AddCoins(ctx, addr, []sdk.Coin{returnedBond})
 	if err != nil {
@@ -104,8 +104,8 @@ func (k Keeper) Unbond(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, int
 
 // FOR TESTING PURPOSES -------------------------------------------------
 
-func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, stake sdk.Coin) (int64, sdk.Error) {
-	if stake.Denom != stakeTypes.DefaultBondDenom {
+func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress, pubKey crypto.PubKey, staking sdk.Coin) (int64, sdk.Error) {
+	if staking.Denom != stakingTypes.DefaultBondDenom {
 		return 0, ErrIncorrectStakingToken(k.codespace)
 	}
 
@@ -117,7 +117,7 @@ func (k Keeper) bondWithoutCoins(ctx sdk.Context, addr sdk.AccAddress, pubKey cr
 		}
 	}
 
-	bi.Power = bi.Power + stake.Amount.Int64()
+	bi.Power = bi.Power + staking.Amount.Int64()
 
 	k.setBondInfo(ctx, addr, bi)
 	return bi.Power, nil

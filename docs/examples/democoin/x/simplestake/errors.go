@@ -1,14 +1,14 @@
-package simplestake
+package simplestaking
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// simple stake errors reserve 300 ~ 399.
+// simple staking errors reserve 300 ~ 399.
 const (
 	DefaultCodespace sdk.CodespaceType = moduleName
 
-	// simplestake errors reserve 300 - 399.
+	// simplestaking errors reserve 300 - 399.
 	CodeEmptyValidator        sdk.CodeType = 300
 	CodeInvalidUnbond         sdk.CodeType = 301
 	CodeEmptyStake            sdk.CodeType = 302

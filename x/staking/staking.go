@@ -1,5 +1,5 @@
 // nolint
-package stake
+package staking
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -108,7 +108,7 @@ const (
 const (
 	StoreKey              = types.StoreKey
 	TStoreKey             = types.TStoreKey
-	QuerierRoute            = types.QuerierRoute
+	QuerierRoute          = types.QuerierRoute
 	RouterKey             = types.RouterKey
 	DefaultCodespace      = types.DefaultCodespace
 	CodeInvalidValidator  = types.CodeInvalidValidator

@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// keeper of the stake store
+// keeper of the staking store
 type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        *codec.Codec
@@ -38,7 +38,7 @@ var (
 	ParamStoreKeyParams = []byte("params")
 )
 
-// ParamTable for stake module
+// ParamTable for staking module
 func ParamTypeTable() params.TypeTable {
 	return params.NewTypeTable(
 		ParamStoreKeyParams, Params{},

@@ -2,7 +2,7 @@ package types
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
-// expected stake keeper
+// expected staking keeper
 type StakeKeeper interface {
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation sdk.Delegation) (stop bool))

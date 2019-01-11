@@ -42,7 +42,7 @@ func getShares(
 		}
 
 		// make a query to get the existing delegation shares
-		key := stake.GetDelegationKey(delAddr, valAddr)
+		key := staking.GetDelegationKey(delAddr, valAddr)
 		cliCtx := context.NewCLIContext().
 			WithCodec(cdc).
 			WithAccountDecoder(cdc)

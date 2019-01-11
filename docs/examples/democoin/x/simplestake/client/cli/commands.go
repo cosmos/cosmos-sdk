@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestaking"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 
@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	flagStake     = "stake"
+	flagStake     = "staking"
 	flagValidator = "validator"
 )
 
@@ -37,9 +37,9 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			stakeString := viper.GetString(flagStake)
-			if len(stakeString) == 0 {
-				return fmt.Errorf("specify coins to bond with --stake")
+			stakingString := viper.GetString(flagStake)
+			if len(stakingString) == 0 {
+				return fmt.Errorf("specify coins to bond with --staking")
 			}
 
 			valString := viper.GetString(flagValidator)
@@ -47,7 +47,7 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("specify pubkey to bond to with --validator")
 			}
 
-			stake, err := sdk.ParseCoin(stakeString)
+			staking, err := sdk.ParseCoin(stakingString)
 			if err != nil {
 				return err
 			}
@@ -60,7 +60,7 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 			var pubKeyEd ed25519.PubKeyEd25519
 			copy(pubKeyEd[:], rawPubKey)
 
-			msg := simplestake.NewMsgBond(from, stake, pubKeyEd)
+			msg := simplestaking.NewMsgBond(from, staking, pubKeyEd)
 
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.
@@ -68,8 +68,8 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagStake, "", "Amount of coins to stake")
-	cmd.Flags().String(flagValidator, "", "Validator address to stake")
+	cmd.Flags().String(flagStake, "", "Amount of coins to staking")
+	cmd.Flags().String(flagValidator, "", "Validator address to staking")
 
 	return cmd
 }
@@ -89,7 +89,7 @@ func UnbondTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := simplestake.NewMsgUnbond(from)
+			msg := simplestaking.NewMsgUnbond(from)
 
 			// Build and sign the transaction, then broadcast to a Tendermint
 			// node.

@@ -85,7 +85,7 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 		// check for the powerkey and the validator from the store
 		store := ctx.KVStore(app.keyStake)
 		res := store.Get(powerKey)
-		val, _ := app.stakeKeeper.GetValidator(ctx, trouble)
+		val, _ := app.stakingKeeper.GetValidator(ctx, trouble)
 		fmt.Println("checking height", checkHeight, res, val)
 		if res == nil {
 			bottomHeight = checkHeight
@@ -142,7 +142,7 @@ type GaiaApp struct {
 	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
-	stakeKeeper         stake.Keeper
+	stakingKeeper         staking.Keeper
 	slashingKeeper      slashing.Keeper
 	paramsKeeper        params.Keeper
 }
@@ -159,8 +159,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 		cdc:         cdc,
 		keyMain:     sdk.NewKVStoreKey(bam.MainStoreKey),
 		keyAccount:  sdk.NewKVStoreKey(auth.StoreKey),
-		keyStake:    sdk.NewKVStoreKey(stake.StoreKey),
-		tkeyStake:   sdk.NewTransientStoreKey(stake.TStoreKey),
+		keyStake:    sdk.NewKVStoreKey(staking.StoreKey),
+		tkeyStake:   sdk.NewTransientStoreKey(staking.TStoreKey),
 		keySlashing: sdk.NewKVStoreKey(slashing.StoreKey),
 		keyParams:   sdk.NewKVStoreKey(params.StoreKey),
 		tkeyParams:  sdk.NewTransientStoreKey(params.TStoreKey),
@@ -178,13 +178,13 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 
 	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
-	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), slashing.DefaultCodespace)
+	app.stakingKeeper = staking.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), slashing.DefaultCodespace)
 
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
-		AddRoute(stake.RouterKey, stake.NewHandler(app.stakeKeeper))
+		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
@@ -207,7 +207,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 func MakeCodec() *codec.Codec {
 	var cdc = codec.New()
 	bank.RegisterCodec(cdc)
-	stake.RegisterCodec(cdc)
+	staking.RegisterCodec(cdc)
 	slashing.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
@@ -228,7 +228,7 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	validatorUpdates, tags := stake.EndBlocker(ctx, app.stakeKeeper)
+	validatorUpdates, tags := staking.EndBlocker(ctx, app.stakingKeeper)
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
@@ -253,8 +253,8 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		app.accountKeeper.SetAccount(ctx, acc)
 	}
 
-	// load the initial stake information
-	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
+	// load the initial staking information
+	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakeData)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}

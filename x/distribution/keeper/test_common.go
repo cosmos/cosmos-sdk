@@ -61,7 +61,7 @@ var (
 func MakeTestCodec() *codec.Codec {
 	var cdc = codec.New()
 	bank.RegisterCodec(cdc)
-	stake.RegisterCodec(cdc)
+	staking.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
@@ -72,7 +72,7 @@ func MakeTestCodec() *codec.Codec {
 
 // test input with default values
 func CreateTestInputDefault(t *testing.T, isCheckTx bool, initCoins int64) (
-	sdk.Context, auth.AccountKeeper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 	return CreateTestInputAdvanced(t, isCheckTx, initCoins, communityTax)
@@ -81,11 +81,11 @@ func CreateTestInputDefault(t *testing.T, isCheckTx bool, initCoins int64) (
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	communityTax sdk.Dec) (
-	sdk.Context, auth.AccountKeeper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
 
 	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
-	keyStake := sdk.NewKVStoreKey(stake.StoreKey)
-	tkeyStake := sdk.NewTransientStoreKey(stake.TStoreKey)
+	keyStake := sdk.NewKVStoreKey(staking.StoreKey)
+	tkeyStake := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyFeeCollection := sdk.NewKVStoreKey(auth.FeeStoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
@@ -111,9 +111,9 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	ck := bank.NewBaseKeeper(accountKeeper)
-	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
-	sk.SetPool(ctx, stake.InitialPool())
-	sk.SetParams(ctx, stake.DefaultParams())
+	sk := staking.NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	sk.SetPool(ctx, staking.InitialPool())
+	sk.SetParams(ctx, staking.DefaultParams())
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range addrs {

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	stake "github.com/cosmos/cosmos-sdk/x/staking/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper of the slashing store
@@ -75,11 +75,11 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 	// Double sign confirmed
 	logger.Info(fmt.Sprintf("Confirmed double sign from %s at height %d, age of %d", pubkey.Address(), infractionHeight, age))
 
-	// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
+	// We need to retrieve the staking distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height.
 	// Note that this *can* result in a negative "distributionHeight", up to -ValidatorUpdateDelay,
 	// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 	// That's fine since this is just used to filter unbonding delegations & redelegations.
-	distributionHeight := infractionHeight - stake.ValidatorUpdateDelay
+	distributionHeight := infractionHeight - staking.ValidatorUpdateDelay
 
 	// get the percentage slash penalty fraction
 	fraction := k.SlashFractionDoubleSign(ctx)
@@ -155,12 +155,12 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			// Downtime confirmed: slash and jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
-			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
+			// We need to retrieve the staking distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
 			// and subtract an additional 1 since this is the LastCommit.
 			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
 			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
-			distributionHeight := height - stake.ValidatorUpdateDelay - 1
+			distributionHeight := height - staking.ValidatorUpdateDelay - 1
 			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))

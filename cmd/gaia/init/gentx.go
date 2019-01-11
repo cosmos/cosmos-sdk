@@ -27,11 +27,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
-	defaultAmount                  = "100" + stakeTypes.DefaultBondDenom
+	defaultAmount                  = "100" + stakingTypes.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
@@ -98,7 +98,7 @@ following delegation and commission default parameters:
 			// Set flags for creating gentx
 			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey)
 
-			// Fetch the amount of coins staked
+			// Fetch the amount of coins stakingd
 			amount := viper.GetString(cli.FlagAmount)
 			coins, err := sdk.ParseCoins(amount)
 			if err != nil {
@@ -178,7 +178,7 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 			// Ensure account contains enough funds of default bond denom
 			if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
 				return fmt.Errorf(
-					"Account %v is in genesis, but the only has %v%v available to stake, not %v%v",
+					"Account %v is in genesis, but the only has %v%v available to staking, not %v%v",
 					key, acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
 				)
 			}

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GenesisState - all staking state that must be provided at genesis

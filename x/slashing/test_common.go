@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)

@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	staketypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type testInput struct {

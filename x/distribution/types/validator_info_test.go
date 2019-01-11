@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestTakeFeePoolRewards(t *testing.T) {

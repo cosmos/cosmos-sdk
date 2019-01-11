@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	staketypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

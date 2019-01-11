@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stake "github.com/cosmos/cosmos-sdk/x/stake/types"
+	stake "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (

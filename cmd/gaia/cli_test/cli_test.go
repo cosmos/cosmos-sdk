@@ -21,7 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestGaiaCLIMinimumFees(t *testing.T) {

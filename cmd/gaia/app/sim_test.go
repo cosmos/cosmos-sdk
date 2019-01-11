@@ -30,8 +30,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	stake "github.com/cosmos/cosmos-sdk/x/stake"
-	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	stakesim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
+	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (

@@ -24,8 +24,8 @@ import (
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	st "github.com/cosmos/cosmos-sdk/x/stake"
-	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
-	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
+	stakecmd "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	stake "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 )
 
 // rootCmd is the entry point for this binary

@@ -81,8 +81,8 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 	return sdk.Result{
 		Tags: sdk.NewTags(
 			tags.Action, tags.ActionProposalVote,
-			tags.Voter, []byte(msg.Voter.String()),
-			tags.ProposalID, []byte(fmt.Sprintf("%d", msg.ProposalID)),
+			tags.Voter, msg.Voter.String(),
+			tags.ProposalID, fmt.Sprintf("%d", msg.ProposalID),
 		),
 	}
 }

@@ -1,23 +1,14 @@
 # End-Block 
 
-## Unbonding Validator Queue
+Each block the following operations occur:
 
-For all unbonding validators that have finished their unbonding period, this switches their validator.Status
-from sdk.Unbonding to sdk.Unbonded if they still have any delegation left.  Otherwise, it deletes it from state.
+## Unbonding Validator Maturity
 
-```golang
-validatorQueue(currTime time.Time):
-    // unbonding validators are in ordered queue from oldest to newest
-    for all unbondingValidators whose CompleteTime < currTime:
-        validator = GetValidator(unbondingValidator.ValidatorAddr)
-        if validator.DelegatorShares == 0 {
-            RemoveValidator(unbondingValidator)
-        } else {
-            validator.Status = sdk.Unbonded
-            SetValidator(unbondingValidator)
-        }
-    return
-```
+Each block the validator queue is to be checked for mature unbonding
+validators.  For all unbonding validators that have finished their unbonding
+period, the validator.Status is switched from sdk.Unbonding to sdk.Unbonded if
+they still have any delegation left.  Otherwise, the validator object is
+deleted from state.
 
 ## Validator Set Changes
 
@@ -29,40 +20,16 @@ changes must be made occurs during staking transactions (and slashing
 transactions) - during end-block the already accounted changes are applied and
 the changes cleared
 
-```golang
-EndBlock() ValidatorSetChanges
-    vsc = GetValidTendermintUpdates()
-    ClearTendermintUpdates()
-    return vsc
-```
-
 ## CompleteUnbonding
 
-Complete the unbonding and transfer the coins to the delegate. Realize any
-slashing that occurred during the unbonding period.
-
-```golang
-unbondingQueue(currTime time.Time):
-    // unbondings are in ordered queue from oldest to newest
-    for all unbondings whose CompleteTime < currTime:
-        validator = GetValidator(unbonding.ValidatorAddr)
-        AddCoins(unbonding.DelegatorAddr, unbonding.Balance)
-        removeUnbondingDelegation(unbonding)
-    return
-```
+Complete the unbonding of all mature `UnbondingDelegations.Entries` by
+transferring the balance coins to the delegator's wallet address and removing
+the mature `UnbondingDelegation.Entries`. If there are no remaining entries also
+remove the `UnbondingDelegation` object from the store. 
 
 ## CompleteRedelegation
 
-Note that unlike CompleteUnbonding slashing of redelegating shares does not
-take place during completion. Slashing on redelegated shares takes place
-actively as a slashing occurs. The redelegation completion queue serves simply to
-clean up state, as redelegations older than an unbonding period need not be kept,
-as that is the max time that their old validator's evidence can be used to slash them.
+Complete the unbonding of all mature `Redelegation.Entries` by removing the
+mature `Redelegation.Entries`. If there are no remaining entries also remove
+the `Redelegation` object from the store. 
 
-```golang
-redelegationQueue(currTime time.Time):
-    // redelegations are in ordered queue from oldest to newest
-    for all redelegations whose CompleteTime < currTime:
-        removeRedelegation(redelegation)
-    return
-```

@@ -51,7 +51,7 @@ Any participant in the network can signal that they want to become a validator b
 
 Once a validator is created, Atom holders can delegate atoms to it, effectively adding staking to this pool. The total staking of an address is the combination of Atoms bonded by delegators and Atoms self-bonded by the entity which designated itself.
 
-Out of all validators that signaled themselves, the 100 with the most staking are the ones who are designated as validators. They become **bonded validators** If a validator's total staking falls below the top 100 then that validator loses its validator privileges, it enters **unbonding mode** and, eventually, becomes **unbonded** . Over time, the maximum number of validators will increase, according to a predefined schedule:
+Out of all validators that signaled themselves, the 100 with the most stake are the ones who are designated as validators. They become **bonded validators** If a validator's total staking falls below the top 100 then that validator loses its validator privileges, it enters **unbonding mode** and, eventually, becomes **unbonded** . Over time, the maximum number of validators will increase, according to a predefined schedule:
 
 * **Year 0:** 100
 * **Year 1:** 113

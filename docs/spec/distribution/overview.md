@@ -31,7 +31,7 @@ following rewards between validators and associated delegators:
 - multi-token fees to be socially distributed
 - proposer reward pool
 - inflated atom provisions
-- validator commission on all rewards earned by their delegators staking
+- validator commission on all rewards earned by their delegators stake
 
 Fees are pooled within a global pool, as well as validator specific
 proposer-reward pools. The mechanisms used allow for validators and delegators
@@ -62,7 +62,7 @@ for further details.
 ## Affect on Staking
 
 Charging commission on Atom provisions while also allowing for Atom-provisions
-to be auto-bonded (distributed directly to the validators bonded staking) is
+to be auto-bonded (distributed directly to the validators bonded stake) is
 problematic within BPoS. Fundamentally, these two mechanisms are mutually
 exclusive. If both commission and auto-bonding mechanisms are simultaneously
 applied to the staking-token then the distribution of staking-tokens between

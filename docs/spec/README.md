@@ -16,7 +16,7 @@ block.
 - [Auth](./auth) - The structure and authentication of accounts and transactions.
 - [Bank](./bank) - Sending tokens.
 - [Governance](./governance) - Proposals and voting.
-- [Staking](./staking) - Proof-of-staking bonding, delegation, etc.
+- [Staking](./staking) - Proof-of-stake bonding, delegation, etc.
 - [Slashing](./slashing) - Validator punishment mechanisms.
 - [Distribution](./distribution) - Fee distribution, and staking token provision distribution .
 - [Inflation](./inflation) - Staking token provision creation

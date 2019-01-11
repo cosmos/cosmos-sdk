@@ -21,7 +21,7 @@ const (
 	ValidatorUpdateDelay int64 = 1
 
 	// Default bondable coin denomination
-	DefaultBondDenom = "staking"
+	DefaultBondDenom = "stake"
 )
 
 // nolint - Keys for parameter access

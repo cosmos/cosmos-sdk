@@ -6,10 +6,10 @@ This section specifies the slashing module of the Cosmos SDK, which implements f
 first outlined in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper) in June 2016.
 
 The slashing module enables Cosmos SDK-based blockchains to disincentivize any attributable action
-by a protocol-recognized actor with value at staking by penalizing them ("slashing").
+by a protocol-recognized actor with value at stake by penalizing them ("slashing").
 
 Penalties may include, but are not limited to:
-- Burning some amount of their staking
+- Burning some amount of their stake
 - Removing their ability to vote on future blocks for a period of time.
 
 This module will be used by the Cosmos Hub, the first hub in the Cosmos ecosystem.

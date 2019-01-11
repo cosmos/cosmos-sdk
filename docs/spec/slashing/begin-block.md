@@ -16,13 +16,13 @@ For some `evidence` to be valid, it must satisfy:
 where `evidence.Timestamp` is the timestamp in the block at height
 `evidence.Height` and `block.Timestamp` is the current block timestamp.
 
-If valid evidence is included in a block, the validator's staking is reduced by `SLASH_PROPORTION` of 
-what their staking was when the infraction occurred (rather than when the evidence was discovered).
-We want to "follow the staking": the staking which contributed to the infraction should be
+If valid evidence is included in a block, the validator's stake is reduced by `SLASH_PROPORTION` of 
+what their stake was when the infraction occurred (rather than when the evidence was discovered).
+We want to "follow the stake": the stake which contributed to the infraction should be
 slashed, even if it has since been redelegated or started unbonding. 
 
 We first need to loop through the unbondings and redelegations from the slashed validator
-and track how much staking has since moved:
+and track how much stake has since moved:
 
 ```
 slashAmountUnbondings := 0
@@ -78,8 +78,8 @@ SigningInfo.Set(val.Address, signInfo)
 ```
 
 This ensures that offending validators are punished the same amount whether they
-act as a single validator with X staking or as N validators with collectively X
-staking.  The amount slashed for all double signature infractions committed within a
+act as a single validator with X stake or as N validators with collectively X
+stake.  The amount slashed for all double signature infractions committed within a
 single slashing period is capped as described in [overview.md](overview.md) under Tombstone Caps.
 
 ## Uptime tracking

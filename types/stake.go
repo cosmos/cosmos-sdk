@@ -34,7 +34,7 @@ func (b BondStatus) Equal(b2 BondStatus) bool {
 	return byte(b) == byte(b2)
 }
 
-// validator for a delegated proof of staking system
+// validator for a delegated proof of stake system
 type Validator interface {
 	GetJailed() bool              // whether the validator is jailed
 	GetMoniker() string           // moniker of the validator
@@ -87,7 +87,7 @@ type ValidatorSet interface {
 
 //_______________________________________________________________________________
 
-// delegation bond for a delegated proof of staking system
+// delegation bond for a delegated proof of stake system
 type Delegation interface {
 	GetDelegatorAddr() AccAddress // delegator AccAddress for the bond
 	GetValidatorAddr() ValAddress // validator operator address

@@ -26,7 +26,7 @@ func TestWithdrawRewards(t *testing.T) {
 	di2 := NewDelegationDistInfo(delAddr2, valAddr1, height)
 	di2Shares := sdk.NewDec(5)
 
-	// simulate adding some staking for inflation
+	// simulate adding some stake for inflation
 	height = 10
 	fp.ValPool = DecCoins{NewDecCoin(stakingTypes.DefaultBondDenom, 1000)}
 

@@ -10,7 +10,7 @@ Before setting up your validator node, make sure you've already gone through the
 
 ## What is a Validator?
 
-[Validators](./overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's staking is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](./validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
+[Validators](./overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](./validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
 
 ::: danger Warning
 If you want to become a validator for the Hub's `mainnet`, you should [research security](./security.md).
@@ -55,16 +55,16 @@ __Note__: If unspecified, `consensus_pubkey` will default to the output of `gaia
 
 __Note__: This section only concerns validators that want to be in the genesis file. If the chain you want to validate is already live, skip this section.
 
-__Note__: `Gaia-9002` and `Game of stakings` will not use this process. They will be bootsrapped using Tendermint seed validators. You will just need to use the [create-validator](#create-your-validator) command in order to join as a validator for these networks.
+__Note__: `Gaia-9002` and `Game of stakes` will not use this process. They will be bootsrapped using Tendermint seed validators. You will just need to use the [create-validator](#create-your-validator) command in order to join as a validator for these networks.
 
-If you want to participate in genesis as a validator, you need to justify that you (or a delegator) have some staking at genesis, create one (or multiple) transaction to bond this staking to your validator address, and include this transaction in the genesis file. 
+If you want to participate in genesis as a validator, you need to justify that you (or a delegator) have some stake at genesis, create one (or multiple) transaction to bond this stake to your validator address, and include this transaction in the genesis file. 
 
 We thus need to distinguish two cases:
 
 - Case 1: You want to bond the initial staking from your validator's address.
 - Case 2: You want to bond the initial staking from a delegator's address.
 
-### Case 1: The initial staking comes from your validator's address
+### Case 1: The initial stake comes from your validator's address
 
 In this case, you will create a `gentx`:
 
@@ -86,7 +86,7 @@ Consult `gaiad gentx --help` for more information on the flags defaults.
 
 A `gentx` is a JSON file carrying a self-delegation. All genesis transactions are collected by a `genesis coordinator` and validated against an initial `genesis.json`. Such initial `genesis.json` contains only a list of accounts and their coins. Once the transactions are processed, they are merged in the `genesis.json`'s `gentxs` field.
 
-### Case 2: The initial staking comes from a delegator's address
+### Case 2: The initial stake comes from a delegator's address
 
 In this case, you need both the signature of the validator and the delegator. Start by creating an unsigned `create-validator` transaction, and save it in a file called `unsignedValTx`: 
 
@@ -140,7 +140,7 @@ Once you've collected all genesis transactions in `~/.gaiad/config/gentx`, you c
 gaiad collect-gentxs
 ```
 
-__Note:__ The accounts from which you delegate in the `gentx` transactions need to possess staking tokens in the genesis file, otherwise `collect-gentx` will fail.
+__Note:__ The accounts from which you delegate in the `gentx` transactions need to possess stake tokens in the genesis file, otherwise `collect-gentx` will fail.
 
 The previous command will collect all genesis transactions and finalise `genesis.json`. To verify the correctness of the configuration and start the node run:
 

@@ -26,7 +26,7 @@ func TestTakeFeePoolRewards(t *testing.T) {
 	validatorTokens3 := sdk.NewDec(50)
 	totalBondedTokens := validatorTokens1.Add(validatorTokens2).Add(validatorTokens3)
 
-	// simulate adding some staking for inflation
+	// simulate adding some stake for inflation
 	height = 10
 	fp.ValPool = DecCoins{NewDecCoin(stakingTypes.DefaultBondDenom, 1000)}
 
@@ -66,7 +66,7 @@ func TestWithdrawCommission(t *testing.T) {
 	validatorTokens := sdk.NewDec(10)
 	totalBondedTokens := validatorTokens.Add(sdk.NewDec(90)) // validator-1 is 10% of total power
 
-	// simulate adding some staking for inflation
+	// simulate adding some stake for inflation
 	height = 10
 	fp.ValPool = DecCoins{NewDecCoin(stakingTypes.DefaultBondDenom, 1000)}
 

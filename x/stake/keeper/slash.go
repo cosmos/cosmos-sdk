@@ -215,7 +215,6 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 
 		if entry.IsMature(now) {
 			// Redelegation no longer eligible for slashing, skip it
-			// TODO Delete it automatically?
 			continue
 		}
 

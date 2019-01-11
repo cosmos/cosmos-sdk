@@ -33,3 +33,15 @@ type Result struct {
 func (res Result) IsOK() bool {
 	return res.Code.IsOK()
 }
+
+// Is a version of ResponseDeliverTx where the tags are StringTags rather than []byte tags
+type StringResponseDeliverTx struct {
+	Code      uint32     `json:"code,omitempty"`
+	Data      []byte     `json:"data,omitempty"`
+	Log       string     `json:"log,omitempty"`
+	Info      string     `json:"info,omitempty"`
+	GasWanted int64      `json:"gas_wanted,omitempty"`
+	GasUsed   int64      `json:"gas_used,omitempty"`
+	Tags      StringTags `json:"tags,omitempty"`
+	Codespace string     `json:"codespace,omitempty"`
+}

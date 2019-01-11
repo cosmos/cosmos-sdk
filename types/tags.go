@@ -61,3 +61,29 @@ var (
 	TagDstValidator = "destination-validator"
 	TagDelegator    = "delegator"
 )
+
+// A KVPair where the Key and Value are both strings, rather than []byte
+type StringTag struct {
+	Key   string `json:"key"`
+	Value string `json:"value,omitempty"`
+}
+
+// A slice of StringTag
+type StringTags []StringTag
+
+// Conversion function from a []byte tag to a string tag
+func TagToStringTag(tag Tag) StringTag {
+	return StringTag{
+		Key:   string(tag.Key),
+		Value: string(tag.Value),
+	}
+}
+
+// Conversion function from Tags to a StringTags
+func TagsToStringTags(tags Tags) StringTags {
+	var stringTags StringTags
+	for _, tag := range tags {
+		stringTags = append(stringTags, TagToStringTag(tag))
+	}
+	return stringTags
+}

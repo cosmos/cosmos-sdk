@@ -6,8 +6,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO: This should get deleted eventually, and perhaps
@@ -137,11 +138,21 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 		type toJSON struct {
 			Height   int64
 			TxHash   string
-			Response abci.ResponseDeliverTx
+			Response sdk.StringResponseDeliverTx
 		}
 
 		if ctx.Output != nil {
-			resJSON := toJSON{res.Height, res.Hash.String(), res.DeliverTx}
+			stringTagDeliverTx := sdk.StringResponseDeliverTx{
+				Code:      res.DeliverTx.Code,
+				Data:      res.DeliverTx.Data,
+				Log:       res.DeliverTx.Log,
+				Info:      res.DeliverTx.Info,
+				GasWanted: res.DeliverTx.GasWanted,
+				GasUsed:   res.DeliverTx.GasUsed,
+				Tags:      sdk.TagsToStringTags(res.DeliverTx.Tags),
+				Codespace: res.DeliverTx.Codespace,
+			}
+			resJSON := toJSON{res.Height, res.Hash.String(), stringTagDeliverTx}
 			bz, err := ctx.Codec.MarshalJSON(resJSON)
 			if err != nil {
 				return res, err

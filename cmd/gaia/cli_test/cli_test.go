@@ -13,8 +13,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -218,7 +216,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	sendResp := struct {
 		Height   int64
 		TxHash   string
-		Response abci.ResponseDeliverTx
+		Response sdk.StringResponseDeliverTx
 	}{}
 	err := cdc.UnmarshalJSON([]byte(stdout), &sendResp)
 	require.Nil(t, err)
@@ -579,7 +577,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.True(t, success)
 
 	var result struct {
-		Response abci.ResponseDeliverTx
+		Response sdk.StringResponseDeliverTx
 	}
 
 	// Unmarshal the response and ensure that gas was properly used

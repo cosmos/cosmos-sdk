@@ -29,7 +29,7 @@ BREAKING CHANGES
   meter utilization during aborted ante handler executions.
   
 * Tendermint
-  * [\#3278](https://github.com/cosmos/cosmos-sdk/pull/3278) Upgrade to 0.27.4 release
+  * \#3279 Upgrade to Tendermint 0.28.0-dev0
 
 FEATURES
 

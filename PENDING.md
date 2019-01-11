@@ -29,7 +29,7 @@ BREAKING CHANGES
   meter utilization during aborted ante handler executions.
   
 * Tendermint
-
+  * \#3279 Upgrade to Tendermint 0.28.0-dev0
 
 FEATURES
 

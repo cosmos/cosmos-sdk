@@ -306,7 +306,7 @@ gaiacli keys show [name] --bech val
 
 where `[name]` is the name of the key you specified when you initialized `gaiad`.
 
-While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their staking in this pool.
+While tokens are bonded, they are pooled with all the other bonded tokens in the network. Validators and delegators obtain a percentage of shares that equal their stake in this pool.
 
 ::: tip Note
 Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!

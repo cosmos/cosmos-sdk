@@ -130,7 +130,7 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
-	store := ctx.KVStore(app.keyStake)
+	store := ctx.KVStore(app.keyStaking)
 	iter := sdk.KVStoreReversePrefixIterator(store, staking.ValidatorsKey)
 	counter := int16(0)
 

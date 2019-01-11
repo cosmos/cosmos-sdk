@@ -77,16 +77,16 @@ func MakeTestCodec() *codec.Codec {
 // hogpodge of all sorts of input required for testing
 func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context, auth.AccountKeeper, Keeper) {
 
-	keyStake := sdk.NewKVStoreKey(types.StoreKey)
-	tkeyStake := sdk.NewTransientStoreKey(types.TStoreKey)
+	keyStaking := sdk.NewKVStoreKey(types.StoreKey)
+	tkeyStaking := sdk.NewTransientStoreKey(types.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
 	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
-	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
-	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
+	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkeyParams, sdk.StoreTypeTransient, db)
@@ -108,7 +108,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 
 	ck := bank.NewBaseKeeper(accountKeeper)
 
-	keeper := NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
+	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
 	keeper.SetParams(ctx, types.DefaultParams())
 

@@ -340,10 +340,10 @@ func TestPoolParamsQuery(t *testing.T) {
 
 	defaultParams := staking.DefaultParams()
 
-	params := getStakeParams(t, port)
+	params := getStakingParams(t, port)
 	require.True(t, defaultParams.Equal(params))
 
-	pool := getStakePool(t, port)
+	pool := getStakingPool(t, port)
 
 	initialPool := staking.InitialPool()
 	initialPool.LooseTokens = initialPool.LooseTokens.Add(sdk.NewInt(100))

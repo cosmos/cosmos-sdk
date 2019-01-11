@@ -13,7 +13,7 @@ type Keeper struct {
 	cdc                 *codec.Codec
 	paramSpace          params.Subspace
 	bankKeeper          types.BankKeeper
-	stakingKeeper       types.StakeKeeper
+	stakingKeeper       types.StakingKeeper
 	feeCollectionKeeper types.FeeCollectionKeeper
 
 	// codespace
@@ -21,7 +21,7 @@ type Keeper struct {
 }
 
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
-	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
+	sk types.StakingKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
 
 	keeper := Keeper{
 		storeKey:            key,

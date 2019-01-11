@@ -32,7 +32,7 @@ var (
 func makeGenesisState(t *testing.T, genTxs []auth.StdTx) GenesisState {
 	// start with the default staking genesis state
 	appState := NewDefaultGenesisState()
-	stakingData := appState.StakeData
+	stakingData := appState.StakingData
 	genAccs := make([]GenesisAccount, len(genTxs))
 
 	for i, genTx := range genTxs {
@@ -111,15 +111,15 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	val1 := stakingTypes.NewValidator(addr1, pk1, stakingTypes.Description{Moniker: "test #2"})
 	val1.Jailed = true
 	val1.Status = sdk.Bonded
-	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val1)
+	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
 	err = GaiaValidateGenesisState(genesisState)
 	require.NotNil(t, err)
 	// Test duplicate validator fails
 	val1.Jailed = false
 	genesisState = makeGenesisState(t, genTxs)
 	val2 := stakingTypes.NewValidator(addr1, pk1, stakingTypes.Description{Moniker: "test #3"})
-	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val1)
-	genesisState.StakeData.Validators = append(genesisState.StakeData.Validators, val2)
+	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
+	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val2)
 	err = GaiaValidateGenesisState(genesisState)
 	require.NotNil(t, err)
 }

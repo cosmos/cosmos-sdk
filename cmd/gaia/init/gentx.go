@@ -168,7 +168,7 @@ following delegation and commission default parameters:
 
 func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins) error {
 	accountIsInGenesis := false
-	bondDenom := genesisState.StakeData.Params.BondDenom
+	bondDenom := genesisState.StakingData.Params.BondDenom
 
 	// Check if the account is in genesis
 	for _, acc := range genesisState.Accounts {

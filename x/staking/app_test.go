@@ -19,17 +19,17 @@ func getMockApp(t *testing.T) (*mock.App, Keeper) {
 
 	RegisterCodec(mApp.Cdc)
 
-	keyStake := sdk.NewKVStoreKey(StoreKey)
-	tkeyStake := sdk.NewTransientStoreKey(TStoreKey)
+	keyStaking := sdk.NewKVStoreKey(StoreKey)
+	tkeyStaking := sdk.NewTransientStoreKey(TStoreKey)
 
 	bankKeeper := bank.NewBaseKeeper(mApp.AccountKeeper)
-	keeper := NewKeeper(mApp.Cdc, keyStake, tkeyStake, bankKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
+	keeper := NewKeeper(mApp.Cdc, keyStaking, tkeyStaking, bankKeeper, mApp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 
 	mApp.Router().AddRoute(RouterKey, NewHandler(keeper))
 	mApp.SetEndBlocker(getEndBlocker(keeper))
 	mApp.SetInitChainer(getInitChainer(mApp, keeper))
 
-	require.NoError(t, mApp.CompleteSetup(keyStake, tkeyStake))
+	require.NoError(t, mApp.CompleteSetup(keyStaking, tkeyStaking))
 	return mApp, keeper
 }
 
@@ -94,7 +94,7 @@ func checkDelegation(
 	require.False(t, found)
 }
 
-func TestStakeMsgs(t *testing.T) {
+func TestStakingMsgs(t *testing.T) {
 	mApp, keeper := getMockApp(t)
 
 	genCoin := sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)

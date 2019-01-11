@@ -26,13 +26,13 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	staking.RegisterCodec(mapp.Cdc)
 	RegisterCodec(mapp.Cdc)
 
-	keyStake := sdk.NewKVStoreKey(staking.StoreKey)
-	tkeyStake := sdk.NewTransientStoreKey(staking.TStoreKey)
+	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyGov := sdk.NewKVStoreKey(StoreKey)
 
 	pk := mapp.ParamsKeeper
 	ck := bank.NewBaseKeeper(mapp.AccountKeeper)
-	sk = staking.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	sk = staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
 
 	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
@@ -41,7 +41,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	mapp.SetEndBlocker(getEndBlocker(keeper))
 	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk, genState))
 
-	require.NoError(t, mapp.CompleteSetup(keyStake, tkeyStake, keyGov))
+	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keyGov))
 
 	if genAccs == nil || len(genAccs) == 0 {
 		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)})

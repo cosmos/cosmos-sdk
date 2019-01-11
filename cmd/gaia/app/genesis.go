@@ -34,7 +34,7 @@ var (
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`
 	AuthData     auth.GenesisState     `json:"auth"`
-	StakeData    staking.GenesisState  `json:"staking"`
+	StakingData    staking.GenesisState  `json:"staking"`
 	MintData     mint.GenesisState     `json:"mint"`
 	DistrData    distr.GenesisState    `json:"distr"`
 	GovData      gov.GenesisState      `json:"gov"`
@@ -50,7 +50,7 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
 	return GenesisState{
 		Accounts:     accounts,
 		AuthData:     authData,
-		StakeData:    stakingData,
+		StakingData:    stakingData,
 		MintData:     mintData,
 		DistrData:    distrData,
 		GovData:      govData,
@@ -108,7 +108,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		return genesisState, errors.New("there must be at least one genesis tx")
 	}
 
-	stakingData := genesisState.StakeData
+	stakingData := genesisState.StakingData
 	for i, genTx := range appGenTxs {
 		var tx auth.StdTx
 		if err := cdc.UnmarshalJSON(genTx, &tx); err != nil {
@@ -134,7 +134,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 			}
 		}
 	}
-	genesisState.StakeData = stakingData
+	genesisState.StakingData = stakingData
 	genesisState.GenTxs = appGenTxs
 	return genesisState, nil
 }
@@ -144,7 +144,7 @@ func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
 		AuthData:     auth.DefaultGenesisState(),
-		StakeData:    staking.DefaultGenesisState(),
+		StakingData:    staking.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
 		GovData:      gov.DefaultGenesisState(),
@@ -170,7 +170,7 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 	if err := auth.ValidateGenesis(genesisState.AuthData); err != nil {
 		return err
 	}
-	if err := staking.ValidateGenesis(genesisState.StakeData); err != nil {
+	if err := staking.ValidateGenesis(genesisState.StakingData); err != nil {
 		return err
 	}
 	if err := mint.ValidateGenesis(genesisState.MintData); err != nil {

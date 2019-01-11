@@ -291,7 +291,7 @@ func InitializeTestLCD(
 		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 100)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakeData.Pool.LooseTokens = genesisState.StakeData.Pool.LooseTokens.Add(sdk.NewInt(100))
+		genesisState.StakingData.Pool.LooseTokens = genesisState.StakingData.Pool.LooseTokens.Add(sdk.NewInt(100))
 	}
 
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)
@@ -1002,7 +1002,7 @@ func getValidatorUnbondingDelegations(t *testing.T, port string, validatorAddr s
 }
 
 // GET /staking/pool Get the current state of the staking pool
-func getStakePool(t *testing.T, port string) staking.Pool {
+func getStakingPool(t *testing.T, port string) staking.Pool {
 	res, body := Request(t, port, "GET", "/staking/pool", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	require.NotNil(t, body)
@@ -1013,7 +1013,7 @@ func getStakePool(t *testing.T, port string) staking.Pool {
 }
 
 // GET /staking/parameters Get the current staking parameter values
-func getStakeParams(t *testing.T, port string) staking.Params {
+func getStakingParams(t *testing.T, port string) staking.Params {
 	res, body := Request(t, port, "GET", "/staking/parameters", nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

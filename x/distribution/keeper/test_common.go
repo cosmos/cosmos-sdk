@@ -84,8 +84,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
 
 	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
-	keyStake := sdk.NewKVStoreKey(staking.StoreKey)
-	tkeyStake := sdk.NewTransientStoreKey(staking.TStoreKey)
+	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
 	keyFeeCollection := sdk.NewKVStoreKey(auth.FeeStoreKey)
 	keyParams := sdk.NewKVStoreKey(params.StoreKey)
@@ -95,8 +95,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	ms := store.NewCommitMultiStore(db)
 
 	ms.MountStoreWithDB(keyDistr, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
-	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
+	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyFeeCollection, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
@@ -111,7 +111,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	ck := bank.NewBaseKeeper(accountKeeper)
-	sk := staking.NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetPool(ctx, staking.InitialPool())
 	sk.SetParams(ctx, staking.DefaultParams())
 

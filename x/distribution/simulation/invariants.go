@@ -12,7 +12,7 @@ import (
 // AllInvariants runs all invariants of the distribution module
 // Currently: total supply, positive power
 func AllInvariants(d distr.Keeper, stk staking.Keeper) simulation.Invariant {
-	sk := distr.StakeKeeper(stk)
+	sk := distr.StakingKeeper(stk)
 	return func(ctx sdk.Context) error {
 		err := ValAccumInvariants(d, sk)(ctx)
 		if err != nil {
@@ -31,7 +31,7 @@ func AllInvariants(d distr.Keeper, stk staking.Keeper) simulation.Invariant {
 }
 
 // ValAccumInvariants checks that the fee pool accum == sum all validators' accum
-func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
+func ValAccumInvariants(k distr.Keeper, sk distr.StakingKeeper) simulation.Invariant {
 
 	return func(ctx sdk.Context) error {
 		height := ctx.BlockHeight()
@@ -56,7 +56,7 @@ func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 }
 
 // DelAccumInvariants checks that each validator del accum == sum all delegators' accum
-func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
+func DelAccumInvariants(k distr.Keeper, sk distr.StakingKeeper) simulation.Invariant {
 
 	return func(ctx sdk.Context) error {
 		height := ctx.BlockHeight()

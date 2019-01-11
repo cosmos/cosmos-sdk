@@ -236,16 +236,16 @@ func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, 
 //___________________________________________________________________________________
 // gaiacli tx staking
 
-// TxStakeCreateValidator is gaiacli tx staking create-validator
-func (f *Fixtures) TxStakeCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
+// TxStakingCreateValidator is gaiacli tx staking create-validator
+func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("gaiacli tx staking create-validator %v --from=%s --pubkey=%s", f.Flags(), from, consPubKey)
 	cmd += fmt.Sprintf(" --amount=%v --moniker=%v --commission-rate=%v", amount, from, "0.05")
 	cmd += fmt.Sprintf(" --commission-max-rate=%v --commission-max-change-rate=%v", "0.20", "0.10")
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
-// TxStakeUnbond is gaiacli tx staking unbond
-func (f *Fixtures) TxStakeUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
+// TxStakingUnbond is gaiacli tx staking unbond
+func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
 	cmd := fmt.Sprintf("gaiacli tx staking unbond %v --from=%s --validator=%s --shares-amount=%v", f.Flags(), from, validator, shares)
 	return executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
@@ -308,7 +308,7 @@ func (f *Fixtures) QueryTxs(tags ...string) []tx.Info {
 //___________________________________________________________________________________
 // gaiacli query staking
 
-// QueryStakeValidator is gaiacli query staking validator
+// QueryStakingValidator is gaiacli query staking validator
 func (f *Fixtures) QueryStakingValidator(valAddr sdk.ValAddress, flags ...string) staking.Validator {
 	cmd := fmt.Sprintf("gaiacli query staking validator %s %v", valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -319,7 +319,7 @@ func (f *Fixtures) QueryStakingValidator(valAddr sdk.ValAddress, flags ...string
 	return validator
 }
 
-// QueryStakeUnbondingDelegationsFrom is gaiacli query staking unbonding-delegations-from
+// QueryStakingUnbondingDelegationsFrom is gaiacli query staking unbonding-delegations-from
 func (f *Fixtures) QueryStakingUnbondingDelegationsFrom(valAddr sdk.ValAddress, flags ...string) []staking.UnbondingDelegation {
 	cmd := fmt.Sprintf("gaiacli query staking unbonding-delegations-from %s %v", valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -330,7 +330,7 @@ func (f *Fixtures) QueryStakingUnbondingDelegationsFrom(valAddr sdk.ValAddress, 
 	return ubds
 }
 
-// QueryStakeDelegationsTo is gaiacli query staking delegations-to
+// QueryStakingDelegationsTo is gaiacli query staking delegations-to
 func (f *Fixtures) QueryStakingDelegationsTo(valAddr sdk.ValAddress, flags ...string) []staking.Delegation {
 	cmd := fmt.Sprintf("gaiacli query staking delegations-to %s %v", valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -341,7 +341,7 @@ func (f *Fixtures) QueryStakingDelegationsTo(valAddr sdk.ValAddress, flags ...st
 	return delegations
 }
 
-// QueryStakePool is gaiacli query staking pool
+// QueryStakingPool is gaiacli query staking pool
 func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
 	cmd := fmt.Sprintf("gaiacli query staking pool %v", f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
@@ -352,8 +352,8 @@ func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
 	return pool
 }
 
-// QueryStakeParameters is gaiacli query staking parameters
-func (f *Fixtures) QueryStakeParameters(flags ...string) staking.Params {
+// QueryStakingParameters is gaiacli query staking parameters
+func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
 	cmd := fmt.Sprintf("gaiacli query staking parameters %v", f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var params staking.Params

@@ -259,7 +259,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(101)) // Delegate tx on GaiaAppGenState
 
 	// Generate a create validator transaction and ensure correctness
-	success, stdout, stderr := f.TxStakeCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--generate-only")
+	success, stdout, stderr := f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--generate-only")
 
 	require.True(f.T, success)
 	require.Empty(f.T, stderr)
@@ -269,11 +269,11 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
-	success, _, _ = f.TxStakeCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--dry-run")
+	success, _, _ = f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--dry-run")
 	require.True(t, success)
 
 	// Create the validator
-	f.TxStakeCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2))
+	f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure funds were deducted properly
@@ -291,7 +291,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.NotZero(t, validatorDelegations[0].Shares)
 
 	// unbond a single share
-	success = f.TxStakeUnbond(keyBar, "1", barVal)
+	success = f.TxStakingUnbond(keyBar, "1", barVal)
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 

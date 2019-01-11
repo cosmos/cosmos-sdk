@@ -44,8 +44,8 @@ type GaiaApp struct {
 	// keys to access the substores
 	keyMain          *sdk.KVStoreKey
 	keyAccount       *sdk.KVStoreKey
-	keyStake         *sdk.KVStoreKey
-	tkeyStake        *sdk.TransientStoreKey
+	keyStaking         *sdk.KVStoreKey
+	tkeyStaking        *sdk.TransientStoreKey
 	keySlashing      *sdk.KVStoreKey
 	keyMint          *sdk.KVStoreKey
 	keyDistr         *sdk.KVStoreKey
@@ -79,8 +79,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		cdc:              cdc,
 		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
 		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
-		keyStake:         sdk.NewKVStoreKey(staking.StoreKey),
-		tkeyStake:        sdk.NewTransientStoreKey(staking.TStoreKey),
+		keyStaking:         sdk.NewKVStoreKey(staking.StoreKey),
+		tkeyStaking:        sdk.NewTransientStoreKey(staking.TStoreKey),
 		keyMint:          sdk.NewKVStoreKey(mint.StoreKey),
 		keyDistr:         sdk.NewKVStoreKey(distr.StoreKey),
 		tkeyDistr:        sdk.NewTransientStoreKey(distr.TStoreKey),
@@ -109,7 +109,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 	)
 	stakingKeeper := staking.NewKeeper(
 		app.cdc,
-		app.keyStake, app.tkeyStake,
+		app.keyStaking, app.tkeyStaking,
 		app.bankKeeper, app.paramsKeeper.Subspace(staking.DefaultParamspace),
 		staking.DefaultCodespace,
 	)
@@ -158,12 +158,12 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc))
 
 	// initialize BaseApp
-	app.MountStores(app.keyMain, app.keyAccount, app.keyStake, app.keyMint, app.keyDistr,
+	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint, app.keyDistr,
 		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
-	app.MountStoresTransient(app.tkeyParams, app.tkeyStake, app.tkeyDistr)
+	app.MountStoresTransient(app.tkeyParams, app.tkeyStaking, app.tkeyDistr)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
@@ -239,14 +239,14 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	}
 
 	// load the initial staking information
-	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakeData)
+	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakingData)
 	if err != nil {
 		panic(err) // TODO find a way to do this w/o panics
 	}
 
 	// initialize module-specific stores
 	auth.InitGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper, genesisState.AuthData)
-	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
+	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData)
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
 	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)

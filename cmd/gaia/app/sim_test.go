@@ -163,7 +163,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		AuthData:     authGenesis,
-		StakeData:    stakingGenesis,
+		StakingData:    stakingGenesis,
 		MintData:     mintGenesis,
 		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),
 		SlashingData: slashingGenesis,
@@ -370,7 +370,7 @@ func TestGaiaImportExport(t *testing.T) {
 	storeKeysPrefixes := []StoreKeysPrefixes{
 		{app.keyMain, newApp.keyMain, [][]byte{}},
 		{app.keyAccount, newApp.keyAccount, [][]byte{}},
-		{app.keyStake, newApp.keyStake, [][]byte{staking.UnbondingQueueKey, staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
+		{app.keyStaking, newApp.keyStaking, [][]byte{staking.UnbondingQueueKey, staking.RedelegationQueueKey, staking.ValidatorQueueKey}}, // ordering may change but it doesn't matter
 		{app.keySlashing, newApp.keySlashing, [][]byte{}},
 		{app.keyMint, newApp.keyMint, [][]byte{}},
 		{app.keyDistr, newApp.keyDistr, [][]byte{}},

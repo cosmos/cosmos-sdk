@@ -1,0 +1,28 @@
+# Gas & Fees
+
+Fees serve two purposes for an operator of the network.
+
+Fees limit the growth of the state stored by every full node and it allows for
+a general purpose for censorship of transactions of little economic value. Fees
+are best suited as an anti-spam mechanism where validators are disinterested in
+the use of the network and identities of users.
+
+Fees are determined by the gas limits and gas prices transactions provide.
+Operators should set minimum gas prices when starting their nodes. They will set
+the unit costs of gas in each token denomination they wish to support:
+
+`gaiad start ... --minimum-gas_prices=1steak,5photinos`
+
+When adding transactions to mempool or gossipping transactions, validators check
+if the transaction's gas prices, which are determined by the provided fees, meet
+any of the validator's minimum gas prices. In other words, a transaction must
+provide a fee of at least one denomination that matches a validator's minimum
+gas price.
+
+Tendermint does not currently provide fee based mempool prioritization and fee
+based mempool filtering is local to node and not part of consensus. But with
+minimum gas prices set, such a mechanism is possible.
+
+Because the market value for tokens will fluctuate, validators are expected to
+dynamically adjust their minimum gas prices to a level that would encourage the
+use of the network.

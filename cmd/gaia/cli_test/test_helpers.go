@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	denom    = "staking"
+	denom    = "stake"
 	keyFoo   = "foo"
 	keyBar   = "bar"
 	fooDenom = "footoken"

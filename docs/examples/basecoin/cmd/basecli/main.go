@@ -23,7 +23,7 @@ import (
 	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	st "github.com/cosmos/cosmos-sdk/x/stake"
+	st "github.com/cosmos/cosmos-sdk/x/staking"
 	stakecmd "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	stake "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 )

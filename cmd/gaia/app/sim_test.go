@@ -29,7 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
-	stake "github.com/cosmos/cosmos-sdk/x/stake"
+	stake "github.com/cosmos/cosmos-sdk/x/staking"
 	stakesim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	stakeTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )

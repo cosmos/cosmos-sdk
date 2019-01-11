@@ -22,7 +22,7 @@ import (
 //    Infraction committed at the current height or at a past height,
 //    not at a height in the future
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
-	logger := ctx.Logger().With("module", "x/stake")
+	logger := ctx.Logger().With("module", "x/staking")
 
 	if slashFactor.LT(sdk.ZeroDec()) {
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
@@ -123,7 +123,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	k.jailValidator(ctx, validator)
-	logger := ctx.Logger().With("module", "x/stake")
+	logger := ctx.Logger().With("module", "x/staking")
 	logger.Info(fmt.Sprintf("validator %s jailed", consAddr))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return
@@ -133,7 +133,7 @@ func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	k.unjailValidator(ctx, validator)
-	logger := ctx.Logger().With("module", "x/stake")
+	logger := ctx.Logger().With("module", "x/staking")
 	logger.Info(fmt.Sprintf("validator %s unjailed", consAddr))
 	// TODO Return event(s), blocked on https://github.com/tendermint/tendermint/pull/1803
 	return

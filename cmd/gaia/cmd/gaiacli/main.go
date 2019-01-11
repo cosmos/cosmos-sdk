@@ -30,7 +30,7 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	st "github.com/cosmos/cosmos-sdk/x/stake"
+	st "github.com/cosmos/cosmos-sdk/x/staking"
 	stake "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"

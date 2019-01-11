@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	stake "github.com/cosmos/cosmos-sdk/x/stake"
+	stake "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // export the state of gaia for a genesis file

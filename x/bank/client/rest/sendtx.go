@@ -57,6 +57,10 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		var from sdk.AccAddress
 		if req.BaseReq.GenerateOnly {
 			from, err = sdk.AccAddressFromBech32(req.BaseReq.From)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
 		} else {
 			info, err := kb.Get(req.BaseReq.Name)
 			if err != nil {

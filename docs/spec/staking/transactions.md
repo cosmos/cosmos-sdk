@@ -67,9 +67,9 @@ assigned to `Delegation.Shares`.
 
 ```golang
 type MsgDelegate struct {
-	DelegatorAddr sdk.Address
-	ValidatorAddr sdk.Address
-	Amount        sdk.Coin
+	DelegatorAddr sdk.AccAddress
+	ValidatorAddr sdk.ValAddress
+	Delegation    sdk.Coin
 }
 ```
 
@@ -88,10 +88,24 @@ Delegator unbonding is defined with the following transaction:
 
 ```golang
 type MsgBeginUnbonding struct {
-	DelegatorAddr sdk.Address
-	ValidatorAddr sdk.Address
-	Shares        string
+	DelegatorAddr sdk.AccAddress 
+	ValidatorAddr sdk.ValAddress
+	SharesAmount  sdk.Dec 
 }
+```
+
+This transaction is expected to fail if: 
+
+ - the validator is does not exist
+ - the validator is jailed 
+
+
+
+
+
+
+
+
 
 startUnbonding(tx TxStartUnbonding):
     delegation, found = getDelegatorBond(store, sender, tx.PubKey)
@@ -133,7 +147,6 @@ startUnbonding(tx TxStartUnbonding):
 		removeValidator(validator.Operator)
 
     return
-```
 
 ### MsgBeginRedelegate
 
@@ -143,12 +156,12 @@ the EndBlocker.
 
 ```golang
 type MsgBeginRedelegate struct {
-    DelegatorAddr Address
-    ValidatorFrom Validator
-    ValidatorTo   Validator
-    Shares        sdk.Dec 
-    CompletedTime int64 
+	DelegatorAddr    sdk.AccAddress 
+	ValidatorSrcAddr sdk.ValAddress 
+	ValidatorDstAddr sdk.ValAddress
+	SharesAmount     sdk.Dec
 }
+```
 
 redelegate(tx TxRedelegate):
 
@@ -167,4 +180,3 @@ redelegate(tx TxRedelegate):
         tx.validatorTo, tx.Shares, createdCoins, tx.CompletedTime)
     setRedelegation(redelegation)
     return
-```

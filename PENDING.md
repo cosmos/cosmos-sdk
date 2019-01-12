@@ -6,6 +6,7 @@ BREAKING CHANGES
   * [gaia-lite] [\#2182] Renamed and merged all redelegations endpoints into `/staking/redelegations`
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
   * [\#2222] all endpoints renamed from `/stake` -> `/staking`
+  * [\#1268] `LooseTokens` -> `NotBondedTokens`
 
 * Gaia CLI  (`gaiacli`)
   * [\#810](https://github.com/cosmos/cosmos-sdk/issues/810) Don't fallback to any default values for chain ID.
@@ -29,6 +30,7 @@ BREAKING CHANGES
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
   meter utilization during aborted ante handler executions.
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
+  * [\#1268] `LooseTokens` -> `NotBondedTokens`
   
 * Tendermint
   * \#3279 Upgrade to Tendermint 0.28.0-dev0
@@ -80,6 +82,7 @@ IMPROVEMENTS
     slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
+  * [\#1268] staking spec rewrite
 
 * Tendermint
 

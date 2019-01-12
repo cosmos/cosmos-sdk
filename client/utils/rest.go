@@ -103,6 +103,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, txBldr 
 type BaseReq struct {
 	Name          string    `json:"name"`
 	Password      string    `json:"password"`
+	From          string    `json:"from"` // optional for generate only requests
 	Memo          string    `json:"memo"`
 	ChainID       string    `json:"chain_id"`
 	AccountNumber uint64    `json:"account_number"`

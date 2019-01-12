@@ -54,13 +54,20 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
+		var from sdk.AccAddress
+		if br.GenerateOnly {
+			from, err = sdk.AccAddressFromBech32(req.BaseReq.From)
+		} else {
+			info, err := kb.Get(req.BaseReq.Name)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			from = sdk.AccAddress(info.GetPubKey().Address())
 		}
 
-		msg := client.CreateMsg(sdk.AccAddress(info.GetPubKey().Address()), to, req.Amount)
+		msg := client.CreateMsg(from, to, req.Amount)
 		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

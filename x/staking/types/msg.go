@@ -15,8 +15,8 @@ var _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegate{}
 
 // MsgCreateValidator - struct for bonding transactions
 type MsgCreateValidator struct {
-	Description
-	Commission    CommissionMsg
+	Description   Description    `json:"description"`
+	Commission    CommissionMsg  `json:"commission"`
 	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	PubKey        crypto.PubKey  `json:"pubkey"`
@@ -62,11 +62,12 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 	return addrs
 }
 
+// TODO Remove use of custom struct (no longer necessary)
 // get the bytes for the message signer to sign on
 func (msg MsgCreateValidator) GetSignBytes() []byte {
 	b, err := MsgCdc.MarshalJSON(struct {
-		Description
-		Commission    CommissionMsg
+		Description   Description    `json:"description"`
+		Commission    CommissionMsg  `json:"commission"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 		ValidatorAddr sdk.ValAddress `json:"validator_address"`
 		PubKey        string         `json:"pubkey"`

@@ -131,9 +131,7 @@ unbonding delegations associated with a given validator that need to be
 slashed.
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
-The unbond must be completed with a second transaction provided by the
-delegation owner after the unbonding period has passed.
-
+k
 ```golang
 type UnbondingDelegation struct {
 	DelegatorAddr sdk.AccAddress             // delegator

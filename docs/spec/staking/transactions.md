@@ -4,18 +4,17 @@ In this section we describe the processing of the transactions and the
 corresponding updates to the state.
 
 Notes:
-* `tx` denotes a reference to the transaction being processed
-* `sender` denotes the address of the sender of the transaction
-* `getXxx`, `setXxx`, and `removeXxx` functions are used to retrieve and
-  modify objects from the store
-* `sdk.Dec` refers to a decimal type specified by the SDK.
-* `sdk.Int` refers to an integer type specified by the SDK.
+ - `tx` denotes a reference to the transaction being processed
+ - `sender` denotes the address of the sender of the transaction
+ - `getXxx`, `setXxx`, and `removeXxx` functions are used to retrieve and
+   modify objects from the store
+ - `sdk.Dec` refers to a decimal type specified by the SDK.
+ - `sdk.Int` refers to an integer type specified by the SDK.
+ 
 
 ## TxCreateValidator
 
-* triggers: `distribution.CreateValidatorDistribution`
-
-A validator is created using the `TxCreateValidator` transaction.
+ - triggers: `distribution.CreateValidatorDistribution`
 
 ```golang
 type TxCreateValidator struct {
@@ -27,33 +26,24 @@ type TxCreateValidator struct {
     PubKey         crypto.PubKey
     Delegation     sdk.Coin
 }
-
-createValidator(tx TxCreateValidator):
-    ok := validatorExists(tx.ValidatorAddr)
-    if ok return err // only one validator per address
-
-    ok := validatorByPubKeyExists(tx.PubKey)
-    if ok return err // only one validator per public key
-
-    err := validateDenom(tx.Delegation.Denom)
-    if err != nil return err // denomination must be valid
-
-    validator := NewValidator(tx.ValidatorAddr, tx.PubKey, tx.Description)
-
-    err := setInitialCommission(validator, tx.Commission, blockTime)
-    if err != nil return err // must be able to set initial commission correctly
-
-    // set the validator and public key
-    setValidator(validator)
-    setValidatorByPubKeyIndex(validator)
-
-    // delegate coins from tx.DelegatorAddr to the validator
-    err := delegate(tx.DelegatorAddr, tx.Delegation, validator)
-    if err != nil return err // must be able to set delegation correctly
-
-    tags := createTags(tx)
-    return tags
 ```
+
+A validator is created using the `TxCreateValidator` transaction. 
+This transaction is expected to fail if: 
+ - another validator with this operator address is already registered
+ - another validator with this pubkey is already registered
+ - the initial self-delegation tokens are of a denom not specified as the
+   bonding denom 
+ - the commission parameters are faulty, namely:
+   - `MaxRate` is either > 1 or < 0 
+   - The initial `Rate` is either negative or > `MaxRate`
+   - The initial `MaxChangeRate` is either negative or > `MaxRate`
+ 
+This transaction creates and stores the `Validator` object at appropriate
+indexes.  Additionally a self-delegation is made with the inital tokens
+delegation tokens `Delegation`.  the validator always starts as unbonded but
+may be bonded in the first end-block. 
+
 
 ## TxEditValidator
 
@@ -67,6 +57,7 @@ type TxEditCandidacy struct {
     ValidatorAddr   sdk.ValAddress
     CommissionRate  sdk.Dec
 }
+```
 
 editCandidacy(tx TxEditCandidacy):
     validator, ok := getValidator(tx.ValidatorAddr)
@@ -90,7 +81,6 @@ editCandidacy(tx TxEditCandidacy):
 
     tags := createTags(tx)
     return tags
-```
 
 ### TxDelegate
 

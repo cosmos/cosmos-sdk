@@ -68,13 +68,20 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
+		var from sdk.AccAddress
+		if req.BaseReq.GenerateOnly {
+			from, err = sdk.AccAddressFromBech32(req.BaseReq.From)
+		} else {
+			info, err := kb.Get(req.BaseReq.Name)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			from = sdk.AccAddress(info.GetPubKey().Address())
 		}
 
-		if !bytes.Equal(info.GetPubKey().Address(), req.DelegatorAddr) {
+		if !bytes.Equal(from.Bytes(), req.DelegatorAddr) {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own delegator address")
 			return
 		}
@@ -105,13 +112,20 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
+		var from sdk.AccAddress
+		if req.BaseReq.GenerateOnly {
+			from, err = sdk.AccAddressFromBech32(req.BaseReq.From)
+		} else {
+			info, err := kb.Get(req.BaseReq.Name)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			from = sdk.AccAddress(info.GetPubKey().Address())
 		}
 
-		if !bytes.Equal(info.GetPubKey().Address(), req.DelegatorAddr) {
+		if !bytes.Equal(from.Bytes(), req.DelegatorAddr) {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own delegator address")
 			return
 		}
@@ -142,13 +156,20 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
+		var from sdk.AccAddress
+		if req.BaseReq.GenerateOnly {
+			from, err = sdk.AccAddressFromBech32(req.BaseReq.From)
+		} else {
+			info, err := kb.Get(req.BaseReq.Name)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			from = sdk.AccAddress(info.GetPubKey().Address())
 		}
 
-		if !bytes.Equal(info.GetPubKey().Address(), req.DelegatorAddr) {
+		if !bytes.Equal(from.Bytes(), req.DelegatorAddr) {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own delegator address")
 			return
 		}

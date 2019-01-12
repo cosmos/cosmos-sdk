@@ -296,7 +296,8 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, delegationsRes[0], delegation)
 
 	// Query unbonging delegation
-	keeper.BeginUnbonding(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
+	_, err = keeper.BeginUnbonding(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
+	require.Nil(t, err)
 
 	queryBondParams = NewQueryBondsParams(addrAcc2, addrVal1)
 	bz, errRes = cdc.MarshalJSON(queryBondParams)
@@ -347,8 +348,10 @@ func TestQueryDelegation(t *testing.T) {
 	require.NotNil(t, err)
 
 	// Query redelegation
-	redel, err := keeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr, sdk.NewDec(10))
+	_, err = keeper.BeginRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr, sdk.NewDec(10))
 	require.Nil(t, err)
+	redel, found := keeper.GetRedelegation(ctx, addrAcc2, val1.OperatorAddr, val2.OperatorAddr)
+	require.True(t, found)
 
 	bz, errRes = cdc.MarshalJSON(NewQueryRedelegationParams(addrAcc2, val1.OperatorAddr, val2.OperatorAddr))
 	require.Nil(t, errRes)
@@ -379,7 +382,7 @@ func TestQueryRedelegations(t *testing.T) {
 	keeper.SetValidator(ctx, val2)
 
 	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin(types.DefaultBondDenom, sdk.NewInt(100)), val1, true)
-	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	_ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	keeper.BeginRedelegation(ctx, addrAcc2, val1.GetOperator(), val2.GetOperator(), sdk.NewDec(20))
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)

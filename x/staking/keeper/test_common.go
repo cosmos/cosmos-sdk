@@ -94,7 +94,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	require.Nil(t, err)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
-	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}}})
+	ctx = ctx.WithConsensusParams(
+		&abci.ConsensusParams{
+			Validator: &abci.ValidatorParams{
+				PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519},
+			},
+		},
+	)
 	cdc := MakeTestCodec()
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams)

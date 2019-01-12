@@ -28,10 +28,11 @@ BREAKING CHANGES
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
   * [\#3195](https://github.com/cosmos/cosmos-sdk/issues/3195) Allows custom configuration for syncable strategy
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
-  meter utilization during aborted ante handler executions.
-  * [\#2222] [x/staking] `/stake` -> `/staking` module rename
-  * [\#1268] `LooseTokens` -> `NotBondedTokens`
-  
+    meter utilization during aborted ante handler executions.
+  * [staking] \#2222 `/stake` -> `/staking` module rename
+  * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+  * [staking] \#1268 `LooseTokens` -> `NotBondedTokens`
+
 * Tendermint
   * \#3279 Upgrade to Tendermint 0.28.0-dev0
 
@@ -82,7 +83,8 @@ IMPROVEMENTS
     slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
-  * [\#1268] staking spec rewrite
+  * [staking] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period 
+  * [staking] \#1268 staking spec rewrite
 
 * Tendermint
 

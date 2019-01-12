@@ -1,20 +1,9 @@
 # Transaction Overview
 
 In this section we describe the processing of the transactions and the
-corresponding updates to the state. Transactions:
+corresponding updates to the state.
 
-* TxCreateValidator
-* TxEditValidator
-* TxDelegation
-* TxStartUnbonding
-* TxRedelegate
-
-Other important state changes:
-
-* Update Validators
-
-Other notes:
-
+Notes:
 * `tx` denotes a reference to the transaction being processed
 * `sender` denotes the address of the sender of the transaction
 * `getXxx`, `setXxx`, and `removeXxx` functions are used to retrieve and
@@ -218,95 +207,4 @@ redelegate(tx TxRedelegate):
         tx.validatorTo, tx.Shares, createdCoins, tx.CompletedTime)
     setRedelegation(redelegation)
     return
-```
-
-### Update Validators
-
-Within many transactions the validator set must be updated based on changes in
-power to a single validator. This process also updates the Tendermint-Updates
-store for use in end-block when validators are either added or kicked from the
-Tendermint.
-
-```golang
-updateBondedValidators(newValidator Validator) (updatedVal Validator)
-
-	kickCliffValidator = false
-	oldCliffValidatorAddr = getCliffValidator(ctx)
-
-	// add the actual validator power sorted store
-	maxValidators = GetParams(ctx).MaxValidators
-	iterator = ReverseSubspaceIterator(ValidatorsByPowerKey) // largest to smallest
-	bondedValidatorsCount = 0
-	var validator Validator
-	for {
-		if !iterator.Valid() || bondedValidatorsCount > int(maxValidators-1) {
-
-			if bondedValidatorsCount == int(maxValidators) { // is cliff validator
-				setCliffValidator(ctx, validator, GetPool(ctx))
-			iterator.Close()
-			break
-
-		// either retrieve the original validator from the store,
-		// or under the situation that this is the "new validator" just
-		// use the validator provided because it has not yet been updated
-		// in the main validator store
-
-		operatorAddr = iterator.Value()
-		if bytes.Equal(operatorAddr, newValidator.Operator) {
-			validator = newValidator
-        else
-			validator = getValidator(operatorAddr)
-
-		// if not previously a validator (and unjailed),
-		// kick the cliff validator / bond this new validator
-		if validator.Status() != Bonded && !validator.Jailed {
-			kickCliffValidator = true
-
-			validator = bondValidator(ctx, store, validator)
-			if bytes.Equal(operatorAddr, newValidator.Operator) {
-				updatedVal = validator
-
-		bondedValidatorsCount++
-		iterator.Next()
-
-	// perform the actual kicks
-	if oldCliffValidatorAddr != nil && kickCliffValidator {
-		validator = getValidator(store, oldCliffValidatorAddr)
-		unbondValidator(ctx, store, validator)
-	return
-
-// perform all the store operations for when a validator status becomes unbonded
-unbondValidator(ctx Context, store KVStore, validator Validator)
-	pool = GetPool(ctx)
-
-	// set the status
-	validator, pool = validator.UpdateStatus(pool, Unbonded)
-	setPool(ctx, pool)
-
-	// save the now unbonded validator record
-	setValidator(validator)
-
-	// add to accumulated changes for tendermint
-	setTendermintUpdates(validator.abciValidatorZero)
-
-	// also remove from the bonded validators index
-	removeValidatorsBonded(validator)
-}
-
-// perform all the store operations for when a validator status becomes bonded
-bondValidator(ctx Context, store KVStore, validator Validator) Validator
-	pool = GetPool(ctx)
-
-	// set the status
-	validator, pool = validator.UpdateStatus(pool, Bonded)
-	setPool(ctx, pool)
-
-	// save the now bonded validator record to the three referenced stores
-	setValidator(validator)
-	setValidatorsBonded(validator)
-
-	// add to accumulated changes for tendermint
-	setTendermintUpdates(validator.abciValidator)
-
-	return validator
 ```

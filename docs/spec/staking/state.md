@@ -18,9 +18,9 @@ type Pool struct {
 ### Params
 
 Params is global data structure that stores system parameters and defines
-overall functioning of the staking module. 
+overall functioning of the staking module. it is stored 
 
- - Params: `0x00 -> amino(params)`
+ - Params: `Paramsspace("staking") -> amino(params)`
 
 ```golang
 type Params struct {
@@ -39,9 +39,9 @@ Tendermint consensus. The validator can be retrieved from it's `ConsPubKey`
 once it can be converted into the corresponding `ConsAddr`. Validators are
 indexed in the store using the following maps:
 
-- Validators: `0x02 | OperatorAddr -> amino(validator)`
-- ValidatorsByConsAddr: `0x03 | ConsAddr -> OperatorAddr`
-- ValidatorsByPower: `0x05 | power | blockHeight | blockTx  -> OperatorAddr`
+- Validators: `0x21 | OperatorAddr -> amino(validator)`
+- ValidatorsByConsAddr: `0x22 | ConsAddr -> OperatorAddr`
+- ValidatorsByPower: `0x23 | BigEndian(Tokens) | OperatorAddr -> OperatorAddr`
 
 `Validators` is the primary index - it ensures that each operator can have only one
 associated validator, where the public key of that validator can change in the
@@ -53,8 +53,8 @@ When Tendermint reports evidence, it provides the validator address, so this
 map is needed to find the operator.
 
 `ValidatorsByPower` is a secondary index that provides a sorted list of
-potential validators to quickly determine the current active set. For instance,
-the first 100 validators in this list can be returned with every EndBlock.
+potential validators to quickly determine the current active set. Note 
+that all validators where `Jailed` is true are not stored within this index.
 
 The `Validator` holds the current state of the validator.
 
@@ -97,7 +97,7 @@ type Description struct {
 Delegations are identified by combining `DelegatorAddr` (the address of the delegator)
 with the `ValidatorAddr` Delegators are indexed in the store as follows:
 
-- Delegation: ` 0x0A | DelegatorAddr | ValidatorAddr -> amino(delegation)`
+- Delegation: ` 0x31 | DelegatorAddr | ValidatorAddr -> amino(delegation)`
 
 Atom holders may delegate coins to validators; under this circumstance their
 funds are held in a `Delegation` data structure. It is owned by one
@@ -120,9 +120,9 @@ detected.
 
 `UnbondingDelegation` are indexed in the store as:
 
-- UnbondingDelegationByDelegator: ` 0x0B | DelegatorAddr | ValidatorAddr ->
+- UnbondingDelegation: ` 0x32 | DelegatorAddr | ValidatorAddr ->
    amino(unbondingDelegation)`
-- UnbondingDelegationByValOwner: ` 0x0C | ValidatorAddr | DelegatorAddr | ValidatorAddr ->
+- UnbondingDelegationsFromValidator: ` 0x33 | ValidatorAddr | DelegatorAddr ->
    nil`
 
 The first map here is used in queries, to lookup all unbonding delegations for
@@ -160,22 +160,17 @@ a `ValidatorSrcAddr` to a `ValidatorDstAddr`.
 
 `Redelegation` are indexed in the store as:
 
- - Redelegations: `0x0D | DelegatorAddr | ValidatorSrcAddr | ValidatorDstAddr ->
-   amino(redelegation)`
- - RedelegationsBySrc: `0x0E | ValidatorSrcAddr | ValidatorDstAddr |
-   DelegatorAddr -> nil`
- - RedelegationsByDst: `0x0F | ValidatorDstAddr | ValidatorSrcAddr | DelegatorAddr
-   -> nil`
+ - Redelegations: `0x34 | DelegatorAddr | ValidatorSrcAddr | ValidatorDstAddr -> amino(redelegation)`
+ - RedelegationsBySrc: `0x35 | ValidatorSrcAddr | ValidatorDstAddr | DelegatorAddr -> nil`
+ - RedelegationsByDst: `0x36 | ValidatorDstAddr | ValidatorSrcAddr | DelegatorAddr -> nil`
 
 The first map here is used for queries, to lookup all redelegations for a given
 delegator. The second map is used for slashing based on the `ValidatorSrcAddr`,
-while the third map is for slashing based on the ToValOwnerAddr.
+while the third map is for slashing based on the `ValidatorDstAddr`.
 
 A redelegation object is created every time a redelegation occurs. The
-redelegation must be completed with a second transaction provided by the
-delegation owner after the unbonding period has passed.  The destination
-delegation of a redelegation may not itself undergo a new redelegation until
-the original redelegation has been completed.
+destination delegation of a redelegation may not itself undergo a new
+redelegation until the original redelegation has been completed.
 
 ```golang
 type Redelegation struct {

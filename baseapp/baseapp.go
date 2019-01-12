@@ -86,7 +86,7 @@ var _ abci.Application = (*BaseApp)(nil)
 // NewBaseApp returns a reference to an initialized BaseApp.
 //
 // NOTE: The db is used to store the version number for now.
-// Accepts a usemake install_examplesr-defined txDecoder
+// Accepts a user-defined txDecoder
 // Accepts variable number of option functions, which act on the BaseApp to set configuration choices
 func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{

@@ -758,6 +758,27 @@ func TestGaiaCLIQueryTxPagination(t *testing.T) {
 	txsPageFull := executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=50 --page=1", fooAddr, flags))
 	require.Len(t, txsPageFull, 30)
 	require.Equal(t, txsPageFull, append(txsPage1, txsPage2...))
+
+	// missing perPage
+	txsPageFull = executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=50", fooAddr, flags))
+	require.Len(t, txsPageFull, 30)
+	require.Equal(t, txsPageFull, append(txsPage1, txsPage2...))
+
+	// missing limit
+	txsPageFull = executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --page=1", fooAddr, flags))
+	require.Len(t, txsPageFull, 30)
+	require.Equal(t, txsPageFull, append(txsPage1, txsPage2...))
+
+	// missing all
+	txsPageFull = executeGetTxs(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v", fooAddr, flags))
+	require.Len(t, txsPageFull, 30)
+	require.Equal(t, txsPageFull, append(txsPage1, txsPage2...))
+
+	// perPage = 0
+	executeGetTxsWrong(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=50 --page=0", fooAddr, flags), "ERROR: page must greater than 0")
+
+	// limit = 0
+	executeGetTxsWrong(t, fmt.Sprintf("gaiacli query txs --tags='sender:%s' %v --limit=0 --page=1", fooAddr, flags), "ERROR: limit must greater than 0")
 }
 
 //___________________________________________________________________________________
@@ -918,6 +939,11 @@ func executeGetTxs(t *testing.T, cmdStr string) []tx.Info {
 	err := cdc.UnmarshalJSON([]byte(out), &txs)
 	require.NoError(t, err, "out %v\n, err %v", out, err)
 	return txs
+}
+
+func executeGetTxsWrong(t *testing.T, cmdStr string, expectedErr string) {
+	_, stderr := tests.ExecuteT(t, cmdStr, "")
+	require.Equal(t, stderr, expectedErr)
 }
 
 //___________________________________________________________________________________

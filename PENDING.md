@@ -19,6 +19,7 @@ BREAKING CHANGES
   * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
   * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
     in order to trigger a simulation of the tx before the actual execution.
+  * [\#3285](https://github.com/cosmos/cosmos-sdk/pull/3285) New `gaiad tendermint version` to print libs versions
 
 
 * SDK

@@ -11,6 +11,7 @@ import (
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
+	tversion "github.com/tendermint/tendermint/version"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,6 +87,26 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 	}
 
 	cmd.Flags().Bool(client.FlagJson, false, "get machine parseable output")
+	return cmd
+}
+
+// VersionCmd prints tendermint and ABCI version numbers.
+func VersionCmd(ctx *Context) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "version",
+		Short: "Print tendermint libraries' version",
+		Long: `Print Tendermint's and ABCI's version numbers
+against which this app has been compiled.
+`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			fmt.Printf(`tendermint: %s
+ABCI: %s
+`, tversion.Version, tversion.ABCIVersion)
+
+			return nil
+		},
+	}
 	return cmd
 }
 

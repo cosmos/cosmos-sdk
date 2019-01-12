@@ -9,6 +9,8 @@ func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterInterface((*Account)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "auth/Account", nil)
 	cdc.RegisterConcrete(StdTx{}, "auth/StdTx", nil)
+	cdc.RegisterInterface((*StdSignature)(nil), nil)
+	cdc.RegisterConcrete(StdSingleSignature{}, "auth/StdSingleSignature", nil)
 }
 
 var msgCdc = codec.New()

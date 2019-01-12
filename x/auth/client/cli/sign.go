@@ -162,7 +162,7 @@ func printAndValidateSigs(
 	}
 
 	for i, sig := range sigs {
-		sigAddr := sdk.AccAddress(sig.Address())
+		sigAddr := sdk.AccAddress(sig.PubKey().Address())
 		sigSanity := "OK"
 
 		if i >= len(signers) || !sigAddr.Equals(signers[i]) {
@@ -184,7 +184,7 @@ func printAndValidateSigs(
 				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 			)
 
-			if ok := sig.VerifyBytes(sigBytes, sig.Signature); !ok {
+			if ok := sig.PubKey().VerifyBytes(sigBytes, sig.Signature()); !ok {
 				sigSanity = "ERROR: signature invalid"
 				success = false
 			}

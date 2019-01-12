@@ -512,7 +512,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 	msgs = []sdk.Msg{msg}
 	tx = newTestTx(ctx, msgs, privs, []uint64{1}, seqs, fee)
 	sigs := tx.(StdTx).GetSignatures()
-	sigs[0].PubKey = nil
+	sigs[0] = NewStdSingleSignature(nil, sigs[0].Signature())
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeInvalidPubKey)
 
 	acc2 = input.ak.GetAccount(ctx, addr2)
@@ -548,11 +548,11 @@ func TestProcessPubKey(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"no sigs, simulate off", args{acc1, StdSignature{}, false}, true},
-		{"no sigs, simulate on", args{acc1, StdSignature{}, true}, false},
-		{"no sigs, account with pub, simulate on", args{acc2, StdSignature{}, true}, false},
-		{"pubkey doesn't match addr, simulate off", args{acc1, StdSignature{PubKey: priv2.PubKey()}, false}, true},
-		{"pubkey doesn't match addr, simulate on", args{acc1, StdSignature{PubKey: priv2.PubKey()}, true}, false},
+		{"no sigs, simulate off", args{acc1, StdSingleSignature{}, false}, true},
+		{"no sigs, simulate on", args{acc1, StdSingleSignature{}, true}, false},
+		{"no sigs, account with pub, simulate on", args{acc2, StdSingleSignature{}, true}, false},
+		{"pubkey doesn't match addr, simulate off", args{acc1, NewStdSingleSignature(priv2.PubKey(), nil), false}, true},
+		{"pubkey doesn't match addr, simulate on", args{acc1, NewStdSingleSignature(priv2.PubKey(), nil), true}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

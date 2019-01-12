@@ -58,7 +58,7 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 
 	sigCount := 0
 	for i := 0; i < len(stdSigs); i++ {
-		sigCount += countSubKeys(stdSigs[i].PubKey)
+		sigCount += countSubKeys(stdSigs[i].PubKey())
 		if uint64(sigCount) > DefaultTxSigLimit {
 			return sdk.ErrTooManySignatures(
 				fmt.Sprintf("signatures: %d, limit: %d", sigCount, DefaultTxSigLimit),
@@ -186,9 +186,31 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 }
 
 // Standard Signature
-type StdSignature struct {
-	crypto.PubKey `json:"pub_key"` // optional
-	Signature     []byte           `json:"signature"`
+type StdSignature interface {
+	PubKey() crypto.PubKey // optional
+	Signature() []byte
+}
+
+// StdSingleSignature is a single-signature implementation
+// of the StdSignature interface.
+type StdSingleSignature struct {
+	PK  crypto.PubKey `json:"pub_key"` // optional
+	Sig []byte        `json:"signature"`
+}
+
+// NewStdSingleSignature builds a new single-signature StdSignature object.
+func NewStdSingleSignature(pubkey crypto.PubKey, sig []byte) StdSignature {
+	return StdSingleSignature{PK: pubkey, Sig: sig}
+}
+
+// PubKey returns the SinglePubKey field.
+func (ss StdSingleSignature) PubKey() crypto.PubKey {
+	return ss.PK
+}
+
+// Signature returns the Sig field of the object.
+func (ss StdSingleSignature) Signature() []byte {
+	return ss.Sig
 }
 
 // logic for standard transaction decoding

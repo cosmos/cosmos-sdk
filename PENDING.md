@@ -29,7 +29,8 @@ BREAKING CHANGES
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
   meter utilization during aborted ante handler executions.
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
-  
+  * [\#2222](https://github.com/cosmos/cosmos-sdk/pull/3283) [x/auth] `StdSignature` is now an interface. `StdSingleSignature` is the new concrete object for single sigs.
+
 * Tendermint
   * \#3279 Upgrade to Tendermint 0.28.0-dev0
 

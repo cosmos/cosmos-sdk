@@ -221,10 +221,7 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 			panic(err)
 		}
 
-		sigs[i] = auth.StdSignature{
-			PubKey:    p.PubKey(),
-			Signature: sig,
-		}
+		sigs[i] = auth.NewStdSingleSignature(p.PubKey(), sig)
 	}
 
 	return auth.NewStdTx(msgs, fee, sigs, memo)

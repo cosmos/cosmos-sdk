@@ -167,7 +167,7 @@ func processSig(
 	}
 
 	consumeSignatureVerificationGas(ctx.GasMeter(), pubKey, params)
-	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
+	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature()) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
@@ -206,7 +206,7 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 	}
 
 	if pubKey == nil {
-		pubKey = sig.PubKey
+		pubKey = sig.PubKey()
 		if pubKey == nil {
 			return nil, sdk.ErrInvalidPubKey("PubKey not found").Result()
 		}

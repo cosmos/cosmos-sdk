@@ -20,7 +20,8 @@ This module will be used in the Cosmos Hub.
         1. [Vesting Account](state.md#vestingaccount)
 1. **[Types](types.md)**
     1. [StdFee](types.md#stdfee)
-    1. [StdSignature](types.md#stdsignature)
+    1. [StdSignature](types.md#stdsignature-interface)
+    1. [StdSingleSignature](types.md#stdsinglesignature)
     1. [StdTx](types.md#stdtx)
     1. [StdSignDoc](types.md#stdsigndoc)
 1. **[Keepers](keepers.md)**

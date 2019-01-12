@@ -18,16 +18,27 @@ type StdFee struct {
 }
 ```
 
-### StdSignature
+### StdSignature Interface
 
 A `StdSignature` is the combination of an optional public key and a cryptographic signature
 as a byte array. The SDK is agnostic to particular key or signature formats and supports any
 supported by the `PubKey` interface.
 
 ```golang
-type StdSignature struct {
-  PubKey    PubKey
-  Signature []byte
+type StdSignature interface {
+	PubKey() crypto.PubKey
+	Signature() []byte
+}
+```
+
+### StdSingleSignature
+
+`StdSingleSignature` is a single signature implmentation of the `StdSignature` interface.
+
+```golang
+type StdSingleSignature struct {
+	PK  crypto.PubKey `json:"pub_key"`
+	Sig []byte        `json:"signature"`
 }
 ```
 

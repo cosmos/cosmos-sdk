@@ -3,21 +3,12 @@
 In this section we describe the processing of the transactions and the
 corresponding updates to the state.
 
-Notes:
- - `tx` denotes a reference to the transaction being processed
- - `sender` denotes the address of the sender of the transaction
- - `getXxx`, `setXxx`, and `removeXxx` functions are used to retrieve and
-   modify objects from the store
- - `sdk.Dec` refers to a decimal type specified by the SDK.
- - `sdk.Int` refers to an integer type specified by the SDK.
- 
+## MsgCreateValidator
 
-## TxCreateValidator
-
- - triggers: `distribution.CreateValidatorDistribution`
+A validator is created using the `MsgCreateValidator` transaction. 
 
 ```golang
-type TxCreateValidator struct {
+type MsgCreateValidator struct {
     Description    Description
     Commission     Commission
 
@@ -28,16 +19,17 @@ type TxCreateValidator struct {
 }
 ```
 
-A validator is created using the `TxCreateValidator` transaction. 
 This transaction is expected to fail if: 
+
  - another validator with this operator address is already registered
  - another validator with this pubkey is already registered
  - the initial self-delegation tokens are of a denom not specified as the
    bonding denom 
  - the commission parameters are faulty, namely:
    - `MaxRate` is either > 1 or < 0 
-   - The initial `Rate` is either negative or > `MaxRate`
-   - The initial `MaxChangeRate` is either negative or > `MaxRate`
+   - the initial `Rate` is either negative or > `MaxRate`
+   - the initial `MaxChangeRate` is either negative or > `MaxRate`
+ - the description fields are too large
  
 This transaction creates and stores the `Validator` object at appropriate
 indexes.  Additionally a self-delegation is made with the inital tokens
@@ -45,80 +37,57 @@ delegation tokens `Delegation`.  the validator always starts as unbonded but
 may be bonded in the first end-block. 
 
 
-## TxEditValidator
+## MsgEditValidator
 
-If either the `Description`, `Commission`, or the `ValidatorAddr` need to be
-updated, the `TxEditCandidacy` transaction should be sent from the operator
-account:
+The `Description`, `CommissionRate` of a validator can be updated using the
+`MsgEditCandidacy`.  
 
 ```golang
-type TxEditCandidacy struct {
+type MsgEditCandidacy struct {
     Description     Description
     ValidatorAddr   sdk.ValAddress
     CommissionRate  sdk.Dec
 }
 ```
 
-editCandidacy(tx TxEditCandidacy):
-    validator, ok := getValidator(tx.ValidatorAddr)
-    if !ok return err // validator must exist
+This transaction is expected to fail if: 
 
-    // Attempt to update the validator's description. The description provided
-    // must be valid.
-    description, err := updateDescription(validator, tx.Description)
-    if err != nil return err
+ - the initial `CommissionRate` is either negative or > `MaxRate`
+ - the `CommissionRate` has already been updated within the previous 24 hours
+ - the `CommissionRate` is > `MaxChangeRate`
+ - the description fields are too large
 
-    // a validator is not required to update it's commission rate
-    if tx.CommissionRate != nil {
-        // Attempt to update a validator's commission rate. The rate provided
-        // must be valid. It's rate can only be updated once a day.
-        err := updateValidatorCommission(validator, tx.CommissionRate)
-        if err != nil return err
-    }
+This transaction stores the updated `Validator` object. 
 
-    // set the validator and public key
-    setValidator(validator)
-
-    tags := createTags(tx)
-    return tags
-
-### TxDelegate
-
- - triggers: `distribution.CreateOrModDelegationDistribution`
+### MsgDelegate
 
 Within this transaction the delegator provides coins, and in return receives
-some amount of their validator's delegator-shares that are assigned to
-`Delegation.Shares`.
+some amount of their validator's (newly created) delegator-shares that are
+assigned to `Delegation.Shares`. 
 
 ```golang
-type TxDelegate struct {
+type MsgDelegate struct {
 	DelegatorAddr sdk.Address
 	ValidatorAddr sdk.Address
 	Amount        sdk.Coin
 }
-
-delegate(tx TxDelegate):
-    pool = getPool()
-    if validator.Status == Jailed return
-
-    delegation = getDelegatorBond(DelegatorAddr, ValidatorAddr)
-    if delegation == nil then delegation = NewDelegation(DelegatorAddr, ValidatorAddr)
-
-    validator, pool, issuedDelegatorShares = validator.addTokensFromDel(tx.Amount, pool)
-    delegation.Shares += issuedDelegatorShares
-
-    setDelegation(delegation)
-    updateValidator(validator)
-    setPool(pool)
-    return
 ```
 
-### TxStartUnbonding
+This transaction is expected to fail if: 
+
+ - the validator is does not exist
+ - the validator is jailed 
+
+If an existing `Delegation` object for provided addresses does not already
+exist than it is created as part of this transaction otherwise the existing
+`Delegation` is updated to include the newly received shares. 
+
+### MsgBeginUnbonding
 
 Delegator unbonding is defined with the following transaction:
 
 ```golang
-type TxStartUnbonding struct {
+type MsgBeginUnbonding struct {
 	DelegatorAddr sdk.Address
 	ValidatorAddr sdk.Address
 	Shares        string
@@ -166,13 +135,14 @@ startUnbonding(tx TxStartUnbonding):
     return
 ```
 
-### TxRedelegation
+### MsgBeginRedelegate
 
 The redelegation command allows delegators to instantly switch validators. Once
-the unbonding period has passed, the redelegation is automatically completed in the EndBlocker.
+the unbonding period has passed, the redelegation is automatically completed in
+the EndBlocker.
 
 ```golang
-type TxRedelegate struct {
+type MsgBeginRedelegate struct {
     DelegatorAddr Address
     ValidatorFrom Validator
     ValidatorTo   Validator

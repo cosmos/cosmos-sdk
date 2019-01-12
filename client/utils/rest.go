@@ -160,7 +160,7 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 			return false
 		}
 	}
-	if len(br.Name) == 0 {
+	if !br.GenerateOnly && len(br.Name) == 0 {
 		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
 		return false
 	}

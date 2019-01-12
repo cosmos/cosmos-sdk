@@ -103,6 +103,7 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, txBldr 
 type BaseReq struct {
 	Name          string    `json:"name"`
 	Password      string    `json:"password"`
+	From          string    `json:"from"` // optional for generate only requests
 	Memo          string    `json:"memo"`
 	ChainID       string    `json:"chain_id"`
 	AccountNumber uint64    `json:"account_number"`
@@ -116,12 +117,13 @@ type BaseReq struct {
 
 // NewBaseReq creates a new basic request instance and sanitizes its values
 func NewBaseReq(
-	name, password, memo, chainID string, gas, gasAdjustment string,
+	name, password, from, memo, chainID string, gas, gasAdjustment string,
 	accNumber, seq uint64, fees sdk.Coins, genOnly, simulate bool) BaseReq {
 
 	return BaseReq{
 		Name:          strings.TrimSpace(name),
 		Password:      password,
+		From:          strings.TrimSpace(from),
 		Memo:          strings.TrimSpace(memo),
 		ChainID:       strings.TrimSpace(chainID),
 		Fees:          fees,
@@ -137,7 +139,7 @@ func NewBaseReq(
 // Sanitize performs basic sanitization on a BaseReq object.
 func (br BaseReq) Sanitize() BaseReq {
 	newBr := NewBaseReq(
-		br.Name, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
+		br.Name, br.Password, br.From, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
 		br.AccountNumber, br.Sequence, br.Fees, br.GenerateOnly, br.Simulate,
 	)
 	return newBr

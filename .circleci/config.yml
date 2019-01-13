@@ -308,19 +308,24 @@ jobs:
   docker_image:
     <<: *linux_defaults
     steps:
+      - attach_workspace:
+          at: /tmp/workspace
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
       - run: |
-          docker build -t tendermint/gaia:$CIRCLE_SHA1 .
+          GAIAD_VERSION=`/tmp/workspace/bin/gaiad version`
+          docker build -t tendermint/gaia:$GAIAD_VERSION .
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push tendermint/gaia:$CIRCLE_SHA1
+          docker push tendermint/gaia:$GAIAD_VERSION
 
 workflows:
   version: 2
   test-suite:
     jobs:
-      - docker_image
+      - docker_image:
+          requires:
+            - setup_dependencies
       - macos_ci:
           filters:
             branches:

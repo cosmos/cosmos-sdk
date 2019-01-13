@@ -22,10 +22,12 @@ import (
 )
 
 const (
-	flagTags  = "tags"
-	flagAny   = "any"
-	flagPage  = "page"
-	flagLimit = "limit"
+	flagTags     = "tags"
+	flagAny      = "any"
+	flagPage     = "page"
+	flagLimit    = "limit"
+	defaultPage  = 1
+	defaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
 )
 
 // default client command to search through tagged transactions
@@ -96,8 +98,8 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
-	cmd.Flags().Int32(flagPage, 1, "Query a specific page of paginated results")
-	cmd.Flags().Int32(flagLimit, 30, "Query number of transactions results per page returned")
+	cmd.Flags().Int32(flagPage, defaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int32(flagLimit, defaultLimit, "Query number of transactions results per page returned")
 	return cmd
 }
 
@@ -208,7 +210,7 @@ func parseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) 
 		var value string
 		value, err = url.QueryUnescape(values[0])
 		if err != nil {
-			return
+			return tags, page, limit, err
 		}
 
 		var tag string
@@ -222,26 +224,27 @@ func parseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) 
 
 	pageStr := r.FormValue("page")
 	if pageStr == "" {
-		pageStr = "1"
-	}
-	page, err = strconv.Atoi(pageStr)
-	if err != nil {
-		return
-	} else if page <= 0 {
-		err = errors.New("page must greater than 0")
-		return
+		page = defaultPage
+	} else {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			return tags, page, limit, err
+		} else if page <= 0 {
+			return tags, page, limit, errors.New("page must greater than 0")
+		}
 	}
 
 	limitStr := r.FormValue("limit")
 	if limitStr == "" {
-		limitStr = "30" // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+		limit = defaultLimit
+	} else {
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			return tags, page, limit, err
+		} else if limit <= 0 {
+			return tags, page, limit, errors.New("limit must greater than 0")
+		}
 	}
-	limit, err = strconv.Atoi(limitStr)
-	if err != nil {
-		return
-	} else if limit <= 0 {
-		err = errors.New("limit must greater than 0")
-		return
-	}
-	return
+
+	return tags, page, limit, nil
 }

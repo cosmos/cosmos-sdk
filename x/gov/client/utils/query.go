@@ -9,6 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
 )
 
+const (
+	defaultPage  = 1
+	defaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
+)
+
 // Proposer contains metadata of a governance proposal used for querying a
 // proposer.
 type Proposer struct {
@@ -33,7 +38,7 @@ func QueryDepositsByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +83,7 @@ func QueryVotesByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +124,7 @@ func QueryVoteByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +167,7 @@ func QueryDepositByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +209,7 @@ func QueryProposerByTxQuery(
 
 	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
 	// support configurable pagination.
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags, 1, 30)
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}

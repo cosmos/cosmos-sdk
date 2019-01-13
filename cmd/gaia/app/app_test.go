@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -28,7 +28,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 	genesisState := NewGenesisState(
 		genaccs,
 		auth.DefaultGenesisState(),
-		stake.DefaultGenesisState(),
+		staking.DefaultGenesisState(),
 		mint.DefaultGenesisState(),
 		distr.DefaultGenesisState(),
 		gov.DefaultGenesisState(),

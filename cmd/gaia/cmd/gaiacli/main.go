@@ -30,15 +30,15 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	st "github.com/cosmos/cosmos-sdk/x/stake"
-	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
+	st "github.com/cosmos/cosmos-sdk/x/staking"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	distClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	slashingClient "github.com/cosmos/cosmos-sdk/x/slashing/client"
-	stakeClient "github.com/cosmos/cosmos-sdk/x/stake/client"
+	stakingClient "github.com/cosmos/cosmos-sdk/x/staking/client"
 
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
@@ -66,7 +66,7 @@ func main() {
 	mc := []sdk.ModuleClients{
 		govClient.NewModuleClient(gv.StoreKey, cdc),
 		distClient.NewModuleClient(dist.StoreKey, cdc),
-		stakeClient.NewModuleClient(st.StoreKey, cdc),
+		stakingClient.NewModuleClient(st.StoreKey, cdc),
 		slashingClient.NewModuleClient(sl.StoreKey, cdc),
 	}
 
@@ -157,7 +157,7 @@ func registerRoutes(rs *lcd.RestServer) {
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, at.StoreKey)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	stake.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	staking.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	gov.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }

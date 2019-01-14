@@ -3,7 +3,7 @@
 Fees serve two purposes for an operator of the network.
 
 Fees limit the growth of the state stored by every full node and it allows for
-a general purpose for censorship of transactions of little economic value. Fees
+general purpose censorship of transactions of little economic value. Fees
 are best suited as an anti-spam mechanism where validators are disinterested in
 the use of the network and identities of users.
 

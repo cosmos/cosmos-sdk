@@ -731,12 +731,12 @@ type sendReq struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doDelegate(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins, generateOnly bool) string {
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
 	msg := msgDelegationsInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
@@ -748,11 +748,7 @@ func doDelegate(t *testing.T, port, name, password string,
 	res, body := Request(t, port, "POST", fmt.Sprintf("/staking/delegators/%s/delegations", delAddr.String()), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var result ctypes.ResultBroadcastTxCommit
-	err = cdc.UnmarshalJSON([]byte(body), &result)
-	require.Nil(t, err)
-
-	return result
+	return body
 }
 
 type msgDelegationsInput struct {
@@ -764,13 +760,13 @@ type msgDelegationsInput struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doBeginUnbonding(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins, generateOnly bool) string {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
 	msg := msgBeginUnbondingInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
@@ -783,11 +779,7 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 	res, body := Request(t, port, "POST", fmt.Sprintf("/staking/delegators/%s/unbonding_delegations", delAddr), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var result ctypes.ResultBroadcastTxCommit
-	err = cdc.UnmarshalJSON([]byte(body), &result)
-	require.Nil(t, err)
-
-	return result
+	return body
 }
 
 type msgBeginUnbondingInput struct {
@@ -799,14 +791,14 @@ type msgBeginUnbondingInput struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doBeginRedelegation(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount int64, fees sdk.Coins, generateOnly bool) string {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
 
 	msg := msgBeginRedelegateInput{
 		BaseReq:          baseReq,
@@ -821,11 +813,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	res, body := Request(t, port, "POST", fmt.Sprintf("/staking/delegators/%s/redelegations", delAddr), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var result ctypes.ResultBroadcastTxCommit
-	err = cdc.UnmarshalJSON([]byte(body), &result)
-	require.Nil(t, err)
-
-	return result
+	return body
 }
 
 type msgBeginRedelegateInput struct {

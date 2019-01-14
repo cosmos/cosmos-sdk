@@ -399,8 +399,11 @@ func TestBonding(t *testing.T) {
 	acc := getAccount(t, port, addr)
 	initialBalance := acc.GetCoins()
 
+	var resultTx ctypes.ResultBroadcastTxCommit
 	// create bond TX
-	resultTx := doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees)
+	body := doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees, false)
+	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
+	require.Nil(t, err)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -442,7 +445,9 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
 
 	// testing unbonding
-	resultTx = doBeginUnbonding(t, port, name1, pw, addr, operAddrs[0], 30, fees)
+	body = doBeginUnbonding(t, port, name1, pw, addr, operAddrs[0], 30, fees, false)
+	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
+	require.Nil(t, err)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -471,7 +476,9 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, int64(30), unbonding.Balance.Amount.Int64())
 
 	// test redelegation
-	resultTx = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], 30, fees)
+	body = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], 30, fees, false)
+	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
+	require.Nil(t, err)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -678,7 +685,9 @@ func TestVote(t *testing.T) {
 	require.Equal(t, sdk.ZeroDec(), tally.Yes, "tally should be 0 as the address is not bonded")
 
 	// create bond TX
-	resultTx = doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees)
+	body := doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees, false)
+	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
+	require.Nil(t, err)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// verify balance

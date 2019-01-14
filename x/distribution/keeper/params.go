@@ -11,7 +11,7 @@ func ParamTypeTable() params.TypeTable {
 		ParamStoreKeyCommunityTax, sdk.Dec{},
 		ParamStoreKeyBaseProposerReward, sdk.Dec{},
 		ParamStoreKeyBonusProposerReward, sdk.Dec{},
-		ParamStoreKeyWithdrawAddrEnabled, true,
+		ParamStoreKeyWithdrawAddrEnabled, false,
 	)
 }
 

@@ -1,114 +1,115 @@
-# Service Providers
+# 서비스 제공자(Service Providers)
 
-We define 'service providers' as entities providing services for end-users that involve some form of interaction with a Cosmos-SDK based blockchain (this includes the Cosmos Hub). More specifically, this document will be focused around interactions with tokens.
+'서비스 제공자'는 코스모스 SDK 기반 블록체인(코스모스 허브도 포함됩니다)과 교류하는 서비스를 엔드유저에게 제공하는 특정 인원/기관을 뜻합니다. 이 문서는 주로 토큰 인터랙션에 대한 정보를 다룹니다.
 
-This section does not concern wallet builders that want to provide [Light-Client](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/light) functionalities. Service providers are expected to act as trusted point of contact to the blockchain for their end-users. 
+다음 항목은 [Light-Client](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/light) 기능을 제공하려는 월렛 개발자들에게 해당하지 않습니다. 서비스 제공자는 엔드 유저와 블록체인을 이어주는 신뢰할 수 있는 기관/개인입니다.
 
-## High-level description of the architecture
+## 보편적 아키텍처 설명
 
-There are three main pieces to consider:
+다음 세가지 항목을 고려해야 합니다:
 
-- Full-nodes: To interact with the blockchain. 
-- Rest Server: This acts as a relayer for HTTP calls.
-- Rest API: Define available endpoints for the Rest Server.
+- 풀 노드(Full-nodes): 블록체인과의 인터랙션. 
+- REST 서버(Rest Server): HTTP 콜을 전달하는 역할.
+- REST API: REST 서버의 활용 가능한 엔드포인트를 정의.
 
-## Running a Full-Node
+## 풀노드 운영하기
 
-### Installation and configuration
+### 설치 및 설정
 
-We will describe the steps to run and interract with a full-node for the Cosmos Hub. For other SDK-based blockchain, the process should be similar. 
+다음은 코스모스 허브의 풀노드를 설정하고 운용하는 방법입니다. 다른 코스모스 SDK 기반 블록체인 또한 비슷한 절차를 가집니다.
 
-First, you need to [install the software](../getting-started/installation.md).
+우선 [소프트웨어를 설치하세요](../getting-started/installation.md).
 
-Then, you can start [running a full-node](../getting-started/join-testnet.md).
+이후, [풀노드를 운영하세요](../getting-started/join-testnet.md).
 
-### Command-Line interface
+### 커맨드 라인 인터페이스
 
-Next you will find a few useful CLI commands to interact with the Full-Node.
+다음은 풀노드를 이용할 수 있는 유용한 CLI 커맨드입니다.
 
-#### Creating a key-pair
+#### 키페어 생성하기
 
-To generate a new key (default secp256k1 elliptic curve):
+새로운 키를 생성하기 위해서는 (기본적으로 secp256k1 엘립틱 커브 기반):
 
 ```bash
 gaiacli keys add <your_key_name>
 ```
 
-You will be asked to create a passwords (at least 8 characters) for this key-pair. The command returns 4 informations:
+이후 해당 키페어에 대한 비밀번호(최소 8글지)를 생성할 것을 요청받습니다. 커맨드는 다음 4개 정보를 리턴합니다:
 
-- `NAME`: Name of your key
-- `ADDRESS`: Your address. Used to receive funds.
-- `PUBKEY`: Your public key. Useful for validators.
-- `Seed phrase`: 12-words phrase. **Save this seed phrase somewhere safe**. It is used to recover your private key in case you forget the password.
 
-You can see all your available keys by typing:
+- `NAME`: 키 이름
+- `ADDRESS`: 주소 (토큰 전송을 받을때 이용)
+- `PUBKEY`: 퍼블릭 키 (검증인들이 사용합니다)
+- `Seed phrase`: 12 단어 백업 시드키 **이 시드는 안전한 곳에 별도로 보관하셔야 합니다**. 이 시드키는 비밀번호를 잊었을 경우, 계정을 복구할때 사용됩니다.
+
+다음 명령어를 통해서 사용 가능한 모든 키를 확인할 수 있습니다:
 
 ```bash
 gaiacli keys list
 ```
 
-#### Checking your balance
+#### 잔고 조회하기
 
-After receiving tokens to your address, you can view your account's balance by typing:
+해당 주소로 토큰을 받으셨다면 다음 명령어로 계정 잔고를 확인하실 수 있습니다:
 
 ```bash
 gaiacli account <YOUR_ADDRESS>
 ```
 
-*Note: When you query an account balance with zero tokens, you will get this error: No account with address <YOUR_ADDRESS> was found in the state. This is expected! We're working on improving our error messages.*
+*참고: 토큰이 0인 계정을 조회하실 경우 다음과 같은 에러 메시지가 표시됩니다: 'No account with address <YOUR_ADDRESS> was found in the state'. 해당 에러 메시지는 정상이며 앞으로 에러 메시지 개선이 들어갈 예정입니다.*
 
-#### Sending coins via the CLI
+#### CLI로 코인 전송하기
 
-Here is the command to send coins via the CLI:
+다음은 CLI를 이용해 코인을 전송하는 명령어입니다:
 
 ```bash
 gaiacli send --amount=10faucetToken --chain-id=<name_of_testnet_chain> --from=<key_name> --to=<destination_address>
 ```
 
-Flags:
-- `--amount`: This flag accepts the format `<value|coinName>`.
-- `--chain-id`: This flag allows you to specify the id of the chain. There will be different ids for different testnet chains and main chain.
-- `--from`: Name of the key of the sending account.
-- `--to`: Address of the recipient.
+플래그:
+- `--amount`: `<value|coinName>` 포맷의 코인 이름/코인 수량입니다.
+- `--chain-id`: 이 플래그는 특정 체인의 ID를 설정할 수 있게 합니다. 앞으로 테스트넷 체인과 메인넷 체인은 각자 다른 아이디를 보유하게 됩니다.
+- `--from`: 전송하는 계정의 키 이름.
+- `--to`: 받는 계정의 주소.
 
 #### Help
 
-If you need to do something else, the best command you can run is:
+이 외의 기능을 이용하시려면 다음 명령어를 사용하세요:
 
 ```bash
 gaiacli 
 ```
 
-It will display all the available commands. For each command, you can use the `--help` flag to get further information. 
+사용 가능한 모든 명령어를 표기하며, 각 명령어 별로 `--help` 플래그를 사용하여 더 자세한 정보를 확인하실 수 있습니다.
 
-## Setting up the Rest Server
+## REST 서버 설정하기
 
-The Rest Server acts as an intermediary between the front-end and the full-node. You don't need to run the Rest Server on the same machine as the full-node. 
+REST 서버는 풀노드와 프론트엔드 사이의 중계역할을 합니다. REST 서버는 풀노드와 다른 머신에서도 운영이 가능합니다.
 
-To start the Rest server: 
+REST 서버를 시작하시려면: 
 
 ```bash
 gaiacli advanced rest-server --node=<full_node_address:full_node_port>
 ```
 
-Flags:
-- `--trust-node`: A boolean. If `true`, light-client verification is disabled. If `false`, it is disabled. For service providers, this should be set to `true`. By default, it set to `true`. 
-- `--node`: This is where you indicate the address and the port of your full-node. The format is <full_node_address:full_node_port>. If the full-node is on the same machine, the address should be `tcp://localhost:26657`.
-- `--laddr`: This flag allows you to specify the address and port for the Rest Server (default `1317`). You will mostly use this flag only to specify the port, in which case just input "localhost" for the address. The format is <rest_server_address:port>.
+플래그:
+- `--trust-node`: 불리언 값. `true`일 경우, 라이트 클라이언트 검증 절차가 비활성화 됩니다. 만약 `false`일 경우, 절차가 활성화됩니다. 서비스 제공자의 경우 `true` 값을 이용하시면 됩니다. 기본 값은 `true`입니다.
+- `--node`: 플노드의 주소와 포트를 입력하시면 됩니다. 만약 풀노드와 REST 서버가 동일한 머신에서 운영될 경우 주소 값은 `tcp://localhost:26657`로 설정하시면 됩니다.
+- `--laddr`: REST 서버의 주소와 포트를 정하는 플래그입니다(기본 값 `1317`). 대다수의 경우에는 포트를 정하기 위해서 사용됩니다, 이 경우 주소는 "localhost"로 입력하시면 됩니다. 포맷은 <rest_server_address:port>입니다.
 
 
-### Listening for incoming transaction
+### 트랜잭션 수신 모니터링
 
-The recommended way to listen for incoming transaction is to periodically query the blockchain through the following endpoint of the LCD:
+추천하는 수신 트랜잭션을 모니터링하는 방식은 LCD의 다음 엔드포인트를 정기적으로 쿼리하는 것입니다:
 
 [`/bank/balance/{account}`](https://cosmos.network/rpc/#/ICS20/get_bank_balances__address_)
 
 ## Rest API
 
-The Rest API documents all the available endpoints that you can use to interract with your full node. It can be found [here](https://cosmos.network/rpc/). 
+REST API는 풀노드와 인터랙션이 가능한 모든 엔드포인트를 정의합니다. 다음 [링크](https://cosmos.network/rpc/)에서 확인이 가능합니다.
 
-The API is divided into ICS standards for each category of endpoints. For example, the [ICS20](https://cosmos.network/rpc/#/ICS20/) describes the API to interact with tokens. 
+API는 엔드포인트의 카테고리에 따라 ICS 스탠다드로 나뉘어집니다. 예를 들어 [ICS20](https://cosmos.network/rpc/#/ICS20/)은 토큰 인터랙션 관련 API를 정의합니다.
 
-To give more flexibility to implementers, we have included the ability to generate unsigned transactions, [sign](https://cosmos.network/rpc/#/ICS20/post_tx_sign) and [broadcast](https://cosmos.network/rpc/#/ICS20/post_tx_broadcast) them with different API endpoints. This allows service providers to use their own signing mechanism for instance. 
+서비스 제공자에게 더 많은 유연성을 제공하기 위해서 미서명 트랜잭션을 생성, [서명](https://cosmos.network/rpc/#/ICS20/post_tx_sign)과 [전달](https://cosmos.network/rpc/#/ICS20/post_tx_broadcast) 등의 다양한 API 엔드포인트가 제공됩니다. 이는 서비스 제공자가 자체 서명 메커니즘을 이용할 수 있게 합니다.
 
-In order to generate an unsigned transaction (example with [coin transfer](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)), you need to use the flag `?generate_only`.
+미서명 트랜잭션을 생성하기 위해서는 (예를 들어 [코인 전송](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)) `?generate_only` 플래그를 이용하셔야 합니다.

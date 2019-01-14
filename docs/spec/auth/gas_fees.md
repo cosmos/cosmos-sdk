@@ -21,7 +21,7 @@ gas price.
 
 Tendermint does not currently provide fee based mempool prioritization and fee
 based mempool filtering is local to node and not part of consensus. But with
-minimum gas prices set, such a mechanism is possible.
+minimum gas prices set, such a mechanism could be implemented by node operators.
 
 Because the market value for tokens will fluctuate, validators are expected to
 dynamically adjust their minimum gas prices to a level that would encourage the

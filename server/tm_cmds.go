@@ -17,6 +17,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	versionString = `Tendermint: %s
+ABCI: %s
+BlockProtocol: %d
+P2PProtocol: %d
+`
+)
+
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
 func ShowNodeIDCmd(ctx *Context) *cobra.Command {
 	return &cobra.Command{
@@ -95,14 +103,13 @@ func VersionCmd(ctx *Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print tendermint libraries' version",
-		Long: `Print Tendermint's and ABCI's version numbers
+		Long: `Print protocols' and libraries' version numbers
 against which this app has been compiled.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			fmt.Printf(`tendermint: %s
-ABCI: %s
-`, tversion.Version, tversion.ABCIVersion)
+			fmt.Printf(versionString, tversion.Version, tversion.ABCIVersion,
+				tversion.BlockProtocol.Uint64(), tversion.P2PProtocol.Uint64())
 
 			return nil
 		},

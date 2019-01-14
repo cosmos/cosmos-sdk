@@ -2216,6 +2216,10 @@ definitions:
       password:
         type: string
         example: "12345678"
+      from:
+        type: string
+        example: "cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc"
+        description: Optional from address to use when only generating a transaction without signing it
       memo:
         type: string
         example: "Sent via Cosmos Voyager 🚀"

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -87,8 +88,9 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
+
 		if !stdTx.Fee.Amount.IsZero() {
-			signerAccs[0], res = DeductFees(signerAccs[0], stdTx.Fee)
+			signerAccs[0], res = DeductFees(ctx.BlockHeader().Time, signerAccs[0], stdTx.Fee)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -254,7 +256,7 @@ func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
 //
 // NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
 // the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func DeductFees(acc Account, fee StdFee) (Account, sdk.Result) {
+func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
@@ -262,14 +264,21 @@ func DeductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 		return nil, sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", feeAmount)).Result()
 	}
 
+	// get the resulting coins deducting the fees
 	newCoins, ok := coins.SafeMinus(feeAmount)
 	if ok {
 		errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
 		return nil, sdk.ErrInsufficientFunds(errMsg).Result()
 	}
 
-	err := acc.SetCoins(newCoins)
-	if err != nil {
+	// Validate the account has enough "spendable" coins as this will cover cases
+	// such as vesting accounts.
+	spendableCoins := acc.SpendableCoins(blockTime)
+	if _, hasNeg := spendableCoins.SafeMinus(feeAmount); hasNeg {
+		return nil, sdk.ErrInsufficientFunds(fmt.Sprintf("%s < %s", spendableCoins, feeAmount)).Result()
+	}
+
+	if err := acc.SetCoins(newCoins); err != nil {
 		// Handle w/ #870
 		panic(err)
 	}

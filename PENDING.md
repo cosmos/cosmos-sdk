@@ -20,7 +20,6 @@ BREAKING CHANGES
   * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
     in order to trigger a simulation of the tx before the actual execution.
 
-
 * SDK
   * [staking] \#2513 Validator power type from Dec -> Int
   * [staking] \#3233 key and value now contain duplicate fields to simplify code
@@ -53,6 +52,7 @@ FEATURES
 * SDK
   - \#3099 Implement F1 fee distribution
   - [\#2926](https://github.com/cosmos/cosmos-sdk/issues/2926) Add TxEncoder to client TxBuilder.
+  * \#2694 Vesting account implementation.
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
   the ante handler.
   * [\#3179](https://github.com/cosmos/cosmos-sdk/pull/3179) New CodeNoSignatures error code.
@@ -76,6 +76,7 @@ IMPROVEMENTS
   * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees in a local testnet.
   * [\#3250](https://github.com/cosmos/cosmos-sdk/pull/3250) Refactor integration tests and increase coverage
   * [\#2859](https://github.com/cosmos/cosmos-sdk/issues/2859) Rename `TallyResult` in gov proposals to `FinalTallyResult`
+  * [\#3286](https://github.com/cosmos/cosmos-sdk/pull/3286) Fix `gaiad gentx` printout of account's addresses, i.e. user bech32 instead of hex.
 
 * SDK
   * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation

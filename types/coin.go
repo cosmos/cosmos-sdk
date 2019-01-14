@@ -96,7 +96,7 @@ func (coin Coin) Minus(coinB Coin) Coin {
 	}
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
-	if !res.IsNotNegative() {
+	if res.IsNegative() {
 		panic("negative count amount")
 	}
 
@@ -107,14 +107,14 @@ func (coin Coin) Minus(coinB Coin) Coin {
 //
 // TODO: Remove once unsigned integers are used.
 func (coin Coin) IsPositive() bool {
-	return (coin.Amount.Sign() == 1)
+	return coin.Amount.Sign() == 1
 }
 
-// IsNotNegative returns true if coin amount is not negative and false otherwise.
+// IsNegative returns true if the coin amount is negative and false otherwise.
 //
 // TODO: Remove once unsigned integers are used.
-func (coin Coin) IsNotNegative() bool {
-	return (coin.Amount.Sign() != -1)
+func (coin Coin) IsNegative() bool {
+	return coin.Amount.Sign() == -1
 }
 
 //-----------------------------------------------------------------------------
@@ -425,7 +425,7 @@ func (coins Coins) IsNotNegative() bool {
 	}
 
 	for _, coin := range coins {
-		if !coin.IsNotNegative() {
+		if coin.IsNegative() {
 			return false
 		}
 	}
@@ -463,6 +463,12 @@ func removeZeroCoins(coins Coins) Coins {
 	}
 
 	return coins[:i]
+}
+
+func copyCoins(coins Coins) Coins {
+	copyCoins := make(Coins, len(coins))
+	copy(copyCoins, coins)
+	return copyCoins
 }
 
 //-----------------------------------------------------------------------------

@@ -647,7 +647,7 @@ func doSign(t *testing.T, port, name, password, chainID string, accnum, sequence
 	payload := authrest.SignBody{
 		Tx: msg,
 		BaseReq: utils.NewBaseReq(
-			name, password, "", "", chainID, "", "", accnum, sequence, nil, false, false,
+			name, password, sdk.AccAddress{}, "", chainID, "", "", accnum, sequence, nil, false, false,
 		),
 	}
 	json, err := cdc.MarshalJSON(payload)
@@ -703,7 +703,7 @@ func doTransferWithGas(t *testing.T, port, seed, name, memo, password string, ad
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
 
-	baseReq := utils.NewBaseReq(name, password, "", memo, chainID, gas,
+	baseReq := utils.NewBaseReq(name, password, addr, memo, chainID, gas,
 		fmt.Sprintf("%f", gasAdjustment), accnum, sequence, fees,
 		generateOnly, simulate,
 	)
@@ -736,7 +736,7 @@ func doDelegate(t *testing.T, port, name, password string,
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, delAddr.String(), "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
+	baseReq := utils.NewBaseReq(name, password, delAddr, "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
 	msg := msgDelegationsInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
@@ -766,7 +766,7 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, delAddr.String(), "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
+	baseReq := utils.NewBaseReq(name, password, delAddr, "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
 	msg := msgBeginUnbondingInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
@@ -798,7 +798,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	sequence := acc.GetSequence()
 
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, delAddr.String(), "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
+	baseReq := utils.NewBaseReq(name, password, delAddr, "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
 
 	msg := msgBeginRedelegateInput{
 		BaseReq:          baseReq,
@@ -1020,7 +1020,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, sdk.AccAddress{}, "", chainID, "", "", accnum, sequence, fees, false, false)
 
 	pr := postProposalReq{
 		Title:          "Test",
@@ -1116,7 +1116,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, sdk.AccAddress{}, "", chainID, "", "", accnum, sequence, fees, false, false)
 
 	dr := depositReq{
 		Depositor: proposerAddr,
@@ -1170,7 +1170,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, sdk.AccAddress{}, "", chainID, "", "", accnum, sequence, fees, false, false)
 
 	vr := voteReq{
 		Voter:   proposerAddr,
@@ -1302,7 +1302,7 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 func doUnjail(t *testing.T, port, seed, name, password string,
 	valAddr sdk.ValAddress, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", 1, 1, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, sdk.AccAddress{}, "", chainID, "", "", 1, 1, fees, false, false)
 
 	ur := unjailReq{
 		BaseReq: baseReq,

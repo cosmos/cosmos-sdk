@@ -262,7 +262,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	payload := authrest.SignBody{
 		Tx: msg,
 		BaseReq: utils.NewBaseReq(
-			name1, pw, "", "", viper.GetString(client.FlagChainID), "", "", accnum, sequence, nil, false, false,
+			name1, pw, sdk.AccAddress{}, "", viper.GetString(client.FlagChainID), "", "", accnum, sequence, nil, false, false,
 		),
 	}
 	json, err := cdc.MarshalJSON(payload)

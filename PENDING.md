@@ -29,6 +29,7 @@ BREAKING CHANGES
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
   meter utilization during aborted ante handler executions.
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
+  * \#3252 [x/distribution] Disable withdraw addresses with a parameter in the param store
   
 * Tendermint
   * \#3279 Upgrade to Tendermint 0.28.0-dev0

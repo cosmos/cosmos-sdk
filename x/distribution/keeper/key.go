@@ -27,6 +27,7 @@ var (
 	ParamStoreKeyCommunityTax        = []byte("communitytax")
 	ParamStoreKeyBaseProposerReward  = []byte("baseproposerreward")
 	ParamStoreKeyBonusProposerReward = []byte("bonusproposerreward")
+	ParamStoreKeyWithdrawAddrEnabled = []byte("withdrawaddrenabled")
 )
 
 // gets an address from a delegator's withdraw info key

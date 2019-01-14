@@ -27,7 +27,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 func handleMsgModifyWithdrawAddress(ctx sdk.Context, msg types.MsgSetWithdrawAddress, k keeper.Keeper) sdk.Result {
 
-	k.SetDelegatorWithdrawAddr(ctx, msg.DelegatorAddr, msg.WithdrawAddr)
+	err := k.SetWithdrawAddr(ctx, msg.DelegatorAddr, msg.WithdrawAddr)
+	if err != nil {
+		return err.Result()
+	}
 
 	tags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),

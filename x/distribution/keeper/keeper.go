@@ -35,6 +35,17 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, c
 	return keeper
 }
 
+// set withdraw address
+func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) sdk.Error {
+	if !k.GetWithdrawAddrEnabled(ctx) {
+		return types.ErrSetWithdrawAddrDisabled(k.codespace)
+	}
+
+	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
+
+	return nil
+}
+
 // withdraw rewards from a delegation
 func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) sdk.Error {
 	val := k.stakingKeeper.Validator(ctx, valAddr)

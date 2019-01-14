@@ -197,11 +197,7 @@ func (bva BaseVestingAccount) spendableCoins(vestingCoins sdk.Coins) sdk.Coins {
 		spendableCoin := sdk.NewCoin(coin.Denom, min)
 
 		if !spendableCoin.IsZero() {
-			if spendableCoins.Empty() {
-				spendableCoins = sdk.Coins{spendableCoin}
-			} else {
-				spendableCoins = spendableCoins.AddCoinByDenom(spendableCoin)
-			}
+			spendableCoins = spendableCoins.Plus(sdk.Coins{spendableCoin})
 		}
 	}
 
@@ -259,27 +255,15 @@ func (bva *BaseVestingAccount) trackDelegation(vestingCoins, amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			if bva.DelegatedVesting.Empty() {
-				bva.DelegatedVesting = sdk.Coins{xCoin}
-			} else {
-				bva.DelegatedVesting = bva.DelegatedVesting.AddCoinByDenom(xCoin)
-			}
+			bva.DelegatedVesting = bva.DelegatedVesting.Plus(sdk.Coins{xCoin})
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			if bva.DelegatedFree.Empty() {
-				bva.DelegatedFree = sdk.Coins{yCoin}
-			} else {
-				bva.DelegatedFree = bva.DelegatedFree.AddCoinByDenom(yCoin)
-			}
+			bva.DelegatedFree = bva.DelegatedFree.Plus(sdk.Coins{yCoin})
 		}
 
-		if bva.Coins.Empty() {
-			bva.Coins = sdk.Coins{coin}
-		} else {
-			bva.Coins = bva.Coins.SubCoinByDenom(coin)
-		}
+		bva.Coins = bva.Coins.Minus(sdk.Coins{coin})
 	}
 }
 
@@ -314,27 +298,15 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 
 		if !x.IsZero() {
 			xCoin := sdk.NewCoin(coin.Denom, x)
-			if bva.DelegatedFree.Empty() {
-				bva.DelegatedFree = sdk.Coins{xCoin}
-			} else {
-				bva.DelegatedFree = bva.DelegatedFree.SubCoinByDenom(xCoin)
-			}
+			bva.DelegatedFree = bva.DelegatedFree.Minus(sdk.Coins{xCoin})
 		}
 
 		if !y.IsZero() {
 			yCoin := sdk.NewCoin(coin.Denom, y)
-			if bva.DelegatedVesting.Empty() {
-				bva.DelegatedVesting = sdk.Coins{yCoin}
-			} else {
-				bva.DelegatedVesting = bva.DelegatedVesting.SubCoinByDenom(yCoin)
-			}
+			bva.DelegatedVesting = bva.DelegatedVesting.Minus(sdk.Coins{yCoin})
 		}
 
-		if bva.Coins.Empty() {
-			bva.Coins = sdk.Coins{coin}
-		} else {
-			bva.Coins = bva.Coins.AddCoinByDenom(coin)
-		}
+		bva.Coins = bva.Coins.Plus(sdk.Coins{coin})
 	}
 }
 

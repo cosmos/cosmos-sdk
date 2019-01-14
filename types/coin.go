@@ -172,26 +172,6 @@ func (coins Coins) IsValid() bool {
 	}
 }
 
-// AddCoinByDenom looks for a matching coin in coins that has the same denom as
-// other. Upon matching, the other coin is added to the matching coin. If the
-// coins are empty, then the coin will not be added. If the denom of the other
-// coin to be added does not exist in coins, the function returns the original
-// coins.
-func (coins Coins) AddCoinByDenom(other Coin) Coins {
-	res := copyCoins(coins)
-
-	// TODO: Perform binary search on coins to improve runtime performance
-	// (i.e. implement a generic binary coin search on Coins)
-	for i, coin := range res {
-		if coin.Denom == other.Denom {
-			res[i] = coin.Plus(other)
-			return res
-		}
-	}
-
-	return res
-}
-
 // Plus adds two sets of coins.
 //
 // e.g.
@@ -258,38 +238,6 @@ func (coins Coins) safePlus(coinsB Coins) Coins {
 			indexB++
 		}
 	}
-}
-
-// SubCoinByDenom looks for a matching coin in coins that has the same denom as
-// other. Upon matching, the other coin is subtracted from the matching coin. If
-// the resulting coin is zero, it is removed. If the denom of the coin to be
-// subtracted does not exist in coins, the function will panic.
-func (coins Coins) SubCoinByDenom(other Coin) Coins {
-	res := copyCoins(coins)
-
-	// TODO: Perform binary search on coins to improve runtime performance
-	// (i.e. implement a generic binary coin search on Coins)
-	for i, coin := range res {
-		if coin.Denom == other.Denom {
-			otherNeg := Coin{other.Denom, other.Amount.Neg()}
-
-			res[i] = coin.Plus(otherNeg)
-			if res[i].IsZero() {
-				// remove resulting zero coin
-				res = append(res[:i], res[i+1:]...)
-			} else if res[i].IsNegative() {
-				panic("negative coin amount")
-			}
-
-			if len(res) == 0 {
-				return nil
-			}
-
-			return res
-		}
-	}
-
-	panic(fmt.Sprintf("coin denom %s not found in coins", other.Denom))
 }
 
 // Minus subtracts a set of coins from another.

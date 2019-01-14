@@ -42,8 +42,6 @@ func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invarian
 		// cache, we don't want to write changes
 		ctx, _ = ctx.CacheContext()
 
-		outstanding := k.GetOutstandingRewards(ctx)
-
 		// iterate over all bonded validators, withdraw commission
 		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
 			_ = k.WithdrawValidatorCommission(ctx, val.GetOperator())
@@ -60,13 +58,6 @@ func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invarian
 
 		if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
 			return fmt.Errorf("Negative remaining coins: %v", remaining)
-		}
-
-		fmt.Printf("Outstanding: %v, remaining %v\n", outstanding, remaining)
-
-		// bound at 0.01% error
-		if len(remaining) > 0 && remaining[0].Amount.Quo(outstanding[0].Amount).GT(sdk.OneDec().Quo(sdk.NewDec(10000))) {
-			return fmt.Errorf("Error too high - outstanding %v, remaining %v", outstanding, remaining)
 		}
 
 		return nil

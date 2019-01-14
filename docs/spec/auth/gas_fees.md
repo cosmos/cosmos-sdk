@@ -19,7 +19,7 @@ any of the validator's minimum gas prices. In other words, a transaction must
 provide a fee of at least one denomination that matches a validator's minimum
 gas price.
 
-Tendermint does not currently provide fee based mempool prioritization and fee
+Tendermint does not currently provide fee based mempool prioritization, and fee
 based mempool filtering is local to node and not part of consensus. But with
 minimum gas prices set, such a mechanism could be implemented by node operators.
 

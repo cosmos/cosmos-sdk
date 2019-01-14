@@ -736,7 +736,7 @@ func doDelegate(t *testing.T, port, name, password string,
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
+	baseReq := utils.NewBaseReq(name, password, delAddr.String(), "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
 	msg := msgDelegationsInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
@@ -766,7 +766,7 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
+	baseReq := utils.NewBaseReq(name, password, delAddr.String(), "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
 	msg := msgBeginUnbondingInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
@@ -798,7 +798,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	sequence := acc.GetSequence()
 
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
+	baseReq := utils.NewBaseReq(name, password, delAddr.String(), "", chainID, "", "", accnum, sequence, fees, generateOnly, false)
 
 	msg := msgBeginRedelegateInput{
 		BaseReq:          baseReq,

@@ -400,9 +400,15 @@ func TestBonding(t *testing.T) {
 	initialBalance := acc.GetCoins()
 
 	var resultTx ctypes.ResultBroadcastTxCommit
+	var tx auth.StdTx
+	// generate bond TX
+	body := doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees, true)
+	err := cdc.UnmarshalJSON([]byte(body), &tx)
+	require.Nil(t, err)
+
 	// create bond TX
-	body := doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees, false)
-	err := cdc.UnmarshalJSON([]byte(body), &resultTx)
+	body = doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees, false)
+	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
 	require.Nil(t, err)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
@@ -444,6 +450,11 @@ func TestBonding(t *testing.T) {
 	bondedValidator := getDelegatorValidator(t, port, addr, operAddrs[0])
 	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
 
+	// generate unbond TX
+	body = doBeginUnbonding(t, port, name1, pw, addr, operAddrs[0], 60, fees, true)
+	err = cdc.UnmarshalJSON([]byte(body), &tx)
+	require.Nil(t, err)
+
 	// testing unbonding
 	body = doBeginUnbonding(t, port, name1, pw, addr, operAddrs[0], 30, fees, false)
 	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
@@ -474,6 +485,11 @@ func TestBonding(t *testing.T) {
 
 	unbonding := getUndelegation(t, port, addr, operAddrs[0])
 	require.Equal(t, int64(30), unbonding.Balance.Amount.Int64())
+
+	// generate redelegation TX
+	body = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], 30, fees, true)
+	err = cdc.UnmarshalJSON([]byte(body), &tx)
+	require.Nil(t, err)
 
 	// test redelegation
 	body = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], 30, fees, false)

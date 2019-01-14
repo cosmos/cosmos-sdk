@@ -2,11 +2,13 @@ package bank
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -197,4 +199,144 @@ func TestViewKeeper(t *testing.T) {
 	require.True(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 5)}))
 	require.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("foocoin", 15)}))
 	require.False(t, viewKeeper.HasCoins(ctx, addr, sdk.Coins{sdk.NewInt64Coin("barcoin", 5)}))
+}
+
+func TestVestingAccountSend(t *testing.T) {
+	input := setupTestInput()
+	now := tmtime.Now()
+	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
+	sendCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
+	bankKeeper := NewBaseKeeper(input.ak)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	input.ak.SetAccount(ctx, vacc)
+
+	// require that no coins be sendable at the beginning of the vesting schedule
+	_, err := bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
+	require.Error(t, err)
+
+	// receive some coins
+	vacc.SetCoins(origCoins.Plus(sendCoins))
+	input.ak.SetAccount(ctx, vacc)
+
+	// require that all vested coins are spendable plus any received
+	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+	_, err = bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins)
+	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.NoError(t, err)
+	require.Equal(t, origCoins, vacc.GetCoins())
+}
+
+func TestVestingAccountReceive(t *testing.T) {
+	input := setupTestInput()
+	now := tmtime.Now()
+	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
+	sendCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
+	bankKeeper := NewBaseKeeper(input.ak)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	acc := input.ak.NewAccountWithAddress(ctx, addr2)
+	input.ak.SetAccount(ctx, vacc)
+	input.ak.SetAccount(ctx, acc)
+	bankKeeper.SetCoins(ctx, addr2, origCoins)
+
+	// send some coins to the vesting account
+	bankKeeper.SendCoins(ctx, addr2, addr1, sendCoins)
+
+	// require the coins are spendable
+	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.Equal(t, origCoins.Plus(sendCoins), vacc.GetCoins())
+	require.Equal(t, vacc.SpendableCoins(now), sendCoins)
+
+	// require coins are spendable plus any that have vested
+	require.Equal(t, vacc.SpendableCoins(now.Add(12*time.Hour)), origCoins)
+}
+
+func TestDelegateCoins(t *testing.T) {
+	input := setupTestInput()
+	now := tmtime.Now()
+	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
+	delCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
+	bankKeeper := NewBaseKeeper(input.ak)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	acc := input.ak.NewAccountWithAddress(ctx, addr2)
+	input.ak.SetAccount(ctx, vacc)
+	input.ak.SetAccount(ctx, acc)
+	bankKeeper.SetCoins(ctx, addr2, origCoins)
+
+	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+
+	// require the ability for a non-vesting account to delegate
+	_, err := bankKeeper.DelegateCoins(ctx, addr2, delCoins)
+	acc = input.ak.GetAccount(ctx, addr2)
+	require.NoError(t, err)
+	require.Equal(t, delCoins, acc.GetCoins())
+
+	// require the ability for a vesting account to delegate
+	_, err = bankKeeper.DelegateCoins(ctx, addr1, delCoins)
+	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.NoError(t, err)
+	require.Equal(t, delCoins, vacc.GetCoins())
+}
+
+func TestUndelegateCoins(t *testing.T) {
+	input := setupTestInput()
+	now := tmtime.Now()
+	ctx := input.ctx.WithBlockHeader(abci.Header{Time: now})
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := sdk.Coins{sdk.NewInt64Coin("steak", 100)}
+	delCoins := sdk.Coins{sdk.NewInt64Coin("steak", 50)}
+	bankKeeper := NewBaseKeeper(input.ak)
+
+	addr1 := sdk.AccAddress([]byte("addr1"))
+	addr2 := sdk.AccAddress([]byte("addr2"))
+
+	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	acc := input.ak.NewAccountWithAddress(ctx, addr2)
+	input.ak.SetAccount(ctx, vacc)
+	input.ak.SetAccount(ctx, acc)
+	bankKeeper.SetCoins(ctx, addr2, origCoins)
+
+	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
+
+	// require the ability for a non-vesting account to delegate
+	_, err := bankKeeper.DelegateCoins(ctx, addr2, delCoins)
+	require.NoError(t, err)
+
+	// require the ability for a non-vesting account to undelegate
+	_, err = bankKeeper.UndelegateCoins(ctx, addr2, delCoins)
+	require.NoError(t, err)
+
+	acc = input.ak.GetAccount(ctx, addr2)
+	require.Equal(t, origCoins, acc.GetCoins())
+
+	// require the ability for a vesting account to delegate
+	_, err = bankKeeper.DelegateCoins(ctx, addr1, delCoins)
+	require.NoError(t, err)
+
+	// require the ability for a vesting account to undelegate
+	_, err = bankKeeper.UndelegateCoins(ctx, addr1, delCoins)
+	require.NoError(t, err)
+
+	vacc = input.ak.GetAccount(ctx, addr1).(*auth.ContinuousVestingAccount)
+	require.Equal(t, origCoins, vacc.GetCoins())
 }

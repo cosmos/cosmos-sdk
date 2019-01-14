@@ -8,7 +8,7 @@ are best suited as an anti-spam mechanism where validators are disinterested in
 the use of the network and identities of users.
 
 Fees are determined by the gas limits and gas prices transactions provide.
-Operators should set minimum gas prices when starting their nodes. They will set
+Operators should set minimum gas prices when starting their nodes. They must set
 the unit costs of gas in each token denomination they wish to support:
 
 `gaiad start ... --minimum-gas_prices=1steak,5photinos`

@@ -129,7 +129,7 @@ gaiacli tx send \
 :::
 
 ::: tip 참고
-해당 트랜잭션이 사용하는 가스 값의 최대치를 설정하기 원하시면 `--gas` 플래그를 이용하세요. 만약 `--gas=simulate`를 이용하시는 경우, 가스 비용은 자동으로 예측되어 사용됩니다. 예측된 가스 값과 실제 트랜잭션이 일어나는 사이에 블록체인 상태가 변경될 수 있으며, 기존 예측 수량에서 값이 변경이 될 수 있다는 점을 유의하세요. 변경 값은 `--gas-adjustment` 플래그를 이용해 설정하실 수 있으며 기본 값은 1.0입니다.
+해당 트랜잭션이 사용하는 가스 값의 최대치를 설정하기 원하시면 `--gas` 플래그를 이용하세요. 만약 `--gas=auto`를 이용하시는 경우, 트랜잭션이 실행되기 전에 가스 서플라이가 자동으로 예측됩니다. 예측된 가스 값과 실제 트랜잭션이 일어나는 사이에 블록체인 상태가 변경될 수 있으며, 기존 예측 수량에서 값이 변경이 될 수 있다는 점을 유의하세요. 변경 값은 `--gas-adjustment` 플래그를 이용해 설정하실 수 있으며 기본 값은 1.0입니다.
 :::
 
 이제 토큰을 전송한 계정과 토큰을 받은 계정의 잔고를 확인합니다:
@@ -215,7 +215,7 @@ gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 각 SDK 모듈에 대한 `tags`는 여기에서 확인할 수 있습니다:
 
 - [Common tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/types/tags.go#L57-L63)
-- [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/stake/tags/tags.go#L8-L24)
+- [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/staking/tags/tags.go#L8-L24)
 - [Governance tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/gov/tags/tags.go#L8-L22)
 - [Slashing tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/slashing/handler.go#L52)
 - [Distribution tags](https://github.com/cosmos/cosmos-sdk/blob/develop/x/distribution/tags/tags.go#L8-L17)
@@ -228,6 +228,32 @@ gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 
 ```bash
 gaiacli query tx [hash]
+```
+
+### 슬래싱
+
+#### 언제일(Unjailing)
+
+제일링 된 검증인을 언제일 하기 위해서는:
+
+```bash
+gaiacli tx slashing unjail --from <validator-operator-addr>
+```
+
+#### 서명 정보
+
+특정 검증인의 서명 정보를 확인하기 위해서는:
+
+```bash
+gaiacli query slashing signing-info <validator-pubkey>
+```
+
+#### 슬래싱 파라미터 조회
+
+현재 슬래싱 파라미터를 확인하기 위해서는:
+
+```bash
+gaiacli query slashing params
 ```
 
 ### 스테이킹
@@ -244,13 +270,13 @@ gaiacli query tx [hash]
 특정 체인의 모든 검증인 목록을 확인하기 위해서는 다음 명령을 실행하세요:
 
 ```bash
-gaiacli query stake validators
+gaiacli query staking validators
 ```
 
 특정 검증인에 대한 정보를 원하실 경우 다음 명령을 실행하세요:
 
 ```bash
-gaiacli query stake validator <account_cosmosval>
+gaiacli query staking validator <account_cosmosval>
 ```
 
 #### 토큰 본딩하기
@@ -259,7 +285,7 @@ gaiacli query stake validator <account_cosmosval>
 
 
 ```bash
-gaiacli tx stake delegate \
+gaiacli tx staking delegate \
   --amount=10steak \
   --validator=<validator> \
   --from=<key_name> \
@@ -286,7 +312,7 @@ gaiacli keys show [name] --bech val
 위임 요청을 검증인에게 전송한 경우, 관련 정보를 다음 명령을 통해 조회하실 수 있습니다:
 
 ```bash
-gaiacli query stake delegation \
+gaiacli query staking delegation \
 	--address-delegator=<account_cosmos> \
 	--validator=<account_cosmosval>
 ```
@@ -294,7 +320,7 @@ gaiacli query stake delegation \
 만약 검증인에 대한 모든 위임 상태를 확인하고 싶으실 경우 다음 명령을 이용하세요:
 
 ```bash
-gaiacli query stake delegations <account_cosmos>
+gaiacli query staking delegations <account_cosmos>
 ```
 
 과거 위임 기록에 대해서는 `--height` 플래그를 추가 하셔서 해당 블록 높이에 대한 기록을 조회하실 수 있습니다.
@@ -305,7 +331,7 @@ gaiacli query stake delegations <account_cosmos>
 
 
 ```bash
-gaiacli tx stake unbond \
+gaiacli tx staking unbond \
   --validator=<account_cosmosval> \
   --shares-fraction=0.5 \
   --from=<key_name> \
@@ -319,7 +345,7 @@ gaiacli tx stake unbond \
 언본딩 절차를 시작하신 후 관련 정보를 조회하는 방법은 다음과 같습니다:
 
 ```bash
-gaiacli query stake unbonding-delegation \
+gaiacli query staking unbonding-delegation \
 	--address-delegator=<account_cosmos> \
 	--validator=<account_cosmosval> \
 ```
@@ -327,13 +353,13 @@ gaiacli query stake unbonding-delegation \
 또는 모든 언본딩 정보를 확인하고 싶으신 경우:
 
 ```bash
-gaiacli query stake unbonding-delegations <account_cosmos>
+gaiacli query staking unbonding-delegations <account_cosmos>
 ```
 
 추가적으로 특정 검증인으로 부터 언본딩하는 정보를 확인하고 싶으신 경우:
 
 ```bash
-  gaiacli query stake unbonding-delegations-from <account_cosmosval>
+  gaiacli query staking unbonding-delegations-from <account_cosmosval>
 ```
 
 과거 언본딩 정보는 `--height` 플래그를 통해서 특정 블록 높이에 대한 언본딩 정보를 조회할 수 있습니다.
@@ -343,7 +369,7 @@ gaiacli query stake unbonding-delegations <account_cosmos>
 재위임이란 본딩 되어있는 토큰을 한 검증인으로 부터 다른 검증인으로 옮기는 것입니다:
 
 ```bash
-gaiacli tx stake redelegate \
+gaiacli tx staking redelegate \
   --addr-validator-source=<account_cosmosval> \
   --addr-validator-dest=<account_cosmosval> \
   --shares-fraction=50 \
@@ -360,7 +386,7 @@ gaiacli tx stake redelegate \
 재위임을 시작하신 후, 다음 명령을 통해서 관련 정보를 조회하실 수 있습니다:
 
 ```bash
-gaiacli query stake redelegation \
+gaiacli query staking redelegation \
 	--address-delegator=<account_cosmos> \
 	--addr-validator-source=<account_cosmosval> \
 	--addr-validator-dest=<account_cosmosval> \
@@ -369,13 +395,13 @@ gaiacli query stake redelegation \
 모든 검증인에 대한 재위임을 확인하고 싶으신 경우:
 
 ```bash
-gaiacli query stake redelegations <account_cosmos>
+gaiacli query staking redelegations <account_cosmos>
 ```
 
 특정 검증인에 대한 재위임을 확인하고 싶으신 경우:
 
 ```bash
-  gaiacli query stake redelegations-from <account_cosmosval>
+  gaiacli query staking redelegations-from <account_cosmosval>
 ```
 
 과거 재위임에 대한 정보는 다른 트랜잭션과 동일하게 `--height` 플래그를 이용하여 특정 블록 높이에 대한 재위임 정보를 확인하실 수 있습니다.
@@ -385,7 +411,7 @@ gaiacli query stake redelegations <account_cosmos>
 파라미터는 스테이킹의 하이-레벨 설정을 정의합니다. 현재 값은 다음 명령어를 통해서 조회할 수 있습니다:
 
 ```bash
-gaiacli query stake parameters
+gaiacli query staking parameters
 ```
 
 위 명령어는 다음과 같은 정보를 표기합니다:
@@ -401,7 +427,7 @@ gaiacli query stake parameters
 스티이킹 풀은 현재 상태(state)에 대한 다이내믹 파라미터(dynamic parameter)를 정의합니다. 관련 정보는 다음 명령을 통해 조회할 수 있습니다:
 
 ```bash
-gaiacli query stake pool
+gaiacli query staking pool
 ```
 
 `pool` 명령은 다음과 같은 정보에 대한 현재 값을 제공합니다:
@@ -466,6 +492,12 @@ gaiacli query gov proposals
 ```
 
 프로포절을 `voter` 또는 `depositor`로 필터링 해서 조회할 수도 있습니다.
+
+특정 거버넌스 프로포절의 제안자를 확인하기 위해서는:
+
+```bash
+gaiacli query gov proposer <proposal_id>
+```
 
 #### 보증금 추가하기
 

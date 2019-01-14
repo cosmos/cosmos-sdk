@@ -1,4 +1,4 @@
-# Gaia 퍼블릭 테스트넷에서 밸리데이터 운영하기
+# 퍼블릭 테스트넷에서 밸리데이터 운영하기
 
 ::: tip
 현재 테스트넷을 참가하는 방법은 [`testnet` repo](https://github.com/cosmos/testnets/tree/master/latest)에 있습니다. 최신 테스트넷에 대한 정보를 확인하시려면 해당 링크를 확인해주세요. 
@@ -6,18 +6,18 @@
 
 __Note__: 이 문서는 **퍼블릭 테스트넷** 검증인들을 위해서만 작성되었습니다.
 
-밸리데이터 노드를 세팅하기 전, [풀노드 세팅](/docs/getting-started/full-node.md) 가이드를 먼저 확인해주세요.
+밸리데이터 노드를 세팅하기 전, [풀노드 세팅](../join-testnet.md) 가이드를 먼저 확인해주세요.
 
 ## 밸리데이터란 무엇인가?
 
-[밸리데이터](/validators/overview.md)는 블록체인의 투표를 통해서 새로운 블록은 생성하는 역할을 합니다. 만약 특정 밸리데이터가 오프라인이 되거나, 같은 블록높이에서 중복 사이닝을 한 경우 해당 밸리데이터의 지분은 삭감(슬래싱, slashing) 됩니다. 노드를 DDOS 공격에서 보호하고 높은 접근성을 유지하기 위해서는 [센트리노드 아키텍쳐](/validators/validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks)에 대해서 읽어보세요.
+[밸리데이터](./overview.md)는 블록체인의 투표를 통해서 새로운 블록은 생성하는 역할을 합니다. 만약 특정 밸리데이터가 오프라인이 되거나, 같은 블록높이에서 중복 사이닝을 한 경우 해당 밸리데이터의 지분은 삭감(슬래싱, slashing) 됩니다. 노드를 DDOS 공격에서 보호하고 높은 접근성을 유지하기 위해서는 [센트리노드 아키텍쳐](./validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks)에 대해서 읽어보세요.
 
 
 ::: danger 경고
-코스모스 허브의 검증인이 되는 것을 검토하신다면, [보안에 대한 분석](/validators/security.md)을 사전에 하시기를 바랍니다.
+코스모스 허브의 검증인이 되는 것을 검토하신다면, [보안에 대한 분석](./security.md)을 사전에 하시기를 바랍니다.
 :::
 
-만약 [풀노드](/join-testnet.md)를 이미 운영중이시다면, 다음 항목을 건너뛰셔도 좋습니다.
+만약 [풀노드](../join-testnet.md)를 이미 운영중이시다면, 다음 항목을 건너뛰셔도 좋습니다.
 
 ## 밸리데이터 생성하기
 
@@ -31,12 +31,12 @@ gaiad tendermint show-validator
 다음은 `gaiad gentx` 명령을 입력하세요:
 
 ::: warning 참고
-보유하고 있는 `steak`이상을 이용하지 마십시오. 언제나 [Faucet](https://faucetcosmos.network/)을 통해서 추가 `steak`를 받으실 수 있습니다.
+보유하고 있는 `STAKE`이상을 이용하지 마십시오. 언제나 [Faucet](https://faucet.cosmos.network/)을 통해서 추가 `STAKE`를 받으실 수 있습니다.
 :::
 
 ```bash
-gaiacli tx stake create-validator \
-  --amount=5steak \
+gaiacli tx staking create-validator \
+  --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
@@ -89,8 +89,8 @@ __참고__: 이 명령어는 제네시스에서의 처리를 위해 `gentx`를 `
 이런 경우에는 위임자와 검증인의 서명이 둘다 필요합니다. 우선 서명이 되지 않은 `create-validator` 트랜잭션을 생성하신 후 `unsignedValTx`라는 파일에 저장하십시오:
 
 ```bash
-gaiacli tx stake create-validator \
-  --amount=5steak \
+gaiacli tx staking create-validator \
+  --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
@@ -139,7 +139,7 @@ __참고:__ 이 항목에서는 최신 테스트넷 관련 정보가 있는 [테
 gaiad collect-gentxs
 ```
 
-__참고:__ `gentx`에서 위임을 하는 계정에 스테이킹 토큰이 있는 것을 확인하세요. 만약 해당 계정에 토큰이 없다면 `collect-gentx`가 실패하게 됩니다.
+__참고:__ `gentx`에서 위임을 하는 계정에 스테이크(stake) 토큰이 있는 것을 확인하세요. 만약 해당 계정에 토큰이 없다면 `collect-gentx`가 실패하게 됩니다.
 
 이전에 실행하신 명령어는 모든 제네시스 트랜잭션을 모으고 `genesis.json`을 파이널라이즈(finalize)합니다. 설정이 올바르게 되었는지 확인하기 위해서는 노드를 시작하십시오: 
 
@@ -154,7 +154,7 @@ gaiad start
 `--identity` 값은 Keybase 또는 UPort 같은 시스템을 이용해서 신분(identity)를 검증하는데 이용될 수 있습니다. Keybase를 사용하시는 경우 `--identity`는 [keybase.io](https://keybase.io) 계정으로 생성하신 16자리 string 값이 입력되어야 합니다. 이런 절차는 다수의 온라인 네트워크에서 본인의 신분을 증명하는데 이용될 수 있습니다. 또한 Keybase API를 이용해서 Keybase 아바타를 가져와 밸리데이터 프로파일에 이용하실 수 있습니다.
 
 ```bash
-gaiacli tx stake edit-validator
+gaiacli tx staking edit-validator
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E \
@@ -174,7 +174,7 @@ __참고__: `commission-rate` 값은 다음의 규칙을 따라야 합니다:
 검증인의 정보는 다음 명령어로 확인이 가능합니다:
 
 ```bash
-gaiacli query stake validator <account_cosmos>
+gaiacli query staking validator <account_cosmos>
 ```
 
 ## 밸리데이터 서명 정보 추적하기

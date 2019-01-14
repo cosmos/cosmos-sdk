@@ -28,7 +28,6 @@
 
 자체적인 `gaia` 테스트넷 운영을 원하시는 경우 **[여기](./gaia/deploy-testnet.md)** 를 확인하세요 
 
-## Contribute
+## 기여하기
 
-See [this file](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md) for details of the build process and
-considerations when making changes.
+코스모스 도큐멘테이션 또는 코드 업데이트 규칙에 관련해서는 [이 파일](https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md)을 참고해주세요.

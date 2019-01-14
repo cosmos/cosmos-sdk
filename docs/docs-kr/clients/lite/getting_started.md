@@ -14,7 +14,7 @@ REST 서버를 가동하기 위해서는 다음과 같은 파라미터 값을 �
 예를 들어::
 
 ```bash
-gaiacli advanced rest-server --chain-id=test \
+gaiacli rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
     --node tcp://localhost:26657 \
     --trust-node=false
@@ -23,11 +23,11 @@ gaiacli advanced rest-server --chain-id=test \
 서버는 기본적으로 HTTPS를 확인합니다. 서버가 이용하는 SSL에 다음과 같은 추가 플래그를 설정하실 수 있습니다:
 
 ```bash
-gaiacli advanced rest-server --chain-id=test \
+gaiacli rest-server --chain-id=test \
     --laddr=tcp://localhost:1317 \
     --node tcp://localhost:26657 \
     --trust-node=false \
-    --certfile=mycert.pem --keyfile=mykey.key
+    --ssl-certfile=mycert.pem --ssl-keyfile=mykey.key
 ```
 
 만약 인증서 또는 키파일 세트가 제공되지 않을 경우, 자체적인 인증서가 생성되고 관련 지문(fingerprint)이 프린트(print) 됩니다. 만약 안전 계층을 비활성화하고 안전하지 않을 수 있는 HTTP 포트로 연결하시는 것을 원하시는 경우 `--insecure` 플래그를 추가해주세요.

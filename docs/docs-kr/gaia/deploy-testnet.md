@@ -33,8 +33,8 @@ gaiacli keys add validator
 
 # Add that key into the genesis.app_state.accounts array in the genesis file
 # NOTE: this command lets you set the number of coins. Make sure this account has some coins
-# with the genesis.app_state.stake.params.bond_denom denom, the default is STAKE
-gaiad add-genesis-account $(gaiacli keys show validator -a) 1000STAKE,1000validatorToken
+# with the genesis.app_state.staking.params.bond_denom denom, the default is staking
+gaiad add-genesis-account $(gaiacli keys show validator -a) 1000stake,1000validatortoken
 
 # Generate the transaction that creates your validator
 gaiad gentx --name validator

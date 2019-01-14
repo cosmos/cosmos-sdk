@@ -7,14 +7,14 @@
 공식 [Go 문서](https://golang.org/doc/install)를 따라서 `go`를 설치하십시오. `$GOPATH`, `$GOBIN`, 그리고 `$PATH`의 환경을 꼭 세팅하세요. 예시: 
 
 ```bash
-mkdir -p $HOME/go/bin
+mkdir -p $HOME/go/b4n
 echo "export GOPATH=$HOME/go" >> ~/.bash_profile
 echo "export GOBIN=$GOPATH/bin" >> ~/.bash_profile
 echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 ```
 
 ::: tip
-코스모스 SDK를 운영하기 위해서는 **Go 1.11** 이상 버전이 필요합니다.
+코스모스 SDK를 운영하기 위해서는 **Go 1.11.4+** 이상 버전이 필요합니다.
 :::
 
 ### 바이너리 설치하기
@@ -26,7 +26,7 @@ mkdir -p $GOPATH/src/github.com/cosmos
 cd $GOPATH/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
 cd cosmos-sdk && git checkout master
-make get_tools && make get_vendor_deps && make install
+make tools && make get_vendor_deps && make install
 ```
 
 > *참고*: 여기에서 문제가 발생한다면, Go의 최신 스테이블 버전이 설치되어있는지 확인하십시오.
@@ -41,4 +41,4 @@ $ gaiacli version
 
 ### 다음 절차
 
-축하합니다! 이제 [퍼블릭 테스트넷](./join-testnet.md)에 참가하시거나 or [프라이빗 테스트넷](./private-testnet.md)을 운영하실 수 있습니다.
+축하합니다! 이제 [퍼블릭 테스트넷](./join-testnet.md)에 참가하시거나 or [프라이빗 테스트넷](./deploy-testnet.md)을 운영하실 수 있습니다.

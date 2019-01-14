@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store"
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/store"
+
 	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/privval"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
@@ -78,7 +80,8 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			}
 			nodeID := string(nodeKey.ID())
 
-			pk := gaiaInit.ReadOrCreatePrivValidator(config.PrivValidatorFile())
+			pk := privval.LoadOrGenFilePV(config.PrivValidatorKeyFile(),
+				config.PrivValidatorStateFile()).GetPubKey()
 			genTx, appMessage, validator, err := server.SimpleAppGenTx(cdc, pk)
 			if err != nil {
 				return err

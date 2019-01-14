@@ -6,13 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // AllInvariants runs all invariants of the distribution module
 // Currently: total supply, positive power
-func AllInvariants(d distr.Keeper, stk stake.Keeper) simulation.Invariant {
-	sk := distr.StakeKeeper(stk)
+func AllInvariants(d distr.Keeper, stk staking.Keeper) simulation.Invariant {
+	sk := distr.StakingKeeper(stk)
 	return func(ctx sdk.Context) error {
 		err := ValAccumInvariants(d, sk)(ctx)
 		if err != nil {
@@ -31,7 +31,7 @@ func AllInvariants(d distr.Keeper, stk stake.Keeper) simulation.Invariant {
 }
 
 // ValAccumInvariants checks that the fee pool accum == sum all validators' accum
-func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
+func ValAccumInvariants(k distr.Keeper, sk distr.StakingKeeper) simulation.Invariant {
 
 	return func(ctx sdk.Context) error {
 		height := ctx.BlockHeight()
@@ -56,7 +56,7 @@ func ValAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 }
 
 // DelAccumInvariants checks that each validator del accum == sum all delegators' accum
-func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invariant {
+func DelAccumInvariants(k distr.Keeper, sk distr.StakingKeeper) simulation.Invariant {
 
 	return func(ctx sdk.Context) error {
 		height := ctx.BlockHeight()
@@ -133,7 +133,7 @@ func DelAccumInvariants(k distr.Keeper, sk distr.StakeKeeper) simulation.Invaria
 }
 
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
-func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant {
+func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		// we don't want to write the changes
 		ctx, _ = ctx.CacheContext()

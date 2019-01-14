@@ -33,7 +33,7 @@ Don't use more `STAKE` thank you have! You can always get more by using the [Fau
 :::
 
 ```bash
-gaiacli tx stake create-validator \
+gaiacli tx staking create-validator \
   --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
@@ -91,7 +91,7 @@ A `gentx` is a JSON file carrying a self-delegation. All genesis transactions ar
 In this case, you need both the signature of the validator and the delegator. Start by creating an unsigned `create-validator` transaction, and save it in a file called `unsignedValTx`: 
 
 ```bash
-gaiacli tx stake create-validator \
+gaiacli tx staking create-validator \
   --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
@@ -140,7 +140,7 @@ Once you've collected all genesis transactions in `~/.gaiad/config/gentx`, you c
 gaiad collect-gentxs
 ```
 
-__Note:__ The accounts from which you delegate in the `gentx` transactions need to possess staking tokens in the genesis file, otherwise `collect-gentx` will fail.
+__Note:__ The accounts from which you delegate in the `gentx` transactions need to possess stake tokens in the genesis file, otherwise `collect-gentx` will fail.
 
 The previous command will collect all genesis transactions and finalise `genesis.json`. To verify the correctness of the configuration and start the node run:
 
@@ -155,7 +155,7 @@ You can edit your validator's public description. This info is to identify your 
 The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
-gaiacli tx stake edit-validator
+gaiacli tx staking edit-validator
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E \
@@ -177,7 +177,7 @@ __Note__: The `commission-rate` value must adhere to the following invariants:
 View the validator's information with this command:
 
 ```bash
-gaiacli query stake validator <account_cosmos>
+gaiacli query staking validator <account_cosmos>
 ```
 
 ## Track Validator Signing Information

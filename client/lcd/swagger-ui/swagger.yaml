@@ -611,7 +611,7 @@ paths:
           description: No content about this account address
         500:
           description: Server internel error
-  /stake/delegators/{delegatorAddr}/delegations:
+  /staking/delegators/{delegatorAddr}/delegations:
     parameters:
     - in: path
       name: delegatorAddr
@@ -669,7 +669,7 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}:
+  /staking/delegators/{delegatorAddr}/delegations/{validatorAddr}:
     parameters:
     - in: path
       name: delegatorAddr
@@ -696,7 +696,7 @@ paths:
           description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/unbonding_delegations:
+  /staking/delegators/{delegatorAddr}/unbonding_delegations:
     parameters:
     - in: path
       name: delegatorAddr
@@ -765,7 +765,7 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
+  /staking/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
     parameters:
     - in: path
       name: delegatorAddr
@@ -794,7 +794,7 @@ paths:
           description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
-  /stake/redelegations:
+  /staking/redelegations:
     parameters:
     - in: query
       name: delegator
@@ -826,7 +826,7 @@ paths:
               $ref: "#/definitions/Redelegation"
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/redelegations:
+  /staking/delegators/{delegatorAddr}/redelegations:
     parameters:
     - in: path
       name: delegatorAddr
@@ -880,7 +880,7 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/validators:
+  /staking/delegators/{delegatorAddr}/validators:
     parameters:
     - in: path
       name: delegatorAddr
@@ -904,7 +904,7 @@ paths:
           description: Invalid delegator address
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/validators/{validatorAddr}:
+  /staking/delegators/{delegatorAddr}/validators/{validatorAddr}:
     parameters:
     - in: path
       name: delegatorAddr
@@ -931,7 +931,7 @@ paths:
           description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/txs:
+  /staking/delegators/{delegatorAddr}/txs:
     parameters:
     - in: path
       name: delegatorAddr
@@ -957,7 +957,7 @@ paths:
           description: Invalid delegator address
         500:
           description: Internal Server Error
-  /stake/validators:
+  /staking/validators:
     get:
       summary: Get all validator candidates
       tags:
@@ -973,7 +973,7 @@ paths:
               $ref: "#/definitions/Validator"
         500:
           description: Internal Server Error
-  /stake/validators/{validatorAddr}:
+  /staking/validators/{validatorAddr}:
     parameters:
     - in: path
       name: validatorAddr
@@ -995,7 +995,7 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
-  /stake/validators/{validatorAddr}/delegations:
+  /staking/validators/{validatorAddr}/delegations:
     parameters:
     - in: path
       name: validatorAddr
@@ -1019,7 +1019,7 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
-  /stake/validators/{validatorAddr}/unbonding_delegations:
+  /staking/validators/{validatorAddr}/unbonding_delegations:
     parameters:
     - in: path
       name: validatorAddr
@@ -1043,7 +1043,7 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
-  /stake/pool:
+  /staking/pool:
     get:
       summary: Get the current state of the staking pool
       tags:
@@ -1070,7 +1070,7 @@ paths:
                 type: string
         500:
           description: Internal Server Error
-  /stake/parameters:
+  /staking/parameters:
     get:
       summary: Get the current staking parameter values
       tags:

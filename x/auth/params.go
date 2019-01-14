@@ -42,7 +42,7 @@ type Params struct {
 	SigVerifyCostSecp256k1 uint64
 }
 
-// ParamTable for stake module
+// ParamTable for staking module
 func ParamTypeTable() params.TypeTable {
 	return params.NewTypeTable().RegisterParamSet(&Params{})
 }

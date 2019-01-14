@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
@@ -234,19 +234,19 @@ func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, 
 }
 
 //___________________________________________________________________________________
-// gaiacli tx stake
+// gaiacli tx staking
 
-// TxStakeCreateValidator is gaiacli tx stake create-validator
-func (f *Fixtures) TxStakeCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("gaiacli tx stake create-validator %v --from=%s --pubkey=%s", f.Flags(), from, consPubKey)
+// TxStakingCreateValidator is gaiacli tx staking create-validator
+func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.Coin, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("gaiacli tx staking create-validator %v --from=%s --pubkey=%s", f.Flags(), from, consPubKey)
 	cmd += fmt.Sprintf(" --amount=%v --moniker=%v --commission-rate=%v", amount, from, "0.05")
 	cmd += fmt.Sprintf(" --commission-max-rate=%v --commission-max-change-rate=%v", "0.20", "0.10")
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
-// TxStakeUnbond is gaiacli tx stake unbond
-func (f *Fixtures) TxStakeUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
-	cmd := fmt.Sprintf("gaiacli tx stake unbond %v --from=%s --validator=%s --shares-amount=%v", f.Flags(), from, validator, shares)
+// TxStakingUnbond is gaiacli tx staking unbond
+func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
+	cmd := fmt.Sprintf("gaiacli tx staking unbond %v --from=%s --validator=%s --shares-amount=%v", f.Flags(), from, validator, shares)
 	return executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -306,57 +306,57 @@ func (f *Fixtures) QueryTxs(tags ...string) []tx.Info {
 }
 
 //___________________________________________________________________________________
-// gaiacli query stake
+// gaiacli query staking
 
-// QueryStakeValidator is gaiacli query stake validator
-func (f *Fixtures) QueryStakeValidator(valAddr sdk.ValAddress, flags ...string) stake.Validator {
-	cmd := fmt.Sprintf("gaiacli query stake validator %s %v", valAddr, f.Flags())
+// QueryStakingValidator is gaiacli query staking validator
+func (f *Fixtures) QueryStakingValidator(valAddr sdk.ValAddress, flags ...string) staking.Validator {
+	cmd := fmt.Sprintf("gaiacli query staking validator %s %v", valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
-	var validator stake.Validator
+	var validator staking.Validator
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &validator)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return validator
 }
 
-// QueryStakeUnbondingDelegationsFrom is gaiacli query stake unbonding-delegations-from
-func (f *Fixtures) QueryStakeUnbondingDelegationsFrom(valAddr sdk.ValAddress, flags ...string) []stake.UnbondingDelegation {
-	cmd := fmt.Sprintf("gaiacli query stake unbonding-delegations-from %s %v", valAddr, f.Flags())
+// QueryStakingUnbondingDelegationsFrom is gaiacli query staking unbonding-delegations-from
+func (f *Fixtures) QueryStakingUnbondingDelegationsFrom(valAddr sdk.ValAddress, flags ...string) []staking.UnbondingDelegation {
+	cmd := fmt.Sprintf("gaiacli query staking unbonding-delegations-from %s %v", valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
-	var ubds []stake.UnbondingDelegation
+	var ubds []staking.UnbondingDelegation
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &ubds)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return ubds
 }
 
-// QueryStakeDelegationsTo is gaiacli query stake delegations-to
-func (f *Fixtures) QueryStakeDelegationsTo(valAddr sdk.ValAddress, flags ...string) []stake.Delegation {
-	cmd := fmt.Sprintf("gaiacli query stake delegations-to %s %v", valAddr, f.Flags())
+// QueryStakingDelegationsTo is gaiacli query staking delegations-to
+func (f *Fixtures) QueryStakingDelegationsTo(valAddr sdk.ValAddress, flags ...string) []staking.Delegation {
+	cmd := fmt.Sprintf("gaiacli query staking delegations-to %s %v", valAddr, f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
-	var delegations []stake.Delegation
+	var delegations []staking.Delegation
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &delegations)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return delegations
 }
 
-// QueryStakePool is gaiacli query stake pool
-func (f *Fixtures) QueryStakePool(flags ...string) stake.Pool {
-	cmd := fmt.Sprintf("gaiacli query stake pool %v", f.Flags())
+// QueryStakingPool is gaiacli query staking pool
+func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
+	cmd := fmt.Sprintf("gaiacli query staking pool %v", f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
-	var pool stake.Pool
+	var pool staking.Pool
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &pool)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return pool
 }
 
-// QueryStakeParameters is gaiacli query stake parameters
-func (f *Fixtures) QueryStakeParameters(flags ...string) stake.Params {
-	cmd := fmt.Sprintf("gaiacli query stake parameters %v", f.Flags())
+// QueryStakingParameters is gaiacli query staking parameters
+func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
+	cmd := fmt.Sprintf("gaiacli query staking parameters %v", f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
-	var params stake.Params
+	var params staking.Params
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &params)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)

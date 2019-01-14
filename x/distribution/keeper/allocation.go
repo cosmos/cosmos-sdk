@@ -35,7 +35,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower int64, totalPo
 	proposerReward := feesCollected.MulDec(proposerMultiplier)
 
 	// pay proposer
-	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposer)
+	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
 	k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
 	remaining := feesCollected.Minus(proposerReward)
 
@@ -46,7 +46,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower int64, totalPo
 	// allocate tokens proportionally to voting power
 	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range votes {
-		validator := k.stakeKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
 
 		// TODO likely we should only reward validators who actually signed the block.
 		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701

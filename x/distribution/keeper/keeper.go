@@ -7,13 +7,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// keeper of the stake store
+// keeper of the staking store
 type Keeper struct {
 	storeKey            sdk.StoreKey
 	cdc                 *codec.Codec
 	paramSpace          params.Subspace
 	bankKeeper          types.BankKeeper
-	stakeKeeper         types.StakeKeeper
+	stakingKeeper       types.StakingKeeper
 	feeCollectionKeeper types.FeeCollectionKeeper
 
 	// codespace
@@ -22,13 +22,13 @@ type Keeper struct {
 
 // create a new keeper
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
-	sk types.StakeKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
+	sk types.StakingKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:            key,
 		cdc:                 cdc,
 		paramSpace:          paramSpace.WithTypeTable(ParamTypeTable()),
 		bankKeeper:          ck,
-		stakeKeeper:         sk,
+		stakingKeeper:       sk,
 		feeCollectionKeeper: fck,
 		codespace:           codespace,
 	}
@@ -37,12 +37,12 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, c
 
 // withdraw rewards from a delegation
 func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) sdk.Error {
-	val := k.stakeKeeper.Validator(ctx, valAddr)
+	val := k.stakingKeeper.Validator(ctx, valAddr)
 	if val == nil {
 		return types.ErrNoValidatorDistInfo(k.codespace)
 	}
 
-	del := k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
+	del := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 	if del == nil {
 		return types.ErrNoDelegationDistInfo(k.codespace)
 	}

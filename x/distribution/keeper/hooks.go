@@ -16,25 +16,25 @@ func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
 // nolint
 func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
-	val := h.k.stakeKeeper.Validator(ctx, valAddr)
+	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 	h.k.initializeValidator(ctx, val)
 }
 func (h Hooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
-	val := h.k.stakeKeeper.Validator(ctx, valAddr)
+	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 	// increment period
 	h.k.incrementValidatorPeriod(ctx, val)
 }
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
 func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	val := h.k.stakeKeeper.Validator(ctx, valAddr)
+	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 
 	// increment period
 	h.k.incrementValidatorPeriod(ctx, val)
 }
 func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	val := h.k.stakeKeeper.Validator(ctx, valAddr)
-	del := h.k.stakeKeeper.Delegation(ctx, delAddr, valAddr)
+	val := h.k.stakingKeeper.Validator(ctx, valAddr)
+	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 
 	// withdraw delegation rewards (which also increments period)
 	if err := h.k.withdrawDelegationRewards(ctx, val, del); err != nil {

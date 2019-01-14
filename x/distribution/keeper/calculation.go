@@ -64,9 +64,9 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
 	// period has already been incremented
 	period := k.GetValidatorCurrentRewards(ctx, val).Period
-	validator := k.stakeKeeper.Validator(ctx, val)
-	delegation := k.stakeKeeper.Delegation(ctx, del, val)
-	// calculate delegation stake in tokens
+	validator := k.stakingKeeper.Validator(ctx, val)
+	delegation := k.stakingKeeper.Delegation(ctx, del, val)
+	// calculate delegation staking in tokens
 	// TODO need to make sure this truncates instead of rounding
 	stake := delegation.GetShares().Mul(validator.GetDelegatorShareExRate())
 	k.SetDelegatorStartingInfo(ctx, val, del, types.DelegatorStartingInfo{
@@ -77,17 +77,17 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 }
 
 // calculate the rewards accrued by a delegation between two periods
-func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Validator, startingPeriod uint64, endingPeriod uint64, stake sdk.Dec) (rewards sdk.DecCoins) {
+func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Validator, startingPeriod uint64, endingPeriod uint64, staking sdk.Dec) (rewards sdk.DecCoins) {
 	// sanity check
 	if startingPeriod > endingPeriod {
 		panic("startingPeriod cannot be greater than endingPeriod")
 	}
 
-	// return stake * (ending - starting)
+	// return staking * (ending - starting)
 	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
 	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
 	difference := ending.Minus(starting)
-	rewards = difference.MulDec(stake)
+	rewards = difference.MulDec(staking)
 	return
 }
 
@@ -98,7 +98,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	startingPeriod := startingInfo.PreviousPeriod
 	stake := startingInfo.Stake
 
-	// iterate through slashes and withdraw with calculated stake for sub-intervals
+	// iterate through slashes and withdraw with calculated staking for sub-intervals
 	startingHeight := startingInfo.Height + 1
 	endingHeight := uint64(ctx.BlockHeight())
 	// if we're still in the same block, no slashes can yet have happened

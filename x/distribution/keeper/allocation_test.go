@@ -7,32 +7,32 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
-	sh := stake.NewHandler(sk)
+	sh := staking.NewHandler(sk)
 
 	// initialize state
 	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
 	// create validator with 50% commission
-	commission := stake.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := stake.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(stake.DefaultBondDenom, sdk.NewInt(100)), stake.Description{}, commission)
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
 	require.True(t, sh(ctx, msg).IsOK())
 	val := sk.Validator(ctx, valOpAddr1)
 
 	// allocate tokens
 	tokens := sdk.DecCoins{
-		{stake.DefaultBondDenom, sdk.NewDec(10)},
+		{staking.DefaultBondDenom, sdk.NewDec(10)},
 	}
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
 	// check commission
 	expected := sdk.DecCoins{
-		{stake.DefaultBondDenom, sdk.NewDec(5)},
+		{staking.DefaultBondDenom, sdk.NewDec(5)},
 	}
 	require.Equal(t, expected, k.GetValidatorAccumulatedCommission(ctx, val.GetOperator()))
 
@@ -42,21 +42,21 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 func TestAllocateTokensToManyValidators(t *testing.T) {
 	ctx, _, k, sk, fck := CreateTestInputDefault(t, false, 1000)
-	sh := stake.NewHandler(sk)
+	sh := staking.NewHandler(sk)
 
 	// initialize state
 	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
 	// create validator with 50% commission
-	commission := stake.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := stake.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(stake.DefaultBondDenom, sdk.NewInt(100)), stake.Description{}, commission)
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// create second validator with 0% commission
-	commission = stake.NewCommissionMsg(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
-	msg = stake.NewMsgCreateValidator(valOpAddr2, valConsPk2,
-		sdk.NewCoin(stake.DefaultBondDenom, sdk.NewInt(100)), stake.Description{}, commission)
+	commission = staking.NewCommissionMsg(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
+	msg = staking.NewMsgCreateValidator(valOpAddr2, valConsPk2,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
 	require.True(t, sh(ctx, msg).IsOK())
 
 	abciValA := abci.Validator{
@@ -78,7 +78,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.Coins{
-		{stake.DefaultBondDenom, sdk.NewInt(100)},
+		{staking.DefaultBondDenom, sdk.NewInt(100)},
 	}
 	fck.SetCollectedFees(fees)
 	votes := []abci.VoteInfo{
@@ -94,15 +94,15 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	k.AllocateTokens(ctx, 200, 200, valConsAddr2, votes)
 
 	// 98 outstanding rewards (100 less 2 to community pool)
-	require.Equal(t, sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDec(98)}}, k.GetOutstandingRewards(ctx))
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(98)}}, k.GetOutstandingRewards(ctx))
 	// 2 community pool coins
-	require.Equal(t, sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDec(2)}}, k.GetFeePool(ctx).CommunityPool)
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(2)}}, k.GetFeePool(ctx).CommunityPool)
 	// 50% commission for first proposer, (0.5 * 93%) * 100 / 2 = 23.25
-	require.Equal(t, sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDecWithPrec(2325, 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDecWithPrec(2325, 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 	// zero commission for second proposer
 	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr2).IsZero())
-	// just stake-proportional for first proposer less commission = (0.5 * 93%) * 100 / 2 = 23.25
-	require.Equal(t, sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDecWithPrec(2325, 2)}}, k.GetValidatorCurrentRewards(ctx, valOpAddr1).Rewards)
-	// proposer reward + stake-proportional for second proposer = (5 % + 0.5 * (93%)) * 100 = 51.5
-	require.Equal(t, sdk.DecCoins{{stake.DefaultBondDenom, sdk.NewDecWithPrec(515, 1)}}, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards)
+	// just staking.proportional for first proposer less commission = (0.5 * 93%) * 100 / 2 = 23.25
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDecWithPrec(2325, 2)}}, k.GetValidatorCurrentRewards(ctx, valOpAddr1).Rewards)
+	// proposer reward + staking.proportional for second proposer = (5 % + 0.5 * (93%)) * 100 = 51.5
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDecWithPrec(515, 1)}}, k.GetValidatorCurrentRewards(ctx, valOpAddr2).Rewards)
 }

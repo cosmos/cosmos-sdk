@@ -71,7 +71,7 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 
 // countSubKeys counts the total number of keys for a multi-sig public key.
 func countSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(*multisig.PubKeyMultisigThreshold)
+	v, ok := pub.(multisig.PubKeyMultisigThreshold)
 	if !ok {
 		return 1
 	}

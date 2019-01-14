@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -48,7 +48,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				SimulateGas:   false,
 				ChainID:       "test-chain",
 				Memo:          "hello from Voyager !",
-				Fees:          sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))},
+				Fees:          sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(1))},
 			},
 			defaultMsg,
 			StdSignMsg{
@@ -57,7 +57,7 @@ func TestTxBuilderBuild(t *testing.T) {
 				Sequence:      1,
 				Memo:          "hello from Voyager !",
 				Msgs:          defaultMsg,
-				Fee:           auth.NewStdFee(100, sdk.Coins{sdk.NewCoin(stakeTypes.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           auth.NewStdFee(100, sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},

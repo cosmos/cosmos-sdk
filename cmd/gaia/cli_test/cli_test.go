@@ -20,8 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestGaiaCLIMinimumFees(t *testing.T) {
@@ -45,7 +45,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	require.False(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	// Ensure tx w/ correct fees (stake) pass
+	// Ensure tx w/ correct fees (staking) pass
 	txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(denom, 23))
 	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), txFees)
 	require.True(f.T, success)
@@ -254,12 +254,12 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	fooAcc := f.QueryAccount(fooAddr)
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
 
-	defaultParams := stake.DefaultParams()
-	initialPool := stake.InitialPool()
+	defaultParams := staking.DefaultParams()
+	initialPool := staking.InitialPool()
 	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(101)) // Delegate tx on GaiaAppGenState
 
 	// Generate a create validator transaction and ensure correctness
-	success, stdout, stderr := f.TxStakeCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--generate-only")
+	success, stdout, stderr := f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--generate-only")
 
 	require.True(f.T, success)
 	require.Empty(f.T, stderr)
@@ -269,11 +269,11 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
-	success, _, _ = f.TxStakeCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--dry-run")
+	success, _, _ = f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--dry-run")
 	require.True(t, success)
 
 	// Create the validator
-	f.TxStakeCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2))
+	f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure funds were deducted properly
@@ -281,35 +281,35 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Ensure that validator state is as expected
-	validator := f.QueryStakeValidator(barVal)
+	validator := f.QueryStakingValidator(barVal)
 	require.Equal(t, validator.OperatorAddr, barVal)
 	require.True(sdk.IntEq(t, sdk.NewInt(2), validator.Tokens))
 
 	// Query delegations to the validator
-	validatorDelegations := f.QueryStakeDelegationsTo(barVal)
+	validatorDelegations := f.QueryStakingDelegationsTo(barVal)
 	require.Len(t, validatorDelegations, 1)
 	require.NotZero(t, validatorDelegations[0].Shares)
 
 	// unbond a single share
-	success = f.TxStakeUnbond(keyBar, "1", barVal)
+	success = f.TxStakingUnbond(keyBar, "1", barVal)
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	// Ensure bonded stake is correct
-	validator = f.QueryStakeValidator(barVal)
+	// Ensure bonded staking is correct
+	validator = f.QueryStakingValidator(barVal)
 	require.Equal(t, "1", validator.Tokens.String())
 
 	// Get unbonding delegations from the validator
-	validatorUbds := f.QueryStakeUnbondingDelegationsFrom(barVal)
+	validatorUbds := f.QueryStakingUnbondingDelegationsFrom(barVal)
 	require.Len(t, validatorUbds, 1)
 	require.Equal(t, "1", validatorUbds[0].Balance.Amount.String())
 
 	// Query staking parameters
-	params := f.QueryStakeParameters()
+	params := f.QueryStakingParameters()
 	require.True(t, defaultParams.Equal(params))
 
 	// Query staking pool
-	pool := f.QueryStakePool()
+	pool := f.QueryStakingPool()
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 
 	f.Cleanup()
@@ -330,7 +330,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAddr := f.KeyAddress(keyFoo)
 
 	fooAcc := f.QueryAccount(fooAddr)
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakeTypes.DefaultBondDenom).Int64())
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom).Int64())
 
 	proposalsQuery := f.QueryGovProposals()
 	require.Equal(t, "No matching proposals found", proposalsQuery)

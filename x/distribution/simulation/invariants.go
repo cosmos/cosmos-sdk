@@ -6,11 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // AllInvariants runs all invariants of the distribution module
-func AllInvariants(d distr.Keeper, stk stake.Keeper) simulation.Invariant {
+func AllInvariants(d distr.Keeper, stk staking.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		err := CanWithdrawInvariant(d, stk)(ctx)
 		if err != nil {
@@ -36,7 +36,7 @@ func NonNegativeOutstandingInvariant(k distr.Keeper) simulation.Invariant {
 }
 
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
-func CanWithdrawInvariant(k distr.Keeper, sk stake.Keeper) simulation.Invariant {
+func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 
 		// cache, we don't want to write changes

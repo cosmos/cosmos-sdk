@@ -18,7 +18,7 @@ type (
 	GenesisState = types.GenesisState
 
 	// expected keepers
-	StakeKeeper         = types.StakeKeeper
+	StakingKeeper         = types.StakingKeeper
 	BankKeeper          = types.BankKeeper
 	FeeCollectionKeeper = types.FeeCollectionKeeper
 )

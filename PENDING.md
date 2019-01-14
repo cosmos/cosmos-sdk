@@ -87,6 +87,7 @@ IMPROVEMENTS
 * CI
   * \#2498 Added macos CI job to CircleCI
   * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim
+  * [#147](https://github.com/tendermint/devops/issues/142) Added docker image build to CI
 
 BUG FIXES
 

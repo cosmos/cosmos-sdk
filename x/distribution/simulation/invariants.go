@@ -62,9 +62,11 @@ func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invarian
 			return fmt.Errorf("Negative remaining coins: %v", remaining)
 		}
 
-		// bound at 0.1% error
-		if len(remaining) > 0 && remaining[0].Amount.Quo(outstanding[0].Amount).GT(sdk.OneDec().Quo(sdk.NewDec(100))) {
-			return fmt.Errorf("High error - outstanding %v, remaining %v", outstanding, remaining)
+		fmt.Printf("Outstanding: %v, remaining %v\n", outstanding, remaining)
+
+		// bound at 0.01% error
+		if len(remaining) > 0 && remaining[0].Amount.Quo(outstanding[0].Amount).GT(sdk.OneDec().Quo(sdk.NewDec(10000))) {
+			return fmt.Errorf("Error too high - outstanding %v, remaining %v", outstanding, remaining)
 		}
 
 		return nil

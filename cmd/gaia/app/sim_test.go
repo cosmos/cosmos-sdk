@@ -160,8 +160,13 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	stakingGenesis.Validators = validators
 	stakingGenesis.Bonds = delegations
 
-	// TODO
-	distrGenesis := distr.DefaultGenesisState()
+	distrGenesis := distr.GenesisState{
+		FeePool:             distr.InitialFeePool(),
+		CommunityTax:        sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
+		BaseProposerReward:  sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
+		BonusProposerReward: sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
+	}
+	fmt.Printf("Selected randomly generated distribution parameters:\n\t%+v\n", distrGenesis)
 
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,

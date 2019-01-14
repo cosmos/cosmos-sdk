@@ -40,6 +40,7 @@ FEATURES
   * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) Add a custom memo on transactions
   * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
   `/gov/proposals/{proposalID}/proposer` to query for a proposal's proposer.
+  * [\#3284](https://github.com/cosmos/cosmos-sdk/issues/3284) Implement generation of txs without account.
 
 * Gaia CLI  (`gaiacli`)
   * \#2399 Implement `params` command to query slashing parameters.

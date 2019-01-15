@@ -56,7 +56,8 @@ func TestToAccount(t *testing.T) {
 	addr := sdk.AccAddress(priv.PubKey().Address())
 	authAcc := auth.NewBaseAccountWithAddress(addr)
 	genAcc := NewGenesisAccount(&authAcc)
-	require.Equal(t, authAcc, *genAcc.ToAccount())
+	acc := genAcc.ToAccount().(*auth.BaseAccount)
+	require.Equal(t, authAcc, *acc)
 }
 
 func TestGaiaAppGenTx(t *testing.T) {

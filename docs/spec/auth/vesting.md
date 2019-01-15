@@ -304,10 +304,11 @@ See the above specification for full implementation details.
 
 ## Genesis Initialization
 
-To initialize both vesting and base accounts, the `GenesisAccount` struct will
-include an `EndTime`. Accounts meant to be of type `BaseAccount` will
-have `EndTime = 0`. The `initChainer` method will parse the GenesisAccount into
-BaseAccounts and VestingAccounts as appropriate.
+To initialize both vesting and non-vesting accounts, the `GenesisAccount` struct will
+include new fields: `Vesting`, `StartTime`, and `EndTime`. Accounts meant to be
+of type `BaseAccount` or any non-vesting type will have `Vesting = false`. The
+genesis initialization logic (e.g. `initFromGenesisState`) will have to parse
+and return the correct accounts accordingly based off of these new fields.
 
 ```go
 type GenesisAccount struct {
@@ -318,35 +319,18 @@ type GenesisAccount struct {
     StartTime  int64
 }
 
-func initChainer() {
-    for genAcc in GenesisAccounts {
-        baseAccount := BaseAccount{
-            Address: genAcc.Address,
-            Coins:   genAcc.GenesisCoins,
-        }
+func ToAccount(gacc GenesisAccount) Account {
+    bacc := NewBaseAccount(gacc)
 
-        if genAcc.StartTime != 0 && genAcc.EndTime != 0 {
-            vestingAccount := ContinuousVestingAccount{
-                BaseAccount:      baseAccount,
-                OriginalVesting:  genAcc.GenesisCoins,
-                StartTime:        RequestInitChain.Time,
-                StartTime:        genAcc.StartTime,
-                EndTime:          genAcc.EndTime,
-            }
-
-            AddAccountToState(vestingAccount)
-        } else if genAcc.EndTime != 0 {
-            vestingAccount := DelayedVestingAccount{
-                BaseAccount:      baseAccount,
-                OriginalVesting:  genAcc.GenesisCoins,
-                EndTime:          genAcc.EndTime,
-            }
-
-            AddAccountToState(vestingAccount)
-        } else {
-            AddAccountToState(baseAccount)
+    if gacc.Vesting {
+        if ga.StartTime != 0 && ga.EndTime != 0 {
+            return NewContinuousVestingAccount(bacc, gacc.StartTime, gacc.EndTime)
+        } else if ga.EndTime != 0 {
+            return NewDelayedVestingAccount(bacc, gacc.EndTime)
         }
     }
+
+    return bacc
 }
 ```
 

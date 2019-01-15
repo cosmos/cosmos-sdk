@@ -14,7 +14,7 @@
     - [Undelegating](#undelegating)
       - [Keepers/Handlers](#keepershandlers-2)
   - [Keepers & Handlers](#keepers--handlers)
-  - [Initializing at Genesis](#initializing-at-genesis)
+  - [Genesis Initialization](#genesis-initialization)
   - [Examples](#examples)
     - [Simple](#simple)
     - [Slashing](#slashing)
@@ -45,13 +45,16 @@ order to make such a distinction.
 type VestingAccount interface {
     Account
 
-    GetVestedCoins(Time) Coins
+    GetVestedCoins(Time)  Coins
     GetVestingCoins(Time) Coins
 
     // Delegation and undelegation accounting that returns the resulting base
     // coins amount.
     TrackDelegation(Time, Coins)
     TrackUndelegation(Coins)
+
+    GetStartTime int64
+    GetEndTime   int64
 }
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all
@@ -63,7 +66,7 @@ type BaseVestingAccount struct {
     DelegatedFree    Coins // coins that are vested and delegated
     DelegatedVesting Coins // coins that vesting and delegated
 
-    EndTime  Time // when the coins become unlocked
+    EndTime  int64 // when the coins become unlocked
 }
 
 // ContinuousVestingAccount implements the VestingAccount interface. It
@@ -71,7 +74,7 @@ type BaseVestingAccount struct {
 type ContinuousVestingAccount struct {
     BaseVestingAccount
 
-    StartTime  Time // when the coins start to vest
+    StartTime  int64 // when the coins start to vest
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
@@ -299,7 +302,7 @@ unlocked coin amount.
 
 See the above specification for full implementation details.
 
-## Initializing at Genesis
+## Genesis Initialization
 
 To initialize both vesting and base accounts, the `GenesisAccount` struct will
 include an `EndTime`. Accounts meant to be of type `BaseAccount` will
@@ -308,10 +311,11 @@ BaseAccounts and VestingAccounts as appropriate.
 
 ```go
 type GenesisAccount struct {
-    Address       sdk.AccAddress
-    GenesisCoins  sdk.Coins
-    EndTime       int64
-    StartTime     int64
+    // ...
+
+    Vesting    bool
+    EndTime    int64
+    StartTime  int64
 }
 
 func initChainer() {

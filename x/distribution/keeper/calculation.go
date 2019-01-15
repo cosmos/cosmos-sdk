@@ -51,10 +51,9 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, historical.Plus(current))
 
 	// Set current rewards, incrementing period by 1
-	newPeriod := rewards.Period + 1
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.ValidatorCurrentRewards{
 		Rewards: sdk.DecCoins{},
-		Period:  newPeriod,
+		Period:  rewards.Period + 1,
 	})
 
 	return rewards.Period
@@ -151,7 +150,9 @@ func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAdd
 	if found {
 		currentFraction = current.Fraction
 	}
-	updatedFraction := sdk.OneDec().Sub(sdk.OneDec().Sub(currentFraction).Mul(sdk.OneDec().Sub(fraction)))
+	currentMultiplicand := sdk.OneDec().Sub(currentFraction)
+	newMultiplicand := sdk.OneDec().Sub(fraction)
+	updatedFraction := sdk.OneDec().Sub(currentMultiplicand.Mul(newMultiplicand))
 	k.SetValidatorSlashEvent(ctx, valAddr, height, types.ValidatorSlashEvent{
 		ValidatorPeriod: currentPeriod,
 		Fraction:        updatedFraction,

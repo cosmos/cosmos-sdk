@@ -65,8 +65,8 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 	period := k.GetValidatorCurrentRewards(ctx, val).Period
 	validator := k.stakingKeeper.Validator(ctx, val)
 	delegation := k.stakingKeeper.Delegation(ctx, del, val)
-	// calculate delegation staking in tokens
-	// TODO need to make sure this truncates instead of rounding
+	// calculate delegation stake in tokens
+	// we don't store directly, so multiply delegation shares * (tokens per share)
 	stake := delegation.GetShares().Mul(validator.GetDelegatorShareExRate())
 	k.SetDelegatorStartingInfo(ctx, val, del, types.DelegatorStartingInfo{
 		PreviousPeriod: period - 1,

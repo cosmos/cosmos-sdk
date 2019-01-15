@@ -19,7 +19,7 @@ BREAKING CHANGES
   * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
   * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
     in order to trigger a simulation of the tx before the actual execution.
-
+  * [\#3285](https://github.com/cosmos/cosmos-sdk/pull/3285) New `gaiad tendermint version` to print libs versions
 
 * SDK
   * [staking] \#2513 Validator power type from Dec -> Int
@@ -50,6 +50,7 @@ FEATURES
     * [\#2182] [x/staking] Added querier for querying a single redelegation
 
 * SDK
+  * \#2694 Vesting account implementation.
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
   the ante handler.
   * [\#3179](https://github.com/cosmos/cosmos-sdk/pull/3179) New CodeNoSignatures error code.
@@ -73,6 +74,7 @@ IMPROVEMENTS
   * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees in a local testnet.
   * [\#3250](https://github.com/cosmos/cosmos-sdk/pull/3250) Refactor integration tests and increase coverage
   * [\#2859](https://github.com/cosmos/cosmos-sdk/issues/2859) Rename `TallyResult` in gov proposals to `FinalTallyResult`
+  * [\#3286](https://github.com/cosmos/cosmos-sdk/pull/3286) Fix `gaiad gentx` printout of account's addresses, i.e. user bech32 instead of hex.
 
 * SDK
   * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation
@@ -86,6 +88,7 @@ IMPROVEMENTS
 * CI
   * \#2498 Added macos CI job to CircleCI
   * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim
+  * [#147](https://github.com/tendermint/devops/issues/142) Added docker image build to CI
 
 BUG FIXES
 

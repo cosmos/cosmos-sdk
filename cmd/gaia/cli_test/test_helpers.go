@@ -56,17 +56,16 @@ type Fixtures struct {
 
 // NewFixtures creates a new instance of Fixtures with many vars set
 func NewFixtures(t *testing.T) *Fixtures {
-	tmpDir := os.TempDir()
-	gaiadHome := fmt.Sprintf("%s%s%s%s.test_gaiad", tmpDir, string(os.PathSeparator), t.Name(), string(os.PathSeparator))
-	gaiacliHome := fmt.Sprintf("%s%s%s%s.test_gaiacli", tmpDir, string(os.PathSeparator), t.Name(), string(os.PathSeparator))
+	tmpDir, err := ioutil.TempDir("", "gaia_integration_"+t.Name()+"_")
+	require.NoError(t, err)
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 	return &Fixtures{
 		T:        t,
-		GDHome:   gaiadHome,
-		GCLIHome: gaiacliHome,
+		GDHome:   filepath.Join(tmpDir, ".gaiad"),
+		GCLIHome: filepath.Join(tmpDir, ".gaiacli"),
 		RPCAddr:  servAddr,
 		P2PAddr:  p2pAddr,
 		Port:     port,

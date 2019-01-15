@@ -369,11 +369,12 @@ func queryDepositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 				return
 			}
 
-			res, err = gcutils.QueryDepositByTxQuery(cdc, cliCtx, params)
+			deposit, err = gcutils.QueryDepositByTxQuery(cdc, cliCtx, params)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
+			res = cdc.MustMarshalJSON(deposit)
 		}
 
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)

@@ -86,6 +86,7 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
+	cmd.MarkFlagRequired(flagTags)
 	return cmd
 }
 

@@ -399,11 +399,18 @@ func (f *Fixtures) QueryGovParamTallying() gov.TallyParams {
 }
 
 // QueryGovProposals is gaiacli query gov proposals
-func (f *Fixtures) QueryGovProposals(flags ...string) string {
+func (f *Fixtures) QueryGovProposals(flags ...string) gov.Proposals {
 	cmd := fmt.Sprintf("gaiacli query gov proposals %v", f.Flags())
 	stdout, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	if stderr == "ERROR: No matching proposals found" {
+		return gov.Proposals{}
+	}
 	require.Empty(f.T, stderr)
-	return stdout
+	var out gov.Proposals
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(stdout), &out)
+	require.NoError(f.T, err)
+	return out
 }
 
 // QueryGovProposal is gaiacli query gov proposal

@@ -17,6 +17,11 @@ type Proposer struct {
 	Proposer   string `json:"proposer"`
 }
 
+func (p Proposer) String() string {
+	return fmt.Sprintf(`ProposalID: %d
+Proposer:   %s`, p.ProposalID, p.Proposer)
+}
+
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
 // will fetch and build deposits directly from the returned txs and return a
 // JSON marshalled result or any error that occurred.
@@ -147,7 +152,7 @@ func QueryVoteByTxQuery(
 // query.
 func QueryDepositByTxQuery(
 	cdc *codec.Codec, cliCtx context.CLIContext, params gov.QueryDepositParams,
-) ([]byte, error) {
+) (dep gov.Deposit, err error) {
 
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalDeposit),
@@ -157,7 +162,7 @@ func QueryDepositByTxQuery(
 
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	for _, info := range infos {
@@ -166,29 +171,25 @@ func QueryDepositByTxQuery(
 			if msg.Type() == gov.TypeMsgDeposit {
 				depMsg := msg.(gov.MsgDeposit)
 
-				deposit := gov.Deposit{
+				dep = gov.Deposit{
 					Depositor:  depMsg.Depositor,
 					ProposalID: params.ProposalID,
 					Amount:     depMsg.Amount,
 				}
 
-				if cliCtx.Indent {
-					return cdc.MarshalJSONIndent(deposit, "", "  ")
-				}
-
-				return cdc.MarshalJSON(deposit)
+				return
 			}
 		}
 	}
-
-	return nil, fmt.Errorf("address '%s' did not deposit to proposalID %d", params.Depositor, params.ProposalID)
+	err = fmt.Errorf("address '%s' did not deposit to proposalID %d", params.Depositor, params.ProposalID)
+	return
 }
 
 // QueryProposerByTxQuery will query for a proposer of a governance proposal by
 // ID.
 func QueryProposerByTxQuery(
 	cdc *codec.Codec, cliCtx context.CLIContext, proposalID uint64,
-) ([]byte, error) {
+) (proposer Proposer, err error) {
 
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalSubmitted),
@@ -197,7 +198,7 @@ func QueryProposerByTxQuery(
 
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
 	if err != nil {
-		return nil, err
+		return proposer, err
 	}
 
 	for _, info := range infos {
@@ -206,19 +207,32 @@ func QueryProposerByTxQuery(
 			if msg.Type() == gov.TypeMsgSubmitProposal {
 				subMsg := msg.(gov.MsgSubmitProposal)
 
-				proposer := Proposer{
+				proposer = Proposer{
 					ProposalID: proposalID,
 					Proposer:   subMsg.Proposer.String(),
 				}
 
-				if cliCtx.Indent {
-					return cdc.MarshalJSONIndent(proposer, "", "  ")
-				}
-
-				return cdc.MarshalJSON(proposer)
+				return proposer, nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
+	return proposer, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
+}
+
+// QueryProposalByID takes an ID and returns the bytes for a Proposal
+func QueryProposalByID(proposalID uint64, cliCtx context.CLIContext, cdc *codec.Codec, queryRoute string) ([]byte, error) {
+	// Construct query
+	params := gov.NewQueryProposalParams(proposalID)
+	bz, err := cdc.MarshalJSON(params)
+	if err != nil {
+		return nil, err
+	}
+
+	// Query store
+	res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
+	if err != nil {
+		return nil, err
+	}
+	return res, err
 }

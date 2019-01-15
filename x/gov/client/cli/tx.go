@@ -194,7 +194,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 			}
 
 			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
@@ -270,7 +270,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 			}
 
 			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}

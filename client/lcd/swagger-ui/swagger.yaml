@@ -2219,7 +2219,7 @@ definitions:
       from:
         type: string
         example: "cosmos1g9ahr6xhht5rmqven628nklxluzyv8z9jqjcmc"
-        description: Optional from address to use when only generating a transaction without signing it
+        description: Optional sender address to generate a transaction without signing it (i.e generate_only=true)
       memo:
         type: string
         example: "Sent via Cosmos Voyager 🚀"

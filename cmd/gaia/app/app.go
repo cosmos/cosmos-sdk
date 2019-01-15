@@ -44,8 +44,8 @@ type GaiaApp struct {
 	// keys to access the substores
 	keyMain          *sdk.KVStoreKey
 	keyAccount       *sdk.KVStoreKey
-	keyStaking         *sdk.KVStoreKey
-	tkeyStaking        *sdk.TransientStoreKey
+	keyStaking       *sdk.KVStoreKey
+	tkeyStaking      *sdk.TransientStoreKey
 	keySlashing      *sdk.KVStoreKey
 	keyMint          *sdk.KVStoreKey
 	keyDistr         *sdk.KVStoreKey
@@ -59,7 +59,7 @@ type GaiaApp struct {
 	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
-	stakingKeeper         staking.Keeper
+	stakingKeeper       staking.Keeper
 	slashingKeeper      slashing.Keeper
 	mintKeeper          mint.Keeper
 	distrKeeper         distr.Keeper
@@ -79,8 +79,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		cdc:              cdc,
 		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
 		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
-		keyStaking:         sdk.NewKVStoreKey(staking.StoreKey),
-		tkeyStaking:        sdk.NewTransientStoreKey(staking.TStoreKey),
+		keyStaking:       sdk.NewKVStoreKey(staking.StoreKey),
+		tkeyStaking:      sdk.NewTransientStoreKey(staking.TStoreKey),
 		keyMint:          sdk.NewKVStoreKey(mint.StoreKey),
 		keyDistr:         sdk.NewKVStoreKey(distr.StoreKey),
 		tkeyDistr:        sdk.NewTransientStoreKey(distr.TStoreKey),

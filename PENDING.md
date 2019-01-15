@@ -43,6 +43,7 @@ FEATURES
 
 * Gaia CLI  (`gaiacli`)
   * \#2399 Implement `params` command to query slashing parameters.
+  * [\#2730](https://github.com/cosmos/cosmos-sdk/issues/2730) Add tx search pagination parameter
   * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
   `query gov proposer [proposal-id]` to query for a proposal's proposer.
 

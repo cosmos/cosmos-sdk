@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,11 +18,16 @@ import (
 	"github.com/spf13/viper"
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 const (
-	flagTags = "tags"
-	flagAny  = "any"
+	flagTags     = "tags"
+	flagAny      = "any"
+	flagPage     = "page"
+	flagLimit    = "limit"
+	defaultPage  = 1
+	defaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
 )
 
 // default client command to search through tagged transactions
@@ -32,7 +38,7 @@ func SearchTxCmd(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Search for transactions that match exactly the given tags. For example:
 
-$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
+$ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			tagsStr := viper.GetString(flagTags)
@@ -53,12 +59,18 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
 				}
 
 				keyValue := strings.Split(tag, ":")
-				tag = fmt.Sprintf("%s='%s'", keyValue[0], keyValue[1])
+				if keyValue[0] == types.TxHeightKey {
+					tag = fmt.Sprintf("%s=%s", keyValue[0], keyValue[1])
+				} else {
+					tag = fmt.Sprintf("%s='%s'", keyValue[0], keyValue[1])
+				}
 				tmTags = append(tmTags, tag)
 			}
+			page := viper.GetInt(flagPage)
+			limit := viper.GetInt(flagLimit)
 
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			txs, err := SearchTxs(cliCtx, cdc, tmTags)
+			txs, err := SearchTxs(cliCtx, cdc, tmTags, page, limit)
 			if err != nil {
 				return err
 			}
@@ -86,15 +98,25 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>'
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
+	cmd.Flags().Int32(flagPage, defaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int32(flagLimit, defaultLimit, "Query number of transactions results per page returned")
 	return cmd
 }
 
 // SearchTxs performs a search for transactions for a given set of tags via
 // Tendermint RPC. It returns a slice of Info object containing txs and metadata.
 // An error is returned if the query fails.
-func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]Info, error) {
+func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page, limit int) ([]Info, error) {
 	if len(tags) == 0 {
 		return nil, errors.New("must declare at least one tag to search")
+	}
+
+	if page <= 0 {
+		return nil, errors.New("page must greater than 0")
+	}
+
+	if limit <= 0 {
+		return nil, errors.New("limit must greater than 0")
 	}
 
 	// XXX: implement ANY
@@ -108,10 +130,7 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string) ([]In
 
 	prove := !cliCtx.TrustNode
 
-	// TODO: take these as args
-	page := 0
-	perPage := 100
-	res, err := node.TxSearch(query, prove, page, perPage)
+	res, err := node.TxSearch(query, prove, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -153,6 +172,7 @@ func FormatTxResults(cdc *codec.Codec, res []*ctypes.ResultTx) ([]Info, error) {
 func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var tags []string
+		var page, limit int
 		var txs []Info
 		err := r.ParseForm()
 		if err != nil {
@@ -164,18 +184,14 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 			return
 		}
 
-		for key, values := range r.Form {
-			value, err := url.QueryUnescape(values[0])
-			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusBadRequest, sdk.AppendMsgToErr("could not decode query value", err.Error()))
-				return
-			}
+		tags, page, limit, err = parseHTTPArgs(r)
 
-			tag := fmt.Sprintf("%s='%s'", key, value)
-			tags = append(tags, tag)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
 		}
 
-		txs, err = SearchTxs(cliCtx, cdc, tags)
+		txs, err = SearchTxs(cliCtx, cdc, tags, page, limit)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -183,4 +199,52 @@ func SearchTxRequestHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.
 
 		utils.PostProcessResponse(w, cdc, txs, cliCtx.Indent)
 	}
+}
+
+func parseHTTPArgs(r *http.Request) (tags []string, page, limit int, err error) {
+	tags = make([]string, 0, len(r.Form))
+	for key, values := range r.Form {
+		if key == "page" || key == "limit" {
+			continue
+		}
+		var value string
+		value, err = url.QueryUnescape(values[0])
+		if err != nil {
+			return tags, page, limit, err
+		}
+
+		var tag string
+		if key == types.TxHeightKey {
+			tag = fmt.Sprintf("%s=%s", key, value)
+		} else {
+			tag = fmt.Sprintf("%s='%s'", key, value)
+		}
+		tags = append(tags, tag)
+	}
+
+	pageStr := r.FormValue("page")
+	if pageStr == "" {
+		page = defaultPage
+	} else {
+		page, err = strconv.Atoi(pageStr)
+		if err != nil {
+			return tags, page, limit, err
+		} else if page <= 0 {
+			return tags, page, limit, errors.New("page must greater than 0")
+		}
+	}
+
+	limitStr := r.FormValue("limit")
+	if limitStr == "" {
+		limit = defaultLimit
+	} else {
+		limit, err = strconv.Atoi(limitStr)
+		if err != nil {
+			return tags, page, limit, err
+		} else if limit <= 0 {
+			return tags, page, limit, errors.New("limit must greater than 0")
+		}
+	}
+
+	return tags, page, limit, nil
 }

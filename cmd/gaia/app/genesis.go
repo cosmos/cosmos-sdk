@@ -34,7 +34,7 @@ var (
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`
 	AuthData     auth.GenesisState     `json:"auth"`
-	StakingData    staking.GenesisState  `json:"staking"`
+	StakingData  staking.GenesisState  `json:"staking"`
 	MintData     mint.GenesisState     `json:"mint"`
 	DistrData    distr.GenesisState    `json:"distr"`
 	GovData      gov.GenesisState      `json:"gov"`
@@ -50,7 +50,7 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
 	return GenesisState{
 		Accounts:     accounts,
 		AuthData:     authData,
-		StakingData:    stakingData,
+		StakingData:  stakingData,
 		MintData:     mintData,
 		DistrData:    distrData,
 		GovData:      govData,
@@ -144,7 +144,7 @@ func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
 		AuthData:     auth.DefaultGenesisState(),
-		StakingData:    staking.DefaultGenesisState(),
+		StakingData:  staking.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
 		GovData:      gov.DefaultGenesisState(),

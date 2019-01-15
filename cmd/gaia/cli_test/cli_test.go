@@ -1,6 +1,7 @@
 package clitest
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -354,7 +355,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure transaction tags can be queried
-	txs := f.QueryTxs("action:submit_proposal", fmt.Sprintf("proposer:%s", fooAddr))
+	txs := f.QueryTxs(1, 50, "action:submit_proposal", fmt.Sprintf("proposer:%s", fooAddr))
 	require.Len(t, txs, 1)
 
 	// Ensure deposit was deducted
@@ -397,7 +398,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(15), deposit.Amount.AmountOf(denom).Int64())
 
 	// Ensure tags are set on the transaction
-	txs = f.QueryTxs("action:deposit", fmt.Sprintf("depositor:%s", fooAddr))
+	txs = f.QueryTxs(1, 50, "action:deposit", fmt.Sprintf("depositor:%s", fooAddr))
 	require.Len(t, txs, 1)
 
 	// Ensure account has expected amount of funds
@@ -434,7 +435,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, gov.OptionYes, votes[0].Option)
 
 	// Ensure tags are applied to voting transaction properly
-	txs = f.QueryTxs("action:vote", fmt.Sprintf("voter:%s", fooAddr))
+	txs = f.QueryTxs(1, 50, "action:vote", fmt.Sprintf("voter:%s", fooAddr))
 	require.Len(t, txs, 1)
 
 	// Ensure no proposals in deposit period
@@ -454,6 +455,54 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 
 	f.Cleanup()
+}
+
+func TestGaiaCLIQueryTxPagination(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooAddr := f.KeyAddress(keyFoo)
+	barAddr := f.KeyAddress(keyBar)
+
+	for i := 1; i <= 30; i++ {
+		success := executeWrite(t, fmt.Sprintf(
+			"gaiacli tx send %s --amount=%dfootoken --to=%s --from=foo",
+			f.Flags(), i, barAddr), app.DefaultKeyPass)
+		require.True(t, success)
+		tests.WaitForNextNBlocksTM(1, f.Port)
+	}
+
+	// perPage = 15, 2 pages
+	txsPage1 := f.QueryTxs(1, 15, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage1, 15)
+	txsPage2 := f.QueryTxs(2, 15, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage2, 15)
+	require.NotEqual(t, txsPage1, txsPage2)
+	txsPage3 := f.QueryTxs(3, 15, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage3, 15)
+	require.Equal(t, txsPage2, txsPage3)
+
+	// perPage = 16, 2 pages
+	txsPage1 = f.QueryTxs(1, 16, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage1, 16)
+	txsPage2 = f.QueryTxs(2, 16, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage2, 14)
+	require.NotEqual(t, txsPage1, txsPage2)
+
+	// perPage = 50
+	txsPageFull := f.QueryTxs(1, 50, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPageFull, 30)
+	require.Equal(t, txsPageFull, append(txsPage1, txsPage2...))
+
+	// perPage = 0
+	f.QueryTxsInvalid(errors.New("ERROR: page must greater than 0"), 0, 50, fmt.Sprintf("sender:%s", fooAddr))
+
+	// limit = 0
+	f.QueryTxsInvalid(errors.New("ERROR: limit must greater than 0"), 1, 0, fmt.Sprintf("sender:%s", fooAddr))
 }
 
 func TestGaiaCLIValidateSignatures(t *testing.T) {

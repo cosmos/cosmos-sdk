@@ -387,7 +387,7 @@ func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount
 }
 
 // GetStartTime returns the time when vesting starts for a continuous vesting
-// account
+// account.
 func (cva *ContinuousVestingAccount) GetStartTime() int64 {
 	return cva.StartTime
 }
@@ -448,8 +448,7 @@ func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, amount sd
 	dva.trackDelegation(dva.GetVestingCoins(blockTime), amount)
 }
 
-// GetStartTime returns the time when vesting starts for a delayed vesting
-// account
+// GetStartTime returns zero since a delayed vesting account has no start time.
 func (dva *DelayedVestingAccount) GetStartTime() int64 {
 	return 0
 }

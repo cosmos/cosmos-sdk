@@ -53,8 +53,8 @@ type VestingAccount interface {
     TrackDelegation(Time, Coins)
     TrackUndelegation(Coins)
 
-    GetStartTime int64
-    GetEndTime   int64
+    GetStartTime() int64
+    GetEndTime()   int64
 }
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all

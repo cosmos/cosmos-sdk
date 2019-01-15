@@ -68,16 +68,15 @@ func (p Pool) bondedTokensToLoose(bondedTokens sdk.Int) Pool {
 	return p
 }
 
-// HumanReadableString returns a human readable string representation of a
-// pool.
-func (p Pool) HumanReadableString() string {
-
-	resp := "Pool \n"
-	resp += fmt.Sprintf("Loose Tokens: %s\n", p.LooseTokens)
-	resp += fmt.Sprintf("Bonded Tokens: %s\n", p.BondedTokens)
-	resp += fmt.Sprintf("Token Supply: %s\n", p.TokenSupply())
-	resp += fmt.Sprintf("Bonded Ratio: %v\n", p.BondedRatio())
-	return resp
+// String returns a human readable string representation of a pool.
+func (p Pool) String() string {
+	return fmt.Sprintf(`Pool:
+  Loose Tokens: %s
+  Bonded Tokens: %s
+  Token Supply: %s
+  Bonded Ratio: %v`, p.LooseTokens,
+		p.BondedTokens, p.TokenSupply(),
+		p.BondedRatio())
 }
 
 // unmarshal the current pool value from store key or panics

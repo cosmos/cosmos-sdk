@@ -11,11 +11,15 @@ import (
 type (
 	Keeper                  = keeper.Keeper
 	Validator               = types.Validator
+	Validators              = types.Validators
 	Description             = types.Description
 	Commission              = types.Commission
 	Delegation              = types.Delegation
+	Delegations             = types.Delegations
 	UnbondingDelegation     = types.UnbondingDelegation
+	UnbondingDelegations    = types.UnbondingDelegations
 	Redelegation            = types.Redelegation
+	Redelegations           = types.Redelegations
 	Params                  = types.Params
 	Pool                    = types.Pool
 	MsgCreateValidator      = types.MsgCreateValidator

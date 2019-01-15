@@ -353,7 +353,7 @@ func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
 
 // QueryStakingParameters is gaiacli query staking parameters
 func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
-	cmd := fmt.Sprintf("gaiacli query staking parameters %v", f.Flags())
+	cmd := fmt.Sprintf("gaiacli query staking params %v", f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var params staking.Params
 	cdc := app.MakeCodec()

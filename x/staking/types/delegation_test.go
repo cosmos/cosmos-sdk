@@ -31,7 +31,7 @@ func TestDelegationEqual(t *testing.T) {
 	require.False(t, ok)
 }
 
-func TestDelegationHumanReadableString(t *testing.T) {
+func TestDelegationString(t *testing.T) {
 	d := Delegation{
 		DelegatorAddr: sdk.AccAddress(addr1),
 		ValidatorAddr: addr2,
@@ -40,9 +40,7 @@ func TestDelegationHumanReadableString(t *testing.T) {
 
 	// NOTE: Being that the validator's keypair is random, we cannot test the
 	// actual contents of the string.
-	valStr, err := d.HumanReadableString()
-	require.Nil(t, err)
-	require.NotEmpty(t, valStr)
+	require.NotEmpty(t, d.String())
 }
 
 func TestUnbondingDelegationEqual(t *testing.T) {
@@ -65,7 +63,7 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 	require.False(t, ok)
 }
 
-func TestUnbondingDelegationHumanReadableString(t *testing.T) {
+func TestUnbondingDelegationString(t *testing.T) {
 	ud := UnbondingDelegation{
 		DelegatorAddr: sdk.AccAddress(addr1),
 		ValidatorAddr: addr2,
@@ -73,9 +71,7 @@ func TestUnbondingDelegationHumanReadableString(t *testing.T) {
 
 	// NOTE: Being that the validator's keypair is random, we cannot test the
 	// actual contents of the string.
-	valStr, err := ud.HumanReadableString()
-	require.Nil(t, err)
-	require.NotEmpty(t, valStr)
+	require.NotEmpty(t, ud.String())
 }
 
 func TestRedelegationEqual(t *testing.T) {
@@ -101,7 +97,7 @@ func TestRedelegationEqual(t *testing.T) {
 	require.False(t, ok)
 }
 
-func TestRedelegationHumanReadableString(t *testing.T) {
+func TestRedelegationString(t *testing.T) {
 	r := Redelegation{
 		DelegatorAddr:    sdk.AccAddress(addr1),
 		ValidatorSrcAddr: addr2,
@@ -112,7 +108,5 @@ func TestRedelegationHumanReadableString(t *testing.T) {
 
 	// NOTE: Being that the validator's keypair is random, we cannot test the
 	// actual contents of the string.
-	valStr, err := r.HumanReadableString()
-	require.Nil(t, err)
-	require.NotEmpty(t, valStr)
+	require.NotEmpty(t, r.String())
 }

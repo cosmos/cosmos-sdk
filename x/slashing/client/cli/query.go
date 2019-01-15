@@ -4,9 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec" // XXX fix
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +14,7 @@ import (
 
 // GetCmdQuerySigningInfo implements the command to query signing info.
 func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "signing-info [validator-pubkey]",
 		Short: "Query a validator's signing information",
 		Args:  cobra.ExactArgs(1),
@@ -33,34 +32,17 @@ func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			signingInfo := new(slashing.ValidatorSigningInfo)
-			cdc.MustUnmarshalBinaryLengthPrefixed(res, signingInfo)
-
-			switch viper.Get(cli.OutputFlag) {
-
-			case "text":
-				human := signingInfo.HumanReadableString()
-				fmt.Println(human)
-
-			case "json":
-				// parse out the signing info
-				output, err := codec.MarshalJSONIndent(cdc, signingInfo)
-				if err != nil {
-					return err
-				}
-				fmt.Println(string(output))
-			}
-
+			var signingInfo slashing.ValidatorSigningInfo
+			cdc.MustUnmarshalBinaryLengthPrefixed(res, &signingInfo)
+			client.PrintOutput(cdc, signingInfo)
 			return nil
 		},
 	}
-
-	return cmd
 }
 
 // GetCmdQueryParams implements a command to fetch slashing parameters.
 func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "params",
 		Short: "Query the current slashing parameters",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -72,10 +54,10 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			fmt.Println(string(res))
+			var params slashing.Params
+			cdc.MustUnmarshalJSON(res, &params)
+			client.PrintOutput(cdc, params)
 			return nil
 		},
 	}
-
-	return cmd
 }

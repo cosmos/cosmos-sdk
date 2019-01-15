@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -70,16 +71,23 @@ func (d Delegation) GetDelegatorAddr() sdk.AccAddress { return d.DelegatorAddr }
 func (d Delegation) GetValidatorAddr() sdk.ValAddress { return d.ValidatorAddr }
 func (d Delegation) GetShares() sdk.Dec               { return d.Shares }
 
-// HumanReadableString returns a human readable string representation of a
-// Delegation. An error is returned if the Delegation's delegator or validator
-// addresses cannot be Bech32 encoded.
-func (d Delegation) HumanReadableString() (string, error) {
-	resp := "Delegation \n"
-	resp += fmt.Sprintf("Delegator: %s\n", d.DelegatorAddr)
-	resp += fmt.Sprintf("Validator: %s\n", d.ValidatorAddr)
-	resp += fmt.Sprintf("Shares: %s\n", d.Shares.String())
+// String returns a human readable string representation of a Delegation.
+func (d Delegation) String() string {
+	return fmt.Sprintf(`Delegation:
+  Delegator: %s
+  Validator: %s
+  Shares:    %s`, d.DelegatorAddr,
+		d.ValidatorAddr, d.Shares)
+}
 
-	return resp, nil
+// Delegations is a collection of delegations
+type Delegations []Delegation
+
+func (d Delegations) String() (out string) {
+	for _, del := range d {
+		out += del.String() + "\n"
+	}
+	return strings.TrimSpace(out)
 }
 
 // UnbondingDelegation reflects a delegation's passive unbonding queue.
@@ -119,19 +127,25 @@ func (d UnbondingDelegation) Equal(d2 UnbondingDelegation) bool {
 	return bytes.Equal(bz1, bz2)
 }
 
-// HumanReadableString returns a human readable string representation of an
-// UnbondingDelegation. An error is returned if the UnbondingDelegation's
-// delegator or validator addresses cannot be Bech32 encoded.
-func (d UnbondingDelegation) HumanReadableString() (string, error) {
-	resp := "Unbonding Delegation \n"
-	resp += fmt.Sprintf("Delegator: %s\n", d.DelegatorAddr)
-	resp += fmt.Sprintf("Validator: %s\n", d.ValidatorAddr)
-	resp += fmt.Sprintf("Creation height: %v\n", d.CreationHeight)
-	resp += fmt.Sprintf("Min time to unbond (unix): %v\n", d.MinTime)
-	resp += fmt.Sprintf("Expected balance: %s", d.Balance.String())
+// String returns a human readable string representation of an UnbondingDelegation.
+func (d UnbondingDelegation) String() string {
+	return fmt.Sprintf(`Unbonding Delegation:
+  Delegator:                 %s
+  Validator:                 %s
+  Creation height:           %v
+  Min time to unbond (unix): %v
+  Expected balance:          %s`, d.Balance.String(),
+		d.DelegatorAddr, d.ValidatorAddr, d.CreationHeight, d.MinTime)
+}
 
-	return resp, nil
+// UnbondingDelegations is a collection of UnbondingDelegation
+type UnbondingDelegations []UnbondingDelegation
 
+func (ubds UnbondingDelegations) String() (out string) {
+	for _, u := range ubds {
+		out += u.String() + "\n"
+	}
+	return strings.TrimSpace(out)
 }
 
 // Redelegation reflects a delegation's passive re-delegation queue.
@@ -174,19 +188,26 @@ func (d Redelegation) Equal(d2 Redelegation) bool {
 	return bytes.Equal(bz1, bz2)
 }
 
-// HumanReadableString returns a human readable string representation of a
-// Redelegation. An error is returned if the UnbondingDelegation's delegator or
-// validator addresses cannot be Bech32 encoded.
-func (d Redelegation) HumanReadableString() (string, error) {
-	resp := "Redelegation \n"
-	resp += fmt.Sprintf("Delegator: %s\n", d.DelegatorAddr)
-	resp += fmt.Sprintf("Source Validator: %s\n", d.ValidatorSrcAddr)
-	resp += fmt.Sprintf("Destination Validator: %s\n", d.ValidatorDstAddr)
-	resp += fmt.Sprintf("Creation height: %v\n", d.CreationHeight)
-	resp += fmt.Sprintf("Min time to unbond (unix): %v\n", d.MinTime)
-	resp += fmt.Sprintf("Source shares: %s\n", d.SharesSrc.String())
-	resp += fmt.Sprintf("Destination shares: %s", d.SharesDst.String())
+// String returns a human readable string representation of a Redelegation.
+func (d Redelegation) String() string {
+	return fmt.Sprintf(`Redelegation:
+  Delegator:                 %s
+  Source Validator:          %s
+  Destination Validator:     %s
+  Creation height:           %v
+  Min time to unbond (unix): %v
+  Source shares:             %s
+  Destination shares:        %s`, d.DelegatorAddr,
+		d.ValidatorSrcAddr, d.ValidatorDstAddr, d.CreationHeight,
+		d.MinTime, d.SharesSrc, d.SharesDst)
+}
 
-	return resp, nil
+// Redelegations are a collection of Redelegation
+type Redelegations []Redelegation
 
+func (d Redelegations) String() (out string) {
+	for _, red := range d {
+		out += red.String() + "\n"
+	}
+	return strings.TrimSpace(out)
 }

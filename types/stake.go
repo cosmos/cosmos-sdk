@@ -116,7 +116,7 @@ type DelegationSet interface {
 // event hooks for staking validator object
 type StakingHooks interface {
 	AfterValidatorCreated(ctx Context, valAddr ValAddress)                       // Must be called when a validator is created
-	BeforeValidatorModified(ctx Context, valAddr ValAddress)                      // Must be called when a validator's state changes
+	BeforeValidatorModified(ctx Context, valAddr ValAddress)                     // Must be called when a validator's state changes
 	AfterValidatorRemoved(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Must be called when a validator is deleted
 
 	AfterValidatorBonded(ctx Context, consAddr ConsAddress, valAddr ValAddress)         // Must be called when a validator is bonded

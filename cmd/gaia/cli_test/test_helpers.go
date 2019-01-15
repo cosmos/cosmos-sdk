@@ -294,14 +294,21 @@ func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.Ba
 // gaiacli query txs
 
 // QueryTxs is gaiacli query txs
-func (f *Fixtures) QueryTxs(tags ...string) []tx.Info {
-	cmd := fmt.Sprintf("gaiacli query txs --tags='%s' %v", queryTags(tags), f.Flags())
+func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []tx.Info {
+	cmd := fmt.Sprintf("gaiacli query txs --page=%d --limit=%d --tags='%s' %v", page, limit, queryTags(tags), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var txs []tx.Info
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &txs)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return txs
+}
+
+// QueryTxsInvalid query txs with wrong parameters and compare expected error
+func (f *Fixtures) QueryTxsInvalid(expectedErr error, page, limit int, tags ...string) {
+	cmd := fmt.Sprintf("gaiacli query txs --page=%d --limit=%d --tags='%s' %v", page, limit, queryTags(tags), f.Flags())
+	_, err := tests.ExecuteT(f.T, cmd, "")
+	require.EqualError(f.T, expectedErr, err)
 }
 
 //___________________________________________________________________________________

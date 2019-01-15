@@ -2,12 +2,16 @@ package utils
 
 import (
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/tags"
+)
+
+const (
+	defaultPage  = 1
+	defaultLimit = 30 // should be consistent with tendermint/tendermint/rpc/core/pipe.go:19
 )
 
 // Proposer contains metadata of a governance proposal used for querying a
@@ -37,7 +41,9 @@ func QueryDepositsByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +86,9 @@ func QueryVotesByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +127,9 @@ func QueryVoteByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.Voter, []byte(params.Voter.String())),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +170,9 @@ func QueryDepositByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.Depositor, []byte(params.Depositor.String())),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return
 	}
@@ -196,7 +208,9 @@ func QueryProposerByTxQuery(
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 	}
 
-	infos, err := tx.SearchTxs(cliCtx, cdc, tags)
+	// NOTE: SearchTxs is used to facilitate the txs query which does not currently
+	// support configurable pagination.
+	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
 		return proposer, err
 	}

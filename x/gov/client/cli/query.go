@@ -434,7 +434,7 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 			var votingParams gov.VotingParams
 			cdc.MustUnmarshalJSON(vp, &votingParams)
 
-			client.PrintOutput(cdc, gov.NewGovParams(votingParams, tallyParams, depositParams))
+			client.PrintOutput(cdc, gov.NewParams(votingParams, tallyParams, depositParams))
 			return nil
 		},
 	}
@@ -469,7 +469,7 @@ func GetCmdQueryParam(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				cdc.MustUnmarshalJSON(res, &param)
 				out = param
 			default:
-				return fmt.Errorf("Arguement must be one of (voting|tallying|deposit), was %s", args[0])
+				return fmt.Errorf("Argument must be one of (voting|tallying|deposit), was %s", args[0])
 			}
 
 			client.PrintOutput(cdc, out)

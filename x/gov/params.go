@@ -51,20 +51,20 @@ func (vp VotingParams) String() string {
   Voting Period:      %s`, vp.VotingPeriod)
 }
 
-// GovParams returns all of the governance params
-type GovParams struct {
+// Params returns all of the governance params
+type Params struct {
 	VotingParams  VotingParams  `json:"voting_params"`
 	TallyParams   TallyParams   `json:"tally_params"`
 	DepositParams DepositParams `json:"deposit_params"`
 }
 
-func (gp GovParams) String() string {
+func (gp Params) String() string {
 	return gp.VotingParams.String() + "\n" +
 		gp.TallyParams.String() + "\n" + gp.DepositParams.String()
 }
 
-func NewGovParams(vp VotingParams, tp TallyParams, dp DepositParams) GovParams {
-	return GovParams{
+func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
+	return Params{
 		VotingParams:  vp,
 		DepositParams: dp,
 		TallyParams:   tp,

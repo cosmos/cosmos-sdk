@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -35,6 +36,8 @@ type Account interface {
 	// Calculates the amount of coins that can be sent to other accounts given
 	// the current time.
 	SpendableCoins(blockTime time.Time) sdk.Coins
+
+	String() string
 }
 
 // VestingAccount defines an account type that vests coins via a vesting schedule.
@@ -69,6 +72,15 @@ type BaseAccount struct {
 	PubKey        crypto.PubKey  `json:"public_key"`
 	AccountNumber uint64         `json:"account_number"`
 	Sequence      uint64         `json:"sequence"`
+}
+
+func (acc BaseAccount) String() string {
+	return fmt.Sprintf(`Account %s:
+  Coins:         %s
+  PubKey:        %s
+  AccountNumber: %d
+  Sequence:      %d`, acc.Address, acc.Coins,
+		acc.PubKey.Address(), acc.AccountNumber, acc.Sequence)
 }
 
 // Prototype function for BaseAccount
@@ -159,6 +171,21 @@ type BaseVestingAccount struct {
 	DelegatedVesting sdk.Coins // coins that vesting and delegated
 
 	EndTime time.Time // when the coins become unlocked
+}
+
+func (bva BaseVestingAccount) String() string {
+	return fmt.Sprintf(`Vesting Account %s:
+  Coins:            %s
+  PubKey:           %s
+  AccountNumber:    %d
+  Sequence:         %d
+  OriginalVesting:  %s
+  DelegatedFree:    %s
+  DelegatedVesting: %s
+  EndTime:          %s `, bva.Address, bva.Coins,
+		bva.PubKey.Address(), bva.AccountNumber, bva.Sequence,
+		bva.OriginalVesting, bva.DelegatedFree,
+		bva.DelegatedVesting, bva.EndTime)
 }
 
 // spendableCoins returns all the spendable coins for a vesting account given a
@@ -321,6 +348,22 @@ type ContinuousVestingAccount struct {
 	*BaseVestingAccount
 
 	StartTime time.Time // when the coins start to vest
+}
+
+func (cva ContinuousVestingAccount) String() string {
+	return fmt.Sprintf(`Vesting Account %s:
+  Coins:            %s
+  PubKey:           %s
+  AccountNumber:    %d
+  Sequence:         %d
+  OriginalVesting:  %s
+  DelegatedFree:    %s
+  DelegatedVesting: %s
+  StartTime:        %s
+  EndTime:          %s `, cva.Address, cva.Coins,
+		cva.PubKey.Address(), cva.AccountNumber, cva.Sequence,
+		cva.OriginalVesting, cva.DelegatedFree,
+		cva.DelegatedVesting, cva.StartTime, cva.EndTime)
 }
 
 func NewContinuousVestingAccount(

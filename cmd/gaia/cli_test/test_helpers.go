@@ -222,7 +222,7 @@ func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags
 
 // TxSign is gaiacli tx sign
 func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("gaiacli tx sign %v --name=%s %v", f.Flags(), signer, fileName)
+	cmd := fmt.Sprintf("gaiacli tx sign %v %s %v", f.Flags(), signer, fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 

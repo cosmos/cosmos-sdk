@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -29,10 +28,10 @@ const (
 // GetSignCommand returns the sign command
 func GetSignCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign <file>",
+		Use:   "sign <name> <file>",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
-Read a transaction from <file>, sign it, and print its JSON encoding.
+Read a transaction from <file>, sign it with <name>, and print its JSON encoding.
 
 If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.
@@ -47,9 +46,8 @@ The --offline flag makes sure that the client will not reach out to an external 
 Thus account number or sequence number lookups will not be performed and it is
 recommended to set such parameters manually.`,
 		RunE: makeSignCmd(codec),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(2),
 	}
-	cmd.Flags().String(client.FlagName, "", "Name of private key with which to sign")
 	cmd.Flags().Bool(flagAppend, true,
 		"Append the signature to the existing ones. If disabled, old signatures would be overwritten")
 	cmd.Flags().Bool(flagSigOnly, false, "Print only the generated signature, then exit.")
@@ -65,7 +63,7 @@ recommended to set such parameters manually.`,
 
 func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		stdTx, err := readAndUnmarshalStdTx(cdc, args[0])
+		stdTx, err := readAndUnmarshalStdTx(cdc, args[1])
 		if err != nil {
 			return
 		}
@@ -82,15 +80,10 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 			return nil
 		}
 
-		name := viper.GetString(client.FlagName)
-		if name == "" {
-			return errors.New("required flag \"name\" has not been set")
-		}
-
 		// if --signature-only is on, then override --append
 		generateSignatureOnly := viper.GetBool(flagSigOnly)
 		appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-		newTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, appendSig, offline)
+		newTx, err := utils.SignStdTx(txBldr, cliCtx, args[0], stdTx, appendSig, offline)
 		if err != nil {
 			return err
 		}

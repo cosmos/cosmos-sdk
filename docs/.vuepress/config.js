@@ -37,6 +37,7 @@ module.exports = {
         title: "Gaia",
         collapsable: false,
         children: [
+          "/gaia/what-is-gaia"
           "/gaia/installation",
           "/gaia/join-testnet",
           "/gaia/validators/validator-setup",

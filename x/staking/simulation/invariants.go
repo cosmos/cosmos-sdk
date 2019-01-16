@@ -59,7 +59,9 @@ func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd staking.UnbondingDelegation) bool {
-			loose = loose.Add(sdk.NewDecFromInt(ubd.Balance.Amount))
+			for _, entry := range ubd.Entries {
+				loose = loose.Add(sdk.NewDecFromInt(entry.Balance.Amount))
+			}
 			return false
 		})
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {

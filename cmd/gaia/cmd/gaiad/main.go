@@ -72,8 +72,7 @@ func exportAppStateAndTMValidators(
 			return nil, nil, err
 		}
 		return gApp.ExportAppStateAndValidators(forZeroHeight)
-	} else {
-		gApp := app.NewGaiaApp(logger, db, traceStore, true)
-		return gApp.ExportAppStateAndValidators(forZeroHeight)
 	}
+	gApp := app.NewGaiaApp(logger, db, traceStore, true)
+	return gApp.ExportAppStateAndValidators(forZeroHeight)
 }

@@ -19,6 +19,7 @@ BREAKING CHANGES
   * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
   * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
     in order to trigger a simulation of the tx before the actual execution.
+  * [\#3285](https://github.com/cosmos/cosmos-sdk/pull/3285) New `gaiad tendermint version` to print libs versions
 
 * SDK
   * [staking] \#2513 Validator power type from Dec -> Int
@@ -29,7 +30,8 @@ BREAKING CHANGES
   meter utilization during aborted ante handler executions.
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
   * \#3292 [x/distribution] Enable or disable withdraw addresses with a parameter in the param store
-  
+  * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+
 * Tendermint
   * \#3279 Upgrade to Tendermint 0.28.0-dev0
 
@@ -43,6 +45,7 @@ FEATURES
 
 * Gaia CLI  (`gaiacli`)
   * \#2399 Implement `params` command to query slashing parameters.
+  * [\#2730](https://github.com/cosmos/cosmos-sdk/issues/2730) Add tx search pagination parameter
   * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
   `query gov proposer [proposal-id]` to query for a proposal's proposer.
 
@@ -84,12 +87,14 @@ IMPROVEMENTS
     slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
+  * [x/stake] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period 
 
 * Tendermint
 
 * CI
   * \#2498 Added macos CI job to CircleCI
   * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim
+  * [#147](https://github.com/tendermint/devops/issues/142) Added docker image build to CI
 
 BUG FIXES
 

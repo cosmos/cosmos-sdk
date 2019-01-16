@@ -178,11 +178,6 @@ func ErrTransitiveRedelegation(codespace sdk.CodespaceType) sdk.Error {
 		"redelegation to this validator already in progress, first redelegation to this validator must complete before next redelegation")
 }
 
-func ErrConflictingRedelegation(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidDelegation,
-		"conflicting redelegation from this source validator to this dest validator already exists, you must wait for it to finish")
-}
-
 func ErrDelegatorShareExRateInvalid(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation,
 		"cannot delegate to validators with invalid (zero) ex-rate")

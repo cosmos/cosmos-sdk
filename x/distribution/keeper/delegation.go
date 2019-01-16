@@ -1,0 +1,89 @@
+package keeper
+
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+)
+
+// initialize starting info for a new delegation
+func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
+	// period has already been incremented
+	period := k.GetValidatorCurrentRewards(ctx, val).Period
+	validator := k.stakingKeeper.Validator(ctx, val)
+	delegation := k.stakingKeeper.Delegation(ctx, del, val)
+	// calculate delegation stake in tokens
+	// we don't store directly, so multiply delegation shares * (tokens per share)
+	stake := delegation.GetShares().Mul(validator.GetDelegatorShareExRate())
+	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(period-1, stake, uint64(ctx.BlockHeight())))
+}
+
+// calculate the rewards accrued by a delegation between two periods
+func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Validator,
+	startingPeriod, endingPeriod uint64, staking sdk.Dec) (rewards sdk.DecCoins) {
+	// sanity check
+	if startingPeriod > endingPeriod {
+		panic("startingPeriod cannot be greater than endingPeriod")
+	}
+
+	// return staking * (ending - starting)
+	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
+	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
+	difference := ending.Minus(starting)
+	rewards = difference.MulDec(staking)
+	return
+}
+
+// calculate the total rewards accrued by a delegation
+func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation, endingPeriod uint64) (rewards sdk.DecCoins) {
+	// fetch starting info for delegation
+	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
+	startingPeriod := startingInfo.PreviousPeriod
+	stake := startingInfo.Stake
+
+	// iterate through slashes and withdraw with calculated staking for sub-intervals
+	// these offsets are dependent on *when* slashes happen - namely, in BeginBlock, after rewards are allocated...
+	// ... so we don't reduce stake for slashes which happened in the *first* block, because the delegation wouldn't have existed
+	startingHeight := startingInfo.Height + 1
+	// ... or slashes which happened in *this* block, since they would have happened after reward allocation
+	endingHeight := uint64(ctx.BlockHeight()) - 1
+	if endingHeight >= startingHeight {
+		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
+			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
+				endingPeriod := event.ValidatorPeriod - 1
+				rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+				stake = stake.Mul(sdk.OneDec().Sub(event.Fraction))
+				startingPeriod = endingPeriod
+				return false
+			},
+		)
+	}
+
+	// calculate rewards for final period
+	rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
+
+	return
+}
+
+func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, del sdk.Delegation) sdk.Error {
+
+	// end current period and calculate rewards
+	endingPeriod := k.incrementValidatorPeriod(ctx, val)
+	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// truncate coins, return remainder to community pool
+	coins, remainder := rewards.TruncateDecimal()
+	outstanding := k.GetOutstandingRewards(ctx)
+	k.SetOutstandingRewards(ctx, outstanding.Minus(rewards))
+	feePool := k.GetFeePool(ctx)
+	feePool.CommunityPool = feePool.CommunityPool.Plus(remainder)
+	k.SetFeePool(ctx, feePool)
+
+	// add coins to user account
+	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, del.GetDelegatorAddr())
+	if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		return err
+	}
+
+	return nil
+}

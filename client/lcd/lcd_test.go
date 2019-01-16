@@ -467,8 +467,9 @@ func TestBonding(t *testing.T) {
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
-	unbonding := getUndelegation(t, port, addr, operAddrs[0])
-	require.Equal(t, int64(30), unbonding.Balance.Amount.Int64())
+	ubd := getUnbondingDelegation(t, port, addr, operAddrs[0])
+	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, int64(30), ubd.Entries[0].Balance.Amount.Int64())
 
 	// test redelegation
 	resultTx = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], 30, fees)
@@ -502,23 +503,28 @@ func TestBonding(t *testing.T) {
 
 	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
 	require.Len(t, redelegation, 1)
-	require.Equal(t, "30", redelegation[0].Balance.Amount.String())
+	require.Len(t, redelegation[0].Entries, 1)
+	require.Equal(t, "30", redelegation[0].Entries[0].Balance.Amount.String())
 
 	delegatorUbds := getDelegatorUnbondingDelegations(t, port, addr)
 	require.Len(t, delegatorUbds, 1)
-	require.Equal(t, "30", delegatorUbds[0].Balance.Amount.String())
+	require.Len(t, delegatorUbds[0].Entries, 1)
+	require.Equal(t, "30", delegatorUbds[0].Entries[0].Balance.Amount.String())
 
 	delegatorReds := getRedelegations(t, port, addr, nil, nil)
 	require.Len(t, delegatorReds, 1)
-	require.Equal(t, "30", delegatorReds[0].Balance.Amount.String())
+	require.Len(t, delegatorReds[0].Entries, 1)
+	require.Equal(t, "30", delegatorReds[0].Entries[0].Balance.Amount.String())
 
 	validatorUbds := getValidatorUnbondingDelegations(t, port, operAddrs[0])
 	require.Len(t, validatorUbds, 1)
-	require.Equal(t, "30", validatorUbds[0].Balance.Amount.String())
+	require.Len(t, validatorUbds[0].Entries, 1)
+	require.Equal(t, "30", validatorUbds[0].Entries[0].Balance.Amount.String())
 
 	validatorReds := getRedelegations(t, port, nil, operAddrs[0], nil)
 	require.Len(t, validatorReds, 1)
-	require.Equal(t, "30", validatorReds[0].Balance.Amount.String())
+	require.Len(t, validatorReds[0].Entries, 1)
+	require.Equal(t, "30", validatorReds[0].Entries[0].Balance.Amount.String())
 
 	// TODO Undonding status not currently implemented
 	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)

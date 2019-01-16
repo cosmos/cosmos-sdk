@@ -89,11 +89,18 @@ func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusPro
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		FeePool:             InitialFeePool(),
-		CommunityTax:        sdk.NewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:  sdk.NewDecWithPrec(1, 2), // 1%
-		BonusProposerReward: sdk.NewDecWithPrec(4, 2), // 4%
-		WithdrawAddrEnabled: false,
+		FeePool:                         InitialFeePool(),
+		CommunityTax:                    sdk.NewDecWithPrec(2, 2), // 2%
+		BaseProposerReward:              sdk.NewDecWithPrec(1, 2), // 1%
+		BonusProposerReward:             sdk.NewDecWithPrec(4, 2), // 4%
+		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
+		PreviousProposer:                nil,
+		OutstandingRewards:              sdk.DecCoins{},
+		ValidatorAccumulatedCommissions: []ValidatorAccumulatedCommissionRecord{},
+		ValidatorHistoricalRewards:      []ValidatorHistoricalRewardsRecord{},
+		ValidatorCurrentRewards:         []ValidatorCurrentRewardsRecord{},
+		DelegatorStartingInfos:          []DelegatorStartingInfoRecord{},
+		ValidatorSlashEvents:            []ValidatorSlashEventRecord{},
 	}
 }
 

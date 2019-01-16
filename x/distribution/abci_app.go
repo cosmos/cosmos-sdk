@@ -11,7 +11,7 @@ import (
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 
 	// determine the total power signing the block
-	totalPower, sumPrecommitPower := int64(0), int64(0)
+	var totalPower, sumPrecommitPower int64
 	for _, voteInfo := range req.LastCommitInfo.GetVotes() {
 		totalPower += voteInfo.Validator.Power
 		if voteInfo.SignedLastBlock {

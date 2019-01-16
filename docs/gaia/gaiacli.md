@@ -214,6 +214,11 @@ And for using multiple `tags`:
 gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 ```
 
+The pagination is supported as well via `page` and `limit`:
+```bash
+gaiacli query txs --tags='<tag>:<value>' --page=1 --limit=20
+```
+
 ::: tip Note
 
 The action tag always equals the message type returned by the `Type()` function of the relevant message.

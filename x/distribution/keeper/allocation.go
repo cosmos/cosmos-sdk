@@ -7,7 +7,7 @@ import (
 )
 
 // allocate fees handles distribution of the collected fees
-func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower int64, totalPower int64, proposer sdk.ConsAddress, votes []abci.VoteInfo) {
+func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower int64, proposer sdk.ConsAddress, votes []abci.VoteInfo) {
 
 	// fetch collected fees & fee pool
 	feesCollectedInt := k.feeCollectionKeeper.GetCollectedFees(ctx)

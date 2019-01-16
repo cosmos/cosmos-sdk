@@ -39,8 +39,6 @@ docs_update: &docs_deploy
   environment:
     AWS_REGION: us-east-1
 
-############
-
 deps: &dependencies
   run:
     name: dependencies
@@ -266,6 +264,7 @@ jobs:
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
+
   deploy_docs:
     <<: *docs_deploy
     steps:
@@ -306,10 +305,38 @@ jobs:
             source $BASH_ENV
             make test_sim_gaia_fast
 
+  docker_image:
+    <<: *linux_defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: |
+          if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            GAIAD_VERSION="stable"
+          elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+            GAIAD_VERSION="develop"
+          else
+            GAIAD_VERSION=`/tmp/workspace/bin/gaiad version`
+          fi
+          docker build -t tendermint/gaia:$GAIAD_VERSION .
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push tendermint/gaia:$GAIAD_VERSION
+
 workflows:
   version: 2
   test-suite:
     jobs:
+      - docker_image:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
+          requires:
+            - setup_dependencies
       - macos_ci:
           filters:
             branches:

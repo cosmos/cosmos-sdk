@@ -160,7 +160,6 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 
 		if entry.IsMature(now) {
 			// Unbonding delegation no longer eligible for slashing, skip it
-			// TODO Settle and delete it automatically?
 			continue
 		}
 

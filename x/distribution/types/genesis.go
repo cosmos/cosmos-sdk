@@ -93,6 +93,7 @@ func DefaultGenesisState() GenesisState {
 		CommunityTax:                    sdk.NewDecWithPrec(2, 2), // 2%
 		BaseProposerReward:              sdk.NewDecWithPrec(1, 2), // 1%
 		BonusProposerReward:             sdk.NewDecWithPrec(4, 2), // 4%
+		WithdrawAddrEnabled:             true,
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
 		PreviousProposer:                nil,
 		OutstandingRewards:              sdk.DecCoins{},

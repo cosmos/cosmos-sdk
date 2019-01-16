@@ -107,8 +107,8 @@ the transaction is the owner of the bond.
 
 ```golang
 type Delegation struct {
-	DelegatorAddr sdk.AccAddress 
-	ValidatorAddr sdk.ValAddress 
+    DelegatorAddr sdk.AccAddress 
+    ValidatorAddr sdk.ValAddress 
     Shares        sdk.Dec        // delegation shares received
 }
 ```
@@ -137,16 +137,16 @@ delegation owner after the unbonding period has passed.
 
 ```golang
 type UnbondingDelegation struct {
-	DelegatorAddr sdk.AccAddress             // delegator
-	ValidatorAddr sdk.ValAddress             // validator unbonding from operator addr
-	Entries       []UnbondingDelegationEntry // unbonding delegation entries
+    DelegatorAddr sdk.AccAddress             // delegator
+    ValidatorAddr sdk.ValAddress             // validator unbonding from operator addr
+    Entries       []UnbondingDelegationEntry // unbonding delegation entries
 }
 
 type UnbondingDelegationEntry struct {
-	CreationHeight int64     // height which the unbonding took place
-	CompletionTime time.Time // unix time for unbonding completion
-	InitialBalance sdk.Coin  // atoms initially scheduled to receive at completion
-	Balance        sdk.Coin  // atoms to receive at completion
+    CreationHeight int64     // height which the unbonding took place
+    CompletionTime time.Time // unix time for unbonding completion
+    InitialBalance sdk.Coin  // atoms initially scheduled to receive at completion
+    Balance        sdk.Coin  // atoms to receive at completion
 }
 ```
 
@@ -178,18 +178,18 @@ the original redelegation has been completed.
 
 ```golang
 type Redelegation struct {
-	DelegatorAddr    sdk.AccAddress      // delegator
-	ValidatorSrcAddr sdk.ValAddress      // validator redelegation source operator addr
-	ValidatorDstAddr sdk.ValAddress      // validator redelegation destination operator addr
-	Entries          []RedelegationEntry // redelegation entries
+    DelegatorAddr    sdk.AccAddress      // delegator
+    ValidatorSrcAddr sdk.ValAddress      // validator redelegation source operator addr
+    ValidatorDstAddr sdk.ValAddress      // validator redelegation destination operator addr
+    Entries          []RedelegationEntry // redelegation entries
 }
 
 type RedelegationEntry struct {
-	CreationHeight int64     // height which the redelegation took place
-	CompletionTime time.Time // unix time for redelegation completion
-	InitialBalance sdk.Coin  // initial balance when redelegation started
-	Balance        sdk.Coin  // current balance
-	SharesSrc      sdk.Dec   // amount of source shares redelegating
-	SharesDst      sdk.Dec   // amount of destination shares redelegating
+    CreationHeight int64     // height which the redelegation took place
+    CompletionTime time.Time // unix time for redelegation completion
+    InitialBalance sdk.Coin  // initial balance when redelegation started
+    Balance        sdk.Coin  // current balance (current value held in destination validator)
+    SharesSrc      sdk.Dec   // amount of source-validator shares removed by redelegation
+    SharesDst      sdk.Dec   // amount of destination-validator shares created by redelegation
 }
 ```

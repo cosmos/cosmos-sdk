@@ -36,7 +36,7 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		}
 
 		// validate tx
- 		// discard error if it's CodeNoSignatures as the tx comes with no signatures
+		// discard error if it's CodeNoSignatures as the tx comes with no signatures
 		if err := m.Tx.ValidateBasic(); err != nil && err.Code() != sdk.CodeNoSignatures {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

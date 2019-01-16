@@ -48,7 +48,9 @@ FEATURES
   `query gov proposer [proposal-id]` to query for a proposal's proposer.
 
 * Gaia
-    * [\#2182] [x/staking] Added querier for querying a single redelegation
+  * [\#2182] [x/staking] Added querier for querying a single redelegation
+  * [\#3305](https://github.com/cosmos/cosmos-sdk/issues/3305) Add support for
+    vesting accounts at genesis.
 
 * SDK
   * \#2694 Vesting account implementation.

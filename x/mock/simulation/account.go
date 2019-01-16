@@ -17,6 +17,7 @@ type Account struct {
 	PrivKey crypto.PrivKey
 	PubKey  crypto.PubKey
 	Address sdk.AccAddress
+	Vesting bool
 }
 
 // are two accounts equal
@@ -34,18 +35,23 @@ func RandomAcc(r *rand.Rand, accs []Account) Account {
 // RandomAccounts generates n random accounts
 func RandomAccounts(r *rand.Rand, n int) []Account {
 	accs := make([]Account, n)
+
 	for i := 0; i < n; i++ {
 		// don't need that much entropy for simulation
 		privkeySeed := make([]byte, 15)
 		r.Read(privkeySeed)
+
 		useSecp := r.Int63()%2 == 0
 		if useSecp {
 			accs[i].PrivKey = secp256k1.GenPrivKeySecp256k1(privkeySeed)
 		} else {
 			accs[i].PrivKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
 		}
+
+		accs[i].Vesting = r.Int63()%10 == 0
 		accs[i].PubKey = accs[i].PrivKey.PubKey()
 		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
 	}
+
 	return accs
 }

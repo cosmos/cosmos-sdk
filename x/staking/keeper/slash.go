@@ -145,34 +145,41 @@ func (k Keeper) Unjail(ctx sdk.Context, consAddr sdk.ConsAddress) {
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation types.UnbondingDelegation,
-	infractionHeight int64, slashFactor sdk.Dec) (slashAmount sdk.Int) {
+	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 
 	now := ctx.BlockHeader().Time
+	totalSlashAmount = sdk.ZeroInt()
 
-	// If unbonding started before this height, stake didn't contribute to infraction
-	if unbondingDelegation.CreationHeight < infractionHeight {
-		return sdk.ZeroInt()
-	}
+	// perform slashing on all entries within the unbonding delegation
+	for i, entry := range unbondingDelegation.Entries {
 
-	if unbondingDelegation.MinTime.Before(now) {
-		// Unbonding delegation no longer eligible for slashing, skip it
-		// TODO Settle and delete it automatically?
-		return sdk.ZeroInt()
-	}
+		// If unbonding started before this height, stake didn't contribute to infraction
+		if entry.CreationHeight < infractionHeight {
+			continue
+		}
 
-	// Calculate slash amount proportional to stake contributing to infraction
-	slashAmountDec := slashFactor.MulInt(unbondingDelegation.InitialBalance.Amount)
-	slashAmount = slashAmountDec.TruncateInt()
+		if entry.IsMature(now) {
+			// Unbonding delegation no longer eligible for slashing, skip it
+			continue
+		}
 
-	// Don't slash more tokens than held
-	// Possible since the unbonding delegation may already
-	// have been slashed, and slash amounts are calculated
-	// according to stake held at time of infraction
-	unbondingSlashAmount := sdk.MinInt(slashAmount, unbondingDelegation.Balance.Amount)
+		// Calculate slash amount proportional to stake contributing to infraction
+		slashAmountDec := slashFactor.MulInt(entry.InitialBalance.Amount)
+		slashAmount := slashAmountDec.TruncateInt()
+		totalSlashAmount = totalSlashAmount.Add(slashAmount)
 
-	// Update unbonding delegation if necessary
-	if !unbondingSlashAmount.IsZero() {
-		unbondingDelegation.Balance.Amount = unbondingDelegation.Balance.Amount.Sub(unbondingSlashAmount)
+		// Don't slash more tokens than held
+		// Possible since the unbonding delegation may already
+		// have been slashed, and slash amounts are calculated
+		// according to stake held at time of infraction
+		unbondingSlashAmount := sdk.MinInt(slashAmount, entry.Balance.Amount)
+
+		// Update unbonding delegation if necessary
+		if unbondingSlashAmount.IsZero() {
+			continue
+		}
+		entry.Balance.Amount = entry.Balance.Amount.Sub(unbondingSlashAmount)
+		unbondingDelegation.Entries[i] = entry
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
 		pool := k.GetPool(ctx)
 
@@ -182,7 +189,7 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		k.SetPool(ctx, pool)
 	}
 
-	return slashAmount
+	return totalSlashAmount
 }
 
 // slash a redelegation and update the pool
@@ -192,44 +199,51 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // insufficient stake remaining)
 // nolint: unparam
 func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, redelegation types.Redelegation,
-	infractionHeight int64, slashFactor sdk.Dec) (slashAmount sdk.Int) {
+	infractionHeight int64, slashFactor sdk.Dec) (totalSlashAmount sdk.Int) {
 
 	now := ctx.BlockHeader().Time
+	totalSlashAmount = sdk.ZeroInt()
 
-	// If redelegation started before this height, stake didn't contribute to infraction
-	if redelegation.CreationHeight < infractionHeight {
-		return sdk.ZeroInt()
-	}
+	// perform slashing on all entries within the redelegation
+	for i, entry := range redelegation.Entries {
 
-	if redelegation.MinTime.Before(now) {
-		// Redelegation no longer eligible for slashing, skip it
-		// TODO Delete it automatically?
-		return sdk.ZeroInt()
-	}
+		// If redelegation started before this height, stake didn't contribute to infraction
+		if entry.CreationHeight < infractionHeight {
+			continue
+		}
 
-	// Calculate slash amount proportional to stake contributing to infraction
-	slashAmountDec := slashFactor.MulInt(redelegation.InitialBalance.Amount)
-	slashAmount = slashAmountDec.TruncateInt()
+		if entry.IsMature(now) {
+			// Redelegation no longer eligible for slashing, skip it
+			continue
+		}
 
-	// Don't slash more tokens than held
-	// Possible since the redelegation may already
-	// have been slashed, and slash amounts are calculated
-	// according to stake held at time of infraction
-	redelegationSlashAmount := sdk.MinInt(slashAmount, redelegation.Balance.Amount)
+		// Calculate slash amount proportional to stake contributing to infraction
+		slashAmountDec := slashFactor.MulInt(entry.InitialBalance.Amount)
+		slashAmount := slashAmountDec.TruncateInt()
+		totalSlashAmount = totalSlashAmount.Add(slashAmount)
 
-	// Update redelegation if necessary
-	if !redelegationSlashAmount.IsZero() {
-		redelegation.Balance.Amount = redelegation.Balance.Amount.Sub(redelegationSlashAmount)
-		k.SetRedelegation(ctx, redelegation)
-	}
+		// Don't slash more tokens than held
+		// Possible since the redelegation may already
+		// have been slashed, and slash amounts are calculated
+		// according to stake held at time of infraction
+		redelegationSlashAmount := sdk.MinInt(slashAmount, entry.Balance.Amount)
 
-	// Unbond from target validator
-	sharesToUnbond := slashFactor.Mul(redelegation.SharesDst)
-	if !sharesToUnbond.IsZero() {
+		// Update entry if necessary
+		if !redelegationSlashAmount.IsZero() {
+			entry.Balance.Amount = entry.Balance.Amount.Sub(redelegationSlashAmount)
+			redelegation.Entries[i] = entry
+			k.SetRedelegation(ctx, redelegation)
+		}
+
+		// Unbond from target validator
+		sharesToUnbond := slashFactor.Mul(entry.SharesDst)
+		if sharesToUnbond.IsZero() {
+			continue
+		}
 		delegation, found := k.GetDelegation(ctx, redelegation.DelegatorAddr, redelegation.ValidatorDstAddr)
 		if !found {
 			// If deleted, delegation has zero shares, and we can't unbond any more
-			return slashAmount
+			continue
 		}
 		if sharesToUnbond.GT(delegation.Shares) {
 			sharesToUnbond = delegation.Shares
@@ -246,5 +260,5 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		k.SetPool(ctx, pool)
 	}
 
-	return slashAmount
+	return totalSlashAmount
 }

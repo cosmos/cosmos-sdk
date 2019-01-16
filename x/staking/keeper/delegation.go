@@ -170,9 +170,28 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 	store.Delete(GetUBDByValIndexKey(ubd.DelegatorAddr, ubd.ValidatorAddr))
 }
 
-// gets a specific unbonding queue timeslice. A timeslice is a slice of DVPairs corresponding to unbonding delegations
-// that expire at a certain time.
-func (k Keeper) GetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPairs []types.DVPair) {
+// SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
+// the given addresses. It creates the unbonding delegation if it does not exist
+func (k Keeper) SetUnbondingDelegationEntry(ctx sdk.Context,
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	creationHeight int64, minTime time.Time, balance sdk.Coin) types.UnbondingDelegation {
+
+	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	if found {
+		ubd.AddEntry(creationHeight, minTime, balance)
+	} else {
+		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance)
+	}
+	k.SetUnbondingDelegation(ctx, ubd)
+	return ubd
+}
+
+//________________________________________________
+// unbonding delegation queue timeslice operations
+
+// gets a specific unbonding queue timeslice. A timeslice is a slice of DVPairs
+// corresponding to unbonding delegations that expire at a certain time.
+func (k Keeper) GetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPairs []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetUnbondingDelegationTimeKey(timestamp))
 	if bz == nil {
@@ -183,38 +202,45 @@ func (k Keeper) GetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time)
 }
 
 // Sets a specific unbonding queue timeslice.
-func (k Keeper) SetUnbondingQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVPair) {
+func (k Keeper) SetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(keys)
 	store.Set(GetUnbondingDelegationTimeKey(timestamp), bz)
 }
 
 // Insert an unbonding delegation to the appropriate timeslice in the unbonding queue
-func (k Keeper) InsertUnbondingQueue(ctx sdk.Context, ubd types.UnbondingDelegation) {
-	timeSlice := k.GetUnbondingQueueTimeSlice(ctx, ubd.MinTime)
+func (k Keeper) InsertUBDQueue(ctx sdk.Context, ubd types.UnbondingDelegation,
+	completionTime time.Time) {
+
+	timeSlice := k.GetUBDQueueTimeSlice(ctx, completionTime)
 	dvPair := types.DVPair{ubd.DelegatorAddr, ubd.ValidatorAddr}
 	if len(timeSlice) == 0 {
-		k.SetUnbondingQueueTimeSlice(ctx, ubd.MinTime, []types.DVPair{dvPair})
+		k.SetUBDQueueTimeSlice(ctx, completionTime, []types.DVPair{dvPair})
 	} else {
 		timeSlice = append(timeSlice, dvPair)
-		k.SetUnbondingQueueTimeSlice(ctx, ubd.MinTime, timeSlice)
+		k.SetUBDQueueTimeSlice(ctx, completionTime, timeSlice)
 	}
 }
 
 // Returns all the unbonding queue timeslices from time 0 until endTime
-func (k Keeper) UnbondingQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+func (k Keeper) UBDQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(UnbondingQueueKey, sdk.InclusiveEndBytes(GetUnbondingDelegationTimeKey(endTime)))
+	return store.Iterator(UnbondingQueueKey,
+		sdk.InclusiveEndBytes(GetUnbondingDelegationTimeKey(endTime)))
 }
 
-// Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
-func (k Keeper) DequeueAllMatureUnbondingQueue(ctx sdk.Context, currTime time.Time) (matureUnbonds []types.DVPair) {
+// Returns a concatenated list of all the timeslices inclusively previous to
+// currTime, and deletes the timeslices from the queue
+func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context,
+	currTime time.Time) (matureUnbonds []types.DVPair) {
+
 	store := ctx.KVStore(k.storeKey)
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
-	unbondingTimesliceIterator := k.UnbondingQueueIterator(ctx, ctx.BlockHeader().Time)
+	unbondingTimesliceIterator := k.UBDQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; unbondingTimesliceIterator.Valid(); unbondingTimesliceIterator.Next() {
 		timeslice := []types.DVPair{}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(unbondingTimesliceIterator.Value(), &timeslice)
+		value := unbondingTimesliceIterator.Value()
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(value, &timeslice)
 		matureUnbonds = append(matureUnbonds, timeslice...)
 		store.Delete(unbondingTimesliceIterator.Key())
 	}
@@ -298,6 +324,26 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Set(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr), []byte{})
 }
 
+// SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
+// the given addresses. It creates the unbonding delegation if it does not exist
+func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
+	delegatorAddr sdk.AccAddress, validatorSrcAddr,
+	validatorDstAddr sdk.ValAddress, creationHeight int64,
+	minTime time.Time, balance sdk.Coin,
+	sharesSrc, sharesDst sdk.Dec) types.Redelegation {
+
+	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
+	if found {
+		red.AddEntry(creationHeight, minTime, balance, sharesSrc, sharesDst)
+	} else {
+		red = types.NewRedelegation(delegatorAddr, validatorSrcAddr,
+			validatorDstAddr, creationHeight, minTime, balance, sharesSrc,
+			sharesDst)
+	}
+	k.SetRedelegation(ctx, red)
+	return red
+}
+
 // iterate through all redelegations
 func (k Keeper) IterateRedelegations(ctx sdk.Context, fn func(index int64, red types.Redelegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
@@ -322,6 +368,9 @@ func (k Keeper) RemoveRedelegation(ctx sdk.Context, red types.Redelegation) {
 	store.Delete(GetREDByValDstIndexKey(red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr))
 }
 
+//________________________________________________
+// redelegation queue timeslice operations
+
 // Gets a specific redelegation queue timeslice. A timeslice is a slice of DVVTriplets corresponding to redelegations
 // that expire at a certain time.
 func (k Keeper) GetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvvTriplets []types.DVVTriplet) {
@@ -342,14 +391,16 @@ func (k Keeper) SetRedelegationQueueTimeSlice(ctx sdk.Context, timestamp time.Ti
 }
 
 // Insert an redelegation delegation to the appropriate timeslice in the redelegation queue
-func (k Keeper) InsertRedelegationQueue(ctx sdk.Context, red types.Redelegation) {
-	timeSlice := k.GetRedelegationQueueTimeSlice(ctx, red.MinTime)
+func (k Keeper) InsertRedelegationQueue(ctx sdk.Context, red types.Redelegation,
+	completionTime time.Time) {
+
+	timeSlice := k.GetRedelegationQueueTimeSlice(ctx, completionTime)
 	dvvTriplet := types.DVVTriplet{red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr}
 	if len(timeSlice) == 0 {
-		k.SetRedelegationQueueTimeSlice(ctx, red.MinTime, []types.DVVTriplet{dvvTriplet})
+		k.SetRedelegationQueueTimeSlice(ctx, completionTime, []types.DVVTriplet{dvvTriplet})
 	} else {
 		timeSlice = append(timeSlice, dvvTriplet)
-		k.SetRedelegationQueueTimeSlice(ctx, red.MinTime, timeSlice)
+		k.SetRedelegationQueueTimeSlice(ctx, completionTime, timeSlice)
 	}
 }
 
@@ -359,14 +410,16 @@ func (k Keeper) RedelegationQueueIterator(ctx sdk.Context, endTime time.Time) sd
 	return store.Iterator(RedelegationQueueKey, sdk.InclusiveEndBytes(GetRedelegationTimeKey(endTime)))
 }
 
-// Returns a concatenated list of all the timeslices before currTime, and deletes the timeslices from the queue
+// Returns a concatenated list of all the timeslices inclusively previous to
+// currTime, and deletes the timeslices from the queue
 func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
 	redelegationTimesliceIterator := k.RedelegationQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; redelegationTimesliceIterator.Valid(); redelegationTimesliceIterator.Next() {
 		timeslice := []types.DVVTriplet{}
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(redelegationTimesliceIterator.Value(), &timeslice)
+		value := redelegationTimesliceIterator.Value()
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(value, &timeslice)
 		matureRedelegations = append(matureRedelegations, timeslice...)
 		store.Delete(redelegationTimesliceIterator.Key())
 	}
@@ -474,9 +527,9 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 
 //______________________________________________________________________________________________________
 
-// get info for begin functions: MinTime and CreationHeight
+// get info for begin functions: completionTime and CreationHeight
 func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
-	minTime time.Time, height int64, completeNow bool) {
+	completionTime time.Time, height int64, completeNow bool) {
 
 	validator, found := k.GetValidator(ctx, valSrcAddr)
 
@@ -484,17 +537,17 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 	case !found || validator.Status == sdk.Bonded:
 
 		// the longest wait - just unbonding period from now
-		minTime = ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
+		completionTime = ctx.BlockHeader().Time.Add(k.UnbondingTime(ctx))
 		height = ctx.BlockHeight()
-		return minTime, height, false
+		return completionTime, height, false
 
 	case validator.Status == sdk.Unbonded:
-		return minTime, height, true
+		return completionTime, height, true
 
 	case validator.Status == sdk.Unbonding:
-		minTime = validator.UnbondingMinTime
+		completionTime = validator.UnbondingMinTime
 		height = validator.UnbondingHeight
-		return minTime, height, false
+		return completionTime, height, false
 
 	default:
 		panic("unknown validator status")
@@ -502,21 +555,15 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 }
 
 // begin unbonding an unbonding record
-func (k Keeper) BeginUnbonding(ctx sdk.Context,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec) (types.UnbondingDelegation, sdk.Error) {
-
-	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
-	_, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
-	if found {
-		return types.UnbondingDelegation{}, types.ErrExistingUnbondingDelegation(k.Codespace())
-	}
+func (k Keeper) BeginUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress, sharesAmount sdk.Dec) (completionTime time.Time, sdkErr sdk.Error) {
 
 	// create the unbonding delegation
-	minTime, height, completeNow := k.getBeginInfo(ctx, valAddr)
+	completionTime, height, completeNow := k.getBeginInfo(ctx, valAddr)
 
 	returnAmount, err := k.unbond(ctx, delAddr, valAddr, sharesAmount)
 	if err != nil {
-		return types.UnbondingDelegation{}, err
+		return completionTime, err
 	}
 	balance := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
 
@@ -524,107 +571,103 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context,
 	if completeNow {
 		_, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance})
 		if err != nil {
-			return types.UnbondingDelegation{}, err
+			return completionTime, err
 		}
-
-		return types.UnbondingDelegation{MinTime: minTime}, nil
+		return completionTime, nil
 	}
 
-	ubd := types.UnbondingDelegation{
-		DelegatorAddr:  delAddr,
-		ValidatorAddr:  valAddr,
-		CreationHeight: height,
-		MinTime:        minTime,
-		Balance:        balance,
-		InitialBalance: balance,
-	}
-	k.SetUnbondingDelegation(ctx, ubd)
-	k.InsertUnbondingQueue(ctx, ubd)
+	ubd := k.SetUnbondingDelegationEntry(ctx, delAddr,
+		valAddr, height, completionTime, balance)
 
-	return ubd, nil
+	k.InsertUBDQueue(ctx, ubd, completionTime)
+	return completionTime, nil
 }
 
-// complete unbonding an unbonding record
-// CONTRACT: Expects unbonding passed in has finished the unbonding period
-func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) sdk.Error {
+// CompleteUnbonding completes the unbonding of all mature entries in the
+// retrieved unbonding delegation object.
+func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
+	valAddr sdk.ValAddress) sdk.Error {
 
 	ubd, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return types.ErrNoUnbondingDelegation(k.Codespace())
 	}
 
-	_, _, err := k.bankKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{ubd.Balance})
-	if err != nil {
-		return err
+	ctxTime := ctx.BlockHeader().Time
+
+	// loop through all the entries and complete unbonding mature entries
+	for i := 0; i < len(ubd.Entries); i++ {
+		entry := ubd.Entries[i]
+		if entry.IsMature(ctxTime) {
+			ubd.RemoveEntry(int64(i))
+			i--
+
+			_, _, err := k.bankKeeper.AddCoins(ctx, ubd.DelegatorAddr, sdk.Coins{entry.Balance})
+			if err != nil {
+				return err
+			}
+		}
 	}
-	k.RemoveUnbondingDelegation(ctx, ubd)
+
+	// set the unbonding delegation or remove it if there are no more entries
+	if len(ubd.Entries) == 0 {
+		k.RemoveUnbondingDelegation(ctx, ubd)
+	} else {
+		k.SetUnbondingDelegation(ctx, ubd)
+	}
+
 	return nil
 }
 
 // begin unbonding / redelegation; create a redelegation record
 func (k Keeper) BeginRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
-	valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec) (types.Redelegation, sdk.Error) {
+	valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec) (
+	completionTime time.Time, errSdk sdk.Error) {
 
 	if bytes.Equal(valSrcAddr, valDstAddr) {
-		return types.Redelegation{}, types.ErrSelfRedelegation(k.Codespace())
-	}
-
-	// check if there is already a redelgation in progress from src to dst
-	// TODO quick fix, instead we should use an index, see https://github.com/cosmos/cosmos-sdk/issues/1402
-	_, found := k.GetRedelegation(ctx, delAddr, valSrcAddr, valDstAddr)
-	if found {
-		return types.Redelegation{}, types.ErrConflictingRedelegation(k.Codespace())
+		return time.Time{}, types.ErrSelfRedelegation(k.Codespace())
 	}
 
 	// check if this is a transitive redelegation
 	if k.HasReceivingRedelegation(ctx, delAddr, valSrcAddr) {
-		return types.Redelegation{}, types.ErrTransitiveRedelegation(k.Codespace())
+		return time.Time{}, types.ErrTransitiveRedelegation(k.Codespace())
 	}
 
 	returnAmount, err := k.unbond(ctx, delAddr, valSrcAddr, sharesAmount)
 	if err != nil {
-		return types.Redelegation{}, err
+		return time.Time{}, err
 	}
 
 	if returnAmount.IsZero() {
-		return types.Redelegation{}, types.ErrVerySmallRedelegation(k.Codespace())
+		return time.Time{}, types.ErrVerySmallRedelegation(k.Codespace())
 	}
 	returnCoin := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
 
 	dstValidator, found := k.GetValidator(ctx, valDstAddr)
 	if !found {
-		return types.Redelegation{}, types.ErrBadRedelegationDst(k.Codespace())
+		return time.Time{}, types.ErrBadRedelegationDst(k.Codespace())
 	}
 
 	sharesCreated, err := k.Delegate(ctx, delAddr, returnCoin, dstValidator, false)
 	if err != nil {
-		return types.Redelegation{}, err
+		return time.Time{}, err
 	}
 
 	// create the unbonding delegation
-	minTime, height, completeNow := k.getBeginInfo(ctx, valSrcAddr)
+	completionTime, height, completeNow := k.getBeginInfo(ctx, valSrcAddr)
 
 	if completeNow { // no need to create the redelegation object
-		return types.Redelegation{MinTime: minTime}, nil
+		return completionTime, nil
 	}
 
-	red := types.Redelegation{
-		DelegatorAddr:    delAddr,
-		ValidatorSrcAddr: valSrcAddr,
-		ValidatorDstAddr: valDstAddr,
-		CreationHeight:   height,
-		MinTime:          minTime,
-		SharesDst:        sharesCreated,
-		SharesSrc:        sharesAmount,
-		Balance:          returnCoin,
-		InitialBalance:   returnCoin,
-	}
-	k.SetRedelegation(ctx, red)
-	k.InsertRedelegationQueue(ctx, red)
-	return red, nil
+	red := k.SetRedelegationEntry(ctx, delAddr, valSrcAddr, valDstAddr,
+		height, completionTime, returnCoin, sharesAmount, sharesCreated)
+	k.InsertRedelegationQueue(ctx, red, completionTime)
+	return completionTime, nil
 }
 
-// complete unbonding an ongoing redelegation
+// CompleteRedelegation completes the unbonding of all mature entries in the
+// retrieved unbonding delegation object.
 func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 	valSrcAddr, valDstAddr sdk.ValAddress) sdk.Error {
 
@@ -633,12 +676,23 @@ func (k Keeper) CompleteRedelegation(ctx sdk.Context, delAddr sdk.AccAddress,
 		return types.ErrNoRedelegation(k.Codespace())
 	}
 
-	// ensure that enough time has passed
 	ctxTime := ctx.BlockHeader().Time
-	if red.MinTime.After(ctxTime) {
-		return types.ErrNotMature(k.Codespace(), "redelegation", "unit-time", red.MinTime, ctxTime)
+
+	// loop through all the entries and complete mature redelegation entries
+	for i := 0; i < len(red.Entries); i++ {
+		entry := red.Entries[i]
+		if entry.IsMature(ctxTime) {
+			red.RemoveEntry(int64(i))
+			i--
+		}
 	}
 
-	k.RemoveRedelegation(ctx, red)
+	// set the redelegation or remove it if there are no more entries
+	if len(red.Entries) == 0 {
+		k.RemoveRedelegation(ctx, red)
+	} else {
+		k.SetRedelegation(ctx, red)
+	}
+
 	return nil
 }

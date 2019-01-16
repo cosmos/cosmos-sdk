@@ -137,13 +137,8 @@ func TestDelegation(t *testing.T) {
 func TestUnbondingDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
-	ubd := types.UnbondingDelegation{
-		DelegatorAddr:  addrDels[0],
-		ValidatorAddr:  addrVals[0],
-		CreationHeight: 0,
-		MinTime:        time.Unix(0, 0),
-		Balance:        sdk.NewInt64Coin(types.DefaultBondDenom, 5),
-	}
+	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
+		time.Unix(0, 0), sdk.NewInt64Coin(types.DefaultBondDenom, 5))
 
 	// set and retrieve a record
 	keeper.SetUnbondingDelegation(ctx, ubd)
@@ -152,7 +147,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.True(t, ubd.Equal(resUnbond))
 
 	// modify a records, save, and retrieve
-	ubd.Balance = sdk.NewInt64Coin(types.DefaultBondDenom, 21)
+	ubd.Entries[0].Balance = sdk.NewInt64Coin(types.DefaultBondDenom, 21)
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
 	resUnbonds := keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
@@ -338,9 +333,10 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	// retrieve the unbonding delegation
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
-	require.True(t, ubd.Balance.IsEqual(sdk.NewInt64Coin(params.BondDenom, 6)))
-	assert.Equal(t, blockHeight, ubd.CreationHeight)
-	assert.True(t, blockTime.Add(params.UnbondingTime).Equal(ubd.MinTime))
+	require.Len(t, ubd.Entries, 1)
+	require.True(t, ubd.Entries[0].Balance.IsEqual(sdk.NewInt64Coin(params.BondDenom, 6)))
+	assert.Equal(t, blockHeight, ubd.Entries[0].CreationHeight)
+	assert.True(t, blockTime.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 }
 
 func TestUndelegateFromUnbondedValidator(t *testing.T) {
@@ -490,15 +486,9 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 func TestGetRedelegationsFromValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
-	rd := types.Redelegation{
-		DelegatorAddr:    addrDels[0],
-		ValidatorSrcAddr: addrVals[0],
-		ValidatorDstAddr: addrVals[1],
-		CreationHeight:   0,
-		MinTime:          time.Unix(0, 0),
-		SharesSrc:        sdk.NewDec(5),
-		SharesDst:        sdk.NewDec(5),
-	}
+	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
+		time.Unix(0, 0), sdk.NewInt64Coin(types.DefaultBondDenom, 5),
+		sdk.NewDec(5), sdk.NewDec(5))
 
 	// set and retrieve a record
 	keeper.SetRedelegation(ctx, rd)
@@ -520,15 +510,9 @@ func TestGetRedelegationsFromValidator(t *testing.T) {
 func TestRedelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
-	rd := types.Redelegation{
-		DelegatorAddr:    addrDels[0],
-		ValidatorSrcAddr: addrVals[0],
-		ValidatorDstAddr: addrVals[1],
-		CreationHeight:   0,
-		MinTime:          time.Unix(0, 0),
-		SharesSrc:        sdk.NewDec(5),
-		SharesDst:        sdk.NewDec(5),
-	}
+	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
+		time.Unix(0, 0), sdk.NewInt64Coin(types.DefaultBondDenom, 5),
+		sdk.NewDec(5), sdk.NewDec(5))
 
 	// test shouldn't have and redelegations
 	has := keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
@@ -556,8 +540,8 @@ func TestRedelegation(t *testing.T) {
 	require.True(t, has)
 
 	// modify a records, save, and retrieve
-	rd.SharesSrc = sdk.NewDec(21)
-	rd.SharesDst = sdk.NewDec(21)
+	rd.Entries[0].SharesSrc = sdk.NewDec(21)
+	rd.Entries[0].SharesDst = sdk.NewDec(21)
 	keeper.SetRedelegation(ctx, rd)
 
 	resRed, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
@@ -742,9 +726,10 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	// retrieve the unbonding delegation
 	ubd, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
-	require.True(t, ubd.Balance.IsEqual(sdk.NewInt64Coin(params.BondDenom, 6)))
-	assert.Equal(t, blockHeight, ubd.CreationHeight)
-	assert.True(t, blockTime.Add(params.UnbondingTime).Equal(ubd.MinTime))
+	require.Len(t, ubd.Entries, 1)
+	require.True(t, ubd.Entries[0].Balance.IsEqual(sdk.NewInt64Coin(params.BondDenom, 6)))
+	assert.Equal(t, blockHeight, ubd.Entries[0].CreationHeight)
+	assert.True(t, blockTime.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 }
 
 func TestRedelegateFromUnbondedValidator(t *testing.T) {

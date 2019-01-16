@@ -130,11 +130,13 @@ is _vesting_.
 
 ```go
 func (cva ContinuousVestingAccount) GetVestedCoins(t Time) Coins {
-    // We must handle the case where the start time for a vesting account has
-    // been set into the future or when the start of the chain is not exactly
-    // known.
-    if t <= va.StartTime {
+    if t <= cva.StartTime {
+        // We must handle the case where the start time for a vesting account has
+        // been set into the future or when the start of the chain is not exactly
+        // known.
         return ZeroCoins
+    } else if t >= cva.EndTime {
+        return cva.OriginalVesting
     }
 
     x := t - cva.StartTime

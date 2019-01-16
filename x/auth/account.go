@@ -352,6 +352,8 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	// known.
 	if blockTime.Unix() <= cva.StartTime {
 		return vestedCoins
+	} else if blockTime.Unix() >= cva.EndTime {
+		return cva.OriginalVesting
 	}
 
 	// calculate the vesting scalar

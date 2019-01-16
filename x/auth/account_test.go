@@ -123,6 +123,10 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	// require 50% of coins vested
 	vestedCoins = cva.GetVestedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, vestedCoins)
+
+	// require 100% of coins vested
+	vestedCoins = cva.GetVestedCoins(now.Add(48 * time.Hour))
+	require.Equal(t, origCoins, vestedCoins)
 }
 
 func TestGetVestingCoinsContVestingAcc(t *testing.T) {

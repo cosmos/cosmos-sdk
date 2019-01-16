@@ -70,25 +70,10 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	// Randomly generate some genesis accounts
 	for _, acc := range accs {
 		coins := sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))}
-		bacc := auth.NewBaseAccountWithAddress(acc.Address)
-		bacc.SetCoins(coins)
-
-		if acc.Vesting {
-			var vacc auth.VestingAccount
-
-			startTime := time.Now().Unix()
-			endTime := r.Int63n((startTime+(60*60*24*2))-startTime) + startTime
-
-			if r.Int63()%10 == 0 {
-				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, endTime)
-			} else {
-				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
-			}
-
-			genesisAccounts = append(genesisAccounts, NewGenesisVestingAccount(vacc))
-		} else {
-			genesisAccounts = append(genesisAccounts, NewGenesisAccount(&bacc))
-		}
+		genesisAccounts = append(genesisAccounts, GenesisAccount{
+			Address: acc.Address,
+			Coins:   coins,
+		})
 	}
 
 	authGenesis := auth.GenesisState{

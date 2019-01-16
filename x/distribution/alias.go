@@ -27,7 +27,7 @@ type (
 	GenesisState = types.GenesisState
 
 	// expected keepers
-	StakingKeeper         = types.StakingKeeper
+	StakingKeeper       = types.StakingKeeper
 	BankKeeper          = types.BankKeeper
 	FeeCollectionKeeper = types.FeeCollectionKeeper
 )
@@ -71,7 +71,7 @@ const (
 	StoreKey         = types.StoreKey
 	TStoreKey        = types.TStoreKey
 	RouterKey        = types.RouterKey
-	QuerierRoute       = types.QuerierRoute
+	QuerierRoute     = types.QuerierRoute
 )
 
 var (

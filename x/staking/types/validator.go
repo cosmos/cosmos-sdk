@@ -405,14 +405,15 @@ func (v Validator) BondedTokens() sdk.Int {
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator
-func (v Validator) GetJailed() bool              { return v.Jailed }
-func (v Validator) GetMoniker() string           { return v.Description.Moniker }
-func (v Validator) GetStatus() sdk.BondStatus    { return v.Status }
-func (v Validator) GetOperator() sdk.ValAddress  { return v.OperatorAddr }
-func (v Validator) GetConsPubKey() crypto.PubKey { return v.ConsPubKey }
-func (v Validator) GetConsAddr() sdk.ConsAddress { return sdk.ConsAddress(v.ConsPubKey.Address()) }
-func (v Validator) GetPower() sdk.Int            { return v.BondedTokens() }
-func (v Validator) GetTokens() sdk.Int           { return v.Tokens }
-func (v Validator) GetCommission() sdk.Dec       { return v.Commission.Rate }
-func (v Validator) GetDelegatorShares() sdk.Dec  { return v.DelegatorShares }
-func (v Validator) GetBondHeight() int64         { return v.BondHeight }
+func (v Validator) GetJailed() bool                  { return v.Jailed }
+func (v Validator) GetMoniker() string               { return v.Description.Moniker }
+func (v Validator) GetStatus() sdk.BondStatus        { return v.Status }
+func (v Validator) GetOperator() sdk.ValAddress      { return v.OperatorAddr }
+func (v Validator) GetConsPubKey() crypto.PubKey     { return v.ConsPubKey }
+func (v Validator) GetConsAddr() sdk.ConsAddress     { return sdk.ConsAddress(v.ConsPubKey.Address()) }
+func (v Validator) GetPower() sdk.Int                { return v.BondedTokens() }
+func (v Validator) GetTokens() sdk.Int               { return v.Tokens }
+func (v Validator) GetCommission() sdk.Dec           { return v.Commission.Rate }
+func (v Validator) GetDelegatorShares() sdk.Dec      { return v.DelegatorShares }
+func (v Validator) GetBondHeight() int64             { return v.BondHeight }
+func (v Validator) GetDelegatorShareExRate() sdk.Dec { return v.DelegatorShareExRate() }

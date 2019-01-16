@@ -45,6 +45,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	for _, delegation := range data.Bonds {
 		keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 		keeper.SetDelegation(ctx, delegation)
+		keeper.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
 	for _, ubd := range data.UnbondingDelegations {

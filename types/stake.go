@@ -45,8 +45,9 @@ type Validator interface {
 	GetPower() Int                // validation power
 	GetTokens() Int               // validation tokens
 	GetCommission() Dec           // validator commission rate
-	GetDelegatorShares() Dec      // Total out standing delegator shares
+	GetDelegatorShares() Dec      // total outstanding delegator shares
 	GetBondHeight() int64         // height in which the validator became active
+	GetDelegatorShareExRate() Dec // tokens per delegator share exchange rate
 }
 
 // validator which fulfills abci validator interface for use in Tendermint
@@ -126,4 +127,6 @@ type StakingHooks interface {
 	BeforeDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is created
 	BeforeDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified
 	BeforeDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is removed
+	AfterDelegationModified(ctx Context, delAddr AccAddress, valAddr ValAddress)
+	BeforeValidatorSlashed(ctx Context, valAddr ValAddress, fraction Dec)
 }

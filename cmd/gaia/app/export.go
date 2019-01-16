@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -14,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	staking "github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // export the state of gaia for a genesis file
@@ -62,55 +61,41 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 
 	/* Handle fee distribution state. */
 
-	// withdraw all delegator & validator rewards
-	vdiIter := func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
-		err := app.distrKeeper.WithdrawValidatorRewardsAll(ctx, valInfo.OperatorAddr)
-		if err != nil {
-			panic(err)
-		}
-		return false
-	}
-	app.distrKeeper.IterateValidatorDistInfos(ctx, vdiIter)
-
-	ddiIter := func(_ int64, distInfo distr.DelegationDistInfo) (stop bool) {
-		err := app.distrKeeper.WithdrawDelegationReward(
-			ctx, distInfo.DelegatorAddr, distInfo.ValOperatorAddr)
-		if err != nil {
-			panic(err)
-		}
-		return false
-	}
-	app.distrKeeper.IterateDelegationDistInfos(ctx, ddiIter)
-
-	app.assertRuntimeInvariantsOnContext(ctx)
-
-	// set distribution info withdrawal heights to 0
-	app.distrKeeper.IterateDelegationDistInfos(ctx, func(_ int64, delInfo distr.DelegationDistInfo) (stop bool) {
-		delInfo.DelPoolWithdrawalHeight = 0
-		app.distrKeeper.SetDelegationDistInfo(ctx, delInfo)
-		return false
-	})
-	app.distrKeeper.IterateValidatorDistInfos(ctx, func(_ int64, valInfo distr.ValidatorDistInfo) (stop bool) {
-		valInfo.FeePoolWithdrawalHeight = 0
-		valInfo.DelAccum.UpdateHeight = 0
-		app.distrKeeper.SetValidatorDistInfo(ctx, valInfo)
+	// withdraw all validator commission
+	app.stakingKeeper.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+		_ = app.distrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
 		return false
 	})
 
-	// assert that the fee pool is empty
-	feePool := app.distrKeeper.GetFeePool(ctx)
-	if !feePool.TotalValAccum.Accum.IsZero() {
-		panic("unexpected leftover validator accum")
-	}
-	bondDenom := app.stakingKeeper.GetParams(ctx).BondDenom
-	if !feePool.ValPool.AmountOf(bondDenom).IsZero() {
-		panic(fmt.Sprintf("unexpected leftover validator pool coins: %v",
-			feePool.ValPool.AmountOf(bondDenom).String()))
+	// withdraw all delegator rewards
+	dels := app.stakingKeeper.GetAllDelegations(ctx)
+	for _, delegation := range dels {
+		_ = app.distrKeeper.WithdrawDelegationRewards(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
-	// reset fee pool height, save fee pool
-	feePool.TotalValAccum = distr.NewTotalAccum(0)
-	app.distrKeeper.SetFeePool(ctx, feePool)
+	// clear validator slash events
+	app.distrKeeper.DeleteValidatorSlashEvents(ctx)
+
+	// clear validator historical rewards
+	app.distrKeeper.DeleteValidatorHistoricalRewards(ctx)
+
+	// set context height to zero
+	height := ctx.BlockHeight()
+	ctx = ctx.WithBlockHeight(0)
+
+	// reinitialize all validators
+	app.stakingKeeper.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+		app.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		return false
+	})
+
+	// reinitialize all delegations
+	for _, del := range dels {
+		app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, del.DelegatorAddr, del.ValidatorAddr)
+	}
+
+	// reset context height
+	ctx = ctx.WithBlockHeight(height)
 
 	/* Handle staking state. */
 

@@ -57,6 +57,8 @@ FEATURES
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) `add-genesis-account` can take both account addresses and key names
 
 * SDK
+  - \#3099 Implement F1 fee distribution
+  - [\#2926](https://github.com/cosmos/cosmos-sdk/issues/2926) Add TxEncoder to client TxBuilder.
   * \#2694 Vesting account implementation.
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
   the ante handler.

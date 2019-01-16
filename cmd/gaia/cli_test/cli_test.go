@@ -76,7 +76,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 23))
 	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(feeDenom, 10), txFees)
 	require.True(f.T, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
+	tests.WaitForNextNBlocksTM(2, f.Port)
 
 	// Ensure tx w/ improper fees (footoken) fails
 	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 23))

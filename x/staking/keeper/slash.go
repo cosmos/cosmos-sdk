@@ -55,6 +55,11 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	operatorAddress := validator.GetOperator()
 	k.BeforeValidatorModified(ctx, operatorAddress)
 
+	// we need to calculate the *effective* slash fraction for distribution
+	if validator.Tokens.GT(sdk.ZeroInt()) {
+		k.BeforeValidatorSlashed(ctx, operatorAddress, slashAmountDec.Quo(sdk.NewDecFromInt(validator.Tokens)))
+	}
+
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
 	// redelegations, as that stake has since unbonded

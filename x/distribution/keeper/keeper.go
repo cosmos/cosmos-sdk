@@ -20,9 +20,9 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
+// create a new keeper
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, ck types.BankKeeper,
 	sk types.StakingKeeper, fck types.FeeCollectionKeeper, codespace sdk.CodespaceType) Keeper {
-
 	keeper := Keeper{
 		storeKey:            key,
 		cdc:                 cdc,
@@ -35,123 +35,53 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, c
 	return keeper
 }
 
-//______________________________________________________________________
-
-// get the global fee pool distribution info
-func (k Keeper) GetFeePool(ctx sdk.Context) (feePool types.FeePool) {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get(FeePoolKey)
-	if b == nil {
-		panic("Stored fee pool should not have been nil")
-	}
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &feePool)
-	return
-}
-
-// set the global fee pool distribution info
-func (k Keeper) SetFeePool(ctx sdk.Context, feePool types.FeePool) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(feePool)
-	store.Set(FeePoolKey, b)
-}
-
-// get the total validator accum for the ctx height
-// in the fee pool
-func (k Keeper) GetFeePoolValAccum(ctx sdk.Context) sdk.Dec {
-
-	// withdraw self-delegation
-	height := ctx.BlockHeight()
-	totalPower := sdk.NewDecFromInt(k.stakingKeeper.GetLastTotalPower(ctx))
-	fp := k.GetFeePool(ctx)
-	return fp.GetTotalValAccum(height, totalPower)
-}
-
-//______________________________________________________________________
-
-// set the proposer public key for this block
-func (k Keeper) GetPreviousProposerConsAddr(ctx sdk.Context) (consAddr sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
-
-	b := store.Get(ProposerKey)
-	if b == nil {
-		panic("Previous proposer not set")
+// withdraw rewards from a delegation
+func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) sdk.Error {
+	val := k.stakingKeeper.Validator(ctx, valAddr)
+	if val == nil {
+		return types.ErrNoValidatorDistInfo(k.codespace)
 	}
 
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &consAddr)
-	return
+	del := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
+	if del == nil {
+		return types.ErrNoDelegationDistInfo(k.codespace)
+	}
+
+	// withdraw rewards
+	if err := k.withdrawDelegationRewards(ctx, val, del); err != nil {
+		return err
+	}
+
+	// reinitialize the delegation
+	k.initializeDelegation(ctx, valAddr, delAddr)
+
+	return nil
 }
 
-// get the proposer public key for this block
-func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(consAddr)
-	store.Set(ProposerKey, b)
-}
+// withdraw validator commission
+func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Error {
 
-//______________________________________________________________________
+	// fetch validator accumulated commission
+	commission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
+	if commission.IsZero() {
+		return types.ErrNoValidatorCommission(k.codespace)
+	}
 
-// get context required for withdraw operations
-func (k Keeper) GetWithdrawContext(ctx sdk.Context,
-	valOperatorAddr sdk.ValAddress) types.WithdrawContext {
+	coins, remainder := commission.TruncateDecimal()
 
-	feePool := k.GetFeePool(ctx)
-	height := ctx.BlockHeight()
-	validator := k.stakingKeeper.Validator(ctx, valOperatorAddr)
-	lastValPower := k.stakingKeeper.GetLastValidatorPower(ctx, valOperatorAddr)
-	lastTotalPower := sdk.NewDecFromInt(k.stakingKeeper.GetLastTotalPower(ctx))
+	// leave remainder to withdraw later
+	k.SetValidatorAccumulatedCommission(ctx, valAddr, remainder)
 
-	return types.NewWithdrawContext(
-		feePool, height, lastTotalPower, sdk.NewDecFromInt(lastValPower),
-		validator.GetCommission())
-}
+	// update outstanding
+	outstanding := k.GetOutstandingRewards(ctx)
+	k.SetOutstandingRewards(ctx, outstanding.Minus(sdk.NewDecCoins(coins)))
 
-//______________________________________________________________________
-// PARAM STORE
+	accAddr := sdk.AccAddress(valAddr)
+	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, accAddr)
 
-// Type declaration for parameters
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(
-		ParamStoreKeyCommunityTax, sdk.Dec{},
-		ParamStoreKeyBaseProposerReward, sdk.Dec{},
-		ParamStoreKeyBonusProposerReward, sdk.Dec{},
-	)
-}
+	if _, _, err := k.bankKeeper.AddCoins(ctx, withdrawAddr, coins); err != nil {
+		return err
+	}
 
-// Returns the current CommunityTax rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyCommunityTax, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetCommunityTax(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyCommunityTax, &percent)
-}
-
-// Returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetBaseProposerReward(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyBaseProposerReward, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetBaseProposerReward(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyBaseProposerReward, &percent)
-}
-
-// Returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetBonusProposerReward(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyBonusProposerReward, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetBonusProposerReward(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyBonusProposerReward, &percent)
+	return nil
 }

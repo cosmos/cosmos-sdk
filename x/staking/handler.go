@@ -53,7 +53,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 	k.UnbondAllMatureValidatorQueue(ctx)
 
 	// Remove all mature unbonding delegations from the ubd queue.
-	matureUnbonds := k.DequeueAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)
+	matureUnbonds := k.DequeueAllMatureUBDQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvPair := range matureUnbonds {
 		err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddr, dvPair.ValidatorAddr)
 		if err != nil {
@@ -70,7 +70,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 	// Remove all mature redelegations from the red queue.
 	matureRedelegations := k.DequeueAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvvTriplet := range matureRedelegations {
-		err := k.CompleteRedelegation(ctx, dvvTriplet.DelegatorAddr, dvvTriplet.ValidatorSrcAddr, dvvTriplet.ValidatorDstAddr)
+		err := k.CompleteRedelegation(ctx, dvvTriplet.DelegatorAddr,
+			dvvTriplet.ValidatorSrcAddr, dvvTriplet.ValidatorDstAddr)
 		if err != nil {
 			continue
 		}
@@ -216,34 +217,34 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 }
 
 func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.Keeper) sdk.Result {
-	ubd, err := k.BeginUnbonding(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
+	completionTime, err := k.BeginUnbonding(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
 	if err != nil {
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(ubd.MinTime)
+	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	tags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
-		tags.EndTime, []byte(ubd.MinTime.Format(time.RFC3339)),
+		tags.EndTime, []byte(completionTime.Format(time.RFC3339)),
 	)
 
 	return sdk.Result{Data: finishTime, Tags: tags}
 }
 
 func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {
-	red, err := k.BeginRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr,
+	completionTime, err := k.BeginRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr,
 		msg.ValidatorDstAddr, msg.SharesAmount)
 	if err != nil {
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(red.MinTime)
+	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
 		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
-		tags.EndTime, []byte(red.MinTime.Format(time.RFC3339)),
+		tags.EndTime, []byte(completionTime.Format(time.RFC3339)),
 	)
 
 	return sdk.Result{Data: finishTime, Tags: resTags}

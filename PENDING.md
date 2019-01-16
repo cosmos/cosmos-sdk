@@ -27,9 +27,10 @@ BREAKING CHANGES
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
   * [\#3195](https://github.com/cosmos/cosmos-sdk/issues/3195) Allows custom configuration for syncable strategy
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
-  meter utilization during aborted ante handler executions.
-  * [\#2222] [x/staking] `/stake` -> `/staking` module rename
-  
+    meter utilization during aborted ante handler executions.
+  * [staking] \#2222 `/stake` -> `/staking` module rename
+  * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+
 * Tendermint
   * \#3279 Upgrade to Tendermint 0.28.0-dev0
 
@@ -46,11 +47,16 @@ FEATURES
   * [\#2730](https://github.com/cosmos/cosmos-sdk/issues/2730) Add tx search pagination parameter
   * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
   `query gov proposer [proposal-id]` to query for a proposal's proposer.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `keys add --multisig` flag to store multisig keys locally.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `multisign` command to generate multisig signatures.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `sign --multisig` flag to enable multisig mode.
 
 * Gaia
   * [\#2182] [x/staking] Added querier for querying a single redelegation
   * [\#3305](https://github.com/cosmos/cosmos-sdk/issues/3305) Add support for
     vesting accounts at genesis.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) [x/auth] Add multisig transactions support
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) `add-genesis-account` can take both account addresses and key names
 
 * SDK
   * \#2694 Vesting account implementation.
@@ -85,6 +91,7 @@ IMPROVEMENTS
     slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
+  * [x/stake] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period 
 
 * Tendermint
 

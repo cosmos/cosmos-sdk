@@ -2,7 +2,6 @@ package staking
 
 import (
 	"fmt"
-	"sort"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -18,9 +17,11 @@ import (
 // Returns final validator set after applying all declaration and delegations
 func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res []abci.ValidatorUpdate, err error) {
 
-	// We need to pretend to be "n blocks before genesis", where "n" is the validator update delay,
-	// so that e.g. slashing periods are correctly initialized for the validator set
-	// e.g. with a one-block offset - the first TM block is at height 1, so state updates applied from genesis.json are in block 0.
+	// We need to pretend to be "n blocks before genesis", where "n" is the
+	// validator update delay, so that e.g. slashing periods are correctly
+	// initialized for the validator set e.g. with a one-block offset - the
+	// first TM block is at height 1, so state updates applied from
+	// genesis.json are in block 0.
 	ctx = ctx.WithBlockHeight(1 - types.ValidatorUpdateDelay)
 
 	keeper.SetPool(ctx, data.Pool)
@@ -46,20 +47,18 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		keeper.SetDelegation(ctx, delegation)
 	}
 
-	sort.SliceStable(data.UnbondingDelegations[:], func(i, j int) bool {
-		return data.UnbondingDelegations[i].CreationHeight < data.UnbondingDelegations[j].CreationHeight
-	})
 	for _, ubd := range data.UnbondingDelegations {
 		keeper.SetUnbondingDelegation(ctx, ubd)
-		keeper.InsertUnbondingQueue(ctx, ubd)
+		for _, entry := range ubd.Entries {
+			keeper.InsertUBDQueue(ctx, ubd, entry.CompletionTime)
+		}
 	}
 
-	sort.SliceStable(data.Redelegations[:], func(i, j int) bool {
-		return data.Redelegations[i].CreationHeight < data.Redelegations[j].CreationHeight
-	})
 	for _, red := range data.Redelegations {
 		keeper.SetRedelegation(ctx, red)
-		keeper.InsertRedelegationQueue(ctx, red)
+		for _, entry := range red.Entries {
+			keeper.InsertRedelegationQueue(ctx, red, entry.CompletionTime)
+		}
 	}
 
 	// don't need to run Tendermint updates if we exported

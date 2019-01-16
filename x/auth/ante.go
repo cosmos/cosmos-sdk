@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -168,7 +170,7 @@ func processSig(
 		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
 	}
 
-	consumeSignatureVerificationGas(ctx.GasMeter(), pubKey, params)
+	consumeSignatureVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
@@ -227,15 +229,36 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 // matched by the concrete type.
 //
 // TODO: Design a cleaner and flexible way to match concrete public key types.
-func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey, params Params) {
+func consumeSignatureVerificationGas(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) {
 	pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
 	switch {
 	case strings.Contains(pubkeyType, "ed25519"):
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 	case strings.Contains(pubkeyType, "secp256k1"):
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
+	case strings.Contains(pubkeyType, "multisigthreshold"):
+
+		var multisignature multisig.Multisignature
+		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
+		multisigPubKey := pubkey.(multisig.PubKeyMultisigThreshold)
+
+		consumeMultisignatureVerificationGas(meter, multisignature, multisigPubKey, params)
 	default:
 		panic(fmt.Sprintf("unrecognized signature type: %s", pubkeyType))
+	}
+}
+
+func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
+	sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold,
+	params Params) {
+
+	size := sig.BitArray.Size()
+	sigIndex := 0
+	for i := 0; i < size; i++ {
+		if sig.BitArray.GetIndex(i) {
+			consumeSignatureVerificationGas(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
+			sigIndex++
+		}
 	}
 }
 

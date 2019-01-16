@@ -133,20 +133,12 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 			"The generated transaction's intended signer does not match the given signer: %q", name)
 	}
 
-	if !offline && txBldr.GetAccountNumber() == 0 {
-		accNum, err := cliCtx.GetAccountNumber(addr)
+	if !offline {
+		txBldr, err = populateAccountFromState(
+			txBldr, cliCtx, sdk.AccAddress(addr))
 		if err != nil {
 			return signedStdTx, err
 		}
-		txBldr = txBldr.WithAccountNumber(accNum)
-	}
-
-	if !offline && txBldr.GetSequence() == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(addr)
-		if err != nil {
-			return signedStdTx, err
-		}
-		txBldr = txBldr.WithSequence(accSeq)
 	}
 
 	passphrase, err := keys.GetPassphrase(name)
@@ -155,6 +147,55 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	}
 
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
+}
+
+// SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
+// Don't perform online validation or lookups if offline is true, else
+// populate account and sequence numbers from a foreign account.
+func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
+	addr sdk.AccAddress, name string, stdTx auth.StdTx,
+	offline bool) (signedStdTx auth.StdTx, err error) {
+
+	// check whether the address is a signer
+	if !isTxSigner(addr, stdTx.GetSigners()) {
+		return signedStdTx, fmt.Errorf(
+			"The generated transaction's intended signer does not match the given signer: %q", name)
+	}
+
+	if !offline {
+		txBldr, err = populateAccountFromState(txBldr, cliCtx, addr)
+		if err != nil {
+			return signedStdTx, err
+		}
+	}
+
+	passphrase, err := keys.GetPassphrase(name)
+	if err != nil {
+		return signedStdTx, err
+	}
+
+	return txBldr.SignStdTx(name, passphrase, stdTx, false)
+}
+
+func populateAccountFromState(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
+	addr sdk.AccAddress) (authtxb.TxBuilder, error) {
+	if txBldr.GetAccountNumber() == 0 {
+		accNum, err := cliCtx.GetAccountNumber(addr)
+		if err != nil {
+			return txBldr, err
+		}
+		txBldr = txBldr.WithAccountNumber(accNum)
+	}
+
+	if txBldr.GetSequence() == 0 {
+		accSeq, err := cliCtx.GetAccountSequence(addr)
+		if err != nil {
+			return txBldr, err
+		}
+		txBldr = txBldr.WithSequence(accSeq)
+	}
+
+	return txBldr, nil
 }
 
 // GetTxEncoder return tx encoder from global sdk configuration if ones is defined.

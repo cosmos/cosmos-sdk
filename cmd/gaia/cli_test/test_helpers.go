@@ -27,11 +27,13 @@ import (
 )
 
 const (
-	denom    = "stake"
-	keyFoo   = "foo"
-	keyBar   = "bar"
-	fooDenom = "footoken"
-	feeDenom = "feetoken"
+	denom        = "stake"
+	keyFoo       = "foo"
+	keyBar       = "bar"
+	keyBaz       = "baz"
+	keyFooBarBaz = "foobarbaz"
+	fooDenom     = "footoken"
+	feeDenom     = "feetoken"
 )
 
 var startCoins = sdk.Coins{
@@ -83,8 +85,13 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 	// Ensure keystore has foo and bar keys
 	f.KeysDelete(keyFoo)
 	f.KeysDelete(keyBar)
+	f.KeysDelete(keyBar)
+	f.KeysDelete(keyFooBarBaz)
 	f.KeysAdd(keyFoo)
 	f.KeysAdd(keyBar)
+	f.KeysAdd(keyBaz)
+	f.KeysAdd(keyFooBarBaz, "--multisig-threshold=2", fmt.Sprintf(
+		"--multisig=%s,%s,%s", keyFoo, keyBar, keyBaz))
 
 	// Ensure that CLI output is in JSON format
 	f.CLIConfig("output", "json")
@@ -175,7 +182,7 @@ func (f *Fixtures) GDStart(flags ...string) *tests.Process {
 // KeysDelete is gaiacli keys delete
 func (f *Fixtures) KeysDelete(name string, flags ...string) {
 	cmd := fmt.Sprintf("gaiacli keys delete --home=%s %s", f.GCLIHome, name)
-	executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	executeWrite(f.T, addFlags(cmd, append(append(flags, "-y"), "-f")))
 }
 
 // KeysAdd is gaiacli keys add
@@ -230,6 +237,16 @@ func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, strin
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("gaiacli tx broadcast %v --json %v", f.Flags(), fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// TxMultisign is gaiacli tx multisign
+func (f *Fixtures) TxMultisign(fileName, name string, signaturesFiles []string,
+	flags ...string) (bool, string, string) {
+
+	cmd := fmt.Sprintf("gaiacli tx multisign %v %s %s %s", f.Flags(),
+		fileName, name, strings.Join(signaturesFiles, " "),
+	)
+	return executeWriteRetStdStreams(f.T, cmd)
 }
 
 //___________________________________________________________________________________

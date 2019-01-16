@@ -25,6 +25,26 @@ import (
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+func TestGaiaCLIKeysAddMultisig(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// key names order does not matter
+	f.KeysAdd("msig1", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", keyBar, keyBaz))
+	f.KeysAdd("msig2", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", keyBaz, keyBar))
+	require.Equal(t, f.KeysShow("msig1").Address, f.KeysShow("msig2").Address)
+
+	f.KeysAdd("msig3", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", keyBar, keyBaz),
+		"--nosort")
+	f.KeysAdd("msig4", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", keyBaz, keyBar),
+		"--nosort")
+	require.NotEqual(t, f.KeysShow("msig3").Address, f.KeysShow("msig4").Address)
+}
+
 func TestGaiaCLIMinimumFees(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)
@@ -645,6 +665,180 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	f.Cleanup()
+}
+
+func TestGaiaCLIMultisignInsufficientCosigners(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server with minimum fees
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooBarBazAddr := f.KeyAddress(keyFooBarBaz)
+	barAddr := f.KeyAddress(keyBar)
+
+	// Send some tokens from one account to the other
+	success, _, _ := f.TxSend(keyFoo, fooBarBazAddr, sdk.NewInt64Coin(denom, 10))
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// Test generate sendTx with multisig
+	success, stdout, _ := f.TxSend(keyFooBarBaz, barAddr, sdk.NewInt64Coin(denom, 5), "--generate-only")
+	require.True(t, success)
+
+	// Write the output to disk
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// Sign with foo's key
+	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	fooSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(fooSignatureFile.Name())
+
+	// Multisign, not enough signatures
+	success, stdout, _ = f.TxMultisign(unsignedTxFile.Name(), keyFooBarBaz, []string{fooSignatureFile.Name()})
+	require.True(t, success)
+
+	// Write the output to disk
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// Validate the multisignature
+	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "--json")
+	require.False(t, success)
+
+	// Broadcast the transaction
+	success, _, _ = f.TxBroadcast(signedTxFile.Name())
+	require.False(t, success)
+}
+
+func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server with minimum fees
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooBarBazAddr := f.KeyAddress(keyFooBarBaz)
+	barAddr := f.KeyAddress(keyBar)
+
+	// Send some tokens from one account to the other
+	success, _, _ := f.TxSend(keyFoo, fooBarBazAddr, sdk.NewInt64Coin(denom, 10))
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// Ensure account balances match expected
+	fooBarBazAcc := f.QueryAccount(fooBarBazAddr)
+	require.Equal(t, int64(10), fooBarBazAcc.GetCoins().AmountOf(denom).Int64())
+
+	// Test generate sendTx with multisig
+	success, stdout, _ := f.TxSend(keyFooBarBaz, barAddr, sdk.NewInt64Coin(denom, 5), "--generate-only")
+	require.True(t, success)
+
+	// Write the output to disk
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// Sign with foo's key
+	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	fooSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(fooSignatureFile.Name())
+
+	// Sign with baz's key
+	success, stdout, _ = f.TxSign(keyBaz, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	bazSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(bazSignatureFile.Name())
+
+	// Multisign, keys in different order
+	success, stdout, _ = f.TxMultisign(unsignedTxFile.Name(), keyFooBarBaz, []string{
+		bazSignatureFile.Name(), fooSignatureFile.Name()})
+	require.True(t, success)
+
+	// Write the output to disk
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// Validate the multisignature
+	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "--json")
+	require.True(t, success)
+
+	// Broadcast the transaction
+	success, _, _ = f.TxBroadcast(signedTxFile.Name())
+	require.True(t, success)
+}
+
+func TestGaiaCLIMultisign(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server with minimum fees
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooBarBazAddr := f.KeyAddress(keyFooBarBaz)
+	bazAddr := f.KeyAddress(keyBaz)
+
+	// Send some tokens from one account to the other
+	success, _, _ := f.TxSend(keyFoo, fooBarBazAddr, sdk.NewInt64Coin(denom, 10))
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// Ensure account balances match expected
+	fooBarBazAcc := f.QueryAccount(fooBarBazAddr)
+	require.Equal(t, int64(10), fooBarBazAcc.GetCoins().AmountOf(denom).Int64())
+
+	// Test generate sendTx with multisig
+	success, stdout, stderr := f.TxSend(keyFooBarBaz, bazAddr, sdk.NewInt64Coin(denom, 10), "--generate-only")
+	require.True(t, success)
+	require.Empty(t, stderr)
+
+	// Write the output to disk
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// Sign with foo's key
+	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	fooSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(fooSignatureFile.Name())
+
+	// Sign with bar's key
+	success, stdout, _ = f.TxSign(keyBar, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	barSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(barSignatureFile.Name())
+
+	// Multisign
+	success, stdout, _ = f.TxMultisign(unsignedTxFile.Name(), keyFooBarBaz, []string{
+		fooSignatureFile.Name(), barSignatureFile.Name()})
+	require.True(t, success)
+
+	// Write the output to disk
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// Validate the multisignature
+	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "--json")
+	require.True(t, success)
+
+	// Broadcast the transaction
+	success, _, _ = f.TxBroadcast(signedTxFile.Name())
+	require.True(t, success)
 }
 
 func TestGaiaCLIConfig(t *testing.T) {

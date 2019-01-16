@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/store"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/store"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

@@ -163,7 +163,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		AuthData:     authGenesis,
-		StakingData:    stakingGenesis,
+		StakingData:  stakingGenesis,
 		MintData:     mintGenesis,
 		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),
 		SlashingData: slashingGenesis,

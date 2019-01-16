@@ -9,6 +9,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
+func TestSetWithdrawAddr(t *testing.T) {
+	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
+
+	keeper.SetWithdrawAddrEnabled(ctx, false)
+
+	err := keeper.SetWithdrawAddr(ctx, delAddr1, delAddr2)
+	require.NotNil(t, err)
+
+	keeper.SetWithdrawAddrEnabled(ctx, true)
+
+	err = keeper.SetWithdrawAddr(ctx, delAddr1, delAddr2)
+	require.Nil(t, err)
+}
+
 func TestWithdrawValidatorCommission(t *testing.T) {
 	ctx, ak, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
 

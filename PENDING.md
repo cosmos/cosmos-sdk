@@ -27,8 +27,9 @@ BREAKING CHANGES
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
   * [\#3195](https://github.com/cosmos/cosmos-sdk/issues/3195) Allows custom configuration for syncable strategy
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
-    meter utilization during aborted ante handler executions.
-  * [staking] \#2222 `/stake` -> `/staking` module rename
+  meter utilization during aborted ante handler executions.
+  * [\#2222] [x/staking] `/stake` -> `/staking` module rename
+  * \#3292 [x/distribution] Enable or disable withdraw addresses with a parameter in the param store
   * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
 
 * Tendermint

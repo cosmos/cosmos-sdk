@@ -52,6 +52,7 @@ type GenesisState struct {
 	CommunityTax                    sdk.Dec                                `json:"community_tax"`
 	BaseProposerReward              sdk.Dec                                `json:"base_proposer_reward"`
 	BonusProposerReward             sdk.Dec                                `json:"bonus_proposer_reward"`
+	WithdrawAddrEnabled             bool                                   `json:"withdraw_addr_enabled"`
 	DelegatorWithdrawInfos          []DelegatorWithdrawInfo                `json:"delegator_withdraw_infos"`
 	PreviousProposer                sdk.ConsAddress                        `json:"previous_proposer"`
 	OutstandingRewards              sdk.DecCoins                           `json:"outstanding_rewards"`
@@ -63,7 +64,7 @@ type GenesisState struct {
 }
 
 func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
-	dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r OutstandingRewards,
+	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r OutstandingRewards,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord,
 	slashes []ValidatorSlashEventRecord) GenesisState {
@@ -73,6 +74,7 @@ func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusPro
 		CommunityTax:                    communityTax,
 		BaseProposerReward:              baseProposerReward,
 		BonusProposerReward:             bonusProposerReward,
+		WithdrawAddrEnabled:             withdrawAddrEnabled,
 		DelegatorWithdrawInfos:          dwis,
 		PreviousProposer:                pp,
 		OutstandingRewards:              r,
@@ -91,6 +93,7 @@ func DefaultGenesisState() GenesisState {
 		CommunityTax:                    sdk.NewDecWithPrec(2, 2), // 2%
 		BaseProposerReward:              sdk.NewDecWithPrec(1, 2), // 1%
 		BonusProposerReward:             sdk.NewDecWithPrec(4, 2), // 4%
+		WithdrawAddrEnabled:             true,
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
 		PreviousProposer:                nil,
 		OutstandingRewards:              sdk.DecCoins{},

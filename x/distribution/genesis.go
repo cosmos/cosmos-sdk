@@ -11,6 +11,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) {
 	keeper.SetCommunityTax(ctx, data.CommunityTax)
 	keeper.SetBaseProposerReward(ctx, data.BaseProposerReward)
 	keeper.SetBonusProposerReward(ctx, data.BonusProposerReward)
+	keeper.SetWithdrawAddrEnabled(ctx, data.WithdrawAddrEnabled)
 	for _, dwi := range data.DelegatorWithdrawInfos {
 		keeper.SetDelegatorWithdrawAddr(ctx, dwi.DelegatorAddr, dwi.WithdrawAddr)
 	}
@@ -39,6 +40,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 	communityTax := keeper.GetCommunityTax(ctx)
 	baseProposerRewards := keeper.GetBaseProposerReward(ctx)
 	bonusProposerRewards := keeper.GetBonusProposerReward(ctx)
+	withdrawAddrEnabled := keeper.GetWithdrawAddrEnabled(ctx)
 	dwi := make([]types.DelegatorWithdrawInfo, 0)
 	keeper.IterateDelegatorWithdrawAddrs(ctx, func(del sdk.AccAddress, addr sdk.AccAddress) (stop bool) {
 		dwi = append(dwi, types.DelegatorWithdrawInfo{
@@ -102,6 +104,6 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 			return false
 		},
 	)
-	return types.NewGenesisState(feePool, communityTax, baseProposerRewards, bonusProposerRewards, dwi, pp, outstanding,
-		acc, his, cur, dels, slashes)
+	return types.NewGenesisState(feePool, communityTax, baseProposerRewards, bonusProposerRewards, withdrawAddrEnabled,
+		dwi, pp, outstanding, acc, his, cur, dels, slashes)
 }

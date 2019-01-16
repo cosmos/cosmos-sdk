@@ -21,13 +21,13 @@ var configTemplate *template.Template
 
 func init() {
 	var err error
-	tmpl := template.New("cosmosConfigFileTemplate")
+	tmpl := template.New("gaiaConfigFileTemplate")
 	if configTemplate, err = tmpl.Parse(defaultConfigTemplate); err != nil {
 		panic(err)
 	}
 }
 
-// ParseConfig retrieves the default environment configuration for Cosmos.
+// ParseConfig retrieves the default environment configuration for Gaia.
 func ParseConfig() (*Config, error) {
 	conf := DefaultConfig()
 	err := viper.Unmarshal(conf)

@@ -24,7 +24,7 @@ const (
 type rootMultiStore struct {
 	db           dbm.DB
 	lastCommitID CommitID
-	pruning      sdk.PruningStrategy
+	pruningOpts  sdk.PruningOptions
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
 	keysByName   map[string]StoreKey
@@ -47,10 +47,10 @@ func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 }
 
 // Implements CommitMultiStore
-func (rs *rootMultiStore) SetPruning(pruning sdk.PruningStrategy) {
-	rs.pruning = pruning
+func (rs *rootMultiStore) SetPruning(pruningOpts sdk.PruningOptions) {
+	rs.pruningOpts = pruningOpts
 	for _, substore := range rs.stores {
-		substore.SetPruning(pruning)
+		substore.SetPruning(pruningOpts)
 	}
 }
 
@@ -230,13 +230,19 @@ func (rs *rootMultiStore) CacheMultiStore() CacheMultiStore {
 }
 
 // Implements MultiStore.
+// If the store does not exist, panics.
 func (rs *rootMultiStore) GetStore(key StoreKey) Store {
-	return rs.stores[key]
+	store := rs.stores[key]
+	if store == nil {
+		panic("Could not load store " + key.String())
+	}
+	return store
 }
 
 // GetKVStore implements the MultiStore interface. If tracing is enabled on the
 // rootMultiStore, a wrapped TraceKVStore will be returned with the given
 // tracer, otherwise, the original KVStore will be returned.
+// If the store does not exist, panics.
 func (rs *rootMultiStore) GetKVStore(key StoreKey) KVStore {
 	store := rs.stores[key].(KVStore)
 
@@ -349,10 +355,11 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(key sdk.StoreKey, id CommitI
 		// TODO: id?
 		// return NewCommitMultiStore(db, id)
 	case sdk.StoreTypeIAVL:
-		store, err = LoadIAVLStore(db, id, rs.pruning)
+		store, err = LoadIAVLStore(db, id, rs.pruningOpts)
 		return
 	case sdk.StoreTypeDB:
-		panic("dbm.DB is not a CommitStore")
+		store = commitDBStoreAdapter{dbStoreAdapter{db}}
+		return
 	case sdk.StoreTypeTransient:
 		_, ok := key.(*sdk.TransientStoreKey)
 		if !ok {

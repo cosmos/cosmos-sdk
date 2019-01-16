@@ -6,10 +6,12 @@ import (
 	"io"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/privval"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/spf13/cobra"
 
@@ -80,7 +82,8 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			}
 			nodeID := string(nodeKey.ID())
 
-			pk := gaiaInit.ReadOrCreatePrivValidator(config.PrivValidatorFile())
+			pk := privval.LoadOrGenFilePV(config.PrivValidatorKeyFile(),
+				config.PrivValidatorStateFile()).GetPubKey()
 			genTx, appMessage, validator, err := server.SimpleAppGenTx(cdc, pk)
 			if err != nil {
 				return err
@@ -128,7 +131,7 @@ func newApp(logger log.Logger, db dbm.DB, _ io.Writer) abci.Application {
 	return app.NewDemocoinApp(logger, db)
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer, _ int64) (
+func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer, _ int64, _ bool) (
 	json.RawMessage, []tmtypes.GenesisValidator, error) {
 	dapp := app.NewDemocoinApp(logger, db)
 	return dapp.ExportAppStateAndValidators()

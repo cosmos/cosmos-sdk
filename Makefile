@@ -9,12 +9,15 @@ GOTOOLS = \
 	github.com/alecthomas/gometalinter \
 	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
-all: get_tools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
+all: devtools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
+
+# The below include contains the tools target.
+include scripts/Makefile
 
 ########################################
 ### CI
 
-ci: get_tools get_vendor_deps install test_cover test_lint test
+ci: devtools get_vendor_deps install test_cover test_lint test
 
 ########################################
 ### Build/Install
@@ -46,9 +49,13 @@ build:
 ifeq ($(OS),Windows_NT)
 	go build $(BUILD_FLAGS) -o build/gaiad.exe ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli.exe ./cmd/gaia/cmd/gaiacli
+	go build $(BUILD_FLAGS) -o build/logjack ./cmd/logjack
 else
 	go build $(BUILD_FLAGS) -o build/gaiad ./cmd/gaia/cmd/gaiad
 	go build $(BUILD_FLAGS) -o build/gaiacli ./cmd/gaia/cmd/gaiacli
+	go build $(BUILD_FLAGS) -o build/gaiareplay ./cmd/gaia/cmd/gaiareplay
+	go build $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
+	go build $(BUILD_FLAGS) -o build/logjack ./cmd/logjack
 endif
 
 build-linux:
@@ -80,6 +87,9 @@ endif
 install: check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
+	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
+	go install $(BUILD_FLAGS) ./cmd/logjack
 
 install_examples:
 	go install $(BUILD_FLAGS) ./docs/examples/basecoin/cmd/basecoind
@@ -107,40 +117,37 @@ check_tools:
 
 update_tools:
 	@echo "--> Updating tools to correct version"
-	$(MAKE) -C scripts get_tools
+	$(MAKE) --always-make tools
 
 update_dev_tools:
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get -u github.com/tendermint/lint/golint
 
-get_tools: $(GOBIN)/dep $(GOBIN)/gometalinter $(GOBIN)/statik
-	@echo "--> Installing tools"
-	$(MAKE) -C scripts get_tools
-
-$(GOBIN)/%:
-	$(MAKE) -C scripts $(subst $(GOBIN)/,,$(@))
-
-get_dev_tools: get_tools
+devtools: devtools-stamp
+devtools-stamp: tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
 	go get github.com/tendermint/lint/golint
+	touch $@
 
-get_vendor_deps: get_tools
+get_vendor_deps: tools
 	@echo "--> Generating vendor directory via dep ensure"
 	@rm -rf .vendor-new
 	@dep ensure -v -vendor-only
 
-update_vendor_deps: get_tools
+update_vendor_deps: tools
 	@echo "--> Running dep ensure"
 	@rm -rf .vendor-new
 	@dep ensure -v
 
-draw_deps: get_tools
+draw_deps: tools
 	@# requires brew install graphviz or apt-get install graphviz
 	go get github.com/RobotsAndPencils/goviz
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
+clean:
+	rm -f devtools-stamp
 
 ########################################
 ### Documentation
@@ -156,7 +163,7 @@ godocs:
 test: test_unit
 
 test_cli:
-	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
+	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
 
 test_examples:
 	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/docs/examples/basecoin/cli_test` -tags=cli_test
@@ -168,25 +175,25 @@ test_unit:
 test_race:
 	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)
 
-test_sim_modules:
-	@echo "Running individual module simulations..."
-	@go test $(PACKAGES_SIMTEST)
-
 test_sim_gaia_nondeterminism:
 	@echo "Running nondeterminism test..."
 	@go test ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
 
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
-	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=500 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=10 -v -timeout 24h
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -v -timeout 24h
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@bash scripts/import-export-sim.sh 50
+	@bash scripts/multisim.sh 50 TestGaiaImportExport
+
+test_sim_gaia_simulation_after_import:
+	@echo "Running Gaia simulation-after-import. This may take several minutes..."
+	@bash scripts/multisim.sh 50 TestGaiaSimulationAfterImport
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 25
+	@bash scripts/multisim.sh 400 TestFullGaiaSimulation
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
@@ -204,7 +211,7 @@ test_cover:
 
 test_lint:
 	gometalinter --config=tools/gometalinter.json ./...
-	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
+	!(gometalinter --exclude /usr/lib/go/src/ --exclude client/lcd/statik/statik.go --exclude 'vendor/*' --exclude 'cmd/logjack/*' --disable-all --enable='errcheck' --vendor ./... | grep -v "client/")
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -d -s
 	dep status >> /dev/null
 	!(grep -n branch Gopkg.toml)
@@ -212,6 +219,7 @@ test_lint:
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs misspell -w
+	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/lcd/statik/statik.go" | xargs goimports -w -local github.com/cosmos/cosmos-sdk
 
 benchmark:
 	@go test -bench=. $(PACKAGES_NOSIMULATION)
@@ -260,7 +268,7 @@ localnet-stop:
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build build_cosmos-sdk-cli build_examples install install_examples install_cosmos-sdk-cli install_debug dist \
-check_tools check_dev_tools get_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
+check_tools check_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \

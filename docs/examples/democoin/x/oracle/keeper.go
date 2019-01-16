@@ -46,7 +46,7 @@ const (
 
 // Info for each payload
 type Info struct {
-	Power      sdk.Dec
+	Power      sdk.Int
 	Hash       []byte
 	LastSigned int64
 	Status     InfoStatus
@@ -55,7 +55,7 @@ type Info struct {
 // EmptyInfo construct an empty Info
 func EmptyInfo(ctx sdk.Context) Info {
 	return Info{
-		Power:      sdk.ZeroDec(),
+		Power:      sdk.ZeroInt(),
 		Hash:       ctx.BlockHeader().ValidatorsHash,
 		LastSigned: ctx.BlockHeight(),
 		Status:     Pending,

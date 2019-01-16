@@ -34,7 +34,11 @@ type ErrorGasOverflow struct {
 // GasMeter interface to track gas consumption
 type GasMeter interface {
 	GasConsumed() Gas
+	GasConsumedToLimit() Gas
+	Limit() Gas
 	ConsumeGas(amount Gas, descriptor string)
+	IsPastLimit() bool
+	IsOutOfGas() bool
 }
 
 type basicGasMeter struct {
@@ -54,6 +58,17 @@ func (g *basicGasMeter) GasConsumed() Gas {
 	return g.consumed
 }
 
+func (g *basicGasMeter) Limit() Gas {
+	return g.limit
+}
+
+func (g *basicGasMeter) GasConsumedToLimit() Gas {
+	if g.IsPastLimit() {
+		return g.limit
+	}
+	return g.consumed
+}
+
 func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	var overflow bool
 
@@ -66,6 +81,14 @@ func (g *basicGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	if g.consumed > g.limit {
 		panic(ErrorOutOfGas{descriptor})
 	}
+}
+
+func (g *basicGasMeter) IsPastLimit() bool {
+	return g.consumed > g.limit
+}
+
+func (g *basicGasMeter) IsOutOfGas() bool {
+	return g.consumed >= g.limit
 }
 
 type infiniteGasMeter struct {
@@ -83,6 +106,14 @@ func (g *infiniteGasMeter) GasConsumed() Gas {
 	return g.consumed
 }
 
+func (g *infiniteGasMeter) GasConsumedToLimit() Gas {
+	return g.consumed
+}
+
+func (g *infiniteGasMeter) Limit() Gas {
+	return 0
+}
+
 func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	var overflow bool
 
@@ -93,6 +124,14 @@ func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	}
 }
 
+func (g *infiniteGasMeter) IsPastLimit() bool {
+	return false
+}
+
+func (g *infiniteGasMeter) IsOutOfGas() bool {
+	return false
+}
+
 // GasConfig defines gas cost for each operation on KVStores
 type GasConfig struct {
 	HasCost          Gas
@@ -101,21 +140,19 @@ type GasConfig struct {
 	ReadCostPerByte  Gas
 	WriteCostFlat    Gas
 	WriteCostPerByte Gas
-	ValueCostPerByte Gas
 	IterNextCostFlat Gas
 }
 
 // KVGasConfig returns a default gas config for KVStores.
 func KVGasConfig() GasConfig {
 	return GasConfig{
-		HasCost:          10,
-		DeleteCost:       10,
-		ReadCostFlat:     10,
-		ReadCostPerByte:  1,
-		WriteCostFlat:    10,
-		WriteCostPerByte: 10,
-		ValueCostPerByte: 1,
-		IterNextCostFlat: 15,
+		HasCost:          1000,
+		DeleteCost:       1000,
+		ReadCostFlat:     1000,
+		ReadCostPerByte:  3,
+		WriteCostFlat:    2000,
+		WriteCostPerByte: 30,
+		IterNextCostFlat: 30,
 	}
 }
 

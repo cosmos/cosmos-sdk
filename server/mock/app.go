@@ -3,8 +3,9 @@ package mock
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tendermint/tendermint/types"
 	"path/filepath"
+
+	"github.com/tendermint/tendermint/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -25,13 +26,13 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	}
 
 	// Capabilities key to access the main KVStore.
-	capKeyMainStore := sdk.NewKVStoreKey("main")
+	capKeyMainStore := sdk.NewKVStoreKey(bam.MainStoreKey)
 
 	// Create BaseApp.
 	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
 
 	// Set mounts for BaseApp's MultiStore.
-	baseApp.MountStoresIAVL(capKeyMainStore)
+	baseApp.MountStores(capKeyMainStore)
 
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 

@@ -61,7 +61,7 @@ pre-image attacks, as well as being [deterministic](https://en.wikipedia.org/wik
 ## Specification
 
 Tendermint has a well established protocol for signing messages using a canonical
-JSON representation as defined [here](https://github.com/tendermint/tendermint/blob/master/types/canonical_json.go).
+JSON representation as defined [here](https://github.com/tendermint/tendermint/blob/master/types/canonical.go).
 
 An example of such a canonical JSON structure is Tendermint's vote structure:
 

@@ -3,24 +3,27 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+
+	"github.com/tendermint/go-amino"
+	"github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/tendermint/go-amino"
-	"github.com/tendermint/tendermint/libs/common"
 )
 
-// CompleteAndBroadcastTxCli implements a utility function that
-// facilitates sending a series of messages in a signed
-// transaction given a TxBuilder and a QueryContext. It ensures
-// that the account exists, has a proper number and sequence
-// set. In addition, it builds and signs a transaction with the
-// supplied messages.  Finally, it broadcasts the signed
-// transaction to a node.
+// CompleteAndBroadcastTxCli implements a utility function that facilitates
+// sending a series of messages in a signed transaction given a TxBuilder and a
+// QueryContext. It ensures that the account exists, has a proper number and
+// sequence set. In addition, it builds and signs a transaction with the
+// supplied messages. Finally, it broadcasts the signed transaction to a node.
+//
 // NOTE: Also see CompleteAndBroadcastTxREST.
 func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
 	txBldr, err := prepareTxBuilder(txBldr, cliCtx)
@@ -33,14 +36,14 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return err
 	}
 
-	if txBldr.SimulateGas || cliCtx.DryRun {
+	if txBldr.GetSimulateAndExecute() || cliCtx.Simulate {
 		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas)
+		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.GetGas())
 	}
-	if cliCtx.DryRun {
+	if cliCtx.Simulate {
 		return nil
 	}
 
@@ -54,6 +57,7 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 	if err != nil {
 		return err
 	}
+
 	// broadcast to a Tendermint node
 	_, err = cliCtx.BroadcastTx(txBytes)
 	return err
@@ -88,7 +92,7 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 // Don't perform online validation or lookups if offline is true.
-func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
+func PrintUnsignedStdTx(w io.Writer, txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
 	var stdTx auth.StdTx
 	if offline {
 		stdTx, err = buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
@@ -98,9 +102,9 @@ func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 	if err != nil {
 		return
 	}
-	json, err := txBldr.Codec.MarshalJSON(stdTx)
+	json, err := cliCtx.Codec.MarshalJSON(stdTx)
 	if err == nil {
-		fmt.Printf("%s\n", json)
+		fmt.Fprintf(w, "%s\n", json)
 	}
 	return
 }
@@ -115,19 +119,21 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	if err != nil {
 		return signedStdTx, err
 	}
+
 	info, err := keybase.Get(name)
 	if err != nil {
 		return signedStdTx, err
 	}
+
 	addr := info.GetPubKey().Address()
 
-	// Check whether the address is a signer
+	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
 		return signedStdTx, fmt.Errorf(
 			"The generated transaction's intended signer does not match the given signer: %q", name)
 	}
 
-	if !offline && txBldr.AccountNumber == 0 {
+	if !offline && txBldr.GetAccountNumber() == 0 {
 		accNum, err := cliCtx.GetAccountNumber(addr)
 		if err != nil {
 			return signedStdTx, err
@@ -135,7 +141,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 		txBldr = txBldr.WithAccountNumber(accNum)
 	}
 
-	if !offline && txBldr.Sequence == 0 {
+	if !offline && txBldr.GetSequence() == 0 {
 		accSeq, err := cliCtx.GetAccountSequence(addr)
 		if err != nil {
 			return signedStdTx, err
@@ -147,7 +153,18 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 	if err != nil {
 		return signedStdTx, err
 	}
+
 	return txBldr.SignStdTx(name, passphrase, stdTx, appendSig)
+}
+
+// GetTxEncoder return tx encoder from global sdk configuration if ones is defined.
+// Otherwise returns encoder with default logic.
+func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
+	encoder = sdk.GetConfig().GetTxEncoder()
+	if encoder == nil {
+		encoder = auth.DefaultTxEncoder(cdc)
+	}
+	return
 }
 
 // nolint
@@ -157,7 +174,7 @@ func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name stri
 	if err != nil {
 		return
 	}
-	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GasAdjustment)
+	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GetGasAdjustment())
 	return
 }
 
@@ -185,7 +202,7 @@ func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
-	if txBldr.AccountNumber == 0 {
+	if txBldr.GetAccountNumber() == 0 {
 		accNum, err := cliCtx.GetAccountNumber(from)
 		if err != nil {
 			return txBldr, err
@@ -195,7 +212,7 @@ func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 
 	// TODO: (ref #1903) Allow for user supplied account sequence without
 	// automatically doing a manual lookup.
-	if txBldr.Sequence == 0 {
+	if txBldr.GetSequence() == 0 {
 		accSeq, err := cliCtx.GetAccountSequence(from)
 		if err != nil {
 			return txBldr, err
@@ -216,7 +233,7 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 }
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
-	if txBldr.SimulateGas {
+	if txBldr.GetSimulateAndExecute() {
 		var name string
 		name, err = cliCtx.GetFromName()
 		if err != nil {
@@ -227,7 +244,7 @@ func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		if err != nil {
 			return
 		}
-		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas)
+		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.GetGas())
 	}
 	stdSignMsg, err := txBldr.Build(msgs)
 	if err != nil {

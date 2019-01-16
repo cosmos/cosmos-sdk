@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	at "github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
@@ -20,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/app"
 	coolcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool/client/cli"
 	powcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow/client/cli"
-	simplestakingcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake/client/cli"
+	simplestakingcmd "github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestaking/client/cli"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,7 +32,6 @@ var (
 		Use:   "democli",
 		Short: "Democoin light-client",
 	}
-	storeAcc = "acc"
 )
 
 func main() {
@@ -48,10 +48,6 @@ func main() {
 	config.SetBech32PrefixForConsensusNode("democons", "democonspub")
 	config.Seal()
 
-	rs := lcd.NewRestServer(cdc)
-
-	registerRoutes(rs)
-
 	// TODO: setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
@@ -59,7 +55,6 @@ func main() {
 	// add standard rpc, and tx commands
 
 	rootCmd.AddCommand(
-		rpc.InitClientCommand(),
 		rpc.StatusCommand(),
 		client.LineBreak,
 		tx.SearchTxCmd(cdc),
@@ -70,13 +65,11 @@ func main() {
 	// add query/post commands (custom to binary)
 	// start with commands common to basecoin
 	rootCmd.AddCommand(
-		client.GetCommands(
-			authcmd.GetAccountCmd(storeAcc, cdc),
-		)...)
+		authcmd.GetAccountCmd(at.StoreKey, cdc),
+	)
 	rootCmd.AddCommand(
-		client.PostCommands(
-			bankcmd.SendTxCmd(cdc),
-		)...)
+		bankcmd.SendTxCmd(cdc),
+	)
 	rootCmd.AddCommand(
 		client.PostCommands(
 			simplestakingcmd.BondTxCmd(cdc),
@@ -96,7 +89,7 @@ func main() {
 	// add proxy, version and key info
 	rootCmd.AddCommand(
 		client.LineBreak,
-		rs.ServeCommand(),
+		lcd.ServeCommand(cdc, registerRoutes),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,
@@ -115,6 +108,6 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, at.StoreKey)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 }

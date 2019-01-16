@@ -28,7 +28,10 @@ type Coin struct {
 // the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
 	if amount.LT(ZeroInt()) {
-		panic("negative coin amount")
+		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
+	}
+	if strings.ToLower(denom) != denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
 	}
 
 	return Coin{
@@ -93,7 +96,7 @@ func (coin Coin) Minus(coinB Coin) Coin {
 	}
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
-	if !res.IsNotNegative() {
+	if res.IsNegative() {
 		panic("negative count amount")
 	}
 
@@ -104,14 +107,14 @@ func (coin Coin) Minus(coinB Coin) Coin {
 //
 // TODO: Remove once unsigned integers are used.
 func (coin Coin) IsPositive() bool {
-	return (coin.Amount.Sign() == 1)
+	return coin.Amount.Sign() == 1
 }
 
-// IsNotNegative returns true if coin amount is not negative and false otherwise.
+// IsNegative returns true if the coin amount is negative and false otherwise.
 //
 // TODO: Remove once unsigned integers are used.
-func (coin Coin) IsNotNegative() bool {
-	return (coin.Amount.Sign() != -1)
+func (coin Coin) IsNegative() bool {
+	return coin.Amount.Sign() == -1
 }
 
 //-----------------------------------------------------------------------------
@@ -132,17 +135,28 @@ func (coins Coins) String() string {
 	return out[:len(out)-1]
 }
 
-// IsValid asserts the Coins are sorted and have positive amounts.
+// IsValid asserts the Coins are sorted, have positive amount,
+// and Denom does not contain upper case characters.
 func (coins Coins) IsValid() bool {
 	switch len(coins) {
 	case 0:
 		return true
 	case 1:
+		if strings.ToLower(coins[0].Denom) != coins[0].Denom {
+			return false
+		}
 		return coins[0].IsPositive()
 	default:
-		lowDenom := coins[0].Denom
+		// check single coin case
+		if !(Coins{coins[0]}).IsValid() {
+			return false
+		}
 
+		lowDenom := coins[0].Denom
 		for _, coin := range coins[1:] {
+			if strings.ToLower(coin.Denom) != coin.Denom {
+				return false
+			}
 			if coin.Denom <= lowDenom {
 				return false
 			}
@@ -251,7 +265,7 @@ func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
 	return diff, !diff.IsNotNegative()
 }
 
-// IsAllGT returns true iff for every denom in coins, the denom is present at a
+// IsAllGT returns true if for every denom in coins, the denom is present at a
 // greater amount in coinsB.
 func (coins Coins) IsAllGT(coinsB Coins) bool {
 	diff, _ := coins.SafeMinus(coinsB)
@@ -283,6 +297,41 @@ func (coins Coins) IsAllLT(coinsB Coins) bool {
 // a smaller or equal amount in coinsB.
 func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	return coinsB.IsAllGTE(coins)
+}
+
+// IsAnyGTE returns true iff coins contains at least one denom that is present
+// at a greater or equal amount in coinsB; it returns false otherwise.
+//
+// NOTE: IsAnyGTE operates under the invariant that coins are sorted by
+// denominations.
+func (coins Coins) IsAnyGTE(coinsB Coins) bool {
+	if len(coinsB) == 0 {
+		return false
+	}
+
+	j := 0
+	for _, coin := range coins {
+		searchOther := true // terminator in case coins breaks the sorted invariant
+
+		for j < len(coinsB) && searchOther {
+			switch strings.Compare(coin.Denom, coinsB[j].Denom) {
+			case -1:
+				// coin denom in less than the current other coin, so move to next coin
+				searchOther = false
+			case 0:
+				if coin.IsGTE(coinsB[j]) {
+					return true
+				}
+
+				fallthrough // skip to next other coin
+			case 1:
+				// coin denom is greater than the current other coin, so move to next other coin
+				j++
+			}
+		}
+	}
+
+	return false
 }
 
 // IsZero returns true if there are no coins or all coins are zero.
@@ -320,6 +369,9 @@ func (coins Coins) Empty() bool {
 
 // Returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
+	if strings.ToLower(denom) != denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
+	}
 	switch len(coins) {
 	case 0:
 		return ZeroInt()
@@ -373,7 +425,7 @@ func (coins Coins) IsNotNegative() bool {
 	}
 
 	for _, coin := range coins {
-		if !coin.IsNotNegative() {
+		if coin.IsNegative() {
 			return false
 		}
 	}
@@ -411,6 +463,12 @@ func removeZeroCoins(coins Coins) Coins {
 	}
 
 	return coins[:i]
+}
+
+func copyCoins(coins Coins) Coins {
+	copyCoins := make(Coins, len(coins))
+	copy(copyCoins, coins)
+	return copyCoins
 }
 
 //-----------------------------------------------------------------------------
@@ -457,7 +515,11 @@ func ParseCoin(coinStr string) (coin Coin, err error) {
 		return Coin{}, fmt.Errorf("failed to parse coin amount: %s", amountStr)
 	}
 
-	return Coin{denomStr, amount}, nil
+	if denomStr != strings.ToLower(denomStr) {
+		return Coin{}, fmt.Errorf("denom cannot contain upper case characters: %s", denomStr)
+	}
+
+	return NewCoin(denomStr, amount), nil
 }
 
 // ParseCoins will parse out a list of coins separated by commas.

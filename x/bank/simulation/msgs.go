@@ -6,13 +6,14 @@ import (
 	"math/big"
 	"math/rand"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // SingleInputSendTx tests and runs a single msg send w/ auth, with one input and one output, where both
@@ -95,8 +96,8 @@ func createSingleInputSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.A
 func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg bank.MsgSend, ctx sdk.Context, privkeys []crypto.PrivKey, handler sdk.Handler) error {
 	initialInputAddrCoins := make([]sdk.Coins, len(msg.Inputs))
 	initialOutputAddrCoins := make([]sdk.Coins, len(msg.Outputs))
-	AccountNumbers := make([]int64, len(msg.Inputs))
-	SequenceNumbers := make([]int64, len(msg.Inputs))
+	AccountNumbers := make([]uint64, len(msg.Inputs))
+	SequenceNumbers := make([]uint64, len(msg.Inputs))
 
 	for i := 0; i < len(msg.Inputs); i++ {
 		acc := mapper.GetAccount(ctx, msg.Inputs[i].Address)

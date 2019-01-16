@@ -12,19 +12,29 @@ import (
 
 // NOTE: These are implemented in cosmos-sdk/store.
 
-// PruningStrategy specfies how old states will be deleted over time
-type PruningStrategy uint8
+// PruningStrategy specifies how old states will be deleted over time where
+// keepRecent can be used with keepEvery to create a pruning "strategy".
+type PruningOptions struct {
+	keepRecent int64
+	keepEvery  int64
+}
 
-const (
-	// PruneSyncable means only those states not needed for state syncing will be deleted (keeps last 100 + every 10000th)
-	PruneSyncable PruningStrategy = iota
+func NewPruningOptions(keepRecent, keepEvery int64) PruningOptions {
+	return PruningOptions{
+		keepRecent: keepRecent,
+		keepEvery:  keepEvery,
+	}
+}
 
-	// PruneEverything means all saved states will be deleted, storing only the current state
-	PruneEverything PruningStrategy = iota
+// How much recent state will be kept. Older state will be deleted.
+func (po PruningOptions) KeepRecent() int64 {
+	return po.keepRecent
+}
 
-	// PruneNothing means all historic states will be saved, nothing will be deleted
-	PruneNothing PruningStrategy = iota
-)
+// Keeps every N stated, deleting others.
+func (po PruningOptions) KeepEvery() int64 {
+	return po.keepEvery
+}
 
 type Store interface { //nolint
 	GetStoreType() StoreType
@@ -35,7 +45,7 @@ type Store interface { //nolint
 type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
-	SetPruning(PruningStrategy)
+	SetPruning(PruningOptions)
 }
 
 // Stores of MultiStore must implement CommitStore.
@@ -64,6 +74,7 @@ type MultiStore interface { //nolint
 	CacheMultiStore() CacheMultiStore
 
 	// Convenience for fetching substores.
+	// If the store does not exist, panics.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
 
@@ -142,7 +153,7 @@ type KVStore interface {
 	Iterator(start, end []byte) Iterator
 
 	// Iterator over a domain of keys in descending order. End is exclusive.
-	// Start must be greater than end, or the Iterator is invalid.
+	// Start must be less than end, or the Iterator is invalid.
 	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	ReverseIterator(start, end []byte) Iterator

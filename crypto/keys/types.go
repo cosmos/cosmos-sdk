@@ -1,8 +1,9 @@
 package keys
 
 import (
-	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/tendermint/tendermint/crypto"
+
+	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +15,7 @@ type Keybase interface {
 	List() ([]Info, error)
 	Get(name string) (Info, error)
 	GetByAddress(address types.AccAddress) (Info, error)
-	Delete(name, passphrase string) error
+	Delete(name, passphrase string, skipPass bool) error
 
 	// Sign some bytes, looking up the private key to use
 	Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error)

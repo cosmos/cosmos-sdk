@@ -4,17 +4,22 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+)
+
+const (
+	flagGenTxDir = "gentx-dir"
 )
 
 type initConfig struct {
@@ -34,7 +39,6 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 			name := viper.GetString(client.FlagName)
-
 			nodeID, valPubKey, err := InitializeNodeValidatorFiles(config)
 			if err != nil {
 				return err
@@ -45,19 +49,13 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			toPrint := printInfo{
-				Moniker: config.Moniker,
-				ChainID: genDoc.ChainID,
-				NodeID:  nodeID,
+			genTxsDir := viper.GetString(flagGenTxDir)
+			if genTxsDir == "" {
+				genTxsDir = filepath.Join(config.RootDir, "config", "gentx")
 			}
 
-			initCfg := initConfig{
-				ChainID:   genDoc.ChainID,
-				GenTxsDir: filepath.Join(config.RootDir, "config", "gentx"),
-				Name:      name,
-				NodeID:    nodeID,
-				ValPubKey: valPubKey,
-			}
+			toPrint := newPrintInfo(config.Moniker, genDoc.ChainID, nodeID, genTxsDir, json.RawMessage(""))
+			initCfg := newInitConfig(genDoc.ChainID, genTxsDir, name, nodeID, valPubKey)
 
 			appMessage, err := genAppStateFromConfig(cdc, config, initCfg, genDoc)
 			if err != nil {
@@ -72,6 +70,9 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	}
 
 	cmd.Flags().String(cli.HomeFlag, app.DefaultNodeHome, "node's home directory")
+	cmd.Flags().String(flagGenTxDir, "",
+		"override default \"gentx\" directory from which collect and execute "+
+			"genesis transactions; default [--home]/config/gentx/")
 	return cmd
 }
 
@@ -115,4 +116,28 @@ func genAppStateFromConfig(
 
 	err = ExportGenesisFile(genFile, initCfg.ChainID, nil, appState)
 	return
+}
+
+func newInitConfig(chainID, genTxsDir, name, nodeID string,
+	valPubKey crypto.PubKey) initConfig {
+
+	return initConfig{
+		ChainID:   chainID,
+		GenTxsDir: genTxsDir,
+		Name:      name,
+		NodeID:    nodeID,
+		ValPubKey: valPubKey,
+	}
+}
+
+func newPrintInfo(moniker, chainID, nodeID, genTxsDir string,
+	appMessage json.RawMessage) printInfo {
+
+	return printInfo{
+		Moniker:    moniker,
+		ChainID:    chainID,
+		NodeID:     nodeID,
+		GenTxsDir:  genTxsDir,
+		AppMessage: appMessage,
+	}
 }

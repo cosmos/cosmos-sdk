@@ -3,92 +3,110 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [gaia-lite] [\#2182] Renamed and merged all redelegations endpoints into `/staking/redelegations`
+  * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
+  * [\#2222] all endpoints renamed from `/stake` -> `/staking`
 
 * Gaia CLI  (`gaiacli`)
-  * [cli] [\#2728](https://github.com/cosmos/cosmos-sdk/pull/2728) Seperate `tx` and `query` subcommands by module
-  * [cli] [\#2727](https://github.com/cosmos/cosmos-sdk/pull/2727) Fix unbonding command flow
-  * [cli] [\#2786](https://github.com/cosmos/cosmos-sdk/pull/2786) Fix redelegation command flow
-  * [cli] [\#2829](https://github.com/cosmos/cosmos-sdk/pull/2829) add-genesis-account command now validates state when adding accounts
-  * [cli] [\#2804](https://github.com/cosmos/cosmos-sdk/issues/2804) Check whether key exists before passing it on to `tx create-validator`.
+  * [\#810](https://github.com/cosmos/cosmos-sdk/issues/810) Don't fallback to any default values for chain ID.
+    * Users need to supply chain ID either via config file or the `--chain-id` flag.
+    * Change `chain_id` and `trust_node` in `gaiacli` configuration to `chain-id` and `trust-node` respectively.
+  * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) `--fee` flag renamed to `--fees` to support multiple coins
+  * [\#3156](https://github.com/cosmos/cosmos-sdk/pull/3156) Remove unimplemented `gaiacli init` command
+  * [\#2222] `gaiacli tx stake` -> `gaiacli tx staking`, `gaiacli query stake` -> `gaiacli query staking`
 
 * Gaia
+  * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
+  * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
+    in order to trigger a simulation of the tx before the actual execution.
+  * [\#3285](https://github.com/cosmos/cosmos-sdk/pull/3285) New `gaiad tendermint version` to print libs versions
 
 * SDK
-  * [\#2752](https://github.com/cosmos/cosmos-sdk/pull/2752) Don't hardcode bondable denom.
-  * [\#2019](https://github.com/cosmos/cosmos-sdk/issues/2019) Cap total number of signatures. Current per-transaction limit is 7, and if that is exceeded transaction is rejected.
-  * [\#2801](https://github.com/cosmos/cosmos-sdk/pull/2801) Remove AppInit structure.
-
+  * [staking] \#2513 Validator power type from Dec -> Int
+  * [staking] \#3233 key and value now contain duplicate fields to simplify code
+  * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.
+  * [\#3195](https://github.com/cosmos/cosmos-sdk/issues/3195) Allows custom configuration for syncable strategy
+  * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
+  meter utilization during aborted ante handler executions.
+  * [\#2222] [x/staking] `/stake` -> `/staking` module rename
+  
 * Tendermint
-
+  * \#3279 Upgrade to Tendermint 0.28.0-dev0
 
 FEATURES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
-  * [gov] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance parameter
-    query REST endpoints.
+  * [\#3067](https://github.com/cosmos/cosmos-sdk/issues/3067) Add support for fees on transactions
+  * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) Add a custom memo on transactions
+  * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
+  `/gov/proposals/{proposalID}/proposer` to query for a proposal's proposer.
 
 * Gaia CLI  (`gaiacli`)
-  * [gov][cli] [\#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Added governance
-    parameter query commands.
-  * [stake][cli] [\#2027] Add CLI query command for getting all delegations to a specific validator.
-  * [\#2840](https://github.com/cosmos/cosmos-sdk/pull/2840) Standardize CLI exports from modules
+  * \#2399 Implement `params` command to query slashing parameters.
+  * [\#2730](https://github.com/cosmos/cosmos-sdk/issues/2730) Add tx search pagination parameter
+  * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
+  `query gov proposer [proposal-id]` to query for a proposal's proposer.
 
 * Gaia
-  * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
-  * [x/gov] [#2479](https://github.com/cosmos/cosmos-sdk/issues/2479) Implemented querier
-  for getting governance parameters.
-  * [app] \#2663 - Runtime-assertable invariants
-  * [app] \#2791 Support export at a specific height, with `gaiad export --height=HEIGHT`.
+    * [\#2182] [x/staking] Added querier for querying a single redelegation
 
 * SDK
-    * [simulator] \#2682 MsgEditValidator now looks at the validator's max rate, thus it now succeeds a significant portion of the time
+  * \#2694 Vesting account implementation.
+  * \#2996 Update the `AccountKeeper` to contain params used in the context of
+  the ante handler.
+  * [\#3179](https://github.com/cosmos/cosmos-sdk/pull/3179) New CodeNoSignatures error code.
+
 
 * Tendermint
 
 
 IMPROVEMENTS
 
-* Gaia REST API (`gaiacli advanced rest-server`)
-  * [\#2836](https://github.com/cosmos/cosmos-sdk/pull/2836) Expose LCD router to allow users to register routes there.
+* Gaia REST API
+  * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) Validate tx/sign endpoint POST body.
+  * [\#2948](https://github.com/cosmos/cosmos-sdk/issues/2948) Swagger UI now makes requests to light client node
 
 * Gaia CLI  (`gaiacli`)
-  * [\#2749](https://github.com/cosmos/cosmos-sdk/pull/2749) Add --chain-id flag to gaiad testnet
+  * [\#3224](https://github.com/cosmos/cosmos-sdk/pull/3224) Support adding offline public keys to the keystore
 
 * Gaia
-  - #2772 Update BaseApp to not persist state when the ante handler fails on DeliverTx.
-  - #2773 Require moniker to be provided on `gaiad init`.
-  - #2672 [Makefile] Updated for better Windows compatibility and ledger support logic, get_tools was rewritten as a cross-compatible Makefile.
-  - [#110](https://github.com/tendermint/devops/issues/110) Updated CircleCI job to trigger website build when cosmos docs are updated.
+  * [\#2186](https://github.com/cosmos/cosmos-sdk/issues/2186) Add Address Interface
+  * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
+  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees in a local testnet.
+  * [\#3250](https://github.com/cosmos/cosmos-sdk/pull/3250) Refactor integration tests and increase coverage
+  * [\#2859](https://github.com/cosmos/cosmos-sdk/issues/2859) Rename `TallyResult` in gov proposals to `FinalTallyResult`
+  * [\#3286](https://github.com/cosmos/cosmos-sdk/pull/3286) Fix `gaiad gentx` printout of account's addresses, i.e. user bech32 instead of hex.
 
 * SDK
- - [x/mock/simulation] [\#2720] major cleanup, introduction of helper objects, reorganization
- - \#2821 Codespaces are now strings
- - [types] #2776 Improve safety of `Coin` and `Coins` types. Various functions
- and methods will panic when a negative amount is discovered.
- - #2815 Gas unit fields changed from `int64` to `uint64`.
- - #2821 Codespaces are now strings
- - #2779 Introduce `ValidateBasic` to the `Tx` interface and call it in the ante
- handler.
- 
-* Tendermint
- - #2796 Update to go-amino 0.14.1
+  * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation
+    for each module along with cleaning up a few existing tags in the governance,
+    slashing, and staking modules.
+  * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
+    verification may fail before last signature is checked.
 
+* Tendermint
+
+* CI
+  * \#2498 Added macos CI job to CircleCI
+  * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim
+  * [#147](https://github.com/tendermint/devops/issues/142) Added docker image build to CI
 
 BUG FIXES
 
-* Gaia REST API (`gaiacli advanced rest-server`)
-  - [gaia-lite] #2868 Added handler for governance tally endpoit
+* Gaia REST API
 
 * Gaia CLI  (`gaiacli`)
+  * \#3141 Fix the bug in GetAccount when `len(res) == 0` and `err == nil`
 
 * Gaia
-  * [\#2723] Use `cosmosvalcons` Bech32 prefix in `tendermint show-address`
-  * [\#2742](https://github.com/cosmos/cosmos-sdk/issues/2742) Fix time format of TimeoutCommit override
+  * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version
+  * \#3181 Correctly reset total accum update height and jailed-validator bond height / unbonding height on export-for-zero-height
+  * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Fix parsing `gaiad.toml`
+  when it already exists.
+  * \#3223 Fix unset governance proposal queues when importing state from old chain
+  * [#3187](https://github.com/cosmos/cosmos-sdk/issues/3187) Fix `gaiad export`
+  by resetting each validator's slashing period.
 
 * SDK
 
-  - \#2733 [x/gov, x/mock/simulation] Fix governance simulation, update x/gov import/export
-  - \#2854 [x/bank] Remove unused bank.MsgIssue, prevent possible panic
-
 * Tendermint
-  * [\#2797](https://github.com/tendermint/tendermint/pull/2797) AddressBook requires addresses to have IDs; Do not crap out immediately after sending pex addrs in seed mode

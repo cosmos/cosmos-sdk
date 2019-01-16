@@ -1,20 +1,20 @@
 # Begin-Block
 
-## Inflation 
+Minting parameters are recalculated and inflation
+paid at the beginning of each block.
 
-Inflation occurs at the beginning of each block. 
+## NextInflationRate
 
-### NextInflation
+The target annual inflation rate is recalculated each block.
+The inflation is also subject to a rate change (positive or negative)
+depending on the distance from the desired ratio (67%). The maximum rate change
+possible is defined to be 13% per year, however the annual inflation is capped
+as between 7% and 20%.
 
-The target annual inflation rate is recalculated for each provisions cycle. The
-inflation is also subject to a rate change (positive or negative) depending on
-the distance from the desired ratio (67%). The maximum rate change possible is
-defined to be 13% per year, however the annual inflation is capped as between
-7% and 20%.
-
-NextInflation(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
+```
+NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 	inflationRateChangePerYear = (1 - bondedRatio/params.GoalBonded) * params.InflationRateChange
-	inflationRateChange = inflationRateChangePerYear/hrsPerYr
+	inflationRateChange = inflationRateChangePerYear/blocksPerYr
 
 	// increase the new annual inflation for this next cycle
 	inflation += inflationRateChange
@@ -26,3 +26,25 @@ NextInflation(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 	}
 
 	return inflation
+```
+
+## NextAnnualProvisions
+
+Calculate the annual provisions based on current total supply and inflation
+rate. This parameter is calculated once per block. 
+
+```
+NextAnnualProvisions(params Params, totalSupply sdk.Dec) (provisions sdk.Dec) {
+	return Inflation * totalSupply
+```
+
+## BlockProvision
+
+Calculate the provisions generated for each block based on current 
+annual provisions 
+
+```
+BlockProvision(params Params) sdk.Coin {
+	provisionAmt = AnnualProvisions/ params.BlocksPerYear
+	return sdk.NewCoin(params.MintDenom, provisionAmt.Truncate())
+```

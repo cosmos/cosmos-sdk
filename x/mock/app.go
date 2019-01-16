@@ -7,16 +7,18 @@ import (
 	"os"
 	"sort"
 
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 const chainID = ""
@@ -26,13 +28,17 @@ const chainID = ""
 // capabilities aren't needed for testing.
 type App struct {
 	*bam.BaseApp
-	Cdc        *codec.Codec // Cdc is public since the codec is passed into the module anyways
-	KeyMain    *sdk.KVStoreKey
-	KeyAccount *sdk.KVStoreKey
+	Cdc              *codec.Codec // Cdc is public since the codec is passed into the module anyways
+	KeyMain          *sdk.KVStoreKey
+	KeyAccount       *sdk.KVStoreKey
+	KeyFeeCollection *sdk.KVStoreKey
+	KeyParams        *sdk.KVStoreKey
+	TKeyParams       *sdk.TransientStoreKey
 
 	// TODO: Abstract this out from not needing to be auth specifically
 	AccountKeeper       auth.AccountKeeper
 	FeeCollectionKeeper auth.FeeCollectionKeeper
+	ParamsKeeper        params.Keeper
 
 	GenesisAccounts  []auth.Account
 	TotalCoinsSupply sdk.Coins
@@ -54,16 +60,26 @@ func NewApp() *App {
 	app := &App{
 		BaseApp:          bam.NewBaseApp("mock", logger, db, auth.DefaultTxDecoder(cdc)),
 		Cdc:              cdc,
-		KeyMain:          sdk.NewKVStoreKey("main"),
-		KeyAccount:       sdk.NewKVStoreKey("acc"),
+		KeyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
+		KeyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
 		TotalCoinsSupply: sdk.Coins{},
+		KeyFeeCollection: sdk.NewKVStoreKey("fee"),
+		KeyParams:        sdk.NewKVStoreKey("params"),
+		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
 	}
+
+	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
 
 	// Define the accountKeeper
 	app.AccountKeeper = auth.NewAccountKeeper(
 		app.Cdc,
 		app.KeyAccount,
+		app.ParamsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount,
+	)
+	app.FeeCollectionKeeper = auth.NewFeeCollectionKeeper(
+		app.Cdc,
+		app.KeyFeeCollection,
 	)
 
 	// Initialize the app. The chainers and blockers can be overwritten before
@@ -79,8 +95,10 @@ func NewApp() *App {
 // CompleteSetup completes the application setup after the routes have been
 // registered.
 func (app *App) CompleteSetup(newKeys ...sdk.StoreKey) error {
-	newKeys = append(newKeys, app.KeyMain)
-	newKeys = append(newKeys, app.KeyAccount)
+	newKeys = append(
+		newKeys,
+		app.KeyMain, app.KeyAccount, app.KeyParams, app.TKeyParams, app.KeyFeeCollection,
+	)
 
 	for _, key := range newKeys {
 		switch key.(type) {
@@ -107,6 +125,8 @@ func (app *App) InitChainer(ctx sdk.Context, _ abci.RequestInitChain) abci.Respo
 		acc.SetCoins(genacc.GetCoins())
 		app.AccountKeeper.SetAccount(ctx, acc)
 	}
+
+	auth.InitGenesis(ctx, app.AccountKeeper, app.FeeCollectionKeeper, auth.DefaultGenesisState())
 
 	return abci.ResponseInitChain{}
 }
@@ -185,7 +205,7 @@ func SetGenesis(app *App, accs []auth.Account) {
 }
 
 // GenTx generates a signed mock transaction.
-func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey) auth.StdTx {
+func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKey) auth.StdTx {
 	// Make the transaction free
 	fee := auth.StdFee{
 		Amount: sdk.Coins{sdk.NewInt64Coin("foocoin", 0)},
@@ -202,10 +222,8 @@ func GenTx(msgs []sdk.Msg, accnums []int64, seq []int64, priv ...crypto.PrivKey)
 		}
 
 		sigs[i] = auth.StdSignature{
-			PubKey:        p.PubKey(),
-			Signature:     sig,
-			AccountNumber: accnums[i],
-			Sequence:      seq[i],
+			PubKey:    p.PubKey(),
+			Signature: sig,
 		}
 	}
 
@@ -304,7 +322,7 @@ func GetAllAccounts(mapper auth.AccountKeeper, ctx sdk.Context) []auth.Account {
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
 // that they differ only by having the sequence numbers incremented between
 // every transaction.
-func GenSequenceOfTxs(msgs []sdk.Msg, accnums []int64, initSeqNums []int64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
+func GenSequenceOfTxs(msgs []sdk.Msg, accnums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
 	txs := make([]auth.StdTx, numToGenerate, numToGenerate)
 	for i := 0; i < numToGenerate; i++ {
 		txs[i] = GenTx(msgs, accnums, initSeqNums, priv...)
@@ -314,7 +332,7 @@ func GenSequenceOfTxs(msgs []sdk.Msg, accnums []int64, initSeqNums []int64, numT
 	return txs
 }
 
-func incrementAllSequenceNumbers(initSeqNums []int64) {
+func incrementAllSequenceNumbers(initSeqNums []uint64) {
 	for i := 0; i < len(initSeqNums); i++ {
 		initSeqNums[i]++
 	}

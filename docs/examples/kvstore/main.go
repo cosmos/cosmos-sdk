@@ -19,7 +19,7 @@ import (
 
 func main() {
 
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "main")
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", bam.MainStoreKey)
 
 	rootDir := viper.GetString(cli.HomeFlag)
 	db, err := dbm.NewGoLevelDB("basecoind", filepath.Join(rootDir, "data"))
@@ -29,13 +29,13 @@ func main() {
 	}
 
 	// Capabilities key to access the main KVStore.
-	var capKeyMainStore = sdk.NewKVStoreKey("main")
+	var capKeyMainStore = sdk.NewKVStoreKey(bam.MainStoreKey)
 
 	// Create BaseApp.
 	var baseApp = bam.NewBaseApp("kvstore", logger, db, decodeTx)
 
 	// Set mounts for BaseApp's MultiStore.
-	baseApp.MountStoresIAVL(capKeyMainStore)
+	baseApp.MountStores(capKeyMainStore)
 
 	// Set a handler Route.
 	baseApp.Router().AddRoute("kvstore", Handler(capKeyMainStore))

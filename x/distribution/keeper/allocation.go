@@ -9,7 +9,7 @@ import (
 func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer sdk.ConsAddress) {
 
 	// get the proposer of this block
-	proposerValidator := k.stakeKeeper.ValidatorByConsAddr(ctx, proposer)
+	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
 
 	proposerDist := k.GetValidatorDistInfo(ctx, proposerValidator.GetOperator())
 
@@ -17,6 +17,16 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 	// transactions in the block
 	feesCollected := k.feeCollectionKeeper.GetCollectedFees(ctx)
 	feesCollectedDec := types.NewDecCoins(feesCollected)
+
+	feePool := k.GetFeePool(ctx)
+	// Temporary workaround to keep CanWithdrawInvariant happy.
+	// General discussions here: https://github.com/cosmos/cosmos-sdk/issues/2906#issuecomment-441867634
+	if k.stakingKeeper.GetLastTotalPower(ctx).IsZero() {
+		feePool.CommunityPool = feePool.CommunityPool.Plus(feesCollectedDec)
+		k.SetFeePool(ctx, feePool)
+		k.feeCollectionKeeper.ClearCollectedFees(ctx)
+		return
+	}
 
 	// allocated rewards to proposer
 	baseProposerReward := k.GetBaseProposerReward(ctx)
@@ -33,7 +43,6 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, percentVotes sdk.Dec, proposer s
 	// allocate community funding
 	communityTax := k.GetCommunityTax(ctx)
 	communityFunding := feesCollectedDec.MulDec(communityTax)
-	feePool := k.GetFeePool(ctx)
 	feePool.CommunityPool = feePool.CommunityPool.Plus(communityFunding)
 
 	// set the global pool within the distribution module

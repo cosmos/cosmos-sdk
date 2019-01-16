@@ -4,13 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ sdk.Tx = (*StdTx)(nil)
+var (
+	_ sdk.Tx = (*StdTx)(nil)
+
+	maxGasWanted = uint64((1 << 63) - 1)
+)
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
@@ -38,30 +43,25 @@ func (tx StdTx) GetMsgs() []sdk.Msg { return tx.Msgs }
 func (tx StdTx) ValidateBasic() sdk.Error {
 	stdSigs := tx.GetSignatures()
 
+	if tx.Fee.Gas > maxGasWanted {
+		return sdk.ErrGasOverflow(fmt.Sprintf("invalid gas supplied; %d > %d", tx.Fee.Gas, maxGasWanted))
+	}
 	if !tx.Fee.Amount.IsNotNegative() {
 		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
 	}
 	if len(stdSigs) == 0 {
-		return sdk.ErrUnauthorized("no signers")
+		return sdk.ErrNoSignatures("no signers")
 	}
 	if len(stdSigs) != len(tx.GetSigners()) {
 		return sdk.ErrUnauthorized("wrong number of signers")
-	}
-	if len(tx.GetMemo()) > maxMemoCharacters {
-		return sdk.ErrMemoTooLarge(
-			fmt.Sprintf(
-				"maximum number of characters is %d but received %d characters",
-				maxMemoCharacters, len(tx.GetMemo()),
-			),
-		)
 	}
 
 	sigCount := 0
 	for i := 0; i < len(stdSigs); i++ {
 		sigCount += countSubKeys(stdSigs[i].PubKey)
-		if sigCount > txSigLimit {
+		if uint64(sigCount) > DefaultTxSigLimit {
 			return sdk.ErrTooManySignatures(
-				fmt.Sprintf("signatures: %d, limit: %d", sigCount, txSigLimit),
+				fmt.Sprintf("signatures: %d, limit: %d", sigCount, DefaultTxSigLimit),
 			)
 		}
 	}
@@ -69,8 +69,9 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
+// countSubKeys counts the total number of keys for a multi-sig public key.
 func countSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(*multisig.PubKeyMultisigThreshold)
+	v, ok := pub.(multisig.PubKeyMultisigThreshold)
 	if !ok {
 		return 1
 	}
@@ -125,7 +126,7 @@ type StdFee struct {
 	Gas    uint64    `json:"gas"`
 }
 
-func NewStdFee(gas uint64, amount ...sdk.Coin) StdFee {
+func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
 	return StdFee{
 		Amount: amount,
 		Gas:    gas,
@@ -156,16 +157,16 @@ func (fee StdFee) Bytes() []byte {
 // and the Sequence numbers for each signature (prevent
 // inchain replay and enforce tx ordering per account).
 type StdSignDoc struct {
-	AccountNumber int64             `json:"account_number"`
+	AccountNumber uint64            `json:"account_number"`
 	ChainID       string            `json:"chain_id"`
 	Fee           json.RawMessage   `json:"fee"`
 	Memo          string            `json:"memo"`
 	Msgs          []json.RawMessage `json:"msgs"`
-	Sequence      int64             `json:"sequence"`
+	Sequence      uint64            `json:"sequence"`
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
+func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	var msgsBytes []json.RawMessage
 	for _, msg := range msgs {
 		msgsBytes = append(msgsBytes, json.RawMessage(msg.GetSignBytes()))
@@ -188,8 +189,6 @@ func StdSignBytes(chainID string, accnum int64, sequence int64, fee StdFee, msgs
 type StdSignature struct {
 	crypto.PubKey `json:"pub_key"` // optional
 	Signature     []byte           `json:"signature"`
-	AccountNumber int64            `json:"account_number"`
-	Sequence      int64            `json:"sequence"`
 }
 
 // logic for standard transaction decoding
@@ -209,5 +208,12 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 		}
 
 		return tx, nil
+	}
+}
+
+// logic for standard transaction encoding
+func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
+	return func(tx sdk.Tx) ([]byte, error) {
+		return cdc.MarshalBinaryLengthPrefixed(tx)
 	}
 }

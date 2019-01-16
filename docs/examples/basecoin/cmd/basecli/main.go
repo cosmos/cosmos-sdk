@@ -9,25 +9,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/app"
 
+	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/libs/cli"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	at "github.com/cosmos/cosmos-sdk/x/auth"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	ibccmd "github.com/cosmos/cosmos-sdk/x/ibc/client/cli"
+	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingcmd "github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	stakecmd "github.com/cosmos/cosmos-sdk/x/stake/client/cli"
-	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
-)
-
-const (
-	storeAcc      = "acc"
-	storeSlashing = "slashing"
-	storeStake    = "stake"
+	st "github.com/cosmos/cosmos-sdk/x/staking"
+	stakingcmd "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 )
 
 // rootCmd is the entry point for this binary
@@ -52,17 +50,12 @@ func main() {
 	config.SetBech32PrefixForConsensusNode("basecons", "baseconspub")
 	config.Seal()
 
-	rs := lcd.NewRestServer(cdc)
-
-	registerRoutes(rs)
-
 	// TODO: Setup keybase, viper object, etc. to be passed into
 	// the below functions and eliminate global vars, like we do
 	// with the cdc.
 
 	// add standard rpc, and tx commands
 	rootCmd.AddCommand(
-		rpc.InitClientCommand(),
 		rpc.StatusCommand(),
 		client.LineBreak,
 		tx.SearchTxCmd(cdc),
@@ -72,40 +65,39 @@ func main() {
 
 	// add query/post commands (custom to binary)
 	rootCmd.AddCommand(
-		client.GetCommands(
-			stakecmd.GetCmdQueryValidator(storeStake, cdc),
-			stakecmd.GetCmdQueryValidators(storeStake, cdc),
-			stakecmd.GetCmdQueryValidatorUnbondingDelegations(storeStake, cdc),
-			stakecmd.GetCmdQueryValidatorRedelegations(storeStake, cdc),
-			stakecmd.GetCmdQueryDelegation(storeStake, cdc),
-			stakecmd.GetCmdQueryDelegations(storeStake, cdc),
-			stakecmd.GetCmdQueryPool(storeStake, cdc),
-			stakecmd.GetCmdQueryParams(storeStake, cdc),
-			stakecmd.GetCmdQueryUnbondingDelegation(storeStake, cdc),
-			stakecmd.GetCmdQueryUnbondingDelegations(storeStake, cdc),
-			stakecmd.GetCmdQueryRedelegation(storeStake, cdc),
-			stakecmd.GetCmdQueryRedelegations(storeStake, cdc),
-			slashingcmd.GetCmdQuerySigningInfo(storeSlashing, cdc),
-			authcmd.GetAccountCmd(storeAcc, cdc),
-		)...)
+		stakingcmd.GetCmdQueryValidator(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryValidators(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryValidatorUnbondingDelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryValidatorRedelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryDelegation(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryDelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryPool(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryParams(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryUnbondingDelegation(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryUnbondingDelegations(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryRedelegation(st.StoreKey, cdc),
+		stakingcmd.GetCmdQueryRedelegations(st.StoreKey, cdc),
+		slashingcmd.GetCmdQuerySigningInfo(sl.StoreKey, cdc),
+		stakingcmd.GetCmdQueryValidatorDelegations(st.StoreKey, cdc),
+		authcmd.GetAccountCmd(at.StoreKey, cdc),
+	)
 
 	rootCmd.AddCommand(
-		client.PostCommands(
-			bankcmd.SendTxCmd(cdc),
-			ibccmd.IBCTransferCmd(cdc),
-			ibccmd.IBCRelayCmd(cdc),
-			stakecmd.GetCmdCreateValidator(cdc),
-			stakecmd.GetCmdEditValidator(cdc),
-			stakecmd.GetCmdDelegate(cdc),
-			stakecmd.GetCmdUnbond(storeStake, cdc),
-			stakecmd.GetCmdRedelegate(storeStake, cdc),
-			slashingcmd.GetCmdUnjail(cdc),
-		)...)
+		bankcmd.SendTxCmd(cdc),
+		ibccmd.IBCTransferCmd(cdc),
+		ibccmd.IBCRelayCmd(cdc),
+		stakingcmd.GetCmdCreateValidator(cdc),
+		stakingcmd.GetCmdEditValidator(cdc),
+		stakingcmd.GetCmdDelegate(cdc),
+		stakingcmd.GetCmdUnbond(st.StoreKey, cdc),
+		stakingcmd.GetCmdRedelegate(st.StoreKey, cdc),
+		slashingcmd.GetCmdUnjail(cdc),
+	)
 
 	// add proxy, version and key info
 	rootCmd.AddCommand(
 		client.LineBreak,
-		rs.ServeCommand(),
+		lcd.ServeCommand(cdc, registerRoutes),
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,
@@ -124,8 +116,8 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, at.StoreKey)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	stake.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	staking.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 }

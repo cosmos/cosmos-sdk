@@ -15,7 +15,7 @@ const (
 	// occur between the tx simulation and the actual run.
 	DefaultGasAdjustment = 1.0
 	DefaultGasLimit      = 200000
-	GasFlagSimulate      = "simulate"
+	GasFlagAuto          = "auto"
 
 	FlagUseLedger          = "ledger"
 	FlagChainID            = "chain-id"
@@ -29,7 +29,7 @@ const (
 	FlagAccountNumber      = "account-number"
 	FlagSequence           = "sequence"
 	FlagMemo               = "memo"
-	FlagFee                = "fee"
+	FlagFees               = "fees"
 	FlagAsync              = "async"
 	FlagJson               = "json"
 	FlagPrintResponse      = "print-response"
@@ -43,6 +43,7 @@ const (
 	FlagSSLHosts           = "ssl-hosts"
 	FlagSSLCertFile        = "ssl-certfile"
 	FlagSSLKeyFile         = "ssl-keyfile"
+	FlagOutputDocument     = "output-document" // inspired by wget -O
 )
 
 // LineBreak can be included in a command list to provide a blank line
@@ -74,10 +75,10 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 	for _, c := range cmds {
 		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().String(FlagFrom, "", "Name or address of private key with which to sign")
-		c.Flags().Int64(FlagAccountNumber, 0, "AccountNumber number to sign the tx")
-		c.Flags().Int64(FlagSequence, 0, "Sequence number to sign the tx")
+		c.Flags().Uint64(FlagAccountNumber, 0, "AccountNumber number to sign the tx")
+		c.Flags().Uint64(FlagSequence, 0, "Sequence number to sign the tx")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
-		c.Flags().String(FlagFee, "", "Fee to pay along with transaction")
+		c.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 10stake,1atom")
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
@@ -90,11 +91,13 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagGenerateOnly, false, "build an unsigned transaction and write it to STDOUT")
 		// --gas can accept integers and "simulate"
 		c.Flags().Var(&GasFlagVar, "gas", fmt.Sprintf(
-			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagSimulate, DefaultGasLimit))
+			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
 		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
+
+		c.MarkFlagRequired(FlagChainID)
 	}
 	return cmds
 }
@@ -132,28 +135,28 @@ func (v *GasSetting) Type() string { return "string" }
 
 // Set parses and sets the value of the --gas flag.
 func (v *GasSetting) Set(s string) (err error) {
-	v.Simulate, v.Gas, err = ReadGasFlag(s)
+	v.Simulate, v.Gas, err = ParseGas(s)
 	return
 }
 
 func (v *GasSetting) String() string {
 	if v.Simulate {
-		return GasFlagSimulate
+		return GasFlagAuto
 	}
 	return strconv.FormatUint(v.Gas, 10)
 }
 
-// ParseGasFlag parses the value of the --gas flag.
-func ReadGasFlag(s string) (simulate bool, gas uint64, err error) {
-	switch s {
+// ParseGas parses the value of the gas option.
+func ParseGas(gasStr string) (simulateAndExecute bool, gas uint64, err error) {
+	switch gasStr {
 	case "":
 		gas = DefaultGasLimit
-	case GasFlagSimulate:
-		simulate = true
+	case GasFlagAuto:
+		simulateAndExecute = true
 	default:
-		gas, err = strconv.ParseUint(s, 10, 64)
+		gas, err = strconv.ParseUint(gasStr, 10, 64)
 		if err != nil {
-			err = fmt.Errorf("gas must be either integer or %q", GasFlagSimulate)
+			err = fmt.Errorf("gas must be either integer or %q", GasFlagAuto)
 			return
 		}
 	}

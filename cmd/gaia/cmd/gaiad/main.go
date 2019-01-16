@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/store"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -55,21 +56,21 @@ func main() {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-	return app.NewGaiaApp(logger, db, traceStore,
-		baseapp.SetPruning(viper.GetString("pruning")),
+	return app.NewGaiaApp(logger, db, traceStore, true,
+		baseapp.SetPruning(store.NewPruningOptions(viper.GetString("pruning"))),
 		baseapp.SetMinimumFees(viper.GetString("minimum_fees")),
 	)
 }
 
 func exportAppStateAndTMValidators(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64,
+	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
-	gApp := app.NewGaiaApp(logger, db, traceStore)
+	gApp := app.NewGaiaApp(logger, db, traceStore, false)
 	if height != -1 {
 		err := gApp.LoadHeight(height)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
-	return gApp.ExportAppStateAndValidators()
+	return gApp.ExportAppStateAndValidators(forZeroHeight)
 }

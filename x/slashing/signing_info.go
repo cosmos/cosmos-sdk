@@ -21,7 +21,7 @@ func (k Keeper) getValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) iterateValidatorSigningInfos(ctx sdk.Context, handler func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool)) {
+func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context, handler func(address sdk.ConsAddress, info ValidatorSigningInfo) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, ValidatorSigningInfoKey)
 	defer iter.Close()
@@ -36,7 +36,7 @@ func (k Keeper) iterateValidatorSigningInfos(ctx sdk.Context, handler func(addre
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) setValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info ValidatorSigningInfo) {
+func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress, info ValidatorSigningInfo) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(info)
 	store.Set(GetValidatorSigningInfoKey(address), bz)
@@ -56,7 +56,7 @@ func (k Keeper) getValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 }
 
 // Stored by *validator* address (not operator address)
-func (k Keeper) iterateValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
+func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	index := int64(0)
 	// Array may be sparse
@@ -91,11 +91,12 @@ func (k Keeper) clearValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.C
 }
 
 // Construct a new `ValidatorSigningInfo` struct
-func NewValidatorSigningInfo(startHeight int64, indexOffset int64, jailedUntil time.Time, missedBlocksCounter int64) ValidatorSigningInfo {
+func NewValidatorSigningInfo(startHeight int64, indexOffset int64, jailedUntil time.Time, tombstoned bool, missedBlocksCounter int64) ValidatorSigningInfo {
 	return ValidatorSigningInfo{
 		StartHeight:         startHeight,
 		IndexOffset:         indexOffset,
 		JailedUntil:         jailedUntil,
+		Tombstoned:          tombstoned,
 		MissedBlocksCounter: missedBlocksCounter,
 	}
 }
@@ -105,6 +106,7 @@ type ValidatorSigningInfo struct {
 	StartHeight         int64     `json:"start_height"`          // height at which validator was first a candidate OR was unjailed
 	IndexOffset         int64     `json:"index_offset"`          // index offset into signed block bit array
 	JailedUntil         time.Time `json:"jailed_until"`          // timestamp validator cannot be unjailed until
+	Tombstoned          bool      `json:"tombstoned"`            // whether or not a validator has been tombstoned (killed out of validator set)
 	MissedBlocksCounter int64     `json:"missed_blocks_counter"` // missed blocks counter (to avoid scanning the array every time)
 }
 

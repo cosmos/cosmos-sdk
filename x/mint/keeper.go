@@ -6,17 +6,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-// keeper of the stake store
+// keeper of the staking store
 type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        *codec.Codec
 	paramSpace params.Subspace
-	sk         StakeKeeper
+	sk         StakingKeeper
 	fck        FeeCollectionKeeper
 }
 
 func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
-	paramSpace params.Subspace, sk StakeKeeper, fck FeeCollectionKeeper) Keeper {
+	paramSpace params.Subspace, sk StakingKeeper, fck FeeCollectionKeeper) Keeper {
 
 	keeper := Keeper{
 		storeKey:   key,
@@ -38,7 +38,7 @@ var (
 	ParamStoreKeyParams = []byte("params")
 )
 
-// ParamTable for stake module
+// ParamTable for staking module
 func ParamTypeTable() params.TypeTable {
 	return params.NewTypeTable(
 		ParamStoreKeyParams, Params{},
@@ -48,6 +48,9 @@ func ParamTypeTable() params.TypeTable {
 const (
 	// default paramspace for params keeper
 	DefaultParamspace = "mint"
+
+	// StoreKey is the default store key for mint
+	StoreKey = "mint"
 )
 
 //______________________________________________________________________

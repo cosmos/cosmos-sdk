@@ -7,14 +7,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
-	coinsPos         = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000)}
+	coinsPos         = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1000)}
 	coinsZero        = sdk.Coins{}
 	coinsPosNotAtoms = sdk.Coins{sdk.NewInt64Coin("foo", 10000)}
-	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
+	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
 )
 
 func init() {
@@ -57,7 +57,7 @@ func TestMsgDeposit(t *testing.T) {
 	_, addrs, _, _ := mock.CreateGenAccounts(1, sdk.Coins{})
 	tests := []struct {
 		proposalID    uint64
-		depositerAddr sdk.AccAddress
+		depositorAddr sdk.AccAddress
 		depositAmount sdk.Coins
 		expectPass    bool
 	}{
@@ -68,7 +68,7 @@ func TestMsgDeposit(t *testing.T) {
 	}
 
 	for i, tc := range tests {
-		msg := NewMsgDeposit(tc.depositerAddr, tc.proposalID, tc.depositAmount)
+		msg := NewMsgDeposit(tc.depositorAddr, tc.proposalID, tc.depositAmount)
 		if tc.expectPass {
 			require.NoError(t, msg.ValidateBasic(), "test: %v", i)
 		} else {

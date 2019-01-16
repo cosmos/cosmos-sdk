@@ -1,9 +1,10 @@
 package keys
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // Commands registers a sub-tree of commands to interact with
@@ -20,7 +21,6 @@ func Commands() *cobra.Command {
 	}
 	cmd.AddCommand(
 		mnemonicKeyCommand(),
-		newKeyCommand(),
 		addKeyCommand(),
 		listKeysCmd,
 		showKeysCmd(),

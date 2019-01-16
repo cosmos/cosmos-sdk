@@ -20,10 +20,10 @@ func (k Keeper) initializeValidator(ctx sdk.Context, val sdk.Validator) {
 
 // increment validator period, returning the period just ended
 func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uint64 {
-	// Fetch current rewards
+	// fetch current rewards
 	rewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
 
-	// Calculate current ratio
+	// calculate current ratio
 	var current sdk.DecCoins
 	if val.GetTokens().IsZero() {
 
@@ -41,13 +41,13 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 		current = rewards.Rewards.QuoDec(sdk.NewDecFromInt(val.GetTokens()))
 	}
 
-	// Fetch historical rewards for last period
+	// fetch historical rewards for last period
 	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1)
 
-	// Set new historical rewards
+	// fet new historical rewards
 	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, historical.Plus(current))
 
-	// Set current rewards, incrementing period by 1
+	// set current rewards, incrementing period by 1
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
 
 	return rewards.Period

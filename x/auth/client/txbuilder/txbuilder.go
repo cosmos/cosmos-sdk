@@ -29,7 +29,7 @@ type TxBuilder struct {
 // NewTxBuilder returns a new initialized TxBuilder.
 func NewTxBuilder(
 	txEncoder sdk.TxEncoder, accNumber, seq, gas uint64, gasAdj float64,
-	simulateAndExecute bool, chainID, memo string, fees, gasPrices sdk.Coins,
+	simulateAndExecute bool, chainID, memo string, fees sdk.Coins, gasPrices sdk.DecCoins,
 ) TxBuilder {
 
 	return TxBuilder{
@@ -94,7 +94,7 @@ func (bldr TxBuilder) GetMemo() string { return bldr.memo }
 func (bldr TxBuilder) GetFees() sdk.Coins { return bldr.fees }
 
 // GetGasPrices returns the gas prices set for the transaction, if any.
-func (bldr TxBuilder) GetGasPrices() sdk.Coins { return bldr.gasPrices }
+func (bldr TxBuilder) GetGasPrices() sdk.DecCoins { return bldr.gasPrices }
 
 // WithTxEncoder returns a copy of the context with an updated codec.
 func (bldr TxBuilder) WithTxEncoder(txEncoder sdk.TxEncoder) TxBuilder {
@@ -127,7 +127,7 @@ func (bldr TxBuilder) WithFees(fees string) TxBuilder {
 
 // WithGasPrices returns a copy of the context with updated gas prices.
 func (bldr TxBuilder) WithGasPrices(gasPrices string) TxBuilder {
-	parsedGasPrices, err := sdk.ParseCoins(gasPrices)
+	parsedGasPrices, err := sdk.ParseDecCoins(gasPrices)
 	if err != nil {
 		panic(err)
 	}
@@ -168,10 +168,14 @@ func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 			return StdSignMsg{}, errors.New("cannot provide both fees and gas prices")
 		}
 
-		// compute fee based on the given gas prices
+		glDec := sdk.NewDec(int64(bldr.gas))
+
+		// Derive the fees based on the provided gas prices, where
+		// fee = ceil(gasPrice * gasLimit).
 		fees = make(sdk.Coins, len(bldr.gasPrices))
 		for i, gp := range bldr.gasPrices {
-			fees[i] = sdk.NewCoin(gp.Denom, gp.Amount.MulRaw(int64(bldr.gas)))
+			fee := gp.Amount.Mul(glDec)
+			fees[i] = sdk.NewInt64Coin(gp.Denom, fee.Ceil().RoundInt64())
 		}
 	}
 

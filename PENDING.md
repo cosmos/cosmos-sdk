@@ -31,6 +31,7 @@ BREAKING CHANGES
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
   * \#3292 [x/distribution] Enable or disable withdraw addresses with a parameter in the param store
   * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+  * [\#3315] Increase decimal precision to 18
 
 * Tendermint
   * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0

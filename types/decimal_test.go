@@ -365,3 +365,24 @@ func TestDecMulInt(t *testing.T) {
 		require.Equal(t, tc.want, got, "Incorrect result on test case %d", i)
 	}
 }
+
+func TestDecCeil(t *testing.T) {
+	testCases := []struct {
+		input    Dec
+		expected Dec
+	}{
+		{NewDecWithPrec(1, 3), NewDec(1)},                     // 0.001 => 1.0
+		{NewDecWithPrec(-1, 3), ZeroDec()},                    // -0.001 => 0.0
+		{ZeroDec(), ZeroDec()},                                // 0.0 => 0.0
+		{NewDecWithPrec(9, 1), NewDec(1)},                     // 0.9 => 1.0
+		{NewDecWithPrec(40010000000, Precision), NewDec(5)},   // 4.001 => 5.0
+		{NewDecWithPrec(-40010000000, Precision), NewDec(-4)}, // -4.001 => -4.0
+		{NewDecWithPrec(47000000000, Precision), NewDec(5)},   // 4.7 => 5.0
+		{NewDecWithPrec(-47000000000, Precision), NewDec(-4)}, // -4.7 => -4.0
+	}
+
+	for i, tc := range testCases {
+		res := tc.input.Ceil()
+		require.Equal(t, tc.expected, res, "unexpected result for test case %d, input: %v", i, tc.input)
+	}
+}

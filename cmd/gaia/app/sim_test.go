@@ -75,21 +75,28 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 
 		var gacc GenesisAccount
 
-		// create a vesting account under the following conditions:
-		// - not an initially bonded (genesis) validator
-		// - every 10th account past the initial bonded validator set
-		if int64(i) > numInitiallyBonded && i+1%10 == 0 {
-			var vacc auth.VestingAccount
+		// Only consider making a vesting account once the initial bonded validator
+		// set is exhausted due to needing to track DelegatedVesting.
+		if int64(i) > numInitiallyBonded && r.Intn(100) < 50 {
+			var (
+				vacc    auth.VestingAccount
+				endTime int
+			)
 
-			// Vesting starts at the genesis time and ends at a time between genesis
-			// and two days from genesis.
 			startTime := genesisTimestamp.Unix()
-			endTime := r.Int63n((startTime+(60*60*24*2))-startTime) + startTime
 
-			if r.Int()%2 == 0 {
-				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, endTime)
+			// Allow for some vesting accounts to vest very quickly while others very
+			// slowly.
+			if r.Intn(100) < 50 {
+				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*24*30)))
 			} else {
-				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
+				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*12)))
+			}
+
+			if r.Intn(100) < 50 {
+				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, int64(endTime))
+			} else {
+				vacc = auth.NewDelayedVestingAccount(&bacc, int64(endTime))
 			}
 
 			gacc = NewGenesisAccountI(vacc)

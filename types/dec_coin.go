@@ -18,6 +18,13 @@ type DecCoin struct {
 }
 
 func NewDecCoin(denom string, amount int64) DecCoin {
+	if amount < 0 {
+		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
+	}
+	if strings.ToLower(denom) != denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
+	}
+
 	return DecCoin{
 		Denom:  denom,
 		Amount: NewDec(amount),
@@ -25,6 +32,13 @@ func NewDecCoin(denom string, amount int64) DecCoin {
 }
 
 func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
+	if amount.LT(ZeroDec()) {
+		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
+	}
+	if strings.ToLower(denom) != denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
+	}
+
 	return DecCoin{
 		Denom:  denom,
 		Amount: amount,
@@ -32,6 +46,13 @@ func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
 }
 
 func NewDecCoinFromCoin(coin Coin) DecCoin {
+	if coin.Amount.LT(ZeroInt()) {
+		panic(fmt.Sprintf("negative decimal coin amount: %v\n", coin.Amount))
+	}
+	if strings.ToLower(coin.Denom) != coin.Denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", coin.Denom))
+	}
+
 	return DecCoin{
 		Denom:  coin.Denom,
 		Amount: NewDecFromInt(coin.Amount),

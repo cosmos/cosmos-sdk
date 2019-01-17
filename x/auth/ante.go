@@ -303,8 +303,8 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
 	if !minGasPrices.IsZero() {
 		requiredFees := make(sdk.Coins, len(minGasPrices))
 
-		// Determine the required fees by multiplying each required gas price by the
-		// gas limit, where fee = ceil(gp * gl).
+		// Determine the required fees by multiplying each required minimum gas
+		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
 		glDec := sdk.NewDec(int64(stdFee.Gas))
 		for i, gp := range minGasPrices {
 			fee := gp.Amount.Mul(glDec)

@@ -19,6 +19,7 @@ BREAKING CHANGES
   * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
   * [\#3162](https://github.com/cosmos/cosmos-sdk/issues/3162) The `--gas` flag now takes `auto` instead of `simulate`
     in order to trigger a simulation of the tx before the actual execution.
+  * [\#3285](https://github.com/cosmos/cosmos-sdk/pull/3285) New `gaiad tendermint version` to print libs versions
 
 * SDK
   * [staking] \#2513 Validator power type from Dec -> Int
@@ -28,9 +29,11 @@ BREAKING CHANGES
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
   meter utilization during aborted ante handler executions.
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
-  
+  * \#3292 [x/distribution] Enable or disable withdraw addresses with a parameter in the param store
+  * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+
 * Tendermint
-  * \#3279 Upgrade to Tendermint 0.28.0-dev0
+  * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0
 
 FEATURES
 
@@ -42,13 +45,23 @@ FEATURES
 
 * Gaia CLI  (`gaiacli`)
   * \#2399 Implement `params` command to query slashing parameters.
+  * [\#2730](https://github.com/cosmos/cosmos-sdk/issues/2730) Add tx search pagination parameter
   * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
   `query gov proposer [proposal-id]` to query for a proposal's proposer.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `keys add --multisig` flag to store multisig keys locally.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `multisign` command to generate multisig signatures.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `sign --multisig` flag to enable multisig mode.
+  * [\#2715](https://github.com/cosmos/cosmos-sdk/issues/2715) Reintroduce gaia server's insecure mode.
 
 * Gaia
-    * [\#2182] [x/staking] Added querier for querying a single redelegation
+  * [\#2182] [x/staking] Added querier for querying a single redelegation
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) [x/auth] Add multisig transactions support
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) `add-genesis-account` can take both account addresses and key names
 
 * SDK
+  - \#3099 Implement F1 fee distribution
+  - [\#2926](https://github.com/cosmos/cosmos-sdk/issues/2926) Add TxEncoder to client TxBuilder.
+  * \#2694 Vesting account implementation.
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
   the ante handler.
   * [\#3179](https://github.com/cosmos/cosmos-sdk/pull/3179) New CodeNoSignatures error code.
@@ -85,12 +98,14 @@ IMPROVEMENTS
     slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
+  * [x/stake] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period 
 
 * Tendermint
 
 * CI
   * \#2498 Added macos CI job to CircleCI
   * [#142](https://github.com/tendermint/devops/issues/142) Increased the number of blocks to be tested during multi-sim
+  * [#147](https://github.com/tendermint/devops/issues/142) Added docker image build to CI
 
 BUG FIXES
 

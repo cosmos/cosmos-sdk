@@ -44,8 +44,8 @@ type GaiaApp struct {
 	// keys to access the substores
 	keyMain          *sdk.KVStoreKey
 	keyAccount       *sdk.KVStoreKey
-	keyStaking         *sdk.KVStoreKey
-	tkeyStaking        *sdk.TransientStoreKey
+	keyStaking       *sdk.KVStoreKey
+	tkeyStaking      *sdk.TransientStoreKey
 	keySlashing      *sdk.KVStoreKey
 	keyMint          *sdk.KVStoreKey
 	keyDistr         *sdk.KVStoreKey
@@ -59,7 +59,7 @@ type GaiaApp struct {
 	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
-	stakingKeeper         staking.Keeper
+	stakingKeeper       staking.Keeper
 	slashingKeeper      slashing.Keeper
 	mintKeeper          mint.Keeper
 	distrKeeper         distr.Keeper
@@ -79,8 +79,8 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 		cdc:              cdc,
 		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
 		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
-		keyStaking:         sdk.NewKVStoreKey(staking.StoreKey),
-		tkeyStaking:        sdk.NewTransientStoreKey(staking.TStoreKey),
+		keyStaking:       sdk.NewKVStoreKey(staking.StoreKey),
+		tkeyStaking:      sdk.NewTransientStoreKey(staking.TStoreKey),
 		keyMint:          sdk.NewKVStoreKey(mint.StoreKey),
 		keyDistr:         sdk.NewKVStoreKey(distr.StoreKey),
 		tkeyDistr:        sdk.NewTransientStoreKey(distr.TStoreKey),
@@ -238,6 +238,9 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 		app.accountKeeper.SetAccount(ctx, acc)
 	}
 
+	// initialize distribution (must happen before staking)
+	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
+
 	// load the initial staking information
 	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakingData)
 	if err != nil {
@@ -249,7 +252,6 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData)
 	gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
-	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
 
 	// validate genesis state
 	err = GaiaValidateGenesisState(genesisState)
@@ -369,4 +371,12 @@ func (h StakingHooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sd
 func (h StakingHooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	h.dh.BeforeDelegationRemoved(ctx, delAddr, valAddr)
 	h.sh.BeforeDelegationRemoved(ctx, delAddr, valAddr)
+}
+func (h StakingHooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.dh.AfterDelegationModified(ctx, delAddr, valAddr)
+	h.sh.AfterDelegationModified(ctx, delAddr, valAddr)
+}
+func (h StakingHooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	h.dh.BeforeValidatorSlashed(ctx, valAddr, fraction)
+	h.sh.BeforeValidatorSlashed(ctx, valAddr, fraction)
 }

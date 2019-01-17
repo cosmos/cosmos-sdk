@@ -59,7 +59,9 @@ func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd staking.UnbondingDelegation) bool {
-			loose = loose.Add(sdk.NewDecFromInt(ubd.Balance.Amount))
+			for _, entry := range ubd.Entries {
+				loose = loose.Add(sdk.NewDecFromInt(entry.Balance.Amount))
+			}
 			return false
 		})
 		k.IterateValidators(ctx, func(_ int64, validator sdk.Validator) bool {
@@ -80,17 +82,8 @@ func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 		// add community pool
 		loose = loose.Add(feePool.CommunityPool.AmountOf(stakingTypes.DefaultBondDenom))
 
-		// add validator distribution pool
-		loose = loose.Add(feePool.ValPool.AmountOf(stakingTypes.DefaultBondDenom))
-
-		// add validator distribution commission and yet-to-be-withdrawn-by-delegators
-		d.IterateValidatorDistInfos(ctx,
-			func(_ int64, distInfo distribution.ValidatorDistInfo) (stop bool) {
-				loose = loose.Add(distInfo.DelPool.AmountOf(stakingTypes.DefaultBondDenom))
-				loose = loose.Add(distInfo.ValCommission.AmountOf(stakingTypes.DefaultBondDenom))
-				return false
-			},
-		)
+		// add yet-to-be-withdrawn
+		loose = loose.Add(d.GetOutstandingRewards(ctx).AmountOf(stakingTypes.DefaultBondDenom))
 
 		// Loose tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators

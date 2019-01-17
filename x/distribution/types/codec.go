@@ -6,9 +6,8 @@ import (
 
 // Register concrete types on codec codec
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgWithdrawDelegatorRewardsAll{}, "cosmos-sdk/MsgWithdrawDelegationRewardsAll", nil)
 	cdc.RegisterConcrete(MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
-	cdc.RegisterConcrete(MsgWithdrawValidatorRewardsAll{}, "cosmos-sdk/MsgWithdrawValidatorRewardsAll", nil)
+	cdc.RegisterConcrete(MsgWithdrawValidatorCommission{}, "cosmos-sdk/MsgWithdrawValidatorCommission", nil)
 	cdc.RegisterConcrete(MsgSetWithdrawAddress{}, "cosmos-sdk/MsgModifyWithdrawAddress", nil)
 }
 

@@ -57,7 +57,7 @@ type DemocoinApp struct {
 	coolKeeper          cool.Keeper
 	powKeeper           pow.Keeper
 	ibcMapper           ibc.Mapper
-	stakingKeeper         simplestaking.Keeper
+	stakingKeeper       simplestaking.Keeper
 
 	// Manage getting and setting accounts
 	accountKeeper auth.AccountKeeper

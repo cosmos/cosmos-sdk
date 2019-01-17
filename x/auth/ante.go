@@ -5,10 +5,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -81,8 +84,9 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		if !res.IsOK() {
 			return newCtx, res, true
 		}
+
 		if !stdTx.Fee.Amount.IsZero() {
-			signerAccs[0], res = DeductFees(signerAccs[0], stdTx.Fee)
+			signerAccs[0], res = DeductFees(ctx.BlockHeader().Time, signerAccs[0], stdTx.Fee)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -160,7 +164,7 @@ func processSig(
 		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
 	}
 
-	consumeSignatureVerificationGas(ctx.GasMeter(), pubKey, params)
+	consumeSignatureVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
@@ -219,15 +223,36 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 // matched by the concrete type.
 //
 // TODO: Design a cleaner and flexible way to match concrete public key types.
-func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey, params Params) {
+func consumeSignatureVerificationGas(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) {
 	pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
 	switch {
 	case strings.Contains(pubkeyType, "ed25519"):
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
 	case strings.Contains(pubkeyType, "secp256k1"):
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
+	case strings.Contains(pubkeyType, "multisigthreshold"):
+
+		var multisignature multisig.Multisignature
+		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
+		multisigPubKey := pubkey.(multisig.PubKeyMultisigThreshold)
+
+		consumeMultisignatureVerificationGas(meter, multisignature, multisigPubKey, params)
 	default:
 		panic(fmt.Sprintf("unrecognized signature type: %s", pubkeyType))
+	}
+}
+
+func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
+	sig multisig.Multisignature, pubkey multisig.PubKeyMultisigThreshold,
+	params Params) {
+
+	size := sig.BitArray.Size()
+	sigIndex := 0
+	for i := 0; i < size; i++ {
+		if sig.BitArray.GetIndex(i) {
+			consumeSignatureVerificationGas(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
+			sigIndex++
+		}
 	}
 }
 
@@ -235,7 +260,7 @@ func consumeSignatureVerificationGas(meter sdk.GasMeter, pubkey crypto.PubKey, p
 //
 // NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
 // the CoinKeeper doesn't give us accounts), but it seems easier to do this.
-func DeductFees(acc Account, fee StdFee) (Account, sdk.Result) {
+func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Result) {
 	coins := acc.GetCoins()
 	feeAmount := fee.Amount
 
@@ -243,14 +268,21 @@ func DeductFees(acc Account, fee StdFee) (Account, sdk.Result) {
 		return nil, sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee amount: %s", feeAmount)).Result()
 	}
 
+	// get the resulting coins deducting the fees
 	newCoins, ok := coins.SafeMinus(feeAmount)
 	if ok {
 		errMsg := fmt.Sprintf("%s < %s", coins, feeAmount)
 		return nil, sdk.ErrInsufficientFunds(errMsg).Result()
 	}
 
-	err := acc.SetCoins(newCoins)
-	if err != nil {
+	// Validate the account has enough "spendable" coins as this will cover cases
+	// such as vesting accounts.
+	spendableCoins := acc.SpendableCoins(blockTime)
+	if _, hasNeg := spendableCoins.SafeMinus(feeAmount); hasNeg {
+		return nil, sdk.ErrInsufficientFunds(fmt.Sprintf("%s < %s", spendableCoins, feeAmount)).Result()
+	}
+
+	if err := acc.SetCoins(newCoins); err != nil {
 		// Handle w/ #870
 		panic(err)
 	}

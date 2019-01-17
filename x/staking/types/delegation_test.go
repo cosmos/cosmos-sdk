@@ -10,16 +10,8 @@ import (
 )
 
 func TestDelegationEqual(t *testing.T) {
-	d1 := Delegation{
-		DelegatorAddr: sdk.AccAddress(addr1),
-		ValidatorAddr: addr2,
-		Shares:        sdk.NewDec(100),
-	}
-	d2 := Delegation{
-		DelegatorAddr: sdk.AccAddress(addr1),
-		ValidatorAddr: addr2,
-		Shares:        sdk.NewDec(100),
-	}
+	d1 := NewDelegation(sdk.AccAddress(addr1), addr2, sdk.NewDec(100))
+	d2 := d1
 
 	ok := d1.Equal(d2)
 	require.True(t, ok)
@@ -32,11 +24,7 @@ func TestDelegationEqual(t *testing.T) {
 }
 
 func TestDelegationHumanReadableString(t *testing.T) {
-	d := Delegation{
-		DelegatorAddr: sdk.AccAddress(addr1),
-		ValidatorAddr: addr2,
-		Shares:        sdk.NewDec(100),
-	}
+	d := NewDelegation(sdk.AccAddress(addr1), addr2, sdk.NewDec(100))
 
 	// NOTE: Being that the validator's keypair is random, we cannot test the
 	// actual contents of the string.
@@ -46,69 +34,54 @@ func TestDelegationHumanReadableString(t *testing.T) {
 }
 
 func TestUnbondingDelegationEqual(t *testing.T) {
-	ud1 := UnbondingDelegation{
-		DelegatorAddr: sdk.AccAddress(addr1),
-		ValidatorAddr: addr2,
-	}
-	ud2 := UnbondingDelegation{
-		DelegatorAddr: sdk.AccAddress(addr1),
-		ValidatorAddr: addr2,
-	}
+	ubd1 := NewUnbondingDelegation(sdk.AccAddress(addr1), addr2, 0,
+		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0))
+	ubd2 := ubd1
 
-	ok := ud1.Equal(ud2)
+	ok := ubd1.Equal(ubd2)
 	require.True(t, ok)
 
-	ud2.ValidatorAddr = addr3
+	ubd2.ValidatorAddr = addr3
 
-	ud2.MinTime = time.Unix(20*20*2, 0)
-	ok = ud1.Equal(ud2)
+	ubd2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
+	ok = ubd1.Equal(ubd2)
 	require.False(t, ok)
 }
 
 func TestUnbondingDelegationHumanReadableString(t *testing.T) {
-	ud := UnbondingDelegation{
-		DelegatorAddr: sdk.AccAddress(addr1),
-		ValidatorAddr: addr2,
-	}
+	ubd := NewUnbondingDelegation(sdk.AccAddress(addr1), addr2, 0,
+		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0))
 
 	// NOTE: Being that the validator's keypair is random, we cannot test the
 	// actual contents of the string.
-	valStr, err := ud.HumanReadableString()
+	valStr, err := ubd.HumanReadableString()
 	require.Nil(t, err)
 	require.NotEmpty(t, valStr)
 }
 
 func TestRedelegationEqual(t *testing.T) {
-	r1 := Redelegation{
-		DelegatorAddr:    sdk.AccAddress(addr1),
-		ValidatorSrcAddr: addr2,
-		ValidatorDstAddr: addr3,
-	}
-	r2 := Redelegation{
-		DelegatorAddr:    sdk.AccAddress(addr1),
-		ValidatorSrcAddr: addr2,
-		ValidatorDstAddr: addr3,
-	}
+	r1 := NewRedelegation(sdk.AccAddress(addr1), addr2, addr3, 0,
+		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0),
+		sdk.NewDec(0), sdk.NewDec(0))
+	r2 := NewRedelegation(sdk.AccAddress(addr1), addr2, addr3, 0,
+		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0),
+		sdk.NewDec(0), sdk.NewDec(0))
 
 	ok := r1.Equal(r2)
 	require.True(t, ok)
 
-	r2.SharesDst = sdk.NewDec(10)
-	r2.SharesSrc = sdk.NewDec(20)
-	r2.MinTime = time.Unix(20*20*2, 0)
+	r2.Entries[0].SharesDst = sdk.NewDec(10)
+	r2.Entries[0].SharesSrc = sdk.NewDec(20)
+	r2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
 
 	ok = r1.Equal(r2)
 	require.False(t, ok)
 }
 
 func TestRedelegationHumanReadableString(t *testing.T) {
-	r := Redelegation{
-		DelegatorAddr:    sdk.AccAddress(addr1),
-		ValidatorSrcAddr: addr2,
-		ValidatorDstAddr: addr3,
-		SharesDst:        sdk.NewDec(10),
-		SharesSrc:        sdk.NewDec(20),
-	}
+	r := NewRedelegation(sdk.AccAddress(addr1), addr2, addr3, 0,
+		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0),
+		sdk.NewDec(10), sdk.NewDec(20))
 
 	// NOTE: Being that the validator's keypair is random, we cannot test the
 	// actual contents of the string.

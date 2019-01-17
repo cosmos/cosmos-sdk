@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/store"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -67,12 +68,14 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application
 func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
-	gApp := app.NewGaiaApp(logger, db, traceStore, false)
 	if height != -1 {
+		gApp := app.NewGaiaApp(logger, db, traceStore, false)
 		err := gApp.LoadHeight(height)
 		if err != nil {
 			return nil, nil, err
 		}
+		return gApp.ExportAppStateAndValidators(forZeroHeight)
 	}
+	gApp := app.NewGaiaApp(logger, db, traceStore, true)
 	return gApp.ExportAppStateAndValidators(forZeroHeight)
 }

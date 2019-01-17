@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/store"
 
 	cpm "github.com/otiai10/copy"
 	"github.com/spf13/cobra"

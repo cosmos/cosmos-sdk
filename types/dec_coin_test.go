@@ -5,14 +5,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestPlusDecCoin(t *testing.T) {
-	decCoinA1 := DecCoin{"A", sdk.NewDecWithPrec(11, 1)}
-	decCoinA2 := DecCoin{"A", sdk.NewDecWithPrec(22, 1)}
-	decCoinB1 := DecCoin{"B", sdk.NewDecWithPrec(11, 1)}
+	decCoinA1 := DecCoin{"A", NewDecWithPrec(11, 1)}
+	decCoinA2 := DecCoin{"A", NewDecWithPrec(22, 1)}
+	decCoinB1 := DecCoin{"B", NewDecWithPrec(11, 1)}
 
 	// regular add
 	res := decCoinA1.Plus(decCoinA1)
@@ -25,11 +23,11 @@ func TestPlusDecCoin(t *testing.T) {
 
 }
 
-func TestPlusCoins(t *testing.T) {
-	one := sdk.NewDec(1)
-	zero := sdk.NewDec(0)
-	negone := sdk.NewDec(-1)
-	two := sdk.NewDec(2)
+func TestPlusDecCoins(t *testing.T) {
+	one := NewDec(1)
+	zero := NewDec(0)
+	negone := NewDec(-1)
+	two := NewDec(2)
 
 	cases := []struct {
 		inputOne DecCoins

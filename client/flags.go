@@ -80,7 +80,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Uint64(FlagSequence, 0, "Sequence number to sign the tx")
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
 		c.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 10stake,1atom")
-		c.Flags().String(FlagGasPrices, "", "Gas prices to determine the transaction fee; eg: 1stake")
+		c.Flags().String(FlagGasPrices, "", "Gas prices to determine the transaction fee (e.g. 0.00001stake)")
 		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")

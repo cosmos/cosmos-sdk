@@ -6,6 +6,10 @@ BREAKING CHANGES
   * [gaia-lite] [\#2182] Renamed and merged all redelegations endpoints into `/staking/redelegations`
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
   * [\#2222] all endpoints renamed from `/stake` -> `/staking`
+  * [\#3289] misc renames:
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `MsgBeginUnbonding` -> `MsgUndelegate`
 
 * Gaia CLI  (`gaiacli`)
   * [\#810](https://github.com/cosmos/cosmos-sdk/issues/810) Don't fallback to any default values for chain ID.
@@ -31,6 +35,10 @@ BREAKING CHANGES
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
   * \#3292 [x/distribution] Enable or disable withdraw addresses with a parameter in the param store
   * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+  * [staking] \#3289 misc renames:
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `MsgBeginUnbonding` -> `MsgUndelegate`
   * [\#3315] Increase decimal precision to 18
 
 * Tendermint

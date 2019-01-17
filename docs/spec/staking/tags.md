@@ -47,7 +47,7 @@ The staking module emits the following events/tags:
 
 * [0] Time is formatted in the RFC3339 standard
 
-### MsgBeginUnbonding
+### MsgUndelegate
 
 | Key              | Value                     |
 |------------------|---------------------------|

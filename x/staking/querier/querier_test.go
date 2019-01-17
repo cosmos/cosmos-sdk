@@ -296,7 +296,7 @@ func TestQueryDelegation(t *testing.T) {
 	require.Equal(t, delegationsRes[0], delegation)
 
 	// Query unbonging delegation
-	_, err = keeper.BeginUnbonding(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
+	_, err = keeper.Undelegate(ctx, addrAcc2, val1.OperatorAddr, sdk.NewDec(10))
 	require.Nil(t, err)
 
 	queryBondParams = NewQueryBondsParams(addrAcc2, addrVal1)

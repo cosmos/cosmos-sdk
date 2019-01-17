@@ -45,6 +45,7 @@ var (
 	NewMsgWithdrawValidatorCommission = types.NewMsgWithdrawValidatorCommission
 
 	NewKeeper         = keeper.NewKeeper
+	NewQuerier        = keeper.NewQuerier
 	DefaultParamspace = keeper.DefaultParamspace
 
 	RegisterCodec       = types.RegisterCodec

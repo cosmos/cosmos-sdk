@@ -91,6 +91,9 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Set value action
+	if len(args) != 2 {
+		return fmt.Errorf("wrong number of arguments")
+	}
 	value := args[1]
 	switch key {
 	case "chain-id", "output", "node":

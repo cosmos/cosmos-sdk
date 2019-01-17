@@ -39,9 +39,10 @@ BREAKING CHANGES
     * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
     * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
     * `MsgBeginUnbonding` -> `MsgUndelegate`
+  * [\#3315] Increase decimal precision to 18
 
 * Tendermint
-  * \#3279 Upgrade to Tendermint 0.28.0-dev0
+  * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0
 
 FEATURES
 
@@ -59,9 +60,12 @@ FEATURES
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `keys add --multisig` flag to store multisig keys locally.
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `multisign` command to generate multisig signatures.
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `sign --multisig` flag to enable multisig mode.
+  * [\#2715](https://github.com/cosmos/cosmos-sdk/issues/2715) Reintroduce gaia server's insecure mode.
 
 * Gaia
   * [\#2182] [x/staking] Added querier for querying a single redelegation
+  * [\#3305](https://github.com/cosmos/cosmos-sdk/issues/3305) Add support for
+    vesting accounts at genesis.
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) [x/auth] Add multisig transactions support
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) `add-genesis-account` can take both account addresses and key names
 
@@ -115,6 +119,7 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
   * \#3141 Fix the bug in GetAccount when `len(res) == 0` and `err == nil`
+  * [\#810](https://github.com/cosmos/cosmos-sdk/pull/3316) Fix regression in gaiacli config file handling
 
 * Gaia
   * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version

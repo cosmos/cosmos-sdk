@@ -58,12 +58,15 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
 	}
 }
 
-// nolint
+// GenesisAccount defines an account initialized at genesis.
 type GenesisAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`
 	Sequence      uint64         `json:"sequence_number"`
 	AccountNumber uint64         `json:"account_number"`
+	Vesting       bool           `json:"vesting"`
+	StartTime     int64          `json:"start_time"`
+	EndTime       int64          `json:"end_time"`
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
@@ -76,22 +79,43 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 }
 
 func NewGenesisAccountI(acc auth.Account) GenesisAccount {
-	return GenesisAccount{
+	gacc := GenesisAccount{
 		Address:       acc.GetAddress(),
 		Coins:         acc.GetCoins(),
 		AccountNumber: acc.GetAccountNumber(),
 		Sequence:      acc.GetSequence(),
 	}
+
+	vacc, ok := acc.(auth.VestingAccount)
+	if ok {
+		gacc.Vesting = true
+		gacc.StartTime = vacc.GetStartTime()
+		gacc.EndTime = vacc.GetEndTime()
+	}
+
+	return gacc
 }
 
 // convert GenesisAccount to auth.BaseAccount
-func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
-	return &auth.BaseAccount{
+func (ga *GenesisAccount) ToAccount() auth.Account {
+	bacc := &auth.BaseAccount{
 		Address:       ga.Address,
 		Coins:         ga.Coins.Sort(),
 		AccountNumber: ga.AccountNumber,
 		Sequence:      ga.Sequence,
 	}
+
+	if ga.Vesting {
+		if ga.StartTime != 0 && ga.EndTime != 0 {
+			return auth.NewContinuousVestingAccount(bacc, ga.StartTime, ga.EndTime)
+		} else if ga.EndTime != 0 {
+			return auth.NewDelayedVestingAccount(bacc, ga.EndTime)
+		} else {
+			panic(fmt.Sprintf("invalid genesis vesting account: %+v", ga))
+		}
+	}
+
+	return bacc
 }
 
 // Create the core parameters for genesis initialization for gaia
@@ -114,11 +138,13 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		if err := cdc.UnmarshalJSON(genTx, &tx); err != nil {
 			return genesisState, err
 		}
+
 		msgs := tx.GetMsgs()
 		if len(msgs) != 1 {
 			return genesisState, errors.New(
 				"must provide genesis StdTx with exactly 1 CreateValidator message")
 		}
+
 		if _, ok := msgs[0].(staking.MsgCreateValidator); !ok {
 			return genesisState, fmt.Errorf(
 				"Genesis transaction %v does not contain a MsgCreateValidator", i)
@@ -126,7 +152,6 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 	}
 
 	for _, acc := range genesisState.Accounts {
-		// create the genesis account, give'm few steaks and a buncha token with there name
 		for _, coin := range acc.Coins {
 			if coin.Denom == bondDenom {
 				stakingData.Pool.LooseTokens = stakingData.Pool.LooseTokens.
@@ -134,8 +159,10 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 			}
 		}
 	}
+
 	genesisState.StakingData = stakingData
 	genesisState.GenTxs = appGenTxs
+
 	return genesisState, nil
 }
 

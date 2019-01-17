@@ -108,7 +108,9 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
-	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
+	cva := NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 
 	// require no coins vested in the very beginning of the vesting schedule
 	vestedCoins := cva.GetVestedCoins(now)
@@ -121,6 +123,10 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 	// require 50% of coins vested
 	vestedCoins = cva.GetVestedCoins(now.Add(12 * time.Hour))
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, vestedCoins)
+
+	// require 100% of coins vested
+	vestedCoins = cva.GetVestedCoins(now.Add(48 * time.Hour))
+	require.Equal(t, origCoins, vestedCoins)
 }
 
 func TestGetVestingCoinsContVestingAcc(t *testing.T) {
@@ -129,7 +135,9 @@ func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
-	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
+	cva := NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 
 	// require all coins vesting in the beginning of the vesting schedule
 	vestingCoins := cva.GetVestingCoins(now)
@@ -150,7 +158,9 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
-	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
+	cva := NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 
 	// require that there exist no spendable coins in the beginning of the
 	// vesting schedule
@@ -188,23 +198,27 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
 
 	// require the ability to delegate all vesting coins
-	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	cva := NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 	cva.TrackDelegation(now, origCoins)
 	require.Equal(t, origCoins, cva.DelegatedVesting)
 	require.Nil(t, cva.DelegatedFree)
 	require.Nil(t, cva.GetCoins())
 
 	// require the ability to delegate all vested coins
-	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	bacc.SetCoins(origCoins)
+	cva = NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 	cva.TrackDelegation(endTime, origCoins)
 	require.Nil(t, cva.DelegatedVesting)
 	require.Equal(t, origCoins, cva.DelegatedFree)
 	require.Nil(t, cva.GetCoins())
 
 	// require the ability to delegate all vesting coins (50%) and all vested coins (50%)
-	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	bacc.SetCoins(origCoins)
+	cva = NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 	cva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(testDenom, 50)}, cva.DelegatedVesting)
 	require.Nil(t, cva.DelegatedFree)
@@ -215,7 +229,8 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 	require.Nil(t, cva.GetCoins())
 
 	// require no modifications when delegation amount is zero or not enough funds
-	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	bacc.SetCoins(origCoins)
+	cva = NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 	require.Panics(t, func() {
 		cva.TrackDelegation(endTime, sdk.Coins{sdk.NewInt64Coin(testDenom, 1000000)})
 	})
@@ -230,9 +245,11 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
 
 	// require the ability to undelegate all vesting coins
-	cva := NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	cva := NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 	cva.TrackDelegation(now, origCoins)
 	cva.TrackUndelegation(origCoins)
 	require.Nil(t, cva.DelegatedFree)
@@ -240,7 +257,9 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, cva.GetCoins())
 
 	// require the ability to undelegate all vested coins
-	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	bacc.SetCoins(origCoins)
+	cva = NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
+
 	cva.TrackDelegation(endTime, origCoins)
 	cva.TrackUndelegation(origCoins)
 	require.Nil(t, cva.DelegatedFree)
@@ -248,7 +267,8 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, cva.GetCoins())
 
 	// require no modifications when the undelegation amount is zero
-	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	bacc.SetCoins(origCoins)
+	cva = NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 
 	require.Panics(t, func() {
 		cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 0)})
@@ -258,7 +278,7 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, cva.GetCoins())
 
 	// vest 50% and delegate to two validators
-	cva = NewContinuousVestingAccount(addr, origCoins, now, endTime)
+	cva = NewContinuousVestingAccount(&bacc, now.Unix(), endTime.Unix())
 	cva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
 	cva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
 
@@ -281,9 +301,11 @@ func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
 
 	// require no coins are vested until schedule maturation
-	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva := NewDelayedVestingAccount(&bacc, endTime.Unix())
 	vestedCoins := dva.GetVestedCoins(now)
 	require.Nil(t, vestedCoins)
 
@@ -298,9 +320,11 @@ func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
 
 	// require all coins vesting at the beginning of the schedule
-	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva := NewDelayedVestingAccount(&bacc, endTime.Unix())
 	vestingCoins := dva.GetVestingCoins(now)
 	require.Equal(t, origCoins, vestingCoins)
 
@@ -315,10 +339,12 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
 
 	// require that no coins are spendable in the beginning of the vesting
 	// schedule
-	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	dva := NewDelayedVestingAccount(&bacc, endTime.Unix())
 	spendableCoins := dva.SpendableCoins(now)
 	require.Nil(t, spendableCoins)
 
@@ -354,16 +380,20 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
 
 	// require the ability to delegate all vesting coins
-	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	bacc.SetCoins(origCoins)
+	dva := NewDelayedVestingAccount(&bacc, endTime.Unix())
 	dva.TrackDelegation(now, origCoins)
 	require.Equal(t, origCoins, dva.DelegatedVesting)
 	require.Nil(t, dva.DelegatedFree)
 	require.Nil(t, dva.GetCoins())
 
 	// require the ability to delegate all vested coins
-	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	bacc.SetCoins(origCoins)
+	dva = NewDelayedVestingAccount(&bacc, endTime.Unix())
 	dva.TrackDelegation(endTime, origCoins)
 	require.Nil(t, dva.DelegatedVesting)
 	require.Equal(t, origCoins, dva.DelegatedFree)
@@ -371,14 +401,16 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 
 	// require the ability to delegate all coins half way through the vesting
 	// schedule
-	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	bacc.SetCoins(origCoins)
+	dva = NewDelayedVestingAccount(&bacc, endTime.Unix())
 	dva.TrackDelegation(now.Add(12*time.Hour), origCoins)
 	require.Equal(t, origCoins, dva.DelegatedVesting)
 	require.Nil(t, dva.DelegatedFree)
 	require.Nil(t, dva.GetCoins())
 
 	// require no modifications when delegation amount is zero or not enough funds
-	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	bacc.SetCoins(origCoins)
+	dva = NewDelayedVestingAccount(&bacc, endTime.Unix())
 
 	require.Panics(t, func() {
 		dva.TrackDelegation(endTime, sdk.Coins{sdk.NewInt64Coin(testDenom, 1000000)})
@@ -394,9 +426,12 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 
 	_, _, addr := keyPubAddr()
 	origCoins := sdk.Coins{sdk.NewInt64Coin(testDenom, 100)}
+	bacc := NewBaseAccountWithAddress(addr)
+	bacc.SetCoins(origCoins)
 
 	// require the ability to undelegate all vesting coins
-	dva := NewDelayedVestingAccount(addr, origCoins, endTime)
+	bacc.SetCoins(origCoins)
+	dva := NewDelayedVestingAccount(&bacc, endTime.Unix())
 	dva.TrackDelegation(now, origCoins)
 	dva.TrackUndelegation(origCoins)
 	require.Nil(t, dva.DelegatedFree)
@@ -404,7 +439,8 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, dva.GetCoins())
 
 	// require the ability to undelegate all vested coins
-	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	bacc.SetCoins(origCoins)
+	dva = NewDelayedVestingAccount(&bacc, endTime.Unix())
 	dva.TrackDelegation(endTime, origCoins)
 	dva.TrackUndelegation(origCoins)
 	require.Nil(t, dva.DelegatedFree)
@@ -412,7 +448,8 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, dva.GetCoins())
 
 	// require no modifications when the undelegation amount is zero
-	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	bacc.SetCoins(origCoins)
+	dva = NewDelayedVestingAccount(&bacc, endTime.Unix())
 
 	require.Panics(t, func() {
 		dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(testDenom, 0)})
@@ -422,7 +459,8 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	require.Equal(t, origCoins, dva.GetCoins())
 
 	// vest 50% and delegate to two validators
-	dva = NewDelayedVestingAccount(addr, origCoins, endTime)
+	bacc.SetCoins(origCoins)
+	dva = NewDelayedVestingAccount(&bacc, endTime.Unix())
 	dva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
 	dva.TrackDelegation(now.Add(12*time.Hour), sdk.Coins{sdk.NewInt64Coin(testDenom, 50)})
 

@@ -98,6 +98,7 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 
 	// NOTE: GDInit sets the ChainID
 	f.GDInit(keyFoo)
+	f.CLIConfig("chain-id", f.ChainID)
 
 	// Start an account with tokens
 	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
@@ -117,7 +118,7 @@ func (f *Fixtures) Cleanup(dirs ...string) {
 
 // Flags returns the flags necessary for making most CLI calls
 func (f *Fixtures) Flags() string {
-	return fmt.Sprintf("--home=%s --node=%s --chain-id=%s", f.GCLIHome, f.RPCAddr, f.ChainID)
+	return fmt.Sprintf("--home=%s --node=%s", f.GCLIHome, f.RPCAddr)
 }
 
 //___________________________________________________________________________________

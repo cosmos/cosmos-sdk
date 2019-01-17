@@ -20,7 +20,7 @@ const (
 	Precision = 18
 
 	// bytes required to represent the above precision
-	// ceil(log2(9999999999))
+	// Ceiling[Log2[999 999 999 999 999 999]]
 	DecimalPrecisionBits = 60
 )
 
@@ -162,7 +162,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	zeros := fmt.Sprintf(`%0`+strconv.Itoa(zerosToAdd)+`s`, "")
 	combinedStr = combinedStr + zeros
 
-	combined, ok := new(big.Int).SetString(combinedStr, 10)
+	combined, ok := new(big.Int).SetString(combinedStr, Precision)
 	if !ok {
 		return d, ErrUnknownRequest(fmt.Sprintf("bad string to integer conversion, combinedStr: %v", combinedStr))
 	}
@@ -217,8 +217,12 @@ func (d Dec) Sub(d2 Dec) Dec {
 
 // multiplication
 func (d Dec) Mul(d2 Dec) Dec {
+	fmt.Printf("debug d: %v\n", d)
+	fmt.Printf("debug d2: %v\n", d2)
 	mul := new(big.Int).Mul(d.Int, d2.Int)
+	fmt.Printf("debug mul: %v\n", mul)
 	chopped := chopPrecisionAndRound(mul)
+	fmt.Printf("debug chopped: %v\n", chopped)
 
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
@@ -276,36 +280,48 @@ func (d Dec) String() string {
 	if d.IsNegative() {
 		d = d.Neg()
 	}
-	bz, err := d.Int.MarshalText()
+
+	bzInt, err := d.Int.MarshalText()
 	if err != nil {
 		return ""
 	}
-	var bzWDec []byte
-	inputSize := len(bz)
+	inputSize := len(bzInt)
+
+	var bzStr []byte
+
 	// TODO: Remove trailing zeros
 	// case 1, purely decimal
 	if inputSize <= Precision {
-		bzWDec = make([]byte, Precision+2)
+
+		bzStr = make([]byte, Precision+2)
+
 		// 0. prefix
-		bzWDec[0] = byte('0')
-		bzWDec[1] = byte('.')
+		bzStr[0] = byte('0')
+		bzStr[1] = byte('.')
+
 		// set relevant digits to 0
 		for i := 0; i < Precision-inputSize; i++ {
-			bzWDec[i+2] = byte('0')
+			bzStr[i+2] = byte('0')
 		}
-		// set last few digits
-		copy(bzWDec[2+(Precision-inputSize):], bz)
+
+		// set final digits
+		copy(bzStr[2+(Precision-inputSize):], bzInt)
+
 	} else {
+
 		// inputSize + 1 to account for the decimal point that is being added
-		bzWDec = make([]byte, inputSize+1)
-		copy(bzWDec, bz[:inputSize-Precision])
-		bzWDec[inputSize-Precision] = byte('.')
-		copy(bzWDec[inputSize-Precision-1:], bz[inputSize-Precision:])
+		bzStr = make([]byte, inputSize+1)
+		decPointPlace := inputSize - Precision
+
+		copy(bzStr, bzInt[:decPointPlace])                   // pre-decimal digits
+		bzStr[decPointPlace] = byte('.')                     // decimal point
+		copy(bzStr[decPointPlace+1:], bzInt[decPointPlace:]) // post-decimal digits
 	}
+
 	if isNeg {
-		return "-" + string(bzWDec)
+		return "-" + string(bzStr)
 	}
-	return string(bzWDec)
+	return string(bzStr)
 }
 
 //     ____

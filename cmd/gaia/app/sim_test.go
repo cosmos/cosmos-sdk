@@ -83,9 +83,6 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 
 			// Vesting starts at the genesis time and ends at a time between genesis
 			// and two days from genesis.
-			//
-			// TODO: Do the vesting periods need to be shrunk to account for short
-			// simulations?
 			startTime := genesisTimestamp.Unix()
 			endTime := r.Int63n((startTime+(60*60*24*2))-startTime) + startTime
 
@@ -95,7 +92,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
 			}
 
-			gacc = NewGenesisVestingAccount(vacc)
+			gacc = NewGenesisAccountI(vacc)
 		} else {
 			gacc = NewGenesisAccount(&bacc)
 		}

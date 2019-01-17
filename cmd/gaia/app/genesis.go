@@ -78,18 +78,6 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 	}
 }
 
-func NewGenesisVestingAccount(vacc auth.VestingAccount) GenesisAccount {
-	return GenesisAccount{
-		Address:       vacc.GetAddress(),
-		Coins:         vacc.GetCoins(),
-		AccountNumber: vacc.GetAccountNumber(),
-		Sequence:      vacc.GetSequence(),
-		Vesting:       true,
-		StartTime:     vacc.GetStartTime(),
-		EndTime:       vacc.GetEndTime(),
-	}
-}
-
 func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 	gacc := GenesisAccount{
 		Address:       acc.GetAddress(),
@@ -122,6 +110,8 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 			return auth.NewContinuousVestingAccount(bacc, ga.StartTime, ga.EndTime)
 		} else if ga.EndTime != 0 {
 			return auth.NewDelayedVestingAccount(bacc, ga.EndTime)
+		} else {
+			panic(fmt.Sprintf("invalid genesis vesting account: %+v", ga))
 		}
 	}
 

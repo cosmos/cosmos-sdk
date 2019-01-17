@@ -329,6 +329,9 @@ func ToAccount(gacc GenesisAccount) Account {
             return NewContinuousVestingAccount(bacc, gacc.StartTime, gacc.EndTime)
         } else if ga.EndTime != 0 {
             return NewDelayedVestingAccount(bacc, gacc.EndTime)
+        } else {
+            // invalid genesis vesting account provided
+            panic()
         }
     }
 

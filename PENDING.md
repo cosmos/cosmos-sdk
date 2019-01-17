@@ -55,6 +55,8 @@ FEATURES
 
 * Gaia
   * [\#2182] [x/staking] Added querier for querying a single redelegation
+  * [\#3305](https://github.com/cosmos/cosmos-sdk/issues/3305) Add support for
+    vesting accounts at genesis.
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) [x/auth] Add multisig transactions support
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) `add-genesis-account` can take both account addresses and key names
 

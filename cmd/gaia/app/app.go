@@ -231,10 +231,11 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	sort.Slice(genesisState.Accounts, func(i, j int) bool {
 		return genesisState.Accounts[i].AccountNumber < genesisState.Accounts[j].AccountNumber
 	})
+
 	// load the accounts
 	for _, gacc := range genesisState.Accounts {
 		acc := gacc.ToAccount()
-		acc.AccountNumber = app.accountKeeper.GetNextAccountNumber(ctx)
+		acc = app.accountKeeper.NewAccount(ctx, acc) // set account number
 		app.accountKeeper.SetAccount(ctx, acc)
 	}
 

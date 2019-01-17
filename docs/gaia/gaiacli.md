@@ -130,7 +130,7 @@ multi signature account see [Multisig Transactions](#multisig-transactions).
 
 ### Fees & Gas
 
-Each transaction may either supply fees or gas prices, but not both. Most transactions
+Each transaction may either supply fees or gas prices, but not both. Most users
 will typically provide fees as this is the cost you will end up incurring for
 the transaction being included in the ledger.
 

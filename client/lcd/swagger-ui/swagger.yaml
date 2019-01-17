@@ -2241,7 +2241,7 @@ definitions:
       gas_prices:
         type: array
         items:
-          $ref: "#/definitions/Coin"
+          $ref: "#/definitions/DecCoins"
       generate_only:
         type: boolean
         example: false

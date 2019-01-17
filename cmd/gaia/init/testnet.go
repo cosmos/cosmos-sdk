@@ -81,7 +81,7 @@ Example:
 		client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created",
 	)
 	cmd.Flags().String(
-		server.FlagMinGasPrices, fmt.Sprintf("1%s", stakingtypes.DefaultBondDenom),
+		server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", stakingtypes.DefaultBondDenom),
 		"Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)",
 	)
 
@@ -191,15 +191,15 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 		accs = append(accs, app.GenesisAccount{
 			Address: addr,
 			Coins: sdk.Coins{
-				sdk.NewInt64Coin(fmt.Sprintf("%stoken", nodeDirName), 10000000),
-				sdk.NewInt64Coin(stakingtypes.DefaultBondDenom, 2000000),
+				sdk.NewInt64Coin(fmt.Sprintf("%stoken", nodeDirName), 1000),
+				sdk.NewInt64Coin(stakingtypes.DefaultBondDenom, 500),
 			},
 		})
 
 		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewInt64Coin(stakingtypes.DefaultBondDenom, 100000),
+			sdk.NewInt64Coin(stakingtypes.DefaultBondDenom, 100),
 			staking.NewDescription(nodeDirName, "", "", ""),
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)

@@ -202,3 +202,24 @@ func TestParseDecCoins(t *testing.T) {
 		}
 	}
 }
+
+func TestDecCoinsString(t *testing.T) {
+	testCases := []struct {
+		input    DecCoins
+		expected string
+	}{
+		{DecCoins{}, ""},
+		{
+			DecCoins{
+				NewDecCoinFromDec("atom", NewDecWithPrec(50400000000, Precision)),
+				NewDecCoinFromDec("stake", NewDecWithPrec(40000000, Precision)),
+			},
+			"5.0400000000atom,0.0040000000stake",
+		},
+	}
+
+	for i, tc := range testCases {
+		out := tc.input.String()
+		require.Equal(t, tc.expected, out, "unexpected result for test case #%d, input: %v", i, tc.input)
+	}
+}

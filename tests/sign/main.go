@@ -27,21 +27,17 @@ func main() {
 	amino.RegisterAmino(cdc)
 	crypto.RegisterAmino(cdc)
 
-	rawJson := []byte(`{"type":"auth/StdTx","value":{"msg":[{"type":"cosmos-sdk/Send","value":{"inputs":[{"address":"cosmos13kujs7dzumc0k2vy37s9zs6j5da6qmn6udddza","coins":[{"denom":"STAKE","amount":"10"}]}],"outputs":[{"address":"cosmos1gfzexy3z0qfc97mjudjy5zeg2fje6k442phy6r","coins":[{"denom":"STAKE","amount":"10"}]}]}}],"fee":{"amount":[{"denom":"","amount":"0"}],"gas":"200000"},"signatures":null,"memo":""}}`)
+	rawJsonTx := []byte(`{"type":"auth/StdTx","value":{"msg":[{"type":"cosmos-sdk/Send","value":{"inputs":[{"address":"cosmos13kujs7dzumc0k2vy37s9zs6j5da6qmn6udddza","coins":[{"denom":"STAKE","amount":"10"}]}],"outputs":[{"address":"cosmos1gfzexy3z0qfc97mjudjy5zeg2fje6k442phy6r","coins":[{"denom":"STAKE","amount":"10"}]}]}}],"fee":{"amount":[{"denom":"","amount":"0"}],"gas":"200000"},"signatures":null,"memo":""}}`)
+	fmt.Println("[1] : ", rawJsonTx)           // [391/416]0xc42098b6c0
+	fmt.Println("[1.1] : ", string(rawJsonTx)) // {"type":"auth/StdTx","value":{"msg":[{"type":"cosmos-sdk/Send","value":{"inputs":[{"address":"cosmos13kujs7dzumc0k2vy37s9zs6j5da6qmn6udddza","coins":[{"denom":"STAKE","amount":"10"}]}],"outputs":[{"address":"cosmos1gfzexy3z0qfc97mjudjy5zeg2fje6k442phy6r","coins":[{"denom":"STAKE","amount":"10"}]}]}}],"fee":{"amount":[{"denom":"","amount":"0"}],"gas":"200000"},"signatures":null,"memo":""}}
 
-	// [391/416]0xc42098b6c0
-	fmt.Println("[1] : ", rawJson)
+	// Wrap rawJsonTx with authStdTx
+	var authStdTx auth.StdTx
+	cdc.UnmarshalJSON(rawJsonTx, &authStdTx)
+	fmt.Println("[2] ", authStdTx, reflect.TypeOf(authStdTx)) // {[{[{8DB92879A2E6F0FB29848FA0514352A37BA06E7A 10STAKE}] [{4245931222781382FB72E3644A0B2852659D5AB5 10STAKE}]}] {0 200000} [] }
+	fmt.Println("[2.1] ", reflect.TypeOf(authStdTx))          // auth.StdTx
 
-	// {"type":"auth/StdTx","value":{"msg":[{"type":"cosmos-sdk/Send","value":{"inputs":[{"address":"cosmos13kujs7dzumc0k2vy37s9zs6j5da6qmn6udddza","coins":[{"denom":"STAKE","amount":"10"}]}],"outputs":[{"address":"cosmos1gfzexy3z0qfc97mjudjy5zeg2fje6k442phy6r","coins":[{"denom":"STAKE","amount":"10"}]}]}}],"fee":{"amount":[{"denom":"","amount":"0"}],"gas":"200000"},"signatures":null,"memo":""}}
-	fmt.Println("[1.1] : ", string(rawJson))
-
-	var recover auth.StdTx
-	cdc.UnmarshalJSON(rawJson, &recover)
-
-	// {[{[{8DB92879A2E6F0FB29848FA0514352A37BA06E7A 10STAKE}] [{4245931222781382FB72E3644A0B2852659D5AB5 10STAKE}]}] {0 200000} [] } auth.StdTx
-	fmt.Println("[2] ", recover, reflect.TypeOf(recover))
-
-	// Error:  too many arguments in call to bcrypt.GenerateFromPassword
+	// Transaction Builder
 	txBldr := txBuilder.NewTxBuilderFromCLI().
 		WithAccountNumber(0).
 		WithSequence(9).
@@ -65,9 +61,9 @@ func main() {
 		txBldr.GetChainID(),
 		txBldr.GetAccountNumber(),
 		txBldr.GetSequence(),
-		recover.Fee,
-		recover.Msgs,
-		recover.Memo,
+		authStdTx.Fee,
+		authStdTx.Msgs,
+		authStdTx.Memo,
 	}
 	// {game_of_stakes_3 0 9 {0 200000} [{[{8DB92879A2E6F0FB29848FA0514352A37BA06E7A 10STAKE}] [{4245931222781382FB72E3644A0B2852659D5AB5 10STAKE}]}] } context.StdSignMsg
 	fmt.Println("[6] ", stdSignMsg, reflect.TypeOf(stdSignMsg))

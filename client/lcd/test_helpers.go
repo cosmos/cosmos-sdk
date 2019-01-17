@@ -772,7 +772,7 @@ func doUndelegate(t *testing.T, port, name, password string,
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
-	msg := msgBeginUnbondingInput{
+	msg := msgUndelegateInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,

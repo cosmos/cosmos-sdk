@@ -499,7 +499,7 @@ func TestBonding(t *testing.T) {
 	// query delegations, unbondings and redelegations from validator and delegator
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
-	require.Equal(t, "30.0000000000", delegatorDels[0].GetShares().String())
+	require.Equal(t, "30.000000000000000000", delegatorDels[0].GetShares().String())
 
 	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
 	require.Len(t, redelegation, 1)

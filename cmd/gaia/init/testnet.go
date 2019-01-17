@@ -82,7 +82,7 @@ Example:
 	)
 	cmd.Flags().String(
 		server.FlagMinGasPrices, fmt.Sprintf("1%s", stakingtypes.DefaultBondDenom),
-		"Minimum disparate gas prices validator will accept for transactions",
+		"Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum",
 	)
 
 	return cmd

@@ -299,41 +299,6 @@ func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	return coinsB.IsAllGTE(coins)
 }
 
-// IsAnyGTE returns true iff coins contains at least one denom that is present
-// at a greater or equal amount in coinsB; it returns false otherwise.
-//
-// NOTE: IsAnyGTE operates under the invariant that coins are sorted by
-// denominations.
-func (coins Coins) IsAnyGTE(coinsB Coins) bool {
-	if len(coinsB) == 0 {
-		return false
-	}
-
-	j := 0
-	for _, coin := range coins {
-		searchOther := true // terminator in case coins breaks the sorted invariant
-
-		for j < len(coinsB) && searchOther {
-			switch strings.Compare(coin.Denom, coinsB[j].Denom) {
-			case -1:
-				// coin denom in less than the current other coin, so move to next coin
-				searchOther = false
-			case 0:
-				if coin.IsGTE(coinsB[j]) {
-					return true
-				}
-
-				fallthrough // skip to next other coin
-			case 1:
-				// coin denom is greater than the current other coin, so move to next other coin
-				j++
-			}
-		}
-	}
-
-	return false
-}
-
 // IsZero returns true if there are no coins or all coins are zero.
 func (coins Coins) IsZero() bool {
 	for _, coin := range coins {
@@ -492,10 +457,12 @@ func (coins Coins) Sort() Coins {
 
 var (
 	// Denominations can be 3 ~ 16 characters long.
-	reDnm  = `[[:alpha:]][[:alnum:]]{2,15}`
-	reAmt  = `[[:digit:]]+`
-	reSpc  = `[[:space:]]*`
-	reCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
+	reDnm     = `[[:alpha:]][[:alnum:]]{2,15}`
+	reAmt     = `[[:digit:]]+`
+	reDecAmt  = `[[:digit:]]*\.[[:digit:]]+`
+	reSpc     = `[[:space:]]*`
+	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
+	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnm))
 )
 
 // ParseCoin parses a cli input for one coin type, returning errors if invalid.

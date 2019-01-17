@@ -12,9 +12,9 @@ const (
 
 // BaseConfig defines the server's basic configuration
 type BaseConfig struct {
-	// The minimum disparate gas prices a validator is willing to accept for
-	// processing a transaction. A transaction must only provide fees that meet
-	// any of the minimum gas prices, but not necessarily all of them.
+	// The minimum gas prices a validator is willing to accept for processing a
+	// transaction. A transaction's fees must meet the minimum of each denomination
+	// specified in this config.
 	MinGasPrices string `mapstructure:"minimum_gas_prices"`
 }
 

@@ -23,7 +23,7 @@ type TxBuilder struct {
 	chainID            string
 	memo               string
 	fees               sdk.Coins
-	gasPrices          sdk.Coins
+	gasPrices          sdk.DecCoins
 }
 
 // NewTxBuilder returns a new initialized TxBuilder.

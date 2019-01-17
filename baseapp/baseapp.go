@@ -74,9 +74,9 @@ type BaseApp struct {
 	// TODO move this in the future to baseapp param store on main store.
 	consensusParams *abci.ConsensusParams
 
-	// The minimum disparate gas prices a validator is willing to accept for
-	// processing a transaction. This is mainly used for DoS and spam prevention.
-	minGasPrices sdk.Coins
+	// The minimum gas prices a validator is willing to accept for processing a
+	// transaction. This is mainly used for DoS and spam prevention.
+	minGasPrices sdk.DecCoins
 
 	// flag for sealing
 	sealed bool
@@ -214,7 +214,7 @@ func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
 	return nil
 }
 
-func (app *BaseApp) setMinGasPrices(gasPrices sdk.Coins) {
+func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }
 

@@ -48,7 +48,10 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything")
-	cmd.Flags().String(FlagMinGasPrices, "", "Minimum disparate gas prices validator will accept for transactions")
+	cmd.Flags().String(
+		FlagMinGasPrices, "",
+		"Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum",
+	)
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

@@ -368,22 +368,6 @@ func TestCoinsLTE(t *testing.T) {
 	assert.True(t, Coins{}.IsAllLTE(Coins{{"a", one}}))
 }
 
-func TestCoinsIsAnyGTE(t *testing.T) {
-	one := NewInt(1)
-	two := NewInt(2)
-
-	assert.False(t, Coins{}.IsAnyGTE(Coins{}))
-	assert.False(t, Coins{{"a", one}}.IsAnyGTE(Coins{}))
-	assert.False(t, Coins{}.IsAnyGTE(Coins{{"a", one}}))
-	assert.False(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", two}}))
-	assert.True(t, Coins{{"a", one}, {"b", two}}.IsAnyGTE(Coins{{"a", two}, {"b", one}}))
-	assert.True(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", one}}))
-	assert.True(t, Coins{{"a", two}}.IsAnyGTE(Coins{{"a", one}}))
-	assert.True(t, Coins{{"a", one}}.IsAnyGTE(Coins{{"a", one}, {"b", two}}))
-	assert.True(t, Coins{{"a", one}, {"b", two}}.IsAnyGTE(Coins{{"a", one}, {"b", one}}))
-	assert.True(t, Coins{{"a", one}, {"b", one}}.IsAnyGTE(Coins{{"a", one}, {"b", two}}))
-}
-
 func TestParse(t *testing.T) {
 	one := NewInt(1)
 

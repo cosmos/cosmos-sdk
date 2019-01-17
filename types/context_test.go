@@ -163,7 +163,7 @@ func TestContextWithCustom(t *testing.T) {
 	logger := NewMockLogger()
 	voteinfos := []abci.VoteInfo{{}}
 	meter := types.NewGasMeter(10000)
-	minGasPrices := types.Coins{types.NewInt64Coin("feetoken", 1)}
+	minGasPrices := types.DecCoins{types.NewDecCoin("feetoken", 1)}
 
 	ctx = types.NewContext(nil, header, ischeck, logger)
 	require.Equal(t, header, ctx.BlockHeader())

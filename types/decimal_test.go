@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -89,6 +88,7 @@ func TestDecString(t *testing.T) {
 		{NewDecWithPrec(12340, 4), "1.234000000000000000"},
 		{NewDecWithPrec(12340, 5), "0.123400000000000000"},
 		{NewDecWithPrec(12340, 8), "0.000123400000000000"},
+		{NewDecWithPrec(1009009009009009009, 17), "10.090090090090090090"},
 	}
 	for tcIndex, tc := range tests {
 		assert.Equal(t, tc.want, tc.d.String(), "bad String(), index: %v", tcIndex)
@@ -160,11 +160,11 @@ func TestArithmetic(t *testing.T) {
 		expMul, expDiv, expAdd, expSub Dec
 	}{
 		// d1       d2         MUL        DIV        ADD        SUB
-		//{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
-		//{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
-		//{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
-		//{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
-		//{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
+		{NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0), NewDec(0)},
+		{NewDec(1), NewDec(0), NewDec(0), NewDec(0), NewDec(1), NewDec(1)},
+		{NewDec(0), NewDec(1), NewDec(0), NewDec(0), NewDec(1), NewDec(-1)},
+		{NewDec(0), NewDec(-1), NewDec(0), NewDec(0), NewDec(-1), NewDec(1)},
+		{NewDec(-1), NewDec(0), NewDec(0), NewDec(0), NewDec(-1), NewDec(-1)},
 
 		{NewDec(1), NewDec(1), NewDec(1), NewDec(1), NewDec(2), NewDec(0)},
 		{NewDec(-1), NewDec(-1), NewDec(1), NewDec(1), NewDec(-2), NewDec(0)},
@@ -178,11 +178,10 @@ func TestArithmetic(t *testing.T) {
 		{NewDecWithPrec(15, 1), NewDecWithPrec(15, 1), NewDecWithPrec(225, 2),
 			NewDec(1), NewDec(3), NewDec(0)},
 		{NewDecWithPrec(3333, 4), NewDecWithPrec(333, 4), NewDecWithPrec(1109889, 8),
-			NewDecWithPrec(1009009009009009009, 17), NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1)},
+			MustNewDecFromStr("10.009009009009009009"), NewDecWithPrec(3666, 4), NewDecWithPrec(3, 1)},
 	}
 
 	for tcIndex, tc := range tests {
-		fmt.Printf("----------------debug tcIndex: %v\n", tcIndex)
 		resAdd := tc.d1.Add(tc.d2)
 		resSub := tc.d1.Sub(tc.d2)
 		resMul := tc.d1.Mul(tc.d2)
@@ -193,7 +192,6 @@ func TestArithmetic(t *testing.T) {
 		if tc.d2.IsZero() { // panic for divide by zero
 			require.Panics(t, func() { tc.d1.Quo(tc.d2) })
 		} else {
-			fmt.Printf("tc: %s %s %s %s\n", tc.d1, tc.d2, tc.expMul, tc.expDiv)
 			resDiv := tc.d1.Quo(tc.d2)
 			require.True(t, tc.expDiv.Equal(resDiv), "exp %v, res %v, tc %d", tc.expDiv.String(), resDiv.String(), tcIndex)
 		}
@@ -360,10 +358,8 @@ func TestEmbeddedStructSerializationGocodec(t *testing.T) {
 func TestStringOverflow(t *testing.T) {
 	// two random 64 bit primes
 	dec1, err := NewDecFromStr("51643150036226787134389711697696177267")
-	fmt.Printf("debug dec1: %v\n", dec1.String())
 	require.NoError(t, err)
 	dec2, err := NewDecFromStr("-31798496660535729618459429845579852627")
-	fmt.Printf("debug dec2: %v\n", dec2.String())
 	require.NoError(t, err)
 	dec3 := dec1.Add(dec2)
 	require.Equal(t,

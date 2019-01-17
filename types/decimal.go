@@ -142,12 +142,14 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	strs := strings.Split(str, ".")
 	lenDecs := 0
 	combinedStr := strs[0]
-	if len(strs) == 2 {
+
+	if len(strs) == 2 { // has a decimal place
 		lenDecs = len(strs[1])
 		if lenDecs == 0 || len(combinedStr) == 0 {
 			return d, ErrUnknownRequest("bad decimal length")
 		}
 		combinedStr = combinedStr + strs[1]
+
 	} else if len(strs) > 2 {
 		return d, ErrUnknownRequest("too many periods to be a decimal string")
 	}
@@ -162,7 +164,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	zeros := fmt.Sprintf(`%0`+strconv.Itoa(zerosToAdd)+`s`, "")
 	combinedStr = combinedStr + zeros
 
-	combined, ok := new(big.Int).SetString(combinedStr, Precision)
+	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10
 	if !ok {
 		return d, ErrUnknownRequest(fmt.Sprintf("bad string to integer conversion, combinedStr: %v", combinedStr))
 	}
@@ -217,12 +219,8 @@ func (d Dec) Sub(d2 Dec) Dec {
 
 // multiplication
 func (d Dec) Mul(d2 Dec) Dec {
-	fmt.Printf("debug d: %v\n", d)
-	fmt.Printf("debug d2: %v\n", d2)
 	mul := new(big.Int).Mul(d.Int, d2.Int)
-	fmt.Printf("debug mul: %v\n", mul)
 	chopped := chopPrecisionAndRound(mul)
-	fmt.Printf("debug chopped: %v\n", chopped)
 
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")

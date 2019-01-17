@@ -101,24 +101,24 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, txBldr 
 // BaseReq defines a structure that can be embedded in other request structures
 // that all share common "base" fields.
 type BaseReq struct {
-	Name          string    `json:"name"`
-	Password      string    `json:"password"`
-	Memo          string    `json:"memo"`
-	ChainID       string    `json:"chain_id"`
-	AccountNumber uint64    `json:"account_number"`
-	Sequence      uint64    `json:"sequence"`
-	Fees          sdk.Coins `json:"fees"`
-	GasPrices     sdk.Coins `json:"gas_prices"`
-	Gas           string    `json:"gas"`
-	GasAdjustment string    `json:"gas_adjustment"`
-	GenerateOnly  bool      `json:"generate_only"`
-	Simulate      bool      `json:"simulate"`
+	Name          string       `json:"name"`
+	Password      string       `json:"password"`
+	Memo          string       `json:"memo"`
+	ChainID       string       `json:"chain_id"`
+	AccountNumber uint64       `json:"account_number"`
+	Sequence      uint64       `json:"sequence"`
+	Fees          sdk.Coins    `json:"fees"`
+	GasPrices     sdk.DecCoins `json:"gas_prices"`
+	Gas           string       `json:"gas"`
+	GasAdjustment string       `json:"gas_adjustment"`
+	GenerateOnly  bool         `json:"generate_only"`
+	Simulate      bool         `json:"simulate"`
 }
 
 // NewBaseReq creates a new basic request instance and sanitizes its values
 func NewBaseReq(
 	name, password, memo, chainID string, gas, gasAdjustment string,
-	accNumber, seq uint64, fees, gasPrices sdk.Coins, genOnly, simulate bool,
+	accNumber, seq uint64, fees sdk.Coins, gasPrices sdk.DecCoins, genOnly, simulate bool,
 ) BaseReq {
 
 	return BaseReq{

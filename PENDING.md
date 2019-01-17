@@ -108,6 +108,7 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
   * \#3141 Fix the bug in GetAccount when `len(res) == 0` and `err == nil`
+  * [\#810](https://github.com/cosmos/cosmos-sdk/pull/3316) Fix regression in gaiacli config file handling
 
 * Gaia
   * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version

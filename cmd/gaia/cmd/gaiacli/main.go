@@ -75,6 +75,12 @@ func main() {
 		Short: "Command line interface for interacting with gaiad",
 	}
 
+	// Add --chain-id to persistent flags and mark it required
+	rootCmd.PersistentFlags().String(client.FlagChainID, "", "Chain ID of tendermint node")
+	rootCmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
+		return initConfig(rootCmd)
+	}
+
 	// Construct Root Command
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
@@ -91,12 +97,8 @@ func main() {
 
 	// Add flags and prefix all env exposed with GA
 	executor := cli.PrepareMainCmd(rootCmd, "GA", app.DefaultCLIHome)
-	err := initConfig(rootCmd)
-	if err != nil {
-		panic(err)
-	}
 
-	err = executor.Execute()
+	err := executor.Execute()
 	if err != nil {
 		fmt.Printf("Failed executing CLI command: %s, exiting...\n", err)
 		os.Exit(1)
@@ -186,7 +188,9 @@ func initConfig(cmd *cobra.Command) error {
 			return err
 		}
 	}
-
+	if err := viper.BindPFlag(client.FlagChainID, cmd.PersistentFlags().Lookup(client.FlagChainID)); err != nil {
+		return err
+	}
 	if err := viper.BindPFlag(cli.EncodingFlag, cmd.PersistentFlags().Lookup(cli.EncodingFlag)); err != nil {
 		return err
 	}

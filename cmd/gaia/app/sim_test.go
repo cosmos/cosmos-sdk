@@ -78,7 +78,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		// create a vesting account under the following conditions:
 		// - not an initially bonded (genesis) validator
 		// - every 10th account past the initial bonded validator set
-		if int64(i) > numInitiallyBonded && i%10 == 0 {
+		if int64(i) > numInitiallyBonded && i+1%10 == 0 {
 			var vacc auth.VestingAccount
 
 			// Vesting starts at the genesis time and ends at a time between genesis

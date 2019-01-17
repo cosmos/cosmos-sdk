@@ -32,7 +32,7 @@ type Validator struct {
 	Description Description `json:"description"` // description terms for the validator
 	BondHeight  int64       `json:"bond_height"` // earliest height as a bonded validator
 
-	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
+	UnbondingHeight         int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
 	Commission Commission `json:"commission"` // commission parameters
@@ -41,17 +41,17 @@ type Validator struct {
 // NewValidator - initialize a new validator
 func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
 	return Validator{
-		OperatorAddr:     operator,
-		ConsPubKey:       pubKey,
-		Jailed:           false,
-		Status:           sdk.Unbonded,
-		Tokens:           sdk.ZeroInt(),
-		DelegatorShares:  sdk.ZeroDec(),
-		Description:      description,
-		BondHeight:       int64(0),
-		UnbondingHeight:  int64(0),
+		OperatorAddr:            operator,
+		ConsPubKey:              pubKey,
+		Jailed:                  false,
+		Status:                  sdk.Unbonded,
+		Tokens:                  sdk.ZeroInt(),
+		DelegatorShares:         sdk.ZeroDec(),
+		Description:             description,
+		BondHeight:              int64(0),
+		UnbondingHeight:         int64(0),
 		UnbondingCompletionTime: time.Unix(0, 0).UTC(),
-		Commission:       NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 	}
 }
 
@@ -115,7 +115,7 @@ type bechValidator struct {
 	Description Description `json:"description"` // description terms for the validator
 	BondHeight  int64       `json:"bond_height"` // earliest height as a bonded validator
 
-	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
+	UnbondingHeight         int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
 	Commission Commission `json:"commission"` // commission parameters
@@ -129,17 +129,17 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 	}
 
 	return codec.Cdc.MarshalJSON(bechValidator{
-		OperatorAddr:     v.OperatorAddr,
-		ConsPubKey:       bechConsPubKey,
-		Jailed:           v.Jailed,
-		Status:           v.Status,
-		Tokens:           v.Tokens,
-		DelegatorShares:  v.DelegatorShares,
-		Description:      v.Description,
-		BondHeight:       v.BondHeight,
-		UnbondingHeight:  v.UnbondingHeight,
+		OperatorAddr:            v.OperatorAddr,
+		ConsPubKey:              bechConsPubKey,
+		Jailed:                  v.Jailed,
+		Status:                  v.Status,
+		Tokens:                  v.Tokens,
+		DelegatorShares:         v.DelegatorShares,
+		Description:             v.Description,
+		BondHeight:              v.BondHeight,
+		UnbondingHeight:         v.UnbondingHeight,
 		UnbondingCompletionTime: v.UnbondingCompletionTime,
-		Commission:       v.Commission,
+		Commission:              v.Commission,
 	})
 }
 
@@ -154,17 +154,17 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*v = Validator{
-		OperatorAddr:     bv.OperatorAddr,
-		ConsPubKey:       consPubKey,
-		Jailed:           bv.Jailed,
-		Tokens:           bv.Tokens,
-		Status:           bv.Status,
-		DelegatorShares:  bv.DelegatorShares,
-		Description:      bv.Description,
-		BondHeight:       bv.BondHeight,
-		UnbondingHeight:  bv.UnbondingHeight,
+		OperatorAddr:            bv.OperatorAddr,
+		ConsPubKey:              consPubKey,
+		Jailed:                  bv.Jailed,
+		Tokens:                  bv.Tokens,
+		Status:                  bv.Status,
+		DelegatorShares:         bv.DelegatorShares,
+		Description:             bv.Description,
+		BondHeight:              bv.BondHeight,
+		UnbondingHeight:         bv.UnbondingHeight,
 		UnbondingCompletionTime: bv.UnbondingCompletionTime,
-		Commission:       bv.Commission,
+		Commission:              bv.Commission,
 	}
 	return nil
 }

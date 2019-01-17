@@ -42,14 +42,9 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 			return "no-operation", nil, nil
 		}
 
-		msg := staking.MsgCreateValidator{
-			Description:   description,
-			Commission:    commission,
-			ValidatorAddr: address,
-			DelegatorAddr: acc.Address,
-			PubKey:        acc.PubKey,
-			Delegation:    sdk.NewCoin(denom, amount),
-		}
+		selfDelegation := sdk.NewCoin(denom, amount)
+		msg := staking.NewMsgCreateValidator(address, acc.PubKey,
+			selfDelegation, description, commission)
 
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
@@ -127,11 +122,10 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 		if amount.Equal(sdk.ZeroInt()) {
 			return "no-operation", nil, nil
 		}
-		msg := staking.MsgDelegate{
-			DelegatorAddr: delegatorAddress,
-			ValidatorAddr: validatorAddress,
-			Delegation:    sdk.NewCoin(denom, amount),
-		}
+
+		msg := staking.NewMsgDelegate(
+			delegatorAddress, validatorAddress, sdk.NewCoin(denom, amount))
+
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}

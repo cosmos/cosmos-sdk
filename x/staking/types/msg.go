@@ -203,7 +203,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !(msg.Delegation.Amount.GT(sdk.ZeroInt())) {
+	if !(msg.Amount.Amount.GT(sdk.ZeroInt())) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil

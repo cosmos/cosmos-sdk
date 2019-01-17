@@ -54,7 +54,7 @@ func init() {
 	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
+func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) json.RawMessage {
 	var genesisAccounts []GenesisAccount
 
 	amount := int64(r.Intn(1e6))
@@ -67,13 +67,40 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		"\t{amount of steak per account: %v, initially bonded validators: %v}\n",
 		amount, numInitiallyBonded)
 
-	// Randomly generate some genesis accounts
-	for _, acc := range accs {
+	// randomly generate some genesis accounts
+	for i, acc := range accs {
 		coins := sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))}
-		genesisAccounts = append(genesisAccounts, GenesisAccount{
-			Address: acc.Address,
-			Coins:   coins,
-		})
+		bacc := auth.NewBaseAccountWithAddress(acc.Address)
+		bacc.SetCoins(coins)
+
+		var gacc GenesisAccount
+
+		// create a vesting account under the following conditions:
+		// - not an initially bonded (genesis) validator
+		// - every 10th account past the initial bonded validator set
+		if int64(i) > numInitiallyBonded && i%10 == 0 {
+			var vacc auth.VestingAccount
+
+			// Vesting starts at the genesis time and ends at a time between genesis
+			// and two days from genesis.
+			//
+			// TODO: Do the vesting periods need to be shrunk to account for short
+			// simulations?
+			startTime := genesisTimestamp.Unix()
+			endTime := r.Int63n((startTime+(60*60*24*2))-startTime) + startTime
+
+			if r.Int()%2 == 0 {
+				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, endTime)
+			} else {
+				vacc = auth.NewDelayedVestingAccount(&bacc, endTime)
+			}
+
+			gacc = NewGenesisVestingAccount(vacc)
+		} else {
+			gacc = NewGenesisAccount(&bacc)
+		}
+
+		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
 	authGenesis := auth.GenesisState{
@@ -156,6 +183,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
+
 	stakingGenesis.Pool.LooseTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Bonds = delegations

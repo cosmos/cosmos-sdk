@@ -764,7 +764,7 @@ type msgDelegationsInput struct {
 }
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
-func doBeginUnbonding(t *testing.T, port, name, password string,
+func doUndelegate(t *testing.T, port, name, password string,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, delAddr)
@@ -791,7 +791,7 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 	return result
 }
 
-type msgBeginUnbondingInput struct {
+type msgUndelegateInput struct {
 	BaseReq       utils.BaseReq  `json:"base_req"`
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32

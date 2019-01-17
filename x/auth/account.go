@@ -48,6 +48,9 @@ type VestingAccount interface {
 
 	GetVestedCoins(blockTime time.Time) sdk.Coins
 	GetVestingCoins(blockTime time.Time) sdk.Coins
+
+	GetStartTime() int64
+	GetEndTime() int64
 }
 
 // AccountDecoder unmarshals account bytes
@@ -158,7 +161,7 @@ type BaseVestingAccount struct {
 	DelegatedFree    sdk.Coins // coins that are vested and delegated
 	DelegatedVesting sdk.Coins // coins that vesting and delegated
 
-	EndTime time.Time // when the coins become unlocked
+	EndTime int64 // when the coins become unlocked
 }
 
 // spendableCoins returns all the spendable coins for a vesting account given a
@@ -320,21 +323,16 @@ var _ VestingAccount = (*ContinuousVestingAccount)(nil)
 type ContinuousVestingAccount struct {
 	*BaseVestingAccount
 
-	StartTime time.Time // when the coins start to vest
+	StartTime int64 // when the coins start to vest
 }
 
 func NewContinuousVestingAccount(
-	addr sdk.AccAddress, origCoins sdk.Coins, StartTime, EndTime time.Time,
+	baseAcc *BaseAccount, StartTime, EndTime int64,
 ) *ContinuousVestingAccount {
-
-	baseAcc := &BaseAccount{
-		Address: addr,
-		Coins:   origCoins,
-	}
 
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
-		OriginalVesting: origCoins,
+		OriginalVesting: baseAcc.Coins,
 		EndTime:         EndTime,
 	}
 
@@ -352,13 +350,15 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	// We must handle the case where the start time for a vesting account has
 	// been set into the future or when the start of the chain is not exactly
 	// known.
-	if blockTime.Unix() <= cva.StartTime.Unix() {
+	if blockTime.Unix() <= cva.StartTime {
 		return vestedCoins
+	} else if blockTime.Unix() >= cva.EndTime {
+		return cva.OriginalVesting
 	}
 
 	// calculate the vesting scalar
-	x := int64(blockTime.Sub(cva.StartTime).Seconds())
-	y := int64(cva.EndTime.Sub(cva.StartTime).Seconds())
+	x := blockTime.Unix() - cva.StartTime
+	y := cva.EndTime - cva.StartTime
 	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
 
 	for _, ovc := range cva.OriginalVesting {
@@ -388,6 +388,17 @@ func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, amount
 	cva.trackDelegation(cva.GetVestingCoins(blockTime), amount)
 }
 
+// GetStartTime returns the time when vesting starts for a continuous vesting
+// account.
+func (cva *ContinuousVestingAccount) GetStartTime() int64 {
+	return cva.StartTime
+}
+
+// GetEndTime returns the time when vesting ends for a continuous vesting account.
+func (cva *ContinuousVestingAccount) GetEndTime() int64 {
+	return cva.EndTime
+}
+
 //-----------------------------------------------------------------------------
 // Delayed Vesting Account
 
@@ -400,18 +411,10 @@ type DelayedVestingAccount struct {
 	*BaseVestingAccount
 }
 
-func NewDelayedVestingAccount(
-	addr sdk.AccAddress, origCoins sdk.Coins, EndTime time.Time,
-) *DelayedVestingAccount {
-
-	baseAcc := &BaseAccount{
-		Address: addr,
-		Coins:   origCoins,
-	}
-
+func NewDelayedVestingAccount(baseAcc *BaseAccount, EndTime int64) *DelayedVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
-		OriginalVesting: origCoins,
+		OriginalVesting: baseAcc.Coins,
 		EndTime:         EndTime,
 	}
 
@@ -421,7 +424,7 @@ func NewDelayedVestingAccount(
 // GetVestedCoins returns the total amount of vested coins for a delayed vesting
 // account. All coins are only vested once the schedule has elapsed.
 func (dva DelayedVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coins {
-	if blockTime.Unix() >= dva.EndTime.Unix() {
+	if blockTime.Unix() >= dva.EndTime {
 		return dva.OriginalVesting
 	}
 
@@ -445,6 +448,16 @@ func (dva DelayedVestingAccount) SpendableCoins(blockTime time.Time) sdk.Coins {
 // overall amount of base coins.
 func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, amount sdk.Coins) {
 	dva.trackDelegation(dva.GetVestingCoins(blockTime), amount)
+}
+
+// GetStartTime returns zero since a delayed vesting account has no start time.
+func (dva *DelayedVestingAccount) GetStartTime() int64 {
+	return 0
+}
+
+// GetEndTime returns the time when vesting ends for a delayed vesting account.
+func (dva *DelayedVestingAccount) GetEndTime() int64 {
+	return dva.EndTime
 }
 
 //-----------------------------------------------------------------------------

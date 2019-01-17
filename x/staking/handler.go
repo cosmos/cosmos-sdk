@@ -26,8 +26,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgDelegate(ctx, msg, k)
 		case types.MsgBeginRedelegate:
 			return handleMsgBeginRedelegate(ctx, msg, k)
-		case types.MsgBeginUnbonding:
-			return handleMsgBeginUnbonding(ctx, msg, k)
+		case types.MsgUndelegate:
+			return handleMsgUndelegate(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 		}
@@ -104,7 +104,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
 
-	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Value.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -133,7 +133,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	_, err = k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
+	_, err = k.Delegate(ctx, msg.DelegatorAddr, msg.Value, validator, true)
 	if err != nil {
 		return err.Result()
 	}
@@ -193,7 +193,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
 
-	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Value.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -201,7 +201,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return ErrValidatorJailed(k.Codespace()).Result()
 	}
 
-	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Value, validator, true)
 	if err != nil {
 		return err.Result()
 	}
@@ -216,8 +216,8 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	}
 }
 
-func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.Keeper) sdk.Result {
-	completionTime, err := k.BeginUnbonding(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
+func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keeper) sdk.Result {
+	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
 	if err != nil {
 		return err.Result()
 	}

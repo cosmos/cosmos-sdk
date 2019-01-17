@@ -60,13 +60,13 @@ func GetCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 		c.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
-		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Int64(FlagHeight, 0, "block height to query, omit to get most recent provable block")
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
-		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
+
+		c.MarkFlagRequired(FlagChainID)
 	}
 	return cmds
 }
@@ -81,7 +81,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 		c.Flags().String(FlagMemo, "", "Memo to send along with transaction")
 		c.Flags().String(FlagFees, "", "Fees to pay along with transaction; eg: 10stake,1atom")
 		c.Flags().String(FlagGasPrices, "", "Gas prices to determine the transaction fee (e.g. 0.00001stake)")
-		c.Flags().String(FlagChainID, "", "Chain ID of tendermint node")
 		c.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to tendermint rpc interface for this chain")
 		c.Flags().Bool(FlagUseLedger, false, "Use a connected Ledger device")
 		c.Flags().Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")
@@ -96,7 +95,6 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 			"gas limit to set per-transaction; set to %q to calculate required gas automatically (default %d)", GasFlagAuto, DefaultGasLimit))
 		viper.BindPFlag(FlagTrustNode, c.Flags().Lookup(FlagTrustNode))
 		viper.BindPFlag(FlagUseLedger, c.Flags().Lookup(FlagUseLedger))
-		viper.BindPFlag(FlagChainID, c.Flags().Lookup(FlagChainID))
 		viper.BindPFlag(FlagNode, c.Flags().Lookup(FlagNode))
 
 		c.MarkFlagRequired(FlagChainID)

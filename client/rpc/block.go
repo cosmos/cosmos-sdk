@@ -28,7 +28,6 @@ func BlockCommand() *cobra.Command {
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
-	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	return cmd
 }
 

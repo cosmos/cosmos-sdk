@@ -709,9 +709,9 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 	// setup
 	input := setupTestInput()
 	ctx := input.ctx.WithMinGasPrices(
-		sdk.Coins{
-			sdk.NewInt64Coin("photino", 5),
-			sdk.NewInt64Coin("stake", 2),
+		sdk.DecCoins{
+			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(1000000, sdk.Precision)), // 0.0001photino
+			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000, sdk.Precision)),     // 0.000001stake
 		},
 	)
 
@@ -719,11 +719,29 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 		input      StdFee
 		expectedOK bool
 	}{
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 400000)}), true},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 39)}), false},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 1000000)}), true},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 99)}), false},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 400000), sdk.NewInt64Coin("photino", 1000000)}), true},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 1)}), false},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 20)}), false},
+		{
+			NewStdFee(
+				200000,
+				sdk.Coins{
+					sdk.NewInt64Coin("photino", 20),
+					sdk.NewInt64Coin("stake", 1),
+				},
+			),
+			true,
+		},
+		{
+			NewStdFee(
+				200000,
+				sdk.Coins{
+					sdk.NewInt64Coin("atom", 2),
+					sdk.NewInt64Coin("photino", 20),
+					sdk.NewInt64Coin("stake", 1),
+				},
+			),
+			true,
+		},
 	}
 
 	for i, tc := range testCases {

@@ -299,20 +299,25 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
 func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
-	gasPrices := make(sdk.Coins, len(stdFee.Amount))
-	for i, fee := range stdFee.Amount {
-		gasPrice := fee.Amount.DivRaw(int64(stdFee.Gas))
-		gasPrices[i] = sdk.NewCoin(fee.Denom, gasPrice)
-	}
-
-	// Validators reject any tx from the mempool with: gasPrices < minGasPrices
-	// where gasPrices must be a subset of minGasPrices.
 	minGasPrices := ctx.MinGasPrices()
-	if !minGasPrices.IsZero() && !gasPrices.IsAnyGTE(minGasPrices) {
-		return sdk.ErrInsufficientFee(
-			fmt.Sprintf(
-				"insufficient fees; received gas prices: %q does not meet minimum: %q", gasPrices, minGasPrices),
-		).Result()
+	if !minGasPrices.IsZero() {
+		requiredFees := make(sdk.Coins, len(minGasPrices))
+
+		// Determine the required fees by multiplying each required gas price by the
+		// gas limit, where fee = ceil(gp * gl).
+		glDec := sdk.NewDec(int64(stdFee.Gas))
+		for i, gp := range minGasPrices {
+			fee := gp.Amount.Mul(glDec)
+			requiredFees[i] = sdk.NewInt64Coin(gp.Denom, fee.Ceil().RoundInt64())
+		}
+
+		if !stdFee.Amount.IsAllGTE(requiredFees) {
+			return sdk.ErrInsufficientFee(
+				fmt.Sprintf(
+					"insufficient fees; got: %q required: %q", stdFee.Amount, requiredFees,
+				),
+			).Result()
+		}
 	}
 
 	return sdk.Result{}

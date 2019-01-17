@@ -13,9 +13,9 @@ const defaultConfigTemplate = `# This is a TOML config file.
 
 ##### main base config options #####
 
-# The minimum disparate gas prices a validator is willing to accept for
-# processing a transaction. A transaction must only provide fees that meet
-# any of the minimum gas prices, but not necessarily all of them.
+# The minimum gas prices a validator is willing to accept for processing a
+# transaction. A transaction's fees must meet the minimum of each denomination
+# specified in this config (e.g. 0.01photino,0.0001stake).
 minimum_gas_prices = "{{ .BaseConfig.MinGasPrices }}"
 `
 

@@ -33,7 +33,7 @@ BREAKING CHANGES
   * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
 
 * Tendermint
-  * \#3279 Upgrade to Tendermint 0.28.0-dev0
+  * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0
 
 FEATURES
 

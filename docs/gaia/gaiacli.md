@@ -16,7 +16,7 @@ you must choose whether you wish to verify lite client proofs. If you trust the 
 Its configuration file resides in `$HOME/.gaiacli/config/config.toml` and can be edited either
 by hand or via the `gaiacli config` command:
 
-```
+```bash
 gaiacli config chain-id gaia-9004
 ```
 

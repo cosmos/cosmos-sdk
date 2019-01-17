@@ -173,7 +173,7 @@ func TestMsgBeginRedelegate(t *testing.T) {
 }
 
 // test ValidateBasic for MsgUnbond
-func TestMsgBeginUnbonding(t *testing.T) {
+func TestMsgUndelegate(t *testing.T) {
 	tests := []struct {
 		name          string
 		delegatorAddr sdk.AccAddress
@@ -189,7 +189,7 @@ func TestMsgBeginUnbonding(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		msg := NewMsgBeginUnbonding(tc.delegatorAddr, tc.validatorAddr, tc.sharesAmount)
+		msg := NewMsgUndelegate(tc.delegatorAddr, tc.validatorAddr, tc.sharesAmount)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {

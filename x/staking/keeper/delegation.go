@@ -546,7 +546,7 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 		return completionTime, height, true
 
 	case validator.Status == sdk.Unbonding:
-		completionTime = validator.UnbondingMinTime
+		completionTime = validator.UnbondingCompletionTime
 		height = validator.UnbondingHeight
 		return completionTime, height, false
 
@@ -556,7 +556,7 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 }
 
 // begin unbonding an unbonding record
-func (k Keeper) BeginUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
+func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress, sharesAmount sdk.Dec) (completionTime time.Time, sdkErr sdk.Error) {
 
 	// create the unbonding delegation

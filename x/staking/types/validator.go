@@ -33,7 +33,7 @@ type Validator struct {
 	BondHeight  int64       `json:"bond_height"` // earliest height as a bonded validator
 
 	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
-	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
+	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
 	Commission Commission `json:"commission"` // commission parameters
 }
@@ -50,7 +50,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		Description:      description,
 		BondHeight:       int64(0),
 		UnbondingHeight:  int64(0),
-		UnbondingMinTime: time.Unix(0, 0).UTC(),
+		UnbondingCompletionTime: time.Unix(0, 0).UTC(),
 		Commission:       NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 	}
 }
@@ -94,7 +94,7 @@ func (v Validator) HumanReadableString() (string, error) {
 	resp += fmt.Sprintf("Description: %s\n", v.Description)
 	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
 	resp += fmt.Sprintf("Unbonding Height: %d\n", v.UnbondingHeight)
-	resp += fmt.Sprintf("Minimum Unbonding Time: %v\n", v.UnbondingMinTime)
+	resp += fmt.Sprintf("Minimum Unbonding Time: %v\n", v.UnbondingCompletionTime)
 	resp += fmt.Sprintf("Commission: {%s}\n", v.Commission)
 
 	return resp, nil
@@ -116,7 +116,7 @@ type bechValidator struct {
 	BondHeight  int64       `json:"bond_height"` // earliest height as a bonded validator
 
 	UnbondingHeight  int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
-	UnbondingMinTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
+	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
 	Commission Commission `json:"commission"` // commission parameters
 }
@@ -138,7 +138,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 		Description:      v.Description,
 		BondHeight:       v.BondHeight,
 		UnbondingHeight:  v.UnbondingHeight,
-		UnbondingMinTime: v.UnbondingMinTime,
+		UnbondingCompletionTime: v.UnbondingCompletionTime,
 		Commission:       v.Commission,
 	})
 }
@@ -163,7 +163,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		Description:      bv.Description,
 		BondHeight:       bv.BondHeight,
 		UnbondingHeight:  bv.UnbondingHeight,
-		UnbondingMinTime: bv.UnbondingMinTime,
+		UnbondingCompletionTime: bv.UnbondingCompletionTime,
 		Commission:       bv.Commission,
 	}
 	return nil

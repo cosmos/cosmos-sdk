@@ -2,7 +2,7 @@
 
 ## Create or modify delegation distribution
  
- - triggered-by: `staking.TxDelegate`, `staking.TxBeginRedelegate`, `staking.TxBeginUnbonding`
+ - triggered-by: `staking.MsgDelegate`, `staking.MsgBeginRedelegate`, `staking.MsgUndelegate`
 
 The pool of a new delegator bond will be 0 for the height at which the bond was
 added, or the withdrawal has taken place. This is achieved by setting
@@ -10,7 +10,7 @@ added, or the withdrawal has taken place. This is achieved by setting
 
 ## Commission rate change
  
- - triggered-by: `staking.TxEditValidator`
+ - triggered-by: `staking.MsgEditValidator`
 
 If a validator changes its commission rate, all commission on fees must be
 simultaneously withdrawn using the transaction `TxWithdrawValidator`.

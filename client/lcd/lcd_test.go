@@ -442,7 +442,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
 
 	// testing unbonding
-	resultTx = doBeginUnbonding(t, port, name1, pw, addr, operAddrs[0], 30, fees)
+	resultTx = doUndelegate(t, port, name1, pw, addr, operAddrs[0], 30, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)

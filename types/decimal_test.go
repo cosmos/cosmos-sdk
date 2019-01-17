@@ -390,14 +390,14 @@ func TestDecCeil(t *testing.T) {
 		input    Dec
 		expected Dec
 	}{
-		{NewDecWithPrec(1, 3), NewDec(1)},                     // 0.001 => 1.0
-		{NewDecWithPrec(-1, 3), ZeroDec()},                    // -0.001 => 0.0
-		{ZeroDec(), ZeroDec()},                                // 0.0 => 0.0
-		{NewDecWithPrec(9, 1), NewDec(1)},                     // 0.9 => 1.0
-		{NewDecWithPrec(40010000000, Precision), NewDec(5)},   // 4.001 => 5.0
-		{NewDecWithPrec(-40010000000, Precision), NewDec(-4)}, // -4.001 => -4.0
-		{NewDecWithPrec(47000000000, Precision), NewDec(5)},   // 4.7 => 5.0
-		{NewDecWithPrec(-47000000000, Precision), NewDec(-4)}, // -4.7 => -4.0
+		{NewDecWithPrec(1000000000000000, Precision), NewDec(1)},  // 0.001 => 1.0
+		{NewDecWithPrec(-1000000000000000, Precision), ZeroDec()}, // -0.001 => 0.0
+		{ZeroDec(), ZeroDec()}, // 0.0 => 0.0
+		{NewDecWithPrec(900000000000000000, Precision), NewDec(1)},    // 0.9 => 1.0
+		{NewDecWithPrec(4001000000000000000, Precision), NewDec(5)},   // 4.001 => 5.0
+		{NewDecWithPrec(-4001000000000000000, Precision), NewDec(-4)}, // -4.001 => -4.0
+		{NewDecWithPrec(4700000000000000000, Precision), NewDec(5)},   // 4.7 => 5.0
+		{NewDecWithPrec(-4700000000000000000, Precision), NewDec(-4)}, // -4.7 => -4.0
 	}
 
 	for i, tc := range testCases {

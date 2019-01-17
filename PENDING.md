@@ -8,7 +8,7 @@ BREAKING CHANGES
   * [\#2222] all endpoints renamed from `/stake` -> `/staking`
   * [\#3289] misc renames:
     * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
-    * `Delegation` -> `Amount` in `MsgCreateValidator` and `MsgDelegate` 
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
     * `MsgBeginUnbonding` -> `MsgUndelegate`
 
 * Gaia CLI  (`gaiacli`)
@@ -37,7 +37,7 @@ BREAKING CHANGES
   * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
   * [staking] \#3289 misc renames:
     * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
-    * `Delegation` -> `Amount` in `MsgCreateValidator` and `MsgDelegate` 
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
     * `MsgBeginUnbonding` -> `MsgUndelegate`
 
 * Tendermint

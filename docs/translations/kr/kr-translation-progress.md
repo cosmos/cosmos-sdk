@@ -16,16 +16,9 @@ Please refer to the official english version of the documentation for the latest
 
 ## Progress by directory
 
-### [`_attic`](../_attic/)
--  *Not sure if translation is required*
-- Pending initial translation (redacted from `docs-kr` until completion)
-
-### [`architecture`](../architecture/)
--  *Not sure if translation is required*
-- Pending initial translation (redacted from `docs-kr` until completion)
 
 ### [`concepts`](../concepts/)
-- Pending initial translation (redacted from `docs-kr` until completion)
+- Needs grammatical/technical revision
 
 ### [`examples`](../examples/)
 - Pending initial translation (redacted from `docs-kr` until completion)
@@ -49,4 +42,7 @@ Please refer to the official english version of the documentation for the latest
 ### [`clients`](../clients/)
 - *Last update [f5e0379](https://github.com/dogemos/cosmos-sdk/commit/f5e0379ef5016e1d8825712a35aac2e0f2567fe2)*
 - Needs grammatical/technical revision
+
+## TO-DO for all
+- Translate code comments (the `#`'s')
 

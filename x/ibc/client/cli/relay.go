@@ -4,15 +4,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/utils"
-
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 
 	"github.com/spf13/cobra"
@@ -205,15 +202,14 @@ func (c relayCommander) refine(bz []byte, ibcSeq, accSeq uint64, passphrase stri
 		Sequence:  ibcSeq,
 	}
 
-	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(accSeq).WithTxEncoder(utils.GetTxEncoder(c.cdc))
-	cliCtx := context.NewCLIContext(c.cdc)
+	cliCtx := context.NewCLIContextTx(c.cdc)
 
 	name, err := cliCtx.GetFromName()
 	if err != nil {
 		panic(err)
 	}
 
-	res, err := txBldr.BuildAndSign(name, passphrase, []sdk.Msg{msg})
+	res, err := cliCtx.TxBldr.BuildAndSign(name, passphrase, []sdk.Msg{msg})
 	if err != nil {
 		panic(err)
 	}

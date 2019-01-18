@@ -608,7 +608,7 @@ gaiacli query gov param tallying
 gaiacli query gov param deposit
 ```
 
-### Distribution
+### Fee Distribution
 
 #### Query distribution parameters
 

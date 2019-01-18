@@ -631,7 +631,7 @@ gaiacli query distr outstanding-rewards
 To check the current outstanding commission for a validator, run:
 
 ```bash
-gaiacli query distr validator-commission <validator_address>
+gaiacli query distr commission <validator_address>
 ```
 
 #### Query validator slashes

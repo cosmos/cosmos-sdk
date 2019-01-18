@@ -636,7 +636,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	// Test generate sendTx, estimate gas
 	success, stdout, stderr = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=auto", "--generate-only")
 	require.True(t, success)
-	require.NotEmpty(t, stderr)
+	require.Empty(t, stderr)
 	msg = unmarshalStdTx(t, stdout)
 	require.True(t, msg.Fee.Gas > 0)
 	require.Equal(t, len(msg.Msgs), 1)

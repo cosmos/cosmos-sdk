@@ -1,14 +1,10 @@
 package cli
 
 import (
-	"os"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	bankClient "github.com/cosmos/cosmos-sdk/x/bank/client"
 
 	"github.com/pkg/errors"
@@ -27,54 +23,39 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "send",
 		Short: "Create and sign a send tx",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
+			cliCtx := context.NewCLIContextTx(cdc)
 
 			addr, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			if err := cliCtx.EnsureAccountExists(addr); err != nil {
+			if err = cliCtx.EnsureAccountExists(addr); err != nil {
 				return err
 			}
 
-			toStr := viper.GetString(flagTo)
-
-			to, err := sdk.AccAddressFromBech32(toStr)
+			to, err := sdk.AccAddressFromBech32(viper.GetString(flagTo))
 			if err != nil {
 				return err
 			}
 
-			// parse coins trying to be sent
-			amount := viper.GetString(flagAmount)
-			coins, err := sdk.ParseCoins(amount)
+			coins, err := sdk.ParseCoins(viper.GetString(flagAmount))
 			if err != nil {
 				return err
 			}
 
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
-			account, err := cliCtx.FetchAccount(from)
+			account, err := cliCtx.FetchAccount(addr)
 			if err != nil {
 				return err
 			}
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(coins) {
-				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", from)
+				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", addr)
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := bankClient.CreateMsg(from, to, coins)
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return cliCtx.MessageOutput(bankClient.CreateMsg(addr, to, coins))
 		},
 	}
 

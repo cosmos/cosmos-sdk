@@ -12,7 +12,7 @@ import (
 )
 
 // Register REST endpoints
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
+func RegisterRoutes(cliCtx *context.CLIContext, r *mux.Router) {
 	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
 	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")
 	r.HandleFunc("/node_info", NodeInfoRequestHandlerFn(cliCtx)).Methods("GET")
@@ -30,7 +30,7 @@ func CLIVersionRequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // connected node version REST handler endpoint
-func NodeVersionRequestHandler(cliCtx context.CLIContext) http.HandlerFunc {
+func NodeVersionRequestHandler(cliCtx *context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		version, err := cliCtx.Query("/app/version", nil)
 		if err != nil {

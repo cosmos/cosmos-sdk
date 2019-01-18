@@ -51,7 +51,7 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]byte, error) {
+func queryTx(cdc *codec.Codec, cliCtx *context.CLIContext, hashHexStr string) ([]byte, error) {
 	hash, err := hex.DecodeString(hashHexStr)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]
 }
 
 // ValidateTxResult performs transaction verification
-func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
+func ValidateTxResult(cliCtx *context.CLIContext, res *ctypes.ResultTx) error {
 	check, err := cliCtx.Verify(res.Height)
 	if err != nil {
 		return err
@@ -135,7 +135,7 @@ func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 // REST
 
 // transaction query REST handler
-func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx *context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		hashHexStr := vars["hash"]

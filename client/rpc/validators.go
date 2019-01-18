@@ -85,7 +85,7 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 	}, nil
 }
 
-func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
+func getValidators(cliCtx *context.CLIContext, height *int64) ([]byte, error) {
 	// get the node
 	node, err := cliCtx.GetNode()
 	if err != nil {
@@ -130,7 +130,7 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 // REST
 
 // Validator Set at a height REST handler
-func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func ValidatorSetRequestHandlerFn(cliCtx *context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -159,7 +159,7 @@ func ValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // Latest Validator Set REST handler
-func LatestValidatorSetRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func LatestValidatorSetRequestHandlerFn(cliCtx *context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		height, err := GetChainHeight(cliCtx)
 		if err != nil {

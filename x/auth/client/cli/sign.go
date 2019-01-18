@@ -12,10 +12,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
 const (
@@ -75,17 +73,17 @@ be generated via the 'multisign' command.
 
 func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
+		cliCtx := context.NewCLIContextTx(cdc)
+
 		stdTx, err := readAndUnmarshalStdTx(cdc, args[0])
 		if err != nil {
 			return
 		}
 
 		offline := viper.GetBool(flagOffline)
-		cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
-		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		if viper.GetBool(flagValidateSigs) {
-			if !printAndValidateSigs(cliCtx, txBldr.GetChainID(), stdTx, offline) {
+			if !printAndValidateSigs(cliCtx, cliCtx.TxBldr.GetChainID(), stdTx, offline) {
 				return fmt.Errorf("signatures validation failed")
 			}
 
@@ -109,13 +107,11 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 				return err
 			}
 
-			newTx, err = utils.SignStdTxWithSignerAddress(
-				txBldr, cliCtx, multisigAddr, name, stdTx, offline)
+			newTx, err = cliCtx.SignStdTxWithSignerAddress(multisigAddr, name, stdTx, offline)
 			generateSignatureOnly = true
 		} else {
 			appendSig := viper.GetBool(flagAppend) && !generateSignatureOnly
-			newTx, err = utils.SignStdTx(
-				txBldr, cliCtx, name, stdTx, appendSig, offline)
+			newTx, err = cliCtx.SignStdTx(name, stdTx, appendSig, offline)
 		}
 		if err != nil {
 			return err
@@ -167,7 +163,7 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 // its expected signers. In addition, if offline has not been supplied, the
 // signature is verified over the transaction sign bytes.
 func printAndValidateSigs(
-	cliCtx context.CLIContext, chainID string, stdTx auth.StdTx, offline bool,
+	cliCtx *context.CLIContext, chainID string, stdTx auth.StdTx, offline bool,
 ) bool {
 
 	fmt.Println("Signers:")

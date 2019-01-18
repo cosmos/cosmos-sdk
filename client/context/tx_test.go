@@ -1,4 +1,4 @@
-package utils
+package context
 
 import (
 	"encoding/json"
@@ -22,17 +22,6 @@ var (
 	priv = ed25519.GenPrivKey()
 	addr = sdk.AccAddress(priv.PubKey().Address())
 )
-
-func TestParseQueryResponse(t *testing.T) {
-	cdc := app.MakeCodec()
-	sdkResBytes := cdc.MustMarshalBinaryLengthPrefixed(sdk.Result{GasUsed: 10})
-	gas, err := parseQueryResponse(cdc, sdkResBytes)
-	assert.Equal(t, gas, uint64(10))
-	assert.Nil(t, err)
-	gas, err = parseQueryResponse(cdc, []byte("fuzzy"))
-	assert.Equal(t, gas, uint64(0))
-	assert.NotNil(t, err)
-}
 
 func TestCalculateGas(t *testing.T) {
 	cdc := app.MakeCodec()

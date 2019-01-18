@@ -19,13 +19,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -54,7 +52,6 @@ following delegation and commission default parameters:
 	commission max change rate:  %s
 `, defaultAmount, defaultCommissionRate, defaultCommissionMaxRate, defaultCommissionMaxChangeRate),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			config := ctx.Config
 			config.SetRoot(viper.GetString(tmcli.HomeFlag))
 			nodeID, valPubKey, err := InitializeNodeValidatorFiles(ctx.Config)
@@ -111,18 +108,19 @@ following delegation and commission default parameters:
 			}
 
 			// Run gaiad tx create-validator
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc)
-			txBldr, msg, err := cli.BuildCreateValidatorMsg(cliCtx, txBldr)
+			cliCtx := context.NewCLIContextTx(cdc)
+			msg, err := cli.BuildCreateValidatorMsg(cliCtx)
 			if err != nil {
 				return err
 			}
 
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
-			if err := utils.PrintUnsignedStdTx(w, txBldr, cliCtx, []sdk.Msg{msg}, true); err != nil {
+			if err = cliCtx.PrintUnsignedStdTx(w, []sdk.Msg{msg}, true); err != nil {
 				return err
 			}
+
+			fmt.Println("Through cliCtx.PrintUnsignedStdTx")
 
 			// read the transaction
 			stdTx, err := readUnsignedGenTxFile(cdc, w)
@@ -131,11 +129,10 @@ following delegation and commission default parameters:
 			}
 
 			// sign the transaction and write it to the output file
-			signedTx, err := utils.SignStdTx(txBldr, cliCtx, name, stdTx, false, true)
+			signedTx, err := cliCtx.SignStdTx(name, stdTx, false, true)
 			if err != nil {
 				return err
 			}
-
 			// Fetch output file name
 			outputDocument := viper.GetString(client.FlagOutputDocument)
 			if outputDocument == "" {
@@ -202,7 +199,7 @@ func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID st
 	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
 	viper.Set(cli.FlagIP, ip)                                      // --ip
 	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
-	viper.Set(cli.FlagGenesisFormat, true)                         // --genesis-format
+	viper.Set(client.FlagGenerateOnly, true)                       // --generate-only
 	viper.Set(cli.FlagMoniker, config.Moniker)                     // --moniker
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))

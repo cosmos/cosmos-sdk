@@ -4,11 +4,8 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 
 	"github.com/spf13/cobra"
 )
@@ -20,8 +17,7 @@ func MineCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Mine some coins with proof-of-work!",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
+			cliCtx := context.NewCLIContextTx(cdc)
 
 			from, err := cliCtx.GetFromAddress()
 			if err != nil {
@@ -43,12 +39,7 @@ func MineCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			solution := []byte(args[3])
-			msg := pow.NewMsgMine(from, difficulty, count, nonce, solution)
-
-			// Build and sign the transaction, then broadcast to a Tendermint
-			// node.
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return cliCtx.MessageOutput(pow.NewMsgMine(from, difficulty, count, nonce, []byte(args[3])))
 		},
 	}
 }

@@ -13,7 +13,7 @@ import (
 )
 
 // register REST routes
-func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
+func RegisterRoutes(cliCtx *context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
 	r.HandleFunc(
 		"/auth/accounts/{address}",
 		QueryAccountRequestHandlerFn(storeName, cdc, cliCtx.GetAccountDecoder(), cliCtx),
@@ -31,7 +31,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 // query accountREST Handler
 func QueryAccountRequestHandlerFn(
 	storeName string, cdc *codec.Codec,
-	decoder auth.AccountDecoder, cliCtx context.CLIContext,
+	decoder auth.AccountDecoder, cliCtx *context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -69,7 +69,7 @@ func QueryAccountRequestHandlerFn(
 // query accountREST Handler
 func QueryBalancesRequestHandlerFn(
 	storeName string, cdc *codec.Codec,
-	decoder auth.AccountDecoder, cliCtx context.CLIContext,
+	decoder auth.AccountDecoder, cliCtx *context.CLIContext,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

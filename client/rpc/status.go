@@ -49,7 +49,7 @@ func StatusCommand(cdc *codec.Codec) *cobra.Command {
 	return cmd
 }
 
-func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
+func getNodeStatus(cliCtx *context.CLIContext) (*ctypes.ResultStatus, error) {
 	// get the node
 	node, err := cliCtx.GetNode()
 	if err != nil {
@@ -62,7 +62,7 @@ func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
 // REST
 
 // REST handler for node info
-func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func NodeInfoRequestHandlerFn(cliCtx *context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if err != nil {
@@ -77,7 +77,7 @@ func NodeInfoRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 }
 
 // REST handler for node syncing
-func NodeSyncingRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func NodeSyncingRequestHandlerFn(cliCtx *context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		status, err := getNodeStatus(cliCtx)
 		if err != nil {

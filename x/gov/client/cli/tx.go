@@ -2,16 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
-	"github.com/pkg/errors"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	"encoding/json"
@@ -21,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )
 
 const (
@@ -75,13 +70,12 @@ is equivalent to
 $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContextTx(cdc)
+
 			proposal, err := parseSubmitProposalFlags()
 			if err != nil {
 				return err
 			}
-
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
 
 			// Get from address
 			from, err := cliCtx.GetFromAddress()
@@ -103,7 +97,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(amount) {
-				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", from)
+				return context.ErrInsufficentFunds(account, amount)
 			}
 
 			proposalType, err := gov.ProposalTypeFromString(proposal.Type)
@@ -112,19 +106,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			msg := gov.NewMsgSubmitProposal(proposal.Title, proposal.Description, proposalType, from, amount)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// Build and sign the transaction, then broadcast to Tendermint
-			// proposalID must be returned, and it is a part of response.
-			cliCtx.PrintResponse = true
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return cliCtx.MessageOutput(msg)
 		},
 	}
 
@@ -144,7 +126,7 @@ func parseSubmitProposalFlags() (*proposal, error) {
 	if proposalFile == "" {
 		proposal.Title = viper.GetString(flagTitle)
 		proposal.Description = viper.GetString(flagDescription)
-		proposal.Type = govClientUtils.NormalizeProposalType(viper.GetString(flagProposalType))
+		proposal.Type = gcutils.NormalizeProposalType(viper.GetString(flagProposalType))
 		proposal.Deposit = viper.GetString(flagDeposit)
 		return proposal, nil
 	}
@@ -170,7 +152,7 @@ func parseSubmitProposalFlags() (*proposal, error) {
 
 // GetCmdDeposit implements depositing tokens for an active proposal.
 func GetCmdDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for activing proposal",
@@ -180,19 +162,18 @@ Submit a deposit for an acive proposal. You can find the proposal-id by running 
 $ gaiacli tx gov deposit 1 10stake --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
+			cliCtx := context.NewCLIContextTx(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
+				return gcutils.InvalidProposalID(args[0])
 			}
 
 			// check to see if the proposal is in the store
-			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
+			_, err = gcutils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
+				return gcutils.FailedToFectchProposal(proposalID, err)
 			}
 
 			// Get from address
@@ -215,30 +196,17 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(amount) {
-				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", from)
+				return context.ErrInsufficentFunds(account, amount)
 			}
 
-			msg := gov.NewMsgDeposit(from, proposalID, amount)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// Build and sign the transaction, then broadcast to a Tendermint node.
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return cliCtx.MessageOutput(gov.NewMsgDeposit(from, proposalID, amount))
 		},
 	}
-
-	return cmd
 }
 
 // GetCmdVote implements creating a new vote command.
 func GetCmdVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
@@ -248,8 +216,7 @@ Submit a vote for an acive proposal. You can find the proposal-id by running gai
 $ gaiacli tx gov vote 1 yes --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
+			cliCtx := context.NewCLIContextTx(cdc)
 
 			// Get voting address
 			from, err := cliCtx.GetFromAddress()
@@ -260,37 +227,23 @@ $ gaiacli tx gov vote 1 yes --from mykey
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
-				return fmt.Errorf("proposal-id %s not a valid int, please input a valid proposal-id", args[0])
+				return gcutils.InvalidProposalID(args[0])
 			}
 
 			// check to see if the proposal is in the store
-			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
+			_, err = gcutils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
-				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
+				return gcutils.FailedToFectchProposal(proposalID, err)
 			}
 
 			// Find out which vote option user chose
-			byteVoteOption, err := gov.VoteOptionFromString(govClientUtils.NormalizeVoteOption(args[1]))
+			byteVoteOption, err := gov.VoteOptionFromString(gcutils.NormalizeVoteOption(args[1]))
 			if err != nil {
 				return err
 			}
 
 			// Build vote message and run basic validation
-			msg := gov.NewMsgVote(from, proposalID, byteVoteOption)
-			err = msg.ValidateBasic()
-			if err != nil {
-				return err
-			}
-
-			// If generate only print the transaction
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// Build and sign the transaction, then broadcast to a Tendermint node.
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return cliCtx.MessageOutput(gov.NewMsgVote(from, proposalID, byteVoteOption))
 		},
 	}
-
-	return cmd
 }

@@ -217,7 +217,7 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
 func CompleteAndBroadcastTxREST(
-	w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext,
+	w http.ResponseWriter, r *http.Request, cliCtx *context.CLIContext,
 	baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
 ) {
 
@@ -232,8 +232,8 @@ func CompleteAndBroadcastTxREST(
 		return
 	}
 
-	txBldr := authtxb.NewTxBuilder(
-		GetTxEncoder(cdc), baseReq.AccountNumber,
+	cliCtx.TxBldr = authtxb.NewTxBuilder(
+		context.GetTxEncoder(cdc), baseReq.AccountNumber,
 		baseReq.Sequence, gas, gasAdjustment, baseReq.Simulate,
 		baseReq.ChainID, baseReq.Memo, baseReq.Fees, baseReq.GasPrices,
 	)
@@ -244,24 +244,23 @@ func CompleteAndBroadcastTxREST(
 			return
 		}
 
-		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
-		if err != nil {
+		if err = cliCtx.EnrichCtxWithGas(baseReq.Name, msgs); err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		if baseReq.Simulate {
-			WriteSimulationResponse(w, txBldr.GetGas())
+			WriteSimulationResponse(w, cliCtx.TxBldr.GetGas())
 			return
 		}
 	}
 
 	if baseReq.GenerateOnly {
-		WriteGenerateStdTxResponse(w, cdc, txBldr, msgs)
+		WriteGenerateStdTxResponse(w, cdc, cliCtx.TxBldr, msgs)
 		return
 	}
 
-	txBytes, err := txBldr.BuildAndSign(baseReq.Name, baseReq.Password, msgs)
+	txBytes, err := cliCtx.TxBldr.BuildAndSign(baseReq.Name, baseReq.Password, msgs)
 	if keyerror.IsErrKeyNotFound(err) {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return

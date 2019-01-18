@@ -28,7 +28,7 @@ import (
 // RestServer represents the Light Client Rest server
 type RestServer struct {
 	Mux     *mux.Router
-	CliCtx  context.CLIContext
+	CliCtx  *context.CLIContext
 	KeyBase keybase.Keybase
 	Cdc     *codec.Codec
 

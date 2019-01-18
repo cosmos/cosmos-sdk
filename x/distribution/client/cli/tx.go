@@ -3,7 +3,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -11,10 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -46,6 +43,7 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 		Short: "withdraw rewards for either a delegation or a validator",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContextTx(cdc)
 
 			onlyFromVal := viper.GetString(flagOnlyFromValidator)
 			isVal := viper.GetBool(flagIsValidator)
@@ -54,9 +52,6 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 				return fmt.Errorf("cannot use --%v, and --%v flags together",
 					flagOnlyFromValidator, flagIsValidator)
 			}
-
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
 
 			var msg sdk.Msg
 			switch {
@@ -81,12 +76,8 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 				msg = types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
 			}
 
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return cliCtx.MessageOutput(msg)
 		},
 	}
 	cmd.Flags().String(flagOnlyFromValidator, "", "only withdraw from this validator address (in bech)")
@@ -96,14 +87,12 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 
 // GetCmdDelegate implements the delegate command.
 func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
+			cliCtx := context.NewCLIContextTx(cdc)
 
 			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {
@@ -115,11 +104,7 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
-
-			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return cliCtx.MessageOutput(types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr))
 		},
 	}
-	return cmd
 }

@@ -5,11 +5,9 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestaking"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -28,8 +26,7 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 		Use:   "bond",
 		Short: "Bond to a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
+			cliCtx := context.NewCLIContextTx(cdc)
 
 			from, err := cliCtx.GetFromAddress()
 			if err != nil {
@@ -59,11 +56,7 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 			var pubKeyEd ed25519.PubKeyEd25519
 			copy(pubKeyEd[:], rawPubKey)
 
-			msg := simplestaking.NewMsgBond(from, staking, pubKeyEd)
-
-			// Build and sign the transaction, then broadcast to a Tendermint
-			// node.
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return cliCtx.MessageOutput(simplestaking.NewMsgBond(from, staking, pubKeyEd))
 		},
 	}
 
@@ -75,25 +68,18 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 
 // simple unbond tx
 func UnbondTxCmd(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "unbond",
 		Short: "Unbond from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext(cdc)
+			cliCtx := context.NewCLIContextTx(cdc)
 
 			from, err := cliCtx.GetFromAddress()
 			if err != nil {
 				return err
 			}
 
-			msg := simplestaking.NewMsgUnbond(from)
-
-			// Build and sign the transaction, then broadcast to a Tendermint
-			// node.
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return cliCtx.MessageOutput(simplestaking.NewMsgUnbond(from))
 		},
 	}
-
-	return cmd
 }

@@ -38,7 +38,7 @@ func (p Proposer) String() string {
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
 func QueryDepositsByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, params gov.QueryProposalParams,
+	cdc *codec.Codec, cliCtx *context.CLIContext, params gov.QueryProposalParams,
 ) ([]byte, error) {
 
 	tags := []string{
@@ -83,7 +83,7 @@ func QueryDepositsByTxQuery(
 // NOTE: SearchTxs is used to facilitate the txs query which does not currently
 // support configurable pagination.
 func QueryVotesByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, params gov.QueryProposalParams,
+	cdc *codec.Codec, cliCtx *context.CLIContext, params gov.QueryProposalParams,
 ) ([]byte, error) {
 
 	tags := []string{
@@ -123,7 +123,7 @@ func QueryVotesByTxQuery(
 
 // QueryVoteByTxQuery will query for a single vote via a direct txs tags query.
 func QueryVoteByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, params gov.QueryVoteParams,
+	cdc *codec.Codec, cliCtx *context.CLIContext, params gov.QueryVoteParams,
 ) ([]byte, error) {
 
 	tags := []string{
@@ -166,7 +166,7 @@ func QueryVoteByTxQuery(
 // QueryDepositByTxQuery will query for a single deposit via a direct txs tags
 // query.
 func QueryDepositByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, params gov.QueryDepositParams,
+	cdc *codec.Codec, cliCtx *context.CLIContext, params gov.QueryDepositParams,
 ) ([]byte, error) {
 
 	tags := []string{
@@ -209,7 +209,7 @@ func QueryDepositByTxQuery(
 // QueryProposerByTxQuery will query for a proposer of a governance proposal by
 // ID.
 func QueryProposerByTxQuery(
-	cdc *codec.Codec, cliCtx context.CLIContext, proposalID uint64,
+	cdc *codec.Codec, cliCtx *context.CLIContext, proposalID uint64,
 ) (Proposer, error) {
 
 	tags := []string{
@@ -237,7 +237,7 @@ func QueryProposerByTxQuery(
 }
 
 // QueryProposalByID takes a proposalID and returns a proposal
-func QueryProposalByID(proposalID uint64, cliCtx context.CLIContext, cdc *codec.Codec, queryRoute string) ([]byte, error) {
+func QueryProposalByID(proposalID uint64, cliCtx *context.CLIContext, cdc *codec.Codec, queryRoute string) ([]byte, error) {
 	// Construct query
 	params := gov.NewQueryProposalParams(proposalID)
 	bz, err := cdc.MarshalJSON(params)

@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -56,17 +55,7 @@ func queryParams(cliCtx context.CLIContext, cdc *codec.Codec, queryRoute string)
 		return nil, err
 	}
 
-	return codec.MarshalJSONIndent(cdc, struct {
-		CommunityTax        json.RawMessage `json:"community_tax"`
-		BaseProposerReward  json.RawMessage `json:"base_proposer_reward"`
-		BonusProposerReward json.RawMessage `json:"bonus_proposer_reward"`
-		WithdrawAddrEnabled json.RawMessage `json:"withdraw_addr_enabled"`
-	}{
-		retCommunityTax,
-		retBaseProposerReward,
-		retBonusProposerReward,
-		retWithdrawAddrEnabled,
-	})
+	return codec.MarshalJSONIndent(cdc, NewPrettyParams(retCommunityTax, retBaseProposerReward, retBonusProposerReward, retWithdrawAddrEnabled))
 }
 
 // GetCmdQueryOutstandingRewards implements the query outstanding rewards command.

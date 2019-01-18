@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// test ValidateBasic for MsgCreateValidator
+// test ValidateBasic for MsgSetWithdrawAddress
 func TestMsgSetWithdrawAddress(t *testing.T) {
 	tests := []struct {
 		delegatorAddr sdk.AccAddress
@@ -32,7 +32,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 	}
 }
 
-// test ValidateBasic for MsgEditValidator
+// test ValidateBasic for MsgWithdrawDelegatorReward
 func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	tests := []struct {
 		delegatorAddr sdk.AccAddress
@@ -54,27 +54,8 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 	}
 }
 
-// test ValidateBasic and GetSigners for MsgCreateValidatorOnBehalfOf
-func TestMsgWithdrawDelegatorRewardsAll(t *testing.T) {
-	tests := []struct {
-		delegatorAddr sdk.AccAddress
-		expectPass    bool
-	}{
-		{delAddr1, true},
-		{emptyDelAddr, false},
-	}
-	for i, tc := range tests {
-		msg := NewMsgWithdrawDelegatorRewardsAll(tc.delegatorAddr)
-		if tc.expectPass {
-			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
-		} else {
-			require.NotNil(t, msg.ValidateBasic(), "test index: %v", i)
-		}
-	}
-}
-
-// test ValidateBasic for MsgDelegate
-func TestMsgWithdrawValidatorRewardsAll(t *testing.T) {
+// test ValidateBasic for MsgWithdrawValidatorCommission
+func TestMsgWithdrawValidatorCommission(t *testing.T) {
 	tests := []struct {
 		validatorAddr sdk.ValAddress
 		expectPass    bool
@@ -83,7 +64,7 @@ func TestMsgWithdrawValidatorRewardsAll(t *testing.T) {
 		{emptyValAddr, false},
 	}
 	for i, tc := range tests {
-		msg := NewMsgWithdrawValidatorRewardsAll(tc.validatorAddr)
+		msg := NewMsgWithdrawValidatorCommission(tc.validatorAddr)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
 		} else {

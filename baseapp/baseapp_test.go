@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store"
 	"os"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/store"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

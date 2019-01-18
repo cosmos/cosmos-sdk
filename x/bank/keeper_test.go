@@ -213,7 +213,9 @@ func TestVestingAccountSend(t *testing.T) {
 
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
-	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	bacc := auth.NewBaseAccountWithAddress(addr1)
+	bacc.SetCoins(origCoins)
+	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	input.ak.SetAccount(ctx, vacc)
 
 	// require that no coins be sendable at the beginning of the vesting schedule
@@ -245,7 +247,9 @@ func TestVestingAccountReceive(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
-	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	bacc := auth.NewBaseAccountWithAddress(addr1)
+	bacc.SetCoins(origCoins)
+	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	acc := input.ak.NewAccountWithAddress(ctx, addr2)
 	input.ak.SetAccount(ctx, vacc)
 	input.ak.SetAccount(ctx, acc)
@@ -276,7 +280,9 @@ func TestDelegateCoins(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
-	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	bacc := auth.NewBaseAccountWithAddress(addr1)
+	bacc.SetCoins(origCoins)
+	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	acc := input.ak.NewAccountWithAddress(ctx, addr2)
 	input.ak.SetAccount(ctx, vacc)
 	input.ak.SetAccount(ctx, acc)
@@ -310,7 +316,9 @@ func TestUndelegateCoins(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("addr1"))
 	addr2 := sdk.AccAddress([]byte("addr2"))
 
-	vacc := auth.NewContinuousVestingAccount(addr1, origCoins, ctx.BlockHeader().Time, endTime)
+	bacc := auth.NewBaseAccountWithAddress(addr1)
+	bacc.SetCoins(origCoins)
+	vacc := auth.NewContinuousVestingAccount(&bacc, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 	acc := input.ak.NewAccountWithAddress(ctx, addr2)
 	input.ak.SetAccount(ctx, vacc)
 	input.ak.SetAccount(ctx, acc)

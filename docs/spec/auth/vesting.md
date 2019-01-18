@@ -14,7 +14,7 @@
     - [Undelegating](#undelegating)
       - [Keepers/Handlers](#keepershandlers-2)
   - [Keepers & Handlers](#keepers--handlers)
-  - [Initializing at Genesis](#initializing-at-genesis)
+  - [Genesis Initialization](#genesis-initialization)
   - [Examples](#examples)
     - [Simple](#simple)
     - [Slashing](#slashing)
@@ -45,13 +45,16 @@ order to make such a distinction.
 type VestingAccount interface {
     Account
 
-    GetVestedCoins(Time) Coins
+    GetVestedCoins(Time)  Coins
     GetVestingCoins(Time) Coins
 
     // Delegation and undelegation accounting that returns the resulting base
     // coins amount.
     TrackDelegation(Time, Coins)
     TrackUndelegation(Coins)
+
+    GetStartTime() int64
+    GetEndTime()   int64
 }
 
 // BaseVestingAccount implements the VestingAccount interface. It contains all
@@ -63,7 +66,7 @@ type BaseVestingAccount struct {
     DelegatedFree    Coins // coins that are vested and delegated
     DelegatedVesting Coins // coins that vesting and delegated
 
-    EndTime  Time // when the coins become unlocked
+    EndTime  int64 // when the coins become unlocked
 }
 
 // ContinuousVestingAccount implements the VestingAccount interface. It
@@ -71,7 +74,7 @@ type BaseVestingAccount struct {
 type ContinuousVestingAccount struct {
     BaseVestingAccount
 
-    StartTime  Time // when the coins start to vest
+    StartTime  int64 // when the coins start to vest
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
@@ -127,11 +130,13 @@ is _vesting_.
 
 ```go
 func (cva ContinuousVestingAccount) GetVestedCoins(t Time) Coins {
-    // We must handle the case where the start time for a vesting account has
-    // been set into the future or when the start of the chain is not exactly
-    // known.
-    if t <= va.StartTime {
+    if t <= cva.StartTime {
+        // We must handle the case where the start time for a vesting account has
+        // been set into the future or when the start of the chain is not exactly
+        // known.
         return ZeroCoins
+    } else if t >= cva.EndTime {
+        return cva.OriginalVesting
     }
 
     x := t - cva.StartTime
@@ -299,50 +304,38 @@ unlocked coin amount.
 
 See the above specification for full implementation details.
 
-## Initializing at Genesis
+## Genesis Initialization
 
-To initialize both vesting and base accounts, the `GenesisAccount` struct will
-include an `EndTime`. Accounts meant to be of type `BaseAccount` will
-have `EndTime = 0`. The `initChainer` method will parse the GenesisAccount into
-BaseAccounts and VestingAccounts as appropriate.
+To initialize both vesting and non-vesting accounts, the `GenesisAccount` struct will
+include new fields: `Vesting`, `StartTime`, and `EndTime`. Accounts meant to be
+of type `BaseAccount` or any non-vesting type will have `Vesting = false`. The
+genesis initialization logic (e.g. `initFromGenesisState`) will have to parse
+and return the correct accounts accordingly based off of these new fields.
 
 ```go
 type GenesisAccount struct {
-    Address       sdk.AccAddress
-    GenesisCoins  sdk.Coins
-    EndTime       int64
-    StartTime     int64
+    // ...
+
+    Vesting    bool
+    EndTime    int64
+    StartTime  int64
 }
 
-func initChainer() {
-    for genAcc in GenesisAccounts {
-        baseAccount := BaseAccount{
-            Address: genAcc.Address,
-            Coins:   genAcc.GenesisCoins,
-        }
+func ToAccount(gacc GenesisAccount) Account {
+    bacc := NewBaseAccount(gacc)
 
-        if genAcc.StartTime != 0 && genAcc.EndTime != 0 {
-            vestingAccount := ContinuousVestingAccount{
-                BaseAccount:      baseAccount,
-                OriginalVesting:  genAcc.GenesisCoins,
-                StartTime:        RequestInitChain.Time,
-                StartTime:        genAcc.StartTime,
-                EndTime:          genAcc.EndTime,
-            }
-
-            AddAccountToState(vestingAccount)
-        } else if genAcc.EndTime != 0 {
-            vestingAccount := DelayedVestingAccount{
-                BaseAccount:      baseAccount,
-                OriginalVesting:  genAcc.GenesisCoins,
-                EndTime:          genAcc.EndTime,
-            }
-
-            AddAccountToState(vestingAccount)
+    if gacc.Vesting {
+        if ga.StartTime != 0 && ga.EndTime != 0 {
+            return NewContinuousVestingAccount(bacc, gacc.StartTime, gacc.EndTime)
+        } else if ga.EndTime != 0 {
+            return NewDelayedVestingAccount(bacc, gacc.EndTime)
         } else {
-            AddAccountToState(baseAccount)
+            // invalid genesis vesting account provided
+            panic()
         }
     }
+
+    return bacc
 }
 ```
 

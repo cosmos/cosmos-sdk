@@ -26,8 +26,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgDelegate(ctx, msg, k)
 		case types.MsgBeginRedelegate:
 			return handleMsgBeginRedelegate(ctx, msg, k)
-		case types.MsgBeginUnbonding:
-			return handleMsgBeginUnbonding(ctx, msg, k)
+		case types.MsgUndelegate:
+			return handleMsgUndelegate(ctx, msg, k)
 		default:
 			return sdk.ErrTxDecode("invalid message parse in staking module").Result()
 		}
@@ -53,7 +53,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 	k.UnbondAllMatureValidatorQueue(ctx)
 
 	// Remove all mature unbonding delegations from the ubd queue.
-	matureUnbonds := k.DequeueAllMatureUnbondingQueue(ctx, ctx.BlockHeader().Time)
+	matureUnbonds := k.DequeueAllMatureUBDQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvPair := range matureUnbonds {
 		err := k.CompleteUnbonding(ctx, dvPair.DelegatorAddr, dvPair.ValidatorAddr)
 		if err != nil {
@@ -70,7 +70,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 	// Remove all mature redelegations from the red queue.
 	matureRedelegations := k.DequeueAllMatureRedelegationQueue(ctx, ctx.BlockHeader().Time)
 	for _, dvvTriplet := range matureRedelegations {
-		err := k.CompleteRedelegation(ctx, dvvTriplet.DelegatorAddr, dvvTriplet.ValidatorSrcAddr, dvvTriplet.ValidatorDstAddr)
+		err := k.CompleteRedelegation(ctx, dvvTriplet.DelegatorAddr,
+			dvvTriplet.ValidatorSrcAddr, dvvTriplet.ValidatorDstAddr)
 		if err != nil {
 			continue
 		}
@@ -103,7 +104,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
 
-	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Value.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -132,7 +133,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
-	_, err = k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
+	_, err = k.Delegate(ctx, msg.DelegatorAddr, msg.Value, validator, true)
 	if err != nil {
 		return err.Result()
 	}
@@ -192,7 +193,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return ErrNoValidatorFound(k.Codespace()).Result()
 	}
 
-	if msg.Delegation.Denom != k.GetParams(ctx).BondDenom {
+	if msg.Value.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
 	}
 
@@ -200,7 +201,7 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 		return ErrValidatorJailed(k.Codespace()).Result()
 	}
 
-	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Delegation, validator, true)
+	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Value, validator, true)
 	if err != nil {
 		return err.Result()
 	}
@@ -215,35 +216,35 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	}
 }
 
-func handleMsgBeginUnbonding(ctx sdk.Context, msg types.MsgBeginUnbonding, k keeper.Keeper) sdk.Result {
-	ubd, err := k.BeginUnbonding(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
+func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keeper) sdk.Result {
+	completionTime, err := k.Undelegate(ctx, msg.DelegatorAddr, msg.ValidatorAddr, msg.SharesAmount)
 	if err != nil {
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(ubd.MinTime)
+	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	tags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
-		tags.EndTime, []byte(ubd.MinTime.Format(time.RFC3339)),
+		tags.EndTime, []byte(completionTime.Format(time.RFC3339)),
 	)
 
 	return sdk.Result{Data: finishTime, Tags: tags}
 }
 
 func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k keeper.Keeper) sdk.Result {
-	red, err := k.BeginRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr,
+	completionTime, err := k.BeginRedelegation(ctx, msg.DelegatorAddr, msg.ValidatorSrcAddr,
 		msg.ValidatorDstAddr, msg.SharesAmount)
 	if err != nil {
 		return err.Result()
 	}
 
-	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(red.MinTime)
+	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
 		tags.Delegator, []byte(msg.DelegatorAddr.String()),
 		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
 		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
-		tags.EndTime, []byte(red.MinTime.Format(time.RFC3339)),
+		tags.EndTime, []byte(completionTime.Format(time.RFC3339)),
 	)
 
 	return sdk.Result{Data: finishTime, Tags: resTags}

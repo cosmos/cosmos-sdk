@@ -21,7 +21,7 @@ type (
 	MsgCreateValidator      = types.MsgCreateValidator
 	MsgEditValidator        = types.MsgEditValidator
 	MsgDelegate             = types.MsgDelegate
-	MsgBeginUnbonding       = types.MsgBeginUnbonding
+	MsgUndelegate           = types.MsgUndelegate
 	MsgBeginRedelegate      = types.MsgBeginRedelegate
 	GenesisState            = types.GenesisState
 	QueryDelegatorParams    = querier.QueryDelegatorParams
@@ -67,6 +67,7 @@ var (
 	KeyBondDenom      = types.KeyBondDenom
 
 	DefaultParams         = types.DefaultParams
+	DefaultBondDenom      = types.DefaultBondDenom
 	InitialPool           = types.InitialPool
 	NewValidator          = types.NewValidator
 	NewDescription        = types.NewDescription
@@ -81,7 +82,7 @@ var (
 	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf
 	NewMsgEditValidator             = types.NewMsgEditValidator
 	NewMsgDelegate                  = types.NewMsgDelegate
-	NewMsgBeginUnbonding            = types.NewMsgBeginUnbonding
+	NewMsgUndelegate                = types.NewMsgUndelegate
 	NewMsgBeginRedelegate           = types.NewMsgBeginRedelegate
 
 	NewQuerier              = querier.NewQuerier

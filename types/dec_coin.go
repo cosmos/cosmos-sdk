@@ -3,34 +3,32 @@ package types
 import (
 	"fmt"
 	"strings"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Coins which can have additional decimal points
 type DecCoin struct {
-	Denom  string  `json:"denom"`
-	Amount sdk.Dec `json:"amount"`
+	Denom  string `json:"denom"`
+	Amount Dec    `json:"amount"`
 }
 
 func NewDecCoin(denom string, amount int64) DecCoin {
 	return DecCoin{
 		Denom:  denom,
-		Amount: sdk.NewDec(amount),
+		Amount: NewDec(amount),
 	}
 }
 
-func NewDecCoinFromDec(denom string, amount sdk.Dec) DecCoin {
+func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
 	return DecCoin{
 		Denom:  denom,
 		Amount: amount,
 	}
 }
 
-func NewDecCoinFromCoin(coin sdk.Coin) DecCoin {
+func NewDecCoinFromCoin(coin Coin) DecCoin {
 	return DecCoin{
 		Denom:  coin.Denom,
-		Amount: sdk.NewDecFromInt(coin.Amount),
+		Amount: NewDecFromInt(coin.Amount),
 	}
 }
 
@@ -51,10 +49,10 @@ func (coin DecCoin) Minus(coinB DecCoin) DecCoin {
 }
 
 // return the decimal coins with trunctated decimals, and return the change
-func (coin DecCoin) TruncateDecimal() (sdk.Coin, DecCoin) {
+func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
-	change := coin.Amount.Sub(sdk.NewDecFromInt(truncated))
-	return sdk.NewCoin(coin.Denom, truncated), DecCoin{coin.Denom, change}
+	change := coin.Amount.Sub(NewDecFromInt(truncated))
+	return NewCoin(coin.Denom, truncated), DecCoin{coin.Denom, change}
 }
 
 //_______________________________________________________________________
@@ -62,7 +60,7 @@ func (coin DecCoin) TruncateDecimal() (sdk.Coin, DecCoin) {
 // coins with decimal
 type DecCoins []DecCoin
 
-func NewDecCoins(coins sdk.Coins) DecCoins {
+func NewDecCoins(coins Coins) DecCoins {
 	dcs := make(DecCoins, len(coins))
 	for i, coin := range coins {
 		dcs[i] = NewDecCoinFromCoin(coin)
@@ -71,9 +69,9 @@ func NewDecCoins(coins sdk.Coins) DecCoins {
 }
 
 // return the coins with trunctated decimals, and return the change
-func (coins DecCoins) TruncateDecimal() (sdk.Coins, DecCoins) {
+func (coins DecCoins) TruncateDecimal() (Coins, DecCoins) {
 	changeSum := DecCoins{}
-	out := make(sdk.Coins, len(coins))
+	out := make(Coins, len(coins))
 	for i, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
 		out[i] = truncated
@@ -135,7 +133,7 @@ func (coins DecCoins) Minus(coinsB DecCoins) DecCoins {
 }
 
 // multiply all the coins by a decimal
-func (coins DecCoins) MulDec(d sdk.Dec) DecCoins {
+func (coins DecCoins) MulDec(d Dec) DecCoins {
 	res := make([]DecCoin, len(coins))
 	for i, coin := range coins {
 		product := DecCoin{
@@ -148,7 +146,7 @@ func (coins DecCoins) MulDec(d sdk.Dec) DecCoins {
 }
 
 // divide all the coins by a decimal
-func (coins DecCoins) QuoDec(d sdk.Dec) DecCoins {
+func (coins DecCoins) QuoDec(d Dec) DecCoins {
 	res := make([]DecCoin, len(coins))
 	for i, coin := range coins {
 		quotient := DecCoin{
@@ -161,16 +159,16 @@ func (coins DecCoins) QuoDec(d sdk.Dec) DecCoins {
 }
 
 // returns the amount of a denom from deccoins
-func (coins DecCoins) AmountOf(denom string) sdk.Dec {
+func (coins DecCoins) AmountOf(denom string) Dec {
 	switch len(coins) {
 	case 0:
-		return sdk.ZeroDec()
+		return ZeroDec()
 	case 1:
 		coin := coins[0]
 		if coin.Denom == denom {
 			return coin.Amount
 		}
-		return sdk.ZeroDec()
+		return ZeroDec()
 	default:
 		midIdx := len(coins) / 2 // binary search
 		coin := coins[midIdx]

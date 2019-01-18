@@ -9,30 +9,54 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-func TestSetGetPreviousProposerConsAddr(t *testing.T) {
-	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 0)
+func TestSetWithdrawAddr(t *testing.T) {
+	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
 
-	keeper.SetPreviousProposerConsAddr(ctx, valConsAddr1)
-	res := keeper.GetPreviousProposerConsAddr(ctx)
-	require.True(t, res.Equals(valConsAddr1), "expected: %v got: %v", valConsAddr1.String(), res.String())
+	keeper.SetWithdrawAddrEnabled(ctx, false)
+
+	err := keeper.SetWithdrawAddr(ctx, delAddr1, delAddr2)
+	require.NotNil(t, err)
+
+	keeper.SetWithdrawAddrEnabled(ctx, true)
+
+	err = keeper.SetWithdrawAddr(ctx, delAddr1, delAddr2)
+	require.Nil(t, err)
 }
 
-func TestSetGetCommunityTax(t *testing.T) {
-	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 0)
+func TestWithdrawValidatorCommission(t *testing.T) {
+	ctx, ak, keeper, _, _ := CreateTestInputDefault(t, false, 1000)
 
-	someDec := sdk.NewDec(333)
-	keeper.SetCommunityTax(ctx, someDec)
-	res := keeper.GetCommunityTax(ctx)
-	require.True(sdk.DecEq(t, someDec, res))
-}
+	// set zero outstanding rewards
+	keeper.SetOutstandingRewards(ctx, types.OutstandingRewards{})
 
-func TestSetGetFeePool(t *testing.T) {
-	ctx, _, keeper, _, _ := CreateTestInputDefault(t, false, 0)
+	// check initial balance
+	balance := ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
+	require.Equal(t, balance, sdk.Coins{
+		{"stake", sdk.NewInt(1000)},
+	})
 
-	fp := types.InitialFeePool()
-	fp.TotalValAccum.UpdateHeight = 777
+	// set commission
+	keeper.SetValidatorAccumulatedCommission(ctx, valOpAddr3, sdk.DecCoins{
+		{"mytoken", sdk.NewDec(5).Quo(sdk.NewDec(4))},
+		{"stake", sdk.NewDec(3).Quo(sdk.NewDec(2))},
+	})
 
-	keeper.SetFeePool(ctx, fp)
-	res := keeper.GetFeePool(ctx)
-	require.Equal(t, fp.TotalValAccum, res.TotalValAccum)
+	// withdraw commission
+	keeper.WithdrawValidatorCommission(ctx, valOpAddr3)
+
+	// check balance increase
+	balance = ak.GetAccount(ctx, sdk.AccAddress(valOpAddr3)).GetCoins()
+	require.Equal(t, balance, sdk.Coins{
+		{"mytoken", sdk.NewInt(1)},
+		{"stake", sdk.NewInt(1001)},
+	})
+
+	// check remainder
+	remainder := keeper.GetValidatorAccumulatedCommission(ctx, valOpAddr3)
+	require.Equal(t, remainder, sdk.DecCoins{
+		{"mytoken", sdk.NewDec(1).Quo(sdk.NewDec(4))},
+		{"stake", sdk.NewDec(1).Quo(sdk.NewDec(2))},
+	})
+
+	require.True(t, true)
 }

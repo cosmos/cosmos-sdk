@@ -45,7 +45,7 @@ type (
 		SharesAmount     sdk.Dec        `json:"shares"`
 	}
 
-	msgBeginUnbondingInput struct {
+	msgUndelegateInput struct {
 		BaseReq       utils.BaseReq  `json:"base_req"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 		ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
@@ -129,7 +129,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 
 func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req msgBeginUnbondingInput
+		var req msgUndelegateInput
 
 		err := utils.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
@@ -153,7 +153,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		msg := staking.NewMsgBeginUnbonding(req.DelegatorAddr, req.ValidatorAddr, req.SharesAmount)
+		msg := staking.NewMsgUndelegate(req.DelegatorAddr, req.ValidatorAddr, req.SharesAmount)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

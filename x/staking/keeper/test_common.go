@@ -63,7 +63,7 @@ func MakeTestCodec() *codec.Codec {
 	cdc.RegisterConcrete(bank.MsgSend{}, "test/staking/Send", nil)
 	cdc.RegisterConcrete(types.MsgCreateValidator{}, "test/staking/CreateValidator", nil)
 	cdc.RegisterConcrete(types.MsgEditValidator{}, "test/staking/EditValidator", nil)
-	cdc.RegisterConcrete(types.MsgBeginUnbonding{}, "test/staking/BeginUnbonding", nil)
+	cdc.RegisterConcrete(types.MsgUndelegate{}, "test/staking/Undelegate", nil)
 	cdc.RegisterConcrete(types.MsgBeginRedelegate{}, "test/staking/BeginRedelegate", nil)
 
 	// Register AppAccount
@@ -94,7 +94,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 	require.Nil(t, err)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
-	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{Validator: &abci.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}}})
+	ctx = ctx.WithConsensusParams(
+		&abci.ConsensusParams{
+			Validator: &abci.ValidatorParams{
+				PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519},
+			},
+		},
+	)
 	cdc := MakeTestCodec()
 
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams)

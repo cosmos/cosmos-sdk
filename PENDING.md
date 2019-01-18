@@ -6,6 +6,10 @@ BREAKING CHANGES
   * [gaia-lite] [\#2182] Renamed and merged all redelegations endpoints into `/staking/redelegations`
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
   * [\#2222] all endpoints renamed from `/stake` -> `/staking`
+  * [\#3289] misc renames:
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `MsgBeginUnbonding` -> `MsgUndelegate`
 
 * Gaia CLI  (`gaiacli`)
   * [\#810](https://github.com/cosmos/cosmos-sdk/issues/810) Don't fallback to any default values for chain ID.
@@ -29,9 +33,16 @@ BREAKING CHANGES
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
   meter utilization during aborted ante handler executions.
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
-  
+  * \#3292 [x/distribution] Enable or disable withdraw addresses with a parameter in the param store
+  * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+  * [staking] \#3289 misc renames:
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `MsgBeginUnbonding` -> `MsgUndelegate`
+  * [\#3315] Increase decimal precision to 18
+
 * Tendermint
-  * \#3279 Upgrade to Tendermint 0.28.0-dev0
+  * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0
 
 FEATURES
 
@@ -43,13 +54,24 @@ FEATURES
 
 * Gaia CLI  (`gaiacli`)
   * \#2399 Implement `params` command to query slashing parameters.
+  * [\#2730](https://github.com/cosmos/cosmos-sdk/issues/2730) Add tx search pagination parameter
   * [\#3027](https://github.com/cosmos/cosmos-sdk/issues/3027) Implement
   `query gov proposer [proposal-id]` to query for a proposal's proposer.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `keys add --multisig` flag to store multisig keys locally.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `multisign` command to generate multisig signatures.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `sign --multisig` flag to enable multisig mode.
+  * [\#2715](https://github.com/cosmos/cosmos-sdk/issues/2715) Reintroduce gaia server's insecure mode.
 
 * Gaia
-    * [\#2182] [x/staking] Added querier for querying a single redelegation
+  * [\#2182] [x/staking] Added querier for querying a single redelegation
+  * [\#3305](https://github.com/cosmos/cosmos-sdk/issues/3305) Add support for
+    vesting accounts at genesis.
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) [x/auth] Add multisig transactions support
+  * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) `add-genesis-account` can take both account addresses and key names
 
 * SDK
+  - \#3099 Implement F1 fee distribution
+  - [\#2926](https://github.com/cosmos/cosmos-sdk/issues/2926) Add TxEncoder to client TxBuilder.
   * \#2694 Vesting account implementation.
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
   the ante handler.
@@ -82,6 +104,7 @@ IMPROVEMENTS
     slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
+  * [x/stake] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period 
 
 * Tendermint
 
@@ -96,6 +119,7 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
   * \#3141 Fix the bug in GetAccount when `len(res) == 0` and `err == nil`
+  * [\#810](https://github.com/cosmos/cosmos-sdk/pull/3316) Fix regression in gaiacli config file handling
 
 * Gaia
   * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version

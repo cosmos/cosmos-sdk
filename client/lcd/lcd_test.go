@@ -442,7 +442,7 @@ func TestBonding(t *testing.T) {
 	require.Equal(t, operAddrs[0], bondedValidator.OperatorAddr)
 
 	// testing unbonding
-	resultTx = doBeginUnbonding(t, port, name1, pw, addr, operAddrs[0], 30, fees)
+	resultTx = doUndelegate(t, port, name1, pw, addr, operAddrs[0], 30, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
@@ -467,8 +467,9 @@ func TestBonding(t *testing.T) {
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
 
-	unbonding := getUndelegation(t, port, addr, operAddrs[0])
-	require.Equal(t, int64(30), unbonding.Balance.Amount.Int64())
+	ubd := getUnbondingDelegation(t, port, addr, operAddrs[0])
+	require.Len(t, ubd.Entries, 1)
+	require.Equal(t, int64(30), ubd.Entries[0].Balance.Amount.Int64())
 
 	// test redelegation
 	resultTx = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], 30, fees)
@@ -498,27 +499,32 @@ func TestBonding(t *testing.T) {
 	// query delegations, unbondings and redelegations from validator and delegator
 	delegatorDels = getDelegatorDelegations(t, port, addr)
 	require.Len(t, delegatorDels, 1)
-	require.Equal(t, "30.0000000000", delegatorDels[0].GetShares().String())
+	require.Equal(t, "30.000000000000000000", delegatorDels[0].GetShares().String())
 
 	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
 	require.Len(t, redelegation, 1)
-	require.Equal(t, "30", redelegation[0].Balance.Amount.String())
+	require.Len(t, redelegation[0].Entries, 1)
+	require.Equal(t, "30", redelegation[0].Entries[0].Balance.Amount.String())
 
 	delegatorUbds := getDelegatorUnbondingDelegations(t, port, addr)
 	require.Len(t, delegatorUbds, 1)
-	require.Equal(t, "30", delegatorUbds[0].Balance.Amount.String())
+	require.Len(t, delegatorUbds[0].Entries, 1)
+	require.Equal(t, "30", delegatorUbds[0].Entries[0].Balance.Amount.String())
 
 	delegatorReds := getRedelegations(t, port, addr, nil, nil)
 	require.Len(t, delegatorReds, 1)
-	require.Equal(t, "30", delegatorReds[0].Balance.Amount.String())
+	require.Len(t, delegatorReds[0].Entries, 1)
+	require.Equal(t, "30", delegatorReds[0].Entries[0].Balance.Amount.String())
 
 	validatorUbds := getValidatorUnbondingDelegations(t, port, operAddrs[0])
 	require.Len(t, validatorUbds, 1)
-	require.Equal(t, "30", validatorUbds[0].Balance.Amount.String())
+	require.Len(t, validatorUbds[0].Entries, 1)
+	require.Equal(t, "30", validatorUbds[0].Entries[0].Balance.Amount.String())
 
 	validatorReds := getRedelegations(t, port, nil, operAddrs[0], nil)
 	require.Len(t, validatorReds, 1)
-	require.Equal(t, "30", validatorReds[0].Balance.Amount.String())
+	require.Len(t, validatorReds[0].Entries, 1)
+	require.Equal(t, "30", validatorReds[0].Entries[0].Balance.Amount.String())
 
 	// TODO Undonding status not currently implemented
 	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)

@@ -763,7 +763,7 @@ type msgDelegationsInput struct {
 }
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
-func doBeginUnbonding(t *testing.T, port, name, password string,
+func doUndelegate(t *testing.T, port, name, password string,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, delAddr)
@@ -771,7 +771,7 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, false, false)
-	msg := msgBeginUnbondingInput{
+	msg := msgUndelegateInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
@@ -790,7 +790,7 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 	return result
 }
 
-type msgBeginUnbondingInput struct {
+type msgUndelegateInput struct {
 	BaseReq       utils.BaseReq  `json:"base_req"`
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
@@ -942,8 +942,13 @@ func getDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, vali
 }
 
 // GET /staking/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr} Query all unbonding delegations between a delegator and a validator
-func getUndelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) staking.UnbondingDelegation {
-	res, body := Request(t, port, "GET", fmt.Sprintf("/staking/delegators/%s/unbonding_delegations/%s", delegatorAddr, validatorAddr), nil)
+func getUnbondingDelegation(t *testing.T, port string, delegatorAddr sdk.AccAddress,
+	validatorAddr sdk.ValAddress) staking.UnbondingDelegation {
+
+	res, body := Request(t, port, "GET",
+		fmt.Sprintf("/staking/delegators/%s/unbonding_delegations/%s",
+			delegatorAddr, validatorAddr), nil)
+
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var unbond staking.UnbondingDelegation

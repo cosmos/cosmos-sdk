@@ -161,7 +161,7 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 
 		case !br.Fees.IsZero() && !br.GasPrices.IsZero():
 			// both fees and gas prices were provided
-			WriteErrorResponse(w, http.StatusPaymentRequired, "cannot provide both fees and gas prices")
+			WriteErrorResponse(w, http.StatusBadRequest, "cannot provide both fees and gas prices")
 			return false
 
 		case !br.Fees.IsValid() && !br.GasPrices.IsValid():

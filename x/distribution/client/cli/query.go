@@ -74,7 +74,7 @@ func GetCmdQueryOutstandingRewards(queryRoute string, cdc *codec.Codec) *cobra.C
 	cmd := &cobra.Command{
 		Use:   "outstanding-rewards",
 		Args:  cobra.ExactArgs(0),
-		Short: "Query distribution outstanding rewards",
+		Short: "Query distribution outstanding (un-withdrawn) rewards",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 

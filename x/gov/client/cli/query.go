@@ -49,7 +49,8 @@ $ gaiacli query gov proposal 1
 }
 
 // GetCmdQueryProposals implements a query proposals command.
-func GetCmdQueryProposals(queryRoute string, cdc *codec.Codec) *cobra.Command {
+func GetCmdQuery
+(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proposals",
 		Short: "Query proposals with optional filters",

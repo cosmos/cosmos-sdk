@@ -74,7 +74,11 @@ func (p Pool) String() string {
   Loose Tokens: %s
   Bonded Tokens: %s
   Token Supply: %s
+<<<<<<< HEAD
   Bonded Ratio: %v`, p.NotBondedTokens,
+=======
+  Bonded Ratio: %v`, p.LooseTokens,
+>>>>>>> Ensure all CLI queries respect output flags
 		p.BondedTokens, p.TokenSupply(),
 		p.BondedRatio())
 }

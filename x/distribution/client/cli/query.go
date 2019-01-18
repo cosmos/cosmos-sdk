@@ -175,7 +175,7 @@ func queryValidatorSlashes(cliCtx context.CLIContext, cdc *codec.Codec, queryRou
 // GetCmdQueryDelegatorRewards implements the query delegator rewards command.
 func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delegator-rewards [delegator] [validator]",
+		Use:   "rewards [delegator] [validator]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Query distribution delegator rewards",
 		RunE: func(cmd *cobra.Command, args []string) error {

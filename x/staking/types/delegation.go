@@ -198,11 +198,7 @@ func (d UnbondingDelegation) String() string {
   Validator:                 %s
 	Entries:`, d.DelegatorAddr, d.ValidatorAddr)
 	for i, entry := range d.Entries {
-<<<<<<< HEAD
 		out += fmt.Sprintf(`    Unbonding Delegation %d:
-=======
-		out += fmt.Sprintf(`    UBD %d:
->>>>>>> Ensure all CLI queries respect output flags
       Creation Height:           %v
       Min time to unbond (unix): %v
       Expected balance:          %s`, i, entry.CreationHeight,
@@ -325,11 +321,7 @@ func (d Redelegation) String() string {
   Destination Validator:     %s
   Entries:`, d.DelegatorAddr, d.ValidatorSrcAddr, d.ValidatorDstAddr)
 	for i, entry := range d.Entries {
-<<<<<<< HEAD
 		out += fmt.Sprintf(`    Redelegation %d:
-=======
-		out += fmt.Sprintf(`    RED %d:
->>>>>>> Ensure all CLI queries respect output flags
       Creation height:           %v
       Min time to unbond (unix): %v
       Source shares:             %s

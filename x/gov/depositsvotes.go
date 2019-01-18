@@ -17,11 +17,7 @@ type Vote struct {
 }
 
 func (v Vote) String() string {
-<<<<<<< HEAD
 	return fmt.Sprintf("Voter %s voted with option %s on proposal %d", v.Voter, v.Option, v.ProposalID)
-=======
-	return fmt.Sprintf(`Voter %s voted with option %s on proposal %d`, v.Voter, v.Option, v.ProposalID)
->>>>>>> Ensure all CLI queries respect output flags
 }
 
 // Votes is a collection of Vote
@@ -53,11 +49,7 @@ type Deposit struct {
 }
 
 func (d Deposit) String() string {
-<<<<<<< HEAD
 	return fmt.Sprintf("Deposit by %s on Proposal %d is for the amount %s",
-=======
-	return fmt.Sprintf(`Deposit by %s on Proposal %d is for the amount %s`,
->>>>>>> Ensure all CLI queries respect output flags
 		d.Depositor, d.ProposalID, d.Amount)
 }
 
@@ -65,11 +57,7 @@ func (d Deposit) String() string {
 type Deposits []Deposit
 
 func (d Deposits) String() string {
-<<<<<<< HEAD
 	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalID)
-=======
-	out := fmt.Sprintf(`Deposits for Proposal %d:`, d[0].ProposalID)
->>>>>>> Ensure all CLI queries respect output flags
 	for _, dep := range d {
 		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)
 	}

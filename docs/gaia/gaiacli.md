@@ -647,7 +647,7 @@ gaiacli query distr slashes <validator_address> <start_height> <end_height>
 To check current rewards for a delegation (were they to be withdrawn), run:
 
 ```bash
-gaiacli query distr delegator-rewards <delegator_address> <validator_address>
+gaiacli query distr rewards <delegator_address> <validator_address>
 ```
 
 ### Multisig transactions

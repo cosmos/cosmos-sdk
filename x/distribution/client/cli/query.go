@@ -97,7 +97,7 @@ func queryOutstandingRewards(cliCtx context.CLIContext, cdc *codec.Codec, queryR
 // GetCmdQueryValidatorCommission implements the query validator commission command.
 func GetCmdQueryValidatorCommission(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validator-commission [validator]",
+		Use:   "commission [validator]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution validator commission",
 		RunE: func(cmd *cobra.Command, args []string) error {

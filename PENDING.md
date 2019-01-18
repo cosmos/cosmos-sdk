@@ -95,6 +95,11 @@ IMPROVEMENTS
   * [\#3158](https://github.com/cosmos/cosmos-sdk/pull/3158) Validate slashing genesis
   * [\#3172](https://github.com/cosmos/cosmos-sdk/pull/3172) Support minimum fees in a local testnet.
   * [\#3250](https://github.com/cosmos/cosmos-sdk/pull/3250) Refactor integration tests and increase coverage
+  * [\#3248](https://github.com/cosmos/cosmos-sdk/issues/3248) Refactor tx fee
+  model:
+    * Validators specify minimum gas prices instead of minimum fees
+    * Clients may provide either fees or gas prices directly
+    * The gas prices of a tx must meet a validator's minimum
   * [\#2859](https://github.com/cosmos/cosmos-sdk/issues/2859) Rename `TallyResult` in gov proposals to `FinalTallyResult`
   * [\#3286](https://github.com/cosmos/cosmos-sdk/pull/3286) Fix `gaiad gentx` printout of account's addresses, i.e. user bech32 instead of hex.
 

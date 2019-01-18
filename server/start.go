@@ -15,12 +15,13 @@ import (
 	"github.com/tendermint/tendermint/proxy"
 )
 
+// Tendermint full-node start flags
 const (
 	flagWithTendermint = "with-tendermint"
 	flagAddress        = "address"
 	flagTraceStore     = "trace-store"
 	flagPruning        = "pruning"
-	flagMinimumFees    = "minimum_fees"
+	FlagMinGasPrices   = "minimum_gas_prices"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -47,7 +48,10 @@ func StartCmd(ctx *Context, appCreator AppCreator) *cobra.Command {
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
 	cmd.Flags().String(flagPruning, "syncable", "Pruning strategy: syncable, nothing, everything")
-	cmd.Flags().String(flagMinimumFees, "", "Minimum fees validator will accept for transactions")
+	cmd.Flags().String(
+		FlagMinGasPrices, "",
+		"Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.0001stake)",
+	)
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

@@ -635,25 +635,6 @@ func expectedGasCostByKeys(pubkeys []crypto.PubKey) uint64 {
 	}
 	return cost
 }
-func TestAdjustFeesByGas(t *testing.T) {
-	type args struct {
-		fee sdk.Coins
-		gas uint64
-	}
-	tests := []struct {
-		name string
-		args args
-		want sdk.Coins
-	}{
-		{"nil coins", args{sdk.Coins{}, 100000}, sdk.Coins{}},
-		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("a", 10), sdk.NewInt64Coin("b", 0)}, 100000}, sdk.Coins{sdk.NewInt64Coin("a", 20), sdk.NewInt64Coin("b", 10)}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.True(t, tt.want.IsEqual(adjustFeesByGas(tt.args.fee, tt.args.gas)))
-		})
-	}
-}
 
 func TestCountSubkeys(t *testing.T) {
 	genPubKeys := func(n int) []crypto.PubKey {
@@ -722,4 +703,52 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 		[]uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
+}
+
+func TestEnsureSufficientMempoolFees(t *testing.T) {
+	// setup
+	input := setupTestInput()
+	ctx := input.ctx.WithMinGasPrices(
+		sdk.DecCoins{
+			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(1000000, sdk.Precision)), // 0.0001photino
+			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000, sdk.Precision)),     // 0.000001stake
+		},
+	)
+
+	testCases := []struct {
+		input      StdFee
+		expectedOK bool
+	}{
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 1)}), false},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 20)}), false},
+		{
+			NewStdFee(
+				200000,
+				sdk.Coins{
+					sdk.NewInt64Coin("photino", 20),
+					sdk.NewInt64Coin("stake", 1),
+				},
+			),
+			true,
+		},
+		{
+			NewStdFee(
+				200000,
+				sdk.Coins{
+					sdk.NewInt64Coin("atom", 2),
+					sdk.NewInt64Coin("photino", 20),
+					sdk.NewInt64Coin("stake", 1),
+				},
+			),
+			true,
+		},
+	}
+
+	for i, tc := range testCases {
+		res := EnsureSufficientMempoolFees(ctx, tc.input)
+		require.Equal(
+			t, tc.expectedOK, res.IsOK(),
+			"unexpected result; tc #%d, input: %v, log: %v", i, tc.input, res.Log,
+		)
+	}
 }

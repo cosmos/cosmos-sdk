@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -30,6 +30,7 @@ func TestTxBuilderBuild(t *testing.T) {
 		ChainID       string
 		Memo          string
 		Fees          sdk.Coins
+		GasPrices     sdk.DecCoins
 	}
 	defaultMsg := []sdk.Msg{sdk.NewTestMsg(addr)}
 	tests := []struct {
@@ -43,27 +44,56 @@ func TestTxBuilderBuild(t *testing.T) {
 				TxEncoder:     auth.DefaultTxEncoder(codec.New()),
 				AccountNumber: 1,
 				Sequence:      1,
-				Gas:           100,
+				Gas:           200000,
 				GasAdjustment: 1.1,
 				SimulateGas:   false,
 				ChainID:       "test-chain",
-				Memo:          "hello from Voyager !",
-				Fees:          sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(1))},
+				Memo:          "hello from Voyager 1!",
+				Fees:          sdk.Coins{sdk.NewCoin(stakingtypes.DefaultBondDenom, sdk.NewInt(1))},
 			},
 			defaultMsg,
 			StdSignMsg{
 				ChainID:       "test-chain",
 				AccountNumber: 1,
 				Sequence:      1,
-				Memo:          "hello from Voyager !",
+				Memo:          "hello from Voyager 1!",
 				Msgs:          defaultMsg,
-				Fee:           auth.NewStdFee(100, sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(1))}),
+				Fee:           auth.NewStdFee(200000, sdk.Coins{sdk.NewCoin(stakingtypes.DefaultBondDenom, sdk.NewInt(1))}),
+			},
+			false,
+		},
+		{
+			fields{
+				TxEncoder:     auth.DefaultTxEncoder(codec.New()),
+				AccountNumber: 1,
+				Sequence:      1,
+				Gas:           200000,
+				GasAdjustment: 1.1,
+				SimulateGas:   false,
+				ChainID:       "test-chain",
+				Memo:          "hello from Voyager 2!",
+				GasPrices:     sdk.DecCoins{sdk.NewDecCoinFromDec(stakingtypes.DefaultBondDenom, sdk.NewDecWithPrec(10000, sdk.Precision))},
+			},
+			defaultMsg,
+			StdSignMsg{
+				ChainID:       "test-chain",
+				AccountNumber: 1,
+				Sequence:      1,
+				Memo:          "hello from Voyager 2!",
+				Msgs:          defaultMsg,
+				Fee:           auth.NewStdFee(200000, sdk.Coins{sdk.NewCoin(stakingtypes.DefaultBondDenom, sdk.NewInt(1))}),
 			},
 			false,
 		},
 	}
+
 	for i, tc := range tests {
-		bldr := NewTxBuilder(tc.fields.TxEncoder, tc.fields.AccountNumber, tc.fields.Sequence, tc.fields.Gas, tc.fields.GasAdjustment, tc.fields.SimulateGas, tc.fields.ChainID, tc.fields.Memo, tc.fields.Fees)
+		bldr := NewTxBuilder(
+			tc.fields.TxEncoder, tc.fields.AccountNumber, tc.fields.Sequence,
+			tc.fields.Gas, tc.fields.GasAdjustment, tc.fields.SimulateGas,
+			tc.fields.ChainID, tc.fields.Memo, tc.fields.Fees, tc.fields.GasPrices,
+		)
+
 		got, err := bldr.Build(tc.msgs)
 		require.Equal(t, tc.wantErr, (err != nil), "TxBuilder.Build() error = %v, wantErr %v, tc %d", err, tc.wantErr, i)
 		if !reflect.DeepEqual(got, tc.want) {

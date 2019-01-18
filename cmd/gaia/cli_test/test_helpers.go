@@ -30,14 +30,16 @@ const (
 	denom        = "stake"
 	keyFoo       = "foo"
 	keyBar       = "bar"
-	keyBaz       = "baz"
-	keyFooBarBaz = "foobarbaz"
 	fooDenom     = "footoken"
 	feeDenom     = "feetoken"
+	fee2Denom    = "fee2token"
+	keyBaz       = "baz"
+	keyFooBarBaz = "foobarbaz"
 )
 
 var startCoins = sdk.Coins{
-	sdk.NewInt64Coin(feeDenom, 1000),
+	sdk.NewInt64Coin(feeDenom, 1000000),
+	sdk.NewInt64Coin(fee2Denom, 1000000),
 	sdk.NewInt64Coin(fooDenom, 1000),
 	sdk.NewInt64Coin(denom, 150),
 }

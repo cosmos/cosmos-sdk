@@ -347,7 +347,7 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 		return d
 	}
 
-	// get the trucated quotient and remainder
+	// get the truncated quotient and remainder
 	quo, rem := d, big.NewInt(0)
 	quo, rem = quo.QuoRem(d, precisionReuse, rem)
 
@@ -417,6 +417,26 @@ func (d Dec) TruncateInt() Int {
 // TruncateDec truncates the decimals from the number and returns a Dec
 func (d Dec) TruncateDec() Dec {
 	return NewDecFromBigInt(chopPrecisionAndTruncateNonMutative(d.Int))
+}
+
+// Ceil returns the smallest interger value (as a decimal) that is greater than
+// or equal to the given decimal.
+func (d Dec) Ceil() Dec {
+	tmp := new(big.Int).Set(d.Int)
+
+	quo, rem := tmp, big.NewInt(0)
+	quo, rem = quo.QuoRem(tmp, precisionReuse, rem)
+
+	// no need to round with a zero remainder regardless of sign
+	if rem.Cmp(zeroInt) == 0 {
+		return NewDecFromBigInt(quo)
+	}
+
+	if rem.Sign() == -1 {
+		return NewDecFromBigInt(quo)
+	}
+
+	return NewDecFromBigInt(quo.Add(quo, oneInt))
 }
 
 //___________________________________________________________________________________

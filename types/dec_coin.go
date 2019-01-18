@@ -2,8 +2,14 @@ package types
 
 import (
 	"fmt"
+	"sort"
 	"strings"
+
+	"github.com/pkg/errors"
 )
+
+// ----------------------------------------------------------------------------
+// Decimal Coin
 
 // Coins which can have additional decimal points
 type DecCoin struct {
@@ -12,6 +18,13 @@ type DecCoin struct {
 }
 
 func NewDecCoin(denom string, amount int64) DecCoin {
+	if amount < 0 {
+		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
+	}
+	if strings.ToLower(denom) != denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
+	}
+
 	return DecCoin{
 		Denom:  denom,
 		Amount: NewDec(amount),
@@ -19,6 +32,13 @@ func NewDecCoin(denom string, amount int64) DecCoin {
 }
 
 func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
+	if amount.LT(ZeroDec()) {
+		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
+	}
+	if strings.ToLower(denom) != denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
+	}
+
 	return DecCoin{
 		Denom:  denom,
 		Amount: amount,
@@ -26,6 +46,13 @@ func NewDecCoinFromDec(denom string, amount Dec) DecCoin {
 }
 
 func NewDecCoinFromCoin(coin Coin) DecCoin {
+	if coin.Amount.LT(ZeroInt()) {
+		panic(fmt.Sprintf("negative decimal coin amount: %v\n", coin.Amount))
+	}
+	if strings.ToLower(coin.Denom) != coin.Denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", coin.Denom))
+	}
+
 	return DecCoin{
 		Denom:  coin.Denom,
 		Amount: NewDecFromInt(coin.Amount),
@@ -55,7 +82,21 @@ func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	return NewCoin(coin.Denom, truncated), DecCoin{coin.Denom, change}
 }
 
-//_______________________________________________________________________
+// IsPositive returns true if coin amount is positive.
+//
+// TODO: Remove once unsigned integers are used.
+func (coin DecCoin) IsPositive() bool {
+	return coin.Amount.IsPositive()
+}
+
+// String implements the Stringer interface for DecCoin. It returns a
+// human-readable representation of a decimal coin.
+func (coin DecCoin) String() string {
+	return fmt.Sprintf("%v%v", coin.Amount, coin.Denom)
+}
+
+// ----------------------------------------------------------------------------
+// Decimal Coins
 
 // coins with decimal
 type DecCoins []DecCoin
@@ -66,6 +107,21 @@ func NewDecCoins(coins Coins) DecCoins {
 		dcs[i] = NewDecCoinFromCoin(coin)
 	}
 	return dcs
+}
+
+// String implements the Stringer interface for DecCoins. It returns a
+// human-readable representation of decimal coins.
+func (coins DecCoins) String() string {
+	if len(coins) == 0 {
+		return ""
+	}
+
+	out := ""
+	for _, coin := range coins {
+		out += fmt.Sprintf("%v,", coin.String())
+	}
+
+	return out[:len(out)-1]
 }
 
 // return the coins with trunctated decimals, and return the change
@@ -200,4 +256,116 @@ func (coins DecCoins) IsZero() bool {
 		}
 	}
 	return true
+}
+
+// IsValid asserts the DecCoins are sorted, have positive amount, and Denom
+// does not contain upper case characters.
+func (coins DecCoins) IsValid() bool {
+	switch len(coins) {
+	case 0:
+		return true
+
+	case 1:
+		if strings.ToLower(coins[0].Denom) != coins[0].Denom {
+			return false
+		}
+		return coins[0].IsPositive()
+
+	default:
+		// check single coin case
+		if !(DecCoins{coins[0]}).IsValid() {
+			return false
+		}
+
+		lowDenom := coins[0].Denom
+		for _, coin := range coins[1:] {
+			if strings.ToLower(coin.Denom) != coin.Denom {
+				return false
+			}
+			if coin.Denom <= lowDenom {
+				return false
+			}
+			if !coin.IsPositive() {
+				return false
+			}
+
+			// we compare each coin against the last denom
+			lowDenom = coin.Denom
+		}
+
+		return true
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Sorting
+
+var _ sort.Interface = Coins{}
+
+//nolint
+func (coins DecCoins) Len() int           { return len(coins) }
+func (coins DecCoins) Less(i, j int) bool { return coins[i].Denom < coins[j].Denom }
+func (coins DecCoins) Swap(i, j int)      { coins[i], coins[j] = coins[j], coins[i] }
+
+// Sort is a helper function to sort the set of decimal coins in-place.
+func (coins DecCoins) Sort() DecCoins {
+	sort.Sort(coins)
+	return coins
+}
+
+// ----------------------------------------------------------------------------
+// Parsing
+
+// ParseDecCoin parses a decimal coin from a string, returning an error if
+// invalid. An empty string is considered invalid.
+func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
+	coinStr = strings.TrimSpace(coinStr)
+
+	matches := reDecCoin.FindStringSubmatch(coinStr)
+	if matches == nil {
+		return DecCoin{}, fmt.Errorf("invalid decimal coin expression: %s", coinStr)
+	}
+
+	amountStr, denomStr := matches[1], matches[2]
+
+	amount, err := NewDecFromStr(amountStr)
+	if err != nil {
+		return DecCoin{}, errors.Wrap(err, fmt.Sprintf("failed to parse decimal coin amount: %s", amountStr))
+	}
+
+	if denomStr != strings.ToLower(denomStr) {
+		return DecCoin{}, fmt.Errorf("denom cannot contain upper case characters: %s", denomStr)
+	}
+
+	return NewDecCoinFromDec(denomStr, amount), nil
+}
+
+// ParseDecCoins will parse out a list of decimal coins separated by commas.
+// If nothing is provided, it returns nil DecCoins. Returned decimal coins are
+// sorted.
+func ParseDecCoins(coinsStr string) (coins DecCoins, err error) {
+	coinsStr = strings.TrimSpace(coinsStr)
+	if len(coinsStr) == 0 {
+		return nil, nil
+	}
+
+	coinStrs := strings.Split(coinsStr, ",")
+	for _, coinStr := range coinStrs {
+		coin, err := ParseDecCoin(coinStr)
+		if err != nil {
+			return nil, err
+		}
+
+		coins = append(coins, coin)
+	}
+
+	// sort coins for determinism
+	coins.Sort()
+
+	// validate coins before returning
+	if !coins.IsValid() {
+		return nil, fmt.Errorf("parsed decimal coins are invalid: %#v", coins)
+	}
+
+	return coins, nil
 }

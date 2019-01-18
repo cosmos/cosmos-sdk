@@ -15,12 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	// TODO: Allow this to be configurable in the same way as minimum fees.
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/3101
-	gasPerUnitCost uint64 = 10000 // how much gas = 1 atom
-)
-
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
@@ -44,7 +38,7 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 		// if this is a CheckTx. This is only for local mempool purposes, and thus
 		// is only ran on check tx.
 		if ctx.IsCheckTx() && !simulate {
-			res := EnsureSufficientMempoolFees(ctx, stdTx)
+			res := EnsureSufficientMempoolFees(ctx, stdTx.Fee)
 			if !res.IsOK() {
 				return newCtx, res, true
 			}
@@ -262,19 +256,6 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 	}
 }
 
-func adjustFeesByGas(fees sdk.Coins, gas uint64) sdk.Coins {
-	gasCost := gas / gasPerUnitCost
-	gasFees := make(sdk.Coins, len(fees))
-
-	// TODO: Make this not price all coins in the same way
-	// TODO: Undo int64 casting once unsigned integers are supported for coins
-	for i := 0; i < len(fees); i++ {
-		gasFees[i] = sdk.NewInt64Coin(fees[i].Denom, int64(gasCost))
-	}
-
-	return fees.Plus(gasFees)
-}
-
 // DeductFees deducts fees from the given account.
 //
 // NOTE: We could use the CoinKeeper (in addition to the AccountKeeper, because
@@ -313,28 +294,30 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 // enough fees to cover a proposer's minimum fees. An result object is returned
 // indicating success or failure.
 //
-// NOTE: This should only be called during CheckTx as it cannot be part of
+// TODO: Account for transaction size.
+//
+// Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.
-func EnsureSufficientMempoolFees(ctx sdk.Context, stdTx StdTx) sdk.Result {
-	// Currently we use a very primitive gas pricing model with a constant
-	// gasPrice where adjustFeesByGas handles calculating the amount of fees
-	// required based on the provided gas.
-	//
-	// TODO:
-	// - Make the gasPrice not a constant, and account for tx size.
-	// - Make Gas an unsigned integer and use tx basic validation
-	if stdTx.Fee.Gas <= 0 {
-		return sdk.ErrInternal(fmt.Sprintf("gas supplied must be a positive integer: %d", stdTx.Fee.Gas)).Result()
-	}
-	requiredFees := adjustFeesByGas(ctx.MinimumFees(), stdTx.Fee.Gas)
+func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
+	minGasPrices := ctx.MinGasPrices()
+	if !minGasPrices.IsZero() {
+		requiredFees := make(sdk.Coins, len(minGasPrices))
 
-	// NOTE: !A.IsAllGTE(B) is not the same as A.IsAllLT(B).
-	if !ctx.MinimumFees().IsZero() && !stdTx.Fee.Amount.IsAnyGTE(requiredFees) {
-		// validators reject any tx from the mempool with less than the minimum fee per gas * gas factor
-		return sdk.ErrInsufficientFee(
-			fmt.Sprintf(
-				"insufficient fee, got: %q required: %q", stdTx.Fee.Amount, requiredFees),
-		).Result()
+		// Determine the required fees by multiplying each required minimum gas
+		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
+		glDec := sdk.NewDec(int64(stdFee.Gas))
+		for i, gp := range minGasPrices {
+			fee := gp.Amount.Mul(glDec)
+			requiredFees[i] = sdk.NewInt64Coin(gp.Denom, fee.Ceil().RoundInt64())
+		}
+
+		if !stdFee.Amount.IsAllGTE(requiredFees) {
+			return sdk.ErrInsufficientFee(
+				fmt.Sprintf(
+					"insufficient fees; got: %q required: %q", stdFee.Amount, requiredFees,
+				),
+			).Result()
+		}
 	}
 
 	return sdk.Result{}

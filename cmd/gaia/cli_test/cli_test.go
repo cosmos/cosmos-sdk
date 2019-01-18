@@ -50,40 +50,67 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	f := InitFixtures(t)
 
 	// start gaiad server with minimum fees
-	fees := fmt.Sprintf("--minimum_fees=%s,%s", sdk.NewInt64Coin(feeDenom, 2), sdk.NewInt64Coin(denom, 2))
+	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
+	fees := fmt.Sprintf(
+		"--minimum_gas_prices=%s,%s",
+		sdk.NewDecCoinFromDec(feeDenom, minGasPrice),
+		sdk.NewDecCoinFromDec(fee2Denom, minGasPrice),
+	)
 	proc := f.GDStart(fees)
 	defer proc.Stop(false)
 
 	barAddr := f.KeyAddress(keyBar)
-	// fooAddr := f.KeyAddress(keyFoo)
-
-	// Check the amount of coins in the foo account to ensure that the right amount exists
-	fooAcc := f.QueryAccount(f.KeyAddress(keyFoo))
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Send a transaction that will get rejected
-	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10))
+	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fee2Denom, 10))
 	require.False(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	// Ensure tx w/ correct fees (staking) pass
-	txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(denom, 23))
-	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), txFees)
+	// Ensure tx w/ correct fees pass
+	txFees := fmt.Sprintf("--fees=%s,%s", sdk.NewInt64Coin(feeDenom, 2), sdk.NewInt64Coin(fee2Denom, 2))
+	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fee2Denom, 10), txFees)
 	require.True(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	// Ensure tx w/ correct fees (feetoken) pass
-	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 23))
-	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(feeDenom, 10), txFees)
-	require.True(f.T, success)
-	tests.WaitForNextNBlocksTM(2, f.Port)
-
-	// Ensure tx w/ improper fees (footoken) fails
-	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 23))
+	// Ensure tx w/ improper fees fails
+	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 5))
 	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 10), txFees)
 	require.False(f.T, success)
 
 	// Cleanup testing directories
+	f.Cleanup()
+}
+
+func TestGaiaCLIGasPrices(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server with minimum fees
+	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
+	proc := f.GDStart(fmt.Sprintf("--minimum_gas_prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
+	defer proc.Stop(false)
+
+	barAddr := f.KeyAddress(keyBar)
+
+	// insufficient gas prices (tx fails)
+	badGasPrice, _ := sdk.NewDecFromStr("0.000003")
+	success, _, _ := f.TxSend(
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 50),
+		fmt.Sprintf("--gas-prices=%s", sdk.NewDecCoinFromDec(feeDenom, badGasPrice)))
+	require.False(t, success)
+
+	// wait for a block confirmation
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// sufficient gas prices (tx passes)
+	success, _, _ = f.TxSend(
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 50),
+		fmt.Sprintf("--gas-prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
+	require.True(t, success)
+
+	// wait for a block confirmation
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
 	f.Cleanup()
 }
 
@@ -92,7 +119,8 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	f := InitFixtures(t)
 
 	// start gaiad server with minimum fees
-	proc := f.GDStart(fmt.Sprintf("--minimum_fees=%s", sdk.NewInt64Coin(fooDenom, 1)))
+	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
+	proc := f.GDStart(fmt.Sprintf("--minimum_gas_prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
 	defer proc.Stop(false)
 
 	// Save key addresses for later use
@@ -100,12 +128,12 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	barAddr := f.KeyAddress(keyBar)
 
 	fooAcc := f.QueryAccount(fooAddr)
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
+	fooAmt := fooAcc.GetCoins().AmountOf(fooDenom)
 
 	// test simulation
 	success, _, _ := f.TxSend(
 		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 1000),
-		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 1)), "--dry-run")
+		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 2)), "--dry-run")
 	require.True(t, success)
 
 	// Wait for a block
@@ -113,12 +141,12 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// ensure state didn't change
 	fooAcc = f.QueryAccount(fooAddr)
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
+	require.Equal(t, fooAmt.Int64(), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// insufficient funds (coins + fees) tx fails
 	success, _, _ = f.TxSend(
-		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 1000),
-		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 1)))
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 10000000),
+		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 2)))
 	require.False(t, success)
 
 	// Wait for a block
@@ -126,12 +154,12 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// ensure state didn't change
 	fooAcc = f.QueryAccount(fooAddr)
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
+	require.Equal(t, fooAmt.Int64(), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// test success (transfer = coins + fees)
 	success, _, _ = f.TxSend(
 		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 500),
-		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 300)))
+		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 2)))
 	require.True(t, success)
 
 	f.Cleanup()

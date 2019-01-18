@@ -608,6 +608,48 @@ gaiacli query gov param tallying
 gaiacli query gov param deposit
 ```
 
+### Distribution
+
+#### Query distribution parameters
+
+To check the current distribution parameters, run:
+
+```bash
+gaiacli query distr params
+```
+
+#### Query outstanding rewards
+
+To check the current outstanding (un-withdrawn) rewards, run:
+
+```bash
+gaiacli query distr outstanding-rewards
+```
+
+#### Query validator commission
+
+To check the current outstanding commission for a validator, run:
+
+```bash
+gaiacli query distr validator-commission <validator_address>
+```
+
+#### Query validator slashes
+
+To check historical slashes for a validator, run:
+
+```bash
+gaiacli query distr validator-slashes <validator_address> <start_height> <end_height>
+```
+
+#### Query delegator rewards
+
+To check current rewards for a delegation (were they to be withdrawn), run:
+
+```bash
+gaiacli query distr delegator-rewards <delegator_address> <validator_address>
+```
+
 ### Multisig transactions
 
 Multisig transactions require signatures of multiple private keys. Thus, generating and signing

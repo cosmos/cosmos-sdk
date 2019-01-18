@@ -142,6 +142,7 @@ func AddCommands(
 		ShowNodeIDCmd(ctx),
 		ShowValidatorCmd(ctx),
 		ShowAddressCmd(ctx),
+		VersionCmd(ctx),
 	)
 
 	rootCmd.AddCommand(

@@ -6,6 +6,10 @@ BREAKING CHANGES
   * [gaia-lite] [\#2182] Renamed and merged all redelegations endpoints into `/staking/redelegations`
   * [\#3176](https://github.com/cosmos/cosmos-sdk/issues/3176) `tx/sign` endpoint now expects `BaseReq` fields as nested object.
   * [\#2222] all endpoints renamed from `/stake` -> `/staking`
+  * [\#3289] misc renames:
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `MsgBeginUnbonding` -> `MsgUndelegate`
 
 * Gaia CLI  (`gaiacli`)
   * [\#810](https://github.com/cosmos/cosmos-sdk/issues/810) Don't fallback to any default values for chain ID.
@@ -31,6 +35,11 @@ BREAKING CHANGES
   * [\#2222] [x/staking] `/stake` -> `/staking` module rename
   * \#3292 [x/distribution] Enable or disable withdraw addresses with a parameter in the param store
   * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+  * [staking] \#3289 misc renames:
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `MsgBeginUnbonding` -> `MsgUndelegate`
+  * [\#3315] Increase decimal precision to 18
 
 * Tendermint
   * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0
@@ -55,6 +64,8 @@ FEATURES
 
 * Gaia
   * [\#2182] [x/staking] Added querier for querying a single redelegation
+  * [\#3305](https://github.com/cosmos/cosmos-sdk/issues/3305) Add support for
+    vesting accounts at genesis.
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) [x/auth] Add multisig transactions support
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) `add-genesis-account` can take both account addresses and key names
 
@@ -108,6 +119,7 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
   * \#3141 Fix the bug in GetAccount when `len(res) == 0` and `err == nil`
+  * [\#810](https://github.com/cosmos/cosmos-sdk/pull/3316) Fix regression in gaiacli config file handling
 
 * Gaia
   * \#3148 Fix `gaiad export` by adding a boolean to `NewGaiaApp` determining whether or not to load the latest version

@@ -12,7 +12,17 @@ Must specify these options: --chain-id  when --trust-node is false
 you must choose whether you wish to verify lite client proofs. If you trust the node which you are querying, you can simply pass `--trust-node=true` - otherwise you'll need to specify `--chain-id`.
 :::
 
-`gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets. Here is a list of useful `gaiacli` commands, including usage examples.
+`gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets.
+Its configuration file resides in `$HOME/.gaiacli/config/config.toml` and can be edited either
+by hand or via the `gaiacli config` command:
+
+```bash
+gaiacli config chain-id gaia-9004
+```
+
+For more information on the command usage, refer to its help screen: `gaiacli config --help`.
+
+Here is a list of useful `gaiacli` commands, including usage examples.
 
 ### Keys
 

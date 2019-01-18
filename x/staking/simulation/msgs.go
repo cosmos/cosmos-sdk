@@ -42,14 +42,9 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 			return "no-operation", nil, nil
 		}
 
-		msg := staking.MsgCreateValidator{
-			Description:   description,
-			Commission:    commission,
-			ValidatorAddr: address,
-			DelegatorAddr: acc.Address,
-			PubKey:        acc.PubKey,
-			Delegation:    sdk.NewCoin(denom, amount),
-		}
+		selfDelegation := sdk.NewCoin(denom, amount)
+		msg := staking.NewMsgCreateValidator(address, acc.PubKey,
+			selfDelegation, description, commission)
 
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
@@ -127,11 +122,10 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 		if amount.Equal(sdk.ZeroInt()) {
 			return "no-operation", nil, nil
 		}
-		msg := staking.MsgDelegate{
-			DelegatorAddr: delegatorAddress,
-			ValidatorAddr: validatorAddress,
-			Delegation:    sdk.NewCoin(denom, amount),
-		}
+
+		msg := staking.NewMsgDelegate(
+			delegatorAddress, validatorAddress, sdk.NewCoin(denom, amount))
+
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
@@ -146,8 +140,8 @@ func SimulateMsgDelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Oper
 	}
 }
 
-// SimulateMsgBeginUnbonding
-func SimulateMsgBeginUnbonding(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
+// SimulateMsgUndelegate
+func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
 	handler := staking.NewHandler(k)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simulation.Account, event func(string)) (
@@ -165,7 +159,7 @@ func SimulateMsgBeginUnbonding(m auth.AccountKeeper, k staking.Keeper) simulatio
 		if numShares.Equal(sdk.ZeroDec()) {
 			return "no-operation", nil, nil
 		}
-		msg := staking.MsgBeginUnbonding{
+		msg := staking.MsgUndelegate{
 			DelegatorAddr: delegatorAddress,
 			ValidatorAddr: delegation.ValidatorAddr,
 			SharesAmount:  numShares,
@@ -179,8 +173,8 @@ func SimulateMsgBeginUnbonding(m auth.AccountKeeper, k staking.Keeper) simulatio
 		if result.IsOK() {
 			write()
 		}
-		event(fmt.Sprintf("staking/MsgBeginUnbonding/%v", result.IsOK()))
-		action = fmt.Sprintf("TestMsgBeginUnbonding: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
+		event(fmt.Sprintf("staking/MsgUndelegate/%v", result.IsOK()))
+		action = fmt.Sprintf("TestMsgUndelegate: ok %v, msg %s", result.IsOK(), msg.GetSignBytes())
 		return action, nil, nil
 	}
 }

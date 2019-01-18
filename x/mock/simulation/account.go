@@ -44,8 +44,10 @@ func RandomAccounts(r *rand.Rand, n int) []Account {
 		} else {
 			accs[i].PrivKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
 		}
+
 		accs[i].PubKey = accs[i].PrivKey.PubKey()
 		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
 	}
+
 	return accs
 }

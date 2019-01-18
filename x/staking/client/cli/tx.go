@@ -241,7 +241,7 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := staking.NewMsgBeginUnbonding(delAddr, valAddr, sharesAmount)
+			msg := staking.NewMsgUndelegate(delAddr, valAddr, sharesAmount)
 
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)

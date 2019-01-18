@@ -76,7 +76,7 @@ FEATURES
   * \#2996 Update the `AccountKeeper` to contain params used in the context of
   the ante handler.
   * [\#3179](https://github.com/cosmos/cosmos-sdk/pull/3179) New CodeNoSignatures error code.
-
+  * \#3319 [x/distribution] Queriers for all distribution state worth querying; distribution query commands
 
 * Tendermint
 

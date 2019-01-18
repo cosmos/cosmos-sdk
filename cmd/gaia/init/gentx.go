@@ -120,8 +120,6 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			fmt.Println("Through cliCtx.PrintUnsignedStdTx")
-
 			// read the transaction
 			stdTx, err := readUnsignedGenTxFile(cdc, w)
 			if err != nil {

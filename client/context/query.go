@@ -73,28 +73,6 @@ func (ctx CLIContext) FetchAccAndSeqNums(address sdk.Address) (uint64, uint64, e
 	return account.GetAccountNumber(), account.GetSequence(), err
 }
 
-// GetAccountNumber returns the next account number for the given account
-// address.
-func (ctx CLIContext) GetAccountNumber(address []byte) (uint64, error) {
-	account, err := ctx.FetchAccount(address)
-	if err != nil {
-		return 0, err
-	}
-
-	return account.GetAccountNumber(), nil
-}
-
-// GetAccountSequence returns the sequence number for the given account
-// address.
-func (ctx CLIContext) GetAccountSequence(address []byte) (uint64, error) {
-	account, err := ctx.FetchAccount(address)
-	if err != nil {
-		return 0, err
-	}
-
-	return account.GetSequence(), nil
-}
-
 // EnsureAccountExists ensures that an account exists for a given
 // address. Instead of using the context's from name, a direct address is
 // given. An error is returned if it does not.

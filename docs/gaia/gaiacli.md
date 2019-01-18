@@ -639,7 +639,7 @@ gaiacli query distr commission <validator_address>
 To check historical slashes for a validator, run:
 
 ```bash
-gaiacli query distr validator-slashes <validator_address> <start_height> <end_height>
+gaiacli query distr slashes <validator_address> <start_height> <end_height>
 ```
 
 #### Query delegator rewards

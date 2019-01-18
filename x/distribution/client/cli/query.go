@@ -20,7 +20,7 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "Query distribution params",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			route := fmt.Sprintf("custom/%s/params/community_tax", queryRoute)
 			retCommunityTax, err := cliCtx.QueryWithData(route, []byte{})
@@ -61,7 +61,7 @@ func GetCmdQueryOutstandingRewards(queryRoute string, cdc *codec.Codec) *cobra.C
 		Args:  cobra.NoArgs,
 		Short: "Query distribution outstanding (un-withdrawn) rewards",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			route := fmt.Sprintf("custom/%s/outstanding_rewards", queryRoute)
 			res, err := cliCtx.QueryWithData(route, []byte{})
@@ -83,7 +83,7 @@ func GetCmdQueryValidatorCommission(queryRoute string, cdc *codec.Codec) *cobra.
 		Args:  cobra.ExactArgs(1),
 		Short: "Query distribution validator commission",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -115,7 +115,7 @@ func GetCmdQueryValidatorSlashes(queryRoute string, cdc *codec.Codec) *cobra.Com
 		Args:  cobra.ExactArgs(3),
 		Short: "Query distribution validator slashes",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -157,7 +157,7 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 		Args:  cobra.ExactArgs(2),
 		Short: "Query distribution delegator rewards",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {

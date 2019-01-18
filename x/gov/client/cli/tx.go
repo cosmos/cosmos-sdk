@@ -97,7 +97,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(amount) {
-				return context.ErrInsufficentFunds(account, amount)
+				return context.ErrInsufficientFunds(account, amount)
 			}
 
 			proposalType, err := gov.ProposalTypeFromString(proposal.Type)
@@ -196,7 +196,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(amount) {
-				return context.ErrInsufficentFunds(account, amount)
+				return context.ErrInsufficientFunds(account, amount)
 			}
 
 			return cliCtx.MessageOutput(gov.NewMsgDeposit(from, proposalID, amount))

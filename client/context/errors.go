@@ -27,8 +27,8 @@ func ErrInvalidSigner(signer sdk.AccAddress, signers []sdk.AccAddress) error {
 	return errors.Errorf(`"The generated transaction's intended signer(s) [%v] does not match the given signer: %s"`, signers, signer)
 }
 
-// ErrInsufficentFunds is returned when a transaction is attempted from an
-// account with insufficent funds
-func ErrInsufficentFunds(account auth.Account, amount sdk.Coins) error {
+// ErrInsufficientFunds is returned when a transaction is attempted from an
+// account with insufficient funds
+func ErrInsufficientFunds(account auth.Account, amount sdk.Coins) error {
 	return errors.Errorf("Address %s has %s coins, transaction requires %s", account.GetAddress(), account.GetCoins(), amount)
 }

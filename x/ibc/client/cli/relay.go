@@ -80,13 +80,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
 
-	address, err := context.NewCLIContext(c.cdc).GetFromAddress()
-	if err != nil {
-		panic(err)
-	}
-
-	c.address = address
-
+	c.address = context.NewCLIContext(c.cdc).FromAddr()
 	c.loop(fromChainID, fromChainNode, toChainID, toChainNode)
 }
 
@@ -94,11 +88,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
 	cliCtx := context.NewCLIContext(c.cdc)
 
-	name, err := cliCtx.GetFromName()
-	if err != nil {
-		panic(err)
-	}
-	passphrase, err := keys.ReadPassphraseFromStdin(name)
+	passphrase, err := keys.ReadPassphraseFromStdin(cliCtx.FromName())
 	if err != nil {
 		panic(err)
 	}
@@ -204,12 +194,7 @@ func (c relayCommander) refine(bz []byte, ibcSeq, accSeq uint64, passphrase stri
 
 	cliCtx := context.NewCLIContextTx(c.cdc)
 
-	name, err := cliCtx.GetFromName()
-	if err != nil {
-		panic(err)
-	}
-
-	res, err := cliCtx.TxBldr.BuildAndSign(name, passphrase, []sdk.Msg{msg})
+	res, err := cliCtx.TxBldr.BuildAndSign(cliCtx.FromName(), passphrase, []sdk.Msg{msg})
 	if err != nil {
 		panic(err)
 	}

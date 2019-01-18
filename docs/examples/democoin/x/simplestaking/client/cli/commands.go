@@ -28,11 +28,6 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
 
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
 			stakingString := viper.GetString(flagStake)
 			if len(stakingString) == 0 {
 				return fmt.Errorf("specify coins to bond with --staking")
@@ -56,7 +51,7 @@ func BondTxCmd(cdc *codec.Codec) *cobra.Command {
 			var pubKeyEd ed25519.PubKeyEd25519
 			copy(pubKeyEd[:], rawPubKey)
 
-			return cliCtx.MessageOutput(simplestaking.NewMsgBond(from, staking, pubKeyEd))
+			return cliCtx.MessageOutput(simplestaking.NewMsgBond(cliCtx.FromAddr(), staking, pubKeyEd))
 		},
 	}
 
@@ -73,13 +68,7 @@ func UnbondTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Unbond from a validator",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
-
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
-			return cliCtx.MessageOutput(simplestaking.NewMsgUnbond(from))
+			return cliCtx.MessageOutput(simplestaking.NewMsgUnbond(cliCtx.FromAddr()))
 		},
 	}
 }

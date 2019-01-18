@@ -19,11 +19,6 @@ func MineCmd(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
 
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
 			difficulty, err := strconv.ParseUint(args[0], 0, 64)
 			if err != nil {
 				return err
@@ -39,7 +34,8 @@ func MineCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			return cliCtx.MessageOutput(pow.NewMsgMine(from, difficulty, count, nonce, []byte(args[3])))
+			msg := pow.NewMsgMine(cliCtx.FromAddr(), difficulty, count, nonce, []byte(args[3]))
+			return cliCtx.MessageOutput(msg)
 		},
 	}
 }

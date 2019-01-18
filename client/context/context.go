@@ -98,16 +98,6 @@ func (ctx *CLIContext) PrepareTxBldrOffline() {
 	ctx.TxBldr = authtxb.NewTxBuilderFromCLI().WithTxEncoder(GetTxEncoder(ctx.Codec))
 }
 
-// PrepareTxBldr sets the transaction builder for the context while
-// setting the sequence and account numbers
-func (ctx *CLIContext) PrepareTxBldr() error {
-	from, err := ctx.GetFromAddress()
-	if err != nil {
-		return err
-	}
-	return ctx.PrepareTxBldrWithAddress(from)
-}
-
 // PrepareTxBldrWithAddress looks up the acc and seq numbs for an addr, also
 // ensuring it exists
 func (ctx *CLIContext) PrepareTxBldrWithAddress(addr sdk.AccAddress) error {
@@ -146,13 +136,19 @@ func (ctx *CLIContext) GetAccountDecoder() auth.AccountDecoder {
 }
 
 // GetFromAddress returns the from address from the context's name.
-func (ctx *CLIContext) GetFromAddress() (sdk.AccAddress, error) {
-	return ctx.fromAddress, nil
+func (ctx *CLIContext) FromAddr() sdk.AccAddress {
+	return ctx.fromAddress
+}
+
+// GetFromAddress returns the from address from the context's name
+// in validator format
+func (ctx *CLIContext) FromValAddr() sdk.ValAddress {
+	return sdk.ValAddress(ctx.fromAddress.Bytes())
 }
 
 // GetFromName returns the key name for the current context.
-func (ctx *CLIContext) GetFromName() (string, error) {
-	return ctx.fromName, nil
+func (ctx *CLIContext) FromName() string {
+	return ctx.fromName
 }
 
 // SetNode returns a copy of the context with an updated node URI.

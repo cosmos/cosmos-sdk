@@ -23,18 +23,13 @@ import (
 //
 // NOTE: Also see CompleteAndBroadcastTxREST.
 func (ctx *CLIContext) CompleteAndBroadcastTxCli(msgs []sdk.Msg) error {
-	err := ctx.PrepareTxBldr()
-	if err != nil {
-		return err
-	}
-
-	name, err := ctx.GetFromName()
+	err := ctx.PrepareTxBldrWithAddress(ctx.FromAddr())
 	if err != nil {
 		return err
 	}
 
 	if ctx.TxBldr.GetSimulateAndExecute() || ctx.Simulate {
-		err = ctx.EnrichCtxWithGas(name, msgs)
+		err = ctx.EnrichCtxWithGas(ctx.FromName(), msgs)
 		if err != nil {
 			return err
 		}
@@ -44,13 +39,13 @@ func (ctx *CLIContext) CompleteAndBroadcastTxCli(msgs []sdk.Msg) error {
 		return nil
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
+	passphrase, err := keys.GetPassphrase(ctx.FromName())
 	if err != nil {
 		return err
 	}
 
 	// build and sign the transaction
-	txBytes, err := ctx.TxBldr.BuildAndSign(name, passphrase, msgs)
+	txBytes, err := ctx.TxBldr.BuildAndSign(ctx.FromName(), passphrase, msgs)
 	if err != nil {
 		return err
 	}
@@ -202,7 +197,7 @@ func (ctx *CLIContext) simulateMsgs(name string, msgs []sdk.Msg) (uint64, uint64
 // buildUnsignedStdTx builds a StdTx as per the parameters passed in the
 // contexts. Gas is automatically estimated if gas wanted is set to 0.
 func (ctx *CLIContext) buildUnsignedStdTx(msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
-	err = ctx.PrepareTxBldr()
+	err = ctx.PrepareTxBldrWithAddress(ctx.FromAddr())
 	if err != nil {
 		return
 	}
@@ -211,11 +206,7 @@ func (ctx *CLIContext) buildUnsignedStdTx(msgs []sdk.Msg) (stdTx auth.StdTx, err
 
 func (ctx *CLIContext) buildUnsignedStdTxOffline(msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	if ctx.TxBldr.GetSimulateAndExecute() {
-		var name string
-		name, err = ctx.GetFromName()
-		if err != nil {
-			return
-		}
+		var name = ctx.FromName()
 
 		err = ctx.EnrichCtxWithGas(name, msgs)
 		if err != nil {

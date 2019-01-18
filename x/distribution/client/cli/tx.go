@@ -56,24 +56,14 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 			var msg sdk.Msg
 			switch {
 			case isVal:
-				addr, err := cliCtx.GetFromAddress()
-				if err != nil {
-					return err
-				}
-				valAddr := sdk.ValAddress(addr.Bytes())
-				msg = types.NewMsgWithdrawValidatorCommission(valAddr)
+				msg = types.NewMsgWithdrawValidatorCommission(cliCtx.FromValAddr())
 			default:
-				delAddr, err := cliCtx.GetFromAddress()
-				if err != nil {
-					return err
-				}
-
 				valAddr, err := sdk.ValAddressFromBech32(onlyFromVal)
 				if err != nil {
 					return err
 				}
 
-				msg = types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
+				msg = types.NewMsgWithdrawDelegatorReward(cliCtx.FromAddr(), valAddr)
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
@@ -94,17 +84,12 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
 			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
-			return cliCtx.MessageOutput(types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr))
+			return cliCtx.MessageOutput(types.NewMsgSetWithdrawAddress(cliCtx.FromAddr(), withdrawAddr))
 		},
 	}
 }

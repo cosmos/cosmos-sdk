@@ -16,13 +16,7 @@ func QuizTxCmd(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
-
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
-			return cliCtx.MessageOutput(cool.NewMsgQuiz(from, args[0]))
+			return cliCtx.MessageOutput(cool.NewMsgQuiz(cliCtx.FromAddr(), args[0]))
 		},
 	}
 }
@@ -35,13 +29,7 @@ func SetTrendTxCmd(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
-
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
-			return cliCtx.MessageOutput(cool.NewMsgSetTrend(from, args[0]))
+			return cliCtx.MessageOutput(cool.NewMsgSetTrend(cliCtx.FromAddr(), args[0]))
 		},
 	}
 }

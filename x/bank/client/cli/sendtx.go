@@ -25,12 +25,9 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
 
-			addr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			addr := cliCtx.FromAddr()
 
-			if err = cliCtx.EnsureAccountExists(addr); err != nil {
+			if err := cliCtx.EnsureAccountExists(addr); err != nil {
 				return err
 			}
 

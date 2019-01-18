@@ -26,15 +26,11 @@ func IBCTransferCmd(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
 
-			from, err := cliCtx.GetFromAddress()
+			msg, err := buildMsg(cliCtx.FromAddr())
 			if err != nil {
 				return err
 			}
 
-			msg, err := buildMsg(from)
-			if err != nil {
-				return err
-			}
 			return cliCtx.MessageOutput(msg)
 		},
 	}

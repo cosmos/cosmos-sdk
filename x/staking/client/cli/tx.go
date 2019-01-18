@@ -54,11 +54,6 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
 
-			valAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
 			description := staking.Description{
 				Moniker:  viper.GetString(FlagMoniker),
 				Identity: viper.GetString(FlagIdentity),
@@ -78,7 +73,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				newRate = &rate
 			}
 
-			msg := staking.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
+			msg := staking.NewMsgEditValidator(cliCtx.FromValAddr(), description, newRate)
 			return cliCtx.MessageOutput(msg)
 		},
 	}
@@ -102,17 +97,12 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
 			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
 			}
 
-			return cliCtx.MessageOutput(staking.NewMsgDelegate(delAddr, valAddr, amount))
+			return cliCtx.MessageOutput(staking.NewMsgDelegate(cliCtx.FromAddr(), valAddr, amount))
 		},
 	}
 
@@ -132,10 +122,7 @@ func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 
 			var err error
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			delAddr := cliCtx.FromAddr()
 
 			valSrcAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
@@ -177,10 +164,7 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			delAddr := cliCtx.FromAddr()
 
 			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
@@ -212,11 +196,6 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 func BuildCreateValidatorMsg(cliCtx *context.CLIContext) (sdk.Msg, error) {
 	amounstStr := viper.GetString(FlagAmount)
 	amount, err := sdk.ParseCoin(amounstStr)
-	if err != nil {
-		return nil, err
-	}
-
-	valAddr, err := cliCtx.GetFromAddress()
 	if err != nil {
 		return nil, err
 	}
@@ -253,11 +232,11 @@ func BuildCreateValidatorMsg(cliCtx *context.CLIContext) (sdk.Msg, error) {
 		}
 
 		msg = staking.NewMsgCreateValidatorOnBehalfOf(
-			delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+			delAddr, cliCtx.FromValAddr(), pk, amount, description, commissionMsg,
 		)
 	} else {
 		msg = staking.NewMsgCreateValidator(
-			sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+			cliCtx.FromValAddr(), pk, amount, description, commissionMsg,
 		)
 	}
 

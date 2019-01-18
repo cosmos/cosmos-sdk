@@ -78,10 +78,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			// Get from address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.FromAddr()
 
 			// Pull associated account
 			account, err := cliCtx.FetchAccount(from)
@@ -176,14 +173,8 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return gcutils.FailedToFectchProposal(proposalID, err)
 			}
 
-			// Get from address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
 			// Fetch associated account
-			account, err := cliCtx.FetchAccount(from)
+			account, err := cliCtx.FetchAccount(cliCtx.FromAddr())
 			if err != nil {
 				return err
 			}
@@ -199,7 +190,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return context.ErrInsufficientFunds(account, amount)
 			}
 
-			return cliCtx.MessageOutput(gov.NewMsgDeposit(from, proposalID, amount))
+			return cliCtx.MessageOutput(gov.NewMsgDeposit(cliCtx.FromAddr(), proposalID, amount))
 		},
 	}
 }
@@ -217,12 +208,6 @@ $ gaiacli tx gov vote 1 yes --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
-
-			// Get voting address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -243,7 +228,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 			}
 
 			// Build vote message and run basic validation
-			return cliCtx.MessageOutput(gov.NewMsgVote(from, proposalID, byteVoteOption))
+			return cliCtx.MessageOutput(gov.NewMsgVote(cliCtx.FromAddr(), proposalID, byteVoteOption))
 		},
 	}
 }

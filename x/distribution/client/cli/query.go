@@ -131,7 +131,7 @@ func queryValidatorCommission(cliCtx context.CLIContext, cdc *codec.Codec, query
 // GetCmdQueryValidatorSlashes implements the query validator slashes command.
 func GetCmdQueryValidatorSlashes(queryRoute string, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "validator-slashes [validator] [start-height] [end-height]",
+		Use:   "slashes [validator] [start-height] [end-height]",
 		Args:  cobra.ExactArgs(3),
 		Short: "Query distribution validator slashes",
 		RunE: func(cmd *cobra.Command, args []string) error {

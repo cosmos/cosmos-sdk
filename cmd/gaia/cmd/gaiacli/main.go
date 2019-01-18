@@ -83,7 +83,7 @@ func main() {
 
 	// Construct Root Command
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		rpc.StatusCommand(cdc),
 		client.ConfigCmd(),
 		queryCmd(cdc, mc),
 		txCmd(cdc, mc),
@@ -114,8 +114,8 @@ func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 	}
 
 	queryCmd.AddCommand(
-		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		rpc.ValidatorCommand(cdc),
+		rpc.BlockCommand(cdc),
 		tx.SearchTxCmd(cdc),
 		tx.QueryTxCmd(cdc),
 		client.LineBreak,

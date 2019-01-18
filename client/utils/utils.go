@@ -179,20 +179,12 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 
 func populateAccountFromState(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
 	addr sdk.AccAddress) (authtxb.TxBuilder, error) {
-	if txBldr.GetAccountNumber() == 0 {
-		accNum, err := cliCtx.GetAccountNumber(addr)
+	if txBldr.GetAccountNumber() == 0 || txBldr.GetSequence() == 0 {
+		accNum, seq, err := cliCtx.FetchAccAndSeqNums(addr)
 		if err != nil {
 			return txBldr, err
 		}
-		txBldr = txBldr.WithAccountNumber(accNum)
-	}
-
-	if txBldr.GetSequence() == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(addr)
-		if err != nil {
-			return txBldr, err
-		}
-		txBldr = txBldr.WithSequence(accSeq)
+		txBldr = txBldr.WithAccountNumber(accNum).WithSequence(seq)
 	}
 
 	return txBldr, nil
@@ -232,34 +224,25 @@ func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (uint64, error) {
 }
 
 func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (authtxb.TxBuilder, error) {
-	if err := cliCtx.EnsureAccountExists(); err != nil {
-		return txBldr, err
-	}
-
 	from, err := cliCtx.GetFromAddress()
 	if err != nil {
 		return txBldr, err
 	}
 
-	// TODO: (ref #1903) Allow for user supplied account number without
-	// automatically doing a manual lookup.
-	if txBldr.GetAccountNumber() == 0 {
-		accNum, err := cliCtx.GetAccountNumber(from)
-		if err != nil {
-			return txBldr, err
-		}
-		txBldr = txBldr.WithAccountNumber(accNum)
+	if err := cliCtx.EnsureAccountExists(from); err != nil {
+		return txBldr, err
 	}
 
-	// TODO: (ref #1903) Allow for user supplied account sequence without
+	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
-	if txBldr.GetSequence() == 0 {
-		accSeq, err := cliCtx.GetAccountSequence(from)
+	if txBldr.GetAccountNumber() == 0 || txBldr.GetSequence() == 0 {
+		accNum, seq, err := cliCtx.FetchAccAndSeqNums(from)
 		if err != nil {
 			return txBldr, err
 		}
-		txBldr = txBldr.WithSequence(accSeq)
+		txBldr = txBldr.WithAccountNumber(accNum).WithSequence(seq)
 	}
+
 	return txBldr, nil
 }
 

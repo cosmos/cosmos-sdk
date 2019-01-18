@@ -28,11 +28,14 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 		Short: "Create and sign a send tx",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
 
-			if err := cliCtx.EnsureAccountExists(); err != nil {
+			addr, err := cliCtx.GetFromAddress()
+			if err != nil {
+				return err
+			}
+
+			if err := cliCtx.EnsureAccountExists(addr); err != nil {
 				return err
 			}
 
@@ -55,7 +58,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			account, err := cliCtx.GetAccount(from)
+			account, err := cliCtx.FetchAccount(from)
 			if err != nil {
 				return err
 			}

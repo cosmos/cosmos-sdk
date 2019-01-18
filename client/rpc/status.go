@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/viper"
@@ -16,11 +17,30 @@ import (
 )
 
 // StatusCommand returns the status of the network
-func StatusCommand() *cobra.Command {
+func StatusCommand(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Query remote node for status",
-		RunE:  printNodeStatus,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext(cdc)
+			status, err := getNodeStatus(cliCtx)
+			if err != nil {
+				return err
+			}
+
+			var output []byte
+			if cliCtx.Indent {
+				output, err = cdc.MarshalJSONIndent(status, "", "  ")
+			} else {
+				output, err = cdc.MarshalJSON(status)
+			}
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(output))
+			return nil
+		},
 	}
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
@@ -37,31 +57,6 @@ func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
 	}
 
 	return node.Status()
-}
-
-// CMD
-
-func printNodeStatus(cmd *cobra.Command, args []string) error {
-	// No need to verify proof in getting node status
-	viper.Set(client.FlagTrustNode, true)
-	cliCtx := context.NewCLIContext()
-	status, err := getNodeStatus(cliCtx)
-	if err != nil {
-		return err
-	}
-
-	var output []byte
-	if cliCtx.Indent {
-		output, err = cdc.MarshalJSONIndent(status, "", "  ")
-	} else {
-		output, err = cdc.MarshalJSON(status)
-	}
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(output))
-	return nil
 }
 
 // REST

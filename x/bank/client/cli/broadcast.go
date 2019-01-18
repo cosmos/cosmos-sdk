@@ -13,7 +13,7 @@ import (
 )
 
 // GetSignCommand returns the sign command
-func GetBroadcastCommand(codec *amino.Codec) *cobra.Command {
+func GetBroadcastCommand(cdc *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "broadcast <file>",
 		Short: "Broadcast transactions generated offline",
@@ -22,7 +22,7 @@ Read a transaction from <file> and broadcast it to a node. If you supply a dash 
 in place of an input filename, the command reads from standard input.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			cliCtx := context.NewCLIContext().WithCodec(codec)
+			cliCtx := context.NewCLIContext(cdc)
 			stdTx, err := readAndUnmarshalStdTx(cliCtx.Codec, args[0])
 			if err != nil {
 				return

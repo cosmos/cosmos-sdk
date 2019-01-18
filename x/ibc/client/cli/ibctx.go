@@ -28,9 +28,7 @@ func IBCTransferCmd(cdc *codec.Codec) *cobra.Command {
 		Use: "transfer",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
 
 			from, err := cliCtx.GetFromAddress()
 			if err != nil {

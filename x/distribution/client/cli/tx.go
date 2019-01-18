@@ -56,9 +56,7 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 			}
 
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
 
 			var msg sdk.Msg
 			switch {
@@ -105,9 +103,7 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
 
 			delAddr, err := cliCtx.GetFromAddress()
 			if err != nil {

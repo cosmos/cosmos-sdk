@@ -42,9 +42,10 @@ type relayCommander struct {
 
 // IBCRelayCmd implements the IBC relay command.
 func IBCRelayCmd(cdc *codec.Codec) *cobra.Command {
+	cliCtx := context.NewCLIContext(cdc)
 	cmdr := relayCommander{
 		cdc:       cdc,
-		decoder:   context.GetAccountDecoder(cdc),
+		decoder:   cliCtx.GetAccountDecoder(),
 		ibcStore:  "ibc",
 		mainStore: bam.MainStoreKey,
 		accStore:  auth.StoreKey,
@@ -82,7 +83,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 	toChainID := viper.GetString(FlagToChainID)
 	toChainNode := viper.GetString(FlagToChainNode)
 
-	address, err := context.NewCLIContext().GetFromAddress()
+	address, err := context.NewCLIContext(c.cdc).GetFromAddress()
 	if err != nil {
 		panic(err)
 	}
@@ -94,7 +95,7 @@ func (c relayCommander) runIBCRelay(cmd *cobra.Command, args []string) {
 
 // This is nolinted as someone is in the process of refactoring this to remove the goto
 func (c relayCommander) loop(fromChainID, fromChainNode, toChainID, toChainNode string) {
-	cliCtx := context.NewCLIContext()
+	cliCtx := context.NewCLIContext(c.cdc)
 
 	name, err := cliCtx.GetFromName()
 	if err != nil {
@@ -112,7 +113,7 @@ OUTER:
 	for {
 		time.Sleep(5 * time.Second)
 
-		processedbz, err := query(toChainNode, ingressKey, c.ibcStore)
+		processedbz, err := c.query(toChainNode, ingressKey, c.ibcStore)
 		if err != nil {
 			panic(err)
 		}
@@ -124,7 +125,7 @@ OUTER:
 			panic(err)
 		}
 
-		egressLengthbz, err := query(fromChainNode, lengthKey, c.ibcStore)
+		egressLengthbz, err := c.query(fromChainNode, lengthKey, c.ibcStore)
 		if err != nil {
 			c.logger.Error("error querying outgoing packet list length", "err", err)
 			continue OUTER // TODO replace with continue (I think it should just to the correct place where OUTER is now)
@@ -144,7 +145,7 @@ OUTER:
 		seq := c.getSequence(toChainNode)
 
 		for i := processed; i < egressLength; i++ {
-			egressbz, err := query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
+			egressbz, err := c.query(fromChainNode, ibc.EgressKey(toChainID, i), c.ibcStore)
 			if err != nil {
 				c.logger.Error("error querying egress packet", "err", err)
 				continue OUTER // TODO replace to break, will break first loop then send back to the beginning (aka OUTER)
@@ -164,18 +165,18 @@ OUTER:
 	}
 }
 
-func query(node string, key []byte, storeName string) (res []byte, err error) {
-	return context.NewCLIContext().WithNodeURI(node).QueryStore(key, storeName)
+func (c relayCommander) query(node string, key []byte, storeName string) (res []byte, err error) {
+	return context.NewCLIContext(c.cdc).SetNode(node).QueryStore(key, storeName)
 }
 
 // nolint: unparam
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
-	_, err := context.NewCLIContext().WithNodeURI(node).BroadcastTx(tx)
+	_, err := context.NewCLIContext(c.cdc).SetNode(node).BroadcastTx(tx)
 	return err
 }
 
 func (c relayCommander) getSequence(node string) uint64 {
-	res, err := query(node, auth.AddressStoreKey(c.address), c.accStore)
+	res, err := c.query(node, auth.AddressStoreKey(c.address), c.accStore)
 	if err != nil {
 		panic(err)
 	}
@@ -205,7 +206,7 @@ func (c relayCommander) refine(bz []byte, ibcSeq, accSeq uint64, passphrase stri
 	}
 
 	txBldr := authtxb.NewTxBuilderFromCLI().WithSequence(accSeq).WithTxEncoder(utils.GetTxEncoder(c.cdc))
-	cliCtx := context.NewCLIContext()
+	cliCtx := context.NewCLIContext(c.cdc)
 
 	name, err := cliCtx.GetFromName()
 	if err != nil {

@@ -15,18 +15,40 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO these next two functions feel kinda hacky based on their placement
 
 //ValidatorCommand returns the validator set for a given height
-func ValidatorCommand() *cobra.Command {
+func ValidatorCommand(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tendermint-validator-set [height]",
 		Short: "Get the full tendermint validator set at given height",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  printValidators,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var height *int64
+			// optional height
+			if len(args) > 0 {
+				h, err := strconv.Atoi(args[0])
+				if err != nil {
+					return err
+				}
+				if h > 0 {
+					tmp := int64(h)
+					height = &tmp
+				}
+			}
+
+			output, err := getValidators(context.NewCLIContext(cdc), height)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(output))
+			return nil
+		},
 	}
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
@@ -103,31 +125,6 @@ func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	}
 	return cdc.MarshalJSON(outputValidatorsRes)
 
-}
-
-// CMD
-
-func printValidators(cmd *cobra.Command, args []string) error {
-	var height *int64
-	// optional height
-	if len(args) > 0 {
-		h, err := strconv.Atoi(args[0])
-		if err != nil {
-			return err
-		}
-		if h > 0 {
-			tmp := int64(h)
-			height = &tmp
-		}
-	}
-
-	output, err := getValidators(context.NewCLIContext(), height)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(output))
-	return nil
 }
 
 // REST

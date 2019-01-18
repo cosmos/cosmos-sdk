@@ -25,8 +25,7 @@ func resultBroadcastTxToCommit(res *ctypes.ResultBroadcastTx) *ctypes.ResultBroa
 
 // BroadcastTx broadcasts a transactions either synchronously or asynchronously
 // based on the context parameters. The result of the broadcast is parsed into
-// an intermediate structure which is logged if the context has a logger
-// defined.
+// an intermediate structure which is logged if the context has a logger defined.
 func (ctx CLIContext) BroadcastTx(txBytes []byte) (*ctypes.ResultBroadcastTxCommit, error) {
 	if ctx.Async {
 		res, err := ctx.broadcastTxAsync(txBytes)
@@ -41,8 +40,7 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (*ctypes.ResultBroadcastTxComm
 	return ctx.broadcastTxCommit(txBytes)
 }
 
-// BroadcastTxAndAwaitCommit broadcasts transaction bytes to a Tendermint node
-// and waits for a commit.
+// BroadcastTxAndAwaitCommit broadcasts transaction bytes to a Tendermint node and waits for a commit.
 func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
@@ -65,8 +63,7 @@ func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (*ctypes.ResultBroadc
 	return res, err
 }
 
-// BroadcastTxSync broadcasts transaction bytes to a Tendermint node
-// synchronously.
+// BroadcastTxSync broadcasts transaction bytes to a Tendermint node synchronously.
 func (ctx CLIContext) BroadcastTxSync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
 	node, err := ctx.GetNode()
 	if err != nil {
@@ -81,8 +78,7 @@ func (ctx CLIContext) BroadcastTxSync(tx []byte) (*ctypes.ResultBroadcastTx, err
 	return res, err
 }
 
-// BroadcastTxAsync broadcasts transaction bytes to a Tendermint node
-// asynchronously.
+// BroadcastTxAsync broadcasts transaction bytes to a Tendermint node asynchronously.
 func (ctx CLIContext) BroadcastTxAsync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
 	node, err := ctx.GetNode()
 	if err != nil {

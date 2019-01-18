@@ -16,11 +16,11 @@ import (
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
 	r.HandleFunc(
 		"/auth/accounts/{address}",
-		QueryAccountRequestHandlerFn(storeName, cdc, context.GetAccountDecoder(cdc), cliCtx),
+		QueryAccountRequestHandlerFn(storeName, cdc, cliCtx.GetAccountDecoder(), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(
 		"/bank/balances/{address}",
-		QueryBalancesRequestHandlerFn(storeName, cdc, context.GetAccountDecoder(cdc), cliCtx),
+		QueryBalancesRequestHandlerFn(storeName, cdc, cliCtx.GetAccountDecoder(), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(
 		"/tx/sign",

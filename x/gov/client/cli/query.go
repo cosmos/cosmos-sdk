@@ -27,7 +27,7 @@ Query details for a proposal. You can find the proposal-id by running gaiacli qu
 $ gaiacli query gov proposal 1
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -101,7 +101,7 @@ $ gaiacli query gov proposals --status (DepositPeriod|VotingPeriod|Passed|Reject
 				return err
 			}
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposals", queryRoute), bz)
 			if err != nil {
@@ -144,7 +144,7 @@ Example:
 $ gaiacli query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -203,7 +203,7 @@ Example:
 $ gaiacli query gov votes 1
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -258,7 +258,7 @@ Example:
 $ gaiacli query gov deposit 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -316,7 +316,7 @@ Query details for all deposits on a proposal. You can find the proposal-id by ru
 $ gaiacli query gov deposits 1
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -369,7 +369,7 @@ Query tally of votes on a proposal. You can find the proposal-id by running gaia
 $ gaiacli query gov tally 1
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -409,7 +409,7 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Use:   "params",
 		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 			tp, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/tallying", queryRoute), nil)
 			if err != nil {
 				return err
@@ -442,7 +442,7 @@ func GetCmdQueryParam(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the parameters (voting|tallying|deposit) of the governance process",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			// Query store
 			res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/%s", queryRoute, args[0]), nil)
@@ -479,7 +479,7 @@ func GetCmdQueryProposer(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Query the proposer of a governance proposal",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			// validate that the proposalID is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)

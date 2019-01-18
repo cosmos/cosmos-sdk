@@ -81,9 +81,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
 
 			// Get from address
 			from, err := cliCtx.GetFromAddress()
@@ -92,7 +90,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			}
 
 			// Pull associated account
-			account, err := cliCtx.GetAccount(from)
+			account, err := cliCtx.FetchAccount(from)
 			if err != nil {
 				return err
 			}
@@ -183,9 +181,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -206,7 +202,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 			}
 
 			// Fetch associated account
-			account, err := cliCtx.GetAccount(from)
+			account, err := cliCtx.FetchAccount(from)
 			if err != nil {
 				return err
 			}
@@ -253,9 +249,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
-			cliCtx := context.NewCLIContext().
-				WithCodec(cdc).
-				WithAccountDecoder(cdc)
+			cliCtx := context.NewCLIContext(cdc).SetAccountDecoder()
 
 			// Get voting address
 			from, err := cliCtx.GetFromAddress()

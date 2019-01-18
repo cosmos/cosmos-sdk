@@ -32,7 +32,7 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 			// find the key to look up the account
 			hashHexStr := args[0]
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			output, err := queryTx(cdc, cliCtx, hashHexStr)
 			if err != nil {

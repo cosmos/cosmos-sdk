@@ -69,7 +69,7 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30
 			page := viper.GetInt(flagPage)
 			limit := viper.GetInt(flagLimit)
 
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 			txs, err := SearchTxs(cliCtx, cdc, tmTags, page, limit)
 			if err != nil {
 				return err

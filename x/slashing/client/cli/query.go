@@ -18,7 +18,7 @@ func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query a validator's signing information",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			pk, err := sdk.GetConsPubKeyBech32(args[0])
 			if err != nil {
@@ -45,7 +45,7 @@ func GetCmdQueryParams(cdc *codec.Codec) *cobra.Command {
 		Use:   "params",
 		Short: "Query the current slashing parameters",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			route := fmt.Sprintf("custom/%s/parameters", slashing.QuerierRoute)
 			res, err := cliCtx.QueryWithData(route, nil)

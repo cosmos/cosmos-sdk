@@ -19,7 +19,7 @@ func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query a validator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			addr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -43,7 +43,7 @@ func GetCmdQueryValidators(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query for all validators",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			resKVs, err := cliCtx.QuerySubspace(staking.ValidatorsKey, storeName)
 			if err != nil {
@@ -67,7 +67,7 @@ func GetCmdQueryValidatorUnbondingDelegations(storeKey string, cdc *codec.Codec)
 		Short: "Query all unbonding delegatations from a validator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -99,7 +99,7 @@ func GetCmdQueryValidatorRedelegations(storeKey string, cdc *codec.Codec) *cobra
 		Short: "Query all outgoing redelegatations from a validator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -131,7 +131,7 @@ func GetCmdQueryDelegation(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query a delegation based on address and validator address",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
@@ -166,7 +166,7 @@ func GetCmdQueryDelegations(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query all delegations made from one delegator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -196,7 +196,7 @@ func GetCmdQueryValidatorDelegations(storeKey string, cdc *codec.Codec) *cobra.C
 		Short: "Query all delegations made to one validator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			validatorAddr, err := sdk.ValAddressFromBech32(args[0])
 			if err != nil {
@@ -229,7 +229,7 @@ func GetCmdQueryUnbondingDelegation(storeName string, cdc *codec.Codec) *cobra.C
 		Short: "Query an unbonding-delegation record based on delegator and validator address",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			valAddr, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
@@ -260,7 +260,7 @@ func GetCmdQueryUnbondingDelegations(storeName string, cdc *codec.Codec) *cobra.
 		Short: "Query all unbonding-delegations records for one delegator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -290,7 +290,7 @@ func GetCmdQueryRedelegation(storeName string, cdc *codec.Codec) *cobra.Command 
 		Short: "Query a redelegation record based on delegator and a source and destination validator address",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			valSrcAddr, err := sdk.ValAddressFromBech32(args[1])
 			if err != nil {
@@ -325,7 +325,7 @@ func GetCmdQueryRedelegations(storeName string, cdc *codec.Codec) *cobra.Command
 		Short: "Query all redelegations records for one delegator",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
@@ -354,7 +354,7 @@ func GetCmdQueryPool(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current staking pool values",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			res, err := cliCtx.QueryStore(staking.PoolKey, storeName)
 			if err != nil {
@@ -373,7 +373,7 @@ func GetCmdQueryParams(storeName string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query the current staking parameters information",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliCtx := context.NewCLIContext().WithCodec(cdc)
+			cliCtx := context.NewCLIContext(cdc)
 
 			route := fmt.Sprintf("custom/%s/%s", storeName, staking.QueryParameters)
 			bz, err := cliCtx.QueryWithData(route, nil)

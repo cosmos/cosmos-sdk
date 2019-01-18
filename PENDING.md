@@ -40,6 +40,7 @@ BREAKING CHANGES
     * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
     * `MsgBeginUnbonding` -> `MsgUndelegate`
   * [\#3315] Increase decimal precision to 18
+  * \#3323 Update to Tendermint 0.29.0
 
 * Tendermint
   * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0

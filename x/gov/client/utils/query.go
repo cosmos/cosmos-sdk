@@ -22,6 +22,10 @@ type Proposer struct {
 	Proposer   string `json:"proposer"`
 }
 
+func NewProposer(proposalID uint64, proposer string) Proposer {
+	return Proposer{proposalID, proposer}
+}
+
 func (p Proposer) String() string {
 	return fmt.Sprintf(`ProposalID: %d
 Proposer:   %s`, p.ProposalID, p.Proposer)
@@ -225,10 +229,7 @@ func QueryProposerByTxQuery(
 			// there should only be a single proposal under the given conditions
 			if msg.Type() == gov.TypeMsgSubmitProposal {
 				subMsg := msg.(gov.MsgSubmitProposal)
-				return Proposer{
-					ProposalID: proposalID,
-					Proposer:   subMsg.Proposer.String(),
-				}, nil
+				return NewProposer(proposalID, subMsg.Proposer.String()), nil
 			}
 		}
 	}

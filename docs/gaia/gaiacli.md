@@ -624,6 +624,11 @@ To check the current governance parameters run:
 
 ```bash
 gaiacli query gov params
+```
+
+To query subsets of the governance parameters run:
+
+```bash
 gaiacli query gov param voting
 gaiacli query gov param tallying
 gaiacli query gov param deposit

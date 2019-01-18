@@ -20,6 +20,10 @@ BREAKING CHANGES
   * [\#3156](https://github.com/cosmos/cosmos-sdk/pull/3156) Remove unimplemented `gaiacli init` command
   * [\#2222] `gaiacli tx stake` -> `gaiacli tx staking`, `gaiacli query stake` -> `gaiacli query staking`
   * [\#3320](https://github.com/cosmos/cosmos-sdk/pull/3320) Ensure all `gaiacli query` commands respect the `--output` and `--indent` flags
+<<<<<<< HEAD
+=======
+  * [\#3268](https://github.com/cosmos/cosmos-sdk/issues/3268) Unify `params` queries call
+>>>>>>> Address @fedekunze PR comments
 
 * Gaia
   * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants

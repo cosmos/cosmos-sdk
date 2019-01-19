@@ -14,6 +14,31 @@ validators, ultimately determining the effective validator set for the system.
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos
 network.
 
+## Contents
+
 The following specification uses *Atom* as the native staking token. The module
 can be adapted to any Proof-Of-Stake blockchain by replacing *Atom* with the
 native staking token of the chain.
+
+ 1. **[State](state.md)**	
+   - Pool
+   - Params
+   - Validator
+   - Delegation
+   - UnbondingDelegation
+   - Redelegation
+ 2. **[Messages](messages.md)**	
+   - MsgCreateValidator
+   - MsgEditValidator
+   - MsgDelegate
+   - MsgBeginUnbonding
+   - MsgBeginRedelegate
+ 3. **[End-Block](end_block.md)**	
+   - Validator Set Changes
+   - Queues 
+   - Unbonding Validators
+   - Unbonding Delegations
+   - Redelegations
+ 4. **[Hooks](hooks.md)**	
+ 5. **[Tags](tags.md)**	
+

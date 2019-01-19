@@ -1,4 +1,4 @@
-# Transaction Overview
+# Messages
 
 In this section we describe the processing of the staking messages and the
 corresponding updates to the state.
@@ -59,7 +59,7 @@ This message is expected to fail if:
 
 This message stores the updated `Validator` object. 
 
-### MsgDelegate
+## MsgDelegate
 
 Within this message the delegator provides coins, and in return receives
 some amount of their validator's (newly created) delegator-shares that are
@@ -82,7 +82,7 @@ If an existing `Delegation` object for provided addresses does not already
 exist than it is created as part of this message otherwise the existing
 `Delegation` is updated to include the newly received shares. 
 
-### MsgBeginUnbonding
+## MsgBeginUnbonding
 
 The begin unbonding message allows delegators to undelegate their tokens from
 validator. 
@@ -120,7 +120,7 @@ When this message is processed the following actions occur:
    - under this situation if the delegation is the validator's self-delegation 
      then also jail the validator. 
 
-### MsgBeginRedelegate
+## MsgBeginRedelegate
 
 The redelegation command allows delegators to instantly switch validators. Once
 the unbonding period has passed, the redelegation is automatically completed in

@@ -1,10 +1,12 @@
-## State
+# State
 
-### Pool
+## Pool
 
-The pool dynamically tracks information about the total amounts of staking
-tokens and their states (bonded or loose). Note that `NotBondedTokens` _does_
-include both `unbonding` tokens, and fully `unbonded` tokens. 
+The pool tracks the total amounts of tokens (each staking denom is tracked
+separately) and their state (bonded or loose). 
+
+Note: `NotBondedTokens` _includes_ both tokens in an `unbonding` state as well
+as fully `unbonded` state. 
 
  - Pool: `0x01 -> amino(pool)`
 
@@ -15,29 +17,27 @@ type Pool struct {
 }
 ```
 
-### Params
+## Params
 
-Params is global data structure that stores system parameters and defines
-overall functioning of the staking module. it is stored 
+Params is a module-wide configuration structure that stores system parameters
+and defines overall functioning of the staking module.
 
  - Params: `Paramsspace("staking") -> amino(params)`
 
 ```golang
 type Params struct {
-	UnbondingTime time.Duration // time duration of unbonding
+    UnbondingTime time.Duration // time duration of unbonding
     MaxValidators uint16        // maximum number of validators
     BondDenom     string        // bondable coin denomination
 }
 ```
 
-### Validator
+## Validator
 
-Validators are identified according to the `OperatorAddr`, an SDK validator
-address for the operator of the validator.
-Validators also have a `ConsPubKey`, the public key of the validator used in
-Tendermint consensus. The validator can be retrieved from it's `ConsPubKey`
-once it can be converted into the corresponding `ConsAddr`. Validators are
-indexed in the store using the following maps:
+Validators objects should be primarily stored and accessed by the
+`OperatorAddr`, an SDK validator address for the operator of the validator. Two
+additional indexes are maintained in order to fulfill required lookups for
+slashing and validator-set updates. 
 
 - Validators: `0x21 | OperatorAddr -> amino(validator)`
 - ValidatorsByConsAddr: `0x22 | ConsAddr -> OperatorAddr`
@@ -48,19 +48,20 @@ associated validator, where the public key of that validator can change in the
 future. Delegators can refer to the immutable operator of the validator, without
 concern for the changing public key.
 
-`ValidatorsByPubKey` is a secondary index that enables lookups for slashing.
+`ValidatorByConsAddr` is a secondary index that enables lookups for slashing.
 When Tendermint reports evidence, it provides the validator address, so this
-map is needed to find the operator.
+map is needed to find the operator. Note that the `ConsAddr` corresponds to the
+address which can be derived from the validator's `ConsPubKey`. 
 
 `ValidatorsByPower` is a secondary index that provides a sorted list of
 potential validators to quickly determine the current active set. Note 
 that all validators where `Jailed` is true are not stored within this index.
 
-The `Validator` holds the current state of the validator.
+Each validator's state is stored in a `Validator` struct:
 
 ```golang
 type Validator struct {
-	OperatorAddr    sdk.ValAddress // address of the validator's operator; bech encoded in JSON
+    OperatorAddr    sdk.ValAddress // address of the validator's operator; bech encoded in JSON
     ConsPubKey      crypto.PubKey  // Tendermint consensus pubkey of validator
     Jailed          bool           // has the validator been jailed?
 
@@ -71,17 +72,17 @@ type Validator struct {
     Description Description  // description terms for the validator
 
     // Needed for ordering vals in the by-power key
-	UnbondingHeight  int64     // if unbonding, height at which this validator has begun unbonding
-	UnbondingMinTime time.Time // if unbonding, min time for the validator to complete unbonding
+    UnbondingHeight  int64     // if unbonding, height at which this validator has begun unbonding
+    UnbondingMinTime time.Time // if unbonding, min time for the validator to complete unbonding
 
     Commission Commission // info about the validator's commission
 }
 
 Commission struct {
-	Rate          sdk.Dec   // the commission rate charged to delegators
-	MaxRate       sdk.Dec   // maximum commission rate which this validator can ever charge
-	MaxChangeRate sdk.Dec   // maximum daily increase of the validator commission
-	UpdateTime    time.Time // the last time the commission rate was changed
+    Rate          sdk.Dec   // the commission rate charged to delegators
+    MaxRate       sdk.Dec   // maximum commission rate which this validator can ever charge
+    MaxChangeRate sdk.Dec   // maximum daily increase of the validator commission
+    UpdateTime    time.Time // the last time the commission rate was changed
 }
 
 type Description struct {
@@ -92,7 +93,7 @@ type Description struct {
 }
 ```
 
-### Delegation
+## Delegation
 
 Delegations are identified by combining `DelegatorAddr` (the address of the delegator)
 with the `ValidatorAddr` Delegators are indexed in the store as follows:
@@ -112,7 +113,7 @@ type Delegation struct {
 }
 ```
 
-### UnbondingDelegation
+## UnbondingDelegation
 
 Shares in a `Delegation` can be unbonded, but they must for some time exist as
 an `UnbondingDelegation`, where shares can be reduced if Byzantine behavior is
@@ -147,14 +148,13 @@ type UnbondingDelegationEntry struct {
 }
 ```
 
-### Redelegation
+## Redelegation
 
 The bonded tokens worth of a `Delegation` may be instantly redelegated from a
 source validator to a different validator (destination validator). However when
 this occurs they must be tracked in a `Redelegation` object, whereby their
-shares can be slashed if their tokens were found to contribute to Byzantine
-behavior in the source validator.  This is tracked as moving a delegation from
-a `ValidatorSrcAddr` to a `ValidatorDstAddr`.
+shares can be slashed if their tokens have contributed to a Byzantine fault
+committed by the source validator. 
 
 `Redelegation` are indexed in the store as:
 
@@ -166,9 +166,12 @@ The first map here is used for queries, to lookup all redelegations for a given
 delegator. The second map is used for slashing based on the `ValidatorSrcAddr`,
 while the third map is for slashing based on the `ValidatorDstAddr`.
 
-A redelegation object is created every time a redelegation occurs. The
-destination delegation of a redelegation may not itself undergo a new
-redelegation until the original redelegation has been completed.
+A redelegation object is created every time a redelegation occurs.  To prevent
+"redelegation hopping" redelegations may not occure under the situation that:
+ - the (re)delegator already has another unmature redelegation in progress
+   with a destination to a validator (let's call it `Validator X`)
+ - and, the (re)delegator is attempting to create a _new_ redelegation 
+   where the source validator for this new redelegation is `Validator-X`. 
 
 ```golang
 type Redelegation struct {

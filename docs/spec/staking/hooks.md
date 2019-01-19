@@ -1,19 +1,25 @@
-## Receiver Hooks
+# Hooks
 
-The staking module allow for the following hooks to be registered with staking events:
+Other modules may register operations to execute when a certain event has
+occurred within staking.  These events can be registered to execute either
+right `Before` or `After` the staking event (as per the hook name). The
+following hooks can registered with staking: 
 
-``` golang
-type StakingHooks interface {
-	AfterValidatorCreated(ctx Context, valAddr ValAddress)                       // Must be called when a validator is created
-	BeforeValidatorModified(ctx Context, valAddr ValAddress)                      // Must be called when a validator's state changes
-	AfterValidatorRemoved(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Must be called when a validator is deleted
-
-	AfterValidatorBonded(ctx Context, consAddr ConsAddress, valAddr ValAddress)         // Must be called when a validator is bonded
-	AfterValidatorBeginUnbonding(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Must be called when a validator begins unbonding
-	AfterValidatorPowerDidChange(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Called at EndBlock when a validator's power did change
-
-	BeforeDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is created
-	BeforeDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified
-	BeforeDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is removed
-}
-```
+ - `AfterValidatorCreated(Context, ValAddress)`
+   - called when a validator is created
+ - `BeforeValidatorModified(Context, ValAddress)`
+   - called when a validator's state is changed
+ - `AfterValidatorRemoved(Context, ConsAddress, ValAddress)`
+   - called when a validator is deleted
+ - `AfterValidatorBonded(Context, ConsAddress, ValAddress)`
+   - called when a validator is bonded
+ - `AfterValidatorBeginUnbonding(Context, ConsAddress, ValAddress)`
+   - called when a validator begins unbonding
+ - `AfterValidatorPowerDidChange(Context, ConsAddress, ValAddress)`
+   - called at EndBlock when a validator's power is changed
+ - `BeforeDelegationCreated(Context, AccAddress, ValAddress)`
+   - called when a delegation is created
+ - `BeforeDelegationSharesModified(Context, AccAddress, ValAddress)`
+   - called when a delegation's shares are modified
+ - `BeforeDelegationRemoved(Context, AccAddress, ValAddress)`
+   - called when a delegation is removed

@@ -29,7 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
-	staking "github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -54,7 +54,7 @@ func init() {
 	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
+func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) json.RawMessage {
 	var genesisAccounts []GenesisAccount
 
 	amount := int64(r.Intn(1e6))
@@ -67,13 +67,44 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		"\t{amount of steak per account: %v, initially bonded validators: %v}\n",
 		amount, numInitiallyBonded)
 
-	// Randomly generate some genesis accounts
-	for _, acc := range accs {
+	// randomly generate some genesis accounts
+	for i, acc := range accs {
 		coins := sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))}
-		genesisAccounts = append(genesisAccounts, GenesisAccount{
-			Address: acc.Address,
-			Coins:   coins,
-		})
+		bacc := auth.NewBaseAccountWithAddress(acc.Address)
+		bacc.SetCoins(coins)
+
+		var gacc GenesisAccount
+
+		// Only consider making a vesting account once the initial bonded validator
+		// set is exhausted due to needing to track DelegatedVesting.
+		if int64(i) > numInitiallyBonded && r.Intn(100) < 50 {
+			var (
+				vacc    auth.VestingAccount
+				endTime int
+			)
+
+			startTime := genesisTimestamp.Unix()
+
+			// Allow for some vesting accounts to vest very quickly while others very
+			// slowly.
+			if r.Intn(100) < 50 {
+				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*24*30)))
+			} else {
+				endTime = randIntBetween(r, int(startTime), int(startTime+(60*60*12)))
+			}
+
+			if r.Intn(100) < 50 {
+				vacc = auth.NewContinuousVestingAccount(&bacc, startTime, int64(endTime))
+			} else {
+				vacc = auth.NewDelayedVestingAccount(&bacc, int64(endTime))
+			}
+
+			gacc = NewGenesisAccountI(vacc)
+		} else {
+			gacc = NewGenesisAccount(&bacc)
+		}
+
+		genesisAccounts = append(genesisAccounts, gacc)
 	}
 
 	authGenesis := auth.GenesisState{
@@ -120,8 +151,8 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		Params: slashing.Params{
 			MaxEvidenceAge:          stakingGenesis.Params.UnbondingTime,
 			SignedBlocksWindow:      int64(randIntBetween(r, 10, 1000)),
-			DowntimeJailDuration:    time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
 			MinSignedPerWindow:      sdk.NewDecWithPrec(int64(r.Intn(10)), 1),
+			DowntimeJailDuration:    time.Duration(randIntBetween(r, 60, 60*60*24)) * time.Second,
 			SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(50) + 1))),
 			SlashFractionDowntime:   sdk.NewDec(1).Quo(sdk.NewDec(int64(r.Intn(200) + 1))),
 		},
@@ -156,18 +187,25 @@ func appStateFn(r *rand.Rand, accs []simulation.Account) json.RawMessage {
 		validators = append(validators, validator)
 		delegations = append(delegations, delegation)
 	}
-	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) +
-		(numInitiallyBonded * amount))
 
+	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Bonds = delegations
+
+	distrGenesis := distr.GenesisState{
+		FeePool:             distr.InitialFeePool(),
+		CommunityTax:        sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
+		BaseProposerReward:  sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
+		BonusProposerReward: sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
+	}
+	fmt.Printf("Selected randomly generated distribution parameters:\n\t%+v\n", distrGenesis)
 
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		AuthData:     authGenesis,
 		StakingData:  stakingGenesis,
 		MintData:     mintGenesis,
-		DistrData:    distr.DefaultGenesisWithValidators(valAddrs),
+		DistrData:    distrGenesis,
 		SlashingData: slashingGenesis,
 		GovData:      govGenesis,
 	}
@@ -190,15 +228,14 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
 		{100, banksim.SingleInputSendMsg(app.accountKeeper, app.bankKeeper)},
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
-		{50, distrsim.SimulateMsgWithdrawDelegatorRewardsAll(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
-		{50, distrsim.SimulateMsgWithdrawValidatorRewardsAll(app.accountKeeper, app.distrKeeper)},
+		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},
 		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakingKeeper)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper)},
 		{100, stakingsim.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper)},
 		{5, stakingsim.SimulateMsgEditValidator(app.stakingKeeper)},
 		{100, stakingsim.SimulateMsgDelegate(app.accountKeeper, app.stakingKeeper)},
-		{100, stakingsim.SimulateMsgBeginUnbonding(app.accountKeeper, app.stakingKeeper)},
+		{100, stakingsim.SimulateMsgUndelegate(app.accountKeeper, app.stakingKeeper)},
 		{100, stakingsim.SimulateMsgBeginRedelegate(app.accountKeeper, app.stakingKeeper)},
 		{100, slashingsim.SimulateMsgUnjail(app.slashingKeeper)},
 	}

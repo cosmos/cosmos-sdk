@@ -647,7 +647,7 @@ func doSign(t *testing.T, port, name, password, chainID string, accnum, sequence
 	payload := authrest.SignBody{
 		Tx: msg,
 		BaseReq: utils.NewBaseReq(
-			name, password, "", chainID, "", "", accnum, sequence, nil, false, false,
+			name, password, "", chainID, "", "", accnum, sequence, nil, nil, false, false,
 		),
 	}
 	json, err := cdc.MarshalJSON(payload)
@@ -703,8 +703,9 @@ func doTransferWithGas(t *testing.T, port, seed, name, memo, password string, ad
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
 
-	baseReq := utils.NewBaseReq(name, password, memo, chainID, gas,
-		fmt.Sprintf("%f", gasAdjustment), accnum, sequence, fees,
+	baseReq := utils.NewBaseReq(
+		name, password, memo, chainID, gas,
+		fmt.Sprintf("%f", gasAdjustment), accnum, sequence, fees, nil,
 		generateOnly, simulate,
 	)
 
@@ -736,7 +737,7 @@ func doDelegate(t *testing.T, port, name, password string,
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 	msg := msgDelegationsInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
@@ -763,15 +764,15 @@ type msgDelegationsInput struct {
 }
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
-func doBeginUnbonding(t *testing.T, port, name, password string,
+func doUndelegate(t *testing.T, port, name, password string,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, false, false)
-	msg := msgBeginUnbondingInput{
+	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
+	msg := msgUndelegateInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
@@ -790,7 +791,7 @@ func doBeginUnbonding(t *testing.T, port, name, password string,
 	return result
 }
 
-type msgBeginUnbondingInput struct {
+type msgUndelegateInput struct {
 	BaseReq       utils.BaseReq  `json:"base_req"`
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
@@ -806,7 +807,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	sequence := acc.GetSequence()
 
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
 	msg := msgBeginRedelegateInput{
 		BaseReq:          baseReq,
@@ -1037,7 +1038,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
 	pr := postProposalReq{
 		Title:          "Test",
@@ -1133,7 +1134,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
 	dr := depositReq{
 		Depositor: proposerAddr,
@@ -1187,7 +1188,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
 	vr := voteReq{
 		Voter:   proposerAddr,
@@ -1319,7 +1320,7 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 func doUnjail(t *testing.T, port, seed, name, password string,
 	valAddr sdk.ValAddress, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", 1, 1, fees, false, false)
+	baseReq := utils.NewBaseReq(name, password, "", chainID, "", "", 1, 1, fees, nil, false, false)
 
 	ur := unjailReq{
 		BaseReq: baseReq,

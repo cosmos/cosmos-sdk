@@ -22,7 +22,6 @@ type SignBody struct {
 // nolint: unparam
 // sign tx REST handler
 func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m SignBody
 
@@ -36,7 +35,7 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		}
 
 		// validate tx
- 		// discard error if it's CodeNoSignatures as the tx comes with no signatures
+		// discard error if it's CodeNoSignatures as the tx comes with no signatures
 		if err := m.Tx.ValidateBasic(); err != nil && err.Code() != sdk.CodeNoSignatures {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -51,7 +50,9 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			false,
 			m.BaseReq.ChainID,
 			m.Tx.GetMemo(),
-			m.Tx.Fee.Amount)
+			m.Tx.Fee.Amount,
+			nil,
+		)
 
 		signedTx, err := txBldr.SignStdTx(m.BaseReq.Name, m.BaseReq.Password, m.Tx, m.AppendSig)
 		if keyerror.IsErrKeyNotFound(err) {

@@ -12,7 +12,17 @@ Must specify these options: --chain-id  when --trust-node is false
 you must choose whether you wish to verify lite client proofs. If you trust the node which you are querying, you can simply pass `--trust-node=true` - otherwise you'll need to specify `--chain-id`.
 :::
 
-`gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets. Here is a list of useful `gaiacli` commands, including usage examples.
+`gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets.
+Its configuration file resides in `$HOME/.gaiacli/config/config.toml` and can be edited either
+by hand or via the `gaiacli config` command:
+
+```bash
+gaiacli config chain-id gaia-9004
+```
+
+For more information on the command usage, refer to its help screen: `gaiacli config --help`.
+
+Here is a list of useful `gaiacli` commands, including usage examples.
 
 ### Keys
 
@@ -87,15 +97,63 @@ Note that this is the Tendermint signing key, _not_ the operator key you will us
 We strongly recommend _NOT_ using the same passphrase for multiple keys. The Tendermint team and the Interchain Foundation will not be responsible for the loss of funds.
 :::
 
-#### Multisig public keys
+#### Generate multisig public keys
 
 You can generate and print a multisig public key by typing:
 
 ```bash
-gaiacli show --multisig-threshold K name1 name2 name3 [...]
+gaiacli keys add --multisig=name1,name2,name3[...] --multisig-threshold=K new_key_name
 ```
 
-`K` is the minimum weight, e.g. minimum number of private keys that must have signed the transactions that carry the generated public key.
+`K` is the minimum number of private keys that must have signed the
+transactions that carry the public key's address as signer.
+
+The `--multisig` flag must contain the name of public keys that will be combined into a
+public key that will be generated and stored as `new_key_name` in the local database.
+All names supplied through `--multisig` must already exist in the local database. Unless
+the flag `--nosort` is set, the order in which the keys are supplied on the command line
+does not matter, i.e. the following commands generate two identical keys:
+
+```bash
+gaiacli keys add --multisig=foo,bar,baz --multisig-threshold=2 multisig_address
+gaiacli keys add --multisig=baz,foo,bar --multisig-threshold=2 multisig_address
+```
+
+Multisig addresses can also be generated on-the-fly and printed through the which command:
+
+```bash
+gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
+```
+
+For more information regarding how to generate, sign and broadcast transactions with a
+multi signature account see [Multisig Transactions](#multisig-transactions).
+
+### Fees & Gas
+
+Each transaction may either supply fees or gas prices, but not both. Most users
+will typically provide fees as this is the cost you will end up incurring for
+the transaction being included in the ledger.
+
+Validator's have a minimum gas price (multi-denom) configuration and they use
+this value when when determining if they should include the transaction in a block
+during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must
+supply fees that match all the denominations the validator requires.
+
+__Note__: With such a mechanism in place, validators may start to prioritize
+txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield
+higher tx priority.
+
+e.g.
+
+```bash
+gaiacli tx send ... --fees=100photino
+```
+
+or
+
+```bash
+gaiacli tx send ... --gas-prices=0.000001stake
+```
 
 ### Account
 
@@ -182,7 +240,7 @@ gaiacli tx sign \
   unsignedSendTx.json > signedSendTx.json
 ```
 
-You can validate the transaction's signagures by typing the following:
+You can validate the transaction's signatures by typing the following:
 
 ```bash
 gaiacli tx sign --validate-signatures signedSendTx.json
@@ -212,6 +270,11 @@ And for using multiple `tags`:
 
 ```bash
 gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
+```
+
+The pagination is supported as well via `page` and `limit`:
+```bash
+gaiacli query txs --tags='<tag>:<value>' --page=1 --limit=20
 ```
 
 ::: tip Note
@@ -570,4 +633,131 @@ To check the current governance parameters run:
 gaiacli query gov param voting
 gaiacli query gov param tallying
 gaiacli query gov param deposit
+```
+
+### Fee Distribution
+
+#### Query distribution parameters
+
+To check the current distribution parameters, run:
+
+```bash
+gaiacli query distr params
+```
+
+#### Query outstanding rewards
+
+To check the current outstanding (un-withdrawn) rewards, run:
+
+```bash
+gaiacli query distr outstanding-rewards
+```
+
+#### Query validator commission
+
+To check the current outstanding commission for a validator, run:
+
+```bash
+gaiacli query distr commission <validator_address>
+```
+
+#### Query validator slashes
+
+To check historical slashes for a validator, run:
+
+```bash
+gaiacli query distr slashes <validator_address> <start_height> <end_height>
+```
+
+#### Query delegator rewards
+
+To check current rewards for a delegation (were they to be withdrawn), run:
+
+```bash
+gaiacli query distr rewards <delegator_address> <validator_address>
+```
+
+### Multisig transactions
+
+Multisig transactions require signatures of multiple private keys. Thus, generating and signing
+a transaction from a multisig account involve cooperation among the parties involved. A multisig
+transaction can be initiated by any of the key holders, and at least one of them would need to
+import other parties' public keys into their local database and generate a multisig public key
+in order to finalize and broadcast the transaction.
+
+For example, given a multisig key comprising the keys `p1`, `p2`, and `p3`, each of which is held
+by a distinct party, the user holding `p1` would require to import both `p2` and `p3` in order to
+generate the multisig account public key:
+
+```
+gaiacli keys add \
+  --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4 \
+  p2
+
+gaiacli keys add \
+  --pubkey=cosmospub1addwnpepqgj04jpm9wrdml5qnss9kjxkmxzywuklnkj0g3a3f8l5wx9z4ennz84ym5t \
+  p3
+
+gaiacli keys add \
+  --multisig-threshold=2
+  --multisig=p1,p2,p3
+  p1p2p3
+```
+
+A new multisig public key `p1p2p3` has been stored, and its address will be
+used as signer of multisig transactions:
+
+```bash
+gaiacli keys show --address p1p2p3
+```
+
+The first step to create a multisig transaction is to initiate it on behalf
+of the multisig address created above:
+
+```bash
+gaiacli tx send \
+  --from=<multisig_address> \
+  --to=cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned \
+  --amount=10stake \
+  --generate-only > unsignedTx.json
+```
+
+The file `unsignedTx.json` contains the unsigned transaction encoded in JSON.
+`p1` can now sign the transaction with its own private key:
+
+```bash
+gaiacli tx sign \
+  --multisig=<multisig_address> \
+  --name=p1 \
+  --output-document=p1signature.json \
+  unsignedTx.json
+```
+
+Once the signature is generated, `p1` transmits both `unsignedTx.json` and
+`p1signature.json` to `p2` or `p3`, which in turn will generate their
+respective signature:
+
+```bash
+gaiacli tx sign \
+  --multisig=<multisig_address> \
+  --name=p2 \
+  --output-document=p2signature.json \
+  unsignedTx.json
+```
+
+`p1p2p3` is a 2-of-3 multisig key, therefore one additional signature
+is sufficient. Any the key holders can now generate the multisig
+transaction by combining the required signature files:
+
+```bash
+gaiacli tx multisign \
+  unsignedTx.json \
+  p1p2p3 \
+  p1signature.json p2signature.json > signedTx.json
+```
+
+The transaction can now be sent to the node:
+
+```bash
+gaiacli tx broadcast signedTx.json
 ```

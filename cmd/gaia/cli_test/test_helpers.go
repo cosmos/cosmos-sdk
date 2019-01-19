@@ -27,15 +27,19 @@ import (
 )
 
 const (
-	denom    = "stake"
-	keyFoo   = "foo"
-	keyBar   = "bar"
-	fooDenom = "footoken"
-	feeDenom = "feetoken"
+	denom        = "stake"
+	keyFoo       = "foo"
+	keyBar       = "bar"
+	fooDenom     = "footoken"
+	feeDenom     = "feetoken"
+	fee2Denom    = "fee2token"
+	keyBaz       = "baz"
+	keyFooBarBaz = "foobarbaz"
 )
 
 var startCoins = sdk.Coins{
-	sdk.NewInt64Coin(feeDenom, 1000),
+	sdk.NewInt64Coin(feeDenom, 1000000),
+	sdk.NewInt64Coin(fee2Denom, 1000000),
 	sdk.NewInt64Coin(fooDenom, 1000),
 	sdk.NewInt64Coin(denom, 150),
 }
@@ -56,17 +60,16 @@ type Fixtures struct {
 
 // NewFixtures creates a new instance of Fixtures with many vars set
 func NewFixtures(t *testing.T) *Fixtures {
-	tmpDir := os.TempDir()
-	gaiadHome := fmt.Sprintf("%s%s%s%s.test_gaiad", tmpDir, string(os.PathSeparator), t.Name(), string(os.PathSeparator))
-	gaiacliHome := fmt.Sprintf("%s%s%s%s.test_gaiacli", tmpDir, string(os.PathSeparator), t.Name(), string(os.PathSeparator))
+	tmpDir, err := ioutil.TempDir("", "gaia_integration_"+t.Name()+"_")
+	require.NoError(t, err)
 	servAddr, port, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 	p2pAddr, _, err := server.FreeTCPAddr()
 	require.NoError(t, err)
 	return &Fixtures{
 		T:        t,
-		GDHome:   gaiadHome,
-		GCLIHome: gaiacliHome,
+		GDHome:   filepath.Join(tmpDir, ".gaiad"),
+		GCLIHome: filepath.Join(tmpDir, ".gaiacli"),
 		RPCAddr:  servAddr,
 		P2PAddr:  p2pAddr,
 		Port:     port,
@@ -84,14 +87,20 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 	// Ensure keystore has foo and bar keys
 	f.KeysDelete(keyFoo)
 	f.KeysDelete(keyBar)
+	f.KeysDelete(keyBar)
+	f.KeysDelete(keyFooBarBaz)
 	f.KeysAdd(keyFoo)
 	f.KeysAdd(keyBar)
+	f.KeysAdd(keyBaz)
+	f.KeysAdd(keyFooBarBaz, "--multisig-threshold=2", fmt.Sprintf(
+		"--multisig=%s,%s,%s", keyFoo, keyBar, keyBaz))
 
 	// Ensure that CLI output is in JSON format
 	f.CLIConfig("output", "json")
 
 	// NOTE: GDInit sets the ChainID
 	f.GDInit(keyFoo)
+	f.CLIConfig("chain-id", f.ChainID)
 
 	// Start an account with tokens
 	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
@@ -111,7 +120,7 @@ func (f *Fixtures) Cleanup(dirs ...string) {
 
 // Flags returns the flags necessary for making most CLI calls
 func (f *Fixtures) Flags() string {
-	return fmt.Sprintf("--home=%s --node=%s --chain-id=%s", f.GCLIHome, f.RPCAddr, f.ChainID)
+	return fmt.Sprintf("--home=%s --node=%s", f.GCLIHome, f.RPCAddr)
 }
 
 //___________________________________________________________________________________
@@ -176,7 +185,7 @@ func (f *Fixtures) GDStart(flags ...string) *tests.Process {
 // KeysDelete is gaiacli keys delete
 func (f *Fixtures) KeysDelete(name string, flags ...string) {
 	cmd := fmt.Sprintf("gaiacli keys delete --home=%s %s", f.GCLIHome, name)
-	executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+	executeWrite(f.T, addFlags(cmd, append(append(flags, "-y"), "-f")))
 }
 
 // KeysAdd is gaiacli keys add
@@ -231,6 +240,16 @@ func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, strin
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("gaiacli tx broadcast %v --json %v", f.Flags(), fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// TxMultisign is gaiacli tx multisign
+func (f *Fixtures) TxMultisign(fileName, name string, signaturesFiles []string,
+	flags ...string) (bool, string, string) {
+
+	cmd := fmt.Sprintf("gaiacli tx multisign %v %s %s %s", f.Flags(),
+		fileName, name, strings.Join(signaturesFiles, " "),
+	)
+	return executeWriteRetStdStreams(f.T, cmd)
 }
 
 //___________________________________________________________________________________
@@ -295,14 +314,21 @@ func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.Ba
 // gaiacli query txs
 
 // QueryTxs is gaiacli query txs
-func (f *Fixtures) QueryTxs(tags ...string) []tx.Info {
-	cmd := fmt.Sprintf("gaiacli query txs --tags='%s' %v", queryTags(tags), f.Flags())
+func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []tx.Info {
+	cmd := fmt.Sprintf("gaiacli query txs --page=%d --limit=%d --tags='%s' %v", page, limit, queryTags(tags), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
 	var txs []tx.Info
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &txs)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
 	return txs
+}
+
+// QueryTxsInvalid query txs with wrong parameters and compare expected error
+func (f *Fixtures) QueryTxsInvalid(expectedErr error, page, limit int, tags ...string) {
+	cmd := fmt.Sprintf("gaiacli query txs --page=%d --limit=%d --tags='%s' %v", page, limit, queryTags(tags), f.Flags())
+	_, err := tests.ExecuteT(f.T, cmd, "")
+	require.EqualError(f.T, expectedErr, err)
 }
 
 //___________________________________________________________________________________

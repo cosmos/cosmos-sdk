@@ -19,7 +19,7 @@ import (
 )
 
 // AppStateFn returns the app state json bytes
-type AppStateFn func(r *rand.Rand, accs []Account) json.RawMessage
+type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) json.RawMessage
 
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
@@ -32,12 +32,13 @@ func Simulate(t *testing.T, app *baseapp.BaseApp,
 }
 
 // initialize the chain for the simulation
-func initChain(r *rand.Rand, params Params, accounts []Account,
-	app *baseapp.BaseApp,
-	appStateFn AppStateFn) mockValidators {
+func initChain(
+	r *rand.Rand, params Params, accounts []Account,
+	app *baseapp.BaseApp, appStateFn AppStateFn, genesisTimestamp time.Time,
+) mockValidators {
 
 	req := abci.RequestInitChain{
-		AppStateBytes: appStateFn(r, accounts),
+		AppStateBytes: appStateFn(r, accounts, genesisTimestamp),
 	}
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
@@ -62,9 +63,9 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 	params := RandomParams(r) // := DefaultParams()
 	fmt.Printf("Randomized simulation params: %+v\n", params)
 
-	timestamp := RandTimestamp(r)
+	genesisTimestamp := RandTimestamp(r)
 	fmt.Printf("Starting the simulation from time %v, unixtime %v\n",
-		timestamp.UTC().Format(time.UnixDate), timestamp.Unix())
+		genesisTimestamp.UTC().Format(time.UnixDate), genesisTimestamp.Unix())
 
 	timeDiff := maxTimePerBlock - minTimePerBlock
 	accs := RandomAccounts(r, params.NumKeys)
@@ -72,12 +73,12 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators := initChain(r, params, accs, app, appStateFn)
+	validators := initChain(r, params, accs, app, appStateFn, genesisTimestamp)
 	nextValidators := validators
 
 	header := abci.Header{
 		Height:          1,
-		Time:            timestamp,
+		Time:            genesisTimestamp,
 		ProposerAddress: validators.randomProposer(r),
 	}
 	opCount := 0

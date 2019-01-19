@@ -18,13 +18,14 @@ func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.cms.SetPruning(opts) }
 }
 
-// SetMinimumFees returns an option that sets the minimum fees on the app.
-func SetMinimumFees(minFees string) func(*BaseApp) {
-	fees, err := sdk.ParseCoins(minFees)
+// SetMinimumGasPrices returns an option that sets the minimum gas prices on the app.
+func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
+	gasPrices, err := sdk.ParseDecCoins(gasPricesStr)
 	if err != nil {
-		panic(fmt.Sprintf("invalid minimum fees: %v", err))
+		panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
 	}
-	return func(bap *BaseApp) { bap.setMinimumFees(fees) }
+
+	return func(bap *BaseApp) { bap.setMinGasPrices(gasPrices) }
 }
 
 func (app *BaseApp) SetName(name string) {

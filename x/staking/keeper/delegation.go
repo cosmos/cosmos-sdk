@@ -77,6 +77,7 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
+	k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 }
 
 // remove a delegation from store
@@ -456,10 +457,9 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	}
 
 	if subtractAccount {
-		// Account new shares, save
-		_, _, err = k.bankKeeper.SubtractCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
+		_, err := k.bankKeeper.DelegateCoins(ctx, delegation.DelegatorAddr, sdk.Coins{bondAmt})
 		if err != nil {
-			return
+			return sdk.Dec{}, err
 		}
 	}
 
@@ -545,7 +545,7 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 		return completionTime, height, true
 
 	case validator.Status == sdk.Unbonding:
-		completionTime = validator.UnbondingMinTime
+		completionTime = validator.UnbondingCompletionTime
 		height = validator.UnbondingHeight
 		return completionTime, height, false
 
@@ -555,7 +555,7 @@ func (k Keeper) getBeginInfo(ctx sdk.Context, valSrcAddr sdk.ValAddress) (
 }
 
 // begin unbonding an unbonding record
-func (k Keeper) BeginUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
+func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress,
 	valAddr sdk.ValAddress, sharesAmount sdk.Dec) (completionTime time.Time, sdkErr sdk.Error) {
 
 	// create the unbonding delegation
@@ -569,7 +569,7 @@ func (k Keeper) BeginUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 
 	// no need to create the ubd object just complete now
 	if completeNow {
-		_, _, err := k.bankKeeper.AddCoins(ctx, delAddr, sdk.Coins{balance})
+		_, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance})
 		if err != nil {
 			return completionTime, err
 		}

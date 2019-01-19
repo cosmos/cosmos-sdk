@@ -213,9 +213,9 @@ type RedelegationEntry struct {
 	CreationHeight int64     `json:"creation_height"` // height which the redelegation took place
 	CompletionTime time.Time `json:"completion_time"` // unix time for redelegation completion
 	InitialBalance sdk.Coin  `json:"initial_balance"` // initial balance when redelegation started
-	Balance        sdk.Coin  `json:"balance"`         // current balance
-	SharesSrc      sdk.Dec   `json:"shares_src"`      // amount of source shares redelegating
-	SharesDst      sdk.Dec   `json:"shares_dst"`      // amount of destination shares redelegating
+	Balance        sdk.Coin  `json:"balance"`         // current balance (current value held in destination validator)
+	SharesSrc      sdk.Dec   `json:"shares_src"`      // amount of source-validator shares removed by redelegation
+	SharesDst      sdk.Dec   `json:"shares_dst"`      // amount of destination-validator shares created by redelegation
 }
 
 // NewRedelegation - create a new redelegation object

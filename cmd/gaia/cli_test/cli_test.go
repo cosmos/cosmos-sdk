@@ -1,6 +1,7 @@
 package clitest
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -24,45 +25,92 @@ import (
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+func TestGaiaCLIKeysAddMultisig(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// key names order does not matter
+	f.KeysAdd("msig1", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", keyBar, keyBaz))
+	f.KeysAdd("msig2", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", keyBaz, keyBar))
+	require.Equal(t, f.KeysShow("msig1").Address, f.KeysShow("msig2").Address)
+
+	f.KeysAdd("msig3", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", keyBar, keyBaz),
+		"--nosort")
+	f.KeysAdd("msig4", "--multisig-threshold=2",
+		fmt.Sprintf("--multisig=%s,%s", keyBaz, keyBar),
+		"--nosort")
+	require.NotEqual(t, f.KeysShow("msig3").Address, f.KeysShow("msig4").Address)
+}
+
 func TestGaiaCLIMinimumFees(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)
 
 	// start gaiad server with minimum fees
-	fees := fmt.Sprintf("--minimum_fees=%s,%s", sdk.NewInt64Coin(feeDenom, 2), sdk.NewInt64Coin(denom, 2))
+	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
+	fees := fmt.Sprintf(
+		"--minimum_gas_prices=%s,%s",
+		sdk.NewDecCoinFromDec(feeDenom, minGasPrice),
+		sdk.NewDecCoinFromDec(fee2Denom, minGasPrice),
+	)
 	proc := f.GDStart(fees)
 	defer proc.Stop(false)
 
 	barAddr := f.KeyAddress(keyBar)
-	// fooAddr := f.KeyAddress(keyFoo)
-
-	// Check the amount of coins in the foo account to ensure that the right amount exists
-	fooAcc := f.QueryAccount(f.KeyAddress(keyFoo))
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Send a transaction that will get rejected
-	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10))
+	success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fee2Denom, 10))
 	require.False(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	// Ensure tx w/ correct fees (staking) pass
-	txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(denom, 23))
-	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), txFees)
+	// Ensure tx w/ correct fees pass
+	txFees := fmt.Sprintf("--fees=%s,%s", sdk.NewInt64Coin(feeDenom, 2), sdk.NewInt64Coin(fee2Denom, 2))
+	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fee2Denom, 10), txFees)
 	require.True(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	// Ensure tx w/ correct fees (feetoken) pass
-	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 23))
-	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(feeDenom, 10), txFees)
-	require.True(f.T, success)
-	tests.WaitForNextNBlocksTM(1, f.Port)
-
-	// Ensure tx w/ improper fees (footoken) fails
-	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 23))
+	// Ensure tx w/ improper fees fails
+	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 5))
 	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 10), txFees)
 	require.False(f.T, success)
 
 	// Cleanup testing directories
+	f.Cleanup()
+}
+
+func TestGaiaCLIGasPrices(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server with minimum fees
+	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
+	proc := f.GDStart(fmt.Sprintf("--minimum_gas_prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
+	defer proc.Stop(false)
+
+	barAddr := f.KeyAddress(keyBar)
+
+	// insufficient gas prices (tx fails)
+	badGasPrice, _ := sdk.NewDecFromStr("0.000003")
+	success, _, _ := f.TxSend(
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 50),
+		fmt.Sprintf("--gas-prices=%s", sdk.NewDecCoinFromDec(feeDenom, badGasPrice)))
+	require.False(t, success)
+
+	// wait for a block confirmation
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// sufficient gas prices (tx passes)
+	success, _, _ = f.TxSend(
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 50),
+		fmt.Sprintf("--gas-prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
+	require.True(t, success)
+
+	// wait for a block confirmation
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
 	f.Cleanup()
 }
 
@@ -71,7 +119,8 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	f := InitFixtures(t)
 
 	// start gaiad server with minimum fees
-	proc := f.GDStart(fmt.Sprintf("--minimum_fees=%s", sdk.NewInt64Coin(fooDenom, 1)))
+	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
+	proc := f.GDStart(fmt.Sprintf("--minimum_gas_prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
 	defer proc.Stop(false)
 
 	// Save key addresses for later use
@@ -79,12 +128,12 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 	barAddr := f.KeyAddress(keyBar)
 
 	fooAcc := f.QueryAccount(fooAddr)
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
+	fooAmt := fooAcc.GetCoins().AmountOf(fooDenom)
 
 	// test simulation
 	success, _, _ := f.TxSend(
 		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 1000),
-		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 1)), "--dry-run")
+		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 2)), "--dry-run")
 	require.True(t, success)
 
 	// Wait for a block
@@ -92,12 +141,12 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// ensure state didn't change
 	fooAcc = f.QueryAccount(fooAddr)
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
+	require.Equal(t, fooAmt.Int64(), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// insufficient funds (coins + fees) tx fails
 	success, _, _ = f.TxSend(
-		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 1000),
-		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 1)))
+		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 10000000),
+		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 2)))
 	require.False(t, success)
 
 	// Wait for a block
@@ -105,12 +154,12 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// ensure state didn't change
 	fooAcc = f.QueryAccount(fooAddr)
-	require.Equal(t, int64(1000), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
+	require.Equal(t, fooAmt.Int64(), fooAcc.GetCoins().AmountOf(fooDenom).Int64())
 
 	// test success (transfer = coins + fees)
 	success, _, _ = f.TxSend(
 		keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 500),
-		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(fooDenom, 300)))
+		fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 2)))
 	require.True(t, success)
 
 	f.Cleanup()
@@ -355,7 +404,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure transaction tags can be queried
-	txs := f.QueryTxs("action:submit_proposal", fmt.Sprintf("proposer:%s", fooAddr))
+	txs := f.QueryTxs(1, 50, "action:submit_proposal", fmt.Sprintf("proposer:%s", fooAddr))
 	require.Len(t, txs, 1)
 
 	// Ensure deposit was deducted
@@ -398,7 +447,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(15), deposit.Amount.AmountOf(denom).Int64())
 
 	// Ensure tags are set on the transaction
-	txs = f.QueryTxs("action:deposit", fmt.Sprintf("depositor:%s", fooAddr))
+	txs = f.QueryTxs(1, 50, "action:deposit", fmt.Sprintf("depositor:%s", fooAddr))
 	require.Len(t, txs, 1)
 
 	// Ensure account has expected amount of funds
@@ -435,7 +484,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, gov.OptionYes, votes[0].Option)
 
 	// Ensure tags are applied to voting transaction properly
-	txs = f.QueryTxs("action:vote", fmt.Sprintf("voter:%s", fooAddr))
+	txs = f.QueryTxs(1, 50, "action:vote", fmt.Sprintf("voter:%s", fooAddr))
 	require.Len(t, txs, 1)
 
 	// Ensure no proposals in deposit period
@@ -455,6 +504,54 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, "  2 - Apples", proposalsQuery)
 
 	f.Cleanup()
+}
+
+func TestGaiaCLIQueryTxPagination(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooAddr := f.KeyAddress(keyFoo)
+	barAddr := f.KeyAddress(keyBar)
+
+	for i := 1; i <= 30; i++ {
+		success := executeWrite(t, fmt.Sprintf(
+			"gaiacli tx send %s --amount=%dfootoken --to=%s --from=foo",
+			f.Flags(), i, barAddr), app.DefaultKeyPass)
+		require.True(t, success)
+		tests.WaitForNextNBlocksTM(1, f.Port)
+	}
+
+	// perPage = 15, 2 pages
+	txsPage1 := f.QueryTxs(1, 15, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage1, 15)
+	txsPage2 := f.QueryTxs(2, 15, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage2, 15)
+	require.NotEqual(t, txsPage1, txsPage2)
+	txsPage3 := f.QueryTxs(3, 15, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage3, 15)
+	require.Equal(t, txsPage2, txsPage3)
+
+	// perPage = 16, 2 pages
+	txsPage1 = f.QueryTxs(1, 16, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage1, 16)
+	txsPage2 = f.QueryTxs(2, 16, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPage2, 14)
+	require.NotEqual(t, txsPage1, txsPage2)
+
+	// perPage = 50
+	txsPageFull := f.QueryTxs(1, 50, fmt.Sprintf("sender:%s", fooAddr))
+	require.Len(t, txsPageFull, 30)
+	require.Equal(t, txsPageFull, append(txsPage1, txsPage2...))
+
+	// perPage = 0
+	f.QueryTxsInvalid(errors.New("ERROR: page must greater than 0"), 0, 50, fmt.Sprintf("sender:%s", fooAddr))
+
+	// limit = 0
+	f.QueryTxsInvalid(errors.New("ERROR: limit must greater than 0"), 1, 0, fmt.Sprintf("sender:%s", fooAddr))
 }
 
 func TestGaiaCLIValidateSignatures(t *testing.T) {
@@ -596,6 +693,180 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	f.Cleanup()
+}
+
+func TestGaiaCLIMultisignInsufficientCosigners(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server with minimum fees
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooBarBazAddr := f.KeyAddress(keyFooBarBaz)
+	barAddr := f.KeyAddress(keyBar)
+
+	// Send some tokens from one account to the other
+	success, _, _ := f.TxSend(keyFoo, fooBarBazAddr, sdk.NewInt64Coin(denom, 10))
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// Test generate sendTx with multisig
+	success, stdout, _ := f.TxSend(keyFooBarBaz, barAddr, sdk.NewInt64Coin(denom, 5), "--generate-only")
+	require.True(t, success)
+
+	// Write the output to disk
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// Sign with foo's key
+	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	fooSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(fooSignatureFile.Name())
+
+	// Multisign, not enough signatures
+	success, stdout, _ = f.TxMultisign(unsignedTxFile.Name(), keyFooBarBaz, []string{fooSignatureFile.Name()})
+	require.True(t, success)
+
+	// Write the output to disk
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// Validate the multisignature
+	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "--json")
+	require.False(t, success)
+
+	// Broadcast the transaction
+	success, _, _ = f.TxBroadcast(signedTxFile.Name())
+	require.False(t, success)
+}
+
+func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server with minimum fees
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooBarBazAddr := f.KeyAddress(keyFooBarBaz)
+	barAddr := f.KeyAddress(keyBar)
+
+	// Send some tokens from one account to the other
+	success, _, _ := f.TxSend(keyFoo, fooBarBazAddr, sdk.NewInt64Coin(denom, 10))
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// Ensure account balances match expected
+	fooBarBazAcc := f.QueryAccount(fooBarBazAddr)
+	require.Equal(t, int64(10), fooBarBazAcc.GetCoins().AmountOf(denom).Int64())
+
+	// Test generate sendTx with multisig
+	success, stdout, _ := f.TxSend(keyFooBarBaz, barAddr, sdk.NewInt64Coin(denom, 5), "--generate-only")
+	require.True(t, success)
+
+	// Write the output to disk
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// Sign with foo's key
+	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	fooSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(fooSignatureFile.Name())
+
+	// Sign with baz's key
+	success, stdout, _ = f.TxSign(keyBaz, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	bazSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(bazSignatureFile.Name())
+
+	// Multisign, keys in different order
+	success, stdout, _ = f.TxMultisign(unsignedTxFile.Name(), keyFooBarBaz, []string{
+		bazSignatureFile.Name(), fooSignatureFile.Name()})
+	require.True(t, success)
+
+	// Write the output to disk
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// Validate the multisignature
+	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "--json")
+	require.True(t, success)
+
+	// Broadcast the transaction
+	success, _, _ = f.TxBroadcast(signedTxFile.Name())
+	require.True(t, success)
+}
+
+func TestGaiaCLIMultisign(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server with minimum fees
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	fooBarBazAddr := f.KeyAddress(keyFooBarBaz)
+	bazAddr := f.KeyAddress(keyBaz)
+
+	// Send some tokens from one account to the other
+	success, _, _ := f.TxSend(keyFoo, fooBarBazAddr, sdk.NewInt64Coin(denom, 10))
+	require.True(t, success)
+	tests.WaitForNextNBlocksTM(1, f.Port)
+
+	// Ensure account balances match expected
+	fooBarBazAcc := f.QueryAccount(fooBarBazAddr)
+	require.Equal(t, int64(10), fooBarBazAcc.GetCoins().AmountOf(denom).Int64())
+
+	// Test generate sendTx with multisig
+	success, stdout, stderr := f.TxSend(keyFooBarBaz, bazAddr, sdk.NewInt64Coin(denom, 10), "--generate-only")
+	require.True(t, success)
+	require.Empty(t, stderr)
+
+	// Write the output to disk
+	unsignedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(unsignedTxFile.Name())
+
+	// Sign with foo's key
+	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	fooSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(fooSignatureFile.Name())
+
+	// Sign with bar's key
+	success, stdout, _ = f.TxSign(keyBar, unsignedTxFile.Name(), "--multisig", fooBarBazAddr.String())
+	require.True(t, success)
+
+	// Write the output to disk
+	barSignatureFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(barSignatureFile.Name())
+
+	// Multisign
+	success, stdout, _ = f.TxMultisign(unsignedTxFile.Name(), keyFooBarBaz, []string{
+		fooSignatureFile.Name(), barSignatureFile.Name()})
+	require.True(t, success)
+
+	// Write the output to disk
+	signedTxFile := writeToNewTempFile(t, stdout)
+	defer os.Remove(signedTxFile.Name())
+
+	// Validate the multisignature
+	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "--json")
+	require.True(t, success)
+
+	// Broadcast the transaction
+	success, _, _ = f.TxBroadcast(signedTxFile.Name())
+	require.True(t, success)
 }
 
 func TestGaiaCLIConfig(t *testing.T) {

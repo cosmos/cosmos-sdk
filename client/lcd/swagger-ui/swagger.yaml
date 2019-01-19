@@ -2238,6 +2238,10 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Coin"
+      gas_prices:
+        type: array
+        items:
+          $ref: "#/definitions/DecCoin"
       generate_only:
         type: boolean
         example: false

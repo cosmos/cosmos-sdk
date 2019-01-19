@@ -72,7 +72,7 @@ func TestHandleDoubleSign(t *testing.T) {
 
 	// Should be able to unbond now
 	del, _ := sk.GetDelegation(ctx, sdk.AccAddress(operatorAddr), operatorAddr)
-	msgUnbond := staking.NewMsgBeginUnbonding(sdk.AccAddress(operatorAddr), operatorAddr, del.GetShares())
+	msgUnbond := staking.NewMsgUndelegate(sdk.AccAddress(operatorAddr), operatorAddr, del.GetShares())
 	res = staking.NewHandler(sk)(ctx, msgUnbond)
 	require.True(t, res.IsOK())
 }

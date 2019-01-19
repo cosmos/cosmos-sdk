@@ -115,20 +115,13 @@ func testAddr(addr string) sdk.AccAddress {
 
 func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
 	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	return staking.MsgCreateValidator{
-		Description:   staking.Description{},
-		Commission:    commission,
-		DelegatorAddr: sdk.AccAddress(address),
-		ValidatorAddr: address,
-		PubKey:        pubKey,
-		Delegation:    sdk.NewCoin(stakingTypes.DefaultBondDenom, amt),
-	}
+	return staking.NewMsgCreateValidator(
+		address, pubKey, sdk.NewCoin(stakingTypes.DefaultBondDenom, amt),
+		staking.Description{}, commission,
+	)
 }
 
 func newTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, delAmount sdk.Int) staking.MsgDelegate {
-	return staking.MsgDelegate{
-		DelegatorAddr: delAddr,
-		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewCoin(stakingTypes.DefaultBondDenom, delAmount),
-	}
+	amount := sdk.NewCoin(staking.DefaultBondDenom, delAmount)
+	return staking.NewMsgDelegate(delAddr, valAddr, amount)
 }

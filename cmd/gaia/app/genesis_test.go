@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -56,7 +57,17 @@ func TestToAccount(t *testing.T) {
 	addr := sdk.AccAddress(priv.PubKey().Address())
 	authAcc := auth.NewBaseAccountWithAddress(addr)
 	genAcc := NewGenesisAccount(&authAcc)
-	require.Equal(t, authAcc, *genAcc.ToAccount())
+	acc := genAcc.ToAccount()
+	require.IsType(t, &auth.BaseAccount{}, acc)
+	require.Equal(t, &authAcc, acc.(*auth.BaseAccount))
+
+	vacc := auth.NewContinuousVestingAccount(
+		&authAcc, time.Now().Unix(), time.Now().Add(24*time.Hour).Unix(),
+	)
+	genAcc = NewGenesisAccountI(vacc)
+	acc = genAcc.ToAccount()
+	require.IsType(t, &auth.ContinuousVestingAccount{}, acc)
+	require.Equal(t, vacc, acc.(*auth.ContinuousVestingAccount))
 }
 
 func TestGaiaAppGenTx(t *testing.T) {

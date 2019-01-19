@@ -219,7 +219,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	validator, pool = validator.UpdateStatus(pool, sdk.Unbonding)
 	k.SetPool(ctx, pool)
 
-	validator.UnbondingMinTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
+	validator.UnbondingCompletionTime = ctx.BlockHeader().Time.Add(params.UnbondingTime)
 	validator.UnbondingHeight = ctx.BlockHeader().Height
 
 	// save the now unbonded validator record and power index

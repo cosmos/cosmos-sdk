@@ -74,8 +74,9 @@ type BaseApp struct {
 	// TODO move this in the future to baseapp param store on main store.
 	consensusParams *abci.ConsensusParams
 
-	// spam prevention
-	minimumFees sdk.Coins
+	// The minimum gas prices a validator is willing to accept for processing a
+	// transaction. This is mainly used for DoS and spam prevention.
+	minGasPrices sdk.DecCoins
 
 	// flag for sealing
 	sealed bool
@@ -213,13 +214,17 @@ func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
 	return nil
 }
 
-func (app *BaseApp) setMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
+func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
+	app.minGasPrices = gasPrices
+}
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).WithMinimumFees(app.minimumFees)
+		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).
+			WithMinGasPrices(app.minGasPrices)
 	}
+
 	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
 }
 
@@ -240,7 +245,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinimumFees(app.minimumFees),
+		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinGasPrices(app.minGasPrices),
 	}
 }
 
@@ -455,8 +460,9 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	}
 
 	// Cache wrap the commit-multistore for safety.
-	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger).
-		WithMinimumFees(app.minimumFees)
+	ctx := sdk.NewContext(
+		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger,
+	).WithMinGasPrices(app.minGasPrices)
 
 	// Passes the rest of the path as an argument to the querier.
 	// For example, in the path "custom/gov/proposal/test", the gov querier gets []string{"proposal", "test"} as the path

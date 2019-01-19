@@ -35,7 +35,6 @@ var (
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagNodeCliHome       = "node-cli-home"
 	flagStartingIPAddress = "starting-ip-address"
-	flagMinimumFees       = "minimum-fees"
 )
 
 const nodeDirPerm = 0755
@@ -82,7 +81,8 @@ Example:
 		client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created",
 	)
 	cmd.Flags().String(
-		flagMinimumFees, fmt.Sprintf("1%s", stakingtypes.DefaultBondDenom), "Validator minimum fees",
+		server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", stakingtypes.DefaultBondDenom),
+		"Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)",
 	)
 
 	return cmd
@@ -104,7 +104,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 	valPubKeys := make([]crypto.PubKey, numValidators)
 
 	gaiaConfig := srvconfig.DefaultConfig()
-	gaiaConfig.MinFees = viper.GetString(flagMinimumFees)
+	gaiaConfig.MinGasPrices = viper.GetString(server.FlagMinGasPrices)
 
 	var (
 		accs     []app.GenesisAccount

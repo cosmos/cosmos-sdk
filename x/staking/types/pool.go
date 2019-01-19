@@ -10,7 +10,7 @@ import (
 
 // Pool - dynamic parameters of the current state
 type Pool struct {
-	NotBondedTokens  sdk.Int `json:"loose_tokens"`  // tokens which are not bonded in a validator
+	NotBondedTokens  sdk.Int `json:"not_bonded_tokens"`  // tokens which are not bonded in a validator
 	BondedTokens sdk.Int `json:"bonded_tokens"` // reserve of bonded tokens
 }
 

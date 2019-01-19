@@ -1,7 +1,8 @@
 # Messages
 
 In this section we describe the processing of the staking messages and the
-corresponding updates to the state.
+corresponding updates to the state. All created/modified state objects
+specified by each message are defined within [state.md](state.md). 
 
 ## MsgCreateValidator
 
@@ -31,10 +32,10 @@ This message is expected to fail if:
    - the initial `MaxChangeRate` is either negative or > `MaxRate`
  - the description fields are too large
  
-This message creates and stores the `Validator` object at appropriate
-indexes.  Additionally a self-delegation is made with the initial tokens
-delegation tokens `Delegation`.  the validator always starts as unbonded but
-may be bonded in the first end-block. 
+This message creates and stores the `Validator` object at appropriate indexes.
+Additionally a self-delegation is made with the initial tokens delegation
+tokens `Delegation`. The validator always starts as unbonded but may be bonded
+in the first end-block. 
 
 
 ## MsgEditValidator

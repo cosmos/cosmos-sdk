@@ -74,16 +74,16 @@ func makePathname() (string, string) {
 		panic(err)
 	}
 
-	uniq := fmt.Sprintf("%d", rand.Int()%1000000)
+	chainid := fmt.Sprintf("%d", rand.Int()%1000000)
 
 	sep := string(filepath.Separator)
-	return strings.Replace(p, sep, "_", -1), uniq
+	return strings.Replace(p, sep, "_", -1), chainid
 }
 
 // GetConfig returns a Tendermint config for the test cases.
 func GetConfig() *tmcfg.Config {
-	pathname, uniq := makePathname()
-	config := tmcfg.ResetTestRoot(pathname, uniq)
+	pathname, chainid := makePathname()
+	config := tmcfg.ResetTestRootWithChainID(pathname, chainid)
 
 	tmAddr, _, err := server.FreeTCPAddr()
 	if err != nil {

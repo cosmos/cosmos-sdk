@@ -35,7 +35,6 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionProposalSubmitted,
 		tags.Proposer, []byte(msg.Proposer.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
@@ -58,7 +57,6 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 
 	proposalIDBytes := []byte(fmt.Sprintf("%d", msg.ProposalID))
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionProposalDeposit,
 		tags.Depositor, []byte(msg.Depositor.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
@@ -80,7 +78,6 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
 	return sdk.Result{
 		Tags: sdk.NewTags(
-			tags.Action, tags.ActionProposalVote,
 			tags.Voter, []byte(msg.Voter.String()),
 			tags.ProposalID, []byte(fmt.Sprintf("%d", msg.ProposalID)),
 		),

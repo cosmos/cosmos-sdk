@@ -78,6 +78,7 @@ type BaseAccount struct {
 	Sequence      uint64         `json:"sequence"`
 }
 
+// String implements fmt.Stringer
 func (acc BaseAccount) String() string {
 	return fmt.Sprintf(`Account %s:
   Coins:         %s
@@ -177,6 +178,7 @@ type BaseVestingAccount struct {
 	EndTime int64 // when the coins become unlocked
 }
 
+// String implements fmt.Stringer
 func (bva BaseVestingAccount) String() string {
 	return fmt.Sprintf(`Vesting Account %s:
   Coins:            %s

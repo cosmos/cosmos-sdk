@@ -40,6 +40,7 @@ BREAKING CHANGES
     * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
     * `MsgBeginUnbonding` -> `MsgUndelegate`
   * [\#3315] Increase decimal precision to 18
+  * [\#3328](https://github.com/cosmos/cosmos-sdk/issues/3328) [x/gov] Remove redundant action tag
 
 * Tendermint
   * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0

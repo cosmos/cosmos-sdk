@@ -245,14 +245,6 @@ func TestPossibleOverflow(t *testing.T) {
 		msg, newValidator.DelegatorShareExRate())
 }
 
-<<<<<<< HEAD
-=======
-func String(t *testing.T) {
-	validator := NewValidator(addr1, pk1, Description{})
-	require.NotEmpty(t, validator.String())
-}
-
->>>>>>> Ensure all CLI queries respect output flags
 func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 	js, err := codec.Cdc.MarshalJSON(validator)

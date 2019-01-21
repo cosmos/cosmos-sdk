@@ -149,8 +149,14 @@ func (k Keeper) IterateValidatorHistoricalRewards(ctx sdk.Context, handler func(
 	}
 }
 
+// delete a historical reward
+func (k Keeper) DeleteValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddress, period uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetValidatorHistoricalRewardsKey(val, period))
+}
+
 // delete historical rewards
-func (k Keeper) DeleteValidatorHistoricalRewards(ctx sdk.Context) {
+func (k Keeper) DeleteAllValidatorHistoricalRewards(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, ValidatorHistoricalRewardsPrefix)
 	defer iter.Close()

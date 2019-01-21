@@ -21,8 +21,8 @@ func (k Keeper) SetDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr 
 	store.Set(GetDelegatorWithdrawAddrKey(delAddr), withdrawAddr.Bytes())
 }
 
-// remove a delegator withdraw addr
-func (k Keeper) RemoveDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress) {
+// delete a delegator withdraw addr
+func (k Keeper) DeleteDelegatorWithdrawAddr(ctx sdk.Context, delAddr, withdrawAddr sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegatorWithdrawAddrKey(delAddr))
 }
@@ -77,7 +77,7 @@ func (k Keeper) SetPreviousProposerConsAddr(ctx sdk.Context, consAddr sdk.ConsAd
 	store.Set(ProposerKey, b)
 }
 
-// get the starting period associated with a delegator
+// get the starting info associated with a delegator
 func (k Keeper) GetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) (period types.DelegatorStartingInfo) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(GetDelegatorStartingInfoKey(val, del))
@@ -85,11 +85,17 @@ func (k Keeper) GetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, de
 	return
 }
 
-// set the starting period associated with a delegator
+// set the starting info associated with a delegator
 func (k Keeper) SetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress, period types.DelegatorStartingInfo) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(period)
 	store.Set(GetDelegatorStartingInfoKey(val, del), b)
+}
+
+// delete the starting info associated with a delegator
+func (k Keeper) DeleteDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetDelegatorStartingInfoKey(val, del))
 }
 
 // iterate over delegator starting infos

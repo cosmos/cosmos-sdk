@@ -429,7 +429,7 @@ func (f *Fixtures) QueryGovParamTallying() gov.TallyParams {
 func (f *Fixtures) QueryGovProposals(flags ...string) gov.Proposals {
 	cmd := fmt.Sprintf("gaiacli query gov proposals %v", f.Flags())
 	stdout, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
-	if stderr == "ERROR: No matching proposals found" {
+	if strings.Contains(stderr, "No matching proposals found") {
 		return gov.Proposals{}
 	}
 	require.Empty(f.T, stderr)

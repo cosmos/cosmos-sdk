@@ -28,8 +28,7 @@ func NewProposer(proposalID uint64, proposer string) Proposer {
 }
 
 func (p Proposer) String() string {
-	return fmt.Sprintf(`ProposalID: %d
-Proposer:   %s`, p.ProposalID, p.Proposer)
+	return fmt.Sprintf("Proposal w/ ID %d was proposed by %s", p.ProposalID, p.Proposer)
 }
 
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
@@ -211,7 +210,7 @@ func QueryDepositByTxQuery(
 // ID.
 func QueryProposerByTxQuery(
 	cdc *codec.Codec, cliCtx context.CLIContext, proposalID uint64,
-) (p Proposer, err error) {
+) (Proposer, error) {
 
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgSubmitProposal{}.Type()),
@@ -222,7 +221,7 @@ func QueryProposerByTxQuery(
 	// support configurable pagination.
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
-		return
+		return Proposer{}, err
 	}
 
 	for _, info := range infos {
@@ -234,8 +233,7 @@ func QueryProposerByTxQuery(
 			}
 		}
 	}
-	err = fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
-	return
+	return Proposer{}, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
 }
 
 // QueryProposalByID takes a proposalID and returns a proposal
@@ -247,7 +245,6 @@ func QueryProposalByID(proposalID uint64, cliCtx context.CLIContext, cdc *codec.
 		return nil, err
 	}
 
-	// Query store
 	res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
 	if err != nil {
 		return nil, err

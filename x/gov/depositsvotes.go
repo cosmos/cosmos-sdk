@@ -17,7 +17,7 @@ type Vote struct {
 }
 
 func (v Vote) String() string {
-	return fmt.Sprintf(`Voter %s voted with option %s on proposal %d`, v.Voter, v.Option, v.ProposalID)
+	return fmt.Sprintf("Voter %s voted with option %s on proposal %d", v.Voter, v.Option, v.ProposalID)
 }
 
 // Votes is a collection of Vote
@@ -49,7 +49,7 @@ type Deposit struct {
 }
 
 func (d Deposit) String() string {
-	return fmt.Sprintf(`Deposit by %s on Proposal %d is for the amount %s`,
+	return fmt.Sprintf("Deposit by %s on Proposal %d is for the amount %s",
 		d.Depositor, d.ProposalID, d.Amount)
 }
 
@@ -57,7 +57,7 @@ func (d Deposit) String() string {
 type Deposits []Deposit
 
 func (d Deposits) String() string {
-	out := fmt.Sprintf(`Deposits for Proposal %d:`, d[0].ProposalID)
+	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalID)
 	for _, dep := range d {
 		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)
 	}

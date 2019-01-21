@@ -245,7 +245,6 @@ func QueryProposalByID(proposalID uint64, cliCtx context.CLIContext, cdc *codec.
 		return nil, err
 	}
 
-	// Query store
 	res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
 	if err != nil {
 		return nil, err

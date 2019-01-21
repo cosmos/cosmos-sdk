@@ -24,19 +24,19 @@ message which is passed back to Tendermint.
 ## Queues 
 
 Within staking, certain state-transitions are not instantaneous but take place
-of a duration of time (typically the unbonding period). When these transitions
-are mature certain operations must take place in order to complete the state
-operation. This is achieved through the use of queues which are
+over a duration of time (typically the unbonding period). When these
+transitions are mature certain operations must take place in order to complete
+the state operation. This is achieved through the use of queues which are
 checked/processed at the end of each block. 
 
 ### Unbonding Validators
 
 When a validator is kicked out of the bonded validator set (either through
-being jailed, or not having sufficient bonded tokens) it begin the unbonding
+being jailed, or not having sufficient bonded tokens) it begins the unbonding
 process - as well as all its delegations begin unbonding while still being
 delegated to this validator. At this point the validator is said to an
-unbonding validator, whereby it will mature to become an unbonded
-validator after the unbonding period has passed. 
+unbonding validator, whereby it will mature to become an unbonded validator
+after the unbonding period has passed. 
 
 Each block the validator queue is to be checked for mature unbonding
 validators. For all unbonding validators that have finished their unbonding

@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	verifier tmlite.Verifier
+	verifiers map[string]tmlite.Verifier
 )
 
 // CLIContext implements a typical CLI context created in SDK modules for
@@ -65,11 +65,6 @@ func NewCLIContext() CLIContext {
 	from := viper.GetString(client.FlagFrom)
 	fromAddress, fromName := fromFields(from)
 
-	// We need to use a single verifier for all contexts
-	if verifier == nil {
-		verifier = createVerifier()
-	}
-
 	return CLIContext{
 		Client:        rpc,
 		Output:        os.Stdout,
@@ -82,7 +77,7 @@ func NewCLIContext() CLIContext {
 		Async:         viper.GetBool(client.FlagAsync),
 		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
-		Verifier:      verifier,
+		Verifier:      getVerifier(),
 		Simulate:      viper.GetBool(client.FlagDryRun),
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
 		fromAddress:   fromAddress,
@@ -91,7 +86,11 @@ func NewCLIContext() CLIContext {
 	}
 }
 
-func createVerifier() tmlite.Verifier {
+func getVerifier() tmlite.Verifier {
+	if verifiers == nil {
+		verifiers = make(map[string]tmlite.Verifier)
+	}
+
 	trustNodeDefined := viper.IsSet(client.FlagTrustNode)
 	if !trustNodeDefined {
 		return nil
@@ -121,6 +120,11 @@ func createVerifier() tmlite.Verifier {
 		os.Exit(1)
 	}
 
+	// We need to use a single verifier for each chain
+	if verifier, ok := verifiers[chainID]; ok {
+		return verifier
+	}
+
 	node := rpcclient.NewHTTP(nodeURI, "/websocket")
 	cacheSize := 10 // TODO: determine appropriate cache size
 	verifier, err := tmliteProxy.NewVerifier(
@@ -133,6 +137,8 @@ func createVerifier() tmlite.Verifier {
 		fmt.Printf("Please check network connection and verify the address of the node to connect to\n")
 		os.Exit(1)
 	}
+
+	verifiers[chainID] = verifier
 
 	return verifier
 }

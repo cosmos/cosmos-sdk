@@ -92,6 +92,12 @@ func (k Keeper) SetDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, de
 	store.Set(GetDelegatorStartingInfoKey(val, del), b)
 }
 
+// check existence of the starting info associated with a delegator
+func (k Keeper) HasDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) bool {
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(GetDelegatorStartingInfoKey(val, del))
+}
+
 // delete the starting info associated with a delegator
 func (k Keeper) DeleteDelegatorStartingInfo(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)

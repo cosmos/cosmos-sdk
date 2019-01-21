@@ -33,7 +33,7 @@ func QueryDepositsByTxQuery(
 ) ([]byte, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalDeposit),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgDeposit{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
@@ -78,7 +78,7 @@ func QueryVotesByTxQuery(
 ) ([]byte, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalVote),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgVote{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 	}
 
@@ -118,7 +118,7 @@ func QueryVoteByTxQuery(
 ) ([]byte, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalVote),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgVote{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		fmt.Sprintf("%s='%s'", tags.Voter, []byte(params.Voter.String())),
 	}
@@ -161,7 +161,7 @@ func QueryDepositByTxQuery(
 ) ([]byte, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalDeposit),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgDeposit{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", params.ProposalID))),
 		fmt.Sprintf("%s='%s'", tags.Depositor, []byte(params.Depositor.String())),
 	}
@@ -204,7 +204,7 @@ func QueryProposerByTxQuery(
 ) ([]byte, error) {
 
 	tags := []string{
-		fmt.Sprintf("%s='%s'", tags.Action, tags.ActionProposalSubmitted),
+		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgSubmitProposal{}.Type()),
 		fmt.Sprintf("%s='%s'", tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 	}
 

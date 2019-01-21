@@ -9,7 +9,7 @@ import (
 // initialize rewards for a new validator
 func (k Keeper) initializeValidator(ctx sdk.Context, val sdk.Validator) {
 	// set initial historical rewards (period 0)
-	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.ValidatorHistoricalRewards{})
+	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 0))
 
 	// set current rewards (starting at period 1)
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
@@ -42,10 +42,10 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 	}
 
 	// fetch historical rewards for last period
-	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1)
+	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1).SeqValue
 
 	// fet new historical rewards
-	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, historical.Plus(current))
+	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(historical.Plus(current), 0))
 
 	// set current rewards, incrementing period by 1
 	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))

@@ -5,9 +5,19 @@ import (
 )
 
 // historical rewards for a validator
-// TODO add reference counter, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r245747051
 // height is implicit within the store key
-type ValidatorHistoricalRewards = sdk.DecCoins
+type ValidatorHistoricalRewards struct {
+	SeqValue       sdk.DecCoins `json:"seq_value"`
+	ReferenceCount uint16       `json:"reference_count"`
+}
+
+// create a new ValidatorHistoricalRewards
+func NewValidatorHistoricalRewards(seqValue sdk.DecCoins, referenceCount uint16) ValidatorHistoricalRewards {
+	return ValidatorHistoricalRewards{
+		SeqValue:       seqValue,
+		ReferenceCount: referenceCount,
+	}
+}
 
 // current rewards and current period for a validator
 // kept as a running counter and incremented each block

@@ -78,7 +78,7 @@ type Validator struct {
     Commission Commission // info about the validator's commission
 }
 
-Commission struct {
+type Commission struct {
     Rate          sdk.Dec   // the commission rate charged to delegators
     MaxRate       sdk.Dec   // maximum commission rate which this validator can ever charge
     MaxChangeRate sdk.Dec   // maximum daily increase of the validator commission

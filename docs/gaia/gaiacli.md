@@ -761,3 +761,26 @@ The transaction can now be sent to the node:
 ```bash
 gaiacli tx broadcast signedTx.json
 ```
+
+## Shells completion scripts
+
+Completion scripts for popular UNIX shell interpreters such as `Bash` and `Zsh`
+can be generated through the `completion` command, which is available for both
+`gaiad` and `gaiacli`.
+
+If you want to generate `Bash` completion scripts run the following command:
+
+```bash
+gaiad completion > gaiad_completion
+gaiacli completion > gaiacli_completion
+```
+
+If you want to generate `Zsh` completion scripts run the following command:
+
+```bash
+gaiad completion --zsh > gaiad_completion
+gaiacli completion --zsh > gaiacli_completion
+```
+
+Refer to the user's manual of your interpreter for information
+on how to enable shell autocompletion.

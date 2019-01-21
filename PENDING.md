@@ -40,7 +40,7 @@ BREAKING CHANGES
     * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
     * `MsgBeginUnbonding` -> `MsgUndelegate`
   * [\#3315] Increase decimal precision to 18
-  * \# - F1 storage efficiency improvements - automatic withdrawals when unbonded, historical reward reference counting
+  * \#3333 - F1 storage efficiency improvements - automatic withdrawals when unbonded, historical reward reference counting
 
 * Tendermint
   * [\#3298](https://github.com/cosmos/cosmos-sdk/issues/3298) Upgrade to Tendermint 0.28.0

@@ -13,8 +13,10 @@ const defaultConfigTemplate = `# This is a TOML config file.
 
 ##### main base config options #####
 
-# Validators reject any tx from the mempool with less than the minimum fee per gas.
-minimum_fees = "{{ .BaseConfig.MinFees }}"
+# The minimum gas prices a validator is willing to accept for processing a
+# transaction. A transaction's fees must meet the minimum of each denomination
+# specified in this config (e.g. 0.01photino,0.0001stake).
+minimum_gas_prices = "{{ .BaseConfig.MinGasPrices }}"
 `
 
 var configTemplate *template.Template
@@ -34,7 +36,8 @@ func ParseConfig() (*Config, error) {
 	return conf, err
 }
 
-// WriteConfigFile renders config using the template and writes it to configFilePath.
+// WriteConfigFile renders config using the template and writes it to
+// configFilePath.
 func WriteConfigFile(configFilePath string, config *Config) {
 	var buffer bytes.Buffer
 

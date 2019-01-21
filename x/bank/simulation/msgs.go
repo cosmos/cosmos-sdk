@@ -64,7 +64,7 @@ func createSingleInputSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.A
 		toAcc = simulation.RandomAcc(r, accs)
 	}
 	toAddr := toAcc.Address
-	initFromCoins := mapper.GetAccount(ctx, fromAcc.Address).GetCoins()
+	initFromCoins := mapper.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
 
 	if len(initFromCoins) == 0 {
 		return fromAcc, "skipping, no coins at all", msg, true

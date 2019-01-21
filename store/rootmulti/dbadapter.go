@@ -30,4 +30,4 @@ func (cdsa commitDBStoreAdapter) LastCommitID() types.CommitID {
 	}
 }
 
-func (cdsa commitDBStoreAdapter) SetPruning(_ types.PruningStrategy) {}
+func (cdsa commitDBStoreAdapter) SetPruning(_ types.PruningOptions) {}

@@ -24,7 +24,7 @@ func GetDelegatorRewardsAll(delegatorAddr sdk.AccAddress, height int64) DecCoins
         
     // collect all entitled rewards
     withdraw = 0
-    pool = stake.GetPool() 
+    pool = staking.GetPool() 
     feePool = GetFeePool() 
     for delegation = range delegations 
         delInfo = GetDelegationDistInfo(delegation.DelegatorAddr,
@@ -55,7 +55,7 @@ func WithdrawDelegationReward(delegatorAddr, validatorAddr, withdrawAddr sdk.Acc
     height = GetHeight()
     
     // get all distribution scenarios
-    pool = stake.GetPool() 
+    pool = staking.GetPool() 
     feePool = GetFeePool() 
     delInfo = GetDelegationDistInfo(delegatorAddr,
                     validatorAddr)

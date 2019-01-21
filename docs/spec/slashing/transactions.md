@@ -22,6 +22,8 @@ handleMsgUnjail(tx TxUnjail)
       fail with "Validator not jailed, cannot unjail"
 
     info = getValidatorSigningInfo(operator)
+    if info.Tombstoned
+      fail with "Tombstoned validator cannot be unjailed"
     if block time < info.JailedUntil
       fail with "Validator still jailed, cannot unjail until period has expired"
 

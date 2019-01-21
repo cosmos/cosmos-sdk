@@ -9,12 +9,13 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/store/iavl"
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	iStore, err := iavl.LoadStore(db, types.CommitID{}, types.PruneNothing)
+	iStore, err := iavl.LoadStore(db, types.CommitID{}, stypes.PruneNothing)
 	store := iStore.(*iavl.Store)
 	require.Nil(t, err)
 	store.Set([]byte("MYKEY"), []byte("MYVALUE"))

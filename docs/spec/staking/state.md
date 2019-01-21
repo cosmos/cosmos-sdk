@@ -10,15 +10,15 @@ inflation information, etc.
 
 ```golang
 type Pool struct {
-    LooseTokens         int64   // tokens not associated with any bonded validator
-    BondedTokens        int64   // reserve of bonded tokens
+    LooseTokens         sdk.Int   // tokens not associated with any bonded validator
+    BondedTokens        sdk.Int   // reserve of bonded tokens
 }
 ```
 
 ### Params
 
 Params is global data structure that stores system parameters and defines
-overall functioning of the stake module. 
+overall functioning of the staking module. 
 
  - Params: `0x00 -> amino(params)`
 
@@ -65,9 +65,8 @@ type Validator struct {
     Jailed          bool           // has the validator been jailed?
 
     Status          sdk.BondStatus // validator status (bonded/unbonding/unbonded)
-    Tokens          sdk.Dec        // delegated tokens (incl. self-delegation)
+    Tokens          sdk.Int        // delegated tokens (incl. self-delegation)
     DelegatorShares sdk.Dec        // total shares issued to a validator's delegators
-    SlashRatio      sdk.Dec        // increases each time the validator is slashed
 
     Description        Description  // description terms for the validator
 
@@ -97,9 +96,9 @@ type Description struct {
 ### Delegation
 
 Delegations are identified by combining `DelegatorAddr` (the address of the delegator)
-with the `OperatorAddr` Delegators are indexed in the store as follows:
+with the `ValidatorAddr` Delegators are indexed in the store as follows:
 
-- Delegation: ` 0x0A | DelegatorAddr | OperatorAddr -> amino(delegation)`
+- Delegation: ` 0x0A | DelegatorAddr | ValidatorAddr -> amino(delegation)`
 
 Atom holders may delegate coins to validators; under this circumstance their
 funds are held in a `Delegation` data structure. It is owned by one
@@ -108,26 +107,29 @@ the transaction is the owner of the bond.
 
 ```golang
 type Delegation struct {
-    Shares        sdk.Dec   // delegation shares received
-    Height        int64     // last height bond updated
+    DelegatorAddr sdk.AccAddress 
+    ValidatorAddr sdk.ValAddress 
+    Shares        sdk.Dec        // delegation shares received
 }
 ```
 
 ### UnbondingDelegation
 
-Shares in a `Delegation` can be unbonded, but they must for some time exist as an `UnbondingDelegation`, where shares can be reduced if Byzantine behavior is detected.
+Shares in a `Delegation` can be unbonded, but they must for some time exist as
+an `UnbondingDelegation`, where shares can be reduced if Byzantine behavior is
+detected.
 
 `UnbondingDelegation` are indexed in the store as:
 
-- UnbondingDelegationByDelegator: ` 0x0B | DelegatorAddr | OperatorAddr ->
+- UnbondingDelegationByDelegator: ` 0x0B | DelegatorAddr | ValidatorAddr ->
    amino(unbondingDelegation)`
-- UnbondingDelegationByValOwner: ` 0x0C | OperatorAddr | DelegatorAddr | OperatorAddr ->
+- UnbondingDelegationByValOwner: ` 0x0C | ValidatorAddr | DelegatorAddr | ValidatorAddr ->
    nil`
 
- The first map here is used in queries, to lookup all unbonding delegations for
- a given delegator, while the second map is used in slashing, to lookup all
- unbonding delegations associated with a given validator that need to be
- slashed.
+The first map here is used in queries, to lookup all unbonding delegations for
+a given delegator, while the second map is used in slashing, to lookup all
+unbonding delegations associated with a given validator that need to be
+slashed.
 
 A UnbondingDelegation object is created every time an unbonding is initiated.
 The unbond must be completed with a second transaction provided by the
@@ -135,8 +137,16 @@ delegation owner after the unbonding period has passed.
 
 ```golang
 type UnbondingDelegation struct {
-    Tokens           sdk.Coins   // the value in Atoms of the amount of shares which are unbonding
-    CompleteTime     int64       // unix time to complete redelegation
+    DelegatorAddr sdk.AccAddress             // delegator
+    ValidatorAddr sdk.ValAddress             // validator unbonding from operator addr
+    Entries       []UnbondingDelegationEntry // unbonding delegation entries
+}
+
+type UnbondingDelegationEntry struct {
+    CreationHeight int64     // height which the unbonding took place
+    CompletionTime time.Time // unix time for unbonding completion
+    InitialBalance sdk.Coin  // atoms initially scheduled to receive at completion
+    Balance        sdk.Coin  // atoms to receive at completion
 }
 ```
 
@@ -144,20 +154,20 @@ type UnbondingDelegation struct {
 
 Shares in a `Delegation` can be rebonded to a different validator, but they must
 for some time exist as a `Redelegation`, where shares can be reduced if Byzantine
-behavior is detected. This is tracked as moving a delegation from a `FromOperatorAddr`
-to a `ToOperatorAddr`.
+behavior is detected. This is tracked as moving a delegation from a `ValidatorSrcAddr`
+to a `ValidatorDstAddr`.
 
 `Redelegation` are indexed in the store as:
 
- - Redelegations: `0x0D | DelegatorAddr | FromOperatorAddr | ToOperatorAddr ->
+ - Redelegations: `0x0D | DelegatorAddr | ValidatorSrcAddr | ValidatorDstAddr ->
    amino(redelegation)`
- - RedelegationsBySrc: `0x0E | FromOperatorAddr | ToOperatorAddr |
+ - RedelegationsBySrc: `0x0E | ValidatorSrcAddr | ValidatorDstAddr |
    DelegatorAddr -> nil`
- - RedelegationsByDst: `0x0F | ToOperatorAddr | FromOperatorAddr | DelegatorAddr
+ - RedelegationsByDst: `0x0F | ValidatorDstAddr | ValidatorSrcAddr | DelegatorAddr
    -> nil`
 
 The first map here is used for queries, to lookup all redelegations for a given
-delegator. The second map is used for slashing based on the `FromOperatorAddr`,
+delegator. The second map is used for slashing based on the `ValidatorSrcAddr`,
 while the third map is for slashing based on the ToValOwnerAddr.
 
 A redelegation object is created every time a redelegation occurs. The
@@ -168,8 +178,18 @@ the original redelegation has been completed.
 
 ```golang
 type Redelegation struct {
-    SourceShares           sdk.Dec     // amount of source shares redelegating
-    DestinationShares      sdk.Dec     // amount of destination shares created at redelegation
-    CompleteTime           int64       // unix time to complete redelegation
+    DelegatorAddr    sdk.AccAddress      // delegator
+    ValidatorSrcAddr sdk.ValAddress      // validator redelegation source operator addr
+    ValidatorDstAddr sdk.ValAddress      // validator redelegation destination operator addr
+    Entries          []RedelegationEntry // redelegation entries
+}
+
+type RedelegationEntry struct {
+    CreationHeight int64     // height which the redelegation took place
+    CompletionTime time.Time // unix time for redelegation completion
+    InitialBalance sdk.Coin  // initial balance when redelegation started
+    Balance        sdk.Coin  // current balance (current value held in destination validator)
+    SharesSrc      sdk.Dec   // amount of source-validator shares removed by redelegation
+    SharesDst      sdk.Dec   // amount of destination-validator shares created by redelegation
 }
 ```

@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/store"
+
 	cpm "github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 
@@ -106,7 +108,7 @@ func run(rootDir string) {
 	fmt.Println("Creating application")
 	myapp := app.NewGaiaApp(
 		ctx.Logger, appDB, traceStoreWriter, true,
-		baseapp.SetPruning("everything"), // nothing
+		baseapp.SetPruning(store.PruneEverything), // nothing
 	)
 
 	// Genesis

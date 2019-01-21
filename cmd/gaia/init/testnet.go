@@ -14,8 +14,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	staketypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,7 +35,6 @@ var (
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagNodeCliHome       = "node-cli-home"
 	flagStartingIPAddress = "starting-ip-address"
-	flagMinimumFees       = "minimum-fees"
 )
 
 const nodeDirPerm = 0755
@@ -82,7 +81,8 @@ Example:
 		client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created",
 	)
 	cmd.Flags().String(
-		flagMinimumFees, fmt.Sprintf("1%s", staketypes.DefaultBondDenom), "Validator minimum fees",
+		server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", stakingtypes.DefaultBondDenom),
+		"Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)",
 	)
 
 	return cmd
@@ -104,7 +104,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 	valPubKeys := make([]crypto.PubKey, numValidators)
 
 	gaiaConfig := srvconfig.DefaultConfig()
-	gaiaConfig.MinFees = viper.GetString(flagMinimumFees)
+	gaiaConfig.MinGasPrices = viper.GetString(server.FlagMinGasPrices)
 
 	var (
 		accs     []app.GenesisAccount
@@ -192,16 +192,16 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 			Address: addr,
 			Coins: sdk.Coins{
 				sdk.NewInt64Coin(fmt.Sprintf("%stoken", nodeDirName), 1000),
-				sdk.NewInt64Coin(staketypes.DefaultBondDenom, 500),
+				sdk.NewInt64Coin(stakingtypes.DefaultBondDenom, 500),
 			},
 		})
 
-		msg := stake.NewMsgCreateValidator(
+		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewInt64Coin(staketypes.DefaultBondDenom, 100),
-			stake.NewDescription(nodeDirName, "", "", ""),
-			stake.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+			sdk.NewInt64Coin(stakingtypes.DefaultBondDenom, 100),
+			staking.NewDescription(nodeDirName, "", "", ""),
+			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
 		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{}, memo)
 		txBldr := authtx.NewTxBuilderFromCLI().WithChainID(chainID).WithMemo(memo)

@@ -1,4 +1,4 @@
-# Run a Validator on Public Testnet
+# Run a Validator on the public testnet
 
 ::: tip
 Information on how to join the current testnet (`genesis.json` file and seeds) is held [in our `testnet` repo](https://github.com/cosmos/testnets/tree/master/latest). Please check there if you are looking to join our latest testnet. 
@@ -6,17 +6,17 @@ Information on how to join the current testnet (`genesis.json` file and seeds) i
 
 __Note__: This documentation is only intended for validators of the **public testnet**
 
-Before setting up your validator node, make sure you've already gone through the [Full Node Setup](/docs/getting-started/full-node.md) guide.
+Before setting up your validator node, make sure you've already gone through the [Full Node Setup](../join-testnet.md) guide.
 
 ## What is a Validator?
 
-[Validators](/validators/overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](/validators/validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
+[Validators](./overview.md) are responsible for committing new blocks to the blockchain through voting. A validator's stake is slashed if they become unavailable or sign blocks at the same height. Please read about [Sentry Node Architecture](./validator-faq.md#how-can-validators-protect-themselves-from-denial-of-service-attacks) to protect your node from DDOS attacks and to ensure high-availability.
 
 ::: danger Warning
-If you want to become a validator for the Hub's `mainnet`, you should [research security](/validators/security.md).
+If you want to become a validator for the Hub's `mainnet`, you should [research security](./security.md).
 :::
 
-You may want to skip the next section if you have already [set up a full-node](/join-testnet.md).
+You may want to skip the next section if you have already [set up a full-node](../join-testnet.md).
 
 ## Create Your Validator
 
@@ -29,12 +29,12 @@ gaiad tendermint show-validator
 Next, craft your `gaiad gentx` command:
 
 ::: warning Note
-Don't use more `steak` thank you have! You can always get more by using the [Faucet](https://faucetcosmos.network/)!
+Don't use more `STAKE` thank you have! You can always get more by using the [Faucet](https://faucet.cosmos.network/)!
 :::
 
 ```bash
-gaiacli tx stake create-validator \
-  --amount=5steak \
+gaiacli tx staking create-validator \
+  --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
@@ -91,8 +91,8 @@ A `gentx` is a JSON file carrying a self-delegation. All genesis transactions ar
 In this case, you need both the signature of the validator and the delegator. Start by creating an unsigned `create-validator` transaction, and save it in a file called `unsignedValTx`: 
 
 ```bash
-gaiacli tx stake create-validator \
-  --amount=5steak \
+gaiacli tx staking create-validator \
+  --amount=5STAKE \
   --pubkey=$(gaiad tendermint show-validator) \
   --moniker="choose a moniker" \
   --chain-id=<chain_id> \
@@ -140,7 +140,7 @@ Once you've collected all genesis transactions in `~/.gaiad/config/gentx`, you c
 gaiad collect-gentxs
 ```
 
-__Note:__ The accounts from which you delegate in the `gentx` transactions need to possess staking tokens in the genesis file, otherwise `collect-gentx` will fail.
+__Note:__ The accounts from which you delegate in the `gentx` transactions need to possess stake tokens in the genesis file, otherwise `collect-gentx` will fail.
 
 The previous command will collect all genesis transactions and finalise `genesis.json`. To verify the correctness of the configuration and start the node run:
 
@@ -155,7 +155,7 @@ You can edit your validator's public description. This info is to identify your 
 The `--identity` can be used as to verify identity with systems like Keybase or UPort. When using with Keybase `--identity` should be populated with a 16-digit string that is generated with a [keybase.io](https://keybase.io) account. It's a cryptographically secure method of verifying your identity across multiple online networks. The Keybase API allows us to retrieve your Keybase avatar. This is how you can add a logo to your validator profile.
 
 ```bash
-gaiacli tx stake edit-validator
+gaiacli tx staking edit-validator
   --moniker="choose a moniker" \
   --website="https://cosmos.network" \
   --identity=6A0D65E29A4CBC8E \
@@ -177,7 +177,7 @@ __Note__: The `commission-rate` value must adhere to the following invariants:
 View the validator's information with this command:
 
 ```bash
-gaiacli query stake validator <account_cosmos>
+gaiacli query staking validator <account_cosmos>
 ```
 
 ## Track Validator Signing Information

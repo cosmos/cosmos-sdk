@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -195,6 +196,7 @@ func TestMultiStoreQuery(t *testing.T) {
 
 func newMultiStoreWithMounts(db dbm.DB) *Store {
 	store := NewStore(db)
+	store.pruningOpts = stypes.PruneSyncable
 	store.MountStoreWithDB(
 		types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(

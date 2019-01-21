@@ -42,18 +42,19 @@ type Validator interface {
 	GetOperator() ValAddress      // operator address to receive/return validators coins
 	GetConsPubKey() crypto.PubKey // validation consensus pubkey
 	GetConsAddr() ConsAddress     // validation consensus address
-	GetPower() Dec                // validation power
-	GetTokens() Dec               // validation tokens
+	GetPower() Int                // validation power
+	GetTokens() Int               // validation tokens
 	GetCommission() Dec           // validator commission rate
-	GetDelegatorShares() Dec      // Total out standing delegator shares
+	GetDelegatorShares() Dec      // total outstanding delegator shares
 	GetBondHeight() int64         // height in which the validator became active
+	GetDelegatorShareExRate() Dec // tokens per delegator share exchange rate
 }
 
 // validator which fulfills abci validator interface for use in Tendermint
 func ABCIValidator(v Validator) abci.Validator {
 	return abci.Validator{
 		Address: v.GetConsPubKey().Address(),
-		Power:   v.GetPower().RoundInt64(),
+		Power:   v.GetPower().Int64(),
 	}
 }
 
@@ -73,7 +74,7 @@ type ValidatorSet interface {
 
 	Validator(Context, ValAddress) Validator            // get a particular validator by operator address
 	ValidatorByConsAddr(Context, ConsAddress) Validator // get a particular validator by consensus address
-	TotalPower(Context) Dec                             // total power of the validator set
+	TotalPower(Context) Int                             // total power of the validator set
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(Context, ConsAddress, int64, int64, Dec)
@@ -115,15 +116,17 @@ type DelegationSet interface {
 
 // event hooks for staking validator object
 type StakingHooks interface {
-	OnValidatorCreated(ctx Context, valAddr ValAddress)                       // Must be called when a validator is created
-	OnValidatorModified(ctx Context, valAddr ValAddress)                      // Must be called when a validator's state changes
-	OnValidatorRemoved(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Must be called when a validator is deleted
+	AfterValidatorCreated(ctx Context, valAddr ValAddress)                       // Must be called when a validator is created
+	BeforeValidatorModified(ctx Context, valAddr ValAddress)                     // Must be called when a validator's state changes
+	AfterValidatorRemoved(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Must be called when a validator is deleted
 
-	OnValidatorBonded(ctx Context, consAddr ConsAddress, valAddr ValAddress)         // Must be called when a validator is bonded
-	OnValidatorBeginUnbonding(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Must be called when a validator begins unbonding
-	OnValidatorPowerDidChange(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Called at EndBlock when a validator's power did change
+	AfterValidatorBonded(ctx Context, consAddr ConsAddress, valAddr ValAddress)         // Must be called when a validator is bonded
+	AfterValidatorBeginUnbonding(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Must be called when a validator begins unbonding
+	AfterValidatorPowerDidChange(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Called at EndBlock when a validator's power did change
 
-	OnDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is created
-	OnDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified
-	OnDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is removed
+	BeforeDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is created
+	BeforeDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified
+	BeforeDelegationRemoved(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is removed
+	AfterDelegationModified(ctx Context, delAddr AccAddress, valAddr ValAddress)
+	BeforeValidatorSlashed(ctx Context, valAddr ValAddress, fraction Dec)
 }

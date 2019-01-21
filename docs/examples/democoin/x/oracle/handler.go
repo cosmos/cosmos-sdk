@@ -14,7 +14,7 @@ func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.Valid
 
 	// Return if the voted power is not bigger than required power
 	totalPower := valset.TotalPower(ctx)
-	requiredPower := totalPower.Mul(keeper.supermaj)
+	requiredPower := keeper.supermaj.MulInt(totalPower).RoundInt()
 	if !info.Power.GT(requiredPower) {
 		return info
 	}
@@ -23,7 +23,7 @@ func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.Valid
 	// and recalculate voted power
 	hash := ctx.BlockHeader().ValidatorsHash
 	if !bytes.Equal(hash, info.Hash) {
-		info.Power = sdk.ZeroDec()
+		info.Power = sdk.ZeroInt()
 		info.Hash = hash
 		prefix := GetSignPrefix(p, keeper.cdc)
 		store := ctx.KVStore(keeper.key)
@@ -36,7 +36,7 @@ func (keeper Keeper) update(ctx sdk.Context, val sdk.Validator, valset sdk.Valid
 			}
 			info.Power = info.Power.Add(val.GetPower())
 		}
-		if !info.Power.GT(totalPower.Mul(keeper.supermaj)) {
+		if !info.Power.GT(keeper.supermaj.MulInt(totalPower).RoundInt()) {
 			return info
 		}
 	}

@@ -45,7 +45,7 @@ func TestGasMeter(t *testing.T) {
 	}
 }
 
-func TestaddUint64Overflow(t *testing.T) {
+func TestAddUint64Overflow(t *testing.T) {
 	testCases := []struct {
 		a, b     uint64
 		result   uint64

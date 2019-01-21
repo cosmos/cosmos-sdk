@@ -8,14 +8,7 @@ import (
 
 // nolint - reexport
 type (
-	PruningStrategy = types.PruningStrategy
-)
-
-// nolint - reexport
-const (
-	PruneSyncable   = types.PruneSyncable
-	PruneEverything = types.PruneEverything
-	PruneNothing    = types.PruneNothing
+	PruningOptions = types.PruningOptions
 )
 
 // nolint - reexport

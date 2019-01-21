@@ -76,31 +76,12 @@ else
 	go build $(BUILD_FLAGS) -o build/cosmos-sdk-cli ./cmd/cosmos-sdk-cli
 endif
 
-build_examples:
-ifeq ($(OS),Windows_NT)
-	go build $(BUILD_FLAGS) -o build/basecoind.exe ./docs/examples/basecoin/cmd/basecoind
-	go build $(BUILD_FLAGS) -o build/basecli.exe ./docs/examples/basecoin/cmd/basecli
-	go build $(BUILD_FLAGS) -o build/democoind.exe ./docs/examples/democoin/cmd/democoind
-	go build $(BUILD_FLAGS) -o build/democli.exe ./docs/examples/democoin/cmd/democli
-else
-	go build $(BUILD_FLAGS) -o build/basecoind ./docs/examples/basecoin/cmd/basecoind
-	go build $(BUILD_FLAGS) -o build/basecli ./docs/examples/basecoin/cmd/basecli
-	go build $(BUILD_FLAGS) -o build/democoind ./docs/examples/democoin/cmd/democoind
-	go build $(BUILD_FLAGS) -o build/democli ./docs/examples/democoin/cmd/democli
-endif
-
 install: check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiakeyutil
 	go install $(BUILD_FLAGS) ./cmd/logjack
-
-install_examples:
-	go install $(BUILD_FLAGS) ./docs/examples/basecoin/cmd/basecoind
-	go install $(BUILD_FLAGS) ./docs/examples/basecoin/cmd/basecli
-	go install $(BUILD_FLAGS) ./docs/examples/democoin/cmd/democoind
-	go install $(BUILD_FLAGS) ./docs/examples/democoin/cmd/democli
 
 install_cosmos-sdk-cli:
 	go install $(BUILD_FLAGS) ./cmd/cosmos-sdk-cli
@@ -170,10 +151,6 @@ test: test_unit
 
 test_cli:
 	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
-
-test_examples:
-	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/docs/examples/basecoin/cli_test` -tags=cli_test
-	@go test -count 1 -p 1 `go list github.com/cosmos/cosmos-sdk/docs/examples/democoin/cli_test` -tags=cli_test
 
 test_unit:
 	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION)

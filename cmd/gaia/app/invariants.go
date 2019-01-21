@@ -10,16 +10,16 @@ import (
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	stakesim "github.com/cosmos/cosmos-sdk/x/stake/simulation"
+	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 )
 
 func (app *GaiaApp) runtimeInvariants() []simulation.Invariant {
 	return []simulation.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
-		distrsim.ValAccumInvariants(app.distrKeeper, app.stakeKeeper),
-		stakesim.SupplyInvariants(app.bankKeeper, app.stakeKeeper,
+		distrsim.NonNegativeOutstandingInvariant(app.distrKeeper),
+		stakingsim.SupplyInvariants(app.bankKeeper, app.stakingKeeper,
 			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper),
-		stakesim.NonNegativePowerInvariant(app.stakeKeeper),
+		stakingsim.NonNegativePowerInvariant(app.stakingKeeper),
 	}
 }
 

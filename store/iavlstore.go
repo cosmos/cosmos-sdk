@@ -19,7 +19,7 @@ const (
 )
 
 // load the iavl store
-func LoadIAVLStore(db dbm.DB, id CommitID, pruning sdk.PruningStrategy) (CommitStore, error) {
+func LoadIAVLStore(db dbm.DB, id CommitID, pruning sdk.PruningOptions) (CommitStore, error) {
 	tree := iavl.NewMutableTree(db, defaultIAVLCacheSize)
 	_, err := tree.LoadVersion(id.Version)
 	if err != nil {
@@ -38,7 +38,6 @@ var _ Queryable = (*iavlStore)(nil)
 
 // iavlStore Implements KVStore and CommitStore.
 type iavlStore struct {
-
 	// The underlying tree.
 	tree *iavl.MutableTree
 
@@ -102,17 +101,9 @@ func (st *iavlStore) LastCommitID() CommitID {
 }
 
 // Implements Committer.
-func (st *iavlStore) SetPruning(pruning sdk.PruningStrategy) {
-	switch pruning {
-	case sdk.PruneEverything:
-		st.numRecent = 0
-		st.storeEvery = 0
-	case sdk.PruneNothing:
-		st.storeEvery = 1
-	case sdk.PruneSyncable:
-		st.numRecent = 100
-		st.storeEvery = 10000
-	}
+func (st *iavlStore) SetPruning(opt sdk.PruningOptions) {
+	st.numRecent = opt.KeepRecent()
+	st.storeEvery = opt.KeepEvery()
 }
 
 // VersionExists returns whether or not a given version is stored.

@@ -24,7 +24,7 @@ const (
 type rootMultiStore struct {
 	db           dbm.DB
 	lastCommitID CommitID
-	pruning      sdk.PruningStrategy
+	pruningOpts  sdk.PruningOptions
 	storesParams map[StoreKey]storeParams
 	stores       map[StoreKey]CommitStore
 	keysByName   map[string]StoreKey
@@ -47,10 +47,10 @@ func NewCommitMultiStore(db dbm.DB) *rootMultiStore {
 }
 
 // Implements CommitMultiStore
-func (rs *rootMultiStore) SetPruning(pruning sdk.PruningStrategy) {
-	rs.pruning = pruning
+func (rs *rootMultiStore) SetPruning(pruningOpts sdk.PruningOptions) {
+	rs.pruningOpts = pruningOpts
 	for _, substore := range rs.stores {
-		substore.SetPruning(pruning)
+		substore.SetPruning(pruningOpts)
 	}
 }
 
@@ -355,7 +355,7 @@ func (rs *rootMultiStore) loadCommitStoreFromParams(key sdk.StoreKey, id CommitI
 		// TODO: id?
 		// return NewCommitMultiStore(db, id)
 	case sdk.StoreTypeIAVL:
-		store, err = LoadIAVLStore(db, id, rs.pruning)
+		store, err = LoadIAVLStore(db, id, rs.pruningOpts)
 		return
 	case sdk.StoreTypeDB:
 		store = commitDBStoreAdapter{dbStoreAdapter{db}}

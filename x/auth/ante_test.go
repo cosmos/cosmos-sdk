@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 
@@ -564,9 +565,19 @@ func TestProcessPubKey(t *testing.T) {
 
 func TestConsumeSignatureVerificationGas(t *testing.T) {
 	params := DefaultParams()
+	msg := []byte{1, 2, 3, 4}
+
+	pkSet1, sigSet1 := generatePubKeysAndSignatures(5, msg, false)
+	multisigKey1 := multisig.NewPubKeyMultisigThreshold(2, pkSet1)
+	multisignature1 := multisig.NewMultisig(len(pkSet1))
+	expectedCost1 := expectedGasCostByKeys(pkSet1)
+	for i := 0; i < len(pkSet1); i++ {
+		multisignature1.AddSignatureFromPubKey(sigSet1[i], pkSet1[i], pkSet1)
+	}
 
 	type args struct {
 		meter  sdk.GasMeter
+		sig    []byte
 		pubkey crypto.PubKey
 		params Params
 	}
@@ -576,40 +587,53 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 		gasConsumed uint64
 		wantPanic   bool
 	}{
-		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), ed25519.GenPrivKey().PubKey(), params}, DefaultSigVerifyCostED25519, false},
-		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), secp256k1.GenPrivKey().PubKey(), params}, DefaultSigVerifyCostSecp256k1, false},
-		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, params}, 0, true},
+		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, DefaultSigVerifyCostED25519, false},
+		{"PubKeySecp256k1", args{sdk.NewInfiniteGasMeter(), nil, secp256k1.GenPrivKey().PubKey(), params}, DefaultSigVerifyCostSecp256k1, false},
+		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1.Marshal(), multisigKey1, params}, expectedCost1, false},
+		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantPanic {
-				require.Panics(t, func() { consumeSignatureVerificationGas(tt.args.meter, tt.args.pubkey, tt.args.params) })
+				require.Panics(t, func() { consumeSignatureVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params) })
 			} else {
-				consumeSignatureVerificationGas(tt.args.meter, tt.args.pubkey, tt.args.params)
-				require.Equal(t, tt.args.meter.GasConsumed(), tt.gasConsumed)
+				consumeSignatureVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
+				require.Equal(t, tt.gasConsumed, tt.args.meter.GasConsumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.GasConsumed()))
 			}
 		})
 	}
 }
 
-func TestAdjustFeesByGas(t *testing.T) {
-	type args struct {
-		fee sdk.Coins
-		gas uint64
+func generatePubKeysAndSignatures(n int, msg []byte, keyTypeed25519 bool) (pubkeys []crypto.PubKey, signatures [][]byte) {
+	pubkeys = make([]crypto.PubKey, n)
+	signatures = make([][]byte, n)
+	for i := 0; i < n; i++ {
+		var privkey crypto.PrivKey
+		if rand.Int63()%2 == 0 {
+			privkey = ed25519.GenPrivKey()
+		} else {
+			privkey = secp256k1.GenPrivKey()
+		}
+		pubkeys[i] = privkey.PubKey()
+		signatures[i], _ = privkey.Sign(msg)
 	}
-	tests := []struct {
-		name string
-		args args
-		want sdk.Coins
-	}{
-		{"nil coins", args{sdk.Coins{}, 100000}, sdk.Coins{}},
-		{"nil coins", args{sdk.Coins{sdk.NewInt64Coin("a", 10), sdk.NewInt64Coin("b", 0)}, 100000}, sdk.Coins{sdk.NewInt64Coin("a", 20), sdk.NewInt64Coin("b", 10)}},
+	return
+}
+
+func expectedGasCostByKeys(pubkeys []crypto.PubKey) uint64 {
+	cost := uint64(0)
+	for _, pubkey := range pubkeys {
+		pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
+		switch {
+		case strings.Contains(pubkeyType, "ed25519"):
+			cost += DefaultParams().SigVerifyCostED25519
+		case strings.Contains(pubkeyType, "secp256k1"):
+			cost += DefaultParams().SigVerifyCostSecp256k1
+		default:
+			panic("unexpected key type")
+		}
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.True(t, tt.want.IsEqual(adjustFeesByGas(tt.args.fee, tt.args.gas)))
-		})
-	}
+	return cost
 }
 
 func TestCountSubkeys(t *testing.T) {
@@ -620,23 +644,23 @@ func TestCountSubkeys(t *testing.T) {
 		}
 		return ret
 	}
-	genMultiKey := func(n, k int, keysGen func(n int) []crypto.PubKey) crypto.PubKey {
-		return multisig.NewPubKeyMultisigThreshold(k, keysGen(n))
-	}
+	singleKey := secp256k1.GenPrivKey().PubKey()
+	singleLevelMultiKey := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
+	multiLevelSubKey1 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
+	multiLevelSubKey2 := multisig.NewPubKeyMultisigThreshold(4, genPubKeys(5))
+	multiLevelMultiKey := multisig.NewPubKeyMultisigThreshold(2, []crypto.PubKey{
+		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
 	type args struct {
 		pub crypto.PubKey
 	}
-	mkey := genMultiKey(5, 4, genPubKeys)
-	mkeyType := mkey.(*multisig.PubKeyMultisigThreshold)
-	mkeyType.PubKeys = append(mkeyType.PubKeys, genMultiKey(6, 5, genPubKeys))
 	tests := []struct {
 		name string
 		args args
 		want int
 	}{
-		{"single key", args{secp256k1.GenPrivKey().PubKey()}, 1},
-		{"multi sig key", args{genMultiKey(5, 4, genPubKeys)}, 5},
-		{"multi multi sig", args{mkey}, 11},
+		{"single key", args{singleKey}, 1},
+		{"single level multikey", args{singleLevelMultiKey}, 5},
+		{"multi level multikey", args{multiLevelMultiKey}, 11},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(T *testing.T) {
@@ -679,4 +703,52 @@ func TestAnteHandlerSigLimitExceeded(t *testing.T) {
 		[]uint64{0, 0, 0, 0, 0, 0, 0, 0}, []uint64{0, 0, 0, 0, 0, 0, 0, 0}
 	tx = newTestTx(ctx, msgs, privs, accnums, seqs, fee)
 	checkInvalidTx(t, anteHandler, ctx, tx, false, sdk.CodeTooManySignatures)
+}
+
+func TestEnsureSufficientMempoolFees(t *testing.T) {
+	// setup
+	input := setupTestInput()
+	ctx := input.ctx.WithMinGasPrices(
+		sdk.DecCoins{
+			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(1000000, sdk.Precision)), // 0.0001photino
+			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000, sdk.Precision)),     // 0.000001stake
+		},
+	)
+
+	testCases := []struct {
+		input      StdFee
+		expectedOK bool
+	}{
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 1)}), false},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 20)}), false},
+		{
+			NewStdFee(
+				200000,
+				sdk.Coins{
+					sdk.NewInt64Coin("photino", 20),
+					sdk.NewInt64Coin("stake", 1),
+				},
+			),
+			true,
+		},
+		{
+			NewStdFee(
+				200000,
+				sdk.Coins{
+					sdk.NewInt64Coin("atom", 2),
+					sdk.NewInt64Coin("photino", 20),
+					sdk.NewInt64Coin("stake", 1),
+				},
+			),
+			true,
+		},
+	}
+
+	for i, tc := range testCases {
+		res := EnsureSufficientMempoolFees(ctx, tc.input)
+		require.Equal(
+			t, tc.expectedOK, res.IsOK(),
+			"unexpected result; tc #%d, input: %v, log: %v", i, tc.input, res.Log,
+		)
+	}
 }

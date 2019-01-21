@@ -8,13 +8,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestUpdateTotalValAccum(t *testing.T) {
+func TestValidateGenesis(t *testing.T) {
 
 	fp := InitialFeePool()
+	require.Nil(t, fp.ValidateGenesis())
 
-	fp = fp.UpdateTotalValAccum(5, sdk.NewDec(3))
-	require.True(sdk.DecEq(t, sdk.NewDec(15), fp.TotalValAccum.Accum))
+	fp2 := FeePool{CommunityPool: sdk.DecCoins{{"stake", sdk.NewDec(-1)}}}
+	require.NotNil(t, fp2.ValidateGenesis())
 
-	fp = fp.UpdateTotalValAccum(8, sdk.NewDec(2))
-	require.True(sdk.DecEq(t, sdk.NewDec(21), fp.TotalValAccum.Accum))
 }

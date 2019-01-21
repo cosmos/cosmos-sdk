@@ -7,14 +7,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
-	coinsPos         = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000)}
+	coinsPos         = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1000)}
 	coinsZero        = sdk.Coins{}
 	coinsPosNotAtoms = sdk.Coins{sdk.NewInt64Coin("foo", 10000)}
-	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
+	coinsMulti       = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1000), sdk.NewInt64Coin("foo", 10000)}
 )
 
 func init() {

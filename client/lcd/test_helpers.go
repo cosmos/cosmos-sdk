@@ -7,7 +7,6 @@ import (
 	"regexp"
 
 	"io/ioutil"
-	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -68,22 +67,20 @@ import (
 
 // makePathname creates a unique pathname for each test. It will panic if it
 // cannot get the current working directory.
-func makePathname() (string, string) {
+func makePathname() string {
 	p, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 
-	chainid := fmt.Sprintf("%d", rand.Int()%1000000)
-
 	sep := string(filepath.Separator)
-	return strings.Replace(p, sep, "_", -1), chainid
+	return strings.Replace(p, sep, "_", -1)
 }
 
 // GetConfig returns a Tendermint config for the test cases.
 func GetConfig() *tmcfg.Config {
-	pathname, chainid := makePathname()
-	config := tmcfg.ResetTestRootWithChainID(pathname, chainid)
+	pathname := makePathname()
+	config := tmcfg.ResetTestRoot(pathname)
 
 	tmAddr, _, err := server.FreeTCPAddr()
 	if err != nil {

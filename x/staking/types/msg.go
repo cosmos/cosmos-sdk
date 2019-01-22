@@ -30,6 +30,15 @@ type MsgCreateValidator struct {
 	Value         sdk.Coin       `json:"value"`
 }
 
+type msgCreateValidatorJSON struct {
+	Description   Description    `json:"description"`
+	Commission    CommissionMsg  `json:"commission"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
+	ValidatorAddr sdk.ValAddress `json:"validator_address"`
+	PubKey        string         `json:"pubkey"`
+	Value         sdk.Coin       `json:"value"`
+}
+
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
 	selfDelegation sdk.Coin, description Description, commission CommissionMsg) MsgCreateValidator {
@@ -72,19 +81,32 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 // MarshalJSON implements the json.Marshaler interface to provide custom JSON
 // serialization of the MsgCreateValidator type.
 func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		Description   Description    `json:"description"`
-		Commission    CommissionMsg  `json:"commission"`
-		DelegatorAddr sdk.AccAddress `json:"delegator_address"`
-		ValidatorAddr sdk.ValAddress `json:"validator_address"`
-		PubKey        string         `json:"pubkey"`
-		Value         sdk.Coin       `json:"value"`
-	}{
+	return json.Marshal(msgCreateValidatorJSON{
 		Description:   msg.Description,
+		Commission:    msg.Commission,
+		DelegatorAddr: msg.DelegatorAddr,
 		ValidatorAddr: msg.ValidatorAddr,
 		PubKey:        sdk.MustBech32ifyConsPub(msg.PubKey),
 		Value:         msg.Value,
 	})
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface to provide custom
+// JSON deserialization of the MsgCreateValidator type.
+func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
+	var msgCreateValJSON msgCreateValidatorJSON
+	if err := json.Unmarshal(bz, &msgCreateValJSON); err != nil {
+		return err
+	}
+
+	msg.Description = msgCreateValJSON.Description
+	msg.Commission = msgCreateValJSON.Commission
+	msg.DelegatorAddr = msgCreateValJSON.DelegatorAddr
+	msg.ValidatorAddr = msgCreateValJSON.ValidatorAddr
+	msg.PubKey = sdk.MustGetConsPubKeyBech32(msgCreateValJSON.PubKey)
+	msg.Value = msgCreateValJSON.Value
+
+	return nil
 }
 
 // GetSignBytes returns the message bytes to sign over.

@@ -74,7 +74,7 @@ func (p Pool) String() string {
   Loose Tokens: %s
   Bonded Tokens: %s
   Token Supply: %s
-  Bonded Ratio: %v`, p.LooseTokens,
+  Bonded Ratio: %v`, p.NotBondedTokens,
 		p.BondedTokens, p.TokenSupply(),
 		p.BondedRatio())
 }

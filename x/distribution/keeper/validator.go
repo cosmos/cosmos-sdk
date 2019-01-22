@@ -42,7 +42,7 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 	}
 
 	// fetch historical rewards for last period
-	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1).SeqValue
+	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1).PeriodRewards
 
 	// set new historical rewards with reference count of 1
 	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(historical.Plus(current), 1))

@@ -13,14 +13,14 @@ import (
 // the number of slashes at the associated period, plus one
 // per validator for the zeroeth period
 type ValidatorHistoricalRewards struct {
-	SeqValue       sdk.DecCoins `json:"seq_value"`
+	PeriodRewards  sdk.DecCoins `json:"period_rewards"`
 	ReferenceCount uint16       `json:"reference_count"`
 }
 
 // create a new ValidatorHistoricalRewards
-func NewValidatorHistoricalRewards(seqValue sdk.DecCoins, referenceCount uint16) ValidatorHistoricalRewards {
+func NewValidatorHistoricalRewards(periodRewards sdk.DecCoins, referenceCount uint16) ValidatorHistoricalRewards {
 	return ValidatorHistoricalRewards{
-		SeqValue:       seqValue,
+		PeriodRewards:  periodRewards,
 		ReferenceCount: referenceCount,
 	}
 }

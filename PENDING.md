@@ -8,8 +8,8 @@ BREAKING CHANGES
   * [\#2222] all endpoints renamed from `/stake` -> `/staking`
   * [\#1268] `LooseTokens` -> `NotBondedTokens`
   * [\#3289] misc renames:
-    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
-    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime`
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate`
     * `MsgBeginUnbonding` -> `MsgUndelegate`
 
 * Gaia CLI  (`gaiacli`)
@@ -19,6 +19,7 @@ BREAKING CHANGES
   * [\#3069](https://github.com/cosmos/cosmos-sdk/pull/3069) `--fee` flag renamed to `--fees` to support multiple coins
   * [\#3156](https://github.com/cosmos/cosmos-sdk/pull/3156) Remove unimplemented `gaiacli init` command
   * [\#2222] `gaiacli tx stake` -> `gaiacli tx staking`, `gaiacli query stake` -> `gaiacli query staking`
+  * [\#3320](https://github.com/cosmos/cosmos-sdk/pull/3320) Ensure all `gaiacli query` commands respect the `--output` and `--indent` flags
 
 * Gaia
   * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
@@ -34,15 +35,17 @@ BREAKING CHANGES
   * [\#3242](https://github.com/cosmos/cosmos-sdk/issues/3242) Fix infinite gas
     meter utilization during aborted ante handler executions.
   * [x/distribution] \#3292 Enable or disable withdraw addresses with a parameter in the param store
-  * [staking] \#2222 `/stake` -> `/staking` module rename
+  * [\#2222] [x/staking] `/stake` -> `/staking` module rename
   * [staking] \#1268 `LooseTokens` -> `NotBondedTokens`
-  * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+  * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries
+
   * [staking] \#3289 misc renames:
-    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
-    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime`
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate`
     * `MsgBeginUnbonding` -> `MsgUndelegate`
   * [\#3315] Increase decimal precision to 18
   * \#3333 - F1 storage efficiency improvements - automatic withdrawals when unbonded, historical reward reference counting
+  * \#3323 Update to Tendermint 0.29.0
   * [\#3328](https://github.com/cosmos/cosmos-sdk/issues/3328) [x/gov] Remove redundant action tag
 
 * Tendermint
@@ -115,7 +118,7 @@ IMPROVEMENTS
     slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
-  * [staking] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period 
+  * [staking] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period
   * [staking] \#1268 staking spec rewrite
 
 * Tendermint

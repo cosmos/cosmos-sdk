@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -36,6 +37,16 @@ type Validator struct {
 	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
 	Commission Commission `json:"commission"` // commission parameters
+}
+
+// Validators is a collection of Validator
+type Validators []Validator
+
+func (v Validators) String() (out string) {
+	for _, val := range v {
+		out += val.String() + "\n"
+	}
+	return strings.TrimSpace(out)
 }
 
 // NewValidator - initialize a new validator
@@ -75,29 +86,27 @@ func UnmarshalValidator(cdc *codec.Codec, value []byte) (validator Validator, er
 	return validator, err
 }
 
-// HumanReadableString returns a human readable string representation of a
-// validator. An error is returned if the operator or the operator's public key
-// cannot be converted to Bech32 format.
-func (v Validator) HumanReadableString() (string, error) {
+// String returns a human readable string representation of a validator.
+func (v Validator) String() string {
 	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
 	if err != nil {
-		return "", err
+		panic(err)
 	}
-
-	resp := "Validator \n"
-	resp += fmt.Sprintf("Operator Address: %s\n", v.OperatorAddr)
-	resp += fmt.Sprintf("Validator Consensus Pubkey: %s\n", bechConsPubKey)
-	resp += fmt.Sprintf("Jailed: %v\n", v.Jailed)
-	resp += fmt.Sprintf("Status: %s\n", sdk.BondStatusToString(v.Status))
-	resp += fmt.Sprintf("Tokens: %s\n", v.Tokens)
-	resp += fmt.Sprintf("Delegator Shares: %s\n", v.DelegatorShares.String())
-	resp += fmt.Sprintf("Description: %s\n", v.Description)
-	resp += fmt.Sprintf("Bond Height: %d\n", v.BondHeight)
-	resp += fmt.Sprintf("Unbonding Height: %d\n", v.UnbondingHeight)
-	resp += fmt.Sprintf("Minimum Unbonding Time: %v\n", v.UnbondingCompletionTime)
-	resp += fmt.Sprintf("Commission: {%s}\n", v.Commission)
-
-	return resp, nil
+	return fmt.Sprintf(`Validator
+  Operator Address:           %s
+  Validator Consensus Pubkey: %s
+  Jailed:                     %v
+  Status:                     %s
+  Tokens:                     %s
+  Delegator Shares:           %s
+  Description:                %s
+  Bond Height:                %d
+  Unbonding Height:           %d
+  Unbonding Completion Time:  %v
+  Commission:                 %s`, v.OperatorAddr, bechConsPubKey,
+		v.Jailed, sdk.BondStatusToString(v.Status), v.Tokens,
+		v.DelegatorShares, v.Description, v.BondHeight,
+		v.UnbondingHeight, v.UnbondingCompletionTime, v.Commission)
 }
 
 //___________________________________________________________________

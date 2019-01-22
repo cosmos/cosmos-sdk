@@ -380,7 +380,7 @@ func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
 
 // QueryStakingParameters is gaiacli query staking parameters
 func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
-	cmd := fmt.Sprintf("gaiacli query staking parameters %v", f.Flags())
+	cmd := fmt.Sprintf("gaiacli query staking params %v", f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var params staking.Params
 	cdc := app.MakeCodec()
@@ -426,11 +426,18 @@ func (f *Fixtures) QueryGovParamTallying() gov.TallyParams {
 }
 
 // QueryGovProposals is gaiacli query gov proposals
-func (f *Fixtures) QueryGovProposals(flags ...string) string {
+func (f *Fixtures) QueryGovProposals(flags ...string) gov.Proposals {
 	cmd := fmt.Sprintf("gaiacli query gov proposals %v", f.Flags())
 	stdout, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	if strings.Contains(stderr, "No matching proposals found") {
+		return gov.Proposals{}
+	}
 	require.Empty(f.T, stderr)
-	return stdout
+	var out gov.Proposals
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(stdout), &out)
+	require.NoError(f.T, err)
+	return out
 }
 
 // QueryGovProposal is gaiacli query gov proposal

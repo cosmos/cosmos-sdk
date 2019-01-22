@@ -98,6 +98,7 @@ $ gaiacli query txs --tags '<tag1>:<value1>&<tag2>:<value2>' --page 1 --limit 30
 	cmd.Flags().String(flagTags, "", "tag:value list of tags that must match")
 	cmd.Flags().Int32(flagPage, defaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int32(flagLimit, defaultLimit, "Query number of transactions results per page returned")
+	cmd.MarkFlagRequired(flagTags)
 	return cmd
 }
 

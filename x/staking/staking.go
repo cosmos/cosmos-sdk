@@ -11,11 +11,15 @@ import (
 type (
 	Keeper                  = keeper.Keeper
 	Validator               = types.Validator
+	Validators              = types.Validators
 	Description             = types.Description
 	Commission              = types.Commission
 	Delegation              = types.Delegation
+	Delegations             = types.Delegations
 	UnbondingDelegation     = types.UnbondingDelegation
+	UnbondingDelegations    = types.UnbondingDelegations
 	Redelegation            = types.Redelegation
+	Redelegations           = types.Redelegations
 	Params                  = types.Params
 	Pool                    = types.Pool
 	MsgCreateValidator      = types.MsgCreateValidator
@@ -94,6 +98,8 @@ var (
 const (
 	QueryValidators                    = querier.QueryValidators
 	QueryValidator                     = querier.QueryValidator
+	QueryValidatorDelegations          = querier.QueryValidatorDelegations
+	QueryValidatorRedelegations        = querier.QueryValidatorRedelegations
 	QueryValidatorUnbondingDelegations = querier.QueryValidatorUnbondingDelegations
 	QueryDelegation                    = querier.QueryDelegation
 	QueryUnbondingDelegation           = querier.QueryUnbondingDelegation

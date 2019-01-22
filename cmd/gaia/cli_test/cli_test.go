@@ -383,7 +383,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom).Int64())
 
 	proposalsQuery := f.QueryGovProposals()
-	require.Equal(t, "No matching proposals found", proposalsQuery)
+	require.Empty(t, proposalsQuery)
 
 	// Test submit generate only for submit proposal
 	success, stdout, stderr := f.TxGovSubmitProposal(
@@ -418,7 +418,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Ensure query proposals returns properly
 	proposalsQuery = f.QueryGovProposals()
-	require.Equal(t, "  1 - Test", proposalsQuery)
+	require.Equal(t, uint64(1), proposalsQuery[0].GetProposalID())
 
 	// Query the deposits on the proposal
 	deposit := f.QueryGovDeposit(1, fooAddr)
@@ -489,11 +489,11 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Ensure no proposals in deposit period
 	proposalsQuery = f.QueryGovProposals("--status=DepositPeriod")
-	require.Equal(t, "No matching proposals found", proposalsQuery)
+	require.Empty(t, proposalsQuery)
 
 	// Ensure the proposal returns as in the voting period
 	proposalsQuery = f.QueryGovProposals("--status=VotingPeriod")
-	require.Equal(t, "  1 - Test", proposalsQuery)
+	require.Equal(t, uint64(1), proposalsQuery[0].GetProposalID())
 
 	// submit a second test proposal
 	f.TxGovSubmitProposal(keyFoo, "Text", "Apples", "test", sdk.NewInt64Coin(denom, 5))
@@ -501,7 +501,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 
 	// Test limit on proposals query
 	proposalsQuery = f.QueryGovProposals("--limit=1")
-	require.Equal(t, "  2 - Apples", proposalsQuery)
+	require.Equal(t, uint64(2), proposalsQuery[0].GetProposalID())
 
 	f.Cleanup()
 }

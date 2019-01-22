@@ -22,6 +22,15 @@ type Proposer struct {
 	Proposer   string `json:"proposer"`
 }
 
+// NewProposer returns a new Proposer given id and proposer
+func NewProposer(proposalID uint64, proposer string) Proposer {
+	return Proposer{proposalID, proposer}
+}
+
+func (p Proposer) String() string {
+	return fmt.Sprintf("Proposal with ID %d was proposed by %s", p.ProposalID, p.Proposer)
+}
+
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
 // will fetch and build deposits directly from the returned txs and return a
 // JSON marshalled result or any error that occurred.
@@ -201,7 +210,7 @@ func QueryDepositByTxQuery(
 // ID.
 func QueryProposerByTxQuery(
 	cdc *codec.Codec, cliCtx context.CLIContext, proposalID uint64,
-) ([]byte, error) {
+) (Proposer, error) {
 
 	tags := []string{
 		fmt.Sprintf("%s='%s'", tags.Action, gov.MsgSubmitProposal{}.Type()),
@@ -212,7 +221,7 @@ func QueryProposerByTxQuery(
 	// support configurable pagination.
 	infos, err := tx.SearchTxs(cliCtx, cdc, tags, defaultPage, defaultLimit)
 	if err != nil {
-		return nil, err
+		return Proposer{}, err
 	}
 
 	for _, info := range infos {
@@ -220,20 +229,24 @@ func QueryProposerByTxQuery(
 			// there should only be a single proposal under the given conditions
 			if msg.Type() == gov.TypeMsgSubmitProposal {
 				subMsg := msg.(gov.MsgSubmitProposal)
-
-				proposer := Proposer{
-					ProposalID: proposalID,
-					Proposer:   subMsg.Proposer.String(),
-				}
-
-				if cliCtx.Indent {
-					return cdc.MarshalJSONIndent(proposer, "", "  ")
-				}
-
-				return cdc.MarshalJSON(proposer)
+				return NewProposer(proposalID, subMsg.Proposer.String()), nil
 			}
 		}
 	}
+	return Proposer{}, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
+}
 
-	return nil, fmt.Errorf("failed to find the proposer for proposalID %d", proposalID)
+// QueryProposalByID takes a proposalID and returns a proposal
+func QueryProposalByID(proposalID uint64, cliCtx context.CLIContext, cdc *codec.Codec, queryRoute string) ([]byte, error) {
+	params := gov.NewQueryProposalParams(proposalID)
+	bz, err := cdc.MarshalJSON(params)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/proposal", queryRoute), bz)
+	if err != nil {
+		return nil, err
+	}
+	return res, err
 }

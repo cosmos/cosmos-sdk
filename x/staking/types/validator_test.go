@@ -245,16 +245,6 @@ func TestPossibleOverflow(t *testing.T) {
 		msg, newValidator.DelegatorShareExRate())
 }
 
-func TestHumanReadableString(t *testing.T) {
-	validator := NewValidator(addr1, pk1, Description{})
-
-	// NOTE: Being that the validator's keypair is random, we cannot test the
-	// actual contents of the string.
-	valStr, err := validator.HumanReadableString()
-	require.Nil(t, err)
-	require.NotEmpty(t, valStr)
-}
-
 func TestValidatorMarshalUnmarshalJSON(t *testing.T) {
 	validator := NewValidator(addr1, pk1, Description{})
 	js, err := codec.Cdc.MarshalJSON(validator)

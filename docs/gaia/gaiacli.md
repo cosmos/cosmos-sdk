@@ -380,15 +380,13 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 Once submitted a delegation to a validator, you can see it's information by using the following command:
 
 ```bash
-gaiacli query staking delegation \
-	--address-delegator=<account_cosmos> \
-	--validator=<account_cosmosval>
+gaiacli query staking delegation <delegator_addr> <validator_addr>
 ```
 
 Or if you want to check all your current delegations with disctinct validators:
 
 ```bash
-gaiacli query staking delegations <account_cosmos>
+gaiacli query staking delegations <delegator_addr>
 ```
 
 You can also get previous delegation(s) status by adding the `--height` flag.
@@ -412,9 +410,7 @@ The unbonding will be automatically completed when the unbonding period has pass
 Once you begin an unbonding-delegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query staking unbonding-delegation \
-	--address-delegator=<account_cosmos> \
-	--validator=<account_cosmosval> \
+gaiacli query staking unbonding-delegation <delegator_addr> <validator_addr>
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:
@@ -426,7 +422,7 @@ gaiacli query staking unbonding-delegations <account_cosmos>
 Additionally, as you can get all the unbonding-delegations from a particular validator:
 
 ```bash
-  gaiacli query staking unbonding-delegations-from <account_cosmosval>
+gaiacli query staking unbonding-delegations-from <account_cosmosval>
 ```
 
 To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
@@ -453,10 +449,7 @@ The redelegation will be automatically completed when the unbonding period has p
 Once you begin an redelegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query staking redelegation \
-	--address-delegator=<account_cosmos> \
-	--addr-validator-source=<account_cosmosval> \
-	--addr-validator-dest=<account_cosmosval> \
+gaiacli query staking redelegation <delegator_addr> <src_val_addr> <dst_val_addr>
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:
@@ -478,7 +471,7 @@ To get previous redelegation(s) status on past blocks, try adding the `--height`
 Parameters define high level settings for staking. You can get the current values by using:
 
 ```bash
-gaiacli query staking parameters
+gaiacli query staking params
 ```
 
 With the above command you will get the values for:
@@ -628,6 +621,12 @@ gaiacli query gov tally <proposal_id>
 #### Query governance parameters
 
 To check the current governance parameters run:
+
+```bash
+gaiacli query gov params
+```
+
+To query subsets of the governance parameters run:
 
 ```bash
 gaiacli query gov param voting

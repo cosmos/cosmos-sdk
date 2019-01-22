@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // Convenience struct for CLI output
@@ -20,4 +21,14 @@ func NewPrettyParams(communityTax json.RawMessage, baseProposerReward json.RawMe
 		BonusProposerReward: bonusProposerReward,
 		WithdrawAddrEnabled: withdrawAddrEnabled,
 	}
+}
+
+func (pp PrettyParams) String() string {
+	return fmt.Sprintf(`Distribution Params:
+  Community Tax:          %s
+  Base Proposer Reward:   %s
+  Bonus Proposer Reward:  %s
+  Withdraw Addr Enabled:  %s`, pp.CommunityTax,
+		pp.BaseProposerReward, pp.BonusProposerReward, pp.WithdrawAddrEnabled)
+
 }

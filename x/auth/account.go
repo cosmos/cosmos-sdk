@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -35,6 +36,9 @@ type Account interface {
 	// Calculates the amount of coins that can be sent to other accounts given
 	// the current time.
 	SpendableCoins(blockTime time.Time) sdk.Coins
+
+	// Ensure that account implements stringer
+	String() string
 }
 
 // VestingAccount defines an account type that vests coins via a vesting schedule.
@@ -72,6 +76,16 @@ type BaseAccount struct {
 	PubKey        crypto.PubKey  `json:"public_key"`
 	AccountNumber uint64         `json:"account_number"`
 	Sequence      uint64         `json:"sequence"`
+}
+
+// String implements fmt.Stringer
+func (acc BaseAccount) String() string {
+	return fmt.Sprintf(`Account %s:
+  Coins:         %s
+  PubKey:        %s
+  AccountNumber: %d
+  Sequence:      %d`, acc.Address, acc.Coins,
+		acc.PubKey.Address(), acc.AccountNumber, acc.Sequence)
 }
 
 // Prototype function for BaseAccount
@@ -162,6 +176,22 @@ type BaseVestingAccount struct {
 	DelegatedVesting sdk.Coins // coins that vesting and delegated
 
 	EndTime int64 // when the coins become unlocked
+}
+
+// String implements fmt.Stringer
+func (bva BaseVestingAccount) String() string {
+	return fmt.Sprintf(`Vesting Account %s:
+  Coins:            %s
+  PubKey:           %s
+  AccountNumber:    %d
+  Sequence:         %d
+  OriginalVesting:  %s
+  DelegatedFree:    %s
+  DelegatedVesting: %s
+  EndTime:          %d `, bva.Address, bva.Coins,
+		bva.PubKey.Address(), bva.AccountNumber, bva.Sequence,
+		bva.OriginalVesting, bva.DelegatedFree,
+		bva.DelegatedVesting, bva.EndTime)
 }
 
 // spendableCoins returns all the spendable coins for a vesting account given a
@@ -340,6 +370,22 @@ func NewContinuousVestingAccount(
 		StartTime:          StartTime,
 		BaseVestingAccount: baseVestingAcc,
 	}
+}
+
+func (cva ContinuousVestingAccount) String() string {
+	return fmt.Sprintf(`Vesting Account %s:
+  Coins:            %s
+  PubKey:           %s
+  AccountNumber:    %d
+  Sequence:         %d
+  OriginalVesting:  %s
+  DelegatedFree:    %s
+  DelegatedVesting: %s
+  StartTime:        %d
+  EndTime:          %d `, cva.Address, cva.Coins,
+		cva.PubKey.Address(), cva.AccountNumber, cva.Sequence,
+		cva.OriginalVesting, cva.DelegatedFree,
+		cva.DelegatedVesting, cva.StartTime, cva.EndTime)
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,

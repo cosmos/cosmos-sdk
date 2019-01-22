@@ -8,8 +8,8 @@ BREAKING CHANGES
   * [\#2222] all endpoints renamed from `/stake` -> `/staking`
   * [\#1268] `LooseTokens` -> `NotBondedTokens`
   * [\#3289] misc renames:
-    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
-    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime`
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate`
     * `MsgBeginUnbonding` -> `MsgUndelegate`
 
 * Gaia CLI  (`gaiacli`)
@@ -20,6 +20,7 @@ BREAKING CHANGES
   * [\#3156](https://github.com/cosmos/cosmos-sdk/pull/3156) Remove unimplemented `gaiacli init` command
   * [\#2222] `gaiacli tx stake` -> `gaiacli tx staking`, `gaiacli query stake` -> `gaiacli query staking`
   * [\#1894](https://github.com/cosmos/cosmos-sdk/issues/1894) `version` command now shows latest commit, vendor dir hash, and build machine info.
+  * [\#3320](https://github.com/cosmos/cosmos-sdk/pull/3320) Ensure all `gaiacli query` commands respect the `--output` and `--indent` flags
 
 * Gaia
   * https://github.com/cosmos/cosmos-sdk/issues/2838 - Move store keys to constants
@@ -38,10 +39,10 @@ BREAKING CHANGES
   * [x/distribution] \#3292 Enable or disable withdraw addresses with a parameter in the param store
   * [staking] \#2222 `/stake` -> `/staking` module rename
   * [staking] \#1268 `LooseTokens` -> `NotBondedTokens`
-  * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries 
+  * [staking] \#1402 Redelegation and unbonding-delegation structs changed to include multiple an array of entries
   * [staking] \#3289 misc renames:
-    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime` 
-    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate` 
+    * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime`
+    * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate`
     * `MsgBeginUnbonding` -> `MsgUndelegate`
   * [\#3315] Increase decimal precision to 18
   * [\#3328](https://github.com/cosmos/cosmos-sdk/issues/3328) [x/gov] Remove redundant action tag
@@ -67,6 +68,7 @@ FEATURES
   * [\#3198](https://github.com/cosmos/cosmos-sdk/issues/3198) New `sign --multisig` flag to enable multisig mode.
   * [\#2715](https://github.com/cosmos/cosmos-sdk/issues/2715) Reintroduce gaia server's insecure mode.
   * [\#3334](https://github.com/cosmos/cosmos-sdk/pull/3334) New `gaiad completion` and `gaiacli completion` to generate Bash/Zsh completion scripts.
+  * [\#2607](https://github.com/cosmos/cosmos-sdk/issues/2607) Make `gaiacli config` handle the boolean `indent` flag to beautify commands JSON output.
 
 * Gaia
   * [\#2182] [x/staking] Added querier for querying a single redelegation
@@ -115,7 +117,7 @@ IMPROVEMENTS
     slashing, and staking modules.
   * [\#3093](https://github.com/cosmos/cosmos-sdk/issues/3093) Ante handler does no longer read all accounts in one go when processing signatures as signature
     verification may fail before last signature is checked.
-  * [staking] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period 
+  * [staking] \#1402 Add for multiple simultaneous redelegations or unbonding-delegations within an unbonding period
   * [staking] \#1268 staking spec rewrite
 
 * Tendermint

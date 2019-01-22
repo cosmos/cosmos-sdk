@@ -21,7 +21,7 @@ func NewModuleClient(storeKey string, cdc *amino.Codec) ModuleClient {
 // GetQueryCmd returns the cli query commands for this module
 func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 	distQueryCmd := &cobra.Command{
-		Use:   "dist",
+		Use:   "distr",
 		Short: "Querying commands for the distribution module",
 	}
 
@@ -39,7 +39,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	distTxCmd := &cobra.Command{
-		Use:   "dist",
+		Use:   "distr",
 		Short: "Distribution transactions subcommands",
 	}
 

@@ -21,7 +21,7 @@ func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
 	params := keeper.GetParams(ctx)
 	pool := keeper.GetPool(ctx)
 	numVals := 3
-	pool.LooseTokens = sdk.NewInt(amt * int64(numVals))
+	pool.NotBondedTokens = sdk.NewInt(amt * int64(numVals))
 
 	// add numVals validators
 	for i := 0; i < numVals; i++ {
@@ -103,7 +103,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// balance decreased
 	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 5), ubd.Entries[0].Balance)
 	newPool := keeper.GetPool(ctx)
-	require.Equal(t, int64(5), oldPool.LooseTokens.Sub(newPool.LooseTokens).Int64())
+	require.Equal(t, int64(5), oldPool.NotBondedTokens.Sub(newPool.NotBondedTokens).Int64())
 }
 
 // tests slashRedelegation
@@ -503,8 +503,8 @@ func TestSlashBoth(t *testing.T) {
 	require.Equal(t, sdk.NewInt(3), rdA.Entries[0].Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
-	// loose tokens burned
-	require.Equal(t, int64(2), oldPool.LooseTokens.Sub(newPool.LooseTokens).Int64())
+	// not-bonded tokens burned
+	require.Equal(t, int64(2), oldPool.NotBondedTokens.Sub(newPool.NotBondedTokens).Int64())
 	// bonded tokens burned
 	require.Equal(t, int64(3), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
 	// read updated validator

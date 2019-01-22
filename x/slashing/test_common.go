@@ -76,7 +76,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	genesis := staking.DefaultGenesisState()
 
-	genesis.Pool.LooseTokens = sdk.NewInt(initCoins.MulRaw(int64(len(addrs))).Int64())
+	genesis.Pool.NotBondedTokens = sdk.NewInt(initCoins.MulRaw(int64(len(addrs))).Int64())
 
 	_, err = staking.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)

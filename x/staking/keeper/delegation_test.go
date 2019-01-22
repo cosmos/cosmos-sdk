@@ -176,7 +176,7 @@ func TestUnbondingDelegation(t *testing.T) {
 func TestUnbondDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewInt(10)
+	pool.NotBondedTokens = sdk.NewInt(10)
 
 	//create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -208,7 +208,7 @@ func TestUnbondDelegation(t *testing.T) {
 
 	require.Equal(t, int64(4), delegation.Shares.RoundInt64())
 	require.Equal(t, int64(4), validator.BondedTokens().Int64())
-	require.Equal(t, int64(6), pool.LooseTokens.Int64(), "%v", pool)
+	require.Equal(t, int64(6), pool.NotBondedTokens.Int64(), "%v", pool)
 	require.Equal(t, int64(4), pool.BondedTokens.Int64())
 }
 
@@ -218,7 +218,7 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewInt(20)
+	pool.NotBondedTokens = sdk.NewInt(20)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -265,7 +265,7 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewInt(20)
+	pool.NotBondedTokens = sdk.NewInt(20)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -342,7 +342,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 func TestUndelegateFromUnbondedValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewInt(20)
+	pool.NotBondedTokens = sdk.NewInt(20)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -421,7 +421,7 @@ func TestUndelegateFromUnbondedValidator(t *testing.T) {
 func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewInt(20)
+	pool.NotBondedTokens = sdk.NewInt(20)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -571,7 +571,7 @@ func TestRedelegation(t *testing.T) {
 func TestRedelegateToSameValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewInt(30)
+	pool.NotBondedTokens = sdk.NewInt(30)
 
 	// create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -596,7 +596,7 @@ func TestRedelegateToSameValidator(t *testing.T) {
 func TestRedelegateSelfDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewInt(30)
+	pool.NotBondedTokens = sdk.NewInt(30)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -651,7 +651,7 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewInt(30)
+	pool.NotBondedTokens = sdk.NewInt(30)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
@@ -735,7 +735,7 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.LooseTokens = sdk.NewInt(30)
+	pool.NotBondedTokens = sdk.NewInt(30)
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})

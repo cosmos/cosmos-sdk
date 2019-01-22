@@ -20,19 +20,25 @@ The following specification uses *Atom* as the native staking token. The module
 can be adapted to any Proof-Of-Stake blockchain by replacing *Atom* with the
 native staking token of the chain.
 
-1. **[State](state.md)**
-    1.  Params
-    1.  Pool
-    2.  Validators
-    3.  Delegations
-2. **[Transactions](transactions.md)**
-    1.  Create-Validator
-    2.  Edit-Validator
-    3.  Repeal-Revocation
-    4.  Delegate
-    5.  Unbond
-    6.  Redelegate
-3. **[Validator Set Changes](valset-changes.md)**
-    1.  Validator set updates
-    2.  Slashing
-    3.  Automatic Unbonding
+ 1. **[State](state.md)**	
+   - Pool
+   - Params
+   - Validator
+   - Delegation
+   - UnbondingDelegation
+   - Redelegation
+ 2. **[Messages](messages.md)**	
+   - MsgCreateValidator
+   - MsgEditValidator
+   - MsgDelegate
+   - MsgBeginUnbonding
+   - MsgBeginRedelegate
+ 3. **[End-Block](end_block.md)**	
+   - Validator Set Changes
+   - Queues 
+   - Unbonding Validators
+   - Unbonding Delegations
+   - Redelegations
+ 4. **[Hooks](hooks.md)**	
+ 5. **[Tags](tags.md)**	
+

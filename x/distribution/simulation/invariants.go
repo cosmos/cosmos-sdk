@@ -34,7 +34,7 @@ func NonNegativeOutstandingInvariant(k distr.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		outstanding := k.GetOutstandingRewards(ctx)
 		if outstanding.HasNegative() {
-			return fmt.Errorf("Negative outstanding coins: %v", outstanding)
+			return fmt.Errorf("negative outstanding coins: %v", outstanding)
 		}
 		return nil
 	}
@@ -62,7 +62,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invarian
 		remaining := k.GetOutstandingRewards(ctx)
 
 		if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
-			return fmt.Errorf("Negative remaining coins: %v", remaining)
+			return fmt.Errorf("negative remaining coins: %v", remaining)
 		}
 
 		return nil
@@ -90,7 +90,7 @@ func ReferenceCountInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invar
 
 		count := k.GetValidatorHistoricalRewardCount(ctx)
 		if count != expected {
-			return fmt.Errorf("Unexpected number of historical rewards records: expected %v, got %v\n", expected, count)
+			return fmt.Errorf("unexpected number of historical rewards records: expected %v, got %v", expected, count)
 		}
 
 		return nil

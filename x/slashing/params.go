@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,6 +41,19 @@ type Params struct {
 	DowntimeJailDuration    time.Duration `json:"downtime-jail-duration"`
 	SlashFractionDoubleSign sdk.Dec       `json:"slash-fraction-double-sign"`
 	SlashFractionDowntime   sdk.Dec       `json:"slash-fraction-downtime"`
+}
+
+func (p Params) String() string {
+	return fmt.Sprintf(`Slashing Params:
+  MaxEvidenceAge:          %s
+  SignedBlocksWindow:      %d
+  MinSignedPerWindow:      %s
+  DowntimeJailDuration:    %s
+  SlashFractionDoubleSign: %d
+  SlashFractionDowntime:   %d`, p.MaxEvidenceAge,
+		p.SignedBlocksWindow, p.MinSignedPerWindow,
+		p.DowntimeJailDuration, p.SlashFractionDoubleSign,
+		p.SlashFractionDowntime)
 }
 
 // Implements params.ParamStruct

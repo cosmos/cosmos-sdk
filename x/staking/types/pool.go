@@ -10,8 +10,8 @@ import (
 
 // Pool - dynamic parameters of the current state
 type Pool struct {
-	NotBondedTokens  sdk.Int `json:"not_bonded_tokens"`  // tokens which are not bonded in a validator
-	BondedTokens sdk.Int `json:"bonded_tokens"` // reserve of bonded tokens
+	NotBondedTokens sdk.Int `json:"not_bonded_tokens"` // tokens which are not bonded in a validator
+	BondedTokens    sdk.Int `json:"bonded_tokens"`     // reserve of bonded tokens
 }
 
 // nolint
@@ -24,8 +24,8 @@ func (p Pool) Equal(p2 Pool) bool {
 // initial pool for testing
 func InitialPool() Pool {
 	return Pool{
-		NotBondedTokens:  sdk.ZeroInt(),
-		BondedTokens: sdk.ZeroInt(),
+		NotBondedTokens: sdk.ZeroInt(),
+		BondedTokens:    sdk.ZeroInt(),
 	}
 }
 
@@ -68,16 +68,15 @@ func (p Pool) bondedTokensToNotBonded(bondedTokens sdk.Int) Pool {
 	return p
 }
 
-// HumanReadableString returns a human readable string representation of a
-// pool.
-func (p Pool) HumanReadableString() string {
-
-	resp := "Pool \n"
-	resp += fmt.Sprintf("Not-Bonded Tokens: %s\n", p.NotBondedTokens)
-	resp += fmt.Sprintf("Bonded Tokens: %s\n", p.BondedTokens)
-	resp += fmt.Sprintf("Token Supply: %s\n", p.TokenSupply())
-	resp += fmt.Sprintf("Bonded Ratio: %v\n", p.BondedRatio())
-	return resp
+// String returns a human readable string representation of a pool.
+func (p Pool) String() string {
+	return fmt.Sprintf(`Pool:
+  Loose Tokens: %s
+  Bonded Tokens: %s
+  Token Supply: %s
+  Bonded Ratio: %v`, p.NotBondedTokens,
+		p.BondedTokens, p.TokenSupply(),
+		p.BondedRatio())
 }
 
 // unmarshal the current pool value from store key or panics

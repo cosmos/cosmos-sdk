@@ -31,6 +31,7 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 		govCli.GetCmdQueryProposals(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryVote(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryVotes(mc.storeKey, mc.cdc),
+		govCli.GetCmdQueryParam(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryParams(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryProposer(mc.storeKey, mc.cdc),
 		govCli.GetCmdQueryDeposit(mc.storeKey, mc.cdc),

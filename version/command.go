@@ -26,7 +26,6 @@ func printVersion(cmd *cobra.Command, args []string) {
 	fmt.Println("cosmos-sdk", GetVersion())
 	fmt.Println("latest commit:", Commit)
 	fmt.Println("vendor/ directory's hash:", VendorDirHash)
-	fmt.Println("built on", Timestamp)
 	fmt.Printf("go version %s %s/%s\n",
 		runtime.Version(), runtime.GOOS, runtime.GOARCH)
 }

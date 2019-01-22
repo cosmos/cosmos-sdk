@@ -2,12 +2,10 @@ PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(subst v,,$(shell git describe --tags --long))
 COMMIT := $(shell git log -1 --format='%H')
-TIMESTAMP := $(shell date --iso=seconds)
 BUILD_TAGS = netgo
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags \
 	"-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
-	-X github.com/cosmos/cosmos-sdk/version.Timestamp=${TIMESTAMP} \
 	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell cat vendor-deps)"
 LEDGER_ENABLED ?= true
 GOTOOLS = \

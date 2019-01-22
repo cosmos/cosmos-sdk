@@ -184,8 +184,8 @@ func TestRemoveDelShares(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
-		BondedTokens: sdk.NewInt(248305),
-		NotBondedTokens:  sdk.NewInt(232147),
+		BondedTokens:    sdk.NewInt(248305),
+		NotBondedTokens: sdk.NewInt(232147),
 	}
 	shares := sdk.NewDec(29)
 	_, newPool, tokens := validator.RemoveDelShares(pool, shares)
@@ -232,8 +232,8 @@ func TestPossibleOverflow(t *testing.T) {
 		DelegatorShares: delShares,
 	}
 	pool := Pool{
-		NotBondedTokens:  sdk.NewInt(100),
-		BondedTokens: poolTokens,
+		NotBondedTokens: sdk.NewInt(100),
+		BondedTokens:    poolTokens,
 	}
 	tokens := int64(71)
 	msg := fmt.Sprintf("validator %#v", validator)

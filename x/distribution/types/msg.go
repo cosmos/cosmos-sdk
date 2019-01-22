@@ -34,11 +34,8 @@ func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check
@@ -75,11 +72,8 @@ func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgWithdrawDelegatorReward) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check
@@ -114,11 +108,8 @@ func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgWithdrawValidatorCommission) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check

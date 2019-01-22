@@ -28,7 +28,7 @@ func NewProposer(proposalID uint64, proposer string) Proposer {
 }
 
 func (p Proposer) String() string {
-	return fmt.Sprintf("Proposal w/ ID %d was proposed by %s", p.ProposalID, p.Proposer)
+	return fmt.Sprintf("Proposal with ID %d was proposed by %s", p.ProposalID, p.Proposer)
 }
 
 // QueryDepositsByTxQuery will query for deposits via a direct txs tags query. It
@@ -238,7 +238,6 @@ func QueryProposerByTxQuery(
 
 // QueryProposalByID takes a proposalID and returns a proposal
 func QueryProposalByID(proposalID uint64, cliCtx context.CLIContext, cdc *codec.Codec, queryRoute string) ([]byte, error) {
-	// Construct query
 	params := gov.NewQueryProposalParams(proposalID)
 	bz, err := cdc.MarshalJSON(params)
 	if err != nil {

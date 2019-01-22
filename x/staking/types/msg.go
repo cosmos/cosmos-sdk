@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"encoding/json"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -68,10 +69,10 @@ func (msg MsgCreateValidator) GetSigners() []sdk.AccAddress {
 	return addrs
 }
 
-// TODO Remove use of custom struct (no longer necessary)
-// get the bytes for the message signer to sign on
-func (msg MsgCreateValidator) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
+// MarshalJSON implements the json.Marshaler interface to provide custom JSON
+// serialization of the MsgCreateValidator type.
+func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
 		Description   Description    `json:"description"`
 		Commission    CommissionMsg  `json:"commission"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_address"`
@@ -84,10 +85,12 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 		PubKey:        sdk.MustBech32ifyConsPub(msg.PubKey),
 		Value:         msg.Value,
 	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+}
+
+// GetSignBytes returns the message bytes to sign over.
+func (msg MsgCreateValidator) GetSignBytes() []byte {
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check

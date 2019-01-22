@@ -8,8 +8,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Verify interface at compile time
-var _, _, _ sdk.Msg = &MsgCreateValidator{}, &MsgEditValidator{}, &MsgDelegate{}
+// ensure Msg interface compliance at compile time
+var (
+	_ sdk.Msg = &MsgCreateValidator{}
+	_ sdk.Msg = &MsgEditValidator{}
+	_ sdk.Msg = &MsgDelegate{}
+	_ sdk.Msg = &MsgUndelegate{}
+	_ sdk.Msg = &MsgBeginRedelegate{}
+)
 
 //______________________________________________________________________
 
@@ -137,17 +143,8 @@ func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgEditValidator) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		Description
-		ValidatorAddr sdk.ValAddress `json:"address"`
-	}{
-		Description:   msg.Description,
-		ValidatorAddr: msg.ValidatorAddr,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check
@@ -189,11 +186,8 @@ func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgDelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check
@@ -240,21 +234,8 @@ func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgBeginRedelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`
-		ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"`
-		ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"`
-		SharesAmount     string         `json:"shares"`
-	}{
-		DelegatorAddr:    msg.DelegatorAddr,
-		ValidatorSrcAddr: msg.ValidatorSrcAddr,
-		ValidatorDstAddr: msg.ValidatorDstAddr,
-		SharesAmount:     msg.SharesAmount.String(),
-	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check
@@ -298,19 +279,8 @@ func (msg MsgUndelegate) GetSigners() []sdk.AccAddress { return []sdk.AccAddress
 
 // get the bytes for the message signer to sign on
 func (msg MsgUndelegate) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(struct {
-		DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-		ValidatorAddr sdk.ValAddress `json:"validator_addr"`
-		SharesAmount  string         `json:"shares_amount"`
-	}{
-		DelegatorAddr: msg.DelegatorAddr,
-		ValidatorAddr: msg.ValidatorAddr,
-		SharesAmount:  msg.SharesAmount.String(),
-	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check

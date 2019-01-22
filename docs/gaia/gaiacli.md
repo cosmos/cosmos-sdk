@@ -782,5 +782,15 @@ gaiad completion --zsh > gaiad_completion
 gaiacli completion --zsh > gaiacli_completion
 ```
 
-Refer to the user's manual of your interpreter for information
-on how to enable shell autocompletion.
+::: tip Note
+On most UNIX systems, such scripts may be loaded in `.bashrc` or
+`.bash_profile` to enable Bash autocompletion:
+
+```bash
+echo '. gaiad_completion' >> ~/.bashrc
+echo '. gaiacli_completion' >> ~/.bashrc
+```
+
+Refer to the user's manual of your interpreter provided by your
+operating system for information on how to enable shell autocompletion.
+:::

@@ -1,5 +1,9 @@
 //nolint
 package version
 
-// GitCommit set by build flags
-var Version = ""
+// Variables set by build flags
+var (
+	Commit        = ""
+	Version       = ""
+	VendorDirHash = ""
+)

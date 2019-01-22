@@ -3,9 +3,10 @@ package gov
 import (
 	"fmt"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // query endpoints supported by the governance Querier
@@ -213,7 +214,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	if proposal.GetStatus() == StatusDepositPeriod {
 		tallyResult = EmptyTallyResult()
 	} else if proposal.GetStatus() == StatusPassed || proposal.GetStatus() == StatusRejected {
-		tallyResult = proposal.GetTallyResult()
+		tallyResult = proposal.GetFinalTallyResult()
 	} else {
 		// proposal is in voting period
 		_, tallyResult = tally(ctx, keeper, proposal)

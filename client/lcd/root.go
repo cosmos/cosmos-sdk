@@ -7,18 +7,19 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/codec"
-	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/log"
 	rpcserver "github.com/tendermint/tendermint/rpc/lib/server"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/codec"
+	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/server"
 
 	// Import statik for light client stuff
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
@@ -39,12 +40,7 @@ type RestServer struct {
 // NewRestServer creates a new rest server instance
 func NewRestServer(cdc *codec.Codec) *RestServer {
 	r := mux.NewRouter()
-	cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-	// Register version methods on the router
-	r.HandleFunc("/version", CLIVersionRequestHandler).Methods("GET")
-	r.HandleFunc("/node_version", NodeVersionRequestHandler(cliCtx)).Methods("GET")
-
+	cliCtx := context.NewCLIContext().WithCodec(cdc).WithAccountDecoder(cdc)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "rest-server")
 
 	return &RestServer{
@@ -81,68 +77,52 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 		rs.log.Error("error closing listener", "err", err)
 	})
 
-	// TODO: re-enable insecure mode once #2715 has been addressed
+	rs.listener, err = rpcserver.Listen(
+		listenAddr,
+		rpcserver.Config{MaxOpenConnections: maxOpen},
+	)
+	if err != nil {
+		return
+	}
+	rs.log.Info("Starting Gaia Lite REST service...")
+
+	// launch rest-server in insecure mode
 	if insecure {
-		fmt.Println(
-			"Insecure mode is temporarily disabled, please locally generate an " +
-				"SSL certificate to test. Support will be re-enabled soon!",
-		)
-		// listener, err = rpcserver.StartHTTPServer(
-		// 	listenAddr, handler, logger,
-		// 	rpcserver.Config{MaxOpenConnections: maxOpen},
-		// )
-		// if err != nil {
-		// 	return
-		// }
-	} else {
-		if certFile != "" {
-			// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
-			err = validateCertKeyFiles(certFile, keyFile)
-			if err != nil {
-				return err
-			}
+		return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log)
+	}
 
-			//  cert/key pair is provided, read the fingerprint
-			rs.fingerprint, err = fingerprintFromFile(certFile)
-			if err != nil {
-				return err
-			}
-		} else {
-			// if certificate is not supplied, generate a self-signed one
-			certFile, keyFile, rs.fingerprint, err = genCertKeyFilesAndReturnFingerprint(sslHosts)
-			if err != nil {
-				return err
-			}
-
-			defer func() {
-				os.Remove(certFile)
-				os.Remove(keyFile)
-			}()
+	// handle certificates
+	if certFile != "" {
+		// validateCertKeyFiles() is needed to work around tendermint/tendermint#2460
+		if err := validateCertKeyFiles(certFile, keyFile); err != nil {
+			return err
 		}
 
-		rs.listener, err = rpcserver.Listen(
-			listenAddr,
-			rpcserver.Config{MaxOpenConnections: maxOpen},
-		)
-		if err != nil {
-			return
-		}
-
-		rs.log.Info("Starting Gaia Lite REST service...")
-		rs.log.Info(rs.fingerprint)
-
-		err := rpcserver.StartHTTPAndTLSServer(
-			rs.listener,
-			rs.Mux,
-			certFile, keyFile,
-			rs.log,
-		)
+		//  cert/key pair is provided, read the fingerprint
+		rs.fingerprint, err = fingerprintFromFile(certFile)
 		if err != nil {
 			return err
 		}
+	} else {
+		// if certificate is not supplied, generate a self-signed one
+		certFile, keyFile, rs.fingerprint, err = genCertKeyFilesAndReturnFingerprint(sslHosts)
+		if err != nil {
+			return err
+		}
+
+		defer func() {
+			os.Remove(certFile)
+			os.Remove(keyFile)
+		}()
 	}
 
-	return nil
+	rs.log.Info(rs.fingerprint)
+	return rpcserver.StartHTTPAndTLSServer(
+		rs.listener,
+		rs.Mux,
+		certFile, keyFile,
+		rs.log,
+	)
 }
 
 // ServeCommand will start a Gaia Lite REST service as a blocking process. It

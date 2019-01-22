@@ -16,11 +16,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/types"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/cool"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/pow"
-	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestake"
+	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/simplestaking"
 	"github.com/cosmos/cosmos-sdk/docs/examples/democoin/x/sketchy"
 )
 
@@ -45,14 +47,17 @@ type DemocoinApp struct {
 	capKeyPowStore     *sdk.KVStoreKey
 	capKeyIBCStore     *sdk.KVStoreKey
 	capKeyStakingStore *sdk.KVStoreKey
+	keyParams          *sdk.KVStoreKey
+	tkeyParams         *sdk.TransientStoreKey
 
 	// keepers
+	paramsKeeper        params.Keeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
 	coolKeeper          cool.Keeper
 	powKeeper           pow.Keeper
 	ibcMapper           ibc.Mapper
-	stakeKeeper         simplestake.Keeper
+	stakingKeeper       simplestaking.Keeper
 
 	// Manage getting and setting accounts
 	accountKeeper auth.AccountKeeper
@@ -67,18 +72,23 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	var app = &DemocoinApp{
 		BaseApp:            bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc)),
 		cdc:                cdc,
-		capKeyMainStore:    sdk.NewKVStoreKey("main"),
-		capKeyAccountStore: sdk.NewKVStoreKey("acc"),
+		capKeyMainStore:    sdk.NewKVStoreKey(bam.MainStoreKey),
+		capKeyAccountStore: sdk.NewKVStoreKey(auth.StoreKey),
 		capKeyPowStore:     sdk.NewKVStoreKey("pow"),
 		capKeyIBCStore:     sdk.NewKVStoreKey("ibc"),
-		capKeyStakingStore: sdk.NewKVStoreKey("stake"),
+		capKeyStakingStore: sdk.NewKVStoreKey(staking.StoreKey),
+		keyParams:          sdk.NewKVStoreKey("params"),
+		tkeyParams:         sdk.NewTransientStoreKey("transient_params"),
 	}
+
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// Define the accountKeeper.
 	app.accountKeeper = auth.NewAccountKeeper(
 		cdc,
-		app.capKeyAccountStore, // target store
-		types.ProtoAppAccount,  // prototype
+		app.capKeyAccountStore,
+		app.paramsKeeper.Subspace(auth.DefaultParamspace),
+		types.ProtoAppAccount,
 	)
 
 	// Add handlers.
@@ -86,14 +96,14 @@ func NewDemocoinApp(logger log.Logger, db dbm.DB) *DemocoinApp {
 	app.coolKeeper = cool.NewKeeper(app.capKeyMainStore, app.bankKeeper, cool.DefaultCodespace)
 	app.powKeeper = pow.NewKeeper(app.capKeyPowStore, pow.NewConfig("pow", int64(1)), app.bankKeeper, pow.DefaultCodespace)
 	app.ibcMapper = ibc.NewMapper(app.cdc, app.capKeyIBCStore, ibc.DefaultCodespace)
-	app.stakeKeeper = simplestake.NewKeeper(app.capKeyStakingStore, app.bankKeeper, simplestake.DefaultCodespace)
+	app.stakingKeeper = simplestaking.NewKeeper(app.capKeyStakingStore, app.bankKeeper, simplestaking.DefaultCodespace)
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
 		AddRoute("cool", cool.NewHandler(app.coolKeeper)).
 		AddRoute("pow", app.powKeeper.Handler).
 		AddRoute("sketchy", sketchy.NewHandler()).
 		AddRoute("ibc", ibc.NewHandler(app.ibcMapper, app.bankKeeper)).
-		AddRoute("simplestake", simplestake.NewHandler(app.stakeKeeper))
+		AddRoute("simplestaking", simplestaking.NewHandler(app.stakingKeeper))
 
 	// Initialize BaseApp.
 	app.SetInitChainer(app.initChainerFn(app.coolKeeper, app.powKeeper))
@@ -118,7 +128,7 @@ func MakeCodec() *codec.Codec {
 	pow.RegisterCodec(cdc)
 	bank.RegisterCodec(cdc)
 	ibc.RegisterCodec(cdc)
-	simplestake.RegisterCodec(cdc)
+	simplestaking.RegisterCodec(cdc)
 
 	// Register AppAccount
 	cdc.RegisterInterface((*auth.Account)(nil), nil)

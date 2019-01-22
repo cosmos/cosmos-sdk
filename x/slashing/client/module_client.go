@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 )
 
 // ModuleClient exports all client functionality from this module
@@ -25,8 +26,12 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 		Short: "Querying commands for the slashing module",
 	}
 
-	slashingQueryCmd.AddCommand(client.GetCommands(
-		cli.GetCmdQuerySigningInfo(mc.storeKey, mc.cdc))...)
+	slashingQueryCmd.AddCommand(
+		client.GetCommands(
+			cli.GetCmdQuerySigningInfo(mc.storeKey, mc.cdc),
+			cli.GetCmdQueryParams(mc.cdc),
+		)...,
+	)
 
 	return slashingQueryCmd
 

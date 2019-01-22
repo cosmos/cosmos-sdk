@@ -6,15 +6,14 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/store"
+
 	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/privval"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/app"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -23,6 +22,12 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/app"
+	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -47,11 +52,22 @@ func main() {
 	rootDir := os.ExpandEnv("$HOME/.basecoind")
 	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
 
+	// initialise the Bech32 prefixes
+	initSDKConfig()
+
 	err := executor.Execute()
 	if err != nil {
 		// Note: Handle with #870
 		panic(err)
 	}
+}
+
+func initSDKConfig() {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("baseacc", "basepub")
+	config.SetBech32PrefixForValidator("baseval", "basevalpub")
+	config.SetBech32PrefixForConsensusNode("basecons", "baseconspub")
+	config.Seal()
 }
 
 // get cmd to initialize all files for tendermint and application
@@ -76,7 +92,8 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 			}
 			nodeID := string(nodeKey.ID())
 
-			pk := gaiaInit.ReadOrCreatePrivValidator(config.PrivValidatorFile())
+			pk := privval.LoadOrGenFilePV(config.PrivValidatorKeyFile(),
+				config.PrivValidatorStateFile()).GetPubKey()
 			genTx, appMessage, validator, err := server.SimpleAppGenTx(cdc, pk)
 			if err != nil {
 				return err
@@ -121,7 +138,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 }
 
 func newApp(logger log.Logger, db dbm.DB, storeTracer io.Writer) abci.Application {
-	return app.NewBasecoinApp(logger, db, baseapp.SetPruning(viper.GetString("pruning")))
+	return app.NewBasecoinApp(logger, db, baseapp.SetPruning(store.NewPruningOptions(viper.GetString("pruning"))))
 }
 
 func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, storeTracer io.Writer, _ int64, _ bool) (

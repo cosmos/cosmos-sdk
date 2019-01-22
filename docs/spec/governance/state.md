@@ -24,6 +24,7 @@ type VotingParams struct {
 
 ```go
 type TallyParams struct {
+  Quorum            sdk.Dec  //  Minimum percentage of stake that needs to vote for a proposal to be considered valid
   Threshold         sdk.Dec  //  Minimum proportion of Yes votes for proposal to pass. Initial value: 0.5
   Veto              sdk.Dec  //  Minimum proportion of Veto votes to Total votes ratio for proposal to be vetoed. Initial value: 1/3
   GovernancePenalty sdk.Dec  //  Penalty if validator does not vote
@@ -159,14 +160,14 @@ And the pseudocode for the `ProposalProcessingQueue`:
       // Tally
       voterIterator = rangeQuery(Governance, <proposalID|'addresses'>) //return all the addresses that voted on the proposal
       for each (voterAddress, vote) in voterIterator
-        delegations = stakeKeeper.getDelegations(voterAddress) // get all delegations for current voter
+        delegations = stakingKeeper.getDelegations(voterAddress) // get all delegations for current voter
 
         for each delegation in delegations
           // make sure delegation.Shares does NOT include shares being unbonded
           tmpValMap(delegation.ValidatorAddr).Minus += delegation.Shares
           proposal.updateTally(vote, delegation.Shares)
 
-        _, isVal = stakeKeeper.getValidator(voterAddress)
+        _, isVal = stakingKeeper.getValidator(voterAddress)
         if (isVal)
           tmpValMap(voterAddress).Vote = vote
 

@@ -13,17 +13,16 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-)
 
-const ctxAccStoreName = "acc"
+	"github.com/cosmos/cosmos-sdk/client/keys"
+	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/types"
+)
 
 var (
 	verifier tmlite.Verifier
@@ -36,6 +35,7 @@ type CLIContext struct {
 	AccDecoder    auth.AccountDecoder
 	Client        rpcclient.Client
 	Output        io.Writer
+	OutputFormat  string
 	Height        int64
 	NodeURI       string
 	From          string
@@ -46,7 +46,7 @@ type CLIContext struct {
 	JSON          bool
 	PrintResponse bool
 	Verifier      tmlite.Verifier
-	DryRun        bool
+	Simulate      bool
 	GenerateOnly  bool
 	fromAddress   types.AccAddress
 	fromName      string
@@ -75,8 +75,9 @@ func NewCLIContext() CLIContext {
 		Client:        rpc,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
-		AccountStore:  ctxAccStoreName,
+		AccountStore:  auth.StoreKey,
 		From:          viper.GetString(client.FlagFrom),
+		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(client.FlagHeight),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
 		UseLedger:     viper.GetBool(client.FlagUseLedger),
@@ -84,7 +85,7 @@ func NewCLIContext() CLIContext {
 		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
-		DryRun:        viper.GetBool(client.FlagDryRun),
+		Simulate:      viper.GetBool(client.FlagDryRun),
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
 		fromAddress:   fromAddress,
 		fromName:      fromName,
@@ -242,4 +243,41 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 func (ctx CLIContext) WithVerifier(verifier tmlite.Verifier) CLIContext {
 	ctx.Verifier = verifier
 	return ctx
+}
+
+// WithGenerateOnly returns a copy of the context with updated GenerateOnly value
+func (ctx CLIContext) WithGenerateOnly(generateOnly bool) CLIContext {
+	ctx.GenerateOnly = generateOnly
+	return ctx
+}
+
+// WithSimulation returns a copy of the context with updated Simulate value
+func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
+	ctx.Simulate = simulate
+	return ctx
+}
+
+// PrintOutput prints output while respecting output and indent flags
+// NOTE: pass in marshalled structs that have been unmarshaled
+// because this function will panic on marshaling errors
+func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
+	var out []byte
+
+	switch ctx.OutputFormat {
+	case "text":
+		out = []byte(toPrint.String())
+	case "json":
+		if ctx.Indent {
+			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", " ")
+		} else {
+			out, err = ctx.Codec.MarshalJSON(toPrint)
+		}
+	}
+
+	if err != nil {
+		return
+	}
+
+	fmt.Println(string(out))
+	return
 }

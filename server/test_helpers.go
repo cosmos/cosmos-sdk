@@ -2,11 +2,12 @@ package server
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"io/ioutil"
 	"net"
 	"os"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"

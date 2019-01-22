@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	cmn "github.com/tendermint/tendermint/libs/common"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -43,6 +44,8 @@ const (
 	CodeMemoTooLarge      CodeType = 13
 	CodeInsufficientFee   CodeType = 14
 	CodeTooManySignatures CodeType = 15
+	CodeGasOverflow       CodeType = 16
+	CodeNoSignatures      CodeType = 17
 
 	// CodespaceRoot is a codespace for error codes in this file only.
 	// Notice that 0 is an "unset" codespace, which can be overridden with
@@ -88,6 +91,8 @@ func CodeToDefaultMsg(code CodeType) string {
 		return "insufficient fee"
 	case CodeTooManySignatures:
 		return "maximum numer of signatures exceeded"
+	case CodeNoSignatures:
+		return "no signatures supplied"
 	default:
 		return unknownCodeMsg(code)
 	}
@@ -142,6 +147,12 @@ func ErrInsufficientFee(msg string) Error {
 }
 func ErrTooManySignatures(msg string) Error {
 	return newErrorWithRootCodespace(CodeTooManySignatures, msg)
+}
+func ErrNoSignatures(msg string) Error {
+	return newErrorWithRootCodespace(CodeNoSignatures, msg)
+}
+func ErrGasOverflow(msg string) Error {
+	return newErrorWithRootCodespace(CodeGasOverflow, msg)
 }
 
 //----------------------------------------

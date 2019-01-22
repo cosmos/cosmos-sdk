@@ -7,10 +7,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"io/ioutil"
 	"path"
+
+	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 const (
@@ -31,7 +33,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 				return err
 			}
 
-			if emptyState {
+			if emptyState || appExporter == nil {
 				fmt.Println("WARNING: State is not initialized. Returning genesis file.")
 				genesisFile := path.Join(home, "config", "genesis.json")
 				genesis, err := ioutil.ReadFile(genesisFile)

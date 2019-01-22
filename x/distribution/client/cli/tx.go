@@ -3,6 +3,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -42,7 +43,7 @@ func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards",
-		Short: "withdraw rewards for either: all-delegations, a delegation, or a validator",
+		Short: "withdraw rewards for either a delegation or a validator",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -54,7 +55,7 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 					flagOnlyFromValidator, flagIsValidator)
 			}
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
@@ -67,8 +68,8 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 					return err
 				}
 				valAddr := sdk.ValAddress(addr.Bytes())
-				msg = types.NewMsgWithdrawValidatorRewardsAll(valAddr)
-			case onlyFromVal != "":
+				msg = types.NewMsgWithdrawValidatorCommission(valAddr)
+			default:
 				delAddr, err := cliCtx.GetFromAddress()
 				if err != nil {
 					return err
@@ -80,12 +81,10 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 				}
 
 				msg = types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
-			default:
-				delAddr, err := cliCtx.GetFromAddress()
-				if err != nil {
-					return err
-				}
-				msg = types.NewMsgWithdrawDelegatorRewardsAll(delAddr)
+			}
+
+			if cliCtx.GenerateOnly {
+				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
@@ -105,7 +104,7 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			txBldr := authtxb.NewTxBuilderFromCLI().WithCodec(cdc)
+			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)

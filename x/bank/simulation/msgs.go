@@ -6,13 +6,14 @@ import (
 	"math/big"
 	"math/rand"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // SingleInputSendTx tests and runs a single msg send w/ auth, with one input and one output, where both
@@ -63,7 +64,7 @@ func createSingleInputSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.A
 		toAcc = simulation.RandomAcc(r, accs)
 	}
 	toAddr := toAcc.Address
-	initFromCoins := mapper.GetAccount(ctx, fromAcc.Address).GetCoins()
+	initFromCoins := mapper.GetAccount(ctx, fromAcc.Address).SpendableCoins(ctx.BlockHeader().Time)
 
 	if len(initFromCoins) == 0 {
 		return fromAcc, "skipping, no coins at all", msg, true

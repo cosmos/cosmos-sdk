@@ -1,10 +1,10 @@
-// nolint
 package tags
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Governance tags
 var (
 	ActionProposalDropped  = []byte("proposal-dropped")
 	ActionProposalPassed   = []byte("proposal-passed")
@@ -16,4 +16,5 @@ var (
 	VotingPeriodStart = "voting-period-start"
 	Depositor         = "depositor"
 	Voter             = "voter"
+	ProposalResult    = "proposal-result"
 )

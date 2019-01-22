@@ -37,6 +37,15 @@ func min(i *big.Int, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == 1 {
 		return new(big.Int).Set(i2)
 	}
+
+	return new(big.Int).Set(i)
+}
+
+func max(i *big.Int, i2 *big.Int) *big.Int {
+	if i.Cmp(i2) == -1 {
+		return new(big.Int).Set(i2)
+	}
+
 	return new(big.Int).Set(i)
 }
 
@@ -153,6 +162,16 @@ func (i Int) IsZero() bool {
 	return i.i.Sign() == 0
 }
 
+// IsNegative returns true if Int is negative
+func (i Int) IsNegative() bool {
+	return i.i.Sign() == -1
+}
+
+// IsPositive returns true if Int is positive
+func (i Int) IsPositive() bool {
+	return i.i.Sign() == 1
+}
+
 // Sign returns sign of Int
 func (i Int) Sign() int {
 	return i.i.Sign()
@@ -254,9 +273,14 @@ func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
 }
 
-// Return the minimum of the ints
+// return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
+}
+
+// MaxInt returns the maximum between two integers.
+func MaxInt(i, i2 Int) Int {
+	return Int{max(i.BigInt(), i2.BigInt())}
 }
 
 // Human readable string
@@ -494,6 +518,11 @@ func (i Uint) ModRaw(i2 uint64) Uint {
 // Return the minimum of the Uints
 func MinUint(i1, i2 Uint) Uint {
 	return Uint{min(i1.BigInt(), i2.BigInt())}
+}
+
+// MaxUint returns the maximum between two unsigned integers.
+func MaxUint(i, i2 Uint) Uint {
+	return Uint{max(i.BigInt(), i2.BigInt())}
 }
 
 // Human readable string

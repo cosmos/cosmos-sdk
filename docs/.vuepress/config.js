@@ -8,8 +8,21 @@ module.exports = {
     lineNumbers: true
   },
   themeConfig: {
-    lastUpdated: "Last Updated",
-    nav: [{ text: "Back to Cosmos", link: "https://cosmos.network" }],
+    repo: "cosmos/cosmos-sdk",
+    editLinks: true,
+    docsDir: "docs",
+    docsBranch: "develop",
+    editLinkText: 'Edit this page on Github',
+    lastUpdated: true,
+    algolia: {
+      apiKey: 'a6e2f64347bb826b732e118c1366819a',
+      indexName: 'cosmos_network',
+      debug: false
+    },
+    nav: [
+      { text: "Back to Cosmos", link: "https://cosmos.network" },
+      { text: "RPC", link: "../rpc/" }
+    ],
     sidebar: [
       {
         title: "Overview",
@@ -24,6 +37,7 @@ module.exports = {
         title: "Gaia",
         collapsable: false,
         children: [
+          "/gaia/what-is-gaia"
           "/gaia/installation",
           "/gaia/join-testnet",
           "/gaia/validators/validator-setup",
@@ -36,7 +50,29 @@ module.exports = {
         ]
       },
       {
-        title: "SDK Clients",
+        title: "Tutorial",
+        collapsable: false,
+        children: [
+          "/tutorial/",
+          "/tutorial/app-design",
+          "/tutorial/app-init",
+          "/tutorial/keeper",
+          "/tutorial/msgs-handlers",
+          "/tutorial/set-name",
+          "/tutorial/buy-name",
+          "/tutorial/queriers",
+          "/tutorial/codec",
+          "/tutorial/cli",
+          "/tutorial/rest",
+          "/tutorial/app-complete",
+          "/tutorial/entrypoint",
+          "/tutorial/dep",
+          "/tutorial/build-run",
+          "/tutorial/run-rest"
+        ]
+      },
+      {
+        title: "Clients",
         collapsable: false,
         children: [
       	  "/clients/",

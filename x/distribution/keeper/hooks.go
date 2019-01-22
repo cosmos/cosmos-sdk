@@ -75,7 +75,7 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 	}
 }
 func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	// nothing needed here since OnDelegationSharesModified will always also be called
+	// nothing needed here since BeforeDelegationSharesModified will always also be called
 }
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	// create new delegation period record

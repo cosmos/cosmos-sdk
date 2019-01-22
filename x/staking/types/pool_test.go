@@ -18,22 +18,22 @@ func TestPoolEqual(t *testing.T) {
 
 func TestAddBondedTokens(t *testing.T) {
 	pool := InitialPool()
-	pool.LooseTokens = sdk.NewInt(10)
+	pool.NotBondedTokens = sdk.NewInt(10)
 	pool.BondedTokens = sdk.NewInt(10)
 
-	pool = pool.looseTokensToBonded(sdk.NewInt(10))
+	pool = pool.notBondedTokensToBonded(sdk.NewInt(10))
 
 	require.True(sdk.IntEq(t, sdk.NewInt(20), pool.BondedTokens))
-	require.True(sdk.IntEq(t, sdk.NewInt(0), pool.LooseTokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(0), pool.NotBondedTokens))
 }
 
 func TestRemoveBondedTokens(t *testing.T) {
 	pool := InitialPool()
-	pool.LooseTokens = sdk.NewInt(10)
+	pool.NotBondedTokens = sdk.NewInt(10)
 	pool.BondedTokens = sdk.NewInt(10)
 
-	pool = pool.bondedTokensToLoose(sdk.NewInt(5))
+	pool = pool.bondedTokensToNotBonded(sdk.NewInt(5))
 
 	require.True(sdk.IntEq(t, sdk.NewInt(5), pool.BondedTokens))
-	require.True(sdk.IntEq(t, sdk.NewInt(15), pool.LooseTokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(15), pool.NotBondedTokens))
 }

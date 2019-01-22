@@ -499,9 +499,9 @@ gaiacli query staking pool
 
 With the `pool` command you will get the values for:
 
-- Loose and bonded tokens
+- Not-bonded and bonded tokens
 - Token supply
-- Current anual inflation and the block in which the last inflation was processed
+- Current annual inflation and the block in which the last inflation was processed
 - Last recorded bonded shares
 
 ##### Query Delegations To Validator
@@ -635,6 +635,48 @@ gaiacli query gov param tallying
 gaiacli query gov param deposit
 ```
 
+### Fee Distribution
+
+#### Query distribution parameters
+
+To check the current distribution parameters, run:
+
+```bash
+gaiacli query distr params
+```
+
+#### Query outstanding rewards
+
+To check the current outstanding (un-withdrawn) rewards, run:
+
+```bash
+gaiacli query distr outstanding-rewards
+```
+
+#### Query validator commission
+
+To check the current outstanding commission for a validator, run:
+
+```bash
+gaiacli query distr commission <validator_address>
+```
+
+#### Query validator slashes
+
+To check historical slashes for a validator, run:
+
+```bash
+gaiacli query distr slashes <validator_address> <start_height> <end_height>
+```
+
+#### Query delegator rewards
+
+To check current rewards for a delegation (were they to be withdrawn), run:
+
+```bash
+gaiacli query distr rewards <delegator_address> <validator_address>
+```
+
 ### Multisig transactions
 
 Multisig transactions require signatures of multiple private keys. Thus, generating and signing
@@ -719,3 +761,36 @@ The transaction can now be sent to the node:
 ```bash
 gaiacli tx broadcast signedTx.json
 ```
+
+## Shells completion scripts
+
+Completion scripts for popular UNIX shell interpreters such as `Bash` and `Zsh`
+can be generated through the `completion` command, which is available for both
+`gaiad` and `gaiacli`.
+
+If you want to generate `Bash` completion scripts run the following command:
+
+```bash
+gaiad completion > gaiad_completion
+gaiacli completion > gaiacli_completion
+```
+
+If you want to generate `Zsh` completion scripts run the following command:
+
+```bash
+gaiad completion --zsh > gaiad_completion
+gaiacli completion --zsh > gaiacli_completion
+```
+
+::: tip Note
+On most UNIX systems, such scripts may be loaded in `.bashrc` or
+`.bash_profile` to enable Bash autocompletion:
+
+```bash
+echo '. gaiad_completion' >> ~/.bashrc
+echo '. gaiacli_completion' >> ~/.bashrc
+```
+
+Refer to the user's manual of your interpreter provided by your
+operating system for information on how to enable shell autocompletion.
+:::

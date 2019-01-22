@@ -45,7 +45,7 @@ func AllInvariants(ck bank.Keeper, k staking.Keeper,
 	}
 }
 
-// SupplyInvariants checks that the total supply reflects all held loose tokens, bonded tokens, and unbonding delegations
+// SupplyInvariants checks that the total supply reflects all held not-bonded tokens, bonded tokens, and unbonding delegations
 // nolint: unparam
 func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 	f auth.FeeCollectionKeeper, d distribution.Keeper, am auth.AccountKeeper) simulation.Invariant {
@@ -85,12 +85,12 @@ func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 		// add yet-to-be-withdrawn
 		loose = loose.Add(d.GetOutstandingRewards(ctx).AmountOf(stakingTypes.DefaultBondDenom))
 
-		// Loose tokens should equal coin supply plus unbonding delegations
+		// Not-bonded tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators
-		if !sdk.NewDecFromInt(pool.LooseTokens).Equal(loose) {
+		if !sdk.NewDecFromInt(pool.NotBondedTokens).Equal(loose) {
 			return fmt.Errorf("loose token invariance:\n"+
-				"\tpool.LooseTokens: %v\n"+
-				"\tsum of account tokens: %v", pool.LooseTokens, loose)
+				"\tpool.NotBondedTokens: %v\n"+
+				"\tsum of account tokens: %v", pool.NotBondedTokens, loose)
 		}
 
 		// Bonded tokens should equal sum of tokens with bonded validators

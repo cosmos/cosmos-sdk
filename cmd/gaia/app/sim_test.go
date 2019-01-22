@@ -188,7 +188,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		delegations = append(delegations, delegation)
 	}
 
-	stakingGenesis.Pool.LooseTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
+	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Bonds = delegations
 

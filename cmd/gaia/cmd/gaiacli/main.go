@@ -93,6 +93,7 @@ func main() {
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,
+		client.NewCompletionCmd(rootCmd, true),
 	)
 
 	// Add flags and prefix all env exposed with GA

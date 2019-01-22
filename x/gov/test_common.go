@@ -68,7 +68,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		mapp.InitChainer(ctx, req)
 
 		stakingGenesis := staking.DefaultGenesisState()
-		stakingGenesis.Pool.LooseTokens = sdk.NewInt(100000)
+		stakingGenesis.Pool.NotBondedTokens = sdk.NewInt(100000)
 
 		validators, err := staking.InitGenesis(ctx, stakingKeeper, stakingGenesis)
 		if err != nil {

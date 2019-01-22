@@ -10,10 +10,10 @@ import (
 func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sdk.AccAddress) {
 	// period has already been incremented
 	previousPeriod := k.GetValidatorCurrentRewards(ctx, val).Period - 1
-	// increment reference count
-	k.incrementReferenceCount(ctx, val, previousPeriod)
+
 	validator := k.stakingKeeper.Validator(ctx, val)
 	delegation := k.stakingKeeper.Delegation(ctx, del, val)
+
 	// calculate delegation stake in tokens
 	// we don't store directly, so multiply delegation shares * (tokens per share)
 	stake := delegation.GetShares().Mul(validator.GetDelegatorShareExRate())
@@ -52,7 +52,7 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 	if endingHeight >= startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, del.GetValidatorAddr(), startingHeight, endingHeight,
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
-				endingPeriod := event.ValidatorPeriod - 1
+				endingPeriod := event.ValidatorPeriod
 				rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 				stake = stake.Mul(sdk.OneDec().Sub(event.Fraction))
 				startingPeriod = endingPeriod
@@ -82,9 +82,6 @@ func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdk.Validator, de
 	startingInfo := k.GetDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr())
 	startingPeriod := startingInfo.PreviousPeriod
 	k.decrementReferenceCount(ctx, del.GetValidatorAddr(), startingPeriod)
-
-	// decrement reference count of previous period, no longer required for next call of `incrementValidatorPeriod`
-	k.decrementReferenceCount(ctx, del.GetValidatorAddr(), endingPeriod-1)
 
 	// truncate coins, return remainder to community pool
 	coins, remainder := rewards.TruncateDecimal()

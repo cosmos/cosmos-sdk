@@ -11,9 +11,7 @@ import (
 // at any point, it is equal to the number of outstanding
 // delegations starting on the associated period, plus
 // the number of slashes at the associated period, plus one
-// if the current period is just after the associated period
-// once the reference count is reduced to zero, the historical
-// entry can be safely deleted, as it will never be accessed again
+// per validator for the zeroeth period
 type ValidatorHistoricalRewards struct {
 	SeqValue       sdk.DecCoins `json:"seq_value"`
 	ReferenceCount uint16       `json:"reference_count"`

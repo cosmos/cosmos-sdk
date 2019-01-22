@@ -175,6 +175,17 @@ func (k Keeper) DeleteAllValidatorHistoricalRewards(ctx sdk.Context) {
 	}
 }
 
+// historical record count (used for testcases)
+func (k Keeper) GetValidatorHistoricalRewardCount(ctx sdk.Context) (count uint64) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, ValidatorHistoricalRewardsPrefix)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		count++
+	}
+	return
+}
+
 // get current rewards for a validator
 func (k Keeper) GetValidatorCurrentRewards(ctx sdk.Context, val sdk.ValAddress) (rewards types.ValidatorCurrentRewards) {
 	store := ctx.KVStore(k.storeKey)

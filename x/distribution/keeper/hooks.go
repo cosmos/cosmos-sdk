@@ -20,9 +20,6 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) {
 	h.k.initializeValidator(ctx, val)
 }
 func (h Hooks) BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) {
-	val := h.k.stakingKeeper.Validator(ctx, valAddr)
-	// increment period
-	h.k.incrementValidatorPeriod(ctx, val)
 }
 func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 	// force-withdraw commission

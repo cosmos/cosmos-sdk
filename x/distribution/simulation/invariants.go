@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -17,6 +18,10 @@ func AllInvariants(d distr.Keeper, stk staking.Keeper) simulation.Invariant {
 			return err
 		}
 		err = NonNegativeOutstandingInvariant(d)(ctx)
+		if err != nil {
+			return err
+		}
+		err = ReferenceCountInvariant(d, stk)(ctx)
 		if err != nil {
 			return err
 		}
@@ -58,6 +63,34 @@ func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invarian
 
 		if len(remaining) > 0 && remaining[0].Amount.LT(sdk.ZeroDec()) {
 			return fmt.Errorf("Negative remaining coins: %v", remaining)
+		}
+
+		return nil
+	}
+}
+
+// ReferenceCountInvariant checks that the number of historical rewards records is correct
+func ReferenceCountInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invariant {
+	return func(ctx sdk.Context) error {
+
+		valCount := uint64(0)
+		sk.IterateValidators(ctx, func(_ int64, val sdk.Validator) (stop bool) {
+			valCount++
+			return false
+		})
+		dels := sk.GetAllDelegations(ctx)
+		slashCount := uint64(0)
+		k.IterateValidatorSlashEvents(ctx, func(_ sdk.ValAddress, _ uint64, _ types.ValidatorSlashEvent) (stop bool) {
+			slashCount++
+			return false
+		})
+
+		// one record per validator (zeroeth period), one record per delegation (previous period), one record per slash (previous period)
+		expected := valCount + uint64(len(dels)) + slashCount
+
+		count := k.GetValidatorHistoricalRewardCount(ctx)
+		if count != expected {
+			return fmt.Errorf("Unexpected number of historical rewards records: expected %v, got %v\n", expected, count)
 		}
 
 		return nil

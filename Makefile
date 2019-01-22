@@ -3,10 +3,11 @@ PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(subst v,,$(shell git describe --tags --long))
 COMMIT := $(shell git log -1 --format='%H')
 BUILD_TAGS = netgo
+CAT := $(if $(filter $(OS),Windows_NT),type,cat)
 BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags \
 	"-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
-	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell cat vendor-deps)"
+	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps)"
 LEDGER_ENABLED ?= true
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \

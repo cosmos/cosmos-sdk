@@ -34,7 +34,7 @@ The maximum number of slashing periods is the `len(UnbondingPeriod) / len(JailPe
 
 Currently, in the jail period implementation, once a validator unjails, all of their delegators who are delegated to them (haven't unbonded / redelegated away), stay with them.  Given that consensus safety faults are so egregious (way more so than liveness faults), it is probably prudent to have delegators not "auto-rebond" to the validator. Thus, we propose setting the "jail time" for a validator who commits a consensus safety fault, to `infite` (i.e. a tombstone state).  This essentially kicks the validator out of the validator set and does not allow them to re-enter the validator set.  All of their delegators (including the operator themselves) have to either unbond or redelegate away.  The validator operator can create a new validator if they would like, with a new operator key and consensus key, but they have to "re-earn" their delegations back.  To put the validator in the tombstone state, we set `DoubleSignJailEndTime` to `time.Unix(253402300800)`, the MAX time supported by Amino.
 
-By implementing the tombstone system and getting rid of the slashing period tracking, will make the `slashing` module way simpler, especially because we can remove all of the hooks defined in the `slashing` module.
+By implementing the tombstone system and getting rid of the slashing period tracking, will make the `slashing` module way simpler, especially because we can remove all of the hooks defined in the `slashing` module consumed by the `staking` module (the `slashing` module still consumes hooks defined in `staking`).
 
 ## Further improvements / Related proposals:
 
@@ -42,34 +42,10 @@ By implementing the tombstone system and getting rid of the slashing period trac
 
 Another optimization that can be made is that if we assume that all ABCI faults for Tendermint consensus are slashed at the same level, we don't have to keep track of "max slash".  Once an ABCI fault happens once, we don't have to worry about comparing potential future ones to find the max.
 
-I believe current planned Tendermint ABCI faults are primarily:
+Currently the only Tendermint ABCI fault is:
 - Unjustified precommits (double signs)
-- Signing a precommit when you're in unbonding phase (can be used to trick light clients)
 
-At the moment, the second one is not implemented, but needs to be implemented soon, in order to make light client bisection safe.  Do we want to punish these two faults at different levels?  If not, we can enact the above change.  Note:  This change may make sense for current Tendermint consensus, but maybe not for a different consensus algorithm or future versions of Tendermint that may want to punish at different levels (for example, partial slashing).
+In it currently planned to include the following fault in the near future:
+- Signing a precommit when you're in unbonding phase (needed to make light client bisection safe)
 
-### Store infractions in state instead of iterating over unbonds/redelegations
-
-Pending discussion on #3206.
-
-<!-- Currently, every time evidence of a new fault comes in, we currently iterate over all of the unbonds/redelegations away from a validator to see if the slash affects them or not.  If it does, we decrease the "balance" of the `ubd` or `red`.  However, as the number of unbonds or redelegations can be very high, this might be very expensive.  Instead, we can store evidences for all infractions that happened in the last `Unbonding Period` in state, and then whenever a ubd or red hits maturity, it can check if it needs to be slashed by checking it against the last infraction that happened before they started unbonding/redelegating away.  Because we only need to store the infractions from the last unbon -->
-
-
-
-
-<!-- 
-First, part of the design of the `stake` module is that delegators should be slashed for the infractions that happened during blocks that they were delegated to the offending validator, however, they should not be slashed for infractions that their voting power did not contribute to.
-
-Thus, if the sequence of events is:
-1. Validator A commits Infraction 1
-2. Delegator X delegates to Validator A
-3. Evidence for Infraction 1 reaches state machine
-Delegator X should not be slashed.
-
-Similarly, if the sequence of events is:
-1. Delegator X delegates to Validator A
-2. Delegator X unbonds from Validator A and begins unbonding period
-3. Validator A commits Infraction 1
-4. Evidence for Infraction 1 reaches state machine
-5. Delegator X finishes unbonding.
-Delegator X should not be slashed. -->
+Given that these faults are both attributable byzantine faults, we will likely want to slash them equally, and thus we can enact the above change.  Note:  This change may make sense for current Tendermint consensus, but maybe not for a different consensus algorithm or future versions of Tendermint that may want to punish at different levels (for example, partial slashing).

@@ -23,7 +23,7 @@ func GetVersion() string {
 
 // CMD
 func printVersion(cmd *cobra.Command, args []string) {
-	fmt.Println("cosmos-sdk", GetVersion())
+	fmt.Println("cosmos-sdk:", GetVersion())
 	fmt.Println("latest commit:", Commit)
 	fmt.Println("vendor hash:", VendorDirHash)
 	fmt.Printf("go version %s %s/%s\n",

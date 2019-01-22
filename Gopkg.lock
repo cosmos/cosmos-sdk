@@ -429,11 +429,12 @@
   revision = "c4c61651e9e37fa117f53c5a906d3b63090d8445"
 
 [[projects]]
-  digest = "1:605b6546f3f43745695298ec2d342d3e952b6d91cdf9f349bea9315f677d759f"
+  digest = "1:83f5e189eea2baad419a6a410984514266ff690075759c87e9ede596809bd0b8"
   name = "github.com/tendermint/btcd"
   packages = ["btcec"]
   pruneopts = "UT"
-  revision = "e5840949ff4fff0c56f9b6a541e22b63581ea9df"
+  revision = "80daadac05d1cd29571fccf27002d79667a88b58"
+  version = "v0.1.1"
 
 [[projects]]
   digest = "1:ad9c4c1a4e7875330b1f62906f2830f043a23edb5db997e3a5ac5d3e6eadf80a"
@@ -452,7 +453,7 @@
   version = "v0.12.0"
 
 [[projects]]
-  digest = "1:27a000a63afee3f22591adc0b6be56be4f850f0af5e85e7673a4dfbab0ab5a87"
+  digest = "1:22a0fe58c626dd09549eb9451688fab5a2c8bef04d478c907f747d6151d431fd"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -518,7 +519,7 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "v0.28.0"
+  revision = "v0.29.0"
 
 [[projects]]
   digest = "1:a7485b2a69f996923f9d3406a9a853fd8eb31818515e985a830d71f88f6a925b"

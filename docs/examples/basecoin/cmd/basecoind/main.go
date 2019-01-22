@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/docs/examples/basecoin/app"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -51,11 +52,22 @@ func main() {
 	rootDir := os.ExpandEnv("$HOME/.basecoind")
 	executor := cli.PrepareBaseCmd(rootCmd, "BC", rootDir)
 
+	// initialise the Bech32 prefixes
+	initSDKConfig()
+
 	err := executor.Execute()
 	if err != nil {
 		// Note: Handle with #870
 		panic(err)
 	}
+}
+
+func initSDKConfig() {
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("baseacc", "basepub")
+	config.SetBech32PrefixForValidator("baseval", "basevalpub")
+	config.SetBech32PrefixForConsensusNode("basecons", "baseconspub")
+	config.Seal()
 }
 
 // get cmd to initialize all files for tendermint and application

@@ -880,10 +880,12 @@ func TestGaiaCLIConfig(t *testing.T) {
 	f.CLIConfig("trust-node", "true")
 	f.CLIConfig("chain-id", f.ChainID)
 	f.CLIConfig("trace", "false")
+	f.CLIConfig("indent", "true")
 
 	config, err := ioutil.ReadFile(path.Join(f.GCLIHome, "config", "config.toml"))
 	require.NoError(t, err)
 	expectedConfig := fmt.Sprintf(`chain-id = "%s"
+indent = true
 node = "%s"
 output = "text"
 trace = false

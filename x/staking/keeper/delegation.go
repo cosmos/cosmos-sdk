@@ -308,11 +308,10 @@ func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 
-	found := false
 	if iterator.Valid() {
-		found = true
+		return true
 	}
-	return found
+	return false
 }
 
 // set a redelegation and associated index

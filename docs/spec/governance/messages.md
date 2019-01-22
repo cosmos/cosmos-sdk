@@ -1,6 +1,6 @@
 # Implementation (2/2)
 
-## Transactions
+## Messages
 
 ### Proposal Submission
 

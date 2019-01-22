@@ -1,6 +1,6 @@
-## Transactions
+## Messages
 
-In this section we describe the processing of transactions for the `slashing` module.
+In this section we describe the processing of messages for the `slashing` module.
 
 ### Unjail
 

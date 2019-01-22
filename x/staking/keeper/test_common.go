@@ -125,7 +125,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 			{keeper.BondDenom(ctx), sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewInt(initCoins))
+		pool.NotBondedTokens = pool.NotBondedTokens.Add(sdk.NewInt(initCoins))
 		keeper.SetPool(ctx, pool)
 	}
 

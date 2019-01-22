@@ -15,7 +15,7 @@ import (
 // * Updates the active valset as keyed by LastValidatorPowerKey.
 // * Updates the total power as keyed by LastTotalPowerKey.
 // * Updates validator status' according to updated powers.
-// * Updates the fee pool bonded vs loose tokens.
+// * Updates the fee pool bonded vs not-bonded tokens.
 // * Updates relevant indices.
 // It gets called once after genesis, another time maybe after genesis transactions,
 // then once at every EndBlock.

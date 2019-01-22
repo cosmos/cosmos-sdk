@@ -44,7 +44,7 @@ deps: &dependencies
     name: dependencies
     command: |
       export PATH="$GOBIN:$PATH"
-      make get_vendor_deps
+      make vendor-deps
 
 jobs:
   setup_dependencies:
@@ -260,7 +260,7 @@ jobs:
               popd
               set -x
               make tools
-              make get_vendor_deps
+              make vendor-deps
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
@@ -292,7 +292,7 @@ jobs:
           command: |
             source $BASH_ENV
             make tools
-            make get_vendor_deps
+            make vendor-deps
             make install
       - run:
           name: Integration tests

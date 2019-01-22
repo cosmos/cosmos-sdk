@@ -6,6 +6,14 @@ import (
 
 // historical rewards for a validator
 // height is implicit within the store key
+// the reference count indicates the number of objects
+// which might need to reference this historical entry
+// at any point, it is equal to the number of outstanding
+// delegations starting on the associated period, plus
+// the number of slashes at the associated period, plus one
+// if the current period is just after the associated period
+// once the reference count is reduced to zero, the historical
+// entry can be safely deleted, as it will never be accessed again
 type ValidatorHistoricalRewards struct {
 	SeqValue       sdk.DecCoins `json:"seq_value"`
 	ReferenceCount uint16       `json:"reference_count"`

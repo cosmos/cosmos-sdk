@@ -68,7 +68,7 @@ func (k Keeper) decrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress,
 	}
 	historical.ReferenceCount--
 	if historical.ReferenceCount == 0 {
-		k.DeleteValidatorHistoricalRewards(ctx, valAddr, period)
+		k.DeleteValidatorHistoricalReward(ctx, valAddr, period)
 	} else {
 		k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
 	}

@@ -49,6 +49,15 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	}
 	// remove commission record
 	h.k.DeleteValidatorAccumulatedCommission(ctx, valAddr)
+
+	// clear slashes
+	h.k.DeleteValidatorSlashEvents(ctx, valAddr)
+
+	// clear historical rewards
+	h.k.DeleteValidatorHistoricalRewards(ctx, valAddr)
+
+	// clear current rewards
+	h.k.DeleteValidatorCurrentRewards(ctx, valAddr)
 }
 func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)

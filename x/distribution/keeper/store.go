@@ -150,12 +150,22 @@ func (k Keeper) IterateValidatorHistoricalRewards(ctx sdk.Context, handler func(
 }
 
 // delete a historical reward
-func (k Keeper) DeleteValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddress, period uint64) {
+func (k Keeper) DeleteValidatorHistoricalReward(ctx sdk.Context, val sdk.ValAddress, period uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetValidatorHistoricalRewardsKey(val, period))
 }
 
-// delete historical rewards
+// delete historical rewards for a validator
+func (k Keeper) DeleteValidatorHistoricalRewards(ctx sdk.Context, val sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, GetValidatorHistoricalRewardsPrefix(val))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
+}
+
+// delete all historical rewards
 func (k Keeper) DeleteAllValidatorHistoricalRewards(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, ValidatorHistoricalRewardsPrefix)
@@ -178,6 +188,12 @@ func (k Keeper) SetValidatorCurrentRewards(ctx sdk.Context, val sdk.ValAddress, 
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(rewards)
 	store.Set(GetValidatorCurrentRewardsKey(val), b)
+}
+
+// delete current rewards for a validator
+func (k Keeper) DeleteValidatorCurrentRewards(ctx sdk.Context, val sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(GetValidatorCurrentRewardsKey(val))
 }
 
 // iterate over current rewards
@@ -301,8 +317,18 @@ func (k Keeper) IterateValidatorSlashEvents(ctx sdk.Context, handler func(val sd
 	}
 }
 
+// delete slash events for a particular validator
+func (k Keeper) DeleteValidatorSlashEvents(ctx sdk.Context, val sdk.ValAddress) {
+	store := ctx.KVStore(k.storeKey)
+	iter := sdk.KVStorePrefixIterator(store, GetValidatorSlashEventPrefix(val))
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		store.Delete(iter.Key())
+	}
+}
+
 // delete all slash events
-func (k Keeper) DeleteValidatorSlashEvents(ctx sdk.Context) {
+func (k Keeper) DeleteAllValidatorSlashEvents(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, ValidatorSlashEventPrefix)
 	defer iter.Close()

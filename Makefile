@@ -1,15 +1,20 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION := $(subst v,,$(shell git describe --tags --long))
+COMMIT := $(shell git log -1 --format='%H')
 BUILD_TAGS = netgo
-BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags "-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION}"
+CAT := $(if $(filter $(OS),Windows_NT),type,cat)
+BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags \
+	"-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
+	-X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
+	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps)"
 LEDGER_ENABLED ?= true
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
 	github.com/alecthomas/gometalinter \
 	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
-all: devtools get_vendor_deps install install_examples install_cosmos-sdk-cli test_lint test
+all: devtools vendor-deps install install_examples install_cosmos-sdk-cli test_lint test
 
 # The below include contains the tools target.
 include scripts/Makefile
@@ -17,7 +22,7 @@ include scripts/Makefile
 ########################################
 ### CI
 
-ci: devtools get_vendor_deps install test_cover test_lint test
+ci: devtools vendor-deps install test_cover test_lint test
 
 ########################################
 ### Build/Install
@@ -131,10 +136,11 @@ devtools-stamp: tools
 	go get github.com/tendermint/lint/golint
 	touch $@
 
-get_vendor_deps: tools
+vendor-deps: tools
 	@echo "--> Generating vendor directory via dep ensure"
 	@rm -rf .vendor-new
 	@dep ensure -v -vendor-only
+	tar -c vendor/ | sha1sum | cut -d' ' -f1 > $@
 
 update_vendor_deps: tools
 	@echo "--> Running dep ensure"
@@ -147,7 +153,7 @@ draw_deps: tools
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -f devtools-stamp
+	rm -f devtools-stamp vendor-deps
 
 ########################################
 ### Documentation
@@ -268,7 +274,7 @@ localnet-stop:
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
 .PHONY: build build_cosmos-sdk-cli build_examples install install_examples install_cosmos-sdk-cli install_debug dist \
-check_tools check_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
+check_tools check_dev_tools draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \

@@ -9,6 +9,8 @@ import (
 
 // historical rewards for a validator
 // height is implicit within the store key
+// cumulative reward ratio is the sum from the zeroeth period
+// until this period of rewards / tokens, per the spec
 // The reference count indicates the number of objects
 // which might need to reference this historical entry
 // at any point.

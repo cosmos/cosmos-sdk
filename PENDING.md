@@ -45,6 +45,7 @@ BREAKING CHANGES
     * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate`
     * `MsgBeginUnbonding` -> `MsgUndelegate`
   * [\#3315] Increase decimal precision to 18
+  * \#3333 - F1 storage efficiency improvements - automatic withdrawals when unbonded, historical reward reference counting
   * \#3323 Update to Tendermint 0.29.0
   * [\#3328](https://github.com/cosmos/cosmos-sdk/issues/3328) [x/gov] Remove redundant action tag
 

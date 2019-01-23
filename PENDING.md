@@ -144,6 +144,8 @@ BUG FIXES
   * \#3223 Fix unset governance proposal queues when importing state from old chain
   * [#3187](https://github.com/cosmos/cosmos-sdk/issues/3187) Fix `gaiad export`
   by resetting each validator's slashing period.
+  * [##3336](https://github.com/cosmos/cosmos-sdk/issues/3336) Ensure all SDK
+  messages have their signature bytes contain canonical fields `value` and `type`.
 
 * SDK
 

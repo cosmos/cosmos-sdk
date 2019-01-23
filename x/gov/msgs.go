@@ -73,11 +73,8 @@ func (msg MsgSubmitProposal) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgSubmitProposal) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := msgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // Implements Msg.
@@ -134,11 +131,8 @@ func (msg MsgDeposit) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := msgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // Implements Msg.
@@ -192,11 +186,8 @@ func (msg MsgVote) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgVote) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := msgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // Implements Msg.

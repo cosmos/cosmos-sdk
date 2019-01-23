@@ -6,19 +6,18 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
-	versionString = `Tendermint: %s
+	flagMachineReadable = "machine-readable"
+	versionString       = `Tendermint: %s
 ABCI: %s
 BlockProtocol: %d
 P2PProtocol: %d
@@ -55,7 +54,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valPubKey := privValidator.GetPubKey()
 
-			if viper.GetBool(client.FlagJson) {
+			if viper.GetBool(flagMachineReadable) {
 				return printlnJSON(valPubKey)
 			}
 
@@ -68,7 +67,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().Bool(client.FlagJson, false, "get machine parseable output")
+	cmd.Flags().BoolP(flagMachineReadable, "m", false, "get machine parseable output")
 	return &cmd
 }
 
@@ -85,7 +84,7 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
 
-			if viper.GetBool(client.FlagJson) {
+			if viper.GetBool(flagMachineReadable) {
 				return printlnJSON(valConsAddr)
 			}
 
@@ -94,7 +93,7 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Bool(client.FlagJson, false, "get machine parseable output")
+	cmd.Flags().BoolP(flagMachineReadable, "m", false, "get machine parseable output")
 	return cmd
 }
 

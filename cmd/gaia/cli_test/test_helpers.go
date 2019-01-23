@@ -238,7 +238,7 @@ func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, strin
 
 // TxBroadcast is gaiacli tx sign
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("gaiacli tx broadcast %v --json %v", f.Flags(), fileName)
+	cmd := fmt.Sprintf("gaiacli tx broadcast %v %v", f.Flags(), fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 

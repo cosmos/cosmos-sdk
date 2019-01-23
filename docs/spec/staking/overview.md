@@ -27,6 +27,11 @@ native staking token of the chain.
    - Delegation
    - UnbondingDelegation
    - Redelegation
+   - Queues
+ 2. **[State Transistions](state_transitions.md)**	
+   - Validator
+   - Delegation
+   - Pool
  2. **[Messages](messages.md)**	
    - MsgCreateValidator
    - MsgEditValidator

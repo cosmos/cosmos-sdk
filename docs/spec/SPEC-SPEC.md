@@ -15,7 +15,7 @@ function
 
  - `overview.md` - describe module
  - `state.md` - specify and describe structures expected to marshalled into the store, and their keys
- - `state_transitions.md` - standard state transition operations triggered by by hooks, messages, etc. 
+ - `state_transitions.md` - standard state transition operations triggered by hooks, messages, etc. 
  - `end_block.md` - specify any end-block operations
  - `begin_block.md` - specify any begin-block operations
  - `messages.md` - specify message structure and expected state machine behaviour 

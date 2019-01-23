@@ -16,13 +16,14 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 
 	// calculate delegation stake in tokens
 	// we don't store directly, so multiply delegation shares * (tokens per share)
-	stake := delegation.GetShares().Mul(validator.GetDelegatorShareExRate())
+	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+	stake := delegation.GetShares().MulTruncate(validator.GetDelegatorShareExRate())
 	k.SetDelegatorStartingInfo(ctx, val, del, types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 }
 
 // calculate the rewards accrued by a delegation between two periods
 func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Validator,
-	startingPeriod, endingPeriod uint64, staking sdk.Dec) (rewards sdk.DecCoins) {
+	startingPeriod, endingPeriod uint64, stake sdk.Dec) (rewards sdk.DecCoins) {
 	// sanity check
 	if startingPeriod > endingPeriod {
 		panic("startingPeriod cannot be greater than endingPeriod")
@@ -32,7 +33,8 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
 	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
 	difference := ending.CumulativeRewardRatio.Minus(starting.CumulativeRewardRatio)
-	rewards = difference.MulDec(staking)
+	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+	rewards = difference.MulDecTruncate(stake)
 	return
 }
 
@@ -54,7 +56,8 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
 				rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
-				stake = stake.Mul(sdk.OneDec().Sub(event.Fraction))
+				// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+				stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
 				startingPeriod = endingPeriod
 				return false
 			},

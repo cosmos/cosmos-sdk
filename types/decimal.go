@@ -351,6 +351,9 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	quo, rem := d, big.NewInt(0)
 	quo, rem = quo.QuoRem(d, precisionReuse, rem)
 
+	// TODO testing
+	return quo
+
 	if rem.Sign() == 0 { // remainder is zero
 		return quo
 	}

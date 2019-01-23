@@ -228,6 +228,17 @@ func (d Dec) Mul(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// multiplication truncate
+func (d Dec) MulTruncate(d2 Dec) Dec {
+	mul := new(big.Int).Mul(d.Int, d2.Int)
+	chopped := chopPrecisionAndTruncate(mul)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{chopped}
+}
+
 // multiplication
 func (d Dec) MulInt(i Int) Dec {
 	mul := new(big.Int).Mul(d.Int, i.i)
@@ -247,6 +258,22 @@ func (d Dec) Quo(d2 Dec) Dec {
 
 	quo := new(big.Int).Quo(mul, d2.Int)
 	chopped := chopPrecisionAndRound(quo)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{chopped}
+}
+
+// quotient truncate
+func (d Dec) QuoTruncate(d2 Dec) Dec {
+
+	// multiply precision twice
+	mul := new(big.Int).Mul(d.Int, precisionReuse)
+	mul.Mul(mul, precisionReuse)
+
+	quo := new(big.Int).Quo(mul, d2.Int)
+	chopped := chopPrecisionAndTruncate(quo)
 
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
@@ -350,9 +377,6 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 	// get the truncated quotient and remainder
 	quo, rem := d, big.NewInt(0)
 	quo, rem = quo.QuoRem(d, precisionReuse, rem)
-
-	// TODO testing
-	return quo
 
 	if rem.Sign() == 0 { // remainder is zero
 		return quo

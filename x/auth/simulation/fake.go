@@ -20,7 +20,7 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 
 		account := simulation.RandomAcc(r, accs)
 		stored := m.GetAccount(ctx, account.Address)
-		initCoins := stored.GetCoins()
+		initCoins := stored.SpendableCoins(ctx.BlockHeader().Time)
 
 		if len(initCoins) == 0 {
 			event(fmt.Sprintf("auth/SimulateDeductFee/false"))

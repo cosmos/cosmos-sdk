@@ -13,9 +13,9 @@ import (
 // which might need to reference this historical entry
 // at any point.
 // ReferenceCount =
-//    number of outstanding delegations (starting on the associated period)
-//  + number of slashes (starting on the associated period)
-//  + one per validator for the zeroeth period
+//    number of outstanding delegations which ended the associated period (and might need to read that record)
+//  + number of slashes which ended the associated period (and might need to read that record)
+//  + one per validator for the zeroeth period, set on initialization
 type ValidatorHistoricalRewards struct {
 	CumulativeRewardRatio sdk.DecCoins `json:"cumulative_reward_ratio"`
 	ReferenceCount        uint16       `json:"reference_count"`

@@ -89,6 +89,7 @@ FEATURES
   * [\#3179](https://github.com/cosmos/cosmos-sdk/pull/3179) New CodeNoSignatures error code.
   * \#3319 [x/distribution] Queriers for all distribution state worth querying; distribution query commands
   * [\#3356](https://github.com/cosmos/cosmos-sdk/issues/3356) [x/auth] bech32-ify accounts address in error message.
+  * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
 
 * Tendermint
 

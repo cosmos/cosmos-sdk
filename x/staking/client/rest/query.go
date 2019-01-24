@@ -126,7 +126,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			return
 		}
 
-		node, err := cliCtx.GetNode()
+		node, err := cliCtx.GetClient()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -153,12 +153,12 @@ OUTER:
 }
 
 func (c relayCommander) query(node string, key []byte, storeName string) (res []byte, err error) {
-	return context.NewCLIContext(c.cdc).WithNode(node).QueryStore(key, storeName)
+	return context.NewCLIContext(c.cdc).WithNodeURIAndClient(node).QueryStore(key, storeName)
 }
 
 // nolint: unparam
 func (c relayCommander) broadcastTx(node string, tx []byte) error {
-	_, err := context.NewCLIContext(c.cdc).WithNode(node).BroadcastTx(tx)
+	_, err := context.NewCLIContext(c.cdc).WithNodeURIAndClient(node).BroadcastTx(tx)
 	return err
 }
 

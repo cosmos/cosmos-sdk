@@ -87,7 +87,7 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 }
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to ctx.Ouput.
-// Don't perform online validation or lookups if offline is true.
+// Doesn't perform online validation or lookups if offline is true.
 func (ctx CLIContext) PrintUnsignedStdTx(w io.Writer, msgs []sdk.Msg, offline bool) (err error) {
 
 	var stdTx auth.StdTx
@@ -111,7 +111,7 @@ func (ctx CLIContext) PrintUnsignedStdTx(w io.Writer, msgs []sdk.Msg, offline bo
 
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
-// Don't perform online validation or lookups if offline is true.
+// Doesn't perform online validation or lookups if offline is true.
 func (ctx CLIContext) SignStdTx(name string, stdTx auth.StdTx, appendSig bool, offline bool) (auth.StdTx, error) {
 	var signedStdTx auth.StdTx
 
@@ -148,7 +148,7 @@ func (ctx CLIContext) SignStdTx(name string, stdTx auth.StdTx, appendSig bool, o
 }
 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
-// Don't perform online validation or lookups if offline is true, else
+// Doesn't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
 func (ctx CLIContext) SignStdTxWithSignerAddress(addr sdk.AccAddress,
 	name string, stdTx auth.StdTx, offline bool) (signedStdTx auth.StdTx, err error) {

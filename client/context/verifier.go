@@ -28,7 +28,7 @@ var (
 
 // Verify verifies the consensus proof at given height.
 func (ctx CLIContext) Verify(height int64) (tmtypes.SignedHeader, error) {
-	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.Client, ctx.Verifier)
+	check, err := tmliteProxy.GetCertifiedCommit(height, ctx.RPCClient, ctx.Verifier)
 	switch {
 	case tmliteErr.IsErrCommitNotFound(err):
 		return tmtypes.SignedHeader{}, ErrVerifyCommit(height)

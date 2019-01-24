@@ -87,7 +87,7 @@ func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error
 
 func getValidators(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	// get the node
-	node, err := cliCtx.GetNode()
+	node, err := cliCtx.GetClient()
 	if err != nil {
 		return nil, err
 	}

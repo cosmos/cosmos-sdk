@@ -54,7 +54,7 @@ func BlockCommand(cdc *codec.Codec) *cobra.Command {
 
 func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 	// get the node
-	node, err := cliCtx.GetNode()
+	node, err := cliCtx.GetClient()
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func getBlock(cliCtx context.CLIContext, height *int64) ([]byte, error) {
 
 // get the current blockchain height
 func GetChainHeight(cliCtx context.CLIContext) (int64, error) {
-	node, err := cliCtx.GetNode()
+	node, err := cliCtx.GetClient()
 	if err != nil {
 		return -1, err
 	}

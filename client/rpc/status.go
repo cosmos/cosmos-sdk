@@ -51,7 +51,7 @@ func StatusCommand(cdc *codec.Codec) *cobra.Command {
 
 func getNodeStatus(cliCtx context.CLIContext) (*ctypes.ResultStatus, error) {
 	// get the node
-	node, err := cliCtx.GetNode()
+	node, err := cliCtx.GetClient()
 	if err != nil {
 		return &ctypes.ResultStatus{}, err
 	}

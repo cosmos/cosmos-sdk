@@ -122,7 +122,7 @@ func SearchTxs(cliCtx context.CLIContext, cdc *codec.Codec, tags []string, page,
 	query := strings.Join(tags, " AND ")
 
 	// get the node
-	node, err := cliCtx.GetNode()
+	node, err := cliCtx.GetClient()
 	if err != nil {
 		return nil, err
 	}

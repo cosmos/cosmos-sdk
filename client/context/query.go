@@ -92,7 +92,7 @@ func (ctx CLIContext) EnsureAccountExists(addr sdk.AccAddress) error {
 // query performs a query from a Tendermint node with the provided store name
 // and path.
 func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err error) {
-	node, err := ctx.GetNode()
+	node, err := ctx.GetClient()
 	if err != nil {
 		return res, err
 	}

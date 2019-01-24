@@ -42,7 +42,7 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (*ctypes.ResultBroadcastTxComm
 
 // BroadcastTxAndAwaitCommit broadcasts transaction bytes to a Tendermint node and waits for a commit.
 func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (*ctypes.ResultBroadcastTxCommit, error) {
-	node, err := ctx.GetNode()
+	node, err := ctx.GetClient()
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (*ctypes.ResultBroadc
 
 // BroadcastTxSync broadcasts transaction bytes to a Tendermint node synchronously.
 func (ctx CLIContext) BroadcastTxSync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
-	node, err := ctx.GetNode()
+	node, err := ctx.GetClient()
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (ctx CLIContext) BroadcastTxSync(tx []byte) (*ctypes.ResultBroadcastTx, err
 
 // BroadcastTxAsync broadcasts transaction bytes to a Tendermint node asynchronously.
 func (ctx CLIContext) BroadcastTxAsync(tx []byte) (*ctypes.ResultBroadcastTx, error) {
-	node, err := ctx.GetNode()
+	node, err := ctx.GetClient()
 	if err != nil {
 		return nil, err
 	}

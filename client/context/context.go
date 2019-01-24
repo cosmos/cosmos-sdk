@@ -27,7 +27,7 @@ import (
 type CLIContext struct {
 	Codec         *codec.Codec
 	AccDecoder    auth.AccountDecoder
-	Client        rpcclient.Client
+	RPCClient     rpcclient.Client
 	TxBldr        authtxb.TxBuilder
 	Output        io.Writer
 	OutputFormat  string
@@ -65,7 +65,7 @@ func NewCLIContext(cdc *codec.Codec) CLIContext {
 	}
 
 	return CLIContext{
-		Client:        rpc,
+		RPCClient:     rpc,
 		Codec:         cdc,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
@@ -128,7 +128,7 @@ func (ctx CLIContext) WithAccountDecoder() CLIContext {
 	return ctx
 }
 
-// GetAccountDecoder gets the account decoder for auth.DefaultAccount.
+// GetAccountDecoder returns the account decoder for auth.DefaultAccount.
 func (ctx CLIContext) GetAccountDecoder() auth.AccountDecoder {
 	return func(accBytes []byte) (acct auth.Account, err error) {
 		if err = ctx.Codec.UnmarshalBinaryBare(accBytes, &acct); err != nil {
@@ -138,37 +138,37 @@ func (ctx CLIContext) GetAccountDecoder() auth.AccountDecoder {
 	}
 }
 
-// GetFromAddress returns the from address from the context's name.
+// FromAddr returns the from address from the context's name.
 func (ctx CLIContext) FromAddr() sdk.AccAddress {
 	return ctx.fromAddress
 }
 
-// GetFromAddress returns the from address from the context's name
+// FromValAddr returns the from address from the context's name
 // in validator format
 func (ctx CLIContext) FromValAddr() sdk.ValAddress {
 	return sdk.ValAddress(ctx.fromAddress.Bytes())
 }
 
-// GetFromName returns the key name for the current context.
+// FromName returns the key name for the current context.
 func (ctx CLIContext) FromName() string {
 	return ctx.fromName
 }
 
-// WithNode returns a copy of the context with an updated node URI.
-func (ctx CLIContext) WithNode(nodeURI string) CLIContext {
+// WithNodeURIAndClient returns a copy of the context with an updated node URI.
+func (ctx CLIContext) WithNodeURIAndClient(nodeURI string) CLIContext {
 	ctx.NodeURI = nodeURI
-	ctx.Client = rpcclient.NewHTTP(nodeURI, "/websocket")
+	ctx.RPCClient = rpcclient.NewHTTP(nodeURI, "/websocket")
 	return ctx
 }
 
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
-func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
-	if ctx.Client == nil {
+func (ctx CLIContext) GetClient() (rpcclient.Client, error) {
+	if ctx.RPCClient == nil {
 		return nil, errors.New("no RPC client defined")
 	}
 
-	return ctx.Client, nil
+	return ctx.RPCClient, nil
 }
 
 // PrintOutput prints output while respecting output and indent flags

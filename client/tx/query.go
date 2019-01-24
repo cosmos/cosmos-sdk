@@ -57,7 +57,7 @@ func queryTx(cdc *codec.Codec, cliCtx context.CLIContext, hashHexStr string) ([]
 		return nil, err
 	}
 
-	node, err := cliCtx.GetNode()
+	node, err := cliCtx.GetClient()
 	if err != nil {
 		return nil, err
 	}

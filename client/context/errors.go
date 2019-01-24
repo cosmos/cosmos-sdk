@@ -24,7 +24,7 @@ Can't verify blockchain proof at this height. Please set --trust-node to true an
 
 // ErrInvalidSigner is returned when an improper key tries to sign the message
 func ErrInvalidSigner(signer sdk.AccAddress, signers []sdk.AccAddress) error {
-	return errors.Errorf(`"The generated transaction's intended signer(s) [%v] does not match the given signer: %s"`, signers, signer)
+	return errors.Errorf("The generated transaction's intended signer(s) [%v] does not match the given signer: %s", signers, signer)
 }
 
 // ErrInsufficientFunds is returned when a transaction is attempted from an

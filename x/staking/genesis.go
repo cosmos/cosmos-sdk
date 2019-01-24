@@ -34,7 +34,9 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator)
-		keeper.AfterValidatorCreated(ctx, validator.OperatorAddr)
+		if !data.Exported {
+			keeper.AfterValidatorCreated(ctx, validator.OperatorAddr)
+		}
 
 		// Set timeslice if necessary
 		if validator.Status == sdk.Unbonding {
@@ -43,9 +45,13 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	}
 
 	for _, delegation := range data.Bonds {
-		keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+		if !data.Exported {
+			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+		}
 		keeper.SetDelegation(ctx, delegation)
-		keeper.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+		if !data.Exported {
+			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
+		}
 	}
 
 	for _, ubd := range data.UnbondingDelegations {

@@ -198,7 +198,7 @@ func TestUnbondDelegation(t *testing.T) {
 
 	amount, err := keeper.unbond(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
 	require.NoError(t, err)
-	require.Equal(t, int64(6), amount.Int64()) // shares to be added to an unbonding delegation / redelegation
+	require.Equal(t, int64(6), amount.Int64()) // shares to be added to an unbonding delegation
 
 	delegation, found := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -210,6 +210,53 @@ func TestUnbondDelegation(t *testing.T) {
 	require.Equal(t, int64(4), validator.BondedTokens().Int64())
 	require.Equal(t, int64(6), pool.NotBondedTokens.Int64(), "%v", pool)
 	require.Equal(t, int64(4), pool.BondedTokens.Int64())
+}
+
+func TestUnbondingDelegationsMaxEntries(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+	pool.NotBondedTokens = sdk.NewInt(10)
+
+	// create a validator and a delegator to that validator
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validator, pool, issuedShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
+	require.Equal(t, int64(10), issuedShares.RoundInt64())
+	keeper.SetPool(ctx, pool)
+	validator = TestingUpdateValidator(keeper, ctx, validator, true)
+
+	pool = keeper.GetPool(ctx)
+	require.Equal(t, int64(10), pool.BondedTokens.Int64())
+	require.Equal(t, int64(10), validator.BondedTokens().Int64())
+
+	delegation := types.Delegation{
+		DelegatorAddr: addrDels[0],
+		ValidatorAddr: addrVals[0],
+		Shares:        issuedShares,
+	}
+	keeper.SetDelegation(ctx, delegation)
+
+	maxEntries := keeper.MaxEntries(ctx)
+
+	// should all pass
+	var completionTime time.Time
+	for i := uint16(0); i < maxEntries; i++ {
+		var err error
+		completionTime, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+		require.NoError(t, err)
+	}
+
+	// an additional unbond should fail due to max entries
+	_, err := keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+	require.Error(t, err)
+
+	// mature unbonding delegations
+	ctx = ctx.WithBlockTime(completionTime)
+	err = keeper.CompleteUnbonding(ctx, addrDels[0], addrVals[0])
+	require.NoError(t, err)
+
+	// unbonding  should work again
+	_, err = keeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+	require.NoError(t, err)
 }
 
 // test removing all self delegation from a validator which should
@@ -591,6 +638,59 @@ func TestRedelegateToSameValidator(t *testing.T) {
 	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[0], sdk.NewDec(5))
 	require.Error(t, err)
 
+}
+
+func TestRedelegationMaxEntries(t *testing.T) {
+	ctx, _, keeper := CreateTestInput(t, false, 0)
+	pool := keeper.GetPool(ctx)
+	pool.NotBondedTokens = sdk.NewInt(20)
+
+	// create a validator with a self-delegation
+	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validator, pool, issuedShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
+	require.Equal(t, int64(10), issuedShares.RoundInt64())
+	keeper.SetPool(ctx, pool)
+	validator = TestingUpdateValidator(keeper, ctx, validator, true)
+	pool = keeper.GetPool(ctx)
+	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
+	selfDelegation := types.Delegation{
+		DelegatorAddr: val0AccAddr,
+		ValidatorAddr: addrVals[0],
+		Shares:        issuedShares,
+	}
+	keeper.SetDelegation(ctx, selfDelegation)
+
+	// create a second validator
+	validator2 := types.NewValidator(addrVals[1], PKs[1], types.Description{})
+	validator2, pool, issuedShares = validator2.AddTokensFromDel(pool, sdk.NewInt(10))
+	require.Equal(t, int64(10), issuedShares.RoundInt64())
+	pool.BondedTokens = pool.BondedTokens.Add(sdk.NewInt(10))
+	keeper.SetPool(ctx, pool)
+	validator2 = TestingUpdateValidator(keeper, ctx, validator2, true)
+	require.Equal(t, sdk.Bonded, validator2.Status)
+
+	maxEntries := keeper.MaxEntries(ctx)
+
+	// redelegations should pass
+	var completionTime time.Time
+	for i := uint16(0); i < maxEntries; i++ {
+		var err error
+		completionTime, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
+		require.NoError(t, err)
+	}
+
+	// an additional redelegation should fail due to max entries
+	_, err := keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
+	require.Error(t, err)
+
+	// mature redelegations
+	ctx = ctx.WithBlockTime(completionTime)
+	err = keeper.CompleteRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1])
+	require.NoError(t, err)
+
+	// redelegation should work again
+	_, err = keeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
+	require.NoError(t, err)
 }
 
 func TestRedelegateSelfDelegation(t *testing.T) {

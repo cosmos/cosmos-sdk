@@ -104,7 +104,7 @@ func (ctx CLIContext) broadcastTxAsync(txBytes []byte) (*ctypes.ResultBroadcastT
 	}
 
 	if ctx.Output != nil {
-		if ctx.JSON {
+		if ctx.OutputFormat == "json" {
 			type toJSON struct {
 				TxHash string
 			}
@@ -131,7 +131,7 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 		return res, err
 	}
 
-	if ctx.JSON {
+	if ctx.OutputFormat == "json" {
 		// Since JSON is intended for automated scripts, always include response in
 		// JSON mode.
 		type toJSON struct {

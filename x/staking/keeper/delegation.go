@@ -77,7 +77,6 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
-	k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 }
 
 // remove a delegation from store
@@ -468,6 +467,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)
 	k.SetDelegation(ctx, delegation)
+	k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 
 	return newShares, nil
 }
@@ -512,6 +512,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	} else {
 		// update the delegation
 		k.SetDelegation(ctx, delegation)
+		k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
 	// remove the coins from the validator

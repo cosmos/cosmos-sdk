@@ -28,7 +28,7 @@ BREAKING CHANGES
     in order to trigger a simulation of the tx before the actual execution.
   * [\#3285](https://github.com/cosmos/cosmos-sdk/pull/3285) New `gaiad tendermint version` to print libs versions
   * [\#1894](https://github.com/cosmos/cosmos-sdk/pull/1894) `version` command now shows latest commit, vendor dir hash, and build machine info.
-  * [\#3249\(https://github.com/cosmos/cosmos-sdk/issues/3249) `tendermint`'s `show-validator` and `show-address` `--json` flags removed in favor of `--machine-parseable`.
+  * [\#3249\(https://github.com/cosmos/cosmos-sdk/issues/3249) `tendermint`'s `show-validator` and `show-address` `--json` flags removed in favor of `--output-format=json`.
 
 * SDK
   * [staking] \#2513 Validator power type from Dec -> Int

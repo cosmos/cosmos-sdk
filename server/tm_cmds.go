@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
+	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
@@ -16,8 +17,7 @@ import (
 )
 
 const (
-	flagMachineReadable = "machine-readable"
-	versionString       = `Tendermint: %s
+	versionString = `Tendermint: %s
 ABCI: %s
 BlockProtocol: %d
 P2PProtocol: %d
@@ -54,7 +54,7 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valPubKey := privValidator.GetPubKey()
 
-			if viper.GetBool(flagMachineReadable) {
+			if viper.GetString(cli.OutputFlag) == "json" {
 				return printlnJSON(valPubKey)
 			}
 
@@ -67,7 +67,8 @@ func ShowValidatorCmd(ctx *Context) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolP(flagMachineReadable, "m", false, "get machine parseable output")
+
+	cmd.Flags().StringP(cli.OutputFlag, "o", "text", "Output format (text|json)")
 	return &cmd
 }
 
@@ -84,7 +85,7 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 				cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile())
 			valConsAddr := (sdk.ConsAddress)(privValidator.GetAddress())
 
-			if viper.GetBool(flagMachineReadable) {
+			if viper.GetString(cli.OutputFlag) == "json" {
 				return printlnJSON(valConsAddr)
 			}
 
@@ -93,7 +94,7 @@ func ShowAddressCmd(ctx *Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolP(flagMachineReadable, "m", false, "get machine parseable output")
+	cmd.Flags().StringP(cli.OutputFlag, "o", "text", "Output format (text|json)")
 	return cmd
 }
 

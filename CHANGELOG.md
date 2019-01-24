@@ -33,6 +33,7 @@ BREAKING CHANGES
   * [\#3249\(https://github.com/cosmos/cosmos-sdk/issues/3249) `tendermint`'s `show-validator` and `show-address` `--json` flags removed in favor of `--output-format=json`.
 
 * SDK
+  * [distribution] \#3359 Always round down when calculating rewards-to-be-withdrawn in F1 fee distribution
   * [#3336](https://github.com/cosmos/cosmos-sdk/issues/3336) Ensure all SDK
   messages have their signature bytes contain canonical fields `value` and `type`.
   * [\#3333](https://github.com/cosmos/cosmos-sdk/issues/3333) - F1 storage efficiency improvements - automatic withdrawals when unbonded, historical reward reference counting

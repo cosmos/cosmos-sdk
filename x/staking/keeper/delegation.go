@@ -77,7 +77,6 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(delegation.DelegatorAddr, delegation.ValidatorAddr), b)
-	k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 }
 
 // remove a delegation from store
@@ -468,6 +467,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	// Update delegation
 	delegation.Shares = delegation.Shares.Add(newShares)
 	k.SetDelegation(ctx, delegation)
+	k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 
 	return newShares, nil
 }
@@ -512,6 +512,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	} else {
 		// update the delegation
 		k.SetDelegation(ctx, delegation)
+		k.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 	}
 
 	// remove the coins from the validator
@@ -569,10 +570,13 @@ func (k Keeper) Undelegate(ctx sdk.Context, delAddr sdk.AccAddress,
 
 	// no need to create the ubd object just complete now
 	if completeNow {
-		_, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance})
-		if err != nil {
-			return completionTime, err
+		// track undelegation only when remaining or truncated shares are non-zero
+		if !balance.IsZero() {
+			if _, err := k.bankKeeper.UndelegateCoins(ctx, delAddr, sdk.Coins{balance}); err != nil {
+				return completionTime, err
+			}
 		}
+
 		return completionTime, nil
 	}
 

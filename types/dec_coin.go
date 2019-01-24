@@ -201,6 +201,19 @@ func (coins DecCoins) MulDec(d Dec) DecCoins {
 	return res
 }
 
+// multiply all the coins by a decimal, truncating
+func (coins DecCoins) MulDecTruncate(d Dec) DecCoins {
+	res := make([]DecCoin, len(coins))
+	for i, coin := range coins {
+		product := DecCoin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.MulTruncate(d),
+		}
+		res[i] = product
+	}
+	return res
+}
+
 // divide all the coins by a decimal
 func (coins DecCoins) QuoDec(d Dec) DecCoins {
 	res := make([]DecCoin, len(coins))
@@ -208,6 +221,19 @@ func (coins DecCoins) QuoDec(d Dec) DecCoins {
 		quotient := DecCoin{
 			Denom:  coin.Denom,
 			Amount: coin.Amount.Quo(d),
+		}
+		res[i] = quotient
+	}
+	return res
+}
+
+// divide all the coins by a decimal, truncating
+func (coins DecCoins) QuoDecTruncate(d Dec) DecCoins {
+	res := make([]DecCoin, len(coins))
+	for i, coin := range coins {
+		quotient := DecCoin{
+			Denom:  coin.Denom,
+			Amount: coin.Amount.QuoTruncate(d),
 		}
 		res[i] = quotient
 	}

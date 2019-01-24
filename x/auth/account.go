@@ -67,7 +67,6 @@ var _ Account = (*BaseAccount)(nil)
 
 // BaseAccount - a base account structure.
 // This can be extended by embedding within in your AppAccount.
-// There are examples of this in: examples/basecoin/types/account.go.
 // However one doesn't have to use BaseAccount as long as your struct
 // implements Account.
 type BaseAccount struct {

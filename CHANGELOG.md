@@ -30,6 +30,7 @@ BREAKING CHANGES
     in order to trigger a simulation of the tx before the actual execution.
   * [\#3285](https://github.com/cosmos/cosmos-sdk/pull/3285) New `gaiad tendermint version` to print libs versions
   * [\#1894](https://github.com/cosmos/cosmos-sdk/pull/1894) `version` command now shows latest commit, vendor dir hash, and build machine info.
+  * [\#3249\(https://github.com/cosmos/cosmos-sdk/issues/3249) `tendermint`'s `show-validator` and `show-address` `--json` flags removed in favor of `--output-format=json`.
 
 * SDK
   * [#3336](https://github.com/cosmos/cosmos-sdk/issues/3336) Ensure all SDK
@@ -91,7 +92,7 @@ FEATURES
   the ante handler.
   * [\#3179](https://github.com/cosmos/cosmos-sdk/pull/3179) New CodeNoSignatures error code.
   * [\#3319](https://github.com/cosmos/cosmos-sdk/issues/3319) [x/distribution] Queriers for all distribution state worth querying; distribution query commands
-
+  * [\#3356](https://github.com/cosmos/cosmos-sdk/issues/3356) [x/auth] bech32-ify accounts address in error message.
 
 IMPROVEMENTS
 
@@ -112,8 +113,10 @@ IMPROVEMENTS
     * Validators specify minimum gas prices instead of minimum fees
     * Clients may provide either fees or gas prices directly
     * The gas prices of a tx must meet a validator's minimum
+    * `gaiad start` and `gaia.toml` take --minimum-gas-prices flag and minimum-gas-price config key respectively.
   * [\#2859](https://github.com/cosmos/cosmos-sdk/issues/2859) Rename `TallyResult` in gov proposals to `FinalTallyResult`
   * [\#3286](https://github.com/cosmos/cosmos-sdk/pull/3286) Fix `gaiad gentx` printout of account's addresses, i.e. user bech32 instead of hex.
+  * [\#3249\(https://github.com/cosmos/cosmos-sdk/issues/3249) `--json` flag removed, users should use `--output=json` instead.
 
 * SDK
   * [\#3137](https://github.com/cosmos/cosmos-sdk/pull/3137) Add tag documentation

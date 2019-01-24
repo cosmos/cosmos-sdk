@@ -43,7 +43,6 @@ type CLIContext struct {
 	TrustNode     bool
 	UseLedger     bool
 	Async         bool
-	JSON          bool
 	PrintResponse bool
 	Verifier      tmlite.Verifier
 	Simulate      bool
@@ -82,7 +81,6 @@ func NewCLIContext() CLIContext {
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
 		UseLedger:     viper.GetBool(client.FlagUseLedger),
 		Async:         viper.GetBool(client.FlagAsync),
-		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(client.FlagDryRun),

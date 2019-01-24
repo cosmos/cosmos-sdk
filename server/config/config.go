@@ -15,7 +15,7 @@ type BaseConfig struct {
 	// The minimum gas prices a validator is willing to accept for processing a
 	// transaction. A transaction's fees must meet the minimum of each denomination
 	// specified in this config (e.g. 0.01photino,0.0001stake).
-	MinGasPrices string `mapstructure:"minimum_gas_prices"`
+	MinGasPrices string `mapstructure:"minimum-gas-prices"`
 }
 
 // Config defines the server's top level configuration

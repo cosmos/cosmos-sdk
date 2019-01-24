@@ -151,7 +151,7 @@ func ErrNoUnbondingDelegation(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrMaxUnbondingDelegationEntries(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation,
-		"to many unbonding delegation entries in this delegator/validator duo, please wait for some entries to mature")
+		"too many unbonding delegation entries in this delegator/validator duo, please wait for some entries to mature")
 }
 
 func ErrBadRedelegationAddr(codespace sdk.CodespaceType) sdk.Error {
@@ -181,7 +181,7 @@ func ErrTransitiveRedelegation(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrMaxRedelegationEntries(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidDelegation,
-		"to many redelegation entries in this delegator/src-validator/dst-validator trio, please wait for some entries to mature")
+		"too many redelegation entries in this delegator/src-validator/dst-validator trio, please wait for some entries to mature")
 }
 
 func ErrDelegatorShareExRateInvalid(codespace sdk.CodespaceType) sdk.Error {

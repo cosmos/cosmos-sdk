@@ -217,7 +217,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	pool.NotBondedTokens = sdk.NewInt(10)
 
-	//create a validator and a delegator to that validator
+	// create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 	require.Equal(t, int64(10), issuedShares.RoundInt64())
@@ -645,7 +645,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 	pool.NotBondedTokens = sdk.NewInt(20)
 
-	//create a validator with a self-delegation
+	// create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 	require.Equal(t, int64(10), issuedShares.RoundInt64())

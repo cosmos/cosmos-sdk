@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -57,12 +59,14 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 	h.k.DeleteValidatorCurrentRewards(ctx, valAddr)
 }
 func (h Hooks) BeforeDelegationCreated(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	fmt.Printf("before delegation created\n")
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 
 	// increment period
 	h.k.incrementValidatorPeriod(ctx, val)
 }
 func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	fmt.Printf("before delegation shares modified\n")
 	val := h.k.stakingKeeper.Validator(ctx, valAddr)
 	del := h.k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 
@@ -72,9 +76,11 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 	}
 }
 func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	fmt.Printf("before delegation removed\n")
 	// nothing needed here since BeforeDelegationSharesModified will always also be called
 }
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	fmt.Printf("after delegation modified\n")
 	// create new delegation period record
 	h.k.initializeDelegation(ctx, valAddr, delAddr)
 }
@@ -85,6 +91,7 @@ func (h Hooks) AfterValidatorBonded(ctx sdk.Context, _ sdk.ConsAddress, valAddr 
 func (h Hooks) AfterValidatorPowerDidChange(ctx sdk.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) {
 }
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	fmt.Printf("before validator slashed\n")
 	// record the slash event
 	h.k.updateValidatorSlashFraction(ctx, valAddr, fraction)
 }

@@ -90,8 +90,10 @@ func ReferenceCountInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invar
 
 		count := k.GetValidatorHistoricalRewardCount(ctx)
 		if count != expected {
-			return fmt.Errorf("unexpected number of historical rewards records: expected %v, got %v", expected, count)
+			return fmt.Errorf("unexpected number of historical rewards records: expected %v (%v vals + %v dels + %v slashes), got %v", expected, valCount, len(dels), slashCount, count)
 		}
+
+		fmt.Printf("expected number of historical rewards records: expected %v (%v vals + %v dels + %v slashes), got %v\n", expected, valCount, len(dels), slashCount, count)
 
 		return nil
 	}

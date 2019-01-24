@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -84,11 +85,13 @@ func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAdd
 	endedPeriod := k.GetValidatorCurrentRewards(ctx, valAddr).Period - 1
 	current, found := k.GetValidatorSlashEvent(ctx, valAddr, height)
 	if found {
+		fmt.Printf("had a prior slash event\n")
 		// there has already been a slash event this height,
 		// and we don't need to store more than one,
 		// so just update the current slash fraction
 		currentFraction = current.Fraction
 	} else {
+		fmt.Printf("did not have a prior slash event\n")
 		val := k.stakingKeeper.Validator(ctx, valAddr)
 		// increment current period
 		endedPeriod = k.incrementValidatorPeriod(ctx, val)

@@ -11,7 +11,7 @@ Fees are determined by the gas limits and gas prices transactions provide.
 Operators should set minimum gas prices when starting their nodes. They must set
 the unit costs of gas in each token denomination they wish to support:
 
-`gaiad start ... --minimum-gas_prices=1steak,5photinos`
+`gaiad start ... --minimum-gas-prices=0.00001steak,0.05photinos`
 
 When adding transactions to mempool or gossipping transactions, validators check
 if the transaction's gas prices, which are determined by the provided fees, meet

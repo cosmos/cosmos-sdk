@@ -35,8 +35,8 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		}
 
 		fees := sdk.Coins{sdk.NewCoin(initCoins[denomIndex].Denom, amt)}
-		newCoins, ok := initCoins.SafeMinus(fees)
-		if ok {
+		newCoins, hasNeg := initCoins.SafeMinus(fees)
+		if hasNeg {
 			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
 			return action, nil, nil
 		}

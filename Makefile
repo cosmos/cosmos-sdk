@@ -14,11 +14,8 @@ GOTOOLS = \
 	github.com/alecthomas/gometalinter \
 	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
-<<<<<<< HEAD
-all: devtools vendor-deps install install_examples install_cosmos-sdk-cli test_lint test
-=======
+
 all: devtools get_vendor_deps install test_lint test
->>>>>>> Clean up Makefile
 
 # The below include contains the tools target.
 include scripts/Makefile

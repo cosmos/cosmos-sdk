@@ -62,13 +62,13 @@ else
 	go build $(BUILD_FLAGS) -o build/gaiakeyutil ./cmd/gaia/cmd/gaiakeyutil
 endif
 
-build-linux:
+build-linux: vendor-deps
 	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 
 update_gaia_lite_docs:
 	@statik -src=client/lcd/swagger-ui -dest=client/lcd -f
 
-install: check-ledger update_gaia_lite_docs
+install: vendor-deps check-ledger update_gaia_lite_docs
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiad
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiacli
 	go install $(BUILD_FLAGS) ./cmd/gaia/cmd/gaiareplay
@@ -156,15 +156,15 @@ test_sim_gaia_fast:
 
 test_sim_gaia_import_export:
 	@echo "Running Gaia import/export simulation. This may take several minutes..."
-	@bash scripts/multisim.sh 50 TestGaiaImportExport
+	@bash scripts/multisim.sh 50 5 TestGaiaImportExport
 
 test_sim_gaia_simulation_after_import:
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
-	@bash scripts/multisim.sh 50 TestGaiaSimulationAfterImport
+	@bash scripts/multisim.sh 50 5 TestGaiaSimulationAfterImport
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
-	@bash scripts/multisim.sh 400 TestFullGaiaSimulation
+	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200

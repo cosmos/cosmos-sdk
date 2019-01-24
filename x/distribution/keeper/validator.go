@@ -82,6 +82,9 @@ func (k Keeper) decrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress,
 }
 
 func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	if fraction.GT(sdk.OneDec()) {
+		panic("fraction greater than one")
+	}
 	height := uint64(ctx.BlockHeight())
 	currentFraction := sdk.ZeroDec()
 	endedPeriod := k.GetValidatorCurrentRewards(ctx, valAddr).Period - 1
@@ -101,5 +104,8 @@ func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAdd
 	currentMultiplicand := sdk.OneDec().Sub(currentFraction)
 	newMultiplicand := sdk.OneDec().Sub(fraction)
 	updatedFraction := sdk.OneDec().Sub(currentMultiplicand.Mul(newMultiplicand))
+	if updatedFraction.LT(sdk.ZeroDec()) {
+		panic("negative slash fraction")
+	}
 	k.SetValidatorSlashEvent(ctx, valAddr, height, types.NewValidatorSlashEvent(endedPeriod, updatedFraction))
 }

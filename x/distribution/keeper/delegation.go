@@ -32,10 +32,18 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdk.Valid
 		panic("startingPeriod cannot be greater than endingPeriod")
 	}
 
+	// sanity check
+	if stake.LT(sdk.ZeroDec()) {
+		panic("stake should not be negative")
+	}
+
 	// return staking * (ending - starting)
 	starting := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), startingPeriod)
 	ending := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), endingPeriod)
 	difference := ending.CumulativeRewardRatio.Minus(starting.CumulativeRewardRatio)
+	if difference.HasNegative() {
+		panic("negative rewards should not be possible")
+	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards = difference.MulDecTruncate(stake)
 	return

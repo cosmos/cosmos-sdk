@@ -10,6 +10,7 @@
 
 # Build
 vendor
+vendor-deps
 .vendor-new
 build
 tools/bin/*

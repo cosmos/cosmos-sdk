@@ -238,13 +238,8 @@ localnet-stop:
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-<<<<<<< HEAD
-.PHONY: build build_cosmos-sdk-cli build_examples install install_examples install_cosmos-sdk-cli install_debug dist \
-check_tools check_dev_tools draw_deps test test_cli test_unit \
-=======
 .PHONY: build install install_debug dist \
 check_tools check_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
->>>>>>> Clean up Makefile
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \

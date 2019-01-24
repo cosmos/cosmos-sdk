@@ -697,7 +697,6 @@
     "github.com/tendermint/tendermint/crypto/secp256k1",
     "github.com/tendermint/tendermint/crypto/tmhash",
     "github.com/tendermint/tendermint/crypto/xsalsa20symmetric",
-    "github.com/tendermint/tendermint/libs/autofile",
     "github.com/tendermint/tendermint/libs/bech32",
     "github.com/tendermint/tendermint/libs/cli",
     "github.com/tendermint/tendermint/libs/cli/flags",

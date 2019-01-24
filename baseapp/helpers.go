@@ -23,7 +23,7 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 	return app.runTx(runTxModeDeliver, nil, tx)
 }
 
-// RunForever - BasecoinApp execution and cleanup
+// RunForever BasecoinApp execution and cleanup
 func RunForever(app abci.Application) {
 
 	// Start the ABCI server

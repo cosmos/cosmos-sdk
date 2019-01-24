@@ -74,7 +74,6 @@ The default implementation of `Account` is the `BaseAccount`:
 ```go
 // BaseAccount - base account structure.
 // Extend this by embedding this in your AppAccount.
-// See the examples/basecoin/types/account.go for an example.
 type BaseAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`

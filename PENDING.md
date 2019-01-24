@@ -113,6 +113,7 @@ IMPROVEMENTS
     * Validators specify minimum gas prices instead of minimum fees
     * Clients may provide either fees or gas prices directly
     * The gas prices of a tx must meet a validator's minimum
+    * `gaiad start` and `gaia.toml` take --minimum-gas-prices flag and minimum-gas-price config key respectively.
   * [\#2859](https://github.com/cosmos/cosmos-sdk/issues/2859) Rename `TallyResult` in gov proposals to `FinalTallyResult`
   * [\#3286](https://github.com/cosmos/cosmos-sdk/pull/3286) Fix `gaiad gentx` printout of account's addresses, i.e. user bech32 instead of hex.
 

@@ -55,6 +55,8 @@ type VestingAccount interface {
 
 	GetStartTime() int64
 	GetEndTime() int64
+
+	ToBaseVestingAccount() BaseVestingAccount
 }
 
 // AccountDecoder unmarshals account bytes
@@ -342,6 +344,16 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 		}
 
 		bva.Coins = bva.Coins.Plus(sdk.Coins{coin})
+	}
+}
+
+// ToBaseVestingAccount returns a copy of a BaseVestingAccount.
+func (bva BaseVestingAccount) ToBaseVestingAccount() BaseVestingAccount {
+	return BaseVestingAccount{
+		OriginalVesting:  bva.OriginalVesting,
+		DelegatedFree:    bva.DelegatedFree,
+		DelegatedVesting: bva.DelegatedVesting,
+		EndTime:          bva.EndTime,
 	}
 }
 

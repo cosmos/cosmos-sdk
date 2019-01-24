@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -70,7 +68,6 @@ func (k Keeper) calculateDelegationRewards(ctx sdk.Context, val sdk.Validator, d
 				endingPeriod := event.ValidatorPeriod
 				rewards = rewards.Plus(k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake))
 				// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-				fmt.Printf("event fraction: %v\n", event.Fraction)
 				stake = stake.MulTruncate(sdk.OneDec().Sub(event.Fraction))
 				startingPeriod = endingPeriod
 				return false

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -84,6 +82,9 @@ func (k Keeper) decrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress,
 }
 
 func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	if fraction.GT(sdk.OneDec()) {
+		panic("fraction greater than one")
+	}
 	height := uint64(ctx.BlockHeight())
 	currentFraction := sdk.ZeroDec()
 	endedPeriod := k.GetValidatorCurrentRewards(ctx, valAddr).Period - 1
@@ -103,7 +104,6 @@ func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAdd
 	currentMultiplicand := sdk.OneDec().Sub(currentFraction)
 	newMultiplicand := sdk.OneDec().Sub(fraction)
 	updatedFraction := sdk.OneDec().Sub(currentMultiplicand.Mul(newMultiplicand))
-	fmt.Printf("currentMultiplicand: %v, newMultiplicand: %v, updatedFraction: %v\n", currentMultiplicand, newMultiplicand, updatedFraction)
 	if updatedFraction.LT(sdk.ZeroDec()) {
 		panic("negative slash fraction")
 	}

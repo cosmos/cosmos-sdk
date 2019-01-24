@@ -56,7 +56,9 @@ type VestingAccount interface {
 	GetStartTime() int64
 	GetEndTime() int64
 
-	ToBaseVestingAccount() BaseVestingAccount
+	GetOriginalVesting() sdk.Coins
+	GetDelegatedFree() sdk.Coins
+	GetDelegatedVesting() sdk.Coins
 }
 
 // AccountDecoder unmarshals account bytes
@@ -347,15 +349,21 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 	}
 }
 
-// ToBaseVestingAccount converts a vesting account to a BaseVestingAccount. This
-// can be used to retrieve common fields that all vesting accounts share.
-func (bva BaseVestingAccount) ToBaseVestingAccount() BaseVestingAccount {
-	return BaseVestingAccount{
-		OriginalVesting:  bva.OriginalVesting,
-		DelegatedFree:    bva.DelegatedFree,
-		DelegatedVesting: bva.DelegatedVesting,
-		EndTime:          bva.EndTime,
-	}
+// GetOriginalVesting returns a vesting account's original vesting amount
+func (bva BaseVestingAccount) GetOriginalVesting() sdk.Coins {
+	return bva.OriginalVesting
+}
+
+// GetDelegatedFree returns a vesting account's delegation amount that is not
+// vesting.
+func (bva BaseVestingAccount) GetDelegatedFree() sdk.Coins {
+	return bva.DelegatedFree
+}
+
+// GetDelegatedVesting returns a vesting account's delegation amount that is
+// still vesting.
+func (bva BaseVestingAccount) GetDelegatedVesting() sdk.Coins {
+	return bva.DelegatedVesting
 }
 
 //-----------------------------------------------------------------------------

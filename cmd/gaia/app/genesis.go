@@ -66,11 +66,11 @@ type GenesisAccount struct {
 	AccountNumber uint64         `json:"account_number"`
 
 	// vesting account fields
-	OriginalVesting  sdk.Coins `json:"original_vesting"`
-	DelegatedFree    sdk.Coins `json:"delegated_free"`
-	DelegatedVesting sdk.Coins `json:"delegated_vesting"`
-	StartTime        int64     `json:"start_time"`
-	EndTime          int64     `json:"end_time"`
+	OriginalVesting  sdk.Coins `json:"original_vesting"`  // total vesting coins upon initialization
+	DelegatedFree    sdk.Coins `json:"delegated_free"`    // delegated vested coins at time of delegation
+	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // delegated vesting coins at time of delegation
+	StartTime        int64     `json:"start_time"`        // vesting start time
+	EndTime          int64     `json:"end_time"`          // vesting end time
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
@@ -92,11 +92,9 @@ func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 
 	vacc, ok := acc.(auth.VestingAccount)
 	if ok {
-		baseVestingAcc := vacc.ToBaseVestingAccount()
-
-		gacc.OriginalVesting = baseVestingAcc.OriginalVesting
-		gacc.DelegatedFree = baseVestingAcc.DelegatedFree
-		gacc.DelegatedVesting = baseVestingAcc.DelegatedVesting
+		gacc.OriginalVesting = vacc.GetOriginalVesting()
+		gacc.DelegatedFree = vacc.GetDelegatedFree()
+		gacc.DelegatedVesting = vacc.GetDelegatedVesting()
 		gacc.StartTime = vacc.GetStartTime()
 		gacc.EndTime = vacc.GetEndTime()
 	}

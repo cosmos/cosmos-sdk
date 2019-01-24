@@ -162,10 +162,7 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx sdk.Context,
 	if !found {
 		return false
 	}
-	if len(ubd.Entries) >= int(k.MaxEntries(ctx)) {
-		return true
-	}
-	return false
+	return len(ubd.Entries) >= int(k.MaxEntries(ctx))
 }
 
 // set the unbonding delegation and associated index
@@ -337,10 +334,7 @@ func (k Keeper) HasMaxRedelegationEntries(ctx sdk.Context,
 	if !found {
 		return false
 	}
-	if len(red.Entries) >= int(k.MaxEntries(ctx)) {
-		return true
-	}
-	return false
+	return len(red.Entries) >= int(k.MaxEntries(ctx))
 }
 
 // set a redelegation and associated index

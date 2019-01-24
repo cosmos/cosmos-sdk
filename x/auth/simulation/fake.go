@@ -34,25 +34,18 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 			return action, nil, nil
 		}
 
-		fees := sdk.Coins{sdk.NewCoin(initCoins[denomIndex].Denom, amt)}
-		newCoins, ok := initCoins.SafeMinus(fees)
-		if ok {
-			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
-			return action, nil, nil
-		}
-
-		if _, hasNeg := initCoins.SafeMinus(fees); hasNeg {
-			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
-			return action, nil, nil
-		}
-
-		err = stored.SetCoins(newCoins)
+		coins := sdk.Coins{sdk.NewCoin(initCoins[denomIndex].Denom, amt)}
+		err = stored.SetCoins(initCoins.Minus(coins))
 		if err != nil {
 			panic(err)
 		}
-
 		m.SetAccount(ctx, stored)
-		f.AddCollectedFees(ctx, fees)
+		if !coins.IsNotNegative() {
+			panic("setting negative fees")
+		}
+
+		f.AddCollectedFees(ctx, coins)
+
 		event(fmt.Sprintf("auth/SimulateDeductFee/true"))
 
 		action = "TestDeductFee"

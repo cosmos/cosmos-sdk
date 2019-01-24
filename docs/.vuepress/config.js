@@ -19,7 +19,10 @@ module.exports = {
       indexName: 'cosmos_network',
       debug: false
     },
-    nav: [{ text: "Back to Cosmos", link: "https://cosmos.network" }],
+    nav: [
+      { text: "Back to Cosmos", link: "https://cosmos.network" },
+      { text: "RPC", link: "../rpc/" }
+    ],
     sidebar: [
       {
         title: "Overview",
@@ -34,6 +37,7 @@ module.exports = {
         title: "Gaia",
         collapsable: false,
         children: [
+          "/gaia/what-is-gaia"
           "/gaia/installation",
           "/gaia/join-testnet",
           "/gaia/validators/validator-setup",

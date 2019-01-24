@@ -9,8 +9,6 @@ import (
 
 // Query endpoints supported by the slashing querier
 const (
-	QuerierRoute = "slashing"
-
 	QueryParameters = "parameters"
 )
 
@@ -21,7 +19,7 @@ func NewQuerier(k Keeper, cdc *codec.Codec) sdk.Querier {
 		case QueryParameters:
 			return queryParams(ctx, cdc, k)
 		default:
-			return nil, sdk.ErrUnknownRequest("unknown stake query endpoint")
+			return nil, sdk.ErrUnknownRequest("unknown staking query endpoint")
 		}
 	}
 }

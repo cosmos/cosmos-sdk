@@ -163,7 +163,7 @@ func TestContextWithCustom(t *testing.T) {
 	logger := NewMockLogger()
 	voteinfos := []abci.VoteInfo{{}}
 	meter := types.NewGasMeter(10000)
-	minFees := types.Coins{types.NewInt64Coin("feeCoin", 1)}
+	minGasPrices := types.DecCoins{types.NewDecCoin("feetoken", 1)}
 
 	ctx = types.NewContext(nil, header, ischeck, logger)
 	require.Equal(t, header, ctx.BlockHeader())
@@ -174,7 +174,7 @@ func TestContextWithCustom(t *testing.T) {
 		WithTxBytes(txbytes).
 		WithVoteInfos(voteinfos).
 		WithGasMeter(meter).
-		WithMinimumFees(minFees)
+		WithMinGasPrices(minGasPrices)
 	require.Equal(t, height, ctx.BlockHeight())
 	require.Equal(t, chainid, ctx.ChainID())
 	require.Equal(t, ischeck, ctx.IsCheckTx())
@@ -182,5 +182,5 @@ func TestContextWithCustom(t *testing.T) {
 	require.Equal(t, logger, ctx.Logger())
 	require.Equal(t, voteinfos, ctx.VoteInfos())
 	require.Equal(t, meter, ctx.GasMeter())
-	require.Equal(t, minFees, types.Coins{types.NewInt64Coin("feeCoin", 1)})
+	require.Equal(t, minGasPrices, ctx.MinGasPrices())
 }

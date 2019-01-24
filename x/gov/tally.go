@@ -26,7 +26,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	keeper.vs.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.Validator) (stop bool) {
 		currValidators[validator.GetOperator().String()] = validatorGovInfo{
 			Address:         validator.GetOperator(),
-			Power:           validator.GetPower(),
+			Power:           sdk.NewDecFromInt(validator.GetPower()),
 			DelegatorShares: validator.GetDelegatorShares(),
 			Minus:           sdk.ZeroDec(),
 			Vote:            OptionEmpty,
@@ -94,11 +94,12 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	}
 
 	// If there is no staked coins, the proposal fails
-	if keeper.vs.TotalPower(ctx).Equal(sdk.ZeroDec()) {
+	if keeper.vs.TotalPower(ctx).IsZero() {
 		return false, tallyResults
 	}
 	// If there is not enough quorum of votes, the proposal fails
-	if totalVotingPower.Quo(keeper.vs.TotalPower(ctx)).LT(tallyParams.Quorum) {
+	percentVoting := totalVotingPower.Quo(sdk.NewDecFromInt(keeper.vs.TotalPower(ctx)))
+	if percentVoting.LT(tallyParams.Quorum) {
 		return false, tallyResults
 	}
 	// If no one votes (everyone abstains), proposal fails

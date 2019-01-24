@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/cosmos/cosmos-sdk/store"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/spf13/cobra"
@@ -26,7 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 )
@@ -48,7 +50,7 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	app := NewGaiaApp(logger, db, baseapp.SetPruning(viper.GetString("pruning")))
+	app := NewGaiaApp(logger, db, baseapp.SetPruning(store.NewPruningOptions(viper.GetString("pruning"))))
 
 	// print some info
 	id := app.LastCommitID()
@@ -82,9 +84,9 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 		ctx := app.NewContext(true, abci.Header{})
 
 		// check for the powerkey and the validator from the store
-		store := ctx.KVStore(app.keyStake)
+		store := ctx.KVStore(app.keyStaking)
 		res := store.Get(powerKey)
-		val, _ := app.stakeKeeper.GetValidator(ctx, trouble)
+		val, _ := app.stakingKeeper.GetValidator(ctx, trouble)
 		fmt.Println("checking height", checkHeight, res, val)
 		if res == nil {
 			bottomHeight = checkHeight
@@ -131,8 +133,8 @@ type GaiaApp struct {
 	// keys to access the substores
 	keyMain     *sdk.KVStoreKey
 	keyAccount  *sdk.KVStoreKey
-	keyStake    *sdk.KVStoreKey
-	tkeyStake   *sdk.TransientStoreKey
+	keyStaking  *sdk.KVStoreKey
+	tkeyStaking *sdk.TransientStoreKey
 	keySlashing *sdk.KVStoreKey
 	keyParams   *sdk.KVStoreKey
 	tkeyParams  *sdk.TransientStoreKey
@@ -141,7 +143,7 @@ type GaiaApp struct {
 	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	bankKeeper          bank.Keeper
-	stakeKeeper         stake.Keeper
+	stakingKeeper       staking.Keeper
 	slashingKeeper      slashing.Keeper
 	paramsKeeper        params.Keeper
 }
@@ -156,39 +158,41 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 	var app = &GaiaApp{
 		BaseApp:     bApp,
 		cdc:         cdc,
-		keyMain:     sdk.NewKVStoreKey("main"),
-		keyAccount:  sdk.NewKVStoreKey("acc"),
-		keyStake:    sdk.NewKVStoreKey("stake"),
-		tkeyStake:   sdk.NewTransientStoreKey("transient_stake"),
-		keySlashing: sdk.NewKVStoreKey("slashing"),
-		keyParams:   sdk.NewKVStoreKey("params"),
-		tkeyParams:  sdk.NewTransientStoreKey("transient_params"),
+		keyMain:     sdk.NewKVStoreKey(bam.MainStoreKey),
+		keyAccount:  sdk.NewKVStoreKey(auth.StoreKey),
+		keyStaking:  sdk.NewKVStoreKey(staking.StoreKey),
+		tkeyStaking: sdk.NewTransientStoreKey(staking.TStoreKey),
+		keySlashing: sdk.NewKVStoreKey(slashing.StoreKey),
+		keyParams:   sdk.NewKVStoreKey(params.StoreKey),
+		tkeyParams:  sdk.NewTransientStoreKey(params.TStoreKey),
 	}
+
+	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// define the accountKeeper
 	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
-		app.keyAccount,        // target store
+		app.keyAccount, // target store
+		app.paramsKeeper.Subspace(auth.DefaultParamspace),
 		auth.ProtoBaseAccount, // prototype
 	)
 
 	// add handlers
 	app.bankKeeper = bank.NewBaseKeeper(app.accountKeeper)
-	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
-	app.stakeKeeper = stake.NewKeeper(app.cdc, app.keyStake, app.tkeyStake, app.bankKeeper, app.paramsKeeper.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
-	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakeKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), slashing.DefaultCodespace)
+	app.stakingKeeper = staking.NewKeeper(app.cdc, app.keyStaking, app.tkeyStaking, app.bankKeeper, app.paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	app.slashingKeeper = slashing.NewKeeper(app.cdc, app.keySlashing, app.stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace), slashing.DefaultCodespace)
 
 	// register message routes
 	app.Router().
 		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
-		AddRoute("stake", stake.NewHandler(app.stakeKeeper))
+		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper))
 
 	// initialize BaseApp
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
-	app.MountStores(app.keyMain, app.keyAccount, app.keyStake, app.keySlashing, app.keyParams)
+	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keySlashing, app.keyParams)
 	app.MountStore(app.tkeyParams, sdk.StoreTypeTransient)
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
@@ -204,7 +208,7 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, baseAppOptions ...func(*bam.BaseAp
 func MakeCodec() *codec.Codec {
 	var cdc = codec.New()
 	bank.RegisterCodec(cdc)
-	stake.RegisterCodec(cdc)
+	staking.RegisterCodec(cdc)
 	slashing.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
@@ -225,7 +229,7 @@ func (app *GaiaApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) ab
 // application updates every end block
 // nolint: unparam
 func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	validatorUpdates, tags := stake.EndBlocker(ctx, app.stakeKeeper)
+	validatorUpdates, tags := staking.EndBlocker(ctx, app.stakingKeeper)
 
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
@@ -250,13 +254,13 @@ func (app *GaiaApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 		app.accountKeeper.SetAccount(ctx, acc)
 	}
 
-	// load the initial stake information
-	validators, err := stake.InitGenesis(ctx, app.stakeKeeper, genesisState.StakeData)
+	// load the initial staking information
+	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakingData)
 	if err != nil {
 		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468 // return sdk.ErrGenesisParse("").TraceCause(err, "")
 	}
 
-	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakeData)
+	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData)
 
 	return abci.ResponseInitChain{
 		Validators: validators,

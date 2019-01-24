@@ -24,8 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-const ctxAccStoreName = "acc"
-
 var (
 	verifier tmlite.Verifier
 )
@@ -37,6 +35,7 @@ type CLIContext struct {
 	AccDecoder    auth.AccountDecoder
 	Client        rpcclient.Client
 	Output        io.Writer
+	OutputFormat  string
 	Height        int64
 	NodeURI       string
 	From          string
@@ -44,7 +43,6 @@ type CLIContext struct {
 	TrustNode     bool
 	UseLedger     bool
 	Async         bool
-	JSON          bool
 	PrintResponse bool
 	Verifier      tmlite.Verifier
 	Simulate      bool
@@ -76,13 +74,13 @@ func NewCLIContext() CLIContext {
 		Client:        rpc,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
-		AccountStore:  ctxAccStoreName,
+		AccountStore:  auth.StoreKey,
 		From:          viper.GetString(client.FlagFrom),
+		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(client.FlagHeight),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
 		UseLedger:     viper.GetBool(client.FlagUseLedger),
 		Async:         viper.GetBool(client.FlagAsync),
-		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(client.FlagDryRun),
@@ -255,4 +253,29 @@ func (ctx CLIContext) WithGenerateOnly(generateOnly bool) CLIContext {
 func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
 	ctx.Simulate = simulate
 	return ctx
+}
+
+// PrintOutput prints output while respecting output and indent flags
+// NOTE: pass in marshalled structs that have been unmarshaled
+// because this function will panic on marshaling errors
+func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
+	var out []byte
+
+	switch ctx.OutputFormat {
+	case "text":
+		out = []byte(toPrint.String())
+	case "json":
+		if ctx.Indent {
+			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", " ")
+		} else {
+			out, err = ctx.Codec.MarshalJSON(toPrint)
+		}
+	}
+
+	if err != nil {
+		return
+	}
+
+	fmt.Println(string(out))
+	return
 }

@@ -7,9 +7,6 @@ import (
 
 var cdc = codec.New()
 
-// name to identify transaction types
-const MsgRoute = "slashing"
-
 // verify interface at compile time
 var _ sdk.Msg = &MsgUnjail{}
 
@@ -25,7 +22,7 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) MsgUnjail {
 }
 
 //nolint
-func (msg MsgUnjail) Route() string { return MsgRoute }
+func (msg MsgUnjail) Route() string { return RouterKey }
 func (msg MsgUnjail) Type() string  { return "unjail" }
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr)}
@@ -33,11 +30,8 @@ func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgUnjail) GetSignBytes() []byte {
-	b, err := cdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := cdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check

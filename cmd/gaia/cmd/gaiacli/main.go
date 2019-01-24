@@ -22,28 +22,25 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
+	at "github.com/cosmos/cosmos-sdk/x/auth"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	dist "github.com/cosmos/cosmos-sdk/x/distribution"
+	gv "github.com/cosmos/cosmos-sdk/x/gov"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	stake "github.com/cosmos/cosmos-sdk/x/stake/client/rest"
+	st "github.com/cosmos/cosmos-sdk/x/staking"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	distClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	govClient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	slashingClient "github.com/cosmos/cosmos-sdk/x/slashing/client"
-	stakeClient "github.com/cosmos/cosmos-sdk/x/stake/client"
+	stakingClient "github.com/cosmos/cosmos-sdk/x/staking/client"
 
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
-)
-
-const (
-	storeAcc      = "acc"
-	storeGov      = "gov"
-	storeSlashing = "slashing"
-	storeStake    = "stake"
-	storeDist     = "distr"
 )
 
 func main() {
@@ -67,10 +64,10 @@ func main() {
 	// Module clients hold cli commnads (tx,query) and lcd routes
 	// TODO: Make the lcd command take a list of ModuleClient
 	mc := []sdk.ModuleClients{
-		govClient.NewModuleClient(storeGov, cdc),
-		distClient.NewModuleClient(storeDist, cdc),
-		stakeClient.NewModuleClient(storeStake, cdc),
-		slashingClient.NewModuleClient(storeSlashing, cdc),
+		govClient.NewModuleClient(gv.StoreKey, cdc),
+		distClient.NewModuleClient(dist.StoreKey, cdc),
+		stakingClient.NewModuleClient(st.StoreKey, cdc),
+		slashingClient.NewModuleClient(sl.StoreKey, cdc),
 	}
 
 	rootCmd := &cobra.Command{
@@ -78,9 +75,14 @@ func main() {
 		Short: "Command line interface for interacting with gaiad",
 	}
 
+	// Add --chain-id to persistent flags and mark it required
+	rootCmd.PersistentFlags().String(client.FlagChainID, "", "Chain ID of tendermint node")
+	rootCmd.PersistentPreRunE = func(_ *cobra.Command, _ []string) error {
+		return initConfig(rootCmd)
+	}
+
 	// Construct Root Command
 	rootCmd.AddCommand(
-		rpc.InitClientCommand(),
 		rpc.StatusCommand(),
 		client.ConfigCmd(),
 		queryCmd(cdc, mc),
@@ -91,16 +93,13 @@ func main() {
 		keys.Commands(),
 		client.LineBreak,
 		version.VersionCmd,
+		client.NewCompletionCmd(rootCmd, true),
 	)
 
 	// Add flags and prefix all env exposed with GA
 	executor := cli.PrepareMainCmd(rootCmd, "GA", app.DefaultCLIHome)
-	err := initConfig(rootCmd)
-	if err != nil {
-		panic(err)
-	}
 
-	err = executor.Execute()
+	err := executor.Execute()
 	if err != nil {
 		fmt.Printf("Failed executing CLI command: %s, exiting...\n", err)
 		os.Exit(1)
@@ -120,7 +119,7 @@ func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 		tx.SearchTxCmd(cdc),
 		tx.QueryTxCmd(cdc),
 		client.LineBreak,
-		authcmd.GetAccountCmd(storeAcc, cdc),
+		authcmd.GetAccountCmd(at.StoreKey, cdc),
 	)
 
 	for _, m := range mc {
@@ -140,6 +139,7 @@ func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 		bankcmd.SendTxCmd(cdc),
 		client.LineBreak,
 		authcmd.GetSignCommand(cdc),
+		authcmd.GetMultiSignCommand(cdc),
 		bankcmd.GetBroadcastCommand(cdc),
 		client.LineBreak,
 	)
@@ -159,9 +159,9 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
+	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, at.StoreKey)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	stake.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	staking.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	gov.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
@@ -189,7 +189,9 @@ func initConfig(cmd *cobra.Command) error {
 			return err
 		}
 	}
-
+	if err := viper.BindPFlag(client.FlagChainID, cmd.PersistentFlags().Lookup(client.FlagChainID)); err != nil {
+		return err
+	}
 	if err := viper.BindPFlag(cli.EncodingFlag, cmd.PersistentFlags().Lookup(cli.EncodingFlag)); err != nil {
 		return err
 	}

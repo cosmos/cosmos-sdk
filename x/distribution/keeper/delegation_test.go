@@ -6,249 +6,554 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-func TestWithdrawDelegationRewardBasic(t *testing.T) {
-	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
-	denom := sk.GetParams(ctx).BondDenom
+func TestCalculateRewardsBasic(t *testing.T) {
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	sh := staking.NewHandler(sk)
 
-	//first make a validator
-	msgCreateValidator := stake.NewTestMsgCreateValidator(valOpAddr1, valConsPk1, 10)
-	got := stakeHandler(ctx, msgCreateValidator)
-	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
-	// delegate
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
-	require.True(t, got.IsOK())
-	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
-	require.Equal(t, int64(90), amt.Int64())
+	// create validator with 50% commission
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+	require.True(t, sh(ctx, msg).IsOK())
 
-	// allocate 100 denom of fees
-	feeInputs := sdk.NewInt(100)
-	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
-	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
+	// end block to bond validator
+	staking.EndBlocker(ctx, sk)
 
-	// withdraw delegation
-	ctx = ctx.WithBlockHeight(1)
-	sk.SetLastTotalPower(ctx, sdk.NewInt(10))
-	sk.SetLastValidatorPower(ctx, valOpAddr1, sdk.NewInt(10))
-	keeper.WithdrawDelegationReward(ctx, delAddr1, valOpAddr1)
-	amt = accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
+	// fetch validator and delegation
+	val := sk.Validator(ctx, valOpAddr1)
+	del := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
 
-	expRes := sdk.NewDec(90).Add(sdk.NewDec(100).Quo(sdk.NewDec(2))).TruncateInt() // 90 + 100 tokens * 10/20
-	require.True(sdk.IntEq(t, expRes, amt))
+	// historical count should be 2 (once for validator init, once for delegation init)
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
+
+	// end period
+	endingPeriod := k.incrementValidatorPeriod(ctx, val)
+
+	// historical count should be 2 still
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
+
+	// calculate delegation rewards
+	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// rewards should be zero
+	require.True(t, rewards.IsZero())
+
+	// allocate some rewards
+	initial := int64(10)
+	tokens := sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// end period
+	endingPeriod = k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards
+	rewards = k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// rewards should be half the tokens
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial / 2)}}, rewards)
+
+	// commission should be the other half
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial / 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 }
 
-func TestWithdrawDelegationRewardWithCommission(t *testing.T) {
-	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
-	denom := sk.GetParams(ctx).BondDenom
+func TestCalculateRewardsAfterSlash(t *testing.T) {
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	sh := staking.NewHandler(sk)
 
-	//first make a validator with 10% commission
-	msgCreateValidator := stake.NewTestMsgCreateValidatorWithCommission(
-		valOpAddr1, valConsPk1, 10, sdk.NewDecWithPrec(1, 1))
-	got := stakeHandler(ctx, msgCreateValidator)
-	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
-	// delegate
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
-	require.True(t, got.IsOK())
-	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
-	require.Equal(t, int64(90), amt.Int64())
+	// create validator with 50% commission
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+	require.True(t, sh(ctx, msg).IsOK())
 
-	// allocate 100 denom of fees
-	feeInputs := sdk.NewInt(100)
-	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
-	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
+	// end block to bond validator
+	staking.EndBlocker(ctx, sk)
 
-	// withdraw delegation
-	ctx = ctx.WithBlockHeight(1)
-	keeper.WithdrawDelegationReward(ctx, delAddr1, valOpAddr1)
-	amt = accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
+	// fetch validator and delegation
+	val := sk.Validator(ctx, valOpAddr1)
+	del := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
 
-	expRes := sdk.NewDec(90).Add(sdk.NewDec(90).Quo(sdk.NewDec(2))).TruncateInt() // 90 + 100*90% tokens * 10/20
-	require.True(sdk.IntEq(t, expRes, amt))
+	// end period
+	endingPeriod := k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards
+	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// rewards should be zero
+	require.True(t, rewards.IsZero())
+
+	// start out block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// slash the validator by 50%
+	sk.Slash(ctx, valConsAddr1, ctx.BlockHeight(), 100, sdk.NewDecWithPrec(5, 1))
+
+	// retrieve validator
+	val = sk.Validator(ctx, valOpAddr1)
+
+	// increase block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// allocate some rewards
+	initial := int64(10)
+	tokens := sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// end period
+	endingPeriod = k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards
+	rewards = k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// rewards should be half the tokens
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial / 2)}}, rewards)
+
+	// commission should be the other half
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial / 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 }
 
-func TestWithdrawDelegationRewardTwoDelegators(t *testing.T) {
-	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
-	denom := sk.GetParams(ctx).BondDenom
+func TestCalculateRewardsAfterManySlashes(t *testing.T) {
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	sh := staking.NewHandler(sk)
 
-	//first make a validator with 10% commission
-	msgCreateValidator := stake.NewTestMsgCreateValidatorWithCommission(
-		valOpAddr1, valConsPk1, 10, sdk.NewDecWithPrec(1, 1))
-	got := stakeHandler(ctx, msgCreateValidator)
-	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
-	// delegate
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
-	require.True(t, got.IsOK())
-	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
-	require.Equal(t, int64(90), amt.Int64())
+	// create validator with 50% commission
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+	require.True(t, sh(ctx, msg).IsOK())
 
-	msgDelegate = stake.NewTestMsgDelegate(delAddr2, valOpAddr1, 20)
-	got = stakeHandler(ctx, msgDelegate)
-	require.True(t, got.IsOK())
-	amt = accMapper.GetAccount(ctx, delAddr2).GetCoins().AmountOf(denom)
-	require.Equal(t, int64(80), amt.Int64())
+	// end block to bond validator
+	staking.EndBlocker(ctx, sk)
 
-	// allocate 100 denom of fees
-	feeInputs := sdk.NewInt(100)
-	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
-	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
+	// fetch validator and delegation
+	val := sk.Validator(ctx, valOpAddr1)
+	del := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
 
-	// delegator 1 withdraw delegation
-	ctx = ctx.WithBlockHeight(1)
-	keeper.WithdrawDelegationReward(ctx, delAddr1, valOpAddr1)
-	amt = accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
+	// end period
+	endingPeriod := k.incrementValidatorPeriod(ctx, val)
 
-	expRes := sdk.NewDec(90).Add(sdk.NewDec(90).Quo(sdk.NewDec(4))).TruncateInt() // 90 + 100*90% tokens * 10/40
-	require.True(sdk.IntEq(t, expRes, amt))
+	// calculate delegation rewards
+	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// rewards should be zero
+	require.True(t, rewards.IsZero())
+
+	// start out block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// slash the validator by 50%
+	sk.Slash(ctx, valConsAddr1, ctx.BlockHeight(), 100, sdk.NewDecWithPrec(5, 1))
+
+	// fetch the validator again
+	val = sk.Validator(ctx, valOpAddr1)
+
+	// increase block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// allocate some rewards
+	initial := int64(10)
+	tokens := sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// slash the validator by 50% again
+	sk.Slash(ctx, valConsAddr1, ctx.BlockHeight(), 50, sdk.NewDecWithPrec(5, 1))
+
+	// fetch the validator again
+	val = sk.Validator(ctx, valOpAddr1)
+
+	// increase block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// allocate some more rewards
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// end period
+	endingPeriod = k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards
+	rewards = k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// rewards should be half the tokens
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}, rewards)
+
+	// commission should be the other half
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 }
 
-// this test demonstrates how two delegators with the same power can end up
-// with different rewards in the end
-func TestWithdrawDelegationRewardTwoDelegatorsUneven(t *testing.T) {
-	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
-	denom := sk.GetParams(ctx).BondDenom
+func TestCalculateRewardsMultiDelegator(t *testing.T) {
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	sh := staking.NewHandler(sk)
 
-	//first make a validator with no commission
-	msgCreateValidator := stake.NewTestMsgCreateValidatorWithCommission(
-		valOpAddr1, valConsPk1, 10, sdk.ZeroDec())
-	got := stakeHandler(ctx, msgCreateValidator)
-	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
-	// delegate
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
-	require.True(t, got.IsOK())
-	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
-	require.Equal(t, int64(90), amt.Int64())
+	// create validator with 50% commission
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+	require.True(t, sh(ctx, msg).IsOK())
 
-	msgDelegate = stake.NewTestMsgDelegate(delAddr2, valOpAddr1, 10)
-	got = stakeHandler(ctx, msgDelegate)
-	require.True(t, got.IsOK())
-	amt = accMapper.GetAccount(ctx, delAddr2).GetCoins().AmountOf(denom)
-	require.Equal(t, int64(90), amt.Int64())
+	// end block to bond validator
+	staking.EndBlocker(ctx, sk)
 
-	// allocate 100 denom of fees
-	feeInputs := sdk.NewInt(90)
-	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
-	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
-	ctx = ctx.WithBlockHeight(1)
+	// fetch validator and delegation
+	val := sk.Validator(ctx, valOpAddr1)
+	del1 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
 
-	// delegator 1 withdraw delegation early, delegator 2 just keeps it's accum
-	keeper.WithdrawDelegationReward(ctx, delAddr1, valOpAddr1)
-	amt = accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
+	// allocate some rewards
+	initial := int64(20)
+	tokens := sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}
+	k.AllocateTokensToValidator(ctx, val, tokens)
 
-	expRes1 := sdk.NewDec(90).Add(sdk.NewDec(90).Quo(sdk.NewDec(3))).TruncateInt() // 90 + 100 * 10/30
-	require.True(sdk.IntEq(t, expRes1, amt))
+	// second delegation
+	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valOpAddr2), valOpAddr1, sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)))
+	require.True(t, sh(ctx, msg2).IsOK())
+	del2 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr2), valOpAddr1)
 
-	// allocate 200 denom of fees
-	feeInputs = sdk.NewInt(180)
-	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
-	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
-	ctx = ctx.WithBlockHeight(2)
+	// fetch updated validator
+	val = sk.Validator(ctx, valOpAddr1)
 
-	// delegator 2 now withdraws everything it's entitled to
-	keeper.WithdrawDelegationReward(ctx, delAddr2, valOpAddr1)
-	amt = accMapper.GetAccount(ctx, delAddr2).GetCoins().AmountOf(denom)
-	// existingTokens + (100+200 * (10/(20+30))
-	withdrawnFromVal := sdk.NewDec(60 + 180).Mul(sdk.NewDec(2)).Quo(sdk.NewDec(5))
-	expRes2 := sdk.NewDec(90).Add(withdrawnFromVal).TruncateInt()
-	require.True(sdk.IntEq(t, expRes2, amt))
+	// end block
+	staking.EndBlocker(ctx, sk)
 
-	// finally delegator 1 withdraws the remainder of its reward
-	keeper.WithdrawDelegationReward(ctx, delAddr1, valOpAddr1)
-	amt = accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
+	// allocate some more rewards
+	k.AllocateTokensToValidator(ctx, val, tokens)
 
-	remainingInVal := sdk.NewDec(60 + 180).Sub(withdrawnFromVal)
-	expRes3 := sdk.NewDecFromInt(expRes1).Add(remainingInVal.Mul(sdk.NewDec(1)).Quo(sdk.NewDec(3))).TruncateInt()
-	require.True(sdk.IntEq(t, expRes3, amt))
+	// end period
+	endingPeriod := k.incrementValidatorPeriod(ctx, val)
 
-	// verify the final withdraw amounts are different
-	require.True(t, expRes2.GT(expRes3))
+	// calculate delegation rewards for del1
+	rewards := k.calculateDelegationRewards(ctx, val, del1, endingPeriod)
+
+	// rewards for del1 should be 3/4 initial
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial * 3 / 4)}}, rewards)
+
+	// calculate delegation rewards for del2
+	rewards = k.calculateDelegationRewards(ctx, val, del2, endingPeriod)
+
+	// rewards for del2 should be 1/4 initial
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial * 1 / 4)}}, rewards)
+
+	// commission should be equal to initial (50% twice)
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
 }
 
-func TestWithdrawDelegationRewardsAll(t *testing.T) {
-	ctx, accMapper, keeper, sk, fck := CreateTestInputAdvanced(t, false, 100, sdk.ZeroDec())
-	stakeHandler := stake.NewHandler(sk)
-	denom := sk.GetParams(ctx).BondDenom
+func TestWithdrawDelegationRewardsBasic(t *testing.T) {
+	balance := int64(1000)
+	ctx, ak, k, sk, _ := CreateTestInputDefault(t, false, balance)
+	sh := staking.NewHandler(sk)
 
-	//make some  validators with different commissions
-	msgCreateValidator := stake.NewTestMsgCreateValidatorWithCommission(
-		valOpAddr1, valConsPk1, 10, sdk.NewDecWithPrec(1, 1))
-	got := stakeHandler(ctx, msgCreateValidator)
-	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
-	msgCreateValidator = stake.NewTestMsgCreateValidatorWithCommission(
-		valOpAddr2, valConsPk2, 50, sdk.NewDecWithPrec(2, 1))
-	got = stakeHandler(ctx, msgCreateValidator)
-	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
+	// create validator with 50% commission
+	bond := int64(100)
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(bond)), staking.Description{}, commission)
+	require.True(t, sh(ctx, msg).IsOK())
 
-	msgCreateValidator = stake.NewTestMsgCreateValidatorWithCommission(
-		valOpAddr3, valConsPk3, 40, sdk.NewDecWithPrec(3, 1))
-	got = stakeHandler(ctx, msgCreateValidator)
-	require.True(t, got.IsOK(), "expected msg to be ok, got %v", got)
+	// assert correct initial balance
+	require.Equal(t, sdk.Coins{{staking.DefaultBondDenom, sdk.NewInt(balance - bond)}}, ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins())
 
-	// delegate to all the validators
-	msgDelegate := stake.NewTestMsgDelegate(delAddr1, valOpAddr1, 10)
-	require.True(t, stakeHandler(ctx, msgDelegate).IsOK())
-	msgDelegate = stake.NewTestMsgDelegate(delAddr1, valOpAddr2, 20)
-	require.True(t, stakeHandler(ctx, msgDelegate).IsOK())
-	msgDelegate = stake.NewTestMsgDelegate(delAddr1, valOpAddr3, 30)
-	require.True(t, stakeHandler(ctx, msgDelegate).IsOK())
+	// end block to bond validator
+	staking.EndBlocker(ctx, sk)
 
-	// Update sk's LastValidatorPower/LastTotalPowers.
-	_ = sk.ApplyAndReturnValidatorSetUpdates(ctx)
+	// set zero outstanding rewards
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
-	// 40 tokens left after delegating 60 of them
-	amt := accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
-	require.Equal(t, int64(40), amt.Int64())
+	// fetch validator and delegation
+	val := sk.Validator(ctx, valOpAddr1)
 
-	// total power of each validator:
-	// validator 1: 10 (self) + 10 (delegator) = 20
-	// validator 2: 50 (self) + 20 (delegator) = 70
-	// validator 3: 40 (self) + 30 (delegator) = 70
-	// grand total: 160
+	// allocate some rewards
+	initial := int64(10)
+	tokens := sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}
+	k.AllocateTokensToValidator(ctx, val, tokens)
 
-	// allocate 100 denom of fees
-	feeInputs := sdk.NewInt(1000)
-	fck.SetCollectedFees(sdk.Coins{sdk.NewCoin(denom, feeInputs)})
-	require.Equal(t, feeInputs, fck.GetCollectedFees(ctx).AmountOf(denom))
-	keeper.AllocateTokens(ctx, sdk.OneDec(), valConsAddr1)
+	// historical count should be 2 (initial + latest for delegation)
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
 
-	// withdraw delegation
-	ctx = ctx.WithBlockHeight(1)
-	keeper.WithdrawDelegationRewardsAll(ctx, delAddr1)
-	amt = accMapper.GetAccount(ctx, delAddr1).GetCoins().AmountOf(denom)
+	// withdraw rewards
+	require.Nil(t, k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1))
 
-	// orig-amount + fees *(1-proposerReward)* (val1Portion * delegatorPotion * (1-val1Commission) ... etc)
-	//             + fees *(proposerReward)  * (delegatorPotion * (1-val1Commission))
-	// 40          + 1000 *(1- 0.95)* (20/160 * 10/20 * 0.9 + 70/160 * 20/70 * 0.8 + 70/160 * 30/70 * 0.7)
-	// 40          + 1000 *( 0.05)  * (10/20 * 0.9)
-	feesInNonProposer := sdk.NewDecFromInt(feeInputs).Mul(sdk.NewDecWithPrec(95, 2))
-	feesInProposer := sdk.NewDecFromInt(feeInputs).Mul(sdk.NewDecWithPrec(5, 2))
-	feesInVal1 := feesInNonProposer.Mul(sdk.NewDec(10).Quo(sdk.NewDec(160))).Mul(sdk.NewDecWithPrec(9, 1))
-	feesInVal2 := feesInNonProposer.Mul(sdk.NewDec(20).Quo(sdk.NewDec(160))).Mul(sdk.NewDecWithPrec(8, 1))
-	feesInVal3 := feesInNonProposer.Mul(sdk.NewDec(30).Quo(sdk.NewDec(160))).Mul(sdk.NewDecWithPrec(7, 1))
-	feesInVal1Proposer := feesInProposer.Mul(sdk.NewDec(10).Quo(sdk.NewDec(20))).Mul(sdk.NewDecWithPrec(9, 1))
-	expRes := sdk.NewDec(40).Add(feesInVal1).Add(feesInVal2).Add(feesInVal3).Add(feesInVal1Proposer).TruncateInt()
-	require.True(sdk.IntEq(t, expRes, amt))
+	// historical count should still be 2 (added one record, cleared one)
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
+
+	// assert correct balance
+	require.Equal(t, sdk.Coins{{staking.DefaultBondDenom, sdk.NewInt(balance - bond + (initial / 2))}}, ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins())
+
+	// withdraw commission
+	require.Nil(t, k.WithdrawValidatorCommission(ctx, valOpAddr1))
+
+	// assert correct balance
+	require.Equal(t, sdk.Coins{{staking.DefaultBondDenom, sdk.NewInt(balance - bond + initial)}}, ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins())
+}
+
+func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	sh := staking.NewHandler(sk)
+
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
+
+	// create validator with 50% commission
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+	require.True(t, sh(ctx, msg).IsOK())
+
+	// end block to bond validator
+	staking.EndBlocker(ctx, sk)
+
+	// fetch validator and delegation
+	val := sk.Validator(ctx, valOpAddr1)
+	del := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
+
+	// end period
+	endingPeriod := k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards
+	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// rewards should be zero
+	require.True(t, rewards.IsZero())
+
+	// start out block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// allocate some rewards
+	initial := int64(10)
+	tokens := sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// slash the validator by 50%
+	sk.Slash(ctx, valConsAddr1, ctx.BlockHeight(), 100, sdk.NewDecWithPrec(5, 1))
+
+	// slash the validator by 50% again
+	sk.Slash(ctx, valConsAddr1, ctx.BlockHeight(), 50, sdk.NewDecWithPrec(5, 1))
+
+	// fetch the validator again
+	val = sk.Validator(ctx, valOpAddr1)
+
+	// increase block height
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// allocate some more rewards
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// end period
+	endingPeriod = k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards
+	rewards = k.calculateDelegationRewards(ctx, val, del, endingPeriod)
+
+	// rewards should be half the tokens
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}, rewards)
+
+	// commission should be the other half
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
+}
+
+func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	sh := staking.NewHandler(sk)
+
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
+
+	// create validator with 50% commission
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+	require.True(t, sh(ctx, msg).IsOK())
+
+	// end block to bond validator
+	staking.EndBlocker(ctx, sk)
+
+	// fetch validator and delegation
+	val := sk.Validator(ctx, valOpAddr1)
+	del1 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
+
+	// allocate some rewards
+	initial := int64(30)
+	tokens := sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// slash the validator
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	sk.Slash(ctx, valConsAddr1, ctx.BlockHeight(), 100, sdk.NewDecWithPrec(5, 1))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// second delegation
+	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valOpAddr2), valOpAddr1, sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)))
+	require.True(t, sh(ctx, msg2).IsOK())
+	del2 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr2), valOpAddr1)
+
+	// end block
+	staking.EndBlocker(ctx, sk)
+
+	// allocate some more rewards
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// slash the validator again
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	sk.Slash(ctx, valConsAddr1, ctx.BlockHeight(), 100, sdk.NewDecWithPrec(5, 1))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+
+	// fetch updated validator
+	val = sk.Validator(ctx, valOpAddr1)
+
+	// end period
+	endingPeriod := k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards for del1
+	rewards := k.calculateDelegationRewards(ctx, val, del1, endingPeriod)
+
+	// rewards for del1 should be 2/3 initial (half initial first period, 1/6 initial second period)
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec((initial / 2) + (initial / 6))}}, rewards)
+
+	// calculate delegation rewards for del2
+	rewards = k.calculateDelegationRewards(ctx, val, del2, endingPeriod)
+
+	// rewards for del2 should be initial / 3
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial / 3)}}, rewards)
+
+	// commission should be equal to initial (twice 50% commission, unaffected by slashing)
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
+}
+
+func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
+	ctx, _, k, sk, _ := CreateTestInputDefault(t, false, 1000)
+	sh := staking.NewHandler(sk)
+
+	// initialize state
+	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
+
+	// create validator with 50% commission
+	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+	require.True(t, sh(ctx, msg).IsOK())
+
+	// end block to bond validator
+	staking.EndBlocker(ctx, sk)
+
+	// fetch validator and delegation
+	val := sk.Validator(ctx, valOpAddr1)
+	del1 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
+
+	// allocate some rewards
+	initial := int64(20)
+	tokens := sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial)}}
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// historical count should be 2 (validator init, delegation init)
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
+
+	// second delegation
+	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valOpAddr2), valOpAddr1, sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)))
+	require.True(t, sh(ctx, msg2).IsOK())
+
+	// historical count should be 3 (second delegation init)
+	require.Equal(t, uint64(3), k.GetValidatorHistoricalReferenceCount(ctx))
+
+	// fetch updated validator
+	val = sk.Validator(ctx, valOpAddr1)
+	del2 := sk.Delegation(ctx, sdk.AccAddress(valOpAddr2), valOpAddr1)
+
+	// end block
+	staking.EndBlocker(ctx, sk)
+
+	// allocate some more rewards
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// first delegator withdraws
+	k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
+
+	// second delegator withdraws
+	k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr2), valOpAddr1)
+
+	// historical count should be 3 (validator init + two delegations)
+	require.Equal(t, uint64(3), k.GetValidatorHistoricalReferenceCount(ctx))
+
+	// validator withdraws commission
+	k.WithdrawValidatorCommission(ctx, valOpAddr1)
+
+	// end period
+	endingPeriod := k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards for del1
+	rewards := k.calculateDelegationRewards(ctx, val, del1, endingPeriod)
+
+	// rewards for del1 should be zero
+	require.True(t, rewards.IsZero())
+
+	// calculate delegation rewards for del2
+	rewards = k.calculateDelegationRewards(ctx, val, del2, endingPeriod)
+
+	// rewards for del2 should be zero
+	require.True(t, rewards.IsZero())
+
+	// commission should be zero
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
+
+	// allocate some more rewards
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// first delegator withdraws again
+	k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
+
+	// end period
+	endingPeriod = k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards for del1
+	rewards = k.calculateDelegationRewards(ctx, val, del1, endingPeriod)
+
+	// rewards for del1 should be zero
+	require.True(t, rewards.IsZero())
+
+	// calculate delegation rewards for del2
+	rewards = k.calculateDelegationRewards(ctx, val, del2, endingPeriod)
+
+	// rewards for del2 should be 1/4 initial
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial / 4)}}, rewards)
+
+	// commission should be half initial
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial / 2)}}, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1))
+
+	// allocate some more rewards
+	k.AllocateTokensToValidator(ctx, val, tokens)
+
+	// withdraw commission
+	k.WithdrawValidatorCommission(ctx, valOpAddr1)
+
+	// end period
+	endingPeriod = k.incrementValidatorPeriod(ctx, val)
+
+	// calculate delegation rewards for del1
+	rewards = k.calculateDelegationRewards(ctx, val, del1, endingPeriod)
+
+	// rewards for del1 should be 1/4 initial
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial / 4)}}, rewards)
+
+	// calculate delegation rewards for del2
+	rewards = k.calculateDelegationRewards(ctx, val, del2, endingPeriod)
+
+	// rewards for del2 should be 1/2 initial
+	require.Equal(t, sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDec(initial / 2)}}, rewards)
+
+	// commission should be zero
+	require.True(t, k.GetValidatorAccumulatedCommission(ctx, valOpAddr1).IsZero())
 }

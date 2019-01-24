@@ -179,7 +179,7 @@ func GetCmdDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`
 Submit a deposit for an acive proposal. You can find the proposal-id by running gaiacli query gov proposals:
 
-$ gaiacli tx gov deposit 1 10STAKE --from mykey
+$ gaiacli tx gov deposit 1 10stake --from mykey
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -194,7 +194,7 @@ $ gaiacli tx gov deposit 1 10STAKE --from mykey
 			}
 
 			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
@@ -270,7 +270,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 			}
 
 			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}

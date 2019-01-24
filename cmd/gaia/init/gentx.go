@@ -26,12 +26,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	"github.com/cosmos/cosmos-sdk/x/stake/client/cli"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
-	defaultAmount                  = "100" + stakeTypes.DefaultBondDenom
+	defaultAmount                  = "100" + stakingTypes.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
@@ -113,7 +113,7 @@ following delegation and commission default parameters:
 			// Run gaiad tx create-validator
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			cliCtx, txBldr, msg, err := cli.BuildCreateValidatorMsg(cliCtx, txBldr)
+			txBldr, msg, err := cli.BuildCreateValidatorMsg(cliCtx, txBldr)
 			if err != nil {
 				return err
 			}
@@ -168,7 +168,7 @@ following delegation and commission default parameters:
 
 func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins sdk.Coins) error {
 	accountIsInGenesis := false
-	bondDenom := genesisState.StakeData.Params.BondDenom
+	bondDenom := genesisState.StakingData.Params.BondDenom
 
 	// Check if the account is in genesis
 	for _, acc := range genesisState.Accounts {
@@ -178,8 +178,8 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 			// Ensure account contains enough funds of default bond denom
 			if coins.AmountOf(bondDenom).GT(acc.Coins.AmountOf(bondDenom)) {
 				return fmt.Errorf(
-					"Account %v is in genesis, but the only has %v%v available to stake, not %v%v",
-					key, acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
+					"account %v is in genesis, but it only has %v%v available to stake, not %v%v",
+					key.String(), acc.Coins.AmountOf(bondDenom), bondDenom, coins.AmountOf(bondDenom), bondDenom,
 				)
 			}
 			accountIsInGenesis = true
@@ -191,7 +191,7 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 		return nil
 	}
 
-	return fmt.Errorf("Account %s in not in the app_state.accounts array of genesis.json", key)
+	return fmt.Errorf("account %s in not in the app_state.accounts array of genesis.json", key)
 }
 
 func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID string,

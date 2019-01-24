@@ -35,7 +35,6 @@ func handleMsgSubmitProposal(ctx sdk.Context, keeper Keeper, msg MsgSubmitPropos
 	}
 
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionProposalSubmitted,
 		tags.Proposer, []byte(msg.Proposer.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
@@ -58,7 +57,6 @@ func handleMsgDeposit(ctx sdk.Context, keeper Keeper, msg MsgDeposit) sdk.Result
 
 	proposalIDBytes := []byte(fmt.Sprintf("%d", msg.ProposalID))
 	resTags := sdk.NewTags(
-		tags.Action, tags.ActionProposalDeposit,
 		tags.Depositor, []byte(msg.Depositor.String()),
 		tags.ProposalID, proposalIDBytes,
 	)
@@ -80,7 +78,6 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 
 	return sdk.Result{
 		Tags: sdk.NewTags(
-			tags.Action, tags.ActionProposalVote,
 			tags.Voter, []byte(msg.Voter.String()),
 			tags.ProposalID, []byte(fmt.Sprintf("%d", msg.ProposalID)),
 		),
@@ -88,9 +85,9 @@ func handleMsgVote(ctx sdk.Context, keeper Keeper, msg MsgVote) sdk.Result {
 }
 
 // Called every block, process inflation, update validator set
-func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
+func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 	logger := ctx.Logger().With("module", "x/gov")
-	resTags = sdk.NewTags()
+	resTags := sdk.NewTags()
 
 	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
 	for ; inactiveIterator.Valid(); inactiveIterator.Next() {
@@ -98,11 +95,12 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(inactiveIterator.Value(), &proposalID)
 		inactiveProposal := keeper.GetProposal(ctx, proposalID)
+
 		keeper.DeleteProposal(ctx, proposalID)
 		keeper.DeleteDeposits(ctx, proposalID) // delete any associated deposits (burned)
 
-		resTags = resTags.AppendTag(tags.Action, tags.ActionProposalDropped)
-		resTags = resTags.AppendTag(tags.ProposalID, []byte(string(proposalID)))
+		resTags = resTags.AppendTag(tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID)))
+		resTags = resTags.AppendTag(tags.ProposalResult, tags.ActionProposalDropped)
 
 		logger.Info(
 			fmt.Sprintf("proposal %d (%s) didn't meet minimum deposit of %s (had only %s); deleted",
@@ -124,26 +122,30 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) (resTags sdk.Tags) {
 		activeProposal := keeper.GetProposal(ctx, proposalID)
 		passes, tallyResults := tally(ctx, keeper, activeProposal)
 
-		var action []byte
+		var tagValue []byte
 		if passes {
 			keeper.RefundDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusPassed)
-			action = tags.ActionProposalPassed
+			tagValue = tags.ActionProposalPassed
 		} else {
 			keeper.DeleteDeposits(ctx, activeProposal.GetProposalID())
 			activeProposal.SetStatus(StatusRejected)
-			action = tags.ActionProposalRejected
+			tagValue = tags.ActionProposalRejected
 		}
 
-		activeProposal.SetTallyResult(tallyResults)
+		activeProposal.SetFinalTallyResult(tallyResults)
 		keeper.SetProposal(ctx, activeProposal)
 		keeper.RemoveFromActiveProposalQueue(ctx, activeProposal.GetVotingEndTime(), activeProposal.GetProposalID())
 
-		logger.Info(fmt.Sprintf("proposal %d (%s) tallied; passed: %v",
-			activeProposal.GetProposalID(), activeProposal.GetTitle(), passes))
+		logger.Info(
+			fmt.Sprintf(
+				"proposal %d (%s) tallied; passed: %v",
+				activeProposal.GetProposalID(), activeProposal.GetTitle(), passes,
+			),
+		)
 
-		resTags = resTags.AppendTag(tags.Action, action)
-		resTags = resTags.AppendTag(tags.ProposalID, []byte(string(proposalID)))
+		resTags = resTags.AppendTag(tags.ProposalID, []byte(fmt.Sprintf("%d", proposalID)))
+		resTags = resTags.AppendTag(tags.ProposalResult, tagValue)
 	}
 
 	activeIterator.Close()

@@ -7,6 +7,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -85,12 +87,13 @@ func TestMountStores(t *testing.T) {
 // Test that LoadLatestVersion actually does.
 func TestLoadVersion(t *testing.T) {
 	logger := defaultLogger()
+	pruningOpt := SetPruning(store.PruneSyncable)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil)
+	app := NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// make a cap key and mount the store
-	capKey := sdk.NewKVStoreKey("main")
+	capKey := sdk.NewKVStoreKey(MainStoreKey)
 	app.MountStores(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
@@ -116,7 +119,7 @@ func TestLoadVersion(t *testing.T) {
 	commitID2 := sdk.CommitID{2, res.Data}
 
 	// reload with LoadLatestVersion
-	app = NewBaseApp(name, logger, db, nil)
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
 	err = app.LoadLatestVersion(capKey)
 	require.Nil(t, err)
@@ -124,7 +127,7 @@ func TestLoadVersion(t *testing.T) {
 
 	// reload with LoadVersion, see if you can commit the same block and get
 	// the same result
-	app = NewBaseApp(name, logger, db, nil)
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
 	app.MountStores(capKey)
 	err = app.LoadVersion(1, capKey)
 	require.Nil(t, err)
@@ -160,7 +163,7 @@ func testChangeNameHelper(name string) func(*BaseApp) {
 	app := newBaseApp(t.Name())
 
 	// make a cap key and mount the store
-	capKey := sdk.NewKVStoreKey("main")
+	capKey := sdk.NewKVStoreKey(MainStoreKey)
 	app.MountStores(capKey)
 	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
 	require.Nil(t, err)
@@ -217,7 +220,7 @@ func TestInitChainer(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
 	app := NewBaseApp(name, logger, db, nil)
-	capKey := sdk.NewKVStoreKey("main")
+	capKey := sdk.NewKVStoreKey(MainStoreKey)
 	capKey2 := sdk.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
 

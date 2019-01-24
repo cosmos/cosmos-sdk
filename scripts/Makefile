@@ -34,10 +34,10 @@ cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) && git fetch origin && git checkout -q $(3)
 go_install = $(call go_get,$(1),$(2),$(3)) && cd $(GITHUBDIR)$(FS)$(1)$(FS)$(2) && $(GO) install
 
 ###
-# get_tools
+# tools
 ###
-all: get_tools
-get_tools: $(GOPATH)/bin/dep $(GOPATH)/bin/gometalinter $(GOPATH)/bin/statik $(GOPATH)/bin/goimports
+all: tools
+tools: $(GOPATH)/bin/dep $(GOPATH)/bin/gometalinter $(GOPATH)/bin/statik $(GOPATH)/bin/goimports
 
 $(GOPATH)/bin/dep:
 	$(call go_get,golang,dep,22125cfaa6ddc71e145b1535d4b7ee9744fefff2)
@@ -53,5 +53,4 @@ $(GOPATH)/bin/statik:
 $(GOPATH)/bin/goimports:
 	go get golang.org/x/tools/cmd/goimports
 
-.PHONY: all get_tools
-
+.PHONY: all

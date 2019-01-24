@@ -26,8 +26,8 @@ func NewApp3(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	app := bapp.NewBaseApp(app3Name, logger, db, auth.DefaultTxDecoder(cdc))
 
 	// Create a key for accessing the account store.
-	keyAccount := sdk.NewKVStoreKey("acc")
-	keyFees := sdk.NewKVStoreKey("fee") // TODO
+	keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
+	keyFees := sdk.NewKVStoreKey(auth.FeeStoreKey) // TODO
 
 	// Set various mappers/keepers to interact easily with underlying stores
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAccount, auth.ProtoBaseAccount)

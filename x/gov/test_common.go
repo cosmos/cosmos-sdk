@@ -6,54 +6,53 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/params"
-
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // initialize the mock application for this module
-func getMockApp(t *testing.T, numGenAccs int) (*mock.App, Keeper, stake.Keeper, []sdk.AccAddress, []crypto.PubKey, []crypto.PrivKey) {
-	mapp := mock.NewApp()
+func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []auth.Account) (mapp *mock.App, keeper Keeper, sk staking.Keeper, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+	mapp = mock.NewApp()
 
-	stake.RegisterCodec(mapp.Cdc)
+	staking.RegisterCodec(mapp.Cdc)
 	RegisterCodec(mapp.Cdc)
 
-	keyGlobalParams := sdk.NewKVStoreKey("params")
-	tkeyGlobalParams := sdk.NewTransientStoreKey("transient_params")
-	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
-	keyGov := sdk.NewKVStoreKey("gov")
+	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
+	keyGov := sdk.NewKVStoreKey(StoreKey)
 
-	pk := params.NewKeeper(mapp.Cdc, keyGlobalParams, tkeyGlobalParams)
+	pk := mapp.ParamsKeeper
 	ck := bank.NewBaseKeeper(mapp.AccountKeeper)
-	sk := stake.NewKeeper(mapp.Cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
-	keeper := NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
+	sk = staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
 
-	mapp.Router().AddRoute("gov", NewHandler(keeper))
-	mapp.QueryRouter().AddRoute("gov", NewQuerier(keeper))
+	mapp.Router().AddRoute(RouterKey, NewHandler(keeper))
+	mapp.QueryRouter().AddRoute(QuerierRoute, NewQuerier(keeper))
 
 	mapp.SetEndBlocker(getEndBlocker(keeper))
-	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk))
+	mapp.SetInitChainer(getInitChainer(mapp, keeper, sk, genState))
 
-	require.NoError(t, mapp.CompleteSetup(keyStake, tkeyStake, keyGov, keyGlobalParams, tkeyGlobalParams))
+	require.NoError(t, mapp.CompleteSetup(keyStaking, tkeyStaking, keyGov))
 
-	genAccs, addrs, pubKeys, privKeys := mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 42)})
+	if genAccs == nil || len(genAccs) == 0 {
+		genAccs, addrs, pubKeys, privKeys = mock.CreateGenAccounts(numGenAccs, sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)})
+	}
 
 	mock.SetGenesis(mapp, genAccs)
 
 	return mapp, keeper, sk, addrs, pubKeys, privKeys
 }
 
-// gov and stake endblocker
+// gov and staking endblocker
 func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	return func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 		tags := EndBlocker(ctx, keeper)
@@ -63,19 +62,23 @@ func getEndBlocker(keeper Keeper) sdk.EndBlocker {
 	}
 }
 
-// gov and stake initchainer
-func getInitChainer(mapp *mock.App, keeper Keeper, stakeKeeper stake.Keeper) sdk.InitChainer {
+// gov and staking initchainer
+func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper, genState GenesisState) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 
-		stakeGenesis := stake.DefaultGenesisState()
-		stakeGenesis.Pool.LooseTokens = sdk.NewDec(100000)
+		stakingGenesis := staking.DefaultGenesisState()
+		stakingGenesis.Pool.NotBondedTokens = sdk.NewInt(100000)
 
-		validators, err := stake.InitGenesis(ctx, stakeKeeper, stakeGenesis)
+		validators, err := staking.InitGenesis(ctx, stakingKeeper, stakingGenesis)
 		if err != nil {
 			panic(err)
 		}
-		InitGenesis(ctx, keeper, DefaultGenesisState())
+		if genState.IsEmpty() {
+			InitGenesis(ctx, keeper, DefaultGenesisState())
+		} else {
+			InitGenesis(ctx, keeper, genState)
+		}
 		return abci.ResponseInitChain{
 			Validators: validators,
 		}

@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	"github.com/cosmos/cosmos-sdk/x/stake"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -61,7 +61,7 @@ var (
 func MakeTestCodec() *codec.Codec {
 	var cdc = codec.New()
 	bank.RegisterCodec(cdc)
-	stake.RegisterCodec(cdc)
+	staking.RegisterCodec(cdc)
 	auth.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
@@ -72,7 +72,7 @@ func MakeTestCodec() *codec.Codec {
 
 // test input with default values
 func CreateTestInputDefault(t *testing.T, isCheckTx bool, initCoins int64) (
-	sdk.Context, auth.AccountKeeper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
 
 	communityTax := sdk.NewDecWithPrec(2, 2)
 	return CreateTestInputAdvanced(t, isCheckTx, initCoins, communityTax)
@@ -81,22 +81,22 @@ func CreateTestInputDefault(t *testing.T, isCheckTx bool, initCoins int64) (
 // hogpodge of all sorts of input required for testing
 func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	communityTax sdk.Dec) (
-	sdk.Context, auth.AccountKeeper, Keeper, stake.Keeper, DummyFeeCollectionKeeper) {
+	sdk.Context, auth.AccountKeeper, Keeper, staking.Keeper, DummyFeeCollectionKeeper) {
 
-	keyDistr := sdk.NewKVStoreKey("distr")
-	keyStake := sdk.NewKVStoreKey("stake")
-	tkeyStake := sdk.NewTransientStoreKey("transient_stake")
-	keyAcc := sdk.NewKVStoreKey("acc")
-	keyFeeCollection := sdk.NewKVStoreKey("fee")
-	keyParams := sdk.NewKVStoreKey("params")
-	tkeyParams := sdk.NewTransientStoreKey("transient_params")
+	keyDistr := sdk.NewKVStoreKey(types.StoreKey)
+	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
+	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
+	keyAcc := sdk.NewKVStoreKey(auth.StoreKey)
+	keyFeeCollection := sdk.NewKVStoreKey(auth.FeeStoreKey)
+	keyParams := sdk.NewKVStoreKey(params.StoreKey)
+	tkeyParams := sdk.NewTransientStoreKey(params.TStoreKey)
 
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db)
 
 	ms.MountStoreWithDB(keyDistr, sdk.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(tkeyStake, sdk.StoreTypeTransient, nil)
-	ms.MountStoreWithDB(keyStake, sdk.StoreTypeIAVL, db)
+	ms.MountStoreWithDB(tkeyStaking, sdk.StoreTypeTransient, nil)
+	ms.MountStoreWithDB(keyStaking, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyAcc, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyFeeCollection, sdk.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(keyParams, sdk.StoreTypeIAVL, db)
@@ -109,11 +109,11 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	pk := params.NewKeeper(cdc, keyParams, tkeyParams)
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
-	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, auth.ProtoBaseAccount)
+	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 	ck := bank.NewBaseKeeper(accountKeeper)
-	sk := stake.NewKeeper(cdc, keyStake, tkeyStake, ck, pk.Subspace(stake.DefaultParamspace), stake.DefaultCodespace)
-	sk.SetPool(ctx, stake.InitialPool())
-	sk.SetParams(ctx, stake.DefaultParams())
+	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
+	sk.SetPool(ctx, staking.InitialPool())
+	sk.SetParams(ctx, staking.DefaultParams())
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range addrs {
@@ -122,7 +122,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 			{sk.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewDec(initCoins))
+		pool.NotBondedTokens = pool.NotBondedTokens.Add(sdk.NewInt(initCoins))
 		sk.SetPool(ctx, pool)
 	}
 

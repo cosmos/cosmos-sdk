@@ -9,10 +9,7 @@ import (
 const MsgRoute = "distr"
 
 // Verify interface at compile time
-var _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorRewardsAll{}
-var _, _ sdk.Msg = &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorRewardsAll{}
-
-//______________________________________________________________________
+var _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorCommission{}
 
 // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
 type MsgSetWithdrawAddress struct {
@@ -37,11 +34,8 @@ func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check
@@ -54,46 +48,6 @@ func (msg MsgSetWithdrawAddress) ValidateBasic() sdk.Error {
 	}
 	return nil
 }
-
-//______________________________________________________________________
-
-// msg struct for delegation withdraw for all of the delegator's delegations
-type MsgWithdrawDelegatorRewardsAll struct {
-	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
-}
-
-func NewMsgWithdrawDelegatorRewardsAll(delAddr sdk.AccAddress) MsgWithdrawDelegatorRewardsAll {
-	return MsgWithdrawDelegatorRewardsAll{
-		DelegatorAddr: delAddr,
-	}
-}
-
-func (msg MsgWithdrawDelegatorRewardsAll) Route() string { return MsgRoute }
-func (msg MsgWithdrawDelegatorRewardsAll) Type() string  { return "withdraw_delegation_rewards_all" }
-
-// Return address that must sign over msg.GetSignBytes()
-func (msg MsgWithdrawDelegatorRewardsAll) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{sdk.AccAddress(msg.DelegatorAddr)}
-}
-
-// get the bytes for the message signer to sign on
-func (msg MsgWithdrawDelegatorRewardsAll) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
-
-// quick validity check
-func (msg MsgWithdrawDelegatorRewardsAll) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
-		return ErrNilDelegatorAddr(DefaultCodespace)
-	}
-	return nil
-}
-
-//______________________________________________________________________
 
 // msg struct for delegation withdraw from a single validator
 type MsgWithdrawDelegatorReward struct {
@@ -118,11 +72,8 @@ func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
 
 // get the bytes for the message signer to sign on
 func (msg MsgWithdrawDelegatorReward) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check
@@ -136,38 +87,33 @@ func (msg MsgWithdrawDelegatorReward) ValidateBasic() sdk.Error {
 	return nil
 }
 
-//______________________________________________________________________
-
 // msg struct for validator withdraw
-type MsgWithdrawValidatorRewardsAll struct {
+type MsgWithdrawValidatorCommission struct {
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
 }
 
-func NewMsgWithdrawValidatorRewardsAll(valAddr sdk.ValAddress) MsgWithdrawValidatorRewardsAll {
-	return MsgWithdrawValidatorRewardsAll{
+func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) MsgWithdrawValidatorCommission {
+	return MsgWithdrawValidatorCommission{
 		ValidatorAddr: valAddr,
 	}
 }
 
-func (msg MsgWithdrawValidatorRewardsAll) Route() string { return MsgRoute }
-func (msg MsgWithdrawValidatorRewardsAll) Type() string  { return "withdraw_validator_rewards_all" }
+func (msg MsgWithdrawValidatorCommission) Route() string { return MsgRoute }
+func (msg MsgWithdrawValidatorCommission) Type() string  { return "withdraw_validator_rewards_all" }
 
 // Return address that must sign over msg.GetSignBytes()
-func (msg MsgWithdrawValidatorRewardsAll) GetSigners() []sdk.AccAddress {
+func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sdk.AccAddress(msg.ValidatorAddr.Bytes())}
 }
 
 // get the bytes for the message signer to sign on
-func (msg MsgWithdrawValidatorRewardsAll) GetSignBytes() []byte {
-	b, err := MsgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+func (msg MsgWithdrawValidatorCommission) GetSignBytes() []byte {
+	bz := MsgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // quick validity check
-func (msg MsgWithdrawValidatorRewardsAll) ValidateBasic() sdk.Error {
+func (msg MsgWithdrawValidatorCommission) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}

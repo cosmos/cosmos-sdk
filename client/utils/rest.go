@@ -101,30 +101,82 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, txBldr 
 // BaseReq defines a structure that can be embedded in other request structures
 // that all share common "base" fields.
 type BaseReq struct {
-	Name          string `json:"name"`
-	Password      string `json:"password"`
-	ChainID       string `json:"chain_id"`
-	AccountNumber uint64 `json:"account_number"`
-	Sequence      uint64 `json:"sequence"`
-	Gas           string `json:"gas"`
-	GasAdjustment string `json:"gas_adjustment"`
-	GenerateOnly  bool   `json:"generate_only"`
-	Simulate      bool   `json:"simulate"`
+	Name          string       `json:"name"`
+	Password      string       `json:"password"`
+	Memo          string       `json:"memo"`
+	ChainID       string       `json:"chain_id"`
+	AccountNumber uint64       `json:"account_number"`
+	Sequence      uint64       `json:"sequence"`
+	Fees          sdk.Coins    `json:"fees"`
+	GasPrices     sdk.DecCoins `json:"gas_prices"`
+	Gas           string       `json:"gas"`
+	GasAdjustment string       `json:"gas_adjustment"`
+	GenerateOnly  bool         `json:"generate_only"`
+	Simulate      bool         `json:"simulate"`
+}
+
+// NewBaseReq creates a new basic request instance and sanitizes its values
+func NewBaseReq(
+	name, password, memo, chainID string, gas, gasAdjustment string,
+	accNumber, seq uint64, fees sdk.Coins, gasPrices sdk.DecCoins, genOnly, simulate bool,
+) BaseReq {
+
+	return BaseReq{
+		Name:          strings.TrimSpace(name),
+		Password:      password,
+		Memo:          strings.TrimSpace(memo),
+		ChainID:       strings.TrimSpace(chainID),
+		Fees:          fees,
+		GasPrices:     gasPrices,
+		Gas:           strings.TrimSpace(gas),
+		GasAdjustment: strings.TrimSpace(gasAdjustment),
+		AccountNumber: accNumber,
+		Sequence:      seq,
+		GenerateOnly:  genOnly,
+		Simulate:      simulate,
+	}
 }
 
 // Sanitize performs basic sanitization on a BaseReq object.
 func (br BaseReq) Sanitize() BaseReq {
-	return BaseReq{
-		Name:          strings.TrimSpace(br.Name),
-		Password:      strings.TrimSpace(br.Password),
-		ChainID:       strings.TrimSpace(br.ChainID),
-		Gas:           strings.TrimSpace(br.Gas),
-		GasAdjustment: strings.TrimSpace(br.GasAdjustment),
-		AccountNumber: br.AccountNumber,
-		Sequence:      br.Sequence,
-		GenerateOnly:  br.GenerateOnly,
-		Simulate:      br.Simulate,
+	return NewBaseReq(
+		br.Name, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
+		br.AccountNumber, br.Sequence, br.Fees, br.GasPrices, br.GenerateOnly, br.Simulate,
+	)
+}
+
+// ValidateBasic performs basic validation of a BaseReq. If custom validation
+// logic is needed, the implementing request handler should perform those
+// checks manually.
+func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
+	if !br.GenerateOnly && !br.Simulate {
+		switch {
+		case len(br.Password) == 0:
+			WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
+			return false
+
+		case len(br.ChainID) == 0:
+			WriteErrorResponse(w, http.StatusUnauthorized, "chain-id required but not specified")
+			return false
+
+		case !br.Fees.IsZero() && !br.GasPrices.IsZero():
+			// both fees and gas prices were provided
+			WriteErrorResponse(w, http.StatusBadRequest, "cannot provide both fees and gas prices")
+			return false
+
+		case !br.Fees.IsValid() && !br.GasPrices.IsValid():
+			// neither fees or gas prices were provided
+			WriteErrorResponse(w, http.StatusPaymentRequired, "invalid fees or gas prices provided")
+			return false
+		}
 	}
+
+	if len(br.Name) == 0 {
+		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
+		return false
+	}
+
+	return true
 }
 
 /*
@@ -149,32 +201,11 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 
 	err = cdc.UnmarshalJSON(body, req)
 	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to decode JSON payload: %s", err))
 		return err
 	}
 
 	return nil
-}
-
-// ValidateBasic performs basic validation of a BaseReq. If custom validation
-// logic is needed, the implementing request handler should perform those
-// checks manually.
-func (br BaseReq) ValidateBasic(w http.ResponseWriter, cliCtx context.CLIContext) bool {
-	if !cliCtx.GenerateOnly && !cliCtx.Simulate {
-		switch {
-		case len(br.Password) == 0:
-			WriteErrorResponse(w, http.StatusUnauthorized, "password required but not specified")
-			return false
-		case len(br.ChainID) == 0:
-			WriteErrorResponse(w, http.StatusUnauthorized, "chain-id required but not specified")
-			return false
-		}
-	}
-	if len(br.Name) == 0 {
-		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
-		return false
-	}
-	return true
 }
 
 // CompleteAndBroadcastTxREST implements a utility function that facilitates
@@ -185,41 +216,44 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter, cliCtx context.CLIContext
 //
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
-func CompleteAndBroadcastTxREST(w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext, baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
-	simulateGas, gas, err := client.ReadGasFlag(baseReq.Gas)
+func CompleteAndBroadcastTxREST(
+	w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext,
+	baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
+) {
+
+	gasAdjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
+	if !ok {
+		return
+	}
+
+	simulateAndExecute, gas, err := client.ParseGas(baseReq.Gas)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	adjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
-	if !ok {
-		return
-	}
+	txBldr := authtxb.NewTxBuilder(
+		GetTxEncoder(cdc), baseReq.AccountNumber,
+		baseReq.Sequence, gas, gasAdjustment, baseReq.Simulate,
+		baseReq.ChainID, baseReq.Memo, baseReq.Fees, baseReq.GasPrices,
+	)
 
-	txBldr := authtxb.TxBuilder{
-		TxEncoder:     GetTxEncoder(cdc),
-		Gas:           gas,
-		GasAdjustment: adjustment,
-		SimulateGas:   simulateGas,
-		ChainID:       baseReq.ChainID,
-		AccountNumber: baseReq.AccountNumber,
-		Sequence:      baseReq.Sequence,
-	}
+	if baseReq.Simulate || simulateAndExecute {
+		if gasAdjustment < 0 {
+			WriteErrorResponse(w, http.StatusBadRequest, "gas adjustment must be a positive float")
+			return
+		}
 
-	if baseReq.Simulate || txBldr.SimulateGas {
-		newBldr, err := EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
+		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		if baseReq.Simulate {
-			WriteSimulationResponse(w, newBldr.Gas)
+			WriteSimulationResponse(w, txBldr.GetGas())
 			return
 		}
-
-		txBldr = newBldr
 	}
 
 	if baseReq.GenerateOnly {

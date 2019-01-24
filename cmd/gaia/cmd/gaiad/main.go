@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -15,9 +13,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -42,6 +43,7 @@ func main() {
 	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
 	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
 	rootCmd.AddCommand(gaiaInit.AddGenesisAccountCmd(ctx, cdc))
+	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
@@ -55,21 +57,24 @@ func main() {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-	return app.NewGaiaApp(logger, db, traceStore, true,
-		baseapp.SetPruning(viper.GetString("pruning")),
-		baseapp.SetMinimumFees(viper.GetString("minimum_fees")),
+	return app.NewGaiaApp(
+		logger, db, traceStore, true,
+		baseapp.SetPruning(store.NewPruningOptions(viper.GetString("pruning"))),
+		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
 	)
 }
 
 func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
-	gApp := app.NewGaiaApp(logger, db, traceStore, false)
 	if height != -1 {
+		gApp := app.NewGaiaApp(logger, db, traceStore, false)
 		err := gApp.LoadHeight(height)
 		if err != nil {
 			return nil, nil, err
 		}
+		return gApp.ExportAppStateAndValidators(forZeroHeight)
 	}
+	gApp := app.NewGaiaApp(logger, db, traceStore, true)
 	return gApp.ExportAppStateAndValidators(forZeroHeight)
 }

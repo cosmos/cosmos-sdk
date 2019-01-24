@@ -50,26 +50,18 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 		return sdk.ErrInsufficientFee(fmt.Sprintf("invalid fee %s amount provided", tx.Fee.Amount))
 	}
 	if len(stdSigs) == 0 {
-		return sdk.ErrUnauthorized("no signers")
+		return sdk.ErrNoSignatures("no signers")
 	}
 	if len(stdSigs) != len(tx.GetSigners()) {
 		return sdk.ErrUnauthorized("wrong number of signers")
-	}
-	if len(tx.GetMemo()) > maxMemoCharacters {
-		return sdk.ErrMemoTooLarge(
-			fmt.Sprintf(
-				"maximum number of characters is %d but received %d characters",
-				maxMemoCharacters, len(tx.GetMemo()),
-			),
-		)
 	}
 
 	sigCount := 0
 	for i := 0; i < len(stdSigs); i++ {
 		sigCount += countSubKeys(stdSigs[i].PubKey)
-		if sigCount > txSigLimit {
+		if uint64(sigCount) > DefaultTxSigLimit {
 			return sdk.ErrTooManySignatures(
-				fmt.Sprintf("signatures: %d, limit: %d", sigCount, txSigLimit),
+				fmt.Sprintf("signatures: %d, limit: %d", sigCount, DefaultTxSigLimit),
 			)
 		}
 	}
@@ -77,8 +69,9 @@ func (tx StdTx) ValidateBasic() sdk.Error {
 	return nil
 }
 
+// countSubKeys counts the total number of keys for a multi-sig public key.
 func countSubKeys(pub crypto.PubKey) int {
-	v, ok := pub.(*multisig.PubKeyMultisigThreshold)
+	v, ok := pub.(multisig.PubKeyMultisigThreshold)
 	if !ok {
 		return 1
 	}
@@ -133,7 +126,7 @@ type StdFee struct {
 	Gas    uint64    `json:"gas"`
 }
 
-func NewStdFee(gas uint64, amount ...sdk.Coin) StdFee {
+func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
 	return StdFee{
 		Amount: amount,
 		Gas:    gas,

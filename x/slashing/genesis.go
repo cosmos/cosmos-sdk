@@ -1,16 +1,18 @@
 package slashing
 
 import (
+	"fmt"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GenesisState - all slashing state that must be provided at genesis
 type GenesisState struct {
-	Params          Params                          `json:"params"`
-	SigningInfos    map[string]ValidatorSigningInfo `json:"signing_infos"`
-	MissedBlocks    map[string][]MissedBlock        `json:"missed_blocks"`
-	SlashingPeriods []ValidatorSlashingPeriod       `json:"slashing_periods"`
+	Params       Params                          `json:"params"`
+	SigningInfos map[string]ValidatorSigningInfo `json:"signing_infos"`
+	MissedBlocks map[string][]MissedBlock        `json:"missed_blocks"`
 }
 
 // MissedBlock
@@ -22,15 +24,44 @@ type MissedBlock struct {
 // HubDefaultGenesisState - default GenesisState used by Cosmos Hub
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
-		Params:          DefaultParams(),
-		SigningInfos:    make(map[string]ValidatorSigningInfo),
-		MissedBlocks:    make(map[string][]MissedBlock),
-		SlashingPeriods: []ValidatorSlashingPeriod{},
+		Params:       DefaultParams(),
+		SigningInfos: make(map[string]ValidatorSigningInfo),
+		MissedBlocks: make(map[string][]MissedBlock),
 	}
 }
 
-// ValidateGenesis TODO https://github.com/cosmos/cosmos-sdk/issues/3008
+// ValidateGenesis validates the slashing genesis parameters
 func ValidateGenesis(data GenesisState) error {
+	downtime := data.Params.SlashFractionDowntime
+	if downtime.IsNegative() || downtime.GT(sdk.OneDec()) {
+		return fmt.Errorf("Slashing fraction downtime should be less than or equal to one and greater than zero, is %s", downtime.String())
+	}
+
+	dblSign := data.Params.SlashFractionDoubleSign
+	if dblSign.IsNegative() || dblSign.GT(sdk.OneDec()) {
+		return fmt.Errorf("Slashing fraction double sign should be less than or equal to one and greater than zero, is %s", dblSign.String())
+	}
+
+	minSign := data.Params.MinSignedPerWindow
+	if minSign.IsNegative() || minSign.GT(sdk.OneDec()) {
+		return fmt.Errorf("Min signed per window should be less than or equal to one and greater than zero, is %s", minSign.String())
+	}
+
+	maxEvidence := data.Params.MaxEvidenceAge
+	if maxEvidence < 1*time.Minute {
+		return fmt.Errorf("Max evidence age must be at least 1 minute, is %s", maxEvidence.String())
+	}
+
+	downtimeJail := data.Params.DowntimeJailDuration
+	if downtimeJail < 1*time.Minute {
+		return fmt.Errorf("Downtime unblond duration must be at least 1 minute, is %s", downtimeJail.String())
+	}
+
+	signedWindow := data.Params.SignedBlocksWindow
+	if signedWindow < 10 {
+		return fmt.Errorf("Signed blocks window must be at least 10, is %d", signedWindow)
+	}
+
 	return nil
 }
 
@@ -59,10 +90,6 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data GenesisState, sdata types.
 		}
 	}
 
-	for _, slashingPeriod := range data.SlashingPeriods {
-		keeper.addOrUpdateValidatorSlashingPeriod(ctx, slashingPeriod)
-	}
-
 	keeper.paramspace.SetParamSet(ctx, &data.Params)
 }
 
@@ -89,16 +116,9 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) (data GenesisState) {
 		return false
 	})
 
-	slashingPeriods := []ValidatorSlashingPeriod{}
-	keeper.IterateValidatorSlashingPeriods(ctx, func(slashingPeriod ValidatorSlashingPeriod) (stop bool) {
-		slashingPeriods = append(slashingPeriods, slashingPeriod)
-		return false
-	})
-
 	return GenesisState{
-		Params:          params,
-		SigningInfos:    signingInfos,
-		MissedBlocks:    missedBlocks,
-		SlashingPeriods: slashingPeriods,
+		Params:       params,
+		SigningInfos: signingInfos,
+		MissedBlocks: missedBlocks,
 	}
 }

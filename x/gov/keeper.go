@@ -11,8 +11,17 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// Parameter store default namestore
 const (
+	// StoreKey is the store key string for gov
+	StoreKey = "gov"
+
+	// RouterKey is the message route for gov
+	RouterKey = "gov"
+
+	// QuerierRoute is the querier route for gov
+	QuerierRoute = "gov"
+
+	// Parameter store default namestore
 	DefaultParamspace = "gov"
 )
 
@@ -90,14 +99,14 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 		return nil
 	}
 	var proposal Proposal = &TextProposal{
-		ProposalID:   proposalID,
-		Title:        title,
-		Description:  description,
-		ProposalType: proposalType,
-		Status:       StatusDepositPeriod,
-		TallyResult:  EmptyTallyResult(),
-		TotalDeposit: sdk.Coins{},
-		SubmitTime:   ctx.BlockHeader().Time,
+		ProposalID:       proposalID,
+		Title:            title,
+		Description:      description,
+		ProposalType:     proposalType,
+		Status:           StatusDepositPeriod,
+		FinalTallyResult: EmptyTallyResult(),
+		TotalDeposit:     sdk.Coins{},
+		SubmitTime:       ctx.BlockHeader().Time,
 	}
 
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod

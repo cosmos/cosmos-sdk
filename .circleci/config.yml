@@ -1,11 +1,36 @@
 version: 2
 
-defaults: &defaults
+defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.11.1
+    - image: circleci/golang:1.11.4
   environment:
     GOBIN: /tmp/workspace/bin
+
+
+############
+#
+# Configure macos integration tests
+
+macos_config: &macos_defaults
+  macos:
+    xcode: "10.1.0"
+  working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
+  environment:
+    GO_VERSION: "1.11.4"
+
+set_macos_env: &macos_env
+  run:
+    name: Set environment
+    command: |
+      echo 'export PATH=$PATH:$HOME/go/bin' >> $BASH_ENV
+      echo 'export GOPATH=$HOME/project' >> $BASH_ENV
+      echo 'export GOBIN=$GOPATH/bin' >> $BASH_ENV
+      echo 'export PATH=$PATH:$HOME/go/bin:$GOBIN' >> $BASH_ENV
+
+############
+#
+# Configure docs deployment
 
 docs_update: &docs_deploy
   working_directory: ~/repo
@@ -14,33 +39,31 @@ docs_update: &docs_deploy
   environment:
     AWS_REGION: us-east-1
 
-jobs:
+deps: &dependencies
+  run:
+    name: dependencies
+    command: |
+      export PATH="$GOBIN:$PATH"
+      make vendor-deps
 
+jobs:
   setup_dependencies:
-    <<: *defaults
+    <<: *linux_defaults
     steps:
       - run: mkdir -p /tmp/workspace/bin
       - run: mkdir -p /tmp/workspace/profiles
       - checkout
-      - restore_cache:
-          keys:
-            - v1-pkg-cache
       - run:
           name: tools
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_tools
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+            make tools
+      - *dependencies
       - run:
           name: binaries
           command: |
             export PATH="$GOBIN:$PATH"
             make install
-            make install_examples
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -48,23 +71,18 @@ jobs:
             - profiles
 
   lint:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_tools
-            make get_dev_tools
+            make devtools
       - run:
           name: Lint source
           command: |
@@ -72,36 +90,27 @@ jobs:
             make test_lint
 
   integration_tests:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test cli
           command: |
             export PATH="$GOBIN:$PATH"
             make test_cli
-            make test_examples
 
   test_sim_gaia_nondeterminism:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test individual module simulations
           command: |
@@ -109,17 +118,13 @@ jobs:
             make test_sim_gaia_nondeterminism
 
   test_sim_gaia_fast:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test full Gaia simulation
           command: |
@@ -127,17 +132,13 @@ jobs:
             make test_sim_gaia_fast
 
   test_sim_gaia_import_export:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test Gaia import/export simulation
           command: |
@@ -145,53 +146,55 @@ jobs:
             make test_sim_gaia_import_export
 
   test_sim_gaia_simulation_after_import:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test Gaia import/export simulation
           command: |
             export PATH="$GOBIN:$PATH"
             make test_sim_gaia_simulation_after_import
 
-  test_sim_gaia_multi_seed:
-    <<: *defaults
+  test_sim_gaia_multi_seed_long:
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
+      - *dependencies
       - run:
-          name: dependencies
+          name: Test multi-seed Gaia simulation long
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+            scripts/multisim.sh 800 50 TestFullGaiaSimulation
+
+  test_sim_gaia_multi_seed:
+    <<: *linux_defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - *dependencies
       - run:
-          name: Test multi-seed Gaia simulation
+          name: Test multi-seed Gaia simulation short
           command: |
             export PATH="$GOBIN:$PATH"
-            scripts/multisim.sh 25 TestFullGaiaSimulation
+            scripts/multisim.sh 50 10 TestFullGaiaSimulation
 
   test_cover:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 4
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run: mkdir -p /tmp/logs
       - run:
           name: Run tests
@@ -211,17 +214,13 @@ jobs:
           path: /tmp/logs
 
   upload_coverage:
-    <<: *defaults
+    <<: *linux_defaults
     parallelism: 1
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: gather
           command: |
@@ -244,6 +243,7 @@ jobs:
         GOPATH: /home/circleci/.go_workspace/
         GOOS: linux
         GOARCH: amd64
+        GO_VERSION: "1.11.4"
       parallelism: 1
       steps:
         - checkout
@@ -251,17 +251,18 @@ jobs:
             name: run localnet and exit on failure
             command: |
               pushd /tmp
-              wget https://dl.google.com/go/go1.11.linux-amd64.tar.gz
-              sudo tar -xvf go1.11.linux-amd64.tar.gz
+              wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
+              sudo tar -xvf go$GO_VERSION.linux-amd64.tar.gz
               sudo rm -rf /usr/local/go
               sudo mv go /usr/local
               popd
               set -x
-              make get_tools
-              make get_vendor_deps
+              make tools
+              make vendor-deps
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
+
   deploy_docs:
     <<: *docs_deploy
     steps:
@@ -271,10 +272,75 @@ jobs:
           command: |
             chamber exec cosmos-sdk -- start_website_build
 
+  macos_ci:
+    <<: *macos_defaults
+    steps:
+      - *macos_env
+      - run:
+          name: Install go
+          command: |
+            source $BASH_ENV
+            curl -L -O https://dl.google.com/go/go$GO_VERSION.darwin-amd64.tar.gz
+            tar -C $HOME -xzf go$GO_VERSION.darwin-amd64.tar.gz
+            rm go$GO_VERSION.darwin-amd64.tar.gz
+            go version
+      - checkout
+      - run:
+          name: Install SDK
+          command: |
+            source $BASH_ENV
+            make tools
+            make vendor-deps
+            make install
+      - run:
+          name: Integration tests
+          command:
+            source $BASH_ENV
+            make test_cli
+      - run:
+          name: Test full gaia simulation
+          command: |
+            source $BASH_ENV
+            make test_sim_gaia_fast
+
+  docker_image:
+    <<: *linux_defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: |
+          if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            GAIAD_VERSION="stable"
+          elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+            GAIAD_VERSION="develop"
+          else
+            GAIAD_VERSION=`/tmp/workspace/bin/gaiad version`
+          fi
+          docker build -t tendermint/gaia:$GAIAD_VERSION .
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push tendermint/gaia:$GAIAD_VERSION
+
 workflows:
   version: 2
   test-suite:
     jobs:
+      - docker_image:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
+          requires:
+            - setup_dependencies
+      - macos_ci:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
       - deploy_docs:
           filters:
             branches:
@@ -303,6 +369,14 @@ workflows:
       - test_sim_gaia_multi_seed:
           requires:
             - setup_dependencies
+      - test_sim_gaia_multi_seed_long:
+          requires:
+            - setup_dependencies
+          filters:
+            branches:
+              only:
+                - master
+                - develop
       - test_cover:
           requires:
             - setup_dependencies

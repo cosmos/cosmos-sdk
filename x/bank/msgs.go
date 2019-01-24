@@ -1,13 +1,11 @@
 package bank
 
 import (
-	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // name to identify transaction routes
-const MsgRoute = "bank"
+const RouterKey = "bank"
 
 // MsgSend - high level transaction of the coin module
 type MsgSend struct {
@@ -24,7 +22,7 @@ func NewMsgSend(in []Input, out []Output) MsgSend {
 
 // Implements Msg.
 // nolint
-func (msg MsgSend) Route() string { return MsgRoute }
+func (msg MsgSend) Route() string { return RouterKey }
 func (msg MsgSend) Type() string  { return "send" }
 
 // Implements Msg.
@@ -43,24 +41,8 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 
 // Implements Msg.
 func (msg MsgSend) GetSignBytes() []byte {
-	var inputs, outputs []json.RawMessage
-	for _, input := range msg.Inputs {
-		inputs = append(inputs, input.GetSignBytes())
-	}
-	for _, output := range msg.Outputs {
-		outputs = append(outputs, output.GetSignBytes())
-	}
-	b, err := msgCdc.MarshalJSON(struct {
-		Inputs  []json.RawMessage `json:"inputs"`
-		Outputs []json.RawMessage `json:"outputs"`
-	}{
-		Inputs:  inputs,
-		Outputs: outputs,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := msgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // Implements Msg.
@@ -81,15 +63,6 @@ type Input struct {
 	Coins   sdk.Coins      `json:"coins"`
 }
 
-// Return bytes to sign for Input
-func (in Input) GetSignBytes() []byte {
-	bin, err := msgCdc.MarshalJSON(in)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bin)
-}
-
 // ValidateBasic - validate transaction input
 func (in Input) ValidateBasic() sdk.Error {
 	if len(in.Address) == 0 {
@@ -106,11 +79,10 @@ func (in Input) ValidateBasic() sdk.Error {
 
 // NewInput - create a transaction input, used with MsgSend
 func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
-	input := Input{
+	return Input{
 		Address: addr,
 		Coins:   coins,
 	}
-	return input
 }
 
 //----------------------------------------
@@ -120,15 +92,6 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 type Output struct {
 	Address sdk.AccAddress `json:"address"`
 	Coins   sdk.Coins      `json:"coins"`
-}
-
-// Return bytes to sign for Output
-func (out Output) GetSignBytes() []byte {
-	bin, err := msgCdc.MarshalJSON(out)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bin)
 }
 
 // ValidateBasic - validate transaction output
@@ -147,11 +110,10 @@ func (out Output) ValidateBasic() sdk.Error {
 
 // NewOutput - create a transaction output, used with MsgSend
 func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
-	output := Output{
+	return Output{
 		Address: addr,
 		Coins:   coins,
 	}
-	return output
 }
 
 // ----------------------------------------------------------------------------

@@ -18,11 +18,12 @@ tags:
 - name: ICS23
   description: Slashing module APIs
 - name: ICS24
-  description: Fee distribution module APIs
+  description: WIP - Fee distribution module APIs
 - name: version
   description: Query app version
 schemes:
 - https
+host: fabo.interblock.io:1317
 securityDefinitions:
   kms:
     type: basic
@@ -286,20 +287,10 @@ paths:
         schema:
           type: object
           properties:
+            base_req:
+              $ref: "#/definitions/BaseReq"
             tx:
               $ref: "#/definitions/StdTx"
-            name:
-              type: string
-            password:
-              type: string
-            chain_id:
-              type: string
-            account_number:
-              type: string
-              example: "0"
-            sequence:
-              type: string
-              example: "0"
             append_sig:
               type: boolean
               example: true
@@ -620,7 +611,7 @@ paths:
           description: No content about this account address
         500:
           description: Server internel error
-  /stake/delegators/{delegatorAddr}/delegations:
+  /staking/delegators/{delegatorAddr}/delegations:
     parameters:
     - in: path
       name: delegatorAddr
@@ -678,7 +669,7 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/delegations/{validatorAddr}:
+  /staking/delegators/{delegatorAddr}/delegations/{validatorAddr}:
     parameters:
     - in: path
       name: delegatorAddr
@@ -705,7 +696,7 @@ paths:
           description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/unbonding_delegations:
+  /staking/delegators/{delegatorAddr}/unbonding_delegations:
     parameters:
     - in: path
       name: delegatorAddr
@@ -774,7 +765,7 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
+  /staking/delegators/{delegatorAddr}/unbonding_delegations/{validatorAddr}:
     parameters:
     - in: path
       name: delegatorAddr
@@ -803,15 +794,25 @@ paths:
           description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/redelegations:
+  /staking/redelegations:
     parameters:
-    - in: path
-      name: delegatorAddr
+    - in: query
+      name: delegator
       description: Bech32 AccAddress of Delegator
-      required: true
+      required: false
+      type: string
+    - in: query
+      name: validator_from
+      description: Bech32 ValAddress of SrcValidator
+      required: false
+      type: string
+    - in: query
+      name: validator_to
+      description: Bech32 ValAddress of DstValidator
+      required: false
       type: string
     get:
-      summary: Get all redelegations from a delegator
+      summary: Get all redelegations (filter by query params)
       tags:
       - ICS21
       produces:
@@ -823,10 +824,15 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Redelegation"
-        400:
-          description: Invalid delegator address
         500:
           description: Internal Server Error
+  /staking/delegators/{delegatorAddr}/redelegations:
+    parameters:
+    - in: path
+      name: delegatorAddr
+      description: Bech32 AccAddress of Delegator
+      required: true
+      type: string
     post:
       summary: Submit a redelegation
       parameters:
@@ -874,7 +880,7 @@ paths:
           description: Key password is wrong
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/validators:
+  /staking/delegators/{delegatorAddr}/validators:
     parameters:
     - in: path
       name: delegatorAddr
@@ -898,7 +904,7 @@ paths:
           description: Invalid delegator address
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/validators/{validatorAddr}:
+  /staking/delegators/{delegatorAddr}/validators/{validatorAddr}:
     parameters:
     - in: path
       name: delegatorAddr
@@ -925,7 +931,7 @@ paths:
           description: Invalid delegator address or validator address
         500:
           description: Internal Server Error
-  /stake/delegators/{delegatorAddr}/txs:
+  /staking/delegators/{delegatorAddr}/txs:
     parameters:
     - in: path
       name: delegatorAddr
@@ -951,7 +957,7 @@ paths:
           description: Invalid delegator address
         500:
           description: Internal Server Error
-  /stake/validators:
+  /staking/validators:
     get:
       summary: Get all validator candidates
       tags:
@@ -967,7 +973,7 @@ paths:
               $ref: "#/definitions/Validator"
         500:
           description: Internal Server Error
-  /stake/validators/{validatorAddr}:
+  /staking/validators/{validatorAddr}:
     parameters:
     - in: path
       name: validatorAddr
@@ -989,7 +995,7 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
-  /stake/validators/{validatorAddr}/delegations:
+  /staking/validators/{validatorAddr}/delegations:
     parameters:
     - in: path
       name: validatorAddr
@@ -1013,7 +1019,7 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
-  /stake/validators/{validatorAddr}/unbonding_delegations:
+  /staking/validators/{validatorAddr}/unbonding_delegations:
     parameters:
     - in: path
       name: validatorAddr
@@ -1037,31 +1043,7 @@ paths:
           description: Invalid validator address
         500:
           description: Internal Server Error
-  /stake/validators/{validatorAddr}/redelegations:
-    parameters:
-    - in: path
-      name: validatorAddr
-      description: Bech32 OperatorAddress of validator
-      required: true
-      type: string
-    get:
-      summary: Get all outgoing redelegations from a validator
-      tags:
-      - ICS21
-      produces:
-      - application/json
-      responses:
-        200:
-          description: OK
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/Redelegation"
-        400:
-          description: Invalid validator address
-        500:
-          description: Internal Server Error
-  /stake/pool:
+  /staking/pool:
     get:
       summary: Get the current state of the staking pool
       tags:
@@ -1088,7 +1070,7 @@ paths:
                 type: string
         500:
           description: Internal Server Error
-  /stake/parameters:
+  /staking/parameters:
     get:
       summary: Get the current staking parameter values
       tags:
@@ -1314,6 +1296,28 @@ paths:
             $ref: "#/definitions/TextProposal"
         400:
           description: Invalid proposal id
+        500:
+          description: Internal Server Error
+  /gov/proposals/{proposalId}/proposer:
+    get:
+      summary: Query proposer
+      description: Query for the proposer for a proposal
+      produces:
+      - application/json
+      tags:
+      - ICS22
+      parameters:
+      - type: string
+        name: proposalId
+        required: true
+        in: path
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/Proposer"
+        400:
+          description: Invalid proposal ID
         500:
           description: Internal Server Error
   /gov/proposals/{proposalId}/deposits:
@@ -2208,23 +2212,36 @@ definitions:
     properties:
       name:
         type: string
+        example: "my_name"
       password:
         type: string
         example: "12345678"
+      memo:
+        type: string
+        example: "Sent via Cosmos Voyager 🚀"
       chain_id:
         type: string
+        example: "Cosmos-Hub"
       account_number:
         type: string
         example: "0"
       sequence:
         type: string
-        example: "0"
+        example: "1"
       gas:
         type: string
         example: "200000"
       gas_adjustment:
         type: string
         example: "1.2"
+      fees:
+        type: array
+        items:
+          $ref: "#/definitions/Coin"
+      gas_prices:
+        type: array
+        items:
+          $ref: "#/definitions/DecCoin"
       generate_only:
         type: boolean
         example: false
@@ -2258,7 +2275,7 @@ definitions:
         type: string
       proposal_status:
         type: string
-      tally_result:
+      final_tally_result:
          $ref: "#/definitions/TallyResult"
       submit_time:
         type: string
@@ -2267,6 +2284,13 @@ definitions:
         items:
           $ref: "#/definitions/Coin"
       voting_start_time:
+        type: string
+  Proposer:
+    type: object
+    properties:
+      proposal_id:
+        type: integer
+      proposer:
         type: string
   Deposit:
     type: object

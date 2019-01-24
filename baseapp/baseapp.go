@@ -33,6 +33,9 @@ const (
 	runTxModeSimulate runTxMode = iota
 	// Deliver a transaction
 	runTxModeDeliver runTxMode = iota
+
+	// MainStoreKey is the string representation of the main store
+	MainStoreKey = "main"
 )
 
 // BaseApp reflects the ABCI application implementation.
@@ -71,8 +74,9 @@ type BaseApp struct {
 	// TODO move this in the future to baseapp param store on main store.
 	consensusParams *abci.ConsensusParams
 
-	// spam prevention
-	minimumFees sdk.Coins
+	// The minimum gas prices a validator is willing to accept for processing a
+	// transaction. This is mainly used for DoS and spam prevention.
+	minGasPrices sdk.DecCoins
 
 	// flag for sealing
 	sealed bool
@@ -210,14 +214,17 @@ func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
 	return nil
 }
 
-// SetMinimumFees sets the minimum fees.
-func (app *BaseApp) SetMinimumFees(fees sdk.Coins) { app.minimumFees = fees }
+func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
+	app.minGasPrices = gasPrices
+}
 
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).WithMinimumFees(app.minimumFees)
+		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).
+			WithMinGasPrices(app.minGasPrices)
 	}
+
 	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
 }
 
@@ -238,7 +245,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinimumFees(app.minimumFees),
+		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinGasPrices(app.minGasPrices),
 	}
 }
 
@@ -453,8 +460,9 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 	}
 
 	// Cache wrap the commit-multistore for safety.
-	ctx := sdk.NewContext(app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger).
-		WithMinimumFees(app.minimumFees)
+	ctx := sdk.NewContext(
+		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger,
+	).WithMinGasPrices(app.minGasPrices)
 
 	// Passes the rest of the path as an argument to the querier.
 	// For example, in the path "custom/gov/proposal/test", the gov querier gets []string{"proposal", "test"} as the path
@@ -501,6 +509,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	} else {
 		gasMeter = sdk.NewInfiniteGasMeter()
 	}
+
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(gasMeter)
 
 	if app.beginBlocker != nil {
@@ -730,7 +739,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 	defer func() {
 		if mode == runTxModeDeliver {
 			ctx.BlockGasMeter().ConsumeGas(
-				ctx.GasMeter().GasConsumedToLimit(), "block gas meter")
+				ctx.GasMeter().GasConsumedToLimit(),
+				"block gas meter",
+			)
+
 			if ctx.BlockGasMeter().GasConsumed() < startingGas {
 				panic(sdk.ErrorGasOverflow{"tx gas summation"})
 			}
@@ -749,23 +761,29 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 
 		// Cache wrap context before anteHandler call in case it aborts.
 		// This is required for both CheckTx and DeliverTx.
-		// https://github.com/cosmos/cosmos-sdk/issues/2772
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/2772
+		//
 		// NOTE: Alternatively, we could require that anteHandler ensures that
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 
 		newCtx, result, abort := app.anteHandler(anteCtx, tx, (mode == runTxModeSimulate))
+		if !newCtx.IsZero() {
+			// At this point, newCtx.MultiStore() is cache-wrapped, or something else
+			// replaced by the ante handler. We want the original multistore, not one
+			// which was cache-wrapped for the ante handler.
+			//
+			// Also, in the case of the tx aborting, we need to track gas consumed via
+			// the instantiated gas meter in the ante handler, so we update the context
+			// prior to returning.
+			ctx = newCtx.WithMultiStore(ms)
+		}
+
 		if abort {
 			return result
 		}
-		if !newCtx.IsZero() {
-			// At this point, newCtx.MultiStore() is cache wrapped,
-			// or something else replaced by anteHandler.
-			// We want the original ms, not one which was cache-wrapped
-			// for the ante handler.
-			ctx = newCtx.WithMultiStore(ms)
-		}
+
 		msCache.Write()
 		gasWanted = result.GasWanted
 	}

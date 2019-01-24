@@ -45,6 +45,14 @@ func TestGaiaCLIKeysAddMultisig(t *testing.T) {
 	require.NotEqual(t, f.KeysShow("msig3").Address, f.KeysShow("msig4").Address)
 }
 
+func TestGaiaCLIKeysAddRecover(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	f.KeysAddRecover("test-recover", "dentist task convince chimney quality leave banana trade firm crawl eternal easily")
+	require.Equal(t, f.KeyAddress("test-recover").String(), "cosmos1qcfdf69js922qrdr4yaww3ax7gjml6pdds46f4")
+}
+
 func TestGaiaCLIMinimumFees(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)

@@ -3,7 +3,7 @@
 package crypto
 
 import (
-	ledger "github.com/zondax/ledger-cosmos-go"
+	ledger "github.com/zondax/ledger-goclient"
 )
 
 // If ledger support (build tag) has been enabled, which implies a CGO dependency,
@@ -11,7 +11,7 @@ import (
 // device at runtime or returning an error.
 func init() {
 	discoverLedger = func() (LedgerSECP256K1, error) {
-		device, err := ledger.FindLedgerCosmosUserApp()
+		device, err := ledger.FindLedger()
 		if err != nil {
 			return nil, err
 		}

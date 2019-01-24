@@ -2,7 +2,7 @@
 
 BREAKING CHANGES
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
 
 * Gaia CLI  (`gaiacli`)
 
@@ -15,7 +15,7 @@ BREAKING CHANGES
 
 FEATURES
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
 
 * Gaia CLI  (`gaiacli`)
 
@@ -29,7 +29,7 @@ FEATURES
 
 IMPROVEMENTS
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
 
 * Gaia CLI  (`gaiacli`)
 
@@ -42,9 +42,12 @@ IMPROVEMENTS
 
 BUG FIXES
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
 
 * Gaia CLI  (`gaiacli`)
+  * [\#3345](https://github.com/cosmos/cosmos-sdk/issues/3345) Fix regression introduced in
+    [\#2870](https://github.com/cosmos/cosmos-sdk/pull/2870), `keys add` was recovering keys from
+    mnemonic incorrectly.
 
 * Gaia
 

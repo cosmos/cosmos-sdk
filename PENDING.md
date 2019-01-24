@@ -31,6 +31,7 @@ BREAKING CHANGES
   * [\#3249\(https://github.com/cosmos/cosmos-sdk/issues/3249) `tendermint`'s `show-validator` and `show-address` `--json` flags removed in favor of `--output-format=json`.
 
 * SDK
+  * [distribution] \#3359 Always round down when calculating rewards-to-be-withdrawn in F1 fee distribution
   * [staking] \#2513 Validator power type from Dec -> Int
   * [staking] \#3233 key and value now contain duplicate fields to simplify code
   * [\#3064](https://github.com/cosmos/cosmos-sdk/issues/3064) Sanitize `sdk.Coin` denom. Coins denoms are now case insensitive, i.e. 100fooToken equals to 100FOOTOKEN.

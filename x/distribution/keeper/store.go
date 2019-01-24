@@ -175,13 +175,15 @@ func (k Keeper) DeleteAllValidatorHistoricalRewards(ctx sdk.Context) {
 	}
 }
 
-// historical record count (used for testcases)
-func (k Keeper) GetValidatorHistoricalRewardCount(ctx sdk.Context) (count uint64) {
+// historical reference count (used for testcases)
+func (k Keeper) GetValidatorHistoricalReferenceCount(ctx sdk.Context) (count uint64) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, ValidatorHistoricalRewardsPrefix)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
-		count++
+		var rewards types.ValidatorHistoricalRewards
+		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &rewards)
+		count += uint64(rewards.ReferenceCount)
 	}
 	return
 }

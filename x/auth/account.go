@@ -347,7 +347,8 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 	}
 }
 
-// ToBaseVestingAccount returns a copy of a BaseVestingAccount.
+// ToBaseVestingAccount converts a vesting account to a BaseVestingAccount. This
+// can be used to retrieve common fields that all vesting accounts share.
 func (bva BaseVestingAccount) ToBaseVestingAccount() BaseVestingAccount {
 	return BaseVestingAccount{
 		OriginalVesting:  bva.OriginalVesting,

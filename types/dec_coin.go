@@ -64,7 +64,7 @@ func (coin DecCoin) Plus(coinB DecCoin) DecCoin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("coin denom different: %v %v\n", coin.Denom, coinB.Denom))
 	}
-	return NewDecCoinFromDec(coin.Denom, coin.Amount.Add(coinB.Amount))
+	return DecCoin{coin.Denom, coin.Amount.Add(coinB.Amount)}
 }
 
 // Subtracts amounts of two coins with same denom
@@ -72,14 +72,14 @@ func (coin DecCoin) Minus(coinB DecCoin) DecCoin {
 	if coin.Denom != coinB.Denom {
 		panic(fmt.Sprintf("coin denom different: %v %v\n", coin.Denom, coinB.Denom))
 	}
-	return NewDecCoinFromDec(coin.Denom, coin.Amount.Sub(coinB.Amount))
+	return DecCoin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 }
 
 // return the decimal coins with trunctated decimals, and return the change
 func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 	truncated := coin.Amount.TruncateInt()
 	change := coin.Amount.Sub(NewDecFromInt(truncated))
-	return NewCoin(coin.Denom, truncated), NewDecCoinFromDec(coin.Denom, change)
+	return NewCoin(coin.Denom, truncated), DecCoin{coin.Denom, change}
 }
 
 // IsPositive returns true if coin amount is positive.

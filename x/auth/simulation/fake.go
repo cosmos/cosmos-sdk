@@ -52,8 +52,7 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 			return action, nil, nil
 		}
 
-		err = stored.SetCoins(newCoins)
-		if err != nil {
+		if err := stored.SetCoins(newCoins); err != nil {
 			panic(err)
 		}
 

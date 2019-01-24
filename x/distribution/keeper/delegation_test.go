@@ -30,13 +30,13 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	del := sk.Delegation(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1)
 
 	// historical count should be 2 (once for validator init, once for delegation init)
-	require.Equal(t, uint64(2), k.GetValidatorHistoricalRewardCount(ctx))
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// end period
 	endingPeriod := k.incrementValidatorPeriod(ctx, val)
 
-	// historical count should be 3 (since we ended the period, and haven't yet decremented a reference)
-	require.Equal(t, uint64(3), k.GetValidatorHistoricalRewardCount(ctx))
+	// historical count should be 2 still
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// calculate delegation rewards
 	rewards := k.calculateDelegationRewards(ctx, val, del, endingPeriod)
@@ -283,13 +283,13 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
 	// historical count should be 2 (initial + latest for delegation)
-	require.Equal(t, uint64(2), k.GetValidatorHistoricalRewardCount(ctx))
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// withdraw rewards
 	require.Nil(t, k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr1), valOpAddr1))
 
 	// historical count should still be 2 (added one record, cleared one)
-	require.Equal(t, uint64(2), k.GetValidatorHistoricalRewardCount(ctx))
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// assert correct balance
 	require.Equal(t, sdk.Coins{{staking.DefaultBondDenom, sdk.NewInt(balance - bond + (initial / 2))}}, ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins())
@@ -460,14 +460,14 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
 	// historical count should be 2 (validator init, delegation init)
-	require.Equal(t, uint64(2), k.GetValidatorHistoricalRewardCount(ctx))
+	require.Equal(t, uint64(2), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// second delegation
 	msg2 := staking.NewMsgDelegate(sdk.AccAddress(valOpAddr2), valOpAddr1, sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)))
 	require.True(t, sh(ctx, msg2).IsOK())
 
 	// historical count should be 3 (second delegation init)
-	require.Equal(t, uint64(3), k.GetValidatorHistoricalRewardCount(ctx))
+	require.Equal(t, uint64(3), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// fetch updated validator
 	val = sk.Validator(ctx, valOpAddr1)
@@ -486,7 +486,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	k.WithdrawDelegationRewards(ctx, sdk.AccAddress(valOpAddr2), valOpAddr1)
 
 	// historical count should be 3 (validator init + two delegations)
-	require.Equal(t, uint64(3), k.GetValidatorHistoricalRewardCount(ctx))
+	require.Equal(t, uint64(3), k.GetValidatorHistoricalReferenceCount(ctx))
 
 	// validator withdraws commission
 	k.WithdrawValidatorCommission(ctx, valOpAddr1)

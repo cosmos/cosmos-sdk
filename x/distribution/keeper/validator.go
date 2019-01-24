@@ -45,6 +45,9 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 	// fetch historical rewards for last period
 	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1).CumulativeRewardRatio
 
+	// decrement reference count
+	k.decrementReferenceCount(ctx, val.GetOperator(), rewards.Period-1)
+
 	// set new historical rewards with reference count of 1
 	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(historical.Plus(current), 1))
 
@@ -57,8 +60,8 @@ func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uin
 // increment the reference count for a historical rewards value
 func (k Keeper) incrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress, period uint64) {
 	historical := k.GetValidatorHistoricalRewards(ctx, valAddr, period)
-	if historical.ReferenceCount > 1 {
-		panic("reference count should never exceed 1")
+	if historical.ReferenceCount > 2 {
+		panic("reference count should never exceed 2")
 	}
 	historical.ReferenceCount++
 	k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
@@ -92,6 +95,8 @@ func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAdd
 		val := k.stakingKeeper.Validator(ctx, valAddr)
 		// increment current period
 		endedPeriod = k.incrementValidatorPeriod(ctx, val)
+		// increment reference count on period we need to track
+		k.incrementReferenceCount(ctx, valAddr, endedPeriod)
 	}
 	currentMultiplicand := sdk.OneDec().Sub(currentFraction)
 	newMultiplicand := sdk.OneDec().Sub(fraction)

@@ -85,12 +85,12 @@ func ReferenceCountInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invar
 			return false
 		})
 
-		// one record per validator (zeroeth period), one record per delegation (previous period), one record per slash (previous period)
+		// one record per validator (last tracked period), one record per delegation (previous period), one record per slash (previous period)
 		expected := valCount + uint64(len(dels)) + slashCount
+		count := k.GetValidatorHistoricalReferenceCount(ctx)
 
-		count := k.GetValidatorHistoricalRewardCount(ctx)
 		if count != expected {
-			return fmt.Errorf("unexpected number of historical rewards records: expected %v, got %v", expected, count)
+			return fmt.Errorf("unexpected number of historical rewards records: expected %v (%v vals + %v dels + %v slashes), got %v", expected, valCount, len(dels), slashCount, count)
 		}
 
 		return nil

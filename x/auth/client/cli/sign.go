@@ -163,7 +163,7 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 // its expected signers. In addition, if offline has not been supplied, the
 // signature is verified over the transaction sign bytes.
 func printAndValidateSigs(
-	cliCtx *context.CLIContext, chainID string, stdTx auth.StdTx, offline bool,
+	cliCtx context.CLIContext, chainID string, stdTx auth.StdTx, offline bool,
 ) bool {
 
 	fmt.Println("Signers:")

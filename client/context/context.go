@@ -49,7 +49,7 @@ type CLIContext struct {
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the
 // command line using Viper.
-func NewCLIContext(cdc *codec.Codec) *CLIContext {
+func NewCLIContext(cdc *codec.Codec) CLIContext {
 	var rpc rpcclient.Client
 
 	nodeURI := viper.GetString(client.FlagNode)
@@ -64,7 +64,7 @@ func NewCLIContext(cdc *codec.Codec) *CLIContext {
 		verifier = createVerifier()
 	}
 
-	return &CLIContext{
+	return CLIContext{
 		Client:        rpc,
 		Codec:         cdc,
 		Output:        os.Stdout,
@@ -86,73 +86,76 @@ func NewCLIContext(cdc *codec.Codec) *CLIContext {
 	}
 }
 
-func NewCLIContextTx(cdc *codec.Codec) *CLIContext {
-	ctx := NewCLIContext(cdc).SetAccountDecoder()
-	ctx.PrepareTxBldrOffline()
+func NewCLIContextTx(cdc *codec.Codec) CLIContext {
+	ctx := NewCLIContext(cdc).WithAccountDecoder().WithTxBldrOffline()
 	return ctx
 }
 
-// PrepareTxBldrOffline sets the transaction builder for the context w/o
+// WithTxBldrAddressOffline sets the transaction builder for the context w/o
 // setting the sequence or account numbers
-func (ctx *CLIContext) PrepareTxBldrOffline() {
+func (ctx CLIContext) WithTxBldrOffline() CLIContext {
 	ctx.TxBldr = authtxb.NewTxBuilderFromCLI().WithTxEncoder(GetTxEncoder(ctx.Codec))
+	return ctx
 }
 
-// PrepareTxBldrWithAddress looks up the acc and seq numbs for an addr, also
+// WithTxBldrAddress looks up the acc and seq numbs for an addr, also
 // ensuring it exists
-func (ctx *CLIContext) PrepareTxBldrWithAddress(addr sdk.AccAddress) error {
+func (ctx CLIContext) WithTxBldrAddress(addr sdk.AccAddress) (CLIContext, error) {
 	if err := ctx.EnsureAccountExists(addr); err != nil {
-		return err
+		return ctx, err
 	}
 
 	if ctx.TxBldr.GetAccountNumber() == 0 || ctx.TxBldr.GetSequence() == 0 {
 		accNum, seq, err := ctx.FetchAccAndSeqNums(addr)
 		if err != nil {
-			return err
+			return ctx, err
 		}
 		ctx.TxBldr = ctx.TxBldr.WithAccountNumber(accNum).WithSequence(seq)
 	}
-	return nil
+	return ctx, nil
 }
 
-// SetAccountDecoder returns a copy of the context with an updated account
+// WithMemo adds a memo to the TxBldr on the CLIContext
+func (ctx CLIContext) WithMemo(s string) CLIContext {
+	ctx.TxBldr = ctx.TxBldr.WithMemo(s)
+	return ctx
+}
+
+// WithAccountDecoder returns a copy of the context with an updated account
 // decoder.
-func (ctx *CLIContext) SetAccountDecoder() *CLIContext {
+func (ctx CLIContext) WithAccountDecoder() CLIContext {
 	ctx.AccDecoder = ctx.GetAccountDecoder()
 	return ctx
 }
 
 // GetAccountDecoder gets the account decoder for auth.DefaultAccount.
-func (ctx *CLIContext) GetAccountDecoder() auth.AccountDecoder {
+func (ctx CLIContext) GetAccountDecoder() auth.AccountDecoder {
 	return func(accBytes []byte) (acct auth.Account, err error) {
-		err = ctx.Codec.UnmarshalBinaryBare(accBytes, &acct)
-		if err != nil {
-			// TODO: remove this, and return the error,
-			// but first figure out where this is used
-			panic(err)
+		if err = ctx.Codec.UnmarshalBinaryBare(accBytes, &acct); err != nil {
+			return
 		}
-		return acct, err
+		return
 	}
 }
 
 // GetFromAddress returns the from address from the context's name.
-func (ctx *CLIContext) FromAddr() sdk.AccAddress {
+func (ctx CLIContext) FromAddr() sdk.AccAddress {
 	return ctx.fromAddress
 }
 
 // GetFromAddress returns the from address from the context's name
 // in validator format
-func (ctx *CLIContext) FromValAddr() sdk.ValAddress {
+func (ctx CLIContext) FromValAddr() sdk.ValAddress {
 	return sdk.ValAddress(ctx.fromAddress.Bytes())
 }
 
 // GetFromName returns the key name for the current context.
-func (ctx *CLIContext) FromName() string {
+func (ctx CLIContext) FromName() string {
 	return ctx.fromName
 }
 
-// SetNode returns a copy of the context with an updated node URI.
-func (ctx *CLIContext) SetNode(nodeURI string) *CLIContext {
+// WithNode returns a copy of the context with an updated node URI.
+func (ctx CLIContext) WithNode(nodeURI string) CLIContext {
 	ctx.NodeURI = nodeURI
 	ctx.Client = rpcclient.NewHTTP(nodeURI, "/websocket")
 	return ctx
@@ -160,7 +163,7 @@ func (ctx *CLIContext) SetNode(nodeURI string) *CLIContext {
 
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
-func (ctx *CLIContext) GetNode() (rpcclient.Client, error) {
+func (ctx CLIContext) GetNode() (rpcclient.Client, error) {
 	if ctx.Client == nil {
 		return nil, errors.New("no RPC client defined")
 	}
@@ -169,7 +172,7 @@ func (ctx *CLIContext) GetNode() (rpcclient.Client, error) {
 }
 
 // PrintOutput prints output while respecting output and indent flags
-func (ctx *CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
+func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 	var out []byte
 
 	switch ctx.OutputFormat {
@@ -193,7 +196,7 @@ func (ctx *CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 
 // MessagesOutput respects flags while either generating a transaction
 // for later signing, or signing and broadcasting those messages in a transaction
-func (ctx *CLIContext) MessagesOutput(msgs []sdk.Msg) error {
+func (ctx CLIContext) MessagesOutput(msgs []sdk.Msg) error {
 	for _, msg := range msgs {
 		if err := msg.ValidateBasic(); err != nil {
 			return err
@@ -209,7 +212,7 @@ func (ctx *CLIContext) MessagesOutput(msgs []sdk.Msg) error {
 
 // MessageOutput respects flags while either generating a transaction
 // for later signing, or signing and broadcasting those messages in a transaction
-func (ctx *CLIContext) MessageOutput(msg sdk.Msg) error {
+func (ctx CLIContext) MessageOutput(msg sdk.Msg) error {
 	return ctx.MessagesOutput([]sdk.Msg{msg})
 }
 

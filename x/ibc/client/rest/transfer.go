@@ -14,7 +14,7 @@ import (
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
-func RegisterRoutes(cliCtx *context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
+func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, kb keys.Keybase) {
 	r.HandleFunc("/ibc/{destchain}/{address}/send", TransferRequestHandlerFn(cdc, kb, cliCtx)).Methods("POST")
 }
 
@@ -25,7 +25,7 @@ type transferReq struct {
 
 // TransferRequestHandler - http request handler to transfer coins to a address
 // on a different chain via IBC.
-func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx *context.CLIContext) http.HandlerFunc {
+func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		destChainID := vars["destchain"]

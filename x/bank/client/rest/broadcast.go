@@ -15,7 +15,7 @@ type broadcastBody struct {
 }
 
 // BroadcastTxRequestHandlerFn returns the broadcast tx REST handler
-func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx *context.CLIContext) http.HandlerFunc {
+func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m broadcastBody
 		if ok := unmarshalBodyOrReturnBadRequest(cliCtx, w, r, &m); !ok {
@@ -38,7 +38,7 @@ func BroadcastTxRequestHandlerFn(cdc *codec.Codec, cliCtx *context.CLIContext) h
 	}
 }
 
-func unmarshalBodyOrReturnBadRequest(cliCtx *context.CLIContext, w http.ResponseWriter, r *http.Request, m *broadcastBody) bool {
+func unmarshalBodyOrReturnBadRequest(cliCtx context.CLIContext, w http.ResponseWriter, r *http.Request, m *broadcastBody) bool {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

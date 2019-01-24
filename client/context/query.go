@@ -46,7 +46,7 @@ func (ctx CLIContext) QuerySubspace(subspace []byte, storeName string) (res []sd
 // error is returned if the query or decoding fails.
 func (ctx CLIContext) FetchAccount(address []byte) (auth.Account, error) {
 	if ctx.AccDecoder == nil {
-		ctx.SetAccountDecoder()
+		ctx.WithAccountDecoder()
 	}
 
 	res, err := ctx.QueryStore(auth.AddressStoreKey(address), ctx.AccountStore)

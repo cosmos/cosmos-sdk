@@ -28,7 +28,7 @@ func contains(stringSlice []string, txType string) bool {
 }
 
 // queries staking txs
-func queryTxs(node rpcclient.Client, cliCtx *context.CLIContext, cdc *codec.Codec, tag string, delegatorAddr string) ([]tx.Info, error) {
+func queryTxs(node rpcclient.Client, cliCtx context.CLIContext, cdc *codec.Codec, tag string, delegatorAddr string) ([]tx.Info, error) {
 	page := 0
 	perPage := 100
 	prove := !cliCtx.TrustNode
@@ -50,7 +50,7 @@ func queryTxs(node rpcclient.Client, cliCtx *context.CLIContext, cdc *codec.Code
 	return tx.FormatTxResults(cdc, res.Txs)
 }
 
-func queryRedelegations(cliCtx *context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
+func queryRedelegations(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
@@ -94,7 +94,7 @@ func queryRedelegations(cliCtx *context.CLIContext, cdc *codec.Codec, endpoint s
 	}
 }
 
-func queryBonds(cliCtx *context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
+func queryBonds(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
@@ -124,7 +124,7 @@ func queryBonds(cliCtx *context.CLIContext, cdc *codec.Codec, endpoint string) h
 	}
 }
 
-func queryDelegator(cliCtx *context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
+func queryDelegator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32delegator := vars["delegatorAddr"]
@@ -152,7 +152,7 @@ func queryDelegator(cliCtx *context.CLIContext, cdc *codec.Codec, endpoint strin
 	}
 }
 
-func queryValidator(cliCtx *context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
+func queryValidator(cliCtx context.CLIContext, cdc *codec.Codec, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		bech32validatorAddr := vars["validatorAddr"]

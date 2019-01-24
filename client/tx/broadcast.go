@@ -27,7 +27,7 @@ type BroadcastBody struct {
 
 // BroadcastTxRequest REST Handler
 // nolint: gocyclo
-func BroadcastTxRequest(cliCtx *context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
+func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m BroadcastBody
 		body, err := ioutil.ReadAll(r.Body)

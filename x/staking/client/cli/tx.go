@@ -21,7 +21,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContextTx(cdc)
 
-			msg, err := BuildCreateValidatorMsg(cliCtx)
+			cliCtx, msg, err := BuildCreateValidatorMsg(cliCtx)
 			if err != nil {
 				return err
 			}
@@ -193,17 +193,17 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 }
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
-func BuildCreateValidatorMsg(cliCtx *context.CLIContext) (sdk.Msg, error) {
+func BuildCreateValidatorMsg(cliCtx context.CLIContext) (context.CLIContext, sdk.Msg, error) {
 	amounstStr := viper.GetString(FlagAmount)
 	amount, err := sdk.ParseCoin(amounstStr)
 	if err != nil {
-		return nil, err
+		return cliCtx, nil, err
 	}
 
 	pkStr := viper.GetString(FlagPubKey)
 	pk, err := sdk.GetConsPubKeyBech32(pkStr)
 	if err != nil {
-		return nil, err
+		return cliCtx, nil, err
 	}
 
 	description := staking.NewDescription(
@@ -219,7 +219,7 @@ func BuildCreateValidatorMsg(cliCtx *context.CLIContext) (sdk.Msg, error) {
 	maxChangeRateStr := viper.GetString(FlagCommissionMaxChangeRate)
 	commissionMsg, err := buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr)
 	if err != nil {
-		return nil, err
+		return cliCtx, nil, err
 	}
 
 	delAddr := viper.GetString(FlagAddressDelegator)
@@ -228,7 +228,7 @@ func BuildCreateValidatorMsg(cliCtx *context.CLIContext) (sdk.Msg, error) {
 	if delAddr != "" {
 		delAddr, err := sdk.AccAddressFromBech32(delAddr)
 		if err != nil {
-			return nil, err
+			return cliCtx, nil, err
 		}
 
 		msg = staking.NewMsgCreateValidatorOnBehalfOf(
@@ -244,8 +244,8 @@ func BuildCreateValidatorMsg(cliCtx *context.CLIContext) (sdk.Msg, error) {
 		ip := viper.GetString(FlagIP)
 		nodeID := viper.GetString(FlagNodeID)
 		if nodeID != "" && ip != "" {
-			cliCtx.TxBldr = cliCtx.TxBldr.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
+			cliCtx = cliCtx.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
 		}
 	}
-	return msg, nil
+	return cliCtx, msg, nil
 }

@@ -109,7 +109,7 @@ following delegation and commission default parameters:
 
 			// Run gaiad tx create-validator
 			cliCtx := context.NewCLIContextTx(cdc)
-			msg, err := cli.BuildCreateValidatorMsg(cliCtx)
+			cliCtx, msg, err := cli.BuildCreateValidatorMsg(cliCtx)
 			if err != nil {
 				return err
 			}

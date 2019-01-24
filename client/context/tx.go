@@ -22,14 +22,14 @@ import (
 // supplied messages. Finally, it broadcasts the signed transaction to a node.
 //
 // NOTE: Also see CompleteAndBroadcastTxREST.
-func (ctx *CLIContext) CompleteAndBroadcastTxCli(msgs []sdk.Msg) error {
-	err := ctx.PrepareTxBldrWithAddress(ctx.FromAddr())
+func (ctx CLIContext) CompleteAndBroadcastTxCli(msgs []sdk.Msg) error {
+	ctx, err := ctx.WithTxBldrAddress(ctx.FromAddr())
 	if err != nil {
 		return err
 	}
 
 	if ctx.TxBldr.GetSimulateAndExecute() || ctx.Simulate {
-		err = ctx.EnrichCtxWithGas(ctx.FromName(), msgs)
+		ctx, err = ctx.EnrichCtxWithGas(ctx.FromName(), msgs)
 		if err != nil {
 			return err
 		}
@@ -57,13 +57,13 @@ func (ctx *CLIContext) CompleteAndBroadcastTxCli(msgs []sdk.Msg) error {
 
 // EnrichCtxWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func (ctx *CLIContext) EnrichCtxWithGas(name string, msgs []sdk.Msg) error {
+func (ctx CLIContext) EnrichCtxWithGas(name string, msgs []sdk.Msg) (CLIContext, error) {
 	_, adjusted, err := ctx.simulateMsgs(name, msgs)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 	ctx.TxBldr = ctx.TxBldr.WithGas(adjusted)
-	return nil
+	return ctx, nil
 }
 
 // CalculateGas simulates the execution of a transaction and returns
@@ -88,7 +88,7 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to ctx.Ouput.
 // Don't perform online validation or lookups if offline is true.
-func (ctx *CLIContext) PrintUnsignedStdTx(w io.Writer, msgs []sdk.Msg, offline bool) (err error) {
+func (ctx CLIContext) PrintUnsignedStdTx(w io.Writer, msgs []sdk.Msg, offline bool) (err error) {
 
 	var stdTx auth.StdTx
 
@@ -112,7 +112,7 @@ func (ctx *CLIContext) PrintUnsignedStdTx(w io.Writer, msgs []sdk.Msg, offline b
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If appendSig
 // is false, it replaces the signatures already attached with the new signature.
 // Don't perform online validation or lookups if offline is true.
-func (ctx *CLIContext) SignStdTx(name string, stdTx auth.StdTx, appendSig bool, offline bool) (auth.StdTx, error) {
+func (ctx CLIContext) SignStdTx(name string, stdTx auth.StdTx, appendSig bool, offline bool) (auth.StdTx, error) {
 	var signedStdTx auth.StdTx
 
 	keybase, err := keys.GetKeyBase()
@@ -133,7 +133,7 @@ func (ctx *CLIContext) SignStdTx(name string, stdTx auth.StdTx, appendSig bool, 
 	}
 
 	if !offline {
-		err = ctx.PrepareTxBldrWithAddress(addr)
+		ctx, err = ctx.WithTxBldrAddress(addr)
 		if err != nil {
 			return signedStdTx, err
 		}
@@ -150,7 +150,7 @@ func (ctx *CLIContext) SignStdTx(name string, stdTx auth.StdTx, appendSig bool, 
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
-func (ctx *CLIContext) SignStdTxWithSignerAddress(addr sdk.AccAddress,
+func (ctx CLIContext) SignStdTxWithSignerAddress(addr sdk.AccAddress,
 	name string, stdTx auth.StdTx, offline bool) (signedStdTx auth.StdTx, err error) {
 
 	// check whether the address is a signer
@@ -159,7 +159,7 @@ func (ctx *CLIContext) SignStdTxWithSignerAddress(addr sdk.AccAddress,
 	}
 
 	if !offline {
-		err = ctx.PrepareTxBldrWithAddress(addr)
+		ctx, err = ctx.WithTxBldrAddress(addr)
 		if err != nil {
 			return signedStdTx, err
 		}
@@ -185,7 +185,7 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 
 // nolint
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func (ctx *CLIContext) simulateMsgs(name string, msgs []sdk.Msg) (uint64, uint64, error) {
+func (ctx CLIContext) simulateMsgs(name string, msgs []sdk.Msg) (uint64, uint64, error) {
 	txBytes, err := ctx.TxBldr.BuildWithPubKey(name, msgs)
 	if err != nil {
 		return 0, 0, err
@@ -196,19 +196,19 @@ func (ctx *CLIContext) simulateMsgs(name string, msgs []sdk.Msg) (uint64, uint64
 
 // buildUnsignedStdTx builds a StdTx as per the parameters passed in the
 // contexts. Gas is automatically estimated if gas wanted is set to 0.
-func (ctx *CLIContext) buildUnsignedStdTx(msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
-	err = ctx.PrepareTxBldrWithAddress(ctx.FromAddr())
+func (ctx CLIContext) buildUnsignedStdTx(msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
+	ctx, err = ctx.WithTxBldrAddress(ctx.FromAddr())
 	if err != nil {
 		return
 	}
 	return ctx.buildUnsignedStdTxOffline(msgs)
 }
 
-func (ctx *CLIContext) buildUnsignedStdTxOffline(msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
+func (ctx CLIContext) buildUnsignedStdTxOffline(msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	if ctx.TxBldr.GetSimulateAndExecute() {
 		var name = ctx.FromName()
 
-		err = ctx.EnrichCtxWithGas(name, msgs)
+		ctx, err = ctx.EnrichCtxWithGas(name, msgs)
 		if err != nil {
 			return
 		}

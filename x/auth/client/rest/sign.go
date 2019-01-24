@@ -21,7 +21,7 @@ type SignBody struct {
 
 // nolint: unparam
 // sign tx REST handler
-func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx *context.CLIContext) http.HandlerFunc {
+func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m SignBody
 

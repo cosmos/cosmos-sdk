@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
-func registerQueryRoutes(cliCtx *context.CLIContext, r *mux.Router, cdc *codec.Codec) {
+func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
 	r.HandleFunc(
 		"/slashing/validators/{validatorPubKey}/signing_info",
 		signingInfoHandlerFn(cliCtx, slashing.StoreKey, cdc),
@@ -27,7 +27,7 @@ func registerQueryRoutes(cliCtx *context.CLIContext, r *mux.Router, cdc *codec.C
 
 // http request handler to query signing info
 // nolint: unparam
-func signingInfoHandlerFn(cliCtx *context.CLIContext, storeName string, cdc *codec.Codec) http.HandlerFunc {
+func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *codec.Codec) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -62,7 +62,7 @@ func signingInfoHandlerFn(cliCtx *context.CLIContext, storeName string, cdc *cod
 	}
 }
 
-func queryParamsHandlerFn(cdc *codec.Codec, cliCtx *context.CLIContext) http.HandlerFunc {
+func queryParamsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		route := fmt.Sprintf("custom/%s/parameters", slashing.QuerierRoute)
 

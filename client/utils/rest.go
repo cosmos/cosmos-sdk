@@ -217,7 +217,7 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 // NOTE: Also see CompleteAndBroadcastTxCli.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
 func CompleteAndBroadcastTxREST(
-	w http.ResponseWriter, r *http.Request, cliCtx *context.CLIContext,
+	w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext,
 	baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
 ) {
 
@@ -244,7 +244,7 @@ func CompleteAndBroadcastTxREST(
 			return
 		}
 
-		if err = cliCtx.EnrichCtxWithGas(baseReq.Name, msgs); err != nil {
+		if cliCtx, err = cliCtx.EnrichCtxWithGas(baseReq.Name, msgs); err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}

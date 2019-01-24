@@ -22,6 +22,7 @@ FEATURES
 * Gaia
 
 * SDK
+  * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
 
 * Tendermint
 

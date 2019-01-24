@@ -28,6 +28,7 @@ const (
 var (
 	KeyUnbondingTime = []byte("UnbondingTime")
 	KeyMaxValidators = []byte("MaxValidators")
+	KeyMaxEntries    = []byte("KeyMaxEntries")
 	KeyBondDenom     = []byte("BondDenom")
 )
 
@@ -37,7 +38,19 @@ var _ params.ParamSet = (*Params)(nil)
 type Params struct {
 	UnbondingTime time.Duration `json:"unbonding_time"` // time duration of unbonding
 	MaxValidators uint16        `json:"max_validators"` // maximum number of validators
+	MaxEntries    uint16        `json:"max_entries"`    // max entries for either unbonding delegation or redelegation (per pair/trio)
 	BondDenom     string        `json:"bond_denom"`     // bondable coin denomination
+}
+
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries uint16,
+	bondDenom string) Params {
+
+	return Params{
+		UnbondingTime: unbondingTime,
+		MaxValidators: maxValidators,
+		MaxEntries:    maxEntries,
+		BondDenom:     bondDenom,
+	}
 }
 
 // Implements params.ParamSet
@@ -45,6 +58,7 @@ func (p *Params) KeyValuePairs() params.KeyValuePairs {
 	return params.KeyValuePairs{
 		{KeyUnbondingTime, &p.UnbondingTime},
 		{KeyMaxValidators, &p.MaxValidators},
+		{KeyMaxEntries, &p.MaxEntries},
 		{KeyBondDenom, &p.BondDenom},
 	}
 }
@@ -58,11 +72,7 @@ func (p Params) Equal(p2 Params) bool {
 
 // DefaultParams returns a default set of parameters.
 func DefaultParams() Params {
-	return Params{
-		UnbondingTime: defaultUnbondingTime,
-		MaxValidators: 100,
-		BondDenom:     DefaultBondDenom,
-	}
+	return NewParams(defaultUnbondingTime, 100, 7, DefaultBondDenom)
 }
 
 // String returns a human readable string representation of the parameters.
@@ -70,8 +80,9 @@ func (p Params) String() string {
 	return fmt.Sprintf(`Params:
   Unbonding Time: %s)
   Max Validators: %d)
+  Max Entries: %d)
   Bonded Coin Denomination: %s`, p.UnbondingTime,
-		p.MaxValidators, p.BondDenom)
+		p.MaxValidators, p.MaxEntries, p.BondDenom)
 }
 
 // unmarshal the current staking params value from store key or panic

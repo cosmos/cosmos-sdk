@@ -28,6 +28,7 @@ and defines overall functioning of the staking module.
 type Params struct {
     UnbondingTime time.Duration // time duration of unbonding
     MaxValidators uint16        // maximum number of validators
+    MaxEntries    uint16        // max entries for either unbonding delegation or redelegation (per pair/trio)
     BondDenom     string        // bondable coin denomination
 }
 ```

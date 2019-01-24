@@ -261,7 +261,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 
 	// Enable auto gas
 	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=auto")
-	require.NotEmpty(t, stderr)
+	require.Empty(t, stderr)
 	require.True(t, success)
 	cdc := app.MakeCodec()
 	sendResp := struct {

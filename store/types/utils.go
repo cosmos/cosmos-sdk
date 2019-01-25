@@ -86,13 +86,3 @@ func InclusiveEndBytes(inclusiveBytes []byte) (exclusiveBytes []byte) {
 	exclusiveBytes = append(inclusiveBytes, byte(0x00))
 	return exclusiveBytes
 }
-
-//----------------------------------------
-func Cp(bz []byte) (ret []byte) {
-	if bz == nil {
-		return nil
-	}
-	ret = make([]byte, len(bz))
-	copy(ret, bz)
-	return ret
-}

@@ -235,7 +235,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		subspace := req.Data
 		res.Key = subspace
 
-		iterator := types.KVStorePrefixIterator(st, subspace)
+		iterator := stypes.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
 			KVs = append(KVs, types.KVPair{Key: iterator.Key(), Value: iterator.Value()})
 		}
@@ -290,8 +290,8 @@ var _ types.Iterator = (*iavlIterator)(nil)
 func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
 	iter := &iavlIterator{
 		tree:      tree,
-		start:     stypes.Cp(start),
-		end:       stypes.Cp(end),
+		start:     types.Cp(start),
+		end:       types.Cp(end),
 		ascending: ascending,
 		iterCh:    make(chan cmn.KVPair, 0), // Set capacity > 0?
 		quitCh:    make(chan struct{}),

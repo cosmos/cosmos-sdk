@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type S struct {
+type TestStruct struct {
 	I uint64
 	B bool
 }
@@ -35,20 +35,20 @@ func TestList(t *testing.T) {
 	store := ctx.KVStore(key)
 	lm := NewList(cdc, store)
 
-	val := S{1, true}
-	var res S
+	val := TestStruct{1, true}
+	var res TestStruct
 
 	lm.Push(val)
 	require.Equal(t, uint64(1), lm.Len())
 	lm.Get(uint64(0), &res)
 	require.Equal(t, val, res)
 
-	val = S{2, false}
+	val = TestStruct{2, false}
 	lm.Set(uint64(0), val)
 	lm.Get(uint64(0), &res)
 	require.Equal(t, val, res)
 
-	val = S{100, false}
+	val = TestStruct{100, false}
 	lm.Push(val)
 	require.Equal(t, uint64(2), lm.Len())
 	lm.Get(uint64(1), &res)
@@ -58,7 +58,7 @@ func TestList(t *testing.T) {
 	require.Equal(t, uint64(2), lm.Len())
 
 	lm.Iterate(&res, func(index uint64) (brk bool) {
-		var temp S
+		var temp TestStruct
 		lm.Get(index, &temp)
 		require.Equal(t, temp, res)
 
@@ -67,12 +67,12 @@ func TestList(t *testing.T) {
 	})
 
 	lm.Iterate(&res, func(index uint64) (brk bool) {
-		lm.Set(index, S{res.I + 1, !res.B})
+		lm.Set(index, TestStruct{res.I + 1, !res.B})
 		return
 	})
 
 	lm.Get(uint64(0), &res)
-	require.Equal(t, S{3, true}, res)
+	require.Equal(t, TestStruct{3, true}, res)
 }
 
 func TestListRandom(t *testing.T) {

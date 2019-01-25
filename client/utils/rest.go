@@ -232,8 +232,7 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 
 // CompleteAndBroadcastTxREST implements a utility function that facilitates
 // sending a series of messages in a signed tx. In addition, it will handle
-// tx gas simulation and estimation. Note, it is expected that the account
-// exists in state and a CLIContext has the appropriate fields set.
+// tx gas simulation and estimation.
 //
 // NOTE: Also see CompleteAndBroadcastTxCLI.
 func CompleteAndBroadcastTxREST(
@@ -252,11 +251,25 @@ func CompleteAndBroadcastTxREST(
 		return
 	}
 
+	// derive the from account address and name from the Keybase
+	fromAddress, fromName, err := context.GetFromFields(baseReq.From)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
 	txBldr := authtxb.NewTxBuilder(
 		GetTxEncoder(cdc), baseReq.AccountNumber,
 		baseReq.Sequence, gas, gasAdj, baseReq.Simulate,
 		baseReq.ChainID, baseReq.Memo, baseReq.Fees, baseReq.GasPrices,
 	)
+
+	txBldr, err = prepareTxBuilder(txBldr, cliCtx)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	if baseReq.Simulate || simAndExec {
 		if gasAdj < 0 {

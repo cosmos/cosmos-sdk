@@ -78,10 +78,10 @@ func DefaultParams() Params {
 // String returns a human readable string representation of the parameters.
 func (p Params) String() string {
 	return fmt.Sprintf(`Params:
-  Unbonding Time: %s)
-  Max Validators: %d)
-  Max Entries: %d)
-  Bonded Coin Denomination: %s`, p.UnbondingTime,
+  Unbonding Time:    %s
+  Max Validators:    %d
+  Max Entries:       %d
+  Bonded Coin Denom: %s`, p.UnbondingTime,
 		p.MaxValidators, p.MaxEntries, p.BondDenom)
 }
 

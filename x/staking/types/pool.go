@@ -71,10 +71,10 @@ func (p Pool) bondedTokensToNotBonded(bondedTokens sdk.Int) Pool {
 // String returns a human readable string representation of a pool.
 func (p Pool) String() string {
 	return fmt.Sprintf(`Pool:
-  Loose Tokens: %s
+  Loose Tokens:  %s
   Bonded Tokens: %s
-  Token Supply: %s
-  Bonded Ratio: %v`, p.NotBondedTokens,
+  Token Supply:  %s
+  Bonded Ratio:  %v`, p.NotBondedTokens,
 		p.BondedTokens, p.TokenSupply(),
 		p.BondedRatio())
 }

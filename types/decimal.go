@@ -17,11 +17,11 @@ type Dec struct {
 
 // number of decimal places
 const (
-	Precision = 10
+	Precision = 18
 
 	// bytes required to represent the above precision
-	// ceil(log2(9999999999))
-	DecimalPrecisionBits = 34
+	// Ceiling[Log2[999 999 999 999 999 999]]
+	DecimalPrecisionBits = 60
 )
 
 var (
@@ -142,12 +142,14 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	strs := strings.Split(str, ".")
 	lenDecs := 0
 	combinedStr := strs[0]
-	if len(strs) == 2 {
+
+	if len(strs) == 2 { // has a decimal place
 		lenDecs = len(strs[1])
 		if lenDecs == 0 || len(combinedStr) == 0 {
 			return d, ErrUnknownRequest("bad decimal length")
 		}
 		combinedStr = combinedStr + strs[1]
+
 	} else if len(strs) > 2 {
 		return d, ErrUnknownRequest("too many periods to be a decimal string")
 	}
@@ -162,7 +164,7 @@ func NewDecFromStr(str string) (d Dec, err Error) {
 	zeros := fmt.Sprintf(`%0`+strconv.Itoa(zerosToAdd)+`s`, "")
 	combinedStr = combinedStr + zeros
 
-	combined, ok := new(big.Int).SetString(combinedStr, 10)
+	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10
 	if !ok {
 		return d, ErrUnknownRequest(fmt.Sprintf("bad string to integer conversion, combinedStr: %v", combinedStr))
 	}
@@ -226,6 +228,17 @@ func (d Dec) Mul(d2 Dec) Dec {
 	return Dec{chopped}
 }
 
+// multiplication truncate
+func (d Dec) MulTruncate(d2 Dec) Dec {
+	mul := new(big.Int).Mul(d.Int, d2.Int)
+	chopped := chopPrecisionAndTruncate(mul)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{chopped}
+}
+
 // multiplication
 func (d Dec) MulInt(i Int) Dec {
 	mul := new(big.Int).Mul(d.Int, i.i)
@@ -245,6 +258,22 @@ func (d Dec) Quo(d2 Dec) Dec {
 
 	quo := new(big.Int).Quo(mul, d2.Int)
 	chopped := chopPrecisionAndRound(quo)
+
+	if chopped.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{chopped}
+}
+
+// quotient truncate
+func (d Dec) QuoTruncate(d2 Dec) Dec {
+
+	// multiply precision twice
+	mul := new(big.Int).Mul(d.Int, precisionReuse)
+	mul.Mul(mul, precisionReuse)
+
+	quo := new(big.Int).Quo(mul, d2.Int)
+	chopped := chopPrecisionAndTruncate(quo)
 
 	if chopped.BitLen() > 255+DecimalPrecisionBits {
 		panic("Int overflow")
@@ -276,36 +305,48 @@ func (d Dec) String() string {
 	if d.IsNegative() {
 		d = d.Neg()
 	}
-	bz, err := d.Int.MarshalText()
+
+	bzInt, err := d.Int.MarshalText()
 	if err != nil {
 		return ""
 	}
-	var bzWDec []byte
-	inputSize := len(bz)
+	inputSize := len(bzInt)
+
+	var bzStr []byte
+
 	// TODO: Remove trailing zeros
 	// case 1, purely decimal
-	if inputSize <= 10 {
-		bzWDec = make([]byte, 12)
+	if inputSize <= Precision {
+
+		bzStr = make([]byte, Precision+2)
+
 		// 0. prefix
-		bzWDec[0] = byte('0')
-		bzWDec[1] = byte('.')
+		bzStr[0] = byte('0')
+		bzStr[1] = byte('.')
+
 		// set relevant digits to 0
-		for i := 0; i < 10-inputSize; i++ {
-			bzWDec[i+2] = byte('0')
+		for i := 0; i < Precision-inputSize; i++ {
+			bzStr[i+2] = byte('0')
 		}
-		// set last few digits
-		copy(bzWDec[2+(10-inputSize):], bz)
+
+		// set final digits
+		copy(bzStr[2+(Precision-inputSize):], bzInt)
+
 	} else {
+
 		// inputSize + 1 to account for the decimal point that is being added
-		bzWDec = make([]byte, inputSize+1)
-		copy(bzWDec, bz[:inputSize-10])
-		bzWDec[inputSize-10] = byte('.')
-		copy(bzWDec[inputSize-9:], bz[inputSize-10:])
+		bzStr = make([]byte, inputSize+1)
+		decPointPlace := inputSize - Precision
+
+		copy(bzStr, bzInt[:decPointPlace])                   // pre-decimal digits
+		bzStr[decPointPlace] = byte('.')                     // decimal point
+		copy(bzStr[decPointPlace+1:], bzInt[decPointPlace:]) // post-decimal digits
 	}
+
 	if isNeg {
-		return "-" + string(bzWDec)
+		return "-" + string(bzStr)
 	}
-	return string(bzWDec)
+	return string(bzStr)
 }
 
 //     ____
@@ -333,7 +374,7 @@ func chopPrecisionAndRound(d *big.Int) *big.Int {
 		return d
 	}
 
-	// get the trucated quotient and remainder
+	// get the truncated quotient and remainder
 	quo, rem := d, big.NewInt(0)
 	quo, rem = quo.QuoRem(d, precisionReuse, rem)
 
@@ -403,6 +444,26 @@ func (d Dec) TruncateInt() Int {
 // TruncateDec truncates the decimals from the number and returns a Dec
 func (d Dec) TruncateDec() Dec {
 	return NewDecFromBigInt(chopPrecisionAndTruncateNonMutative(d.Int))
+}
+
+// Ceil returns the smallest interger value (as a decimal) that is greater than
+// or equal to the given decimal.
+func (d Dec) Ceil() Dec {
+	tmp := new(big.Int).Set(d.Int)
+
+	quo, rem := tmp, big.NewInt(0)
+	quo, rem = quo.QuoRem(tmp, precisionReuse, rem)
+
+	// no need to round with a zero remainder regardless of sign
+	if rem.Cmp(zeroInt) == 0 {
+		return NewDecFromBigInt(quo)
+	}
+
+	if rem.Sign() == -1 {
+		return NewDecFromBigInt(quo)
+	}
+
+	return NewDecFromBigInt(quo.Add(quo, oneInt))
 }
 
 //___________________________________________________________________________________

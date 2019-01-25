@@ -12,7 +12,17 @@ Must specify these options: --chain-id  when --trust-node is false
 you must choose whether you wish to verify lite client proofs. If you trust the node which you are querying, you can simply pass `--trust-node=true` - otherwise you'll need to specify `--chain-id`.
 :::
 
-`gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets. Here is a list of useful `gaiacli` commands, including usage examples.
+`gaiacli` is the command line interface to manage accounts and transactions on Cosmos testnets.
+Its configuration file resides in `$HOME/.gaiacli/config/config.toml` and can be edited either
+by hand or via the `gaiacli config` command:
+
+```bash
+gaiacli config chain-id gaia-9004
+```
+
+For more information on the command usage, refer to its help screen: `gaiacli config --help`.
+
+Here is a list of useful `gaiacli` commands, including usage examples.
 
 ### Keys
 
@@ -87,15 +97,63 @@ Note that this is the Tendermint signing key, _not_ the operator key you will us
 We strongly recommend _NOT_ using the same passphrase for multiple keys. The Tendermint team and the Interchain Foundation will not be responsible for the loss of funds.
 :::
 
-#### Multisig public keys
+#### Generate multisig public keys
 
 You can generate and print a multisig public key by typing:
 
 ```bash
-gaiacli show --multisig-threshold K name1 name2 name3 [...]
+gaiacli keys add --multisig=name1,name2,name3[...] --multisig-threshold=K new_key_name
 ```
 
-`K` is the minimum weight, e.g. minimum number of private keys that must have signed the transactions that carry the generated public key.
+`K` is the minimum number of private keys that must have signed the
+transactions that carry the public key's address as signer.
+
+The `--multisig` flag must contain the name of public keys that will be combined into a
+public key that will be generated and stored as `new_key_name` in the local database.
+All names supplied through `--multisig` must already exist in the local database. Unless
+the flag `--nosort` is set, the order in which the keys are supplied on the command line
+does not matter, i.e. the following commands generate two identical keys:
+
+```bash
+gaiacli keys add --multisig=foo,bar,baz --multisig-threshold=2 multisig_address
+gaiacli keys add --multisig=baz,foo,bar --multisig-threshold=2 multisig_address
+```
+
+Multisig addresses can also be generated on-the-fly and printed through the which command:
+
+```bash
+gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
+```
+
+For more information regarding how to generate, sign and broadcast transactions with a
+multi signature account see [Multisig Transactions](#multisig-transactions).
+
+### Fees & Gas
+
+Each transaction may either supply fees or gas prices, but not both. Most users
+will typically provide fees as this is the cost you will end up incurring for
+the transaction being included in the ledger.
+
+Validator's have a minimum gas price (multi-denom) configuration and they use
+this value when when determining if they should include the transaction in a block
+during `CheckTx`, where `gasPrices >= minGasPrices`. Note, your transaction must
+supply fees that match all the denominations the validator requires.
+
+__Note__: With such a mechanism in place, validators may start to prioritize
+txs by `gasPrice` in the mempool, so providing higher fees or gas prices may yield
+higher tx priority.
+
+e.g.
+
+```bash
+gaiacli tx send ... --fees=100photino
+```
+
+or
+
+```bash
+gaiacli tx send ... --gas-prices=0.000001stake
+```
 
 ### Account
 
@@ -134,7 +192,7 @@ The `--amount` flag accepts the format `--amount=<value|coin_name>`.
 
 ::: tip Note
 You may want to cap the maximum gas that can be consumed by the transaction via the `--gas` flag.
-If you pass `--gas=simulate`, the gas limit will be automatically estimated.
+If you pass `--gas=auto`, the gas supply will be automatically estimated before executing the transaction.
 Gas estimate might be inaccurate as state changes could occur in between the end of the simulation and the actual execution of a transaction, thus an adjustment is applied on top of the original estimate in order to ensure the transaction is broadcasted successfully. The adjustment can be controlled via the `--gas-adjustment` flag, whose default value is 1.0.
 :::
 
@@ -182,7 +240,7 @@ gaiacli tx sign \
   unsignedSendTx.json > signedSendTx.json
 ```
 
-You can validate the transaction's signagures by typing the following:
+You can validate the transaction's signatures by typing the following:
 
 ```bash
 gaiacli tx sign --validate-signatures signedSendTx.json
@@ -214,6 +272,11 @@ And for using multiple `tags`:
 gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
 ```
 
+The pagination is supported as well via `page` and `limit`:
+```bash
+gaiacli query txs --tags='<tag>:<value>' --page=1 --limit=20
+```
+
 ::: tip Note
 
 The action tag always equals the message type returned by the `Type()` function of the relevant message.
@@ -221,7 +284,7 @@ The action tag always equals the message type returned by the `Type()` function 
 You can find a list of available `tags` on each of the SDK modules:
 
 - [Common tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/types/tags.go#L57-L63)
-- [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/stake/tags/tags.go#L8-L24)
+- [Staking tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/staking/tags/tags.go#L8-L24)
 - [Governance tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/gov/tags/tags.go#L8-L22)
 - [Slashing tags](https://github.com/cosmos/cosmos-sdk/blob/d1e76221d8e28824bb4791cb4ad8662d2ae9051e/x/slashing/handler.go#L52)
 - [Distribution tags](https://github.com/cosmos/cosmos-sdk/blob/develop/x/distribution/tags/tags.go#L8-L17)
@@ -277,13 +340,13 @@ On the upcoming mainnet, you can delegate `atom` to a validator. These [delegato
 You can query the list of all validators of a specific chain:
 
 ```bash
-gaiacli query stake validators
+gaiacli query staking validators
 ```
 
 If you want to get the information of a single validator you can check it with:
 
 ```bash
-gaiacli query stake validator <account_cosmosval>
+gaiacli query staking validator <account_cosmosval>
 ```
 
 #### Bond Tokens
@@ -291,7 +354,7 @@ gaiacli query stake validator <account_cosmosval>
 On the testnet, we delegate `steak` instead of `atom`. Here's how you can bond tokens to a testnet validator (_i.e._ delegate):
 
 ```bash
-gaiacli tx stake delegate \
+gaiacli tx staking delegate \
   --amount=10steak \
   --validator=<validator> \
   --from=<key_name> \
@@ -317,15 +380,13 @@ Don't use more `steak` thank you have! You can always get more by using the [Fau
 Once submitted a delegation to a validator, you can see it's information by using the following command:
 
 ```bash
-gaiacli query stake delegation \
-	--address-delegator=<account_cosmos> \
-	--validator=<account_cosmosval>
+gaiacli query staking delegation <delegator_addr> <validator_addr>
 ```
 
 Or if you want to check all your current delegations with disctinct validators:
 
 ```bash
-gaiacli query stake delegations <account_cosmos>
+gaiacli query staking delegations <delegator_addr>
 ```
 
 You can also get previous delegation(s) status by adding the `--height` flag.
@@ -335,7 +396,7 @@ You can also get previous delegation(s) status by adding the `--height` flag.
 If for any reason the validator misbehaves, or you just want to unbond a certain amount of tokens, use this following command. You can unbond a specific `shares-amount` (eg:`12.1`\) or a `shares-fraction` (eg:`0.25`) with the corresponding flags.
 
 ```bash
-gaiacli tx stake unbond \
+gaiacli tx staking unbond \
   --validator=<account_cosmosval> \
   --shares-fraction=0.5 \
   --from=<key_name> \
@@ -349,21 +410,19 @@ The unbonding will be automatically completed when the unbonding period has pass
 Once you begin an unbonding-delegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query stake unbonding-delegation \
-	--address-delegator=<account_cosmos> \
-	--validator=<account_cosmosval> \
+gaiacli query staking unbonding-delegation <delegator_addr> <validator_addr>
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:
 
 ```bash
-gaiacli query stake unbonding-delegations <account_cosmos>
+gaiacli query staking unbonding-delegations <account_cosmos>
 ```
 
 Additionally, as you can get all the unbonding-delegations from a particular validator:
 
 ```bash
-  gaiacli query stake unbonding-delegations-from <account_cosmosval>
+gaiacli query staking unbonding-delegations-from <account_cosmosval>
 ```
 
 To get previous unbonding-delegation(s) status on past blocks, try adding the `--height` flag.
@@ -373,7 +432,7 @@ To get previous unbonding-delegation(s) status on past blocks, try adding the `-
 A redelegation is a type delegation that allows you to bond illiquid tokens from one validator to another:
 
 ```bash
-gaiacli tx stake redelegate \
+gaiacli tx staking redelegate \
   --addr-validator-source=<account_cosmosval> \
   --addr-validator-dest=<account_cosmosval> \
   --shares-fraction=50 \
@@ -390,22 +449,19 @@ The redelegation will be automatically completed when the unbonding period has p
 Once you begin an redelegation, you can see it's information by using the following command:
 
 ```bash
-gaiacli query stake redelegation \
-	--address-delegator=<account_cosmos> \
-	--addr-validator-source=<account_cosmosval> \
-	--addr-validator-dest=<account_cosmosval> \
+gaiacli query staking redelegation <delegator_addr> <src_val_addr> <dst_val_addr>
 ```
 
 Or if you want to check all your current unbonding-delegations with disctinct validators:
 
 ```bash
-gaiacli query stake redelegations <account_cosmos>
+gaiacli query staking redelegations <account_cosmos>
 ```
 
 Additionally, as you can get all the outgoing redelegations from a particular validator:
 
 ```bash
-  gaiacli query stake redelegations-from <account_cosmosval>
+  gaiacli query staking redelegations-from <account_cosmosval>
 ```
 
 To get previous redelegation(s) status on past blocks, try adding the `--height` flag.
@@ -415,7 +471,7 @@ To get previous redelegation(s) status on past blocks, try adding the `--height`
 Parameters define high level settings for staking. You can get the current values by using:
 
 ```bash
-gaiacli query stake parameters
+gaiacli query staking params
 ```
 
 With the above command you will get the values for:
@@ -431,14 +487,14 @@ All these values will be subject to updates though a `governance` process by `Pa
 A staking `Pool` defines the dynamic parameters of the current state. You can query them with the following command:
 
 ```bash
-gaiacli query stake pool
+gaiacli query staking pool
 ```
 
 With the `pool` command you will get the values for:
 
-- Loose and bonded tokens
+- Not-bonded and bonded tokens
 - Token supply
-- Current anual inflation and the block in which the last inflation was processed
+- Current annual inflation and the block in which the last inflation was processed
 - Last recorded bonded shares
 
 ##### Query Delegations To Validator
@@ -497,6 +553,12 @@ gaiacli query gov proposals
 ```
 
 You can also query proposals filtered by `voter` or `depositor` by using the corresponding flags.
+
+To query for the proposer of a given governance proposal:
+
+```bash
+gaiacli query gov proposer <proposal_id>
+```
 
 #### Increase deposit
 
@@ -561,7 +623,173 @@ gaiacli query gov tally <proposal_id>
 To check the current governance parameters run:
 
 ```bash
+gaiacli query gov params
+```
+
+To query subsets of the governance parameters run:
+
+```bash
 gaiacli query gov param voting
 gaiacli query gov param tallying
 gaiacli query gov param deposit
 ```
+
+### Fee Distribution
+
+#### Query distribution parameters
+
+To check the current distribution parameters, run:
+
+```bash
+gaiacli query distr params
+```
+
+#### Query outstanding rewards
+
+To check the current outstanding (un-withdrawn) rewards, run:
+
+```bash
+gaiacli query distr outstanding-rewards
+```
+
+#### Query validator commission
+
+To check the current outstanding commission for a validator, run:
+
+```bash
+gaiacli query distr commission <validator_address>
+```
+
+#### Query validator slashes
+
+To check historical slashes for a validator, run:
+
+```bash
+gaiacli query distr slashes <validator_address> <start_height> <end_height>
+```
+
+#### Query delegator rewards
+
+To check current rewards for a delegation (were they to be withdrawn), run:
+
+```bash
+gaiacli query distr rewards <delegator_address> <validator_address>
+```
+
+### Multisig transactions
+
+Multisig transactions require signatures of multiple private keys. Thus, generating and signing
+a transaction from a multisig account involve cooperation among the parties involved. A multisig
+transaction can be initiated by any of the key holders, and at least one of them would need to
+import other parties' public keys into their local database and generate a multisig public key
+in order to finalize and broadcast the transaction.
+
+For example, given a multisig key comprising the keys `p1`, `p2`, and `p3`, each of which is held
+by a distinct party, the user holding `p1` would require to import both `p2` and `p3` in order to
+generate the multisig account public key:
+
+```
+gaiacli keys add \
+  --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4 \
+  p2
+
+gaiacli keys add \
+  --pubkey=cosmospub1addwnpepqgj04jpm9wrdml5qnss9kjxkmxzywuklnkj0g3a3f8l5wx9z4ennz84ym5t \
+  p3
+
+gaiacli keys add \
+  --multisig-threshold=2
+  --multisig=p1,p2,p3
+  p1p2p3
+```
+
+A new multisig public key `p1p2p3` has been stored, and its address will be
+used as signer of multisig transactions:
+
+```bash
+gaiacli keys show --address p1p2p3
+```
+
+The first step to create a multisig transaction is to initiate it on behalf
+of the multisig address created above:
+
+```bash
+gaiacli tx send \
+  --from=<multisig_address> \
+  --to=cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned \
+  --amount=10stake \
+  --generate-only > unsignedTx.json
+```
+
+The file `unsignedTx.json` contains the unsigned transaction encoded in JSON.
+`p1` can now sign the transaction with its own private key:
+
+```bash
+gaiacli tx sign \
+  --multisig=<multisig_address> \
+  --name=p1 \
+  --output-document=p1signature.json \
+  unsignedTx.json
+```
+
+Once the signature is generated, `p1` transmits both `unsignedTx.json` and
+`p1signature.json` to `p2` or `p3`, which in turn will generate their
+respective signature:
+
+```bash
+gaiacli tx sign \
+  --multisig=<multisig_address> \
+  --name=p2 \
+  --output-document=p2signature.json \
+  unsignedTx.json
+```
+
+`p1p2p3` is a 2-of-3 multisig key, therefore one additional signature
+is sufficient. Any the key holders can now generate the multisig
+transaction by combining the required signature files:
+
+```bash
+gaiacli tx multisign \
+  unsignedTx.json \
+  p1p2p3 \
+  p1signature.json p2signature.json > signedTx.json
+```
+
+The transaction can now be sent to the node:
+
+```bash
+gaiacli tx broadcast signedTx.json
+```
+
+## Shells completion scripts
+
+Completion scripts for popular UNIX shell interpreters such as `Bash` and `Zsh`
+can be generated through the `completion` command, which is available for both
+`gaiad` and `gaiacli`.
+
+If you want to generate `Bash` completion scripts run the following command:
+
+```bash
+gaiad completion > gaiad_completion
+gaiacli completion > gaiacli_completion
+```
+
+If you want to generate `Zsh` completion scripts run the following command:
+
+```bash
+gaiad completion --zsh > gaiad_completion
+gaiacli completion --zsh > gaiacli_completion
+```
+
+::: tip Note
+On most UNIX systems, such scripts may be loaded in `.bashrc` or
+`.bash_profile` to enable Bash autocompletion:
+
+```bash
+echo '. gaiad_completion' >> ~/.bashrc
+echo '. gaiacli_completion' >> ~/.bashrc
+```
+
+Refer to the user's manual of your interpreter provided by your
+operating system for information on how to enable shell autocompletion.
+:::

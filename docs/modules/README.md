@@ -6,9 +6,9 @@ See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/bank).
 
 # Stake
 
-The `x/stake` module is for Cosmos Delegated-Proof-of-Stake.
+The `x/staking` module is for Cosmos Delegated-Proof-of-Stake.
 
-See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/stake).
+See the [API docs](https://godoc.org/github.com/cosmos/cosmos-sdk/x/staking).
 
 See the
 [specification](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/staking)

@@ -1,2 +1,0 @@
-- reserve pool
-- AiB vesting

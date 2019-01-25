@@ -2,170 +2,110 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-// check whether a validator has distribution info
-func (k Keeper) HasValidatorDistInfo(ctx sdk.Context,
-	operatorAddr sdk.ValAddress) (exists bool) {
-	store := ctx.KVStore(k.storeKey)
-	return store.Has(GetValidatorDistInfoKey(operatorAddr))
+// initialize rewards for a new validator
+func (k Keeper) initializeValidator(ctx sdk.Context, val sdk.Validator) {
+	// set initial historical rewards (period 0) with reference count of 1
+	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 0, types.NewValidatorHistoricalRewards(sdk.DecCoins{}, 1))
+
+	// set current rewards (starting at period 1)
+	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, 1))
+
+	// set accumulated commission
+	k.SetValidatorAccumulatedCommission(ctx, val.GetOperator(), types.InitialValidatorAccumulatedCommission())
 }
 
-// get the validator distribution info
-func (k Keeper) GetValidatorDistInfo(ctx sdk.Context,
-	operatorAddr sdk.ValAddress) (vdi types.ValidatorDistInfo) {
+// increment validator period, returning the period just ended
+func (k Keeper) incrementValidatorPeriod(ctx sdk.Context, val sdk.Validator) uint64 {
+	// fetch current rewards
+	rewards := k.GetValidatorCurrentRewards(ctx, val.GetOperator())
 
-	store := ctx.KVStore(k.storeKey)
+	// calculate current ratio
+	var current sdk.DecCoins
+	if val.GetTokens().IsZero() {
 
-	b := store.Get(GetValidatorDistInfoKey(operatorAddr))
-	if b == nil {
-		panic("Stored validator-distribution info should not have been nil")
+		// can't calculate ratio for zero-token validators
+		// ergo we instead add to the community pool
+		feePool := k.GetFeePool(ctx)
+		outstanding := k.GetOutstandingRewards(ctx)
+		feePool.CommunityPool = feePool.CommunityPool.Plus(rewards.Rewards)
+		outstanding = outstanding.Minus(rewards.Rewards)
+		k.SetFeePool(ctx, feePool)
+		k.SetOutstandingRewards(ctx, outstanding)
+
+		current = sdk.DecCoins{}
+	} else {
+		// note: necessary to truncate so we don't allow withdrawing more rewards than owed
+		current = rewards.Rewards.QuoDecTruncate(sdk.NewDecFromInt(val.GetTokens()))
 	}
 
-	k.cdc.MustUnmarshalBinaryLengthPrefixed(b, &vdi)
-	return
+	// fetch historical rewards for last period
+	historical := k.GetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period-1).CumulativeRewardRatio
+
+	// decrement reference count
+	k.decrementReferenceCount(ctx, val.GetOperator(), rewards.Period-1)
+
+	// set new historical rewards with reference count of 1
+	k.SetValidatorHistoricalRewards(ctx, val.GetOperator(), rewards.Period, types.NewValidatorHistoricalRewards(historical.Plus(current), 1))
+
+	// set current rewards, incrementing period by 1
+	k.SetValidatorCurrentRewards(ctx, val.GetOperator(), types.NewValidatorCurrentRewards(sdk.DecCoins{}, rewards.Period+1))
+
+	return rewards.Period
 }
 
-// set the validator distribution info
-func (k Keeper) SetValidatorDistInfo(ctx sdk.Context, vdi types.ValidatorDistInfo) {
-	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshalBinaryLengthPrefixed(vdi)
-	store.Set(GetValidatorDistInfoKey(vdi.OperatorAddr), b)
-}
-
-// remove a validator distribution info
-func (k Keeper) RemoveValidatorDistInfo(ctx sdk.Context, valAddr sdk.ValAddress) {
-
-	// defensive check
-	vdi := k.GetValidatorDistInfo(ctx, valAddr)
-	if vdi.DelAccum.Accum.IsPositive() {
-		panic("Should not delete validator with unwithdrawn delegator accum")
+// increment the reference count for a historical rewards value
+func (k Keeper) incrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress, period uint64) {
+	historical := k.GetValidatorHistoricalRewards(ctx, valAddr, period)
+	if historical.ReferenceCount > 2 {
+		panic("reference count should never exceed 2")
 	}
-	if !vdi.ValCommission.IsZero() {
-		panic("Should not delete validator with unwithdrawn validator commission")
-	}
-
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(GetValidatorDistInfoKey(valAddr))
+	historical.ReferenceCount++
+	k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
 }
 
-// remove all validator distribution infos
-func (k Keeper) RemoveValidatorDistInfos(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		store.Delete(iter.Key())
+// decrement the reference count for a historical rewards value, and delete if zero references remain
+func (k Keeper) decrementReferenceCount(ctx sdk.Context, valAddr sdk.ValAddress, period uint64) {
+	historical := k.GetValidatorHistoricalRewards(ctx, valAddr, period)
+	if historical.ReferenceCount == 0 {
+		panic("cannot set negative reference count")
 	}
-}
-
-// iterate over all the validator distribution infos
-func (k Keeper) IterateValidatorDistInfos(ctx sdk.Context,
-	fn func(index int64, distInfo types.ValidatorDistInfo) (stop bool)) {
-
-	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, ValidatorDistInfoKey)
-	defer iter.Close()
-	index := int64(0)
-	for ; iter.Valid(); iter.Next() {
-		var vdi types.ValidatorDistInfo
-		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &vdi)
-		if fn(index, vdi) {
-			return
-		}
-		index++
+	historical.ReferenceCount--
+	if historical.ReferenceCount == 0 {
+		k.DeleteValidatorHistoricalReward(ctx, valAddr, period)
+	} else {
+		k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
 	}
 }
 
-// Get the calculated accum of a validator at the current block
-// without affecting the state.
-func (k Keeper) GetValidatorAccum(ctx sdk.Context, operatorAddr sdk.ValAddress) (sdk.Dec, sdk.Error) {
-	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
-		return sdk.Dec{}, types.ErrNoValidatorDistInfo(k.codespace)
+func (k Keeper) updateValidatorSlashFraction(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
+	if fraction.GT(sdk.OneDec()) {
+		panic("fraction greater than one")
 	}
-
-	// withdraw self-delegation
-	height := ctx.BlockHeight()
-	lastValPower := k.stakeKeeper.GetLastValidatorPower(ctx, operatorAddr)
-	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
-	accum := valInfo.GetValAccum(height, sdk.NewDecFromInt(lastValPower))
-
-	return accum, nil
-}
-
-// takeValidatorFeePoolRewards updates the validator's distribution info
-// from the global fee pool without withdrawing any rewards. This will be called
-// from a onValidatorModified hook.
-func (k Keeper) takeValidatorFeePoolRewards(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
-	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
-		return types.ErrNoValidatorDistInfo(k.codespace)
+	height := uint64(ctx.BlockHeight())
+	currentFraction := sdk.ZeroDec()
+	endedPeriod := k.GetValidatorCurrentRewards(ctx, valAddr).Period - 1
+	current, found := k.GetValidatorSlashEvent(ctx, valAddr, height)
+	if found {
+		// there has already been a slash event this height,
+		// and we don't need to store more than one,
+		// so just update the current slash fraction
+		currentFraction = current.Fraction
+	} else {
+		val := k.stakingKeeper.Validator(ctx, valAddr)
+		// increment current period
+		endedPeriod = k.incrementValidatorPeriod(ctx, val)
+		// increment reference count on period we need to track
+		k.incrementReferenceCount(ctx, valAddr, endedPeriod)
 	}
-	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-
-	// withdraw reward for self-delegation
-	if k.HasDelegationDistInfo(ctx, accAddr, operatorAddr) {
-		fp, vi, di, withdraw :=
-			k.withdrawDelegationReward(ctx, accAddr, operatorAddr)
-		k.SetFeePool(ctx, fp)
-		k.SetValidatorDistInfo(ctx, vi)
-		k.SetDelegationDistInfo(ctx, di)
-		k.WithdrawToDelegator(ctx, fp, accAddr, withdraw)
+	currentMultiplicand := sdk.OneDec().Sub(currentFraction)
+	newMultiplicand := sdk.OneDec().Sub(fraction)
+	updatedFraction := sdk.OneDec().Sub(currentMultiplicand.Mul(newMultiplicand))
+	if updatedFraction.LT(sdk.ZeroDec()) {
+		panic("negative slash fraction")
 	}
-
-	// withdrawal validator commission rewards
-	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
-	wc := k.GetWithdrawContext(ctx, operatorAddr)
-	valInfo, feePool := valInfo.TakeFeePoolRewards(wc)
-	k.SetFeePool(ctx, feePool)
-	k.SetValidatorDistInfo(ctx, valInfo)
-	return nil
-}
-
-func (k Keeper) withdrawValidatorCommission(ctx sdk.Context, operatorAddr sdk.ValAddress) (types.FeePool, types.DecCoins) {
-	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
-	wc := k.GetWithdrawContext(ctx, operatorAddr)
-	valInfo, feePool, commission := valInfo.WithdrawCommission(wc)
-	k.SetValidatorDistInfo(ctx, valInfo)
-
-	return feePool, commission
-}
-
-// withdrawal all the validator rewards including the commission
-func (k Keeper) WithdrawValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) sdk.Error {
-	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
-		return types.ErrNoValidatorDistInfo(k.codespace)
-	}
-
-	// withdraw self-delegation
-	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-	withdraw := k.withdrawDelegationRewardsAll(ctx, accAddr)
-
-	// withdrawal validator commission rewards
-	feePool, commission := k.withdrawValidatorCommission(ctx, operatorAddr)
-	withdraw = withdraw.Plus(commission)
-
-	k.WithdrawToDelegator(ctx, feePool, accAddr, withdraw)
-	return nil
-}
-
-// get all the validator rewards including the commission
-func (k Keeper) CurrentValidatorRewardsAll(ctx sdk.Context, operatorAddr sdk.ValAddress) (sdk.Coins, sdk.Error) {
-
-	if !k.HasValidatorDistInfo(ctx, operatorAddr) {
-		return sdk.Coins{}, types.ErrNoValidatorDistInfo(k.codespace)
-	}
-
-	// withdraw self-delegation
-	accAddr := sdk.AccAddress(operatorAddr.Bytes())
-	withdraw := k.CurrentDelegationRewardsAll(ctx, accAddr)
-
-	// withdrawal validator commission rewards
-	valInfo := k.GetValidatorDistInfo(ctx, operatorAddr)
-
-	wc := k.GetWithdrawContext(ctx, operatorAddr)
-	commission := valInfo.CurrentCommissionRewards(wc)
-	withdraw = withdraw.Plus(commission)
-	truncated, _ := withdraw.TruncateDecimal()
-	return truncated, nil
+	k.SetValidatorSlashEvent(ctx, valAddr, height, types.NewValidatorSlashEvent(endedPeriod, updatedFraction))
 }

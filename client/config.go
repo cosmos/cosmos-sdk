@@ -78,7 +78,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	// Get value action
 	if getAction {
 		switch key {
-		case "trace", "trust-node":
+		case "trace", "trust-node", "indent":
 			fmt.Println(tree.GetDefault(key, false).(bool))
 		default:
 			if defaultValue, ok := configDefaults[key]; ok {
@@ -91,11 +91,14 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Set value action
+	if len(args) != 2 {
+		return fmt.Errorf("wrong number of arguments")
+	}
 	value := args[1]
 	switch key {
 	case "chain-id", "output", "node":
 		tree.Set(key, value)
-	case "trace", "trust-node":
+	case "trace", "trust-node", "indent":
 		boolVal, err := strconv.ParseBool(value)
 		if err != nil {
 			return err

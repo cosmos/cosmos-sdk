@@ -40,6 +40,7 @@ type ValidatorSigningInfo struct {
     IndexOffset           int64     // Offset into the signed block bit array
     JailedUntilHeight     int64     // Block height until which the validator is jailed,
                                     // or sentinel value of 0 for not jailed
+    Tombstoned            bool      // Whether a validator is tombstoned or not
     MissedBlocksCounter   int64     // Running counter of missed blocks
 }
 
@@ -49,32 +50,5 @@ Where:
 * `StartHeight` is set to the height that the candidate became an active validator (with non-zero voting power).
 * `IndexOffset` is incremented each time the candidate was a bonded validator in a block (and may have signed a precommit or not).
 * `JailedUntil` is set whenever the candidate is jailed due to downtime
+* `Tombstoned` is set once a validator's first double sign evidence comes in
 * `MissedBlocksCounter` is a counter kept to avoid unnecessary array reads. `MissedBlocksBitArray.Sum() == MissedBlocksCounter` always.
-
-## Slashing Period
-
-A slashing period is a start and end block height associated with a particular validator,
-within which only the "worst infraction counts" (see the [Overview](overview.md)): the total
-amount of slashing for infractions committed within the period (and discovered whenever) is
-capped at the penalty for the worst offense.
-
-This period starts when a validator is first bonded and ends when a validator is slashed & jailed
-for any reason. When the validator rejoins the validator set (perhaps through unjailing themselves,
-and perhaps also changing signing keys), they enter into a new period.
-
-Slashing periods are indexed in the store as follows:
-
-- SlashingPeriod: ` 0x03 | ValTendermintAddr | StartHeight -> amino(slashingPeriod) `
-
-This allows us to look up slashing period by a validator's address, the only lookup necessary,
-and iterate over start height to efficiently retrieve the most recent slashing period(s)
-or those beginning after a given height.
-
-```go
-type SlashingPeriod struct {
-    ValidatorAddr         sdk.ValAddress      // Tendermint address of the validator
-    StartHeight           int64               // Block height at which slashing period begin
-    EndHeight             int64               // Block height at which slashing period ended
-    SlashedSoFar          sdk.Rat             // Fraction slashed so far, cumulative
-}
-```

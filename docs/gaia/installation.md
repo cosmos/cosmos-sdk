@@ -28,7 +28,7 @@ mkdir -p $GOPATH/src/github.com/cosmos
 cd $GOPATH/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
 cd cosmos-sdk && git checkout master
-make get_tools && make get_vendor_deps && make install
+make tools && make get_vendor_deps && make install
 ```
 
 > *NOTE*: If you have issues at this step, please check that you have the latest stable version of GO installed.
@@ -42,4 +42,4 @@ $ gaiacli version
 
 ### Next
 
-Now you can [join the public testnet](./join-testnet.md) or [create you own private testnet](./private-testnet.md)
+Now you can [join the public testnet](./join-testnet.md) or [create you own  testnet](./deploy-testnet.md)

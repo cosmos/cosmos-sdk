@@ -39,36 +39,31 @@ docs_update: &docs_deploy
   environment:
     AWS_REGION: us-east-1
 
-
-############
+deps: &dependencies
+  run:
+    name: dependencies
+    command: |
+      export PATH="$GOBIN:$PATH"
+      make vendor-deps
 
 jobs:
-
   setup_dependencies:
     <<: *linux_defaults
     steps:
       - run: mkdir -p /tmp/workspace/bin
       - run: mkdir -p /tmp/workspace/profiles
       - checkout
-      - restore_cache:
-          keys:
-            - v1-pkg-cache
       - run:
           name: tools
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_tools
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+            make tools
+      - *dependencies
       - run:
           name: binaries
           command: |
             export PATH="$GOBIN:$PATH"
             make install
-            make install_examples
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -82,17 +77,12 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_tools
-            make get_dev_tools
+            make devtools
       - run:
           name: Lint source
           command: |
@@ -106,17 +96,12 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test cli
           command: |
             export PATH="$GOBIN:$PATH"
             make test_cli
-            make test_examples
 
   test_sim_gaia_nondeterminism:
     <<: *linux_defaults
@@ -125,11 +110,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test individual module simulations
           command: |
@@ -143,11 +124,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test full Gaia simulation
           command: |
@@ -161,11 +138,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test Gaia import/export simulation
           command: |
@@ -179,16 +152,26 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: Test Gaia import/export simulation
           command: |
             export PATH="$GOBIN:$PATH"
             make test_sim_gaia_simulation_after_import
+
+  test_sim_gaia_multi_seed_long:
+    <<: *linux_defaults
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - *dependencies
+      - run:
+          name: Test multi-seed Gaia simulation long
+          command: |
+            export PATH="$GOBIN:$PATH"
+            scripts/multisim.sh 800 50 TestFullGaiaSimulation
 
   test_sim_gaia_multi_seed:
     <<: *linux_defaults
@@ -197,16 +180,12 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
+      - *dependencies
       - run:
-          name: dependencies
+          name: Test multi-seed Gaia simulation short
           command: |
             export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
-      - run:
-          name: Test multi-seed Gaia simulation
-          command: |
-            export PATH="$GOBIN:$PATH"
-            scripts/multisim.sh 25 TestFullGaiaSimulation
+            scripts/multisim.sh 50 10 TestFullGaiaSimulation
 
   test_cover:
     <<: *linux_defaults
@@ -215,11 +194,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run: mkdir -p /tmp/logs
       - run:
           name: Run tests
@@ -245,11 +220,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - run:
-          name: dependencies
-          command: |
-            export PATH="$GOBIN:$PATH"
-            make get_vendor_deps
+      - *dependencies
       - run:
           name: gather
           command: |
@@ -286,11 +257,12 @@ jobs:
               sudo mv go /usr/local
               popd
               set -x
-              make get_tools
-              make get_vendor_deps
+              make tools
+              make vendor-deps
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
+
   deploy_docs:
     <<: *docs_deploy
     steps:
@@ -317,8 +289,8 @@ jobs:
           name: Install SDK
           command: |
             source $BASH_ENV
-            make get_tools
-            make get_vendor_deps
+            make tools
+            make vendor-deps
             make install
       - run:
           name: Integration tests
@@ -331,10 +303,38 @@ jobs:
             source $BASH_ENV
             make test_sim_gaia_fast
 
+  docker_image:
+    <<: *linux_defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: |
+          if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            GAIAD_VERSION="stable"
+          elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+            GAIAD_VERSION="develop"
+          else
+            GAIAD_VERSION=`/tmp/workspace/bin/gaiad version`
+          fi
+          docker build -t tendermint/gaia:$GAIAD_VERSION .
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push tendermint/gaia:$GAIAD_VERSION
+
 workflows:
   version: 2
   test-suite:
     jobs:
+      - docker_image:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
+          requires:
+            - setup_dependencies
       - macos_ci:
           filters:
             branches:
@@ -369,6 +369,14 @@ workflows:
       - test_sim_gaia_multi_seed:
           requires:
             - setup_dependencies
+      - test_sim_gaia_multi_seed_long:
+          requires:
+            - setup_dependencies
+          filters:
+            branches:
+              only:
+                - master
+                - develop
       - test_cover:
           requires:
             - setup_dependencies

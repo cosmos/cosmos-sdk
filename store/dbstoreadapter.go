@@ -64,4 +64,4 @@ func (cdsa commitDBStoreAdapter) LastCommitID() CommitID {
 	}
 }
 
-func (cdsa commitDBStoreAdapter) SetPruning(_ PruningStrategy) {}
+func (cdsa commitDBStoreAdapter) SetPruning(_ PruningOptions) {}

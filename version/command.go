@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/spf13/cobra"
 )
@@ -22,5 +23,9 @@ func GetVersion() string {
 
 // CMD
 func printVersion(cmd *cobra.Command, args []string) {
-	fmt.Println(GetVersion())
+	fmt.Println("cosmos-sdk:", GetVersion())
+	fmt.Println("git commit:", Commit)
+	fmt.Println("vendor hash:", VendorDirHash)
+	fmt.Printf("go version %s %s/%s\n",
+		runtime.Version(), runtime.GOOS, runtime.GOARCH)
 }

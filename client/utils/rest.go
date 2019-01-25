@@ -78,7 +78,20 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 }
 
 // WriteGenerateStdTxResponse writes response for the generate_only mode.
-func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, txBldr authtxb.TxBuilder, msgs []sdk.Msg) {
+func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, br BaseReq, msgs []sdk.Msg) {
+	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, client.DefaultGasAdjustment)
+	if !ok {
+		return
+	}
+
+	_, gas, err := client.ParseGas(br.Gas)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	txBldr := br.ToTxBuilder(cdc, gas, gasAdj)
+
 	stdMsg, err := txBldr.Build(msgs)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -177,6 +190,15 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 	}
 
 	return true
+}
+
+// ToTxBuilder returns a TxBuilder based off of the populated fields of a BaseReq.
+// Any additional required fields must be provided as parameters.
+func (br BaseReq) ToTxBuilder(cdc *codec.Codec, gas uint64, gasAdj float64) authtxb.TxBuilder {
+	return authtxb.NewTxBuilder(
+		GetTxEncoder(cdc), br.AccountNumber, br.Sequence, gas, gasAdj,
+		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
+	)
 }
 
 /*

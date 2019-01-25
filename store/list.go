@@ -84,6 +84,7 @@ func (m List) Push(value interface{}) {
 // CONTRACT: No writes may happen within a domain while iterating over it.
 func (m List) Iterate(ptr interface{}, fn func(uint64) bool) {
 	iter := sdk.KVStorePrefixIterator(m.store, []byte{0x01})
+	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		v := iter.Value()
 		m.cdc.MustUnmarshalBinaryLengthPrefixed(v, ptr)
@@ -100,8 +101,6 @@ func (m List) Iterate(ptr interface{}, fn func(uint64) bool) {
 			break
 		}
 	}
-
-	iter.Close()
 }
 
 func subspace(prefix []byte) (start, end []byte) {

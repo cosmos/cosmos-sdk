@@ -101,6 +101,8 @@ This message is expected to fail if:
  - the delegation doesn't exist
  - the validator doesn't exist
  - the delegation has less shares than `SharesAmount`
+ - existing `UnbondingDelegation` has maximum entries as defined by
+   params.MaxEntries
 
 When this message is processed the following actions occur:
  - validator's `DelegatorShares` and the delegation's `Shares` are both reduced
@@ -143,6 +145,8 @@ This message is expected to fail if:
  - the delegation has less shares than `SharesAmount`
  - the source validator has a receiving redelegation which
    is not matured (aka. the redelegation may be transitive) 
+ - existing `Redelegation` has maximum entries as defined by
+   params.MaxEntries
 
 When this message is processed the following actions occur:
  - the source validator's `DelegatorShares` and the delegations `Shares` are

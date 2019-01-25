@@ -56,6 +56,7 @@ func TestToAccount(t *testing.T) {
 	priv := ed25519.GenPrivKey()
 	addr := sdk.AccAddress(priv.PubKey().Address())
 	authAcc := auth.NewBaseAccountWithAddress(addr)
+	authAcc.SetCoins(sdk.Coins{sdk.NewInt64Coin(bondDenom, 150)})
 	genAcc := NewGenesisAccount(&authAcc)
 	acc := genAcc.ToAccount()
 	require.IsType(t, &auth.BaseAccount{}, acc)

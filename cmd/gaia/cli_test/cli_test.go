@@ -52,7 +52,7 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	// start gaiad server with minimum fees
 	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
 	fees := fmt.Sprintf(
-		"--minimum_gas_prices=%s,%s",
+		"--minimum-gas-prices=%s,%s",
 		sdk.NewDecCoinFromDec(feeDenom, minGasPrice),
 		sdk.NewDecCoinFromDec(fee2Denom, minGasPrice),
 	)
@@ -87,7 +87,7 @@ func TestGaiaCLIGasPrices(t *testing.T) {
 
 	// start gaiad server with minimum fees
 	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
-	proc := f.GDStart(fmt.Sprintf("--minimum_gas_prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
+	proc := f.GDStart(fmt.Sprintf("--minimum-gas-prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
 	defer proc.Stop(false)
 
 	barAddr := f.KeyAddress(keyBar)
@@ -120,7 +120,7 @@ func TestGaiaCLIFeesDeduction(t *testing.T) {
 
 	// start gaiad server with minimum fees
 	minGasPrice, _ := sdk.NewDecFromStr("0.000006")
-	proc := f.GDStart(fmt.Sprintf("--minimum_gas_prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
+	proc := f.GDStart(fmt.Sprintf("--minimum-gas-prices=%s", sdk.NewDecCoinFromDec(feeDenom, minGasPrice)))
 	defer proc.Stop(false)
 
 	// Save key addresses for later use
@@ -260,7 +260,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(denom).Int64())
 
 	// Enable auto gas
-	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=auto", "--json")
+	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10), "--gas=auto")
 	require.NotEmpty(t, stderr)
 	require.True(t, success)
 	cdc := app.MakeCodec()
@@ -646,7 +646,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Test sign --validate-signatures
-	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--validate-signatures", "--json")
+	success, stdout, _ = f.TxSign(keyFoo, unsignedTxFile.Name(), "--validate-signatures")
 	require.False(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n\n", fooAddr.String()), stdout)
 
@@ -663,7 +663,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// Test sign --validate-signatures
-	success, stdout, _ = f.TxSign(keyFoo, signedTxFile.Name(), "--validate-signatures", "--json")
+	success, stdout, _ = f.TxSign(keyFoo, signedTxFile.Name(), "--validate-signatures")
 	require.True(t, success)
 	require.Equal(t, fmt.Sprintf("Signers:\n 0: %v\n\nSignatures:\n 0: %v\t[OK]\n\n", fooAddr.String(),
 		fooAddr.String()), stdout)
@@ -736,7 +736,7 @@ func TestGaiaCLIMultisignInsufficientCosigners(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// Validate the multisignature
-	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "--json")
+	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures")
 	require.False(t, success)
 
 	// Broadcast the transaction
@@ -798,7 +798,7 @@ func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// Validate the multisignature
-	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "--json")
+	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures")
 	require.True(t, success)
 
 	// Broadcast the transaction
@@ -861,7 +861,7 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	defer os.Remove(signedTxFile.Name())
 
 	// Validate the multisignature
-	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures", "--json")
+	success, _, _ = f.TxSign(keyFooBarBaz, signedTxFile.Name(), "--validate-signatures")
 	require.True(t, success)
 
 	// Broadcast the transaction

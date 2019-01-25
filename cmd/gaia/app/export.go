@@ -74,10 +74,10 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context) {
 	}
 
 	// clear validator slash events
-	app.distrKeeper.DeleteValidatorSlashEvents(ctx)
+	app.distrKeeper.DeleteAllValidatorSlashEvents(ctx)
 
 	// clear validator historical rewards
-	app.distrKeeper.DeleteValidatorHistoricalRewards(ctx)
+	app.distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
 	// set context height to zero
 	height := ctx.BlockHeight()

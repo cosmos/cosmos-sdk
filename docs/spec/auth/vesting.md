@@ -316,19 +316,22 @@ and return the correct accounts accordingly based off of these new fields.
 type GenesisAccount struct {
     // ...
 
-    Vesting    bool
-    EndTime    int64
-    StartTime  int64
+    // vesting account fields
+    OriginalVesting  sdk.Coins `json:"original_vesting"`
+    DelegatedFree    sdk.Coins `json:"delegated_free"`
+    DelegatedVesting sdk.Coins `json:"delegated_vesting"`
+    StartTime        int64     `json:"start_time"`
+    EndTime          int64     `json:"end_time"`
 }
 
 func ToAccount(gacc GenesisAccount) Account {
     bacc := NewBaseAccount(gacc)
 
-    if gacc.Vesting {
+    if gacc.OriginalVesting > 0 {
         if ga.StartTime != 0 && ga.EndTime != 0 {
-            return NewContinuousVestingAccount(bacc, gacc.StartTime, gacc.EndTime)
+            // return a continuous vesting account
         } else if ga.EndTime != 0 {
-            return NewDelayedVestingAccount(bacc, gacc.EndTime)
+            // return a delayed vesting account
         } else {
             // invalid genesis vesting account provided
             panic()

@@ -64,7 +64,6 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make install
-            make install_examples
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -103,7 +102,6 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_cli
-            make test_examples
 
   test_sim_gaia_nondeterminism:
     <<: *linux_defaults

@@ -69,7 +69,7 @@ If you open a PR on the Cosmos SDK, it is mandatory to update the relevant docum
 
 * If your change relates to the core SDK (baseapp, store, ...), please update the docs/gaia folder, the docs/examples folder and possibly the docs/spec folder.
 * If your changes relate specifically to the gaia application (not including modules), please modify the docs/gaia folder.
-* If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia and/or basecoin, you might also need to modify docs/gaia and/or docs/examples.
+* If your changes relate to a module, please update the module's spec in docs/spec. If the module is used by gaia, you might also need to modify docs/gaia and/or docs/examples.
 * If your changes relate to the core of the CLI or Light-client (not specifically to module's CLI/Rest), please modify the docs/clients folder.
 
 ## Forking
@@ -85,7 +85,7 @@ For instance, to create a fork and work on a branch of it, I would:
   - Create the fork on github, using the fork button.
   - Go to the original repo checked out locally (i.e. `$GOPATH/src/github.com/cosmos/cosmos-sdk`)
   - `git remote rename origin upstream`
-  - `git remote add origin git@github.com:ebuchman/basecoin.git`
+  - `git remote add origin git@github.com:ebuchman/cosmos-sdk.git`
 
 Now `origin` refers to my fork and `upstream` refers to the Cosmos-SDK version.
 So I can `git push -u origin master` to update my fork, and make pull requests to Cosmos-SDK from there.

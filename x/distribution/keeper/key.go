@@ -112,6 +112,11 @@ func GetDelegatorStartingInfoKey(v sdk.ValAddress, d sdk.AccAddress) []byte {
 	return append(append(DelegatorStartingInfoPrefix, v.Bytes()...), d.Bytes()...)
 }
 
+// gets the prefix key for a validator's historical rewards
+func GetValidatorHistoricalRewardsPrefix(v sdk.ValAddress) []byte {
+	return append(ValidatorHistoricalRewardsPrefix, v.Bytes()...)
+}
+
 // gets the key for a validator's historical rewards
 func GetValidatorHistoricalRewardsKey(v sdk.ValAddress, k uint64) []byte {
 	b := make([]byte, 8)
@@ -127,6 +132,11 @@ func GetValidatorCurrentRewardsKey(v sdk.ValAddress) []byte {
 // gets the key for a validator's current commission
 func GetValidatorAccumulatedCommissionKey(v sdk.ValAddress) []byte {
 	return append(ValidatorAccumulatedCommissionPrefix, v.Bytes()...)
+}
+
+// gets the prefix key for a validator's slash fractions
+func GetValidatorSlashEventPrefix(v sdk.ValAddress) []byte {
+	return append(ValidatorSlashEventPrefix, v.Bytes()...)
 }
 
 // gets the key for a validator's slash fraction

@@ -14,6 +14,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -42,6 +43,7 @@ func main() {
 	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
 	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
 	rootCmd.AddCommand(gaiaInit.AddGenesisAccountCmd(ctx, cdc))
+	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 

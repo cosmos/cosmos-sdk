@@ -28,24 +28,36 @@ func SimulateDeductFee(m auth.AccountKeeper, f auth.FeeCollectionKeeper) simulat
 		}
 
 		denomIndex := r.Intn(len(initCoins))
-		amt, err := randPositiveInt(r, initCoins[denomIndex].Amount)
+		randCoin := initCoins[denomIndex]
+
+		amt, err := randPositiveInt(r, randCoin.Amount)
 		if err != nil {
 			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
 			return action, nil, nil
 		}
 
-		coins := sdk.Coins{sdk.NewCoin(initCoins[denomIndex].Denom, amt)}
-		err = stored.SetCoins(initCoins.Minus(coins))
-		if err != nil {
+		// Create a random fee and verify the fees are within the account's spendable
+		// balance.
+		fees := sdk.Coins{sdk.NewCoin(randCoin.Denom, amt)}
+		spendableCoins := stored.SpendableCoins(ctx.BlockHeader().Time)
+		if _, hasNeg := spendableCoins.SafeMinus(fees); hasNeg {
+			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
+			return action, nil, nil
+		}
+
+		// get the new account balance
+		newCoins, hasNeg := initCoins.SafeMinus(fees)
+		if hasNeg {
+			event(fmt.Sprintf("auth/SimulateDeductFee/false"))
+			return action, nil, nil
+		}
+
+		if err := stored.SetCoins(newCoins); err != nil {
 			panic(err)
 		}
+
 		m.SetAccount(ctx, stored)
-		if !coins.IsNotNegative() {
-			panic("setting negative fees")
-		}
-
-		f.AddCollectedFees(ctx, coins)
-
+		f.AddCollectedFees(ctx, fees)
 		event(fmt.Sprintf("auth/SimulateDeductFee/true"))
 
 		action = "TestDeductFee"

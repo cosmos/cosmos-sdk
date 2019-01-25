@@ -64,9 +64,13 @@ type GenesisAccount struct {
 	Coins         sdk.Coins      `json:"coins"`
 	Sequence      uint64         `json:"sequence_number"`
 	AccountNumber uint64         `json:"account_number"`
-	Vesting       bool           `json:"vesting"`
-	StartTime     int64          `json:"start_time"`
-	EndTime       int64          `json:"end_time"`
+
+	// vesting account fields
+	OriginalVesting  sdk.Coins `json:"original_vesting"`  // total vesting coins upon initialization
+	DelegatedFree    sdk.Coins `json:"delegated_free"`    // delegated vested coins at time of delegation
+	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // delegated vesting coins at time of delegation
+	StartTime        int64     `json:"start_time"`        // vesting start time
+	EndTime          int64     `json:"end_time"`          // vesting end time
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
@@ -88,7 +92,9 @@ func NewGenesisAccountI(acc auth.Account) GenesisAccount {
 
 	vacc, ok := acc.(auth.VestingAccount)
 	if ok {
-		gacc.Vesting = true
+		gacc.OriginalVesting = vacc.GetOriginalVesting()
+		gacc.DelegatedFree = vacc.GetDelegatedFree()
+		gacc.DelegatedVesting = vacc.GetDelegatedVesting()
 		gacc.StartTime = vacc.GetStartTime()
 		gacc.EndTime = vacc.GetEndTime()
 	}
@@ -105,11 +111,24 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 		Sequence:      ga.Sequence,
 	}
 
-	if ga.Vesting {
+	if !ga.OriginalVesting.IsZero() {
+		baseVestingAcc := &auth.BaseVestingAccount{
+			BaseAccount:      bacc,
+			OriginalVesting:  ga.OriginalVesting,
+			DelegatedFree:    ga.DelegatedFree,
+			DelegatedVesting: ga.DelegatedVesting,
+			EndTime:          ga.EndTime,
+		}
+
 		if ga.StartTime != 0 && ga.EndTime != 0 {
-			return auth.NewContinuousVestingAccount(bacc, ga.StartTime, ga.EndTime)
+			return &auth.ContinuousVestingAccount{
+				BaseVestingAccount: baseVestingAcc,
+				StartTime:          ga.StartTime,
+			}
 		} else if ga.EndTime != 0 {
-			return auth.NewDelayedVestingAccount(bacc, ga.EndTime)
+			return &auth.DelayedVestingAccount{
+				BaseVestingAccount: baseVestingAcc,
+			}
 		} else {
 			panic(fmt.Sprintf("invalid genesis vesting account: %+v", ga))
 		}
@@ -154,7 +173,7 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 	for _, acc := range genesisState.Accounts {
 		for _, coin := range acc.Coins {
 			if coin.Denom == bondDenom {
-				stakingData.Pool.LooseTokens = stakingData.Pool.LooseTokens.
+				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.
 					Add(coin.Amount) // increase the supply
 			}
 		}

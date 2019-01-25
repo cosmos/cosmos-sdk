@@ -188,7 +188,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		delegations = append(delegations, delegation)
 	}
 
-	stakingGenesis.Pool.LooseTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
+	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Bonds = delegations
 
@@ -425,8 +425,10 @@ func TestGaiaImportExport(t *testing.T) {
 		storeB := ctxB.KVStore(storeKeyB)
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
-		require.True(t, equal, "unequal stores: %s / %s:\nstore A %s (%X) => %s (%X)\nstore B %s (%X) => %s (%X)",
-			storeKeyA, storeKeyB, kvA.Key, kvA.Key, kvA.Value, kvA.Value, kvB.Key, kvB.Key, kvB.Value, kvB.Value)
+		require.True(t, equal,
+			"unequal stores: %s / %s:\nstore A %X => %X\nstore B %X => %X",
+			storeKeyA, storeKeyB, kvA.Key, kvA.Value, kvB.Key, kvB.Value,
+		)
 	}
 
 }

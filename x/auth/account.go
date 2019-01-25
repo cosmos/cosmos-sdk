@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -35,6 +36,9 @@ type Account interface {
 	// Calculates the amount of coins that can be sent to other accounts given
 	// the current time.
 	SpendableCoins(blockTime time.Time) sdk.Coins
+
+	// Ensure that account implements stringer
+	String() string
 }
 
 // VestingAccount defines an account type that vests coins via a vesting schedule.
@@ -51,6 +55,10 @@ type VestingAccount interface {
 
 	GetStartTime() int64
 	GetEndTime() int64
+
+	GetOriginalVesting() sdk.Coins
+	GetDelegatedFree() sdk.Coins
+	GetDelegatedVesting() sdk.Coins
 }
 
 // AccountDecoder unmarshals account bytes
@@ -63,7 +71,6 @@ var _ Account = (*BaseAccount)(nil)
 
 // BaseAccount - a base account structure.
 // This can be extended by embedding within in your AppAccount.
-// There are examples of this in: examples/basecoin/types/account.go.
 // However one doesn't have to use BaseAccount as long as your struct
 // implements Account.
 type BaseAccount struct {
@@ -72,6 +79,16 @@ type BaseAccount struct {
 	PubKey        crypto.PubKey  `json:"public_key"`
 	AccountNumber uint64         `json:"account_number"`
 	Sequence      uint64         `json:"sequence"`
+}
+
+// String implements fmt.Stringer
+func (acc BaseAccount) String() string {
+	return fmt.Sprintf(`Account %s:
+  Coins:         %s
+  PubKey:        %s
+  AccountNumber: %d
+  Sequence:      %d`, acc.Address, acc.Coins,
+		acc.PubKey.Address(), acc.AccountNumber, acc.Sequence)
 }
 
 // Prototype function for BaseAccount
@@ -162,6 +179,24 @@ type BaseVestingAccount struct {
 	DelegatedVesting sdk.Coins // coins that vesting and delegated
 
 	EndTime int64 // when the coins become unlocked
+}
+
+// String implements fmt.Stringer
+func (bva BaseVestingAccount) String() string {
+	return fmt.Sprintf(`Vesting Account:
+  Address:          %s
+  Coins:            %s
+  AccountNumber:    %d
+  Sequence:         %d
+  OriginalVesting:  %s
+  DelegatedFree:    %s
+  DelegatedVesting: %s
+  EndTime:          %d `,
+		bva.Address, bva.Coins,
+		bva.AccountNumber, bva.Sequence,
+		bva.OriginalVesting, bva.DelegatedFree,
+		bva.DelegatedVesting, bva.EndTime,
+	)
 }
 
 // spendableCoins returns all the spendable coins for a vesting account given a
@@ -313,6 +348,23 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 	}
 }
 
+// GetOriginalVesting returns a vesting account's original vesting amount
+func (bva BaseVestingAccount) GetOriginalVesting() sdk.Coins {
+	return bva.OriginalVesting
+}
+
+// GetDelegatedFree returns a vesting account's delegation amount that is not
+// vesting.
+func (bva BaseVestingAccount) GetDelegatedFree() sdk.Coins {
+	return bva.DelegatedFree
+}
+
+// GetDelegatedVesting returns a vesting account's delegation amount that is
+// still vesting.
+func (bva BaseVestingAccount) GetDelegatedVesting() sdk.Coins {
+	return bva.DelegatedVesting
+}
+
 //-----------------------------------------------------------------------------
 // Continuous Vesting Account
 
@@ -340,6 +392,24 @@ func NewContinuousVestingAccount(
 		StartTime:          StartTime,
 		BaseVestingAccount: baseVestingAcc,
 	}
+}
+
+func (cva ContinuousVestingAccount) String() string {
+	return fmt.Sprintf(`Continuous Vesting Account:
+  Address:          %s
+  Coins:            %s
+  AccountNumber:    %d
+  Sequence:         %d
+  OriginalVesting:  %s
+  DelegatedFree:    %s
+  DelegatedVesting: %s
+  StartTime:        %d
+  EndTime:          %d `,
+		cva.Address, cva.Coins,
+		cva.AccountNumber, cva.Sequence,
+		cva.OriginalVesting, cva.DelegatedFree,
+		cva.DelegatedVesting, cva.StartTime, cva.EndTime,
+	)
 }
 
 // GetVestedCoins returns the total number of vested coins. If no coins are vested,

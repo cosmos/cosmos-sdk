@@ -195,7 +195,7 @@ func TestMultiStoreQuery(t *testing.T) {
 
 func newMultiStoreWithMounts(db dbm.DB) *Store {
 	store := NewStore(db)
-	store.pruningOpts = stypes.PruneSyncable
+	store.pruningOpts = types.PruneSyncable
 	store.MountStoreWithDB(
 		types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(

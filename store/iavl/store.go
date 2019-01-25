@@ -11,10 +11,9 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (
@@ -290,8 +289,8 @@ var _ types.Iterator = (*iavlIterator)(nil)
 func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
 	iter := &iavlIterator{
 		tree:      tree,
-		start:     stypes.Cp(start),
-		end:       stypes.Cp(end),
+		start:     types.Cp(start),
+		end:       types.Cp(end),
 		ascending: ascending,
 		iterCh:    make(chan cmn.KVPair, 0), // Set capacity > 0?
 		quitCh:    make(chan struct{}),

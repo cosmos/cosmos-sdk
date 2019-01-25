@@ -16,7 +16,7 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
-//----------------------------------------
+//-----------------------------------------------------------------------------
 // Basic HTTP utilities
 
 // WriteErrorResponse prepares and writes a HTTP error
@@ -95,13 +95,13 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, txBldr 
 	return
 }
 
-//----------------------------------------
+//-----------------------------------------------------------------------------
 // Building / Sending utilities
 
 // BaseReq defines a structure that can be embedded in other request structures
 // that all share common "base" fields.
 type BaseReq struct {
-	Name          string       `json:"name"`
+	From          string       `json:"from"`
 	Password      string       `json:"password"`
 	Memo          string       `json:"memo"`
 	ChainID       string       `json:"chain_id"`
@@ -117,12 +117,12 @@ type BaseReq struct {
 
 // NewBaseReq creates a new basic request instance and sanitizes its values
 func NewBaseReq(
-	name, password, memo, chainID string, gas, gasAdjustment string,
+	from, password, memo, chainID string, gas, gasAdjustment string,
 	accNumber, seq uint64, fees sdk.Coins, gasPrices sdk.DecCoins, genOnly, simulate bool,
 ) BaseReq {
 
 	return BaseReq{
-		Name:          strings.TrimSpace(name),
+		From:          strings.TrimSpace(from),
 		Password:      password,
 		Memo:          strings.TrimSpace(memo),
 		ChainID:       strings.TrimSpace(chainID),
@@ -140,7 +140,7 @@ func NewBaseReq(
 // Sanitize performs basic sanitization on a BaseReq object.
 func (br BaseReq) Sanitize() BaseReq {
 	return NewBaseReq(
-		br.Name, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
+		br.From, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
 		br.AccountNumber, br.Sequence, br.Fees, br.GasPrices, br.GenerateOnly, br.Simulate,
 	)
 }
@@ -171,7 +171,7 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 		}
 	}
 
-	if len(br.Name) == 0 {
+	if len(br.From) == 0 {
 		WriteErrorResponse(w, http.StatusUnauthorized, "name required but not specified")
 		return false
 	}
@@ -214,19 +214,27 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 // sequence set. In addition, it builds and signs a transaction with the
 // supplied messages. Finally, it broadcasts the signed transaction to a node.
 //
-// NOTE: Also see CompleteAndBroadcastTxCli.
+// NOTE: Also see CompleteAndBroadcastTxCLI.
 // NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
 func CompleteAndBroadcastTxREST(
 	w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext,
 	baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
 ) {
 
-	gasAdjustment, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
+	fromAddress, fromName, err := context.GetFromFields(baseReq.From)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
+
+	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return
 	}
 
-	simulateAndExecute, gas, err := client.ParseGas(baseReq.Gas)
+	simAndExec, gas, err := client.ParseGas(baseReq.Gas)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
@@ -234,17 +242,17 @@ func CompleteAndBroadcastTxREST(
 
 	txBldr := authtxb.NewTxBuilder(
 		GetTxEncoder(cdc), baseReq.AccountNumber,
-		baseReq.Sequence, gas, gasAdjustment, baseReq.Simulate,
+		baseReq.Sequence, gas, gasAdj, baseReq.Simulate,
 		baseReq.ChainID, baseReq.Memo, baseReq.Fees, baseReq.GasPrices,
 	)
 
-	if baseReq.Simulate || simulateAndExecute {
-		if gasAdjustment < 0 {
+	if baseReq.Simulate || simAndExec {
+		if gasAdj < 0 {
 			WriteErrorResponse(w, http.StatusBadRequest, "gas adjustment must be a positive float")
 			return
 		}
 
-		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, baseReq.Name, msgs)
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, cliCtx.GetFromName(), msgs)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -256,12 +264,7 @@ func CompleteAndBroadcastTxREST(
 		}
 	}
 
-	if baseReq.GenerateOnly {
-		WriteGenerateStdTxResponse(w, cdc, txBldr, msgs)
-		return
-	}
-
-	txBytes, err := txBldr.BuildAndSign(baseReq.Name, baseReq.Password, msgs)
+	txBytes, err := txBldr.BuildAndSign(cliCtx.GetFromName(), baseReq.Password, msgs)
 	if keyerror.IsErrKeyNotFound(err) {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
@@ -282,9 +285,10 @@ func CompleteAndBroadcastTxREST(
 	PostProcessResponse(w, cdc, res, cliCtx.Indent)
 }
 
-// PostProcessResponse performs post process for rest response
+// PostProcessResponse performs post processing for a REST response.
 func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response interface{}, indent bool) {
 	var output []byte
+
 	switch response.(type) {
 	default:
 		var err error
@@ -300,6 +304,7 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 	case []byte:
 		output = response.([]byte)
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)
 }

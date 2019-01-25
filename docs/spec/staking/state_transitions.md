@@ -6,35 +6,38 @@ This document describes the state transition operations pertaining to:
  - Slashing
 
 ## Validators
-RemoveValidatorTokens
-RemoveValidatorTokensAndShares
-AddValidatorTokensAndShares
 
-completeUnbondingValidator
-beginUnbondingValidator
-bondValidator
+### non-bonded to bonded
+ - delete record from `ValidatorByPowerIndex`
+ - set `Validator.BondHeight` to current height
 
-bondedToUnbonding
- -> beginUnbondingValidator
-unbondingToBonded
- -> bondValidator
-unbondedToBonded
- -> bondValidator
-unbondingToUnbonded
+### unbonding to unbonded
  -> completeUnbondingValidator
 
-jailValidator / unjailValidator
+### bonded to unbonding
+ -> beginUnbondingValidator
+
+### jail/unjail 
+when a validator is jailed it is effectively removed from the Tendermint set.
+this process may be also be reversed. the following operations occur:
+ - set `Validator.Jailed` and update object 
+ - if jailed delete record from `ValidatorByPowerIndex`
+ - if unjailed add record to `ValidatorByPowerIndex`
 
 ## Delegations
-Delegate
-unbond
-Undelegate
-CompleteUnbonding
-BeginRedelegation
-CompleteRedelegation
+
+### Delegate
+   ### AddValidatorTokensAndShares
+### unbond
+### Undelegate
+   ### RemoveValidatorTokensAndShares
+### CompleteUnbonding
+### BeginRedelegation
+### CompleteRedelegation
 
 ## Slashing
-Slash
-slashUnbondingDelegation
-slashRedelegation
+### Slash
+      ### RemoveValidatorTokens
+### slashUnbondingDelegation
+### slashRedelegation
 

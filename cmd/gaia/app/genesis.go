@@ -58,6 +58,17 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
 	}
 }
 
+// Sanitize sorts accounts and coin sets.
+func (gs GenesisState) Sanitize() {
+	sort.Slice(gs.Accounts, func(i, j int) bool {
+		return gs.Accounts[i].AccountNumber < gs.Accounts[j].AccountNumber
+	})
+
+	for _, acc := range gs.Accounts {
+		acc.Coins = acc.Coins.Sort()
+	}
+}
+
 // GenesisAccount defines an account initialized at genesis.
 type GenesisAccount struct {
 	Address       sdk.AccAddress `json:"address"`

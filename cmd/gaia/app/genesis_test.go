@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	"github.com/stretchr/testify/require"
+
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -141,4 +141,25 @@ func TestNewDefaultGenesisAccount(t *testing.T) {
 	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
 	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("footoken"))
 	require.Equal(t, sdk.NewInt(150), acc.Coins.AmountOf(bondDenom))
+}
+
+func TestGenesisStateSanitize(t *testing.T) {
+	genesisState := makeGenesisState(t, nil)
+	require.Nil(t, GaiaValidateGenesisState(genesisState))
+	priv := ed25519.GenPrivKey()
+	addr := sdk.AccAddress(priv.PubKey().Address())
+	authAcc := auth.NewBaseAccountWithAddress(addr)
+	authAcc.SetCoins(sdk.Coins{
+		sdk.NewInt64Coin("bcoin", 150),
+		sdk.NewInt64Coin("acoin", 150),
+	})
+	genAcc := NewGenesisAccount(&authAcc)
+	genesisState.Accounts = append(genesisState.Accounts, genAcc)
+	lastAccount := genesisState.Accounts[len(genesisState.Accounts)-1]
+	require.Equal(t, lastAccount.Coins[0].Denom, "bcoin")
+	require.Equal(t, lastAccount.Coins[1].Denom, "acoin")
+	genesisState.Sanitize()
+	lastAccount = genesisState.Accounts[len(genesisState.Accounts)-1]
+	require.Equal(t, lastAccount.Coins[0].Denom, "acoin")
+	require.Equal(t, lastAccount.Coins[1].Denom, "bcoin")
 }

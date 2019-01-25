@@ -10,6 +10,7 @@ This document describes the state transition operations pertaining to:
 ### non-bonded to bonded
  - delete record from `ValidatorByPowerIndex`
  - set `Validator.BondHeight` to current height
+ - update `Pool` object to reflect new bonded tokens
 
 ### unbonding to unbonded
  -> completeUnbondingValidator

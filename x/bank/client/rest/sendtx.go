@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/bank/client"
+	bankclient "github.com/cosmos/cosmos-sdk/x/bank/client"
 
 	"github.com/gorilla/mux"
 )
@@ -37,7 +37,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]
 
-		to, err := sdk.AccAddressFromBech32(bech32Addr)
+		toAddr, err := sdk.AccAddressFromBech32(bech32Addr)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -54,13 +54,19 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if req.BaseReq.GenerateOnly {
+			fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			msg := bankclient.CreateMsg(fromAddr, toAddr, req.Amount)
+			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		msg := client.CreateMsg(sdk.AccAddress(info.GetPubKey().Address()), to, req.Amount)
+		msg := bankclient.CreateMsg(cliCtx.GetFromAddress(), toAddr, req.Amount)
 		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

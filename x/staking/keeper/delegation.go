@@ -464,7 +464,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	// Get or create the delegator delegation
 	delegation, found := k.GetDelegation(ctx, delAddr, validator.OperatorAddr)
 	if !found {
-		delegation = NewDelegation(delAddr, validator.OperatorAddrsdk.ZeroDec())
+		delegation = types.NewDelegation(delAddr, validator.OperatorAddr, sdk.ZeroDec())
 	}
 
 	// call the appropriate hook if present

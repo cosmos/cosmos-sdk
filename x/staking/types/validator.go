@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
@@ -264,7 +265,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Power:  v.BondedTokens().Int64(),
+		Power:  v.Power().Int64(),
 	}
 }
 
@@ -400,12 +401,28 @@ func (v Validator) DelegatorShareExRate() sdk.Dec {
 	return sdk.NewDecFromInt(v.Tokens).Quo(v.DelegatorShares)
 }
 
-// Get the bonded tokens which the validator holds
+// get the bonded tokens which the validator holds
 func (v Validator) BondedTokens() sdk.Int {
 	if v.Status == sdk.Bonded {
 		return v.Tokens
 	}
 	return sdk.ZeroInt()
+}
+
+var powerReduction sdk.Int = new(big.Int).Exp(big.NewInt(10), big.NewInt(9), nil)
+
+// get the Tendermint Power
+// a reduction of 10^9 from validator tokens is applied
+func (v Validator) Power() int64 {
+	if v.Status == sdk.Bonded {
+		return (v.Tokens.Div(powerReduction)).Int64()
+	}
+	return 0
+}
+
+// potential Tendermint power
+func (v Validator) PotentialPower() int64 {
+	return (v.Tokens.Div(powerReduction)).Int64()
 }
 
 //______________________________________________________________________
@@ -420,7 +437,8 @@ func (v Validator) GetStatus() sdk.BondStatus        { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress      { return v.OperatorAddr }
 func (v Validator) GetConsPubKey() crypto.PubKey     { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress     { return sdk.ConsAddress(v.ConsPubKey.Address()) }
-func (v Validator) GetPower() sdk.Int                { return v.BondedTokens() }
+func (v Validator) GetBondedTokens() sdk.Int         { return v.BondedTokens() }
+func (v Validator) GetPower() sdk.Int                { return v.Power() }
 func (v Validator) GetTokens() sdk.Int               { return v.Tokens }
 func (v Validator) GetCommission() sdk.Dec           { return v.Commission.Rate }
 func (v Validator) GetDelegatorShares() sdk.Dec      { return v.DelegatorShares }

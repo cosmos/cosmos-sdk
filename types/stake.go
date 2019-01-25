@@ -42,7 +42,8 @@ type Validator interface {
 	GetOperator() ValAddress      // operator address to receive/return validators coins
 	GetConsPubKey() crypto.PubKey // validation consensus pubkey
 	GetConsAddr() ConsAddress     // validation consensus address
-	GetPower() Int                // validation power
+	GetBondedTokens() Int         // validation power
+	GetPower() int64              // validation power
 	GetTokens() Int               // validation tokens
 	GetCommission() Dec           // validator commission rate
 	GetDelegatorShares() Dec      // total outstanding delegator shares

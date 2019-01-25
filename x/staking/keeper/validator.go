@@ -184,15 +184,11 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 		return
 	}
 	if validator.Status != sdk.Unbonded {
-		panic("Cannot call RemoveValidator on bonded or unbonding validators")
+		panic("cannot call RemoveValidator on bonded or unbonding validators")
 	}
-
-	// if any tokens remain, remove from pool (burning the tokens).
-	// this happens if shares are zero but tokens are not.
-	// TODO: Remove once https://github.com/cosmos/cosmos-sdk/pull/2958 is merged
-	pool := k.GetPool(ctx)
-	pool.NotBondedTokens = pool.NotBondedTokens.Sub(validator.Tokens)
-	k.SetPool(ctx, pool)
+	if validator.Tokens.IsPositive() {
+		panic("attempting to remove a validator which still contains tokens")
+	}
 
 	// delete the old validator record
 	store := ctx.KVStore(k.storeKey)
@@ -200,11 +196,8 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
 	store.Delete(GetValidatorsByPowerIndexKey(validator))
 
-	// call hook if present
-	if k.hooks != nil {
-		k.hooks.AfterValidatorRemoved(ctx, validator.ConsAddress(), validator.OperatorAddr)
-	}
-
+	// call hooks
+	k.AfterValidatorRemoved(ctx, validator.ConsAddress(), validator.OperatorAddr)
 }
 
 //___________________________________________________________________________

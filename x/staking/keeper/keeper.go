@@ -28,7 +28,9 @@ type Keeper struct {
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper, paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, ck bank.Keeper,
+	paramstore params.Subspace, codespace sdk.CodespaceType) Keeper {
+
 	keeper := Keeper{
 		storeKey:           key,
 		storeTKey:          tkey,

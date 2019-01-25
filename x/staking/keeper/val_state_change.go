@@ -79,9 +79,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 			// Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
 			// This hook is extremely useful, otherwise lazy accum bugs will be difficult to solve.
-			if k.hooks != nil {
-				k.hooks.AfterValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
-			}
+			k.AfterValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
 
 			// set validator power on lookup index.
 			k.SetLastValidatorPower(ctx, valAddr, sdk.NewInt(newPower))
@@ -194,10 +192,8 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	// delete from queue if present
 	k.DeleteValidatorQueue(ctx, validator)
 
-	// call the bond hook if present
-	if k.hooks != nil {
-		k.hooks.AfterValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
-	}
+	// trigger hook
+	k.AfterValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
 
 	return validator
 }
@@ -229,10 +225,8 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	// Adds to unbonding validator queue
 	k.InsertValidatorQueue(ctx, validator)
 
-	// call the unbond hook if present
-	if k.hooks != nil {
-		k.hooks.AfterValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddr)
-	}
+	// trigger hook
+	k.AfterValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddr)
 
 	return validator
 }

@@ -204,7 +204,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 
 	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
 	// power decreased
-	require.True(sdk.IntEq(t, sdk.NewInt(5), validator.GetPower()))
+	require.Equal(t, int64(5), validator.GetPower())
 	// pool bonded shares decreased
 	require.Equal(t, int64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
 }
@@ -231,7 +231,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 
 	validator = keeper.mustGetValidator(ctx, validator.OperatorAddr)
 	// power decreased
-	require.True(sdk.IntEq(t, sdk.NewInt(5), validator.GetPower()))
+	require.Equal(t, int64(5), validator.GetPower())
 	// pool bonded shares decreased
 	require.Equal(t, int64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
 }
@@ -276,7 +276,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// was still bonded at the time of discovery and was slashed by half, 4 stake
 	// bonded at the time of discovery hadn't been bonded at the time of infraction
 	// and wasn't slashed
-	require.True(sdk.IntEq(t, sdk.NewInt(7), validator.GetPower()))
+	require.Equal(t, int64(7), validator.GetPower())
 
 	// slash validator again
 	ctx = ctx.WithBlockHeight(13)
@@ -294,7 +294,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	// power decreased by 3 again
-	require.True(sdk.IntEq(t, sdk.NewInt(4), validator.GetPower()))
+	require.Equal(t, int64(4), validator.GetPower())
 
 	// slash validator again
 	// all originally bonded stake has been slashed, so this will have no effect
@@ -315,7 +315,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	// power decreased by 3 again
-	require.True(sdk.IntEq(t, sdk.NewInt(1), validator.GetPower()))
+	require.Equal(t, int64(1), validator.GetPower())
 
 	// slash validator again
 	// all originally bonded stake has been slashed, so this will have no effect
@@ -390,7 +390,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// was still bonded at the time of discovery and was slashed by half, 4 stake
 	// bonded at the time of discovery hadn't been bonded at the time of infraction
 	// and wasn't slashed
-	require.True(sdk.IntEq(t, sdk.NewInt(8), validator.GetPower()))
+	require.Equal(t, int64(8), validator.GetPower())
 
 	// slash the validator again
 	ctx = ctx.WithBlockHeight(12)
@@ -412,7 +412,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	// power decreased by 4
-	require.True(sdk.IntEq(t, sdk.NewInt(4), validator.GetPower()))
+	require.Equal(t, int64(4), validator.GetPower())
 
 	// slash the validator again, by 100%
 	ctx = ctx.WithBlockHeight(12)
@@ -511,5 +511,5 @@ func TestSlashBoth(t *testing.T) {
 	validator, found = keeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	// power not decreased, all stake was bonded since
-	require.True(sdk.IntEq(t, sdk.NewInt(10), validator.GetPower()))
+	require.Equal(t, int64(10), validator.GetPower())
 }

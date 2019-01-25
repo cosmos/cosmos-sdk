@@ -39,7 +39,7 @@ func TestHandleDoubleSign(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
-	require.True(sdk.IntEq(t, amt, sk.Validator(ctx, operatorAddr).GetPower()))
+	require.Equal(t, amt.Int64(), sk.Validator(ctx, operatorAddr).GetPower())
 
 	// handle a signature to set signing info
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
@@ -96,7 +96,7 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(operatorAddr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
-	require.True(sdk.IntEq(t, amt, sk.Validator(ctx, operatorAddr).GetPower()))
+	require.Equal(t, amt.Int64(), sk.Validator(ctx, operatorAddr).GetPower())
 
 	// handle a signature to set signing info
 	keeper.handleValidatorSignature(ctx, val.Address(), amtInt, true)
@@ -112,7 +112,7 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	require.True(t, sk.Validator(ctx, operatorAddr).GetStatus() == sdk.Bonded)
 
 	// should still have same power
-	require.True(t, sk.Validator(ctx, operatorAddr).GetPower().Equal(oldPower))
+	require.Equal(t, oldPower, sk.Validator(ctx, operatorAddr).GetPower())
 }
 
 // Test a validator through uptime, downtime, revocation,
@@ -133,7 +133,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
-	require.True(sdk.IntEq(t, amt, sk.Validator(ctx, addr).GetPower()))
+	require.Equal(t, amt.Int64(), sk.Validator(ctx, addr).GetPower())
 
 	// will exist since the validator has been bonded
 	info, found := keeper.getValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
@@ -286,7 +286,7 @@ func TestHandleNewValidator(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt))},
 	)
-	require.Equal(t, amt, sk.Validator(ctx, addr).GetPower().Int64())
+	require.Equal(t, amt, sk.Validator(ctx, addr).GetPower())
 
 	// Now a validator, for two blocks
 	keeper.handleValidatorSignature(ctx, val.Address(), 100, true)

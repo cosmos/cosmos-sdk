@@ -265,7 +265,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
 		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
-		Power:  v.Power().Int64(),
+		Power:  v.Power(),
 	}
 }
 
@@ -409,20 +409,20 @@ func (v Validator) BondedTokens() sdk.Int {
 	return sdk.ZeroInt()
 }
 
-var powerReduction sdk.Int = new(big.Int).Exp(big.NewInt(10), big.NewInt(9), nil)
+var powerReduction = new(big.Int).Exp(big.NewInt(10), big.NewInt(9), nil)
 
 // get the Tendermint Power
 // a reduction of 10^9 from validator tokens is applied
 func (v Validator) Power() int64 {
 	if v.Status == sdk.Bonded {
-		return (v.Tokens.Div(powerReduction)).Int64()
+		return v.PotentialPower()
 	}
 	return 0
 }
 
 // potential Tendermint power
 func (v Validator) PotentialPower() int64 {
-	return (v.Tokens.Div(powerReduction)).Int64()
+	return (v.Tokens.Div(sdk.NewIntFromBigInt(powerReduction))).Int64()
 }
 
 //______________________________________________________________________
@@ -438,7 +438,7 @@ func (v Validator) GetOperator() sdk.ValAddress      { return v.OperatorAddr }
 func (v Validator) GetConsPubKey() crypto.PubKey     { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress     { return sdk.ConsAddress(v.ConsPubKey.Address()) }
 func (v Validator) GetBondedTokens() sdk.Int         { return v.BondedTokens() }
-func (v Validator) GetPower() sdk.Int                { return v.Power() }
+func (v Validator) GetPower() int64                  { return v.Power() }
 func (v Validator) GetTokens() sdk.Int               { return v.Tokens }
 func (v Validator) GetCommission() sdk.Dec           { return v.Commission.Rate }
 func (v Validator) GetDelegatorShares() sdk.Dec      { return v.DelegatorShares }

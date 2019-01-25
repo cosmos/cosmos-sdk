@@ -121,13 +121,15 @@ func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, 
 }
 
 // Iterate over last validator powers.
-func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operator sdk.ValAddress, power sdk.Int) (stop bool)) {
+func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context,
+	handler func(operator sdk.ValAddress, power int64) (stop bool)) {
+
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(iter.Key()[len(LastValidatorPowerKey):])
-		var power sdk.Int
+		var power int64
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &power)
 		if handler(addr, power) {
 			break

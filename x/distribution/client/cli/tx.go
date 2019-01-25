@@ -88,7 +88,7 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 	cmd.Flags().String(flagOnlyFromValidator, "", "only withdraw from this validator address (in bech)")
@@ -122,7 +122,7 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 	return cmd

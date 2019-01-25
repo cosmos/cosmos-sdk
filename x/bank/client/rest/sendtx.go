@@ -55,6 +55,8 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		}
 
 		if req.BaseReq.GenerateOnly {
+			// When generate only is supplied, the from field must be a valid Bech32
+			// address.
 			fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 			if err != nil {
 				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())

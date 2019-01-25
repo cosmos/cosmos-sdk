@@ -15,15 +15,15 @@
 Once you have the Cosmos app installed on your Ledger, and the Ledger is accessible from the machine you are using `gaiacli` from you can create a new account key using the Ledger:
 
 ```bash
-$ gaiacli keys add {{ .Key.Name }} --ledger
+$ gaiacli keys add { .Key.Name } --ledger
 NAME:	          TYPE:	  ADDRESS:						                                  PUBKEY:
-{{ .Key.Name }}	ledger	cosmos1aw64xxr80lwqqdk8u2xhlrkxqaxamkr3e2g943	cosmospub1addwnpepqvhs678gh9aqrjc2tg2vezw86csnvgzqq530ujkunt5tkuc7lhjkz5mj629
+{ .Key.Name }	ledger	cosmos1aw64xxr80lwqqdk8u2xhlrkxqaxamkr3e2g943	cosmospub1addwnpepqvhs678gh9aqrjc2tg2vezw86csnvgzqq530ujkunt5tkuc7lhjkz5mj629
 ```
 
 This key will only be accessible while the Ledger is plugged in and unlocked. To send some coins with this key, run the following:
 
 ```bash
-$ gaiacli tx send --from {{ .Key.Name }} --to {{ .Destination.AccAddr }} --chain-id=gaia-7000
+$ gaiacli tx send --from { .Key.Name } --to { .Destination.AccAddr } --chain-id=gaia-7000
 ```
 
 You will be asked to review and confirm the transaction on the Ledger. Once you do this you should see the result in the console! Now you can use your Ledger to manage your Atoms and Stake!

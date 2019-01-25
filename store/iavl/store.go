@@ -290,8 +290,8 @@ var _ types.Iterator = (*iavlIterator)(nil)
 func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
 	iter := &iavlIterator{
 		tree:      tree,
-		start:     types.Cp(start),
-		end:       types.Cp(end),
+		start:     stypes.Cp(start),
+		end:       stypes.Cp(end),
 		ascending: ascending,
 		iterCh:    make(chan cmn.KVPair, 0), // Set capacity > 0?
 		quitCh:    make(chan struct{}),

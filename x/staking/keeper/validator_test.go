@@ -276,9 +276,24 @@ func TestValidatorBasics(t *testing.T) {
 	assert.True(ValEq(t, validators[2], resVals[2]))
 
 	// remove a record
-	validators[1].Status = sdk.Unbonded                     // First must set to Unbonded.
-	keeper.SetValidator(ctx, validators[1])                 // ...
-	keeper.RemoveValidator(ctx, validators[1].OperatorAddr) // Now it can be removed.
+
+	// shouldn't be able to remove if status is not unbonded
+	assert.PanicsWithValue(t,
+		"cannot call RemoveValidator on bonded or unbonding validators",
+		func() { keeper.RemoveValidator(ctx, validators[1].OperatorAddr) })
+
+	// shouldn't be able to remove if there are still tokens left
+	validators[1].Status = sdk.Unbonded
+	keeper.SetValidator(ctx, validators[1])
+	assert.PanicsWithValue(t,
+		"attempting to remove a validator which still contains tokens",
+		func() { keeper.RemoveValidator(ctx, validators[1].OperatorAddr) })
+
+	validators[1].Tokens = sdk.ZeroInt()
+	keeper.SetValidator(ctx, validators[1])
+
+	// now it can be removed
+	keeper.RemoveValidator(ctx, validators[1].OperatorAddr)
 	_, found = keeper.GetValidator(ctx, addrVals[1])
 	require.False(t, found)
 }

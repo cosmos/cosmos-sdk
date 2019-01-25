@@ -231,25 +231,15 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 }
 
 // CompleteAndBroadcastTxREST implements a utility function that facilitates
-// sending a series of messages in a signed transaction given a TxBuilder and a
-// QueryContext. It ensures that the account exists, has a proper number and
-// sequence set. In addition, it builds and signs a transaction with the
-// supplied messages. Finally, it broadcasts the signed transaction to a node.
+// sending a series of messages in a signed tx. In addition, it will handle
+// tx gas simulation and estimation. Note, it is expected that the account
+// exists in state and a CLIContext has the appropriate fields set.
 //
 // NOTE: Also see CompleteAndBroadcastTxCLI.
-// NOTE: Also see x/stake/client/rest/tx.go delegationsRequestHandlerFn.
 func CompleteAndBroadcastTxREST(
 	w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext,
 	baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
 ) {
-
-	fromAddress, fromName, err := context.GetFromFields(baseReq.From)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
 
 	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {

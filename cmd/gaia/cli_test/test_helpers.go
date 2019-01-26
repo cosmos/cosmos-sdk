@@ -179,6 +179,12 @@ func (f *Fixtures) GDStart(flags ...string) *tests.Process {
 	return proc
 }
 
+// ValidateGenesis runs gaiad validate-genesi
+func (f *Fixtures) ValidateGenesis() {
+	cmd := fmt.Sprintf("gaiad validate-genesis")
+	executeWriteCheckErr(f.T, cmd)
+}
+
 //___________________________________________________________________________________
 // gaiacli keys
 

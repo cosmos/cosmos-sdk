@@ -18,21 +18,23 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.RangeArgs(0, 1),
 		Short: "validates the genesis file at the default location or at the location passed as an arg",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			var genesis string
-			var genDoc types.GenesisDoc
-			var genstate app.GenesisState
 
 			// Load default if passed no args, otherwise load passed file
+			var genesis string
 			if len(args) == 0 {
 				genesis = ctx.Config.GenesisFile()
 			} else {
 				genesis = args[0]
 			}
 
+			fmt.Printf("validating genesis file at %s\n", genesis)
+
+			var genDoc types.GenesisDoc
 			if genDoc, err = loadGenesisDoc(cdc, genesis); err != nil {
 				return errors.Errorf("Error loading genesis doc from %s: %s", genesis, err.Error())
 			}
 
+			var genstate app.GenesisState
 			if err = cdc.UnmarshalJSON(genDoc.AppState, &genstate); err != nil {
 				return errors.Errorf("Error unmarshaling genesis doc %s: %s", genesis, err.Error())
 			}

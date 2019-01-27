@@ -76,7 +76,7 @@ Now it is time to upgrade the software:
 ```bash
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 git fetch --all && git checkout master
-make update_tools && make install
+make update_tools install
 ```
 
 ::: tip

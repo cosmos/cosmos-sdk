@@ -83,12 +83,13 @@ type BaseAccount struct {
 
 // String implements fmt.Stringer
 func (acc BaseAccount) String() string {
-	return fmt.Sprintf(`Account %s:
+	return fmt.Sprintf(`Account:
+  Address:       %s
   Coins:         %s
-  PubKey:        %s
   AccountNumber: %d
-  Sequence:      %d`, acc.Address, acc.Coins,
-		acc.PubKey.Address(), acc.AccountNumber, acc.Sequence)
+  Sequence:      %d`,
+		acc.Address, acc.Coins, acc.AccountNumber, acc.Sequence,
+	)
 }
 
 // Prototype function for BaseAccount

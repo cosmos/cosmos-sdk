@@ -58,7 +58,9 @@ Now we can access to the paramstore using Paramstore Keys
 	k.ps.Get(ctx, KeyParameter1, &param)
 	k.ps.Set(ctx, KeyParameter2, param)
 
-If you want to store an unknown number of parameters, or want to store a mapping, you can use subkeys. Subkeys can be used with a main key, where the subkeys are inheriting the key properties.
+If you want to store an unknown number of parameters, or want to store a mapping,
+you can use subkeys. Subkeys can be used with a main key, where the subkeys are
+inheriting the key properties.
 
 	func ParamKeyTable() params.KeyTable {
 		return params.NewKeyTable(

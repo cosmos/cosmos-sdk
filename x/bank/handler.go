@@ -20,6 +20,9 @@ func NewHandler(k Keeper) sdk.Handler {
 // Handle MsgSend.
 func handleMsgSend(ctx sdk.Context, k Keeper, msg MsgSend) sdk.Result {
 	// NOTE: totalIn == totalOut should already have been checked
+	if !k.GetSendEnabled(ctx) {
+		return ErrSendDisabled(k.Codespace()).Result()
+	}
 	tags, err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
 	if err != nil {
 		return err.Result()

@@ -76,7 +76,7 @@ func (s Subspace) kvStore(ctx sdk.Context) sdk.KVStore {
 func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
-	return ctx.TransientStore(s.tkey).Prefix(append(s.name, "/m/"...))
+	return ctx.TransientStore(s.tkey).Prefix(append(s.name, "/"...))
 }
 
 func concatKeys(key, subkey []byte) (res []byte) {

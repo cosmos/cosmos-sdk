@@ -219,6 +219,7 @@ func TestCoinSend(t *testing.T) {
 	acc = getAccount(t, port, addr)
 	require.Equal(t, expectedBalance.Amount, acc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom))
 
+	// run successful tx
 	gas := fmt.Sprintf("%d", gasEstResp.GasEstimate)
 	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, gas, 1.0, false, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -233,6 +234,27 @@ func TestCoinSend(t *testing.T) {
 	acc = getAccount(t, port, addr)
 	expectedBalance = expectedBalance.Minus(fees[0])
 	require.Equal(t, expectedBalance.Amount.SubRaw(1), acc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom))
+}
+
+func TestCoinSendAccAuto(t *testing.T) {
+	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	acc := getAccount(t, port, addr)
+	initialBalance := acc.GetCoins()
+
+	// send a transfer tx without specifying account number and sequence
+	res, body, _ := doTransferWithGasAccAuto(t, port, seed, name1, memo, pw, "200000", 1.0, false, false, fees)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	// query sender
+	acc = getAccount(t, port, addr)
+	coins := acc.GetCoins()
+	expectedBalance := initialBalance[0].Minus(fees[0])
+
+	require.Equal(t, stakingTypes.DefaultBondDenom, coins[0].Denom)
+	require.Equal(t, expectedBalance.Amount.SubRaw(1), coins[0].Amount)
 }
 
 func TestCoinSendGenerateOnly(t *testing.T) {

@@ -730,6 +730,39 @@ func doTransferWithGas(
 	return
 }
 
+func doTransferWithGasAccAuto(
+	t *testing.T, port, seed, from, memo, password string, gas string,
+	gasAdjustment float64, simulate, generateOnly bool, fees sdk.Coins,
+) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
+
+	// create receive address
+	kb := client.MockKeyBase()
+
+	receiveInfo, _, err := kb.CreateMnemonic(
+		"receive_address", cryptoKeys.English, gapp.DefaultKeyPass, cryptoKeys.SigningAlgo("secp256k1"),
+	)
+	require.Nil(t, err)
+
+	receiveAddr = sdk.AccAddress(receiveInfo.GetPubKey().Address())
+	chainID := viper.GetString(client.FlagChainID)
+
+	baseReq := utils.NewBaseReq(
+		from, password, memo, chainID, gas,
+		fmt.Sprintf("%f", gasAdjustment), 0, 0, fees, nil, generateOnly, simulate,
+	)
+
+	sr := sendReq{
+		Amount:  sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1)},
+		BaseReq: baseReq,
+	}
+
+	req, err := cdc.MarshalJSON(sr)
+	require.NoError(t, err)
+
+	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/accounts/%s/transfers", receiveAddr), req)
+	return
+}
+
 type sendReq struct {
 	Amount  sdk.Coins     `json:"amount"`
 	BaseReq utils.BaseReq `json:"base_req"`

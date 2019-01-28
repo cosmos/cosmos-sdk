@@ -2,6 +2,7 @@ package init
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,7 +28,7 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				genesis = args[0]
 			}
 
-			fmt.Printf("validating genesis file at %s\n", genesis)
+			fmt.Fprintf(os.Stderr, "validating genesis file at %s\n", genesis)
 
 			var genDoc types.GenesisDoc
 			if genDoc, err = loadGenesisDoc(cdc, genesis); err != nil {

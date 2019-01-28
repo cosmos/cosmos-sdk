@@ -1,54 +1,59 @@
-## PENDING
+# PENDING
 
-BREAKING CHANGES
+<!----------------------------- BREAKING CHANGES ----------------------------->
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+## BREAKING CHANGES
 
-* Gaia CLI  (`gaiacli`)
+### Gaia REST API
 
-* Gaia
+### Gaia CLI
 
-* SDK
+### Gaia
 
-* Tendermint
+### SDK
 
+### Tendermint
 
-FEATURES
+<!--------------------------------- FEATURES --------------------------------->
+
+## FEATURES
 
 * Gaia REST API
 
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
-  - [\#3397](https://github.com/cosmos/cosmos-sdk/pull/3397) Implement genesis file sanitization to avoid failures at chain init.
+  * [\#3397](https://github.com/cosmos/cosmos-sdk/pull/3397) Implement genesis file sanitization to avoid failures at chain init.
 
 * SDK
   * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
 
 * Tendermint
 
+<!------------------------------- IMPROVEMENTS ------------------------------->
 
-IMPROVEMENTS
+## IMPROVEMENTS
 
-* Gaia REST API
+### Gaia REST API
 
-* Gaia CLI  (`gaiacli`)
+### Gaia CLI
 
-* Gaia
+### Gaia
 
-* SDK
+### SDK
 
-* Tendermint
+### Tendermint
 
+<!--------------------------------- BUG FIXES -------------------------------->
 
-BUG FIXES
+## BUG FIXES
 
-* Gaia REST API
+### Gaia REST API
 
-* Gaia CLI  (`gaiacli`)
+### Gaia CLI
 
-* Gaia
+### Gaia
 
-* SDK
+### SDK
 
-* Tendermint
+### Tendermint

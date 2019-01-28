@@ -83,12 +83,19 @@ type BaseAccount struct {
 
 // String implements fmt.Stringer
 func (acc BaseAccount) String() string {
+	var pubkey string
+
+	if acc.PubKey != nil {
+		pubkey = sdk.MustBech32ifyAccPub(acc.PubKey)
+	}
+
 	return fmt.Sprintf(`Account:
-  Address:       %s
+	Address:       %s
+	Pubkey:        %s
   Coins:         %s
   AccountNumber: %d
   Sequence:      %d`,
-		acc.Address, acc.Coins, acc.AccountNumber, acc.Sequence,
+		acc.Address, pubkey, acc.Coins, acc.AccountNumber, acc.Sequence,
 	)
 }
 
@@ -184,8 +191,15 @@ type BaseVestingAccount struct {
 
 // String implements fmt.Stringer
 func (bva BaseVestingAccount) String() string {
+	var pubkey string
+
+	if bva.PubKey != nil {
+		pubkey = sdk.MustBech32ifyAccPub(bva.PubKey)
+	}
+
 	return fmt.Sprintf(`Vesting Account:
-  Address:          %s
+	Address:          %s
+	Pubkey:           %s
   Coins:            %s
   AccountNumber:    %d
   Sequence:         %d
@@ -193,10 +207,8 @@ func (bva BaseVestingAccount) String() string {
   DelegatedFree:    %s
   DelegatedVesting: %s
   EndTime:          %d `,
-		bva.Address, bva.Coins,
-		bva.AccountNumber, bva.Sequence,
-		bva.OriginalVesting, bva.DelegatedFree,
-		bva.DelegatedVesting, bva.EndTime,
+		bva.Address, pubkey, bva.Coins, bva.AccountNumber, bva.Sequence,
+		bva.OriginalVesting, bva.DelegatedFree, bva.DelegatedVesting, bva.EndTime,
 	)
 }
 
@@ -396,8 +408,15 @@ func NewContinuousVestingAccount(
 }
 
 func (cva ContinuousVestingAccount) String() string {
+	var pubkey string
+
+	if cva.PubKey != nil {
+		pubkey = sdk.MustBech32ifyAccPub(cva.PubKey)
+	}
+
 	return fmt.Sprintf(`Continuous Vesting Account:
-  Address:          %s
+	Address:          %s
+	Pubkey:           %s
   Coins:            %s
   AccountNumber:    %d
   Sequence:         %d
@@ -406,10 +425,9 @@ func (cva ContinuousVestingAccount) String() string {
   DelegatedVesting: %s
   StartTime:        %d
   EndTime:          %d `,
-		cva.Address, cva.Coins,
-		cva.AccountNumber, cva.Sequence,
-		cva.OriginalVesting, cva.DelegatedFree,
-		cva.DelegatedVesting, cva.StartTime, cva.EndTime,
+		cva.Address, pubkey, cva.Coins, cva.AccountNumber, cva.Sequence,
+		cva.OriginalVesting, cva.DelegatedFree, cva.DelegatedVesting,
+		cva.StartTime, cva.EndTime,
 	)
 }
 

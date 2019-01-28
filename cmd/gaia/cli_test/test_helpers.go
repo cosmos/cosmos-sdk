@@ -196,7 +196,16 @@ func (f *Fixtures) GDStart(flags ...string) *tests.Process {
 	return proc
 }
 
-// ValidateGenesis runs gaiad validate-genesi
+// GDTendermint returns the results of gaiad tendermint [query]
+func (f *Fixtures) GDTendermint(query string) string {
+	cmd := fmt.Sprintf("gaiad tendermint %s --home=%s", query, f.GDHome)
+	success, stdout, stderr := executeWriteRetStdStreams(f.T, cmd)
+	require.Empty(f.T, stderr)
+	require.True(f.T, success)
+	return strings.TrimSpace(stdout)
+}
+
+// ValidateGenesis runs gaiad validate-genesis
 func (f *Fixtures) ValidateGenesis() {
 	cmd := fmt.Sprintf("gaiad validate-genesis --home=%s", f.GDHome)
 	executeWriteCheckErr(f.T, cmd)
@@ -520,6 +529,18 @@ func (f *Fixtures) QueryGovDeposits(propsalID int, flags ...string) []gov.Deposi
 
 //___________________________________________________________________________________
 // query slashing
+
+// QuerySigningInfo returns the signing info for a validator
+func (f *Fixtures) QuerySigningInfo(val string) slashing.ValidatorSigningInfo {
+	cmd := fmt.Sprintf("gaiacli query slashing signing-info %s %s", val, f.Flags())
+	res, errStr := tests.ExecuteT(f.T, cmd, "")
+	require.Empty(f.T, errStr)
+	cdc := app.MakeCodec()
+	var sinfo slashing.ValidatorSigningInfo
+	err := cdc.UnmarshalJSON([]byte(res), &sinfo)
+	require.NoError(f.T, err)
+	return sinfo
+}
 
 // QuerySlashingParams is gaiacli query slashing params
 func (f *Fixtures) QuerySlashingParams() slashing.Params {

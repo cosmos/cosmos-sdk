@@ -977,6 +977,10 @@ func TestSlashingGetParams(t *testing.T) {
 	require.Equal(t, time.Duration(120000000000), params.MaxEvidenceAge)
 	require.Equal(t, int64(100), params.SignedBlocksWindow)
 	require.Equal(t, sdk.NewDecWithPrec(5, 1), params.MinSignedPerWindow)
+
+	sinfo := f.QuerySigningInfo(f.GDTendermint("show-validator"))
+	require.Equal(t, int64(0), sinfo.StartHeight)
+	require.False(t, sinfo.Tombstoned)
 }
 
 func TestValidateGenesis(t *testing.T) {

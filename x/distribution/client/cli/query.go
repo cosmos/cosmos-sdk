@@ -143,10 +143,6 @@ func GetCmdQueryValidatorSlashes(queryRoute string, cdc *codec.Codec) *cobra.Com
 				return err
 			}
 
-			if len(res) < 3 {
-				return fmt.Errorf("no slashes found for validator %s between blocks %d and %d", validatorAddr, startHeight, endHeight)
-			}
-
 			var slashes types.ValidatorSlashEvents
 			cdc.MustUnmarshalJSON(res, &slashes)
 			return cliCtx.PrintOutput(slashes)

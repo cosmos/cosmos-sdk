@@ -50,6 +50,12 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 		}
 
 		msg := slashing.NewMsgUnjail(valAddr)
+		err = msg.ValidateBasic()
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		if req.BaseReq.GenerateOnly {
 			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
 			return

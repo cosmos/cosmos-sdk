@@ -15,7 +15,7 @@ GOTOOLS = \
 	github.com/rakyll/statik
 GOBIN ?= $(GOPATH)/bin
 
-all: devtools get_vendor_deps install test_lint test
+all: devtools install test_lint test
 
 # The below include contains the tools target.
 include scripts/Makefile

@@ -68,21 +68,29 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
-		}
-
-		if !bytes.Equal(info.GetPubKey().Address(), req.DelegatorAddr) {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own delegator address")
-			return
-		}
-
 		msg := staking.NewMsgDelegate(req.DelegatorAddr, req.ValidatorAddr, req.Delegation)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if req.BaseReq.GenerateOnly {
+			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			return
+		}
+
+		// derive the from account address and name from the Keybase
+		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
+
+		if !bytes.Equal(cliCtx.GetFromAddress(), req.DelegatorAddr) {
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, "must use own delegator address")
 			return
 		}
 
@@ -105,21 +113,29 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
-		}
-
-		if !bytes.Equal(info.GetPubKey().Address(), req.DelegatorAddr) {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own delegator address")
-			return
-		}
-
 		msg := staking.NewMsgBeginRedelegate(req.DelegatorAddr, req.ValidatorSrcAddr, req.ValidatorDstAddr, req.SharesAmount)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if req.BaseReq.GenerateOnly {
+			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			return
+		}
+
+		// derive the from account address and name from the Keybase
+		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
+
+		if !bytes.Equal(cliCtx.GetFromAddress(), req.DelegatorAddr) {
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, "must use own delegator address")
 			return
 		}
 
@@ -142,21 +158,29 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
-		}
-
-		if !bytes.Equal(info.GetPubKey().Address(), req.DelegatorAddr) {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, "Must use own delegator address")
-			return
-		}
-
 		msg := staking.NewMsgUndelegate(req.DelegatorAddr, req.ValidatorAddr, req.SharesAmount)
 		err = msg.ValidateBasic()
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if req.BaseReq.GenerateOnly {
+			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			return
+		}
+
+		// derive the from account address and name from the Keybase
+		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
+
+		if !bytes.Equal(cliCtx.GetFromAddress(), req.DelegatorAddr) {
+			utils.WriteErrorResponse(w, http.StatusUnauthorized, "must use own delegator address")
 			return
 		}
 

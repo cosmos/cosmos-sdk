@@ -982,3 +982,14 @@ func TestSlashingGetParams(t *testing.T) {
 	require.Equal(t, int64(0), sinfo.StartHeight)
 	require.False(t, sinfo.Tombstoned)
 }
+
+func TestValidateGenesis(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	f.ValidateGenesis()
+}

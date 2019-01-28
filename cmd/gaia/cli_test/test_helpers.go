@@ -205,6 +205,12 @@ func (f *Fixtures) GDTendermint(query string) string {
 	return strings.TrimSpace(stdout)
 }
 
+// ValidateGenesis runs gaiad validate-genesis
+func (f *Fixtures) ValidateGenesis() {
+	cmd := fmt.Sprintf("gaiad validate-genesis --home=%s", f.GDHome)
+	executeWriteCheckErr(f.T, cmd)
+}
+
 //___________________________________________________________________________________
 // gaiacli keys
 

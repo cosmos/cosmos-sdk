@@ -90,7 +90,10 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, br Base
 		return
 	}
 
-	txBldr := br.ToTxBuilder(cdc, gas, gasAdj)
+	txBldr := authtxb.NewTxBuilder(
+		GetTxEncoder(cdc), br.AccountNumber, br.Sequence, gas, gasAdj,
+		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
+	)
 
 	stdMsg, err := txBldr.Build(msgs)
 	if err != nil {
@@ -190,15 +193,6 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 	}
 
 	return true
-}
-
-// ToTxBuilder returns a TxBuilder based off of the populated fields of a BaseReq.
-// Any additional required fields must be provided as parameters.
-func (br BaseReq) ToTxBuilder(cdc *codec.Codec, gas uint64, gasAdj float64) authtxb.TxBuilder {
-	return authtxb.NewTxBuilder(
-		GetTxEncoder(cdc), br.AccountNumber, br.Sequence, gas, gasAdj,
-		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
-	)
 }
 
 /*

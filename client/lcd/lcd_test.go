@@ -2,7 +2,6 @@ package lcd
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -211,16 +210,16 @@ func TestCoinSend(t *testing.T) {
 	// run simulation and test success with estimated gas
 	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var responseBody struct {
-		GasEstimate int64 `json:"gas_estimate"`
-	}
-	require.Nil(t, json.Unmarshal([]byte(body), &responseBody))
+
+	var gasEstResp utils.GasEstimateResponse
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &gasEstResp))
+	require.NotZero(t, gasEstResp.GasEstimate)
 
 	acc = getAccount(t, port, addr)
 	require.Equal(t, expectedBalance.Amount, acc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom))
 
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr,
-		fmt.Sprintf("%d", responseBody.GasEstimate), 1.0, false, false, fees)
+	gas := fmt.Sprintf("%d", gasEstResp.GasEstimate)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, gas, 1.0, false, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
@@ -241,9 +240,19 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	defer cleanup()
 	acc := getAccount(t, port, addr)
 
-	// generate TX
-	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1, false, true, fees)
+	// simulate tx
+	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1, true, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var gasEstResp utils.GasEstimateResponse
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &gasEstResp))
+	require.NotZero(t, gasEstResp.GasEstimate)
+
+	// generate tx
+	gas := fmt.Sprintf("%d", gasEstResp.GasEstimate)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, "", addr, gas, 1, false, true, fees)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
 	var msg auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))
 	require.Equal(t, len(msg.Msgs), 1)
@@ -251,6 +260,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, msg.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(msg.Signatures))
 	require.Equal(t, memo, msg.Memo)
+	require.NotZero(t, msg.Fee.Gas)
 
 	gasEstimate := int64(msg.Fee.Gas)
 	accnum := acc.GetAccountNumber()
@@ -268,6 +278,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	}
 	json, err := cdc.MarshalJSON(payload)
 	require.Nil(t, err)
+
 	res, body = Request(t, port, "POST", "/tx/sign", json)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &signedMsg))

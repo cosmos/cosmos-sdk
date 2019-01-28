@@ -68,7 +68,16 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			return
 		}
 
+		// derive the from account address and name from the Keybase
+		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
 		msg := bankclient.CreateMsg(cliCtx.GetFromAddress(), toAddr, req.Amount)
+
 		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

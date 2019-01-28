@@ -16,6 +16,11 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
+// GasEstimateResponse defines a response definition for tx gas estimation.
+type GasEstimateResponse struct {
+	GasEstimate uint64 `json:"gas_estimate"`
+}
+
 //-----------------------------------------------------------------------------
 // Basic HTTP utilities
 
@@ -28,9 +33,17 @@ func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
 
 // WriteSimulationResponse prepares and writes an HTTP
 // response for transactions simulations.
-func WriteSimulationResponse(w http.ResponseWriter, gas uint64) {
+func WriteSimulationResponse(w http.ResponseWriter, cdc *codec.Codec, gas uint64) {
+	gasEst := GasEstimateResponse{GasEstimate: gas}
+	resp, err := cdc.MarshalJSON(gasEst)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`{"gas_estimate":%v}`, gas)))
+	w.Write(resp)
 }
 
 // ParseInt64OrReturnBadRequest converts s to a int64 value.
@@ -75,40 +88,6 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 	}
 
 	return n, true
-}
-
-// WriteGenerateStdTxResponse writes response for the generate_only mode.
-func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, br BaseReq, msgs []sdk.Msg) {
-	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, client.DefaultGasAdjustment)
-	if !ok {
-		return
-	}
-
-	_, gas, err := client.ParseGas(br.Gas)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	txBldr := authtxb.NewTxBuilder(
-		GetTxEncoder(cdc), br.AccountNumber, br.Sequence, gas, gasAdj,
-		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
-	)
-
-	stdMsg, err := txBldr.Build(msgs)
-	if err != nil {
-		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	output, err := cdc.MarshalJSON(auth.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
-	if err != nil {
-		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	w.Write(output)
-	return
 }
 
 //-----------------------------------------------------------------------------
@@ -278,7 +257,7 @@ func CompleteAndBroadcastTxREST(
 		}
 
 		if baseReq.Simulate {
-			WriteSimulationResponse(w, txBldr.GetGas())
+			WriteSimulationResponse(w, cdc, txBldr.GetGas())
 			return
 		}
 	}
@@ -326,4 +305,38 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)
+}
+
+// WriteGenerateStdTxResponse writes response for the generate only mode.
+func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, br BaseReq, msgs []sdk.Msg) {
+	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, client.DefaultGasAdjustment)
+	if !ok {
+		return
+	}
+
+	_, gas, err := client.ParseGas(br.Gas)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	txBldr := authtxb.NewTxBuilder(
+		GetTxEncoder(cdc), br.AccountNumber, br.Sequence, gas, gasAdj,
+		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
+	)
+
+	stdMsg, err := txBldr.Build(msgs)
+	if err != nil {
+		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	output, err := cdc.MarshalJSON(auth.NewStdTx(stdMsg.Msgs, stdMsg.Fee, nil, stdMsg.Memo))
+	if err != nil {
+		WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Write(output)
+	return
 }

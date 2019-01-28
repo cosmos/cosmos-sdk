@@ -522,12 +522,12 @@
   revision = "v0.29.0"
 
 [[projects]]
-  digest = "1:a7485b2a69f996923f9d3406a9a853fd8eb31818515e985a830d71f88f6a925b"
+  digest = "1:29b886f00694ae7c18c4559a2901f2a057d5a62308ed5eb6cd52b9a31016fb14"
   name = "github.com/zondax/ledger-cosmos-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d4aed6d929a703bb555a2d79fe9c470afe61f648"
-  version = "v0.9.2"
+  revision = "71aa0ab6e03d2d320c82bbe13678a36584a5b813"
+  version = "v0.9.3"
 
 [[projects]]
   digest = "1:6f6dc6060c4e9ba73cf28aa88f12a69a030d3d19d518ef8e931879eaa099628d"

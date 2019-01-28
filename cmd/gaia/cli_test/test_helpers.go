@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -74,6 +75,22 @@ func NewFixtures(t *testing.T) *Fixtures {
 		P2PAddr:  p2pAddr,
 		Port:     port,
 	}
+}
+
+// GenesisFile returns the path of the genesis file
+func (f Fixtures) GenesisFile() string {
+	return filepath.Join(f.GDHome, "config", "genesis.json")
+}
+
+// GenesisFile returns the application's genesis state
+func (f Fixtures) GenesisState() app.GenesisState {
+	cdc := codec.New()
+	genDoc, err := appInit.LoadGenesisDoc(cdc, f.GenesisFile())
+	require.NoError(f.T, err)
+
+	var appState app.GenesisState
+	require.NoError(f.T, cdc.UnmarshalJSON(genDoc.AppState, &appState))
+	return appState
 }
 
 // InitFixtures is called at the beginning of a test

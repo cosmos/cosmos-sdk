@@ -228,10 +228,7 @@ func (app *GaiaApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.R
 
 // initialize store from a genesis state
 func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
-	// sort by account number to maintain consistency
-	sort.Slice(genesisState.Accounts, func(i, j int) bool {
-		return genesisState.Accounts[i].AccountNumber < genesisState.Accounts[j].AccountNumber
-	})
+	genesisState.Sanitize()
 
 	// load the accounts
 	for _, gacc := range genesisState.Accounts {
@@ -256,8 +253,7 @@ func (app *GaiaApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisSt
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
 
 	// validate genesis state
-	err = GaiaValidateGenesisState(genesisState)
-	if err != nil {
+	if err := GaiaValidateGenesisState(genesisState); err != nil {
 		panic(err) // TODO find a way to do this w/o panics
 	}
 

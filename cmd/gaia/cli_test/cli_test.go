@@ -978,3 +978,14 @@ func TestSlashingGetParams(t *testing.T) {
 	require.Equal(t, int64(100), params.SignedBlocksWindow)
 	require.Equal(t, sdk.NewDecWithPrec(5, 1), params.MinSignedPerWindow)
 }
+
+func TestValidateGenesis(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	f.ValidateGenesis()
+}

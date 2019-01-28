@@ -25,10 +25,7 @@ func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			valAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			valAddr := cliCtx.GetFromAddress()
 
 			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
 			if cliCtx.GenerateOnly {

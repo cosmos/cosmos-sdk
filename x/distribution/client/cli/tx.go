@@ -63,18 +63,11 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 			var msg sdk.Msg
 			switch {
 			case isVal:
-				addr, err := cliCtx.GetFromAddress()
-				if err != nil {
-					return err
-				}
+				addr := cliCtx.GetFromAddress()
 				valAddr := sdk.ValAddress(addr.Bytes())
 				msg = types.NewMsgWithdrawValidatorCommission(valAddr)
 			default:
-				delAddr, err := cliCtx.GetFromAddress()
-				if err != nil {
-					return err
-				}
-
+				delAddr := cliCtx.GetFromAddress()
 				valAddr, err := sdk.ValAddressFromBech32(onlyFromVal)
 				if err != nil {
 					return err
@@ -109,11 +102,7 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
+			delAddr := cliCtx.GetFromAddress()
 			withdrawAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err

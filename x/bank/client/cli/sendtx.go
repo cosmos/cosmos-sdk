@@ -50,11 +50,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
+			from := cliCtx.GetFromAddress()
 			account, err := cliCtx.GetAccount(from)
 			if err != nil {
 				return err

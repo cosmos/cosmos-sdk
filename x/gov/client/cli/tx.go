@@ -86,10 +86,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				WithAccountDecoder(cdc)
 
 			// Get from address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
 
 			// Pull associated account
 			account, err := cliCtx.GetAccount(from)
@@ -199,11 +196,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
-			// Get from address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
 
 			// Fetch associated account
 			account, err := cliCtx.GetAccount(from)
@@ -258,10 +251,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 				WithAccountDecoder(cdc)
 
 			// Get voting address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)

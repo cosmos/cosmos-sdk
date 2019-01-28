@@ -28,6 +28,7 @@ func ValidateGenesisCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				genesis = args[0]
 			}
 
+			//nolint
 			fmt.Fprintf(os.Stderr, "validating genesis file at %s\n", genesis)
 
 			var genDoc types.GenesisDoc

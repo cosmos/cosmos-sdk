@@ -181,8 +181,8 @@ func (f *Fixtures) GDStart(flags ...string) *tests.Process {
 
 // ValidateGenesis runs gaiad validate-genesi
 func (f *Fixtures) ValidateGenesis() {
-	cmd := fmt.Sprintf("gaiad validate-genesis")
-	executeWriteCheckErr(f.T, addFlags(cmd, flags))
+	cmd := fmt.Sprintf("gaiad validate-genesis --home=%s", f.GDHome)
+	executeWriteCheckErr(f.T, cmd)
 }
 
 //___________________________________________________________________________________

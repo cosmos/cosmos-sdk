@@ -119,7 +119,8 @@ func NonNegativePowerInvariant(k staking.Keeper) simulation.Invariant {
 
 			if !bytes.Equal(iterator.Key(), powerKey) {
 				return fmt.Errorf("power store invariance:\n\tvalidator.Power: %v"+
-					"\n\tkey should be: %v\n\tkey in store: %v", validator.GetPower(), powerKey, iterator.Key())
+					"\n\tkey should be: %v\n\tkey in store: %v",
+					validator.GetTendermintPower(), powerKey, iterator.Key())
 			}
 
 			if validator.Tokens.IsNegative() {

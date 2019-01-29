@@ -45,6 +45,8 @@ var (
 	manyCoins = sdk.Coins{sdk.NewInt64Coin("foocoin", 1), sdk.NewInt64Coin("barcoin", 1)}
 	freeFee   = auth.NewStdFee(100000, sdk.Coins{sdk.NewInt64Coin("foocoin", 0)})
 
+	sendMsg1 = NewMsgSend(addr1, addr2, coins)
+
 	multiSendMsg1 = MsgMultiSend{
 		Inputs:  []Input{NewInput(addr1, coins)},
 		Outputs: []Output{NewOutput(addr2, coins)},

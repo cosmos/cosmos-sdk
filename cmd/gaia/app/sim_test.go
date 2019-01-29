@@ -59,31 +59,33 @@ func init() {
 	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
-
-	if genesisFile != "" {
-		var genesis tmtypes.GenesisDoc
-		cdc := MakeCodec()
-		bytes, err := ioutil.ReadFile(genesisFile)
-		if err != nil {
-			panic(err)
-		}
-		if err = cdc.UnmarshalJSON(bytes, &genesis); err != nil {
-			panic(err)
-		}
-		var appState GenesisState
-		if err = cdc.UnmarshalJSON(genesis.AppState, &appState); err != nil {
-			panic(err)
-		}
-		var newAccs []simulation.Account
-		for _, acc := range appState.Accounts {
-			privkeySeed := make([]byte, 15)
-			r.Read(privkeySeed)
-			privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
-			newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
-		}
-		return json.RawMessage(genesis.AppState), newAccs, genesis.ChainID
+func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+	var genesis tmtypes.GenesisDoc
+	cdc := MakeCodec()
+	bytes, err := ioutil.ReadFile(genesisFile)
+	if err != nil {
+		panic(err)
 	}
+	if err = cdc.UnmarshalJSON(bytes, &genesis); err != nil {
+		panic(err)
+	}
+	var appState GenesisState
+	if err = cdc.UnmarshalJSON(genesis.AppState, &appState); err != nil {
+		panic(err)
+	}
+	var newAccs []simulation.Account
+	for _, acc := range appState.Accounts {
+		// Pick a random private key, since we don't know the actual key
+		// This should be fine as it's only used for mock Tendermint validators
+		privkeySeed := make([]byte, 15)
+		r.Read(privkeySeed)
+		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
+		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
+	}
+	return json.RawMessage(genesis.AppState), newAccs, genesis.ChainID
+}
+
+func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
 
 	var genesisAccounts []GenesisAccount
 
@@ -251,6 +253,13 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 	}
 
 	return appState, accs, "simulation"
+}
+
+func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+	if genesisFile != "" {
+		return appStateFromGenesisFileFn(r, accs, genesisTimestamp)
+	}
+	return appStateRandomizedFn(r, accs, genesisTimestamp)
 }
 
 func randIntBetween(r *rand.Rand, min, max int) int {

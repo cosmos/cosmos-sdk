@@ -119,12 +119,6 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	err := GaiaValidateGenesisState(genesisState)
 	require.Error(t, err)
 
-	// require invalid vesting account fails validation (vesting > total)
-	genesisState = makeGenesisState(t, genTxs)
-	genesisState.Accounts[0].OriginalVesting = sdk.Coins{sdk.NewInt64Coin(bondDenom, 200)}
-	err = GaiaValidateGenesisState(genesisState)
-	require.Error(t, err)
-
 	// require invalid vesting account fails validation (invalid end time)
 	genesisState = makeGenesisState(t, genTxs)
 	genesisState.Accounts[0].OriginalVesting = genesisState.Accounts[0].Coins

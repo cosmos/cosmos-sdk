@@ -268,13 +268,6 @@ func validateGenesisStateAccounts(accs []GenesisAccount) error {
 
 		// validate any vesting fields
 		if !acc.OriginalVesting.IsZero() {
-			if acc.OriginalVesting.IsAllGT(acc.Coins) {
-				return fmt.Errorf(
-					"vesting coins cannot be greater than total coins; address: %s, vesting: %s, total: %s",
-					addrStr, acc.OriginalVesting, acc.Coins,
-				)
-			}
-
 			if acc.EndTime == 0 {
 				return fmt.Errorf("missing end time for vesting account; address: %s", addrStr)
 			}

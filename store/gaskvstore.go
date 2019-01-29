@@ -45,6 +45,7 @@ func (gs *gasKVStore) Get(key []byte) (value []byte) {
 
 // Implements KVStore.
 func (gs *gasKVStore) Set(key []byte, value []byte) {
+	assertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, sdk.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*sdk.Gas(len(value)), sdk.GasWritePerByteDesc)

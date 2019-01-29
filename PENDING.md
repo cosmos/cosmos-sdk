@@ -47,7 +47,7 @@ IMPROVEMENTS
   genesis validation checks to `GaiaValidateGenesisState`.
 
 * SDK
-  * \#2707 Test that store implementations do not allow nil values
+  * \#3435 Test that store implementations do not allow nil values
 
 * Tendermint
 

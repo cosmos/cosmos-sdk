@@ -61,6 +61,7 @@ func (s prefixStore) Has(key []byte) bool {
 
 // Implements KVStore
 func (s prefixStore) Set(key, value []byte) {
+	assertValidValue(value)
 	s.parent.Set(s.key(key), value)
 }
 

@@ -29,6 +29,11 @@ func TestGasKVStoreBasic(t *testing.T) {
 	require.Equal(t, meter.GasConsumed(), sdk.Gas(6429))
 }
 
+func TestGasKVStoreNoNilSet(t *testing.T) {
+	st := newGasKVStore()
+	require.Panics(t, func() { st.Set([]byte("key"), nil) }, "setting a nil value should panic")
+}
+
 func TestGasKVStoreIterator(t *testing.T) {
 	mem := dbStoreAdapter{dbm.NewMemDB()}
 	meter := sdk.NewGasMeter(10000)

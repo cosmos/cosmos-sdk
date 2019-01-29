@@ -128,7 +128,7 @@ func (st *iavlStore) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap 
 
 // Implements KVStore.
 func (st *iavlStore) Set(key, value []byte) {
-	st.assertValidValue(value)
+	assertValidValue(value)
 	st.tree.Set(key, value)
 }
 
@@ -166,13 +166,6 @@ func (st *iavlStore) Iterator(start, end []byte) Iterator {
 // Implements KVStore.
 func (st *iavlStore) ReverseIterator(start, end []byte) Iterator {
 	return newIAVLIterator(st.tree.ImmutableTree, start, end, false)
-}
-
-// Assert validity of a value
-func (st *iavlStore) assertValidValue(value []byte) {
-	if value == nil {
-		panic("value must not be nil")
-	}
 }
 
 // Handle gatest the latest height, if height is 0

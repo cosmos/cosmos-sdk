@@ -272,7 +272,7 @@ func validateGenesisStateAccounts(accs []GenesisAccount) error {
 				return fmt.Errorf("missing end time for vesting account; address: %s", addrStr)
 			}
 
-			if acc.StartTime > acc.EndTime {
+			if acc.StartTime >= acc.EndTime {
 				return fmt.Errorf(
 					"vesting start time must before end time; address: %s, start: %s, end: %s",
 					addrStr,

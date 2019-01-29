@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -74,6 +75,22 @@ func NewFixtures(t *testing.T) *Fixtures {
 		P2PAddr:  p2pAddr,
 		Port:     port,
 	}
+}
+
+// GenesisFile returns the path of the genesis file
+func (f Fixtures) GenesisFile() string {
+	return filepath.Join(f.GDHome, "config", "genesis.json")
+}
+
+// GenesisFile returns the application's genesis state
+func (f Fixtures) GenesisState() app.GenesisState {
+	cdc := codec.New()
+	genDoc, err := appInit.LoadGenesisDoc(cdc, f.GenesisFile())
+	require.NoError(f.T, err)
+
+	var appState app.GenesisState
+	require.NoError(f.T, cdc.UnmarshalJSON(genDoc.AppState, &appState))
+	return appState
 }
 
 // InitFixtures is called at the beginning of a test
@@ -179,6 +196,21 @@ func (f *Fixtures) GDStart(flags ...string) *tests.Process {
 	return proc
 }
 
+// GDTendermint returns the results of gaiad tendermint [query]
+func (f *Fixtures) GDTendermint(query string) string {
+	cmd := fmt.Sprintf("gaiad tendermint %s --home=%s", query, f.GDHome)
+	success, stdout, stderr := executeWriteRetStdStreams(f.T, cmd)
+	require.Empty(f.T, stderr)
+	require.True(f.T, success)
+	return strings.TrimSpace(stdout)
+}
+
+// ValidateGenesis runs gaiad validate-genesis
+func (f *Fixtures) ValidateGenesis() {
+	cmd := fmt.Sprintf("gaiad validate-genesis --home=%s", f.GDHome)
+	executeWriteCheckErr(f.T, cmd)
+}
+
 //___________________________________________________________________________________
 // gaiacli keys
 
@@ -192,6 +224,12 @@ func (f *Fixtures) KeysDelete(name string, flags ...string) {
 func (f *Fixtures) KeysAdd(name string, flags ...string) {
 	cmd := fmt.Sprintf("gaiacli keys add --home=%s %s", f.GCLIHome, name)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// KeysAdd is gaiacli keys add --recover
+func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli keys add --home=%s --recover %s", f.GCLIHome, name)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
 }
 
 // KeysShow is gaiacli keys show
@@ -497,6 +535,18 @@ func (f *Fixtures) QueryGovDeposits(propsalID int, flags ...string) []gov.Deposi
 
 //___________________________________________________________________________________
 // query slashing
+
+// QuerySigningInfo returns the signing info for a validator
+func (f *Fixtures) QuerySigningInfo(val string) slashing.ValidatorSigningInfo {
+	cmd := fmt.Sprintf("gaiacli query slashing signing-info %s %s", val, f.Flags())
+	res, errStr := tests.ExecuteT(f.T, cmd, "")
+	require.Empty(f.T, errStr)
+	cdc := app.MakeCodec()
+	var sinfo slashing.ValidatorSigningInfo
+	err := cdc.UnmarshalJSON([]byte(res), &sinfo)
+	require.NoError(f.T, err)
+	return sinfo
+}
 
 // QuerySlashingParams is gaiacli query slashing params
 func (f *Fixtures) QuerySlashingParams() slashing.Params {

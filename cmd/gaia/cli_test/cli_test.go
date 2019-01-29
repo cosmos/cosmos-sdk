@@ -45,6 +45,14 @@ func TestGaiaCLIKeysAddMultisig(t *testing.T) {
 	require.NotEqual(t, f.KeysShow("msig3").Address, f.KeysShow("msig4").Address)
 }
 
+func TestGaiaCLIKeysAddRecover(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	f.KeysAddRecover("test-recover", "dentist task convince chimney quality leave banana trade firm crawl eternal easily")
+	require.Equal(t, f.KeyAddress("test-recover").String(), "cosmos1qcfdf69js922qrdr4yaww3ax7gjml6pdds46f4")
+}
+
 func TestGaiaCLIMinimumFees(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)
@@ -909,10 +917,7 @@ func TestGaiadCollectGentxs(t *testing.T) {
 	f.UnsafeResetAll()
 
 	// Initialize keys
-	f.KeysDelete(keyFoo)
-	f.KeysDelete(keyBar)
 	f.KeysAdd(keyFoo)
-	f.KeysAdd(keyBar)
 
 	// Configure json output
 	f.CLIConfig("output", "json")
@@ -932,6 +937,42 @@ func TestGaiadCollectGentxs(t *testing.T) {
 	f.Cleanup(gentxDir)
 }
 
+func TestGaiadAddGenesisAccount(t *testing.T) {
+	t.Parallel()
+	f := NewFixtures(t)
+
+	// Reset testing path
+	f.UnsafeResetAll()
+
+	// Initialize keys
+	f.KeysDelete(keyFoo)
+	f.KeysDelete(keyBar)
+	f.KeysDelete(keyBaz)
+	f.KeysAdd(keyFoo)
+	f.KeysAdd(keyBar)
+	f.KeysAdd(keyBaz)
+
+	// Configure json output
+	f.CLIConfig("output", "json")
+
+	// Run init
+	f.GDInit(keyFoo)
+
+	// Add account to genesis.json
+	bazCoins := sdk.Coins{
+		sdk.NewInt64Coin("acoin", 1000000),
+		sdk.NewInt64Coin("bcoin", 1000000),
+	}
+
+	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
+	f.AddGenesisAccount(f.KeyAddress(keyBar), bazCoins)
+	genesisState := f.GenesisState()
+	require.Equal(t, genesisState.Accounts[0].Address, f.KeyAddress(keyFoo))
+	require.Equal(t, genesisState.Accounts[1].Address, f.KeyAddress(keyBar))
+	require.True(t, genesisState.Accounts[0].Coins.IsEqual(startCoins))
+	require.True(t, genesisState.Accounts[1].Coins.IsEqual(bazCoins))
+}
+
 func TestSlashingGetParams(t *testing.T) {
 	t.Parallel()
 	f := InitFixtures(t)
@@ -944,4 +985,19 @@ func TestSlashingGetParams(t *testing.T) {
 	require.Equal(t, time.Duration(120000000000), params.MaxEvidenceAge)
 	require.Equal(t, int64(100), params.SignedBlocksWindow)
 	require.Equal(t, sdk.NewDecWithPrec(5, 1), params.MinSignedPerWindow)
+
+	sinfo := f.QuerySigningInfo(f.GDTendermint("show-validator"))
+	require.Equal(t, int64(0), sinfo.StartHeight)
+	require.False(t, sinfo.Tombstoned)
+}
+
+func TestValidateGenesis(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	f.ValidateGenesis()
 }

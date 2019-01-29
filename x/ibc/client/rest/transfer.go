@@ -48,17 +48,27 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
+		var fromAddr sdk.AccAddress
+
+		if req.BaseReq.GenerateOnly {
+			// When generate only is supplied, the from field must be a valid Bech32
+			// address.
+			addr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+			if err != nil {
+				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			fromAddr = addr
 		}
 
-		packet := ibc.NewIBCPacket(
-			sdk.AccAddress(info.GetPubKey().Address()), to,
-			req.Amount, req.BaseReq.ChainID, destChainID,
-		)
+		packet := ibc.NewIBCPacket(fromAddr, to, req.Amount, req.BaseReq.ChainID, destChainID)
 		msg := ibc.IBCTransferMsg{IBCPacket: packet}
+
+		if req.BaseReq.GenerateOnly {
+			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			return
+		}
 
 		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}

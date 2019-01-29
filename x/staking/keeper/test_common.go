@@ -112,7 +112,11 @@ func CreateTestInput(t *testing.T, isCheckTx bool, initCoins int64) (sdk.Context
 		auth.ProtoBaseAccount, // prototype
 	)
 
-	ck := bank.NewBaseKeeper(accountKeeper)
+	ck := bank.NewBaseKeeper(
+		accountKeeper,
+		pk.Subspace(bank.DefaultParamspace),
+		bank.DefaultCodespace,
+	)
 
 	keeper := NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(DefaultParamspace), types.DefaultCodespace)
 	keeper.SetPool(ctx, types.InitialPool())
@@ -215,6 +219,7 @@ func TestingUpdateValidator(keeper Keeper, ctx sdk.Context, validator types.Vali
 	{ // Remove any existing power key for validator.
 		store := ctx.KVStore(keeper.storeKey)
 		iterator := sdk.KVStorePrefixIterator(store, ValidatorsByPowerIndexKey)
+		defer iterator.Close()
 		deleted := false
 		for ; iterator.Valid(); iterator.Next() {
 			valAddr := parseValidatorPowerRankKey(iterator.Key())

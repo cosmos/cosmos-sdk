@@ -5,11 +5,12 @@ BRANCH=$1
 CIRCLE_TOKEN=$2
 
 # let the website CI have a chance to run through the builds
-#sleep 120
+sleep 120
 
+# get details from the latest builds of that branch
 recent_build=$(curl https://circleci.com/api/v1.1/project/github/cosmos/cosmos.network/tree/$BRANCH?circle-token=$CIRCLE_TOKEN)
 
-# check the last three builds for that branch
+# collect the last three builds
 last_three=()
 for i in {1..3}
 do

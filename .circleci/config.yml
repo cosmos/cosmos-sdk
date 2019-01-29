@@ -364,7 +364,6 @@ workflows:
               only:
                 - master
                 - develop
-                - zach/report-docs
       - setup_dependencies
       - lint:
           requires:

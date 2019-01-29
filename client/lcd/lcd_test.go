@@ -257,7 +257,7 @@ func TestCoinSendAccAuto(t *testing.T) {
 	require.Equal(t, expectedBalance.Amount.SubRaw(1), coins[0].Amount)
 }
 
-func TestCoinSendGenerateOnly(t *testing.T) {
+func TestCoinMultiSendGenerateOnly(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
@@ -275,7 +275,7 @@ func TestCoinSendGenerateOnly(t *testing.T) {
 	require.Equal(t, memo, stdTx.Memo)
 	require.NotZero(t, stdTx.Fee.Gas)
 	require.IsType(t, stdTx.GetMsgs()[0], bank.MsgSend{})
-	require.Equal(t, addr, stdTx.GetMsgs()[0].(bank.MsgSend).Inputs[0].Address)
+	require.Equal(t, addr, stdTx.GetMsgs()[0].(bank.MsgSend).FromAddress)
 }
 
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {

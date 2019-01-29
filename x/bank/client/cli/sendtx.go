@@ -50,11 +50,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
+			from := cliCtx.GetFromAddress()
 			account, err := cliCtx.GetAccount(from)
 			if err != nil {
 				return err
@@ -71,7 +67,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

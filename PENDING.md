@@ -3,6 +3,8 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [\#3284](https://github.com/cosmos/cosmos-sdk/issues/3284) Rename the `name`
+  field to `from` in the `base_req` body.
 
 * Gaia CLI  (`gaiacli`)
   - [#3399](https://github.com/cosmos/cosmos-sdk/pull/3399) Add `gaiad validate-genesis` command to facilitate checking of genesis files
@@ -32,10 +34,17 @@ FEATURES
 IMPROVEMENTS
 
 * Gaia REST API
+  * [\#3284](https://github.com/cosmos/cosmos-sdk/issues/3284) Update Gaia Lite
+  REST service to support the following:
+    * Automatic account number and sequence population when fields are omitted
+    * Generate only functionality no longer requires access to a local Keybase
+    * `from` field in the `base_req` body can be a Keybase name or account address
 
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account
+  genesis validation checks to `GaiaValidateGenesisState`.
 
 * SDK
 
@@ -51,7 +60,7 @@ BUG FIXES
   - [\#3345](https://github.com/cosmos/cosmos-sdk/issues/3345) Upgrade ledger-cosmos-go dependency to v0.9.3 to pull
     https://github.com/ZondaX/ledger-cosmos-go/commit/ed9aa39ce8df31bad1448c72d3d226bf2cb1a8d1 in order to fix a derivation path issue that causes `gaiacli keys add --recover`
     to malfunction.
-
+  - [\#3419](https://github.com/cosmos/cosmos-sdk/pull/3419) Fix `q distr slashes` panic 
 
 * Gaia
 

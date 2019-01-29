@@ -2,7 +2,6 @@ package lcd
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -26,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -211,16 +211,17 @@ func TestCoinSend(t *testing.T) {
 	// run simulation and test success with estimated gas
 	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var responseBody struct {
-		GasEstimate int64 `json:"gas_estimate"`
-	}
-	require.Nil(t, json.Unmarshal([]byte(body), &responseBody))
+
+	var gasEstResp utils.GasEstimateResponse
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &gasEstResp))
+	require.NotZero(t, gasEstResp.GasEstimate)
 
 	acc = getAccount(t, port, addr)
 	require.Equal(t, expectedBalance.Amount, acc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom))
 
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr,
-		fmt.Sprintf("%d", responseBody.GasEstimate), 1.0, false, false, fees)
+	// run successful tx
+	gas := fmt.Sprintf("%d", gasEstResp.GasEstimate)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, gas, 1.0, false, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	err = cdc.UnmarshalJSON([]byte(body), &resultTx)
@@ -235,15 +236,67 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, expectedBalance.Amount.SubRaw(1), acc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom))
 }
 
+func TestCoinSendAccAuto(t *testing.T) {
+	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	acc := getAccount(t, port, addr)
+	initialBalance := acc.GetCoins()
+
+	// send a transfer tx without specifying account number and sequence
+	res, body, _ := doTransferWithGasAccAuto(t, port, seed, name1, memo, pw, "200000", 1.0, false, false, fees)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	// query sender
+	acc = getAccount(t, port, addr)
+	coins := acc.GetCoins()
+	expectedBalance := initialBalance[0].Minus(fees[0])
+
+	require.Equal(t, stakingTypes.DefaultBondDenom, coins[0].Denom)
+	require.Equal(t, expectedBalance.Amount.SubRaw(1), coins[0].Amount)
+}
+
+func TestCoinSendGenerateOnly(t *testing.T) {
+	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	// generate only
+	res, body, _ := doTransferWithGas(t, port, seed, "", memo, "", addr, "200000", 1, false, true, fees)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var stdTx auth.StdTx
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &stdTx))
+	require.Equal(t, len(stdTx.Msgs), 1)
+	require.Equal(t, stdTx.GetMsgs()[0].Route(), "bank")
+	require.Equal(t, stdTx.GetMsgs()[0].GetSigners(), []sdk.AccAddress{addr})
+	require.Equal(t, 0, len(stdTx.Signatures))
+	require.Equal(t, memo, stdTx.Memo)
+	require.NotZero(t, stdTx.Fee.Gas)
+	require.IsType(t, stdTx.GetMsgs()[0], bank.MsgSend{})
+	require.Equal(t, addr, stdTx.GetMsgs()[0].(bank.MsgSend).Inputs[0].Address)
+}
+
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 	acc := getAccount(t, port, addr)
 
-	// generate TX
-	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1, false, true, fees)
+	// simulate tx
+	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1, true, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var gasEstResp utils.GasEstimateResponse
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &gasEstResp))
+	require.NotZero(t, gasEstResp.GasEstimate)
+
+	// generate tx
+	gas := fmt.Sprintf("%d", gasEstResp.GasEstimate)
+	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, "", addr, gas, 1, false, true, fees)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
 	var msg auth.StdTx
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &msg))
 	require.Equal(t, len(msg.Msgs), 1)
@@ -251,6 +304,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, msg.Msgs[0].GetSigners(), []sdk.AccAddress{addr})
 	require.Equal(t, 0, len(msg.Signatures))
 	require.Equal(t, memo, msg.Memo)
+	require.NotZero(t, msg.Fee.Gas)
 
 	gasEstimate := int64(msg.Fee.Gas)
 	accnum := acc.GetAccountNumber()
@@ -268,6 +322,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	}
 	json, err := cdc.MarshalJSON(payload)
 	require.Nil(t, err)
+
 	res, body = Request(t, port, "POST", "/tx/sign", json)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &signedMsg))

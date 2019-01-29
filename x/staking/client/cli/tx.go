@@ -39,7 +39,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -71,11 +71,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			valAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
+			valAddr := cliCtx.GetFromAddress()
 			description := staking.Description{
 				Moniker:  viper.GetString(FlagMoniker),
 				Identity: viper.GetString(FlagIdentity),
@@ -102,7 +98,7 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -128,11 +124,7 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
+			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
@@ -144,7 +136,7 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -167,11 +159,7 @@ func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 
 			var err error
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
+			delAddr := cliCtx.GetFromAddress()
 			valSrcAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidatorSrc))
 			if err != nil {
 				return err
@@ -199,7 +187,7 @@ func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -220,11 +208,7 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			delAddr, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
-
+			delAddr := cliCtx.GetFromAddress()
 			valAddr, err := sdk.ValAddressFromBech32(viper.GetString(FlagAddressValidator))
 			if err != nil {
 				return err
@@ -247,7 +231,7 @@ func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}
 			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -265,12 +249,9 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		return txBldr, nil, err
 	}
 
-	valAddr, err := cliCtx.GetFromAddress()
-	if err != nil {
-		return txBldr, nil, err
-	}
-
+	valAddr := cliCtx.GetFromAddress()
 	pkStr := viper.GetString(FlagPubKey)
+
 	pk, err := sdk.GetConsPubKeyBech32(pkStr)
 	if err != nil {
 		return txBldr, nil, err

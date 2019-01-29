@@ -111,29 +111,41 @@ func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
 }
 
 func TestGaiaGenesisValidation(t *testing.T) {
-	genTxs := make([]auth.StdTx, 2)
-	// Test duplicate accounts fails
-	genTxs[0] = makeMsg("test-0", pk1)
-	genTxs[1] = makeMsg("test-1", pk1)
-	genesisState := makeGenesisState(t, genTxs)
+	genTxs := []auth.StdTx{makeMsg("test-0", pk1), makeMsg("test-1", pk2)}
+	dupGenTxs := []auth.StdTx{makeMsg("test-0", pk1), makeMsg("test-1", pk1)}
+
+	// require duplicate accounts fails validation
+	genesisState := makeGenesisState(t, dupGenTxs)
 	err := GaiaValidateGenesisState(genesisState)
-	require.NotNil(t, err)
-	// Test bonded + jailed validator fails
+	require.Error(t, err)
+
+	// require invalid vesting account fails validation (invalid end time)
+	genesisState = makeGenesisState(t, genTxs)
+	genesisState.Accounts[0].OriginalVesting = genesisState.Accounts[0].Coins
+	err = GaiaValidateGenesisState(genesisState)
+	require.Error(t, err)
+	genesisState.Accounts[0].StartTime = 1548888000
+	genesisState.Accounts[0].EndTime = 1548775410
+	err = GaiaValidateGenesisState(genesisState)
+	require.Error(t, err)
+
+	// require bonded + jailed validator fails validation
 	genesisState = makeGenesisState(t, genTxs)
 	val1 := stakingTypes.NewValidator(addr1, pk1, stakingTypes.Description{Moniker: "test #2"})
 	val1.Jailed = true
 	val1.Status = sdk.Bonded
 	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
 	err = GaiaValidateGenesisState(genesisState)
-	require.NotNil(t, err)
-	// Test duplicate validator fails
+	require.Error(t, err)
+
+	// require duplicate validator fails validation
 	val1.Jailed = false
 	genesisState = makeGenesisState(t, genTxs)
 	val2 := stakingTypes.NewValidator(addr1, pk1, stakingTypes.Description{Moniker: "test #3"})
 	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
 	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val2)
 	err = GaiaValidateGenesisState(genesisState)
-	require.NotNil(t, err)
+	require.Error(t, err)
 }
 
 func TestNewDefaultGenesisAccount(t *testing.T) {

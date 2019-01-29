@@ -8,7 +8,9 @@ import (
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
@@ -19,14 +21,10 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	verifier tmlite.Verifier
-)
+var verifier tmlite.Verifier
 
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
@@ -47,8 +45,8 @@ type CLIContext struct {
 	Verifier      tmlite.Verifier
 	Simulate      bool
 	GenerateOnly  bool
-	fromAddress   types.AccAddress
-	fromName      string
+	FromAddress   sdk.AccAddress
+	FromName      string
 	Indent        bool
 }
 
@@ -63,7 +61,11 @@ func NewCLIContext() CLIContext {
 	}
 
 	from := viper.GetString(client.FlagFrom)
-	fromAddress, fromName := fromFields(from)
+	fromAddress, fromName, err := GetFromFields(from)
+	if err != nil {
+		fmt.Printf("failed to get from fields: %v", err)
+		os.Exit(1)
+	}
 
 	// We need to use a single verifier for all contexts
 	if verifier == nil {
@@ -85,8 +87,8 @@ func NewCLIContext() CLIContext {
 		Verifier:      verifier,
 		Simulate:      viper.GetBool(client.FlagDryRun),
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
-		fromAddress:   fromAddress,
-		fromName:      fromName,
+		FromAddress:   fromAddress,
+		FromName:      fromName,
 		Indent:        viper.GetBool(client.FlagIndentResponse),
 	}
 }
@@ -135,37 +137,6 @@ func createVerifier() tmlite.Verifier {
 	}
 
 	return verifier
-}
-
-func fromFields(from string) (fromAddr types.AccAddress, fromName string) {
-	if from == "" {
-		return nil, ""
-	}
-
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		fmt.Println("no keybase found")
-		os.Exit(1)
-	}
-
-	var info cskeys.Info
-	if addr, err := types.AccAddressFromBech32(from); err == nil {
-		info, err = keybase.GetByAddress(addr)
-		if err != nil {
-			fmt.Printf("could not find key %s\n", from)
-			os.Exit(1)
-		}
-	} else {
-		info, err = keybase.Get(from)
-		if err != nil {
-			fmt.Printf("could not find key %s\n", from)
-			os.Exit(1)
-		}
-	}
-
-	fromAddr = info.GetAddress()
-	fromName = info.GetName()
-	return
 }
 
 // WithCodec returns a copy of the context with an updated codec.
@@ -255,6 +226,19 @@ func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
 	return ctx
 }
 
+// WithFromName returns a copy of the context with an updated from account name.
+func (ctx CLIContext) WithFromName(name string) CLIContext {
+	ctx.FromName = name
+	return ctx
+}
+
+// WithFromAddress returns a copy of the context with an updated from account
+// address.
+func (ctx CLIContext) WithFromAddress(addr sdk.AccAddress) CLIContext {
+	ctx.FromAddress = addr
+	return ctx
+}
+
 // PrintOutput prints output while respecting output and indent flags
 // NOTE: pass in marshalled structs that have been unmarshaled
 // because this function will panic on marshaling errors
@@ -278,4 +262,32 @@ func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
 
 	fmt.Println(string(out))
 	return
+}
+
+// GetFromFields returns a from account address and Keybase name given either
+// an address or key name.
+func GetFromFields(from string) (sdk.AccAddress, string, error) {
+	if from == "" {
+		return nil, "", nil
+	}
+
+	keybase, err := keys.GetKeyBase()
+	if err != nil {
+		return nil, "", err
+	}
+
+	var info cryptokeys.Info
+	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
+		info, err = keybase.GetByAddress(addr)
+		if err != nil {
+			return nil, "", err
+		}
+	} else {
+		info, err = keybase.Get(from)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	return info.GetAddress(), info.GetName(), nil
 }

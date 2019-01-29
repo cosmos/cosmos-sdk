@@ -272,6 +272,17 @@ jobs:
           command: |
             chamber exec cosmos-sdk -- start_website_build
 
+  report_docs_build:
+    working_directory: /go/src/github.com/cosmos/cosmos-sdk
+    docker:
+      - image: circleci/golang:1.11.4
+    steps:
+      - checkout
+      - run:
+          name: Check that docs build without error
+          command: |
+            bash .circleci/check-docs.sh $CIRCLE_BRANCH $CIRCLE_TOKEN
+
   macos_ci:
     <<: *macos_defaults
     steps:
@@ -347,6 +358,13 @@ workflows:
               only:
                 - master
                 - develop
+      - report_docs_build:
+          filters:
+            branches:
+              only:
+                - master
+                - develop
+                - zach/report-docs
       - setup_dependencies
       - lint:
           requires:

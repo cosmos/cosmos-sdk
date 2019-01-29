@@ -15,6 +15,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,16 +37,18 @@ import (
 )
 
 var (
-	seed      int64
-	numBlocks int
-	blockSize int
-	enabled   bool
-	verbose   bool
-	commit    bool
-	period    int
+	genesisFile string
+	seed        int64
+	numBlocks   int
+	blockSize   int
+	enabled     bool
+	verbose     bool
+	commit      bool
+	period      int
 )
 
 func init() {
+	flag.StringVar(&genesisFile, "SimulationGenesis", "", "Custom simulation genesis file")
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
@@ -56,6 +59,21 @@ func init() {
 }
 
 func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) json.RawMessage {
+
+	if genesisFile != "" {
+		var genesis tmtypes.GenesisDoc
+		cdc := MakeCodec()
+		bytes, err := ioutil.ReadFile(genesisFile)
+		if err != nil {
+			panic(err)
+		}
+		if err = cdc.UnmarshalJSON(bytes, &genesis); err != nil {
+			panic(err)
+		}
+		fmt.Printf("app state: %s\n", json.RawMessage(genesis.AppState))
+		return json.RawMessage(genesis.AppState)
+	}
+
 	var genesisAccounts []GenesisAccount
 
 	amount := int64(r.Intn(1e6))

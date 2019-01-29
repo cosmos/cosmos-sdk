@@ -150,6 +150,11 @@ test_sim_gaia_nondeterminism:
 	@echo "Running nondeterminism test..."
 	@go test ./cmd/gaia/app -run TestAppStateDeterminism -SimulationEnabled=true -v -timeout 10m
 
+test_sim_gaia_custom_genesis_fast:
+	@echo "Running custom genesis simulation..."
+	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
+	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationGenesis=${HOME}/.gaiad/config/genesis.json -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -v -timeout 24h
+
 test_sim_gaia_fast:
 	@echo "Running quick Gaia simulation. This may take several minutes..."
 	@go test ./cmd/gaia/app -run TestFullGaiaSimulation -SimulationEnabled=true -SimulationNumBlocks=1000 -SimulationBlockSize=200 -SimulationCommit=true -SimulationSeed=99 -v -timeout 24h
@@ -161,6 +166,11 @@ test_sim_gaia_import_export:
 test_sim_gaia_simulation_after_import:
 	@echo "Running Gaia simulation-after-import. This may take several minutes..."
 	@bash scripts/multisim.sh 50 5 TestGaiaSimulationAfterImport
+
+test_sim_gaia_custom_genesis_multi_seed:
+	@echo "Running multi-seed custom genesis simulation..."
+	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
+	@bash scripts/multisim.sh 400 5 TestFullGaiaSimulation ${HOME}/.gaiad/config/genesis.json
 
 test_sim_gaia_multi_seed:
 	@echo "Running multi-seed Gaia simulation. This may take awhile!"
@@ -255,5 +265,6 @@ check_tools check_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
+test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
 test_sim_gaia_multi_seed test_sim_gaia_import_export update_tools update_dev_tools \
 build-snap-edge

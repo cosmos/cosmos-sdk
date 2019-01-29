@@ -36,6 +36,8 @@ IMPROVEMENTS
 * Gaia CLI  (`gaiacli`)
 
 * Gaia
+  * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account
+  genesis validation checks to `GaiaValidateGenesisState`.
 
 * SDK
 

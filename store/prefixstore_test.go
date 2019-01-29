@@ -95,6 +95,13 @@ func TestGasKVStorePrefix(t *testing.T) {
 	testPrefixStore(t, gasStore, []byte("test"))
 }
 
+func TestPrefixKVStoreNoNilSet(t *testing.T) {
+	meter := sdk.NewGasMeter(100000000)
+	mem := dbStoreAdapter{dbm.NewMemDB()}
+	gasStore := NewGasKVStore(meter, sdk.KVGasConfig(), mem)
+	require.Panics(t, func() { gasStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
+}
+
 func TestPrefixStoreIterate(t *testing.T) {
 	db := dbm.NewMemDB()
 	baseStore := dbStoreAdapter{db}

@@ -82,13 +82,13 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 }
 
 // GetFromAddress returns the from address from the context's name.
-func (ctx CLIContext) GetFromAddress() (sdk.AccAddress, error) {
-	return ctx.fromAddress, nil
+func (ctx CLIContext) GetFromAddress() sdk.AccAddress {
+	return ctx.FromAddress
 }
 
 // GetFromName returns the key name for the current context.
-func (ctx CLIContext) GetFromName() (string, error) {
-	return ctx.fromName, nil
+func (ctx CLIContext) GetFromName() string {
+	return ctx.FromName
 }
 
 // GetAccountNumber returns the next account number for the given account
@@ -116,11 +116,7 @@ func (ctx CLIContext) GetAccountSequence(address []byte) (uint64, error) {
 // EnsureAccountExists ensures that an account exists for a given context. An
 // error is returned if it does not.
 func (ctx CLIContext) EnsureAccountExists() error {
-	addr, err := ctx.GetFromAddress()
-	if err != nil {
-		return err
-	}
-
+	addr := ctx.GetFromAddress()
 	accountBytes, err := ctx.QueryStore(auth.AddressStoreKey(addr), ctx.AccountStore)
 	if err != nil {
 		return err

@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/bank"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -28,6 +30,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 	genesisState := NewGenesisState(
 		genaccs,
 		auth.DefaultGenesisState(),
+		bank.DefaultGenesisState(),
 		staking.DefaultGenesisState(),
 		mint.DefaultGenesisState(),
 		distr.DefaultGenesisState(),

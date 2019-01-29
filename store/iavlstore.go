@@ -128,6 +128,7 @@ func (st *iavlStore) CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap 
 
 // Implements KVStore.
 func (st *iavlStore) Set(key, value []byte) {
+	assertValidValue(value)
 	st.tree.Set(key, value)
 }
 

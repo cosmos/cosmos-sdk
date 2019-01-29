@@ -44,7 +44,7 @@ func (ci *cacheKVStore) GetStoreType() StoreType {
 func (ci *cacheKVStore) Get(key []byte) (value []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
-	ci.assertValidKey(key)
+	assertValidKey(key)
 
 	cacheValue, ok := ci.cache[string(key)]
 	if !ok {
@@ -61,8 +61,8 @@ func (ci *cacheKVStore) Get(key []byte) (value []byte) {
 func (ci *cacheKVStore) Set(key []byte, value []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
-	ci.assertValidKey(key)
-	ci.assertValidValue(value)
+	assertValidKey(key)
+	assertValidValue(value)
 
 	ci.setCacheValue(key, value, false, true)
 }
@@ -77,7 +77,7 @@ func (ci *cacheKVStore) Has(key []byte) bool {
 func (ci *cacheKVStore) Delete(key []byte) {
 	ci.mtx.Lock()
 	defer ci.mtx.Unlock()
-	ci.assertValidKey(key)
+	assertValidKey(key)
 
 	ci.setCacheValue(key, nil, true, true)
 }
@@ -187,21 +187,6 @@ func (ci *cacheKVStore) dirtyItems(start, end []byte, ascending bool) []cmn.KVPa
 	})
 
 	return items
-}
-
-//----------------------------------------
-// etc
-
-func (ci *cacheKVStore) assertValidKey(key []byte) {
-	if key == nil {
-		panic("key is nil")
-	}
-}
-
-func (ci *cacheKVStore) assertValidValue(value []byte) {
-	if value == nil {
-		panic("value is nil")
-	}
 }
 
 // Only entrypoint to mutate ci.cache.

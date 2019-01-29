@@ -26,7 +26,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router) {
 // cli version REST handler endpoint
 func CLIVersionRequestHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(fmt.Sprintf("{\"version\": \"%s\"}", version.GetVersion())))
+	w.Write([]byte(fmt.Sprintf("{\"version\": \"%s\"}", version.Version)))
 }
 
 // connected node version REST handler endpoint

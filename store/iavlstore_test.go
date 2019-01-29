@@ -69,6 +69,13 @@ func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 	require.False(t, exists)
 }
 
+func TestIAVLStoreNoNilSet(t *testing.T) {
+	db := dbm.NewMemDB()
+	tree, _ := newAlohaTree(t, db)
+	iavlStore := newIAVLStore(tree, numRecent, storeEvery)
+	require.Panics(t, func() { iavlStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
+}
+
 func TestIAVLIterator(t *testing.T) {
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)

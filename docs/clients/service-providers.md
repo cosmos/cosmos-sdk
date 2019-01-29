@@ -105,10 +105,19 @@ The recommended way to listen for incoming transaction is to periodically query 
 
 ## Rest API
 
-The Rest API documents all the available endpoints that you can use to interract with your full node. It can be found [here](https://cosmos.network/rpc/). 
+The Rest API documents all the available endpoints that you can use to interact
+with your full node. It can be found [here](https://cosmos.network/rpc/).
 
-The API is divided into ICS standards for each category of endpoints. For example, the [ICS20](https://cosmos.network/rpc/#/ICS20/) describes the API to interact with tokens. 
+The API is divided into ICS standards for each category of endpoints. For
+example, the [ICS20](https://cosmos.network/rpc/#/ICS20/) describes the API to
+interact with tokens.
 
-To give more flexibility to implementers, we have included the ability to generate unsigned transactions, [sign](https://cosmos.network/rpc/#/ICS20/post_tx_sign) and [broadcast](https://cosmos.network/rpc/#/ICS20/post_tx_broadcast) them with different API endpoints. This allows service providers to use their own signing mechanism for instance. 
+To give more flexibility to implementers, we have included the ability to
+generate unsigned transactions, [sign](https://cosmos.network/rpc/#/ICS20/post_tx_sign)
+and [broadcast](https://cosmos.network/rpc/#/ICS20/post_tx_broadcast) them with
+different API endpoints. This allows service providers to use their own signing
+mechanism for instance.
 
-In order to generate an unsigned transaction (example with [coin transfer](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)), you need to use the flag `?generate_only`.
+In order to generate an unsigned transaction (example with
+[coin transfer](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)),
+you need to use the field `generate_only` in the body of `base_req`.

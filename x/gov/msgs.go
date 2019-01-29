@@ -11,6 +11,9 @@ const (
 	TypeMsgDeposit        = "deposit"
 	TypeMsgVote           = "vote"
 	TypeMsgSubmitProposal = "submit_proposal"
+
+	MaxDescriptionLength int = 5000
+	MaxTitleLength       int = 140
 )
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
@@ -41,10 +44,10 @@ func (msg MsgSubmitProposal) Type() string  { return TypeMsgSubmitProposal }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
-	if len(msg.Title) == 0 {
+	if len(msg.Title) == 0 || len(msg.Title) > MaxTitleLength {
 		return ErrInvalidTitle(DefaultCodespace, msg.Title) // TODO: Proper Error
 	}
-	if len(msg.Description) == 0 {
+	if len(msg.Description) == 0 || len(msg.Description) > MaxDescriptionLength {
 		return ErrInvalidDescription(DefaultCodespace, msg.Description) // TODO: Proper Error
 	}
 	if !validProposalType(msg.ProposalType) {

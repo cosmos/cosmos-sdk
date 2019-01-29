@@ -124,6 +124,9 @@ draw_deps: tools
 clean:
 	rm -f devtools-stamp vendor-deps snapcraft.yaml
 
+distclean: clean
+	rm -rf vendor/
+
 ########################################
 ### Documentation
 
@@ -250,7 +253,7 @@ build-snap-edge: snapcraft.yaml
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
 # https://www.gnu.org/software/make/manual/html_node/Phony-Targets.html
-.PHONY: build install install_debug dist \
+.PHONY: build install install_debug dist clean distclean \
 check_tools check_dev_tools get_vendor_deps draw_deps test test_cli test_unit \
 test_cover test_lint benchmark devdoc_init devdoc devdoc_save devdoc_update \
 build-linux build-docker-gaiadnode localnet-start localnet-stop \

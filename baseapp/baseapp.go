@@ -396,7 +396,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			return abci.ResponseQuery{
 				Code:      uint32(sdk.CodeOK),
 				Codespace: string(sdk.CodespaceRoot),
-				Value:     []byte(version.GetVersion()),
+				Value:     []byte(version.Version),
 			}
 		default:
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()

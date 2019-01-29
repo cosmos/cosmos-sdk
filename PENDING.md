@@ -48,6 +48,7 @@ BUG FIXES
 
 * Gaia CLI  (`gaiacli`)
   - [\#3417](https://github.com/cosmos/cosmos-sdk/pull/3417) Fix `q slashing signing-info` panic by ensuring safety of user input and properly returning not found error
+  - [\#3419](https://github.com/cosmos/cosmos-sdk/pull/3419) Fix `q distr slashes` panic 
 
 * Gaia
 

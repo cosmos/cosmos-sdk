@@ -143,7 +143,7 @@ func GetCmdQueryValidatorSlashes(queryRoute string, cdc *codec.Codec) *cobra.Com
 				return err
 			}
 
-			var slashes types.ValidatorSlashEvent
+			var slashes types.ValidatorSlashEvents
 			cdc.MustUnmarshalJSON(res, &slashes)
 			return cliCtx.PrintOutput(slashes)
 		},

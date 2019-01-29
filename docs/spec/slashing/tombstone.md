@@ -36,8 +36,6 @@ Currently, in the jail period implementation, once a validator unjails, all of t
 
 Implementing the tombstone system and getting rid of the slashing period tracking will make the `slashing` module way simpler, especially because we can remove all of the hooks defined in the `slashing` module consumed by the `staking` module (the `slashing` module still consumes hooks defined in `staking`).
 
-## Further improvements / Related proposals:
-
 ### Single slashing amount
 
 Another optimization that can be made is that if we assume that all ABCI faults for Tendermint consensus are slashed at the same level, we don't have to keep track of "max slash".  Once an ABCI fault happens, we don't have to worry about comparing potential future ones to find the max.

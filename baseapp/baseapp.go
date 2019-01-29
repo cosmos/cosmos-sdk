@@ -483,7 +483,6 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(nil)
 		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))

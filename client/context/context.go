@@ -30,26 +30,26 @@ var verifier tmlite.Verifier
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
 type CLIContext struct {
-	Codec           *codec.Codec
-	AccDecoder      auth.AccountDecoder
-	Client          rpcclient.Client
-	Output          io.Writer
+	Codec         *codec.Codec
+	AccDecoder    auth.AccountDecoder
+	Client        rpcclient.Client
+	Output        io.Writer
 	OutputFormat  string
-	Height          int64
-	NodeURI         string
-	From            string
-	AccountStore    string
-	TrustNode       bool
-	UseLedger       bool
-	Async           bool
-	PrintResponse   bool
-	// Overrides the default CLI transaction response handling
+	Height        int64
+	NodeURI       string
+	From          string
+	AccountStore  string
+	TrustNode     bool
+	UseLedger     bool
+	Async         bool
+	PrintResponse bool
+	// Overrides the default CLI transaction response handling with a custom handler
 	ResponseHandler func(res *ctypes.ResultBroadcastTxCommit) (*ctypes.ResultBroadcastTxCommit, error)
 	Verifier        tmlite.Verifier
 	Simulate        bool
 	GenerateOnly    bool
-	FromAddress   sdk.AccAddress
-	FromName      string
+	FromAddress     sdk.AccAddress
+	FromName        string
 	Indent          bool
 }
 

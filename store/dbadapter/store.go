@@ -25,7 +25,7 @@ func (dsa Store) CacheWrap() types.CacheWrap {
 	return cachekv.NewStore(dsa)
 }
 
-// CacheWrapWithTrace implements the KVStore interface.
+// CacheWrapWithTrace implements KVStore.
 func (dsa Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
 	return cachekv.NewStore(tracekv.NewStore(dsa, w, tc))
 }

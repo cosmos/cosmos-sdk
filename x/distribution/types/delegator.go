@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,4 +27,45 @@ func NewDelegatorStartingInfo(previousPeriod uint64, stake sdk.Dec, height uint6
 		Stake:          stake,
 		Height:         height,
 	}
+}
+
+type (
+	// AllDelegationRewards defines a response to querying for all distribution
+	// rewards for a given delegator.
+	AllDelegationRewards []DelegationRewards
+
+	// DelegationRewards defines a response to querying for distribution rewards
+	// between a given validator and delegator.
+	DelegationRewards struct {
+		DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+		ValidatorAddr sdk.ValAddress `json:"validator_addr"`
+		Rewards       sdk.DecCoins   `json:"rewards"`
+	}
+)
+
+func (dr DelegationRewards) String() string {
+	return fmt.Sprintf(`Delegation Rewards:
+  Delegator Address:  %s
+  Validator Address:  %s
+  Rewards:            %v`,
+		dr.DelegatorAddr, dr.ValidatorAddr, dr.Rewards,
+	)
+}
+
+func (adr AllDelegationRewards) String() string {
+	var b strings.Builder
+	b.WriteString("Delegation Rewards:")
+
+	for _, dr := range adr {
+		b.WriteString(
+			fmt.Sprintf(`
+	Delegator Address:  %s
+	Validator Address:  %s
+	Rewards:            %v`,
+				dr.DelegatorAddr, dr.ValidatorAddr, dr.Rewards,
+			),
+		)
+	}
+
+	return b.String()
 }

@@ -21,11 +21,11 @@ exit_code=0
 i=0
 
 for build in ${last_three[@]}; do
+	url=$(echo $recent_build | jq '.['"$i"'].build_url')
 	if [ $build == "\"success\"" ]; then
-		echo "Docs build OK"
+		echo "Docs build OK, see $url"
 	else
-		failed=$(echo $recent_build | jq '.['"$i"'].build_url')
-		echo "Docs build Failed, see $failed"
+		echo "Docs build Failed, see $url"
 		exit_code=1
 	fi
 	i+=1

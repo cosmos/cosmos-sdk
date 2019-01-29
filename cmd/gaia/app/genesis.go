@@ -86,8 +86,8 @@ type GenesisAccount struct {
 	OriginalVesting  sdk.Coins `json:"original_vesting"`  // total vesting coins upon initialization
 	DelegatedFree    sdk.Coins `json:"delegated_free"`    // delegated vested coins at time of delegation
 	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // delegated vesting coins at time of delegation
-	StartTime        int64     `json:"start_time"`        // vesting start time
-	EndTime          int64     `json:"end_time"`          // vesting end time
+	StartTime        int64     `json:"start_time"`        // vesting start time (UNIX Epoch time)
+	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {

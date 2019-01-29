@@ -50,9 +50,11 @@ sequence number (nonce) and address.
 
 Accounts may also be vesting in which they must provide the necessary vesting
 information. Vesting accounts must provide at a minimum `OriginalVesting` and
-`EndTime`. If `StartTime` is also provided, it must be less than `EndTime` but may be
-in the future. In other words, it does not have to be equal to the genesis time.
-In a new chain starting from a fresh state (not exported), `OriginalVesting`
-must be less than or equal to `Coins.`
+`EndTime`. If `StartTime` is also provided, the account will be treated as a
+"continuous" vesting account in which it vests coins at a predefined schedule.
+Providing a `StartTime` must be less than `EndTime` but may be in the future.
+In other words, it does not have to be equal to the genesis time. In a new chain
+starting from a fresh state (not exported), `OriginalVesting` must be less than
+or equal to `Coins.`
 
 <!-- TODO: Remaining modules and components in GenesisState -->

@@ -13,8 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,16 +38,18 @@ import (
 )
 
 var (
-	seed      int64
-	numBlocks int
-	blockSize int
-	enabled   bool
-	verbose   bool
-	commit    bool
-	period    int
+	genesisFile string
+	seed        int64
+	numBlocks   int
+	blockSize   int
+	enabled     bool
+	verbose     bool
+	commit      bool
+	period      int
 )
 
 func init() {
+	flag.StringVar(&genesisFile, "SimulationGenesis", "", "Custom simulation genesis file")
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
@@ -55,7 +59,31 @@ func init() {
 	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) json.RawMessage {
+func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+	var genesis tmtypes.GenesisDoc
+	cdc := MakeCodec()
+	bytes, err := ioutil.ReadFile(genesisFile)
+	if err != nil {
+		panic(err)
+	}
+	cdc.MustUnmarshalJSON(bytes, &genesis)
+	var appState GenesisState
+	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
+	var newAccs []simulation.Account
+	for _, acc := range appState.Accounts {
+		// Pick a random private key, since we don't know the actual key
+		// This should be fine as it's only used for mock Tendermint validators
+		// and these keys are never actually used to sign by mock Tendermint.
+		privkeySeed := make([]byte, 15)
+		r.Read(privkeySeed)
+		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
+		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
+	}
+	return json.RawMessage(genesis.AppState), newAccs, genesis.ChainID
+}
+
+func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+
 	var genesisAccounts []GenesisAccount
 
 	amount := int64(r.Intn(1e6))
@@ -221,7 +249,14 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		panic(err)
 	}
 
-	return appState
+	return appState, accs, "simulation"
+}
+
+func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+	if genesisFile != "" {
+		return appStateFromGenesisFileFn(r, accs, genesisTimestamp)
+	}
+	return appStateRandomizedFn(r, accs, genesisTimestamp)
 }
 
 func randIntBetween(r *rand.Rand, min, max int) int {

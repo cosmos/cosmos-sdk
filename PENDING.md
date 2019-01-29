@@ -25,6 +25,7 @@ FEATURES
 
 * Gaia
   - [\#3397](https://github.com/cosmos/cosmos-sdk/pull/3397) Implement genesis file sanitization to avoid failures at chain init.
+  * \#3428 Run the simulation from a particular genesis state loaded from a file
 
 * SDK
   * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio

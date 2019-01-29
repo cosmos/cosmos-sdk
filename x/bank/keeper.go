@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
 //-----------------------------------------------------------------------------
@@ -32,14 +33,20 @@ type Keeper interface {
 type BaseKeeper struct {
 	BaseSendKeeper
 
-	ak auth.AccountKeeper
+	ak         auth.AccountKeeper
+	paramSpace params.Subspace
 }
 
 // NewBaseKeeper returns a new BaseKeeper
-func NewBaseKeeper(ak auth.AccountKeeper) BaseKeeper {
+func NewBaseKeeper(ak auth.AccountKeeper,
+	paramSpace params.Subspace,
+	codespace sdk.CodespaceType) BaseKeeper {
+
+	ps := paramSpace.WithTypeTable(ParamTypeTable())
 	return BaseKeeper{
-		BaseSendKeeper: NewBaseSendKeeper(ak),
+		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace),
 		ak:             ak,
+		paramSpace:     ps,
 	}
 }
 
@@ -95,6 +102,9 @@ type SendKeeper interface {
 	ViewKeeper
 
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
+
+	GetSendEnabled(ctx sdk.Context) bool
+	SetSendEnabled(ctx sdk.Context, enabled bool)
 }
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
@@ -104,14 +114,18 @@ var _ SendKeeper = (*BaseSendKeeper)(nil)
 type BaseSendKeeper struct {
 	BaseViewKeeper
 
-	ak auth.AccountKeeper
+	ak         auth.AccountKeeper
+	paramSpace params.Subspace
 }
 
 // NewBaseSendKeeper returns a new BaseSendKeeper.
-func NewBaseSendKeeper(ak auth.AccountKeeper) BaseSendKeeper {
+func NewBaseSendKeeper(ak auth.AccountKeeper,
+	paramSpace params.Subspace, codespace sdk.CodespaceType) BaseSendKeeper {
+
 	return BaseSendKeeper{
-		BaseViewKeeper: NewBaseViewKeeper(ak),
+		BaseViewKeeper: NewBaseViewKeeper(ak, codespace),
 		ak:             ak,
+		paramSpace:     paramSpace,
 	}
 }
 
@@ -119,8 +133,20 @@ func NewBaseSendKeeper(ak auth.AccountKeeper) BaseSendKeeper {
 func (keeper BaseSendKeeper) SendCoins(
 	ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins,
 ) (sdk.Tags, sdk.Error) {
-
 	return sendCoins(ctx, keeper.ak, fromAddr, toAddr, amt)
+}
+
+// GetSendEnabled returns the current SendEnabled
+// nolint: errcheck
+func (keeper BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
+	var enabled bool
+	keeper.paramSpace.Get(ctx, ParamStoreKeySendEnabled, &enabled)
+	return enabled
+}
+
+// nolint: errcheck
+func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
+	keeper.paramSpace.Set(ctx, ParamStoreKeySendEnabled, &enabled)
 }
 
 //-----------------------------------------------------------------------------
@@ -133,18 +159,19 @@ var _ ViewKeeper = (*BaseViewKeeper)(nil)
 type ViewKeeper interface {
 	GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool
+
+	Codespace() sdk.CodespaceType
 }
 
 // BaseViewKeeper implements a read only keeper implementation of ViewKeeper.
 type BaseViewKeeper struct {
-	ak auth.AccountKeeper
+	ak        auth.AccountKeeper
+	codespace sdk.CodespaceType
 }
 
 // NewBaseViewKeeper returns a new BaseViewKeeper.
-func NewBaseViewKeeper(ak auth.AccountKeeper) BaseViewKeeper {
-	return BaseViewKeeper{
-		ak: ak,
-	}
+func NewBaseViewKeeper(ak auth.AccountKeeper, codespace sdk.CodespaceType) BaseViewKeeper {
+	return BaseViewKeeper{ak: ak, codespace: codespace}
 }
 
 // GetCoins returns the coins at the addr.
@@ -155,6 +182,11 @@ func (keeper BaseViewKeeper) GetCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.
 // HasCoins returns whether or not an account has at least amt coins.
 func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) bool {
 	return hasCoins(ctx, keeper.ak, addr, amt)
+}
+
+// Codespace returns the keeper's codespace.
+func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
+	return keeper.codespace
 }
 
 //-----------------------------------------------------------------------------

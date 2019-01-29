@@ -40,20 +40,20 @@ func NewStore(parent types.KVStore) *Store {
 }
 
 // Implements Store.
-func (ci *Store) GetStoreType() types.StoreType {
-	return ci.parent.GetStoreType()
+func (store *Store) GetStoreType() types.StoreType {
+	return store.parent.GetStoreType()
 }
 
 // Implements types.KVStore.
-func (ci *Store) Get(key []byte) (value []byte) {
-	ci.mtx.Lock()
-	defer ci.mtx.Unlock()
-	ci.assertValidKey(key)
+func (store *Store) Get(key []byte) (value []byte) {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+	types.AssertValidKey(key)
 
-	cacheValue, ok := ci.cache[string(key)]
+	cacheValue, ok := store.cache[string(key)]
 	if !ok {
-		value = ci.parent.Get(key)
-		ci.setCacheValue(key, value, false, false)
+		value = store.parent.Get(key)
+		store.setCacheValue(key, value, false, false)
 	} else {
 		value = cacheValue.value
 	}
@@ -62,39 +62,39 @@ func (ci *Store) Get(key []byte) (value []byte) {
 }
 
 // Implements types.KVStore.
-func (ci *Store) Set(key []byte, value []byte) {
-	ci.mtx.Lock()
-	defer ci.mtx.Unlock()
-	ci.assertValidKey(key)
-	ci.assertValidValue(value)
+func (store *Store) Set(key []byte, value []byte) {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+	types.AssertValidKey(key)
+	types.AssertValidValue(value)
 
-	ci.setCacheValue(key, value, false, true)
+	store.setCacheValue(key, value, false, true)
 }
 
 // Implements types.KVStore.
-func (ci *Store) Has(key []byte) bool {
-	value := ci.Get(key)
+func (store *Store) Has(key []byte) bool {
+	value := store.Get(key)
 	return value != nil
 }
 
 // Implements types.KVStore.
-func (ci *Store) Delete(key []byte) {
-	ci.mtx.Lock()
-	defer ci.mtx.Unlock()
-	ci.assertValidKey(key)
+func (store *Store) Delete(key []byte) {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+	types.AssertValidKey(key)
 
-	ci.setCacheValue(key, nil, true, true)
+	store.setCacheValue(key, nil, true, true)
 }
 
 // Implements Cachetypes.KVStore.
-func (ci *Store) Write() {
-	ci.mtx.Lock()
-	defer ci.mtx.Unlock()
+func (store *Store) Write() {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
 
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.
-	keys := make([]string, 0, len(ci.cache))
-	for key, dbValue := range ci.cache {
+	keys := make([]string, 0, len(store.cache))
+	for key, dbValue := range store.cache {
 		if dbValue.dirty {
 			keys = append(keys, key)
 		}
@@ -105,66 +105,66 @@ func (ci *Store) Write() {
 	// TODO: Consider allowing usage of Batch, which would allow the write to
 	// at least happen atomically.
 	for _, key := range keys {
-		cacheValue := ci.cache[key]
+		cacheValue := store.cache[key]
 		if cacheValue.deleted {
-			ci.parent.Delete([]byte(key))
+			store.parent.Delete([]byte(key))
 		} else if cacheValue.value == nil {
 			// Skip, it already doesn't exist in parent.
 		} else {
-			ci.parent.Set([]byte(key), cacheValue.value)
+			store.parent.Set([]byte(key), cacheValue.value)
 		}
 	}
 
 	// Clear the cache
-	ci.cache = make(map[string]cValue)
+	store.cache = make(map[string]cValue)
 }
 
 //----------------------------------------
 // To cache-wrap this Store further.
 
 // Implements CacheWrapper.
-func (ci *Store) CacheWrap() types.CacheWrap {
-	return NewStore(ci)
+func (store *Store) CacheWrap() types.CacheWrap {
+	return NewStore(store)
 }
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
-func (ci *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return NewStore(tracekv.NewStore(ci, w, tc))
+func (store *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	return NewStore(tracekv.NewStore(store, w, tc))
 }
 
 //----------------------------------------
 // Iteration
 
 // Implements types.KVStore.
-func (ci *Store) Iterator(start, end []byte) types.Iterator {
-	return ci.iterator(start, end, true)
+func (store *Store) Iterator(start, end []byte) types.Iterator {
+	return store.iterator(start, end, true)
 }
 
 // Implements types.KVStore.
-func (ci *Store) ReverseIterator(start, end []byte) types.Iterator {
-	return ci.iterator(start, end, false)
+func (store *Store) ReverseIterator(start, end []byte) types.Iterator {
+	return store.iterator(start, end, false)
 }
 
-func (ci *Store) iterator(start, end []byte, ascending bool) types.Iterator {
+func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	var parent, cache types.Iterator
 
 	if ascending {
-		parent = ci.parent.Iterator(start, end)
+		parent = store.parent.Iterator(start, end)
 	} else {
-		parent = ci.parent.ReverseIterator(start, end)
+		parent = store.parent.ReverseIterator(start, end)
 	}
 
-	items := ci.dirtyItems(start, end, ascending)
+	items := store.dirtyItems(start, end, ascending)
 	cache = newMemIterator(start, end, items)
 
 	return newCacheMergeIterator(parent, cache, ascending)
 }
 
 // Constructs a slice of dirty items, to use w/ memIterator.
-func (ci *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
+func (store *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
 	items := make([]cmn.KVPair, 0)
 
-	for key, cacheValue := range ci.cache {
+	for key, cacheValue := range store.cache {
 		if !cacheValue.dirty {
 			continue
 		}
@@ -186,21 +186,9 @@ func (ci *Store) dirtyItems(start, end []byte, ascending bool) []cmn.KVPair {
 //----------------------------------------
 // etc
 
-func (ci *Store) assertValidKey(key []byte) {
-	if key == nil {
-		panic("key is nil")
-	}
-}
-
-func (ci *Store) assertValidValue(value []byte) {
-	if value == nil {
-		panic("value is nil")
-	}
-}
-
-// Only entrypoint to mutate ci.cache.
-func (ci *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
-	ci.cache[string(key)] = cValue{
+// Only entrypoint to mutate store.cache.
+func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
+	store.cache[string(key)] = cValue{
 		value:   value,
 		deleted: deleted,
 		dirty:   dirty,

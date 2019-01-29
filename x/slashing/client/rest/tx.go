@@ -43,24 +43,38 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
-		}
-
 		valAddr, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		if !bytes.Equal(info.GetPubKey().Address(), valAddr) {
+		msg := slashing.NewMsgUnjail(valAddr)
+		err = msg.ValidateBasic()
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if req.BaseReq.GenerateOnly {
+			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			return
+		}
+
+		// derive the from account address and name from the Keybase
+		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
+
+		if !bytes.Equal(cliCtx.GetFromAddress(), valAddr) {
 			utils.WriteErrorResponse(w, http.StatusUnauthorized, "must use own validator address")
 			return
 		}
 
-		msg := slashing.NewMsgUnjail(valAddr)
 		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

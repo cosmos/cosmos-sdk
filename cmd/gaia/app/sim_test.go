@@ -20,6 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
@@ -118,6 +119,9 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
 
+	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
+	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
+
 	// Random genesis states
 	vp := time.Duration(r.Intn(2*172800)) * time.Second
 	govGenesis := gov.GenesisState{
@@ -203,6 +207,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		AuthData:     authGenesis,
+		BankData:     bankGenesis,
 		StakingData:  stakingGenesis,
 		MintData:     mintGenesis,
 		DistrData:    distrGenesis,

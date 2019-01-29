@@ -10,6 +10,7 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -90,6 +91,13 @@ func TestIAVLStorePrefix(t *testing.T) {
 	iavlStore := iavl.UnsafeNewStore(tree, numRecent, storeEvery)
 
 	testPrefixStore(t, iavlStore, []byte("test"))
+}
+
+func TestPrefixKVStoreNoNilSet(t *testing.T) {
+	meter := types.NewGasMeter(100000000)
+	mem := dbadapter.Store{dbm.NewMemDB()}
+	gasStore := gaskv.NewStore(mem, meter, types.KVGasConfig())
+	require.Panics(t, func() { gasStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
 }
 
 func TestPrefixStoreIterate(t *testing.T) {

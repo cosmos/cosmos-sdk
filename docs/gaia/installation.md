@@ -28,7 +28,7 @@ mkdir -p $GOPATH/src/github.com/cosmos
 cd $GOPATH/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
 cd cosmos-sdk && git checkout master
-make tools && make get_vendor_deps && make install
+make tools install
 ```
 
 > *NOTE*: If you have issues at this step, please check that you have the latest stable version of GO installed.

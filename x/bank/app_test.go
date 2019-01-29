@@ -91,6 +91,17 @@ func getMockApp(t *testing.T) *mock.App {
 	return mapp
 }
 
+// overwrite the mock init chainer
+func getInitChainer(mapp *mock.App, keeper BaseKeeper) sdk.InitChainer {
+	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		mapp.InitChainer(ctx, req)
+		bankGenesis := DefaultGenesisState()
+		InitGenesis(ctx, keeper, bankGenesis)
+
+		return abci.ResponseInitChain{}
+	}
+}
+
 func TestMsgSendWithAccounts(t *testing.T) {
 	mapp := getMockApp(t)
 	acc := &auth.BaseAccount{

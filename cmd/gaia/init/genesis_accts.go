@@ -1,7 +1,6 @@
 package init
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -49,7 +48,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 			if !common.FileExists(genFile) {
 				return fmt.Errorf("%s does not exist, run `gaiad init` first", genFile)
 			}
-			genDoc, err := loadGenesisDoc(cdc, genFile)
+			genDoc, err := LoadGenesisDoc(cdc, genFile)
 			if err != nil {
 				return err
 			}
@@ -59,7 +58,12 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 				return err
 			}
 
-			appStateJSON, err := addGenesisAccount(cdc, appState, addr, coins)
+			appState, err = addGenesisAccount(cdc, appState, addr, coins)
+			if err != nil {
+				return err
+			}
+
+			appStateJSON, err := cdc.MarshalJSON(appState)
 			if err != nil {
 				return err
 			}
@@ -73,15 +77,15 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 	return cmd
 }
 
-func addGenesisAccount(cdc *codec.Codec, appState app.GenesisState, addr sdk.AccAddress, coins sdk.Coins) (json.RawMessage, error) {
+func addGenesisAccount(cdc *codec.Codec, appState app.GenesisState, addr sdk.AccAddress, coins sdk.Coins) (app.GenesisState, error) {
 	for _, stateAcc := range appState.Accounts {
 		if stateAcc.Address.Equals(addr) {
-			return nil, fmt.Errorf("the application state already contains account %v", addr)
+			return appState, fmt.Errorf("the application state already contains account %v", addr)
 		}
 	}
 
 	acc := auth.NewBaseAccountWithAddress(addr)
 	acc.Coins = coins
 	appState.Accounts = append(appState.Accounts, app.NewGenesisAccount(&acc))
-	return cdc.MarshalJSON(appState)
+	return appState, nil
 }

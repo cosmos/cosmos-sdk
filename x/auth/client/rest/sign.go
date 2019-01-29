@@ -41,6 +41,15 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
+		// derive the from account address and name from the Keybase
+		fromAddress, fromName, err := context.GetFromFields(m.BaseReq.From)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
+
 		txBldr := authtxb.NewTxBuilder(
 			utils.GetTxEncoder(cdc),
 			m.BaseReq.AccountNumber,
@@ -54,7 +63,7 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			nil,
 		)
 
-		signedTx, err := txBldr.SignStdTx(m.BaseReq.Name, m.BaseReq.Password, m.Tx, m.AppendSig)
+		signedTx, err := txBldr.SignStdTx(cliCtx.GetFromName(), m.BaseReq.Password, m.Tx, m.AppendSig)
 		if keyerror.IsErrKeyNotFound(err) {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

@@ -64,6 +64,12 @@ func TestCacheKVStore(t *testing.T) {
 	require.Empty(t, mem.Get(keyFmt(1)), "Expected `key1` to be empty")
 }
 
+func TestCacheKVStoreNoNilSet(t *testing.T) {
+	mem := dbadapter.Store{dbm.NewMemDB()}
+	st := cachekv.NewStore(mem)
+	require.Panics(t, func() { st.Set([]byte("key"), nil) }, "setting a nil value should panic")
+}
+
 func TestCacheKVStoreNested(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
 	st := cachekv.NewStore(mem)

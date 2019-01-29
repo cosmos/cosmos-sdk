@@ -18,8 +18,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AppStateFn returns the app state json bytes
-type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) (json.RawMessage, []Account, string)
+// AppStateFn returns the app state json bytes, the genesis accounts, and the chain identifier
+type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) (appState json.RawMessage, accounts []Account, chainId string)
 
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,

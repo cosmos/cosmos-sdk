@@ -66,17 +66,14 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 	if err != nil {
 		panic(err)
 	}
-	if err = cdc.UnmarshalJSON(bytes, &genesis); err != nil {
-		panic(err)
-	}
+	cdc.MustUnmarshalJSON(bytes, &genesis)
 	var appState GenesisState
-	if err = cdc.UnmarshalJSON(genesis.AppState, &appState); err != nil {
-		panic(err)
-	}
+	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
 	var newAccs []simulation.Account
 	for _, acc := range appState.Accounts {
 		// Pick a random private key, since we don't know the actual key
 		// This should be fine as it's only used for mock Tendermint validators
+		// and these keys are never actually used to sign by mock Tendermint.
 		privkeySeed := make([]byte, 15)
 		r.Read(privkeySeed)
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)

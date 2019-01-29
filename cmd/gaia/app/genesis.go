@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
@@ -85,8 +86,8 @@ type GenesisAccount struct {
 	OriginalVesting  sdk.Coins `json:"original_vesting"`  // total vesting coins upon initialization
 	DelegatedFree    sdk.Coins `json:"delegated_free"`    // delegated vested coins at time of delegation
 	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // delegated vesting coins at time of delegation
-	StartTime        int64     `json:"start_time"`        // vesting start time
-	EndTime          int64     `json:"end_time"`          // vesting end time
+	StartTime        int64     `json:"start_time"`        // vesting start time (UNIX Epoch time)
+	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
@@ -252,17 +253,38 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 	return slashing.ValidateGenesis(genesisState.SlashingData)
 }
 
-// Ensures that there are no duplicate accounts in the genesis state,
+// validateGenesisStateAccounts performs validation of genesis accounts. It
+// ensures that there are no duplicate accounts in the genesis state and any
+// provided vesting accounts are valid.
 func validateGenesisStateAccounts(accs []GenesisAccount) error {
 	addrMap := make(map[string]bool, len(accs))
-	for i := 0; i < len(accs); i++ {
-		acc := accs[i]
-		strAddr := string(acc.Address)
-		if _, ok := addrMap[strAddr]; ok {
-			return fmt.Errorf("Duplicate account in genesis state: Address %v", acc.Address)
+	for _, acc := range accs {
+		addrStr := acc.Address.String()
+
+		// disallow any duplicate accounts
+		if _, ok := addrMap[addrStr]; ok {
+			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
 		}
-		addrMap[strAddr] = true
+
+		// validate any vesting fields
+		if !acc.OriginalVesting.IsZero() {
+			if acc.EndTime == 0 {
+				return fmt.Errorf("missing end time for vesting account; address: %s", addrStr)
+			}
+
+			if acc.StartTime >= acc.EndTime {
+				return fmt.Errorf(
+					"vesting start time must before end time; address: %s, start: %s, end: %s",
+					addrStr,
+					time.Unix(acc.StartTime, 0).UTC().Format(time.RFC3339),
+					time.Unix(acc.EndTime, 0).UTC().Format(time.RFC3339),
+				)
+			}
+		}
+
+		addrMap[addrStr] = true
 	}
+
 	return nil
 }
 

@@ -124,6 +124,9 @@ draw_deps: tools
 clean:
 	rm -f devtools-stamp vendor-deps snapcraft.yaml
 
+distclean: clean
+	rm -rf vendor/
+
 ########################################
 ### Documentation
 

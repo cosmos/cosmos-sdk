@@ -810,8 +810,8 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 	require.Equal(t, 2, len(keeper.ApplyAndReturnValidatorSetUpdates(ctx)))
 
 	// check initial power
-	require.Equal(t, int64(100), validators[0].GetPower())
-	require.Equal(t, int64(100), validators[1].GetPower())
+	require.Equal(t, int64(100), validators[0].GetTendermintPower())
+	require.Equal(t, int64(100), validators[1].GetTendermintPower())
 
 	// test multiple value change
 	//  tendermintUpdate set: {c1, c3} -> {c1', c3'}
@@ -823,8 +823,8 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 	validators[1] = TestingUpdateValidator(keeper, ctx, validators[1], false)
 
 	// power has changed
-	require.Equal(t, int64(80), validators[0].GetPower())
-	require.Equal(t, int64(70), validators[1].GetPower())
+	require.Equal(t, int64(80), validators[0].GetTendermintPower())
+	require.Equal(t, int64(70), validators[1].GetTendermintPower())
 
 	// Tendermint updates should reflect power change
 	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)

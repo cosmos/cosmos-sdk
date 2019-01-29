@@ -25,7 +25,7 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
-	require.Equal(t, amt.Int64(), sk.Validator(ctx, addr).GetPower())
+	require.Equal(t, amt.Int64(), sk.Validator(ctx, addr).GetTendermintPower())
 
 	// assert non-jailed validator can't be unjailed
 	got = slh(ctx, NewMsgUnjail(addr))

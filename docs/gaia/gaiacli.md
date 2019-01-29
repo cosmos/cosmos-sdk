@@ -209,7 +209,8 @@ You can also check your balance at a given block by using the `--block` flag:
 gaiacli query account <account_cosmos> --block=<block_height>
 ```
 
-You can simulate a transaction without actually broadcasting it by appending the `--dry-run` flag to the command line:
+You can simulate a transaction without actually broadcasting it by appending the
+`--dry-run` flag to the command line:
 
 ```bash
 gaiacli tx send \
@@ -220,7 +221,8 @@ gaiacli tx send \
   --dry-run
 ```
 
-Furthermore, you can build a transaction and print its JSON format to STDOUT by appending `--generate-only` to the list of the command line arguments:
+Furthermore, you can build a transaction and print its JSON format to STDOUT by
+appending `--generate-only` to the list of the command line arguments:
 
 ```bash
 gaiacli tx send \
@@ -231,7 +233,14 @@ gaiacli tx send \
   --generate-only > unsignedSendTx.json
 ```
 
-You can now sign the transaction file generated through the `--generate-only` flag by providing your key to the following command:
+::: tip Note
+Simulation cannot be used in conjunction with tx generation only functionality
+due to the fact that simulation requires a public key and generation only does
+not utilize a Keybase.
+
+You can now sign the transaction file generated through the `--generate-only`
+flag by providing your key to the following command:
+:::
 
 ```bash
 gaiacli tx sign \

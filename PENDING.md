@@ -3,6 +3,8 @@
 BREAKING CHANGES
 
 * Gaia REST API (`gaiacli advanced rest-server`)
+  * [\#3284](https://github.com/cosmos/cosmos-sdk/issues/3284) Rename the `name`
+  field to `from` in the `base_req` body.
 
 * Gaia CLI  (`gaiacli`)
   - [#3399](https://github.com/cosmos/cosmos-sdk/pull/3399) Add `gaiad validate-genesis` command to facilitate checking of genesis files
@@ -32,6 +34,11 @@ FEATURES
 IMPROVEMENTS
 
 * Gaia REST API
+  * [\#3284](https://github.com/cosmos/cosmos-sdk/issues/3284) Update Gaia Lite
+  REST service to support the following:
+    * Automatic account number and sequence population when fields are omitted
+    * Generate only functionality no longer requires access to a local Keybase
+    * `from` field in the `base_req` body can be a Keybase name or account address
 
 * Gaia CLI  (`gaiacli`)
 

@@ -18,26 +18,23 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
-// CompleteAndBroadcastTxCli implements a utility function that facilitates
+// CompleteAndBroadcastTxCLI implements a utility function that facilitates
 // sending a series of messages in a signed transaction given a TxBuilder and a
 // QueryContext. It ensures that the account exists, has a proper number and
 // sequence set. In addition, it builds and signs a transaction with the
 // supplied messages. Finally, it broadcasts the signed transaction to a node.
 //
 // NOTE: Also see CompleteAndBroadcastTxREST.
-func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
+func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
 	txBldr, err := prepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
 		return err
 	}
 
-	name, err := cliCtx.GetFromName()
-	if err != nil {
-		return err
-	}
+	name := cliCtx.GetFromName()
 
 	if txBldr.GetSimulateAndExecute() || cliCtx.Simulate {
-		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return err
 		}
@@ -63,9 +60,9 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 	return err
 }
 
-// EnrichCtxWithGas calculates the gas estimate that would be consumed by the
+// EnrichWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
+func EnrichWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
 	_, adjusted, err := simulateMsgs(txBldr, cliCtx, name, msgs)
 	if err != nil {
 		return txBldr, err
@@ -236,10 +233,7 @@ func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 		return txBldr, err
 	}
 
-	from, err := cliCtx.GetFromAddress()
-	if err != nil {
-		return txBldr, err
-	}
+	from := cliCtx.GetFromAddress()
 
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
@@ -275,22 +269,21 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	if txBldr.GetSimulateAndExecute() {
-		var name string
-		name, err = cliCtx.GetFromName()
+		name := cliCtx.GetFromName()
+
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, name, msgs)
 		if err != nil {
 			return
 		}
 
-		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
-		if err != nil {
-			return
-		}
 		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.GetGas())
 	}
+
 	stdSignMsg, err := txBldr.Build(msgs)
 	if err != nil {
 		return
 	}
+
 	return auth.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
 }
 
@@ -300,5 +293,6 @@ func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
 			return true
 		}
 	}
+
 	return false
 }

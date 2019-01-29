@@ -688,25 +688,67 @@ func doTransfer(t *testing.T, port, seed, name, memo, password string, addr sdk.
 	return receiveAddr, resultTx
 }
 
-func doTransferWithGas(t *testing.T, port, seed, name, memo, password string, addr sdk.AccAddress, gas string,
-	gasAdjustment float64, simulate, generateOnly bool, fees sdk.Coins) (
-	res *http.Response, body string, receiveAddr sdk.AccAddress) {
+func doTransferWithGas(
+	t *testing.T, port, seed, from, memo, password string, addr sdk.AccAddress,
+	gas string, gasAdjustment float64, simulate, generateOnly bool, fees sdk.Coins,
+) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
 	// create receive address
 	kb := client.MockKeyBase()
-	receiveInfo, _, err := kb.CreateMnemonic("receive_address", cryptoKeys.English, gapp.DefaultKeyPass, cryptoKeys.SigningAlgo("secp256k1"))
-	require.Nil(t, err)
-	receiveAddr = sdk.AccAddress(receiveInfo.GetPubKey().Address())
 
+	receiveInfo, _, err := kb.CreateMnemonic(
+		"receive_address", cryptoKeys.English, gapp.DefaultKeyPass, cryptoKeys.SigningAlgo("secp256k1"),
+	)
+	require.Nil(t, err)
+
+	receiveAddr = sdk.AccAddress(receiveInfo.GetPubKey().Address())
 	acc := getAccount(t, port, addr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
 
+	if generateOnly {
+		// generate only txs do not use a Keybase so the address must be used
+		from = addr.String()
+	}
+
 	baseReq := utils.NewBaseReq(
-		name, password, memo, chainID, gas,
+		from, password, memo, chainID, gas,
 		fmt.Sprintf("%f", gasAdjustment), accnum, sequence, fees, nil,
 		generateOnly, simulate,
+	)
+
+	sr := sendReq{
+		Amount:  sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1)},
+		BaseReq: baseReq,
+	}
+
+	req, err := cdc.MarshalJSON(sr)
+	require.NoError(t, err)
+
+	res, body = Request(t, port, "POST", fmt.Sprintf("/bank/accounts/%s/transfers", receiveAddr), req)
+	return
+}
+
+func doTransferWithGasAccAuto(
+	t *testing.T, port, seed, from, memo, password string, gas string,
+	gasAdjustment float64, simulate, generateOnly bool, fees sdk.Coins,
+) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
+
+	// create receive address
+	kb := client.MockKeyBase()
+
+	receiveInfo, _, err := kb.CreateMnemonic(
+		"receive_address", cryptoKeys.English, gapp.DefaultKeyPass, cryptoKeys.SigningAlgo("secp256k1"),
+	)
+	require.Nil(t, err)
+
+	receiveAddr = sdk.AccAddress(receiveInfo.GetPubKey().Address())
+	chainID := viper.GetString(client.FlagChainID)
+
+	baseReq := utils.NewBaseReq(
+		from, password, memo, chainID, gas,
+		fmt.Sprintf("%f", gasAdjustment), 0, 0, fees, nil, generateOnly, simulate,
 	)
 
 	sr := sendReq{

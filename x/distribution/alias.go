@@ -26,9 +26,6 @@ type (
 	QueryValidatorCommissionParams = keeper.QueryValidatorCommissionParams
 	QueryValidatorSlashesParams    = keeper.QueryValidatorSlashesParams
 	QueryDelegationRewardsParams   = keeper.QueryDelegationRewardsParams
-
-	DelegationRewards    = types.DelegationRewards
-	AllDelegationRewards = types.AllDelegationRewards
 )
 
 const (

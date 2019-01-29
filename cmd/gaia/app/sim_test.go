@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -58,7 +59,7 @@ func init() {
 	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) json.RawMessage {
+func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
 
 	if genesisFile != "" {
 		var genesis tmtypes.GenesisDoc
@@ -70,8 +71,18 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		if err = cdc.UnmarshalJSON(bytes, &genesis); err != nil {
 			panic(err)
 		}
-		fmt.Printf("app state: %s\n", json.RawMessage(genesis.AppState))
-		return json.RawMessage(genesis.AppState)
+		var appState GenesisState
+		if err = cdc.UnmarshalJSON(genesis.AppState, &appState); err != nil {
+			panic(err)
+		}
+		var newAccs []simulation.Account
+		for _, acc := range appState.Accounts {
+			privkeySeed := make([]byte, 15)
+			r.Read(privkeySeed)
+			privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
+			newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
+		}
+		return json.RawMessage(genesis.AppState), newAccs, genesis.ChainID
 	}
 
 	var genesisAccounts []GenesisAccount
@@ -239,7 +250,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		panic(err)
 	}
 
-	return appState
+	return appState, accs, "simulation"
 }
 
 func randIntBetween(r *rand.Rand, min, max int) int {

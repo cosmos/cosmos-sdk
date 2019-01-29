@@ -44,7 +44,7 @@
 
 [[constraint]]
   name = "github.com/zondax/ledger-cosmos-go"
-  version = "=v0.9.3"
+  version = "=v0.9.4"
 
 ## deps without releases:
 
@@ -84,3 +84,6 @@
 [prune]
   go-tests = true
   unused-packages = true
+  [[prune.project]]
+      name = "github.com/karalabe/hid"
+      unused-packages = false

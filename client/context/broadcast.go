@@ -132,7 +132,8 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 	}
 
 	if ctx.ResponseHandler != nil {
-		return ctx.ResponseHandler(res)
+		ctx.ResponseHandler(res)
+		return res, nil
 	}
 
 	if ctx.OutputFormat == "json" {

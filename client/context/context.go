@@ -44,7 +44,7 @@ type CLIContext struct {
 	Async         bool
 	PrintResponse bool
 	// Overrides the default CLI transaction response handling with a custom handler
-	ResponseHandler func(res *ctypes.ResultBroadcastTxCommit) (*ctypes.ResultBroadcastTxCommit, error)
+	ResponseHandler func(res *ctypes.ResultBroadcastTxCommit)
 	Verifier        tmlite.Verifier
 	Simulate        bool
 	GenerateOnly    bool

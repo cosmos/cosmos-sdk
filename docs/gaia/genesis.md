@@ -48,7 +48,7 @@ type GenesisAccount struct {
 Each account must have a valid and unique account number in addition to a
 sequence number (nonce) and address.
 
-Accounts may also be vesting in which they must provide the necessary vesting
+Accounts may also be vesting, in which case they must provide the necessary vesting
 information. Vesting accounts must provide at a minimum `OriginalVesting` and
 `EndTime`. If `StartTime` is also provided, it must be less than `EndTime` but may be
 in the future. In other words, it does not have to be equal to the genesis time.

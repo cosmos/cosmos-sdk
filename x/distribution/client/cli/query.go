@@ -181,9 +181,43 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 				return err
 			}
 
-			var coins sdk.DecCoins
-			cdc.MustUnmarshalJSON(res, &coins)
-			return cliCtx.PrintOutput(coins)
+			var resp distr.DelegationRewards
+			cdc.MustUnmarshalJSON(res, &resp)
+			return cliCtx.PrintOutput(resp)
+		},
+	}
+}
+
+// GetCmdQueryAllDelegatorRewards implements the query all delegator rewards
+// command.
+func GetCmdQueryAllDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Command {
+	return &cobra.Command{
+		Use:   "all-rewards [delegator]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query for all distribution delegator rewards",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cliCtx := context.NewCLIContext().WithCodec(cdc)
+
+			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			params := distr.NewQueryDelegationRewardsParams(delegatorAddr, nil)
+			bz, err := cdc.MarshalJSON(params)
+			if err != nil {
+				return err
+			}
+
+			route := fmt.Sprintf("custom/%s/all_delegation_rewards", queryRoute)
+			res, err := cliCtx.QueryWithData(route, bz)
+			if err != nil {
+				return err
+			}
+
+			var resp distr.AllDelegationRewards
+			cdc.MustUnmarshalJSON(res, &resp)
+			return cliCtx.PrintOutput(resp)
 		},
 	}
 }

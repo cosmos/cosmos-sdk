@@ -119,8 +119,8 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
 
-	bankGenesis := bank.DefaultGenesisState()
-	fmt.Printf("Selected default bank parameters:\n\t%+v\n", authGenesis)
+	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
+	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
 
 	// Random genesis states
 	vp := time.Duration(r.Intn(2*172800)) * time.Second

@@ -112,6 +112,9 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg b
 	if handler != nil {
 		res := handler(ctx, msg)
 		if !res.IsOK() {
+			if res.Code == bank.CodeSendDisabled {
+				return nil
+			}
 			// TODO: Do this in a more 'canonical' way
 			return fmt.Errorf("handling msg failed %v", res)
 		}

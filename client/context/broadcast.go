@@ -131,6 +131,10 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 		return res, err
 	}
 
+	if ctx.ResponseHandler != nil {
+		return ctx.ResponseHandler(res)
+	}
+
 	if ctx.OutputFormat == "json" {
 		// Since JSON is intended for automated scripts, always include response in
 		// JSON mode.
@@ -158,13 +162,9 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 		resStr := fmt.Sprintf("Committed at block %d (tx hash: %s)\n", res.Height, res.Hash.String())
 
 		if ctx.PrintResponse {
-			if ctx.ResponsePrinter != nil {
-				resStr = ctx.ResponsePrinter(res)
-			} else {
-				resStr = fmt.Sprintf("Committed at block %d (tx hash: %s, response: %+v)\n",
-					res.Height, res.Hash.String(), res.DeliverTx,
-				)
-			}
+			resStr = fmt.Sprintf("Committed at block %d (tx hash: %s, response: %+v)\n",
+				res.Height, res.Hash.String(), res.DeliverTx,
+			)
 		}
 
 		io.WriteString(ctx.Output, resStr)

@@ -3,7 +3,6 @@ package context
 import (
 	"bytes"
 	"fmt"
-	"github.com/tendermint/tendermint/rpc/core/types"
 	"io"
 	"os"
 	"path/filepath"
@@ -21,13 +20,12 @@ import (
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var verifier tmlite.Verifier
-
-type ResponsePrinter = func(res *core_types.ResultBroadcastTxCommit) string
 
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
@@ -45,7 +43,8 @@ type CLIContext struct {
 	UseLedger       bool
 	Async           bool
 	PrintResponse   bool
-	ResponsePrinter ResponsePrinter
+	// Overrides the default CLI transaction response handling
+	ResponseHandler func(res *ctypes.ResultBroadcastTxCommit) (*ctypes.ResultBroadcastTxCommit, error)
 	Verifier        tmlite.Verifier
 	Simulate        bool
 	GenerateOnly    bool

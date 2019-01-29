@@ -226,6 +226,12 @@ func (f *Fixtures) KeysAdd(name string, flags ...string) {
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
+// KeysAdd is gaiacli keys add --recover
+func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli keys add --home=%s --recover %s", f.GCLIHome, name)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
+}
+
 // KeysShow is gaiacli keys show
 func (f *Fixtures) KeysShow(name string, flags ...string) keys.KeyOutput {
 	cmd := fmt.Sprintf("gaiacli keys show --home=%s %s", f.GCLIHome, name)

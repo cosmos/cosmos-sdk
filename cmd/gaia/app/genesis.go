@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/x/bank"
+
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,6 +36,7 @@ var (
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`
 	AuthData     auth.GenesisState     `json:"auth"`
+	BankData     bank.GenesisState     `json:"bank"`
 	StakingData  staking.GenesisState  `json:"staking"`
 	MintData     mint.GenesisState     `json:"mint"`
 	DistrData    distr.GenesisState    `json:"distr"`
@@ -43,6 +46,7 @@ type GenesisState struct {
 }
 
 func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
+	bankData bank.GenesisState,
 	stakingData staking.GenesisState, mintData mint.GenesisState,
 	distrData distr.GenesisState, govData gov.GenesisState,
 	slashingData slashing.GenesisState) GenesisState {
@@ -50,6 +54,7 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
 	return GenesisState{
 		Accounts:     accounts,
 		AuthData:     authData,
+		BankData:     bankData,
 		StakingData:  stakingData,
 		MintData:     mintData,
 		DistrData:    distrData,
@@ -201,6 +206,7 @@ func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
 		AuthData:     auth.DefaultGenesisState(),
+		BankData:     bank.DefaultGenesisState(),
 		StakingData:  staking.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
@@ -225,6 +231,9 @@ func GaiaValidateGenesisState(genesisState GenesisState) error {
 	}
 
 	if err := auth.ValidateGenesis(genesisState.AuthData); err != nil {
+		return err
+	}
+	if err := bank.ValidateGenesis(genesisState.BankData); err != nil {
 		return err
 	}
 	if err := staking.ValidateGenesis(genesisState.StakingData); err != nil {

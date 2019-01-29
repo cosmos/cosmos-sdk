@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  digest = "1:0e3c4434de19ab6378518212ae289f32a93b58fe3cbadef8d5e18c4430ade1a9"
-  name = "github.com/ZondaX/ledger-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "5271d68c0c1fa7718e5781fea56169bba82942f6"
-  version = "v0.5.0"
-
-[[projects]]
   branch = "master"
   digest = "1:09a7f74eb6bb3c0f14d8926610c87f569c5cff68e978d30e9a3540aeb626fdf0"
   name = "github.com/bartekn/go-bip39"
@@ -198,14 +190,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "c42d9e0ca023e2198120196f842701bb4c55d7b9"
-
-[[projects]]
-  branch = "master"
-  digest = "1:447562773a19dc1719359c2cd70d275c62c0b89f79d763f41d5deedb0e69873f"
-  name = "github.com/karalabe/hid"
-  packages = ["."]
-  pruneopts = "T"
-  revision = "d815e0c1a2e2082a287a2806bc90bc8fc7b276a9"
 
 [[projects]]
   branch = "master"
@@ -522,12 +506,28 @@
   revision = "v0.29.0"
 
 [[projects]]
-  digest = "1:4f00ff9ea968ebd4e591884513604087e01aadd0bef4ab4ab7644a304723ae13"
+  digest = "1:b73f5e117bc7c6e8fc47128f20db48a873324ad5cfeeebfc505e85c58682b5e4"
+  name = "github.com/zondax/hid"
+  packages = ["."]
+  pruneopts = "T"
+  revision = "302fd402163c34626286195dfa9adac758334acc"
+  version = "v0.9.0"
+
+[[projects]]
+  digest = "1:1327096745ba36bd6c7b4c9ea09c25b3c262d36f09ce21b8c5e34ea41fb71798"
   name = "github.com/zondax/ledger-cosmos-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e236ef273df616b984def5f9188e2d9bebb39e8b"
-  version = "v0.9.4"
+  revision = "a93249f81d8e5a294fb2d2ead4c17abc88d0fd3a"
+  version = "v0.9.5"
+
+[[projects]]
+  digest = "1:312416a870d6ef9941e1ea7893480ff1e6627cc66517ce2760bf97af427d8f8c"
+  name = "github.com/zondax/ledger-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6c752dfd14666393766f120c0c3ae940b5aaa8d5"
+  version = "v0.6.0"
 
 [[projects]]
   digest = "1:6f6dc6060c4e9ba73cf28aa88f12a69a030d3d19d518ef8e931879eaa099628d"

@@ -21,7 +21,7 @@ type Store struct {
 
 ### Iterator
 
-`Store.Iterator()` have to traverse on both caches items and the original items. In `Store.iterator()`, two iterators are generated for each of them, and merged. `memIterator` is essentially a slice of the `KVPair`s, used for cached items. `mergeIterator` is a combination of two iterators, 
+`Store.Iterator()` have to traverse on both caches items and the original items. In `Store.iterator()`, two iterators are generated for each of them, and merged. `memIterator` is essentially a slice of the `KVPair`s, used for cached items. `mergeIterator` is a combination of two iterators, where traverse happens ordered on both iterators.
 
 ## CacheMulti
 
@@ -50,17 +50,28 @@ type Store struct {
 
 ## IAVL
 
-`iavl.Store` is a base-layer self-balancing merkle tree.
+`iavl.Store` is a base-layer self-balancing merkle tree. It is guaranteed that 
 
-### Get
+1. get/set operation is done within `O(log n)`
+2. iteration efficiently returns the sorted elements within the range
+3. each version is immutable, can be retrieved even after a commit
 
-### Set
-
-### Iterator
+Specification and implementation of IAVL tree can be found in [https://github.com/tendermint/iavl].
 
 ## GasKV
 
 `gaskv.Store` is a wrapper `KVStore` which provides gas consuming functionalities over the underlying `KVStore`.
+
+```go
+type Store struct {
+    gasMeter types.GasMeter
+    gasConfig types.GasConfig
+    parent types.KVStore
+}
+```
+
+When each `KVStore` methods are called, `gaskv.Store` automatically consumes appropriate amount of gas depending on the `Store.gasConfig`.
+
 
 ## Prefix
 
@@ -84,6 +95,27 @@ When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`,
 ## TraceKV
 
 `tracekv.Store` is a wrapper `KVStore` which provides operation tracing functionalities over the underlying `KVStore`.
+
+```go
+type Store struct {
+    parent types.KVStore
+    writer io.Writer
+    context types.TraceContext
+}
+```
+
+When each `KVStore` methods are called, `tracekv.Store` automatically logs `traceOperation` to the `Store.writer`.
+
+```go
+type traceOperation struct {
+    Operation operation
+    Key string
+    Value string
+    Metadata map[string]interface{}
+} 
+```
+
+`traceOperation.Metadata` is filled with `Store.context` when it is not nil. `TraceContext` is a `map[string]interface{}`.
 
 ## Transient
 

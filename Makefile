@@ -99,6 +99,7 @@ update_dev_tools:
 	go get -u github.com/tendermint/lint/golint
 
 devtools: devtools-stamp
+devtools-clean: tools-clean
 devtools-stamp: tools
 	@echo "--> Downloading linters (this may take awhile)"
 	$(GOPATH)/src/github.com/alecthomas/gometalinter/scripts/install.sh -b $(GOBIN)
@@ -273,4 +274,4 @@ build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
 test_sim_gaia_multi_seed test_sim_gaia_import_export update_tools update_dev_tools \
-build-snap-edge
+build-snap-edge devtools-clean

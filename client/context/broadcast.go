@@ -131,11 +131,16 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 		return res, err
 	}
 
-	if ctx.ResponseHandler != nil {
-		ctx.ResponseHandler(res)
-		return res, nil
+	if ctx.TxResponseHandler != nil {
+		err = ctx.TxResponseHandler(res)
+	} else {
+		err = ctx.DefaultTxResponseHandler(res)
 	}
+	return res, err
 
+}
+
+func (ctx CLIContext) DefaultTxResponseHandler(res *ctypes.ResultBroadcastTxCommit) error {
 	if ctx.OutputFormat == "json" {
 		// Since JSON is intended for automated scripts, always include response in
 		// JSON mode.
@@ -149,14 +154,14 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 			resJSON := toJSON{res.Height, res.Hash.String(), res.DeliverTx}
 			bz, err := ctx.Codec.MarshalJSON(resJSON)
 			if err != nil {
-				return res, err
+				return err
 			}
 
 			ctx.Output.Write(bz)
 			io.WriteString(ctx.Output, "\n")
 		}
 
-		return res, nil
+		return nil
 	}
 
 	if ctx.Output != nil {
@@ -171,5 +176,5 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 		io.WriteString(ctx.Output, resStr)
 	}
 
-	return res, nil
+	return nil
 }

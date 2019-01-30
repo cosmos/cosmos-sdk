@@ -44,13 +44,13 @@ type CLIContext struct {
 	Async         bool
 	PrintResponse bool
 	// Overrides the default CLI transaction response handling with a custom handler
-	ResponseHandler func(res *ctypes.ResultBroadcastTxCommit)
-	Verifier        tmlite.Verifier
-	Simulate        bool
-	GenerateOnly    bool
-	FromAddress     sdk.AccAddress
-	FromName        string
-	Indent          bool
+	TxResponseHandler func(res *ctypes.ResultBroadcastTxCommit) error
+	Verifier          tmlite.Verifier
+	Simulate          bool
+	GenerateOnly      bool
+	FromAddress       sdk.AccAddress
+	FromName          string
+	Indent            bool
 }
 
 // NewCLIContext returns a new initialized CLIContext with parameters from the

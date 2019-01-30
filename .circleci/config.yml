@@ -376,6 +376,11 @@ workflows:
       - test_cover:
           requires:
             - setup_dependencies
+          filters:
+            branches:
+              only:
+                - master
+                - develop
       - localnet:
           requires:
             - setup_dependencies

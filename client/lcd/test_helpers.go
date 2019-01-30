@@ -71,13 +71,13 @@ func makePathname() string {
 	if err != nil {
 		panic(err)
 	}
-	viper.Set(cli.HomeFlag, dir)
 	return dir
 }
 
 // GetConfig returns a Tendermint config for the test cases.
 func GetConfig() *tmcfg.Config {
 	pathname := makePathname()
+	viper.Set(cli.HomeFlag, pathname)
 	config := tmcfg.ResetTestRoot(pathname)
 
 	tmAddr, _, err := server.FreeTCPAddr()
@@ -108,14 +108,8 @@ func GetConfig() *tmcfg.Config {
 // NOTE: memDB cannot be used because the request is expecting to interact with
 // the default location.
 func GetKeyBase(t *testing.T) crkeys.Keybase {
-	dir, err := ioutil.TempDir("", "lcd_test")
-	require.NoError(t, err)
-
-	viper.Set(cli.HomeFlag, dir)
-
 	keybase, err := keys.GetKeyBaseWithWritePerm()
 	require.NoError(t, err)
-
 	return keybase
 }
 
@@ -303,9 +297,6 @@ func InitializeTestLCD(
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
 	viper.Set(client.FlagTrustNode, false)
-	dir, err := ioutil.TempDir("", "lcd_test")
-	require.NoError(t, err)
-	viper.Set(cli.HomeFlag, dir)
 
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)

@@ -69,6 +69,8 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			return newCtx, err.Result(), true
 		}
 
+		newCtx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(newCtx.TxBytes())), "txSize")
+
 		if res := ValidateMemo(newCtx.GasMeter(), stdTx, params); !res.IsOK() {
 			return newCtx, res, true
 		}

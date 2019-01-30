@@ -79,7 +79,7 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
 		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
 	}
-	return json.RawMessage(genesis.AppState), newAccs, genesis.ChainID
+	return genesis.AppState, newAccs, genesis.ChainID
 }
 
 func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {

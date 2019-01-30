@@ -185,7 +185,7 @@ func processSig(
 		// StdSignature (Amino encoding) and simulate gas consumption
 		// (assuming a SECP256k1 simulation key).
 		//
-		// XXX: Alternatively, we may avoid this alltogether and increase the default
+		// XXX: Alternatively, we may avoid this altogether and increase the default
 		// gas adjustment.
 		if sig.PubKey == nil {
 			cost := params.TxSizeCostPerByte * sdk.Gas(len(pubKey.Bytes()))

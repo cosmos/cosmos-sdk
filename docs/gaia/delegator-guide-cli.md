@@ -30,7 +30,7 @@ It also contains instructions on how to manage accounts, restore accounts from t
 
 ## Cosmos Accounts
 
-At the core of every Cosmos Account, there is a seed, which takes the form of a 12 or 24-words mnemonic. From this mnemonic, it is possible to create any number of Cosmos accounts, i.e. pairs of private key/public key. 
+At the core of every Cosmos Account, there is a seed, which takes the form of a 12 or 24-words mnemonic. From this mnemonic, it is possible to create any number of Cosmos accounts, i.e. pairs of private key/public key. This is called HD Wallet (see [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) for more information on HD Wallet).
 
 ```
      Account 0                         Account 1                         Account 2
@@ -71,7 +71,7 @@ The funds stored in an account are controlled by the private key. This private k
 **NEVER LOOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS.**
 :::
 
-The address is a human-readble public information (e.g. `cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg`) that identifies your account. When someone wants to send you fund, they send it to your address. It is not possible to find the private key associated with a given address. 
+The address is a public information with a human-readble prefix (e.g. `cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg`) that identifies your account. When someone wants to send you fund, they send it to your address. It is not possible to find the private key associated with a given address. 
 
 ### Restoring an account from the fundraiser
 
@@ -159,6 +159,15 @@ The command will generate a 24-words mnemonic and account `0` at the same time. 
 **NEVER LOOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS**
 ::: 
 
+::: warning
+After you have secured your mnemonic (triple check!), you can delete bash history to ensure no one can retrieve it:
+
+```bash
+history -c
+rm ~/.bash_history
+```
+:::
+
 - `<yourKeyName>` is the name of the account. It is a reference to the account number used to derive the key pair from the mnemonic. You will use this name to identify your account when you want to send a transaction.
 - You can add the optional `--account` flag to specify the path (`0`, `1`, `2`, ...) you want to use to generate your account. By default, account `0` is generated. 
 
@@ -236,7 +245,7 @@ gaiacli config chain-id gos-3
 
 ## Querying the state
 
-`gaiacli` lets you query all relevant information from the blockchain, like account balances, amount of bonded tokens, outsanding rewards, governance proposals and more. Next is a list of the most useful commands for delegator. Please make sure you [set up gaiacli](#setting-up-gaiacli) before trying them.
+[`gaiacli`](https://cosmos.network/docs/gaia/gaiacli.html) lets you query all relevant information from the blockchain, like account balances, amount of bonded tokens, outsanding rewards, governance proposals and more. Next is a list of the most useful commands for delegator. Please make sure you [set up gaiacli](#setting-up-gaiacli) before trying them.
 
 ```bash
 // query account balances and other account-related information
@@ -304,6 +313,11 @@ gaiacli query account
 
 // you should have delegations after you bond Atom
 gaiacli query delegations <delegatorAddress>
+
+// this returns your tx if it has been included
+// use the tx hash that was displayed when you created the tx
+gaiacli query tx <txHash>
+
 ```
 
 Double check with a block explorer if you interract with the network through a trusted full-node. 

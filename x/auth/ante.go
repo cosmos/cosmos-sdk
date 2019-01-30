@@ -54,8 +54,12 @@ func NewAnteHandler(ak AccountKeeper, fck FeeCollectionKeeper) sdk.AnteHandler {
 			if r := recover(); r != nil {
 				switch rType := r.(type) {
 				case sdk.ErrorOutOfGas:
-					log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+					log := fmt.Sprintf(
+						"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
+						rType.Descriptor, stdTx.Fee.Gas, newCtx.GasMeter().GasConsumed(),
+					)
 					res = sdk.ErrOutOfGas(log).Result()
+
 					res.GasWanted = stdTx.Fee.Gas
 					res.GasUsed = newCtx.GasMeter().GasConsumed()
 					abort = true

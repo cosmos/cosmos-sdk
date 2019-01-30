@@ -719,7 +719,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
 			case sdk.ErrorOutOfGas:
-				log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+				log := fmt.Sprintf(
+					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
+					rType.Descriptor, gasWanted, ctx.GasMeter().GasConsumed(),
+				)
 				result = sdk.ErrOutOfGas(log).Result()
 			default:
 				log := fmt.Sprintf("recovered: %v\nstack:\n%v", r, string(debug.Stack()))

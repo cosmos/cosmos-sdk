@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -67,17 +68,18 @@ import (
 // makePathname creates a unique pathname for each test. It will panic if it
 // cannot get the current working directory.
 func makePathname() string {
-	dir, err := ioutil.TempDir("", "lcd_test")
+	p, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
-	return dir
+
+	sep := string(filepath.Separator)
+	return strings.Replace(p, sep, "_", -1)
 }
 
 // GetConfig returns a Tendermint config for the test cases.
 func GetConfig() *tmcfg.Config {
 	pathname := makePathname()
-	viper.Set(cli.HomeFlag, pathname)
 	config := tmcfg.ResetTestRoot(pathname)
 
 	tmAddr, _, err := server.FreeTCPAddr()
@@ -108,8 +110,14 @@ func GetConfig() *tmcfg.Config {
 // NOTE: memDB cannot be used because the request is expecting to interact with
 // the default location.
 func GetKeyBase(t *testing.T) crkeys.Keybase {
+	dir, err := ioutil.TempDir("", "lcd_test")
+	require.NoError(t, err)
+
+	viper.Set(cli.HomeFlag, dir)
+
 	keybase, err := keys.GetKeyBaseWithWritePerm()
 	require.NoError(t, err)
+
 	return keybase
 }
 
@@ -296,7 +304,11 @@ func InitializeTestLCD(
 	// XXX: Need to set this so LCD knows the tendermint node address!
 	viper.Set(client.FlagNode, config.RPC.ListenAddress)
 	viper.Set(client.FlagChainID, genDoc.ChainID)
-	viper.Set(client.FlagTrustNode, false)
+	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
+	viper.Set(client.FlagTrustNode, true)
+	dir, err := ioutil.TempDir("", "lcd_test")
+	require.NoError(t, err)
+	viper.Set(cli.HomeFlag, dir)
 
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)

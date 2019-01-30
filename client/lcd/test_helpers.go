@@ -67,15 +67,12 @@ import (
 // makePathname creates a unique pathname for each test. It will panic if it
 // cannot get the current working directory.
 func makePathname() string {
-	p, err := os.Getwd()
+	dir, err := ioutil.TempDir("", "lcd_test")
 	if err != nil {
 		panic(err)
 	}
-	name, err := ioutil.TempDir(p, "lcd_test")
-	if err != nil {
-		panic(err)
-	}
-	return name
+	viper.Set(cli.HomeFlag, dir)
+	return dir
 }
 
 // GetConfig returns a Tendermint config for the test cases.

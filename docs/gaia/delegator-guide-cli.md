@@ -75,7 +75,9 @@ The address is a human-readble public information (e.g. `cosmos10snjt8dmpr5my0h7
 
 ### Restoring an account from the fundraiser
 
->NOTE: This section only concerns fundraiser participants
+::: tip
+*NOTE: This section only concerns fundraiser participants*
+:::
 
 If you participated in the fundraiser, you should be in possession of a 12-words mnemonic. Newly generated mnemonic use 24 words, but 12-words mnemonic are also compatible with all the Cosmos tools. 
 

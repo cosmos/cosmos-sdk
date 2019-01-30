@@ -67,7 +67,9 @@ At the core of every Cosmos Account, there is a seed, which takes the form of a 
 
 The funds stored in an account are controlled by the private key. This private key is generated using a one-way function from the mnemonic. If you loose the private key, you can retrieve it using the mnemonic. However, if you loose the mnemonic, you loose access to all the derived private keys. Likewise, if someone gains access to your mnemonic, they gain access to all the associated accounts. 
 
+::: danger
 **NEVER LOOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS.**
+:::
 
 The address is a human-readble public information (e.g. `cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg`) that identifies your account. When someone wants to send you fund, they send it to your address. It is not possible to find the private key associated with a given address. 
 
@@ -81,7 +83,9 @@ If you participated in the fundraiser, you should be in possession of a 12-words
 
 At the core of a ledger device, there is a mnemonic used to generate accounts on multiple blockchains (including the Cosmos Hub). Usually, you will create a new mnemonic when you initialize your ledger device. However, it is possible to tell the ledger device to use a mnemonic provided by the user instead. Let us go ahead and see how you can input the mnemonic you obtained during the fundraiser as the seed of your ledger device. 
 
-> NOTE: To do this, **it is preferrable to use a brand new ledger device.**. Indeed, there can be only one mnemonic per ledger device. If however you want to use a ledger  that is already initalized with a seed, you can reset it by going in `Settings`>`Device`>`Reset All`. **Please note that this will wipe out the seed currently stored on the device. If you have not properly secured the associated mnemonic, you could loose your funds!!!**
+::: warning
+*NOTE: To do this, **it is preferrable to use a brand new ledger device.**. Indeed, there can be only one mnemonic per ledger device. If however you want to use a ledger  that is already initalized with a seed, you can reset it by going in `Settings`>`Device`>`Reset All`. **Please note that this will wipe out the seed currently stored on the device. If you have not properly secured the associated mnemonic, you could loose your funds!!!***
+:::
 
 The following steps need to be performed on an un-initialized ledger device:
 
@@ -98,7 +102,9 @@ Next, click [here](#using-a-ledger-device) to generate an account.
 
 #### On a computer
 
+::: warning
 **NOTE: It is more secure to perform this action on an offline computer**
+::: 
 
 To restore an account using a fundraiser mnemonic and store the associated encrypted private key on a computer, use the following command:
 
@@ -135,7 +141,9 @@ gaiacli keys add <yourAccountName> --ledger
 
 #### Using a computer 
 
+::: warning
 **NOTE: It is more secure to perform this action on an offline computer**
+:::
 
 To generate an account, just use the following command:
 
@@ -145,7 +153,9 @@ gaiacli keys add <yourKeyName>
 
 The command will generate a 24-words mnemonic and account `0` at the same time. You will be prompted to input a passphrase that is used to encrypt the private key of account `0` on disk. Each time you want to send a transaction, this password will be required. If you loose the password, you can always recover the private key with the mnemonic. 
 
+::: danger
 **NEVER LOOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS**
+::: 
 
 - `<yourKeyName>` is the name of the account. It is a reference to the account number used to derive the key pair from the mnemonic. You will use this name to identify your account when you want to send a transaction.
 - You can add the optional `--account` flag to specify the path (`0`, `1`, `2`, ...) you want to use to generate your account. By default, account `0` is generated. 
@@ -164,7 +174,9 @@ This command will prompt you to input a passphrase as well as your mnemonic. Cha
 
 In order to query the state and send transactions, you need a way to access the network. To do so, you can either run your own full-node, or connect to someone else's.
 
+::: warning
 **NOTE: Never give your mnemonic, private key or passphrase to anyone. If a full-node operator requests it, they are trying to abuse you**.
+::: 
 
 ### Running your own full-node
 
@@ -263,9 +275,13 @@ For each command, you can use the `--h` flag to get more information.
 
 ## Bonding Atoms and Withdrawing rewards
 
+::: warning
 **Before bonding Atoms, please read the [delegator faq](https://cosmos.network/resources/delegators) to understand the risk and responsabilities involved with delegating**
+:::
 
+::: warning
 **Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
+::: 
 
 ```
 // Bond Atoms 
@@ -324,7 +340,9 @@ At the end of the voting period, the proposal is accepted if there is more than 
 
 ### In practice
 
+::: warning
 **Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
+::: 
 
 ```
 // Submit a Proposal

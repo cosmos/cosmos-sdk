@@ -30,7 +30,7 @@ It also contains instructions on how to manage accounts, restore accounts from t
 
 ## Cosmos Accounts
 
-At the core of every Cosmos Account, there is a seed, which takes the form of a 12 or 24 words mnemonic. From this mnemonic, it is possible to create any number of Cosmos accounts, i.e. pairs of private key and public key. 
+At the core of every Cosmos Account, there is a seed, which takes the form of a 12 or 24-words mnemonic. From this mnemonic, it is possible to create any number of Cosmos accounts, i.e. pairs of private key/public key. 
 
 ```
      Account 0                         Account 1                         Account 2
@@ -67,21 +67,21 @@ At the core of every Cosmos Account, there is a seed, which takes the form of a 
 
 The funds stored in an account are controlled by the private key. This private key is generated using a one-way function from the mnemonic. If you loose the private key, you can retrieve it using the mnemonic. However, if you loose the mnemonic, you loose access to all the derived private keys. Likewise, if someone gains access to your mnemonic, they gain access to all the associated accounts. 
 
-**NEVER LOOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS**
+**NEVER LOOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS.**
 
-The address is a human-readble public information (e.g. `cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg`) that identifies your account. When someone wants to send you fund, they do it using the address. It is not possible to find the private key associated with a given address. 
+The address is a human-readble public information (e.g. `cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg`) that identifies your account. When someone wants to send you fund, they send it to your address. It is not possible to find the private key associated with a given address. 
 
 ### Restoring an account from the fundraiser
 
 >NOTE: This section only concerns fundraiser participants
 
-If you participated in the fundraiser, you should be in possession of a 12-words mnemonic. Newly generated mnemonic use 24 words, but 12-words mnemonic are also compatible. 
+If you participated in the fundraiser, you should be in possession of a 12-words mnemonic. Newly generated mnemonic use 24 words, but 12-words mnemonic are also compatible with all the Cosmos tools. 
 
 #### On a ledger device
 
-At the core of the ledger device, there is a mnemonic that is used to generate accounts on multiple blockchains (including Cosmos Hub). Usually, you will create a new mnemonic when you initialize your ledger device. However, it is possible to tell the ledger device to use a mnemonic provided by the user instead. Let us go ahead and see how you can input the mnemonic you obtained during the fundraiser as the seed of your ledger device. 
+At the core of a ledger device, there is a mnemonic used to generate accounts on multiple blockchains (including the Cosmos Hub). Usually, you will create a new mnemonic when you initialize your ledger device. However, it is possible to tell the ledger device to use a mnemonic provided by the user instead. Let us go ahead and see how you can input the mnemonic you obtained during the fundraiser as the seed of your ledger device. 
 
-> NOTE: To do this, **it is preferrable to use a brand new ledger device.**. Indeed, there can be only one mnemonic per ledger device. If however you want to use a ledger  that is already initalized with a seed, you can reset it by going in `Settings`>`Device`>`Reset All` on your device. **Please note that this will wipe out the seed currently stored on the device. If you have not properly secure the associated mnemonic, you could loose your funds!!!**
+> NOTE: To do this, **it is preferrable to use a brand new ledger device.**. Indeed, there can be only one mnemonic per ledger device. If however you want to use a ledger  that is already initalized with a seed, you can reset it by going in `Settings`>`Device`>`Reset All`. **Please note that this will wipe out the seed currently stored on the device. If you have not properly secured the associated mnemonic, you could loose your funds!!!**
 
 The following steps need to be performed on an un-initialized ledger device:
 
@@ -92,17 +92,21 @@ The following steps need to be performed on an un-initialized ledger device:
 5. Choose the 12 words option
 6. Input each of the words you got during the fundraiser, in the correct order. 
 
-Your ledger is now correctly set up with your fundraiser mnemonic! Next, click [here](#using-a-ledger-device) to generate an account. 
+Your ledger is now correctly set up with your fundraiser mnemonic! Do not loose this mnemonic! If your ledger is compromised, you can always restore a new device again using the same mnemonic.
+
+Next, click [here](#using-a-ledger-device) to generate an account. 
 
 #### On a computer
 
 **NOTE: It is more secure to perform this action on an offline computer**
 
-To restore an account using a fundraiser mnemonic, use the following command:
+To restore an account using a fundraiser mnemonic and store the associated encrypted private key on a computer, use the following command:
 
 ```
 gaiacli keys add <yourKeyName> --recover
 ```
+
+You will be prompted to input a passphrase that is used to encrypt the private key of account `0` on disk. Each time you want to send a transaction, this password will be required. If you loose the password, you can always recover the private key with the mnemonic. 
 
 - `<yourKeyName>` is the name of the account. It is a reference to the account number used to derive the key pair from the mnemonic. You will use this name to identify your account when you want to send a transaction.
 - You can add the optional `--account` flag to specify the path (`0`, `1`, `2`, ...) you want to use to generate your account. By default, account `0` is generated. 
@@ -143,6 +147,10 @@ The command will generate a 24-words mnemonic and account `0` at the same time. 
 
 **NEVER LOOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS**
 
+- `<yourKeyName>` is the name of the account. It is a reference to the account number used to derive the key pair from the mnemonic. You will use this name to identify your account when you want to send a transaction.
+- You can add the optional `--account` flag to specify the path (`0`, `1`, `2`, ...) you want to use to generate your account. By default, account `0` is generated. 
+
+
 You can generate more accounts from the same mnemonic using the following command:
 
 ```
@@ -172,23 +180,23 @@ You will find the tutorial to install `gaiad` [here](https://cosmos.network/docs
 
 ### Connecting to a remote full-node
 
-If you do not want or cannot run your own full-node, you can connect to someone else's. You should pick an operator you trust, because a malicious operator could return you incorrect query results or censor your transactions. However, they will never be able to steal your funds, as your private keys are stored locally on your computer or ledger device. Possible options of full-node operators include validators, wallet providers or exchanges. 
+If you do not want or cannot run your own node, you can connect to someone else's full-node. You should pick an operator you trust, because a malicious operator could return  incorrect query results or censor your transactions. However, they will never be able to steal your funds, as your private keys are stored locally on your computer or ledger device. Possible options of full-node operators include validators, wallet providers or exchanges. 
 
-In order to connect to the full-node, you will need an address of the following form: `https://77.87.106.33:26657` (*Note: This is a placeholder*). This address has to be communicated by the full-node operator you choose to trust. 
+In order to connect to the full-node, you will need an address of the following form: `https://77.87.106.33:26657` (*Note: This is a placeholder*). This address has to be communicated by the full-node operator you choose to trust. You will use this address in the [following section](#setting-up-gaiacli).
 
 ## Setting up `gaiacli`
 
 `gaiacli` is the tool that enables you to interract with the node that runs on the Cosmos Hub network, wether you run it yourself or not (see [accessing the cosmos hub network](#accession-the-cosmos-hub-network)). Let us set it up properly.
 
-In order to set up `gaiacli`, we use the following command:
+In order to set up `gaiacli`, use the following command:
 
 ```
 gaiacli config <flag> <value>
 ```
 
-It allows us to set a default value for each given flag. 
+It allows you to set a default value for each given flag. 
 
-First, set up the address of the full-node you want to connected to:
+First, set up the address of the full-node you want to connect to:
 
 ```
 gaiacli config node <host>:<port
@@ -196,7 +204,7 @@ gaiacli config node <host>:<port
 // example: gaiacli config node https://77.87.106.33:26657
 ```
 
-If you run your own full-node, just use `localhost` as the address. 
+If you run your own full-node, just use `tcp://localhost:26657` as the address. 
 
 Then, let us set the default value of the `--trust-node` flag:
 
@@ -214,7 +222,7 @@ gaiacli config chain-id gos-3
 
 ## Querying the state
 
-`gaiacli` lets you query all the relevant information from the blockchain, like account balances, amount of bonded tokens, outsanding rewards, governance proposals and more. Next is a list of the most useful commands for delegator. Please make sure you [set up gaiacli](#setting-up-gaiacli) before trying them.
+`gaiacli` lets you query all relevant information from the blockchain, like account balances, amount of bonded tokens, outsanding rewards, governance proposals and more. Next is a list of the most useful commands for delegator. Please make sure you [set up gaiacli](#setting-up-gaiacli) before trying them.
 
 ```
 // query account balances and other account-related information
@@ -289,10 +297,10 @@ Double check with a block explorer if you interract with the network through a t
 Transactions on the Cosmos Hub network need to include a transaction fee in order to be processed. This fee pays for the gas required to run the transaction. The formula is the following:
 
 ```
-fees = gas * gasPrice
+fees = gas * gasPrices
 ```
 
-The `gas` is dependent on the transaction. Different transaction require different amount of `gas`. The `gas` amount for the transaction is calculated as it is being processed, but there is a way to estimate it when creating the transaction by using the `auto` value for the `gas` flag. Of course, this only gives an estimate. You can adjust this estimate with the flag `--gas-adjustment` (default `1.0`) if you want to be sure you provide enough `gas` for the transaction. 
+The `gas` is dependent on the transaction. Different transaction require different amount of `gas`. The `gas` amount for a transaction is calculated as it is being processed, but there is a way to estimate it beforehand by using the `auto` value for the `gas` flag. Of course, this only gives an estimate. You can adjust this estimate with the flag `--gas-adjustment` (default `1.0`) if you want to be sure you provide enough `gas` for the transaction. 
 
 The `gasPrice` is the price of each unit of `gas`. Each validator sets a `min-gas-price` value, and will only include transaction that have a `gasPrice` superior to their `min-gas-price`. 
 
@@ -308,7 +316,7 @@ The Cosmos Hub has a built-in governance system that lets bonded Atom holder vot
 - `Parameter Proposals`: These are used to update the value of an existing parameter.
 - `Software Upgrade Proposal`: These are used to propose an upgrade of the Hub's software.
 
-Any Atom holder can submit a proposal. In order for the proposal to be open for voting, it needs to come with a `deposit` that is superior to a parameter called `minDeposit`. The `deposit` need not be provided in its entirety by the submitter. If the initial proposer `deposit` is not sufficient, the proposal enters the `deposit_period` status. Then, any Atom holder can increase the deposit by sending a `depositTx`. 
+Any Atom holder can submit a proposal. In order for the proposal to be open for voting, it needs to come with a `deposit` that is superior to a parameter called `minDeposit`. The `deposit` need not be provided in its entirety by the submitter. If the initial proposer's `deposit` is not sufficient, the proposal enters the `deposit_period` status. Then, any Atom holder can increase the deposit by sending a `depositTx`. 
 
 Once the `deposit` reaches `minDeposit`, the proposal enters the `voting_period`, which lasts 2 weeks. Any **bonded** Atom hodler can then cast a vote on this proposal. The options are `Yes`, `No`, `NoWithVeto` and `Abstain`. The weight of the vote is based on the amount of bonded Atoms of the sender. If they don't vote, delegator inherit the vote of their validator. However, delegators can override their validator's vote by sending a vote themselves. 
 
@@ -321,7 +329,7 @@ At the end of the voting period, the proposal is accepted if there is more than 
 ```
 // Submit a Proposal
 // <type>=text/parameter_change/software_upgrade
-// ex: <gasPrice>=0.0001stake
+// ex value for flag: <gasPrice>=0.0001stake
 
 gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <type> --deposit=10stake --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
 

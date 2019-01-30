@@ -212,14 +212,17 @@ gaiacli query delegations <delegatorAddress>
 // query a specific delegation made from a delegator to a validator given their addresses
 gaiacli query delegations <delegatorAddress> <validatorAddress>
 
-// query the rewards of a delegator given a delegator and validator address (e.g. cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg)
-gaiacli query distr rewards <delegatorAddress> <validatorAddress> 
+// query the rewards of a delegator given a delegator address (e.g. cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg)
+gaiacli query distr rewards <delegatorAddress> 
 
 // query all proposals currently open for depositing
 gaiacli query proposals --status deposit_period
 
 // query all proposals currently open for voting
 gaiacli query proposals --status voting_period
+
+// query a proposal given its proposalID
+gaiacli query proposal <proposalID>
 ```
 
 For more commands, just type:
@@ -234,24 +237,108 @@ For each command, you can use the `--h` flag to get more information.
 
 **Before bonding Atoms, please read the [delegator faq](https://cosmos.network/resources/delegators) to understand the risk and responsabilities involved with delegating**
 
-#### From a Ledger device / online computer
+**Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
 
-**Note: It is more secure to perform these commands on a ledger device**
+```
+// Bond Atoms 
+// ex value for flags: <amountToBound>=10000stake, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake
 
-#### From an offline computer
+gaiacli tx staking --amount <amountToBond> --validator <bech32AddressOfValidator> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
+
+
+
+// Withdraw rewards
+
+gaiacli tx distr withdraw-rewards --from <delegatorKeyName>
+```
+
+To confirm that your transaction went through, you can use the following queries:
+
+```
+// your balance should change after you bond Atoms or withdraw rewards
+gaiacli query account
+
+// you should have delegations after you bond Atom
+gaiacli query delegations <delegatorAddress>
+```
+
+Double check with a block explorer if you interract with the network through a trusted full-node. 
+
+### A note on gas and fees
+
+Transactions on the Cosmos Hub network need to include a transaction fee in order to be processed. This fee pays for the gas required to run the transaction. The formula is the following:
+
+```
+fees = gas * gasPrice
+```
+
+The `gas` is dependent on the transaction. Different transaction require different amount of `gas`. The `gas` amount for the transaction is calculated as it is being processed, but there is a way to estimate it when creating the transaction by using the `auto` value for the `gas` flag. Of course, this only gives an estimate. You can adjust this estimate with the flag `--gas-adjustment` (default `1.0`) if you want to be sure you provide enough `gas` for the transaction. 
+
+The `gasPrice` is the price of each unit of `gas`. Each validator sets a `min-gas-price` value, and will only include transaction that have a `gasPrice` superior to their `min-gas-price`. 
+
+The transaction `fees` is the product of `gas` and `gasPrice`. As a user, you have to input 2 out of 3. The higher the `gasPrice`, the higher the chance that your transaction will get included in a block. 
 
 ## Participating in governance
 
-#### Primer on governance
+### Primer on governance
+
+The Cosmos Hub has a built-in governance system that lets bonded Atom holder vote on proposals. There are three types of proposal:
+
+- `Text Proposals`: These are the most basic type of proposals. They can be used to get the opinion of the network on a given topic. 
+- `Parameter Proposals`: These are used to update the value of an existing parameter.
+- `Software Upgrade Proposal`: These are used to propose an upgrade of the Hub's software.
+
+Any Atom holder can submit a proposal. In order for the proposal to be open for voting, it needs to come with a `deposit` that is superior to a parameter called `minDeposit`. The `deposit` need not be provided in its entirety by the submitter. If the initial proposer `deposit` is not sufficient, the proposal enters the `deposit_period` status. Then, any Atom holder can increase the deposit by sending a `depositTx`. 
+
+Once the `deposit` reaches `minDeposit`, the proposal enters the `voting_period`, which lasts 2 weeks. Any **bonded** Atom hodler can then cast a vote on this proposal. The options are `Yes`, `No`, `NoWithVeto` and `Abstain`. The weight of the vote is based on the amount of bonded Atoms of the sender. If they don't vote, delegator inherit the vote of their validator. However, delegators can override their validator's vote by sending a vote themselves. 
+
+At the end of the voting period, the proposal is accepted if there is more than 50% `Yes` votes (excluding `Abstain ` votes) and less than 33.33% of `NoWithVeto` votes (excluding `Abstain` votes).
+
+### In practice
+
+**Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
+
+```
+// Submit a Proposal
+// <type>=text/parameter_change/software_upgrade
+// ex: <gasPrice>=0.0001stake
+
+gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <type> --deposit=10stake --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
 
 
+// Increase deposit of a proposal
+// Retrieve proposalID from $gaiacli query gov proposals --status deposit_period
+// ex value for parameter: <deposit>=1stake
 
-#### From a Ledger device / online computer
-
-**Note: It is more secure to perform these commands on a ledger device**
-
-#### From an offline computer
-
+gaiacli tx gov deposit <proposalID> <deposit> --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
 
 
+// Vote on a proposal
+// Retrieve proposalID from $gaiacli query gov proposals --status voting_period 
+// <option>=yes/no/no_with_veto/abstain
 
+gaiacli tx gov vote <proposalID> <option> --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
+```
+
+## Signing transactions from an offline computer
+
+If you do not have a ledger device and want to interract with your private key on an offline computer, you can use the following procedure. First, generate an unsigned transaction on an **online computer** with the following command (example with a bonding transaction):
+
+```
+// Bond Atoms 
+// ex value for flags: <amountToBound>=10000stake, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake
+
+gaiacli tx staking --amount <amountToBond> --validator <bech32AddressOfValidator> --gas auto --gas-prices <gasPrice> --generate-only > unsignedTX.json
+```
+
+Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline computer. If it is not done already, [create an account on the offline computer](#using-a-computer). Now, sign the transaction using the following command:
+
+```
+gaiacli tx sign unsignedTx.json --from <delegatorKeyName> > signedTx.json
+```
+
+Copy `signedTx.json` and transfer it back to the online computer. Finally, use the following command to broadcast the transaction:
+
+```
+gaiacli tx broadcast signedTx.json
+```

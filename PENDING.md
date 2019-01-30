@@ -22,6 +22,8 @@ FEATURES
 * Gaia REST API
 
 * Gaia CLI  (`gaiacli`)
+  * [\#3429](https://github.com/cosmos/cosmos-sdk/issues/3429) Support querying
+  for all delegator distribution rewards.
 
 * Gaia
   - [\#3397](https://github.com/cosmos/cosmos-sdk/pull/3397) Implement genesis file sanitization to avoid failures at chain init.

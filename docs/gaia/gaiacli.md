@@ -685,6 +685,14 @@ To check current rewards for a delegation (were they to be withdrawn), run:
 gaiacli query distr rewards <delegator_address> <validator_address>
 ```
 
+#### Query all delegator rewards
+
+To check all current rewards for a delegation (were they to be withdrawn), run:
+
+```bash
+gaiacli query distr rewards <delegator_address>
+```
+
 ### Multisig transactions
 
 Multisig transactions require signatures of multiple private keys. Thus, generating and signing

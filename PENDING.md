@@ -51,6 +51,7 @@ IMPROVEMENTS
   * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account
   genesis validation checks to `GaiaValidateGenesisState`.
   * [\#3420](https://github.com/cosmos/cosmos-sdk/issues/3420) Added maximum length to governance proposal descriptions and titles
+  * [\#3454](https://github.com/cosmos/cosmos-sdk/pull/3454) Add `--jail-whitelist` to `gaiad export` to enable testing of complex exports
 
 * SDK
   * \#3435 Test that store implementations do not allow nil values
@@ -67,7 +68,7 @@ BUG FIXES
   - [\#3345](https://github.com/cosmos/cosmos-sdk/issues/3345) Upgrade ledger-cosmos-go dependency to v0.9.3 to pull
     https://github.com/ZondaX/ledger-cosmos-go/commit/ed9aa39ce8df31bad1448c72d3d226bf2cb1a8d1 in order to fix a derivation path issue that causes `gaiacli keys add --recover`
     to malfunction.
-  - [\#3419](https://github.com/cosmos/cosmos-sdk/pull/3419) Fix `q distr slashes` panic 
+  - [\#3419](https://github.com/cosmos/cosmos-sdk/pull/3419) Fix `q distr slashes` panic
 
 * Gaia
 

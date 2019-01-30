@@ -50,7 +50,7 @@ func NewTags(tags ...interface{}) Tags {
 func toBytes(i interface{}) []byte {
 	switch x := i.(type) {
 	case []uint8:
-		return []byte(x)
+		return x
 	case string:
 		return []byte(x)
 	default:

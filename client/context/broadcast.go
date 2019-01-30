@@ -145,7 +145,7 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 	}
 
 	if ctx.OutputIsSet() {
-		resStr := fmt.Sprintf("Committed tx with hash %s at block %d\n", res.Height, res.Hash.String())
+		resStr := fmt.Sprintf("Committed tx with hash %s at block %d\n", res.Hash.String(), res.Height)
 
 		if ctx.PrintResponse {
 			resStr += fmt.Sprintf("Response: %+#v\n", res.DeliverTx)

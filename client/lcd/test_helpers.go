@@ -22,7 +22,6 @@ import (
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -63,6 +62,7 @@ import (
 	govRest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	slashingRest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	stakingRest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -248,16 +248,19 @@ func InitializeTestLCD(
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
 		pubKey := privVal.GetPubKey()
-		delegation := 100
+
+		power := int64(100)
 		if i > 0 {
 			pubKey = ed25519.GenPrivKey().PubKey()
-			delegation = 1
+			power = 1
 		}
+		startTokens := staking.TokensFromTendermintPower(power)
+
 		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(operAddr),
 			pubKey,
-			sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(int64(delegation))),
-			staking.Description{Moniker: fmt.Sprintf("validator-%d", i+1)},
+			sdk.NewCoin(staking.DefaultBondDenom, startTokens),
+			staking.NewDescription(fmt.Sprintf("validator-%d", i+1), "", "", ""),
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
 		stdSignMsg := txbuilder.StdSignMsg{
@@ -274,7 +277,8 @@ func InitializeTestLCD(
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 
 		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
-		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 150)}
+		accTokens := types.TokensFromTendermintPower(150)
+		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
 		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
 	}
 
@@ -288,10 +292,11 @@ func InitializeTestLCD(
 	// add some tokens to init accounts
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 100)}
+		accTokens := types.TokensFromTendermintPower(100)
+		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(sdk.NewInt(100))
+		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(accTokens)
 	}
 
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)
@@ -719,7 +724,7 @@ func doTransferWithGas(
 	)
 
 	sr := sendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1)},
+		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 
@@ -752,7 +757,7 @@ func doTransferWithGasAccAuto(
 	)
 
 	sr := sendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1)},
+		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 
@@ -784,7 +789,7 @@ func doDelegate(t *testing.T, port, name, password string,
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, amount),
+		Delegation:    sdk.NewInt64Coin(staking.DefaultBondDenom, amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -1087,7 +1092,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 		Description:    "test",
 		ProposalType:   "Text",
 		Proposer:       proposerAddr,
-		InitialDeposit: sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))},
+		InitialDeposit: sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(amount))},
 		BaseReq:        baseReq,
 	}
 
@@ -1180,7 +1185,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 
 	dr := depositReq{
 		Depositor: proposerAddr,
-		Amount:    sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))},
+		Amount:    sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(amount))},
 		BaseReq:   baseReq,
 	}
 

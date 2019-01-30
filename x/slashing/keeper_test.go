@@ -30,7 +30,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
-	amtInt := int64(100)
+	amtInt := TokensFromTendermintPower(100)
 	operatorAddr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
@@ -87,7 +87,7 @@ func TestPastMaxEvidenceAge(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
 	// validator added pre-genesis
 	ctx = ctx.WithBlockHeight(-1)
-	amtInt := int64(100)
+	amtInt := TokensFromTendermintPower(100)
 	operatorAddr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(operatorAddr, val, amt))
 	require.True(t, got.IsOK())
@@ -121,7 +121,7 @@ func TestHandleAbsentValidator(t *testing.T) {
 
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
-	amtInt64 := int64(100)
+	amtInt := TokensFromTendermintPower(100)
 	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt64)
 	sh := staking.NewHandler(sk)
 	slh := NewHandler(keeper)
@@ -271,20 +271,21 @@ func TestHandleAbsentValidator(t *testing.T) {
 func TestHandleNewValidator(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, keeperTestParams())
-	addr, val, amt := addrs[0], pks[0], int64(100)
+	addr, val := addrs[0], pks[0]
+	amtInt := TokensFromTendermintPower(100)
 	sh := staking.NewHandler(sk)
 
 	// 1000 first blocks not a validator
 	ctx = ctx.WithBlockHeight(keeper.SignedBlocksWindow(ctx) + 1)
 
 	// Validator created
-	got := sh(ctx, NewTestMsgCreateValidator(addr, val, sdk.NewInt(amt)))
+	got := sh(ctx, NewTestMsgCreateValidator(addr, val, amtInt))
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
-		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.SubRaw(amt))},
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amtInt))},
 	)
 	require.Equal(t, amt, sk.Validator(ctx, addr).GetTendermintPower())
 

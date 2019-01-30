@@ -70,10 +70,9 @@ func CheckGenTx(
 // block commitment with the given transaction. A test assertion is made using
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
-func SignCheckDeliver(
-	t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accNums []uint64,
-	seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
-) sdk.Result {
+func SignCheckDeliver(t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accNums,
+	seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey) sdk.Result {
+
 	tx := GenTx(msgs, accNums, seq, priv...)
 	// Must simulate now as CheckTx doesn't run Msgs anymore
 	res := app.Simulate(tx)

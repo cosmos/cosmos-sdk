@@ -402,9 +402,11 @@ func TestPoolParamsQuery(t *testing.T) {
 	pool := getStakingPool(t, port)
 
 	initialPool := staking.InitialPool()
-	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(sdk.NewInt(100))
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(100))      // Delegate tx on GaiaAppGenState
-	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(sdk.NewInt(50)) // freeFermionsAcc = 50 on GaiaAppGenState
+	tokens := staking.TokensFromTendermintPower(100)
+	freeFermions := staking.TokensFromTendermintPower(50)
+	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(tokens)
+	initialPool.BondedTokens = initialPool.BondedTokens.Add(tokens)             // Delegate tx on GaiaAppGenState
+	initialPool.NotBondedTokens = initialPool.NotBondedTokens.Add(freeFermions) // freeFermionsAcc = 50 on GaiaAppGenState
 
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 	require.Equal(t, initialPool.NotBondedTokens, pool.NotBondedTokens)

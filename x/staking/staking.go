@@ -82,6 +82,9 @@ var (
 	DefaultGenesisState   = types.DefaultGenesisState
 	RegisterCodec         = types.RegisterCodec
 
+	TokensToTendermintPower   = types.TokensToTendermintPower
+	TokensFromTendermintPower = types.TokensFromTendermintPower
+
 	NewMsgCreateValidator           = types.NewMsgCreateValidator
 	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf
 	NewMsgEditValidator             = types.NewMsgEditValidator

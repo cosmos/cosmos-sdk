@@ -91,8 +91,10 @@ func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
 func TestSlashingMsgs(t *testing.T) {
 	mapp, stakingKeeper, keeper := getMockApp(t)
 
-	genCoin := sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)
-	bondCoin := sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 10)
+	genTokens := TokensFromTendermintPower(42)
+	bondTokens := TokensFromTendermintPower(10)
+	genCoin := sdk.NewCoin(stakingTypes.DefaultBondDenom, genTokens)
+	bondCoin := sdk.NewCoin(stakingTypes.DefaultBondDenom, bondTokens)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,

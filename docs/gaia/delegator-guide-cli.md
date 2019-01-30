@@ -110,7 +110,7 @@ Next, click [here](#using-a-ledger-device) to generate an account.
 
 To restore an account using a fundraiser mnemonic and store the associated encrypted private key on a computer, use the following command:
 
-```
+```bash
 gaiacli keys add <yourKeyName> --recover
 ```
 
@@ -127,14 +127,14 @@ To create an account, you just need to have `gaiacli` installed. Before creating
 
 When you initialize your ledger, a 24-words mnemonic is generated and stored in the device. This mnemonic is compatible with Cosmos and Cosmos Accounts can be derived from it. Therefore, all you have to do is make your ledger compatible with `gaiacli`. To do so, you need to go through the following steps:
 
-1. Download ledger live from https://www.ledger.com 
+1. Download the Ledger Live app [here](https://www.ledger.com/pages/ledger-live)
 2. Connect your ledger via USB and update to the latest firmware
 3. Go to the ledger live app store, and download the "Cosmos" application (this can take a while)
 4. Navigate to the Cosmos app on your ledger device
 
 Then, to create an account, use the following command:
 
-```
+```bash
 gaiacli keys add <yourAccountName> --ledger 
 ```
 
@@ -149,7 +149,7 @@ gaiacli keys add <yourAccountName> --ledger
 
 To generate an account, just use the following command:
 
-```
+```bash
 gaiacli keys add <yourKeyName>
 ```
 
@@ -165,7 +165,7 @@ The command will generate a 24-words mnemonic and account `0` at the same time. 
 
 You can generate more accounts from the same mnemonic using the following command:
 
-```
+```bash
 gaiacli keys add <yourKeyName> --recover --account 1
 ```
 
@@ -204,7 +204,7 @@ In order to connect to the full-node, you will need an address of the following 
 
 In order to set up `gaiacli`, use the following command:
 
-```
+```bash
 gaiacli config <flag> <value>
 ```
 
@@ -212,7 +212,7 @@ It allows you to set a default value for each given flag.
 
 First, set up the address of the full-node you want to connect to:
 
-```
+```bash
 gaiacli config node <host>:<port
 
 // example: gaiacli config node https://77.87.106.33:26657
@@ -222,7 +222,7 @@ If you run your own full-node, just use `tcp://localhost:26657` as the address.
 
 Then, let us set the default value of the `--trust-node` flag:
 
-```
+```bash
 gaiacli config trust-node false
 
 // Set to true if you run a light-client node, false otherwise
@@ -230,7 +230,7 @@ gaiacli config trust-node false
 
 Finally, let us set the `chain-id` of the blockchain we want to interract with:
 
-```
+```bash
 gaiacli config chain-id gos-3
 ```
 
@@ -238,7 +238,7 @@ gaiacli config chain-id gos-3
 
 `gaiacli` lets you query all relevant information from the blockchain, like account balances, amount of bonded tokens, outsanding rewards, governance proposals and more. Next is a list of the most useful commands for delegator. Please make sure you [set up gaiacli](#setting-up-gaiacli) before trying them.
 
-```
+```bash
 // query account balances and other account-related information
 gaiacli query account
 
@@ -269,7 +269,7 @@ gaiacli query proposal <proposalID>
 
 For more commands, just type:
 
-```
+```bash
 gaiacli query
 ```
 
@@ -285,13 +285,11 @@ For each command, you can use the `--h` flag to get more information.
 **Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
 ::: 
 
-```
+```bash
 // Bond Atoms 
 // ex value for flags: <amountToBound>=10000stake, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake
 
 gaiacli tx staking --amount <amountToBond> --validator <bech32AddressOfValidator> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
-
-
 
 // Withdraw rewards
 
@@ -300,7 +298,7 @@ gaiacli tx distr withdraw-rewards --from <delegatorKeyName>
 
 To confirm that your transaction went through, you can use the following queries:
 
-```
+```bash
 // your balance should change after you bond Atoms or withdraw rewards
 gaiacli query account
 
@@ -346,20 +344,18 @@ At the end of the voting period, the proposal is accepted if there is more than 
 **Note: These commands need to be run on an online computer. It is more secure to perform them commands using a ledger device. For the offline procedure, click [here](#signing-transactions-from-an-offline-computer).**
 ::: 
 
-```
+```bash
 // Submit a Proposal
 // <type>=text/parameter_change/software_upgrade
 // ex value for flag: <gasPrice>=0.0001stake
 
 gaiacli tx gov submit-proposal --title "Test Proposal" --description "My awesome proposal" --type <type> --deposit=10stake --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
 
-
 // Increase deposit of a proposal
 // Retrieve proposalID from $gaiacli query gov proposals --status deposit_period
 // ex value for parameter: <deposit>=1stake
 
 gaiacli tx gov deposit <proposalID> <deposit> --gas auto --gas-prices <gasPrice> --from <delegatorKeyName>
-
 
 // Vote on a proposal
 // Retrieve proposalID from $gaiacli query gov proposals --status voting_period 
@@ -372,7 +368,7 @@ gaiacli tx gov vote <proposalID> <option> --gas auto --gas-prices <gasPrice> --f
 
 If you do not have a ledger device and want to interract with your private key on an offline computer, you can use the following procedure. First, generate an unsigned transaction on an **online computer** with the following command (example with a bonding transaction):
 
-```
+```bash
 // Bond Atoms 
 // ex value for flags: <amountToBound>=10000stake, <bech32AddressOfValidator>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake
 
@@ -381,12 +377,12 @@ gaiacli tx staking --amount <amountToBond> --validator <bech32AddressOfValidator
 
 Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline computer. If it is not done already, [create an account on the offline computer](#using-a-computer). Now, sign the transaction using the following command:
 
-```
+```bash
 gaiacli tx sign unsignedTx.json --from <delegatorKeyName> > signedTx.json
 ```
 
 Copy `signedTx.json` and transfer it back to the online computer. Finally, use the following command to broadcast the transaction:
 
-```
+```bash
 gaiacli tx broadcast signedTx.json
 ```

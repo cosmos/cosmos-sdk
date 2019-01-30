@@ -390,7 +390,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			if err != nil {
 				result = err.Result()
 			} else {
-				result = app.Simulate(tx)
+				result = app.Simulate(txBytes, tx)
 			}
 		case "version":
 			return abci.ResponseQuery{

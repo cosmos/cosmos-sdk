@@ -15,6 +15,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var (
+	// simulation signature values used to estimate gas consumption
+	simSecp256k1Pubkey  secp256k1.PubKeySecp256k1
+	simSecp256k1SigSize = 64
+)
+
+func init() {
+	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
+	copy(simSecp256k1Pubkey[:], bz)
+}
+
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
 // numbers, checks signatures & account numbers, and deducts fees from the first
 // signer.
@@ -168,7 +179,27 @@ func processSig(
 		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
 	}
 
-	consumeSignatureVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)
+	if simulate {
+		// Simulated txs should not contain a signature and are not required to
+		// contain a pubkey, so we must account for tx size of including a
+		// StdSignature (Amino encoding) and simulate gas consumption
+		// (assuming a SECP256k1 simulation key).
+		//
+		// XXX: Alternatively, we may avoid this alltogether and increase the default
+		// gas adjustment.
+		if sig.PubKey == nil {
+			cost := params.TxSizeCostPerByte * sdk.Gas(len(pubKey.Bytes()))
+			cost += params.TxSizeCostPerByte * 3 // account for Amino encoding
+			ctx.GasMeter().ConsumeGas(cost, "txSize")
+		}
+		if len(sig.Signature) == 0 {
+			cost := params.TxSizeCostPerByte * sdk.Gas(simSecp256k1SigSize)
+			cost += params.TxSizeCostPerByte * 6 // account for Amino encoding
+			ctx.GasMeter().ConsumeGas(cost, "txSize")
+		}
+	}
+
+	consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
@@ -180,13 +211,6 @@ func processSig(
 	}
 
 	return acc, res
-}
-
-var dummySecp256k1Pubkey secp256k1.PubKeySecp256k1
-
-func init() {
-	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
-	copy(dummySecp256k1Pubkey[:], bz)
 }
 
 // ProcessPubKey verifies that the given account address matches that of the
@@ -201,7 +225,7 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 		// shall consume the largest amount, i.e. it takes more gas to verify
 		// secp256k1 keys than ed25519 ones.
 		if pubKey == nil {
-			return dummySecp256k1Pubkey, sdk.Result{}
+			return simSecp256k1Pubkey, sdk.Result{}
 		}
 
 		return pubKey, sdk.Result{}
@@ -222,25 +246,27 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 	return pubKey, sdk.Result{}
 }
 
-// consumeSignatureVerificationGas consumes gas for signature verification based
-// upon the public key type. The cost is fetched from the given params and is
-// matched by the concrete type.
+// consumeSigVerificationGas consumes gas for signature verification based upon
+// the public key type. The cost is fetched from the given params and is matched
+// by the concrete type.
 //
 // TODO: Design a cleaner and flexible way to match concrete public key types.
-func consumeSignatureVerificationGas(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) {
+func consumeSigVerificationGas(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params Params) {
 	pubkeyType := strings.ToLower(fmt.Sprintf("%T", pubkey))
 	switch {
 	case strings.Contains(pubkeyType, "ed25519"):
 		meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
+
 	case strings.Contains(pubkeyType, "secp256k1"):
 		meter.ConsumeGas(params.SigVerifyCostSecp256k1, "ante verify: secp256k1")
-	case strings.Contains(pubkeyType, "multisigthreshold"):
 
+	case strings.Contains(pubkeyType, "multisigthreshold"):
 		var multisignature multisig.Multisignature
 		codec.Cdc.MustUnmarshalBinaryBare(sig, &multisignature)
-		multisigPubKey := pubkey.(multisig.PubKeyMultisigThreshold)
 
+		multisigPubKey := pubkey.(multisig.PubKeyMultisigThreshold)
 		consumeMultisignatureVerificationGas(meter, multisignature, multisigPubKey, params)
+
 	default:
 		panic(fmt.Sprintf("unrecognized signature type: %s", pubkeyType))
 	}
@@ -254,7 +280,7 @@ func consumeMultisignatureVerificationGas(meter sdk.GasMeter,
 	sigIndex := 0
 	for i := 0; i < size; i++ {
 		if sig.BitArray.GetIndex(i) {
-			consumeSignatureVerificationGas(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
+			consumeSigVerificationGas(meter, sig.Sigs[sigIndex], pubkey.PubKeys[i], params)
 			sigIndex++
 		}
 	}
@@ -297,8 +323,6 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 // EnsureSufficientMempoolFees verifies that the given transaction has supplied
 // enough fees to cover a proposer's minimum fees. An result object is returned
 // indicating success or failure.
-//
-// TODO: Account for transaction size.
 //
 // Contract: This should only be called during CheckTx as it cannot be part of
 // consensus.

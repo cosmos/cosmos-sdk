@@ -14,8 +14,8 @@ func (app *BaseApp) Check(tx sdk.Tx) (result sdk.Result) {
 }
 
 // nolint - full tx execution
-func (app *BaseApp) Simulate(tx sdk.Tx) (result sdk.Result) {
-	return app.runTx(runTxModeSimulate, nil, tx)
+func (app *BaseApp) Simulate(txBytes []byte, tx sdk.Tx) (result sdk.Result) {
+	return app.runTx(runTxModeSimulate, txBytes, tx)
 }
 
 // nolint

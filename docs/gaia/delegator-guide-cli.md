@@ -4,6 +4,22 @@ This document contains all the necessary information for delegators to interract
 
 It also contains instructions on how to manage accounts, restore accounts from the fundraiser and use the ledger nano device.
 
+## Table of contents
+
+- [Installing `gaiacli`](#installing-gaiacli)
+- [Cosmos Accounts](#cosmos-accounts)
+    + [Restoring an account from the fundrasier](#restoring-an-account-from-the-fundraiser)
+    + [Creating an account](#creating-an-account)
+- [Accessing the Cosmos Hub network](#accessing-the-cosmos-hub-network)
+    + [Running your own full-node](#running-your-own-full-node)
+    + [Running a light-node](#running-a-light-node)
+    + [Connecting to a remote full-node](#connecting-to-a-remote-full-node)
+- [Setting up `gaiacli`](#setting-up-gaiacli)
+- [Querying the state](querying-the-state)
+- [Bonding Atoms and Withdrawing rewards](bonding-atoms-and-withdrawing-rewards)
+- [Participating in Governance](participating-in-governance)
+- [Signing transactions from an offline computer](#signing-transactions-from-an-offline-computer)
+
 ## Installing `gaiacli` 
 
 `gaiacli`: This is the command-line interface to interract with a `gaiad` full-node. 
@@ -237,7 +253,7 @@ gaiacli query
 
 For each command, you can use the `--h` flag to get more information.
 
-##  Bonding Atoms and Withdrawing rewards
+## Bonding Atoms and Withdrawing rewards
 
 **Before bonding Atoms, please read the [delegator faq](https://cosmos.network/resources/delegators) to understand the risk and responsabilities involved with delegating**
 

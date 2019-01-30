@@ -121,11 +121,7 @@ func TestSlashRedelegation(t *testing.T) {
 	keeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.Delegation{
-		DelegatorAddr: addrDels[0],
-		ValidatorAddr: addrVals[1],
-		Shares:        sdk.NewDec(10),
-	}
+	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDec(10))
 	keeper.SetDelegation(ctx, del)
 
 	// started redelegating prior to the current height, stake didn't contribute to infraction
@@ -245,8 +241,9 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// set an unbonding delegation with expiration timestamp beyond which the
 	// unbonding delegation shouldn't be slashed
+	ubdTokens := types.TokensFromTendermintPower(4)
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
-		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 4))
+		time.Unix(0, 0), sdk.NewCoin(params.BondDenom, ubdTokens))
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
 	// slash validator for the first time
@@ -265,7 +262,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
 	// balance decreased
-	require.Equal(t, sdk.NewInt(2), ubd.Entries[0].Balance.Amount)
+	require.Equal(t, types.TokensFromTendermintPower(2), ubd.Entries[0].Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// bonded tokens burned
@@ -332,7 +329,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// just 1 bonded token burned again since that's all the validator now has
-	require.Equal(t, int64(10), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(10), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	// read updated validator
@@ -349,22 +346,19 @@ func TestSlashWithRedelegation(t *testing.T) {
 	fraction := sdk.NewDecWithPrec(5, 1)
 
 	// set a redelegation
+	rdTokens := types.TokensFromTendermintPower(6)
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 6), sdk.NewDec(6),
-		sdk.NewDec(6))
+		time.Unix(0, 0), sdk.NewCoin(params.BondDenom, rdTokens), sdk.NewDecFromInt(rdTokens),
+		sdk.NewDecFromInt(rdTokens))
 	keeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.Delegation{
-		DelegatorAddr: addrDels[0],
-		ValidatorAddr: addrVals[1],
-		Shares:        sdk.NewDec(6),
-	}
+	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdTokens))
 	keeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
 	pool := keeper.GetPool(ctx)
-	pool.BondedTokens = pool.BondedTokens.Add(sdk.NewInt(6))
+	pool.BondedTokens = pool.BondedTokens.Add(rdTokens)
 	keeper.SetPool(ctx, pool)
 
 	// slash validator
@@ -379,11 +373,11 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
 	// balance decreased
-	require.Equal(t, sdk.NewInt(3), rd.Entries[0].Balance.Amount)
+	require.Equal(t, types.TokensFromTendermintPower(3), rd.Entries[0].Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// bonded tokens burned
-	require.Equal(t, int64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -469,23 +463,21 @@ func TestSlashBoth(t *testing.T) {
 
 	// set a redelegation with expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
+	rdATokens := types.TokensFromTendermintPower(6)
 	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 6), sdk.NewDec(6),
-		sdk.NewDec(6))
+		time.Unix(0, 0), sdk.NewCoin(params.BondDenom, rdATokens),
+		sdk.NewDecFromInt(rdATokens), sdk.NewDecFromInt(rdATokens))
 	keeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation
-	delA := types.Delegation{
-		DelegatorAddr: addrDels[0],
-		ValidatorAddr: addrVals[1],
-		Shares:        sdk.NewDec(6),
-	}
+	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdATokens))
 	keeper.SetDelegation(ctx, delA)
 
 	// set an unbonding delegation with expiration timestamp (beyond which the
 	// unbonding delegation shouldn't be slashed)
+	ubdATokens := types.TokensFromTendermintPower(4)
 	ubdA := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 11,
-		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 4))
+		time.Unix(0, 0), sdk.NewCoin(params.BondDenom, ubdATokens))
 	keeper.SetUnbondingDelegation(ctx, ubdA)
 
 	// slash validator
@@ -501,7 +493,7 @@ func TestSlashBoth(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rdA.Entries, 1)
 	// balance decreased
-	require.Equal(t, sdk.NewInt(3), rdA.Entries[0].Balance.Amount)
+	require.Equal(t, types.TokensFromTendermintPower(3), rdA.Entries[0].Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// not-bonded tokens burned

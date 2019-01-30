@@ -21,7 +21,7 @@ module.exports = {
     },
     nav: [
       { text: "Back to Cosmos", link: "https://cosmos.network" },
-      { text: "RPC", link: "../rpc/" }
+      { text: "RPC", link: "https://cosmos.network/rpc/" }
     ],
     sidebar: [
       {

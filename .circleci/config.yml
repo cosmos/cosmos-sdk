@@ -373,14 +373,14 @@ workflows:
       - test_sim_gaia_multi_seed_long:
           requires:
             - setup_dependencies
-      - test_cover:
-          requires:
-            - setup_dependencies
           filters:
             branches:
               only:
                 - master
                 - develop
+      - test_cover:
+          requires:
+            - setup_dependencies
       - localnet:
           requires:
             - setup_dependencies

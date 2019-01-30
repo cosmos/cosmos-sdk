@@ -138,7 +138,6 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	authGenesis := auth.GenesisState{
 		Params: auth.Params{
-			MemoCostPerByte:        uint64(r.Intn(10) + 1),
 			MaxMemoCharacters:      uint64(randIntBetween(r, 100, 200)),
 			TxSigLimit:             uint64(r.Intn(7) + 1),
 			TxSizeCostPerByte:      uint64(randIntBetween(r, 5, 15)),

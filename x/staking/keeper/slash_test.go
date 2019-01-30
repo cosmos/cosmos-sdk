@@ -14,20 +14,21 @@ import (
 
 // TODO integrate with test_common.go helper (CreateTestInput)
 // setup helper function - creates two validators
-func setupHelper(t *testing.T, amt int64) (sdk.Context, Keeper, types.Params) {
+func setupHelper(t *testing.T, power int64) (sdk.Context, Keeper, types.Params) {
 
 	// setup
-	ctx, _, keeper := CreateTestInput(t, false, amt)
+	ctx, _, keeper := CreateTestInput(t, false, power)
 	params := keeper.GetParams(ctx)
 	pool := keeper.GetPool(ctx)
-	numVals := 3
-	pool.NotBondedTokens = sdk.NewInt(amt * int64(numVals))
+	numVals := int64(3)
+	amt := types.TokensFromTendermintPower(power)
+	pool.NotBondedTokens = amt.MulRaw(numVals)
 
 	// add numVals validators
-	for i := 0; i < numVals; i++ {
+	for i := int64(0); i < numVals; i++ {
 		validator := types.NewValidator(addrVals[i], PKs[i], types.Description{})
-		validator, pool, _ = validator.AddTokensFromDel(pool, sdk.NewInt(amt))
-		pool.BondedTokens = pool.BondedTokens.Add(sdk.NewInt(amt))
+		validator, pool, _ = validator.AddTokensFromDel(pool, amt)
+		pool.BondedTokens = pool.BondedTokens.Add(amt)
 		keeper.SetPool(ctx, pool)
 		validator = TestingUpdateValidator(keeper, ctx, validator, true)
 		keeper.SetValidatorByConsAddr(ctx, validator)
@@ -206,7 +207,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	// power decreased
 	require.Equal(t, int64(5), validator.GetTendermintPower())
 	// pool bonded shares decreased
-	require.Equal(t, int64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 }
 
 // tests Slash at the current height
@@ -233,7 +234,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	// power decreased
 	require.Equal(t, int64(5), validator.GetTendermintPower())
 	// pool bonded shares decreased
-	require.Equal(t, int64(5), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(5), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 }
 
 // tests Slash at a previous height with an unbonding delegation
@@ -268,7 +269,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// bonded tokens burned
-	require.Equal(t, int64(3), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(3), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -289,7 +290,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// bonded tokens burned again
-	require.Equal(t, int64(6), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(6), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -310,7 +311,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// bonded tokens burned again
-	require.Equal(t, int64(9), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(9), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -407,7 +408,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// seven bonded tokens burned
-	require.Equal(t, int64(12), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(12), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
@@ -429,7 +430,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// four more bonded tokens burned
-	require.Equal(t, int64(16), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(16), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	// read updated validator
@@ -454,7 +455,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// no more bonded tokens burned
-	require.Equal(t, int64(16), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(16), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	// power still zero, still in unbonding period
 	validator, _ = keeper.GetValidatorByConsAddr(ctx, consAddr)
@@ -504,9 +505,9 @@ func TestSlashBoth(t *testing.T) {
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// not-bonded tokens burned
-	require.Equal(t, int64(2), oldPool.NotBondedTokens.Sub(newPool.NotBondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(2), oldPool.NotBondedTokens.Sub(newPool.NotBondedTokens))
 	// bonded tokens burned
-	require.Equal(t, int64(3), oldPool.BondedTokens.Sub(newPool.BondedTokens).Int64())
+	require.Equal(t, types.TokensFromTendermintPower(3), oldPool.BondedTokens.Sub(newPool.BondedTokens))
 	// read updated validator
 	validator, found = keeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)

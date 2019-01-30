@@ -176,29 +176,27 @@ func TestUnbondingDelegation(t *testing.T) {
 func TestUnbondDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
-	pool.NotBondedTokens = sdk.NewInt(10)
+	startTokens := types.TokensFromTendermintPower(10)
+	pool.NotBondedTokens = startTokens
 
 	//create a validator and a delegator to that validator
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
-	validator, pool, issuedShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
-	require.Equal(t, int64(10), issuedShares.RoundInt64())
+	validator, pool, issuedShares := validator.AddTokensFromDel(pool, startTokens)
+	require.Equal(t, startTokens, issuedShares.RoundInt())
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 
 	pool = keeper.GetPool(ctx)
-	require.Equal(t, int64(10), pool.BondedTokens.Int64())
-	require.Equal(t, int64(10), validator.BondedTokens().Int64())
+	require.Equal(t, startTokens, pool.BondedTokens)
+	require.Equal(t, startTokens, validator.BondedTokens())
 
-	delegation := types.Delegation{
-		DelegatorAddr: addrDels[0],
-		ValidatorAddr: addrVals[0],
-		Shares:        issuedShares,
-	}
+	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
 	keeper.SetDelegation(ctx, delegation)
 
-	amount, err := keeper.unbond(ctx, addrDels[0], addrVals[0], sdk.NewDec(6))
+	bondTokens := types.TokensFromTendermintPower(6)
+	amount, err := keeper.unbond(ctx, addrDels[0], addrVals[0], sdk.NewDecFromInt(bondTokens))
 	require.NoError(t, err)
-	require.Equal(t, int64(6), amount.Int64()) // shares to be added to an unbonding delegation
+	require.Equal(t, bondTokens, amount) // shares to be added to an unbonding delegation
 
 	delegation, found := keeper.GetDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -206,10 +204,11 @@ func TestUnbondDelegation(t *testing.T) {
 	require.True(t, found)
 	pool = keeper.GetPool(ctx)
 
-	require.Equal(t, int64(4), delegation.Shares.RoundInt64())
-	require.Equal(t, int64(4), validator.BondedTokens().Int64())
-	require.Equal(t, int64(6), pool.NotBondedTokens.Int64(), "%v", pool)
-	require.Equal(t, int64(4), pool.BondedTokens.Int64())
+	remainingTokens := startTokens.Sub(bondTokens)
+	require.Equal(t, remainingTokens, delegation.Shares.RoundInt())
+	require.Equal(t, remainingTokens, validator.BondedTokens())
+	require.Equal(t, bondTokens, pool.NotBondedTokens, "%v", pool)
+	require.Equal(t, remainingTokens, pool.BondedTokens)
 }
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {

@@ -18,6 +18,7 @@ const (
 	DefaultMemoCostPerByte        sdk.Gas = 3
 	DefaultMaxMemoCharacters      uint64  = 256
 	DefaultTxSigLimit             uint64  = 7
+	DefaultTxSizeCostPerByte      uint64  = 10
 	DefaultSigVerifyCostED25519   uint64  = 590
 	DefaultSigVerifyCostSecp256k1 uint64  = 1000
 )
@@ -27,6 +28,7 @@ var (
 	KeyMemoCostPerByte        = []byte("MemoCostPerByte")
 	KeyMaxMemoCharacters      = []byte("MaxMemoCharacters")
 	KeyTxSigLimit             = []byte("TxSigLimit")
+	KeyTxSizeCostPerByte      = []byte("TxSizeCostPerByte")
 	KeySigVerifyCostED25519   = []byte("SigVerifyCostED25519")
 	KeySigVerifyCostSecp256k1 = []byte("SigVerifyCostSecp256k1")
 )
@@ -38,6 +40,7 @@ type Params struct {
 	MemoCostPerByte        sdk.Gas
 	MaxMemoCharacters      uint64
 	TxSigLimit             uint64 // max total number of signatures per tx
+	TxSizeCostPerByte      uint64
 	SigVerifyCostED25519   uint64
 	SigVerifyCostSecp256k1 uint64
 }
@@ -55,6 +58,7 @@ func (p *Params) KeyValuePairs() params.KeyValuePairs {
 		{KeyMemoCostPerByte, &p.MemoCostPerByte},
 		{KeyMaxMemoCharacters, &p.MaxMemoCharacters},
 		{KeyTxSigLimit, &p.TxSigLimit},
+		{KeyTxSizeCostPerByte, &p.TxSizeCostPerByte},
 		{KeySigVerifyCostED25519, &p.SigVerifyCostED25519},
 		{KeySigVerifyCostSecp256k1, &p.SigVerifyCostSecp256k1},
 	}
@@ -73,6 +77,7 @@ func DefaultParams() Params {
 		MemoCostPerByte:        DefaultMemoCostPerByte,
 		MaxMemoCharacters:      DefaultMaxMemoCharacters,
 		TxSigLimit:             DefaultTxSigLimit,
+		TxSizeCostPerByte:      DefaultTxSizeCostPerByte,
 		SigVerifyCostED25519:   DefaultSigVerifyCostED25519,
 		SigVerifyCostSecp256k1: DefaultSigVerifyCostSecp256k1,
 	}
@@ -86,6 +91,7 @@ func (p Params) String() string {
 	sb.WriteString(fmt.Sprintf("MemoCostPerByte: %v\n", p.MemoCostPerByte))
 	sb.WriteString(fmt.Sprintf("MaxMemoCharacters: %d\n", p.MaxMemoCharacters))
 	sb.WriteString(fmt.Sprintf("TxSigLimit: %d\n", p.TxSigLimit))
+	sb.WriteString(fmt.Sprintf("TxSizeCostPerByte: %d\n", p.TxSizeCostPerByte))
 	sb.WriteString(fmt.Sprintf("SigVerifyCostED25519: %d\n", p.SigVerifyCostED25519))
 	sb.WriteString(fmt.Sprintf("SigVerifyCostSecp256k1: %d\n", p.SigVerifyCostSecp256k1))
 

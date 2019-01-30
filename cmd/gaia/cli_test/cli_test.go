@@ -678,14 +678,12 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	success, stdout, _ = f.TxBroadcast(signedTxFile.Name())
 	require.True(t, success)
 
-	var result struct {
-		Response sdk.StringResponseDeliverTx
-	}
+	var result sdk.StringResponseDeliverTx
 
 	// Unmarshal the response and ensure that gas was properly used
 	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
-	require.True(t, msg.Fee.Gas >= uint64(result.Response.GasUsed))
-	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
+	require.Equal(t, msg.Fee.Gas, uint64(result.GasUsed))
+	require.Equal(t, msg.Fee.Gas, uint64(result.GasWanted))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account state

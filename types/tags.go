@@ -41,10 +41,21 @@ func NewTags(tags ...interface{}) Tags {
 		if i == len(tags) {
 			break
 		}
-		ret = append(ret, Tag{Key: []byte(tags[i].(string)), Value: []byte(tags[i+1].(string))})
+		ret = append(ret, Tag{Key: toBytes(tags[i]), Value: toBytes(tags[i+1])})
 		i += 2
 	}
 	return ret
+}
+
+func toBytes(i interface{}) []byte {
+	switch x := i.(type) {
+	case []uint8:
+		return []byte(x)
+	case string:
+		return []byte(x)
+	default:
+		panic(i)
+	}
 }
 
 // Make a tag from a key and a value

@@ -6,7 +6,7 @@ It also contains instructions on how to manage accounts, restore accounts from t
 
 ## Installing `gaiacli` 
 
-`gaiacli`: This is the command-line interface to interract with a `gaiad` full-node. You need it in all cases.
+`gaiacli`: This is the command-line interface to interract with a `gaiad` full-node. 
 
 [**Download the binaries**]
 
@@ -148,7 +148,11 @@ This is the most secure option, but comes with relatively high resources require
 
 You will find the tutorial to install `gaiad` [here](https://cosmos.network/docs/gaia/installation.html), and the guide to run a full-node [here](https://cosmos.network/docs/gaia/join-testnet.html).
 
+// TODO: Add root-of-trust and note about long-range-attacks when implemented
+
 ### Running a light-node
+
+// TODO when functionality is implemented
 
 ### Connecting to a remote full-node
 
@@ -158,7 +162,7 @@ In order to connect to the full-node, you will need an address of the following 
 
 ## Setting up `gaiacli`
 
-`gaiacli` is the tool that enables you to interract with the node that runs on the Cosmos Hub network, wether you run it yourself or not (see [accessing the cosmos network](#accession-the-cosmos-network)). Let us set it up properly.
+`gaiacli` is the tool that enables you to interract with the node that runs on the Cosmos Hub network, wether you run it yourself or not (see [accessing the cosmos hub network](#accession-the-cosmos-hub-network)). Let us set it up properly.
 
 In order to set up `gaiacli`, we use the following command:
 

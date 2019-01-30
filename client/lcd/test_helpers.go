@@ -10,7 +10,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -72,9 +71,11 @@ func makePathname() string {
 	if err != nil {
 		panic(err)
 	}
-
-	sep := string(filepath.Separator)
-	return strings.Replace(p, sep, "_", -1)
+	name, err := ioutil.TempDir(p, "lcd_test")
+	if err != nil {
+		panic(err)
+	}
+	return name
 }
 
 // GetConfig returns a Tendermint config for the test cases.

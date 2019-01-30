@@ -16,7 +16,7 @@ func EmptyTags() Tags {
 }
 
 // Append a single tag
-func (t Tags) AppendTag(k string, v []byte) Tags {
+func (t Tags) AppendTag(k string, v string) Tags {
 	return append(t, MakeTag(k, v))
 }
 
@@ -41,15 +41,15 @@ func NewTags(tags ...interface{}) Tags {
 		if i == len(tags) {
 			break
 		}
-		ret = append(ret, Tag{Key: []byte(tags[i].(string)), Value: tags[i+1].([]byte)})
+		ret = append(ret, Tag{Key: []byte(tags[i].(string)), Value: []byte(tags[i+1].(string))})
 		i += 2
 	}
 	return ret
 }
 
 // Make a tag from a key and a value
-func MakeTag(k string, v []byte) Tag {
-	return Tag{Key: []byte(k), Value: v}
+func MakeTag(k string, v string) Tag {
+	return Tag{Key: []byte(k), Value: []byte(v)}
 }
 
 //__________________________________________________
@@ -61,3 +61,29 @@ var (
 	TagDstValidator = "destination-validator"
 	TagDelegator    = "delegator"
 )
+
+// A KVPair where the Key and Value are both strings, rather than []byte
+type StringTag struct {
+	Key   string `json:"key"`
+	Value string `json:"value,omitempty"`
+}
+
+// A slice of StringTag
+type StringTags []StringTag
+
+// Conversion function from a []byte tag to a string tag
+func TagToStringTag(tag Tag) StringTag {
+	return StringTag{
+		Key:   string(tag.Key),
+		Value: string(tag.Value),
+	}
+}
+
+// Conversion function from Tags to a StringTags
+func TagsToStringTags(tags Tags) StringTags {
+	var stringTags StringTags
+	for _, tag := range tags {
+		stringTags = append(stringTags, TagToStringTag(tag))
+	}
+	return stringTags
+}

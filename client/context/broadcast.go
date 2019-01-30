@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -103,23 +103,21 @@ func (ctx CLIContext) broadcastTxAsync(txBytes []byte) (*ctypes.ResultBroadcastT
 		return res, err
 	}
 
-	if ctx.Output != nil {
-		if ctx.OutputFormat == "json" {
-			type toJSON struct {
-				TxHash string
-			}
+	if ctx.OutputIsSet() && ctx.OutputIsJSON() {
+		bz, err := ctx.Codec.MarshalJSON(struct {
+			T string `json:"tx_hash"`
+		}{T: res.Hash.String()})
 
-			resJSON := toJSON{res.Hash.String()}
-			bz, err := ctx.Codec.MarshalJSON(resJSON)
-			if err != nil {
-				return res, err
-			}
-
-			ctx.Output.Write(bz)
-			io.WriteString(ctx.Output, "\n")
-		} else {
-			io.WriteString(ctx.Output, fmt.Sprintf("async tx sent (tx hash: %s)\n", res.Hash))
+		if err != nil {
+			return res, err
 		}
+
+		ctx.Output.Write(bz)
+		io.WriteString(ctx.Output, "\n")
+	}
+
+	if ctx.OutputIsSet() {
+		io.WriteString(ctx.Output, fmt.Sprintf("async tx with hash %s sent\n", res.Hash))
 	}
 
 	return res, nil
@@ -131,36 +129,26 @@ func (ctx CLIContext) broadcastTxCommit(txBytes []byte) (*ctypes.ResultBroadcast
 		return res, err
 	}
 
-	if ctx.OutputFormat == "json" {
+	if ctx.OutputIsJSON() && ctx.OutputIsSet() {
 		// Since JSON is intended for automated scripts, always include response in
 		// JSON mode.
-		type toJSON struct {
-			Height   int64
-			TxHash   string
-			Response abci.ResponseDeliverTx
+
+		bz, err := ctx.Codec.MarshalJSON(sdk.NewStringResponseDeliverTx(res))
+		if err != nil {
+			return res, err
 		}
 
-		if ctx.Output != nil {
-			resJSON := toJSON{res.Height, res.Hash.String(), res.DeliverTx}
-			bz, err := ctx.Codec.MarshalJSON(resJSON)
-			if err != nil {
-				return res, err
-			}
-
-			ctx.Output.Write(bz)
-			io.WriteString(ctx.Output, "\n")
-		}
+		ctx.Output.Write(bz)
+		io.WriteString(ctx.Output, "\n")
 
 		return res, nil
 	}
 
-	if ctx.Output != nil {
-		resStr := fmt.Sprintf("Committed at block %d (tx hash: %s)\n", res.Height, res.Hash.String())
+	if ctx.OutputIsSet() {
+		resStr := fmt.Sprintf("Committed tx with hash %s at block %d\n", res.Height, res.Hash.String())
 
 		if ctx.PrintResponse {
-			resStr = fmt.Sprintf("Committed at block %d (tx hash: %s, response: %+v)\n",
-				res.Height, res.Hash.String(), res.DeliverTx,
-			)
+			resStr += fmt.Sprintf("Response: %+#v\n", res.DeliverTx)
 		}
 
 		io.WriteString(ctx.Output, resStr)

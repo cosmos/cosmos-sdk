@@ -21,34 +21,10 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query distribution params",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			route := fmt.Sprintf("custom/%s/params/community_tax", queryRoute)
-			retCommunityTax, err := cliCtx.QueryWithData(route, []byte{})
+			params, err := QueryParams(cliCtx, queryRoute)
 			if err != nil {
 				return err
 			}
-
-			route = fmt.Sprintf("custom/%s/params/base_proposer_reward", queryRoute)
-			retBaseProposerReward, err := cliCtx.QueryWithData(route, []byte{})
-			if err != nil {
-				return err
-			}
-
-			route = fmt.Sprintf("custom/%s/params/bonus_proposer_reward", queryRoute)
-			retBonusProposerReward, err := cliCtx.QueryWithData(route, []byte{})
-			if err != nil {
-				return err
-			}
-
-			route = fmt.Sprintf("custom/%s/params/withdraw_addr_enabled", queryRoute)
-			retWithdrawAddrEnabled, err := cliCtx.QueryWithData(route, []byte{})
-			if err != nil {
-				return err
-			}
-
-			params := NewPrettyParams(retCommunityTax, retBaseProposerReward,
-				retBonusProposerReward, retWithdrawAddrEnabled)
-
 			return cliCtx.PrintOutput(params)
 		},
 	}
@@ -199,4 +175,35 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 			return cliCtx.PrintOutput(result)
 		},
 	}
+}
+
+// QueryParams actually queries distribution params.
+func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, error) {
+	route := fmt.Sprintf("custom/%s/params/community_tax", queryRoute)
+
+	retCommunityTax, err := cliCtx.QueryWithData(route, []byte{})
+	if err != nil {
+		return PrettyParams{}, err
+	}
+
+	route = fmt.Sprintf("custom/%s/params/base_proposer_reward", queryRoute)
+	retBaseProposerReward, err := cliCtx.QueryWithData(route, []byte{})
+	if err != nil {
+		return PrettyParams{}, err
+	}
+
+	route = fmt.Sprintf("custom/%s/params/bonus_proposer_reward", queryRoute)
+	retBonusProposerReward, err := cliCtx.QueryWithData(route, []byte{})
+	if err != nil {
+		return PrettyParams{}, err
+	}
+
+	route = fmt.Sprintf("custom/%s/params/withdraw_addr_enabled", queryRoute)
+	retWithdrawAddrEnabled, err := cliCtx.QueryWithData(route, []byte{})
+	if err != nil {
+		return PrettyParams{}, err
+	}
+
+	return NewPrettyParams(retCommunityTax, retBaseProposerReward,
+		retBonusProposerReward, retWithdrawAddrEnabled), nil
 }

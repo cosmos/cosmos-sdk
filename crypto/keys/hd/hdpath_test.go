@@ -3,6 +3,7 @@ package hd
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,24 +29,20 @@ func ExampleStringifyPathParams() {
 	// 44'/33'/7'/1/9
 }
 
-func ExampleStringifyFundraiserPathParams() {
+func TestStringifyFundraiserPathParams(t *testing.T) {
 	path := NewFundraiserParams(4, 22)
-	fmt.Println(path.String())
+	require.Equal(t, "44'/118'/4'/0/22", path.String())
+
 	path = NewFundraiserParams(4, 57)
-	fmt.Println(path.String())
-	// Output:
-	// 44'/118'/4'/0/22
-	// 44'/118'/4'/0/57
+	require.Equal(t, "44'/118'/4'/0/57", path.String())
 }
 
-func ExamplePathToArray() {
+func TestPathToArray(t *testing.T) {
 	path := NewParams(44, 118, 1, false, 4)
-	fmt.Println(path.DerivationPath())
+	require.Equal(t, "[44 118 1 0 4]", path.DerivationPath())
+
 	path = NewParams(44, 118, 2, true, 15)
-	fmt.Println(path.DerivationPath())
-	// Output:
-	// [44 118 1 0 4]
-	// [44 118 2 1 15]
+	require.Equal(t, "[44 118 2 1 15]", path.DerivationPath())
 }
 
 func TestParamsFromPath(t *testing.T) {

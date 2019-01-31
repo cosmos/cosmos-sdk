@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -21,7 +22,7 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query distribution params",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			params, err := QueryParams(cliCtx, queryRoute)
+			params, err := common.QueryParams(cliCtx, queryRoute)
 			if err != nil {
 				return err
 			}
@@ -141,7 +142,7 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 				valAddr = args[1]
 			}
 
-			resp, err := QueryRewards(cliCtx, cdc, queryRoute, args[0], valAddr)
+			resp, err := common.QueryRewards(cliCtx, cdc, queryRoute, args[0], valAddr)
 			if err != nil {
 				return err
 			}
@@ -151,70 +152,4 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 			return cliCtx.PrintOutput(result)
 		},
 	}
-}
-
-// QueryParams actually queries distribution params.
-func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, error) {
-	route := fmt.Sprintf("custom/%s/params/community_tax", queryRoute)
-
-	retCommunityTax, err := cliCtx.QueryWithData(route, []byte{})
-	if err != nil {
-		return PrettyParams{}, err
-	}
-
-	route = fmt.Sprintf("custom/%s/params/base_proposer_reward", queryRoute)
-	retBaseProposerReward, err := cliCtx.QueryWithData(route, []byte{})
-	if err != nil {
-		return PrettyParams{}, err
-	}
-
-	route = fmt.Sprintf("custom/%s/params/bonus_proposer_reward", queryRoute)
-	retBonusProposerReward, err := cliCtx.QueryWithData(route, []byte{})
-	if err != nil {
-		return PrettyParams{}, err
-	}
-
-	route = fmt.Sprintf("custom/%s/params/withdraw_addr_enabled", queryRoute)
-	retWithdrawAddrEnabled, err := cliCtx.QueryWithData(route, []byte{})
-	if err != nil {
-		return PrettyParams{}, err
-	}
-
-	return NewPrettyParams(retCommunityTax, retBaseProposerReward,
-		retBonusProposerReward, retWithdrawAddrEnabled), nil
-}
-
-// QueryParams queries delegator rewards. If valAddr is empty string,
-// it returns all delegations rewards for the given delegator; else
-// it returns the rewards for the specific delegation.
-func QueryRewards(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute, delAddr, valAddr string) ([]byte, error) {
-
-	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	var params distr.QueryDelegationRewardsParams
-	var route string
-
-	if valAddr == "" {
-		params = distr.NewQueryDelegationRewardsParams(delegatorAddr, nil)
-		route = fmt.Sprintf("custom/%s/all_delegation_rewards", queryRoute)
-	} else {
-		validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
-		if err != nil {
-			return nil, err
-		}
-
-		params = distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)
-		route = fmt.Sprintf("custom/%s/delegation_rewards", queryRoute)
-	}
-
-	bz, err := cdc.MarshalJSON(params)
-	if err != nil {
-		return nil, err
-	}
-
-	return cliCtx.QueryWithData(route, bz)
 }

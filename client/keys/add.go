@@ -20,7 +20,6 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +27,6 @@ import (
 
 const (
 	flagInteractive = "interactive"
-	flagBIP44Path   = "bip44-path"
 	flagRecover     = "recover"
 	flagNoBackup    = "no-backup"
 	flagDryRun      = "dry-run"
@@ -68,7 +66,6 @@ the flag --nosort is set.
 	cmd.Flags().String(FlagPublicKey, "", "Parse a public key in bech32 format and save it to disk")
 	cmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
 	cmd.Flags().Bool(client.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
-	cmd.Flags().String(flagBIP44Path, "44'/118'/0'/0/0", "BIP44 path from which to derive a private key")
 	cmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
 	cmd.Flags().Bool(flagDryRun, false, "Perform action, but don't add key to local keystore")
@@ -168,19 +165,13 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	bipFlag := cmd.Flags().Lookup(flagBIP44Path)
-	bip44Params, err := getBIP44ParamsAndPath(bipFlag.Value.String(), bipFlag.Changed || !interactive)
-	if err != nil {
-		return err
-	}
+	account := uint32(viper.GetInt(flagAccount))
+	index := uint32(viper.GetInt(flagIndex))
+	bip44path := hd.NewParams(44, 118, account, false, index)
 
-	// If we're using ledger, only thing we need is the path. So generate key and
-	// we're done.
+	// If we're using ledger, only thing we need is the path. So generate key and we're done.
 	if viper.GetBool(client.FlagUseLedger) {
-		account := uint32(viper.GetInt(flagAccount))
-		index := uint32(viper.GetInt(flagIndex))
-		path := ccrypto.DerivationPath{44, 118, account, 0, index}
-		info, err := kb.CreateLedger(name, path, keys.Secp256k1)
+		info, err := kb.CreateLedger(name, *bip44path, keys.Secp256k1)
 		if err != nil {
 			return err
 		}
@@ -196,6 +187,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
+		// TODO: THIS IS INCORRECT!
 		info, err := kb.CreateKey(name, seed, encryptPassword)
 		if err != nil {
 			return err
@@ -250,38 +243,12 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	info, err := kb.Derive(name, mnemonic, bip39Passphrase, encryptPassword, *bip44Params)
+	info, err := kb.Derive(name, mnemonic, bip39Passphrase, encryptPassword, *bip44path)
 	if err != nil {
 		return err
 	}
 	printCreate(info, mnemonic)
 	return nil
-}
-
-func getBIP44ParamsAndPath(path string, flagSet bool) (*hd.BIP44Params, error) {
-	buf := client.BufferStdin()
-	bip44Path := path
-
-	// if it wasn't set in the flag, give it a chance to overide interactively
-	if !flagSet {
-		var err error
-
-		bip44Path, err = client.GetString(fmt.Sprintf("Enter your bip44 path. Default is %s\n", path), buf)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(bip44Path) == 0 {
-			bip44Path = path
-		}
-	}
-
-	bip44params, err := hd.NewParamsFromPath(bip44Path)
-	if err != nil {
-		return nil, err
-	}
-
-	return bip44params, nil
 }
 
 func printCreate(info keys.Info, seed string) {

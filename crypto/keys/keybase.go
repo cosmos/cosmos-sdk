@@ -30,6 +30,7 @@ var _ Keybase = dbKeybase{}
 // Find a list of all supported languages in the BIP 39 spec (word lists).
 type Language int
 
+//noinspection ALL
 const (
 	// English is the default language to create a mnemonic.
 	// It is the only supported language by this package.
@@ -158,15 +159,17 @@ func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
-func (kb dbKeybase) CreateLedger(name string, path crypto.DerivationPath, algo SigningAlgo) (Info, error) {
+func (kb dbKeybase) CreateLedger(name string, path hd.BIP44Params, algo SigningAlgo) (Info, error) {
 	if algo != Secp256k1 {
 		return nil, ErrUnsupportedSigningAlgo
 	}
+
 	priv, err := crypto.NewPrivKeyLedgerSecp256k1(path)
 	if err != nil {
 		return nil, err
 	}
 	pub := priv.PubKey()
+
 	return kb.writeLedgerKey(pub, path, name), nil
 }
 
@@ -432,7 +435,7 @@ func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string
 	return info
 }
 
-func (kb dbKeybase) writeLedgerKey(pub tmcrypto.PubKey, path crypto.DerivationPath, name string) Info {
+func (kb dbKeybase) writeLedgerKey(pub tmcrypto.PubKey, path hd.BIP44Params, name string) Info {
 	info := newLedgerInfo(name, pub, path)
 	kb.writeInfo(info, name)
 	return info

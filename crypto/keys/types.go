@@ -3,8 +3,6 @@ package keys
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,16 +25,15 @@ type Keybase interface {
 	CreateKey(name, mnemonic, passwd string) (info Info, err error)
 	// CreateFundraiserKey takes a mnemonic and derives, a password
 	CreateFundraiserKey(name, mnemonic, passwd string) (info Info, err error)
-	// Compute a BIP39 seed from th mnemonic and bip39Passwd.
+	// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
 	// Derive private key from the seed using the BIP44 params.
 	// Encrypt the key to disk using encryptPasswd.
 	// See https://github.com/cosmos/cosmos-sdk/issues/2095
-	Derive(name, mnemonic, bip39Passwd,
-		encryptPasswd string, params hd.BIP44Params) (Info, error)
-	// Create, store, and return a new Ledger key reference
-	CreateLedger(name string, path ccrypto.DerivationPath, algo SigningAlgo) (info Info, err error)
+	Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error)
+	// CreateLedger creates, stores, and returns a new Ledger key reference
+	CreateLedger(name string, path hd.BIP44Params, algo SigningAlgo) (info Info, err error)
 
-	// Create, store, and return a new offline key reference
+	// CreateOffline creates, stores, and returns a new offline key reference
 	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)
 
 	// The following operations will *only* work on locally-stored keys
@@ -46,10 +43,10 @@ type Keybase interface {
 	Export(name string) (armor string, err error)
 	ExportPubKey(name string) (armor string, err error)
 
-	// *only* works on locally-stored keys. Temporary method until we redo the exporting API
+	// ExportPrivateKeyObject *only* works on locally-stored keys. Temporary method until we redo the exporting API
 	ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error)
 
-	// Close closes the database.
+	// CloseDB closes the database.
 	CloseDB()
 }
 
@@ -125,10 +122,10 @@ func (i localInfo) GetAddress() types.AccAddress {
 type ledgerInfo struct {
 	Name   string                 `json:"name"`
 	PubKey crypto.PubKey          `json:"pubkey"`
-	Path   ccrypto.DerivationPath `json:"path"`
+	Path   hd.BIP44Params 		  `json:"path"`
 }
 
-func newLedgerInfo(name string, pub crypto.PubKey, path ccrypto.DerivationPath) Info {
+func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params) Info {
 	return &ledgerInfo{
 		Name:   name,
 		PubKey: pub,

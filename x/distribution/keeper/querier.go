@@ -22,6 +22,7 @@ const (
 	ParamCommunityTax        = "community_tax"
 	ParamBaseProposerReward  = "base_proposer_reward"
 	ParamBonusProposerReward = "bonus_proposer_reward"
+	ParamFeePool             = "fee_pool"
 	ParamWithdrawAddrEnabled = "withdraw_addr_enabled"
 )
 
@@ -74,6 +75,12 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 		return bz, nil
 	case ParamWithdrawAddrEnabled:
 		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetWithdrawAddrEnabled(ctx))
+		if err != nil {
+			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+		}
+		return bz, nil
+	case ParamFeePool:
+		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetFeePool(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}

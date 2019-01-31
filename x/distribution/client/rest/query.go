@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -18,9 +19,15 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
 		"/distribution/parameters",
 		paramsHandlerFn(cliCtx, cdc, queryRoute),
 	).Methods("GET")
+
+	// Get the current staking parameter values
+	r.HandleFunc(
+		"/distribution/pool",
+		poolHandlerFn(cliCtx, cdc, queryRoute),
+	).Methods("GET")
 }
 
-// HTTP request handler to query the staking params values
+// HTTP request handler to query the distribution params values
 func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string) http.HandlerFunc {
 
@@ -32,5 +39,19 @@ func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 			return
 		}
 		utils.PostProcessResponse(w, cdc, params, cliCtx.Indent)
+	}
+}
+
+// HTTP request handler to query the pool information
+func poolHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/fee_pool", queryRoute), []byte{})
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

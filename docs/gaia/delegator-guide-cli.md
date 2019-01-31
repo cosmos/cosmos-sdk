@@ -305,6 +305,10 @@ gaiacli tx staking --amount <amountToBond> --validator <bech32AddressOfValidator
 gaiacli tx distr withdraw-rewards --from <delegatorKeyName>
 ```
 
+::: tip
+If you use a connected Ledger, you will be asked to confirm the transaction on the device before it is signed and broadcast to the network
+::: 
+
 To confirm that your transaction went through, you can use the following queries:
 
 ```bash

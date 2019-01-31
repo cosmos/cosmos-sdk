@@ -9,6 +9,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -76,9 +77,8 @@ func TestDeposits(t *testing.T) {
 	addr0Initial := keeper.ck.GetCoins(ctx, addrs[0])
 	addr1Initial := keeper.ck.GetCoins(ctx, addrs[1])
 
-	// require.True(t, addr0Initial.IsEqual(sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)}))
-	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)}, addr0Initial)
-
+	expTokens := staking.TokensFromTendermintPower(42)
+	require.Equal(t, sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, expTokens)}, addr0Initial)
 	require.True(t, proposal.GetTotalDeposit().IsEqual(sdk.Coins{}))
 
 	// Check no deposits at beginning

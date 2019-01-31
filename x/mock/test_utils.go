@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -71,10 +73,9 @@ func CheckGenTx(
 // the parameter 'expPass' against the result. A corresponding result is
 // returned.
 func SignCheckDeliver(
-	t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accNums []uint64,
-	seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
+	t *testing.T, cdc *codec.Codec, app *baseapp.BaseApp, msgs []sdk.Msg,
+	accNums []uint64, seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) sdk.Result {
-	cdc := createCodec()
 	tx := GenTx(msgs, accNums, seq, priv...)
 
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)

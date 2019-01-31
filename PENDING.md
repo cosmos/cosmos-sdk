@@ -50,6 +50,8 @@ IMPROVEMENTS
   * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account
   genesis validation checks to `GaiaValidateGenesisState`.
   * [\#3420](https://github.com/cosmos/cosmos-sdk/issues/3420) Added maximum length to governance proposal descriptions and titles
+  * [\#3256](https://github.com/cosmos/cosmos-sdk/issues/3256) Add gas consumption
+  for tx size in the ante handler and increase the default gas adjustment.
 
 * SDK
   * \#3435 Test that store implementations do not allow nil values

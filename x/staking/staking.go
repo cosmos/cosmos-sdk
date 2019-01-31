@@ -82,6 +82,7 @@ var (
 	DefaultGenesisState   = types.DefaultGenesisState
 	RegisterCodec         = types.RegisterCodec
 
+	ValidatorUpdateDelay      = types.ValidatorUpdateDelay
 	TokensToTendermintPower   = types.TokensToTendermintPower
 	TokensFromTendermintPower = types.TokensFromTendermintPower
 

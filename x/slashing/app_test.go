@@ -60,7 +60,8 @@ func getInitChainer(mapp *mock.App, keeper staking.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		stakingGenesis := staking.DefaultGenesisState()
-		stakingGenesis.Pool.NotBondedTokens = sdk.NewInt(100000)
+		tokens := staking.TokensFromTendermintPower(100000)
+		stakingGenesis.Pool.NotBondedTokens = tokens
 		validators, err := staking.InitGenesis(ctx, keeper, stakingGenesis)
 		if err != nil {
 			panic(err)
@@ -91,8 +92,8 @@ func checkValidatorSigningInfo(t *testing.T, mapp *mock.App, keeper Keeper,
 func TestSlashingMsgs(t *testing.T) {
 	mapp, stakingKeeper, keeper := getMockApp(t)
 
-	genTokens := TokensFromTendermintPower(42)
-	bondTokens := TokensFromTendermintPower(10)
+	genTokens := staking.TokensFromTendermintPower(42)
+	bondTokens := staking.TokensFromTendermintPower(10)
 	genCoin := sdk.NewCoin(stakingTypes.DefaultBondDenom, genTokens)
 	bondCoin := sdk.NewCoin(stakingTypes.DefaultBondDenom, bondTokens)
 
@@ -116,7 +117,7 @@ func TestSlashingMsgs(t *testing.T) {
 	validator := checkValidator(t, mapp, stakingKeeper, addr1, true)
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.True(sdk.IntEq(t, sdk.NewInt(10), validator.BondedTokens()))
+	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 	unjailMsg := MsgUnjail{ValidatorAddr: sdk.ValAddress(validator.ConsPubKey.Address())}
 
 	// no signing info yet

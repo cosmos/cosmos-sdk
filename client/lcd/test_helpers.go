@@ -211,9 +211,8 @@ func (b AddrSeedSlice) Swap(i, j int) {
 // their respective sockets where nValidators is the total number of validators
 // and initAddrs are the accounts to initialize with some steak tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.
-func InitializeTestLCD(
-	t *testing.T, nValidators int, initAddrs []sdk.AccAddress,
-) (cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
+func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress) (
+	cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
 
 	if nValidators < 1 {
 		panic("InitializeTestLCD must use at least one validator")
@@ -272,6 +271,7 @@ func InitializeTestLCD(
 		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
 		txBytes, err := cdc.MarshalJSON(tx)
 		require.Nil(t, err)
+
 		genTxs = append(genTxs, txBytes)
 		valConsPubKeys = append(valConsPubKeys, pubKey)
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
@@ -344,6 +344,7 @@ func startTM(
 	tmcfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc,
 	privVal tmtypes.PrivValidator, app abci.Application,
 ) (*nm.Node, error) {
+
 	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
 	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
 	nodeKey, err := p2p.LoadOrGenNodeKey(tmcfg.NodeKeyFile())

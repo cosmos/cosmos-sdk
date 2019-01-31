@@ -54,7 +54,7 @@ type Store struct {
 
 1. Get & set operations are `O(log n)`, where `n` is the number of elements in the tree
 2. Iteration efficiently returns the sorted elements within the range
-3. each version is immutable, can be retrieved even after a commit
+3. Each tree version is immutable and can be retrieved even after a commit(depending on the pruning settings)
 
 Specification and implementation of IAVL tree can be found in [https://github.com/tendermint/iavl].
 
@@ -86,11 +86,11 @@ type Store struct {
 
 When `Store.{Get, Set}()` is called, the store forwards the call to its parent, with the key prefixed with the `Store.prefix`.
 
-When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`, since it does not work as intended. 
+When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`, since it does not work as intended. In that case, some of the elements are traversed even they are not starting with the prefix.
 
 ## RootMulti
 
-`rootmulti.Store` is a base-layer `MultiStore` where multiple `KVStore` can be mounted on it and retrieved via object-capability keys
+`rootmulti.Store` is a base-layer `MultiStore` where multiple `KVStore` can be mounted on it and retrieved via object-capability keys. The keys are memory addresses, so it is impossible to forge the key unless an object is a valid owner(or a receiver) of the key, according to the object capability principles.
 
 ## TraceKV
 

@@ -1,0 +1,58 @@
+---
+title: Bonded Proof-of-Stake
+author: Tendermint/Cosmos Team
+date: \textit{Working Draft}
+abstract: Bonded proof-of-stake is the Sybil-resistance construction utilized by the Cosmos Hub in conjunction with Tendermint BFT consensus to provide a quantifiably secure distributed ledger backbone.
+urlcolor: cyan
+header-includes:
+    - \usepackage{fancyhdr}
+    - \usepackage{graphicx}
+    - \usepackage{hyperref}
+    - \pagestyle{fancy}
+    - \fancyhead[RE,LO]{BPoS}
+    - \fancyhead[LE,RO]{[logo]}
+    - \fancyhead[CO,CE]{}
+    - \fancyfoot[CO,CE]{}
+    - \fancyfoot[LE,RO]{\thepage}
+---
+
+## Prerequisites
+
+- BFT voting consensus algorithm
+- Scarce fungible token in the state machine
+
+## Desiderata
+
+- Imposition of scarcity on voting within an unbonding period (both full nodes / lite clients)
+- Imposition of cost on downtime
+
+## Terminology
+
+- Stakers: validators, delegators
+- Validators: bonded, unbonding, unbonded
+- Slash
+- Equivocation
+- Unbonding period
+
+## Implementation
+
+- Tracking of what stake contributed to which vote
+- Proportional slashing of contributing stake on equivocation discovery
+- Microslashing for prolonged downtime
+
+### Deviations
+
+- Simplified accounting in slashing for past infractions
+- Tombstone (limited to one slash event while bonded)
+
+### Idiosyncrasies
+
+- Must limit liquidity of stake due to proposer reward
+- Unbonding delegations, redelegations cannot be canceled
+
+## Future Improvements
+
+### Light Client Efficiency
+
+- Bisectable light client proofs
+- Must slash for signatures when not bonded.

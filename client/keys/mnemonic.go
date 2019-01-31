@@ -58,7 +58,7 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 		// hash input entropy to get entropy seed
 		hashedEntropy := sha256.Sum256([]byte(inputEntropy))
 		entropySeed = hashedEntropy[:]
-		printStep()
+		logger.Printf("-------------------------------------")
 	} else {
 		// read entropy seed straight from crypto.Rand
 		var err error

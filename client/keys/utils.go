@@ -120,11 +120,11 @@ func SetKeyBase(kb keys.Keybase) {
 
 // used for outputting keys.Info over REST
 type KeyOutput struct {
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Address string `json:"address"`
-	PubKey  string `json:"pub_key"`
-	Seed    string `json:"seed,omitempty"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Address  string `json:"address"`
+	PubKey   string `json:"pub_key"`
+	Mnemonic string `json:"mnemonic,omitempty"`
 }
 
 // create a list of KeyOutput in bech32 format

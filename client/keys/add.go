@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/tendermint/tendermint/crypto/multisig"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"sort"
-
-	"github.com/tendermint/tendermint/crypto/multisig"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/gorilla/mux"
@@ -35,6 +35,21 @@ const (
 	flagMultisig    = "multisig"
 	flagNoSort      = "nosort"
 )
+
+const (
+	defaultBIP39Passphrase = ""
+	throwAwayPassword      = "throwing-this-key-away"
+	maxValidAccountValue   = int(0x80000000 - 1)
+	maxValidIndexalue      = int(0x80000000 - 1)
+)
+
+var (
+	logger *log.Logger
+)
+
+func Init() {
+	logger = log.New(os.Stderr, "", 0)
+}
 
 func addKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -92,12 +107,13 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	interactive := viper.GetBool(flagInteractive)
+	showMnemonic := viper.GetBool(flagNoBackup)
 
 	if viper.GetBool(flagDryRun) {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
 		kb = client.MockKeyBase()
-		encryptPassword = "throwing-this-key-away"
+		encryptPassword = throwAwayPassword
 	} else {
 		kb, err = GetKeyBaseWithWritePerm()
 		if err != nil {
@@ -141,7 +157,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			if _, err := kb.CreateOffline(name, pk); err != nil {
 				return err
 			}
-			fmt.Fprintf(os.Stderr, "Key %q saved to disk.", name)
+			logger.Printf("Key %q saved to disk.", name)
 			return nil
 		}
 
@@ -176,32 +192,24 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		printCreate(info, "")
+		printCreate(info, false, "")
 		return nil
 	}
 
-	// Recover key from seed passphrase
-	if viper.GetBool(flagRecover) {
-		seed, err := client.GetSeed(
-			"Enter your recovery seed phrase:", buf)
-		if err != nil {
-			return err
-		}
+	//////////////////////////////
+	//////////////////////////////
 
-		// TODO: THIS IS INCORRECT!
-		info, err := kb.CreateKey(name, seed, encryptPassword)
-		if err != nil {
-			return err
-		}
-		// print out results without the seed phrase
-		viper.Set(flagNoBackup, true)
-		printCreate(info, "")
-		return nil
-	}
-
+	// Get bip39 mnemonic
 	var mnemonic string
-	if interactive {
-		mnemonic, err = client.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", buf)
+	bip39Passphrase := defaultBIP39Passphrase
+
+	if interactive || viper.GetBool(flagRecover) {
+		bip39Message := "Enter your bip39 mnemonic"
+		if !viper.GetBool(flagRecover) {
+			bip39Message = "Enter your bip39 mnemonic, or hit enter to generate one."
+		}
+
+		mnemonic, err = client.GetString(bip39Message, buf)
 		if err != nil {
 			return err
 		}
@@ -220,8 +228,12 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// get bip39 passphrase
-	var bip39Passphrase string
+	if !bip39.IsMnemonicValid(mnemonic) {
+		logger.Printf("Error: Mnemonic is not valid")
+		return nil
+	}
+
+	// override bip39 passphrase
 	if interactive {
 		bip39Passphrase, err = client.GetString(
 			"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
@@ -243,66 +255,64 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	info, err := kb.Derive(name, mnemonic, bip39Passphrase, encryptPassword, *bip44path)
+	//////////////////////////////
+	//////////////////////////////
+
+	info, err := kb.Derive(name, mnemonic, defaultBIP39Passphrase, encryptPassword, *bip44path)
 	if err != nil {
 		return err
 	}
-	printCreate(info, mnemonic)
+
+	// Recover key from seed passphrase
+	if viper.GetBool(flagRecover) {
+		// Hide mnemonic from output
+		showMnemonic = false
+		mnemonic = ""
+	}
+
+	printCreate(info, showMnemonic, mnemonic)
 	return nil
 }
 
-func printCreate(info keys.Info, seed string) {
+func printCreate(info keys.Info, showMnemonic bool, mnemonic string) {
 	output := viper.Get(cli.OutputFlag)
+
 	switch output {
 	case "text":
-		fmt.Fprintln(os.Stderr, "")
+		logger.Println()
 		printKeyInfo(info, Bech32KeyOutput)
 
-		// print seed unless requested not to.
-		if !viper.GetBool(client.FlagUseLedger) && !viper.GetBool(flagNoBackup) {
-			fmt.Fprintln(os.Stderr, "\n**Important** write this seed phrase in a safe place.")
-			fmt.Fprintln(os.Stderr, "It is the only way to recover your account if you ever forget your password.")
-			fmt.Fprintln(os.Stderr)
-			fmt.Fprintln(os.Stderr, seed)
+		// print mnemonic unless requested not to.
+		if showMnemonic {
+			logger.Printf("\n**Important** write this mnemonic phrase in a safe place.")
+			logger.Printf("It is the only way to recover your account if you ever forget your password.")
+			logger.Println()
+			logger.Println(mnemonic)
 		}
 	case "json":
 		out, err := Bech32KeyOutput(info)
 		if err != nil {
 			panic(err)
 		}
-		if !viper.GetBool(flagNoBackup) {
-			out.Seed = seed
+
+		if showMnemonic {
+			out.Mnemonic = mnemonic
 		}
+
 		var jsonString []byte
 		if viper.GetBool(client.FlagIndentResponse) {
 			jsonString, err = cdc.MarshalJSONIndent(out, "", "  ")
 		} else {
 			jsonString, err = cdc.MarshalJSON(out)
 		}
+
 		if err != nil {
 			panic(err) // really shouldn't happen...
 		}
-		fmt.Fprintln(os.Stderr, string(jsonString))
+		logger.Printf(string(jsonString))
 	default:
 		panic(fmt.Sprintf("I can't speak: %s", output))
 	}
-}
-
-// function to just a new seed to display in the UI before actually persisting it in the keybase
-func getSeed(algo keys.SigningAlgo) string {
-	kb := client.MockKeyBase()
-	pass := "throwing-this-key-away"
-	name := "inmemorykey"
-	_, seed, _ := kb.CreateMnemonic(name, keys.English, pass, algo)
-	return seed
-}
-
-func printPrefixed(msg string) {
-	fmt.Fprintln(os.Stderr, msg)
-}
-
-func printStep() {
-	printPrefixed("-------------------------------------")
 }
 
 /////////////////////////////
@@ -312,7 +322,35 @@ func printStep() {
 type NewKeyBody struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
-	Seed     string `json:"seed"`
+	Mnemonic string `json:"mnemonic"`
+	Account  int    `json:"account"`
+	Index    int    `json:"index"`
+}
+
+// RecoverKeyBody is recover key request REST body
+type RecoverKeyBody struct {
+	Password string `json:"password"`
+	Mnemonic string `json:"mnemonic"`
+	Account  int    `json:"account"`
+	Index    int    `json:"index"`
+}
+
+// function to just create a new seed to display in the UI before actually persisting it in the keybase
+func generateMnemonic(algo keys.SigningAlgo) string {
+	kb := client.MockKeyBase()
+	pass := throwAwayPassword
+	name := "inmemorykey"
+	_, seed, _ := kb.CreateMnemonic(name, keys.English, pass, algo)
+	return seed
+}
+
+func checkErrorREST(w http.ResponseWriter, httpErr int, err error) bool {
+	if err != nil {
+		w.WriteHeader(httpErr)
+		_, _ = w.Write([]byte(err.Error()))
+		return true
+	}
+	return false
 }
 
 // add new key REST handler
@@ -322,34 +360,46 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		var m NewKeyBody
 
 		kb, err := GetKeyBaseWithWritePerm()
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+		if checkErrorREST(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+		if checkErrorREST(w, http.StatusBadRequest, err) {
 			return
 		}
+
 		err = json.Unmarshal(body, &m)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+		if checkErrorREST(w, http.StatusBadRequest, err) {
 			return
 		}
+
+		// Check parameters
 		if m.Name == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			err = errMissingName()
-			w.Write([]byte(err.Error()))
+			checkErrorREST(w, http.StatusBadRequest, errMissingName())
 			return
 		}
 		if m.Password == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			err = errMissingPassword()
-			w.Write([]byte(err.Error()))
+			checkErrorREST(w, http.StatusBadRequest, errMissingPassword())
+			return
+		}
+
+		mnemonic := m.Mnemonic
+		// if mnemonic is empty, generate one
+		if mnemonic == "" {
+			mnemonic = generateMnemonic(keys.Secp256k1)
+		}
+		if !bip39.IsMnemonicValid(mnemonic) {
+			checkErrorREST(w, http.StatusBadRequest, errInvalidMnemonic())
+		}
+
+		if m.Account < 0 || m.Account > maxValidAccountValue {
+			checkErrorREST(w, http.StatusBadRequest, errInvalidAccountNumber())
+			return
+		}
+
+		if m.Index < 0 || m.Index > maxValidIndexalue {
+			checkErrorREST(w, http.StatusBadRequest, errInvalidIndexNumber())
 			return
 		}
 
@@ -357,33 +407,26 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		infos, err := kb.List()
 		for _, info := range infos {
 			if info.GetName() == m.Name {
-				w.WriteHeader(http.StatusConflict)
-				err = errKeyNameConflict(m.Name)
-				w.Write([]byte(err.Error()))
+				checkErrorREST(w, http.StatusConflict, errKeyNameConflict(m.Name))
 				return
 			}
 		}
 
 		// create account
-		seed := m.Seed
-		if seed == "" {
-			seed = getSeed(keys.Secp256k1)
-		}
-		info, err := kb.CreateKey(m.Name, seed, m.Password)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+		account := uint32(m.Account)
+		index := uint32(m.Index)
+		bip44path := hd.NewParams(44, 118, account, false, index)
+		info, err := kb.Derive(m.Name, mnemonic, defaultBIP39Passphrase, m.Password, *bip44path)
+		if checkErrorREST(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		keyOutput, err := Bech32KeyOutput(info)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+		if checkErrorREST(w, http.StatusInternalServerError, err) {
 			return
 		}
 
-		keyOutput.Seed = seed
+		keyOutput.Mnemonic = mnemonic
 
 		PostProcessResponse(w, cdc, keyOutput, indent)
 	}
@@ -399,16 +442,10 @@ func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	algo := keys.SigningAlgo(algoType)
 
-	seed := getSeed(algo)
+	seed := generateMnemonic(algo)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(seed))
-}
-
-// RecoverKeyBody is recover key request REST body
-type RecoverKeyBody struct {
-	Password string `json:"password"`
-	Seed     string `json:"seed"`
+	_, _ = w.Write([]byte(seed))
 }
 
 // RecoverRequestHandler performs key recover request
@@ -417,66 +454,68 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 		vars := mux.Vars(r)
 		name := vars["name"]
 		var m RecoverKeyBody
+
 		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
-			return
-		}
-		err = cdc.UnmarshalJSON(body, &m)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(err.Error()))
+		if checkErrorREST(w, http.StatusBadRequest, err) {
 			return
 		}
 
-		if name == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			err = errMissingName()
-			w.Write([]byte(err.Error()))
-			return
-		}
-		if m.Password == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			err = errMissingPassword()
-			w.Write([]byte(err.Error()))
-			return
-		}
-		if m.Seed == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			err = errMissingSeed()
-			w.Write([]byte(err.Error()))
+		err = cdc.UnmarshalJSON(body, &m)
+		if checkErrorREST(w, http.StatusBadRequest, err) {
 			return
 		}
 
 		kb, err := GetKeyBaseWithWritePerm()
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+		checkErrorREST(w, http.StatusInternalServerError, err)
+
+		if name == "" {
+			checkErrorREST(w, http.StatusBadRequest, errMissingName())
 			return
 		}
+		if m.Password == "" {
+			checkErrorREST(w, http.StatusBadRequest, errMissingPassword())
+			return
+		}
+
+		mnemonic := m.Mnemonic
+		if !bip39.IsMnemonicValid(mnemonic) {
+			checkErrorREST(w, http.StatusBadRequest, errInvalidMnemonic())
+		}
+
+		if m.Mnemonic == "" {
+			checkErrorREST(w, http.StatusBadRequest, errMissingMnemonic())
+			return
+		}
+
+		if m.Account < 0 || m.Account > maxValidAccountValue {
+			checkErrorREST(w, http.StatusBadRequest, errInvalidAccountNumber())
+			return
+		}
+
+		if m.Index < 0 || m.Index > maxValidIndexalue {
+			checkErrorREST(w, http.StatusBadRequest, errInvalidIndexNumber())
+			return
+		}
+
 		// check if already exists
 		infos, err := kb.List()
 		for _, info := range infos {
 			if info.GetName() == name {
-				w.WriteHeader(http.StatusConflict)
-				err = errKeyNameConflict(name)
-				w.Write([]byte(err.Error()))
+				checkErrorREST(w, http.StatusConflict, errKeyNameConflict(name))
 				return
 			}
 		}
 
-		info, err := kb.CreateKey(name, m.Seed, m.Password)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+		account := uint32(m.Account)
+		index := uint32(m.Index)
+		bip44path := hd.NewParams(44, 118, account, false, index)
+		info, err := kb.Derive(name, mnemonic, defaultBIP39Passphrase, m.Password, *bip44path)
+		if checkErrorREST(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		keyOutput, err := Bech32KeyOutput(info)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+		if checkErrorREST(w, http.StatusInternalServerError, err) {
 			return
 		}
 

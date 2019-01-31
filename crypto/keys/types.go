@@ -21,10 +21,6 @@ type Keybase interface {
 	// CreateMnemonic creates a new mnemonic, and derives a hierarchical deterministic
 	// key from that.
 	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)
-	// CreateKey takes a mnemonic and derives, a password. This method is temporary
-	CreateKey(name, mnemonic, passwd string) (info Info, err error)
-	// CreateFundraiserKey takes a mnemonic and derives, a password
-	CreateFundraiserKey(name, mnemonic, passwd string) (info Info, err error)
 	// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
 	// Derive private key from the seed using the BIP44 params.
 	// Encrypt the key to disk using encryptPasswd.

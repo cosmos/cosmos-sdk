@@ -690,7 +690,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 
 	// Unmarshal the response and ensure that gas was properly used
 	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
-	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasUsed))
+	require.True(t, msg.Fee.Gas >= uint64(result.Response.GasUsed))
 	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 

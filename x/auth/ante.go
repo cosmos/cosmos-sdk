@@ -179,26 +179,6 @@ func processSig(
 		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
 	}
 
-	if simulate {
-		// Simulated txs should not contain a signature and are not required to
-		// contain a pubkey, so we must account for tx size of including a
-		// StdSignature (Amino encoding) and simulate gas consumption
-		// (assuming a SECP256k1 simulation key).
-		//
-		// XXX: Alternatively, we may avoid this altogether and increase the default
-		// gas adjustment.
-		if sig.PubKey == nil {
-			cost := params.TxSizeCostPerByte * sdk.Gas(len(pubKey.Bytes()))
-			cost += params.TxSizeCostPerByte * 3 // account for Amino encoding
-			ctx.GasMeter().ConsumeGas(cost, "txSize")
-		}
-		if len(sig.Signature) == 0 {
-			cost := params.TxSizeCostPerByte * sdk.Gas(simSecp256k1SigSize)
-			cost += params.TxSizeCostPerByte * 6 // account for Amino encoding
-			ctx.GasMeter().ConsumeGas(cost, "txSize")
-		}
-	}
-
 	consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()

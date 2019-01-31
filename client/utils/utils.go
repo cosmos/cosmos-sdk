@@ -49,7 +49,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		}
 
 		gasEst := GasEstimateResponse{GasEstimate: txBldr.GetGas()}
-		cliCtx.PrintOutput(gasEst)
+		fmt.Fprintf(os.Stderr, gasEst.String())
 	}
 
 	if cliCtx.Simulate {

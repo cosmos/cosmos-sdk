@@ -279,7 +279,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	}{}
 	err := cdc.UnmarshalJSON([]byte(stdout), &sendResp)
 	require.Nil(t, err)
-	require.Equal(t, sendResp.Response.GasWanted, sendResp.Response.GasUsed)
+	require.True(t, sendResp.Response.GasWanted >= sendResp.Response.GasUsed)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Check state has changed accordingly

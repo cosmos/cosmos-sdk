@@ -849,8 +849,8 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 	delTokens1 := types.TokensFromTendermintPower(20)
 	delTokens2 := types.TokensFromTendermintPower(30)
 	validators[0], pool, _ = validators[0].RemoveDelShares(pool, sdk.NewDecFromInt(delTokens1))
-	keeper.SetPool(ctx, pool)
 	validators[1], pool, _ = validators[1].RemoveDelShares(pool, sdk.NewDecFromInt(delTokens2))
+	keeper.SetPool(ctx, pool)
 	validators[0] = TestingUpdateValidator(keeper, ctx, validators[0], false)
 	validators[1] = TestingUpdateValidator(keeper, ctx, validators[1], false)
 

@@ -18,6 +18,7 @@ const (
 	QueryValidatorSlashes     = "validator_slashes"
 	QueryDelegationRewards    = "delegation_rewards"
 	QueryAllDelegationRewards = "all_delegation_rewards"
+	QueryWithdrawAddr         = "withdraw_addr"
 
 	ParamCommunityTax        = "community_tax"
 	ParamBaseProposerReward  = "base_proposer_reward"
@@ -46,6 +47,9 @@ func NewQuerier(k Keeper) sdk.Querier {
 
 		case QueryAllDelegationRewards:
 			return queryAllDelegationRewards(ctx, path[1:], req, k)
+
+		case QueryWithdrawAddr:
+			return queryDelegatorWithdrawAddress(ctx, path[1:], req, k)
 
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown distr query endpoint")
@@ -222,6 +226,35 @@ func queryAllDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuer
 	)
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, totalRewards)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return bz, nil
+}
+
+// params for query 'custom/distr/withdraw_addr'
+type QueryDelegatorWithdrawAddrParams struct {
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+}
+
+// NewQueryDelegatorWithdrawAddrParams creates a new instance of QueryDelegatorWithdrawAddrParams.
+func NewQueryDelegatorWithdrawAddrParams(delegatorAddr sdk.AccAddress) QueryDelegatorWithdrawAddrParams {
+	return QueryDelegatorWithdrawAddrParams{DelegatorAddr: delegatorAddr}
+}
+
+func queryDelegatorWithdrawAddress(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params QueryDelegatorWithdrawAddrParams
+	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
+	}
+
+	// cache-wrap context as to not persist state changes during querying
+	ctx, _ = ctx.CacheContext()
+	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, params.DelegatorAddr)
+
+	bz, err := codec.MarshalJSONIndent(k.cdc, withdrawAddr)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

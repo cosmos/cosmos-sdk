@@ -54,6 +54,7 @@ IMPROVEMENTS
 
 * SDK
   * \#3435 Test that store implementations do not allow nil values
+  * \#3459 Add basic design specification for bonded-proof-of-stake
 
 * Tendermint
 

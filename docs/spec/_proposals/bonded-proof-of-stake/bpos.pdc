@@ -25,6 +25,7 @@ header-includes:
 
 - Imposition of scarcity on voting within an unbonding period (both full nodes / lite clients)
 - Imposition of cost on downtime
+- Maximize amount of bonded stake
 
 ## Terminology
 
@@ -39,6 +40,12 @@ header-includes:
 - Tracking of what stake contributed to which vote
 - Proportional slashing of contributing stake on equivocation discovery
 - Microslashing for prolonged downtime
+- Split of stakers into validators / delegators due to TM O(n^2) voting (and desire for stake to be bonded)
+- Inflation to pay for risk + operation of voting
+
+### Particulars
+
+- Instant redelegation
 
 ### Deviations
 

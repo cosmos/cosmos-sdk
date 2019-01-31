@@ -2,12 +2,15 @@ package rest
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"net/http"
+
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 )
 
@@ -24,6 +27,12 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards/{validatorAddr}",
 		delegatorRewardsHandlerFn(cliCtx, cdc, queryRoute),
+	).Methods("GET")
+
+	// Get the rewards withdrawal address
+	r.HandleFunc(
+		"/distribution/delegators/{delegatorAddr}/withdraw_address",
+		delegatorWithdrawalAddrHandlerFn(cliCtx, cdc, queryRoute),
 	).Methods("GET")
 
 	// Get the current distribution parameter values
@@ -72,12 +81,39 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	}
 }
 
+// HTTP request handler to query a delegation rewards
+func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		delegatorAddr, err := sdk.AccAddressFromBech32(mux.Vars(r)["delegatorAddr"])
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		params := distribution.NewQueryDelegatorWithdrawAddrParams(delegatorAddr)
+		bz, err := cdc.MarshalJSON(params)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+	}
+}
+
 // HTTP request handler to query the distribution params values
 func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		cliCtx := context.NewCLIContext().WithCodec(cdc)
 		params, err := common.QueryParams(cliCtx, queryRoute)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())

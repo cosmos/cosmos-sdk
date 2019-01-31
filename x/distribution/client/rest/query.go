@@ -2,12 +2,12 @@ package rest
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/gorilla/mux"
 )
 
@@ -45,7 +45,7 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// query for rewards from a particular delegator
-		res, err := cli.QueryRewards(cliCtx, cdc, queryRoute, mux.Vars(r)["delegatorAddr"], "")
+		res, err := common.QueryRewards(cliCtx, cdc, queryRoute, mux.Vars(r)["delegatorAddr"], "")
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -61,7 +61,7 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// query for rewards from a particular delegation
-		res, err := cli.QueryRewards(cliCtx, cdc, queryRoute,
+		res, err := common.QueryRewards(cliCtx, cdc, queryRoute,
 			mux.Vars(r)["delegatorAddr"], mux.Vars(r)["validatorAddr"])
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -78,7 +78,7 @@ func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		cliCtx := context.NewCLIContext().WithCodec(cdc)
-		params, err := cli.QueryParams(cliCtx, queryRoute)
+		params, err := common.QueryParams(cliCtx, queryRoute)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

@@ -38,7 +38,7 @@ func ConfigCmd(defaultCLIHome string) *cobra.Command {
 		Args:  cobra.RangeArgs(0, 2),
 	}
 
-	cmd.Flags().String(cli.HomeFlag, defaultHome,
+	cmd.Flags().String(cli.HomeFlag, defaultCLIHome,
 		"set client's home directory for configuration")
 	cmd.Flags().Bool(flagGet, false,
 		"print configuration value or its default if unset")

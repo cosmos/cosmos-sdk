@@ -268,16 +268,15 @@ jobs:
       working_directory: /home/circleci/.snap_workspace/src/github.com/cosmos/cosmos-sdk
       machine: true
       environment:
-        GOBIN: /home/circleci/.snap_workspace/bin
-        GOPATH: /home/circleci/.snap_workspace/
-        GOOS: linux
-        GOARCH: amd64
-        GO_VERSION: "1.11.4"
         LC_ALL: C.UTF-8
         LANG: C.UTF-8
+        GOPATH: /tmp/workspace
+        GOBIN: /tmp/workspace/bin
       parallelism: 1
       steps:
         - checkout
+        - attach_workspace:
+            at: /tmp/workspace
         - run:
             name: Install prerequitistes
             command: |
@@ -289,14 +288,6 @@ jobs:
         - run:
             name: prepping snap build
             command: |
-              pushd /tmp
-              wget https://dl.google.com/go/go$GO_VERSION.linux-amd64.tar.gz
-              sudo tar -xf go$GO_VERSION.linux-amd64.tar.gz
-              sudo rm -rf /usr/local/go
-              sudo mv go /usr/local
-              popd
-              set -x
-              export PATH="$GOBIN:/usr/local/go/bin:$PATH"
               /snap/bin/snapcraft version
               make snapcraft.yaml
         - run:

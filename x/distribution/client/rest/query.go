@@ -7,8 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	"github.com/gorilla/mux"
 )
@@ -16,9 +14,15 @@ import (
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
 	cdc *codec.Codec, queryRoute string) {
 
-	// Get delegator's rewards
+	// Get the total rewards balance from all delegations
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards",
+		delegatorRewardsHandlerFn(cliCtx, cdc, queryRoute),
+	).Methods("GET")
+
+	// Query a delegation reward
+	r.HandleFunc(
+		"/distribution/delegators/{delegatorAddr}/rewards/{validatorAddr}",
 		delegatorRewardsHandlerFn(cliCtx, cdc, queryRoute),
 	).Methods("GET")
 
@@ -41,21 +45,24 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// query for rewards from a particular delegator
-		delegatorAddr, err := sdk.AccAddressFromBech32(mux.Vars(r)["delegatorAddr"])
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		params := distr.NewQueryDelegationRewardsParams(delegatorAddr, nil)
-		bz, err := cdc.MarshalJSON(params)
+		res, err := cli.QueryRewards(cliCtx, cdc, queryRoute, mux.Vars(r)["delegatorAddr"], "")
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/delegation_rewards", queryRoute)
-		res, err := cliCtx.QueryWithData(route, bz)
+		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+	}
+}
+
+// HTTP request handler to query a delegation rewards
+func delegationRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		// query for rewards from a particular delegation
+		res, err := cli.QueryRewards(cliCtx, cdc, queryRoute,
+			mux.Vars(r)["delegatorAddr"], mux.Vars(r)["validatorAddr"])
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

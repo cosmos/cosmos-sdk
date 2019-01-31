@@ -39,10 +39,10 @@ func TestStringifyFundraiserPathParams(t *testing.T) {
 
 func TestPathToArray(t *testing.T) {
 	path := NewParams(44, 118, 1, false, 4)
-	require.Equal(t, "[44 118 1 0 4]", path.DerivationPath())
+	require.Equal(t, "[44 118 1 0 4]", fmt.Sprintf("%v", path.DerivationPath()))
 
 	path = NewParams(44, 118, 2, true, 15)
-	require.Equal(t, "[44 118 2 1 15]", path.DerivationPath())
+	require.Equal(t, "[44 118 2 1 15]", fmt.Sprintf("%v", path.DerivationPath()))
 }
 
 func TestParamsFromPath(t *testing.T) {

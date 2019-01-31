@@ -201,7 +201,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 	// Get bip39 mnemonic
 	var mnemonic string
-	bip39Passphrase := defaultBIP39Passphrase
+	var bip39Passphrase string
 
 	if interactive || viper.GetBool(flagRecover) {
 		bip39Message := "Enter your bip39 mnemonic"
@@ -405,7 +405,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		}
 
 		// check if already exists
-		infos, err := kb.List()
+		infos, _ := kb.List()
 		for _, info := range infos {
 			if info.GetName() == m.Name {
 				checkErrorREST(w, http.StatusConflict, errKeyNameConflict(m.Name))
@@ -499,7 +499,7 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 		}
 
 		// check if already exists
-		infos, err := kb.List()
+		infos, _ := kb.List()
 		for _, info := range infos {
 			if info.GetName() == name {
 				checkErrorREST(w, http.StatusConflict, errKeyNameConflict(name))

@@ -121,9 +121,9 @@ func (i localInfo) GetAddress() types.AccAddress {
 
 // ledgerInfo is the public information about a Ledger key
 type ledgerInfo struct {
-	Name   string                 `json:"name"`
-	PubKey crypto.PubKey          `json:"pubkey"`
-	Path   hd.BIP44Params 		  `json:"path"`
+	Name   string         `json:"name"`
+	PubKey crypto.PubKey  `json:"pubkey"`
+	Path   hd.BIP44Params `json:"path"`
 }
 
 func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params) Info {

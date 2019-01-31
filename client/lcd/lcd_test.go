@@ -67,7 +67,7 @@ func TestKeyRecover(t *testing.T) {
 	myName2 := "TestKeyRecover_2"
 
 	mnemonic := getKeysSeed(t, port)
-	expectedInfo, _ := GetKeyBase(t).CreateAccount(myName1, mnemonic, "", pw, 0, 0, )
+	expectedInfo, _ := GetKeyBase(t).CreateAccount(myName1, mnemonic, "", pw, 0, 0)
 	expectedAddress := expectedInfo.GetAddress().String()
 	expectedPubKey := sdk.MustBech32ifyAccPub(expectedInfo.GetPubKey())
 
@@ -126,7 +126,7 @@ func TestKeys(t *testing.T) {
 	require.NoError(t, err, "Failed to return a correct bech32 address")
 
 	// test if created account is the correct account
-	expectedInfo3, _ := GetKeyBase(t).CreateAccount(name3, mnemonic3, "", pw, 0, 0, )
+	expectedInfo3, _ := GetKeyBase(t).CreateAccount(name3, mnemonic3, "", pw, 0, 0)
 	expectedAddress3 := sdk.AccAddress(expectedInfo3.GetPubKey().Address()).String()
 	require.Equal(t, expectedAddress3, addr3Bech32)
 

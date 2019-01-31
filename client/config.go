@@ -30,7 +30,7 @@ func init() {
 
 // ConfigCmd returns a CLI command to interactively create a
 // Gaia CLI config file.
-func ConfigCmd(defaultHome string) *cobra.Command {
+func ConfigCmd(defaultCLIHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config <key> [value]",
 		Short: "Create or query a Gaia CLI configuration file",

@@ -13,9 +13,8 @@ import (
 const (
 	// DefaultGasAdjustment is applied to gas estimates to avoid tx execution
 	// failures due to state changes that might occur between the tx simulation
-	// and the actual run. In addition, it must also account for tx size
-	// discrepancies when valid signature are provided.
-	DefaultGasAdjustment = 1.03
+	// and the actual run.
+	DefaultGasAdjustment = 1.0
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
 

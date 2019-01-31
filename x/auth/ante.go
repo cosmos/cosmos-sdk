@@ -17,8 +17,8 @@ import (
 
 var (
 	// simulation signature values used to estimate gas consumption
-	simSecp256k1Pubkey  secp256k1.PubKeySecp256k1
-	simSecp256k1SigSize = 64
+	simSecp256k1Pubkey secp256k1.PubKeySecp256k1
+	simSecp256k1Sig    [64]byte
 )
 
 func init() {
@@ -177,6 +177,20 @@ func processSig(
 	err := acc.SetPubKey(pubKey)
 	if err != nil {
 		return nil, sdk.ErrInternal("setting PubKey on signer's account").Result()
+	}
+
+	if simulate {
+		// Simulated txs should not contain a signature and are not required to
+		// contain a pubkey, so we must account for tx size of including a
+		// StdSignature (Amino encoding) and simulate gas consumption
+		// (assuming a SECP256k1 simulation key).
+		simSig := StdSignature{PubKey: pubKey}
+		if len(sig.Signature) == 0 {
+			simSig.Signature = simSecp256k1Sig[:]
+		}
+
+		sigBz := msgCdc.MustMarshalBinaryLengthPrefixed(simSig)
+		ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sigBz)), "txSize")
 	}
 
 	consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)

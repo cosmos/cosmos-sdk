@@ -210,7 +210,7 @@ func TestCoinSend(t *testing.T) {
 
 	// run simulation and test success with estimated gas
 	res, body, _ = doTransferWithGas(
-		t, port, seed, name1, memo, pw, addr, "10000", client.DefaultGasAdjustment, true, false, fees,
+		t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees,
 	)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -288,8 +288,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 
 	// simulate tx
 	res, body, _ := doTransferWithGas(
-		t, port, seed, name1, memo, "", addr, client.GasFlagAuto,
-		client.DefaultGasAdjustment, true, false, fees,
+		t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1.0, true, false, fees,
 	)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 

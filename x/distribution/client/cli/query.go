@@ -135,42 +135,18 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			var (
-				route  string
-				params distr.QueryDelegationRewardsParams
-				result sdk.DecCoins
-			)
-
-			if len(args) == 1 {
-				// query for all rewards
-				params = distr.NewQueryDelegationRewardsParams(delegatorAddr, nil)
-				route = fmt.Sprintf("custom/%s/all_delegation_rewards", queryRoute)
-			} else {
+			valAddr := ""
+			if len(args) == 2 {
 				// query for rewards from a particular validator
-				validatorAddr, err := sdk.ValAddressFromBech32(args[1])
-				if err != nil {
-					return err
-				}
-
-				params = distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)
-				route = fmt.Sprintf("custom/%s/delegation_rewards", queryRoute)
+				valAddr = args[1]
 			}
 
-			bz, err := cdc.MarshalJSON(params)
+			resp, err := QueryRewards(cliCtx, cdc, queryRoute, args[0], valAddr)
 			if err != nil {
 				return err
 			}
 
-			resp, err := cliCtx.QueryWithData(route, bz)
-			if err != nil {
-				return err
-			}
-
+			var result sdk.DecCoins
 			cdc.MustUnmarshalJSON(resp, &result)
 			return cliCtx.PrintOutput(result)
 		},
@@ -206,4 +182,39 @@ func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, er
 
 	return NewPrettyParams(retCommunityTax, retBaseProposerReward,
 		retBonusProposerReward, retWithdrawAddrEnabled), nil
+}
+
+// QueryParams queries delegator rewards. If valAddr is empty string,
+// it returns all delegations rewards for the given delegator; else
+// it returns the rewards for the specific delegation.
+func QueryRewards(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute, delAddr, valAddr string) ([]byte, error) {
+
+	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	var params distr.QueryDelegationRewardsParams
+	var route string
+
+	if valAddr == "" {
+		params = distr.NewQueryDelegationRewardsParams(delegatorAddr, nil)
+		route = fmt.Sprintf("custom/%s/all_delegation_rewards", queryRoute)
+	} else {
+		validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
+		if err != nil {
+			return nil, err
+		}
+
+		params = distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)
+		route = fmt.Sprintf("custom/%s/delegation_rewards", queryRoute)
+	}
+
+	bz, err := cdc.MarshalJSON(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return cliCtx.QueryWithData(route, bz)
 }

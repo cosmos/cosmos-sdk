@@ -103,21 +103,15 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 
 // RegisterRestServerFlags registers the flags required for rest server
 func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
+	cmd = GetCommands(cmd)[0]
 	cmd.Flags().String(FlagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
 	cmd.Flags().Bool(FlagInsecure, false, "Do not set up SSL/TLS layer")
 	cmd.Flags().String(FlagSSLHosts, "", "Comma-separated hostnames and IPs to generate a certificate for")
 	cmd.Flags().String(FlagSSLCertFile, "", "Path to a SSL certificate file. If not supplied, a self-signed certificate will be generated.")
 	cmd.Flags().String(FlagSSLKeyFile, "", "Path to a key file; ignored if a certificate file is not supplied.")
 	cmd.Flags().String(FlagCORS, "", "Set the domains that can make CORS requests (* for all)")
-	cmd.Flags().String(FlagChainID, "", "Chain ID of Tendermint node")
-	cmd.Flags().String(FlagNode, "tcp://localhost:26657", "Address of the node to connect to")
 	cmd.Flags().Int(FlagMaxOpenConnections, 1000, "The number of maximum open connections")
-	cmd.Flags().Bool(FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
-	cmd.Flags().Bool(FlagIndentResponse, false, "Add indent to JSON response")
 
-	viper.BindPFlag(FlagTrustNode, cmd.Flags().Lookup(FlagTrustNode))
-	viper.BindPFlag(FlagChainID, cmd.Flags().Lookup(FlagChainID))
-	viper.BindPFlag(FlagNode, cmd.Flags().Lookup(FlagNode))
 	return cmd
 }
 

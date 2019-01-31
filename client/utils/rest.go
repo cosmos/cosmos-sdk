@@ -16,11 +16,6 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
-// GasEstimateResponse defines a response definition for tx gas estimation.
-type GasEstimateResponse struct {
-	GasEstimate uint64 `json:"gas_estimate"`
-}
-
 //-----------------------------------------------------------------------------
 // Basic HTTP utilities
 

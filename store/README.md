@@ -52,7 +52,7 @@ type Store struct {
 
 `iavl.Store` is a base-layer self-balancing merkle tree. It is guaranteed that 
 
-1. get/set operation is done within `O(log n)`
+1. Get & set operations are `O(log n)`, where `n` is the number of elements in the tree
 2. iteration efficiently returns the sorted elements within the range
 3. each version is immutable, can be retrieved even after a commit
 

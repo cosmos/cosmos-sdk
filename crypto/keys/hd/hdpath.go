@@ -62,19 +62,7 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 		return nil, fmt.Errorf("path length is wrong. Expected 5, got %d", len(spl))
 	}
 
-	if spl[0] != "44'" {
-		return nil, fmt.Errorf("first field in path must be 44', got %v", spl[0])
-	}
-
-	if !isHardened(spl[1]) || !isHardened(spl[2]) {
-		return nil,
-			fmt.Errorf("second and third field in path must be hardened (ie. contain the suffix ', got %v and %v", spl[1], spl[2])
-	}
-	if isHardened(spl[3]) || isHardened(spl[4]) {
-		return nil,
-			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %v and %v", spl[3], spl[4])
-	}
-
+	// Check items can be parsed
 	purpose, err := hardenedInt(spl[0])
 	if err != nil {
 		return nil, err
@@ -91,13 +79,28 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !(change == 0 || change == 1) {
-		return nil, fmt.Errorf("change field can only be 0 or 1")
-	}
 
 	addressIdx, err := hardenedInt(spl[4])
 	if err != nil {
 		return nil, err
+	}
+
+	// Confirm valid values
+	if spl[0] != "44'" {
+		return nil, fmt.Errorf("first field in path must be 44', got %v", spl[0])
+	}
+
+	if !isHardened(spl[1]) || !isHardened(spl[2]) {
+		return nil,
+			fmt.Errorf("second and third field in path must be hardened (ie. contain the suffix ', got %v and %v", spl[1], spl[2])
+	}
+	if isHardened(spl[3]) || isHardened(spl[4]) {
+		return nil,
+			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %v and %v", spl[3], spl[4])
+	}
+
+	if !(change == 0 || change == 1) {
+		return nil, fmt.Errorf("change field can only be 0 or 1")
 	}
 
 	return &BIP44Params{
@@ -132,7 +135,7 @@ func NewFundraiserParams(account uint32, addressIdx uint32) *BIP44Params {
 	return NewParams(44, 118, account, false, addressIdx)
 }
 
-// Return the BIP44 fields as an array.
+// DerivationPath returns the BIP44 fields as an array.
 func (p BIP44Params) DerivationPath() []uint32 {
 	change := uint32(0)
 	if p.change {

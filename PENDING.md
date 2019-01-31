@@ -77,6 +77,7 @@ BUG FIXES
   - [\#3419](https://github.com/cosmos/cosmos-sdk/pull/3419) Fix `q distr slashes` panic 
   - [\#3453](https://github.com/cosmos/cosmos-sdk/pull/3453) The `rest-server` command didn't respect persistent flags such as `--chain-id` and `--trust-node` if they were
     passed on the command line.
+  - [\#3427](https://github.com/cosmos/cosmos-sdk/issues/3427) Gaiacli generates/recovers the same address irrespective of the --account or --index arguments.
 
 * Gaia
 

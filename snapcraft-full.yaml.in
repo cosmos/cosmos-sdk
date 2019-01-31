@@ -21,7 +21,15 @@ parts:
     plugin: dump
     source: ./
     override-pull: |
-        echo "Installing files from $GOBIN ..."
+        rootdir=$(pwd)
+        gitroot=$(git rev-parse --show-toplevel)
+        cd ${gitroot} && git archive \
+            -o ${rootdir}/gaia-@VERSION@.tar.gz \
+            --format tar.gz -9 --prefix gaia-@VERSION@/ HEAD
+        cd ${rootdir}
+        tar xf gaia-@VERSION@.tar.gz ; rm -f gaia-@VERSION@.tar.gz
+        mkdir -p go/src/github.com/cosmos bin
+        mv gaia-@VERSION@/ go/src/github.com/cosmos/cosmos-sdk/
 
         # Use the following instructions to build a package from a release.
         # wget https://github.com/cosmos/cosmos-sdk/archive/v@VERSION@.tar.gz
@@ -30,6 +38,14 @@ parts:
 
     build-snaps: [go]
     override-build: |
-        mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-        cp $GOBIN/gaiad $SNAPCRAFT_PART_INSTALL/bin
-        cp $GOBIN/gaiacli $SNAPCRAFT_PART_INSTALL/bin
+        base=`pwd`
+        export GOPATH=`pwd`/go
+        export GOBIN=$GOPATH/bin
+        export PATH=$GOBIN:$PATH
+        cd $GOPATH/src/github.com/cosmos/cosmos-sdk
+        make tools
+        make vendor-deps
+        make install
+        mkdir $SNAPCRAFT_PART_INSTALL/bin
+        cp $GOPATH/bin/gaiad $SNAPCRAFT_PART_INSTALL/bin
+        cp $GOPATH/bin/gaiacli $SNAPCRAFT_PART_INSTALL/bin

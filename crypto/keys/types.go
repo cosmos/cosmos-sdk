@@ -21,13 +21,18 @@ type Keybase interface {
 	// CreateMnemonic creates a new mnemonic, and derives a hierarchical deterministic
 	// key from that.
 	CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error)
+
+	// CreateAccount creates an account based using the BIP44 path (44'/118'/{account}'/0/{index}
+	CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error)
+
 	// Derive computes a BIP39 seed from th mnemonic and bip39Passwd.
 	// Derive private key from the seed using the BIP44 params.
 	// Encrypt the key to disk using encryptPasswd.
 	// See https://github.com/cosmos/cosmos-sdk/issues/2095
 	Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error)
+
 	// CreateLedger creates, stores, and returns a new Ledger key reference
-	CreateLedger(name string, path hd.BIP44Params, algo SigningAlgo) (info Info, err error)
+	CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (info Info, err error)
 
 	// CreateOffline creates, stores, and returns a new offline key reference
 	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)

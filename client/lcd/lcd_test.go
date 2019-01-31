@@ -14,13 +14,13 @@ import (
 
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	client "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
-	tests "github.com/cosmos/cosmos-sdk/tests"
+	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -48,41 +48,100 @@ func init() {
 	version.Version = os.Getenv("VERSION")
 }
 
-func TestKeys(t *testing.T) {
+func TestSeedsAreDifferent(t *testing.T) {
 	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
-	// get new seed
-	seed := getKeysSeed(t, port)
+	mnemonic1 := getKeysSeed(t, port)
+	mnemonic2 := getKeysSeed(t, port)
+
+	require.NotEqual(t, mnemonic1, mnemonic2)
+}
+
+func TestKeyRecover(t *testing.T) {
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+
+	myName1 := "TestKeyRecover_1"
+	myName2 := "TestKeyRecover_2"
+
+	mnemonic := getKeysSeed(t, port)
+	expectedInfo, _ := GetKeyBase(t).CreateAccount(myName1, mnemonic, "", pw, 0, 0, )
+	expectedAddress := expectedInfo.GetAddress().String()
+	expectedPubKey := sdk.MustBech32ifyAccPub(expectedInfo.GetPubKey())
 
 	// recover key
-	doRecoverKey(t, port, name2, pw, seed)
+	doRecoverKey(t, port, myName2, pw, mnemonic, 0, 0)
+
+	keys := getKeys(t, port)
+
+	require.Equal(t, expectedAddress, keys[0].Address)
+	require.Equal(t, expectedPubKey, keys[0].PubKey)
+}
+
+func TestKeyRecoverHDPath(t *testing.T) {
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+
+	mnemonic := getKeysSeed(t, port)
+
+	for account := uint32(0); account < 50; account += 13 {
+		for index := uint32(0); index < 50; index += 15 {
+			name1Idx := fmt.Sprintf("name1_%d_%d", account, index)
+			name2Idx := fmt.Sprintf("name2_%d_%d", account, index)
+
+			expectedInfo, _ := GetKeyBase(t).CreateAccount(name1Idx, mnemonic, "", pw, account, index)
+			expectedAddress := expectedInfo.GetAddress().String()
+			expectedPubKey := sdk.MustBech32ifyAccPub(expectedInfo.GetPubKey())
+
+			// recover key
+			doRecoverKey(t, port, name2Idx, pw, mnemonic, account, index)
+
+			keysName2Idx := getKey(t, port, name2Idx)
+
+			require.Equal(t, expectedAddress, keysName2Idx.Address)
+			require.Equal(t, expectedPubKey, keysName2Idx.PubKey)
+		}
+	}
+}
+
+func TestKeys(t *testing.T) {
+	addr1, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
+	addr1Bech32 := addr1.String()
+
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr1})
+	defer cleanup()
+
+	// get new seed & recover key
+	mnemonic2 := getKeysSeed(t, port)
+	doRecoverKey(t, port, name2, pw, mnemonic2, 0, 0)
 
 	// add key
-	resp := doKeysPost(t, port, name3, pw, seed)
+	mnemonic3 := mnemonic2
+	resp := doKeysPost(t, port, name3, pw, mnemonic3, 0, 0)
 
-	addrBech32 := addr.String()
-	addr2Bech32 := resp.Address
-	_, err := sdk.AccAddressFromBech32(addr2Bech32)
+	addr3Bech32 := resp.Address
+	_, err := sdk.AccAddressFromBech32(addr3Bech32)
 	require.NoError(t, err, "Failed to return a correct bech32 address")
 
 	// test if created account is the correct account
-	expectedInfo, _ := GetKeyBase(t).CreateKey(name3, seed, pw)
-	expectedAccount := sdk.AccAddress(expectedInfo.GetPubKey().Address().Bytes())
-	require.Equal(t, expectedAccount.String(), addr2Bech32)
+	expectedInfo3, _ := GetKeyBase(t).CreateAccount(name3, mnemonic3, "", pw, 0, 0, )
+	expectedAddress3 := sdk.AccAddress(expectedInfo3.GetPubKey().Address()).String()
+	require.Equal(t, expectedAddress3, addr3Bech32)
 
 	// existing keys
-	keys := getKeys(t, port)
-	require.Equal(t, name1, keys[0].Name, "Did not serve keys name correctly")
-	require.Equal(t, addrBech32, keys[0].Address, "Did not serve keys Address correctly")
-	require.Equal(t, name2, keys[1].Name, "Did not serve keys name correctly")
-	require.Equal(t, addr2Bech32, keys[1].Address, "Did not serve keys Address correctly")
+	require.Equal(t, name1, getKey(t, port, name1).Name, "Did not serve keys name correctly")
+	require.Equal(t, addr1Bech32, getKey(t, port, name1).Address, "Did not serve keys Address correctly")
+	require.Equal(t, name2, getKey(t, port, name2).Name, "Did not serve keys name correctly")
+	require.Equal(t, addr3Bech32, getKey(t, port, name2).Address, "Did not serve keys Address correctly")
+	require.Equal(t, name3, getKey(t, port, name3).Name, "Did not serve keys name correctly")
+	require.Equal(t, addr3Bech32, getKey(t, port, name3).Address, "Did not serve keys Address correctly")
 
 	// select key
 	key := getKey(t, port, name3)
 	require.Equal(t, name3, key.Name, "Did not serve keys name correctly")
-	require.Equal(t, addr2Bech32, key.Address, "Did not serve keys Address correctly")
+	require.Equal(t, addr3Bech32, key.Address, "Did not serve keys Address correctly")
 
 	// update key
 	updateKey(t, port, name3, pw, altPw, false)

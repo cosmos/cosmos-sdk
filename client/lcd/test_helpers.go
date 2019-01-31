@@ -538,11 +538,27 @@ func getKeys(t *testing.T, port string) []keys.KeyOutput {
 	return m
 }
 
+type postKeys struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+	Mnemonic string `json:"mnemonic"`
+	Account  int    `json:"account,string,omitempty"`
+	Index    int    `json:"index,string,omitempty"`
+}
+
+type postRecoverKey struct {
+	Password string `json:"password"`
+	Mnemonic string `json:"mnemonic"`
+	Account  int    `json:"account,string,omitempty"`
+	Index    int    `json:"index,string,omitempty"`
+}
+
 // POST /keys Create a new account locally
-func doKeysPost(t *testing.T, port, name, password, seed string) keys.KeyOutput {
-	pk := postKeys{name, password, seed}
+func doKeysPost(t *testing.T, port, name, password, mnemonic string, account int, index int) keys.KeyOutput {
+	pk := postKeys{name, password, mnemonic, account, index}
 	req, err := cdc.MarshalJSON(pk)
 	require.NoError(t, err)
+
 	res, body := Request(t, port, "POST", "/keys", req)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
@@ -550,12 +566,6 @@ func doKeysPost(t *testing.T, port, name, password, seed string) keys.KeyOutput 
 	err = cdc.UnmarshalJSON([]byte(body), &resp)
 	require.Nil(t, err, body)
 	return resp
-}
-
-type postKeys struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Seed     string `json:"seed"`
 }
 
 // GET /keys/seed Create a new seed to create a new account defaultValidFor
@@ -570,13 +580,16 @@ func getKeysSeed(t *testing.T, port string) string {
 }
 
 // POST /keys/{name}/recover Recover a account from a seed
-func doRecoverKey(t *testing.T, port, recoverName, recoverPassword, seed string) {
-	jsonStr := []byte(fmt.Sprintf(`{"password":"%s", "seed":"%s"}`, recoverPassword, seed))
-	res, body := Request(t, port, "POST", fmt.Sprintf("/keys/%s/recover", recoverName), jsonStr)
+func doRecoverKey(t *testing.T, port, recoverName, recoverPassword, mnemonic string, account uint32, index uint32) {
+	pk := postRecoverKey{recoverPassword, mnemonic, int(account), int(index)}
+	req, err := cdc.MarshalJSON(pk)
+	require.NoError(t, err)
+
+	res, body := Request(t, port, "POST", fmt.Sprintf("/keys/%s/recover", recoverName), req)
 
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 	var resp keys.KeyOutput
-	err := codec.Cdc.UnmarshalJSON([]byte(body), &resp)
+	err = codec.Cdc.UnmarshalJSON([]byte(body), &resp)
 	require.Nil(t, err, body)
 
 	addr1Bech32 := resp.Address

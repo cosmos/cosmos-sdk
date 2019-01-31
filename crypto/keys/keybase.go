@@ -115,6 +115,11 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 	return
 }
 
+func (kb dbKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
+	hdPath := hd.NewFundraiserParams(account, index)
+	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
+}
+
 func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
 	if err != nil {
@@ -127,18 +132,19 @@ func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
-func (kb dbKeybase) CreateLedger(name string, path hd.BIP44Params, algo SigningAlgo) (Info, error) {
+func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (Info, error) {
 	if algo != Secp256k1 {
 		return nil, ErrUnsupportedSigningAlgo
 	}
 
-	priv, err := crypto.NewPrivKeyLedgerSecp256k1(path)
+	hdPath := hd.NewFundraiserParams(account, index)
+	priv, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath)
 	if err != nil {
 		return nil, err
 	}
 	pub := priv.PubKey()
 
-	return kb.writeLedgerKey(pub, path, name), nil
+	return kb.writeLedgerKey(pub, *hdPath, name), nil
 }
 
 // CreateOffline creates a new reference to an offline keypair

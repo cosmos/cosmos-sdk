@@ -21,7 +21,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -44,11 +43,11 @@ const (
 )
 
 var (
-	logger *log.Logger
+	logSErr *log.Logger
 )
 
-func Init() {
-	logger = log.New(os.Stderr, "", 0)
+func init() {
+	logSErr = log.New(os.Stderr, "", 0)
 }
 
 func addKeyCommand() *cobra.Command {
@@ -157,7 +156,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			if _, err := kb.CreateOffline(name, pk); err != nil {
 				return err
 			}
-			logger.Printf("Key %q saved to disk.", name)
+			logSErr.Printf("Key %q saved to disk.", name)
 			return nil
 		}
 
@@ -177,23 +176,24 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		kb.CreateOffline(name, pk)
+		_, err = kb.CreateOffline(name, pk)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
 	account := uint32(viper.GetInt(flagAccount))
 	index := uint32(viper.GetInt(flagIndex))
-	bip44path := hd.NewParams(44, 118, account, false, index)
 
 	// If we're using ledger, only thing we need is the path. So generate key and we're done.
 	if viper.GetBool(client.FlagUseLedger) {
-		info, err := kb.CreateLedger(name, *bip44path, keys.Secp256k1)
+		info, err := kb.CreateLedger(name, keys.Secp256k1, account, index)
 		if err != nil {
 			return err
 		}
 
-		printCreate(info, false, "")
-		return nil
+		return printCreate(info, false, "")
 	}
 
 	//////////////////////////////
@@ -229,7 +229,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if !bip39.IsMnemonicValid(mnemonic) {
-		logger.Printf("Error: Mnemonic is not valid")
+		logSErr.Printf("Error: Mnemonic is not valid")
 		return nil
 	}
 
@@ -258,7 +258,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	//////////////////////////////
 	//////////////////////////////
 
-	info, err := kb.Derive(name, mnemonic, defaultBIP39Passphrase, encryptPassword, *bip44path)
+	info, err := kb.CreateAccount(name, mnemonic, defaultBIP39Passphrase, encryptPassword, account, index)
 	if err != nil {
 		return err
 	}
@@ -270,29 +270,28 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		mnemonic = ""
 	}
 
-	printCreate(info, showMnemonic, mnemonic)
-	return nil
+	return printCreate(info, showMnemonic, mnemonic)
 }
 
-func printCreate(info keys.Info, showMnemonic bool, mnemonic string) {
+func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 	output := viper.Get(cli.OutputFlag)
 
 	switch output {
 	case "text":
-		logger.Println()
+		fmt.Println()
 		printKeyInfo(info, Bech32KeyOutput)
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			logger.Printf("\n**Important** write this mnemonic phrase in a safe place.")
-			logger.Printf("It is the only way to recover your account if you ever forget your password.")
-			logger.Println()
-			logger.Println(mnemonic)
+			fmt.Printf("\n**Important** write this mnemonic phrase in a safe place.")
+			fmt.Printf("It is the only way to recover your account if you ever forget your password.")
+			fmt.Println()
+			fmt.Println(mnemonic)
 		}
 	case "json":
 		out, err := Bech32KeyOutput(info)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		if showMnemonic {
@@ -307,12 +306,14 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) {
 		}
 
 		if err != nil {
-			panic(err) // really shouldn't happen...
+			return err
 		}
-		logger.Printf(string(jsonString))
+		fmt.Printf(string(jsonString))
 	default:
-		panic(fmt.Sprintf("I can't speak: %s", output))
+		return errors.Errorf("I can't speak: %s", output)
 	}
+
+	return nil
 }
 
 /////////////////////////////
@@ -323,16 +324,16 @@ type NewKeyBody struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 	Mnemonic string `json:"mnemonic"`
-	Account  int    `json:"account"`
-	Index    int    `json:"index"`
+	Account  int    `json:"account,string,omitempty"`
+	Index    int    `json:"index,string,omitempty"`
 }
 
 // RecoverKeyBody is recover key request REST body
 type RecoverKeyBody struct {
 	Password string `json:"password"`
 	Mnemonic string `json:"mnemonic"`
-	Account  int    `json:"account"`
-	Index    int    `json:"index"`
+	Account  int    `json:"account,string,omitempty"`
+	Index    int    `json:"index,string,omitempty"`
 }
 
 // function to just create a new seed to display in the UI before actually persisting it in the keybase
@@ -415,8 +416,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		// create account
 		account := uint32(m.Account)
 		index := uint32(m.Index)
-		bip44path := hd.NewParams(44, 118, account, false, index)
-		info, err := kb.Derive(m.Name, mnemonic, defaultBIP39Passphrase, m.Password, *bip44path)
+		info, err := kb.CreateAccount(m.Name, mnemonic, defaultBIP39Passphrase, m.Password, account, index)
 		if checkErrorREST(w, http.StatusInternalServerError, err) {
 			return
 		}
@@ -436,12 +436,13 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 func SeedRequestHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	algoType := vars["type"]
+
 	// algo type defaults to secp256k1
 	if algoType == "" {
 		algoType = "secp256k1"
 	}
-	algo := keys.SigningAlgo(algoType)
 
+	algo := keys.SigningAlgo(algoType)
 	seed := generateMnemonic(algo)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -508,8 +509,8 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 
 		account := uint32(m.Account)
 		index := uint32(m.Index)
-		bip44path := hd.NewParams(44, 118, account, false, index)
-		info, err := kb.Derive(name, mnemonic, defaultBIP39Passphrase, m.Password, *bip44path)
+
+		info, err := kb.CreateAccount(name, mnemonic, defaultBIP39Passphrase, m.Password, account, index)
 		if checkErrorREST(w, http.StatusInternalServerError, err) {
 			return
 		}

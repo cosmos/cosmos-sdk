@@ -74,10 +74,14 @@ func SignCheckDeliver(
 	t *testing.T, app *baseapp.BaseApp, msgs []sdk.Msg, accNums []uint64,
 	seq []uint64, expSimPass, expPass bool, priv ...crypto.PrivKey,
 ) sdk.Result {
+	cdc := createCodec()
 	tx := GenTx(msgs, accNums, seq, priv...)
 
+	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
+	require.Nil(t, err)
+
 	// Must simulate now as CheckTx doesn't run Msgs anymore
-	res := app.Simulate(nil, tx)
+	res := app.Simulate(txBytes, tx)
 
 	if expSimPass {
 		require.Equal(t, sdk.CodeOK, res.Code, res.Log)

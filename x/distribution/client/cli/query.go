@@ -67,13 +67,7 @@ func GetCmdQueryValidatorCommission(queryRoute string, cdc *codec.Codec) *cobra.
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(distr.NewQueryValidatorCommissionParams(validatorAddr))
-			if err != nil {
-				return err
-			}
-
-			route := fmt.Sprintf("custom/%s/validator_commission", queryRoute)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, err := common.QueryValidatorCommission(cliCtx, cdc, queryRoute, validatorAddr)
 			if err != nil {
 				return err
 			}

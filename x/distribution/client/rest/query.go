@@ -35,6 +35,18 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
 		delegatorWithdrawalAddrHandlerFn(cliCtx, cdc, queryRoute),
 	).Methods("GET")
 
+	// Validator distribution information
+	r.HandleFunc(
+		"/distribution/validator/{validatorAddr}",
+		validatorInfoHandlerFn(cliCtx, cdc, queryRoute),
+	).Methods("GET")
+
+	// Commission and self-delegation rewards of a single a validator
+	r.HandleFunc(
+		"/distribution/validator/{validatorAddr}/rewards",
+		validatorRewardsHandlerFn(cliCtx, cdc, queryRoute),
+	).Methods("GET")
+
 	// Get the current distribution parameter values
 	r.HandleFunc(
 		"/distribution/parameters",
@@ -107,6 +119,20 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, cdc *codec.Code
 
 		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
+}
+
+// HTTP request handler to query validator's distribution information
+func validatorInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {}
+}
+
+// HTTP request handler to query validator's commission and self-delegation rewards
+func validatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {}
 }
 
 // HTTP request handler to query the distribution params values

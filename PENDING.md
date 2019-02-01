@@ -56,6 +56,7 @@ IMPROVEMENTS
 
 * SDK
   * \#3435 Test that store implementations do not allow nil values
+  * [\##2509] Sanitize all usage of Dec.RoundInt64()
 
 * Tendermint
 

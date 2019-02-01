@@ -13,6 +13,8 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
+  - [\#2513][staking] tendermint updates are 10^-9 less than staking token use,
+    the minimum requirement for validator to become bonded is 10^9 staking tokens. 
 
 * Tendermint
 

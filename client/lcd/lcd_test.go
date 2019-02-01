@@ -374,7 +374,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 
 	payload := authrest.SignBody{
 		Tx: msg,
-		BaseReq: utils.NewBaseReq(
+		BaseReq: client.NewBaseReq(
 			name1, pw, "", viper.GetString(client.FlagChainID), "", "",
 			accnum, sequence, nil, nil, false, false,
 		),

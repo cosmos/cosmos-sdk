@@ -265,7 +265,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 
 	switch output {
 	case "text":
-		fmt.Println()
+		fmt.Fprintln(os.Stderr)
 		printKeyInfo(info, Bech32KeyOutput)
 
 		// print mnemonic unless requested not to.

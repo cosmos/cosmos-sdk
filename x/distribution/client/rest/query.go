@@ -55,8 +55,8 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
 
 	// Get the current distribution pool
 	r.HandleFunc(
-		"/distribution/pool",
-		poolHandlerFn(cliCtx, cdc, queryRoute),
+		"/distribution/outstanding_rewards",
+		outstandingRewardsHandlerFn(cliCtx, cdc, queryRoute),
 	).Methods("GET")
 }
 
@@ -149,12 +149,12 @@ func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	}
 }
 
-// HTTP request handler to query the pool information
-func poolHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
+// HTTP request handler to query the outstanding rewards
+func outstandingRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/params/fee_pool", queryRoute), []byte{})
+		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/outstanding_rewards", queryRoute), []byte{})
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

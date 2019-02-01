@@ -393,7 +393,13 @@ If you do not have a ledger device and want to interact with your private key on
 gaiacli tx staking --amount <amountToBond> --validator <bech32AddressOfValidator> --gas auto --gas-prices <gasPrice> --generate-only > unsignedTX.json
 ```
 
-Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline computer. If it is not done already, [create an account on the offline computer](#using-a-computer). Now, sign the transaction using the following command:
+Then, copy `unsignedTx.json` and transfer it (e.g. via USB) to the offline computer. If it is not done already, [create an account on the offline computer](#using-a-computer). For additional security, you can double check the parameters of your transaction before signing it using the following command:
+
+```bash
+cat unsignedTx.json
+```
+
+Now, sign the transaction using the following command:
 
 ```bash
 gaiacli tx sign unsignedTx.json --from <delegatorKeyName> > signedTx.json

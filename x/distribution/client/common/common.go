@@ -84,3 +84,22 @@ func QueryValidatorCommission(cliCtx context.CLIContext, cdc *codec.Codec,
 		cdc.MustMarshalJSON(distr.NewQueryValidatorCommissionParams(validatorAddr)),
 	)
 }
+
+// WithdrawValidatorRewardsAndCommission builds a two-message message slice to be
+// used to withdraw both validation's commission and self-delegation reward.
+func WithdrawValidatorRewardsAndCommission(validatorAddr sdk.ValAddress) ([]sdk.Msg, error) {
+
+	commissionMsg := distr.NewMsgWithdrawValidatorCommission(validatorAddr)
+	if err := commissionMsg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	// build and validate MsgWithdrawDelegatorReward
+	rewardMsg := distr.NewMsgWithdrawDelegatorReward(
+		sdk.AccAddress(validatorAddr.Bytes()), validatorAddr)
+	if err := rewardMsg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	return []sdk.Msg{commissionMsg, rewardMsg}, nil
+}

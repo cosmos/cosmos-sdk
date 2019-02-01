@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -53,7 +54,7 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) 
 }
 
 type postProposalReq struct {
-	BaseReq        utils.BaseReq  `json:"base_req"`
+	BaseReq        client.BaseReq `json:"base_req"`
 	Title          string         `json:"title"`           //  Title of the proposal
 	Description    string         `json:"description"`     //  Description of the proposal
 	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
@@ -62,13 +63,13 @@ type postProposalReq struct {
 }
 
 type depositReq struct {
-	BaseReq   utils.BaseReq  `json:"base_req"`
+	BaseReq   client.BaseReq `json:"base_req"`
 	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
 	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
 type voteReq struct {
-	BaseReq utils.BaseReq  `json:"base_req"`
+	BaseReq client.BaseReq `json:"base_req"`
 	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
 	Option  string         `json:"option"` //  option from OptionSet chosen by the voter
 }
@@ -83,7 +84,7 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
+		if !utils.ValidateBasic(w, req.BaseReq) {
 			return
 		}
 
@@ -133,7 +134,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
+		if !utils.ValidateBasic(w, req.BaseReq) {
 			return
 		}
 
@@ -177,7 +178,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
+		if !utils.ValidateBasic(w, req.BaseReq) {
 			return
 		}
 

@@ -3,6 +3,7 @@ package rest
 import (
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,9 +15,9 @@ import (
 
 // SignBody defines the properties of a sign request's body.
 type SignBody struct {
-	Tx        auth.StdTx    `json:"tx"`
-	AppendSig bool          `json:"append_sig"`
-	BaseReq   utils.BaseReq `json:"base_req"`
+	Tx        auth.StdTx     `json:"tx"`
+	AppendSig bool           `json:"append_sig"`
+	BaseReq   client.BaseReq `json:"base_req"`
 }
 
 // nolint: unparam
@@ -30,7 +31,7 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		if !m.BaseReq.ValidateBasic(w) {
+		if !utils.ValidateBasic(w, m.BaseReq) {
 			return
 		}
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,14 +32,14 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 
 type (
 	msgDelegationsInput struct {
-		BaseReq       utils.BaseReq  `json:"base_req"`
+		BaseReq       client.BaseReq `json:"base_req"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 		ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
 		Delegation    sdk.Coin       `json:"delegation"`
 	}
 
 	msgBeginRedelegateInput struct {
-		BaseReq          utils.BaseReq  `json:"base_req"`
+		BaseReq          client.BaseReq `json:"base_req"`
 		DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
 		ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
 		ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // in bech32
@@ -46,7 +47,7 @@ type (
 	}
 
 	msgUndelegateInput struct {
-		BaseReq       utils.BaseReq  `json:"base_req"`
+		BaseReq       client.BaseReq `json:"base_req"`
 		DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
 		ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
 		SharesAmount  sdk.Dec        `json:"shares"`
@@ -64,7 +65,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
+		if !utils.ValidateBasic(w, req.BaseReq) {
 			return
 		}
 
@@ -109,7 +110,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
+		if !utils.ValidateBasic(w, req.BaseReq) {
 			return
 		}
 
@@ -154,7 +155,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
+		if !utils.ValidateBasic(w, req.BaseReq) {
 			return
 		}
 

@@ -10,7 +10,6 @@ import (
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -105,19 +104,19 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
 		kb = client.MockKeyBase()
-		encryptPassword = throwAwayPassword
+		encryptPassword = app.DefaultKeyPass
 	} else {
 		kb, err = GetKeyBaseWithWritePerm()
 		if err != nil {
 			return err
 		}
 
-		_, err := kb.Get(name)
+		_, err = kb.Get(name)
 		if err == nil {
 			// account exists, ask for user confirmation
-			if response, err := client.GetConfirmation(
-				fmt.Sprintf("override the existing name %s", name), buf); err != nil || !response {
-				return err
+			if response, err2 := client.GetConfirmation(
+				fmt.Sprintf("override the existing name %s", name), buf); err2 != nil || !response {
+				return err2
 			}
 		}
 
@@ -271,10 +270,10 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			fmt.Printf("\n**Important** write this mnemonic phrase in a safe place.")
-			fmt.Printf("It is the only way to recover your account if you ever forget your password.")
-			fmt.Println()
-			fmt.Println(mnemonic)
+			fmt.Fprintln(os.Stderr, "\n**Important** write this mnemonic phrase in a safe place.")
+			fmt.Fprintln(os.Stderr, "It is the only way to recover your account if you ever forget your password.")
+			fmt.Fprintln(os.Stderr, "")
+			fmt.Fprintln(os.Stderr, mnemonic)
 		}
 	case "json":
 		out, err := Bech32KeyOutput(info)
@@ -296,7 +295,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf(string(jsonString))
+		fmt.Fprintln(os.Stderr, string(jsonString))
 	default:
 		return errors.Errorf("I can't speak: %s", output)
 	}
@@ -307,23 +306,6 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 /////////////////////////////
 // REST
 
-// new key request REST body
-type NewKeyBody struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
-	Mnemonic string `json:"mnemonic"`
-	Account  int    `json:"account,string,omitempty"`
-	Index    int    `json:"index,string,omitempty"`
-}
-
-// RecoverKeyBody is recover key request REST body
-type RecoverKeyBody struct {
-	Password string `json:"password"`
-	Mnemonic string `json:"mnemonic"`
-	Account  int    `json:"account,string,omitempty"`
-	Index    int    `json:"index,string,omitempty"`
-}
-
 // function to just create a new seed to display in the UI before actually persisting it in the keybase
 func generateMnemonic(algo keys.SigningAlgo) string {
 	kb := client.MockKeyBase()
@@ -333,34 +315,46 @@ func generateMnemonic(algo keys.SigningAlgo) string {
 	return seed
 }
 
+// CheckAndWriteErrorResponse will check for errors and return
+// a given error message when corresponding
+//TODO: Move to utils/rest or similar
+func CheckAndWriteErrorResponse(w http.ResponseWriter, httpErr int, err error) bool {
+	if err != nil {
+		w.WriteHeader(httpErr)
+		_, _ = w.Write([]byte(err.Error()))
+		return true
+	}
+	return false
+}
+
 // add new key REST handler
 func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var kb keys.Keybase
-		var m NewKeyBody
+		var m client.NewKeyBody
 
 		kb, err := GetKeyBaseWithWritePerm()
-		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
+		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		body, err := ioutil.ReadAll(r.Body)
-		if utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
+		if CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
 		err = json.Unmarshal(body, &m)
-		if utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
+		if CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
 		// Check parameters
 		if m.Name == "" {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingName())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingName())
 			return
 		}
 		if m.Password == "" {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingPassword())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingPassword())
 			return
 		}
 
@@ -370,21 +364,21 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 			mnemonic = generateMnemonic(keys.Secp256k1)
 		}
 		if !bip39.IsMnemonicValid(mnemonic) {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidMnemonic())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidMnemonic())
 		}
 
 		if m.Account < 0 || m.Account > maxValidAccountValue {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidAccountNumber())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidAccountNumber())
 			return
 		}
 
 		if m.Index < 0 || m.Index > maxValidIndexalue {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidIndexNumber())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidIndexNumber())
 			return
 		}
 
 		if _, tmpErr := kb.Get(m.Name); tmpErr != nil {
-			utils.CheckAndWriteErrorResponse(w, http.StatusConflict, errKeyNameConflict(m.Name))
+			CheckAndWriteErrorResponse(w, http.StatusConflict, errKeyNameConflict(m.Name))
 			return
 		}
 
@@ -392,12 +386,12 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		account := uint32(m.Account)
 		index := uint32(m.Index)
 		info, err := kb.CreateAccount(m.Name, mnemonic, defaultBIP39Passphrase, m.Password, account, index)
-		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
+		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		keyOutput, err := Bech32KeyOutput(info)
-		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
+		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
@@ -429,52 +423,52 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		name := vars["name"]
-		var m RecoverKeyBody
+		var m client.RecoverKeyBody
 
 		body, err := ioutil.ReadAll(r.Body)
-		if utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
+		if CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
 		err = cdc.UnmarshalJSON(body, &m)
-		if utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
+		if CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
 		kb, err := GetKeyBaseWithWritePerm()
-		utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err)
+		CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err)
 
 		if name == "" {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingName())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingName())
 			return
 		}
 		if m.Password == "" {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingPassword())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingPassword())
 			return
 		}
 
 		mnemonic := m.Mnemonic
 		if !bip39.IsMnemonicValid(mnemonic) {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidMnemonic())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidMnemonic())
 		}
 
 		if m.Mnemonic == "" {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingMnemonic())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingMnemonic())
 			return
 		}
 
 		if m.Account < 0 || m.Account > maxValidAccountValue {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidAccountNumber())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidAccountNumber())
 			return
 		}
 
 		if m.Index < 0 || m.Index > maxValidIndexalue {
-			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidIndexNumber())
+			CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidIndexNumber())
 			return
 		}
 
 		if _, tmpErr := kb.Get(name); tmpErr != nil {
-			utils.CheckAndWriteErrorResponse(w, http.StatusConflict, errKeyNameConflict(name))
+			CheckAndWriteErrorResponse(w, http.StatusConflict, errKeyNameConflict(name))
 			return
 		}
 
@@ -482,12 +476,12 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 		index := uint32(m.Index)
 
 		info, err := kb.CreateAccount(name, mnemonic, defaultBIP39Passphrase, m.Password, account, index)
-		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
+		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		keyOutput, err := Bech32KeyOutput(info)
-		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
+		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 

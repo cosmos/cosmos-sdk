@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
@@ -23,17 +22,6 @@ type GasEstimateResponse struct {
 
 //-----------------------------------------------------------------------------
 // Basic HTTP utilities
-
-// CheckAndWriteErrorResponse will check for errors and return
-// a given error message when corresponding
-func CheckAndWriteErrorResponse(w http.ResponseWriter, httpErr int, err error) bool {
-	if err != nil {
-		w.WriteHeader(httpErr)
-		_, _ = w.Write([]byte(err.Error()))
-		return true
-	}
-	return false
-}
 
 // WriteErrorResponse prepares and writes a HTTP error
 // given a status code and an error message.
@@ -104,57 +92,10 @@ func ParseFloat64OrReturnBadRequest(w http.ResponseWriter, s string, defaultIfEm
 //-----------------------------------------------------------------------------
 // Building / Sending utilities
 
-// BaseReq defines a structure that can be embedded in other request structures
-// that all share common "base" fields.
-type BaseReq struct {
-	From          string       `json:"from"`
-	Password      string       `json:"password"`
-	Memo          string       `json:"memo"`
-	ChainID       string       `json:"chain_id"`
-	AccountNumber uint64       `json:"account_number"`
-	Sequence      uint64       `json:"sequence"`
-	Fees          sdk.Coins    `json:"fees"`
-	GasPrices     sdk.DecCoins `json:"gas_prices"`
-	Gas           string       `json:"gas"`
-	GasAdjustment string       `json:"gas_adjustment"`
-	GenerateOnly  bool         `json:"generate_only"`
-	Simulate      bool         `json:"simulate"`
-}
-
-// NewBaseReq creates a new basic request instance and sanitizes its values
-func NewBaseReq(
-	from, password, memo, chainID string, gas, gasAdjustment string,
-	accNumber, seq uint64, fees sdk.Coins, gasPrices sdk.DecCoins, genOnly, simulate bool,
-) BaseReq {
-
-	return BaseReq{
-		From:          strings.TrimSpace(from),
-		Password:      password,
-		Memo:          strings.TrimSpace(memo),
-		ChainID:       strings.TrimSpace(chainID),
-		Fees:          fees,
-		GasPrices:     gasPrices,
-		Gas:           strings.TrimSpace(gas),
-		GasAdjustment: strings.TrimSpace(gasAdjustment),
-		AccountNumber: accNumber,
-		Sequence:      seq,
-		GenerateOnly:  genOnly,
-		Simulate:      simulate,
-	}
-}
-
-// Sanitize performs basic sanitization on a BaseReq object.
-func (br BaseReq) Sanitize() BaseReq {
-	return NewBaseReq(
-		br.From, br.Password, br.Memo, br.ChainID, br.Gas, br.GasAdjustment,
-		br.AccountNumber, br.Sequence, br.Fees, br.GasPrices, br.GenerateOnly, br.Simulate,
-	)
-}
-
 // ValidateBasic performs basic validation of a BaseReq. If custom validation
 // logic is needed, the implementing request handler should perform those
 // checks manually.
-func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
+func ValidateBasic(w http.ResponseWriter, br client.BaseReq) bool {
 	if !br.GenerateOnly && !br.Simulate {
 		switch {
 		case len(br.Password) == 0:
@@ -221,7 +162,7 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 // NOTE: Also see CompleteAndBroadcastTxCLI.
 func CompleteAndBroadcastTxREST(
 	w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext,
-	baseReq BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
+	baseReq client.BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
 ) {
 
 	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
@@ -319,10 +260,7 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 }
 
 // WriteGenerateStdTxResponse writes response for the generate only mode.
-func WriteGenerateStdTxResponse(
-	w http.ResponseWriter, cdc *codec.Codec, cliCtx context.CLIContext, br BaseReq, msgs []sdk.Msg,
-) {
-
+func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, br client.BaseReq, msgs []sdk.Msg) {
 	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return

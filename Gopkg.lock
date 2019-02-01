@@ -514,20 +514,20 @@
   version = "v0.9.0"
 
 [[projects]]
-  digest = "1:20e33bf30e3b9b95eeb5ab28cd7fdb1b6f171433053666a18b245bf9e1cc6c73"
+  digest = "1:fca24169988a61ea725d1326de30910d8049fe68bcbc194d28803f9a76dda380"
   name = "github.com/zondax/ledger-cosmos-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "a67896da91d935e859755d080d7b2e4c2a5a163d"
-  version = "v0.9.6"
+  revision = "69fdb8ce5e5b9d9c3b22b9248e117b231d4f06dd"
+  version = "v0.9.7"
 
 [[projects]]
-  digest = "1:65384c591a38a7fe5b2593cb195e4da7870970687b38f6da64a94a4bd47a4275"
+  digest = "1:f8e4c0b959174a1fa5946b12f1f2ac7ea5651bef20a9e4a8dac55dbffcaa6cd6"
   name = "github.com/zondax/ledger-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "918a8a722678b284fc313bd9f2c28df6458a313f"
-  version = "v0.7.0"
+  revision = "69c15f1333a9b6866e5f66096561c7d138894bc5"
+  version = "v0.8.0"
 
 [[projects]]
   digest = "1:6f6dc6060c4e9ba73cf28aa88f12a69a030d3d19d518ef8e931879eaa099628d"
@@ -681,6 +681,7 @@
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
     "github.com/syndtr/goleveldb/leveldb/opt",
+    "github.com/tendermint/btcd/btcec",
     "github.com/tendermint/go-amino",
     "github.com/tendermint/iavl",
     "github.com/tendermint/tendermint/abci/server",

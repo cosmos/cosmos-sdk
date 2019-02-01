@@ -10,32 +10,34 @@ type QueryRouter interface {
 	Route(path string) (h sdk.Querier)
 }
 
-type queryrouter struct {
+type queryRouter struct {
 	routes map[string]sdk.Querier
 }
 
-// nolint
-// NewRouter - create new router
-// TODO either make Function unexported or make return type (router) Exported
-func NewQueryRouter() *queryrouter {
-	return &queryrouter{
+// NewQueryRouter returns a reference to a new queryRouter.
+//
+// TODO: Either make the function private or make return type (queryRouter) public.
+func NewQueryRouter() *queryRouter {
+	return &queryRouter{
 		routes: map[string]sdk.Querier{},
 	}
 }
 
-// AddRoute - Adds an sdk.Querier to the route provided. Panics on duplicate
-func (rtr *queryrouter) AddRoute(r string, q sdk.Querier) QueryRouter {
+// AddRoute adds a query path to the router with a given Querier. It will panic
+// if a duplicate route is given. The route must be alphanumeric.
+func (qrt *queryRouter) AddRoute(r string, q sdk.Querier) QueryRouter {
 	if !isAlphaNumeric(r) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
-	if rtr.routes[r] != nil {
+	if qrt.routes[r] != nil {
 		panic("route has already been initialized")
 	}
-	rtr.routes[r] = q
-	return rtr
+
+	qrt.routes[r] = q
+	return qrt
 }
 
-// Returns the sdk.Querier for a certain route path
-func (rtr *queryrouter) Route(path string) (h sdk.Querier) {
-	return rtr.routes[path]
+// Route returns the Querier for a given query route path.
+func (qrt *queryRouter) Route(path string) (h sdk.Querier) {
+	return qrt.routes[path]
 }

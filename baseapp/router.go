@@ -22,9 +22,9 @@ type router struct {
 	routes []route
 }
 
-// nolint
-// NewRouter - create new router
-// TODO either make Function unexported or make return type (router) Exported
+// NewRouter returns a reference to a new router.
+//
+// TODO: Either make the function private or make return type (router) public.
 func NewRouter() *router {
 	return &router{
 		routes: make([]route, 0),
@@ -33,18 +33,20 @@ func NewRouter() *router {
 
 var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 
-// AddRoute - TODO add description
+// AddRoute adds a route path to the router with a given handler. The route must
+// be alphanumeric.
 func (rtr *router) AddRoute(r string, h sdk.Handler) Router {
 	if !isAlphaNumeric(r) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
-	rtr.routes = append(rtr.routes, route{r, h})
 
+	rtr.routes = append(rtr.routes, route{r, h})
 	return rtr
 }
 
-// Route - TODO add description
-// TODO handle expressive matches.
+// Route returns a handler for a given route path.
+//
+// TODO: Handle expressive matches.
 func (rtr *router) Route(path string) (h sdk.Handler) {
 	for _, route := range rtr.routes {
 		if route.r == path {

@@ -23,24 +23,24 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 	return app.runTx(runTxModeDeliver, nil, tx)
 }
 
-// RunForever BasecoinApp execution and cleanup
+// RunForever creates and starts an ABCI server and allows it to run
+// indefinitely listening for interupt singals.
 func RunForever(app abci.Application) {
-
-	// Start the ABCI server
 	srv, err := server.NewServer("0.0.0.0:26658", "socket", app)
 	if err != nil {
 		cmn.Exit(err.Error())
 		return
 	}
+
 	err = srv.Start()
 	if err != nil {
 		cmn.Exit(err.Error())
 		return
 	}
 
-	// Wait forever
+	// wait forever
 	cmn.TrapSignal(func() {
-		// Cleanup
+		// cleanup
 		err := srv.Stop()
 		if err != nil {
 			cmn.Exit(err.Error())

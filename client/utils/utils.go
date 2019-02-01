@@ -208,7 +208,7 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 // nolint
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
 func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (estimated, adjusted uint64, err error) {
-	txBytes, err := txBldr.BuildForSim(msgs)
+	txBytes, err := txBldr.BuildTxForSim(msgs)
 	if err != nil {
 		return
 	}

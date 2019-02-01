@@ -214,9 +214,9 @@ func (bldr TxBuilder) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]b
 	return bldr.Sign(name, passphrase, msg)
 }
 
-// BuildForSim creates a StdSignMsg and encodes a transaction with the
+// BuildTxForSim creates a StdSignMsg and encodes a transaction with the
 // StdSignMsg with a single empty StdSignature for tx simulation.
-func (bldr TxBuilder) BuildForSim(msgs []sdk.Msg) ([]byte, error) {
+func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
 	signMsg, err := bldr.Build(msgs)
 	if err != nil {
 		return nil, err

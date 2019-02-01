@@ -3,12 +3,11 @@ package keys
 import (
 	"crypto/sha256"
 	"fmt"
-
-	"github.com/spf13/cobra"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	"os"
 
 	bip39 "github.com/bartekn/go-bip39"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -58,7 +57,7 @@ func runMnemonicCmd(cmd *cobra.Command, args []string) error {
 		// hash input entropy to get entropy seed
 		hashedEntropy := sha256.Sum256([]byte(inputEntropy))
 		entropySeed = hashedEntropy[:]
-		logSErr.Printf("-------------------------------------")
+		fmt.Fprintf(os.Stderr, "-------------------------------------")
 	} else {
 		// read entropy seed straight from crypto.Rand
 		var err error

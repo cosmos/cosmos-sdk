@@ -24,6 +24,17 @@ type GasEstimateResponse struct {
 //-----------------------------------------------------------------------------
 // Basic HTTP utilities
 
+// CheckAndWriteErrorResponse will check for errors and return
+// a given error message when corresponding
+func CheckAndWriteErrorResponse(w http.ResponseWriter, httpErr int, err error) bool {
+	if err != nil {
+		w.WriteHeader(httpErr)
+		_, _ = w.Write([]byte(err.Error()))
+		return true
+	}
+	return false
+}
+
 // WriteErrorResponse prepares and writes a HTTP error
 // given a status code and an error message.
 func WriteErrorResponse(w http.ResponseWriter, status int, err string) {

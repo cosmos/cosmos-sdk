@@ -3,12 +3,11 @@ package hd
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/cosmos/go-bip39"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var defaultBIP39Passphrase = ""

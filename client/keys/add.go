@@ -4,24 +4,26 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/tendermint/tendermint/crypto/multisig"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"sort"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto"
+	"github.com/tendermint/tendermint/crypto/multisig"
+	"github.com/tendermint/tendermint/libs/cli"
 )
 
 const (
@@ -37,18 +39,9 @@ const (
 
 const (
 	defaultBIP39Passphrase = ""
-	throwAwayPassword      = "throwing-this-key-away"
 	maxValidAccountValue   = int(0x80000000 - 1)
 	maxValidIndexalue      = int(0x80000000 - 1)
 )
-
-var (
-	logSErr *log.Logger
-)
-
-func init() {
-	logSErr = log.New(os.Stderr, "", 0)
-}
 
 func addKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -156,7 +149,8 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			if _, err := kb.CreateOffline(name, pk); err != nil {
 				return err
 			}
-			logSErr.Printf("Key %q saved to disk.", name)
+
+			fmt.Fprintf(os.Stderr, "Key %q saved to disk.", name)
 			return nil
 		}
 
@@ -196,9 +190,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return printCreate(info, false, "")
 	}
 
-	//////////////////////////////
-	//////////////////////////////
-
 	// Get bip39 mnemonic
 	var mnemonic string
 	var bip39Passphrase string
@@ -229,7 +220,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	if !bip39.IsMnemonicValid(mnemonic) {
-		logSErr.Printf("Error: Mnemonic is not valid")
+		fmt.Fprintf(os.Stderr, "Error: Mnemonic is not valid")
 		return nil
 	}
 
@@ -254,9 +245,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-
-	//////////////////////////////
-	//////////////////////////////
 
 	info, err := kb.CreateAccount(name, mnemonic, defaultBIP39Passphrase, encryptPassword, account, index)
 	if err != nil {
@@ -339,19 +327,10 @@ type RecoverKeyBody struct {
 // function to just create a new seed to display in the UI before actually persisting it in the keybase
 func generateMnemonic(algo keys.SigningAlgo) string {
 	kb := client.MockKeyBase()
-	pass := throwAwayPassword
+	pass := app.DefaultKeyPass
 	name := "inmemorykey"
 	_, seed, _ := kb.CreateMnemonic(name, keys.English, pass, algo)
 	return seed
-}
-
-func checkErrorREST(w http.ResponseWriter, httpErr int, err error) bool {
-	if err != nil {
-		w.WriteHeader(httpErr)
-		_, _ = w.Write([]byte(err.Error()))
-		return true
-	}
-	return false
 }
 
 // add new key REST handler
@@ -361,27 +340,27 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		var m NewKeyBody
 
 		kb, err := GetKeyBaseWithWritePerm()
-		if checkErrorREST(w, http.StatusInternalServerError, err) {
+		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		body, err := ioutil.ReadAll(r.Body)
-		if checkErrorREST(w, http.StatusBadRequest, err) {
+		if utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
 		err = json.Unmarshal(body, &m)
-		if checkErrorREST(w, http.StatusBadRequest, err) {
+		if utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
 		// Check parameters
 		if m.Name == "" {
-			checkErrorREST(w, http.StatusBadRequest, errMissingName())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingName())
 			return
 		}
 		if m.Password == "" {
-			checkErrorREST(w, http.StatusBadRequest, errMissingPassword())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingPassword())
 			return
 		}
 
@@ -391,38 +370,34 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 			mnemonic = generateMnemonic(keys.Secp256k1)
 		}
 		if !bip39.IsMnemonicValid(mnemonic) {
-			checkErrorREST(w, http.StatusBadRequest, errInvalidMnemonic())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidMnemonic())
 		}
 
 		if m.Account < 0 || m.Account > maxValidAccountValue {
-			checkErrorREST(w, http.StatusBadRequest, errInvalidAccountNumber())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidAccountNumber())
 			return
 		}
 
 		if m.Index < 0 || m.Index > maxValidIndexalue {
-			checkErrorREST(w, http.StatusBadRequest, errInvalidIndexNumber())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidIndexNumber())
 			return
 		}
 
-		// check if already exists
-		infos, _ := kb.List()
-		for _, info := range infos {
-			if info.GetName() == m.Name {
-				checkErrorREST(w, http.StatusConflict, errKeyNameConflict(m.Name))
-				return
-			}
+		if _, tmpErr := kb.Get(m.Name); tmpErr != nil {
+			utils.CheckAndWriteErrorResponse(w, http.StatusConflict, errKeyNameConflict(m.Name))
+			return
 		}
 
 		// create account
 		account := uint32(m.Account)
 		index := uint32(m.Index)
 		info, err := kb.CreateAccount(m.Name, mnemonic, defaultBIP39Passphrase, m.Password, account, index)
-		if checkErrorREST(w, http.StatusInternalServerError, err) {
+		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		keyOutput, err := Bech32KeyOutput(info)
-		if checkErrorREST(w, http.StatusInternalServerError, err) {
+		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
@@ -457,66 +432,62 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 		var m RecoverKeyBody
 
 		body, err := ioutil.ReadAll(r.Body)
-		if checkErrorREST(w, http.StatusBadRequest, err) {
+		if utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
 		err = cdc.UnmarshalJSON(body, &m)
-		if checkErrorREST(w, http.StatusBadRequest, err) {
+		if utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {
 			return
 		}
 
 		kb, err := GetKeyBaseWithWritePerm()
-		checkErrorREST(w, http.StatusInternalServerError, err)
+		utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err)
 
 		if name == "" {
-			checkErrorREST(w, http.StatusBadRequest, errMissingName())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingName())
 			return
 		}
 		if m.Password == "" {
-			checkErrorREST(w, http.StatusBadRequest, errMissingPassword())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingPassword())
 			return
 		}
 
 		mnemonic := m.Mnemonic
 		if !bip39.IsMnemonicValid(mnemonic) {
-			checkErrorREST(w, http.StatusBadRequest, errInvalidMnemonic())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidMnemonic())
 		}
 
 		if m.Mnemonic == "" {
-			checkErrorREST(w, http.StatusBadRequest, errMissingMnemonic())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errMissingMnemonic())
 			return
 		}
 
 		if m.Account < 0 || m.Account > maxValidAccountValue {
-			checkErrorREST(w, http.StatusBadRequest, errInvalidAccountNumber())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidAccountNumber())
 			return
 		}
 
 		if m.Index < 0 || m.Index > maxValidIndexalue {
-			checkErrorREST(w, http.StatusBadRequest, errInvalidIndexNumber())
+			utils.CheckAndWriteErrorResponse(w, http.StatusBadRequest, errInvalidIndexNumber())
 			return
 		}
 
-		// check if already exists
-		infos, _ := kb.List()
-		for _, info := range infos {
-			if info.GetName() == name {
-				checkErrorREST(w, http.StatusConflict, errKeyNameConflict(name))
-				return
-			}
+		if _, tmpErr := kb.Get(name); tmpErr != nil {
+			utils.CheckAndWriteErrorResponse(w, http.StatusConflict, errKeyNameConflict(name))
+			return
 		}
 
 		account := uint32(m.Account)
 		index := uint32(m.Index)
 
 		info, err := kb.CreateAccount(name, mnemonic, defaultBIP39Passphrase, m.Password, account, index)
-		if checkErrorREST(w, http.StatusInternalServerError, err) {
+		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 
 		keyOutput, err := Bech32KeyOutput(info)
-		if checkErrorREST(w, http.StatusInternalServerError, err) {
+		if utils.CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
 

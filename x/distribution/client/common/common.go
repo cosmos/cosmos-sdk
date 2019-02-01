@@ -74,3 +74,13 @@ func QueryRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return cliCtx.QueryWithData(route, bz)
 }
+
+// QueryValidatorCommission returns a validator's commission.
+func QueryValidatorCommission(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string, validatorAddr sdk.ValAddress) ([]byte, error) {
+
+	return cliCtx.QueryWithData(
+		fmt.Sprintf("custom/%s/validator_commission", queryRoute),
+		cdc.MustMarshalJSON(distr.NewQueryValidatorCommissionParams(validatorAddr)),
+	)
+}

@@ -22,9 +22,13 @@ FEATURES
 * Gaia REST API
 
 * Gaia CLI  (`gaiacli`)
+  * [\#3429](https://github.com/cosmos/cosmos-sdk/issues/3429) Support querying
+  for all delegator distribution rewards.
+  * \#3449 Proof verification now works with absence proofs
 
 * Gaia
   - [\#3397](https://github.com/cosmos/cosmos-sdk/pull/3397) Implement genesis file sanitization to avoid failures at chain init.
+  * \#3428 Run the simulation from a particular genesis state loaded from a file
 
 * SDK
   * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
@@ -64,6 +68,8 @@ BUG FIXES
     https://github.com/ZondaX/ledger-cosmos-go/commit/ed9aa39ce8df31bad1448c72d3d226bf2cb1a8d1 in order to fix a derivation path issue that causes `gaiacli keys add --recover`
     to malfunction.
   - [\#3419](https://github.com/cosmos/cosmos-sdk/pull/3419) Fix `q distr slashes` panic 
+  - [\#3453](https://github.com/cosmos/cosmos-sdk/pull/3453) The `rest-server` command didn't respect persistent flags such as `--chain-id` and `--trust-node` if they were
+    passed on the command line.
 
 * Gaia
 

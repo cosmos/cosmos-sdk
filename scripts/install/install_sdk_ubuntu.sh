@@ -7,7 +7,7 @@
 BRANCH=master
 REPO=github.com/cosmos/cosmos-sdk
 
-GO_VERSION=1.11.4
+GO_VERSION=1.11.5
 
 sudo apt-get update -y
 sudo apt-get upgrade -y

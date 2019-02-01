@@ -780,7 +780,7 @@ type sendReq struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doDelegate(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Int, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
@@ -790,7 +790,7 @@ func doDelegate(t *testing.T, port, name, password string,
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewInt64Coin(staking.DefaultBondDenom, amount),
+		Delegation:    sdk.NewCoin(staking.DefaultBondDenom, amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -813,7 +813,7 @@ type msgDelegationsInput struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doUndelegate(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Int, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
@@ -824,7 +824,7 @@ func doUndelegate(t *testing.T, port, name, password string,
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		SharesAmount:  sdk.NewDec(amount),
+		SharesAmount:  sdk.NewDecFromInt(amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -848,7 +848,8 @@ type msgUndelegateInput struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doBeginRedelegation(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount sdk.Int,
+	fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
@@ -862,7 +863,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 		DelegatorAddr:    delAddr,
 		ValidatorSrcAddr: valSrcAddr,
 		ValidatorDstAddr: valDstAddr,
-		SharesAmount:     sdk.NewDec(amount),
+		SharesAmount:     sdk.NewDecFromInt(amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -1081,7 +1082,8 @@ func getStakingParams(t *testing.T, port string) staking.Params {
 // ICS 22 - Gov
 // ----------------------------------------------------------------------
 // POST /gov/proposals Submit a proposal
-func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress,
+	amount sdk.Int, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
@@ -1093,7 +1095,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 		Description:    "test",
 		ProposalType:   "Text",
 		Proposer:       proposerAddr,
-		InitialDeposit: sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(amount))},
+		InitialDeposit: sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, amount)},
 		BaseReq:        baseReq,
 	}
 
@@ -1176,7 +1178,8 @@ func getProposalsFilterStatus(t *testing.T, port string, status gov.ProposalStat
 }
 
 // POST /gov/proposals/{proposalId}/deposits Deposit tokens to a proposal
-func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64,
+	amount sdk.Int, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
@@ -1186,7 +1189,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 
 	dr := depositReq{
 		Depositor: proposerAddr,
-		Amount:    sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(amount))},
+		Amount:    sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, amount)},
 		BaseReq:   baseReq,
 	}
 

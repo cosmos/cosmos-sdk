@@ -39,10 +39,10 @@ const (
 )
 
 var startCoins = sdk.Coins{
-	sdk.NewInt64Coin(feeDenom, 1000000000000000),
-	sdk.NewInt64Coin(fee2Denom, 1000000000000000),
-	sdk.NewInt64Coin(fooDenom, 1000000000000),
-	sdk.NewInt64Coin(denom, 150000000000),
+	sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
+	sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
+	sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
+	sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
 }
 
 //___________________________________________________________________________________

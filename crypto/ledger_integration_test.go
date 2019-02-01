@@ -21,6 +21,7 @@ func TestDiscoverDevice(t *testing.T) {
 	device, err := discoverLedger()
 	require.NoError(t, err)
 	require.NotNil(t, device)
+	defer device.Close()
 }
 
 func TestDiscoverDeviceTwice(t *testing.T) {
@@ -28,6 +29,7 @@ func TestDiscoverDeviceTwice(t *testing.T) {
 	device, err := discoverLedger()
 	require.NoError(t, err)
 	require.NotNil(t, device)
+	defer device.Close()
 
 	device2, err := discoverLedger()
 	require.Error(t, err)
@@ -46,6 +48,7 @@ func TestDiscoverDeviceTwiceClosing(t *testing.T) {
 	device2, err := discoverLedger()
 	require.NoError(t, err)
 	require.NotNil(t, device2)
+	require.NoError(t, device2.Close())
 }
 
 func TestPublicKey(t *testing.T) {

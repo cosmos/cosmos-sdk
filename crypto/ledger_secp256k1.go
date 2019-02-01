@@ -74,6 +74,20 @@ func (pkl PrivKeyLedgerSecp256k1) PubKey() tmcrypto.PubKey {
 	return pkl.CachedPubKey
 }
 
+func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
+	if discoverLedger == nil {
+		return nil, errors.New("no Ledger discovery function defined")
+	}
+
+	device, err := discoverLedger()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create PrivKeyLedgerSecp256k1")
+	}
+	defer device.Close()
+
+	return sign(device, pkl.Path, message)
+}
+
 // ValidateKey allows us to verify the sanity of a public key after loading it
 // from disk.
 func (pkl PrivKeyLedgerSecp256k1) ValidateKey() error {
@@ -115,18 +129,19 @@ func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
 // Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes, returning
 // an error, so this should only trigger if the private key is held in memory
 // for a while before use.
-func (pkl PrivKeyLedgerSecp256k1) Sign(msg []byte) ([]byte, error) {
-	//sig, err := pkl.signLedgerSecp256k1(msg)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//return sig, nil
-	return nil, nil
-}
+func sign(device LedgerSECP256K1, path DerivationPath, msg []byte) ([]byte, error) {
+	sig, err := device.SignSECP256K1(path, msg)
+	if err != nil {
+		return nil, err
+	}
 
-//func (pkl PrivKeyLedgerSecp256k1) signLedgerSecp256k1(msg []byte) ([]byte, error) {
-//	return pkl.ledger.SignSECP256K1(pkl.Path, msg)
-//}
+	sig_, err := secp256k1.ParseDERSignature(sig[:], secp256k1.S256())
+	if err != nil {
+		return nil, err
+	}
+
+	return sig_.Serialize(), nil
+}
 
 // getPubKey reads the pubkey the ledger itself
 // since this involves IO, it may return an error, which is not exposed

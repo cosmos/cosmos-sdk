@@ -3,6 +3,8 @@ package rest
 import (
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,8 +21,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 }
 
 type transferReq struct {
-	BaseReq utils.BaseReq `json:"base_req"`
-	Amount  sdk.Coins     `json:"amount"`
+	BaseReq client.BaseReq `json:"base_req"`
+	Amount  sdk.Coins      `json:"amount"`
 }
 
 // TransferRequestHandler - http request handler to transfer coins to a address
@@ -44,7 +46,7 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !req.BaseReq.ValidateBasic(w) {
+		if !utils.ValidateBasic(w, req.BaseReq) {
 			return
 		}
 

@@ -130,8 +130,8 @@ func TestGaiaGenesisValidation(t *testing.T) {
 
 	// require bonded + jailed validator fails validation
 	genesisState = makeGenesisState(t, genTxs)
-	val1.Jailed = true
 	val1 := staking.NewValidator(addr1, pk1, staking.NewDescription("test #2", "", "", ""))
+	val1.Jailed = true
 	val1.Status = sdk.Bonded
 	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
 	err = GaiaValidateGenesisState(genesisState)
@@ -151,7 +151,7 @@ func TestNewDefaultGenesisAccount(t *testing.T) {
 	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
 	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
 	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("footoken"))
-	require.Equal(t, sdk.NewInt(150), acc.Coins.AmountOf(bondDenom))
+	require.Equal(t, staking.TokensFromTendermintPower(150), acc.Coins.AmountOf(bondDenom))
 }
 
 func TestGenesisStateSanitize(t *testing.T) {

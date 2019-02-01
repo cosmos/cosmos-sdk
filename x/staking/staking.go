@@ -14,6 +14,7 @@ type (
 	Validators              = types.Validators
 	Description             = types.Description
 	Commission              = types.Commission
+	CommissionMsg           = types.CommissionMsg
 	Delegation              = types.Delegation
 	Delegations             = types.Delegations
 	UnbondingDelegation     = types.UnbondingDelegation
@@ -77,7 +78,6 @@ var (
 	NewDescription        = types.NewDescription
 	NewCommission         = types.NewCommission
 	NewCommissionMsg      = types.NewCommissionMsg
-	CommissionMsg         = types.CommissionMsg
 	NewCommissionWithTime = types.NewCommissionWithTime
 	NewGenesisState       = types.NewGenesisState
 	DefaultGenesisState   = types.DefaultGenesisState

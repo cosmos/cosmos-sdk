@@ -409,7 +409,7 @@ func TestPoolParamsQuery(t *testing.T) {
 
 	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
 
-	//TODO include this test once REST for distribution is online, need to include distirbution tokens from inflation
+	//TODO include this test once REST for distribution is online, need to include distribution tokens from inflation
 	//     for this equality to make sense
 	//require.Equal(t, initialPool.NotBondedTokens, pool.NotBondedTokens)
 }

@@ -54,6 +54,8 @@ IMPROVEMENTS
 
 * SDK
   * \#3435 Test that store implementations do not allow nil values
+  * [\#556](https://github.com/cosmos/cosmos-sdk/issues/556) Increase `BaseApp`
+  test coverage.
 
 * Tendermint
 

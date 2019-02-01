@@ -1,0 +1,128 @@
+// +build cgo ledger real_ledger
+
+package crypto
+
+import (
+	"testing"
+
+	ledger "github.com/zondax/ledger-cosmos-go"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/encoding/amino"
+)
+
+const (
+	// These tests expect a ledger device initialized to the following mnemonic
+	testMnemonic = "equip will roof matter pink blind book anxiety banner elbow sun young"
+)
+
+func TestDiscoverDevice(t *testing.T) {
+	device, err := discoverLedger()
+	require.NoError(t, err)
+	require.NotNil(t, device)
+}
+
+func TestDiscoverDeviceTwice(t *testing.T) {
+	// We expect the second call not to find a device
+	device, err := discoverLedger()
+	require.NoError(t, err)
+	require.NotNil(t, device)
+
+	device2, err := discoverLedger()
+	require.Error(t, err)
+	require.Equal(t, "no ledger connected", err.Error())
+	require.Nil(t, device2)
+}
+
+func TestDiscoverDeviceTwiceClosing(t *testing.T) {
+	{
+		device, err := ledger.FindLedgerCosmosUserApp()
+		require.NoError(t, err)
+		require.NotNil(t, device)
+		require.NoError(t, device.Close())
+	}
+
+	device2, err := discoverLedger()
+	require.NoError(t, err)
+	require.NotNil(t, device2)
+}
+
+func TestPublicKey(t *testing.T) {
+	path := DerivationPath{44, 118, 0, 0, 0}
+	priv, err := NewPrivKeyLedgerSecp256k1(path)
+	require.Nil(t, err, "%s", err)
+	require.NotNil(t, priv)
+
+	pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+	require.NoError(t, err)
+	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0", pubKeyAddr)
+}
+
+func TestPublicKeyHDPath(t *testing.T) {
+	expectedAnswers := []string{
+		"cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
+		"cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65",
+		"cosmospub1addwnpepqw3xwqun6q43vtgw6p4qspq7srvxhcmvq4jrx5j5ma6xy3r7k6dtxmrkh3d",
+		"cosmospub1addwnpepqvez9lrp09g8w7gkv42y4yr5p6826cu28ydrhrujv862yf4njmqyyjr4pjs",
+		"cosmospub1addwnpepq06hw3enfrtmq8n67teytcmtnrgcr0yntmyt25kdukfjkerdc7lqg32rcz7",
+		"cosmospub1addwnpepqg3trf2gd0s2940nckrxherwqhgmm6xd5h4pcnrh4x7y35h6yafmcpk5qns",
+		"cosmospub1addwnpepqdm6rjpx6wsref8wjn7ym6ntejet430j4szpngfgc20caz83lu545vuv8hp",
+		"cosmospub1addwnpepqvdhtjzy2wf44dm03jxsketxc07vzqwvt3vawqqtljgsr9s7jvydjmt66ew",
+		"cosmospub1addwnpepqwystfpyxwcava7v3t7ndps5xzu6s553wxcxzmmnxevlzvwrlqpzz695nw9",
+		"cosmospub1addwnpepqw970u6gjqkccg9u3rfj99857wupj2z9fqfzy2w7e5dd7xn7kzzgkgqch0r",
+	}
+
+	// TODO: Check data with locally generated pubkey
+	// TODO: ONHOLD, it needs another PR to get merged first
+	//seed, _ := bip39.NewSeedWithErrorChecking(testMnemonic, "")
+	//masterPriv, ch := hd.ComputeMastersFromSeed(seed)
+	//derivedPriv, err := hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
+
+	// Check with device
+	for i := uint32(0); i < 10; i++ {
+		path := DerivationPath{44, 118, 0, 0, i}
+		priv, err := NewPrivKeyLedgerSecp256k1(path)
+		require.Nil(t, err, "%s", err)
+		require.NotNil(t, priv)
+
+		pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
+		require.NoError(t, err)
+		require.Equal(t, expectedAnswers[i], pubKeyAddr)
+	}
+}
+
+func TestRealLedgerSecp256k1(t *testing.T) {
+	msg := []byte("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}")
+	path := DerivationPath{44, 118, 0, 0, 0}
+
+	priv, err := NewPrivKeyLedgerSecp256k1(path)
+	require.Nil(t, err, "%s", err)
+
+	pub := priv.PubKey()
+	sig, err := priv.Sign(msg)
+	require.Nil(t, err)
+
+	valid := pub.VerifyBytes(msg, sig)
+	require.True(t, valid)
+
+	// now, let's serialize the public key and make sure it still works
+	bs := priv.PubKey().Bytes()
+	pub2, err := cryptoAmino.PubKeyFromBytes(bs)
+	require.Nil(t, err, "%+v", err)
+
+	// make sure we get the same pubkey when we load from disk
+	require.Equal(t, pub, pub2)
+
+	// signing with the loaded key should match the original pubkey
+	sig, err = priv.Sign(msg)
+	require.Nil(t, err)
+	valid = pub.VerifyBytes(msg, sig)
+	require.True(t, valid)
+
+	// make sure pubkeys serialize properly as well
+	bs = pub.Bytes()
+	bpub, err := cryptoAmino.PubKeyFromBytes(bs)
+	require.NoError(t, err)
+	require.Equal(t, pub, bpub)
+}

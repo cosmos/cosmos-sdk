@@ -302,13 +302,17 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 
 	consPubKey := sdk.MustBech32ifyConsPub(ed25519.GenPrivKey().PubKey())
 
-	f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(denom, 10))
+	sendTokens := staking.TokensFromTendermintPower(10)
+	f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
+	startDenom := staking.TokensFromTendermintPower(50)
+
 	barAcc := f.QueryAccount(barAddr)
-	require.Equal(t, int64(10), barAcc.GetCoins().AmountOf(denom).Int64())
+	require.Equal(t, sendTokens, barAcc.GetCoins().AmountOf(denom))
 	fooAcc := f.QueryAccount(fooAddr)
-	require.Equal(t, int64(40), fooAcc.GetCoins().AmountOf(denom).Int64())
+	require.Equal(t, startDenom.Sub(sendTokens), fooAcc.GetCoins().AmountOf(denom))
+	//40
 
 	defaultParams := staking.DefaultParams()
 	initialPool := staking.InitialPool()

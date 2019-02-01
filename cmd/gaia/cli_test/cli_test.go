@@ -296,7 +296,6 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	proc := f.GDStart()
 	defer proc.Stop(false)
 
-	fooAddr := f.KeyAddress(keyFoo)
 	barAddr := f.KeyAddress(keyBar)
 	barVal := sdk.ValAddress(barAddr)
 
@@ -306,17 +305,8 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
-	startDenom := staking.TokensFromTendermintPower(50)
-
 	barAcc := f.QueryAccount(barAddr)
 	require.Equal(t, sendTokens, barAcc.GetCoins().AmountOf(denom))
-	fooAcc := f.QueryAccount(fooAddr)
-	require.Equal(t, startDenom.Sub(sendTokens), fooAcc.GetCoins().AmountOf(denom))
-	//40
-
-	defaultParams := staking.DefaultParams()
-	initialPool := staking.InitialPool()
-	initialPool.BondedTokens = initialPool.BondedTokens.Add(sdk.NewInt(101)) // Delegate tx on GaiaAppGenState
 
 	// Generate a create validator transaction and ensure correctness
 	success, stdout, stderr := f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--generate-only")
@@ -329,21 +319,22 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.Equal(t, 0, len(msg.GetSignatures()))
 
 	// Test --dry-run
-	success, _, _ = f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2), "--dry-run")
+	newValTokens := staking.TokensFromTendermintPower(2)
+	success, _, _ = f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewCoin(denom, newValTokens), "--dry-run")
 	require.True(t, success)
 
 	// Create the validator
-	f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewInt64Coin(denom, 2))
+	f.TxStakingCreateValidator(keyBar, consPubKey, sdk.NewCoin(denom, newValTokens))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure funds were deducted properly
 	barAcc = f.QueryAccount(barAddr)
-	require.Equal(t, int64(8), barAcc.GetCoins().AmountOf(denom).Int64())
+	require.Equal(t, sendTokens.Sub(newValTokens), barAcc.GetCoins().AmountOf(denom))
 
 	// Ensure that validator state is as expected
 	validator := f.QueryStakingValidator(barVal)
 	require.Equal(t, validator.OperatorAddr, barVal)
-	require.True(sdk.IntEq(t, sdk.NewInt(2), validator.Tokens))
+	require.True(sdk.IntEq(t, newValTokens, validator.Tokens))
 
 	// Query delegations to the validator
 	validatorDelegations := f.QueryStakingDelegationsTo(barVal)
@@ -351,27 +342,21 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	require.NotZero(t, validatorDelegations[0].Shares)
 
 	// unbond a single share
-	success = f.TxStakingUnbond(keyBar, "1", barVal)
+	unbondTokens := staking.TokensFromTendermintPower(1)
+	success = f.TxStakingUnbond(keyBar, unbondTokens.String(), barVal)
 	require.True(t, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure bonded staking is correct
+	remainingTokens := newValTokens.Sub(unbondTokens)
 	validator = f.QueryStakingValidator(barVal)
-	require.Equal(t, "1", validator.Tokens.String())
+	require.Equal(t, remainingTokens, validator.Tokens)
 
 	// Get unbonding delegations from the validator
 	validatorUbds := f.QueryStakingUnbondingDelegationsFrom(barVal)
 	require.Len(t, validatorUbds, 1)
 	require.Len(t, validatorUbds[0].Entries, 1)
-	require.Equal(t, "1", validatorUbds[0].Entries[0].Balance.Amount.String())
-
-	// Query staking parameters
-	params := f.QueryStakingParameters()
-	require.True(t, defaultParams.Equal(params))
-
-	// Query staking pool
-	pool := f.QueryStakingPool()
-	require.Equal(t, initialPool.BondedTokens, pool.BondedTokens)
+	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.Amount.String())
 
 	f.Cleanup()
 }

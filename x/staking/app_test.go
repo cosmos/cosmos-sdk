@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // getMockApp returns an initialized mock application for this module.
@@ -100,8 +100,8 @@ func TestStakingMsgs(t *testing.T) {
 
 	genTokens := TokensFromTendermintPower(42)
 	bondTokens := TokensFromTendermintPower(10)
-	genCoin := sdk.NewCoin(stakingTypes.DefaultBondDenom, genTokens)
-	bondCoin := sdk.NewCoin(stakingTypes.DefaultBondDenom, bondTokens)
+	genCoin := sdk.NewCoin(staking.DefaultBondDenom, genTokens)
+	bondCoin := sdk.NewCoin(staking.DefaultBondDenom, bondTokens)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,

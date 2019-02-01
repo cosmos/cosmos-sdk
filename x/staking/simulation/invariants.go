@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AllInvariants runs all invariants of the staking module.
@@ -55,7 +54,7 @@ func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 		loose := sdk.ZeroDec()
 		bonded := sdk.ZeroDec()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom)))
+			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(staking.DefaultBondDenom)))
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd staking.UnbondingDelegation) bool {
@@ -77,13 +76,13 @@ func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 		feePool := d.GetFeePool(ctx)
 
 		// add outstanding fees
-		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(stakingTypes.DefaultBondDenom)))
+		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(staking.DefaultBondDenom)))
 
 		// add community pool
-		loose = loose.Add(feePool.CommunityPool.AmountOf(stakingTypes.DefaultBondDenom))
+		loose = loose.Add(feePool.CommunityPool.AmountOf(staking.DefaultBondDenom))
 
 		// add yet-to-be-withdrawn
-		loose = loose.Add(d.GetOutstandingRewards(ctx).AmountOf(stakingTypes.DefaultBondDenom))
+		loose = loose.Add(d.GetOutstandingRewards(ctx).AmountOf(staking.DefaultBondDenom))
 
 		// Not-bonded tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators

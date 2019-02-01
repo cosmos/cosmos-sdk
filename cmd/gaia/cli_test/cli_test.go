@@ -22,7 +22,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestGaiaCLIKeysAddMultisig(t *testing.T) {
@@ -388,7 +387,7 @@ func TestGaiaCLISubmitProposal(t *testing.T) {
 	fooAddr := f.KeyAddress(keyFoo)
 
 	fooAcc := f.QueryAccount(fooAddr)
-	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(stakingTypes.DefaultBondDenom).Int64())
+	require.Equal(t, int64(50), fooAcc.GetCoins().AmountOf(staking.DefaultBondDenom).Int64())
 
 	proposalsQuery := f.QueryGovProposals()
 	require.Empty(t, proposalsQuery)

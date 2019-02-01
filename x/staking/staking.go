@@ -77,6 +77,7 @@ var (
 	NewDescription        = types.NewDescription
 	NewCommission         = types.NewCommission
 	NewCommissionMsg      = types.NewCommissionMsg
+	CommissionMsg         = types.CommissionMsg
 	NewCommissionWithTime = types.NewCommissionWithTime
 	NewGenesisState       = types.NewGenesisState
 	DefaultGenesisState   = types.DefaultGenesisState

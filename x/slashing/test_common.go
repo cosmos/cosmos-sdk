@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
@@ -116,7 +115,7 @@ func testAddr(addr string) sdk.AccAddress {
 func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
 	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return staking.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(stakingTypes.DefaultBondDenom, amt),
+		address, pubKey, sdk.NewCoin(staking.DefaultBondDenom, amt),
 		staking.Description{}, commission,
 	)
 }

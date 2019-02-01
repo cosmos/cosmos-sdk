@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -94,8 +93,8 @@ func TestSlashingMsgs(t *testing.T) {
 
 	genTokens := staking.TokensFromTendermintPower(42)
 	bondTokens := staking.TokensFromTendermintPower(10)
-	genCoin := sdk.NewCoin(stakingTypes.DefaultBondDenom, genTokens)
-	bondCoin := sdk.NewCoin(stakingTypes.DefaultBondDenom, bondTokens)
+	genCoin := sdk.NewCoin(staking.DefaultBondDenom, genTokens)
+	bondCoin := sdk.NewCoin(staking.DefaultBondDenom, bondTokens)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,

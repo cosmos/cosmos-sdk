@@ -190,7 +190,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	}
 }
 
-func TestMultiSendMsgMultipleInOut(t *testing.T) {
+func TestMsgMultiSendMultipleInOut(t *testing.T) {
 	mapp := getMockApp(t)
 
 	acc1 := &auth.BaseAccount{

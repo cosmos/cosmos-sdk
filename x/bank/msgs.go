@@ -29,13 +29,13 @@ func (msg MsgSend) Type() string  { return "send" }
 // Implements Msg.
 func (msg MsgSend) ValidateBasic() sdk.Error {
 	if msg.FromAddress.Empty() {
-		return sdk.ErrInvalidAddress("No FromAddress included")
+		return sdk.ErrInvalidAddress("missing sender address")
 	}
 	if msg.ToAddress.Empty() {
-		return sdk.ErrInvalidAddress("No ToAddress included")
+		return sdk.ErrInvalidAddress("missing recipient address")
 	}
 	if !msg.Amount.IsPositive() {
-		return sdk.ErrInsufficientCoins("Send Amount must be positive")
+		return sdk.ErrInsufficientCoins("send amount must be positive")
 	}
 	return nil
 }

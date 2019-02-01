@@ -202,7 +202,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
 			valPubKeys[i],
-			sdk.NewInt64Coin(stakingtypes.DefaultBondDenom, valTokens),
+			sdk.NewCoin(stakingtypes.DefaultBondDenom, valTokens),
 			staking.NewDescription(nodeDirName, "", "", ""),
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)

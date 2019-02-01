@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +16,12 @@ import (
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router,
 	cdc *codec.Codec) {
+
+	// Withdraw delegator rewards
+	r.HandleFunc(
+		"/distribution/delegators/{delegatorAddr}/rewards",
+		withdrawDelegatorRewardsHandlerFn(cdc, cliCtx),
+	).Methods("POST")
 
 	// Withdraw delegation rewards
 	r.HandleFunc(
@@ -32,6 +39,12 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router,
 
 type withdrawRewardsReq struct {
 	BaseReq utils.BaseReq `json:"base_req"`
+}
+
+func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+	}
 }
 
 func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
@@ -58,14 +71,6 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 		if abort {
 			return
 		}
-
-		// derive the from account address and name from the Keybase
-		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
 
 		msg := types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
 		if err := msg.ValidateBasic(); err != nil {
@@ -102,31 +107,13 @@ func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 			return
 		}
 
-		// derive the from account address and name from the Keybase
-		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		// prepare multi-message transaction
+		msgs, err := common.WithdrawValidatorRewardsAndCommission(valAddr)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
 
-		// build and validate MsgWithdrawValidatorCommission
-		commissionMsg := types.NewMsgWithdrawValidatorCommission(valAddr)
-		if err := commissionMsg.ValidateBasic(); err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		// build and validate MsgWithdrawDelegatorReward
-		delAddr := sdk.AccAddress(valAddr.Bytes())
-		rewardMsg := types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
-		if err := rewardMsg.ValidateBasic(); err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		// prepare multi-message transaction
-		msgs := []sdk.Msg{rewardMsg, commissionMsg}
 		if req.BaseReq.GenerateOnly {
 			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, msgs)
 			return

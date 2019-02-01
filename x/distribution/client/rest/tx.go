@@ -22,15 +22,21 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router,
 		withdrawDelegationRewardsHandlerFn(cdc, cliCtx),
 	).Methods("POST")
 
+	// Withdraw validator rewards and commission
+	r.HandleFunc(
+		"/distribution/validators/{validatorAddr}/rewards",
+		withdrawValidatorRewardsHandlerFn(cdc, cliCtx),
+	).Methods("POST")
+
 }
 
-type withdrawDelegationRewardsReq struct {
+type withdrawRewardsReq struct {
 	BaseReq utils.BaseReq `json:"base_req"`
 }
 
 func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req withdrawDelegationRewardsReq
+		var req withdrawRewardsReq
 
 		if err := utils.ReadRESTReq(w, r, cdc, &req); err != nil {
 			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -42,6 +48,7 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 			return
 		}
 
+		// read and validate URL's variables
 		delAddr, abort := checkDelegatorAddressVar(w, r)
 		if abort {
 			return
@@ -74,6 +81,62 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
+
+func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req withdrawRewardsReq
+
+		if err := utils.ReadRESTReq(w, r, cdc, &req); err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
+
+		// read and validate URL's variable
+		valAddr, abort := checkValidatorAddressVar(w, r)
+		if abort {
+			return
+		}
+
+		// derive the from account address and name from the Keybase
+		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
+
+		// build and validate MsgWithdrawValidatorCommission
+		commissionMsg := types.NewMsgWithdrawValidatorCommission(valAddr)
+		if err := commissionMsg.ValidateBasic(); err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		// build and validate MsgWithdrawDelegatorReward
+		delAddr := sdk.AccAddress(valAddr.Bytes())
+		rewardMsg := types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
+		if err := rewardMsg.ValidateBasic(); err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		// prepare multi-message transaction
+		msgs := []sdk.Msg{rewardMsg, commissionMsg}
+		if req.BaseReq.GenerateOnly {
+			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, msgs)
+			return
+		}
+
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
+	}
+}
+
+// Auxiliary
 
 func checkDelegatorAddressVar(w http.ResponseWriter, r *http.Request) (sdk.AccAddress, bool) {
 	addr, err := sdk.AccAddressFromBech32(mux.Vars(r)["delegatorAddr"])

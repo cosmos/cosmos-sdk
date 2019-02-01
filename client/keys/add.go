@@ -37,7 +37,6 @@ const (
 )
 
 const (
-	defaultBIP39Passphrase = ""
 	maxValidAccountValue   = int(0x80000000 - 1)
 	maxValidIndexalue      = int(0x80000000 - 1)
 )
@@ -245,7 +244,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	info, err := kb.CreateAccount(name, mnemonic, defaultBIP39Passphrase, encryptPassword, account, index)
+	info, err := kb.CreateAccount(name, mnemonic, keys.DefaultBIP39Passphrase, encryptPassword, account, index)
 	if err != nil {
 		return err
 	}
@@ -386,7 +385,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		// create account
 		account := uint32(m.Account)
 		index := uint32(m.Index)
-		info, err := kb.CreateAccount(m.Name, mnemonic, defaultBIP39Passphrase, m.Password, account, index)
+		info, err := kb.CreateAccount(m.Name, mnemonic, keys.DefaultBIP39Passphrase, m.Password, account, index)
 		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
@@ -477,7 +476,7 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 		account := uint32(m.Account)
 		index := uint32(m.Index)
 
-		info, err := kb.CreateAccount(name, mnemonic, defaultBIP39Passphrase, m.Password, account, index)
+		info, err := kb.CreateAccount(name, mnemonic, keys.DefaultBIP39Passphrase, m.Password, account, index)
 		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}

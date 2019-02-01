@@ -54,7 +54,7 @@ const (
 
 const (
 	// used for deriving seed from mnemonic
-	defaultBIP39Passphrase = ""
+	DefaultBIP39Passphrase = ""
 
 	// bits of entropy to draw when creating a mnemonic
 	defaultEntropySize = 256
@@ -109,7 +109,7 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 		return
 	}
 
-	seed := bip39.NewSeed(mnemonic, defaultBIP39Passphrase)
+	seed := bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
 	info, err = kb.persistDerivedKey(seed, passwd, name, hd.FullFundraiserPath)
 	return
 }

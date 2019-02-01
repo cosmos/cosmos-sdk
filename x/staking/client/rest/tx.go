@@ -76,7 +76,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
@@ -121,7 +121,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
@@ -166,7 +166,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 

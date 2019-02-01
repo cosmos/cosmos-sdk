@@ -64,7 +64,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			}
 
 			msg := bankclient.CreateMsg(fromAddr, toAddr, req.Amount)
-			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 

@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/tendermint/go-amino"
@@ -126,7 +127,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 
 	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", ErrInvalidSigner, name)
+		return signedStdTx, fmt.Errorf("%s: %s", client.ErrInvalidSigner, name)
 	}
 
 	if !offline {
@@ -154,7 +155,7 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf("%s: %s", ErrInvalidSigner, name)
+		return signedStdTx, fmt.Errorf("%s: %s", client.ErrInvalidSigner, name)
 	}
 
 	if !offline {

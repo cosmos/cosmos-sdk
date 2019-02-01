@@ -246,7 +246,7 @@ func CompleteAndBroadcastTxREST(
 
 	if baseReq.Simulate || simAndExec {
 		if gasAdj < 0 {
-			WriteErrorResponse(w, http.StatusBadRequest, ErrInvalidGasAdjustment.Error())
+			WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
 			return
 		}
 
@@ -330,7 +330,7 @@ func WriteGenerateStdTxResponse(
 
 	if simAndExec {
 		if gasAdj < 0 {
-			WriteErrorResponse(w, http.StatusBadRequest, ErrInvalidGasAdjustment.Error())
+			WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
 			return
 		}
 

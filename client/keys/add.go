@@ -377,7 +377,8 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		if _, tmpErr := kb.Get(m.Name); tmpErr != nil {
+		_, err = kb.Get(m.Name)
+		if err == nil {
 			CheckAndWriteErrorResponse(w, http.StatusConflict, errKeyNameConflict(m.Name))
 			return
 		}
@@ -467,7 +468,8 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		if _, tmpErr := kb.Get(name); tmpErr != nil {
+		_, err = kb.Get(name)
+		if err == nil {
 			CheckAndWriteErrorResponse(w, http.StatusConflict, errKeyNameConflict(name))
 			return
 		}

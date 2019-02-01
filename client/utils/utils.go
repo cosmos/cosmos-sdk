@@ -31,10 +31,10 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return err
 	}
 
-	name := cliCtx.GetFromName()
+	fromName := cliCtx.GetFromName()
 
 	if txBldr.GetSimulateAndExecute() || cliCtx.Simulate {
-		txBldr, err = EnrichWithGas(txBldr, cliCtx, name, msgs)
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			return err
 		}
@@ -44,13 +44,13 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return nil
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
+	passphrase, err := keys.GetPassphrase(fromName)
 	if err != nil {
 		return err
 	}
 
 	// build and sign the transaction
-	txBytes, err := txBldr.BuildAndSign(name, passphrase, msgs)
+	txBytes, err := txBldr.BuildAndSign(fromName, passphrase, msgs)
 	if err != nil {
 		return err
 	}
@@ -62,8 +62,8 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 // EnrichWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func EnrichWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
-	_, adjusted, err := simulateMsgs(txBldr, cliCtx, name, msgs)
+func EnrichWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
+	_, adjusted, err := simulateMsgs(txBldr, cliCtx, msgs)
 	if err != nil {
 		return txBldr, err
 	}
@@ -207,8 +207,8 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 
 // nolint
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted uint64, err error) {
-	txBytes, err := txBldr.BuildWithPubKey(name, msgs)
+func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (estimated, adjusted uint64, err error) {
+	txBytes, err := txBldr.BuildForSim(msgs)
 	if err != nil {
 		return
 	}
@@ -269,9 +269,7 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	if txBldr.GetSimulateAndExecute() {
-		name := cliCtx.GetFromName()
-
-		txBldr, err = EnrichWithGas(txBldr, cliCtx, name, msgs)
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			return
 		}

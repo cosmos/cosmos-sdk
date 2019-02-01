@@ -250,7 +250,7 @@ func CompleteAndBroadcastTxREST(
 			return
 		}
 
-		txBldr, err = EnrichWithGas(txBldr, cliCtx, cliCtx.GetFromName(), msgs)
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return

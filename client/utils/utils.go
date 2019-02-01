@@ -126,8 +126,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 
 	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf(
-			"The generated transaction's intended signer does not match the given signer: %q", name)
+		return signedStdTx, fmt.Errorf("%s: %s", ErrInvalidSigner, name)
 	}
 
 	if !offline {
@@ -155,8 +154,7 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf(
-			"The generated transaction's intended signer does not match the given signer: %q", name)
+		return signedStdTx, fmt.Errorf("%s: %s", ErrInvalidSigner, name)
 	}
 
 	if !offline {

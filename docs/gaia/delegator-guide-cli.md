@@ -1,6 +1,6 @@
 # Delegator Guide (CLI)
 
-This document contains all the necessary information for delegators to interract with the Cosmos Hub through the Command-Line Interface (CLI).
+This document contains all the necessary information for delegators to interact with the Cosmos Hub through the Command-Line Interface (CLI).
 
 It also contains instructions on how to manage accounts, restore accounts from the fundraiser and use a ledger nano device.
 

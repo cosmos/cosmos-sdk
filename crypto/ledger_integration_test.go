@@ -60,7 +60,7 @@ func TestPublicKey(t *testing.T) {
 
 	pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
 	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0", pubKeyAddr)
+	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0", pubKeyAddr, "Is your device using test mnemonic: %s ?", testMnemonic)
 	require.Equal(t, "5075624b6579536563703235366b317b303334464546394344374334433633353838443342303"+
 		"3464542353238314239443233324342413334443646334437314145453539323131464642464531464538377d",
 		fmt.Sprintf("%x", priv.PubKey()))
@@ -81,7 +81,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 	}
 
 	// TODO: Check data with locally generated pubkey
-	// TODO: ONHOLD, it needs another PR to get merged first
+	// TODO: ONHOLD, it needs PR #3461 to get merged first
 	//seed, _ := bip39.NewSeedWithErrorChecking(testMnemonic, "")
 	//masterPriv, ch := hd.ComputeMastersFromSeed(seed)
 	//derivedPriv, err := hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
@@ -89,32 +89,47 @@ func TestPublicKeyHDPath(t *testing.T) {
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
 		path := *hd.NewFundraiserParams(0, i)
+		fmt.Printf("Checking keys at %v\n", path)
+
 		priv, err := NewPrivKeyLedgerSecp256k1(path)
 		require.Nil(t, err, "%s", err)
 		require.NotNil(t, priv)
 
 		pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
 		require.NoError(t, err)
-		require.Equal(t, expectedAnswers[i], pubKeyAddr)
+		require.Equal(t, expectedAnswers[i], pubKeyAddr, "Is your device using test mnemonic: %s ?", testMnemonic)
 	}
 }
 
-func TestSignature(t *testing.T) {
-	msg := []byte("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}")
-	path := *hd.NewFundraiserParams(0, 0)
-	priv, err := NewPrivKeyLedgerSecp256k1(path)
-	require.Nil(t, err, "%s", err)
+func getFakeTx(accountNumber uint32) []byte {
+	tmp := fmt.Sprintf(
+		`{"account_number":"%d","chain_id":"1234","fee":{"amount":[{"amount":"150","denom":"atom"}],"gas":"5000"},"memo":"memo","msgs":[[""]],"sequence":"6"}`,
+		accountNumber)
 
-	pub := priv.PubKey()
-	sig, err := priv.Sign(msg)
-	require.Nil(t, err)
+	return []byte(tmp)
+}
 
-	valid := pub.VerifyBytes(msg, sig)
-	require.True(t, valid)
+func TestSignaturesHD(t *testing.T) {
+	for account := uint32(0); account < 100; account += 30 {
+		msg := getFakeTx(account)
+
+		path := *hd.NewFundraiserParams(account, account/5)
+		fmt.Printf("Checking signature at %v\n", path)
+
+		priv, err := NewPrivKeyLedgerSecp256k1(path)
+		require.Nil(t, err, "%s", err)
+
+		pub := priv.PubKey()
+		sig, err := priv.Sign(msg)
+		require.Nil(t, err)
+
+		valid := pub.VerifyBytes(msg, sig)
+		require.True(t, valid, "Is your device using test mnemonic: %s ?", testMnemonic)
+	}
 }
 
 func TestRealLedgerSecp256k1(t *testing.T) {
-	msg := []byte("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}")
+	msg := getFakeTx(50)
 	path := *hd.NewFundraiserParams(0, 0)
 	priv, err := NewPrivKeyLedgerSecp256k1(path)
 	require.Nil(t, err, "%s", err)

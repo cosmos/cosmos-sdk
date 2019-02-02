@@ -144,6 +144,9 @@ test: test_unit
 test_cli:
 	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
 
+test_ledger:
+	@go test `go list github.com/cosmos/cosmos-sdk/crypto` -tags=ledger_device
+
 test_unit:
 	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION)
 

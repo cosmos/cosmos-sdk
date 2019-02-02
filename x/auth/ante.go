@@ -308,7 +308,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
 		glDec := sdk.NewDec(int64(stdFee.Gas))
 		for i, gp := range minGasPrices {
 			fee := gp.Amount.Mul(glDec)
-			requiredFees[i] = sdk.NewInt64Coin(gp.Denom, fee.Ceil().RoundInt64())
+			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
 
 		if !stdFee.Amount.IsAllGTE(requiredFees) {

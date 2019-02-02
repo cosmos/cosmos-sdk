@@ -44,6 +44,8 @@ IMPROVEMENTS
     * Automatic account number and sequence population when fields are omitted
     * Generate only functionality no longer requires access to a local Keybase
     * `from` field in the `base_req` body can be a Keybase name or account address
+  * [\#3423](https://github.com/cosmos/cosmos-sdk/issues/3423) Allow simulation
+  (auto gas) to work with generate only.
 
 * Gaia CLI  (`gaiacli`)
 

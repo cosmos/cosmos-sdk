@@ -246,11 +246,11 @@ func CompleteAndBroadcastTxREST(
 
 	if baseReq.Simulate || simAndExec {
 		if gasAdj < 0 {
-			WriteErrorResponse(w, http.StatusBadRequest, "gas adjustment must be a positive float")
+			WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
 			return
 		}
 
-		txBldr, err = EnrichWithGas(txBldr, cliCtx, cliCtx.GetFromName(), msgs)
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
@@ -308,13 +308,16 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 }
 
 // WriteGenerateStdTxResponse writes response for the generate only mode.
-func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, br BaseReq, msgs []sdk.Msg) {
+func WriteGenerateStdTxResponse(
+	w http.ResponseWriter, cdc *codec.Codec, cliCtx context.CLIContext, br BaseReq, msgs []sdk.Msg,
+) {
+
 	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return
 	}
 
-	_, gas, err := client.ParseGas(br.Gas)
+	simAndExec, gas, err := client.ParseGas(br.Gas)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
@@ -324,6 +327,19 @@ func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, br Base
 		GetTxEncoder(cdc), br.AccountNumber, br.Sequence, gas, gasAdj,
 		br.Simulate, br.ChainID, br.Memo, br.Fees, br.GasPrices,
 	)
+
+	if simAndExec {
+		if gasAdj < 0 {
+			WriteErrorResponse(w, http.StatusBadRequest, client.ErrInvalidGasAdjustment.Error())
+			return
+		}
+
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
+		if err != nil {
+			WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
 
 	stdMsg, err := txBldr.Build(msgs)
 	if err != nil {

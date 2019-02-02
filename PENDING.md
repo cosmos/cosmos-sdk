@@ -53,6 +53,7 @@ IMPROVEMENTS
   * [\#3420](https://github.com/cosmos/cosmos-sdk/issues/3420) Added maximum length to governance proposal descriptions and titles
 
 * SDK
+  * [\#2986](https://github.com/cosmos/cosmos-sdk/pull/2986) Store Refactor
   * \#3435 Test that store implementations do not allow nil values
 
 * Tendermint

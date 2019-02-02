@@ -3,9 +3,9 @@ package crypto
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
-
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/pkg/errors"
 	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
@@ -23,10 +23,6 @@ type (
 	// dependencies when Ledger support is potentially not enabled.
 	discoverLedgerFn func() (LedgerSECP256K1, error)
 
-	// TODO: Improve this
-	// DerivationPath represents a Ledger derivation path.
-	DerivationPath []uint32
-
 	// LedgerSECP256K1 reflects an interface a Ledger API must implement for
 	// the SECP256K1 scheme.
 	LedgerSECP256K1 interface {
@@ -42,7 +38,7 @@ type (
 		// go-amino so we can view the address later, even without having the
 		// ledger attached.
 		CachedPubKey tmcrypto.PubKey
-		Path         DerivationPath
+		Path         hd.BIP44Params
 	}
 )
 
@@ -51,7 +47,7 @@ type (
 //
 // CONTRACT: The ledger device, ledgerDevice, must be loaded and set prior to
 // any creation of a PrivKeyLedgerSecp256k1.
-func NewPrivKeyLedgerSecp256k1(path DerivationPath) (tmcrypto.PrivKey, error) {
+func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
 	device, err := getLedgerDevice()
 	if err != nil {
 		return nil, err
@@ -159,7 +155,7 @@ func sign(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byt
 		return nil, err
 	}
 
-	sig, err := device.SignSECP256K1(pkl.Path, msg)
+	sig, err := device.SignSECP256K1(pkl.Path.DerivationPath(), msg)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +166,8 @@ func sign(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byt
 // getPubKey reads the pubkey the ledger itself
 // since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling
-func getPubKey(device LedgerSECP256K1, path DerivationPath) (tmcrypto.PubKey, error) {
-	publicKey, err := device.GetPublicKeySECP256K1(path)
+func getPubKey(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, error) {
+	publicKey, err := device.GetPublicKeySECP256K1(path.DerivationPath())
 	if err != nil {
 		return nil, fmt.Errorf("please open Cosmos app on the Ledger device - error: %v", err)
 	}

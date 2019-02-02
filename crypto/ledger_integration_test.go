@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/encoding/amino"
-
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	ledger "github.com/zondax/ledger-cosmos-go"
 )
 
@@ -53,7 +53,7 @@ func TestDiscoverDeviceTwiceClosing(t *testing.T) {
 }
 
 func TestPublicKey(t *testing.T) {
-	path := DerivationPath{44, 118, 0, 0, 0}
+	path := *hd.NewFundraiserParams(0, 0)
 	priv, err := NewPrivKeyLedgerSecp256k1(path)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, priv)
@@ -88,7 +88,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
-		path := DerivationPath{44, 118, 0, 0, i}
+		path := *hd.NewFundraiserParams(0, i)
 		priv, err := NewPrivKeyLedgerSecp256k1(path)
 		require.Nil(t, err, "%s", err)
 		require.NotNil(t, priv)
@@ -101,8 +101,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 
 func TestSignature(t *testing.T) {
 	msg := []byte("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}")
-	path := DerivationPath{44, 118, 0, 0, 0}
-
+	path := *hd.NewFundraiserParams(0, 0)
 	priv, err := NewPrivKeyLedgerSecp256k1(path)
 	require.Nil(t, err, "%s", err)
 
@@ -116,8 +115,7 @@ func TestSignature(t *testing.T) {
 
 func TestRealLedgerSecp256k1(t *testing.T) {
 	msg := []byte("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}")
-	path := DerivationPath{44, 118, 0, 0, 0}
-
+	path := *hd.NewFundraiserParams(0, 0)
 	priv, err := NewPrivKeyLedgerSecp256k1(path)
 	require.Nil(t, err, "%s", err)
 

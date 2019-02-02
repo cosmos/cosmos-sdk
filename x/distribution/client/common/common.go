@@ -43,6 +43,9 @@ func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, er
 // QueryParams queries delegator rewards. If valAddr is empty string,
 // it returns all delegations rewards for the given delegator; else
 // it returns the rewards for the specific delegation.
+//
+// TODO refactor remove this function, we should likely not clump these two
+// cases together
 func QueryRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute, delAddr, valAddr string) ([]byte, error) {
 
@@ -51,25 +54,30 @@ func QueryRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 		return nil, err
 	}
 
-	var params distr.QueryDelegationRewardsParams
 	var route string
+	var bz []byte
 
 	if valAddr == "" {
-		params = distr.NewQueryDelegationRewardsParams(delegatorAddr, nil)
-		route = fmt.Sprintf("custom/%s/total_delegation_rewards", queryRoute)
-	} else {
-		validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
+
+		params := distr.NewQueryDelegatorParams(delegatorAddr)
+		route = fmt.Sprintf("custom/%s/delegator_total_rewards", queryRoute)
+		bz, err = cdc.MarshalJSON(params)
 		if err != nil {
 			return nil, err
 		}
 
-		params = distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)
-		route = fmt.Sprintf("custom/%s/delegation_rewards", queryRoute)
-	}
+	} else {
 
-	bz, err := cdc.MarshalJSON(params)
-	if err != nil {
-		return nil, err
+		validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
+		if err != nil {
+			return nil, err
+		}
+		params := distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)
+		bz, err = cdc.MarshalJSON(params)
+		if err != nil {
+			return nil, err
+		}
+		route = fmt.Sprintf("custom/%s/delegation_rewards", queryRoute)
 	}
 
 	return cliCtx.QueryWithData(route, bz)

@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -52,7 +53,7 @@ func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer device.Close()
+	defer warnIfErrors(device.Close)
 
 	pubKey, err := getPubKey(device, path)
 	if err != nil {
@@ -73,7 +74,7 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer device.Close()
+	defer warnIfErrors(device.Close)
 
 	return sign(device, pkl, message)
 }
@@ -85,7 +86,7 @@ func (pkl PrivKeyLedgerSecp256k1) ValidateKey() error {
 	if err != nil {
 		return err
 	}
-	defer device.Close()
+	defer warnIfErrors(device.Close)
 
 	return validateKey(device, pkl)
 }
@@ -106,6 +107,14 @@ func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
 		return pkl.CachedPubKey.Equals(ledger.CachedPubKey)
 	}
 	return false
+}
+
+// warnIfErrors wraps a function and writes a warning to stderr. This is required
+// to avoid ignoring errors when defer is used. Using defer may result in linter warnings.
+func warnIfErrors(f func() error) {
+	if err := f(); err != nil {
+		_, _ = fmt.Fprint(os.Stderr, "received error when closing ledger connection", err)
+	}
 }
 
 func convertDERtoBER(signatureDER []byte) ([]byte, error) {

@@ -41,35 +41,43 @@ type withdrawRewardsReq struct {
 	BaseReq utils.BaseReq `json:"base_req"`
 }
 
+// Withdraw delegator rewards
 func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext,
 	queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// var req withdrawRewardsReq
+		var req withdrawRewardsReq
+		if err := utils.ReadRESTReq(w, r, cdc, &req); err != nil {
+			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
-		// if err := utils.ReadRESTReq(w, r, cdc, &req); err != nil {
-		// 	utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		// 	return
-		// }
+		req.BaseReq = req.BaseReq.Sanitize()
+		if !req.BaseReq.ValidateBasic(w) {
+			return
+		}
 
-		// req.BaseReq = req.BaseReq.Sanitize()
-		// if !req.BaseReq.ValidateBasic(w) {
-		// 	return
-		// }
+		// read and validate URL's variables
+		delAddr, abort := checkDelegatorAddressVar(w, r)
+		if abort {
+			return
+		}
 
-		// // read and validate URL's variables
-		// delAddr, abort := checkDelegatorAddressVar(w, r)
-		// if abort {
-		// 	return
-		// }
+		msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, cdc, queryRoute, delAddr)
+		if err != nil {
+			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
 
-		// queryRes, abort := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute, delAddr, "")
-		// if abort {
-		// 	return
-		// }
-		// return
+		if req.BaseReq.GenerateOnly {
+			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
+			return
+		}
+
+		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
 	}
 }
 
+// Withdraw delegation rewards
 func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
@@ -102,7 +110,7 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
@@ -110,6 +118,7 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 	}
 }
 
+// Withdraw validator rewards and commission
 func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
@@ -138,7 +147,7 @@ func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, msgs)
+			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
 			return
 		}
 

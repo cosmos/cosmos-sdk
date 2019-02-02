@@ -58,29 +58,29 @@ func QueryRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 	var bz []byte
 
 	if valAddr == "" {
-
-		params := distr.NewQueryDelegatorParams(delegatorAddr)
+		bz = cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr))
 		route = fmt.Sprintf("custom/%s/delegator_total_rewards", queryRoute)
-		bz, err = cdc.MarshalJSON(params)
-		if err != nil {
-			return nil, err
-		}
-
 	} else {
-
 		validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
 		if err != nil {
 			return nil, err
 		}
-		params := distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)
-		bz, err = cdc.MarshalJSON(params)
-		if err != nil {
-			return nil, err
-		}
+		bz = cdc.MustMarshalJSON(distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr))
 		route = fmt.Sprintf("custom/%s/delegation_rewards", queryRoute)
 	}
 
 	return cliCtx.QueryWithData(route, bz)
+}
+
+// QueryDelegatorValidators returns delegator's list of validators
+// it submitted delegations to.
+func QueryDelegatorValidators(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string, delegatorAddr sdk.AccAddress) ([]byte, error) {
+
+	return cliCtx.QueryWithData(
+		fmt.Sprintf("custom/%s/delegator_validators", queryRoute),
+		cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr)),
+	)
 }
 
 // QueryValidatorCommission returns a validator's commission.
@@ -91,6 +91,36 @@ func QueryValidatorCommission(cliCtx context.CLIContext, cdc *codec.Codec,
 		fmt.Sprintf("custom/%s/validator_commission", queryRoute),
 		cdc.MustMarshalJSON(distr.NewQueryValidatorCommissionParams(validatorAddr)),
 	)
+}
+
+// WithdrawAllDelegatorRewards builds a multi-message slice to be used
+// to withdraw all delegations rewards for the given delegator.
+func WithdrawAllDelegatorRewards(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute string, delegatorAddr sdk.AccAddress) ([]sdk.Msg, error) {
+
+	// retrieve the comprehensive list of all validators which the
+	// delegator had submitted delegations to
+	bz, err := QueryDelegatorValidators(cliCtx, cdc, queryRoute, delegatorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	var validators []sdk.ValAddress
+	if err := cdc.UnmarshalJSON(bz, &validators); err != nil {
+		return nil, err
+	}
+
+	// build multi-message transaction
+	var msgs []sdk.Msg
+	for _, valAddr := range validators {
+		msg := distr.NewMsgWithdrawDelegatorReward(delegatorAddr, valAddr)
+		if err := msg.ValidateBasic(); err != nil {
+			return nil, err
+		}
+		msgs = append(msgs, msg)
+	}
+
+	return msgs, nil
 }
 
 // WithdrawValidatorRewardsAndCommission builds a two-message message slice to be

@@ -5,7 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	secp256k1 "github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec"
+	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 )
@@ -124,6 +125,15 @@ func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
 	return false
 }
 
+func convertDERtoBER(signatureDER []byte) ([]byte, error) {
+	sigDER, err := btcec.ParseDERSignature(signatureDER[:], btcec.S256())
+	if err != nil {
+		return nil, err
+	}
+	sigBER := tmbtcec.Signature{R: sigDER.R, S: sigDER.S}
+	return sigBER.Serialize(), nil
+}
+
 // Sign calls the ledger and stores the PubKey for future use.
 //
 // Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes, returning
@@ -134,13 +144,7 @@ func sign(device LedgerSECP256K1, path DerivationPath, msg []byte) ([]byte, erro
 	if err != nil {
 		return nil, err
 	}
-
-	sig_, err := secp256k1.ParseDERSignature(sig[:], secp256k1.S256())
-	if err != nil {
-		return nil, err
-	}
-
-	return sig_.Serialize(), nil
+	return convertDERtoBER(sig)
 }
 
 // getPubKey reads the pubkey the ledger itself
@@ -153,7 +157,7 @@ func getPubKey(device LedgerSECP256K1, path DerivationPath) (tmcrypto.PubKey, er
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := secp256k1.ParsePubKey(publicKey[:], secp256k1.S256())
+	cmp, err := btcec.ParsePubKey(publicKey[:], btcec.S256())
 	if err != nil {
 		return nil, fmt.Errorf("error parsing public publicKey: %v", err)
 	}

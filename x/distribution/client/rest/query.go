@@ -67,9 +67,9 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// query for rewards from a particular delegator
-		res, abort := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute,
+		res, ok := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute,
 			mux.Vars(r)["delegatorAddr"], "")
-		if abort {
+		if !ok {
 			return
 		}
 
@@ -83,9 +83,9 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// query for rewards from a particular delegation
-		res, abort := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute,
+		res, ok := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute,
 			mux.Vars(r)["delegatorAddr"], mux.Vars(r)["validatorAddr"])
-		if abort {
+		if !ok {
 			return
 		}
 
@@ -163,9 +163,9 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 		// self bond rewards
 		delAddr := sdk.AccAddress(validatorAddr)
-		rewardsRes, abort := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute,
+		rewardsRes, ok := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute,
 			delAddr.String(), valAddr)
-		if abort {
+		if !ok {
 			return
 		}
 
@@ -191,8 +191,8 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 		}
 
 		delAddr := sdk.AccAddress(validatorAddr).String()
-		res, abort := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute, delAddr, valAddr)
-		if abort {
+		res, ok := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute, delAddr, valAddr)
+		if !ok {
 			return
 		}
 
@@ -229,13 +229,13 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 }
 
 func checkResponseQueryRewards(w http.ResponseWriter, cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute, delAddr, valAddr string) (res []byte, abort bool) {
+	queryRoute, delAddr, valAddr string) (res []byte, ok bool) {
 
 	res, err := common.QueryRewards(cliCtx, cdc, queryRoute, delAddr, valAddr)
 	if err != nil {
 		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-		return nil, true
+		return nil, false
 	}
 
-	return res, false
+	return res, true
 }

@@ -57,7 +57,7 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, req.BaseReq, []sdk.Msg{msg})
+			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 

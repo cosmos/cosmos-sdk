@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/tendermint/go-amino"
@@ -40,10 +41,10 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return err
 	}
 
-	name := cliCtx.GetFromName()
+	fromName := cliCtx.GetFromName()
 
 	if txBldr.GetSimulateAndExecute() || cliCtx.Simulate {
-		txBldr, err = EnrichWithGas(txBldr, cliCtx, name, msgs)
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			return err
 		}
@@ -56,13 +57,13 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return nil
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
+	passphrase, err := keys.GetPassphrase(fromName)
 	if err != nil {
 		return err
 	}
 
 	// build and sign the transaction
-	txBytes, err := txBldr.BuildAndSign(name, passphrase, msgs)
+	txBytes, err := txBldr.BuildAndSign(fromName, passphrase, msgs)
 	if err != nil {
 		return err
 	}
@@ -74,8 +75,8 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 // EnrichWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func EnrichWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
-	_, adjusted, err := simulateMsgs(txBldr, cliCtx, name, msgs)
+func EnrichWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
+	_, adjusted, err := simulateMsgs(txBldr, cliCtx, msgs)
 	if err != nil {
 		return txBldr, err
 	}
@@ -138,8 +139,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 
 	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf(
-			"The generated transaction's intended signer does not match the given signer: %q", name)
+		return signedStdTx, fmt.Errorf("%s: %s", client.ErrInvalidSigner, name)
 	}
 
 	if !offline {
@@ -167,8 +167,7 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf(
-			"The generated transaction's intended signer does not match the given signer: %q", name)
+		return signedStdTx, fmt.Errorf("%s: %s", client.ErrInvalidSigner, name)
 	}
 
 	if !offline {
@@ -219,8 +218,8 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 
 // nolint
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted uint64, err error) {
-	txBytes, err := txBldr.BuildWithPubKey(name, msgs)
+func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (estimated, adjusted uint64, err error) {
+	txBytes, err := txBldr.BuildTxForSim(msgs)
 	if err != nil {
 		return
 	}
@@ -281,9 +280,7 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	if txBldr.GetSimulateAndExecute() {
-		name := cliCtx.GetFromName()
-
-		txBldr, err = EnrichWithGas(txBldr, cliCtx, name, msgs)
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			return
 		}

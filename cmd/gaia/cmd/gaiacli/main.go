@@ -84,7 +84,7 @@ func main() {
 	// Construct Root Command
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
-		client.ConfigCmd(),
+		client.ConfigCmd(app.DefaultCLIHome),
 		queryCmd(cdc, mc),
 		txCmd(cdc, mc),
 		client.LineBreak,

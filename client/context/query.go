@@ -10,6 +10,7 @@ import (
 
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -17,8 +18,6 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/store"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -207,7 +206,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 	}
 
 	// TODO: Instead of reconstructing, stash on CLIContext field?
-	prt := store.DefaultProofRuntime()
+	prt := rootmulti.DefaultProofRuntime()
 
 	// TODO: Better convention for path?
 	storeName, err := parseQueryStorePath(queryPath)
@@ -219,6 +218,13 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 	kp = kp.AppendKey([]byte(storeName), merkle.KeyEncodingURL)
 	kp = kp.AppendKey(resp.Key, merkle.KeyEncodingURL)
 
+	if resp.Value == nil {
+		err = prt.VerifyAbsence(resp.Proof, commit.Header.AppHash, kp.String())
+		if err != nil {
+			return errors.Wrap(err, "failed to prove merkle proof")
+		}
+		return nil
+	}
 	err = prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value)
 	if err != nil {
 		return errors.Wrap(err, "failed to prove merkle proof")
@@ -247,7 +253,7 @@ func isQueryStoreWithProof(path string) bool {
 		return false
 	case paths[0] != "store":
 		return false
-	case store.RequireProof("/" + paths[2]):
+	case rootmulti.RequireProof("/" + paths[2]):
 		return true
 	}
 

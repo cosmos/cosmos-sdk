@@ -52,13 +52,9 @@ type (
 // CONTRACT: The ledger device, ledgerDevice, must be loaded and set prior to
 // any creation of a PrivKeyLedgerSecp256k1.
 func NewPrivKeyLedgerSecp256k1(path DerivationPath) (tmcrypto.PrivKey, error) {
-	if discoverLedger == nil {
-		return nil, errors.New("no Ledger discovery function defined")
-	}
-
-	device, err := discoverLedger()
+	device, err := getLedgerDevice()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create PrivKeyLedgerSecp256k1")
+		return nil, err
 	}
 	defer device.Close()
 
@@ -75,35 +71,27 @@ func (pkl PrivKeyLedgerSecp256k1) PubKey() tmcrypto.PubKey {
 	return pkl.CachedPubKey
 }
 
+// Sign returns a secp256k1 signature for the corresponding message
 func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
-	if discoverLedger == nil {
-		return nil, errors.New("no Ledger discovery function defined")
-	}
-
-	device, err := discoverLedger()
+	device, err := getLedgerDevice()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create PrivKeyLedgerSecp256k1")
+		return nil, err
 	}
 	defer device.Close()
 
-	return sign(device, pkl.Path, message)
+	return sign(device, pkl, message)
 }
 
 // ValidateKey allows us to verify the sanity of a public key after loading it
 // from disk.
 func (pkl PrivKeyLedgerSecp256k1) ValidateKey() error {
-	//// getPubKey will return an error if the ledger is not
-	//pub, err := pkl.getPubKey()
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//// verify this matches cached address
-	//if !pub.Equals(pkl.CachedPubKey) {
-	//	return fmt.Errorf("cached key does not match retrieved key")
-	//}
+	device, err := getLedgerDevice()
+	if err != nil {
+		return err
+	}
+	defer device.Close()
 
-	return nil
+	return validateKey(device, pkl)
 }
 
 // AssertIsPrivKeyInner implements the PrivKey interface. It performs a no-op.
@@ -121,7 +109,6 @@ func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
 	if ledger, ok := other.(*PrivKeyLedgerSecp256k1); ok {
 		return pkl.CachedPubKey.Equals(ledger.CachedPubKey)
 	}
-
 	return false
 }
 
@@ -134,16 +121,49 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	return sigBER.Serialize(), nil
 }
 
+func getLedgerDevice() (LedgerSECP256K1, error) {
+	if discoverLedger == nil {
+		return nil, errors.New("no Ledger discovery function defined")
+	}
+
+	device, err := discoverLedger()
+	if err != nil {
+		return nil, errors.Wrap(err, "ledger nano S")
+	}
+
+	return device, nil
+}
+
+func validateKey(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1) error {
+	pub, err := getPubKey(device, pkl.Path)
+	if err != nil {
+		return err
+	}
+
+	// verify this matches cached address
+	if !pub.Equals(pkl.CachedPubKey) {
+		return fmt.Errorf("cached key does not match retrieved key")
+	}
+
+	return nil
+}
+
 // Sign calls the ledger and stores the PubKey for future use.
 //
 // Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes, returning
 // an error, so this should only trigger if the private key is held in memory
 // for a while before use.
-func sign(device LedgerSECP256K1, path DerivationPath, msg []byte) ([]byte, error) {
-	sig, err := device.SignSECP256K1(path, msg)
+func sign(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byte, error) {
+	err := validateKey(device, pkl)
 	if err != nil {
 		return nil, err
 	}
+
+	sig, err := device.SignSECP256K1(pkl.Path, msg)
+	if err != nil {
+		return nil, err
+	}
+
 	return convertDERtoBER(sig)
 }
 

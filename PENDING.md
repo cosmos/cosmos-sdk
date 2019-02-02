@@ -5,7 +5,7 @@ BREAKING CHANGES
 * Gaia REST API (`gaiacli advanced rest-server`)
   * [\#3284](https://github.com/cosmos/cosmos-sdk/issues/3284) Rename the `name`
   field to `from` in the `base_req` body.
-  * [distribution] endpoint changed "all_delegation_rewards" -> "delegator_total_rewards"
+  * [\#3477][distribution] endpoint changed "all_delegation_rewards" -> "delegator_total_rewards"
 
 * Gaia CLI  (`gaiacli`)
   - [#3399](https://github.com/cosmos/cosmos-sdk/pull/3399) Add `gaiad validate-genesis` command to facilitate checking of genesis files
@@ -33,6 +33,7 @@ FEATURES
 
 * SDK
   * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
+  * [\#3477][distribution] new query endpoint "delegator_validators"
 
 * Tendermint
 

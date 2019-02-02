@@ -20,7 +20,6 @@ import (
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -179,7 +178,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	if viper.GetBool(client.FlagUseLedger) {
 		account := uint32(viper.GetInt(flagAccount))
 		index := uint32(viper.GetInt(flagIndex))
-		path := ccrypto.DerivationPath{44, 118, account, 0, index}
+		path := *hd.NewFundraiserParams(account, index)
 		info, err := kb.CreateLedger(name, path, keys.Secp256k1)
 		if err != nil {
 			return err

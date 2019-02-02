@@ -3,8 +3,6 @@ package keys
 import (
 	"github.com/tendermint/tendermint/crypto"
 
-	ccrypto "github.com/cosmos/cosmos-sdk/crypto"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/types"
 )
@@ -34,7 +32,7 @@ type Keybase interface {
 	Derive(name, mnemonic, bip39Passwd,
 		encryptPasswd string, params hd.BIP44Params) (Info, error)
 	// Create, store, and return a new Ledger key reference
-	CreateLedger(name string, path ccrypto.DerivationPath, algo SigningAlgo) (info Info, err error)
+	CreateLedger(name string, path hd.BIP44Params, algo SigningAlgo) (info Info, err error)
 
 	// Create, store, and return a new offline key reference
 	CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error)
@@ -123,12 +121,12 @@ func (i localInfo) GetAddress() types.AccAddress {
 
 // ledgerInfo is the public information about a Ledger key
 type ledgerInfo struct {
-	Name   string                 `json:"name"`
-	PubKey crypto.PubKey          `json:"pubkey"`
-	Path   ccrypto.DerivationPath `json:"path"`
+	Name   string         `json:"name"`
+	PubKey crypto.PubKey  `json:"pubkey"`
+	Path   hd.BIP44Params `json:"path"`
 }
 
-func newLedgerInfo(name string, pub crypto.PubKey, path ccrypto.DerivationPath) Info {
+func newLedgerInfo(name string, pub crypto.PubKey, path hd.BIP44Params) Info {
 	return &ledgerInfo{
 		Name:   name,
 		PubKey: pub,

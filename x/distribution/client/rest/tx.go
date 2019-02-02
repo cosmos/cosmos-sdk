@@ -15,12 +15,12 @@ import (
 )
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router,
-	cdc *codec.Codec) {
+	cdc *codec.Codec, queryRoute string) {
 
 	// Withdraw delegator rewards
 	r.HandleFunc(
 		"/distribution/delegators/{delegatorAddr}/rewards",
-		withdrawDelegatorRewardsHandlerFn(cdc, cliCtx),
+		withdrawDelegatorRewardsHandlerFn(cdc, cliCtx, queryRoute),
 	).Methods("POST")
 
 	// Withdraw delegation rewards
@@ -41,9 +41,32 @@ type withdrawRewardsReq struct {
 	BaseReq utils.BaseReq `json:"base_req"`
 }
 
-func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
+func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext,
+	queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// var req withdrawRewardsReq
 
+		// if err := utils.ReadRESTReq(w, r, cdc, &req); err != nil {
+		// 	utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		// 	return
+		// }
+
+		// req.BaseReq = req.BaseReq.Sanitize()
+		// if !req.BaseReq.ValidateBasic(w) {
+		// 	return
+		// }
+
+		// // read and validate URL's variables
+		// delAddr, abort := checkDelegatorAddressVar(w, r)
+		// if abort {
+		// 	return
+		// }
+
+		// queryRes, abort := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute, delAddr, "")
+		// if abort {
+		// 	return
+		// }
+		// return
 	}
 }
 

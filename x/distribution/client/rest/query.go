@@ -98,19 +98,12 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, cdc *codec.Code
 	queryRoute string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		delegatorAddr, err := sdk.AccAddressFromBech32(mux.Vars(r)["delegatorAddr"])
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		delegatorAddr, ok := checkDelegatorAddressVar(w, r)
+		if !ok {
 			return
 		}
 
-		params := distribution.NewQueryDelegatorWithdrawAddrParams(delegatorAddr)
-		bz, err := cdc.MarshalJSON(params)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
+		bz := cdc.MustMarshalJSON(distribution.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
 		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
 		if err != nil {
 			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -145,9 +138,8 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		valAddr := mux.Vars(r)["validatorAddr"]
-		validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		validatorAddr, ok := checkValidatorAddressVar(w, r)
+		if !ok {
 			return
 		}
 
@@ -184,9 +176,8 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		valAddr := mux.Vars(r)["validatorAddr"]
-		validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		validatorAddr, ok := checkValidatorAddressVar(w, r)
+		if !ok {
 			return
 		}
 

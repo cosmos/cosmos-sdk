@@ -122,7 +122,7 @@ func GetCmdWithdrawAllRewards(cdc *codec.Codec, queryRoute string) *cobra.Comman
 	return cmd
 }
 
-// GetCmdDelegate implements the delegate command.
+// command to replace a delegator's withdrawal address
 func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",

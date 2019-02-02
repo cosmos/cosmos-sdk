@@ -37,8 +37,8 @@ const (
 )
 
 const (
-	maxValidAccountValue   = int(0x80000000 - 1)
-	maxValidIndexalue      = int(0x80000000 - 1)
+	maxValidAccountValue = int(0x80000000 - 1)
+	maxValidIndexalue    = int(0x80000000 - 1)
 )
 
 func addKeyCommand() *cobra.Command {

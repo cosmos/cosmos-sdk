@@ -2,9 +2,10 @@ package crypto
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"os"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"

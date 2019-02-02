@@ -260,7 +260,8 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 }
 
 // WriteGenerateStdTxResponse writes response for the generate only mode.
-func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec, br client.BaseReq, msgs []sdk.Msg) {
+func WriteGenerateStdTxResponse(w http.ResponseWriter, cdc *codec.Codec,
+	cliCtx context.CLIContext, br client.BaseReq, msgs []sdk.Msg) {
 	gasAdj, ok := ParseFloat64OrReturnBadRequest(w, br.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {
 		return

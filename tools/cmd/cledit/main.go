@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -13,28 +14,56 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Stanza []string
-
-func NewStanza() *Stanza { return new(Stanza) }
-
-func (st *Stanza) Empty() bool { return st == nil || len(*st) == 0 }
-
-func (st *Stanza) Append(s string) { *st = append(*st, s) }
-
 type Section struct {
-	GaiaREST   *Stanza
-	Gaiacli    *Stanza
-	Gaia       *Stanza
-	SDK        *Stanza
-	Tendermint *Stanza
+	GaiaREST   []string
+	Gaiacli    []string
+	Gaia       []string
+	SDK        []string
+	Tendermint []string
 }
 
 func NewSection() *Section {
-	return &Section{GaiaREST: NewStanza(), Gaiacli: NewStanza(), Gaia: NewStanza(), SDK: NewStanza()}
+	return &Section{GaiaREST: []string{}, Gaiacli: []string{}, Gaia: []string{}, SDK: []string{}}
 }
 
 func (se *Section) Empty() bool {
-	return se == nil || (se.GaiaREST.Empty() && se.Gaiacli.Empty() && se.Gaia.Empty() && se.SDK.Empty())
+	return se == nil || (len(se.GaiaREST) == 0 &&
+		len(se.Gaiacli) == 0 && len(se.Gaia) == 0 &&
+		len(se.SDK) == 0)
+}
+
+func (se Section) GetStanza(name string) ([]string, error) {
+	switch name {
+	case "gaiarest":
+		return se.GaiaREST, nil
+	case "gaiacli":
+		return se.Gaiacli, nil
+	case "gaia":
+		return se.Gaia, nil
+	case "sdk":
+		return se.SDK, nil
+	case "tendermint":
+		return se.Tendermint, nil
+	}
+	return nil, errors.New("unknown stanza")
+}
+
+func (se *Section) AppendItem(stanza, item string) error {
+	switch stanza {
+	case "gaiarest":
+		se.GaiaREST = append(se.GaiaREST, item)
+	case "gaiacli":
+		se.Gaiacli = append(se.Gaiacli, item)
+	case "gaia":
+		se.Gaia = append(se.Gaia, item)
+	case "sdk":
+		se.SDK = append(se.SDK, item)
+	case "tendermint":
+		se.Tendermint = append(se.Tendermint, item)
+	default:
+		return errors.New("unknown stanza")
+	}
+	return nil
 }
 
 type Release struct {
@@ -129,23 +158,7 @@ func editFile(clFile, section, stanza string) {
 			[]string{"breaking", "features", "improvements", "bugfixes"})
 	}
 
-	//var releaseStanza Stanza
-
-	//fmt.Printf("%+v\n", releaseSection)
-
-	releaseStanza := NewStanza()
-	switch stanza {
-	case "gaia":
-		releaseStanza = releaseSection.Gaia
-	case "gaiacli":
-		releaseStanza = releaseSection.Gaiacli
-	case "gaiarest":
-		releaseStanza = releaseSection.GaiaREST
-	case "sdk":
-		releaseStanza = releaseSection.SDK
-	case "tendermint":
-		releaseStanza = releaseSection.Tendermint
-	default:
+	if _, err := releaseSection.GetStanza(stanza); err != nil {
 		log.Fatalf("unknown stanza %q, possible values are %s", stanza,
 			[]string{"gaia", "gaiacli", "gaiarest", "sdk", "tendermint"})
 	}
@@ -155,13 +168,23 @@ func editFile(clFile, section, stanza string) {
 		log.Fatalf("error: %v", err)
 	}
 
-	releaseStanza.Append(strings.TrimSpace(string(bytes)))
+	if err := releaseSection.AppendItem(stanza, strings.TrimSpace(string(bytes))); err != nil {
+		panic(err)
+	}
 
 	out, err := yaml.Marshal(r)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
-	fmt.Printf("%s", out)
+
+	outFile := os.Stdout
+	if overwriteSourceFile {
+		outFile, err = os.OpenFile(clFile, os.O_WRONLY|os.O_TRUNC, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	fmt.Fprintf(outFile, "%s", out)
 }
 
 func convert(clFile, version string) {
@@ -187,13 +210,13 @@ func processSection(section *Section, header string) string {
 	return s
 }
 
-func processStanza(stanza *Stanza, header string) string {
+func processStanza(stanza []string, header string) string {
 	// regex to beautify github issues URLs
-	if stanza.Empty() {
+	if len(stanza) == 0 {
 		return ""
 	}
 	s := fmt.Sprintf("* %s\n", header)
-	for _, item := range *stanza {
+	for _, item := range stanza {
 		s += processLine(item) + "\n"
 	}
 	return s

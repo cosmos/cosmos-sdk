@@ -48,34 +48,28 @@ func NewRelease() *Release {
 	return &Release{Breaking: NewSection(), Features: NewSection(), Improvements: NewSection(), Bugfixes: NewSection()}
 }
 
-var progName string
+var (
+	progName string
+
+	overwriteSourceFile bool
+)
 
 func init() {
 	progName = filepath.Base(os.Args[0])
-	flag.Bool("w", false, "write result to (source) file instead of stdout")
-	flag.Usage = func() {
-		usageText := fmt.Sprintf(`usage: %s [-w] [option]
+	flag.BoolVar(&overwriteSourceFile, "w", false, "write result to (source) file instead of stdout")
+	flag.Usage = printUsage
+}
 
-Commands:
-    new                          Create new empty changelog.
-    add FILE SECTION STANZA      Add entry to a changelog file.
-                                 Read from stdin until it
-							     encounters EOF.
-	convert FILE VERSION         Convert a changelog into
-								 Markdown format and print it
-								 to stdout.
+func errInsufficientArgs() {
+	log.Fatalf("insufficient arguments\nTry '%s -help' for more information.", progName)
+}
 
-     Sections:            Stanzas:
-           ---                 ---
-      breaking                gaia
-      features             gaiacli
-  improvements            gaiarest
-      bugfixes                 sdk
-                        tendermint
-`, progName)
-		fmt.Fprintf(os.Stderr, "%s\nFlags:\n", usageText)
-		flag.PrintDefaults()
-	}
+func errTooManyArgs() {
+	log.Fatalf("too many arguments\nTry '%s -help' for more information.", progName)
+}
+
+func unknownCommand(cmd string) {
+	log.Fatalf("unknown command -- '%s'\nTry '%s -help' for more information.", cmd, progName)
 }
 
 func main() {
@@ -84,7 +78,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() < 1 {
-		log.Fatal("insufficient arguments")
+		errInsufficientArgs()
 	}
 
 	cmd := flag.Arg(0)
@@ -95,23 +89,23 @@ func main() {
 	case "add":
 		switch {
 		case flag.NArg() < 4:
-			log.Fatal("insufficient arguments")
+			errInsufficientArgs()
 		case flag.NArg() > 4:
-			log.Fatal("too many arguments")
+			errTooManyArgs()
 		}
 		editFile(flag.Arg(1), flag.Arg(2), flag.Arg(3))
 		return
 	case "convert":
 		switch {
 		case flag.NArg() < 3:
-			log.Fatal("insufficient arguments")
+			errInsufficientArgs()
 		case flag.NArg() > 3:
-			log.Fatal("too many arguments")
+			errTooManyArgs()
 		}
 		convert(flag.Arg(1), flag.Arg(2))
 		return
 	default:
-		log.Fatal(fmt.Errorf("unknown command -- '%s'", cmd))
+		unknownCommand(cmd)
 	}
 }
 
@@ -251,4 +245,28 @@ func mustMarshal(t interface{}) []byte {
 		log.Fatal(err)
 	}
 	return out
+}
+
+func printUsage() {
+	usageText := fmt.Sprintf(`usage: %s [-w] [option]
+
+Commands:
+new                               Create new empty changelog.
+add [-w] FILE SECTION STANZA      Add entry to a changelog file.
+                                  Read from stdin until it
+                                  encounters EOF.
+convert FILE VERSION              Convert a changelog into
+                                  Markdown format and print it
+                                  to stdout.
+
+    Sections:            Stanzas:
+         ---                 ---
+    breaking                gaia
+    features             gaiacli
+improvements            gaiarest
+    bugfixes                 sdk
+                      tendermint
+`, progName)
+	fmt.Fprintf(os.Stderr, "%s\nFlags:\n", usageText)
+	flag.PrintDefaults()
 }

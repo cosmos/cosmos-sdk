@@ -184,7 +184,7 @@ func getPubKey(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, er
 	// re-serialize in the 33-byte compressed format
 	cmp, err := btcec.ParsePubKey(publicKey[:], btcec.S256())
 	if err != nil {
-		return nil, fmt.Errorf("error parsing public publicKey: %v", err)
+		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
 
 	var compressedPublicKey tmsecp256k1.PubKeySecp256k1

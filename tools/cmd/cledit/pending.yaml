@@ -1,0 +1,31 @@
+breaking:
+  gaiarest:
+  - issue#2182 Renamed and merged all redelegations endpoints into `/staking/redelegations`
+  - issue#3176 `tx/sign` endpoint now expects `BaseReq` fields as nested object.
+  - issue#2222 all endpoints renamed from `/stake` -> `/staking`
+  - |-
+   issue#3289 misc renames:
+   - `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime`
+   - `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate`
+   - `MsgBeginUnbonding` -> `MsgUndelegate`
+  gaiacli:
+  - issue#3399 Add `gaiad validate-genesis` command to facilitate checking of genesis files
+  - issue#1894 `version` prints out short info by default. Add `--long` flag. Proper handling of `--format` flag introduced.
+  - |
+   issue#3465 `gaiacli rest-server` switched back to insecure mode by default
+   - `--insecure` flag is removed
+   - `--tls` is now used to enable secure layer
+  sdk:
+  - |
+   issue#3289 misc renames:
+   * `Validator.UnbondingMinTime` -> `Validator.UnbondingCompletionTime`
+   * `Delegation` -> `Value` in `MsgCreateValidator` and `MsgDelegate`
+   * `MsgBeginUnbonding` -> `MsgUndelegate`
+features:
+  gaia:
+  - issue#2182 [x/staking] Added querier for querying a single redelegation
+  sdk:
+  - issue#3099 Implement F1 fee distribution
+improvements:
+  tendermint:
+  - issue#3298 Upgrade to Tendermint 0.28.0

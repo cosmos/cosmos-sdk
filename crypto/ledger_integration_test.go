@@ -80,12 +80,6 @@ func TestPublicKeyHDPath(t *testing.T) {
 		"cosmospub1addwnpepqw970u6gjqkccg9u3rfj99857wupj2z9fqfzy2w7e5dd7xn7kzzgkgqch0r",
 	}
 
-	// TODO: Check data with locally generated pubkey
-	// TODO: ONHOLD, it needs PR #3461 to get merged first
-	//seed, _ := bip39.NewSeedWithErrorChecking(testMnemonic, "")
-	//masterPriv, ch := hd.ComputeMastersFromSeed(seed)
-	//derivedPriv, err := hd.DerivePrivateKeyForPath(masterPriv, ch, fullHdPath)
-
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
 		path := *hd.NewFundraiserParams(0, i)

@@ -266,7 +266,8 @@ func randIntBetween(r *rand.Rand, min, max int) int {
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
-		{100, banksim.SingleInputSendMsg(app.accountKeeper, app.bankKeeper)},
+		{100, banksim.SendMsg(app.accountKeeper, app.bankKeeper)},
+		{10, banksim.SingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper)},
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},

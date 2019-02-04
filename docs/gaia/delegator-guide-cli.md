@@ -12,7 +12,6 @@ It also contains instructions on how to manage accounts, restore accounts from t
     + [Creating an account](#creating-an-account)
 - [Accessing the Cosmos Hub network](#accessing-the-cosmos-hub-network)
     + [Running your own full-node](#running-your-own-full-node)
-    + [Running a light-node](#running-a-light-node)
     + [Connecting to a remote full-node](#connecting-to-a-remote-full-node)
 - [Setting up `gaiacli`](#setting-up-gaiacli)
 - [Querying the state](querying-the-state)
@@ -194,12 +193,6 @@ In order to query the state and send transactions, you need a way to access the 
 This is the most secure option, but comes with relatively high resource requirements. In order to run your own full-node, you need good bandwidth and at least 1TB of disk space. 
 
 You will find the tutorial on how to install `gaiad` [here](https://cosmos.network/docs/gaia/installation.html), and the guide to run a full-node [here](https://cosmos.network/docs/gaia/join-testnet.html).
-
-// TODO: Add root-of-trust and note about long-range-attacks when implemented
-
-### Running a light-node
-
-// TODO when functionality is implemented
 
 ### Connecting to a remote full-node
 

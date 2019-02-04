@@ -60,8 +60,7 @@ func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 	queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
-		if err := rest.ReadRESTReq(w, r, cdc, &req); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -96,8 +95,7 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
 
-		if err := rest.ReadRESTReq(w, r, cdc, &req); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -137,8 +135,7 @@ func setDelegatorWithdrawalAddrHandlerFn(cdc *codec.Codec, cliCtx context.CLICon
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req setWithdrawalAddrReq
 
-		if err := rest.ReadRESTReq(w, r, cdc, &req); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -173,8 +170,7 @@ func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
 
-		if err := rest.ReadRESTReq(w, r, cdc, &req); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 

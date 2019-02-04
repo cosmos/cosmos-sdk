@@ -26,8 +26,7 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m SignBody
 
-		if err := rest.ReadRESTReq(w, r, cdc, &m); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if !rest.ReadRESTReq(w, r, cdc, &m) {
 			return
 		}
 

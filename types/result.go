@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -39,7 +42,7 @@ func (res Result) IsOK() bool {
 }
 
 // Is a version of ResponseDeliverTx where the tags are StringTags rather than []byte tags
-type StringResponseDeliverTx struct {
+type ResponseDeliverTx struct {
 	Height    int64      `json:"height"`
 	TxHash    string     `json:"txhash"`
 	Code      uint32     `json:"code,omitempty"`
@@ -52,8 +55,8 @@ type StringResponseDeliverTx struct {
 	Codespace string     `json:"codespace,omitempty"`
 }
 
-func NewStringResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) StringResponseDeliverTx {
-	return StringResponseDeliverTx{
+func NewResponseDeliverTxCommit(res *ctypes.ResultBroadcastTxCommit) ResponseDeliverTx {
+	return ResponseDeliverTx{
 		Height:    res.Height,
 		TxHash:    res.Hash.String(),
 		Code:      res.DeliverTx.Code,
@@ -65,4 +68,60 @@ func NewStringResponseDeliverTx(res *ctypes.ResultBroadcastTxCommit) StringRespo
 		Tags:      TagsToStringTags(res.DeliverTx.Tags),
 		Codespace: res.DeliverTx.Codespace,
 	}
+}
+
+func NewResponseDeliverTx(res *ctypes.ResultBroadcastTx) ResponseDeliverTx {
+	return ResponseDeliverTx{
+		Code:   res.Code,
+		Data:   res.Data.Bytes(),
+		Log:    res.Log,
+		TxHash: res.Hash.String(),
+	}
+}
+
+func (r ResponseDeliverTx) String() string {
+	var sb strings.Builder
+	sb.WriteString("Response:\n")
+
+	if r.Height > 0 {
+		sb.WriteString(fmt.Sprintf("  Height: %d\n", r.Height))
+	}
+
+	if r.TxHash != "" {
+		sb.WriteString(fmt.Sprintf("  TxHash: %s\n", r.TxHash))
+	}
+
+	if r.Code > 0 {
+		sb.WriteString(fmt.Sprintf("  Code: %d\n", r.Code))
+	}
+
+	if r.Data != nil {
+		sb.WriteString(fmt.Sprintf("  Data: %s\n", string(r.Data)))
+	}
+
+	if r.Log != "" {
+		sb.WriteString(fmt.Sprintf("  Log: %s\n", r.Log))
+	}
+
+	if r.Info != "" {
+		sb.WriteString(fmt.Sprintf("  Info: %s\n", r.Info))
+	}
+
+	if r.GasWanted != 0 {
+		sb.WriteString(fmt.Sprintf("  GasWanted: %d\n", r.GasWanted))
+	}
+
+	if r.GasUsed != 0 {
+		sb.WriteString(fmt.Sprintf("  GasUsed: %d\n", r.GasUsed))
+	}
+
+	if len(r.Tags) > 0 {
+		sb.WriteString(fmt.Sprintf("  Tags: %s\n", r.Tags.String()))
+	}
+
+	if r.Codespace != "" {
+		sb.WriteString(fmt.Sprintf("  Codespace: %s\n", r.Codespace))
+	}
+
+	return strings.TrimSpace(sb.String())
 }

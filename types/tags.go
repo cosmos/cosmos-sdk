@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	cmn "github.com/tendermint/tendermint/libs/common"
 )
 
@@ -79,8 +82,20 @@ type StringTag struct {
 	Value string `json:"value,omitempty"`
 }
 
+func (st StringTag) String() string {
+	return fmt.Sprintf("%s = %s", st.Key, st.Value)
+}
+
 // A slice of StringTag
 type StringTags []StringTag
+
+func (st StringTags) String() string {
+	var sb strings.Builder
+	for _, t := range st {
+		sb.WriteString(fmt.Sprintf("    - %s\n", t.String()))
+	}
+	return strings.TrimSpace(sb.String())
+}
 
 // Conversion function from a []byte tag to a string tag
 func TagToStringTag(tag Tag) StringTag {

@@ -67,17 +67,19 @@ func (p *Params) KeyValuePairs() params.KeyValuePairs {
 func DefaultParams() Params {
 	return Params{
 		// defaultMaxEvidenceAge = 60 * 60 * 24 * 7 * 3
-		// TODO Temporarily set to 2 minutes for testnets.
+		// Set to 2 minutes for testnets.
 		MaxEvidenceAge: 60 * 2 * time.Second,
 
-		// TODO Temporarily set to 100 blocks for testnets
+		// Set to 100 blocks for testnets
 		SignedBlocksWindow: 100,
 
-		// TODO Temporarily set to 10 minutes for testnets
+		// Set to 10 minutes for testnets
 		DowntimeJailDuration: 60 * 10 * time.Second,
 
-		MinSignedPerWindow: sdk.NewDecWithPrec(5, 1),
+		// Set to 10%, viable for both testnets & mainnets
+		MinSignedPerWindow: sdk.NewDecWithPrec(1, 1),
 
+		// Set to 5% for testnets
 		SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(20)),
 	}
 }

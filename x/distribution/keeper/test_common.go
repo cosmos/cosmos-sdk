@@ -135,8 +135,8 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	// set genesis items required for distribution
 	keeper.SetFeePool(ctx, types.InitialFeePool())
 	keeper.SetCommunityTax(ctx, communityTax)
-	keeper.SetBaseProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
-	keeper.SetBonusProposerReward(ctx, sdk.NewDecWithPrec(4, 2))
+	keeper.SetProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
+	keeper.SetSignerReward(ctx, sdk.NewDecWithPrec(4, 2))
 
 	return ctx, accountKeeper, keeper, sk, fck
 }

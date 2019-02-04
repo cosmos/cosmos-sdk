@@ -9,8 +9,8 @@ import (
 func ParamTypeTable() params.TypeTable {
 	return params.NewTypeTable(
 		ParamStoreKeyCommunityTax, sdk.Dec{},
-		ParamStoreKeyBaseProposerReward, sdk.Dec{},
-		ParamStoreKeyBonusProposerReward, sdk.Dec{},
+		ParamStoreKeyProposerReward, sdk.Dec{},
+		ParamStoreKeySignerReward, sdk.Dec{},
 		ParamStoreKeyWithdrawAddrEnabled, false,
 	)
 }
@@ -18,40 +18,40 @@ func ParamTypeTable() params.TypeTable {
 // returns the current CommunityTax rate from the global param store
 // nolint: errcheck
 func (k Keeper) GetCommunityTax(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyCommunityTax, &percent)
-	return percent
+	var fraction sdk.Dec
+	k.paramSpace.Get(ctx, ParamStoreKeyCommunityTax, &fraction)
+	return fraction
 }
 
 // nolint: errcheck
-func (k Keeper) SetCommunityTax(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyCommunityTax, &percent)
+func (k Keeper) SetCommunityTax(ctx sdk.Context, fraction sdk.Dec) {
+	k.paramSpace.Set(ctx, ParamStoreKeyCommunityTax, &fraction)
 }
 
-// returns the current BaseProposerReward rate from the global param store
+// returns the current ProposerReward rate from the global param store
 // nolint: errcheck
-func (k Keeper) GetBaseProposerReward(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyBaseProposerReward, &percent)
-	return percent
-}
-
-// nolint: errcheck
-func (k Keeper) SetBaseProposerReward(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyBaseProposerReward, &percent)
-}
-
-// returns the current BaseProposerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetBonusProposerReward(ctx sdk.Context) sdk.Dec {
-	var percent sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeyBonusProposerReward, &percent)
-	return percent
+func (k Keeper) GetProposerReward(ctx sdk.Context) sdk.Dec {
+	var fraction sdk.Dec
+	k.paramSpace.Get(ctx, ParamStoreKeyProposerReward, &fraction)
+	return fraction
 }
 
 // nolint: errcheck
-func (k Keeper) SetBonusProposerReward(ctx sdk.Context, percent sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeyBonusProposerReward, &percent)
+func (k Keeper) SetProposerReward(ctx sdk.Context, fraction sdk.Dec) {
+	k.paramSpace.Set(ctx, ParamStoreKeyProposerReward, &fraction)
+}
+
+// returns the current SignerReward rate from the global param store
+// nolint: errcheck
+func (k Keeper) GetSignerReward(ctx sdk.Context) sdk.Dec {
+	var fraction sdk.Dec
+	k.paramSpace.Get(ctx, ParamStoreKeySignerReward, &fraction)
+	return fraction
+}
+
+// nolint: errcheck
+func (k Keeper) SetSignerReward(ctx sdk.Context, fraction sdk.Dec) {
+	k.paramSpace.Set(ctx, ParamStoreKeySignerReward, &fraction)
 }
 
 // returns the current WithdrawAddrEnabled

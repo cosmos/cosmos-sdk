@@ -29,8 +29,8 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	fractionVotes := sdk.NewDec(sumPrecommitPower).Quo(sdk.NewDec(totalPower))
 
 	// calculate proposer reward
-	baseProposerReward := k.GetBaseProposerReward(ctx)
-	bonusProposerReward := k.GetBonusProposerReward(ctx)
+	baseProposerReward := k.GetProposerReward(ctx)
+	bonusProposerReward := k.GetSignerReward(ctx)
 	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.Mul(fractionVotes))
 	proposerReward := feesCollected.MulDec(proposerMultiplier)
 

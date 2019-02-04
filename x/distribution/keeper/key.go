@@ -25,8 +25,8 @@ var (
 	ValidatorSlashEventPrefix            = []byte{0x08} // key for validator slash fraction
 
 	ParamStoreKeyCommunityTax        = []byte("communitytax")
-	ParamStoreKeyBaseProposerReward  = []byte("baseproposerreward")
-	ParamStoreKeyBonusProposerReward = []byte("bonusproposerreward")
+	ParamStoreKeyProposerReward      = []byte("proposerreward")
+	ParamStoreKeySignerReward        = []byte("signerreward")
 	ParamStoreKeyWithdrawAddrEnabled = []byte("withdrawaddrenabled")
 )
 

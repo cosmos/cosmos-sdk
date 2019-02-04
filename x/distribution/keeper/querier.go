@@ -20,8 +20,8 @@ const (
 	QueryAllDelegationRewards = "all_delegation_rewards"
 
 	ParamCommunityTax        = "community_tax"
-	ParamBaseProposerReward  = "base_proposer_reward"
-	ParamBonusProposerReward = "bonus_proposer_reward"
+	ParamProposerReward      = "proposer_reward"
+	ParamSignerReward        = "signer_reward"
 	ParamWithdrawAddrEnabled = "withdraw_addr_enabled"
 )
 
@@ -60,14 +60,14 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, k Keeper
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
 		return bz, nil
-	case ParamBaseProposerReward:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetBaseProposerReward(ctx))
+	case ParamProposerReward:
+		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetProposerReward(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
 		return bz, nil
-	case ParamBonusProposerReward:
-		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetBonusProposerReward(ctx))
+	case ParamSignerReward:
+		bz, err := codec.MarshalJSONIndent(k.cdc, k.GetSignerReward(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}

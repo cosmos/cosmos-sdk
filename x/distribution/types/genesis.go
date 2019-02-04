@@ -50,8 +50,8 @@ type ValidatorSlashEventRecord struct {
 type GenesisState struct {
 	FeePool                         FeePool                                `json:"fee_pool"`
 	CommunityTax                    sdk.Dec                                `json:"community_tax"`
-	BaseProposerReward              sdk.Dec                                `json:"base_proposer_reward"`
-	BonusProposerReward             sdk.Dec                                `json:"bonus_proposer_reward"`
+	ProposerReward                  sdk.Dec                                `json:"proposer_reward"`
+	SignerReward                    sdk.Dec                                `json:"signer_reward"`
 	WithdrawAddrEnabled             bool                                   `json:"withdraw_addr_enabled"`
 	DelegatorWithdrawInfos          []DelegatorWithdrawInfo                `json:"delegator_withdraw_infos"`
 	PreviousProposer                sdk.ConsAddress                        `json:"previous_proposer"`
@@ -63,7 +63,7 @@ type GenesisState struct {
 	ValidatorSlashEvents            []ValidatorSlashEventRecord            `json:"validator_slash_events"`
 }
 
-func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusProposerReward sdk.Dec,
+func NewGenesisState(feePool FeePool, communityTax, proposerReward, signerReward sdk.Dec,
 	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r OutstandingRewards,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord,
@@ -72,8 +72,8 @@ func NewGenesisState(feePool FeePool, communityTax, baseProposerReward, bonusPro
 	return GenesisState{
 		FeePool:                         feePool,
 		CommunityTax:                    communityTax,
-		BaseProposerReward:              baseProposerReward,
-		BonusProposerReward:             bonusProposerReward,
+		ProposerReward:                  proposerReward,
+		SignerReward:                    signerReward,
 		WithdrawAddrEnabled:             withdrawAddrEnabled,
 		DelegatorWithdrawInfos:          dwis,
 		PreviousProposer:                pp,
@@ -91,8 +91,8 @@ func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		FeePool:                         InitialFeePool(),
 		CommunityTax:                    sdk.NewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:              sdk.NewDecWithPrec(1, 2), // 1%
-		BonusProposerReward:             sdk.NewDecWithPrec(4, 2), // 4%
+		ProposerReward:                  sdk.NewDecWithPrec(1, 2), // 1%
+		SignerReward:                    sdk.NewDecWithPrec(4, 2), // 4%
 		WithdrawAddrEnabled:             true,
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
 		PreviousProposer:                nil,
@@ -111,19 +111,19 @@ func ValidateGenesis(data GenesisState) error {
 		return fmt.Errorf("mint parameter CommunityTax should non-negative and "+
 			"less than one, is %s", data.CommunityTax.String())
 	}
-	if data.BaseProposerReward.IsNegative() {
-		return fmt.Errorf("mint parameter BaseProposerReward should be positive, is %s",
-			data.BaseProposerReward.String())
+	if data.ProposerReward.IsNegative() {
+		return fmt.Errorf("mint parameter ProposerReward should be positive, is %s",
+			data.ProposerReward.String())
 	}
-	if data.BonusProposerReward.IsNegative() {
-		return fmt.Errorf("mint parameter BonusProposerReward should be positive, is %s",
-			data.BonusProposerReward.String())
+	if data.SignerReward.IsNegative() {
+		return fmt.Errorf("mint parameter SignerReward should be positive, is %s",
+			data.SignerReward.String())
 	}
-	if (data.BaseProposerReward.Add(data.BonusProposerReward)).
+	if (data.ProposerReward.Add(data.SignerReward)).
 		GT(sdk.OneDec()) {
-		return fmt.Errorf("mint parameters BaseProposerReward and "+
-			"BonusProposerReward cannot add to be greater than one, "+
-			"adds to %s", data.BaseProposerReward.Add(data.BonusProposerReward).String())
+		return fmt.Errorf("mint parameters ProposerReward and "+
+			"SignerReward cannot add to be greater than one, "+
+			"adds to %s", data.ProposerReward.Add(data.SignerReward).String())
 	}
 	return data.FeePool.ValidateGenesis()
 }

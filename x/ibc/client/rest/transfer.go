@@ -3,8 +3,9 @@ package rest
 import (
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,8 +20,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 }
 
 type transferReq struct {
-	BaseReq utils.BaseReq `json:"base_req"`
-	Amount  sdk.Coins     `json:"amount"`
+	BaseReq rest.BaseReq `json:"base_req"`
+	Amount  sdk.Coins    `json:"amount"`
 }
 
 // TransferRequestHandler - http request handler to transfer coins to a address
@@ -33,12 +34,12 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 
 		to, err := sdk.AccAddressFromBech32(bech32Addr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		var req transferReq
-		err = utils.ReadRESTReq(w, r, cdc, &req)
+		err = rest.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
@@ -55,7 +56,7 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 			// address.
 			addr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
 
@@ -66,10 +67,10 @@ func TransferRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		msg := ibc.IBCTransferMsg{IBCPacket: packet}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

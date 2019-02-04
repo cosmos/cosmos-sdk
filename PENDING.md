@@ -5,14 +5,19 @@ BREAKING CHANGES
 * Gaia REST API (`gaiacli advanced rest-server`)
   * [\#3284](https://github.com/cosmos/cosmos-sdk/issues/3284) Rename the `name`
   field to `from` in the `base_req` body.
+  * [\#3485](https://github.com/cosmos/cosmos-sdk/pull/3485) Error responses are now JSON objects.
 
 * Gaia CLI  (`gaiacli`)
   - [#3399](https://github.com/cosmos/cosmos-sdk/pull/3399) Add `gaiad validate-genesis` command to facilitate checking of genesis files
   - [\#1894](https://github.com/cosmos/cosmos-sdk/issues/1894) `version` prints out short info by default. Add `--long` flag. Proper handling of `--format` flag introduced.
+  - [\#3465](https://github.com/cosmos/cosmos-sdk/issues/3465) `gaiacli rest-server` switched back to insecure mode by default:
+    - `--insecure` flag is removed.
+    - `--tls` is now used to enable secure layer.
 
 * Gaia
 
 * SDK
+  * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
 
 * Tendermint
 
@@ -55,6 +60,7 @@ IMPROVEMENTS
   * [\#3420](https://github.com/cosmos/cosmos-sdk/issues/3420) Added maximum length to governance proposal descriptions and titles
   * [\#3256](https://github.com/cosmos/cosmos-sdk/issues/3256) Add gas consumption
   for tx size in the ante handler.
+  * [\#3454](https://github.com/cosmos/cosmos-sdk/pull/3454) Add `--jail-whitelist` to `gaiad export` to enable testing of complex exports
   * [\#3424](https://github.com/cosmos/cosmos-sdk/issues/3424) Allow generation of gentxs with empty memo field.
 
 * SDK
@@ -78,6 +84,8 @@ BUG FIXES
     passed on the command line.
 
 * Gaia
+  * [\#3486](https://github.com/cosmos/cosmos-sdk/pull/3486) Use AmountOf in
+    vesting accounts instead of zipping/aligning denominations.
 
 * SDK
 

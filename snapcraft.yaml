@@ -1,12 +1,11 @@
-name: gaia # you probably want to 'snapcraft register <name>'
-# base: core18 # the base snap is the execution environment for this snap
-version: '@VERSION@' # just for humans, typically '1.2+git' or '1.3.2'
+name: gaia
+version: git
 summary: Gaia Daemon # 79 char long summary
 description: |
   This snap provides the Gaia daemon gaiad and the command line
   tool gaiacli.
 grade: devel # must be 'stable' to release into candidate/stable channels
-confinement: strict # use 'strict' once you have the right plugs and slots
+confinement: strict
 
 apps:
     gaiad:
@@ -24,17 +23,12 @@ parts:
         rootdir=$(pwd)
         gitroot=$(git rev-parse --show-toplevel)
         cd ${gitroot} && git archive \
-            -o ${rootdir}/gaia-@VERSION@.tar.gz \
-            --format tar.gz -9 --prefix gaia-@VERSION@/ HEAD
+            -o ${rootdir}/gaia-git.tar.gz \
+            --format tar.gz -9 --prefix gaia-git/ HEAD
         cd ${rootdir}
-        tar xf gaia-@VERSION@.tar.gz ; rm -f gaia-@VERSION@.tar.gz
+        tar xf gaia-git.tar.gz ; rm -f gaia-git.tar.gz
         mkdir -p go/src/github.com/cosmos bin
-        mv gaia-@VERSION@/ go/src/github.com/cosmos/cosmos-sdk/
-
-        # Use the following instructions to build a package from a release.
-        # wget https://github.com/cosmos/cosmos-sdk/archive/v@VERSION@.tar.gz
-        # tar xvf v@VERSION@.tar.gz
-        # rm v@VERSION@.tar.gz
+        mv gaia-git/ go/src/github.com/cosmos/cosmos-sdk/
 
     build-snaps: [go]
     override-build: |

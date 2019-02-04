@@ -17,6 +17,7 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
+  * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
 
 * Tendermint
 

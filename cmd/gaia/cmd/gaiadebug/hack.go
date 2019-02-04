@@ -50,7 +50,7 @@ func runHackCmd(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	app := NewGaiaApp(logger, db, baseapp.SetPruning(store.NewPruningOptions(viper.GetString("pruning"))))
+	app := NewGaiaApp(logger, db, baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))))
 
 	// print some info
 	id := app.LastCommitID()

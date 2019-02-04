@@ -14,7 +14,7 @@ echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 ```
 
 ::: tip
-**Go 1.11.4+** is required for the Cosmos SDK.
+**Go 1.11.5+** is required for the Cosmos SDK.
 :::
 
 ### Install the binaries

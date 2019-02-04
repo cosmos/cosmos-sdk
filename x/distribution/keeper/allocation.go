@@ -29,9 +29,7 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	fractionVotes := sdk.NewDec(sumPrecommitPower).Quo(sdk.NewDec(totalPower))
 
 	// calculate proposer reward
-	baseProposerReward := k.GetProposerReward(ctx)
-	bonusProposerReward := k.GetSignerReward(ctx)
-	proposerMultiplier := baseProposerReward.Add(bonusProposerReward.Mul(fractionVotes))
+	proposerMultiplier := k.GetProposerReward(ctx).Mul(fractionVotes)
 	proposerReward := feesCollected.MulDec(proposerMultiplier)
 
 	// pay proposer
@@ -44,16 +42,16 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
 
 	// allocate tokens proportionally to voting power
-	// TODO consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
+	// consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
 	for _, vote := range votes {
-		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		if vote.SignedLastBlock {
+			powerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(sumPrecommitPower))
+			reward := feesCollected.MulDec(voteMultiplier).MulDec(powerFraction)
 
-		// TODO likely we should only reward validators who actually signed the block.
-		// ref https://github.com/cosmos/cosmos-sdk/issues/2525#issuecomment-430838701
-		powerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(totalPower))
-		reward := feesCollected.MulDec(voteMultiplier).MulDec(powerFraction)
-		k.AllocateTokensToValidator(ctx, validator, reward)
-		remaining = remaining.Minus(reward)
+			validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+			k.AllocateTokensToValidator(ctx, validator, reward)
+			remaining = remaining.Minus(reward)
+		}
 	}
 
 	// allocate community funding

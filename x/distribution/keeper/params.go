@@ -10,7 +10,6 @@ func ParamTypeTable() params.TypeTable {
 	return params.NewTypeTable(
 		ParamStoreKeyCommunityTax, sdk.Dec{},
 		ParamStoreKeyProposerReward, sdk.Dec{},
-		ParamStoreKeySignerReward, sdk.Dec{},
 		ParamStoreKeyWithdrawAddrEnabled, false,
 	)
 }
@@ -39,19 +38,6 @@ func (k Keeper) GetProposerReward(ctx sdk.Context) sdk.Dec {
 // nolint: errcheck
 func (k Keeper) SetProposerReward(ctx sdk.Context, fraction sdk.Dec) {
 	k.paramSpace.Set(ctx, ParamStoreKeyProposerReward, &fraction)
-}
-
-// returns the current SignerReward rate from the global param store
-// nolint: errcheck
-func (k Keeper) GetSignerReward(ctx sdk.Context) sdk.Dec {
-	var fraction sdk.Dec
-	k.paramSpace.Get(ctx, ParamStoreKeySignerReward, &fraction)
-	return fraction
-}
-
-// nolint: errcheck
-func (k Keeper) SetSignerReward(ctx sdk.Context, fraction sdk.Dec) {
-	k.paramSpace.Set(ctx, ParamStoreKeySignerReward, &fraction)
 }
 
 // returns the current WithdrawAddrEnabled

@@ -136,7 +136,6 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 	keeper.SetFeePool(ctx, types.InitialFeePool())
 	keeper.SetCommunityTax(ctx, communityTax)
 	keeper.SetProposerReward(ctx, sdk.NewDecWithPrec(1, 2))
-	keeper.SetSignerReward(ctx, sdk.NewDecWithPrec(4, 2))
 
 	return ctx, accountKeeper, keeper, sk, fck
 }

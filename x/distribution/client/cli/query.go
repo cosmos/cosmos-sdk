@@ -130,13 +130,15 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			valAddr := ""
+			var resp []byte
+			var err error
 			if len(args) == 2 {
-				// query for rewards from a particular validator
-				valAddr = args[1]
+				// query for rewards from a particular delegation
+				resp, err = common.QueryDelegationRewards(cliCtx, cdc, queryRoute, args[0], args[1])
+			} else {
+				// query for delegator total rewards
+				resp, err = common.QueryDelegatorTotalRewards(cliCtx, cdc, queryRoute, args[0])
 			}
-
-			resp, err := common.QueryRewards(cliCtx, cdc, queryRoute, args[0], valAddr)
 			if err != nil {
 				return err
 			}

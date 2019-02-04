@@ -61,14 +61,14 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router,
 	).Methods("GET")
 }
 
-// HTTP request handler to query delegators rewards
+// HTTP request handler to query the total rewards balance from all delegations
 func delegatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute string) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// query for rewards from a particular delegator
-		res, ok := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute,
-			mux.Vars(r)["delegatorAddr"], "")
+		res, ok := checkResponseQueryDelegatorTotalRewards(w, cliCtx, cdc, queryRoute,
+			mux.Vars(r)["delegatorAddr"])
 		if !ok {
 			return
 		}
@@ -83,7 +83,7 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		// query for rewards from a particular delegation
-		res, ok := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute,
+		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, cdc, queryRoute,
 			mux.Vars(r)["delegatorAddr"], mux.Vars(r)["validatorAddr"])
 		if !ok {
 			return
@@ -155,7 +155,7 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 		// self bond rewards
 		delAddr := sdk.AccAddress(validatorAddr)
-		rewardsRes, ok := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute,
+		rewardsRes, ok := checkResponseQueryDelegationRewards(w, cliCtx, cdc, queryRoute,
 			delAddr.String(), valAddr)
 		if !ok {
 			return
@@ -182,7 +182,7 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 		}
 
 		delAddr := sdk.AccAddress(validatorAddr).String()
-		res, ok := checkResponseQueryRewards(w, cliCtx, cdc, queryRoute, delAddr, valAddr)
+		res, ok := checkResponseQueryDelegationRewards(w, cliCtx, cdc, queryRoute, delAddr, valAddr)
 		if !ok {
 			return
 		}
@@ -219,10 +219,22 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	}
 }
 
-func checkResponseQueryRewards(w http.ResponseWriter, cliCtx context.CLIContext, cdc *codec.Codec,
+func checkResponseQueryDelegatorTotalRewards(w http.ResponseWriter, cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute, delAddr string) (res []byte, ok bool) {
+
+	res, err := common.QueryDelegatorTotalRewards(cliCtx, cdc, queryRoute, delAddr)
+	if err != nil {
+		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		return nil, false
+	}
+
+	return res, true
+}
+
+func checkResponseQueryDelegationRewards(w http.ResponseWriter, cliCtx context.CLIContext, cdc *codec.Codec,
 	queryRoute, delAddr, valAddr string) (res []byte, ok bool) {
 
-	res, err := common.QueryRewards(cliCtx, cdc, queryRoute, delAddr, valAddr)
+	res, err := common.QueryDelegationRewards(cliCtx, cdc, queryRoute, delAddr, valAddr)
 	if err != nil {
 		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return nil, false

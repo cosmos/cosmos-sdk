@@ -40,36 +40,38 @@ func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, er
 		retBonusProposerReward, retWithdrawAddrEnabled), nil
 }
 
-// QueryParams queries delegator rewards. If valAddr is empty string,
-// it returns all delegations rewards for the given delegator; else
-// it returns the rewards for the specific delegation.
-//
-// TODO refactor remove this function, we should likely not clump these two
-// cases together
-func QueryRewards(cliCtx context.CLIContext, cdc *codec.Codec,
-	queryRoute, delAddr, valAddr string) ([]byte, error) {
+// QueryDelegatorTotalRewards queries delegator total rewards.
+func QueryDelegatorTotalRewards(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute, delAddr string) ([]byte, error) {
 
 	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	var route string
-	var bz []byte
+	return cliCtx.QueryWithData(
+		fmt.Sprintf("custom/%s/delegator_total_rewards", queryRoute),
+		cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr)),
+	)
+}
 
-	if valAddr == "" {
-		bz = cdc.MustMarshalJSON(distr.NewQueryDelegatorParams(delegatorAddr))
-		route = fmt.Sprintf("custom/%s/delegator_total_rewards", queryRoute)
-	} else {
-		validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
-		if err != nil {
-			return nil, err
-		}
-		bz = cdc.MustMarshalJSON(distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr))
-		route = fmt.Sprintf("custom/%s/delegation_rewards", queryRoute)
+// QueryDelegationRewards queries a delegation rewards.
+func QueryDelegationRewards(cliCtx context.CLIContext, cdc *codec.Codec,
+	queryRoute, delAddr, valAddr string) ([]byte, error) {
+
+	delegatorAddr, err := sdk.AccAddressFromBech32(delAddr)
+	if err != nil {
+		return nil, err
+	}
+	validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
+	if err != nil {
+		return nil, err
 	}
 
-	return cliCtx.QueryWithData(route, bz)
+	return cliCtx.QueryWithData(
+		fmt.Sprintf("custom/%s/delegation_rewards", queryRoute),
+		cdc.MustMarshalJSON(distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)),
+	)
 }
 
 // QueryDelegatorValidators returns delegator's list of validators

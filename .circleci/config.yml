@@ -264,52 +264,6 @@ jobs:
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
 
-  snap-edge:
-      working_directory: /home/circleci/.snap_workspace/src/github.com/cosmos/cosmos-sdk
-      machine: true
-      environment:
-        LC_ALL: C.UTF-8
-        LANG: C.UTF-8
-        GOPATH: /tmp/workspace
-        GOBIN: /tmp/workspace/bin
-      parallelism: 1
-      steps:
-        - checkout
-        - attach_workspace:
-            at: /tmp/workspace
-        - run:
-            name: Install prerequitistes
-            command: |
-              sudo sh -c "echo '#!/bin/sh' > /usr/sbin/update-initramfs"
-              sudo sh -c "echo 'exit 0' >> /usr/sbin/update-initramfs"
-              sudo apt update -y &>/dev/null
-              sudo apt install -y build-essential snapd
-              sudo snap install snapcraft --edge --classic
-        - run:
-            name: prepping snap build
-            command: |
-              /snap/bin/snapcraft version
-              make snapcraft.yaml
-        - run:
-            name: build edge snap
-            command: /snap/bin/snapcraft
-        - run:
-            name: Create credentials file
-            command: |
-              echo '[login.ubuntu.com]' > credentials
-              echo "macaroon = $SNAPCRAFT_CREDENTIALS_MACAROON" >> credentials
-              echo "unbound_discharge = $SNAPCRAFT_CREDENTIALS_UNBOUND_DISCHARGE" >> credentials
-              echo "email = $SNAPCRAFT_CREDENTIALS_EMAIL" >> credentials
-        - run:
-            name: Authenticate snapcraft
-            command: /snap/bin/snapcraft login --with credentials
-        - run:
-            name: Push/release snap
-            command: /snap/bin/snapcraft push *.snap --release edge
-        - run:
-            name: Clean up credentials file
-            command: rm -vf credentials
-
   deploy_docs:
     <<: *docs_deploy
     steps:
@@ -430,14 +384,6 @@ workflows:
       - localnet:
           requires:
             - setup_dependencies
-      - snap-edge:
-          requires:
-            - setup_dependencies
-          filters:
-            branches:
-              only:
-                - master
-                - develop
       - upload_coverage:
           requires:
             - test_cover

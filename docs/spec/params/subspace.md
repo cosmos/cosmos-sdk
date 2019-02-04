@@ -20,7 +20,7 @@ Only primary keys have to be registered on the `KeyTable`. Subkeys inherit the a
 
 Modules often define a struct of parameters. Instead of calling methods with each of those parameters, when the struct implements `ParamSet`, it can be used with the following methods:
 
-* `KeyTable.RegisterParamSet()`: registeres all parameters in the struct
+* `KeyTable.RegisterParamSet()`: registers all parameters in the struct
 * `Subspace.{Get, Set}ParamSet()`: Get to & Set from the struct
 
 The implementor should be a pointer in order to use `GetParamSet()`

@@ -12,11 +12,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	client "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/rest"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
@@ -170,8 +167,7 @@ func TestCoinSend(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	// query sender
 	acc = getAccount(t, port, addr)
@@ -232,8 +228,7 @@ func TestCoinSend(t *testing.T) {
 	require.Nil(t, err)
 
 	tests.WaitForHeight(resultTx.Height+1, port)
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	acc = getAccount(t, port, addr)
 	expectedBalance = expectedBalance.Minus(fees[0])
@@ -348,11 +343,10 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// check if tx was committed
-	var resultTx ctypes.ResultBroadcastTxCommit
+	var resultTx sdk.ResponseFormat
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
-	require.Equal(t, gasEstimate, resultTx.DeliverTx.GasWanted)
+	require.Equal(t, uint32(0), resultTx.Code)
+	require.Equal(t, gasEstimate, resultTx.GasWanted)
 }
 
 func TestTxs(t *testing.T) {
@@ -360,7 +354,7 @@ func TestTxs(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
-	var emptyTxs []tx.Info
+	var emptyTxs []sdk.ResponseFormat
 	txs := getTransactions(t, port)
 	require.Equal(t, emptyTxs, txs)
 
@@ -380,14 +374,13 @@ func TestTxs(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx is queryable
-	tx := getTransaction(t, port, resultTx.Hash.String())
-	require.Equal(t, resultTx.Hash, tx.Hash)
+	tx := getTransaction(t, port, resultTx.TxHash)
+	require.Equal(t, resultTx.TxHash, tx.TxHash)
 
 	// query sender
 	txs = getTransactions(t, port, fmt.Sprintf("sender=%s", addr.String()))
 	require.Len(t, txs, 1)
 	require.Equal(t, resultTx.Height, txs[0].Height)
-	fmt.Println(txs[0])
 
 	// query recipient
 	txs = getTransactions(t, port, fmt.Sprintf("recipient=%s", receiveAddr.String()))
@@ -465,8 +458,7 @@ func TestBonding(t *testing.T) {
 	resultTx := doDelegate(t, port, name1, pw, addr, operAddrs[0], 60, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	// query tx
 	txs := getTransactions(t, port,
@@ -507,8 +499,7 @@ func TestBonding(t *testing.T) {
 	resultTx = doUndelegate(t, port, name1, pw, addr, operAddrs[0], 30, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	// sender should have not received any coins as the unbonding has only just begun
 	acc = getAccount(t, port, addr)
@@ -537,8 +528,7 @@ func TestBonding(t *testing.T) {
 	resultTx = doBeginRedelegation(t, port, name1, pw, addr, operAddrs[0], operAddrs[1], 30, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	// verify balance after paying fees
 	acc = getAccount(t, port, addr)
@@ -618,11 +608,10 @@ func TestSubmitProposal(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	var proposalID uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID)
 
 	// verify balance
 	acc = getAccount(t, port, addr)
@@ -651,11 +640,10 @@ func TestDeposit(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	var proposalID uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID)
 
 	// verify balance
 	acc = getAccount(t, port, addr)
@@ -704,11 +692,10 @@ func TestVote(t *testing.T) {
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// check if tx was committed
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	var proposalID uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID)
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID)
 
 	// verify balance
 	acc = getAccount(t, port, addr)
@@ -802,18 +789,18 @@ func TestProposalsQuery(t *testing.T) {
 	// Addr1 proposes (and deposits) proposals #1 and #2
 	resultTx := doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit, fees)
 	var proposalID1 uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID1)
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID1)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	resultTx = doSubmitProposal(t, port, seeds[0], names[0], passwords[0], addrs[0], halfMinDeposit, fees)
 	var proposalID2 uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID2)
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID2)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 proposes (and deposits) proposals #3
 	resultTx = doSubmitProposal(t, port, seeds[1], names[1], passwords[1], addrs[1], halfMinDeposit, fees)
 	var proposalID3 uint64
-	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.DeliverTx.GetData(), &proposalID3)
+	cdc.MustUnmarshalBinaryLengthPrefixed(resultTx.Data, &proposalID3)
 	tests.WaitForHeight(resultTx.Height+1, port)
 
 	// Addr2 deposits on proposals #2 & #3

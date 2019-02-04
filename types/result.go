@@ -7,7 +7,7 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-// Result is the union of ResponseDeliverTx and ResponseCheckTx.
+// Result is the union of ResponseFormat and ResponseCheckTx.
 type Result struct {
 
 	// Code is the response code, is stored back on the chain.
@@ -41,8 +41,8 @@ func (res Result) IsOK() bool {
 	return res.Code.IsOK()
 }
 
-// Is a version of ResponseDeliverTx where the tags are StringTags rather than []byte tags
-type ResponseDeliverTx struct {
+// Is a version of ResponseFormat where the tags are StringTags rather than []byte tags
+type ResponseFormat struct {
 	Height    int64      `json:"height"`
 	TxHash    string     `json:"txhash"`
 	Code      uint32     `json:"code,omitempty"`
@@ -53,10 +53,26 @@ type ResponseDeliverTx struct {
 	GasUsed   int64      `json:"gas_used,omitempty"`
 	Tags      StringTags `json:"tags,omitempty"`
 	Codespace string     `json:"codespace,omitempty"`
+	Tx        Tx         `json:"tx,omitempty"`
 }
 
-func NewResponseDeliverTxCommit(res *ctypes.ResultBroadcastTxCommit) ResponseDeliverTx {
-	return ResponseDeliverTx{
+func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) ResponseFormat {
+	return ResponseFormat{
+		TxHash:    res.Hash.String(),
+		Height:    res.Height,
+		Code:      res.TxResult.Code,
+		Data:      res.TxResult.Data,
+		Log:       res.TxResult.Log,
+		Info:      res.TxResult.Info,
+		GasWanted: res.TxResult.GasWanted,
+		GasUsed:   res.TxResult.GasUsed,
+		Tags:      TagsToStringTags(res.TxResult.Tags),
+		Tx:        tx,
+	}
+}
+
+func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) ResponseFormat {
+	return ResponseFormat{
 		Height:    res.Height,
 		TxHash:    res.Hash.String(),
 		Code:      res.DeliverTx.Code,
@@ -70,8 +86,8 @@ func NewResponseDeliverTxCommit(res *ctypes.ResultBroadcastTxCommit) ResponseDel
 	}
 }
 
-func NewResponseDeliverTx(res *ctypes.ResultBroadcastTx) ResponseDeliverTx {
-	return ResponseDeliverTx{
+func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) ResponseFormat {
+	return ResponseFormat{
 		Code:   res.Code,
 		Data:   res.Data.Bytes(),
 		Log:    res.Log,
@@ -79,7 +95,7 @@ func NewResponseDeliverTx(res *ctypes.ResultBroadcastTx) ResponseDeliverTx {
 	}
 }
 
-func (r ResponseDeliverTx) String() string {
+func (r ResponseFormat) String() string {
 	var sb strings.Builder
 	sb.WriteString("Response:\n")
 

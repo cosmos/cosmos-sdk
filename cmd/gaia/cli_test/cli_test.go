@@ -270,7 +270,7 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.NotEmpty(t, stderr)
 	require.True(t, success)
 	cdc := app.MakeCodec()
-	sendResp := sdk.ResponseDeliverTx{}
+	sendResp := sdk.ResponseFormat{}
 	err := cdc.UnmarshalJSON([]byte(stdout), &sendResp)
 	require.Nil(t, err)
 	require.True(t, sendResp.GasWanted >= sendResp.GasUsed)
@@ -678,7 +678,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	success, stdout, _ = f.TxBroadcast(signedTxFile.Name())
 	require.True(t, success)
 
-	var result sdk.ResponseDeliverTx
+	var result sdk.ResponseFormat
 
 	// Unmarshal the response and ensure that gas was properly used
 	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))

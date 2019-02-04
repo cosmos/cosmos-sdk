@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rest"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -145,7 +144,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
 		isRedTx := contains(typesQuerySlice, "redelegate")
-		var txs = []tx.Info{}
+		var txs = []sdk.ResponseFormat{}
 		var actions []string
 
 		switch {

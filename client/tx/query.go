@@ -5,19 +5,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
-
-	"github.com/tendermint/tendermint/libs/common"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -100,27 +96,23 @@ func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
 	return nil
 }
 
-func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (Info, error) {
+func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (sdk.ResponseFormat, error) {
 	tx, err := parseTx(cdc, res.Tx)
 	if err != nil {
-		return Info{}, err
+		return sdk.ResponseFormat{}, err
 	}
 
-	return Info{
-		Hash:   res.Hash,
-		Height: res.Height,
-		Tx:     tx,
-		Result: res.TxResult,
-	}, nil
+	return sdk.NewResponseResultTx(res, tx), nil
 }
 
-// Info is used to prepare info to display
-type Info struct {
-	Hash   common.HexBytes        `json:"hash"`
-	Height int64                  `json:"height"`
-	Tx     sdk.Tx                 `json:"tx"`
-	Result abci.ResponseDeliverTx `json:"result"`
-}
+//
+// // Info is used to prepare info to display
+// type Info struct {
+// 	Hash   common.HexBytes       `json:"hash"`
+// 	Height int64                 `json:"height"`
+// 	Tx     sdk.Tx                `json:"tx"`
+// 	Result sdk.ResponseFormat `json:"result"`
+// }
 
 func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 	var tx auth.StdTx

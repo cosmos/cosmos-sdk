@@ -655,20 +655,20 @@ func TestSimulateTx(t *testing.T) {
 		app.BeginBlock(abci.RequestBeginBlock{})
 
 		tx := newTxCounter(count, count)
+		txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
+		require.Nil(t, err)
 
 		// simulate a message, check gas reported
-		result := app.Simulate(tx)
+		result := app.Simulate(txBytes, tx)
 		require.True(t, result.IsOK(), result.Log)
 		require.Equal(t, gasConsumed, result.GasUsed)
 
 		// simulate again, same result
-		result = app.Simulate(tx)
+		result = app.Simulate(txBytes, tx)
 		require.True(t, result.IsOK(), result.Log)
 		require.Equal(t, gasConsumed, result.GasUsed)
 
 		// simulate by calling Query with encoded tx
-		txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
-		require.Nil(t, err)
 		query := abci.RequestQuery{
 			Path: "/app/simulate",
 			Data: txBytes,

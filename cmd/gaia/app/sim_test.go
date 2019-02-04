@@ -79,7 +79,7 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
 		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
 	}
-	return json.RawMessage(genesis.AppState), newAccs, genesis.ChainID
+	return genesis.AppState, newAccs, genesis.ChainID
 }
 
 func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
@@ -138,11 +138,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	authGenesis := auth.GenesisState{
 		Params: auth.Params{
-			MemoCostPerByte:        uint64(r.Intn(10) + 1),
-			MaxMemoCharacters:      uint64(r.Intn(200-100) + 100),
+			MaxMemoCharacters:      uint64(randIntBetween(r, 100, 200)),
 			TxSigLimit:             uint64(r.Intn(7) + 1),
-			SigVerifyCostED25519:   uint64(r.Intn(1000-500) + 500),
-			SigVerifyCostSecp256k1: uint64(r.Intn(1000-500) + 500),
+			TxSizeCostPerByte:      uint64(randIntBetween(r, 5, 15)),
+			SigVerifyCostED25519:   uint64(randIntBetween(r, 500, 1000)),
+			SigVerifyCostSecp256k1: uint64(randIntBetween(r, 500, 1000)),
 		},
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)

@@ -19,6 +19,15 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
+// GasEstimateResponse defines a response definition for tx gas estimation.
+type GasEstimateResponse struct {
+	GasEstimate uint64 `json:"gas_estimate"`
+}
+
+func (gr GasEstimateResponse) String() string {
+	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
+}
+
 // CompleteAndBroadcastTxCLI implements a utility function that facilitates
 // sending a series of messages in a signed transaction given a TxBuilder and a
 // QueryContext. It ensures that the account exists, has a proper number and
@@ -39,8 +48,11 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.GetGas())
+
+		gasEst := GasEstimateResponse{GasEstimate: txBldr.GetGas()}
+		fmt.Fprintf(os.Stderr, gasEst.String())
 	}
+
 	if cliCtx.Simulate {
 		return nil
 	}

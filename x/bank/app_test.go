@@ -141,7 +141,7 @@ func TestMsgSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -180,7 +180,7 @@ func TestMsgSendMultipleOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -224,7 +224,7 @@ func TestSengMsgMultipleInOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)
@@ -269,7 +269,7 @@ func TestMsgSendDependent(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		mock.SignCheckDeliver(t, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
+		mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, tc.msgs, tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 
 		for _, eb := range tc.expectedBalances {
 			mock.CheckBalance(t, mapp, eb.addr, eb.coins)

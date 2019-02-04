@@ -209,7 +209,9 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees)
+	res, body, _ = doTransferWithGas(
+		t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees,
+	)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var gasEstResp rest.GasEstimateResponse
@@ -285,7 +287,9 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	acc := getAccount(t, port, addr)
 
 	// simulate tx
-	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1, true, false, fees)
+	res, body, _ := doTransferWithGas(
+		t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1.0, true, false, fees,
+	)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var gasEstResp rest.GasEstimateResponse

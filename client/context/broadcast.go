@@ -22,7 +22,6 @@ func (ctx CLIContext) BroadcastTx(txBytes []byte) (res sdk.ResponseFormat, err e
 		return
 	}
 
-	ctx.PrintOutput(res)
 	return
 }
 

@@ -55,6 +55,7 @@ var (
 	NewQueryValidatorCommissionParams   = keeper.NewQueryValidatorCommissionParams
 	NewQueryValidatorSlashesParams      = keeper.NewQueryValidatorSlashesParams
 	NewQueryDelegationRewardsParams     = keeper.NewQueryDelegationRewardsParams
+	NewQueryDelegatorParams             = keeper.NewQueryDelegatorParams
 	NewQueryDelegatorWithdrawAddrParams = keeper.NewQueryDelegatorWithdrawAddrParams
 	DefaultParamspace                   = keeper.DefaultParamspace
 

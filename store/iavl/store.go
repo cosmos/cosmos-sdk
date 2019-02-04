@@ -130,7 +130,7 @@ func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 
 // Implements types.KVStore.
 func (st *Store) Set(key, value []byte) {
-	stypes.AssertValidValue(value)
+	types.AssertValidValue(value)
 	st.tree.Set(key, value)
 }
 

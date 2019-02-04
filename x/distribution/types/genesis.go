@@ -88,8 +88,8 @@ func NewGenesisState(feePool FeePool, communityTax, proposerReward sdk.Dec,
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		FeePool:                         InitialFeePool(),
-		CommunityTax:                    sdk.NewDecWithPrec(2, 2), // 2%
-		ProposerReward:                  sdk.NewDecWithPrec(5, 2), // 5%
+		CommunityTax:                    sdk.NewDecWithPrec(2, 2),   // 2%
+		ProposerReward:                  sdk.NewDecWithPrec(428, 2), // 42.8%
 		WithdrawAddrEnabled:             true,
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
 		PreviousProposer:                nil,

@@ -26,6 +26,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -626,7 +627,7 @@ func doSign(t *testing.T, port, name, password, chainID string, accnum, sequence
 	var signedMsg auth.StdTx
 	payload := authrest.SignBody{
 		Tx: msg,
-		BaseReq: client.NewBaseReq(
+		BaseReq: rest.NewBaseReq(
 			name, password, "", chainID, "", "", accnum, sequence, nil, nil, false, false,
 		),
 	}
@@ -687,7 +688,7 @@ func doTransferWithGas(
 		from = addr.String()
 	}
 
-	baseReq := client.NewBaseReq(
+	baseReq := rest.NewBaseReq(
 		from, password, memo, chainID, gas,
 		fmt.Sprintf("%f", gasAdjustment), accnum, sequence, fees, nil,
 		generateOnly, simulate,
@@ -721,7 +722,7 @@ func doTransferWithGasAccAuto(
 	receiveAddr = sdk.AccAddress(receiveInfo.GetPubKey().Address())
 	chainID := viper.GetString(client.FlagChainID)
 
-	baseReq := client.NewBaseReq(
+	baseReq := rest.NewBaseReq(
 		from, password, memo, chainID, gas,
 		fmt.Sprintf("%f", gasAdjustment), 0, 0, fees, nil, generateOnly, simulate,
 	)
@@ -738,6 +739,11 @@ func doTransferWithGasAccAuto(
 	return
 }
 
+type sendReq struct {
+	Amount  sdk.Coins    `json:"amount"`
+	BaseReq rest.BaseReq `json:"base_req"`
+}
+
 // ----------------------------------------------------------------------
 // ICS 21 - Stake
 // ----------------------------------------------------------------------
@@ -749,8 +755,8 @@ func doDelegate(t *testing.T, port, name, password string,
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := client.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
-	msg := client.MsgDelegationsInput{
+	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
+	msg := msgDelegationsInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
@@ -768,6 +774,13 @@ func doDelegate(t *testing.T, port, name, password string,
 	return result
 }
 
+type msgDelegationsInput struct {
+	BaseReq       rest.BaseReq   `json:"base_req"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
+	Delegation    sdk.Coin       `json:"delegation"`
+}
+
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doUndelegate(t *testing.T, port, name, password string,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
@@ -776,8 +789,8 @@ func doUndelegate(t *testing.T, port, name, password string,
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := client.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
-	msg := client.MsgUndelegateInput{
+	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
+	msg := msgUndelegateInput{
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
@@ -796,6 +809,13 @@ func doUndelegate(t *testing.T, port, name, password string,
 	return result
 }
 
+type msgUndelegateInput struct {
+	BaseReq       rest.BaseReq   `json:"base_req"`
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"` // in bech32
+	ValidatorAddr sdk.ValAddress `json:"validator_addr"` // in bech32
+	SharesAmount  sdk.Dec        `json:"shares"`
+}
+
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doBeginRedelegation(t *testing.T, port, name, password string,
 	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
@@ -805,7 +825,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	sequence := acc.GetSequence()
 
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := client.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
+	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
 	msg := client.MsgBeginRedelegateInput{
 		BaseReq:          baseReq,
@@ -825,6 +845,14 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	require.Nil(t, err)
 
 	return result
+}
+
+type msgBeginRedelegateInput struct {
+	BaseReq          rest.BaseReq   `json:"base_req"`
+	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
+	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
+	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // in bech32
+	SharesAmount     sdk.Dec        `json:"shares"`
 }
 
 // GET /staking/delegators/{delegatorAddr}/delegations Get all delegations from a delegator
@@ -1028,7 +1056,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := client.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
+	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
 	pr := client.PostProposalReq{
 		Title:          "Test",
@@ -1051,6 +1079,15 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	require.Nil(t, err)
 
 	return results
+}
+
+type postProposalReq struct {
+	BaseReq        rest.BaseReq   `json:"base_req"`
+	Title          string         `json:"title"`           //  Title of the proposal
+	Description    string         `json:"description"`     //  Description of the proposal
+	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
+	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
 }
 
 // GET /gov/proposals Query proposals
@@ -1115,7 +1152,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := client.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
+	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
 	dr := client.DepositReq{
 		Depositor: proposerAddr,
@@ -1134,6 +1171,12 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	require.Nil(t, err)
 
 	return results
+}
+
+type depositReq struct {
+	BaseReq   rest.BaseReq   `json:"base_req"`
+	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
+	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
 }
 
 // GET /gov/proposals/{proposalId}/deposits Query deposits
@@ -1163,7 +1206,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := client.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
+	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
 
 	vr := client.VoteReq{
 		Voter:   proposerAddr,
@@ -1182,6 +1225,12 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	require.Nil(t, err)
 
 	return results
+}
+
+type voteReq struct {
+	BaseReq rest.BaseReq   `json:"base_req"`
+	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
+	Option  string         `json:"option"` //  option from OptionSet chosen by the voter
 }
 
 // GET /gov/proposals/{proposalId}/votes Query voters
@@ -1289,7 +1338,7 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 func doUnjail(t *testing.T, port, seed, name, password string,
 	valAddr sdk.ValAddress, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
 	chainID := viper.GetString(client.FlagChainID)
-	baseReq := client.NewBaseReq(name, password, "", chainID, "", "", 1, 1, fees, nil, false, false)
+	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", 1, 1, fees, nil, false, false)
 
 	ur := client.UnjailReq{
 		BaseReq: baseReq,
@@ -1304,4 +1353,8 @@ func doUnjail(t *testing.T, port, seed, name, password string,
 	require.Nil(t, err)
 
 	return results[0]
+}
+
+type unjailReq struct {
+	BaseReq rest.BaseReq `json:"base_req"`
 }

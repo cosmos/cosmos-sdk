@@ -15,8 +15,8 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
@@ -271,7 +271,7 @@ func TestCoinSend(t *testing.T) {
 	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var gasEstResp utils.GasEstimateResponse
+	var gasEstResp rest.GasEstimateResponse
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &gasEstResp))
 	require.NotZero(t, gasEstResp.GasEstimate)
 
@@ -347,7 +347,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1, true, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var gasEstResp utils.GasEstimateResponse
+	var gasEstResp rest.GasEstimateResponse
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &gasEstResp))
 	require.NotZero(t, gasEstResp.GasEstimate)
 
@@ -374,7 +374,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 
 	payload := authrest.SignBody{
 		Tx: msg,
-		BaseReq: client.NewBaseReq(
+		BaseReq: rest.NewBaseReq(
 			name1, pw, "", viper.GetString(client.FlagChainID), "", "",
 			accnum, sequence, nil, nil, false, false,
 		),

@@ -15,6 +15,7 @@ BREAKING CHANGES
     - `--tls` is now used to enable secure layer.
 
 * Gaia
+  *  [\#3457](https://github.com/cosmos/cosmos-sdk/issues/3457) Changed governance tally validatorGovInfo to use sdk.Int power instead of sdk.Dec
 
 * SDK
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.

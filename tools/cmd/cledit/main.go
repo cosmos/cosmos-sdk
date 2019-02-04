@@ -77,6 +77,20 @@ func NewRelease() *Release {
 	return &Release{Breaking: NewSection(), Features: NewSection(), Improvements: NewSection(), Bugfixes: NewSection()}
 }
 
+func (r Release) GetSection(name string) (*Section, error) {
+	switch name {
+	case "breaking":
+		return r.Breaking, nil
+	case "improvements":
+		return r.Improvements, nil
+	case "features":
+		return r.Features, nil
+	case "bugfixes":
+		return r.Bugfixes, nil
+	}
+	return nil, errors.New("unknown section")
+}
+
 var (
 	progName string
 
@@ -138,22 +152,13 @@ func main() {
 	}
 }
 
-func newFile() { fmt.Printf("%s", mustMarshal(Release{})) }
+func newFile() { fmt.Printf("%s", mustMarshal(NewRelease())) }
 
 func editFile(clFile, section, stanza string) {
 	r := unmarshalChangelogFile(clFile)
 
-	var releaseSection *Section
-	switch section {
-	case "breaking":
-		releaseSection = r.Breaking
-	case "features":
-		releaseSection = r.Features
-	case "improvements":
-		releaseSection = r.Improvements
-	case "bugfixes":
-		releaseSection = r.Bugfixes
-	default:
+	releaseSection, err := r.GetSection(section)
+	if err != nil {
 		log.Fatalf("unknown section %q, possible values are %s", section,
 			[]string{"breaking", "features", "improvements", "bugfixes"})
 	}

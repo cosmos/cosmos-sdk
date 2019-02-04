@@ -14,7 +14,7 @@ All of the paramter keys that will be used should be registered at the compile t
 
 Currently, `attribute` only consists of `reflect.Type`, which indicates the parameter type. It is needed even if the state machine has no error, because the paraeter can be modified externally, for example via the governance.
 
-Only primary keys have to be registered on the `KeyTable`. Subkeys inherits the attribute of the primary key.
+Only primary keys have to be registered on the `KeyTable`. Subkeys inherit the attribute of the primary key.
 
 ## ParamSet
 

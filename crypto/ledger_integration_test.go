@@ -1,4 +1,4 @@
-// +build cgo,ledger,real_ledger
+// +build cgo,ledger,test_real_ledger
 
 package crypto
 

@@ -15,6 +15,7 @@ BREAKING CHANGES
     - `--tls` is now used to enable secure layer.
 
 * Gaia
+  * \# Alter liveness incentives to prevent 34% cabal attack and encourage uptime on a per-signature basis
 
 * SDK
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.

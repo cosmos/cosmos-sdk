@@ -152,16 +152,9 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	if height > minHeight && signInfo.MissedBlocksCounter > maxMissed {
 		validator := k.validatorSet.ValidatorByConsAddr(ctx, consAddr)
 		if validator != nil && !validator.GetJailed() {
-			// Downtime confirmed: slash and jail the validator
+			// Downtime confirmed: jail the validator
 			logger.Info(fmt.Sprintf("Validator %s past min height of %d and below signed blocks threshold of %d",
 				pubkey.Address(), minHeight, k.MinSignedPerWindow(ctx)))
-			// We need to retrieve the stake distribution which signed the block, so we subtract ValidatorUpdateDelay from the evidence height,
-			// and subtract an additional 1 since this is the LastCommit.
-			// Note that this *can* result in a negative "distributionHeight" up to -ValidatorUpdateDelay-1,
-			// i.e. at the end of the pre-genesis block (none) = at the beginning of the genesis block.
-			// That's fine since this is just used to filter unbonding delegations & redelegations.
-			distributionHeight := height - staking.ValidatorUpdateDelay - 1
-			k.validatorSet.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.validatorSet.Jail(ctx, consAddr)
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
@@ -169,8 +162,8 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 			signInfo.IndexOffset = 0
 			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
 		} else {
-			// Validator was (a) not found or (b) already jailed, don't slash
-			logger.Info(fmt.Sprintf("Validator %s would have been slashed for downtime, but was either not found in store or already jailed",
+			// Validator was (a) not found or (b) already jailed
+			logger.Info(fmt.Sprintf("Validator %s would have been jailed for downtime, but was either not found in store or already jailed",
 				pubkey.Address()))
 		}
 	}

@@ -32,11 +32,6 @@ func DefaultGenesisState() GenesisState {
 
 // ValidateGenesis validates the slashing genesis parameters
 func ValidateGenesis(data GenesisState) error {
-	downtime := data.Params.SlashFractionDowntime
-	if downtime.IsNegative() || downtime.GT(sdk.OneDec()) {
-		return fmt.Errorf("Slashing fraction downtime should be less than or equal to one and greater than zero, is %s", downtime.String())
-	}
-
 	dblSign := data.Params.SlashFractionDoubleSign
 	if dblSign.IsNegative() || dblSign.GT(sdk.OneDec()) {
 		return fmt.Errorf("Slashing fraction double sign should be less than or equal to one and greater than zero, is %s", dblSign.String())

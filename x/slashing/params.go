@@ -25,7 +25,6 @@ var (
 	KeyMinSignedPerWindow      = []byte("MinSignedPerWindow")
 	KeyDowntimeJailDuration    = []byte("DowntimeJailDuration")
 	KeySlashFractionDoubleSign = []byte("SlashFractionDoubleSign")
-	KeySlashFractionDowntime   = []byte("SlashFractionDowntime")
 )
 
 // ParamTypeTable for slashing module
@@ -40,7 +39,6 @@ type Params struct {
 	MinSignedPerWindow      sdk.Dec       `json:"min-signed-per-window"`
 	DowntimeJailDuration    time.Duration `json:"downtime-jail-duration"`
 	SlashFractionDoubleSign sdk.Dec       `json:"slash-fraction-double-sign"`
-	SlashFractionDowntime   sdk.Dec       `json:"slash-fraction-downtime"`
 }
 
 func (p Params) String() string {
@@ -49,11 +47,9 @@ func (p Params) String() string {
   SignedBlocksWindow:      %d
   MinSignedPerWindow:      %s
   DowntimeJailDuration:    %s
-  SlashFractionDoubleSign: %d
-  SlashFractionDowntime:   %d`, p.MaxEvidenceAge,
+  SlashFractionDoubleSign: %d`, p.MaxEvidenceAge,
 		p.SignedBlocksWindow, p.MinSignedPerWindow,
-		p.DowntimeJailDuration, p.SlashFractionDoubleSign,
-		p.SlashFractionDowntime)
+		p.DowntimeJailDuration, p.SlashFractionDoubleSign)
 }
 
 // Implements params.ParamStruct
@@ -64,7 +60,6 @@ func (p *Params) KeyValuePairs() params.KeyValuePairs {
 		{KeyMinSignedPerWindow, &p.MinSignedPerWindow},
 		{KeyDowntimeJailDuration, &p.DowntimeJailDuration},
 		{KeySlashFractionDoubleSign, &p.SlashFractionDoubleSign},
-		{KeySlashFractionDowntime, &p.SlashFractionDowntime},
 	}
 }
 
@@ -84,8 +79,6 @@ func DefaultParams() Params {
 		MinSignedPerWindow: sdk.NewDecWithPrec(5, 1),
 
 		SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(20)),
-
-		SlashFractionDowntime: sdk.NewDec(1).Quo(sdk.NewDec(100)),
 	}
 }
 
@@ -119,12 +112,6 @@ func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
 // SlashFractionDoubleSign - currently default 5%
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, KeySlashFractionDoubleSign, &res)
-	return
-}
-
-// SlashFractionDowntime - currently default 1%
-func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
-	k.paramspace.Get(ctx, KeySlashFractionDowntime, &res)
 	return
 }
 

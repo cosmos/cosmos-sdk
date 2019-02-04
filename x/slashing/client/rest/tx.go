@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,7 +24,7 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 
 // Unjail TX body
 type UnjailReq struct {
-	BaseReq utils.BaseReq `json:"base_req"`
+	BaseReq rest.BaseReq `json:"base_req"`
 }
 
 func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIContext) http.HandlerFunc {
@@ -33,7 +34,7 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 		bech32validator := vars["validatorAddr"]
 
 		var req UnjailReq
-		err := utils.ReadRESTReq(w, r, cdc, &req)
+		err := rest.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
@@ -43,24 +44,38 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
-			return
-		}
-
 		valAddr, err := sdk.ValAddressFromBech32(bech32validator)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		if !bytes.Equal(info.GetPubKey().Address(), valAddr) {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, "must use own validator address")
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		msg := slashing.NewMsgUnjail(valAddr)
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		err = msg.ValidateBasic()
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if req.BaseReq.GenerateOnly {
+			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			return
+		}
+
+		// derive the from account address and name from the Keybase
+		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
+
+		if !bytes.Equal(cliCtx.GetFromAddress(), valAddr) {
+			rest.WriteErrorResponse(w, http.StatusUnauthorized, "must use own validator address")
+			return
+		}
+
+		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

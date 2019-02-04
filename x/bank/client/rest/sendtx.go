@@ -3,13 +3,14 @@ package rest
 import (
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/bank/client"
+	bankclient "github.com/cosmos/cosmos-sdk/x/bank/client"
 
 	"github.com/gorilla/mux"
 )
@@ -21,8 +22,8 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 }
 
 type sendReq struct {
-	BaseReq utils.BaseReq `json:"base_req"`
-	Amount  sdk.Coins     `json:"amount"`
+	BaseReq rest.BaseReq `json:"base_req"`
+	Amount  sdk.Coins    `json:"amount"`
 }
 
 var msgCdc = codec.New()
@@ -37,14 +38,14 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		vars := mux.Vars(r)
 		bech32Addr := vars["address"]
 
-		to, err := sdk.AccAddressFromBech32(bech32Addr)
+		toAddr, err := sdk.AccAddressFromBech32(bech32Addr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		var req sendReq
-		err = utils.ReadRESTReq(w, r, cdc, &req)
+		err = rest.ReadRESTReq(w, r, cdc, &req)
 		if err != nil {
 			return
 		}
@@ -54,13 +55,30 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			return
 		}
 
-		info, err := kb.Get(req.BaseReq.Name)
-		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if req.BaseReq.GenerateOnly {
+			// When generate only is supplied, the from field must be a valid Bech32
+			// address.
+			fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
+			if err != nil {
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				return
+			}
+
+			msg := bankclient.CreateMsg(fromAddr, toAddr, req.Amount)
+			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		msg := client.CreateMsg(sdk.AccAddress(info.GetPubKey().Address()), to, req.Amount)
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		// derive the from account address and name from the Keybase
+		fromAddress, fromName, err := context.GetFromFields(req.BaseReq.From)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
+		msg := bankclient.CreateMsg(cliCtx.GetFromAddress(), toAddr, req.Amount)
+
+		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

@@ -631,28 +631,3 @@ func TestSafeSub(t *testing.T) {
 		)
 	}
 }
-
-func TestAddUint64Overflow(t *testing.T) {
-	testCases := []struct {
-		a, b     uint64
-		result   uint64
-		overflow bool
-	}{
-		{0, 0, 0, false},
-		{100, 100, 200, false},
-		{math.MaxUint64 / 2, math.MaxUint64/2 + 1, math.MaxUint64, false},
-		{math.MaxUint64 / 2, math.MaxUint64/2 + 2, 0, true},
-	}
-
-	for i, tc := range testCases {
-		res, overflow := AddUint64Overflow(tc.a, tc.b)
-		require.Equal(
-			t, tc.overflow, overflow,
-			"invalid overflow result; tc: #%d, a: %d, b: %d", i, tc.a, tc.b,
-		)
-		require.Equal(
-			t, tc.result, res,
-			"invalid uint64 result; tc: #%d, a: %d, b: %d", i, tc.a, tc.b,
-		)
-	}
-}

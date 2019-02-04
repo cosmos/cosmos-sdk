@@ -13,13 +13,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
@@ -35,16 +38,18 @@ import (
 )
 
 var (
-	seed      int64
-	numBlocks int
-	blockSize int
-	enabled   bool
-	verbose   bool
-	commit    bool
-	period    int
+	genesisFile string
+	seed        int64
+	numBlocks   int
+	blockSize   int
+	enabled     bool
+	verbose     bool
+	commit      bool
+	period      int
 )
 
 func init() {
+	flag.StringVar(&genesisFile, "SimulationGenesis", "", "Custom simulation genesis file")
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
@@ -54,7 +59,31 @@ func init() {
 	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) json.RawMessage {
+func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+	var genesis tmtypes.GenesisDoc
+	cdc := MakeCodec()
+	bytes, err := ioutil.ReadFile(genesisFile)
+	if err != nil {
+		panic(err)
+	}
+	cdc.MustUnmarshalJSON(bytes, &genesis)
+	var appState GenesisState
+	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
+	var newAccs []simulation.Account
+	for _, acc := range appState.Accounts {
+		// Pick a random private key, since we don't know the actual key
+		// This should be fine as it's only used for mock Tendermint validators
+		// and these keys are never actually used to sign by mock Tendermint.
+		privkeySeed := make([]byte, 15)
+		r.Read(privkeySeed)
+		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
+		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
+	}
+	return json.RawMessage(genesis.AppState), newAccs, genesis.ChainID
+}
+
+func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+
 	var genesisAccounts []GenesisAccount
 
 	amount := int64(r.Intn(1e6))
@@ -117,6 +146,9 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		},
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
+
+	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
+	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
 
 	// Random genesis states
 	vp := time.Duration(r.Intn(2*172800)) * time.Second
@@ -203,6 +235,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		AuthData:     authGenesis,
+		BankData:     bankGenesis,
 		StakingData:  stakingGenesis,
 		MintData:     mintGenesis,
 		DistrData:    distrGenesis,
@@ -216,7 +249,14 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		panic(err)
 	}
 
-	return appState
+	return appState, accs, "simulation"
+}
+
+func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+	if genesisFile != "" {
+		return appStateFromGenesisFileFn(r, accs, genesisTimestamp)
+	}
+	return appStateRandomizedFn(r, accs, genesisTimestamp)
 }
 
 func randIntBetween(r *rand.Rand, min, max int) int {
@@ -376,7 +416,7 @@ func TestGaiaImportExport(t *testing.T) {
 
 	fmt.Printf("Exporting genesis...\n")
 
-	appState, _, err := app.ExportAppStateAndValidators(false)
+	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
 	if err != nil {
 		panic(err)
 	}
@@ -480,7 +520,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 
 	fmt.Printf("Exporting genesis...\n")
 
-	appState, _, err := app.ExportAppStateAndValidators(true)
+	appState, _, err := app.ExportAppStateAndValidators(true, []string{})
 	if err != nil {
 		panic(err)
 	}

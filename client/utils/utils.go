@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
 	"github.com/tendermint/go-amino"
@@ -18,26 +19,23 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
-// CompleteAndBroadcastTxCli implements a utility function that facilitates
+// CompleteAndBroadcastTxCLI implements a utility function that facilitates
 // sending a series of messages in a signed transaction given a TxBuilder and a
 // QueryContext. It ensures that the account exists, has a proper number and
 // sequence set. In addition, it builds and signs a transaction with the
 // supplied messages. Finally, it broadcasts the signed transaction to a node.
 //
 // NOTE: Also see CompleteAndBroadcastTxREST.
-func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
-	txBldr, err := prepareTxBuilder(txBldr, cliCtx)
+func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
+	txBldr, err := PrepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
 		return err
 	}
 
-	name, err := cliCtx.GetFromName()
-	if err != nil {
-		return err
-	}
+	fromName := cliCtx.GetFromName()
 
 	if txBldr.GetSimulateAndExecute() || cliCtx.Simulate {
-		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			return err
 		}
@@ -47,13 +45,13 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		return nil
 	}
 
-	passphrase, err := keys.GetPassphrase(name)
+	passphrase, err := keys.GetPassphrase(fromName)
 	if err != nil {
 		return err
 	}
 
 	// build and sign the transaction
-	txBytes, err := txBldr.BuildAndSign(name, passphrase, msgs)
+	txBytes, err := txBldr.BuildAndSign(fromName, passphrase, msgs)
 	if err != nil {
 		return err
 	}
@@ -63,10 +61,10 @@ func CompleteAndBroadcastTxCli(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 	return err
 }
 
-// EnrichCtxWithGas calculates the gas estimate that would be consumed by the
+// EnrichWithGas calculates the gas estimate that would be consumed by the
 // transaction and set the transaction's respective value accordingly.
-func EnrichCtxWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
-	_, adjusted, err := simulateMsgs(txBldr, cliCtx, name, msgs)
+func EnrichWithGas(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (authtxb.TxBuilder, error) {
+	_, adjusted, err := simulateMsgs(txBldr, cliCtx, msgs)
 	if err != nil {
 		return txBldr, err
 	}
@@ -129,8 +127,7 @@ func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string,
 
 	// check whether the address is a signer
 	if !isTxSigner(sdk.AccAddress(addr), stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf(
-			"The generated transaction's intended signer does not match the given signer: %q", name)
+		return signedStdTx, fmt.Errorf("%s: %s", client.ErrInvalidSigner, name)
 	}
 
 	if !offline {
@@ -158,8 +155,7 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 
 	// check whether the address is a signer
 	if !isTxSigner(addr, stdTx.GetSigners()) {
-		return signedStdTx, fmt.Errorf(
-			"The generated transaction's intended signer does not match the given signer: %q", name)
+		return signedStdTx, fmt.Errorf("%s: %s", client.ErrInvalidSigner, name)
 	}
 
 	if !offline {
@@ -210,8 +206,8 @@ func GetTxEncoder(cdc *codec.Codec) (encoder sdk.TxEncoder) {
 
 // nolint
 // SimulateMsgs simulates the transaction and returns the gas estimate and the adjusted value.
-func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, msgs []sdk.Msg) (estimated, adjusted uint64, err error) {
-	txBytes, err := txBldr.BuildWithPubKey(name, msgs)
+func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (estimated, adjusted uint64, err error) {
+	txBytes, err := txBldr.BuildTxForSim(msgs)
 	if err != nil {
 		return
 	}
@@ -231,15 +227,13 @@ func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (uint64, error) {
 	return simulationResult.GasUsed, nil
 }
 
-func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (authtxb.TxBuilder, error) {
+// PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.
+func PrepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (authtxb.TxBuilder, error) {
 	if err := cliCtx.EnsureAccountExists(); err != nil {
 		return txBldr, err
 	}
 
-	from, err := cliCtx.GetFromAddress()
-	if err != nil {
-		return txBldr, err
-	}
+	from := cliCtx.GetFromAddress()
 
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
@@ -266,7 +260,7 @@ func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 // buildUnsignedStdTx builds a StdTx as per the parameters passed in the
 // contexts. Gas is automatically estimated if gas wanted is set to 0.
 func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
-	txBldr, err = prepareTxBuilder(txBldr, cliCtx)
+	txBldr, err = PrepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
 		return
 	}
@@ -275,22 +269,19 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
 	if txBldr.GetSimulateAndExecute() {
-		var name string
-		name, err = cliCtx.GetFromName()
+		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			return
 		}
 
-		txBldr, err = EnrichCtxWithGas(txBldr, cliCtx, name, msgs)
-		if err != nil {
-			return
-		}
 		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.GetGas())
 	}
+
 	stdSignMsg, err := txBldr.Build(msgs)
 	if err != nil {
 		return
 	}
+
 	return auth.NewStdTx(stdSignMsg.Msgs, stdSignMsg.Fee, nil, stdSignMsg.Memo), nil
 }
 
@@ -300,5 +291,6 @@ func isTxSigner(user sdk.AccAddress, signers []sdk.AccAddress) bool {
 			return true
 		}
 	}
+
 	return false
 }

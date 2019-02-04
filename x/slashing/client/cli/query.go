@@ -25,15 +25,20 @@ func GetCmdQuerySigningInfo(storeName string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			key := slashing.GetValidatorSigningInfoKey(sdk.ConsAddress(pk.Address()))
+			consAddr := sdk.ConsAddress(pk.Address())
+			key := slashing.GetValidatorSigningInfoKey(consAddr)
 
 			res, err := cliCtx.QueryStore(key, storeName)
 			if err != nil {
 				return err
 			}
 
+			if len(res) == 0 {
+				return fmt.Errorf("Validator %s not found in slashing store", consAddr)
+			}
+
 			var signingInfo slashing.ValidatorSigningInfo
-			cdc.MustUnmarshalBinaryLengthPrefixed(res, signingInfo)
+			cdc.MustUnmarshalBinaryLengthPrefixed(res, &signingInfo)
 			return cliCtx.PrintOutput(signingInfo)
 		},
 	}

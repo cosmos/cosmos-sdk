@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/x/bank"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
@@ -28,6 +30,7 @@ func setGenesis(gapp *GaiaApp, accs ...*auth.BaseAccount) error {
 	genesisState := NewGenesisState(
 		genaccs,
 		auth.DefaultGenesisState(),
+		bank.DefaultGenesisState(),
 		staking.DefaultGenesisState(),
 		mint.DefaultGenesisState(),
 		distr.DefaultGenesisState(),
@@ -55,6 +58,6 @@ func TestGaiadExport(t *testing.T) {
 
 	// Making a new app object with the db, so that initchain hasn't been called
 	newGapp := NewGaiaApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true)
-	_, _, err := newGapp.ExportAppStateAndValidators(false)
+	_, _, err := newGapp.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }

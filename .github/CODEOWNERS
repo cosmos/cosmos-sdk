@@ -4,4 +4,6 @@
 *       @ebuchman @rigelrozanski @cwgoes
 
 # Precious documentation
-/docs/  @zramsay @jolesbi
+/docs/README.md  @zramsay
+/docs/DOCS_README.md  @zramsay
+/docs/.vuepress/  @zramsay

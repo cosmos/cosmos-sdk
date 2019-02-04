@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
@@ -73,7 +73,7 @@ func delegatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -89,7 +89,7 @@ func delegationRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -106,11 +106,11 @@ func delegatorWithdrawalAddrHandlerFn(cliCtx context.CLIContext, cdc *codec.Code
 		bz := cdc.MustMarshalJSON(distribution.NewQueryDelegatorWithdrawAddrParams(delegatorAddr))
 		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/withdraw_addr", queryRoute), bz)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -146,7 +146,7 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 		// query commission
 		commissionRes, err := common.QueryValidatorCommission(cliCtx, cdc, queryRoute, validatorAddr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -166,7 +166,7 @@ func validatorInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 
 		// Prepare response
 		res := cdc.MustMarshalJSON(NewValidatorDistInfo(delAddr, rewards, valCom))
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -187,7 +187,7 @@ func validatorRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -198,10 +198,10 @@ func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	return func(w http.ResponseWriter, r *http.Request) {
 		params, err := common.QueryParams(cliCtx, queryRoute)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, params, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, params, cliCtx.Indent)
 	}
 }
 
@@ -212,10 +212,10 @@ func outstandingRewardsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec,
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData(fmt.Sprintf("custom/%s/outstanding_rewards", queryRoute), []byte{})
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -224,7 +224,7 @@ func checkResponseQueryRewards(w http.ResponseWriter, cliCtx context.CLIContext,
 
 	res, err := common.QueryRewards(cliCtx, cdc, queryRoute, delAddr, valAddr)
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+		rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return nil, false
 	}
 

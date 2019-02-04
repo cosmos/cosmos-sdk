@@ -3,10 +3,11 @@ package rest
 import (
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -45,11 +46,11 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router,
 
 type (
 	withdrawRewardsReq struct {
-		BaseReq utils.BaseReq `json:"base_req"`
+		BaseReq rest.BaseReq `json:"base_req"`
 	}
 
 	setWithdrawalAddrReq struct {
-		BaseReq         utils.BaseReq  `json:"base_req"`
+		BaseReq         rest.BaseReq   `json:"base_req"`
 		WithdrawAddress sdk.AccAddress `json:"withdraw_address"`
 	}
 )
@@ -59,8 +60,8 @@ func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 	queryRoute string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
-		if err := utils.ReadRESTReq(w, r, cdc, &req); err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if err := rest.ReadRESTReq(w, r, cdc, &req); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -77,16 +78,16 @@ func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 
 		msgs, err := common.WithdrawAllDelegatorRewards(cliCtx, cdc, queryRoute, delAddr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
+			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
 			return
 		}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
+		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
 	}
 }
 
@@ -95,8 +96,8 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
 
-		if err := utils.ReadRESTReq(w, r, cdc, &req); err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if err := rest.ReadRESTReq(w, r, cdc, &req); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -118,16 +119,16 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 
 		msg := types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
 		if err := msg.ValidateBasic(); err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -136,8 +137,8 @@ func setDelegatorWithdrawalAddrHandlerFn(cdc *codec.Codec, cliCtx context.CLICon
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req setWithdrawalAddrReq
 
-		if err := utils.ReadRESTReq(w, r, cdc, &req); err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if err := rest.ReadRESTReq(w, r, cdc, &req); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -154,16 +155,16 @@ func setDelegatorWithdrawalAddrHandlerFn(cdc *codec.Codec, cliCtx context.CLICon
 
 		msg := types.NewMsgSetWithdrawAddress(delAddr, req.WithdrawAddress)
 		if err := msg.ValidateBasic(); err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -172,8 +173,8 @@ func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req withdrawRewardsReq
 
-		if err := utils.ReadRESTReq(w, r, cdc, &req); err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if err := rest.ReadRESTReq(w, r, cdc, &req); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -191,16 +192,16 @@ func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 		// prepare multi-message transaction
 		msgs, err := common.WithdrawValidatorRewardsAndCommission(valAddr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		if req.BaseReq.GenerateOnly {
-			utils.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
+			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
 			return
 		}
 
-		utils.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
+		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
 	}
 }
 
@@ -209,7 +210,7 @@ func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 func checkDelegatorAddressVar(w http.ResponseWriter, r *http.Request) (sdk.AccAddress, bool) {
 	addr, err := sdk.AccAddressFromBech32(mux.Vars(r)["delegatorAddr"])
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return nil, false
 	}
 	return addr, true
@@ -218,7 +219,7 @@ func checkDelegatorAddressVar(w http.ResponseWriter, r *http.Request) (sdk.AccAd
 func checkValidatorAddressVar(w http.ResponseWriter, r *http.Request) (sdk.ValAddress, bool) {
 	addr, err := sdk.ValAddressFromBech32(mux.Vars(r)["validatorAddr"])
 	if err != nil {
-		utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return nil, false
 	}
 	return addr, true

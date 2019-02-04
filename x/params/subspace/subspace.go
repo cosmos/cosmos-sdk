@@ -5,6 +5,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 )
 
 const (
@@ -69,14 +71,14 @@ func (s Subspace) WithKeyTable(table KeyTable) Subspace {
 func (s Subspace) kvStore(ctx sdk.Context) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
-	return ctx.KVStore(s.key).Prefix(append(s.name, '/'))
+	return prefix.NewStore(ctx.KVStore(s.key), append(s.name, '/'))
 }
 
 // Returns a transient store for modification
 func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
-	return ctx.TransientStore(s.tkey).Prefix(append(s.name, "/"...))
+	return prefix.NewStore(ctx.TransientStore(s.tkey), append(s.name, '/'))
 }
 
 func concatKeys(key, subkey []byte) (res []byte) {

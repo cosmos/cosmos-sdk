@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"math"
 	"testing"
 
 	"math/big"
@@ -573,16 +572,6 @@ func (i *Uint) UnmarshalJSON(bz []byte) error {
 // otherwise.
 func UintOverflow(x Uint) bool {
 	return x.i.Sign() == -1 || x.i.Sign() == 1 && x.i.BitLen() > 256
-}
-
-// AddUint64Overflow performs the addition operation on two uint64 integers and
-// returns a boolean on whether or not the result overflows.
-func AddUint64Overflow(a, b uint64) (uint64, bool) {
-	if math.MaxUint64-a < b {
-		return 0, true
-	}
-
-	return a + b, false
 }
 
 // intended to be used with require/assert:  require.True(IntEq(...))

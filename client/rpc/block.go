@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 
@@ -12,8 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
-
-	"github.com/cosmos/cosmos-sdk/client/utils"
 )
 
 //BlockCommand returns the verified block data for a given heights
@@ -131,7 +131,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }
 
@@ -150,6 +150,6 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

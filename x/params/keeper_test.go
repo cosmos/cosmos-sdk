@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -70,8 +71,8 @@ func TestKeeper(t *testing.T) {
 	tkey := sdk.NewTransientStoreKey("transient_test")
 	ctx := defaultContext(skey, tkey)
 	keeper := NewKeeper(cdc, skey, tkey)
+	store := prefix.NewStore(ctx.KVStore(skey), []byte("test/"))
 	space := keeper.Subspace("test").WithKeyTable(table)
-	store := ctx.KVStore(skey).Prefix([]byte("test/"))
 
 	// Set params
 	for i, kv := range kvs {
@@ -177,7 +178,7 @@ func TestSubspace(t *testing.T) {
 		[]byte("struct"), s{},
 	)
 
-	store := ctx.KVStore(key).Prefix([]byte("test/"))
+	store := prefix.NewStore(ctx.KVStore(key), []byte("test/"))
 	space := keeper.Subspace("test").WithKeyTable(table)
 
 	// Test space.Set, space.Modified

@@ -114,7 +114,7 @@ func (app *BaseApp) Name() string {
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
-	app.cms.WithTracer(w)
+	app.cms.SetTracer(w)
 }
 
 // Mount IAVL or DB stores to the provided keys in the BaseApp multistore
@@ -483,8 +483,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	if app.cms.TracingEnabled() {
-		app.cms.ResetTraceContext()
-		app.cms.WithTracingContext(sdk.TraceContext(
+		app.cms.SetTracingContext(sdk.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
 	}
@@ -679,7 +678,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
 	if msCache.TracingEnabled() {
-		msCache = msCache.WithTracingContext(
+		msCache = msCache.SetTracingContext(
 			sdk.TraceContext(
 				map[string]interface{}{
 					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
@@ -813,7 +812,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 // EndBlock implements the ABCI application interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	if app.deliverState.ms.TracingEnabled() {
-		app.deliverState.ms = app.deliverState.ms.ResetTraceContext().(sdk.CacheMultiStore)
+		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
 	}
 
 	if app.endBlocker != nil {

@@ -24,7 +24,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var verifier tmlite.Verifier
+var (
+	verifier     tmlite.Verifier
+	verifierHome string
+)
 
 // CLIContext implements a typical CLI context created in SDK modules for
 // transaction handling and queries.
@@ -43,6 +46,7 @@ type CLIContext struct {
 	Async         bool
 	PrintResponse bool
 	Verifier      tmlite.Verifier
+	VerifierHome  string
 	Simulate      bool
 	GenerateOnly  bool
 	FromAddress   sdk.AccAddress
@@ -68,8 +72,9 @@ func NewCLIContext() CLIContext {
 	}
 
 	// We need to use a single verifier for all contexts
-	if verifier == nil {
+	if verifier == nil || verifierHome != viper.GetString(cli.HomeFlag) {
 		verifier = createVerifier()
+		verifierHome = viper.GetString(cli.HomeFlag)
 	}
 
 	return CLIContext{

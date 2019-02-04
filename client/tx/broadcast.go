@@ -3,10 +3,11 @@ package tx
 import (
 	"net/http"
 
+	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"io/ioutil"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
@@ -32,12 +33,12 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 		var m BroadcastBody
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		err = cdc.UnmarshalJSON(body, &m)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		var res interface{}
@@ -49,13 +50,13 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 		case flagAsync:
 			res, err = cliCtx.BroadcastTxAsync(m.TxBytes)
 		default:
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, "unsupported return type. supported types: block, sync, async")
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, "unsupported return type. supported types: block, sync, async")
 			return
 		}
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

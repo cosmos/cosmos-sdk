@@ -233,15 +233,6 @@ gaiacli tx send \
   --generate-only > unsignedSendTx.json
 ```
 
-::: tip Note
-Simulation cannot be used in conjunction with tx generation only functionality
-due to the fact that simulation requires a public key and generation only does
-not utilize a Keybase.
-
-You can now sign the transaction file generated through the `--generate-only`
-flag by providing your key to the following command:
-:::
-
 ```bash
 gaiacli tx sign \
   --chain-id=<chain_id> \
@@ -683,6 +674,14 @@ To check current rewards for a delegation (were they to be withdrawn), run:
 
 ```bash
 gaiacli query distr rewards <delegator_address> <validator_address>
+```
+
+#### Query all delegator rewards
+
+To check all current rewards for a delegation (were they to be withdrawn), run:
+
+```bash
+gaiacli query distr rewards <delegator_address>
 ```
 
 ### Multisig transactions

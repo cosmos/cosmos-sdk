@@ -10,6 +10,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/store/gaskv"
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 /*
@@ -46,7 +49,7 @@ func NewContext(ms MultiStore, header abci.Header, isCheckTx bool, logger log.Lo
 	c = c.WithTxBytes(nil)
 	c = c.WithLogger(logger)
 	c = c.WithVoteInfos(nil)
-	c = c.WithGasMeter(NewInfiniteGasMeter())
+	c = c.WithGasMeter(stypes.NewInfiniteGasMeter())
 	c = c.WithMinGasPrices(DecCoins{})
 	c = c.WithConsensusParams(nil)
 	return c
@@ -74,12 +77,12 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key StoreKey) KVStore {
-	return c.MultiStore().GetKVStore(key).Gas(c.GasMeter(), cachedKVGasConfig)
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.KVGasConfig())
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
 func (c Context) TransientStore(key StoreKey) KVStore {
-	return c.MultiStore().GetKVStore(key).Gas(c.GasMeter(), cachedTransientGasConfig)
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), stypes.TransientGasConfig())
 }
 
 //----------------------------------------

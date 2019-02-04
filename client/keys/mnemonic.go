@@ -3,7 +3,6 @@ package keys
 import (
 	"crypto/sha256"
 	"fmt"
-	"os"
 
 	bip39 "github.com/bartekn/go-bip39"
 	"github.com/cosmos/cosmos-sdk/client"

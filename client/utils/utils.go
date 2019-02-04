@@ -27,7 +27,7 @@ import (
 //
 // NOTE: Also see CompleteAndBroadcastTxREST.
 func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) error {
-	txBldr, err := prepareTxBuilder(txBldr, cliCtx)
+	txBldr, err := PrepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,8 @@ func parseQueryResponse(cdc *amino.Codec, rawRes []byte) (uint64, error) {
 	return simulationResult.GasUsed, nil
 }
 
-func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (authtxb.TxBuilder, error) {
+// PrepareTxBuilder populates a TxBuilder in preparation for the build of a Tx.
+func PrepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (authtxb.TxBuilder, error) {
 	if err := cliCtx.EnsureAccountExists(); err != nil {
 		return txBldr, err
 	}
@@ -259,7 +260,7 @@ func prepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 // buildUnsignedStdTx builds a StdTx as per the parameters passed in the
 // contexts. Gas is automatically estimated if gas wanted is set to 0.
 func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
-	txBldr, err = prepareTxBuilder(txBldr, cliCtx)
+	txBldr, err = PrepareTxBuilder(txBldr, cliCtx)
 	if err != nil {
 		return
 	}

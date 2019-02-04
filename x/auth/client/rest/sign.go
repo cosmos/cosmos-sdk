@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
@@ -14,9 +15,9 @@ import (
 
 // SignBody defines the properties of a sign request's body.
 type SignBody struct {
-	Tx        auth.StdTx    `json:"tx"`
-	AppendSig bool          `json:"append_sig"`
-	BaseReq   utils.BaseReq `json:"base_req"`
+	Tx        auth.StdTx   `json:"tx"`
+	AppendSig bool         `json:"append_sig"`
+	BaseReq   rest.BaseReq `json:"base_req"`
 }
 
 // nolint: unparam
@@ -25,8 +26,8 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 	return func(w http.ResponseWriter, r *http.Request) {
 		var m SignBody
 
-		if err := utils.ReadRESTReq(w, r, cdc, &m); err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if err := rest.ReadRESTReq(w, r, cdc, &m); err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -37,14 +38,14 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 		// validate tx
 		// discard error if it's CodeNoSignatures as the tx comes with no signatures
 		if err := m.Tx.ValidateBasic(); err != nil && err.Code() != sdk.CodeNoSignatures {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		// derive the from account address and name from the Keybase
 		fromAddress, fromName, err := context.GetFromFields(m.BaseReq.From)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -65,16 +66,16 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 
 		signedTx, err := txBldr.SignStdTx(cliCtx.GetFromName(), m.BaseReq.Password, m.Tx, m.AppendSig)
 		if keyerror.IsErrKeyNotFound(err) {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		} else if keyerror.IsErrWrongPassword(err) {
-			utils.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
+			rest.WriteErrorResponse(w, http.StatusUnauthorized, err.Error())
 			return
 		} else if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, signedTx, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, signedTx, cliCtx.Indent)
 	}
 }

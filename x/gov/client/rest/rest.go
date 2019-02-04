@@ -84,7 +84,7 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !utils.ValidateBasic(w, req.BaseReq) {
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 
@@ -134,7 +134,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !utils.ValidateBasic(w, req.BaseReq) {
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 
@@ -178,7 +178,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !utils.ValidateBasic(w, req.BaseReq) {
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 

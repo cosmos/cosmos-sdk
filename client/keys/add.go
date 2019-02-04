@@ -330,7 +330,7 @@ func CheckAndWriteErrorResponse(w http.ResponseWriter, httpErr int, err error) b
 func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var kb keys.Keybase
-		var m client.NewKeyBody
+		var m AddNewKey
 
 		kb, err := GetKeyBaseWithWritePerm()
 		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
@@ -423,7 +423,7 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		name := vars["name"]
-		var m client.RecoverKeyBody
+		var m RecoverKey
 
 		body, err := ioutil.ReadAll(r.Body)
 		if CheckAndWriteErrorResponse(w, http.StatusBadRequest, err) {

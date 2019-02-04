@@ -3,7 +3,6 @@ package rest
 import (
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -32,7 +31,7 @@ func SignTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Ha
 			return
 		}
 
-		if !utils.ValidateBasic(w, m.BaseReq) {
+		if !m.BaseReq.ValidateBasic(w) {
 			return
 		}
 

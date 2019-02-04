@@ -65,7 +65,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !utils.ValidateBasic(w, req.BaseReq) {
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 
@@ -110,7 +110,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !utils.ValidateBasic(w, req.BaseReq) {
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 
@@ -155,7 +155,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !utils.ValidateBasic(w, req.BaseReq) {
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 

@@ -40,7 +40,7 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 		}
 
 		req.BaseReq = req.BaseReq.Sanitize()
-		if !utils.ValidateBasic(w, req.BaseReq) {
+		if !req.BaseReq.ValidateBasic(w) {
 			return
 		}
 

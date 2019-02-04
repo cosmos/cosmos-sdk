@@ -225,8 +225,8 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	distrGenesis := distr.GenesisState{
 		FeePool:        distr.InitialFeePool(),
-		CommunityTax:   sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
-		ProposerReward: sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2)),
+		CommunityTax:   sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(40)), 2)),
+		ProposerReward: sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(40)), 2)),
 	}
 	fmt.Printf("Selected randomly generated distribution parameters:\n\t%+v\n", distrGenesis)
 

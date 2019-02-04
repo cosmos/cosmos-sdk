@@ -21,13 +21,12 @@ import (
 )
 
 var (
-	// make some cap keys
 	capKey1 = sdk.NewKVStoreKey("key1")
 	capKey2 = sdk.NewKVStoreKey("key2")
 )
 
-//------------------------------------------------------------------------------------------
-// Helpers for setup. Most tests should be able to use setupBaseApp
+// ----------------------------------------------------------------------------
+// Auxiliary
 
 func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
@@ -70,8 +69,8 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	return app
 }
 
-//------------------------------------------------------------------------------------------
-// test mounting and loading stores
+// ----------------------------------------------------------------------------
+// Store tests
 
 func TestMountStores(t *testing.T) {
 	app := setupBaseApp(t)
@@ -157,39 +156,24 @@ func testChangeNameHelper(name string) func(*BaseApp) {
 	}
 }
 
-// Test that the app hash is static
-// TODO: https://github.com/cosmos/cosmos-sdk/issues/520
-/*func TestStaticAppHash(t *testing.T) {
-	app := newBaseApp(t.Name())
-
-	// make a cap key and mount the store
-	capKey := sdk.NewKVStoreKey(MainStoreKey)
-	app.MountStores(capKey)
-	err := app.LoadLatestVersion(capKey) // needed to make stores non-nil
-	require.Nil(t, err)
-
-	// execute some blocks
-	header := abci.Header{Height: 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res := app.Commit()
-	commitID1 := sdk.CommitID{1, res.Data}
-
-	header = abci.Header{Height: 2}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	res = app.Commit()
-	commitID2 := sdk.CommitID{2, res.Data}
-
-	require.Equal(t, commitID1.Hash, commitID2.Hash)
-}
-*/
-
-//------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // test some basic abci/baseapp functionality
 
 // Test that txs can be unmarshalled and read and that
 // correct error codes are returned when not
 func TestTxDecoder(t *testing.T) {
-	// TODO
+	codec := codec.New()
+	registerTestCodec(codec)
+
+	app := newBaseApp(t.Name())
+	tx := newTxCounter(1, 0)
+	txBytes := codec.MustMarshalBinaryLengthPrefixed(tx)
+
+	dTx, err := app.txDecoder(txBytes)
+	require.NoError(t, err)
+
+	cTx := dTx.(txTest)
+	require.Equal(t, tx.Counter, cTx.Counter)
 }
 
 // Test that Info returns the latest committed state.
@@ -210,7 +194,7 @@ func TestInfo(t *testing.T) {
 	// TODO
 }
 
-//------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // InitChain, BeginBlock, EndBlock
 
 func TestInitChainer(t *testing.T) {
@@ -1030,4 +1014,86 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	// commit
 	app.EndBlock(abci.RequestEndBlock{})
 	app.Commit()
+}
+
+func TestGasConsumptionBadTx(t *testing.T) {
+	gasWanted := uint64(5)
+	anteOpt := func(bapp *BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
+
+			// NOTE/TODO/XXX:
+			// AnteHandlers must have their own defer/recover in order
+			// for the BaseApp to know how much gas was used used!
+			// This is because the GasMeter is created in the AnteHandler,
+			// but if it panics the context won't be set properly in runTx's recover ...
+			defer func() {
+				if r := recover(); r != nil {
+					switch rType := r.(type) {
+					case sdk.ErrorOutOfGas:
+						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+						res = sdk.ErrOutOfGas(log).Result()
+						res.GasWanted = gasWanted
+						res.GasUsed = newCtx.GasMeter().GasConsumed()
+					default:
+						panic(r)
+					}
+				}
+			}()
+
+			txTest := tx.(txTest)
+			newCtx.GasMeter().ConsumeGas(uint64(txTest.Counter), "counter-ante")
+			if txTest.FailOnAnte {
+				return newCtx, sdk.ErrInternal("ante handler failure").Result(), true
+			}
+
+			res = sdk.Result{
+				GasWanted: gasWanted,
+			}
+			return
+		})
+	}
+
+	routerOpt := func(bapp *BaseApp) {
+		bapp.Router().AddRoute(routeMsgCounter, func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
+			count := msg.(msgCounter).Counter
+			ctx.GasMeter().ConsumeGas(uint64(count), "counter-handler")
+			return sdk.Result{}
+		})
+	}
+
+	cdc := codec.New()
+	registerTestCodec(cdc)
+
+	app := setupBaseApp(t, anteOpt, routerOpt)
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: &abci.ConsensusParams{
+			BlockSize: &abci.BlockSizeParams{
+				MaxGas: 9,
+			},
+		},
+	})
+
+	app.InitChain(abci.RequestInitChain{})
+	app.BeginBlock(abci.RequestBeginBlock{})
+
+	// execute a tx that will fail ante handler execution
+	//
+	// NOTE: State should not be mutated here. This will be implicitly checked by
+	// the next txs ante handler execution (anteHandlerTxTest).
+	tx := newTxCounter(5, 0)
+	tx.setFailOnAnte(true)
+	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)
+	require.NoError(t, err)
+
+	res := app.DeliverTx(txBytes)
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	// require next tx to fail due to black gas limit
+	tx = newTxCounter(5, 0)
+	txBytes, err = cdc.MarshalBinaryLengthPrefixed(tx)
+	require.NoError(t, err)
+
+	res = app.DeliverTx(txBytes)
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 }

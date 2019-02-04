@@ -184,13 +184,7 @@ func processSig(
 		// contain a pubkey, so we must account for tx size of including a
 		// StdSignature (Amino encoding) and simulate gas consumption
 		// (assuming a SECP256k1 simulation key).
-		simSig := StdSignature{PubKey: pubKey}
-		if len(sig.Signature) == 0 {
-			simSig.Signature = simSecp256k1Sig[:]
-		}
-
-		sigBz := msgCdc.MustMarshalBinaryLengthPrefixed(simSig)
-		ctx.GasMeter().ConsumeGas(params.TxSizeCostPerByte*sdk.Gas(len(sigBz)), "txSize")
+		consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
 	}
 
 	consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)
@@ -205,6 +199,24 @@ func processSig(
 	}
 
 	return acc, res
+}
+
+func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignature, params Params) {
+	simSig := StdSignature{PubKey: pubkey}
+	if len(sig.Signature) == 0 {
+		simSig.Signature = simSecp256k1Sig[:]
+	}
+
+	sigBz := msgCdc.MustMarshalBinaryLengthPrefixed(simSig)
+	cost := sdk.Gas(len(sigBz) + 4)
+
+	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
+	// number of signers.
+	if _, ok := pubkey.(multisig.PubKeyMultisigThreshold); ok {
+		cost *= params.TxSigLimit
+	}
+
+	gasmeter.ConsumeGas(params.TxSizeCostPerByte*cost, "txSize")
 }
 
 // ProcessPubKey verifies that the given account address matches that of the

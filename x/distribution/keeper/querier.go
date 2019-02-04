@@ -12,13 +12,13 @@ import (
 
 // nolint
 const (
-	QueryParams               = "params"
-	QueryOutstandingRewards   = "outstanding_rewards"
-	QueryValidatorCommission  = "validator_commission"
-	QueryValidatorSlashes     = "validator_slashes"
-	QueryDelegationRewards    = "delegation_rewards"
-	QueryAllDelegationRewards = "all_delegation_rewards"
-	QueryWithdrawAddr         = "withdraw_addr"
+	QueryParams                 = "params"
+	QueryOutstandingRewards     = "outstanding_rewards"
+	QueryValidatorCommission    = "validator_commission"
+	QueryValidatorSlashes       = "validator_slashes"
+	QueryDelegationRewards      = "delegation_rewards"
+	QueryTotalDelegationRewards = "total_delegation_rewards"
+	QueryWithdrawAddr           = "withdraw_addr"
 
 	ParamCommunityTax        = "community_tax"
 	ParamBaseProposerReward  = "base_proposer_reward"
@@ -44,8 +44,8 @@ func NewQuerier(k Keeper) sdk.Querier {
 		case QueryDelegationRewards:
 			return queryDelegationRewards(ctx, path[1:], req, k)
 
-		case QueryAllDelegationRewards:
-			return queryAllDelegationRewards(ctx, path[1:], req, k)
+		case QueryTotalDelegationRewards:
+			return queryTotalDelegationRewards(ctx, path[1:], req, k)
 
 		case QueryWithdrawAddr:
 			return queryDelegatorWithdrawAddress(ctx, path[1:], req, k)
@@ -194,7 +194,7 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 	return bz, nil
 }
 
-func queryAllDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+func queryTotalDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
 	var params QueryDelegationRewardsParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {

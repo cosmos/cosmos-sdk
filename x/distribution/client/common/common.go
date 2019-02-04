@@ -56,7 +56,7 @@ func QueryRewards(cliCtx context.CLIContext, cdc *codec.Codec,
 
 	if valAddr == "" {
 		params = distr.NewQueryDelegationRewardsParams(delegatorAddr, nil)
-		route = fmt.Sprintf("custom/%s/all_delegation_rewards", queryRoute)
+		route = fmt.Sprintf("custom/%s/total_delegation_rewards", queryRoute)
 	} else {
 		validatorAddr, err := sdk.ValAddressFromBech32(valAddr)
 		if err != nil {

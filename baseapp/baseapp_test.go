@@ -229,6 +229,12 @@ func TestBaseAppOptionSeal(t *testing.T) {
 	})
 }
 
+func TestSetMinGasPrices(t *testing.T) {
+	minGasPrices := sdk.DecCoins{sdk.NewDecCoin("stake", 5000)}
+	app := newBaseApp(t.Name(), SetMinGasPrices(minGasPrices.String()))
+	require.Equal(t, minGasPrices, app.minGasPrices)
+}
+
 // ----------------------------------------------------------------------------
 // InitChain, BeginBlock, EndBlock
 

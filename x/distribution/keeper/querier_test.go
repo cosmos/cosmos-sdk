@@ -16,7 +16,7 @@ import (
 
 const custom = "custom"
 
-func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (communityTax sdk.Dec, baseProposerReward sdk.Dec, bonusProposerReward sdk.Dec, withdrawAddrEnabled bool) {
+func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier sdk.Querier) (communityTax sdk.Dec, proposerReward sdk.Dec, withdrawAddrEnabled bool) {
 
 	query := abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, QueryParams, ParamCommunityTax}, "/"),
@@ -28,22 +28,13 @@ func getQueriedParams(t *testing.T, ctx sdk.Context, cdc *codec.Codec, querier s
 	require.Nil(t, cdc.UnmarshalJSON(bz, &communityTax))
 
 	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryParams, ParamBaseProposerReward}, "/"),
+		Path: strings.Join([]string{custom, types.QuerierRoute, QueryParams, ParamProposerReward}, "/"),
 		Data: []byte{},
 	}
 
-	bz, err = querier(ctx, []string{QueryParams, ParamBaseProposerReward}, query)
+	bz, err = querier(ctx, []string{QueryParams, ParamProposerReward}, query)
 	require.Nil(t, err)
-	require.Nil(t, cdc.UnmarshalJSON(bz, &baseProposerReward))
-
-	query = abci.RequestQuery{
-		Path: strings.Join([]string{custom, types.QuerierRoute, QueryParams, ParamBonusProposerReward}, "/"),
-		Data: []byte{},
-	}
-
-	bz, err = querier(ctx, []string{QueryParams, ParamBonusProposerReward}, query)
-	require.Nil(t, err)
-	require.Nil(t, cdc.UnmarshalJSON(bz, &bonusProposerReward))
+	require.Nil(t, cdc.UnmarshalJSON(bz, &proposerReward))
 
 	query = abci.RequestQuery{
 		Path: strings.Join([]string{custom, types.QuerierRoute, QueryParams, ParamWithdrawAddrEnabled}, "/"),
@@ -116,17 +107,14 @@ func TestQueries(t *testing.T) {
 
 	// test param queries
 	communityTax := sdk.NewDecWithPrec(3, 1)
-	baseProposerReward := sdk.NewDecWithPrec(2, 1)
-	bonusProposerReward := sdk.NewDecWithPrec(1, 1)
+	proposerReward := sdk.NewDecWithPrec(2, 1)
 	withdrawAddrEnabled := true
 	keeper.SetCommunityTax(ctx, communityTax)
-	keeper.SetBaseProposerReward(ctx, baseProposerReward)
-	keeper.SetBonusProposerReward(ctx, bonusProposerReward)
+	keeper.SetProposerReward(ctx, proposerReward)
 	keeper.SetWithdrawAddrEnabled(ctx, withdrawAddrEnabled)
-	retCommunityTax, retBaseProposerReward, retBonusProposerReward, retWithdrawAddrEnabled := getQueriedParams(t, ctx, cdc, querier)
+	retCommunityTax, retProposerReward, retWithdrawAddrEnabled := getQueriedParams(t, ctx, cdc, querier)
 	require.Equal(t, communityTax, retCommunityTax)
-	require.Equal(t, baseProposerReward, retBaseProposerReward)
-	require.Equal(t, bonusProposerReward, retBonusProposerReward)
+	require.Equal(t, proposerReward, retProposerReward)
 	require.Equal(t, withdrawAddrEnabled, retWithdrawAddrEnabled)
 
 	// test outstanding rewards query

@@ -92,6 +92,7 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	sk.SetHooks(keeper.Hooks())
 
 	require.NotPanics(t, func() {
+		defaults.MinSignedPerWindow = sdk.NewDecWithPrec(5, 1)
 		InitGenesis(ctx, keeper, GenesisState{defaults, nil, nil}, genesis)
 	})
 

@@ -137,7 +137,7 @@ func sendAndVerifyMsgSend(app *baseapp.BaseApp, mapper auth.AccountKeeper, msg b
 // accounts already exist.
 func SingleInputMultiSendTx(mapper auth.AccountKeeper) simulation.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
-		fromAcc, action, msg, abort := createSingleInputMultiSendMsg(r, ctx, accs, mapper)
+		fromAcc, action, msg, abort := createSingleInputMsgMultiSend(r, ctx, accs, mapper)
 		if abort {
 			return action, nil, nil
 		}
@@ -153,10 +153,10 @@ func SingleInputMultiSendTx(mapper auth.AccountKeeper) simulation.Operation {
 
 // SingleInputSendMsg tests and runs a single msg multisend, with one input and one output, where both
 // accounts already exist.
-func SingleInputMultiSendMsg(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
+func SingleInputMsgMultiSend(mapper auth.AccountKeeper, bk bank.Keeper) simulation.Operation {
 	handler := bank.NewHandler(bk)
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simulation.Account, event func(string)) (action string, fOps []simulation.FutureOperation, err error) {
-		fromAcc, action, msg, abort := createSingleInputMultiSendMsg(r, ctx, accs, mapper)
+		fromAcc, action, msg, abort := createSingleInputMsgMultiSend(r, ctx, accs, mapper)
 		if abort {
 			return action, nil, nil
 		}
@@ -170,7 +170,7 @@ func SingleInputMultiSendMsg(mapper auth.AccountKeeper, bk bank.Keeper) simulati
 	}
 }
 
-func createSingleInputMultiSendMsg(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper auth.AccountKeeper) (fromAcc simulation.Account, action string, msg bank.MsgMultiSend, abort bool) {
+func createSingleInputMsgMultiSend(r *rand.Rand, ctx sdk.Context, accs []simulation.Account, mapper auth.AccountKeeper) (fromAcc simulation.Account, action string, msg bank.MsgMultiSend, abort bool) {
 	fromAcc = simulation.RandomAcc(r, accs)
 	toAcc := simulation.RandomAcc(r, accs)
 	// Disallow sending money to yourself

@@ -105,7 +105,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd = GetCommands(cmd)[0]
 	cmd.Flags().String(FlagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
-	cmd.Flags().Bool(FlagTLS, true, "Enable SSL/TLS layer")
+	cmd.Flags().Bool(FlagTLS, false, "Enable SSL/TLS layer")
 	cmd.Flags().String(FlagSSLHosts, "", "Comma-separated hostnames and IPs to generate a certificate for")
 	cmd.Flags().String(FlagSSLCertFile, "", "Path to a SSL certificate file. If not supplied, a self-signed certificate will be generated.")
 	cmd.Flags().String(FlagSSLKeyFile, "", "Path to a key file; ignored if a certificate file is not supplied.")

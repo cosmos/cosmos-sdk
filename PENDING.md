@@ -6,7 +6,7 @@ BREAKING CHANGES
   * [\#3284](https://github.com/cosmos/cosmos-sdk/issues/3284) Rename the `name`
   field to `from` in the `base_req` body.
   * [\#3485](https://github.com/cosmos/cosmos-sdk/pull/3485) Error responses are now JSON objects.
-  * [distribution] endpoint changed "all_delegation_rewards" -> "total_delegation_rewards"
+  * [\#3477][distribution] endpoint changed "all_delegation_rewards" -> "delegator_total_rewards"
 
 * Gaia CLI  (`gaiacli`)
   - [#3399](https://github.com/cosmos/cosmos-sdk/pull/3399) Add `gaiad validate-genesis` command to facilitate checking of genesis files
@@ -26,6 +26,7 @@ BREAKING CHANGES
 FEATURES
 
 * Gaia REST API
+  * [\#2358](https://github.com/cosmos/cosmos-sdk/issues/2358) Add distribution module REST interface
 
 * Gaia CLI  (`gaiacli`)
   * [\#3429](https://github.com/cosmos/cosmos-sdk/issues/3429) Support querying
@@ -38,6 +39,7 @@ FEATURES
 
 * SDK
   * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
+  * [\#3477][distribution] new query endpoint "delegator_validators"
 
 * Tendermint
 
@@ -54,6 +56,7 @@ IMPROVEMENTS
   (auto gas) to work with generate only.
 
 * Gaia CLI  (`gaiacli`)
+  * [\#3476](https://github.com/cosmos/cosmos-sdk/issues/3476) New `withdraw-all-rewards` command to withdraw all delegations rewards for delegators.
 
 * Gaia
   * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account

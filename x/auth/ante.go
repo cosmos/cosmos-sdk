@@ -208,7 +208,7 @@ func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignat
 	}
 
 	sigBz := msgCdc.MustMarshalBinaryLengthPrefixed(simSig)
-	cost := sdk.Gas(len(sigBz) + 4)
+	cost := sdk.Gas(len(sigBz) + 6)
 
 	// If the pubkey is a multi-signature pubkey, then we estimate for the maximum
 	// number of signers.

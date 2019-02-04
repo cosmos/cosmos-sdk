@@ -26,6 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	dclcommon "github.com/cosmos/cosmos-sdk/x/distribution/client/common"
+	distrrest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -913,4 +915,100 @@ func TestSlashingGetParams(t *testing.T) {
 	var params slashing.Params
 	err := cdc.UnmarshalJSON([]byte(body), &params)
 	require.NoError(t, err)
+}
+
+func TestDistributionGetParams(t *testing.T) {
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	defer cleanup()
+
+	res, body := Request(t, port, "GET", "/distribution/parameters", nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &dclcommon.PrettyParams{}))
+}
+
+func TestDistributionFlow(t *testing.T) {
+	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	//addr2, seed2 = CreateAddr(t, name2, pw, GetKeyBase(t))
+	cleanup, _, valAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	defer cleanup()
+
+	valAddr := valAddrs[0]
+	operAddr := sdk.AccAddress(valAddr)
+
+	var rewards sdk.DecCoins
+	res, body := Request(t, port, "GET", fmt.Sprintf("/distribution/outstanding_rewards"), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
+	require.Equal(t, sdk.DecCoins(nil), rewards)
+
+	var valDistInfo distrrest.ValidatorDistInfo
+	res, body = Request(t, port, "GET", "/distribution/validators/"+valAddr.String(), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &valDistInfo))
+	require.Equal(t, valDistInfo.OperatorAddress.String(), sdk.AccAddress(valAddr).String())
+	require.Equal(t, valDistInfo.ValidatorCommission, sdk.DecCoins(nil))
+	require.Equal(t, valDistInfo.SelfBondRewards, sdk.DecCoins(nil))
+
+	// Delegate some coins
+	resultTx := doDelegate(t, port, name1, pw, addr, valAddr, 60, fees)
+	tests.WaitForHeight(resultTx.Height+1, port)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// send some coins
+	_, resultTx = doTransfer(t, port, seed, name1, memo, pw, addr, fees)
+	tests.WaitForHeight(resultTx.Height+5, port)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+
+	// Query outstanding rewards changed
+	oustandingRewards := mustParseDecCoins("9.80stake")
+	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/outstanding_rewards"), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
+	require.Equal(t, oustandingRewards, rewards)
+
+	// Query validator distribution info
+	res, body = Request(t, port, "GET", "/distribution/validators/"+valAddr.String(), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	valRewards := mustParseDecCoins("6.125stake")
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &valDistInfo))
+	require.Equal(t, valRewards, valDistInfo.SelfBondRewards)
+
+	// Query validator's rewards
+	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/validators/%s/rewards", valAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
+	require.Equal(t, valRewards, rewards)
+
+	// Query self-delegation
+	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/delegators/%s/rewards/%s", operAddr, valAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
+	require.Equal(t, valRewards, rewards)
+
+	// Query delegation
+	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/delegators/%s/rewards/%s", addr, valAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
+	require.Equal(t, mustParseDecCoins("3.675stake"), rewards)
+
+	// Query delegator's rewards total
+	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/delegators/%s/rewards", operAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &rewards))
+	require.Equal(t, valRewards, rewards)
+
+	// Query delegator's withdrawal address
+	var withdrawAddr string
+	res, body = Request(t, port, "GET", fmt.Sprintf("/distribution/delegators/%s/withdraw_address", operAddr), nil)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	require.NoError(t, cdc.UnmarshalJSON([]byte(body), &withdrawAddr))
+	require.Equal(t, operAddr.String(), withdrawAddr)
+
+	// Withdraw delegator's rewards
+	resultTx = doWithdrawDelegatorAllRewards(t, port, seed, name1, pw, addr, fees)
+	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
+	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
 }

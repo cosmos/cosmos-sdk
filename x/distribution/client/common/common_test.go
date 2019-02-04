@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestQueryRewardsAddrValidation(t *testing.T) {
+func TestQueryDelegationRewardsAddrValidation(t *testing.T) {
 	cdc := codec.New()
 	ctx := context.NewCLIContext().WithCodec(cdc)
 	type args struct {
@@ -28,7 +28,7 @@ func TestQueryRewardsAddrValidation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := QueryRewards(ctx, cdc, "", tt.args.delAddr, tt.args.valAddr)
+			_, err := QueryDelegationRewards(ctx, cdc, "", tt.args.delAddr, tt.args.valAddr)
 			require.True(t, err != nil, tt.wantErr)
 		})
 	}

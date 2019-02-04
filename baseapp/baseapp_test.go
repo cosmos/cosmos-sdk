@@ -194,6 +194,41 @@ func TestInfo(t *testing.T) {
 	// TODO
 }
 
+func TestBaseAppOptionSeal(t *testing.T) {
+	app := setupBaseApp(t)
+
+	require.Panics(t, func() {
+		app.SetName("")
+	})
+	require.Panics(t, func() {
+		app.SetDB(nil)
+	})
+	require.Panics(t, func() {
+		app.SetCMS(nil)
+	})
+	require.Panics(t, func() {
+		app.SetInitChainer(nil)
+	})
+	require.Panics(t, func() {
+		app.SetBeginBlocker(nil)
+	})
+	require.Panics(t, func() {
+		app.SetEndBlocker(nil)
+	})
+	require.Panics(t, func() {
+		app.SetAnteHandler(nil)
+	})
+	require.Panics(t, func() {
+		app.SetAddrPeerFilter(nil)
+	})
+	require.Panics(t, func() {
+		app.SetPubKeyPeerFilter(nil)
+	})
+	require.Panics(t, func() {
+		app.SetFauxMerkleMode()
+	})
+}
+
 // ----------------------------------------------------------------------------
 // InitChain, BeginBlock, EndBlock
 

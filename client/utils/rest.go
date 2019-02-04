@@ -24,11 +24,23 @@ type GasEstimateResponse struct {
 //-----------------------------------------------------------------------------
 // Basic HTTP utilities
 
+// ErrorResponse defines the attributes of a JSON error response.
+type ErrorResponse struct {
+	Code    int    `json:"code,omitempty"`
+	Message string `json:"message"`
+}
+
+// NewErrorResponse creates a new ErrorResponse instance.
+func NewErrorResponse(code int, msg string) ErrorResponse {
+	return ErrorResponse{Code: code, Message: msg}
+}
+
 // WriteErrorResponse prepares and writes a HTTP error
 // given a status code and an error message.
 func WriteErrorResponse(w http.ResponseWriter, status int, err string) {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write([]byte(err))
+	w.Write(codec.Cdc.MustMarshalJSON(NewErrorResponse(0, err)))
 }
 
 // WriteSimulationResponse prepares and writes an HTTP
@@ -353,6 +365,7 @@ func WriteGenerateStdTxResponse(
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(output)
 	return
 }

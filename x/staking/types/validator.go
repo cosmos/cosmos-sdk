@@ -22,20 +22,16 @@ import (
 // divided by the current exchange rate. Voting power can be calculated as total
 // bonded shares multiplied by exchange rate.
 type Validator struct {
-	OperatorAddr sdk.ValAddress `json:"operator_address"` // address of the validator's operator; bech encoded in JSON
-	ConsPubKey   crypto.PubKey  `json:"consensus_pubkey"` // the consensus public key of the validator; bech encoded in JSON
-	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
-
-	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
-	Tokens          sdk.Int        `json:"tokens"`           // delegated tokens (incl. self-delegation)
-	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
-
-	Description Description `json:"description"` // description terms for the validator
-
-	UnbondingHeight         int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
-	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
-
-	Commission Commission `json:"commission"` // commission parameters
+	OperatorAddr            sdk.ValAddress `json:"operator_address"` // address of the validator's operator; bech encoded in JSON
+	ConsPubKey              crypto.PubKey  `json:"consensus_pubkey"` // the consensus public key of the validator; bech encoded in JSON
+	Jailed                  bool           `json:"jailed"`           // has the validator been jailed from bonded status?
+	Status                  sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
+	Tokens                  sdk.Int        `json:"tokens"`           // delegated tokens (incl. self-delegation)
+	DelegatorShares         sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
+	Description             Description    `json:"description"`      // description terms for the validator
+	UnbondingHeight         int64          `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
+	UnbondingCompletionTime time.Time      `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
+	Commission              Commission     `json:"commission"`       // commission parameters
 }
 
 // Validators is a collection of Validator
@@ -106,24 +102,18 @@ func (v Validator) String() string {
 		v.UnbondingHeight, v.UnbondingCompletionTime, v.Commission)
 }
 
-//___________________________________________________________________
-
 // this is a helper struct used for JSON de- and encoding only
 type bechValidator struct {
-	OperatorAddr sdk.ValAddress `json:"operator_address"` // the bech32 address of the validator's operator
-	ConsPubKey   string         `json:"consensus_pubkey"` // the bech32 consensus public key of the validator
-	Jailed       bool           `json:"jailed"`           // has the validator been jailed from bonded status?
-
-	Status          sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
-	Tokens          sdk.Int        `json:"tokens"`           // delegated tokens (incl. self-delegation)
-	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
-
-	Description Description `json:"description"` // description terms for the validator
-
-	UnbondingHeight         int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
-	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
-
-	Commission Commission `json:"commission"` // commission parameters
+	OperatorAddr            sdk.ValAddress `json:"operator_address"` // the bech32 address of the validator's operator
+	ConsPubKey              string         `json:"consensus_pubkey"` // the bech32 consensus public key of the validator
+	Jailed                  bool           `json:"jailed"`           // has the validator been jailed from bonded status?
+	Status                  sdk.BondStatus `json:"status"`           // validator status (bonded/unbonding/unbonded)
+	Tokens                  sdk.Int        `json:"tokens"`           // delegated tokens (incl. self-delegation)
+	DelegatorShares         sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
+	Description             Description    `json:"description"`      // description terms for the validator
+	UnbondingHeight         int64          `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
+	UnbondingCompletionTime time.Time      `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
+	Commission              Commission     `json:"commission"`       // commission parameters
 }
 
 // MarshalJSON marshals the validator to JSON using Bech32
@@ -172,9 +162,9 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-//___________________________________________________________________
-
 // only the vitals
+// TODO having Equal functions which do not test equality of
+// all struct fields is very unobvious, we should call this something else
 func (v Validator) Equal(v2 Validator) bool {
 	return v.ConsPubKey.Equals(v2.ConsPubKey) &&
 		bytes.Equal(v.OperatorAddr, v2.OperatorAddr) &&

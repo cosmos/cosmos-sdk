@@ -132,7 +132,7 @@ func (r TxResponse) String() string {
 	}
 
 	if len(r.Tags) > 0 {
-		sb.WriteString(fmt.Sprintf("  Tags: %s\n", r.Tags.String()))
+		sb.WriteString(fmt.Sprintf("  Tags: \n%s\n", r.Tags.String()))
 	}
 
 	if r.Codespace != "" {

@@ -1,6 +1,10 @@
 package params
 
 import (
+	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/x/params/subspace"
 )
 
@@ -9,11 +13,14 @@ type (
 	Subspace         = subspace.Subspace
 	ReadOnlySubspace = subspace.ReadOnlySubspace
 	ParamSet         = subspace.ParamSet
-	KeyValuePairs    = subspace.KeyValuePairs
-	TypeTable        = subspace.TypeTable
+	ParamSetPairs    = subspace.ParamSetPairs
+	KeyTable         = subspace.KeyTable
 )
 
-// re-export functions from subspace
-func NewTypeTable(keytypes ...interface{}) TypeTable {
-	return subspace.NewTypeTable(keytypes...)
+// nolint - re-export functions from subspace
+func NewKeyTable(keytypes ...interface{}) KeyTable {
+	return subspace.NewKeyTable(keytypes...)
+}
+func DefaultTestComponents(t *testing.T) (sdk.Context, Subspace, func() sdk.CommitID) {
+	return subspace.DefaultTestComponents(t)
 }

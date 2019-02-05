@@ -42,7 +42,7 @@ func NewBaseKeeper(ak auth.AccountKeeper,
 	paramSpace params.Subspace,
 	codespace sdk.CodespaceType) BaseKeeper {
 
-	ps := paramSpace.WithTypeTable(ParamTypeTable())
+	ps := paramSpace.WithKeyTable(ParamKeyTable())
 	return BaseKeeper{
 		BaseSendKeeper: NewBaseSendKeeper(ak, ps, codespace),
 		ak:             ak,

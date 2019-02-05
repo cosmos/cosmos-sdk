@@ -27,10 +27,25 @@ recommended to use the same name with the module's.
 	)
 
 	type Keeper struct {
-		cdc *wire.Codec
+		cdc *codec.Codec
 		key sdk.StoreKey
 
 		ps params.Subspace
+	}
+
+	func ParamKeyTable() params.KeyTable {
+		return params.NewKeyTable(
+			KeyParameter1, MyStruct{},
+			KeyParameter2, MyStruct{},
+		)
+	}
+
+	func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, ps params.Subspace) Keeper {
+		return Keeper {
+			cdc: cdc,
+			key: key,
+			ps: ps.WithKeyTable(ParamKeyTable()),
+		}
 	}
 
 Pass a params.Subspace to NewKeeper with DefaultParamspace (or another)
@@ -40,8 +55,23 @@ Pass a params.Subspace to NewKeeper with DefaultParamspace (or another)
 Now we can access to the paramstore using Paramstore Keys
 
 	var param MyStruct
-	k.ps.Get(KeyParameter1, &param)
-	k.ps.Set(KeyParameter2, param)
+	k.ps.Get(ctx, KeyParameter1, &param)
+	k.ps.Set(ctx, KeyParameter2, param)
+
+If you want to store an unknown number of parameters, or want to store a mapping,
+you can use subkeys. Subkeys can be used with a main key, where the subkeys are
+inheriting the key properties.
+
+	func ParamKeyTable() params.KeyTable {
+		return params.NewKeyTable(
+			KeyParamMain, MyStruct{},
+		)
+	}
+
+
+	func (k Keeper) GetDynamicParameter(ctx sdk.Context, subkey []byte) (res MyStruct) {
+		k.ps.GetWithSubkey(ctx, KeyParamMain, subkey, &res)
+	}
 
 Genesis Usage:
 

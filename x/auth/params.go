@@ -42,15 +42,15 @@ type Params struct {
 }
 
 // ParamTable for staking module
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable().RegisterParamSet(&Params{})
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// KeyValuePairs implements the ParamSet interface and returns all the key/value
+// ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
 // pairs of auth module's parameters.
 // nolint
-func (p *Params) KeyValuePairs() params.KeyValuePairs {
-	return params.KeyValuePairs{
+func (p *Params) ParamSetPairs() params.ParamSetPairs {
+	return params.ParamSetPairs{
 		{KeyMaxMemoCharacters, &p.MaxMemoCharacters},
 		{KeyTxSigLimit, &p.TxSigLimit},
 		{KeyTxSizeCostPerByte, &p.TxSizeCostPerByte},

@@ -20,9 +20,11 @@ func RegisterCodec(cdc *codec.Codec) {
 }
 
 func init() {
-	msgCdc = codec.New()
-	RegisterCodec(msgCdc)
-	msgCdc = msgCdc.Seal()
-
 	jsonCdc = codec.New()
+	msgCdc = codec.New()
+
+	RegisterCodec(msgCdc)
+
+	msgCdc = msgCdc.Seal()
+	jsonCdc = jsonCdc.Seal()
 }

@@ -41,8 +41,8 @@ func (res Result) IsOK() bool {
 	return res.Code.IsOK()
 }
 
-// Is a version of ResponseFormat where the tags are StringTags rather than []byte tags
-type ResponseFormat struct {
+// Is a version of TxResponse where the tags are StringTags rather than []byte tags
+type TxResponse struct {
 	Height    int64      `json:"height"`
 	TxHash    string     `json:"txhash"`
 	Code      uint32     `json:"code,omitempty"`
@@ -56,8 +56,8 @@ type ResponseFormat struct {
 	Tx        Tx         `json:"tx,omitempty"`
 }
 
-func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) ResponseFormat {
-	return ResponseFormat{
+func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
+	return TxResponse{
 		TxHash:    res.Hash.String(),
 		Height:    res.Height,
 		Code:      res.TxResult.Code,
@@ -71,8 +71,8 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) ResponseFormat {
 	}
 }
 
-func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) ResponseFormat {
-	return ResponseFormat{
+func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+	return TxResponse{
 		Height:    res.Height,
 		TxHash:    res.Hash.String(),
 		Code:      res.DeliverTx.Code,
@@ -86,8 +86,8 @@ func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) Res
 	}
 }
 
-func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) ResponseFormat {
-	return ResponseFormat{
+func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) TxResponse {
+	return TxResponse{
 		Code:   res.Code,
 		Data:   res.Data.Bytes(),
 		Log:    res.Log,
@@ -95,7 +95,7 @@ func NewResponseFormatBroadcastTx(res *ctypes.ResultBroadcastTx) ResponseFormat 
 	}
 }
 
-func (r ResponseFormat) String() string {
+func (r TxResponse) String() string {
 	var sb strings.Builder
 	sb.WriteString("Response:\n")
 

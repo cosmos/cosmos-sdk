@@ -343,7 +343,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	// check if tx was committed
-	var resultTx sdk.ResponseFormat
+	var resultTx sdk.TxResponse
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
 	require.Equal(t, uint32(0), resultTx.Code)
 	require.Equal(t, gasEstimate, resultTx.GasWanted)
@@ -354,7 +354,7 @@ func TestTxs(t *testing.T) {
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
-	var emptyTxs []sdk.ResponseFormat
+	var emptyTxs []sdk.TxResponse
 	txs := getTransactions(t, port)
 	require.Equal(t, emptyTxs, txs)
 

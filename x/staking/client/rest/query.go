@@ -144,7 +144,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
 		isRedTx := contains(typesQuerySlice, "redelegate")
-		var txs = []sdk.ResponseFormat{}
+		var txs = []sdk.TxResponse{}
 		var actions []string
 
 		switch {

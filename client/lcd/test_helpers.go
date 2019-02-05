@@ -506,8 +506,8 @@ func getValidatorSets(t *testing.T, port string, height int, expectFail bool) rp
 }
 
 // GET /txs/{hash} get tx by hash
-func getTransaction(t *testing.T, port string, hash string) sdk.ResponseFormat {
-	var tx sdk.ResponseFormat
+func getTransaction(t *testing.T, port string, hash string) sdk.TxResponse {
+	var tx sdk.TxResponse
 	res, body := Request(t, port, "GET", fmt.Sprintf("/txs/%s", hash), nil)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -519,8 +519,8 @@ func getTransaction(t *testing.T, port string, hash string) sdk.ResponseFormat {
 // POST /txs broadcast txs
 
 // GET /txs search transactions
-func getTransactions(t *testing.T, port string, tags ...string) []sdk.ResponseFormat {
-	var txs []sdk.ResponseFormat
+func getTransactions(t *testing.T, port string, tags ...string) []sdk.TxResponse {
+	var txs []sdk.TxResponse
 	if len(tags) == 0 {
 		return txs
 	}
@@ -667,13 +667,13 @@ func doSign(t *testing.T, port, name, password, chainID string, accnum, sequence
 }
 
 // POST /tx/broadcast Send a signed Tx
-func doBroadcast(t *testing.T, port string, msg auth.StdTx) sdk.ResponseFormat {
+func doBroadcast(t *testing.T, port string, msg auth.StdTx) sdk.TxResponse {
 	tx := broadcastReq{Tx: msg, Return: "block"}
 	req, err := cdc.MarshalJSON(tx)
 	require.Nil(t, err)
 	res, body := Request(t, port, "POST", "/tx/broadcast", req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
-	var resultTx sdk.ResponseFormat
+	var resultTx sdk.TxResponse
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
 	return resultTx
 }
@@ -686,7 +686,7 @@ type broadcastReq struct {
 // GET /bank/balances/{address} Get the account balances
 
 // POST /bank/accounts/{address}/transfers Send coins (build -> sign -> send)
-func doTransfer(t *testing.T, port, seed, name, memo, password string, addr sdk.AccAddress, fees sdk.Coins) (receiveAddr sdk.AccAddress, resultTx sdk.ResponseFormat) {
+func doTransfer(t *testing.T, port, seed, name, memo, password string, addr sdk.AccAddress, fees sdk.Coins) (receiveAddr sdk.AccAddress, resultTx sdk.TxResponse) {
 	res, body, receiveAddr := doTransferWithGas(t, port, seed, name, memo, password, addr, "", 1.0, false, false, fees)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
@@ -782,7 +782,7 @@ type sendReq struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doDelegate(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx sdk.ResponseFormat) {
+	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
@@ -799,7 +799,7 @@ func doDelegate(t *testing.T, port, name, password string,
 	res, body := Request(t, port, "POST", fmt.Sprintf("/staking/delegators/%s/delegations", delAddr.String()), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var result sdk.ResponseFormat
+	var result sdk.TxResponse
 	err = cdc.UnmarshalJSON([]byte(body), &result)
 	require.Nil(t, err)
 
@@ -815,7 +815,7 @@ type msgDelegationsInput struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doUndelegate(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx sdk.ResponseFormat) {
+	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
@@ -834,7 +834,7 @@ func doUndelegate(t *testing.T, port, name, password string,
 	res, body := Request(t, port, "POST", fmt.Sprintf("/staking/delegators/%s/unbonding_delegations", delAddr), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var result sdk.ResponseFormat
+	var result sdk.TxResponse
 	err = cdc.UnmarshalJSON([]byte(body), &result)
 	require.Nil(t, err)
 
@@ -850,7 +850,7 @@ type msgUndelegateInput struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doBeginRedelegation(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx sdk.ResponseFormat) {
+	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
@@ -872,7 +872,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 	res, body := Request(t, port, "POST", fmt.Sprintf("/staking/delegators/%s/redelegations", delAddr), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var result sdk.ResponseFormat
+	var result sdk.TxResponse
 	err = cdc.UnmarshalJSON([]byte(body), &result)
 	require.Nil(t, err)
 
@@ -961,7 +961,7 @@ func getDelegatorValidator(t *testing.T, port string, delegatorAddr sdk.AccAddre
 }
 
 // GET /staking/delegators/{delegatorAddr}/txs Get all staking txs (i.e msgs) from a delegator
-func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []sdk.ResponseFormat {
+func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, query string) []sdk.TxResponse {
 	var res *http.Response
 	var body string
 
@@ -972,7 +972,7 @@ func getBondingTxs(t *testing.T, port string, delegatorAddr sdk.AccAddress, quer
 	}
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var txs []sdk.ResponseFormat
+	var txs []sdk.TxResponse
 
 	err := cdc.UnmarshalJSON([]byte(body), &txs)
 	require.Nil(t, err)
@@ -1083,7 +1083,7 @@ func getStakingParams(t *testing.T, port string) staking.Params {
 // ICS 22 - Gov
 // ----------------------------------------------------------------------
 // POST /gov/proposals Submit a proposal
-func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, amount int64, fees sdk.Coins) (resultTx sdk.ResponseFormat) {
+func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
@@ -1106,7 +1106,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 	res, body := Request(t, port, "POST", "/gov/proposals", req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results sdk.ResponseFormat
+	var results sdk.TxResponse
 	err = cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
@@ -1178,7 +1178,7 @@ func getProposalsFilterStatus(t *testing.T, port string, status gov.ProposalStat
 }
 
 // POST /gov/proposals/{proposalId}/deposits Deposit tokens to a proposal
-func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, amount int64, fees sdk.Coins) (resultTx sdk.ResponseFormat) {
+func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
 
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
@@ -1198,7 +1198,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/deposits", proposalID), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results sdk.ResponseFormat
+	var results sdk.TxResponse
 	err = cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
@@ -1232,7 +1232,7 @@ func getTally(t *testing.T, port string, proposalID uint64) gov.TallyResult {
 }
 
 // POST /gov/proposals/{proposalId}/votes Vote a proposal
-func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, option string, fees sdk.Coins) (resultTx sdk.ResponseFormat) {
+func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, option string, fees sdk.Coins) (resultTx sdk.TxResponse) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
@@ -1252,7 +1252,7 @@ func doVote(t *testing.T, port, seed, name, password string, proposerAddr sdk.Ac
 	res, body := Request(t, port, "POST", fmt.Sprintf("/gov/proposals/%d/votes", proposalID), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results sdk.ResponseFormat
+	var results sdk.TxResponse
 	err = cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 
@@ -1368,7 +1368,7 @@ func getSigningInfo(t *testing.T, port string, validatorPubKey string) slashing.
 // TODO: Test this functionality, it is not currently in any of the tests
 // POST /slashing/validators/{validatorAddr}/unjail Unjail a jailed validator
 func doUnjail(t *testing.T, port, seed, name, password string,
-	valAddr sdk.ValAddress, fees sdk.Coins) (resultTx sdk.ResponseFormat) {
+	valAddr sdk.ValAddress, fees sdk.Coins) (resultTx sdk.TxResponse) {
 	chainID := viper.GetString(client.FlagChainID)
 	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", 1, 1, fees, nil, false, false)
 
@@ -1380,7 +1380,7 @@ func doUnjail(t *testing.T, port, seed, name, password string,
 	res, body := Request(t, port, "POST", fmt.Sprintf("/slashing/validators/%s/unjail", valAddr.String()), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results sdk.ResponseFormat
+	var results sdk.TxResponse
 	err = cdc.UnmarshalJSON([]byte(body), &results)
 	require.Nil(t, err)
 

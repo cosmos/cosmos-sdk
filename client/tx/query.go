@@ -96,23 +96,14 @@ func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
 	return nil
 }
 
-func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (sdk.ResponseFormat, error) {
+func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (sdk.TxResponse, error) {
 	tx, err := parseTx(cdc, res.Tx)
 	if err != nil {
-		return sdk.ResponseFormat{}, err
+		return sdk.TxResponse{}, err
 	}
 
 	return sdk.NewResponseResultTx(res, tx), nil
 }
-
-//
-// // Info is used to prepare info to display
-// type Info struct {
-// 	Hash   common.HexBytes       `json:"hash"`
-// 	Height int64                 `json:"height"`
-// 	Tx     sdk.Tx                `json:"tx"`
-// 	Result sdk.ResponseFormat `json:"result"`
-// }
 
 func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
 	var tx auth.StdTx

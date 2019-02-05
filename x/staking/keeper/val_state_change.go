@@ -78,12 +78,6 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
 
-			// Assert that the validator had updated its ValidatorDistInfo.FeePoolWithdrawalHeight.
-			// This hook is extremely useful, otherwise lazy accum bugs will be difficult to solve.
-			if k.hooks != nil {
-				k.hooks.AfterValidatorPowerDidChange(ctx, validator.ConsAddress(), valAddr)
-			}
-
 			// set validator power on lookup index.
 			k.SetLastValidatorPower(ctx, valAddr, sdk.NewInt(newPower))
 		}

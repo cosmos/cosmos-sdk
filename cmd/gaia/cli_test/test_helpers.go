@@ -269,7 +269,7 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 
 // TxSend is gaiacli tx send
 func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("gaiacli tx send %v --amount=%s --to=%s --from=%s", f.Flags(), amount, to, from)
+	cmd := fmt.Sprintf("gaiacli tx send %s %s %v --from=%s", amount, to, f.Flags(), from)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 

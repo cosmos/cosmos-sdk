@@ -3,7 +3,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -77,12 +76,7 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 				msg = types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
 			}
 
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.MessageOutput(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 	cmd.Flags().String(flagOnlyFromValidator, "", "only withdraw from this validator address (in bech)")
@@ -109,12 +103,7 @@ func GetCmdWithdrawAllRewards(cdc *codec.Codec, queryRoute string) *cobra.Comman
 				return err
 			}
 
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, msgs, false)
-			}
-
-			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, msgs)
+			return utils.MessageOutput(cliCtx, txBldr, msgs, false)
 		},
 	}
 	cmd.Flags().String(flagOnlyFromValidator, "", "only withdraw from this validator address (in bech)")
@@ -142,9 +131,7 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 			}
 
 			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
-
-			// build and sign the transaction, then broadcast to Tendermint
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.MessageOutput(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 	return cmd

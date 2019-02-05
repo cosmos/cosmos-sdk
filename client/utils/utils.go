@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -26,6 +25,14 @@ type GasEstimateResponse struct {
 
 func (gr GasEstimateResponse) String() string {
 	return fmt.Sprintf("gas estimate: %d", gr.GasEstimate)
+}
+
+// MessageOutput respects CLI flags and outputs a message
+func MessageOutput(cliCtx context.CLIContext, txBldr authtxb.TxBuilder, msgs []sdk.Msg, offline bool) error {
+	if cliCtx.GenerateOnly {
+		return PrintUnsignedStdTx(txBldr, cliCtx, msgs, offline)
+	}
+	return CompleteAndBroadcastTxCLI(txBldr, cliCtx, msgs)
 }
 
 // CompleteAndBroadcastTxCLI implements a utility function that facilitates
@@ -103,7 +110,7 @@ func CalculateGas(queryFunc func(string, common.HexBytes) ([]byte, error), cdc *
 
 // PrintUnsignedStdTx builds an unsigned StdTx and prints it to os.Stdout.
 // Don't perform online validation or lookups if offline is true.
-func PrintUnsignedStdTx(w io.Writer, txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
+func PrintUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg, offline bool) (err error) {
 	var stdTx auth.StdTx
 	if offline {
 		stdTx, err = buildUnsignedStdTxOffline(txBldr, cliCtx, msgs)
@@ -115,7 +122,7 @@ func PrintUnsignedStdTx(w io.Writer, txBldr authtxb.TxBuilder, cliCtx context.CL
 	}
 	json, err := cliCtx.Codec.MarshalJSON(stdTx)
 	if err == nil {
-		fmt.Fprintf(w, "%s\n", json)
+		fmt.Fprintf(cliCtx.Output, "%s\n", json)
 	}
 	return
 }

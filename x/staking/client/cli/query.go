@@ -17,7 +17,11 @@ func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
 		Use:   "validator [operator-addr]",
 		Short: "Query a validator",
-		Args:  cobra.ExactArgs(1),
+		Long: `Query details about an individual validator:
+
+$ gaiacli query staking validator cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
@@ -29,6 +33,10 @@ func GetCmdQueryValidator(storeName string, cdc *codec.Codec) *cobra.Command {
 			res, err := cliCtx.QueryStore(staking.GetValidatorKey(addr), storeName)
 			if err != nil {
 				return err
+			}
+
+			if len(res) == 0 {
+				return fmt.Errorf("No validator found with address %s", addr)
 			}
 
 			return cliCtx.PrintOutput(types.MustUnmarshalValidator(cdc, res))

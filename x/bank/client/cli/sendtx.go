@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"os"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -13,7 +11,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const (
@@ -24,7 +21,7 @@ const (
 // SendTxCmd will create a send tx and sign it with the given key.
 func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "send",
+		Use:   "send [to_address] [amount]",
 		Short: "Create and sign a send tx",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -36,16 +33,13 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			toStr := viper.GetString(flagTo)
-
-			to, err := sdk.AccAddressFromBech32(toStr)
+			to, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
 				return err
 			}
 
 			// parse coins trying to be sent
-			amount := viper.GetString(flagAmount)
-			coins, err := sdk.ParseCoins(amount)
+			coins, err := sdk.ParseCoins(args[1])
 			if err != nil {
 				return err
 			}
@@ -63,18 +57,8 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			// build and sign the transaction, then broadcast to Tendermint
 			msg := bank.NewMsgSend(from, to, coins)
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.MessageOutput(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	cmd.Flags().String(flagTo, "", "Address to send coins")
-	cmd.Flags().String(flagAmount, "", "Amount of coins to send")
-	cmd.MarkFlagRequired(flagTo)
-	cmd.MarkFlagRequired(flagAmount)
-
 	return client.PostCommands(cmd)[0]
 }

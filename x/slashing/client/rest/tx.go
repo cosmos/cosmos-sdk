@@ -34,8 +34,7 @@ func unjailRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CL
 		bech32validator := vars["validatorAddr"]
 
 		var req UnjailReq
-		err := rest.ReadRESTReq(w, r, cdc, &req)
-		if err != nil {
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 

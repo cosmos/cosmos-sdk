@@ -595,9 +595,9 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantPanic {
-				require.Panics(t, func() { consumeSignatureVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params) })
+				require.Panics(t, func() { consumeSigVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params) })
 			} else {
-				consumeSignatureVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
+				consumeSigVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
 				require.Equal(t, tt.gasConsumed, tt.args.meter.GasConsumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.GasConsumed()))
 			}
 		})

@@ -215,7 +215,7 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 	totalSlashAmount = sdk.ZeroInt()
 
 	// perform slashing on all entries within the redelegation
-	for i, entry := range redelegation.Entries {
+	for _, entry := range redelegation.Entries {
 
 		// If redelegation started before this height, stake didn't contribute to infraction
 		if entry.CreationHeight < infractionHeight {
@@ -231,19 +231,6 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 		slashAmountDec := slashFactor.MulInt(entry.InitialBalance.Amount)
 		slashAmount := slashAmountDec.TruncateInt()
 		totalSlashAmount = totalSlashAmount.Add(slashAmount)
-
-		// Don't slash more tokens than held
-		// Possible since the redelegation may already
-		// have been slashed, and slash amounts are calculated
-		// according to stake held at time of infraction
-		redelegationSlashAmount := sdk.MinInt(slashAmount, entry.Balance.Amount)
-
-		// Update entry if necessary
-		if !redelegationSlashAmount.IsZero() {
-			entry.Balance.Amount = entry.Balance.Amount.Sub(redelegationSlashAmount)
-			redelegation.Entries[i] = entry
-			k.SetRedelegation(ctx, redelegation)
-		}
 
 		// Unbond from target validator
 		sharesToUnbond := slashFactor.Mul(entry.SharesDst)

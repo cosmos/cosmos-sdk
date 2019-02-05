@@ -587,7 +587,6 @@ func TestRedelegation(t *testing.T) {
 	require.True(t, has)
 
 	// modify a records, save, and retrieve
-	rd.Entries[0].SharesSrc = sdk.NewDec(21)
 	rd.Entries[0].SharesDst = sdk.NewDec(21)
 	keeper.SetRedelegation(ctx, rd)
 

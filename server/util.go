@@ -120,7 +120,7 @@ func interceptLoadConfig() (conf *cfg.Config, err error) {
 
 // validate the config with the sdk's requirements.
 func validateConfig(conf *cfg.Config) error {
-	if conf.Consensus.CreateEmptyBlocks == false {
+	if !conf.Consensus.CreateEmptyBlocks {
 		return errors.New("config option CreateEmptyBlocks = false is currently unsupported")
 	}
 	return nil

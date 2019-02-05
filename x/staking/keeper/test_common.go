@@ -166,7 +166,7 @@ func TestAddr(addr string, bech string) sdk.AccAddress {
 	if err != nil {
 		panic(err)
 	}
-	if bytes.Compare(bechres, res) != 0 {
+	if !bytes.Equal(bechres, res) {
 		panic("Bech decode and hex decode don't match")
 	}
 

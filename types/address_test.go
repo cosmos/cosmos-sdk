@@ -1,17 +1,15 @@
 package types_test
 
 import (
+	"crypto/rand"
 	"encoding/hex"
-	"math/rand"
 	"testing"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var invalidStrs = []string{

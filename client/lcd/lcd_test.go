@@ -175,7 +175,7 @@ func TestVersion(t *testing.T) {
 	reg, err := regexp.Compile(`\d+\.\d+\.\d+.*`)
 	require.Nil(t, err)
 	match := reg.MatchString(body)
-	require.True(t, match, body, fmt.Sprintf("%s", body))
+	require.True(t, match, body, body)
 
 	// node info
 	res, body = Request(t, port, "GET", "/node_version", nil)

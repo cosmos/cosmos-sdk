@@ -222,7 +222,7 @@ func (k Keeper) InsertUBDQueue(ctx sdk.Context, ubd types.UnbondingDelegation,
 	completionTime time.Time) {
 
 	timeSlice := k.GetUBDQueueTimeSlice(ctx, completionTime)
-	dvPair := types.DVPair{ubd.DelegatorAddr, ubd.ValidatorAddr}
+	dvPair := types.DVPair{DelegatorAddr: ubd.DelegatorAddr, ValidatorAddr: ubd.ValidatorAddr}
 	if len(timeSlice) == 0 {
 		k.SetUBDQueueTimeSlice(ctx, completionTime, []types.DVPair{dvPair})
 	} else {
@@ -314,10 +314,7 @@ func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 	iterator := sdk.KVStorePrefixIterator(store, prefix)
 	defer iterator.Close()
 
-	if iterator.Valid() {
-		return true
-	}
-	return false
+	return iterator.Valid()
 }
 
 // HasMaxRedelegationEntries - redelegation has maximum number of entries
@@ -411,7 +408,11 @@ func (k Keeper) InsertRedelegationQueue(ctx sdk.Context, red types.Redelegation,
 	completionTime time.Time) {
 
 	timeSlice := k.GetRedelegationQueueTimeSlice(ctx, completionTime)
-	dvvTriplet := types.DVVTriplet{red.DelegatorAddr, red.ValidatorSrcAddr, red.ValidatorDstAddr}
+	dvvTriplet := types.DVVTriplet{
+		DelegatorAddr:    red.DelegatorAddr,
+		ValidatorSrcAddr: red.ValidatorSrcAddr,
+		ValidatorDstAddr: red.ValidatorDstAddr}
+
 	if len(timeSlice) == 0 {
 		k.SetRedelegationQueueTimeSlice(ctx, completionTime, []types.DVVTriplet{dvvTriplet})
 	} else {

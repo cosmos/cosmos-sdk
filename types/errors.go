@@ -19,10 +19,7 @@ type CodespaceType string
 
 // IsOK - is everything okay?
 func (code CodeType) IsOK() bool {
-	if code == CodeOK {
-		return true
-	}
-	return false
+	return code == CodeOK
 }
 
 // SDK error codes

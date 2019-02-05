@@ -15,7 +15,11 @@ import (
 )
 
 // KeyDBName is the directory under root where we store the keys
-const KeyDBName = "keys"
+const (
+	KeyDBName        = "keys"
+	OutputFormatText = "text"
+	OutputFormatJSON = "json"
+)
 
 type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
 
@@ -157,7 +161,7 @@ func printKeyInfo(keyInfo keys.Info, bechKeyOut bechKeyOutFn) {
 	}
 
 	switch viper.Get(cli.OutputFlag) {
-	case "text":
+	case OutputFormatText:
 		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
 		printKeyOutput(ko)
 	case "json":
@@ -176,12 +180,12 @@ func printInfos(infos []keys.Info) {
 		panic(err)
 	}
 	switch viper.Get(cli.OutputFlag) {
-	case "text":
+	case OutputFormatText:
 		fmt.Printf("NAME:\tTYPE:\tADDRESS:\t\t\t\t\t\tPUBKEY:\n")
 		for _, ko := range kos {
 			printKeyOutput(ko)
 		}
-	case "json":
+	case OutputFormatJSON:
 		out, err := MarshalJSON(kos)
 		if err != nil {
 			panic(err)

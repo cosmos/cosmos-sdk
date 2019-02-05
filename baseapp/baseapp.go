@@ -253,12 +253,6 @@ func (app *BaseApp) Seal() { app.sealed = true }
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
 
-func (app *BaseApp) enforceSeal() {
-	if !app.sealed {
-		panic("enforceSeal() on BaseApp but not sealed")
-	}
-}
-
 func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{

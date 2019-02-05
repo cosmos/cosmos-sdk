@@ -77,9 +77,7 @@ type voteReq struct {
 func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req postProposalReq
-		err := rest.ReadRESTReq(w, r, cdc, &req)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -96,8 +94,7 @@ func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.Han
 
 		// create the message
 		msg := gov.NewMsgSubmitProposal(req.Title, req.Description, proposalType, req.Proposer, req.InitialDeposit)
-		err = msg.ValidateBasic()
-		if err != nil {
+		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -128,8 +125,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 		}
 
 		var req depositReq
-		err := rest.ReadRESTReq(w, r, cdc, &req)
-		if err != nil {
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -140,8 +136,7 @@ func depositHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerF
 
 		// create the message
 		msg := gov.NewMsgDeposit(req.Depositor, proposalID, req.Amount)
-		err = msg.ValidateBasic()
-		if err != nil {
+		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -172,8 +167,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 		}
 
 		var req voteReq
-		err := rest.ReadRESTReq(w, r, cdc, &req)
-		if err != nil {
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -190,8 +184,7 @@ func voteHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc
 
 		// create the message
 		msg := gov.NewMsgVote(req.Voter, proposalID, voteOption)
-		err = msg.ValidateBasic()
-		if err != nil {
+		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}

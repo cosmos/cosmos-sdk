@@ -14,8 +14,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -50,7 +48,24 @@ func TestGaiaCLIKeysAddRecover(t *testing.T) {
 	f := InitFixtures(t)
 
 	f.KeysAddRecover("test-recover", "dentist task convince chimney quality leave banana trade firm crawl eternal easily")
-	require.Equal(t, f.KeyAddress("test-recover").String(), "cosmos1qcfdf69js922qrdr4yaww3ax7gjml6pdds46f4")
+	require.Equal(t, "cosmos1qcfdf69js922qrdr4yaww3ax7gjml6pdds46f4", f.KeyAddress("test-recover").String())
+}
+
+func TestGaiaCLIKeysAddRecoverHDPath(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	f.KeysAddRecoverHDPath("test-recoverHD1", "dentist task convince chimney quality leave banana trade firm crawl eternal easily", 0, 0)
+	require.Equal(t, "cosmos1qcfdf69js922qrdr4yaww3ax7gjml6pdds46f4", f.KeyAddress("test-recoverHD1").String())
+
+	f.KeysAddRecoverHDPath("test-recoverH2", "dentist task convince chimney quality leave banana trade firm crawl eternal easily", 1, 5)
+	require.Equal(t, "cosmos1pdfav2cjhry9k79nu6r8kgknnjtq6a7rykmafy", f.KeyAddress("test-recoverH2").String())
+
+	f.KeysAddRecoverHDPath("test-recoverH3", "dentist task convince chimney quality leave banana trade firm crawl eternal easily", 1, 17)
+	require.Equal(t, "cosmos1909k354n6wl8ujzu6kmh49w4d02ax7qvlkv4sn", f.KeyAddress("test-recoverH3").String())
+
+	f.KeysAddRecoverHDPath("test-recoverH4", "dentist task convince chimney quality leave banana trade firm crawl eternal easily", 2, 17)
+	require.Equal(t, "cosmos1v9plmhvyhgxk3th9ydacm7j4z357s3nhtwsjat", f.KeyAddress("test-recoverH4").String())
 }
 
 func TestGaiaCLIMinimumFees(t *testing.T) {
@@ -272,14 +287,10 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.NotEmpty(t, stderr)
 	require.True(t, success)
 	cdc := app.MakeCodec()
-	sendResp := struct {
-		Height   int64
-		TxHash   string
-		Response abci.ResponseDeliverTx
-	}{}
+	sendResp := sdk.TxResponse{}
 	err := cdc.UnmarshalJSON([]byte(stdout), &sendResp)
 	require.Nil(t, err)
-	require.Equal(t, sendResp.Response.GasWanted, sendResp.Response.GasUsed)
+	require.True(t, sendResp.GasWanted >= sendResp.GasUsed)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Check state has changed accordingly
@@ -684,14 +695,12 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	success, stdout, _ = f.TxBroadcast(signedTxFile.Name())
 	require.True(t, success)
 
-	var result struct {
-		Response abci.ResponseDeliverTx
-	}
+	var result sdk.TxResponse
 
 	// Unmarshal the response and ensure that gas was properly used
 	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
-	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasUsed))
-	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
+	require.Equal(t, msg.Fee.Gas, uint64(result.GasUsed))
+	require.Equal(t, msg.Fee.Gas, uint64(result.GasWanted))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account state

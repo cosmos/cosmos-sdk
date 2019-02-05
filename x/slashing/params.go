@@ -27,9 +27,9 @@ var (
 	KeySlashFractionDoubleSign = []byte("SlashFractionDoubleSign")
 )
 
-// ParamTypeTable for slashing module
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable().RegisterParamSet(&Params{})
+// ParamKeyTable for slashing module
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 // Params - used for initializing default parameter for slashing at genesis
@@ -53,8 +53,8 @@ func (p Params) String() string {
 }
 
 // Implements params.ParamStruct
-func (p *Params) KeyValuePairs() params.KeyValuePairs {
-	return params.KeyValuePairs{
+func (p *Params) ParamSetPairs() params.ParamSetPairs {
+	return params.ParamSetPairs{
 		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},
 		{KeySignedBlocksWindow, &p.SignedBlocksWindow},
 		{KeyMinSignedPerWindow, &p.MinSignedPerWindow},

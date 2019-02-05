@@ -58,9 +58,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgDelegationsInput
 
-		err := rest.ReadRESTReq(w, r, cdc, &req)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -70,8 +68,7 @@ func postDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.
 		}
 
 		msg := staking.NewMsgDelegate(req.DelegatorAddr, req.ValidatorAddr, req.Delegation)
-		err = msg.ValidateBasic()
-		if err != nil {
+		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -103,9 +100,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgBeginRedelegateInput
 
-		err := rest.ReadRESTReq(w, r, cdc, &req)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -115,8 +110,7 @@ func postRedelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx contex
 		}
 
 		msg := staking.NewMsgBeginRedelegate(req.DelegatorAddr, req.ValidatorSrcAddr, req.ValidatorDstAddr, req.SharesAmount)
-		err = msg.ValidateBasic()
-		if err != nil {
+		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
@@ -148,9 +142,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req msgUndelegateInput
 
-		err := rest.ReadRESTReq(w, r, cdc, &req)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -160,8 +152,7 @@ func postUnbondingDelegationsHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx
 		}
 
 		msg := staking.NewMsgUndelegate(req.DelegatorAddr, req.ValidatorAddr, req.SharesAmount)
-		err = msg.ValidateBasic()
-		if err != nil {
+		if err := msg.ValidateBasic(); err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}

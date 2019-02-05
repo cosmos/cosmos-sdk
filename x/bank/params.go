@@ -15,8 +15,8 @@ const (
 var ParamStoreKeySendEnabled = []byte("sendenabled")
 
 // type declaration for parameters
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable(
 		ParamStoreKeySendEnabled, false,
 	)
 }

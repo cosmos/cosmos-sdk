@@ -46,6 +46,7 @@ func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	distTxCmd.AddCommand(client.PostCommands(
 		distCmds.GetCmdWithdrawRewards(mc.cdc),
 		distCmds.GetCmdSetWithdrawAddr(mc.cdc),
+		distCmds.GetCmdWithdrawAllRewards(mc.cdc, mc.storeKey),
 	)...)
 
 	return distTxCmd

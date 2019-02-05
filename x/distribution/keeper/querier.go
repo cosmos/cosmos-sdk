@@ -12,12 +12,14 @@ import (
 
 // nolint
 const (
-	QueryParams               = "params"
-	QueryOutstandingRewards   = "outstanding_rewards"
-	QueryValidatorCommission  = "validator_commission"
-	QueryValidatorSlashes     = "validator_slashes"
-	QueryDelegationRewards    = "delegation_rewards"
-	QueryAllDelegationRewards = "all_delegation_rewards"
+	QueryParams                = "params"
+	QueryOutstandingRewards    = "outstanding_rewards"
+	QueryValidatorCommission   = "validator_commission"
+	QueryValidatorSlashes      = "validator_slashes"
+	QueryDelegationRewards     = "delegation_rewards"
+	QueryDelegatorTotalRewards = "delegator_total_rewards"
+	QueryDelegatorValidators   = "delegator_validators"
+	QueryWithdrawAddr          = "withdraw_addr"
 
 	ParamCommunityTax        = "community_tax"
 	ParamProposerReward      = "proposer_reward"
@@ -42,8 +44,14 @@ func NewQuerier(k Keeper) sdk.Querier {
 		case QueryDelegationRewards:
 			return queryDelegationRewards(ctx, path[1:], req, k)
 
-		case QueryAllDelegationRewards:
-			return queryAllDelegationRewards(ctx, path[1:], req, k)
+		case QueryDelegatorTotalRewards:
+			return queryDelegatorTotalRewards(ctx, path[1:], req, k)
+
+		case QueryDelegatorValidators:
+			return queryDelegatorValidators(ctx, path[1:], req, k)
+
+		case QueryWithdrawAddr:
+			return queryDelegatorWithdrawAddress(ctx, path[1:], req, k)
 
 		default:
 			return nil, sdk.ErrUnknownRequest("unknown distr query endpoint")
@@ -183,8 +191,20 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 	return bz, nil
 }
 
-func queryAllDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
-	var params QueryDelegationRewardsParams
+// params for query 'custom/distr/delegator_total_rewards' and 'custom/distr/delegator_validators'
+type QueryDelegatorParams struct {
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+}
+
+// creates a new instance of QueryDelegationRewardsParams
+func NewQueryDelegatorParams(delegatorAddr sdk.AccAddress) QueryDelegatorParams {
+	return QueryDelegatorParams{
+		DelegatorAddr: delegatorAddr,
+	}
+}
+
+func queryDelegatorTotalRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params QueryDelegatorParams
 	err := k.cdc.UnmarshalJSON(req.Data, &params)
 	if err != nil {
 		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
@@ -208,6 +228,62 @@ func queryAllDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuer
 	)
 
 	bz, err := codec.MarshalJSONIndent(k.cdc, totalRewards)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+
+	return bz, nil
+}
+
+func queryDelegatorValidators(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params QueryDelegatorParams
+	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
+	}
+
+	// cache-wrap context as to not persist state changes during querying
+	ctx, _ = ctx.CacheContext()
+
+	var validators []sdk.ValAddress
+
+	k.stakingKeeper.IterateDelegations(
+		ctx, params.DelegatorAddr,
+		func(_ int64, del sdk.Delegation) (stop bool) {
+			validators = append(validators[:], del.GetValidatorAddr())
+			return false
+		},
+	)
+
+	bz, err := codec.MarshalJSONIndent(k.cdc, validators)
+	if err != nil {
+		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
+	}
+	return bz, nil
+}
+
+// params for query 'custom/distr/withdraw_addr'
+type QueryDelegatorWithdrawAddrParams struct {
+	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
+}
+
+// NewQueryDelegatorWithdrawAddrParams creates a new instance of QueryDelegatorWithdrawAddrParams.
+func NewQueryDelegatorWithdrawAddrParams(delegatorAddr sdk.AccAddress) QueryDelegatorWithdrawAddrParams {
+	return QueryDelegatorWithdrawAddrParams{DelegatorAddr: delegatorAddr}
+}
+
+func queryDelegatorWithdrawAddress(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper) ([]byte, sdk.Error) {
+	var params QueryDelegatorWithdrawAddrParams
+	err := k.cdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdk.ErrUnknownRequest(sdk.AppendMsgToErr("incorrectly formatted request data", err.Error()))
+	}
+
+	// cache-wrap context as to not persist state changes during querying
+	ctx, _ = ctx.CacheContext()
+	withdrawAddr := k.GetDelegatorWithdrawAddr(ctx, params.DelegatorAddr)
+
+	bz, err := codec.MarshalJSONIndent(k.cdc, withdrawAddr)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

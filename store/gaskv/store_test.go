@@ -8,15 +8,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/stretchr/testify/require"
 )
 
-func newGasKVStore() stypes.KVStore {
-	meter := stypes.NewGasMeter(10000)
+func newGasKVStore() types.KVStore {
+	meter := types.NewGasMeter(10000)
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	return gaskv.NewStore(mem, meter, stypes.KVGasConfig())
+	return gaskv.NewStore(mem, meter, types.KVGasConfig())
 }
 
 func bz(s string) []byte { return []byte(s) }
@@ -26,20 +26,20 @@ func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestGasKVStoreBasic(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := stypes.NewGasMeter(10000)
-	st := gaskv.NewStore(mem, meter, stypes.KVGasConfig())
+	meter := types.NewGasMeter(10000)
+	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	st.Delete(keyFmt(1))
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
-	require.Equal(t, meter.GasConsumed(), stypes.Gas(6429))
+	require.Equal(t, meter.GasConsumed(), types.Gas(6429))
 }
 
 func TestGasKVStoreIterator(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := stypes.NewGasMeter(10000)
-	st := gaskv.NewStore(mem, meter, stypes.KVGasConfig())
+	meter := types.NewGasMeter(10000)
+	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.Empty(t, st.Get(keyFmt(1)), "Expected `key1` to be empty")
 	require.Empty(t, st.Get(keyFmt(2)), "Expected `key2` to be empty")
 	st.Set(keyFmt(1), valFmt(1))
@@ -57,20 +57,20 @@ func TestGasKVStoreIterator(t *testing.T) {
 	iterator.Next()
 	require.False(t, iterator.Valid())
 	require.Panics(t, iterator.Next)
-	require.Equal(t, meter.GasConsumed(), stypes.Gas(6987))
+	require.Equal(t, meter.GasConsumed(), types.Gas(6987))
 }
 
 func TestGasKVStoreOutOfGasSet(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := stypes.NewGasMeter(0)
-	st := gaskv.NewStore(mem, meter, stypes.KVGasConfig())
+	meter := types.NewGasMeter(0)
+	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.Panics(t, func() { st.Set(keyFmt(1), valFmt(1)) }, "Expected out-of-gas")
 }
 
 func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	mem := dbadapter.Store{dbm.NewMemDB()}
-	meter := stypes.NewGasMeter(20000)
-	st := gaskv.NewStore(mem, meter, stypes.KVGasConfig())
+	meter := types.NewGasMeter(20000)
+	st := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	st.Set(keyFmt(1), valFmt(1))
 	iterator := st.Iterator(nil, nil)
 	iterator.Next()

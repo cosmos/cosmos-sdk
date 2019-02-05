@@ -29,7 +29,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspa
 		storeKey:     key,
 		cdc:          cdc,
 		validatorSet: vs,
-		paramspace:   paramspace.WithTypeTable(ParamTypeTable()),
+		paramspace:   paramspace.WithKeyTable(ParamKeyTable()),
 		codespace:    codespace,
 	}
 	return keeper

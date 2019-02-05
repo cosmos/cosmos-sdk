@@ -14,7 +14,6 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -226,9 +225,15 @@ func (f *Fixtures) KeysAdd(name string, flags ...string) {
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
-// KeysAdd is gaiacli keys add --recover
+// KeysAddRecover prepares gaiacli keys add --recover
 func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) {
 	cmd := fmt.Sprintf("gaiacli keys add --home=%s --recover %s", f.GCLIHome, name)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
+}
+
+// KeysAddRecoverHDPath prepares gaiacli keys add --recover --account --index
+func (f *Fixtures) KeysAddRecoverHDPath(name, mnemonic string, account uint32, index uint32, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli keys add --home=%s --recover %s --account %d --index %d", f.GCLIHome, name, account, index)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
 }
 
@@ -352,10 +357,10 @@ func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.Ba
 // gaiacli query txs
 
 // QueryTxs is gaiacli query txs
-func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []tx.Info {
+func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []sdk.TxResponse {
 	cmd := fmt.Sprintf("gaiacli query txs --page=%d --limit=%d --tags='%s' %v", page, limit, queryTags(tags), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
-	var txs []tx.Info
+	var txs []sdk.TxResponse
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &txs)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)

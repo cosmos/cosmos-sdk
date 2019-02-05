@@ -98,7 +98,7 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 
 /*
 ReadRESTReq is a simple convenience wrapper that reads the body and
-unmarshals to the req interface.
+unmarshals to the req interface. Returns false if errors occurred.
 
   Usage:
     type SomeReq struct {
@@ -107,20 +107,22 @@ unmarshals to the req interface.
 		}
 
     req := new(SomeReq)
-    err := ReadRESTReq(w, r, cdc, req)
+    if ok := ReadRESTReq(w, r, cdc, req); !ok {
+        return
+    }
 */
-func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) error {
+func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req interface{}) bool {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-		return err
+		return false
 	}
 
 	err = cdc.UnmarshalJSON(body, req)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to decode JSON payload: %s", err))
-		return err
+		return false
 	}
 
-	return nil
+	return true
 }

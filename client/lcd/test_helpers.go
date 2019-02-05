@@ -60,6 +60,8 @@ import (
 
 	authRest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankRest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrRest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 	govRest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	slashingRest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	stakingRest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
@@ -294,6 +296,11 @@ func InitializeTestLCD(
 		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(sdk.NewInt(100))
 	}
 
+	inflationMin := sdk.MustNewDecFromStr("10000.0")
+	genesisState.MintData.Minter.Inflation = inflationMin
+	genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+	genesisState.MintData.Params.InflationMin = inflationMin
+
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)
 	require.NoError(t, err)
 	genDoc.AppState = appState
@@ -390,6 +397,7 @@ func registerRoutes(rs *RestServer) {
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 	authRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, auth.StoreKey)
 	bankRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	distrRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distr.StoreKey)
 	stakingRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashingRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	govRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
@@ -1381,4 +1389,38 @@ func doUnjail(t *testing.T, port, seed, name, password string,
 
 type unjailReq struct {
 	BaseReq rest.BaseReq `json:"base_req"`
+}
+
+// ICS24 - fee distribution
+
+// POST /distribution/delegators/{delgatorAddr}/rewards Withdraw delegator rewards
+func doWithdrawDelegatorAllRewards(t *testing.T, port, seed, name, password string,
+	delegatorAddr sdk.AccAddress, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+	// get the account to get the sequence
+	acc := getAccount(t, port, delegatorAddr)
+	accnum := acc.GetAccountNumber()
+	sequence := acc.GetSequence()
+	chainID := viper.GetString(client.FlagChainID)
+	baseReq := rest.NewBaseReq(name, password, "", chainID, "", "", accnum, sequence, fees, nil, false, false)
+
+	wr := struct {
+		BaseReq rest.BaseReq `json:"base_req"`
+	}{BaseReq: baseReq}
+
+	req := cdc.MustMarshalJSON(wr)
+	res, body := Request(t, port, "POST", fmt.Sprintf("/distribution/delegators/%s/rewards", delegatorAddr), req)
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+
+	var results ctypes.ResultBroadcastTxCommit
+	cdc.MustUnmarshalJSON([]byte(body), &results)
+
+	return results
+}
+
+func mustParseDecCoins(dcstring string) sdk.DecCoins {
+	dcoins, err := sdk.ParseDecCoins(dcstring)
+	if err != nil {
+		panic(err)
+	}
+	return dcoins
 }

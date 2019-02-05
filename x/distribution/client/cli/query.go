@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -21,34 +22,10 @@ func GetCmdQueryParams(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		Short: "Query distribution params",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-
-			route := fmt.Sprintf("custom/%s/params/community_tax", queryRoute)
-			retCommunityTax, err := cliCtx.QueryWithData(route, []byte{})
+			params, err := common.QueryParams(cliCtx, queryRoute)
 			if err != nil {
 				return err
 			}
-
-			route = fmt.Sprintf("custom/%s/params/base_proposer_reward", queryRoute)
-			retBaseProposerReward, err := cliCtx.QueryWithData(route, []byte{})
-			if err != nil {
-				return err
-			}
-
-			route = fmt.Sprintf("custom/%s/params/bonus_proposer_reward", queryRoute)
-			retBonusProposerReward, err := cliCtx.QueryWithData(route, []byte{})
-			if err != nil {
-				return err
-			}
-
-			route = fmt.Sprintf("custom/%s/params/withdraw_addr_enabled", queryRoute)
-			retWithdrawAddrEnabled, err := cliCtx.QueryWithData(route, []byte{})
-			if err != nil {
-				return err
-			}
-
-			params := NewPrettyParams(retCommunityTax, retBaseProposerReward,
-				retBonusProposerReward, retWithdrawAddrEnabled)
-
 			return cliCtx.PrintOutput(params)
 		},
 	}
@@ -90,13 +67,7 @@ func GetCmdQueryValidatorCommission(queryRoute string, cdc *codec.Codec) *cobra.
 				return err
 			}
 
-			bz, err := cdc.MarshalJSON(distr.NewQueryValidatorCommissionParams(validatorAddr))
-			if err != nil {
-				return err
-			}
-
-			route := fmt.Sprintf("custom/%s/validator_commission", queryRoute)
-			res, err := cliCtx.QueryWithData(route, bz)
+			res, err := common.QueryValidatorCommission(cliCtx, cdc, queryRoute, validatorAddr)
 			if err != nil {
 				return err
 			}
@@ -159,42 +130,20 @@ func GetCmdQueryDelegatorRewards(queryRoute string, cdc *codec.Codec) *cobra.Com
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			delegatorAddr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			var (
-				route  string
-				params distr.QueryDelegationRewardsParams
-				result sdk.DecCoins
-			)
-
-			if len(args) == 1 {
-				// query for all rewards
-				params = distr.NewQueryDelegationRewardsParams(delegatorAddr, nil)
-				route = fmt.Sprintf("custom/%s/all_delegation_rewards", queryRoute)
+			var resp []byte
+			var err error
+			if len(args) == 2 {
+				// query for rewards from a particular delegation
+				resp, err = common.QueryDelegationRewards(cliCtx, cdc, queryRoute, args[0], args[1])
 			} else {
-				// query for rewards from a particular validator
-				validatorAddr, err := sdk.ValAddressFromBech32(args[1])
-				if err != nil {
-					return err
-				}
-
-				params = distr.NewQueryDelegationRewardsParams(delegatorAddr, validatorAddr)
-				route = fmt.Sprintf("custom/%s/delegation_rewards", queryRoute)
+				// query for delegator total rewards
+				resp, err = common.QueryDelegatorTotalRewards(cliCtx, cdc, queryRoute, args[0])
 			}
-
-			bz, err := cdc.MarshalJSON(params)
 			if err != nil {
 				return err
 			}
 
-			resp, err := cliCtx.QueryWithData(route, bz)
-			if err != nil {
-				return err
-			}
-
+			var result sdk.DecCoins
 			cdc.MustUnmarshalJSON(resp, &result)
 			return cliCtx.PrintOutput(result)
 		},

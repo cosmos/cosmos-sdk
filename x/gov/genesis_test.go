@@ -10,6 +10,21 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+func TestEqualProposalID(t *testing.T) {
+	state1 := GenesisState{}
+	state2 := GenesisState{}
+	require.Equal(t, state1, state2)
+
+	// Proposals
+	state1.StartingProposalID = 1
+	require.NotEqual(t, state1, state2)
+	require.False(t, state1.Equal(state2))
+
+	state2.StartingProposalID = 1
+	require.Equal(t, state1, state2)
+	require.True(t, state1.Equal(state2))
+}
+
 func TestImportExportQueues(t *testing.T) {
 
 	// Generate mock app and keepers

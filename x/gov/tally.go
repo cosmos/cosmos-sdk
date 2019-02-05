@@ -7,7 +7,7 @@ import (
 // validatorGovInfo used for tallying
 type validatorGovInfo struct {
 	Address         sdk.ValAddress // address of the validator operator
-	Power           sdk.Dec        // Power of a Validator
+	Power           sdk.Int        // Power of a Validator
 	DelegatorShares sdk.Dec        // Total outstanding delegator shares
 	Minus           sdk.Dec        // Minus of validator, used to compute validator's voting power
 	Vote            VoteOption     // Vote of the validator
@@ -26,7 +26,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	keeper.vs.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.Validator) (stop bool) {
 		currValidators[validator.GetOperator().String()] = validatorGovInfo{
 			Address:         validator.GetOperator(),
-			Power:           sdk.NewDecFromInt(validator.GetPower()),
+			Power:           validator.GetPower(),
 			DelegatorShares: validator.GetDelegatorShares(),
 			Minus:           sdk.ZeroDec(),
 			Vote:            OptionEmpty,
@@ -57,7 +57,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 					currValidators[valAddrStr] = val
 
 					delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
-					votingPower := val.Power.Mul(delegatorShare)
+					votingPower := delegatorShare.MulInt(val.Power)
 
 					results[vote.Option] = results[vote.Option].Add(votingPower)
 					totalVotingPower = totalVotingPower.Add(votingPower)
@@ -78,7 +78,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 		sharesAfterMinus := val.DelegatorShares.Sub(val.Minus)
 		percentAfterMinus := sharesAfterMinus.Quo(val.DelegatorShares)
-		votingPower := val.Power.Mul(percentAfterMinus)
+		votingPower := percentAfterMinus.MulInt(val.Power)
 
 		results[val.Vote] = results[val.Vote].Add(votingPower)
 		totalVotingPower = totalVotingPower.Add(votingPower)

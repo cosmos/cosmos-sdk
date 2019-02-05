@@ -54,8 +54,8 @@ func ValidateGenesis(data GenesisState) error {
 	if data.Params.MaxMemoCharacters == 0 {
 		return fmt.Errorf("invalid max memo characters: %d", data.Params.MaxMemoCharacters)
 	}
-	if data.Params.MemoCostPerByte == 0 {
-		return fmt.Errorf("invalid memo cost per byte: %d", data.Params.MemoCostPerByte)
+	if data.Params.TxSizeCostPerByte == 0 {
+		return fmt.Errorf("invalid tx size cost per byte: %d", data.Params.TxSizeCostPerByte)
 	}
 
 	return nil

@@ -14,8 +14,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -272,14 +270,10 @@ func TestGaiaCLIGasAuto(t *testing.T) {
 	require.NotEmpty(t, stderr)
 	require.True(t, success)
 	cdc := app.MakeCodec()
-	sendResp := struct {
-		Height   int64
-		TxHash   string
-		Response abci.ResponseDeliverTx
-	}{}
+	sendResp := sdk.TxResponse{}
 	err := cdc.UnmarshalJSON([]byte(stdout), &sendResp)
 	require.Nil(t, err)
-	require.Equal(t, sendResp.Response.GasWanted, sendResp.Response.GasUsed)
+	require.True(t, sendResp.GasWanted >= sendResp.GasUsed)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Check state has changed accordingly
@@ -684,14 +678,12 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	success, stdout, _ = f.TxBroadcast(signedTxFile.Name())
 	require.True(t, success)
 
-	var result struct {
-		Response abci.ResponseDeliverTx
-	}
+	var result sdk.TxResponse
 
 	// Unmarshal the response and ensure that gas was properly used
 	require.Nil(t, app.MakeCodec().UnmarshalJSON([]byte(stdout), &result))
-	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasUsed))
-	require.Equal(t, msg.Fee.Gas, uint64(result.Response.GasWanted))
+	require.Equal(t, msg.Fee.Gas, uint64(result.GasUsed))
+	require.Equal(t, msg.Fee.Gas, uint64(result.GasWanted))
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure account state

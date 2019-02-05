@@ -390,7 +390,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			if err != nil {
 				result = err.Result()
 			} else {
-				result = app.Simulate(tx)
+				result = app.Simulate(txBytes, tx)
 			}
 		case "version":
 			return abci.ResponseQuery{
@@ -630,7 +630,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 		// Append Data and Tags
 		data = append(data, msgResult.Data...)
-		tags = append(tags, sdk.MakeTag(sdk.TagAction, []byte(msg.Type())))
+		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
 		tags = append(tags, msgResult.Tags...)
 
 		// Stop execution and return on first failed message.
@@ -718,7 +718,10 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
 			case sdk.ErrorOutOfGas:
-				log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+				log := fmt.Sprintf(
+					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
+					rType.Descriptor, gasWanted, ctx.GasMeter().GasConsumed(),
+				)
 				result = sdk.ErrOutOfGas(log).Result()
 			default:
 				log := fmt.Sprintf("recovered: %v\nstack:\n%v", r, string(debug.Stack()))

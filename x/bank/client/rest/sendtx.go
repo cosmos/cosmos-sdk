@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	bankclient "github.com/cosmos/cosmos-sdk/x/bank/client"
 
 	"github.com/gorilla/mux"
 )
@@ -45,8 +44,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		}
 
 		var req sendReq
-		err = rest.ReadRESTReq(w, r, cdc, &req)
-		if err != nil {
+		if !rest.ReadRESTReq(w, r, cdc, &req) {
 			return
 		}
 
@@ -64,7 +62,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 				return
 			}
 
-			msg := bankclient.CreateMsg(fromAddr, toAddr, req.Amount)
+			msg := bank.NewMsgSend(fromAddr, toAddr, req.Amount)
 			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
@@ -77,7 +75,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		}
 
 		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
-		msg := bankclient.CreateMsg(cliCtx.GetFromAddress(), toAddr, req.Amount)
+		msg := bank.NewMsgSend(cliCtx.GetFromAddress(), toAddr, req.Amount)
 
 		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}

@@ -7,9 +7,11 @@ general purpose censorship of transactions of little economic value. Fees
 are best suited as an anti-spam mechanism where validators are disinterested in
 the use of the network and identities of users.
 
-Fees are determined by the gas limits and gas prices transactions provide.
-Operators should set minimum gas prices when starting their nodes. They must set
-the unit costs of gas in each token denomination they wish to support:
+Fees are determined by the gas limits and gas prices transactions provide, where
+`fees = ceil(gasLimit * gasPrices)`. Txs incur gas costs for all state reads/writes,
+signature verification, as well as costs proportional to the tx size. Operators
+should set minimum gas prices when starting their nodes. They must set the unit
+costs of gas in each token denomination they wish to support:
 
 `gaiad start ... --minimum-gas-prices=0.00001steak,0.05photinos`
 

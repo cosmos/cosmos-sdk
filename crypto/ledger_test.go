@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 )
@@ -16,9 +18,9 @@ func TestRealLedgerSecp256k1(t *testing.T) {
 		t.Skip(fmt.Sprintf("Set '%s' to run code on a real ledger", ledgerEnabledEnv))
 	}
 	msg := []byte("{\"account_number\":\"3\",\"chain_id\":\"1234\",\"fee\":{\"amount\":[{\"amount\":\"150\",\"denom\":\"atom\"}],\"gas\":\"5000\"},\"memo\":\"memo\",\"msgs\":[[\"%s\"]],\"sequence\":\"6\"}")
-	path := DerivationPath{44, 60, 0, 0, 0}
+	path := hd.NewParams(44, 60, 0, false, 0)
 
-	priv, err := NewPrivKeyLedgerSecp256k1(path)
+	priv, err := NewPrivKeyLedgerSecp256k1(*path)
 	require.Nil(t, err, "%s", err)
 
 	pub := priv.PubKey()
@@ -58,7 +60,7 @@ func TestRealLedgerErrorHandling(t *testing.T) {
 
 	// first, try to generate a key, must return an error
 	// (no panic)
-	path := DerivationPath{44, 60, 0, 0, 0}
-	_, err := NewPrivKeyLedgerSecp256k1(path)
+	path := hd.NewParams(44, 60, 0, false, 0)
+	_, err := NewPrivKeyLedgerSecp256k1(*path)
 	require.Error(t, err)
 }

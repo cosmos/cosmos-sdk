@@ -244,11 +244,6 @@ func (ctx CLIContext) WithFromAddress(addr sdk.AccAddress) CLIContext {
 	return ctx
 }
 
-// OutputIsJSON true if the output format for the CLI is json and false otherwise
-func (ctx CLIContext) OutputIsJSON() bool {
-	return ctx.OutputFormat == "json"
-}
-
 // PrintOutput prints output while respecting output and indent flags
 // NOTE: pass in marshalled structs that have been unmarshaled
 // because this function will panic on marshaling errors

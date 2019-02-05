@@ -181,8 +181,6 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
-	validator.BondHeight = ctx.BlockHeight()
-
 	// set the status
 	pool := k.GetPool(ctx)
 	validator, pool = validator.UpdateStatus(pool, sdk.Bonded)

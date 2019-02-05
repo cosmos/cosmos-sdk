@@ -15,12 +15,12 @@ import (
 )
 
 // Validator defines the total amount of bond shares and their exchange rate to
-// coins. Accumulation of interest is modelled as an in increase in the
-// exchange rate, and slashing as a decrease.  When coins are delegated to this
-// validator, the validator is credited with a Delegation whose number of
-// bond shares is based on the amount of coins delegated divided by the current
-// exchange rate. Voting power can be calculated as total bonds multiplied by
-// exchange rate.
+// coins. Slashing results in a decrease in the exchange rate, allowing correct
+// calculation of future undelegations without iterating over delegators.
+// When coins are delegated to this validator, the validator is credited with a
+// delegation whose number of bond shares is based on the amount of coins delegated
+// divided by the current exchange rate. Voting power can be calculated as total
+// bonded shares multiplied by exchange rate.
 type Validator struct {
 	OperatorAddr sdk.ValAddress `json:"operator_address"` // address of the validator's operator; bech encoded in JSON
 	ConsPubKey   crypto.PubKey  `json:"consensus_pubkey"` // the consensus public key of the validator; bech encoded in JSON
@@ -31,7 +31,6 @@ type Validator struct {
 	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
 	Description Description `json:"description"` // description terms for the validator
-	BondHeight  int64       `json:"bond_height"` // earliest height as a bonded validator
 
 	UnbondingHeight         int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
@@ -59,7 +58,6 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		Tokens:                  sdk.ZeroInt(),
 		DelegatorShares:         sdk.ZeroDec(),
 		Description:             description,
-		BondHeight:              int64(0),
 		UnbondingHeight:         int64(0),
 		UnbondingCompletionTime: time.Unix(0, 0).UTC(),
 		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
@@ -100,12 +98,11 @@ func (v Validator) String() string {
   Tokens:                     %s
   Delegator Shares:           %s
   Description:                %s
-  Bond Height:                %d
   Unbonding Height:           %d
   Unbonding Completion Time:  %v
   Commission:                 %s`, v.OperatorAddr, bechConsPubKey,
 		v.Jailed, sdk.BondStatusToString(v.Status), v.Tokens,
-		v.DelegatorShares, v.Description, v.BondHeight,
+		v.DelegatorShares, v.Description,
 		v.UnbondingHeight, v.UnbondingCompletionTime, v.Commission)
 }
 
@@ -122,7 +119,6 @@ type bechValidator struct {
 	DelegatorShares sdk.Dec        `json:"delegator_shares"` // total shares issued to a validator's delegators
 
 	Description Description `json:"description"` // description terms for the validator
-	BondHeight  int64       `json:"bond_height"` // earliest height as a bonded validator
 
 	UnbondingHeight         int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
@@ -145,7 +141,6 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 		Tokens:                  v.Tokens,
 		DelegatorShares:         v.DelegatorShares,
 		Description:             v.Description,
-		BondHeight:              v.BondHeight,
 		UnbondingHeight:         v.UnbondingHeight,
 		UnbondingCompletionTime: v.UnbondingCompletionTime,
 		Commission:              v.Commission,
@@ -170,7 +165,6 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		Status:                  bv.Status,
 		DelegatorShares:         bv.DelegatorShares,
 		Description:             bv.Description,
-		BondHeight:              bv.BondHeight,
 		UnbondingHeight:         bv.UnbondingHeight,
 		UnbondingCompletionTime: bv.UnbondingCompletionTime,
 		Commission:              bv.Commission,
@@ -424,5 +418,4 @@ func (v Validator) GetPower() sdk.Int                { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Int               { return v.Tokens }
 func (v Validator) GetCommission() sdk.Dec           { return v.Commission.Rate }
 func (v Validator) GetDelegatorShares() sdk.Dec      { return v.DelegatorShares }
-func (v Validator) GetBondHeight() int64             { return v.BondHeight }
 func (v Validator) GetDelegatorShareExRate() sdk.Dec { return v.DelegatorShareExRate() }

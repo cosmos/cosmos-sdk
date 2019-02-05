@@ -12,7 +12,7 @@ import (
 type CodeType = sdk.CodeType
 
 const (
-	DefaultCodespace sdk.CodespaceType = "staking"
+	DefaultCodespace sdk.CodespaceType = ModuleName
 
 	CodeInvalidValidator  CodeType = 101
 	CodeInvalidDelegation CodeType = 102

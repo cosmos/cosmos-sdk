@@ -225,7 +225,7 @@ type Redelegation struct {
 }
 
 // RedelegationEntry - entry to a Redelegation
-// TODO: Why do we need to store the denomination string as `sdk.Coin` instead of just the amount
+// TODO: Why do we need to store the initial balance as `sdk.Coin` instead of just the amount
 type RedelegationEntry struct {
 	CreationHeight int64     `json:"creation_height"` // height at which the redelegation took place
 	CompletionTime time.Time `json:"completion_time"` // time at which the redelegation will complete
@@ -303,6 +303,7 @@ func UnmarshalRED(cdc *codec.Codec, value []byte) (red Redelegation, err error) 
 }
 
 // nolint
+// TODO: this is less efficient than comparing struct fields
 func (d Redelegation) Equal(d2 Redelegation) bool {
 	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d)
 	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d2)

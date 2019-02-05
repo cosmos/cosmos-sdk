@@ -1103,10 +1103,6 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	app.InitChain(abci.RequestInitChain{})
 	app.BeginBlock(abci.RequestBeginBlock{})
 
-	// execute a tx that will fail ante handler execution
-	//
-	// NOTE: State should not be mutated here. This will be implicitly checked by
-	// the next txs ante handler execution (anteHandlerTxTest).
 	tx := newTxCounter(5, 0)
 	tx.setFailOnAnte(true)
 	txBytes, err := cdc.MarshalBinaryLengthPrefixed(tx)

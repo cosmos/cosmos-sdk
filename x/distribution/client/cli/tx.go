@@ -3,6 +3,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -44,7 +45,11 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw-rewards",
 		Short: "withdraw rewards for either a delegation or a validator",
-		Args:  cobra.NoArgs,
+		Long: strings.TrimSpace(`Withdraw rewards from either a delegation or a validator:
+
+
+`),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			onlyFromVal := viper.GetString(flagOnlyFromValidator)
@@ -116,7 +121,11 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
-		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(`Set the withdraw address for rewards assoicated with a delegator address:
+
+$ gaiacli tx set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
+`),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
@@ -18,11 +19,11 @@ import (
 )
 
 // GetCmdCreateValidator implements the create validator command handler.
+// TODO: Add full description
 func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
 		Short: "create new validator initialized with a self-delegation to it",
-		Long:  `Creates a new validator `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
@@ -55,6 +56,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 }
 
 // GetCmdEditValidator implements the create edit validator command.
+// TODO: add full description
 func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
@@ -99,9 +101,13 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 // GetCmdDelegate implements the delegate command.
 func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "delegate [validator] [amount]",
+		Use:   "delegate [validator-addr] [amount]",
 		Args:  cobra.ExactArgs(2),
 		Short: "delegate liquid tokens to a validator",
+		Long: strings.TrimSpace(`Delegate an amount of liquid coins to a validator from your wallet:
+
+$ gaiacli tx staking delegate cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --from mykey
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
@@ -128,8 +134,13 @@ func GetCmdDelegate(cdc *codec.Codec) *cobra.Command {
 // GetCmdRedelegate the begin redelegation command.
 func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "redelegate [src_validator] [dst_validator] [amount]",
+		Use:   "redelegate [src-validator-addr] [dst-validator-addr] [amount]",
 		Short: "redelegate illiquid tokens from one validator to another",
+		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(`Redelegate an amount of illiquid staking tokens from one validator to another:
+
+$ gaiacli tx staking redelegate cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmosvaloper1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 100 --from mykey
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
@@ -164,8 +175,13 @@ func GetCmdRedelegate(storeName string, cdc *codec.Codec) *cobra.Command {
 // GetCmdUnbond implements the unbond validator command.
 func GetCmdUnbond(storeName string, cdc *codec.Codec) *cobra.Command {
 	return &cobra.Command{
-		Use:   "unbond [validator] [amount]",
+		Use:   "unbond [validator-addr] [amount]",
 		Short: "unbond shares from a validator",
+		Args:  cobra.ExactArgs(2),
+		Long: strings.TrimSpace(`Unbond an amount of bonded shares from a validator:
+
+$ gaiacli tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100 --from mykey
+`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(auth.DefaultTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().

@@ -69,7 +69,8 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 	}
 
 	// broadcast to a Tendermint node
-	_, err = cliCtx.BroadcastTx(txBytes)
+	res, err := cliCtx.BroadcastTx(txBytes)
+	cliCtx.PrintOutput(res)
 	return err
 }
 

@@ -56,7 +56,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 
 	tags := sdk.NewTags(
 		tags.Action, tags.ActionValidatorUnjailed,
-		tags.Validator, []byte(msg.ValidatorAddr.String()),
+		tags.Validator, msg.ValidatorAddr.String(),
 	)
 
 	return sdk.Result{

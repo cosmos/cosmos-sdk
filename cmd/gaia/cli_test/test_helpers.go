@@ -14,7 +14,6 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -352,10 +351,10 @@ func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.Ba
 // gaiacli query txs
 
 // QueryTxs is gaiacli query txs
-func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []tx.Info {
+func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []sdk.TxResponse {
 	cmd := fmt.Sprintf("gaiacli query txs --page=%d --limit=%d --tags='%s' %v", page, limit, queryTags(tags), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
-	var txs []tx.Info
+	var txs []sdk.TxResponse
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &txs)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)

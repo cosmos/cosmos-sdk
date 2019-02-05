@@ -62,8 +62,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 
 		resTags.AppendTags(sdk.NewTags(
 			tags.Action, ActionCompleteUnbonding,
-			tags.Delegator, []byte(dvPair.DelegatorAddr.String()),
-			tags.SrcValidator, []byte(dvPair.ValidatorAddr.String()),
+			tags.Delegator, dvPair.DelegatorAddr.String(),
+			tags.SrcValidator, dvPair.ValidatorAddr.String(),
 		))
 	}
 
@@ -78,9 +78,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 
 		resTags.AppendTags(sdk.NewTags(
 			tags.Action, tags.ActionCompleteRedelegation,
-			tags.Delegator, []byte(dvvTriplet.DelegatorAddr.String()),
-			tags.SrcValidator, []byte(dvvTriplet.ValidatorSrcAddr.String()),
-			tags.DstValidator, []byte(dvvTriplet.ValidatorDstAddr.String()),
+			tags.Delegator, dvvTriplet.DelegatorAddr.String(),
+			tags.SrcValidator, dvvTriplet.ValidatorSrcAddr.String(),
+			tags.DstValidator, dvvTriplet.ValidatorDstAddr.String(),
 		))
 	}
 
@@ -145,9 +145,9 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	}
 
 	tags := sdk.NewTags(
-		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
-		tags.Moniker, []byte(msg.Description.Moniker),
-		tags.Identity, []byte(msg.Description.Identity),
+		tags.DstValidator, msg.ValidatorAddr.String(),
+		tags.Moniker, msg.Description.Moniker,
+		tags.Identity, msg.Description.Identity,
 	)
 
 	return sdk.Result{
@@ -183,9 +183,9 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	k.SetValidator(ctx, validator)
 
 	tags := sdk.NewTags(
-		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
-		tags.Moniker, []byte(description.Moniker),
-		tags.Identity, []byte(description.Identity),
+		tags.DstValidator, msg.ValidatorAddr.String(),
+		tags.Moniker, description.Moniker,
+		tags.Identity, description.Identity,
 	)
 
 	return sdk.Result{
@@ -213,8 +213,8 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 	}
 
 	tags := sdk.NewTags(
-		tags.Delegator, []byte(msg.DelegatorAddr.String()),
-		tags.DstValidator, []byte(msg.ValidatorAddr.String()),
+		tags.Delegator, msg.DelegatorAddr.String(),
+		tags.DstValidator, msg.ValidatorAddr.String(),
 	)
 
 	return sdk.Result{
@@ -230,9 +230,9 @@ func handleMsgUndelegate(ctx sdk.Context, msg types.MsgUndelegate, k keeper.Keep
 
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	tags := sdk.NewTags(
-		tags.Delegator, []byte(msg.DelegatorAddr.String()),
-		tags.SrcValidator, []byte(msg.ValidatorAddr.String()),
-		tags.EndTime, []byte(completionTime.Format(time.RFC3339)),
+		tags.Delegator, msg.DelegatorAddr.String(),
+		tags.SrcValidator, msg.ValidatorAddr.String(),
+		tags.EndTime, completionTime.Format(time.RFC3339),
 	)
 
 	return sdk.Result{Data: finishTime, Tags: tags}
@@ -247,10 +247,10 @@ func handleMsgBeginRedelegate(ctx sdk.Context, msg types.MsgBeginRedelegate, k k
 
 	finishTime := types.MsgCdc.MustMarshalBinaryLengthPrefixed(completionTime)
 	resTags := sdk.NewTags(
-		tags.Delegator, []byte(msg.DelegatorAddr.String()),
-		tags.SrcValidator, []byte(msg.ValidatorSrcAddr.String()),
-		tags.DstValidator, []byte(msg.ValidatorDstAddr.String()),
-		tags.EndTime, []byte(completionTime.Format(time.RFC3339)),
+		tags.Delegator, msg.DelegatorAddr.String(),
+		tags.SrcValidator, msg.ValidatorSrcAddr.String(),
+		tags.DstValidator, msg.ValidatorDstAddr.String(),
+		tags.EndTime, completionTime.Format(time.RFC3339),
 	)
 
 	return sdk.Result{Data: finishTime, Tags: resTags}

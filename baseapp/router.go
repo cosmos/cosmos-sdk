@@ -25,20 +25,20 @@ func NewRouter() *router { // nolint: golint
 
 // AddRoute adds a route path to the router with a given handler. The route must
 // be alphanumeric.
-func (rtr *router) AddRoute(r string, h sdk.Handler) Router {
-	if !isAlphaNumeric(r) {
+func (rtr *router) AddRoute(path string, h sdk.Handler) Router {
+	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
 
 	// TODO: Should we panic on duplicates?
 
-	rtr.routes[r] = h
+	rtr.routes[path] = h
 	return rtr
 }
 
 // Route returns a handler for a given route path.
 //
 // TODO: Handle expressive matches.
-func (rtr *router) Route(path string) (h sdk.Handler) {
+func (rtr *router) Route(path string) sdk.Handler {
 	return rtr.routes[path]
 }

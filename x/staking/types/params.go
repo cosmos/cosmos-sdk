@@ -112,3 +112,14 @@ func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) 
 	}
 	return
 }
+
+// validate a set of params
+func (params Params) Validate() error {
+	if params.BondDenom == "" {
+		return fmt.Errorf("staking parameter BondDenom can't be an empty string")
+	}
+	if params.MaxValidators == 0 {
+		return fmt.Errorf("staking parameter MaxValidators must be a positive integer")
+	}
+	return nil
+}

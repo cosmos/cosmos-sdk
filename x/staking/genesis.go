@@ -147,18 +147,11 @@ func ValidateGenesis(data types.GenesisState) error {
 	if err != nil {
 		return err
 	}
-	err = validateParams(data.Params)
+	err = data.Params.Validate()
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func validateParams(params types.Params) error {
-	if params.BondDenom == "" {
-		return fmt.Errorf("staking parameter BondDenom can't be an empty string")
-	}
 	return nil
 }
 

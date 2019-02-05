@@ -106,8 +106,6 @@ func (k Keeper) InflateSupply(ctx sdk.Context, newTokens sdk.Int) {
 	k.SetPool(ctx, pool)
 }
 
-//__________________________________________________________________________
-
 // Implements DelegationSet
 
 var _ sdk.DelegationSet = Keeper{}
@@ -133,7 +131,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(delAddr)
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) //smallest to largest
+	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()
 	for i := int64(0); iterator.Valid(); iterator.Next() {
 		del := types.MustUnmarshalDelegation(k.cdc, iterator.Value())

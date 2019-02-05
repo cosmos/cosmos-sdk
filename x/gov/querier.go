@@ -53,19 +53,19 @@ func NewQuerier(keeper Keeper) sdk.Querier {
 func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper) ([]byte, sdk.Error) {
 	switch path[0] {
 	case ParamDeposit:
-		bz, err := codec.MarshalJSONIndent(keeper.cdc, keeper.GetDepositParams(ctx))
+		bz, err := codec.MarshalJSONIndent(jsonCdc, keeper.GetDepositParams(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
 		return bz, nil
 	case ParamVoting:
-		bz, err := codec.MarshalJSONIndent(keeper.cdc, keeper.GetVotingParams(ctx))
+		bz, err := codec.MarshalJSONIndent(jsonCdc, keeper.GetVotingParams(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
 		return bz, nil
 	case ParamTallying:
-		bz, err := codec.MarshalJSONIndent(keeper.cdc, keeper.GetTallyParams(ctx))
+		bz, err := codec.MarshalJSONIndent(jsonCdc, keeper.GetTallyParams(ctx))
 		if err != nil {
 			return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 		}
@@ -104,7 +104,7 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		return nil, ErrUnknownProposal(DefaultCodespace, params.ProposalID)
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposal)
+	bz, err := codec.MarshalJSONIndent(jsonCdc, proposal)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -134,7 +134,7 @@ func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 	}
 
 	deposit, _ := keeper.GetDeposit(ctx, params.ProposalID, params.Depositor)
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposit)
+	bz, err := codec.MarshalJSONIndent(jsonCdc, deposit)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -164,7 +164,7 @@ func queryVote(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Kee
 	}
 
 	vote, _ := keeper.GetVote(ctx, params.ProposalID, params.Voter)
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, vote)
+	bz, err := codec.MarshalJSONIndent(jsonCdc, vote)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -188,7 +188,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 		deposits = append(deposits, deposit)
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, deposits)
+	bz, err := codec.MarshalJSONIndent(jsonCdc, deposits)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -221,7 +221,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		_, tallyResult = tally(ctx, keeper, proposal)
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, tallyResult)
+	bz, err := codec.MarshalJSONIndent(jsonCdc, tallyResult)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -246,7 +246,7 @@ func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 		votes = append(votes, vote)
 	}
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, votes)
+	bz, err := codec.MarshalJSONIndent(jsonCdc, votes)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}
@@ -281,7 +281,7 @@ func queryProposals(ctx sdk.Context, path []string, req abci.RequestQuery, keepe
 
 	proposals := keeper.GetProposalsFiltered(ctx, params.Voter, params.Depositor, params.ProposalStatus, params.Limit)
 
-	bz, err := codec.MarshalJSONIndent(keeper.cdc, proposals)
+	bz, err := codec.MarshalJSONIndent(jsonCdc, proposals)
 	if err != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", err.Error()))
 	}

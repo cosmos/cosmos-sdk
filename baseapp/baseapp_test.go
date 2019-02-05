@@ -802,11 +802,6 @@ func TestTxGasLimits(t *testing.T) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
-			// NOTE/TODO/XXX:
-			// AnteHandlers must have their own defer/recover in order
-			// for the BaseApp to know how much gas was used used!
-			// This is because the GasMeter is created in the AnteHandler,
-			// but if it panics the context won't be set properly in runTx's recover ...
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
@@ -891,11 +886,6 @@ func TestMaxBlockGasLimits(t *testing.T) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
 
-			// NOTE/TODO/XXX:
-			// AnteHandlers must have their own defer/recover in order
-			// for the BaseApp to know how much gas was used used!
-			// This is because the GasMeter is created in the AnteHandler,
-			// but if it panics the context won't be set properly in runTx's recover ...
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
@@ -1063,11 +1053,6 @@ func TestGasConsumptionBadTx(t *testing.T) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, res sdk.Result, abort bool) {
 			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
 
-			// NOTE/TODO/XXX:
-			// AnteHandlers must have their own defer/recover in order
-			// for the BaseApp to know how much gas was used used!
-			// This is because the GasMeter is created in the AnteHandler,
-			// but if it panics the context won't be set properly in runTx's recover ...
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {

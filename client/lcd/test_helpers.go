@@ -1395,7 +1395,7 @@ type unjailReq struct {
 
 // POST /distribution/delegators/{delgatorAddr}/rewards Withdraw delegator rewards
 func doWithdrawDelegatorAllRewards(t *testing.T, port, seed, name, password string,
-	delegatorAddr sdk.AccAddress, fees sdk.Coins) (resultTx ctypes.ResultBroadcastTxCommit) {
+	delegatorAddr sdk.AccAddress, fees sdk.Coins) (resultTx sdk.TxResponse) {
 	// get the account to get the sequence
 	acc := getAccount(t, port, delegatorAddr)
 	accnum := acc.GetAccountNumber()
@@ -1411,7 +1411,7 @@ func doWithdrawDelegatorAllRewards(t *testing.T, port, seed, name, password stri
 	res, body := Request(t, port, "POST", fmt.Sprintf("/distribution/delegators/%s/rewards", delegatorAddr), req)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
-	var results ctypes.ResultBroadcastTxCommit
+	var results sdk.TxResponse
 	cdc.MustUnmarshalJSON([]byte(body), &results)
 
 	return results

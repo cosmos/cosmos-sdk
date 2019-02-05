@@ -943,14 +943,12 @@ func TestDistributionFlow(t *testing.T) {
 	// Delegate some coins
 	resultTx := doDelegate(t, port, name1, pw, addr, valAddr, 60, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	// send some coins
 	_, resultTx = doTransfer(t, port, seed, name1, memo, pw, addr, fees)
 	tests.WaitForHeight(resultTx.Height+5, port)
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 
 	// Query outstanding rewards changed
 	oustandingRewards := mustParseDecCoins("9.80stake")
@@ -1000,6 +998,5 @@ func TestDistributionFlow(t *testing.T) {
 
 	// Withdraw delegator's rewards
 	resultTx = doWithdrawDelegatorAllRewards(t, port, seed, name1, pw, addr, fees)
-	require.Equal(t, uint32(0), resultTx.CheckTx.Code)
-	require.Equal(t, uint32(0), resultTx.DeliverTx.Code)
+	require.Equal(t, uint32(0), resultTx.Code)
 }

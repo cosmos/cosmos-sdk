@@ -2,6 +2,7 @@ package keys
 
 import (
 	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,50 +20,95 @@ func init() {
 	mintkey.BcryptSecurityParameter = 1
 }
 
+func TestKeybaseOpenClose(t *testing.T) {
+	dir, err := ioutil.TempDir("", "TestKeybaseOpenClose")
+	assert.Nil(t, err)
+
+	kb := New(dbm.NewDB("TestKeybaseOpenClose", dbm.LevelDBBackend, dir))
+	kb.CloseDB()
+
+	// The DB has been closed. At the moment, the expected behaviour is to panic
+	assert.Panics(t, func() {
+		_, _ = kb.CreateAccount(
+			"some_account",
+			"key pair crucial catch public canyon evil outer stage ten gym tornado",
+			"", "", 0, 1)
+	})
+}
+
+func TestLanguage(t *testing.T) {
+	kb := New(dbm.NewMemDB())
+	_, _, err := kb.CreateMnemonic("something", Japanese, "no_pass", Secp256k1)
+	assert.Error(t, err)
+	assert.Equal(t, "unsupported language: only english is supported", err.Error())
+}
+
+func TestCreateAccountInvalidMnemonic(t *testing.T) {
+	kb := New(dbm.NewMemDB())
+	_, err := kb.CreateAccount(
+		"some_account",
+		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
+		"", "", 0, 1)
+	assert.Error(t, err)
+	assert.Equal(t, "Invalid mnemonic", err.Error())
+}
+
+func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
+	kb := New(dbm.NewMemDB())
+	_, err := kb.CreateLedger("some_account", Ed25519, 0, 1)
+	assert.Error(t, err)
+	assert.Equal(t, "unsupported signing algo: only secp256k1 is supported", err.Error())
+}
+
+func TestCreateLedger(t *testing.T) {
+	kb := New(dbm.NewMemDB())
+	_, err := kb.CreateLedger("some_account", Secp256k1, 0, 1)
+	assert.Error(t, err)
+	assert.Equal(t, "no Ledger discovery function defined", err.Error())
+}
+
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
 	db := dbm.NewMemDB()
-	cstore := New(
-		db,
-	)
+	cStore := New(db)
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
 	p1, p2 := "1234", "really-secure!@#$"
 
 	// Check empty state
-	l, err := cstore.List()
+	l, err := cStore.List()
 	require.Nil(t, err)
 	assert.Empty(t, l)
 
-	_, _, err = cstore.CreateMnemonic(n1, English, p1, Ed25519)
+	_, _, err = cStore.CreateMnemonic(n1, English, p1, Ed25519)
 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
 
 	// create some keys
-	_, err = cstore.Get(n1)
+	_, err = cStore.Get(n1)
 	require.Error(t, err)
-	i, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
+	i, _, err := cStore.CreateMnemonic(n1, English, p1, algo)
 
 	require.NoError(t, err)
 	require.Equal(t, n1, i.GetName())
-	_, _, err = cstore.CreateMnemonic(n2, English, p2, algo)
+	_, _, err = cStore.CreateMnemonic(n2, English, p2, algo)
 	require.NoError(t, err)
 
 	// we can get these keys
-	i2, err := cstore.Get(n2)
+	i2, err := cStore.Get(n2)
 	require.NoError(t, err)
-	_, err = cstore.Get(n3)
+	_, err = cStore.Get(n3)
 	require.NotNil(t, err)
-	_, err = cstore.GetByAddress(accAddr(i2))
+	_, err = cStore.GetByAddress(accAddr(i2))
 	require.NoError(t, err)
 	addr, err := types.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 	require.NoError(t, err)
-	_, err = cstore.GetByAddress(addr)
+	_, err = cStore.GetByAddress(addr)
 	require.NotNil(t, err)
 
 	// list shows them in order
-	keyS, err := cstore.List()
+	keyS, err := cStore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
 	// note these are in alphabetical order
@@ -71,37 +117,37 @@ func TestKeyManagement(t *testing.T) {
 	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
 
 	// deleting a key removes it
-	err = cstore.Delete("bad name", "foo", false)
+	err = cStore.Delete("bad name", "foo", false)
 	require.NotNil(t, err)
-	err = cstore.Delete(n1, p1, false)
+	err = cStore.Delete(n1, p1, false)
 	require.NoError(t, err)
-	keyS, err = cstore.List()
+	keyS, err = cStore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
-	_, err = cstore.Get(n1)
+	_, err = cStore.Get(n1)
 	require.Error(t, err)
 
 	// create an offline key
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = cstore.CreateOffline(o1, pub1)
+	i, err = cStore.CreateOffline(o1, pub1)
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
-	keyS, err = cstore.List()
+	keyS, err = cStore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
 
 	// delete the offline key
-	err = cstore.Delete(o1, "", false)
+	err = cStore.Delete(o1, "", false)
 	require.NoError(t, err)
-	keyS, err = cstore.List()
+	keyS, err = cStore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
 
 	// addr cache gets nuked - and test skip flag
-	err = cstore.Delete(n2, "", true)
+	err = cStore.Delete(n2, "", true)
 	require.NoError(t, err)
 	require.False(t, db.Has(addrKey(i2.GetAddress())))
 }

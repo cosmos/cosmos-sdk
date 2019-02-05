@@ -4,6 +4,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	CodeOK             = sdk.CodeOK
+	CodeInternal       = sdk.CodeInternal
+	CodeTxDecode       = sdk.CodeTxDecode
+	CodeUnknownRequest = sdk.CodeUnknownRequest
+
+	CodespaceRoot = sdk.CodespaceRoot
+)
+
 type Error = sdk.Error
 
 func ErrInternal(msg string) Error {

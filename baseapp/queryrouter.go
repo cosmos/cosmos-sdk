@@ -17,7 +17,7 @@ type queryRouter struct {
 // NewQueryRouter returns a reference to a new queryRouter.
 //
 // TODO: Either make the function private or make return type (queryRouter) public.
-func NewQueryRouter() *queryRouter {
+func NewQueryRouter() *queryRouter { // nolint: golint
 	return &queryRouter{
 		routes: map[string]sdk.Querier{},
 	}

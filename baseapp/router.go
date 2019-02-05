@@ -25,7 +25,7 @@ type router struct {
 // NewRouter returns a reference to a new router.
 //
 // TODO: Either make the function private or make return type (router) public.
-func NewRouter() *router {
+func NewRouter() *router { // nolint: golint
 	return &router{
 		routes: make([]route, 0),
 	}

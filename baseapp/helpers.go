@@ -24,7 +24,7 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 }
 
 // RunForever creates and starts an ABCI server and allows it to run
-// indefinitely listening for interupt singals.
+// indefinitely listening for interrupt signals.
 func RunForever(app abci.Application) {
 	srv, err := server.NewServer("0.0.0.0:26658", "socket", app)
 	if err != nil {

@@ -376,7 +376,6 @@ func startTM(
 // startLCD starts the LCD.
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
-	rs.setKeybase(GetTestKeyBase(t))
 	registerRoutes(rs)
 	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
 	if err != nil {

@@ -2,11 +2,12 @@ package crypto
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/pkg/errors"
-
-	secp256k1 "github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/pkg/errors"
+	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
 )
@@ -26,6 +27,7 @@ type (
 	// LedgerSECP256K1 reflects an interface a Ledger API must implement for
 	// the SECP256K1 scheme.
 	LedgerSECP256K1 interface {
+		Close() error
 		GetPublicKeySECP256K1([]uint32) ([]byte, error)
 		SignSECP256K1([]uint32, []byte) ([]byte, error)
 	}
@@ -38,7 +40,6 @@ type (
 		// ledger attached.
 		CachedPubKey tmcrypto.PubKey
 		Path         hd.BIP44Params
-		ledger       LedgerSECP256K1
 	}
 )
 
@@ -48,24 +49,18 @@ type (
 // CONTRACT: The ledger device, ledgerDevice, must be loaded and set prior to
 // any creation of a PrivKeyLedgerSecp256k1.
 func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
-	if discoverLedger == nil {
-		return nil, errors.New("no Ledger discovery function defined")
-	}
-
-	device, err := discoverLedger()
+	device, err := getLedgerDevice()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create PrivKeyLedgerSecp256k1")
+		return nil, err
 	}
+	defer warnIfErrors(device.Close)
 
-	pkl := &PrivKeyLedgerSecp256k1{Path: path, ledger: device}
-
-	pubKey, err := pkl.getPubKey()
+	pubKey, err := getPubKey(device, path)
 	if err != nil {
 		return nil, err
 	}
 
-	pkl.CachedPubKey = pubKey
-	return pkl, err
+	return PrivKeyLedgerSecp256k1{pubKey, path}, nil
 }
 
 // PubKey returns the cached public key.
@@ -73,21 +68,27 @@ func (pkl PrivKeyLedgerSecp256k1) PubKey() tmcrypto.PubKey {
 	return pkl.CachedPubKey
 }
 
+// Sign returns a secp256k1 signature for the corresponding message
+func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
+	device, err := getLedgerDevice()
+	if err != nil {
+		return nil, err
+	}
+	defer warnIfErrors(device.Close)
+
+	return sign(device, pkl, message)
+}
+
 // ValidateKey allows us to verify the sanity of a public key after loading it
 // from disk.
 func (pkl PrivKeyLedgerSecp256k1) ValidateKey() error {
-	// getPubKey will return an error if the ledger is not
-	pub, err := pkl.getPubKey()
+	device, err := getLedgerDevice()
 	if err != nil {
 		return err
 	}
+	defer warnIfErrors(device.Close)
 
-	// verify this matches cached address
-	if !pub.Equals(pkl.CachedPubKey) {
-		return fmt.Errorf("cached key does not match retrieved key")
-	}
-
-	return nil
+	return validateKey(device, pkl)
 }
 
 // AssertIsPrivKeyInner implements the PrivKey interface. It performs a no-op.
@@ -105,8 +106,51 @@ func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
 	if ledger, ok := other.(*PrivKeyLedgerSecp256k1); ok {
 		return pkl.CachedPubKey.Equals(ledger.CachedPubKey)
 	}
-
 	return false
+}
+
+// warnIfErrors wraps a function and writes a warning to stderr. This is required
+// to avoid ignoring errors when defer is used. Using defer may result in linter warnings.
+func warnIfErrors(f func() error) {
+	if err := f(); err != nil {
+		_, _ = fmt.Fprint(os.Stderr, "received error when closing ledger connection", err)
+	}
+}
+
+func convertDERtoBER(signatureDER []byte) ([]byte, error) {
+	sigDER, err := btcec.ParseDERSignature(signatureDER[:], btcec.S256())
+	if err != nil {
+		return nil, err
+	}
+	sigBER := tmbtcec.Signature{R: sigDER.R, S: sigDER.S}
+	return sigBER.Serialize(), nil
+}
+
+func getLedgerDevice() (LedgerSECP256K1, error) {
+	if discoverLedger == nil {
+		return nil, errors.New("no Ledger discovery function defined")
+	}
+
+	device, err := discoverLedger()
+	if err != nil {
+		return nil, errors.Wrap(err, "ledger nano S")
+	}
+
+	return device, nil
+}
+
+func validateKey(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1) error {
+	pub, err := getPubKey(device, pkl.Path)
+	if err != nil {
+		return err
+	}
+
+	// verify this matches cached address
+	if !pub.Equals(pkl.CachedPubKey) {
+		return fmt.Errorf("cached key does not match retrieved key")
+	}
+
+	return nil
 }
 
 // Sign calls the ledger and stores the PubKey for future use.
@@ -114,45 +158,37 @@ func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
 // Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes, returning
 // an error, so this should only trigger if the private key is held in memory
 // for a while before use.
-func (pkl PrivKeyLedgerSecp256k1) Sign(msg []byte) ([]byte, error) {
-	sig, err := pkl.signLedgerSecp256k1(msg)
+func sign(device LedgerSECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte) ([]byte, error) {
+	err := validateKey(device, pkl)
 	if err != nil {
 		return nil, err
 	}
 
-	return sig, nil
+	sig, err := device.SignSECP256K1(pkl.Path.DerivationPath(), msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertDERtoBER(sig)
 }
 
 // getPubKey reads the pubkey the ledger itself
 // since this involves IO, it may return an error, which is not exposed
 // in the PubKey interface, so this function allows better error handling
-func (pkl PrivKeyLedgerSecp256k1) getPubKey() (key tmcrypto.PubKey, err error) {
-	key, err = pkl.pubkeyLedgerSecp256k1()
+func getPubKey(device LedgerSECP256K1, path hd.BIP44Params) (tmcrypto.PubKey, error) {
+	publicKey, err := device.GetPublicKeySECP256K1(path.DerivationPath())
 	if err != nil {
-		return key, fmt.Errorf("please open Cosmos app on the Ledger device - error: %v", err)
+		return nil, fmt.Errorf("please open Cosmos app on the Ledger device - error: %v", err)
 	}
-
-	return key, err
-}
-
-func (pkl PrivKeyLedgerSecp256k1) signLedgerSecp256k1(msg []byte) ([]byte, error) {
-	return pkl.ledger.SignSECP256K1(pkl.Path.DerivationPath(), msg)
-}
-
-func (pkl PrivKeyLedgerSecp256k1) pubkeyLedgerSecp256k1() (pub tmcrypto.PubKey, err error) {
-	key, err := pkl.ledger.GetPublicKeySECP256K1(pkl.Path.DerivationPath())
-	if err != nil {
-		return nil, fmt.Errorf("error fetching public key: %v", err)
-	}
-
-	var pk tmsecp256k1.PubKeySecp256k1
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := secp256k1.ParsePubKey(key[:], secp256k1.S256())
+	cmp, err := btcec.ParsePubKey(publicKey[:], btcec.S256())
 	if err != nil {
 		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
-	copy(pk[:], cmp.SerializeCompressed())
 
-	return pk, nil
+	var compressedPublicKey tmsecp256k1.PubKeySecp256k1
+	copy(compressedPublicKey[:], cmp.SerializeCompressed())
+
+	return compressedPublicKey, nil
 }

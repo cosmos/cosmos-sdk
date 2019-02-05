@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/errors"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
@@ -288,12 +289,12 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	store := rs.getStoreByName(storeName)
 	if store == nil {
 		msg := fmt.Sprintf("no such store: %s", storeName)
-		return types.ErrUnknownRequest(msg).QueryResult()
+		return errors.ErrUnknownRequest(msg).QueryResult()
 	}
 	queryable, ok := store.(types.Queryable)
 	if !ok {
 		msg := fmt.Sprintf("store %s doesn't support queries", storeName)
-		return types.ErrUnknownRequest(msg).QueryResult()
+		return errors.ErrUnknownRequest(msg).QueryResult()
 	}
 
 	// trim the path and make the query
@@ -305,12 +306,12 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	if res.Proof == nil || len(res.Proof.Ops) == 0 {
-		return types.ErrInternal("substore proof was nil/empty when it should never be").QueryResult()
+		return errors.ErrInternal("substore proof was nil/empty when it should never be").QueryResult()
 	}
 
 	commitInfo, errMsg := getCommitInfo(rs.db, res.Height)
 	if errMsg != nil {
-		return types.ErrInternal(errMsg.Error()).QueryResult()
+		return errors.ErrInternal(errMsg.Error()).QueryResult()
 	}
 
 	// Restore origin path and append proof op.
@@ -327,9 +328,9 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 // parsePath expects a format like /<storeName>[/<subpath>]
 // Must start with /, subpath may be empty
 // Returns error if it doesn't start with /
-func parsePath(path string) (storeName string, subpath string, err types.Error) {
+func parsePath(path string) (storeName string, subpath string, err errors.Error) {
 	if !strings.HasPrefix(path, "/") {
-		err = types.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
+		err = errors.ErrUnknownRequest(fmt.Sprintf("invalid path: %s", path))
 		return
 	}
 

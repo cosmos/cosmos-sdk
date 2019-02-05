@@ -12,6 +12,7 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/errors"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -184,7 +185,7 @@ func getHeight(tree *iavl.MutableTree, req abci.RequestQuery) int64 {
 func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return types.ErrTxDecode(msg).QueryResult()
+		return errors.ErrTxDecode(msg).QueryResult()
 	}
 
 	tree := st.tree
@@ -244,7 +245,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return types.ErrUnknownRequest(msg).QueryResult()
+		return errors.ErrUnknownRequest(msg).QueryResult()
 	}
 
 	return

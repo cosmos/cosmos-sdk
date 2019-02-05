@@ -8,8 +8,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/errors"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const useDebugDB = false
@@ -157,37 +157,37 @@ func TestMultiStoreQuery(t *testing.T) {
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
-	require.EqualValues(t, types.CodeUnknownRequest, qres.Code)
-	require.EqualValues(t, types.CodespaceRoot, qres.Codespace)
+	require.EqualValues(t, errors.CodeUnknownRequest, qres.Code)
+	require.EqualValues(t, errors.CodespaceRoot, qres.Codespace)
 
 	query.Path = "h897fy32890rf63296r92"
 	qres = multi.Query(query)
-	require.EqualValues(t, types.CodeUnknownRequest, qres.Code)
-	require.EqualValues(t, types.CodespaceRoot, qres.Codespace)
+	require.EqualValues(t, errors.CodeUnknownRequest, qres.Code)
+	require.EqualValues(t, errors.CodespaceRoot, qres.Codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
 	qres = multi.Query(query)
-	require.EqualValues(t, types.CodeUnknownRequest, qres.Code)
-	require.EqualValues(t, types.CodespaceRoot, qres.Codespace)
+	require.EqualValues(t, errors.CodeUnknownRequest, qres.Code)
+	require.EqualValues(t, errors.CodespaceRoot, qres.Codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
 	qres = multi.Query(query)
-	require.EqualValues(t, types.CodeOK, qres.Code)
+	require.EqualValues(t, errors.CodeOK, qres.Code)
 	require.Equal(t, v, qres.Value)
 
 	// Test valid but empty query.
 	query.Path = "/store2/key"
 	query.Prove = true
 	qres = multi.Query(query)
-	require.EqualValues(t, types.CodeOK, qres.Code)
+	require.EqualValues(t, errors.CodeOK, qres.Code)
 	require.Nil(t, qres.Value)
 
 	// Test store2 data.
 	query.Data = k2
 	qres = multi.Query(query)
-	require.EqualValues(t, types.CodeOK, qres.Code)
+	require.EqualValues(t, errors.CodeOK, qres.Code)
 	require.Equal(t, v2, qres.Value)
 }
 
@@ -196,7 +196,7 @@ func TestMultiStoreQuery(t *testing.T) {
 
 func newMultiStoreWithMounts(db dbm.DB) *Store {
 	store := NewStore(db)
-	store.pruningOpts = stypes.PruneSyncable
+	store.pruningOpts = types.PruneSyncable
 	store.MountStoreWithDB(
 		types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(

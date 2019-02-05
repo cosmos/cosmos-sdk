@@ -18,8 +18,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AppStateFn returns the app state json bytes
-type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) json.RawMessage
+// AppStateFn returns the app state json bytes, the genesis accounts, and the chain identifier
+type AppStateFn func(r *rand.Rand, accs []Account, genesisTimestamp time.Time) (appState json.RawMessage, accounts []Account, chainId string)
 
 // Simulate tests application by sending random messages.
 func Simulate(t *testing.T, app *baseapp.BaseApp,
@@ -35,15 +35,18 @@ func Simulate(t *testing.T, app *baseapp.BaseApp,
 func initChain(
 	r *rand.Rand, params Params, accounts []Account,
 	app *baseapp.BaseApp, appStateFn AppStateFn, genesisTimestamp time.Time,
-) mockValidators {
+) (mockValidators, []Account) {
+
+	appState, accounts, chainID := appStateFn(r, accounts, genesisTimestamp)
 
 	req := abci.RequestInitChain{
-		AppStateBytes: appStateFn(r, accounts, genesisTimestamp),
+		AppStateBytes: appState,
+		ChainId:       chainID,
 	}
 	res := app.InitChain(req)
 	validators := newMockValidators(r, res.Validators, params)
 
-	return validators
+	return validators, accounts
 }
 
 // SimulateFromSeed tests an application by running the provided
@@ -73,7 +76,11 @@ func SimulateFromSeed(tb testing.TB, app *baseapp.BaseApp,
 
 	// Second variable to keep pending validator set (delayed one block since
 	// TM 0.24) Initially this is the same as the initial validator set
-	validators := initChain(r, params, accs, app, appStateFn, genesisTimestamp)
+	validators, accs := initChain(r, params, accs, app, appStateFn, genesisTimestamp)
+	if len(accs) == 0 {
+		return true, fmt.Errorf("must have greater than zero genesis accounts")
+	}
+
 	nextValidators := validators
 
 	header := abci.Header{

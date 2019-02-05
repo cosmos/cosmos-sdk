@@ -110,7 +110,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 
 	ctx := sdk.NewContext(ms, abci.Header{ChainID: "foochainid"}, isCheckTx, log.NewNopLogger())
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, pk.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
-	ck := bank.NewBaseKeeper(accountKeeper)
+	ck := bank.NewBaseKeeper(accountKeeper, pk.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	sk.SetPool(ctx, staking.InitialPool())
 	sk.SetParams(ctx, staking.DefaultParams())
@@ -122,7 +122,7 @@ func CreateTestInputAdvanced(t *testing.T, isCheckTx bool, initCoins int64,
 			{sk.GetParams(ctx).BondDenom, sdk.NewInt(initCoins)},
 		})
 		require.Nil(t, err)
-		pool.LooseTokens = pool.LooseTokens.Add(sdk.NewInt(initCoins))
+		pool.NotBondedTokens = pool.NotBondedTokens.Add(sdk.NewInt(initCoins))
 		sk.SetPool(ctx, pool)
 	}
 

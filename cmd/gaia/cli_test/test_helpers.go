@@ -14,8 +14,8 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
@@ -74,6 +74,22 @@ func NewFixtures(t *testing.T) *Fixtures {
 		P2PAddr:  p2pAddr,
 		Port:     port,
 	}
+}
+
+// GenesisFile returns the path of the genesis file
+func (f Fixtures) GenesisFile() string {
+	return filepath.Join(f.GDHome, "config", "genesis.json")
+}
+
+// GenesisFile returns the application's genesis state
+func (f Fixtures) GenesisState() app.GenesisState {
+	cdc := codec.New()
+	genDoc, err := appInit.LoadGenesisDoc(cdc, f.GenesisFile())
+	require.NoError(f.T, err)
+
+	var appState app.GenesisState
+	require.NoError(f.T, cdc.UnmarshalJSON(genDoc.AppState, &appState))
+	return appState
 }
 
 // InitFixtures is called at the beginning of a test
@@ -179,6 +195,21 @@ func (f *Fixtures) GDStart(flags ...string) *tests.Process {
 	return proc
 }
 
+// GDTendermint returns the results of gaiad tendermint [query]
+func (f *Fixtures) GDTendermint(query string) string {
+	cmd := fmt.Sprintf("gaiad tendermint %s --home=%s", query, f.GDHome)
+	success, stdout, stderr := executeWriteRetStdStreams(f.T, cmd)
+	require.Empty(f.T, stderr)
+	require.True(f.T, success)
+	return strings.TrimSpace(stdout)
+}
+
+// ValidateGenesis runs gaiad validate-genesis
+func (f *Fixtures) ValidateGenesis() {
+	cmd := fmt.Sprintf("gaiad validate-genesis --home=%s", f.GDHome)
+	executeWriteCheckErr(f.T, cmd)
+}
+
 //___________________________________________________________________________________
 // gaiacli keys
 
@@ -192,6 +223,18 @@ func (f *Fixtures) KeysDelete(name string, flags ...string) {
 func (f *Fixtures) KeysAdd(name string, flags ...string) {
 	cmd := fmt.Sprintf("gaiacli keys add --home=%s %s", f.GCLIHome, name)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// KeysAddRecover prepares gaiacli keys add --recover
+func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli keys add --home=%s --recover %s", f.GCLIHome, name)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
+}
+
+// KeysAddRecoverHDPath prepares gaiacli keys add --recover --account --index
+func (f *Fixtures) KeysAddRecoverHDPath(name, mnemonic string, account uint32, index uint32, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli keys add --home=%s --recover %s --account %d --index %d", f.GCLIHome, name, account, index)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
 }
 
 // KeysShow is gaiacli keys show
@@ -238,7 +281,7 @@ func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, strin
 
 // TxBroadcast is gaiacli tx sign
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("gaiacli tx broadcast %v --json %v", f.Flags(), fileName)
+	cmd := fmt.Sprintf("gaiacli tx broadcast %v %v", f.Flags(), fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -314,10 +357,10 @@ func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.Ba
 // gaiacli query txs
 
 // QueryTxs is gaiacli query txs
-func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []tx.Info {
+func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []sdk.TxResponse {
 	cmd := fmt.Sprintf("gaiacli query txs --page=%d --limit=%d --tags='%s' %v", page, limit, queryTags(tags), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
-	var txs []tx.Info
+	var txs []sdk.TxResponse
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &txs)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)
@@ -380,7 +423,7 @@ func (f *Fixtures) QueryStakingPool(flags ...string) staking.Pool {
 
 // QueryStakingParameters is gaiacli query staking parameters
 func (f *Fixtures) QueryStakingParameters(flags ...string) staking.Params {
-	cmd := fmt.Sprintf("gaiacli query staking parameters %v", f.Flags())
+	cmd := fmt.Sprintf("gaiacli query staking params %v", f.Flags())
 	out, _ := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
 	var params staking.Params
 	cdc := app.MakeCodec()
@@ -426,11 +469,18 @@ func (f *Fixtures) QueryGovParamTallying() gov.TallyParams {
 }
 
 // QueryGovProposals is gaiacli query gov proposals
-func (f *Fixtures) QueryGovProposals(flags ...string) string {
+func (f *Fixtures) QueryGovProposals(flags ...string) gov.Proposals {
 	cmd := fmt.Sprintf("gaiacli query gov proposals %v", f.Flags())
 	stdout, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), "")
+	if strings.Contains(stderr, "No matching proposals found") {
+		return gov.Proposals{}
+	}
 	require.Empty(f.T, stderr)
-	return stdout
+	var out gov.Proposals
+	cdc := app.MakeCodec()
+	err := cdc.UnmarshalJSON([]byte(stdout), &out)
+	require.NoError(f.T, err)
+	return out
 }
 
 // QueryGovProposal is gaiacli query gov proposal
@@ -490,6 +540,18 @@ func (f *Fixtures) QueryGovDeposits(propsalID int, flags ...string) []gov.Deposi
 
 //___________________________________________________________________________________
 // query slashing
+
+// QuerySigningInfo returns the signing info for a validator
+func (f *Fixtures) QuerySigningInfo(val string) slashing.ValidatorSigningInfo {
+	cmd := fmt.Sprintf("gaiacli query slashing signing-info %s %s", val, f.Flags())
+	res, errStr := tests.ExecuteT(f.T, cmd, "")
+	require.Empty(f.T, errStr)
+	cdc := app.MakeCodec()
+	var sinfo slashing.ValidatorSigningInfo
+	err := cdc.UnmarshalJSON([]byte(res), &sinfo)
+	require.NoError(f.T, err)
+	return sinfo
+}
 
 // QuerySlashingParams is gaiacli query slashing params
 func (f *Fixtures) QuerySlashingParams() slashing.Params {

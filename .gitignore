@@ -10,6 +10,7 @@
 
 # Build
 vendor
+vendor-deps
 .vendor-new
 build
 tools/bin/*
@@ -20,7 +21,6 @@ dist
 devtools-stamp
 
 # Data - ideally these don't exist
-examples/basecoin/app/data
 baseapp/data/*
 client/lcd/keys/*
 client/lcd/statik/statik.go

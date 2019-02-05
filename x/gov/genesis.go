@@ -184,12 +184,14 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	for _, proposal := range proposals {
 		proposalID := proposal.GetProposalID()
 		depositsIterator := k.GetDeposits(ctx, proposalID)
+		defer depositsIterator.Close()
 		for ; depositsIterator.Valid(); depositsIterator.Next() {
 			var deposit Deposit
 			k.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 			deposits = append(deposits, DepositWithMetadata{proposalID, deposit})
 		}
 		votesIterator := k.GetVotes(ctx, proposalID)
+		defer votesIterator.Close()
 		for ; votesIterator.Valid(); votesIterator.Next() {
 			var vote Vote
 			k.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)

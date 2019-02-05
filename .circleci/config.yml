@@ -3,7 +3,7 @@ version: 2
 defaults: &linux_defaults
   working_directory: /go/src/github.com/cosmos/cosmos-sdk
   docker:
-    - image: circleci/golang:1.11.4
+    - image: circleci/golang:1.11.5
   environment:
     GOBIN: /tmp/workspace/bin
 
@@ -17,7 +17,7 @@ macos_config: &macos_defaults
     xcode: "10.1.0"
   working_directory: /Users/distiller/project/src/github.com/cosmos/cosmos-sdk
   environment:
-    GO_VERSION: "1.11.4"
+    GO_VERSION: "1.11.5"
 
 set_macos_env: &macos_env
   run:
@@ -44,7 +44,7 @@ deps: &dependencies
     name: dependencies
     command: |
       export PATH="$GOBIN:$PATH"
-      make get_vendor_deps
+      make vendor-deps
 
 jobs:
   setup_dependencies:
@@ -64,7 +64,6 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make install
-            make install_examples
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -83,6 +82,7 @@ jobs:
           name: Get metalinter
           command: |
             export PATH="$GOBIN:$PATH"
+            make devtools-clean
             make devtools
       - run:
           name: Lint source
@@ -103,7 +103,6 @@ jobs:
           command: |
             export PATH="$GOBIN:$PATH"
             make test_cli
-            make test_examples
 
   test_sim_gaia_nondeterminism:
     <<: *linux_defaults
@@ -173,7 +172,7 @@ jobs:
           name: Test multi-seed Gaia simulation long
           command: |
             export PATH="$GOBIN:$PATH"
-            scripts/multisim.sh 800 50 TestFullGaiaSimulation
+            scripts/multisim.sh 500 50 TestFullGaiaSimulation
 
   test_sim_gaia_multi_seed:
     <<: *linux_defaults
@@ -245,7 +244,7 @@ jobs:
         GOPATH: /home/circleci/.go_workspace/
         GOOS: linux
         GOARCH: amd64
-        GO_VERSION: "1.11.4"
+        GO_VERSION: "1.11.5"
       parallelism: 1
       steps:
         - checkout
@@ -260,7 +259,7 @@ jobs:
               popd
               set -x
               make tools
-              make get_vendor_deps
+              make vendor-deps
               make build-linux
               make localnet-start
               ./scripts/localnet-blocks-test.sh 40 5 10 localhost
@@ -292,7 +291,7 @@ jobs:
           command: |
             source $BASH_ENV
             make tools
-            make get_vendor_deps
+            make vendor-deps
             make install
       - run:
           name: Integration tests

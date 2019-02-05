@@ -39,13 +39,14 @@ func (mc ModuleClient) GetQueryCmd() *cobra.Command {
 // GetTxCmd returns the transaction commands for this module
 func (mc ModuleClient) GetTxCmd() *cobra.Command {
 	distTxCmd := &cobra.Command{
-		Use:   "dist",
+		Use:   "distr",
 		Short: "Distribution transactions subcommands",
 	}
 
 	distTxCmd.AddCommand(client.PostCommands(
 		distCmds.GetCmdWithdrawRewards(mc.cdc),
 		distCmds.GetCmdSetWithdrawAddr(mc.cdc),
+		distCmds.GetCmdWithdrawAllRewards(mc.cdc, mc.storeKey),
 	)...)
 
 	return distTxCmd

@@ -13,13 +13,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsim "github.com/cosmos/cosmos-sdk/x/auth/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
@@ -35,16 +38,18 @@ import (
 )
 
 var (
-	seed      int64
-	numBlocks int
-	blockSize int
-	enabled   bool
-	verbose   bool
-	commit    bool
-	period    int
+	genesisFile string
+	seed        int64
+	numBlocks   int
+	blockSize   int
+	enabled     bool
+	verbose     bool
+	commit      bool
+	period      int
 )
 
 func init() {
+	flag.StringVar(&genesisFile, "SimulationGenesis", "", "Custom simulation genesis file")
 	flag.Int64Var(&seed, "SimulationSeed", 42, "Simulation random seed")
 	flag.IntVar(&numBlocks, "SimulationNumBlocks", 500, "Number of blocks")
 	flag.IntVar(&blockSize, "SimulationBlockSize", 200, "Operations per block")
@@ -54,7 +59,31 @@ func init() {
 	flag.IntVar(&period, "SimulationPeriod", 1, "Run slow invariants only once every period assertions")
 }
 
-func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) json.RawMessage {
+func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+	var genesis tmtypes.GenesisDoc
+	cdc := MakeCodec()
+	bytes, err := ioutil.ReadFile(genesisFile)
+	if err != nil {
+		panic(err)
+	}
+	cdc.MustUnmarshalJSON(bytes, &genesis)
+	var appState GenesisState
+	cdc.MustUnmarshalJSON(genesis.AppState, &appState)
+	var newAccs []simulation.Account
+	for _, acc := range appState.Accounts {
+		// Pick a random private key, since we don't know the actual key
+		// This should be fine as it's only used for mock Tendermint validators
+		// and these keys are never actually used to sign by mock Tendermint.
+		privkeySeed := make([]byte, 15)
+		r.Read(privkeySeed)
+		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
+		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
+	}
+	return genesis.AppState, newAccs, genesis.ChainID
+}
+
+func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+
 	var genesisAccounts []GenesisAccount
 
 	amount := int64(r.Intn(1e6))
@@ -109,14 +138,17 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 
 	authGenesis := auth.GenesisState{
 		Params: auth.Params{
-			MemoCostPerByte:        uint64(r.Intn(10) + 1),
-			MaxMemoCharacters:      uint64(r.Intn(200-100) + 100),
+			MaxMemoCharacters:      uint64(randIntBetween(r, 100, 200)),
 			TxSigLimit:             uint64(r.Intn(7) + 1),
-			SigVerifyCostED25519:   uint64(r.Intn(1000-500) + 500),
-			SigVerifyCostSecp256k1: uint64(r.Intn(1000-500) + 500),
+			TxSizeCostPerByte:      uint64(randIntBetween(r, 5, 15)),
+			SigVerifyCostED25519:   uint64(randIntBetween(r, 500, 1000)),
+			SigVerifyCostSecp256k1: uint64(randIntBetween(r, 500, 1000)),
 		},
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
+
+	bankGenesis := bank.NewGenesisState(r.Int63n(2) == 0)
+	fmt.Printf("Selected randomly generated bank parameters:\n\t%+v\n", bankGenesis)
 
 	// Random genesis states
 	vp := time.Duration(r.Intn(2*172800)) * time.Second
@@ -188,7 +220,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		delegations = append(delegations, delegation)
 	}
 
-	stakingGenesis.Pool.LooseTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
+	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
 	stakingGenesis.Bonds = delegations
 
@@ -203,6 +235,7 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 	genesis := GenesisState{
 		Accounts:     genesisAccounts,
 		AuthData:     authGenesis,
+		BankData:     bankGenesis,
 		StakingData:  stakingGenesis,
 		MintData:     mintGenesis,
 		DistrData:    distrGenesis,
@@ -216,7 +249,14 @@ func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.T
 		panic(err)
 	}
 
-	return appState
+	return appState, accs, "simulation"
+}
+
+func appStateFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
+	if genesisFile != "" {
+		return appStateFromGenesisFileFn(r, accs, genesisTimestamp)
+	}
+	return appStateRandomizedFn(r, accs, genesisTimestamp)
 }
 
 func randIntBetween(r *rand.Rand, min, max int) int {
@@ -226,7 +266,8 @@ func randIntBetween(r *rand.Rand, min, max int) int {
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
-		{100, banksim.SingleInputSendMsg(app.accountKeeper, app.bankKeeper)},
+		{100, banksim.SendMsg(app.accountKeeper, app.bankKeeper)},
+		{10, banksim.SingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper)},
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},
@@ -376,7 +417,7 @@ func TestGaiaImportExport(t *testing.T) {
 
 	fmt.Printf("Exporting genesis...\n")
 
-	appState, _, err := app.ExportAppStateAndValidators(false)
+	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
 	if err != nil {
 		panic(err)
 	}
@@ -425,8 +466,10 @@ func TestGaiaImportExport(t *testing.T) {
 		storeB := ctxB.KVStore(storeKeyB)
 		kvA, kvB, count, equal := sdk.DiffKVStores(storeA, storeB, prefixes)
 		fmt.Printf("Compared %d key/value pairs between %s and %s\n", count, storeKeyA, storeKeyB)
-		require.True(t, equal, "unequal stores: %s / %s:\nstore A %s (%X) => %s (%X)\nstore B %s (%X) => %s (%X)",
-			storeKeyA, storeKeyB, kvA.Key, kvA.Key, kvA.Value, kvA.Value, kvB.Key, kvB.Key, kvB.Value, kvB.Value)
+		require.True(t, equal,
+			"unequal stores: %s / %s:\nstore A %X => %X\nstore B %X => %X",
+			storeKeyA, storeKeyB, kvA.Key, kvA.Value, kvB.Key, kvB.Value,
+		)
 	}
 
 }
@@ -478,7 +521,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 
 	fmt.Printf("Exporting genesis...\n")
 
-	appState, _, err := app.ExportAppStateAndValidators(true)
+	appState, _, err := app.ExportAppStateAndValidators(true, []string{})
 	if err != nil {
 		panic(err)
 	}

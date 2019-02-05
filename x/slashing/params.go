@@ -1,6 +1,7 @@
 package slashing
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,9 +28,9 @@ var (
 	KeySlashFractionDowntime   = []byte("SlashFractionDowntime")
 )
 
-// ParamTypeTable for slashing module
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable().RegisterParamSet(&Params{})
+// ParamKeyTable for slashing module
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 // Params - used for initializing default parameter for slashing at genesis
@@ -42,9 +43,22 @@ type Params struct {
 	SlashFractionDowntime   sdk.Dec       `json:"slash-fraction-downtime"`
 }
 
+func (p Params) String() string {
+	return fmt.Sprintf(`Slashing Params:
+  MaxEvidenceAge:          %s
+  SignedBlocksWindow:      %d
+  MinSignedPerWindow:      %s
+  DowntimeJailDuration:    %s
+  SlashFractionDoubleSign: %d
+  SlashFractionDowntime:   %d`, p.MaxEvidenceAge,
+		p.SignedBlocksWindow, p.MinSignedPerWindow,
+		p.DowntimeJailDuration, p.SlashFractionDoubleSign,
+		p.SlashFractionDowntime)
+}
+
 // Implements params.ParamStruct
-func (p *Params) KeyValuePairs() params.KeyValuePairs {
-	return params.KeyValuePairs{
+func (p *Params) ParamSetPairs() params.ParamSetPairs {
+	return params.ParamSetPairs{
 		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},
 		{KeySignedBlocksWindow, &p.SignedBlocksWindow},
 		{KeyMinSignedPerWindow, &p.MinSignedPerWindow},

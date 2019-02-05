@@ -1,68 +1,62 @@
 # End-Block 
 
-## Unbonding Validator Queue
-
-For all unbonding validators that have finished their unbonding period, this switches their validator.Status
-from sdk.Unbonding to sdk.Unbonded if they still have any delegation left.  Otherwise, it deletes it from state.
-
-```golang
-validatorQueue(currTime time.Time):
-    // unbonding validators are in ordered queue from oldest to newest
-    for all unbondingValidators whose CompleteTime < currTime:
-        validator = GetValidator(unbondingValidator.ValidatorAddr)
-        if validator.DelegatorShares == 0 {
-            RemoveValidator(unbondingValidator)
-        } else {
-            validator.Status = sdk.Unbonded
-            SetValidator(unbondingValidator)
-        }
-    return
-```
+Each abci end block call, the operations to update queues and validator set
+changes are specified to execute. 
 
 ## Validator Set Changes
 
-The Tendermint validator set may be updated by state transitions that run at
-the end of every block. The Tendermint validator set may be changed by
-validators either being jailed due to inactivity/unexpected behaviour (covered
-in slashing) or changed in validator power. Determining which validator set
-changes must be made occurs during staking transactions (and slashing
-transactions) - during end-block the already accounted changes are applied and
-the changes cleared
+The staking validator set is updated during this process by state transitions
+that run at the end of every block. As a part of this process any updated
+validators are also returned back to Tendermint for inclusion in the Tendermint
+validator set which is responsible for validating Tendermint messages at the
+consensus layer. Operations are as following:
 
-```golang
-EndBlock() ValidatorSetChanges
-    vsc = GetValidTendermintUpdates()
-    ClearTendermintUpdates()
-    return vsc
-```
+ - the new validator set is taken as the top `params.MaxValidators` number of
+   validators retrieved from the ValidatorsByPower index
+ - the previous validator set is compared with the new validator set 
+   - missing validators begin unbonding
+   - new validator are instantly bonded
 
-## CompleteUnbonding
+In all cases, any validators leaving or entering the bonded validator set or
+changing balances and staying within the bonded validator set incur an update
+message which is passed back to Tendermint.
 
-Complete the unbonding and transfer the coins to the delegate. Realize any
-slashing that occurred during the unbonding period.
+## Queues 
 
-```golang
-unbondingQueue(currTime time.Time):
-    // unbondings are in ordered queue from oldest to newest
-    for all unbondings whose CompleteTime < currTime:
-        validator = GetValidator(unbonding.ValidatorAddr)
-        AddCoins(unbonding.DelegatorAddr, unbonding.Balance)
-        removeUnbondingDelegation(unbonding)
-    return
-```
+Within staking, certain state-transitions are not instantaneous but take place
+over a duration of time (typically the unbonding period). When these
+transitions are mature certain operations must take place in order to complete
+the state operation. This is achieved through the use of queues which are
+checked/processed at the end of each block. 
 
-## CompleteRedelegation
+### Unbonding Validators
 
-Note that unlike CompleteUnbonding slashing of redelegating shares does not
-take place during completion. Slashing on redelegated shares takes place
-actively as a slashing occurs. The redelegation completion queue serves simply to
-clean up state, as redelegations older than an unbonding period need not be kept,
-as that is the max time that their old validator's evidence can be used to slash them.
+When a validator is kicked out of the bonded validator set (either through
+being jailed, or not having sufficient bonded tokens) it begins the unbonding
+process along with all its delegations begin unbonding (while still being
+delegated to this validator). At this point the validator is said to be an
+unbonding validator, whereby it will mature to become an "unbonded validator"
+after the unbonding period has passed. 
 
-```golang
-redelegationQueue(currTime time.Time):
-    // redelegations are in ordered queue from oldest to newest
-    for all redelegations whose CompleteTime < currTime:
-        removeRedelegation(redelegation)
-    return
-```
+Each block the validator queue is to be checked for mature unbonding
+validators. For all unbonding validators that have finished their unbonding
+period, the validator.Status is switched from sdk.Unbonding to sdk.Unbonded.
+If at this switch they do not have any delegation left the validator object
+instead just deleted from state.
+
+### Unbonding Delegations
+
+Complete the unbonding of all mature `UnbondingDelegations.Entries` within the
+`UnbondingDelegations` queue with the following procedure: 
+ - transfer the balance coins to the delegator's wallet address
+ - remove the mature entry from `UnbondingDelegation.Entries`
+ - remove the `UnbondingDelegation` object from the store if there are no
+   remaining entries. 
+
+### Redelegations
+
+Complete the unbonding of all mature `Redelegation.Entries` within the
+`Redelegations` queue with the following procedure: 
+ - remove the mature entry from `Redelegation.Entries`
+ - remove the `Redelegation` object from the store if there are no
+   remaining entries. 

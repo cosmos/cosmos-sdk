@@ -9,8 +9,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/cli"
 
-	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,7 +30,7 @@ func init() {
 
 // ConfigCmd returns a CLI command to interactively create a
 // Gaia CLI config file.
-func ConfigCmd() *cobra.Command {
+func ConfigCmd(defaultCLIHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config <key> [value]",
 		Short: "Create or query a Gaia CLI configuration file",
@@ -40,7 +38,7 @@ func ConfigCmd() *cobra.Command {
 		Args:  cobra.RangeArgs(0, 2),
 	}
 
-	cmd.Flags().String(cli.HomeFlag, app.DefaultCLIHome,
+	cmd.Flags().String(cli.HomeFlag, defaultCLIHome,
 		"set client's home directory for configuration")
 	cmd.Flags().Bool(flagGet, false,
 		"print configuration value or its default if unset")
@@ -78,7 +76,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	// Get value action
 	if getAction {
 		switch key {
-		case "trace", "trust-node":
+		case "trace", "trust-node", "indent":
 			fmt.Println(tree.GetDefault(key, false).(bool))
 		default:
 			if defaultValue, ok := configDefaults[key]; ok {
@@ -98,7 +96,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	switch key {
 	case "chain-id", "output", "node":
 		tree.Set(key, value)
-	case "trace", "trust-node":
+	case "trace", "trust-node", "indent":
 		boolVal, err := strconv.ParseBool(value)
 		if err != nil {
 			return err

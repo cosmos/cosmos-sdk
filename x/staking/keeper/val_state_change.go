@@ -15,7 +15,7 @@ import (
 // * Updates the active valset as keyed by LastValidatorPowerKey.
 // * Updates the total power as keyed by LastTotalPowerKey.
 // * Updates validator status' according to updated powers.
-// * Updates the fee pool bonded vs loose tokens.
+// * Updates the fee pool bonded vs not-bonded tokens.
 // * Updates relevant indices.
 // It gets called once after genesis, another time maybe after genesis transactions,
 // then once at every EndBlock.
@@ -36,6 +36,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 	// Iterate over validators, highest power to lowest.
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
+	defer iterator.Close()
 	count := 0
 	for ; iterator.Valid() && count < int(maxValidators); iterator.Next() {
 
@@ -254,6 +255,7 @@ func (k Keeper) getLastValidatorsByAddr(ctx sdk.Context) validatorsByAddr {
 	last := make(validatorsByAddr)
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
+	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var valAddr [sdk.AddrLen]byte
 		copy(valAddr[:], iterator.Key()[1:])

@@ -14,6 +14,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -42,6 +43,8 @@ func main() {
 	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
 	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
 	rootCmd.AddCommand(gaiaInit.AddGenesisAccountCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.ValidateGenesisCmd(ctx, cdc))
+	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
@@ -57,13 +60,13 @@ func main() {
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
 	return app.NewGaiaApp(
 		logger, db, traceStore, true,
-		baseapp.SetPruning(store.NewPruningOptions(viper.GetString("pruning"))),
+		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
 	)
 }
 
 func exportAppStateAndTMValidators(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool,
+	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 	if height != -1 {
 		gApp := app.NewGaiaApp(logger, db, traceStore, false)
@@ -71,8 +74,8 @@ func exportAppStateAndTMValidators(
 		if err != nil {
 			return nil, nil, err
 		}
-		return gApp.ExportAppStateAndValidators(forZeroHeight)
+		return gApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 	}
 	gApp := app.NewGaiaApp(logger, db, traceStore, true)
-	return gApp.ExportAppStateAndValidators(forZeroHeight)
+	return gApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

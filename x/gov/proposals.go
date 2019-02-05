@@ -3,6 +3,7 @@ package gov
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -45,6 +46,21 @@ type Proposal interface {
 
 	GetVotingEndTime() time.Time
 	SetVotingEndTime(time.Time)
+
+	String() string
+}
+
+// Proposals is an array of proposal
+type Proposals []Proposal
+
+func (p Proposals) String() string {
+	out := "ID - (Status) [Type] Title\n"
+	for _, prop := range p {
+		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
+			prop.GetProposalID(), prop.GetStatus(),
+			prop.GetProposalType(), prop.GetTitle())
+	}
+	return strings.TrimSpace(out)
 }
 
 // checks if two proposals are equal
@@ -117,6 +133,20 @@ func (tp *TextProposal) SetVotingStartTime(votingStartTime time.Time) {
 func (tp TextProposal) GetVotingEndTime() time.Time { return tp.VotingEndTime }
 func (tp *TextProposal) SetVotingEndTime(votingEndTime time.Time) {
 	tp.VotingEndTime = votingEndTime
+}
+
+func (tp TextProposal) String() string {
+	return fmt.Sprintf(`Proposal %d:
+  Title:              %s
+  Type:               %s
+  Status:             %s
+  Submit Time:        %s
+  Deposit End Time:   %s
+  Total Deposit:      %s
+  Voting Start Time:  %s
+  Voting End Time:    %s`, tp.ProposalID, tp.Title, tp.ProposalType,
+		tp.Status, tp.SubmitTime, tp.DepositEndTime,
+		tp.TotalDeposit, tp.VotingStartTime, tp.VotingEndTime)
 }
 
 //-----------------------------------------------------------
@@ -343,9 +373,17 @@ func EmptyTallyResult() TallyResult {
 }
 
 // checks if two proposals are equal
-func (resultA TallyResult) Equals(resultB TallyResult) bool {
-	return (resultA.Yes.Equal(resultB.Yes) &&
-		resultA.Abstain.Equal(resultB.Abstain) &&
-		resultA.No.Equal(resultB.No) &&
-		resultA.NoWithVeto.Equal(resultB.NoWithVeto))
+func (tr TallyResult) Equals(comp TallyResult) bool {
+	return (tr.Yes.Equal(comp.Yes) &&
+		tr.Abstain.Equal(comp.Abstain) &&
+		tr.No.Equal(comp.No) &&
+		tr.NoWithVeto.Equal(comp.NoWithVeto))
+}
+
+func (tr TallyResult) String() string {
+	return fmt.Sprintf(`Tally Result:
+  Yes:        %s
+  Abstain:    %s
+  No:         %s
+  NoWithVeto: %s`, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
 }

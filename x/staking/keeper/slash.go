@@ -57,7 +57,12 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.GT(sdk.ZeroInt()) {
-		k.BeforeValidatorSlashed(ctx, operatorAddress, slashAmountDec.Quo(sdk.NewDecFromInt(validator.Tokens)))
+		effectiveFraction := slashAmountDec.Quo(sdk.NewDecFromInt(validator.Tokens))
+		// possible if power has changed
+		if effectiveFraction.GT(sdk.OneDec()) {
+			effectiveFraction = sdk.OneDec()
+		}
+		k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
 	}
 
 	// Track remaining slash amount for the validator
@@ -108,11 +113,11 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	tokensToBurn = sdk.MaxInt(tokensToBurn, sdk.ZeroInt()) // defensive.
 
 	// Deduct from validator's bonded tokens and update the validator.
-	// The deducted tokens are returned to pool.LooseTokens.
+	// The deducted tokens are returned to pool.NotBondedTokens.
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 	pool := k.GetPool(ctx)
 	// Burn the slashed tokens, which are now loose.
-	pool.LooseTokens = pool.LooseTokens.Sub(tokensToBurn)
+	pool.NotBondedTokens = pool.NotBondedTokens.Sub(tokensToBurn)
 	k.SetPool(ctx, pool)
 
 	// Log that a slash occurred!
@@ -188,9 +193,9 @@ func (k Keeper) slashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 		k.SetUnbondingDelegation(ctx, unbondingDelegation)
 		pool := k.GetPool(ctx)
 
-		// Burn loose tokens
+		// Burn not-bonded tokens
 		// Ref https://github.com/cosmos/cosmos-sdk/pull/1278#discussion_r198657760
-		pool.LooseTokens = pool.LooseTokens.Sub(unbondingSlashAmount)
+		pool.NotBondedTokens = pool.NotBondedTokens.Sub(unbondingSlashAmount)
 		k.SetPool(ctx, pool)
 	}
 
@@ -259,9 +264,9 @@ func (k Keeper) slashRedelegation(ctx sdk.Context, validator types.Validator, re
 			panic(fmt.Errorf("error unbonding delegator: %v", err))
 		}
 
-		// Burn loose tokens
+		// Burn not-bonded tokens
 		pool := k.GetPool(ctx)
-		pool.LooseTokens = pool.LooseTokens.Sub(tokensToBurn)
+		pool.NotBondedTokens = pool.NotBondedTokens.Sub(tokensToBurn)
 		k.SetPool(ctx, pool)
 	}
 

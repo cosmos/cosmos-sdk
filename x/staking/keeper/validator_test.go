@@ -75,7 +75,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	pool := keeper.GetPool(ctx)
 
 	// create a random pool
-	pool.LooseTokens = sdk.NewInt(10000)
+	pool.NotBondedTokens = sdk.NewInt(10000)
 	pool.BondedTokens = sdk.NewInt(1234)
 	keeper.SetPool(ctx, pool)
 
@@ -123,7 +123,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	keeper.SetParams(ctx, params)
 
 	// create a random pool
-	pool.LooseTokens = sdk.NewInt(10000)
+	pool.NotBondedTokens = sdk.NewInt(10000)
 	pool.BondedTokens = sdk.NewInt(1234)
 	keeper.SetPool(ctx, pool)
 

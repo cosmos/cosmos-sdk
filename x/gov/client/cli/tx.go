@@ -86,10 +86,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				WithAccountDecoder(cdc)
 
 			// Get from address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
 
 			// Pull associated account
 			account, err := cliCtx.GetAccount(from)
@@ -126,7 +123,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 			// Build and sign the transaction, then broadcast to Tendermint
 			// proposalID must be returned, and it is a part of response.
 			cliCtx.PrintResponse = true
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -194,16 +191,12 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 			}
 
 			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
 
-			// Get from address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
 
 			// Fetch associated account
 			account, err := cliCtx.GetAccount(from)
@@ -233,7 +226,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 			}
 
 			// Build and sign the transaction, then broadcast to a Tendermint node.
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 
@@ -258,10 +251,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 				WithAccountDecoder(cdc)
 
 			// Get voting address
-			from, err := cliCtx.GetFromAddress()
-			if err != nil {
-				return err
-			}
+			from := cliCtx.GetFromAddress()
 
 			// validate that the proposal id is a uint
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)
@@ -270,7 +260,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 			}
 
 			// check to see if the proposal is in the store
-			_, err = queryProposal(proposalID, cliCtx, cdc, queryRoute)
+			_, err = govClientUtils.QueryProposalByID(proposalID, cliCtx, cdc, queryRoute)
 			if err != nil {
 				return fmt.Errorf("Failed to fetch proposal-id %d: %s", proposalID, err)
 			}
@@ -294,7 +284,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 			}
 
 			// Build and sign the transaction, then broadcast to a Tendermint node.
-			return utils.CompleteAndBroadcastTxCli(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
 		},
 	}
 

@@ -26,11 +26,13 @@ func getMockApp(t *testing.T) (*mock.App, staking.Keeper, Keeper) {
 	mapp := mock.NewApp()
 
 	RegisterCodec(mapp.Cdc)
+	stakingTypes.RegisterCodec(mapp.Cdc)
+
 	keyStaking := sdk.NewKVStoreKey(staking.StoreKey)
 	tkeyStaking := sdk.NewTransientStoreKey(staking.TStoreKey)
 	keySlashing := sdk.NewKVStoreKey(StoreKey)
 
-	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper)
+	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	stakingKeeper := staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, bankKeeper, mapp.ParamsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper := NewKeeper(mapp.Cdc, keySlashing, stakingKeeper, mapp.ParamsKeeper.Subspace(DefaultParamspace), DefaultCodespace)
 	mapp.Router().AddRoute(staking.RouterKey, staking.NewHandler(stakingKeeper))
@@ -60,7 +62,7 @@ func getInitChainer(mapp *mock.App, keeper staking.Keeper) sdk.InitChainer {
 	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		mapp.InitChainer(ctx, req)
 		stakingGenesis := staking.DefaultGenesisState()
-		stakingGenesis.Pool.LooseTokens = sdk.NewInt(100000)
+		stakingGenesis.Pool.NotBondedTokens = sdk.NewInt(100000)
 		validators, err := staking.InitGenesis(ctx, keeper, stakingGenesis)
 		if err != nil {
 			panic(err)
@@ -107,7 +109,7 @@ func TestSlashingMsgs(t *testing.T) {
 	createValidatorMsg := staking.NewMsgCreateValidator(
 		sdk.ValAddress(addr1), priv1.PubKey(), bondCoin, description, commission,
 	)
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{createValidatorMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, sdk.Coins{genCoin.Minus(bondCoin)})
 	mapp.BeginBlock(abci.RequestBeginBlock{})
 
@@ -121,7 +123,7 @@ func TestSlashingMsgs(t *testing.T) {
 	checkValidatorSigningInfo(t, mapp, keeper, sdk.ConsAddress(addr1), false)
 
 	// unjail should fail with unknown validator
-	res := mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
+	res := mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{unjailMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
 	require.EqualValues(t, CodeValidatorNotJailed, res.Code)
 	require.EqualValues(t, DefaultCodespace, res.Codespace)
 }

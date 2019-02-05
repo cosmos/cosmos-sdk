@@ -35,9 +35,9 @@ var (
 	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
 
-// Type declaration for parameters
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(
+// Key declaration for parameters
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable(
 		ParamStoreKeyDepositParams, DepositParams{},
 		ParamStoreKeyVotingParams, VotingParams{},
 		ParamStoreKeyTallyParams, TallyParams{},
@@ -80,7 +80,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, p
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
-		paramSpace:   paramSpace.WithTypeTable(ParamTypeTable()),
+		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           ck,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),
@@ -422,7 +422,7 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) sdk.Iterato
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
-
+	defer depositsIterator.Close()
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
@@ -434,15 +434,13 @@ func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 
 		store.Delete(depositsIterator.Key())
 	}
-
-	depositsIterator.Close()
 }
 
 // Deletes all the deposits on a specific proposal without refunding them
 func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
-
+	defer depositsIterator.Close()
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
@@ -454,8 +452,6 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 
 		store.Delete(depositsIterator.Key())
 	}
-
-	depositsIterator.Close()
 }
 
 // =====================================================

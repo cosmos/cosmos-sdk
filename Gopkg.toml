@@ -40,11 +40,11 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  revision = "v0.28.0"
+  revision = "v0.29.0"
 
 [[constraint]]
   name = "github.com/zondax/ledger-cosmos-go"
-  version = "=v0.9.2"
+  version = "=v0.9.7"
 
 ## deps without releases:
 
@@ -84,3 +84,6 @@
 [prune]
   go-tests = true
   unused-packages = true
+  [[prune.project]]
+      name = "github.com/zondax/hid"
+      unused-packages = false

@@ -31,7 +31,7 @@ func getMockApp(t *testing.T, numGenAccs int, genState GenesisState, genAccs []a
 	keyGov := sdk.NewKVStoreKey(StoreKey)
 
 	pk := mapp.ParamsKeeper
-	ck := bank.NewBaseKeeper(mapp.AccountKeeper)
+	ck := bank.NewBaseKeeper(mapp.AccountKeeper, mapp.ParamsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk = staking.NewKeeper(mapp.Cdc, keyStaking, tkeyStaking, ck, pk.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	keeper = NewKeeper(mapp.Cdc, keyGov, pk, pk.Subspace("testgov"), ck, sk, DefaultCodespace)
 
@@ -68,7 +68,7 @@ func getInitChainer(mapp *mock.App, keeper Keeper, stakingKeeper staking.Keeper,
 		mapp.InitChainer(ctx, req)
 
 		stakingGenesis := staking.DefaultGenesisState()
-		stakingGenesis.Pool.LooseTokens = sdk.NewInt(100000)
+		stakingGenesis.Pool.NotBondedTokens = sdk.NewInt(100000)
 
 		validators, err := staking.InitGenesis(ctx, stakingKeeper, stakingGenesis)
 		if err != nil {

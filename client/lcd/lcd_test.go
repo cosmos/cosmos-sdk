@@ -209,7 +209,9 @@ func TestCoinSend(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode, body)
 
 	// run simulation and test success with estimated gas
-	res, body, _ = doTransferWithGas(t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees)
+	res, body, _ = doTransferWithGas(
+		t, port, seed, name1, memo, pw, addr, "10000", 1.0, true, false, fees,
+	)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var gasEstResp rest.GasEstimateResponse
@@ -257,7 +259,7 @@ func TestCoinSendAccAuto(t *testing.T) {
 	require.Equal(t, expectedBalance.Amount.SubRaw(1), coins[0].Amount)
 }
 
-func TestCoinSendGenerateOnly(t *testing.T) {
+func TestCoinMultiSendGenerateOnly(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
@@ -275,7 +277,7 @@ func TestCoinSendGenerateOnly(t *testing.T) {
 	require.Equal(t, memo, stdTx.Memo)
 	require.NotZero(t, stdTx.Fee.Gas)
 	require.IsType(t, stdTx.GetMsgs()[0], bank.MsgSend{})
-	require.Equal(t, addr, stdTx.GetMsgs()[0].(bank.MsgSend).Inputs[0].Address)
+	require.Equal(t, addr, stdTx.GetMsgs()[0].(bank.MsgSend).FromAddress)
 }
 
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
@@ -285,7 +287,9 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	acc := getAccount(t, port, addr)
 
 	// simulate tx
-	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1, true, false, fees)
+	res, body, _ := doTransferWithGas(
+		t, port, seed, name1, memo, "", addr, client.GasFlagAuto, 1.0, true, false, fees,
+	)
 	require.Equal(t, http.StatusOK, res.StatusCode, body)
 
 	var gasEstResp rest.GasEstimateResponse

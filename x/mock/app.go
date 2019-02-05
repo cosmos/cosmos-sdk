@@ -51,10 +51,7 @@ func NewApp() *App {
 	db := dbm.NewMemDB()
 
 	// Create the cdc with some standard codecs
-	cdc := codec.New()
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	auth.RegisterCodec(cdc)
+	cdc := createCodec()
 
 	// Create your application object
 	app := &App{
@@ -336,4 +333,12 @@ func incrementAllSequenceNumbers(initSeqNums []uint64) {
 	for i := 0; i < len(initSeqNums); i++ {
 		initSeqNums[i]++
 	}
+}
+
+func createCodec() *codec.Codec {
+	cdc := codec.New()
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	auth.RegisterCodec(cdc)
+	return cdc
 }

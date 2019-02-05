@@ -15,6 +15,7 @@ BREAKING CHANGES
     - `--tls` is now used to enable secure layer.
 
 * Gaia
+  *  [\#3457](https://github.com/cosmos/cosmos-sdk/issues/3457) Changed governance tally validatorGovInfo to use sdk.Int power instead of sdk.Dec
 
 * SDK
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
@@ -58,6 +59,8 @@ IMPROVEMENTS
   * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account
   genesis validation checks to `GaiaValidateGenesisState`.
   * [\#3420](https://github.com/cosmos/cosmos-sdk/issues/3420) Added maximum length to governance proposal descriptions and titles
+  * [\#3256](https://github.com/cosmos/cosmos-sdk/issues/3256) Add gas consumption
+  for tx size in the ante handler.
   * [\#3454](https://github.com/cosmos/cosmos-sdk/pull/3454) Add `--jail-whitelist` to `gaiad export` to enable testing of complex exports
   * [\#3424](https://github.com/cosmos/cosmos-sdk/issues/3424) Allow generation of gentxs with empty memo field.
 
@@ -81,8 +84,10 @@ BUG FIXES
   - [\#3419](https://github.com/cosmos/cosmos-sdk/pull/3419) Fix `q distr slashes` panic 
   - [\#3453](https://github.com/cosmos/cosmos-sdk/pull/3453) The `rest-server` command didn't respect persistent flags such as `--chain-id` and `--trust-node` if they were
     passed on the command line.
-    
+
 * Gaia
+  * [\#3486](https://github.com/cosmos/cosmos-sdk/pull/3486) Use AmountOf in
+    vesting accounts instead of zipping/aligning denominations.
 
 * SDK
 

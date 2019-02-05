@@ -49,7 +49,7 @@ var (
 
 // intended to be used with require/assert:  require.True(ValEq(...))
 func ValEq(t *testing.T, exp, got types.Validator) (*testing.T, bool, string, types.Validator, types.Validator) {
-	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp, got
+	return t, exp.TestEquivalent(got), "expected:\t%v\ngot:\t\t%v", exp, got
 }
 
 //_______________________________________________________________________________________

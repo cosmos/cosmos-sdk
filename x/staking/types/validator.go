@@ -14,6 +14,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	// TODO: Why can't we just have one string description which can be JSON by convention
+	MaxMonikerLength  = 70
+	MaxIdentityLength = 3000
+	MaxWebsiteLength  = 140
+	MaxDetailsLength  = 280
+)
+
 // Validator defines the total amount of bond shares and their exchange rate to
 // coins. Slashing results in a decrease in the exchange rate, allowing correct
 // calculation of future undelegations without iterating over delegators.
@@ -163,9 +171,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 }
 
 // only the vitals
-// TODO having Equal functions which do not test equality of
-// all struct fields is very unobvious, we should call this something else
-func (v Validator) Equal(v2 Validator) bool {
+func (v Validator) TestEquivalent(v2 Validator) bool {
 	return v.ConsPubKey.Equals(v2.ConsPubKey) &&
 		bytes.Equal(v.OperatorAddr, v2.OperatorAddr) &&
 		v.Status.Equal(v2.Status) &&
@@ -227,23 +233,23 @@ func (d Description) UpdateDescription(d2 Description) (Description, sdk.Error) 
 
 // EnsureLength ensures the length of a validator's description.
 func (d Description) EnsureLength() (Description, sdk.Error) {
-	if len(d.Moniker) > 70 {
-		return d, ErrDescriptionLength(DefaultCodespace, "moniker", len(d.Moniker), 70)
+	if len(d.Moniker) > MaxMonikerLength {
+		return d, ErrDescriptionLength(DefaultCodespace, "moniker", len(d.Moniker), MaxMonikerLength)
 	}
-	if len(d.Identity) > 3000 {
-		return d, ErrDescriptionLength(DefaultCodespace, "identity", len(d.Identity), 3000)
+	if len(d.Identity) > MaxIdentityLength {
+		return d, ErrDescriptionLength(DefaultCodespace, "identity", len(d.Identity), MaxIdentityLength)
 	}
-	if len(d.Website) > 140 {
-		return d, ErrDescriptionLength(DefaultCodespace, "website", len(d.Website), 140)
+	if len(d.Website) > MaxWebsiteLength {
+		return d, ErrDescriptionLength(DefaultCodespace, "website", len(d.Website), MaxWebsiteLength)
 	}
-	if len(d.Details) > 280 {
-		return d, ErrDescriptionLength(DefaultCodespace, "details", len(d.Details), 280)
+	if len(d.Details) > MaxDetailsLength {
+		return d, ErrDescriptionLength(DefaultCodespace, "details", len(d.Details), MaxDetailsLength)
 	}
 
 	return d, nil
 }
 
-// ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staked validator type
+// ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
@@ -252,7 +258,7 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	}
 }
 
-// ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staked validator type
+// ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
@@ -305,6 +311,7 @@ func (v Validator) RemoveTokens(pool Pool, tokens sdk.Int) (Validator, Pool) {
 		panic(fmt.Sprintf("should not happen: only have %v tokens, trying to remove %v", v.Tokens, tokens))
 	}
 	v.Tokens = v.Tokens.Sub(tokens)
+	// TODO: It is not obvious from the name of the function that this will happen. Either justify or move outside.
 	if v.Status == sdk.Bonded {
 		pool = pool.bondedTokensToNotBonded(tokens)
 	}
@@ -322,8 +329,6 @@ func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.E
 	return v, nil
 }
 
-//_________________________________________________________________________________________________________
-
 // AddTokensFromDel adds tokens to a validator
 func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool, sdk.Dec) {
 
@@ -333,6 +338,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 		panic("zero exRate should not happen")
 	}
 
+	// TODO: This is unobvious from the name of the function, either justify or move outside.
 	if v.Status == sdk.Bonded {
 		pool = pool.notBondedTokensToBonded(amount)
 	}
@@ -368,6 +374,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 	}
 
 	v.DelegatorShares = remainingShares
+	// TODO: This is unobvious from the name of the function, either justify or move outside.
 	if v.Status == sdk.Bonded {
 		pool = pool.bondedTokensToNotBonded(issuedTokens)
 	}
@@ -379,6 +386,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 // UNITS: tokens/delegator-shares
 func (v Validator) DelegatorShareExRate() sdk.Dec {
 	if v.DelegatorShares.IsZero() {
+		// TODO: When does this happen and is this semantically correct?
 		return sdk.OneDec()
 	}
 	return sdk.NewDecFromInt(v.Tokens).Quo(v.DelegatorShares)
@@ -392,9 +400,7 @@ func (v Validator) BondedTokens() sdk.Int {
 	return sdk.ZeroInt()
 }
 
-//______________________________________________________________________
-
-// ensure fulfills the sdk validator types
+// ensure that validator fulfills the sdk validator interface
 var _ sdk.Validator = Validator{}
 
 // nolint - for sdk.Validator

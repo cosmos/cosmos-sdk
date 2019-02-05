@@ -62,10 +62,13 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			ip, err := server.ExternalIP()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP, "+
-					"consequently the tx's memo field will be unset: %s", err)
+			ip := viper.GetString(cli.FlagIP)
+			if ip == "" {
+				ip, err = server.ExternalIP()
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP, "+
+						"consequently the tx's memo field will be unset: %s", err)
+				}
 			}
 
 			genDoc, err := LoadGenesisDoc(cdc, config.GenesisFile())
@@ -161,6 +164,7 @@ following delegation and commission default parameters:
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(client.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
+	cmd.Flags().String(cli.FlagIP, "", "The node's public IP.")
 	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
 	cmd.Flags().AddFlagSet(cli.FsAmount)
 	cmd.Flags().AddFlagSet(cli.FsPk)

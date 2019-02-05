@@ -38,6 +38,6 @@ func (qrt *queryRouter) AddRoute(r string, q sdk.Querier) QueryRouter {
 }
 
 // Route returns the Querier for a given query route path.
-func (qrt *queryRouter) Route(path string) (h sdk.Querier) {
+func (qrt *queryRouter) Route(path string) sdk.Querier {
 	return qrt.routes[path]
 }

@@ -115,7 +115,7 @@ func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 	}
 
 	queryCmd.AddCommand(
-		rpc.ValidatorCommand(),
+		rpc.ValidatorCommand(cdc),
 		rpc.BlockCommand(),
 		tx.SearchTxCmd(cdc),
 		tx.QueryTxCmd(cdc),

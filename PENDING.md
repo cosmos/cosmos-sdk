@@ -15,6 +15,8 @@ BREAKING CHANGES
     - `--insecure` flag is removed.
     - `--tls` is now used to enable secure layer.
   - [\#3451](https://github.com/cosmos/cosmos-sdk/pull/3451) `gaiacli` now returns transactions in plain text including tags.
+  * [\#3501](https://github.com/cosmos/cosmos-sdk/issues/3501) Change validator
+  address Bech32 encoding to consensus address in `tendermint-validator-set`.
 
 * Gaia
   *  [\#3457](https://github.com/cosmos/cosmos-sdk/issues/3457) Changed governance tally validatorGovInfo to use sdk.Int power instead of sdk.Dec

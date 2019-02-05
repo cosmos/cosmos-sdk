@@ -97,7 +97,7 @@ func (data GenesisState) Equal(data2 GenesisState) bool {
 		return false
 	}
 	for i := range data.Proposals {
-		if data.Proposals[i] != data2.Proposals[i] {
+		if !ProposalEqual(data.Proposals[i], data2.Proposals[i]) {
 			return false
 		}
 	}

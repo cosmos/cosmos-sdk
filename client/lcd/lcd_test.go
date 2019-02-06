@@ -993,7 +993,6 @@ func TestDistributionGetParams(t *testing.T) {
 
 func TestDistributionFlow(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	//addr2, seed2 = CreateAddr(t, name2, pw, GetKeyBase(t))
 	cleanup, _, valAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
 	defer cleanup()
 
@@ -1015,7 +1014,8 @@ func TestDistributionFlow(t *testing.T) {
 	require.Equal(t, valDistInfo.SelfBondRewards, sdk.DecCoins(nil))
 
 	// Delegate some coins
-	resultTx := doDelegate(t, port, name1, pw, addr, valAddr, 60, fees)
+	delTokens := staking.TokensFromTendermintPower(60)
+	resultTx := doDelegate(t, port, name1, pw, addr, valAddr, delTokens, fees)
 	tests.WaitForHeight(resultTx.Height+1, port)
 	require.Equal(t, uint32(0), resultTx.Code)
 

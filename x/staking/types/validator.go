@@ -418,23 +418,23 @@ func (v Validator) TendermintPower() int64 {
 	return 0
 }
 
-var powerReduction = new(big.Int).Exp(big.NewInt(10), big.NewInt(9), nil)
+var powerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(9), nil))
 
 // potential Tendermint power
 func (v Validator) PotentialTendermintPower() int64 {
-	return (v.Tokens.Div(sdk.NewIntFromBigInt(powerReduction))).Int64()
+	return (v.Tokens.Div(powerReduction)).Int64()
 }
 
-//utility functions
+// utility functions
 
 // TokensToTendermintPower - convert input tokens to potential tendermint power
 func TokensToTendermintPower(tokens sdk.Int) int64 {
-	return (tokens.Div(sdk.NewIntFromBigInt(powerReduction))).Int64()
+	return (tokens.Div(powerReduction)).Int64()
 }
 
 // TokensFromTendermintPower - convert input power to tokens
 func TokensFromTendermintPower(power int64) sdk.Int {
-	return sdk.NewInt(power).Mul(sdk.NewIntFromBigInt(powerReduction))
+	return sdk.NewInt(power).Mul(powerReduction)
 }
 
 //______________________________________________________________________

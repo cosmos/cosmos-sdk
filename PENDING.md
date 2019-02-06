@@ -20,8 +20,7 @@ BREAKING CHANGES
   *  [\#3457](https://github.com/cosmos/cosmos-sdk/issues/3457) Changed governance tally validatorGovInfo to use sdk.Int power instead of sdk.Dec
 
 * SDK
-  * [\#2513][staking] tendermint updates are 10^-9 less than staking token use,
-    the minimum requirement for validator to become bonded is 10^9 staking tokens. 
+  * \#2513 Tendermint updates are adjusted by 10^-6 relative to staking tokens, 
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
   * [\#3490](https://github.com/cosmos/cosmos-sdk/issues/3490) ReadRESTReq() returns bool to avoid callers to write error responses twice.
 
@@ -76,7 +75,7 @@ IMPROVEMENTS
   * [\#2605] x/params add subkey accessing
   * [\#2986](https://github.com/cosmos/cosmos-sdk/pull/2986) Store Refactor
   * \#3435 Test that store implementations do not allow nil values
-  * [\##2509] Sanitize all usage of Dec.RoundInt64()
+  * \#2509 Sanitize all usage of Dec.RoundInt64()
 
 * Tendermint
 

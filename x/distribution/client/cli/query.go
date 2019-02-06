@@ -62,7 +62,7 @@ func GetCmdQueryValidatorCommission(queryRoute string, cdc *codec.Codec) *cobra.
 		Short: "Query distribution validator commission",
 		Long: strings.TrimSpace(`Query validator commission rewards from delegators to that validator:
 
-$ gaiacli query distr comission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ gaiacli query distr commission cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)

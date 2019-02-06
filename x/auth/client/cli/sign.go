@@ -85,7 +85,7 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		if viper.GetBool(flagValidateSigs) {
-			if !printAndValidateSigs(cliCtx, txBldr.GetChainID(), stdTx, offline) {
+			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, offline) {
 				return fmt.Errorf("signatures validation failed")
 			}
 

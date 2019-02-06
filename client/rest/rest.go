@@ -153,7 +153,7 @@ func CompleteAndBroadcastTxREST(
 		}
 
 		if baseReq.Simulate {
-			WriteSimulationResponse(w, cdc, txBldr.GetGas())
+			WriteSimulationResponse(w, cdc, txBldr.Gas())
 			return
 		}
 	}

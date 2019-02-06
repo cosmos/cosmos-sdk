@@ -74,39 +74,39 @@ func NewTxBuilderFromCLI() TxBuilder {
 	return txbldr
 }
 
-// GetTxEncoder returns the transaction encoder
-func (bldr TxBuilder) GetTxEncoder() sdk.TxEncoder { return bldr.txEncoder }
+// TxEncoder returns the transaction encoder
+func (bldr TxBuilder) TxEncoder() sdk.TxEncoder { return bldr.txEncoder }
 
-// GetAccountNumber returns the account number
-func (bldr TxBuilder) GetAccountNumber() uint64 { return bldr.accountNumber }
+// AccountNumber returns the account number
+func (bldr TxBuilder) AccountNumber() uint64 { return bldr.accountNumber }
 
-// GetSequence returns the transaction sequence
-func (bldr TxBuilder) GetSequence() uint64 { return bldr.sequence }
+// Sequence returns the transaction sequence
+func (bldr TxBuilder) Sequence() uint64 { return bldr.sequence }
 
-// GetGas returns the gas for the transaction
-func (bldr TxBuilder) GetGas() uint64 { return bldr.gas }
+// Gas returns the gas for the transaction
+func (bldr TxBuilder) Gas() uint64 { return bldr.gas }
 
-// GetGasAdjustment returns the gas adjustment
-func (bldr TxBuilder) GetGasAdjustment() float64 { return bldr.gasAdjustment }
+// GasAdjustment returns the gas adjustment
+func (bldr TxBuilder) GasAdjustment() float64 { return bldr.gasAdjustment }
 
-// GetKeybase returns the keybase
-func (bldr TxBuilder) GetKeybase() crkeys.Keybase { return bldr.keybase }
+// Keybase returns the keybase
+func (bldr TxBuilder) Keybase() crkeys.Keybase { return bldr.keybase }
 
-// GetSimulateAndExecute returns the option to simulate and then execute the transaction
+// SimulateAndExecute returns the option to simulate and then execute the transaction
 // using the gas from the simulation results
-func (bldr TxBuilder) GetSimulateAndExecute() bool { return bldr.simulateAndExecute }
+func (bldr TxBuilder) SimulateAndExecute() bool { return bldr.simulateAndExecute }
 
-// GetChainID returns the chain id
-func (bldr TxBuilder) GetChainID() string { return bldr.chainID }
+// ChainID returns the chain id
+func (bldr TxBuilder) ChainID() string { return bldr.chainID }
 
-// GetMemo returns the memo message
-func (bldr TxBuilder) GetMemo() string { return bldr.memo }
+// Memo returns the memo message
+func (bldr TxBuilder) Memo() string { return bldr.memo }
 
-// GetFees returns the fees for the transaction
-func (bldr TxBuilder) GetFees() sdk.Coins { return bldr.fees }
+// Fees returns the fees for the transaction
+func (bldr TxBuilder) Fees() sdk.Coins { return bldr.fees }
 
-// GetGasPrices returns the gas prices set for the transaction, if any.
-func (bldr TxBuilder) GetGasPrices() sdk.DecCoins { return bldr.gasPrices }
+// GasPrices returns the gas prices set for the transaction, if any.
+func (bldr TxBuilder) GasPrices() sdk.DecCoins { return bldr.gasPrices }
 
 // WithTxEncoder returns a copy of the context with an updated codec.
 func (bldr TxBuilder) WithTxEncoder(txEncoder sdk.TxEncoder) TxBuilder {

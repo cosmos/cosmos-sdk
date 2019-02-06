@@ -23,6 +23,10 @@ It also contains instructions on how to manage accounts, restore accounts from t
 
 `gaiacli`: This is the command-line interface to interact with a `gaiad` full-node. 
 
+::: warning
+**Please check that you download the latest stable release of `gaiacli` that is available**
+:::
+
 [**Download the binaries**]
 
 [**Install from source**](https://cosmos.network/docs/gaia/installation.html)
@@ -67,7 +71,7 @@ At the core of every Cosmos account, there is a seed, which takes the form of a 
 The funds stored in an account are controlled by the private key. This private key is generated using a one-way function from the mnemonic. If you lose the private key, you can retrieve it using the mnemonic. However, if you lose the mnemonic, you will lose access to all the derived private keys. Likewise, if someone gains access to your mnemonic, they gain access to all the associated accounts. 
 
 ::: danger
-**NEVER LOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS.**
+**Do not lose or share your 12 words with anyone. To prevent theft or loss of funds, it is best to ensure that you keep multiple copies of your mnemonic, and store it in a safe, secure place and that only you know how to access. If someone is able to gain access to your mnemonic, they will be able to gain access to your private keys and control the accounts associated with them.**
 :::
 
 The address is a public string with a human-readable prefix (e.g. `cosmos10snjt8dmpr5my0h76xj48ty80uzwhraqalu4eg`) that identifies your account. When someone wants to send you funds, they send it to your address. It is computationally infeasible to find the private key associated with a given address. 
@@ -124,6 +128,10 @@ To create an account, you just need to have `gaiacli` installed. Before creating
 
 #### Using a ledger device
 
+::: warning
+**Only use Ledger devices that you bought factory new or trust fully**
+:::
+
 When you initialize your ledger, a 24-word mnemonic is generated and stored in the device. This mnemonic is compatible with Cosmos and Cosmos accounts can be derived from it. Therefore, all you have to do is make your ledger compatible with `gaiacli`. To do so, you need to go through the following steps:
 
 1. Download the Ledger Live app [here](https://www.ledger.com/pages/ledger-live)
@@ -155,7 +163,7 @@ gaiacli keys add <yourKeyName>
 The command will generate a 24-words mnemonic and save the private and public keys for account `0` at the same time. You will be prompted to input a passphrase that is used to encrypt the private key of account `0` on disk. Each time you want to send a transaction, this password will be required. If you lose the password, you can always recover the private key with the mnemonic. 
 
 ::: danger
-**NEVER LOSE YOUR MNEMONIC. WRITE IT DOWN ON A PIECE OF PAPER AND STORE IT SOMEWHERE SAFE. IF YOU LOSE IT, THERE IS NO WAY TO RETRIEVE IT. IF SOMEONE GAINS ACCESS TO IT, THEY GAIN ACCESS TO ALL THE ASSOCIATED ACCOUNTS**
+**Do not lose or share your 12 words with anyone. To prevent theft or loss of funds, it is best to ensure that you keep multiple copies of your mnemonic, and store it in a safe, secure place and that only you know how to access. If someone is able to gain access to your mnemonic, they will be able to gain access to your private keys and control the accounts associated with them.**
 ::: 
 
 ::: warning
@@ -184,8 +192,8 @@ This command will prompt you to input a passphrase as well as your mnemonic. Cha
 
 In order to query the state and send transactions, you need a way to access the network. To do so, you can either run your own full-node, or connect to someone else's.
 
-::: warning
-**NOTE: Never give your mnemonic, private key or passphrase to anyone. If a full-node operator requests it, they are trying to abuse you**.
+::: danger
+**NOTE: Do not share your mnemonic (12 or 24 words) with anyone. The only person who should ever need to know it is you. This is especially important if you are ever approached via email or direct message by someone requesting that you share your mnemonic for any kind of blockchain services or support. No one from Cosmos, the Tendermint team or the Interchain Foundation will ever send an email that asks for you to share any kind of account credentials or your mnemonic."**.
 ::: 
 
 ### Running your own full-node
@@ -201,6 +209,10 @@ If you do not want or cannot run your own node, you can connect to someone else'
 In order to connect to the full-node, you will need an address of the following form: `https://77.87.106.33:26657` (*Note: This is a placeholder*). This address has to be communicated by the full-node operator you choose to trust. You will use this address in the [following section](#setting-up-gaiacli).
 
 ## Setting up `gaiacli`
+
+::: warning
+**Please check that you are always using the latest stable release of `gaiacli`**
+:::
 
 `gaiacli` is the tool that enables you to interact with the node that runs on the Cosmos Hub network, whether you run it yourself or not (see [accessing the cosmos hub network](#accession-the-cosmos-hub-network)). Let us set it up properly.
 

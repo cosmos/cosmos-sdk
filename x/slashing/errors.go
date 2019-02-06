@@ -10,7 +10,7 @@ type CodeType = sdk.CodeType
 
 const (
 	// Default slashing codespace
-	DefaultCodespace sdk.CodespaceType = "SLASH"
+	DefaultCodespace sdk.CodespaceType = ModuleName
 
 	CodeInvalidValidator      CodeType = 101
 	CodeValidatorJailed       CodeType = 102

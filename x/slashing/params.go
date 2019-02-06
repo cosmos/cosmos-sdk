@@ -10,15 +10,21 @@ import (
 
 // Default parameter namespace
 const (
-	DefaultParamspace = "slashing"
+	DefaultParamspace                         = ModuleName
+	DefaultMaxEvidenceAge       time.Duration = 60 * 2 * time.Second
+	DefaultSignedBlocksWindow   int64         = 100
+	DefaultDowntimeJailDuration time.Duration = 60 * 10 * time.Second
 )
 
 // The Double Sign Jail period ends at Max Time supported by Amino (Dec 31, 9999 - 23:59:59 GMT)
 var (
-	DoubleSignJailEndTime = time.Unix(253402300799, 0)
+	DoubleSignJailEndTime                  = time.Unix(253402300799, 0)
+	DefaultMinSignedPerWindow      sdk.Dec = sdk.NewDecWithPrec(5, 1)
+	DefaultSlashFractionDoubleSign sdk.Dec = sdk.NewDec(1).Quo(sdk.NewDec(20))
+	DefaultSlashFractionDowntime   sdk.Dec = sdk.NewDec(1).Quo(sdk.NewDec(100))
 )
 
-// Parameter store key
+// Parameter store keys
 var (
 	KeyMaxEvidenceAge          = []byte("MaxEvidenceAge")
 	KeySignedBlocksWindow      = []byte("SignedBlocksWindow")
@@ -56,7 +62,7 @@ func (p Params) String() string {
 		p.SlashFractionDowntime)
 }
 
-// Implements params.ParamStruct
+// Implements params.ParamSet
 func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	return params.ParamSetPairs{
 		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},
@@ -68,29 +74,19 @@ func (p *Params) ParamSetPairs() params.ParamSetPairs {
 	}
 }
 
-// Default parameters used by Cosmos Hub
+// Default parameters for this module
 func DefaultParams() Params {
 	return Params{
-		// defaultMaxEvidenceAge = 60 * 60 * 24 * 7 * 3
-		// TODO Temporarily set to 2 minutes for testnets.
-		MaxEvidenceAge: 60 * 2 * time.Second,
-
-		// TODO Temporarily set to 100 blocks for testnets
-		SignedBlocksWindow: 100,
-
-		// TODO Temporarily set to 10 minutes for testnets
-		DowntimeJailDuration: 60 * 10 * time.Second,
-
-		MinSignedPerWindow: sdk.NewDecWithPrec(5, 1),
-
-		SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(20)),
-
-		SlashFractionDowntime: sdk.NewDec(1).Quo(sdk.NewDec(100)),
+		MaxEvidenceAge:          DefaultMaxEvidenceAge,
+		SignedBlocksWindow:      DefaultSignedBlocksWindow,
+		MinSignedPerWindow:      DefaultMinSignedPerWindow,
+		DowntimeJailDuration:    DefaultDowntimeJailDuration,
+		SlashFractionDoubleSign: DefaultSlashFractionDoubleSign,
+		SlashFractionDowntime:   DefaultSlashFractionDowntime,
 	}
 }
 
-// MaxEvidenceAge - Max age for evidence - 21 days (3 weeks)
-// MaxEvidenceAge = 60 * 60 * 24 * 7 * 3
+// MaxEvidenceAge - max age for evidence
 func (k Keeper) MaxEvidenceAge(ctx sdk.Context) (res time.Duration) {
 	k.paramspace.Get(ctx, KeyMaxEvidenceAge, &res)
 	return
@@ -102,7 +98,7 @@ func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
 	return
 }
 
-// Downtime slashing threshold - default 50% of the SignedBlocksWindow
+// Downtime slashing threshold
 func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
 	k.paramspace.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
@@ -116,13 +112,13 @@ func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
 	return
 }
 
-// SlashFractionDoubleSign - currently default 5%
+// SlashFractionDoubleSign
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, KeySlashFractionDoubleSign, &res)
 	return
 }
 
-// SlashFractionDowntime - currently default 1%
+// SlashFractionDowntime
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, KeySlashFractionDowntime, &res)
 	return

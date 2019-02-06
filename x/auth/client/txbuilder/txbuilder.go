@@ -177,7 +177,7 @@ func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 		fees = make(sdk.Coins, len(bldr.gasPrices))
 		for i, gp := range bldr.gasPrices {
 			fee := gp.Amount.Mul(glDec)
-			fees[i] = sdk.NewInt64Coin(gp.Denom, fee.Ceil().RoundInt64())
+			fees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
 	}
 

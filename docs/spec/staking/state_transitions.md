@@ -45,23 +45,37 @@ this process may be also be reversed. the following operations occur:
 
 ### Delegate
 When a delegation occurs both the validator object are affected  
- 
- - update the `Validator` object
+ - determine the delegators shares based on tokens delegated and the validator's exchange rate
+ - remove tokens from the sending account 
+ - add shares the delegation object or add them to a created validator object
+ - add new delegator shares and update the `Validator` object
+ - update the `Pool` object appropriately if tokens have moved into a bonded validator
  - delete record the existing record from `ValidatorByPowerIndex`
  - add an new updated record to the `ValidatorByPowerIndex`
 
-### unbond
 ### Undelegate
-   ### RemoveValidatorTokensAndShares
+When a
+
+unbond
+	// subtract shares from delegator
+	// remove the delegation or // update the delegation
+	// if the delegation is the operator of the validator then
+	// trigger a jail validator
+	// remove the coins from the validator
+	// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
+
 ### CompleteUnbonding
+ - 
+
 ### BeginRedelegation
+
 ### CompleteRedelegation
 
 
-## Slashing
 
+TODO TODO TOFU TODO
+## Slashing
 ### Slash
-   ### RemoveValidatorTokens
 ### slashUnbondingDelegation
 ### slashRedelegation
 

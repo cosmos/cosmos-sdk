@@ -274,18 +274,18 @@ func (k Keeper) ValidatorsPowerStoreIterator(ctx sdk.Context) (iterator sdk.Iter
 
 // Load the last validator power.
 // Returns zero if the operator was not a validator last block.
-func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power sdk.Int) {
+func (k Keeper) GetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress) (power int64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(GetLastValidatorPowerKey(operator))
 	if bz == nil {
-		return sdk.ZeroInt()
+		return 0
 	}
 	k.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &power)
 	return
 }
 
 // Set the last validator power.
-func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power sdk.Int) {
+func (k Keeper) SetLastValidatorPower(ctx sdk.Context, operator sdk.ValAddress, power int64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshalBinaryLengthPrefixed(power)
 	store.Set(GetLastValidatorPowerKey(operator), bz)
@@ -305,13 +305,13 @@ func (k Keeper) LastValidatorsIterator(ctx sdk.Context) (iterator sdk.Iterator) 
 }
 
 // Iterate over last validator powers.
-func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operator sdk.ValAddress, power sdk.Int) (stop bool)) {
+func (k Keeper) IterateLastValidatorPowers(ctx sdk.Context, handler func(operator sdk.ValAddress, power int64) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, LastValidatorPowerKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(iter.Key()[len(LastValidatorPowerKey):])
-		var power sdk.Int
+		var power int64
 		k.cdc.MustUnmarshalBinaryLengthPrefixed(iter.Value(), &power)
 		if handler(addr, power) {
 			break

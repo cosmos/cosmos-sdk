@@ -17,7 +17,6 @@ When a validator is bonded from any other state the following operations occur:
  - add an new updated record to the `ValidatorByPowerIndex`
  - update the `Validator` object for this validator
  - if it exists, delete any `ValidatorQueue` record for this validator 
- - call the `AfterValidatorBonded` hook
 
 ### bonded to unbonding
 When a validator begins the unbonding process the following operations occur: 
@@ -27,14 +26,12 @@ When a validator begins the unbonding process the following operations occur:
  - add an new updated record to the `ValidatorByPowerIndex`
  - update the `Validator` object for this validator
  - insert a new record into the `ValidatorQueue` for this validator 
- - call the `AfterValidatorBeginUnbonding` hook
 
 ### unbonding to unbonded
 A validator moves from unbonding to unbonded when the `ValidatorQueue` object
 moves from bonded to unbonded
  - update the `Validator` object for this validator
  - set `validator.Status` to `Unbonded`
-
 
 ### jail/unjail 
 when a validator is jailed it is effectively removed from the Tendermint set.
@@ -47,7 +44,12 @@ this process may be also be reversed. the following operations occur:
 ## Delegations
 
 ### Delegate
-   ### AddValidatorTokensAndShares
+When a delegation occurs both the validator object are affected  
+ 
+ - update the `Validator` object
+ - delete record the existing record from `ValidatorByPowerIndex`
+ - add an new updated record to the `ValidatorByPowerIndex`
+
 ### unbond
 ### Undelegate
    ### RemoveValidatorTokensAndShares

@@ -51,6 +51,7 @@ type GenesisState struct {
 	FeePool                         FeePool                                `json:"fee_pool"`
 	CommunityTax                    sdk.Dec                                `json:"community_tax"`
 	ProposerReward                  sdk.Dec                                `json:"proposer_reward"`
+	SignerReward                    sdk.Dec                                `json:"signer_reward"`
 	WithdrawAddrEnabled             bool                                   `json:"withdraw_addr_enabled"`
 	DelegatorWithdrawInfos          []DelegatorWithdrawInfo                `json:"delegator_withdraw_infos"`
 	PreviousProposer                sdk.ConsAddress                        `json:"previous_proposer"`
@@ -62,7 +63,7 @@ type GenesisState struct {
 	ValidatorSlashEvents            []ValidatorSlashEventRecord            `json:"validator_slash_events"`
 }
 
-func NewGenesisState(feePool FeePool, communityTax, proposerReward sdk.Dec,
+func NewGenesisState(feePool FeePool, communityTax, proposerReward, signerReward sdk.Dec,
 	withdrawAddrEnabled bool, dwis []DelegatorWithdrawInfo, pp sdk.ConsAddress, r OutstandingRewards,
 	acc []ValidatorAccumulatedCommissionRecord, historical []ValidatorHistoricalRewardsRecord,
 	cur []ValidatorCurrentRewardsRecord, dels []DelegatorStartingInfoRecord,
@@ -72,6 +73,7 @@ func NewGenesisState(feePool FeePool, communityTax, proposerReward sdk.Dec,
 		FeePool:                         feePool,
 		CommunityTax:                    communityTax,
 		ProposerReward:                  proposerReward,
+		SignerReward:                    signerReward,
 		WithdrawAddrEnabled:             withdrawAddrEnabled,
 		DelegatorWithdrawInfos:          dwis,
 		PreviousProposer:                pp,
@@ -88,8 +90,9 @@ func NewGenesisState(feePool FeePool, communityTax, proposerReward sdk.Dec,
 func DefaultGenesisState() GenesisState {
 	return GenesisState{
 		FeePool:                         InitialFeePool(),
-		CommunityTax:                    sdk.NewDecWithPrec(2, 2),         // 2%
-		ProposerReward:                  sdk.NewDec(3).Quo(sdk.NewDec(4)), // 3/4, exact, see https://github.com/cosmos/cosmos-sdk/pull/3494
+		CommunityTax:                    sdk.NewDec(2).Quo(sdk.NewDec(100)), // 2%
+		ProposerReward:                  sdk.NewDec(1).Quo(sdk.NewDec(20)),  // 5%
+		SignerReward:                    sdk.NewDec(1).Quo(sdk.NewDec(4)),   // 25%
 		WithdrawAddrEnabled:             true,
 		DelegatorWithdrawInfos:          []DelegatorWithdrawInfo{},
 		PreviousProposer:                nil,
@@ -112,11 +115,15 @@ func ValidateGenesis(data GenesisState) error {
 		return fmt.Errorf("mint parameter ProposerReward should be positive, is %s",
 			data.ProposerReward.String())
 	}
-	if (data.ProposerReward.Add(data.CommunityTax)).
+	if data.SignerReward.IsNegative() {
+		return fmt.Errorf("mint parameter SignerReward should be positive, is %s",
+			data.SignerReward.String())
+	}
+	if (data.ProposerReward.Add(data.SignerReward.Add(data.CommunityTax))).
 		GT(sdk.OneDec()) {
 		return fmt.Errorf("mint parameters ProposerReward and "+
-			"CommunityTax cannot add to be greater than one, "+
-			"adds to %s", data.ProposerReward.Add(data.CommunityTax).String())
+			"SignerReward and CommunityTax cannot add to be greater than one, "+
+			"adds to %s", data.ProposerReward.Add(data.SignerReward.Add(data.CommunityTax)).String())
 	}
 	return data.FeePool.ValidateGenesis()
 }

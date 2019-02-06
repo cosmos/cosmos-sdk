@@ -707,7 +707,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	{
 		emptyTx := &txTest{}
 		err := app.Deliver(emptyTx)
-		require.EqualValues(t, sdk.CodeInternal, err.Code)
+		require.EqualValues(t, sdk.CodeUnknownRequest, err.Code)
 		require.EqualValues(t, sdk.CodespaceRoot, err.Codespace)
 	}
 

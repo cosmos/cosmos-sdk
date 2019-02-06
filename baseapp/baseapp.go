@@ -41,6 +41,7 @@ const (
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
+	// TODO: make logger private and add getter
 	Logger      log.Logger
 	name        string               // application name from abci.Info
 	db          dbm.DB               // common DB backend
@@ -49,6 +50,7 @@ type BaseApp struct {
 	queryRouter QueryRouter          // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
+	// TODO: change name to basekey, consensuskey
 	// set upon LoadVersion or LoadLatestVersion.
 	mainKey *sdk.KVStoreKey // Main KVStore in cms
 
@@ -117,6 +119,7 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.SetTracer(w)
 }
 
+// TODO: merge MountStores + MountStoresTransient and type assert
 // Mount IAVL or DB stores to the provided keys in the BaseApp multistore
 func (app *BaseApp) MountStores(keys ...*sdk.KVStoreKey) {
 	for _, key := range keys {
@@ -218,6 +221,7 @@ func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }
 
+// TODO: check if it is used by tests only and move to test_common.go
 // NewContext returns a new Context with the correct store, the given header, and nil txBytes.
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
@@ -241,6 +245,7 @@ func (st *state) Context() sdk.Context {
 	return st.ctx
 }
 
+// TODO: add godoc that it is called only by InitChain(), initChainFromMainStore(), Commit()
 func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
@@ -249,6 +254,8 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	}
 }
 
+// TODO: add godoc that it is called only by BeginBlock() and InitChain()
+// TODO: deliverState is set nil in Commit()
 func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
@@ -402,6 +409,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 			result = sdk.ErrUnknownRequest(fmt.Sprintf("Unknown query: %s", path)).Result()
 		}
 
+		// TODO: check length prefixing is needed here
 		// Encode with json
 		value := codec.Cdc.MustMarshalBinaryLengthPrefixed(result)
 		return abci.ResponseQuery{
@@ -429,11 +437,13 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res a
 func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 {
+		// TODO: assign path[x] to variables or switch by path[2]
 		if path[1] == "filter" {
 			if path[2] == "addr" {
 				return app.FilterPeerByAddrPort(path[3])
 			}
 			if path[2] == "pubkey" {
+				// TODO: check it
 				// TODO: this should be changed to `id`
 				// NOTE: this changed in tendermint and we didn't notice...
 				return app.FilterPeerByPubKey(path[3])
@@ -488,6 +498,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		))
 	}
 
+	// TODO: make interdependent state setting clear
 	// Initialize the DeliverTx state. If this is the first block, it should
 	// already be initialized in InitChain. Otherwise app.deliverState will be
 	// nil, since it is reset on Commit.
@@ -516,7 +527,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	// set the signed validators for addition to context in deliverTx
-	// TODO: communicate this result to the address to pubkey map in slashing
 	app.voteInfos = req.LastCommitInfo.GetVotes()
 	return
 }
@@ -576,8 +586,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 // Basic validator for msgs
 func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 	if msgs == nil || len(msgs) == 0 {
-		// TODO: probably shouldn't be ErrInternal. Maybe new ErrInvalidMessage, or ?
-		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list")
+		return sdk.ErrUnknownRequest("Tx.GetMsgs() must return at least one message in list")
 	}
 
 	for _, msg := range msgs {
@@ -629,6 +638,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		// GasUsed by the GasMeter
 
 		// Append Data and Tags
+		// Result.Data must be length prefixed in order to separate each result
 		data = append(data, msgResult.Data...)
 		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
 		tags = append(tags, msgResult.Tags...)
@@ -653,6 +663,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		Log:       strings.Join(logs, "\n"),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
 		// TODO: FeeAmount/FeeDenom
+		// TODO: update sdk result to contain just fees
 		Tags: tags,
 	}
 
@@ -782,12 +793,13 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			ctx = newCtx.WithMultiStore(ms)
 		}
 
+		gasWanted = result.GasWanted
+
 		if abort {
 			return result
 		}
 
 		msCache.Write()
-		gasWanted = result.GasWanted
 	}
 
 	if mode == runTxModeCheck {

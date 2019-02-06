@@ -193,6 +193,7 @@ func (i Int) LT(i2 Int) bool {
 	return lt(i.i, i2.i)
 }
 
+// LTE returns true if first Int is less than or equal to second
 func (i Int) LTE(i2 Int) bool {
 	return lte(i.i, i2.i)
 }

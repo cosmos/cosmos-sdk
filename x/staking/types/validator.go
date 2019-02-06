@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// nolint
 const (
 	// TODO: Why can't we just have one string description which can be JSON by convention
 	MaxMonikerLength  = 70

@@ -501,8 +501,8 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	require.Equal(t, nMax, uint16(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
-	validator, exists := keeper.GetValidator(ctx, validators[3].OperatorAddr)
-	require.Equal(t, exists, true)
+	_, exists := keeper.GetValidator(ctx, validators[3].OperatorAddr)
+	require.True(t, exists)
 }
 
 func TestValidatorBondHeight(t *testing.T) {

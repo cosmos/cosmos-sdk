@@ -114,8 +114,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// set a redelegation with an expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(5, 0), sdk.NewInt64Coin(params.BondDenom, 10), sdk.NewDec(10),
-		sdk.NewDec(10))
+		time.Unix(5, 0), sdk.NewInt64Coin(params.BondDenom, 10), sdk.NewDec(10))
 
 	keeper.SetRedelegation(ctx, rd)
 
@@ -159,9 +158,6 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// initialbalance unchanged
 	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 10), rd.Entries[0].InitialBalance)
-
-	// balance decreased
-	require.Equal(t, sdk.NewInt64Coin(params.BondDenom, 5), rd.Entries[0].Balance)
 
 	// shares decreased
 	del, found = keeper.GetDelegation(ctx, addrDels[0], addrVals[1])
@@ -349,8 +345,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// set a redelegation
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 6), sdk.NewDec(6),
-		sdk.NewDec(6))
+		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 6), sdk.NewDec(6))
 	keeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
@@ -377,8 +372,6 @@ func TestSlashWithRedelegation(t *testing.T) {
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
-	// balance decreased
-	require.Equal(t, sdk.NewInt(3), rd.Entries[0].Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// bonded tokens burned
@@ -402,8 +395,6 @@ func TestSlashWithRedelegation(t *testing.T) {
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
-	// balance decreased, now zero
-	require.Equal(t, sdk.NewInt(0), rd.Entries[0].Balance.Amount)
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// seven bonded tokens burned
@@ -424,8 +415,6 @@ func TestSlashWithRedelegation(t *testing.T) {
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
-	// balance still zero
-	require.Equal(t, sdk.NewInt(0), rd.Entries[0].Balance.Amount)
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// four more bonded tokens burned
@@ -449,8 +438,6 @@ func TestSlashWithRedelegation(t *testing.T) {
 	rd, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
-	// balance still zero
-	require.Equal(t, sdk.NewInt(0), rd.Entries[0].Balance.Amount)
 	// read updated pool
 	newPool = keeper.GetPool(ctx)
 	// no more bonded tokens burned
@@ -469,8 +456,7 @@ func TestSlashBoth(t *testing.T) {
 	// set a redelegation with expiration timestamp beyond which the
 	// redelegation shouldn't be slashed
 	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 6), sdk.NewDec(6),
-		sdk.NewDec(6))
+		time.Unix(0, 0), sdk.NewInt64Coin(params.BondDenom, 6), sdk.NewDec(6))
 	keeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation
@@ -499,8 +485,6 @@ func TestSlashBoth(t *testing.T) {
 	rdA, found = keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, rdA.Entries, 1)
-	// balance decreased
-	require.Equal(t, sdk.NewInt(3), rdA.Entries[0].Balance.Amount)
 	// read updated pool
 	newPool := keeper.GetPool(ctx)
 	// not-bonded tokens burned

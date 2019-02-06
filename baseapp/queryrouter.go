@@ -1,6 +1,8 @@
 package baseapp
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,15 +27,15 @@ func NewQueryRouter() *queryRouter { // nolint: golint
 
 // AddRoute adds a query path to the router with a given Querier. It will panic
 // if a duplicate route is given. The route must be alphanumeric.
-func (qrt *queryRouter) AddRoute(r string, q sdk.Querier) QueryRouter {
-	if !isAlphaNumeric(r) {
+func (qrt *queryRouter) AddRoute(path string, q sdk.Querier) QueryRouter {
+	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
-	if qrt.routes[r] != nil {
-		panic("route has already been initialized")
+	if qrt.routes[path] != nil {
+		panic(fmt.Sprintf("route %s has already been initialized", path))
 	}
 
-	qrt.routes[r] = q
+	qrt.routes[path] = q
 	return qrt
 }
 

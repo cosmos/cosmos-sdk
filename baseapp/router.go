@@ -1,6 +1,8 @@
 package baseapp
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -29,8 +31,9 @@ func (rtr *router) AddRoute(path string, h sdk.Handler) Router {
 	if !isAlphaNumeric(path) {
 		panic("route expressions can only contain alphanumeric characters")
 	}
-
-	// TODO: Should we panic on duplicates?
+	if rtr.routes[path] != nil {
+		panic(fmt.Sprintf("route %s has already been initialized", path))
+	}
 
 	rtr.routes[path] = h
 	return rtr

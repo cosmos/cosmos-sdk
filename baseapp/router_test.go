@@ -23,4 +23,9 @@ func TestRouter(t *testing.T) {
 	rtr.AddRoute("testRoute", testHandler)
 	h := rtr.Route("testRoute")
 	require.NotNil(t, h)
+
+	// require panic on duplicate route
+	require.Panics(t, func() {
+		rtr.AddRoute("testRoute", testHandler)
+	})
 }

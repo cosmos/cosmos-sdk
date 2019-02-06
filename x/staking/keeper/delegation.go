@@ -447,7 +447,7 @@ func (k Keeper) Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Co
 	validator types.Validator, subtractAccount bool) (newShares sdk.Dec, err sdk.Error) {
 
 	// In some situations, the exchange rate becomes invalid, e.g. if
-	// validator loses all tokens due to slashing. In this case,
+	// Validator loses all tokens due to slashing. In this case,
 	// make all future delegations invalid.
 	if validator.DelegatorShareExRate().IsZero() {
 		return sdk.ZeroDec(), types.ErrDelegatorShareExRateInvalid(k.Codespace())

@@ -115,7 +115,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			return utils.MessageOutput(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 
@@ -213,7 +213,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			return utils.MessageOutput(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 }
@@ -263,7 +263,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			return utils.MessageOutput(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 }

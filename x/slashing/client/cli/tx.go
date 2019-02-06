@@ -30,7 +30,7 @@ $ gaiacli tx slashing unjail --from mykey
 			valAddr := cliCtx.GetFromAddress()
 
 			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
-			return utils.MessageOutput(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 }

@@ -68,7 +68,7 @@ $ gaiacli tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9
 				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
 			}
 
-			return utils.MessageOutput(cliCtx, txBldr, msgs, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs, false)
 		},
 	}
 	cmd.Flags().Bool(flagComission, false, "also withdraw validator's commission")
@@ -98,7 +98,7 @@ $ gaiacli tx distr withdraw-all-rewards --from mykey
 				return err
 			}
 
-			return utils.MessageOutput(cliCtx, txBldr, msgs, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, msgs, false)
 		},
 	}
 }
@@ -127,7 +127,7 @@ $ gaiacli tx set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --f
 			}
 
 			msg := types.NewMsgSetWithdrawAddress(delAddr, withdrawAddr)
-			return utils.MessageOutput(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 	return cmd

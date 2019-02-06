@@ -179,11 +179,9 @@ When you query an account balance with zero tokens, you will get this error: `No
 The following command could be used to send coins from one account to another:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmos> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmos>
 ```
 
 ::: warning Note
@@ -213,11 +211,9 @@ You can simulate a transaction without actually broadcasting it by appending the
 `--dry-run` flag to the command line:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmosaccaddr> \
   --dry-run
 ```
 
@@ -225,11 +221,9 @@ Furthermore, you can build a transaction and print its JSON format to STDOUT by
 appending `--generate-only` to the list of the command line arguments:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmosaccaddr> \
   --generate-only > unsignedSendTx.json
 ```
 
@@ -722,10 +716,8 @@ The first step to create a multisig transaction is to initiate it on behalf
 of the multisig address created above:
 
 ```bash
-gaiacli tx send \
+gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10stake \
   --from=<multisig_address> \
-  --to=cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned \
-  --amount=10stake \
   --generate-only > unsignedTx.json
 ```
 

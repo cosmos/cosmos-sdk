@@ -154,7 +154,7 @@ func handleFrom(store sdk.KVStore, from sdk.AccAddress, amt sdk.Coins) sdk.Resul
 	senderCoins := acc.Coins.Minus(amt)
 
 	// If any coin has negative amount, return insufficient coins error.
-	if !senderCoins.IsNotNegative() {
+	if senderCoins.IsAnyNegative() {
 		return sdk.ErrInsufficientCoins("Insufficient coins in account").Result()
 	}
 

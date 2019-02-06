@@ -21,8 +21,8 @@ const (
 	QueryDelegatorValidators   = "delegator_validators"
 	QueryWithdrawAddr          = "withdraw_addr"
 
-	ParamCommunityTax        = "community_tax"
 	ParamProposerReward      = "proposer_reward"
+	ParamCommunityTax        = "community_tax"
 	ParamWithdrawAddrEnabled = "withdraw_addr_enabled"
 )
 

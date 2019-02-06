@@ -62,6 +62,11 @@ following delegation and commission default parameters:
 				return err
 			}
 
+			// Read --nodeID, if empty take it from priv_validator.json
+			if nodeIDString := viper.GetString(cli.FlagNodeID); nodeIDString != "" {
+				nodeID = nodeIDString
+			}
+
 			ip := viper.GetString(cli.FlagIP)
 			if ip == "" {
 				fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
@@ -164,6 +169,7 @@ following delegation and commission default parameters:
 	cmd.Flags().String(client.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
 	cmd.Flags().String(cli.FlagIP, ip, "The node's public IP")
+	cmd.Flags().String(cli.FlagNodeID, "", "The node's NodeID")
 	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
 	cmd.Flags().AddFlagSet(cli.FsAmount)
 	cmd.Flags().AddFlagSet(cli.FsPk)

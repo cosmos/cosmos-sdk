@@ -8,19 +8,18 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cosmos/go-bip39"
-
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/go-bip39"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	dbm "github.com/tendermint/tendermint/libs/db"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
 
 var _ Keybase = dbKeybase{}
@@ -30,6 +29,7 @@ var _ Keybase = dbKeybase{}
 // Find a list of all supported languages in the BIP 39 spec (word lists).
 type Language int
 
+//noinspection ALL
 const (
 	// English is the default language to create a mnemonic.
 	// It is the only supported language by this package.
@@ -54,7 +54,7 @@ const (
 
 const (
 	// used for deriving seed from mnemonic
-	defaultBIP39Passphrase = ""
+	DefaultBIP39Passphrase = ""
 
 	// bits of entropy to draw when creating a mnemonic
 	defaultEntropySize = 256
@@ -109,41 +109,15 @@ func (kb dbKeybase) CreateMnemonic(name string, language Language, passwd string
 		return
 	}
 
-	seed := bip39.NewSeed(mnemonic, defaultBIP39Passphrase)
+	seed := bip39.NewSeed(mnemonic, DefaultBIP39Passphrase)
 	info, err = kb.persistDerivedKey(seed, passwd, name, hd.FullFundraiserPath)
 	return
 }
 
-// TEMPORARY METHOD UNTIL WE FIGURE OUT USER FACING HD DERIVATION API
-func (kb dbKeybase) CreateKey(name, mnemonic, passwd string) (info Info, err error) {
-	words := strings.Split(mnemonic, " ")
-	if len(words) != 12 && len(words) != 24 {
-		err = fmt.Errorf("recovering only works with 12 word (fundraiser) or 24 word mnemonics, got: %v words", len(words))
-		return
-	}
-	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, defaultBIP39Passphrase)
-	if err != nil {
-		return
-	}
-	info, err = kb.persistDerivedKey(seed, passwd, name, hd.FullFundraiserPath)
-	return
-}
-
-// CreateFundraiserKey converts a mnemonic to a private key and persists it,
-// encrypted with the given password.
-// TODO(ismail)
-func (kb dbKeybase) CreateFundraiserKey(name, mnemonic, passwd string) (info Info, err error) {
-	words := strings.Split(mnemonic, " ")
-	if len(words) != 12 {
-		err = fmt.Errorf("recovering only works with 12 word (fundraiser), got: %v words", len(words))
-		return
-	}
-	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, defaultBIP39Passphrase)
-	if err != nil {
-		return
-	}
-	info, err = kb.persistDerivedKey(seed, passwd, name, hd.FullFundraiserPath)
-	return
+// CreateAccount converts a mnemonic to a private key and persists it, encrypted with the given password.
+func (kb dbKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
+	hdPath := hd.NewFundraiserParams(account, index)
+	return kb.Derive(name, mnemonic, bip39Passwd, encryptPasswd, *hdPath)
 }
 
 func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string, params hd.BIP44Params) (info Info, err error) {
@@ -151,23 +125,26 @@ func (kb dbKeybase) Derive(name, mnemonic, bip39Passphrase, encryptPasswd string
 	if err != nil {
 		return
 	}
-	info, err = kb.persistDerivedKey(seed, encryptPasswd, name, params.String())
 
+	info, err = kb.persistDerivedKey(seed, encryptPasswd, name, params.String())
 	return
 }
 
 // CreateLedger creates a new locally-stored reference to a Ledger keypair
 // It returns the created key info and an error if the Ledger could not be queried
-func (kb dbKeybase) CreateLedger(name string, path crypto.DerivationPath, algo SigningAlgo) (Info, error) {
+func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (Info, error) {
 	if algo != Secp256k1 {
 		return nil, ErrUnsupportedSigningAlgo
 	}
-	priv, err := crypto.NewPrivKeyLedgerSecp256k1(path)
+
+	hdPath := hd.NewFundraiserParams(account, index)
+	priv, err := crypto.NewPrivKeyLedgerSecp256k1(*hdPath)
 	if err != nil {
 		return nil, err
 	}
 	pub := priv.PubKey()
-	return kb.writeLedgerKey(pub, path, name), nil
+
+	return kb.writeLedgerKey(pub, *hdPath, name), nil
 }
 
 // CreateOffline creates a new reference to an offline keypair
@@ -432,7 +409,7 @@ func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string
 	return info
 }
 
-func (kb dbKeybase) writeLedgerKey(pub tmcrypto.PubKey, path crypto.DerivationPath, name string) Info {
+func (kb dbKeybase) writeLedgerKey(pub tmcrypto.PubKey, path hd.BIP44Params, name string) Info {
 	info := newLedgerInfo(name, pub, path)
 	kb.writeInfo(info, name)
 	return info

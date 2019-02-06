@@ -78,7 +78,7 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
 		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
 	}
-	return json.RawMessage(genesis.AppState), newAccs, genesis.ChainID
+	return genesis.AppState, newAccs, genesis.ChainID
 }
 
 func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
@@ -137,11 +137,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	authGenesis := auth.GenesisState{
 		Params: auth.Params{
-			MemoCostPerByte:        uint64(r.Intn(10) + 1),
-			MaxMemoCharacters:      uint64(r.Intn(200-100) + 100),
+			MaxMemoCharacters:      uint64(randIntBetween(r, 100, 200)),
 			TxSigLimit:             uint64(r.Intn(7) + 1),
-			SigVerifyCostED25519:   uint64(r.Intn(1000-500) + 500),
-			SigVerifyCostSecp256k1: uint64(r.Intn(1000-500) + 500),
+			TxSizeCostPerByte:      uint64(randIntBetween(r, 5, 15)),
+			SigVerifyCostED25519:   uint64(randIntBetween(r, 500, 1000)),
+			SigVerifyCostSecp256k1: uint64(randIntBetween(r, 500, 1000)),
 		},
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
@@ -265,7 +265,8 @@ func randIntBetween(r *rand.Rand, min, max int) int {
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
-		{100, banksim.SingleInputSendMsg(app.accountKeeper, app.bankKeeper)},
+		{100, banksim.SendMsg(app.accountKeeper, app.bankKeeper)},
+		{10, banksim.SingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper)},
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},
@@ -415,7 +416,7 @@ func TestGaiaImportExport(t *testing.T) {
 
 	fmt.Printf("Exporting genesis...\n")
 
-	appState, _, err := app.ExportAppStateAndValidators(false)
+	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
 	if err != nil {
 		panic(err)
 	}
@@ -519,7 +520,7 @@ func TestGaiaSimulationAfterImport(t *testing.T) {
 
 	fmt.Printf("Exporting genesis...\n")
 
-	appState, _, err := app.ExportAppStateAndValidators(true)
+	appState, _, err := app.ExportAppStateAndValidators(true, []string{})
 	if err != nil {
 		panic(err)
 	}

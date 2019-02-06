@@ -21,7 +21,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey,
 	keeper := Keeper{
 		storeKey:   key,
 		cdc:        cdc,
-		paramSpace: paramSpace.WithTypeTable(ParamTypeTable()),
+		paramSpace: paramSpace.WithKeyTable(ParamKeyTable()),
 		sk:         sk,
 		fck:        fck,
 	}
@@ -39,8 +39,8 @@ var (
 )
 
 // ParamTable for staking module
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable(
 		ParamStoreKeyParams, Params{},
 	)
 }

@@ -11,9 +11,9 @@ import (
 
 // nolint
 const (
-	// DefaultGasAdjustment is applied to gas estimates to avoid tx
-	// execution failures due to state changes that might
-	// occur between the tx simulation and the actual run.
+	// DefaultGasAdjustment is applied to gas estimates to avoid tx execution
+	// failures due to state changes that might occur between the tx simulation
+	// and the actual run.
 	DefaultGasAdjustment = 1.0
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
@@ -40,7 +40,7 @@ const (
 	FlagListenAddr         = "laddr"
 	FlagCORS               = "cors"
 	FlagMaxOpenConnections = "max-open"
-	FlagInsecure           = "insecure"
+	FlagTLS                = "tls"
 	FlagSSLHosts           = "ssl-hosts"
 	FlagSSLCertFile        = "ssl-certfile"
 	FlagSSLKeyFile         = "ssl-keyfile"
@@ -105,7 +105,7 @@ func PostCommands(cmds ...*cobra.Command) []*cobra.Command {
 func RegisterRestServerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd = GetCommands(cmd)[0]
 	cmd.Flags().String(FlagListenAddr, "tcp://localhost:1317", "The address for the server to listen on")
-	cmd.Flags().Bool(FlagInsecure, false, "Do not set up SSL/TLS layer")
+	cmd.Flags().Bool(FlagTLS, false, "Enable SSL/TLS layer")
 	cmd.Flags().String(FlagSSLHosts, "", "Comma-separated hostnames and IPs to generate a certificate for")
 	cmd.Flags().String(FlagSSLCertFile, "", "Path to a SSL certificate file. If not supplied, a self-signed certificate will be generated.")
 	cmd.Flags().String(FlagSSLKeyFile, "", "Path to a key file; ignored if a certificate file is not supplied.")

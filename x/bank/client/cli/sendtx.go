@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	bankClient "github.com/cosmos/cosmos-sdk/x/bank/client"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -62,7 +62,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint
-			msg := bankClient.CreateMsg(from, to, coins)
+			msg := bank.NewMsgSend(from, to, coins)
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
 			}

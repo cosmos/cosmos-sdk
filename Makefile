@@ -123,7 +123,7 @@ draw_deps: tools
 	@goviz -i github.com/cosmos/cosmos-sdk/cmd/gaia/cmd/gaiad -d 2 | dot -Tpng -o dependency-graph.png
 
 clean:
-	rm -f devtools-stamp vendor-deps snapcraft.yaml
+	rm -f devtools-stamp vendor-deps snapcraft-local.yaml
 
 distclean: clean
 	rm -rf vendor/
@@ -143,6 +143,9 @@ test: test_unit
 
 test_cli:
 	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
+
+test_ledger:
+	@go test `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_real_ledger'
 
 test_unit:
 	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION)
@@ -256,13 +259,8 @@ localnet-stop:
 ########################################
 ### Packaging
 
-snapcraft.yaml: snapcraft.yaml.in
+snapcraft-local.yaml: snapcraft-local.yaml.in
 	sed "s/@VERSION@/${VERSION}/g" < $< > $@
-
-build-snap-edge: snapcraft.yaml
-	snapcraft clean
-	snapcraft
-
 
 # To avoid unintended conflicts with file names, always add to .PHONY
 # unless there is a reason not to.
@@ -274,4 +272,4 @@ build-linux build-docker-gaiadnode localnet-start localnet-stop \
 format check-ledger test_sim_gaia_nondeterminism test_sim_modules test_sim_gaia_fast \
 test_sim_gaia_custom_genesis_fast test_sim_gaia_custom_genesis_multi_seed \
 test_sim_gaia_multi_seed test_sim_gaia_import_export update_tools update_dev_tools \
-build-snap-edge devtools-clean
+devtools-clean

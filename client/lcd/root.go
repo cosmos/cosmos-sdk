@@ -70,7 +70,7 @@ func (rs *RestServer) setKeybase(kb keybase.Keybase) {
 
 // Start starts the rest server
 func (rs *RestServer) Start(listenAddr string, sslHosts string,
-	certFile string, keyFile string, maxOpen int, insecure bool) (err error) {
+	certFile string, keyFile string, maxOpen int, secure bool) (err error) {
 
 	server.TrapSignal(func() {
 		err := rs.listener.Close()
@@ -88,7 +88,7 @@ func (rs *RestServer) Start(listenAddr string, sslHosts string,
 		viper.GetString(client.FlagChainID)))
 
 	// launch rest-server in insecure mode
-	if insecure {
+	if !secure {
 		return rpcserver.StartHTTPServer(rs.listener, rs.Mux, rs.log)
 	}
 
@@ -146,7 +146,7 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 				viper.GetString(client.FlagSSLCertFile),
 				viper.GetString(client.FlagSSLKeyFile),
 				viper.GetInt(client.FlagMaxOpenConnections),
-				viper.GetBool(client.FlagInsecure))
+				viper.GetBool(client.FlagTLS))
 
 			return err
 		},

@@ -18,7 +18,7 @@ tags:
   - name: ICS23
     description: Slashing module APIs
   - name: ICS24
-    description: WIP - Fee distribution module APIs
+    description: Fee distribution module APIs
   - name: version
     description: Query app version
 schemes:
@@ -1846,9 +1846,9 @@ paths:
                 type: string
         500:
           description: Internal Server Error
-  /distribution/pool:
+  /distribution/outstanding_rewards:
     get:
-      summary: Fee distribution pool
+      summary: Fee distribution outstanding rewards
       tags:
         - ICS24
       produces:
@@ -1857,7 +1857,9 @@ paths:
         200:
           description: OK
           schema:
-            $ref: "#/definitions/FeePool"
+            type: array
+            items:
+              $ref: "#/definitions/Coin"
         500:
           description: Internal Server Error
 definitions:
@@ -2198,7 +2200,7 @@ definitions:
       power:
         type: string
         example: "1000"
-      accum:
+      proposer_priority:
         type: string
         example: "1000"
   TextProposal:
@@ -2367,36 +2369,12 @@ definitions:
         type: string
       shares_dst:
         type: string
-  FeePool:
-    type: object
-    properties:
-      community_pool:
-        type: array
-        items:
-          $ref: "#/definitions/Coin"
-      val_accum:
-        $ref: "#/definitions/TotalAccum"
-      val_pool:
-        type: array
-        items:
-          $ref: "#/definitions/Coin"
-  TotalAccum:
-    type: object
-    properties:
-      update_height:
-        type: integer
-      accum:
-        type: string
   ValidatorDistInfo:
     type: object
     properties:
       operator_addr:
         $ref: "#/definitions/ValidatorAddress"
-      fee_pool_withdrawal_height:
-        type: integer
-      del_accum:
-        $ref: "#/definitions/TotalAccum"
-      del_pool:
+      self_bond_rewards:
         type: array
         items:
           $ref: "#/definitions/Coin"

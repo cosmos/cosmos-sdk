@@ -156,6 +156,8 @@ func (bldr TxBuilder) WithAccountNumber(accnum uint64) TxBuilder {
 
 // Build builds a single message to be signed from a TxBuilder given a set of
 // messages. It returns an error if a fee is supplied but cannot be parsed.
+//
+// TODO: Should consider renaming to BuildSignMsg.
 func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 	chainID := bldr.chainID
 	if chainID == "" {
@@ -212,31 +214,17 @@ func (bldr TxBuilder) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]b
 	return bldr.Sign(name, passphrase, msg)
 }
 
-// BuildWithPubKey builds a single message to be signed from a TxBuilder given a set of
-// messages and attach the public key associated to the given name.
-// It returns an error if a fee is supplied but cannot be parsed or the key cannot be
-// retrieved.
-func (bldr TxBuilder) BuildWithPubKey(name string, msgs []sdk.Msg) ([]byte, error) {
-	msg, err := bldr.Build(msgs)
+// BuildTxForSim creates a StdSignMsg and encodes a transaction with the
+// StdSignMsg with a single empty StdSignature for tx simulation.
+func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
+	signMsg, err := bldr.Build(msgs)
 	if err != nil {
 		return nil, err
 	}
 
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		return nil, err
-	}
-
-	info, err := keybase.Get(name)
-	if err != nil {
-		return nil, err
-	}
-
-	sigs := []auth.StdSignature{{
-		PubKey: info.GetPubKey(),
-	}}
-
-	return bldr.txEncoder(auth.NewStdTx(msg.Msgs, msg.Fee, sigs, msg.Memo))
+	// the ante handler will populate with a sentinel pubkey
+	sigs := []auth.StdSignature{{}}
+	return bldr.txEncoder(auth.NewStdTx(signMsg.Msgs, signMsg.Fee, sigs, signMsg.Memo))
 }
 
 // SignStdTx appends a signature to a StdTx and returns a copy of a it. If append

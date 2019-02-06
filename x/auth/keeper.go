@@ -47,7 +47,7 @@ func NewAccountKeeper(
 		key:           key,
 		proto:         proto,
 		cdc:           cdc,
-		paramSubspace: paramstore.WithTypeTable(ParamTypeTable()),
+		paramSubspace: paramstore.WithKeyTable(ParamKeyTable()),
 	}
 }
 

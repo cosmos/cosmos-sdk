@@ -42,12 +42,6 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	return pass, nil
 }
 
-// GetSeed will request a seed phrase from stdin and trims off
-// leading/trailing spaces
-func GetSeed(prompt string, buf *bufio.Reader) (string, error) {
-	return GetString(prompt, buf)
-}
-
 // GetCheckPassword will prompt for a password twice to verify they
 // match (for creating a new password).
 // It enforces the password length. Only parses password once if

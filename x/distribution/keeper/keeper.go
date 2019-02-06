@@ -26,7 +26,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramSpace params.Subspace, c
 	keeper := Keeper{
 		storeKey:            key,
 		cdc:                 cdc,
-		paramSpace:          paramSpace.WithTypeTable(ParamTypeTable()),
+		paramSpace:          paramSpace.WithKeyTable(ParamKeyTable()),
 		bankKeeper:          ck,
 		stakingKeeper:       sk,
 		feeCollectionKeeper: fck,

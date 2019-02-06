@@ -7,13 +7,13 @@ import (
 // validatorGovInfo used for tallying
 type validatorGovInfo struct {
 	Address         sdk.ValAddress // address of the validator operator
-	BondedTokens    sdk.Dec        // bonded tokens of a Validator
+	BondedTokens    sdk.Int        // Power of a Validator
 	DelegatorShares sdk.Dec        // Total outstanding delegator shares
 	Minus           sdk.Dec        // Minus of validator, used to compute validator's voting power
 	Vote            VoteOption     // Vote of the validator
 }
 
-func newValidatorGovInfo(address sdk.ValAddress, bondedTokens, delegatorShares,
+func newValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegatorShares,
 	minus sdk.Dec, vote VoteOption) validatorGovInfo {
 
 	return validatorGovInfo{
@@ -38,7 +38,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	keeper.vs.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.Validator) (stop bool) {
 		currValidators[validator.GetOperator().String()] = newValidatorGovInfo(
 			validator.GetOperator(),
-			sdk.NewDecFromInt(validator.GetBondedTokens()),
+			validator.GetBondedTokens(),
 			validator.GetDelegatorShares(),
 			sdk.ZeroDec(),
 			OptionEmpty,
@@ -69,7 +69,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 					currValidators[valAddrStr] = val
 
 					delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
-					votingPower := val.BondedTokens.Mul(delegatorShare)
+					votingPower := delegatorShare.MulInt(val.BondedTokens)
 
 					results[vote.Option] = results[vote.Option].Add(votingPower)
 					totalVotingPower = totalVotingPower.Add(votingPower)
@@ -90,7 +90,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 		sharesAfterMinus := val.DelegatorShares.Sub(val.Minus)
 		percentAfterMinus := sharesAfterMinus.Quo(val.DelegatorShares)
-		votingPower := val.BondedTokens.Mul(percentAfterMinus)
+		votingPower := percentAfterMinus.MulInt(val.BondedTokens)
 
 		results[val.Vote] = results[val.Vote].Add(votingPower)
 		totalVotingPower = totalVotingPower.Add(votingPower)

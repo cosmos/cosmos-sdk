@@ -18,7 +18,7 @@ along with their associated name and address.`,
 }
 
 func runListCmd(cmd *cobra.Command, args []string) error {
-	kb, err := GetKeyBase()
+	kb, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func runListCmd(cmd *cobra.Command, args []string) error {
 // query key list REST handler
 func QueryKeysRequestHandler(indent bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		kb, err := GetKeyBase()
+		kb, err := NewKeyBaseFromHomeFlag()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

@@ -27,6 +27,9 @@ BREAKING CHANGES
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
   * [\#3490](https://github.com/cosmos/cosmos-sdk/issues/3490) ReadRESTReq() returns bool to avoid callers to write error responses twice.
   * [\#3502](https://github.com/cosmos/cosmos-sdk/pull/3502) Fixes issue when comparing genesis states
+  * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Various clean ups:
+    - Replace all GetKeyBase* functions family in favor of NewKeyBaseFromDir and NewKeyBaseFromHomeFlag.
+    - Remove Get prefix from all TxBuilder's getters.
 
 * Tendermint
 
@@ -48,6 +51,8 @@ FEATURES
 * SDK
   * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
   * [\#3477][distribution] new query endpoint "delegator_validators"
+  * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Provided a lazy loading implementation of Keybase that locks the underlying
+    storage only for the time needed to perform the required operation. Also added Keybase reference to TxBuilder struct.
 
 * Tendermint
 
@@ -62,6 +67,7 @@ IMPROVEMENTS
     * `from` field in the `base_req` body can be a Keybase name or account address
   * [\#3423](https://github.com/cosmos/cosmos-sdk/issues/3423) Allow simulation
   (auto gas) to work with generate only.
+  * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) REST server calls to keybase does not lock the underlying storage anymore.
 
 * Gaia CLI  (`gaiacli`)
   * [\#3476](https://github.com/cosmos/cosmos-sdk/issues/3476) New `withdraw-all-rewards` command to withdraw all delegations rewards for delegators.

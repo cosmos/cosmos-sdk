@@ -57,7 +57,7 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 			return
 		}
 
-		keybase, err := keys.GetKeyBaseFromDir(viper.GetString(cli.HomeFlag))
+		keybase, err := keys.NewKeyBaseFromDir(viper.GetString(cli.HomeFlag))
 		if err != nil {
 			return
 		}
@@ -100,7 +100,7 @@ func makeMultiSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) 
 
 			// Validate each signature
 			sigBytes := auth.StdSignBytes(
-				txBldr.GetChainID(), txBldr.GetAccountNumber(), txBldr.GetSequence(),
+				txBldr.ChainID(), txBldr.AccountNumber(), txBldr.Sequence(),
 				stdTx.Fee, stdTx.GetMsgs(), stdTx.GetMemo(),
 			)
 			if ok := stdSig.PubKey.VerifyBytes(sigBytes, stdSig.Signature); !ok {

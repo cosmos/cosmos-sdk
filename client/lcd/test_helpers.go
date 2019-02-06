@@ -99,30 +99,6 @@ func GetConfig() *tmcfg.Config {
 	return config
 }
 
-// GetKeyBase returns the LCD test keybase. It also requires that a directory
-// could be made and a keybase could be fetched.
-//
-// NOTE: memDB cannot be used because the request is expecting to interact with
-// the default location.
-func GetKeyBase(t *testing.T) crkeys.Keybase {
-	dir, err := ioutil.TempDir("", "lcd_test")
-	require.NoError(t, err)
-
-	viper.Set(cli.HomeFlag, dir)
-
-	keybase, err := keys.GetKeyBaseWithWritePerm()
-	require.NoError(t, err)
-
-	return keybase
-}
-
-// GetTestKeyBase fetches the current testing keybase
-func GetTestKeyBase(t *testing.T) crkeys.Keybase {
-	keybase, err := keys.GetKeyBaseWithWritePerm()
-	require.NoError(t, err)
-	return keybase
-}
-
 // CreateAddr adds an address to the key store and returns an address and seed.
 // It also requires that the key could be created.
 func CreateAddr(t *testing.T, name, password string, kb crkeys.Keybase) (sdk.AccAddress, string) {
@@ -191,6 +167,20 @@ func (b AddrSeedSlice) Less(i, j int) bool {
 
 func (b AddrSeedSlice) Swap(i, j int) {
 	b[j], b[i] = b[i], b[j]
+}
+
+// InitClientHome initialises client home dir.
+func InitClientHome(t *testing.T, dir string) string {
+	var err error
+	if dir == "" {
+		dir, err = ioutil.TempDir("", "lcd_test")
+		require.NoError(t, err)
+	}
+	// TODO: this should be set in NewRestServer
+	// and pass down the CLIContext to achieve
+	// parallelism.
+	viper.Set(cli.HomeFlag, dir)
+	return dir
 }
 
 // TODO: Make InitializeTestLCD safe to call in multiple tests at the same time
@@ -308,9 +298,6 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	viper.Set(client.FlagChainID, genDoc.ChainID)
 	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
 	viper.Set(client.FlagTrustNode, true)
-	dir, err := ioutil.TempDir("", "lcd_test")
-	require.NoError(t, err)
-	viper.Set(cli.HomeFlag, dir)
 
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)
@@ -376,7 +363,6 @@ func startTM(
 // startLCD starts the LCD.
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
-	rs.setKeybase(GetTestKeyBase(t))
 	registerRoutes(rs)
 	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
 	if err != nil {

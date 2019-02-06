@@ -136,6 +136,41 @@ func TestLoadVersion(t *testing.T) {
 	testLoadVersionHelper(t, app, int64(2), commitID2)
 }
 
+func TestLoadVersionInvalid(t *testing.T) {
+	logger := log.NewNopLogger()
+	pruningOpt := SetPruning(store.PruneSyncable)
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db, nil, pruningOpt)
+
+	capKey := sdk.NewKVStoreKey(MainStoreKey)
+	app.MountStores(capKey)
+	err := app.LoadLatestVersion(capKey)
+	require.Nil(t, err)
+
+	// require error when loading an invalid version
+	err = app.LoadVersion(-1, capKey)
+	require.Error(t, err)
+
+	header := abci.Header{Height: 1}
+	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	res := app.Commit()
+	commitID1 := sdk.CommitID{1, res.Data}
+
+	// create a new app with the stores mounted under the same cap key
+	app = NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.MountStores(capKey)
+
+	// require we can load the latest version
+	err = app.LoadVersion(1, capKey)
+	require.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(1), commitID1)
+
+	// require error when loading an invalid version
+	err = app.LoadVersion(2, capKey)
+	require.Error(t, err)
+}
+
 func testLoadVersionHelper(t *testing.T, app *BaseApp, expectedHeight int64, expectedID sdk.CommitID) {
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()

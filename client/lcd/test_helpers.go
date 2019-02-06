@@ -15,13 +15,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tendermint/tendermint/crypto/secp256k1"
-	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
@@ -31,25 +26,22 @@ import (
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authRest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	bankRest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	bankrest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrrest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govRest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	slashingRest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
+	slashingrest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingRest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
-
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
+	stakingrest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
@@ -66,17 +58,6 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
-
-	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-
-	authRest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
-	bankRest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrRest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
-	govRest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
-	slashingRest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	stakingRest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -283,7 +264,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 
 		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
-		accTokens := types.TokensFromTendermintPower(150)
+		accTokens := staking.TokensFromTendermintPower(150)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
 		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
 	}
@@ -298,7 +279,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	// add some tokens to init accounts
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accTokens := types.TokensFromTendermintPower(100)
+		accTokens := staking.TokensFromTendermintPower(100)
 		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
@@ -405,12 +386,12 @@ func registerRoutes(rs *RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	authRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, auth.StoreKey)
-	bankRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	distrRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distr.StoreKey)
-	stakingRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	slashingRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	govRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	authrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, auth.StoreKey)
+	bankrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	distrrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distr.StoreKey)
+	stakingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	slashingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	govrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
 // Request makes a test LCD test request. It returns a response object and a
@@ -699,7 +680,7 @@ func doTransferWithGas(
 	kb := client.MockKeyBase()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
-		"receive_address", cryptoKeys.English, gapp.DefaultKeyPass, cryptoKeys.SigningAlgo("secp256k1"),
+		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
 	)
 	require.Nil(t, err)
 
@@ -741,7 +722,7 @@ func doTransferWithGasAccAuto(
 	kb := client.MockKeyBase()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
-		"receive_address", cryptoKeys.English, gapp.DefaultKeyPass, cryptoKeys.SigningAlgo("secp256k1"),
+		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
 	)
 	require.Nil(t, err)
 

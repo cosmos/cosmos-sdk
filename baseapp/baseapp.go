@@ -238,7 +238,8 @@ func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 // Router returns the router of the BaseApp.
 func (app *BaseApp) Router() Router {
 	if app.sealed {
-		// TODO: Why are panicing here on returning the router???
+		// We cannot return a router when the app is sealed because we can't have
+		// any routes modified which would cause unexpected routing behavior.
 		panic("Router() on sealed BaseApp")
 	}
 	return app.router

@@ -25,9 +25,6 @@ var (
 	capKey2 = sdk.NewKVStoreKey("key2")
 )
 
-// ----------------------------------------------------------------------------
-// Auxiliary
-
 func defaultLogger() log.Logger {
 	return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "sdk/app")
 }
@@ -68,9 +65,6 @@ func setupBaseApp(t *testing.T, options ...func(*BaseApp)) *BaseApp {
 	require.Nil(t, err)
 	return app
 }
-
-// ----------------------------------------------------------------------------
-// Store tests
 
 func TestMountStores(t *testing.T) {
 	app := setupBaseApp(t)
@@ -191,9 +185,6 @@ func testChangeNameHelper(name string) func(*BaseApp) {
 	}
 }
 
-// ----------------------------------------------------------------------------
-// test some basic abci/baseapp functionality
-
 // Test that txs can be unmarshalled and read and that
 // correct error codes are returned when not
 func TestTxDecoder(t *testing.T) {
@@ -270,9 +261,6 @@ func TestSetMinGasPrices(t *testing.T) {
 	require.Equal(t, minGasPrices, app.minGasPrices)
 }
 
-// ----------------------------------------------------------------------------
-// InitChain, BeginBlock, EndBlock
-
 func TestInitChainer(t *testing.T) {
 	name := t.Name()
 	// keep the db and logger ourselves so
@@ -339,11 +327,6 @@ func TestInitChainer(t *testing.T) {
 	res = app.Query(query)
 	require.Equal(t, value, res.Value)
 }
-
-//------------------------------------------------------------------------------------------
-// Mock tx, msgs, and mapper for the baseapp tests.
-// Self-contained, just uses counters.
-// We don't care about signatures, coins, accounts, etc. in the baseapp.
 
 // Simple tx with a list of Msgs.
 type txTest struct {
@@ -476,9 +459,6 @@ func handlerMsgCounter(t *testing.T, capKey *sdk.KVStoreKey, deliverKey []byte) 
 		return incrementingCounter(t, store, deliverKey, msgCount)
 	}
 }
-
-//-----------------------------------------------------------------
-// simple int mapper
 
 func i2b(i int64) []byte {
 	return []byte{byte(i)}
@@ -745,10 +725,6 @@ func TestSimulateTx(t *testing.T) {
 		app.Commit()
 	}
 }
-
-//-------------------------------------------------------------------------------------------
-// Tx failure cases
-// TODO: add more
 
 func TestRunInvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *BaseApp) {
@@ -1154,9 +1130,6 @@ func TestGasConsumptionBadTx(t *testing.T) {
 	res = app.DeliverTx(txBytes)
 	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 }
-
-// ----------------------------------------------------------------------------
-// Queries
 
 // Test that we can only query from the latest committed state.
 func TestQuery(t *testing.T) {

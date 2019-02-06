@@ -17,9 +17,6 @@ import (
 // KeyDBName is the directory under root where we store the keys
 const KeyDBName = "keys"
 
-// keybase is used to make NewKeyBaseFromHomeFlag a singleton
-var keybase keys.Keybase
-
 type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
 
 // GetKeyInfo returns key info for a given name. An error is returned if the
@@ -79,11 +76,6 @@ func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
 
 // NewKeyBaseFromDir initializes a keybase at a particular dir.
 func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	// Disabled because of the inability to create a new keys database directory
-	// in the instance of when ReadOnly is set to true.
-	//
-	// ref: syndtr/goleveldb#240
-	// return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
 	return getLazyKeyBaseFromDir(rootDir)
 }
 

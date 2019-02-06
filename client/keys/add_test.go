@@ -1,48 +1,50 @@
 package keys
 
 import (
+	"bufio"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 
+	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/cosmos/cosmos-sdk/tests"
+
+	"github.com/cosmos/cosmos-sdk/client"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/spf13/cobra"
 )
 
-func Test_addKeyCommand(t *testing.T) {
-	tests := []struct {
-		name string
-		want *cobra.Command
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := addKeyCommand(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("addKeyCommand() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+func Test_runAddCmdBasic(t *testing.T) {
+	cmd := addKeyCommand()
+	assert.NotNil(t, cmd)
 
-func Test_runAddCmd(t *testing.T) {
-	type args struct {
-		in0  *cobra.Command
-		args []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := runAddCmd(tt.args.in0, tt.args.args); (err != nil) != tt.wantErr {
-				t.Errorf("runAddCmd() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+	// Empty
+	err := runAddCmd(cmd, []string{})
+	assert.EqualError(t, err, "not enough arguments")
+
+	// Missing input (enter password)
+	err = runAddCmd(cmd, []string{"keyname"})
+	assert.EqualError(t, err, "EOF")
+
+	// Prepare a keybase
+	kbHome, kbCleanUp, err := tests.GetTempDir("Test_runDeleteCmd")
+	assert.NoError(t, err)
+	assert.NotNil(t, kbHome)
+	defer kbCleanUp()
+	viper.Set(cli.HomeFlag, kbHome)
+	viper.Set(cli.OutputFlag, OutputFormatText)
+
+	{
+		// Now enter password
+		cleanUp := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
+		defer cleanUp()
+		err = runAddCmd(cmd, []string{"keyname"})
+		assert.NoError(t, err)
 	}
 }
 

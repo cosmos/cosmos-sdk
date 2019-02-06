@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/tests"
-
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/spf13/cobra"
 )
@@ -20,25 +19,36 @@ func Test_runListCmd(t *testing.T) {
 	}
 
 	cmdBasic := listKeysCmd()
-	keyBase1 := keys.New(dbm.NewMemDB())
 
-	keyBase2 := keys.New(dbm.NewMemDB())
-	_, err := keyBase2.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
+	// Prepare some keybases
+	kbHome1, cleanUp1, err := tests.GetTempDir("Test_runListCmd")
+	defer cleanUp1()
+	assert.NoError(t, err)
+	// Do nothing, leave home1 empty
+
+	kbHome2, cleanUp2, err := tests.GetTempDir("Test_runListCmd")
+	defer cleanUp2()
+	viper.Set(cli.HomeFlag, kbHome2)
 	assert.NoError(t, err)
 
-	tests := []struct {
+	kb, err := NewKeyBaseFromHomeFlag()
+	assert.NoError(t, err)
+	_, err = kb.CreateAccount("something", tests.TestMnemonic, "", "", 0, 0)
+	assert.NoError(t, err)
+
+	testData := []struct {
 		name    string
-		kb      keys.Keybase
+		kbDir   string
 		args    args
 		wantErr bool
 	}{
-		{"no keybase", nil, args{cmdBasic, []string{}}, true},
-		{"with keybase1", keyBase1, args{cmdBasic, []string{}}, false},
-		{"with keybase2", keyBase2, args{cmdBasic, []string{}}, false},
+		{"invalid keybase", "/dev/null", args{cmdBasic, []string{}}, true},
+		{"keybase: empty", kbHome1, args{cmdBasic, []string{}}, false},
+		{"keybase: w/key", kbHome2, args{cmdBasic, []string{}}, false},
 	}
-	for _, tt := range tests {
+	for _, tt := range testData {
 		t.Run(tt.name, func(t *testing.T) {
-			SetKeyBase(tt.kb)
+			viper.Set(cli.HomeFlag, tt.kbDir)
 			if err := runListCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
 				t.Errorf("runListCmd() error = %v, wantErr %v", err, tt.wantErr)
 			}

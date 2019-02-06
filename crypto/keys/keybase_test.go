@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	dbm "github.com/tendermint/tendermint/libs/db"
@@ -62,9 +63,24 @@ func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
 
 func TestCreateLedger(t *testing.T) {
 	kb := New(dbm.NewMemDB())
+
+	// test_cover and test_unit will result in different answers
+	// test_cover does not compile some dependencies so ledger is disabled
+	// test_unit may add a ledger mock
+	// both cases are acceptable
 	ledger, err := kb.CreateLedger("some_account", Secp256k1, 0, 1)
-	assert.NoError(t, err)
-	assert.NotNil(t, ledger)
+
+	if err != nil {
+		assert.Error(t, err)
+		assert.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
+		assert.Nil(t, ledger)
+	} else {
+		// The mock is available, check that the address is correct
+		pubKey := ledger.GetPubKey()
+		addr, err := sdk.Bech32ifyAccPub(pubKey)
+		assert.NoError(t, err)
+		assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", addr)
+	}
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well

@@ -1,36 +1,45 @@
 package keys
 
 import (
+	"bufio"
+	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/client"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/stretchr/testify/require"
 )
 
-func Test_RunMnemonicCmd(t *testing.T) {
-	type args struct {
-		cmd  *cobra.Command
-		args []string
-	}
-
+func Test_RunMnemonicCmdNormal(t *testing.T) {
 	cmdBasic := mnemonicKeyCommand()
+	err := runMnemonicCmd(cmdBasic, []string{})
+	require.NoError(t, err)
+}
+
+func Test_RunMnemonicCmdUser(t *testing.T) {
 	cmdUser := mnemonicKeyCommand()
-	cmdUser.Flags().Set(flagUserEntropy, "1")
+	err := cmdUser.Flags().Set(flagUserEntropy, "1")
+	assert.NoError(t, err)
 
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{"mne1", args{cmdBasic, []string{}}, false},
+	err = runMnemonicCmd(cmdUser, []string{})
+	require.Error(t, err)
+	require.Equal(t, "EOF", err.Error())
 
-		// TODO: Requires stdin mocking
-		// {"mne2", args{cmdUser, []string{}}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := runMnemonicCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
-				t.Errorf("runMnemonicCmd() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	// Try again
+	cleanUp := client.OverrideStdin(bufio.NewReader(strings.NewReader("Hi!\n")))
+	defer cleanUp()
+	err = runMnemonicCmd(cmdUser, []string{})
+	require.Error(t, err)
+	require.Equal(t,
+		"256-bits is 43 characters in Base-64, and 100 in Base-6. You entered 3, and probably want more",
+		err.Error())
+
+	// Now provide "good" entropy :)
+	fakeEntropy := strings.Repeat(":)", 40) + "\ny\n" // entropy + accept count
+	cleanUp2 := client.OverrideStdin(bufio.NewReader(strings.NewReader(fakeEntropy)))
+	defer cleanUp2()
+	err = runMnemonicCmd(cmdUser, []string{})
+	require.NoError(t, err)
 }

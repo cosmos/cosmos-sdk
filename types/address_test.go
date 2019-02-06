@@ -1,8 +1,8 @@
 package types_test
 
 import (
-	"crypto/rand"
 	"encoding/hex"
+	"math/rand"
 	"testing"
 
 	"strings"

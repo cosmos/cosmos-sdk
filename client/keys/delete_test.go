@@ -5,15 +5,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/spf13/viper"
+	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/tests"
-	dbm "github.com/tendermint/tendermint/libs/db"
-
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/cli"
 )
 
 func Test_runDeleteCmd(t *testing.T) {
@@ -24,40 +22,59 @@ func Test_runDeleteCmd(t *testing.T) {
 	assert.False(t, yesF)
 	assert.False(t, forceF)
 
-	fakeKeyName := "runDeleteCmd1"
+	fakeKeyName1 := "runDeleteCmd_Key1"
+	fakeKeyName2 := "runDeleteCmd_Key2"
 
-	kb := keys.New(dbm.NewMemDB())
-	_, err := kb.CreateAccount(fakeKeyName,
-		tests.TestMnemonic, "", "", 0, 0)
-	assert.NoError(t, err)
-
-	err = runDeleteCmd(deleteKeyCommand, []string{})
+	err := runDeleteCmd(deleteKeyCommand, []string{})
 	require.Error(t, err)
 	require.Equal(t, "a name must be provided", err.Error())
 
-	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
-	require.Error(t, err)
-	require.Equal(t, "file missing [file=MANIFEST-000000]", err.Error())
+	// Now add a temporary keybase
+	kbHome, cleanUp, err := tests.GetTempDir("Test_runDeleteCmd")
+	assert.NoError(t, err)
+	defer cleanUp()
+	viper.Set(cli.HomeFlag, kbHome)
 
-	// Now add a keybase
-	SetKeyBase(kb)
+	// Now
+	kb, err := NewKeyBaseFromHomeFlag()
+	assert.NoError(t, err)
+	_, err = kb.CreateAccount(fakeKeyName1,
+		tests.TestMnemonic, "", "", 0, 0)
+	assert.NoError(t, err)
+	_, err = kb.CreateAccount(fakeKeyName2,
+		tests.TestMnemonic, "", "", 0, 1)
+	assert.NoError(t, err)
+
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})
 	require.Error(t, err)
 	require.Equal(t, "Key blah not found", err.Error())
 
-	// User confirmation
-	// TODO: Mock stdin?
-	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName})
+	// User confirmation missing
+	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
 	require.Error(t, err)
 	require.Equal(t, "EOF", err.Error())
 
+	{
+		_, err = kb.Get(fakeKeyName1)
+		require.NoError(t, err)
+
+		// Now there is a confirmation
+		cleanUp := client.OverrideStdin(bufio.NewReader(strings.NewReader("y\n")))
+		defer cleanUp()
+		err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName1})
+		require.NoError(t, err)
+
+		_, err = kb.Get(fakeKeyName1)
+		require.Error(t, err) // Key1 is gone
+	}
+
 	viper.Set(flagYes, true)
-	_, err = kb.Get(fakeKeyName)
+	_, err = kb.Get(fakeKeyName2)
 	require.NoError(t, err)
-	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName})
+	err = runDeleteCmd(deleteKeyCommand, []string{fakeKeyName2})
 	require.NoError(t, err)
-	_, err = kb.Get(fakeKeyName)
-	require.Error(t, err)
+	_, err = kb.Get(fakeKeyName2)
+	require.Error(t, err) // Key2 is gone
 
 	// TODO: Write another case for !keys.Local
 }

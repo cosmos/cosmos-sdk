@@ -30,10 +30,10 @@ const (
 // GetSignCommand returns the sign command
 func GetSignCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign <file>",
+		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
-Read a transaction from <file>, sign it, and print its JSON encoding.
+Read a transaction from [file], sign it, and print its JSON encoding.
 
 If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.

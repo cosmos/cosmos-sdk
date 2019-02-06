@@ -533,9 +533,7 @@ func TestGaiaCLIQueryTxPagination(t *testing.T) {
 	barAddr := f.KeyAddress(keyBar)
 
 	for i := 1; i <= 30; i++ {
-		success := executeWrite(t, fmt.Sprintf(
-			"gaiacli tx send %s --amount=%dfootoken --to=%s --from=foo",
-			f.Flags(), i, barAddr), app.DefaultKeyPass)
+		success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, int64(i)))
 		require.True(t, success)
 		tests.WaitForNextNBlocksTM(1, f.Port)
 	}

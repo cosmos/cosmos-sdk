@@ -2,7 +2,6 @@
 package cli
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -23,6 +22,7 @@ import (
 var (
 	flagOnlyFromValidator = "only-from-validator"
 	flagIsValidator       = "is-validator"
+	flagComission         = "comission"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -43,58 +43,48 @@ func GetTxCmd(storeKey string, cdc *amino.Codec) *cobra.Command {
 // command to withdraw rewards
 func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw-rewards",
-		Short: "withdraw rewards for either a delegation or a validator",
-		Long: strings.TrimSpace(`Withdraw rewards from either a delegation or a validator:
+		Use:   "withdraw-rewards [validator-addr]",
+		Short: "witdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator",
+		Long: strings.TrimSpace(`witdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator:
 
-
+$ gaiacli tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
+$ gaiacli tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey --comission
 `),
-		Args: cobra.NoArgs,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			onlyFromVal := viper.GetString(flagOnlyFromValidator)
-			isVal := viper.GetBool(flagIsValidator)
-
-			if onlyFromVal != "" && isVal {
-				return fmt.Errorf("cannot use --%v, and --%v flags together",
-					flagOnlyFromValidator, flagIsValidator)
-			}
-
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
 				WithCodec(cdc).
 				WithAccountDecoder(cdc)
 
-			var msg sdk.Msg
-			switch {
-			case isVal:
-				addr := cliCtx.GetFromAddress()
-				valAddr := sdk.ValAddress(addr.Bytes())
-				msg = types.NewMsgWithdrawValidatorCommission(valAddr)
-			default:
-				delAddr := cliCtx.GetFromAddress()
-				valAddr, err := sdk.ValAddressFromBech32(onlyFromVal)
-				if err != nil {
-					return err
-				}
-
-				msg = types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)
+			delAddr := cliCtx.GetFromAddress()
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
 			}
 
-			return utils.MessageOutput(cliCtx, txBldr, []sdk.Msg{msg}, false)
+			msgs := []sdk.Msg{types.NewMsgWithdrawDelegatorReward(delAddr, valAddr)}
+			if viper.GetBool(flagComission) {
+				msgs = append(msgs, types.NewMsgWithdrawValidatorCommission(valAddr))
+			}
+
+			return utils.MessageOutput(cliCtx, txBldr, msgs, false)
 		},
 	}
-	cmd.Flags().String(flagOnlyFromValidator, "", "only withdraw from this validator address (in bech)")
-	cmd.Flags().Bool(flagIsValidator, false, "also withdraw validator's commission")
+	cmd.Flags().Bool(flagComission, false, "also withdraw validator's commission")
 	return cmd
 }
 
 // command to withdraw all rewards
 func GetCmdWithdrawAllRewards(cdc *codec.Codec, queryRoute string) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "withdraw-all-rewards [delegator-addr]",
+	return &cobra.Command{
+		Use:   "withdraw-all-rewards",
 		Short: "withdraw all delegations rewards for a delegator",
-		Args:  cobra.NoArgs,
+		Long: strings.TrimSpace(`Withdraw all rewards for a single delegator:
+
+$ gaiacli tx distr withdraw-all-rewards --from mykey
+`),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
@@ -111,9 +101,6 @@ func GetCmdWithdrawAllRewards(cdc *codec.Codec, queryRoute string) *cobra.Comman
 			return utils.MessageOutput(cliCtx, txBldr, msgs, false)
 		},
 	}
-	cmd.Flags().String(flagOnlyFromValidator, "", "only withdraw from this validator address (in bech)")
-	cmd.Flags().Bool(flagIsValidator, false, "also withdraw validator's commission")
-	return cmd
 }
 
 // command to replace a delegator's withdrawal address

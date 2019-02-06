@@ -276,7 +276,7 @@ func GetFromFields(from string) (sdk.AccAddress, string, error) {
 		return nil, "", nil
 	}
 
-	keybase, err := keys.GetKeyBase()
+	keybase, err := keys.NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return nil, "", err
 	}

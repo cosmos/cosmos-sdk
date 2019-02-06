@@ -108,7 +108,7 @@ func GenerateCoinKey() (sdk.AccAddress, string, error) {
 func GenerateSaveCoinKey(clientRoot, keyName, keyPass string, overwrite bool) (sdk.AccAddress, string, error) {
 
 	// get the keystore from the client
-	keybase, err := clkeys.GetKeyBaseFromDir(clientRoot)
+	keybase, err := clkeys.NewKeyBaseFromDir(clientRoot)
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}

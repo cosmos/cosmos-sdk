@@ -17,7 +17,7 @@ import (
 // KeyDBName is the directory under root where we store the keys
 const KeyDBName = "keys"
 
-// keybase is used to make GetKeyBase a singleton
+// keybase is used to make NewKeyBaseFromHomeFlag a singleton
 var keybase keys.Keybase
 
 type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
@@ -25,7 +25,7 @@ type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
 // GetKeyInfo returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
 func GetKeyInfo(name string) (keys.Info, error) {
-	keybase, err := GetKeyBase()
+	keybase, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return nil, err
 	}
@@ -71,16 +71,14 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 	return passphrase, nil
 }
 
-// TODO make keybase take a database not load from the directory
-
-// GetKeyBase initializes a read-only KeyBase based on the configuration.
-func GetKeyBase() (keys.Keybase, error) {
+// NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
+func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
 	rootDir := viper.GetString(cli.HomeFlag)
-	return GetKeyBaseFromDir(rootDir)
+	return NewKeyBaseFromDir(rootDir)
 }
 
-// GetKeyBaseFromDir initializes a read-only keybase at a particular dir.
-func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
+// NewKeyBaseFromDir initializes a keybase at a particular dir.
+func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	// Disabled because of the inability to create a new keys database directory
 	// in the instance of when ReadOnly is set to true.
 	//

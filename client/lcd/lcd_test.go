@@ -47,7 +47,7 @@ func init() {
 }
 
 func TestSeedsAreDifferent(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, _ := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -60,7 +60,7 @@ func TestSeedsAreDifferent(t *testing.T) {
 }
 
 func TestKeyRecover(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
@@ -83,7 +83,7 @@ func TestKeyRecover(t *testing.T) {
 }
 
 func TestKeyRecoverHDPath(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
@@ -111,7 +111,7 @@ func TestKeyRecoverHDPath(t *testing.T) {
 }
 
 func TestKeys(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr1, _ := CreateAddr(t, name1, pw, kb)
 	addr1Bech32 := addr1.String()
@@ -213,7 +213,7 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -304,7 +304,7 @@ func TestCoinSend(t *testing.T) {
 }
 
 func TestCoinSendAccAuto(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -327,7 +327,7 @@ func TestCoinSendAccAuto(t *testing.T) {
 }
 
 func TestCoinMultiSendGenerateOnly(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -350,7 +350,7 @@ func TestCoinMultiSendGenerateOnly(t *testing.T) {
 }
 
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -424,7 +424,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 }
 
 func TestTxs(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -465,7 +465,7 @@ func TestTxs(t *testing.T) {
 }
 
 func TestPoolParamsQuery(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, _ := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -523,7 +523,7 @@ func TestValidatorQuery(t *testing.T) {
 }
 
 func TestBonding(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, _ := CreateAddr(t, name1, pw, kb)
 
@@ -686,7 +686,7 @@ func TestBonding(t *testing.T) {
 }
 
 func TestSubmitProposal(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -721,7 +721,7 @@ func TestSubmitProposal(t *testing.T) {
 }
 
 func TestDeposit(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -778,7 +778,7 @@ func TestDeposit(t *testing.T) {
 }
 
 func TestVote(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -863,7 +863,7 @@ func TestVote(t *testing.T) {
 }
 
 func TestUnjail(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, _ := CreateAddr(t, name1, pw, kb)
 	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
@@ -880,7 +880,7 @@ func TestUnjail(t *testing.T) {
 }
 
 func TestProposalsQuery(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addrs, seeds, names, passwords := CreateAddrs(t, kb, 2)
 
@@ -1025,7 +1025,7 @@ func TestDistributionGetParams(t *testing.T) {
 }
 
 func TestDistributionFlow(t *testing.T) {
-	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, valAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, false)

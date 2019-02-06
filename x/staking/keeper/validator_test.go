@@ -276,7 +276,8 @@ func TestValidatorBasics(t *testing.T) {
 
 	// remove a record
 	validators[1].Status = sdk.Unbonded                     // First must set to Unbonded.
-	keeper.SetValidator(ctx, validators[1])                 // ...
+	validators[1].Tokens = sdk.ZeroInt()                    // ...remove all tokens
+	keeper.SetValidator(ctx, validators[1])                 // ...set the validator
 	keeper.RemoveValidator(ctx, validators[1].OperatorAddr) // Now it can be removed.
 	_, found = keeper.GetValidator(ctx, addrVals[1])
 	require.False(t, found)

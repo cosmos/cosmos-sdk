@@ -269,15 +269,10 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.Equal(t, bondAmount, bond.Shares.RoundInt64())
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt64())
 
-	// verify a delegator cannot create a new delegation to the now jailed validator
-	msgDelegate = NewTestMsgDelegate(delAddr, valAddr, bondAmount)
-	got = handleMsgDelegate(ctx, msgDelegate, keeper)
-	require.False(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
-
 	// verify the validator can still self-delegate
 	msgSelfDelegate := NewTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
 	got = handleMsgDelegate(ctx, msgSelfDelegate, keeper)
-	require.True(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
+	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
 	// verify validator bonded shares
 	validator, found = keeper.GetValidator(ctx, valAddr)
@@ -598,10 +593,6 @@ func TestJailValidator(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.True(t, validator.Jailed, "%v", validator)
-
-	// test that this address cannot yet be bonded too because is jailed
-	got = handleMsgDelegate(ctx, msgDelegate, keeper)
-	require.False(t, got.IsOK(), "expected error, got %v", got)
 
 	// test that the delegator can still withdraw their bonds
 	msgUndelegateDelegator := NewMsgUndelegate(delegatorAddr, validatorAddr, sdk.NewDec(10))

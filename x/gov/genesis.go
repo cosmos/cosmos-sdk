@@ -63,7 +63,7 @@ func DefaultGenesisState() GenesisState {
 
 // Checks whether 2 GenesisState structs are equivalent.
 func (data GenesisState) Equal(data2 GenesisState) bool {
-	if data.StartingProposalID != data.StartingProposalID ||
+	if data.StartingProposalID != data2.StartingProposalID ||
 		!data.DepositParams.Equal(data2.DepositParams) ||
 		data.VotingParams != data2.VotingParams ||
 		data.TallyParams != data2.TallyParams {
@@ -98,7 +98,7 @@ func (data GenesisState) Equal(data2 GenesisState) bool {
 		return false
 	}
 	for i := range data.Proposals {
-		if data.Proposals[i] != data.Proposals[i] {
+		if !ProposalEqual(data.Proposals[i], data2.Proposals[i]) {
 			return false
 		}
 	}

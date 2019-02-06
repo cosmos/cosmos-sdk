@@ -23,6 +23,7 @@ BREAKING CHANGES
   * \#2513 Tendermint updates are adjusted by 10^-6 relative to staking tokens, 
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
   * [\#3490](https://github.com/cosmos/cosmos-sdk/issues/3490) ReadRESTReq() returns bool to avoid callers to write error responses twice.
+  * [\#3502](https://github.com/cosmos/cosmos-sdk/pull/3502) Fixes issue when comparing genesis states
 
 * Tendermint
 
@@ -76,6 +77,8 @@ IMPROVEMENTS
   * [\#2986](https://github.com/cosmos/cosmos-sdk/pull/2986) Store Refactor
   * \#3435 Test that store implementations do not allow nil values
   * \#2509 Sanitize all usage of Dec.RoundInt64()
+  * [\#556](https://github.com/cosmos/cosmos-sdk/issues/556) Increase `BaseApp`
+  test coverage.
 
 * Tendermint
 

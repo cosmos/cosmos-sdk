@@ -381,9 +381,7 @@ workflows:
       - test_cover:
           requires:
             - setup_dependencies
-      - localnet:
-          requires:
-            - setup_dependencies
+      - localnet
       - upload_coverage:
           requires:
             - test_cover

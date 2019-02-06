@@ -15,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -104,7 +103,7 @@ func TestGaiaAppGenState(t *testing.T) {
 
 func makeMsg(name string, pk crypto.PubKey) auth.StdTx {
 	desc := staking.NewDescription(name, "", "", "")
-	comm := stakingTypes.CommissionMsg{}
+	comm := staking.CommissionMsg{}
 	msg := staking.NewMsgCreateValidator(sdk.ValAddress(pk.Address()), pk, sdk.NewInt64Coin(bondDenom,
 		50), desc, comm)
 	return auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, nil, "")
@@ -131,7 +130,7 @@ func TestGaiaGenesisValidation(t *testing.T) {
 
 	// require bonded + jailed validator fails validation
 	genesisState = makeGenesisState(t, genTxs)
-	val1 := stakingTypes.NewValidator(addr1, pk1, stakingTypes.Description{Moniker: "test #2"})
+	val1 := staking.NewValidator(addr1, pk1, staking.NewDescription("test #2", "", "", ""))
 	val1.Jailed = true
 	val1.Status = sdk.Bonded
 	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
@@ -141,7 +140,7 @@ func TestGaiaGenesisValidation(t *testing.T) {
 	// require duplicate validator fails validation
 	val1.Jailed = false
 	genesisState = makeGenesisState(t, genTxs)
-	val2 := stakingTypes.NewValidator(addr1, pk1, stakingTypes.Description{Moniker: "test #3"})
+	val2 := staking.NewValidator(addr1, pk1, staking.NewDescription("test #3", "", "", ""))
 	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val1)
 	genesisState.StakingData.Validators = append(genesisState.StakingData.Validators, val2)
 	err = GaiaValidateGenesisState(genesisState)
@@ -152,7 +151,7 @@ func TestNewDefaultGenesisAccount(t *testing.T) {
 	addr := secp256k1.GenPrivKeySecp256k1([]byte("")).PubKey().Address()
 	acc := NewDefaultGenesisAccount(sdk.AccAddress(addr))
 	require.Equal(t, sdk.NewInt(1000), acc.Coins.AmountOf("footoken"))
-	require.Equal(t, sdk.NewInt(150), acc.Coins.AmountOf(bondDenom))
+	require.Equal(t, staking.TokensFromTendermintPower(150), acc.Coins.AmountOf(bondDenom))
 }
 
 func TestGenesisStateSanitize(t *testing.T) {

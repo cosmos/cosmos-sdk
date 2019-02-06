@@ -34,7 +34,6 @@ import (
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -98,7 +97,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	// randomly generate some genesis accounts
 	for i, acc := range accs {
-		coins := sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))}
+		coins := sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(amount))}
 		bacc := auth.NewBaseAccountWithAddress(acc.Address)
 		bacc.SetCoins(coins)
 
@@ -155,7 +154,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	govGenesis := gov.GenesisState{
 		StartingProposalID: uint64(r.Intn(100)),
 		DepositParams: gov.DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, int64(r.Intn(1e3)))},
+			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, int64(r.Intn(1e3)))},
 			MaxDepositPeriod: vp,
 		},
 		VotingParams: gov.VotingParams{
@@ -174,7 +173,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		Params: staking.Params{
 			UnbondingTime: time.Duration(randIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
 			MaxValidators: uint16(r.Intn(250)),
-			BondDenom:     stakingTypes.DefaultBondDenom,
+			BondDenom:     staking.DefaultBondDenom,
 		},
 	}
 	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakingGenesis)
@@ -194,7 +193,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		Minter: mint.InitialMinter(
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
 		Params: mint.NewParams(
-			stakingTypes.DefaultBondDenom,
+			staking.DefaultBondDenom,
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
 			sdk.NewDecWithPrec(20, 2),
 			sdk.NewDecWithPrec(7, 2),

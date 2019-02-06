@@ -76,6 +76,8 @@ func DefaultParams() Params {
 		// Set to 10 minutes for testnets
 		DowntimeJailDuration: 60 * 10 * time.Second,
 
+		// CONTRACT must be less than 1
+		// TODO enforce this contract https://github.com/cosmos/cosmos-sdk/issues/3474
 		// Set to 10%, viable for both testnets & mainnets
 		MinSignedPerWindow: sdk.NewDecWithPrec(1, 1),
 
@@ -102,7 +104,10 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
 	k.paramspace.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
-	return sdk.NewDec(signedBlocksWindow).Mul(minSignedPerWindow).RoundInt64()
+
+	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
+	//       less than 1.
+	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
 }
 
 // Downtime unbond duration

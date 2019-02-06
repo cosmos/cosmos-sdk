@@ -38,10 +38,10 @@ const (
 )
 
 var startCoins = sdk.Coins{
-	sdk.NewInt64Coin(feeDenom, 1000000),
-	sdk.NewInt64Coin(fee2Denom, 1000000),
-	sdk.NewInt64Coin(fooDenom, 1000),
-	sdk.NewInt64Coin(denom, 150),
+	sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
+	sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
+	sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
+	sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
 }
 
 //___________________________________________________________________________________
@@ -153,7 +153,7 @@ func (f *Fixtures) UnsafeResetAll(flags ...string) {
 // GDInit is gaiad init
 // NOTE: GDInit sets the ChainID for the Fixtures instance
 func (f *Fixtures) GDInit(moniker string, flags ...string) {
-	cmd := fmt.Sprintf("gaiad init -o --moniker=%s --home=%s", moniker, f.GDHome)
+	cmd := fmt.Sprintf("gaiad init -o --home=%s %s", f.GDHome, moniker)
 	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 
 	var chainID string

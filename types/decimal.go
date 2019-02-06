@@ -249,6 +249,16 @@ func (d Dec) MulInt(i Int) Dec {
 	return Dec{mul}
 }
 
+// MulInt64 - multiplication with int64
+func (d Dec) MulInt64(i int64) Dec {
+	mul := new(big.Int).Mul(d.Int, big.NewInt(i))
+
+	if mul.BitLen() > 255+DecimalPrecisionBits {
+		panic("Int overflow")
+	}
+	return Dec{mul}
+}
+
 // quotient
 func (d Dec) Quo(d2 Dec) Dec {
 
@@ -284,6 +294,12 @@ func (d Dec) QuoTruncate(d2 Dec) Dec {
 // quotient
 func (d Dec) QuoInt(i Int) Dec {
 	mul := new(big.Int).Quo(d.Int, i.i)
+	return Dec{mul}
+}
+
+// QuoInt64 - quotient with int64
+func (d Dec) QuoInt64(i int64) Dec {
+	mul := new(big.Int).Quo(d.Int, big.NewInt(i))
 	return Dec{mul}
 }
 

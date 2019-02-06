@@ -21,7 +21,6 @@ import (
 const (
 	flagOverwrite  = "overwrite"
 	flagClientHome = "home-client"
-	flagMoniker    = "moniker"
 )
 
 type printInfo struct {
@@ -46,11 +45,11 @@ func displayInfo(cdc *codec.Codec, info printInfo) error {
 // nolint
 func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "init",
+		Use:   "init [moniker]",
 		Short: "Initialize private validator, p2p, genesis, and application configuration files",
 		Long:  `Initialize validators's and node's configuration files.`,
-		Args:  cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
+		Args:  cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
 			config := ctx.Config
 			config.SetRoot(viper.GetString(cli.HomeFlag))
 
@@ -64,7 +63,7 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			config.Moniker = viper.GetString(flagMoniker)
+			config.Moniker = args[0]
 
 			var appState json.RawMessage
 			genFile := config.GenesisFile()
@@ -89,8 +88,6 @@ func InitCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(cli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().String(flagMoniker, "", "set the validator's moniker")
-	cmd.MarkFlagRequired(flagMoniker)
 
 	return cmd
 }

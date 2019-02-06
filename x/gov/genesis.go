@@ -5,7 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // GenesisState - all staking state that must be provided at genesis
@@ -42,10 +42,11 @@ func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParam
 
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
+	minDepositTokens := staking.TokensFromTendermintPower(10)
 	return GenesisState{
 		StartingProposalID: 1,
 		DepositParams: DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 10)},
+			MinDeposit:       sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, minDepositTokens)},
 			MaxDepositPeriod: time.Duration(172800) * time.Second,
 		},
 		VotingParams: VotingParams{

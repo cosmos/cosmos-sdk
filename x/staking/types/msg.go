@@ -178,7 +178,6 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
 	}
 
-	// TODO what if the validator just wanted to change their commission rate, do they need a description
 	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
 	}

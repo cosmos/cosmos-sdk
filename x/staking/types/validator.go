@@ -386,7 +386,7 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 // UNITS: tokens/delegator-shares
 func (v Validator) DelegatorShareExRate() sdk.Dec {
 	if v.DelegatorShares.IsZero() {
-		// TODO: When does this happen and is this semantically correct?
+		// the first delegation to a validator sets the exchange rate to one
 		return sdk.OneDec()
 	}
 	return sdk.NewDecFromInt(v.Tokens).Quo(v.DelegatorShares)

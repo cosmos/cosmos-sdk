@@ -31,7 +31,7 @@ native staking token of the chain.
  2. **[State Transistions](state_transitions.md)**	
    - Validator
    - Delegation
-   - Pool
+   - Slashing
  2. **[Messages](messages.md)**	
    - MsgCreateValidator
    - MsgEditValidator

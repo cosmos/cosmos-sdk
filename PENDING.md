@@ -16,6 +16,8 @@ BREAKING CHANGES
     - `--tls` is now used to enable secure layer.
   - [\#3451](https://github.com/cosmos/cosmos-sdk/pull/3451) `gaiacli` now returns transactions in plain text including tags.
   - [\#3497](https://github.com/cosmos/cosmos-sdk/issues/3497) `gaiad init` now takes moniker as required arguments, not as parameter.
+  * [\#3501](https://github.com/cosmos/cosmos-sdk/issues/3501) Change validator
+  address Bech32 encoding to consensus address in `tendermint-validator-set`.
 
 * Gaia
   *  [\#3457](https://github.com/cosmos/cosmos-sdk/issues/3457) Changed governance tally validatorGovInfo to use sdk.Int power instead of sdk.Dec
@@ -23,6 +25,7 @@ BREAKING CHANGES
 * SDK
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
   * [\#3490](https://github.com/cosmos/cosmos-sdk/issues/3490) ReadRESTReq() returns bool to avoid callers to write error responses twice.
+  * [\#3502](https://github.com/cosmos/cosmos-sdk/pull/3502) Fixes issue when comparing genesis states
 
 * Tendermint
 
@@ -61,7 +64,7 @@ IMPROVEMENTS
 
 * Gaia CLI  (`gaiacli`)
   * [\#3476](https://github.com/cosmos/cosmos-sdk/issues/3476) New `withdraw-all-rewards` command to withdraw all delegations rewards for delegators.
-  - [\#3497](https://github.com/cosmos/cosmos-sdk/issues/3497) `gaiad gentx` supports `--ip` flag to take a custom ip address.
+  - [\#3497](https://github.com/cosmos/cosmos-sdk/issues/3497) `gaiad gentx` supports `--ip` and `--node-id` flags to override defaults.
 
 * Gaia
   * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account
@@ -76,6 +79,8 @@ IMPROVEMENTS
   * [\#2605] x/params add subkey accessing
   * [\#2986](https://github.com/cosmos/cosmos-sdk/pull/2986) Store Refactor
   * \#3435 Test that store implementations do not allow nil values
+  * [\#556](https://github.com/cosmos/cosmos-sdk/issues/556) Increase `BaseApp`
+  test coverage.
 
 * Tendermint
 
@@ -92,6 +97,7 @@ BUG FIXES
   - [\#3419](https://github.com/cosmos/cosmos-sdk/pull/3419) Fix `q distr slashes` panic
   - [\#3453](https://github.com/cosmos/cosmos-sdk/pull/3453) The `rest-server` command didn't respect persistent flags such as `--chain-id` and `--trust-node` if they were
     passed on the command line.
+  - [\#3441](https://github.com/cosmos/cosmos-sdk/pull/3431) Improved resource management and connection handling (ledger devices). Fixes issue with DER vs BER signatures.
 
 * Gaia
   * [\#3486](https://github.com/cosmos/cosmos-sdk/pull/3486) Use AmountOf in

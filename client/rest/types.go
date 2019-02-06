@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // GasEstimateResponse defines a response definition for tx gas estimation.
@@ -125,4 +126,62 @@ func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.Codec, req i
 	}
 
 	return true
+}
+
+// AddrSeed combines an Address with the mnemonic of the private key to that address
+type AddrSeed struct {
+	Address  sdk.AccAddress
+	Seed     string
+	Name     string
+	Password string
+}
+
+// SendReq requests sending an amount of coins
+type SendReq struct {
+	Amount  sdk.Coins `json:"amount"`
+	BaseReq BaseReq   `json:"base_req"`
+}
+
+// MsgBeginRedelegateInput request to begin a redelegation
+type MsgBeginRedelegateInput struct {
+	BaseReq          BaseReq        `json:"base_req"`
+	DelegatorAddr    sdk.AccAddress `json:"delegator_addr"`     // in bech32
+	ValidatorSrcAddr sdk.ValAddress `json:"validator_src_addr"` // in bech32
+	ValidatorDstAddr sdk.ValAddress `json:"validator_dst_addr"` // in bech32
+	SharesAmount     sdk.Dec        `json:"shares"`
+}
+
+// PostProposalReq requests a proposals
+type PostProposalReq struct {
+	BaseReq        BaseReq        `json:"base_req"`
+	Title          string         `json:"title"`           //  Title of the proposal
+	Description    string         `json:"description"`     //  Description of the proposal
+	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
+	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
+}
+
+// BroadcastReq requests broadcasting a transaction
+type BroadcastReq struct {
+	Tx     auth.StdTx `json:"tx"`
+	Return string     `json:"return"`
+}
+
+// DepositReq requests a deposit of an amount of coins
+type DepositReq struct {
+	BaseReq   BaseReq        `json:"base_req"`
+	Depositor sdk.AccAddress `json:"depositor"` // Address of the depositor
+	Amount    sdk.Coins      `json:"amount"`    // Coins to add to the proposal's deposit
+}
+
+// VoteReq requests sending a vote
+type VoteReq struct {
+	BaseReq BaseReq        `json:"base_req"`
+	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
+	Option  string         `json:"option"` //  option from OptionSet chosen by the voter
+}
+
+// UnjailReq request unjailing
+type UnjailReq struct {
+	BaseReq BaseReq `json:"base_req"`
 }

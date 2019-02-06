@@ -23,6 +23,14 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, 
 		QueryBalancesRequestHandlerFn(storeName, cdc, context.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(
+		"/tx/broadcast",
+		BroadcastTxRequestHandlerFn(cdc, cliCtx),
+	).Methods("POST")
+	r.HandleFunc(
+		"/tx/encode",
+		EncodeTxRequestHandlerFn(cdc, cliCtx),
+	).Methods("POST")
+	r.HandleFunc(
 		"/tx/sign",
 		SignTxRequestHandlerFn(cdc, cliCtx),
 	).Methods("POST")

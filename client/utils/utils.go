@@ -50,7 +50,7 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		}
 
 		gasEst := GasEstimateResponse{GasEstimate: txBldr.GetGas()}
-		fmt.Fprintf(os.Stderr, gasEst.String())
+		fmt.Fprintf(os.Stderr, "%s\n", gasEst.String())
 	}
 
 	if cliCtx.Simulate {

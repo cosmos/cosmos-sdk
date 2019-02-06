@@ -30,6 +30,7 @@ BREAKING CHANGES
   * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Various clean ups:
     - Replace all GetKeyBase* functions family in favor of NewKeyBaseFromDir and NewKeyBaseFromHomeFlag.
     - Remove Get prefix from all TxBuilder's getters.
+  * [\#3522](https://github.com/cosmos/cosmos-sdk/pull/3522) Get rid of double negatives: Coins.IsNotNegative() -> Coins.IsAnyNegative().
 
 * Tendermint
 

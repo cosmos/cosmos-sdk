@@ -27,7 +27,9 @@ func TestPublicKey(t *testing.T) {
 
 	pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
 	require.NoError(t, err)
-	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0", pubKeyAddr, "Is your device using test mnemonic: %s ?", TestMnemonic)
+	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
+		pubKeyAddr, "Is your device using test mnemonic: %s ?", TestMnemonic)
+
 	require.Equal(t, "5075624b6579536563703235366b317b303334464546394344374334433633353838443342303"+
 		"3464542353238314239443233324342413334443646334437314145453539323131464642464531464538377d",
 		fmt.Sprintf("%x", priv.PubKey()))
@@ -77,7 +79,7 @@ func TestSignaturesHD(t *testing.T) {
 		msg := getFakeTx(account)
 
 		path := *hd.NewFundraiserParams(account, account/5)
-		fmt.Printf("Checking signature at %v\n", path)
+		fmt.Printf("Checking signature at %v    ---   PLEASE REVIEW AND ACCEPT IN THE DEVICE\n", path)
 
 		priv, err := NewPrivKeyLedgerSecp256k1(path)
 		require.Nil(t, err, "%s", err)

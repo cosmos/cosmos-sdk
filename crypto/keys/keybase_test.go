@@ -62,9 +62,9 @@ func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
 
 func TestCreateLedger(t *testing.T) {
 	kb := New(dbm.NewMemDB())
-	_, err := kb.CreateLedger("some_account", Secp256k1, 0, 1)
-	assert.Error(t, err)
-	assert.Equal(t, "no Ledger discovery function defined", err.Error())
+	ledger, err := kb.CreateLedger("some_account", Secp256k1, 0, 1)
+	assert.NoError(t, err)
+	assert.NotNil(t, ledger)
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well

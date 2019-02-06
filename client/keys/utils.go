@@ -6,9 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/viper"
-	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/tendermint/tendermint/libs/cli"
-	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -89,7 +87,7 @@ func GetKeyBaseWithWritePerm() (keys.Keybase, error) {
 
 // GetKeyBaseFromDirWithWritePerm initializes a keybase at a particular dir with write permissions.
 func GetKeyBaseFromDirWithWritePerm(rootDir string) (keys.Keybase, error) {
-	return getKeyBaseFromDirWithOpts(rootDir, nil)
+	return getLazyKeyBaseFromDir(rootDir)
 }
 
 // GetKeyBaseFromDir initializes a read-only keybase at a particular dir.
@@ -99,23 +97,11 @@ func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	//
 	// ref: syndtr/goleveldb#240
 	// return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
-	return getKeyBaseFromDirWithOpts(rootDir, nil)
+	return getLazyKeyBaseFromDir(rootDir)
 }
 
-func getKeyBaseFromDirWithOpts(rootDir string, o *opt.Options) (keys.Keybase, error) {
-	if keybase == nil {
-		db, err := dbm.NewGoLevelDBWithOpts(KeyDBName, filepath.Join(rootDir, "keys"), o)
-		if err != nil {
-			return nil, err
-		}
-		keybase = client.GetKeyBase(db)
-	}
-	return keybase, nil
-}
-
-// used to set the keybase manually in test
-func SetKeyBase(kb keys.Keybase) {
-	keybase = kb
+func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
+	return keys.NewLazyKeybase(KeyDBName, filepath.Join(rootDir, "keys")), nil
 }
 
 // create a list of KeyOutput in bech32 format

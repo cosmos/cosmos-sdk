@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
@@ -46,7 +47,9 @@ func init() {
 }
 
 func TestSeedsAreDifferent(t *testing.T) {
-	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, _ := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -57,6 +60,8 @@ func TestSeedsAreDifferent(t *testing.T) {
 }
 
 func TestKeyRecover(t *testing.T) {
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 
@@ -64,7 +69,7 @@ func TestKeyRecover(t *testing.T) {
 	myName2 := "TestKeyRecover_2"
 
 	mnemonic := getKeysSeed(t, port)
-	expectedInfo, _ := GetKeyBase(t).CreateAccount(myName1, mnemonic, "", pw, 0, 0)
+	expectedInfo, _ := kb.CreateAccount(myName1, mnemonic, "", pw, 0, 0)
 	expectedAddress := expectedInfo.GetAddress().String()
 	expectedPubKey := sdk.MustBech32ifyAccPub(expectedInfo.GetPubKey())
 
@@ -78,6 +83,8 @@ func TestKeyRecover(t *testing.T) {
 }
 
 func TestKeyRecoverHDPath(t *testing.T) {
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 
@@ -88,7 +95,7 @@ func TestKeyRecoverHDPath(t *testing.T) {
 			name1Idx := fmt.Sprintf("name1_%d_%d", account, index)
 			name2Idx := fmt.Sprintf("name2_%d_%d", account, index)
 
-			expectedInfo, _ := GetKeyBase(t).CreateAccount(name1Idx, mnemonic, "", pw, account, index)
+			expectedInfo, _ := kb.CreateAccount(name1Idx, mnemonic, "", pw, account, index)
 			expectedAddress := expectedInfo.GetAddress().String()
 			expectedPubKey := sdk.MustBech32ifyAccPub(expectedInfo.GetPubKey())
 
@@ -104,7 +111,9 @@ func TestKeyRecoverHDPath(t *testing.T) {
 }
 
 func TestKeys(t *testing.T) {
-	addr1, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr1, _ := CreateAddr(t, name1, pw, kb)
 	addr1Bech32 := addr1.String()
 
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr1}, true)
@@ -119,11 +128,11 @@ func TestKeys(t *testing.T) {
 	resp := doKeysPost(t, port, name3, pw, mnemonic3, 0, 0)
 
 	addr3Bech32 := resp.Address
-	_, err := sdk.AccAddressFromBech32(addr3Bech32)
+	_, err = sdk.AccAddressFromBech32(addr3Bech32)
 	require.NoError(t, err, "Failed to return a correct bech32 address")
 
 	// test if created account is the correct account
-	expectedInfo3, _ := GetKeyBase(t).CreateAccount(name3, mnemonic3, "", pw, 0, 0)
+	expectedInfo3, _ := kb.CreateAccount(name3, mnemonic3, "", pw, 0, 0)
 	expectedAddress3 := sdk.AccAddress(expectedInfo3.GetPubKey().Address()).String()
 	require.Equal(t, expectedAddress3, addr3Bech32)
 
@@ -204,7 +213,9 @@ func TestValidators(t *testing.T) {
 }
 
 func TestCoinSend(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -293,7 +304,9 @@ func TestCoinSend(t *testing.T) {
 }
 
 func TestCoinSendAccAuto(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -314,7 +327,9 @@ func TestCoinSendAccAuto(t *testing.T) {
 }
 
 func TestCoinMultiSendGenerateOnly(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -335,7 +350,9 @@ func TestCoinMultiSendGenerateOnly(t *testing.T) {
 }
 
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 	acc := getAccount(t, port, addr)
@@ -407,7 +424,9 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 }
 
 func TestTxs(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -446,7 +465,9 @@ func TestTxs(t *testing.T) {
 }
 
 func TestPoolParamsQuery(t *testing.T) {
-	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, _ := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -502,7 +523,9 @@ func TestValidatorQuery(t *testing.T) {
 }
 
 func TestBonding(t *testing.T) {
-	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, _ := CreateAddr(t, name1, pw, kb)
 
 	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 2, []sdk.AccAddress{addr}, true)
 	defer cleanup()
@@ -663,7 +686,9 @@ func TestBonding(t *testing.T) {
 }
 
 func TestSubmitProposal(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -696,7 +721,9 @@ func TestSubmitProposal(t *testing.T) {
 }
 
 func TestDeposit(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -751,7 +778,9 @@ func TestDeposit(t *testing.T) {
 }
 
 func TestVote(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -834,7 +863,9 @@ func TestVote(t *testing.T) {
 }
 
 func TestUnjail(t *testing.T) {
-	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, _ := CreateAddr(t, name1, pw, kb)
 	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
@@ -849,7 +880,9 @@ func TestUnjail(t *testing.T) {
 }
 
 func TestProposalsQuery(t *testing.T) {
-	addrs, seeds, names, passwords := CreateAddrs(t, GetKeyBase(t), 2)
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addrs, seeds, names, passwords := CreateAddrs(t, kb, 2)
 
 	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addrs[0], addrs[1]}, true)
 	defer cleanup()
@@ -992,7 +1025,9 @@ func TestDistributionGetParams(t *testing.T) {
 }
 
 func TestDistributionFlow(t *testing.T) {
-	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
+	kb, err := keys.GetKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
 	cleanup, _, valAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, false)
 	defer cleanup()
 

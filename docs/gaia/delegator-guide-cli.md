@@ -14,9 +14,9 @@ It also contains instructions on how to manage accounts, restore accounts from t
     + [Running your own full-node](#running-your-own-full-node)
     + [Connecting to a remote full-node](#connecting-to-a-remote-full-node)
 - [Setting up `gaiacli`](#setting-up-gaiacli)
-- [Querying the state](querying-the-state)
-- [Bonding Atoms and Withdrawing rewards](bonding-atoms-and-withdrawing-rewards)
-- [Participating in Governance](participating-in-governance)
+- [Querying the state](#querying-the-state)
+- [Bonding Atoms and Withdrawing rewards](#bonding-atoms-and-withdrawing-rewards)
+- [Participating in Governance](#participating-in-governance)
 - [Signing transactions from an offline computer](#signing-transactions-from-an-offline-computer)
 
 ## Installing `gaiacli` 

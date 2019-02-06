@@ -35,6 +35,7 @@ type CLIContext struct {
 	Codec         *codec.Codec
 	AccDecoder    auth.AccountDecoder
 	Client        rpcclient.Client
+	Keybase       cryptokeys.Keybase
 	Output        io.Writer
 	OutputFormat  string
 	Height        int64
@@ -276,7 +277,7 @@ func GetFromFields(from string) (sdk.AccAddress, string, error) {
 		return nil, "", nil
 	}
 
-	keybase, err := keys.GetKeyBase()
+	keybase, err := keys.NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return nil, "", err
 	}

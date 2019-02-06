@@ -43,13 +43,13 @@ func CompleteAndBroadcastTxCLI(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 
 	fromName := cliCtx.GetFromName()
 
-	if txBldr.GetSimulateAndExecute() || cliCtx.Simulate {
+	if txBldr.SimulateAndExecute() || cliCtx.Simulate {
 		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			return err
 		}
 
-		gasEst := GasEstimateResponse{GasEstimate: txBldr.GetGas()}
+		gasEst := GasEstimateResponse{GasEstimate: txBldr.Gas()}
 		fmt.Fprintf(os.Stderr, gasEst.String())
 	}
 
@@ -126,10 +126,7 @@ func PrintUnsignedStdTx(w io.Writer, txBldr authtxb.TxBuilder, cliCtx context.CL
 func SignStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, name string, stdTx auth.StdTx, appendSig bool, offline bool) (auth.StdTx, error) {
 	var signedStdTx auth.StdTx
 
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		return signedStdTx, err
-	}
+	keybase := txBldr.Keybase()
 
 	info, err := keybase.Get(name)
 	if err != nil {
@@ -188,7 +185,7 @@ func SignStdTxWithSignerAddress(txBldr authtxb.TxBuilder, cliCtx context.CLICont
 
 func populateAccountFromState(txBldr authtxb.TxBuilder, cliCtx context.CLIContext,
 	addr sdk.AccAddress) (authtxb.TxBuilder, error) {
-	if txBldr.GetAccountNumber() == 0 {
+	if txBldr.AccountNumber() == 0 {
 		accNum, err := cliCtx.GetAccountNumber(addr)
 		if err != nil {
 			return txBldr, err
@@ -196,7 +193,7 @@ func populateAccountFromState(txBldr authtxb.TxBuilder, cliCtx context.CLIContex
 		txBldr = txBldr.WithAccountNumber(accNum)
 	}
 
-	if txBldr.GetSequence() == 0 {
+	if txBldr.Sequence() == 0 {
 		accSeq, err := cliCtx.GetAccountSequence(addr)
 		if err != nil {
 			return txBldr, err
@@ -224,7 +221,7 @@ func simulateMsgs(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sd
 	if err != nil {
 		return
 	}
-	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GetGasAdjustment())
+	estimated, adjusted, err = CalculateGas(cliCtx.Query, cliCtx.Codec, txBytes, txBldr.GasAdjustment())
 	return
 }
 
@@ -250,7 +247,7 @@ func PrepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 
 	// TODO: (ref #1903) Allow for user supplied account number without
 	// automatically doing a manual lookup.
-	if txBldr.GetAccountNumber() == 0 {
+	if txBldr.AccountNumber() == 0 {
 		accNum, err := cliCtx.GetAccountNumber(from)
 		if err != nil {
 			return txBldr, err
@@ -260,7 +257,7 @@ func PrepareTxBuilder(txBldr authtxb.TxBuilder, cliCtx context.CLIContext) (auth
 
 	// TODO: (ref #1903) Allow for user supplied account sequence without
 	// automatically doing a manual lookup.
-	if txBldr.GetSequence() == 0 {
+	if txBldr.Sequence() == 0 {
 		accSeq, err := cliCtx.GetAccountSequence(from)
 		if err != nil {
 			return txBldr, err
@@ -281,13 +278,13 @@ func buildUnsignedStdTx(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msg
 }
 
 func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIContext, msgs []sdk.Msg) (stdTx auth.StdTx, err error) {
-	if txBldr.GetSimulateAndExecute() {
+	if txBldr.SimulateAndExecute() {
 		txBldr, err = EnrichWithGas(txBldr, cliCtx, msgs)
 		if err != nil {
 			return
 		}
 
-		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.GetGas())
+		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas())
 	}
 
 	stdSignMsg, err := txBldr.Build(msgs)

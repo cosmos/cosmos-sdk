@@ -84,7 +84,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			kb, err := keys.GetKeyBaseFromDir(viper.GetString(flagClientHome))
+			kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 			if err != nil {
 				return err
 			}

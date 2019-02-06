@@ -29,29 +29,36 @@ func (k Keeper) AllocateTokens(ctx sdk.Context, sumPrecommitPower, totalPower in
 	fractionVotes := sdk.NewDec(sumPrecommitPower).Quo(sdk.NewDec(totalPower))
 
 	// calculate proposer reward
-	proposerMultiplier := k.GetProposerReward(ctx).Mul(fractionVotes)
-	proposerReward := feesCollected.MulDec(proposerMultiplier)
+	proposerReward := k.GetProposerReward(ctx)
+	proposerMultiplier := proposerReward.Mul(fractionVotes)
+	proposerRewardAmount := feesCollected.MulDec(proposerMultiplier)
 
 	// pay proposer
 	proposerValidator := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
-	k.AllocateTokensToValidator(ctx, proposerValidator, proposerReward)
-	remaining := feesCollected.Minus(proposerReward)
+	k.AllocateTokensToValidator(ctx, proposerValidator, proposerRewardAmount)
+	remaining := feesCollected.Minus(proposerRewardAmount)
 
 	// calculate fraction allocated to validators
 	communityTax := k.GetCommunityTax(ctx)
-	voteMultiplier := sdk.OneDec().Sub(proposerMultiplier).Sub(communityTax)
+	signerReward := k.GetSignerReward(ctx)
+	signerMultiplier := signerReward
+	bondedMultiplier := sdk.OneDec().Sub(proposerReward).Sub(communityTax).Sub(signerReward)
 
-	// allocate tokens proportionally to voting power
-	// consider parallelizing later, ref https://github.com/cosmos/cosmos-sdk/pull/3099#discussion_r246276376
+	// allocate tokens proportionally to voting power, each to signing / bonded
 	for _, vote := range votes {
-		if vote.SignedLastBlock {
-			powerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(sumPrecommitPower))
-			reward := feesCollected.MulDec(voteMultiplier).MulDec(powerFraction)
+		var tokens sdk.DecCoins
 
-			validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
-			k.AllocateTokensToValidator(ctx, validator, reward)
-			remaining = remaining.Minus(reward)
+		totalPowerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(totalPower))
+		tokens = tokens.Plus(feesCollected.MulDec(bondedMultiplier).MulDec(totalPowerFraction))
+
+		if vote.SignedLastBlock {
+			signedPowerFraction := sdk.NewDec(vote.Validator.Power).Quo(sdk.NewDec(sumPrecommitPower))
+			tokens = tokens.Plus(feesCollected.MulDec(signerMultiplier).MulDec(signedPowerFraction))
 		}
+
+		validator := k.stakingKeeper.ValidatorByConsAddr(ctx, vote.Validator.Address)
+		k.AllocateTokensToValidator(ctx, validator, tokens)
+		remaining = remaining.Minus(tokens)
 	}
 
 	// allocate community funding

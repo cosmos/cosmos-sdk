@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
@@ -49,6 +50,10 @@ func TestPublicKeyHDPath(t *testing.T) {
 		"cosmospub1addwnpepqw970u6gjqkccg9u3rfj99857wupj2z9fqfzy2w7e5dd7xn7kzzgkgqch0r",
 	}
 
+	const numIters = 10
+
+	privKeys := make([]tmcrypto.PrivKey, numIters)
+
 	// Check with device
 	for i := uint32(0); i < 10; i++ {
 		path := *hd.NewFundraiserParams(0, i)
@@ -58,11 +63,31 @@ func TestPublicKeyHDPath(t *testing.T) {
 		require.Nil(t, err, "%s", err)
 		require.NotNil(t, priv)
 
+		// Check other methods
+		require.NoError(t, priv.(PrivKeyLedgerSecp256k1).ValidateKey())
+		tmp := priv.(PrivKeyLedgerSecp256k1)
+		(&tmp).AssertIsPrivKeyInner()
+
 		pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedAnswers[i], pubKeyAddr,
 			"Is your device using test mnemonic: %s ?", TestMnemonic)
+
+		// Store and restore
+		serializedPk := priv.Bytes()
+		require.NotNil(t, serializedPk)
+		require.Equal(t, 44, len(serializedPk))
+
+		privKeys[i] = priv
+	}
+
+	// Now check equality
+	for i := 0; i < 10; i++ {
+		for j := 0; j < 10; j++ {
+			require.Equal(t, i == j, privKeys[i].Equals(privKeys[j]))
+			require.Equal(t, i == j, privKeys[j].Equals(privKeys[i]))
+		}
 	}
 }
 

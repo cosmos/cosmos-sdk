@@ -1,4 +1,4 @@
-package crypto
+package tests
 
 const (
 	// Tests expect a ledger device initialized to the following mnemonic

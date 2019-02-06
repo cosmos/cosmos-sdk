@@ -47,6 +47,9 @@ gaiacli.
 }
 
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return errors.New("a name must be provided")
+	}
 	name := args[0]
 
 	kb, err := NewKeyBaseFromHomeFlag()
@@ -88,6 +91,17 @@ func runDeleteCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	fmt.Fprintln(os.Stderr, "Key deleted forever (uh oh!)")
+	return nil
+}
+
+func confirmDeletion(buf *bufio.Reader) error {
+	answer, err := client.GetConfirmation("Key reference will be deleted. Continue?", buf)
+	if err != nil {
+		return err
+	}
+	if !answer {
+		return errors.New("aborted")
+	}
 	return nil
 }
 
@@ -137,15 +151,4 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-}
-
-func confirmDeletion(buf *bufio.Reader) error {
-	answer, err := client.GetConfirmation("Key reference will be deleted. Continue?", buf)
-	if err != nil {
-		return err
-	}
-	if !answer {
-		return errors.New("aborted")
-	}
-	return nil
 }

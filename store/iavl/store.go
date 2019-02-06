@@ -11,11 +11,10 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/errors"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (
@@ -132,7 +131,7 @@ func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 
 // Implements types.KVStore.
 func (st *Store) Set(key, value []byte) {
-	stypes.AssertValidValue(value)
+	types.AssertValidValue(value)
 	st.tree.Set(key, value)
 }
 
@@ -186,7 +185,7 @@ func getHeight(tree *iavl.MutableTree, req abci.RequestQuery) int64 {
 func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	if len(req.Data) == 0 {
 		msg := "Query cannot be zero length"
-		return types.ErrTxDecode(msg).QueryResult()
+		return errors.ErrTxDecode(msg).QueryResult()
 	}
 
 	tree := st.tree
@@ -236,7 +235,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		subspace := req.Data
 		res.Key = subspace
 
-		iterator := stypes.KVStorePrefixIterator(st, subspace)
+		iterator := types.KVStorePrefixIterator(st, subspace)
 		for ; iterator.Valid(); iterator.Next() {
 			KVs = append(KVs, types.KVPair{Key: iterator.Key(), Value: iterator.Value()})
 		}
@@ -246,7 +245,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 
 	default:
 		msg := fmt.Sprintf("Unexpected Query path: %v", req.Path)
-		return types.ErrUnknownRequest(msg).QueryResult()
+		return errors.ErrUnknownRequest(msg).QueryResult()
 	}
 
 	return
@@ -291,8 +290,8 @@ var _ types.Iterator = (*iavlIterator)(nil)
 func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
 	iter := &iavlIterator{
 		tree:      tree,
-		start:     stypes.Cp(start),
-		end:       stypes.Cp(end),
+		start:     types.Cp(start),
+		end:       types.Cp(end),
 		ascending: ascending,
 		iterCh:    make(chan cmn.KVPair, 0), // Set capacity > 0?
 		quitCh:    make(chan struct{}),

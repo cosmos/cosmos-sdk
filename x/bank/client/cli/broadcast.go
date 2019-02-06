@@ -33,7 +33,8 @@ in place of an input filename, the command reads from standard input.`,
 				return
 			}
 
-			_, err = cliCtx.BroadcastTx(txBytes)
+			res, err := cliCtx.BroadcastTx(txBytes)
+			cliCtx.PrintOutput(res)
 			return err
 		},
 	}

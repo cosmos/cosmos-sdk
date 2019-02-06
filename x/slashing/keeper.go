@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	staking "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // Keeper of the slashing store
@@ -29,7 +29,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, paramspa
 		storeKey:     key,
 		cdc:          cdc,
 		validatorSet: vs,
-		paramspace:   paramspace.WithTypeTable(ParamTypeTable()),
+		paramspace:   paramspace.WithKeyTable(ParamKeyTable()),
 		codespace:    codespace,
 	}
 	return keeper
@@ -49,7 +49,8 @@ func (k Keeper) handleDoubleSign(ctx sdk.Context, addr crypto.Address, infractio
 
 	// Reject evidence if the double is too old
 	if age > k.MaxEvidenceAge(ctx) {
-		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d", pubkey.Address(), infractionHeight, age, k.MaxEvidenceAge(ctx)))
+		logger.Info(fmt.Sprintf("Ignored double sign from %s at height %d, age of %d past max age of %d",
+			pubkey.Address(), infractionHeight, age, k.MaxEvidenceAge(ctx)))
 		return
 	}
 

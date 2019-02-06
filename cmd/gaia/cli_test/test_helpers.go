@@ -14,7 +14,6 @@ import (
 	cmn "github.com/tendermint/tendermint/libs/common"
 
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	appInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -39,10 +38,10 @@ const (
 )
 
 var startCoins = sdk.Coins{
-	sdk.NewInt64Coin(feeDenom, 1000000),
-	sdk.NewInt64Coin(fee2Denom, 1000000),
-	sdk.NewInt64Coin(fooDenom, 1000),
-	sdk.NewInt64Coin(denom, 150),
+	sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
+	sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
+	sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
+	sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
 }
 
 //___________________________________________________________________________________
@@ -154,7 +153,7 @@ func (f *Fixtures) UnsafeResetAll(flags ...string) {
 // GDInit is gaiad init
 // NOTE: GDInit sets the ChainID for the Fixtures instance
 func (f *Fixtures) GDInit(moniker string, flags ...string) {
-	cmd := fmt.Sprintf("gaiad init -o --moniker=%s --home=%s", moniker, f.GDHome)
+	cmd := fmt.Sprintf("gaiad init -o --home=%s %s", f.GDHome, moniker)
 	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 
 	var chainID string
@@ -226,9 +225,15 @@ func (f *Fixtures) KeysAdd(name string, flags ...string) {
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
-// KeysAdd is gaiacli keys add --recover
+// KeysAddRecover prepares gaiacli keys add --recover
 func (f *Fixtures) KeysAddRecover(name, mnemonic string, flags ...string) {
 	cmd := fmt.Sprintf("gaiacli keys add --home=%s --recover %s", f.GCLIHome, name)
+	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
+}
+
+// KeysAddRecoverHDPath prepares gaiacli keys add --recover --account --index
+func (f *Fixtures) KeysAddRecoverHDPath(name, mnemonic string, account uint32, index uint32, flags ...string) {
+	cmd := fmt.Sprintf("gaiacli keys add --home=%s --recover %s --account %d --index %d", f.GCLIHome, name, account, index)
 	executeWriteCheckErr(f.T, addFlags(cmd, flags), app.DefaultKeyPass, mnemonic)
 }
 
@@ -352,10 +357,10 @@ func (f *Fixtures) QueryAccount(address sdk.AccAddress, flags ...string) auth.Ba
 // gaiacli query txs
 
 // QueryTxs is gaiacli query txs
-func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []tx.Info {
+func (f *Fixtures) QueryTxs(page, limit int, tags ...string) []sdk.TxResponse {
 	cmd := fmt.Sprintf("gaiacli query txs --page=%d --limit=%d --tags='%s' %v", page, limit, queryTags(tags), f.Flags())
 	out, _ := tests.ExecuteT(f.T, cmd, "")
-	var txs []tx.Info
+	var txs []sdk.TxResponse
 	cdc := app.MakeCodec()
 	err := cdc.UnmarshalJSON([]byte(out), &txs)
 	require.NoError(f.T, err, "out %v\n, err %v", out, err)

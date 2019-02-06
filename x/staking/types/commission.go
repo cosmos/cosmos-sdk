@@ -7,23 +7,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type (
-	// Commission defines a commission parameters for a given validator.
-	Commission struct {
-		Rate          sdk.Dec   `json:"rate"`            // the commission rate charged to delegators
-		MaxRate       sdk.Dec   `json:"max_rate"`        // maximum commission rate which this validator can ever charge
-		MaxChangeRate sdk.Dec   `json:"max_change_rate"` // maximum daily increase of the validator commission
-		UpdateTime    time.Time `json:"update_time"`     // the last time the commission rate was changed
-	}
+// Commission defines a commission parameters for a given validator.
+type Commission struct {
+	Rate          sdk.Dec   `json:"rate"`            // the commission rate charged to delegators
+	MaxRate       sdk.Dec   `json:"max_rate"`        // maximum commission rate which this validator can ever charge
+	MaxChangeRate sdk.Dec   `json:"max_change_rate"` // maximum daily increase of the validator commission
+	UpdateTime    time.Time `json:"update_time"`     // the last time the commission rate was changed
+}
 
-	// CommissionMsg defines a commission message to be used for creating a
-	// validator.
-	CommissionMsg struct {
-		Rate          sdk.Dec `json:"rate"`            // the commission rate charged to delegators
-		MaxRate       sdk.Dec `json:"max_rate"`        // maximum commission rate which validator can ever charge
-		MaxChangeRate sdk.Dec `json:"max_change_rate"` // maximum daily increase of the validator commission
-	}
-)
+// CommissionMsg defines a commission message to be used for creating a
+// validator.
+type CommissionMsg struct {
+	Rate          sdk.Dec `json:"rate"`            // the commission rate charged to delegators
+	MaxRate       sdk.Dec `json:"max_rate"`        // maximum commission rate which validator can ever charge
+	MaxChangeRate sdk.Dec `json:"max_change_rate"` // maximum daily increase of the validator commission
+}
 
 // NewCommissionMsg returns an initialized validator commission message.
 func NewCommissionMsg(rate, maxRate, maxChangeRate sdk.Dec) CommissionMsg {

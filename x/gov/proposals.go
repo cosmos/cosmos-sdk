@@ -362,6 +362,24 @@ type TallyResult struct {
 	NoWithVeto sdk.Dec `json:"no_with_veto"`
 }
 
+func NewTallyResult(yes, abstain, no, noWithVeto sdk.Dec) TallyResult {
+	return TallyResult{
+		Yes:        yes,
+		Abstain:    abstain,
+		No:         no,
+		NoWithVeto: noWithVeto,
+	}
+}
+
+func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
+	return TallyResult{
+		Yes:        results[OptionYes],
+		Abstain:    results[OptionAbstain],
+		No:         results[OptionNo],
+		NoWithVeto: results[OptionNoWithVeto],
+	}
+}
+
 // checks if two proposals are equal
 func EmptyTallyResult() TallyResult {
 	return TallyResult{

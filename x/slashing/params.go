@@ -28,19 +28,19 @@ var (
 	KeySlashFractionDowntime   = []byte("SlashFractionDowntime")
 )
 
-// ParamTypeTable for slashing module
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable().RegisterParamSet(&Params{})
+// ParamKeyTable for slashing module
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 // Params - used for initializing default parameter for slashing at genesis
 type Params struct {
-	MaxEvidenceAge          time.Duration `json:"max-evidence-age"`
-	SignedBlocksWindow      int64         `json:"signed-blocks-window"`
-	MinSignedPerWindow      sdk.Dec       `json:"min-signed-per-window"`
-	DowntimeJailDuration    time.Duration `json:"downtime-jail-duration"`
-	SlashFractionDoubleSign sdk.Dec       `json:"slash-fraction-double-sign"`
-	SlashFractionDowntime   sdk.Dec       `json:"slash-fraction-downtime"`
+	MaxEvidenceAge          time.Duration `json:"max_evidence_age"`
+	SignedBlocksWindow      int64         `json:"signed_blocks_window"`
+	MinSignedPerWindow      sdk.Dec       `json:"min_signed_per_window"`
+	DowntimeJailDuration    time.Duration `json:"downtime_jail_duration"`
+	SlashFractionDoubleSign sdk.Dec       `json:"slash_fraction_double_sign"`
+	SlashFractionDowntime   sdk.Dec       `json:"slash_fraction_downtime"`
 }
 
 func (p Params) String() string {
@@ -57,8 +57,8 @@ func (p Params) String() string {
 }
 
 // Implements params.ParamStruct
-func (p *Params) KeyValuePairs() params.KeyValuePairs {
-	return params.KeyValuePairs{
+func (p *Params) ParamSetPairs() params.ParamSetPairs {
+	return params.ParamSetPairs{
 		{KeyMaxEvidenceAge, &p.MaxEvidenceAge},
 		{KeySignedBlocksWindow, &p.SignedBlocksWindow},
 		{KeyMinSignedPerWindow, &p.MinSignedPerWindow},
@@ -81,11 +81,13 @@ func DefaultParams() Params {
 		// TODO Temporarily set to 10 minutes for testnets
 		DowntimeJailDuration: 60 * 10 * time.Second,
 
+		// CONTRACT must be less than 1
+		// TODO enforce this contract https://github.com/cosmos/cosmos-sdk/issues/3474
 		MinSignedPerWindow: sdk.NewDecWithPrec(5, 1),
 
-		SlashFractionDoubleSign: sdk.NewDec(1).Quo(sdk.NewDec(20)),
+		SlashFractionDoubleSign: sdk.NewDec(1).QuoInt64(20),
 
-		SlashFractionDowntime: sdk.NewDec(1).Quo(sdk.NewDec(100)),
+		SlashFractionDowntime: sdk.NewDec(1).QuoInt64(100),
 	}
 }
 
@@ -107,7 +109,10 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
 	k.paramspace.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
-	return sdk.NewDec(signedBlocksWindow).Mul(minSignedPerWindow).RoundInt64()
+
+	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
+	//       less than 1.
+	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
 }
 
 // Downtime unbond duration

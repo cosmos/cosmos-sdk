@@ -34,7 +34,6 @@ import (
 	slashingsim "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
@@ -79,7 +78,7 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
 		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
 	}
-	return json.RawMessage(genesis.AppState), newAccs, genesis.ChainID
+	return genesis.AppState, newAccs, genesis.ChainID
 }
 
 func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimestamp time.Time) (json.RawMessage, []simulation.Account, string) {
@@ -98,7 +97,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	// randomly generate some genesis accounts
 	for i, acc := range accs {
-		coins := sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))}
+		coins := sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(amount))}
 		bacc := auth.NewBaseAccountWithAddress(acc.Address)
 		bacc.SetCoins(coins)
 
@@ -138,11 +137,11 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	authGenesis := auth.GenesisState{
 		Params: auth.Params{
-			MemoCostPerByte:        uint64(r.Intn(10) + 1),
-			MaxMemoCharacters:      uint64(r.Intn(200-100) + 100),
+			MaxMemoCharacters:      uint64(randIntBetween(r, 100, 200)),
 			TxSigLimit:             uint64(r.Intn(7) + 1),
-			SigVerifyCostED25519:   uint64(r.Intn(1000-500) + 500),
-			SigVerifyCostSecp256k1: uint64(r.Intn(1000-500) + 500),
+			TxSizeCostPerByte:      uint64(randIntBetween(r, 5, 15)),
+			SigVerifyCostED25519:   uint64(randIntBetween(r, 500, 1000)),
+			SigVerifyCostSecp256k1: uint64(randIntBetween(r, 500, 1000)),
 		},
 	}
 	fmt.Printf("Selected randomly generated auth parameters:\n\t%+v\n", authGenesis)
@@ -155,7 +154,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 	govGenesis := gov.GenesisState{
 		StartingProposalID: uint64(r.Intn(100)),
 		DepositParams: gov.DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, int64(r.Intn(1e3)))},
+			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, int64(r.Intn(1e3)))},
 			MaxDepositPeriod: vp,
 		},
 		VotingParams: gov.VotingParams{
@@ -174,7 +173,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		Params: staking.Params{
 			UnbondingTime: time.Duration(randIntBetween(r, 60, 60*60*24*3*2)) * time.Second,
 			MaxValidators: uint16(r.Intn(250)),
-			BondDenom:     stakingTypes.DefaultBondDenom,
+			BondDenom:     staking.DefaultBondDenom,
 		},
 	}
 	fmt.Printf("Selected randomly generated staking parameters:\n\t%+v\n", stakingGenesis)
@@ -195,7 +194,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		Minter: mint.InitialMinter(
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2)),
 		Params: mint.NewParams(
-			stakingTypes.DefaultBondDenom,
+			staking.DefaultBondDenom,
 			sdk.NewDecWithPrec(int64(r.Intn(99)), 2),
 			sdk.NewDecWithPrec(20, 2),
 			sdk.NewDecWithPrec(7, 2),
@@ -266,7 +265,8 @@ func randIntBetween(r *rand.Rand, min, max int) int {
 func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	return []simulation.WeightedOperation{
 		{5, authsim.SimulateDeductFee(app.accountKeeper, app.feeCollectionKeeper)},
-		{100, banksim.SingleInputSendMsg(app.accountKeeper, app.bankKeeper)},
+		{100, banksim.SendMsg(app.accountKeeper, app.bankKeeper)},
+		{10, banksim.SingleInputMsgMultiSend(app.accountKeeper, app.bankKeeper)},
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},

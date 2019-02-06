@@ -198,7 +198,7 @@ func (b AddrSeedSlice) Swap(i, j int) {
 // their respective sockets where nValidators is the total number of validators
 // and initAddrs are the accounts to initialize with some steak tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.
-func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress) (
+func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress, minting bool) (
 	cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
 
 	if nValidators < 1 {
@@ -286,9 +286,14 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(accTokens)
 	}
 
-	inflationMin := sdk.MustNewDecFromStr("10000.0")
+	inflationMin := sdk.ZeroDec()
+	if minting {
+		inflationMin = sdk.MustNewDecFromStr("10000.0")
+		genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+	} else {
+		genesisState.MintData.Params.InflationMax = inflationMin
+	}
 	genesisState.MintData.Minter.Inflation = inflationMin
-	genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
 	genesisState.MintData.Params.InflationMin = inflationMin
 
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)

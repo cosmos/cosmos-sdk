@@ -47,7 +47,7 @@ func init() {
 
 func TestSeedsAreDifferent(t *testing.T) {
 	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	mnemonic1 := getKeysSeed(t, port)
@@ -57,7 +57,7 @@ func TestSeedsAreDifferent(t *testing.T) {
 }
 
 func TestKeyRecover(t *testing.T) {
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 
 	myName1 := "TestKeyRecover_1"
@@ -78,7 +78,7 @@ func TestKeyRecover(t *testing.T) {
 }
 
 func TestKeyRecoverHDPath(t *testing.T) {
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 
 	mnemonic := getKeysSeed(t, port)
@@ -107,7 +107,7 @@ func TestKeys(t *testing.T) {
 	addr1, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
 	addr1Bech32 := addr1.String()
 
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr1})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr1}, true)
 	defer cleanup()
 
 	// get new seed & recover key
@@ -156,7 +156,7 @@ func TestVersion(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 
 	// node info
@@ -179,14 +179,14 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNodeStatus(t *testing.T) {
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 	getNodeInfo(t, port)
 	getSyncStatus(t, port, false)
 }
 
 func TestBlock(t *testing.T) {
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 	getBlock(t, port, -1, false)
 	getBlock(t, port, 2, false)
@@ -194,7 +194,7 @@ func TestBlock(t *testing.T) {
 }
 
 func TestValidators(t *testing.T) {
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 	resultVals := getValidatorSets(t, port, -1, false)
 	require.Contains(t, resultVals.Validators[0].Address.String(), "cosmosvaloper")
@@ -205,7 +205,7 @@ func TestValidators(t *testing.T) {
 
 func TestCoinSend(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	bz, err := hex.DecodeString("8FA6AB57AD6870F6B5B2E57735F38F2F30E73CB6")
@@ -294,7 +294,7 @@ func TestCoinSend(t *testing.T) {
 
 func TestCoinSendAccAuto(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	acc := getAccount(t, port, addr)
@@ -315,7 +315,7 @@ func TestCoinSendAccAuto(t *testing.T) {
 
 func TestCoinMultiSendGenerateOnly(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	// generate only
@@ -336,7 +336,7 @@ func TestCoinMultiSendGenerateOnly(t *testing.T) {
 
 func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 	acc := getAccount(t, port, addr)
 
@@ -408,7 +408,7 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 
 func TestTxs(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	var emptyTxs []sdk.TxResponse
@@ -447,7 +447,7 @@ func TestTxs(t *testing.T) {
 
 func TestPoolParamsQuery(t *testing.T) {
 	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	defaultParams := staking.DefaultParams()
@@ -472,7 +472,7 @@ func TestPoolParamsQuery(t *testing.T) {
 }
 
 func TestValidatorsQuery(t *testing.T) {
-	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 
 	require.Equal(t, 1, len(valPubKeys))
@@ -492,7 +492,7 @@ func TestValidatorsQuery(t *testing.T) {
 }
 
 func TestValidatorQuery(t *testing.T) {
-	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 	require.Equal(t, 1, len(valPubKeys))
 	require.Equal(t, 1, len(operAddrs))
@@ -504,7 +504,7 @@ func TestValidatorQuery(t *testing.T) {
 func TestBonding(t *testing.T) {
 	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
 
-	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 2, []sdk.AccAddress{addr})
+	cleanup, valPubKeys, operAddrs, port := InitializeTestLCD(t, 2, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	require.Equal(t, 2, len(valPubKeys))
@@ -664,7 +664,7 @@ func TestBonding(t *testing.T) {
 
 func TestSubmitProposal(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	acc := getAccount(t, port, addr)
@@ -697,7 +697,7 @@ func TestSubmitProposal(t *testing.T) {
 
 func TestDeposit(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	acc := getAccount(t, port, addr)
@@ -752,7 +752,7 @@ func TestDeposit(t *testing.T) {
 
 func TestVote(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, operAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	acc := getAccount(t, port, addr)
@@ -835,7 +835,7 @@ func TestVote(t *testing.T) {
 
 func TestUnjail(t *testing.T) {
 	addr, _ := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	// XXX: any less than this and it fails
@@ -851,7 +851,7 @@ func TestUnjail(t *testing.T) {
 func TestProposalsQuery(t *testing.T) {
 	addrs, seeds, names, passwords := CreateAddrs(t, GetKeyBase(t), 2)
 
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addrs[0], addrs[1]})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addrs[0], addrs[1]}, true)
 	defer cleanup()
 
 	depositParam := getDepositParam(t, port)
@@ -971,7 +971,7 @@ func TestProposalsQuery(t *testing.T) {
 }
 
 func TestSlashingGetParams(t *testing.T) {
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 
 	res, body := Request(t, port, "GET", "/slashing/parameters", nil)
@@ -983,7 +983,7 @@ func TestSlashingGetParams(t *testing.T) {
 }
 
 func TestDistributionGetParams(t *testing.T) {
-	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{})
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{}, true)
 	defer cleanup()
 
 	res, body := Request(t, port, "GET", "/distribution/parameters", nil)
@@ -993,7 +993,7 @@ func TestDistributionGetParams(t *testing.T) {
 
 func TestDistributionFlow(t *testing.T) {
 	addr, seed := CreateAddr(t, name1, pw, GetKeyBase(t))
-	cleanup, _, valAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr})
+	cleanup, _, valAddrs, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, false)
 	defer cleanup()
 
 	valAddr := valAddrs[0]

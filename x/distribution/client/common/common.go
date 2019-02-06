@@ -18,14 +18,14 @@ func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, er
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/base_proposer_reward", queryRoute)
-	retBaseProposerReward, err := cliCtx.QueryWithData(route, []byte{})
+	route = fmt.Sprintf("custom/%s/params/proposer_reward", queryRoute)
+	retProposerReward, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
 
-	route = fmt.Sprintf("custom/%s/params/bonus_proposer_reward", queryRoute)
-	retBonusProposerReward, err := cliCtx.QueryWithData(route, []byte{})
+	route = fmt.Sprintf("custom/%s/params/signer_reward", queryRoute)
+	retSignerReward, err := cliCtx.QueryWithData(route, []byte{})
 	if err != nil {
 		return PrettyParams{}, err
 	}
@@ -36,8 +36,8 @@ func QueryParams(cliCtx context.CLIContext, queryRoute string) (PrettyParams, er
 		return PrettyParams{}, err
 	}
 
-	return NewPrettyParams(retCommunityTax, retBaseProposerReward,
-		retBonusProposerReward, retWithdrawAddrEnabled), nil
+	return NewPrettyParams(retCommunityTax, retProposerReward,
+		retSignerReward, retWithdrawAddrEnabled), nil
 }
 
 // QueryDelegatorTotalRewards queries delegator total rewards.

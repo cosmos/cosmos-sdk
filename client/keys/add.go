@@ -14,11 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/go-bip39"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/cosmos/go-bip39"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -97,7 +98,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	interactive := viper.GetBool(flagInteractive)
-	showMnemonic := viper.GetBool(flagNoBackup)
+	showMnemonic := !viper.GetBool(flagNoBackup)
 
 	if viper.GetBool(flagDryRun) {
 		// we throw this away, so don't enforce args,

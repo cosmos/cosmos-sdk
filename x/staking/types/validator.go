@@ -418,7 +418,7 @@ func (v Validator) TendermintPower() int64 {
 	return 0
 }
 
-var powerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(9), nil))
+var powerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil))
 
 // potential Tendermint power
 func (v Validator) PotentialTendermintPower() int64 {

@@ -153,7 +153,7 @@ func (f *Fixtures) UnsafeResetAll(flags ...string) {
 // GDInit is gaiad init
 // NOTE: GDInit sets the ChainID for the Fixtures instance
 func (f *Fixtures) GDInit(moniker string, flags ...string) {
-	cmd := fmt.Sprintf("gaiad init -o --moniker=%s --home=%s", moniker, f.GDHome)
+	cmd := fmt.Sprintf("gaiad init -o --home=%s %s", f.GDHome, moniker)
 	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 
 	var chainID string

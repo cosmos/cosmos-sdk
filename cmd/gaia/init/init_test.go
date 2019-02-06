@@ -36,10 +36,7 @@ func TestInitCmd(t *testing.T) {
 	cdc := app.MakeCodec()
 	cmd := InitCmd(ctx, cdc)
 
-	viper.Set(flagMoniker, "gaianode-test")
-
-	err = cmd.RunE(nil, nil)
-	require.NoError(t, err)
+	require.NoError(t, cmd.RunE(nil, []string{"gaianode-test"}))
 }
 
 func setupClientHome(t *testing.T) func() {
@@ -64,11 +61,9 @@ func TestEmptyState(t *testing.T) {
 
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
-	viper.Set(flagMoniker, "gaianode-test")
 
 	cmd := InitCmd(ctx, cdc)
-	err = cmd.RunE(nil, nil)
-	require.NoError(t, err)
+	require.NoError(t, cmd.RunE(nil, []string{"gaianode-test"}))
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
@@ -103,7 +98,6 @@ func TestStartStandAlone(t *testing.T) {
 		os.RemoveAll(home)
 	}()
 	viper.Set(cli.HomeFlag, home)
-	viper.Set(client.FlagName, "moniker")
 	defer setupClientHome(t)()
 
 	logger := log.NewNopLogger()
@@ -112,8 +106,7 @@ func TestStartStandAlone(t *testing.T) {
 	ctx := server.NewContext(cfg, logger)
 	cdc := app.MakeCodec()
 	initCmd := InitCmd(ctx, cdc)
-	err = initCmd.RunE(nil, nil)
-	require.NoError(t, err)
+	require.NoError(t, initCmd.RunE(nil, []string{"gaianode-test"}))
 
 	app, err := mock.NewApp(home, logger)
 	require.Nil(t, err)

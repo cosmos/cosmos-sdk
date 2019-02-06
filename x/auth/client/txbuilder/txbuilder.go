@@ -89,6 +89,7 @@ func (bldr TxBuilder) GetGas() uint64 { return bldr.gas }
 // GetGasAdjustment returns the gas adjustment
 func (bldr TxBuilder) GetGasAdjustment() float64 { return bldr.gasAdjustment }
 
+// GetKeybase returns the keybase
 func (bldr TxBuilder) GetKeybase() crkeys.Keybase { return bldr.keybase }
 
 // GetSimulateAndExecute returns the option to simulate and then execute the transaction

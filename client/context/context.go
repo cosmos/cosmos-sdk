@@ -35,6 +35,7 @@ type CLIContext struct {
 	Codec         *codec.Codec
 	AccDecoder    auth.AccountDecoder
 	Client        rpcclient.Client
+	Keybase       cryptokeys.Keybase
 	Output        io.Writer
 	OutputFormat  string
 	Height        int64
@@ -79,6 +80,7 @@ func NewCLIContext() CLIContext {
 
 	return CLIContext{
 		Client:        rpc,
+		Keybase:       nil,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
 		AccountStore:  auth.StoreKey,
@@ -160,6 +162,12 @@ func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
 
 		return acct, err
 	}
+}
+
+// WithKeybase returns a copy of the context with an updated keybase.
+func (ctx CLIContext) WithKeybase(kb cryptokeys.Keybase) CLIContext {
+	ctx.Keybase = kb
+	return ctx
 }
 
 // WithAccountDecoder returns a copy of the context with an updated account

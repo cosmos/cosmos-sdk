@@ -75,6 +75,8 @@ IMPROVEMENTS
   * [\#2605] x/params add subkey accessing
   * [\#2986](https://github.com/cosmos/cosmos-sdk/pull/2986) Store Refactor
   * \#3435 Test that store implementations do not allow nil values
+  * [\#556](https://github.com/cosmos/cosmos-sdk/issues/556) Increase `BaseApp`
+  test coverage.
 
 * Tendermint
 

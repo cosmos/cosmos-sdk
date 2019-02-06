@@ -18,7 +18,7 @@ func SetPruning(opts sdk.PruningOptions) func(*BaseApp) {
 	return func(bap *BaseApp) { bap.cms.SetPruning(opts) }
 }
 
-// SetMinimumGasPrices returns an option that sets the minimum gas prices on the app.
+// SetMinGasPrices returns an option that sets the minimum gas prices on the app.
 func SetMinGasPrices(gasPricesStr string) func(*BaseApp) {
 	gasPrices, err := sdk.ParseDecCoins(gasPricesStr)
 	if err != nil {
@@ -96,26 +96,4 @@ func (app *BaseApp) SetFauxMerkleMode() {
 		panic("SetFauxMerkleMode() on sealed BaseApp")
 	}
 	app.fauxMerkleMode = true
-}
-
-//----------------------------------------
-// TODO: move these out of this file?
-
-func (app *BaseApp) Router() Router {
-	if app.sealed {
-		panic("Router() on sealed BaseApp")
-	}
-	return app.router
-}
-
-func (app *BaseApp) QueryRouter() QueryRouter {
-	return app.queryRouter
-}
-
-func (app *BaseApp) Seal()          { app.sealed = true }
-func (app *BaseApp) IsSealed() bool { return app.sealed }
-func (app *BaseApp) enforceSeal() {
-	if !app.sealed {
-		panic("enforceSeal() on BaseApp but not sealed")
-	}
 }

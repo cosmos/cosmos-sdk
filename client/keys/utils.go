@@ -79,17 +79,6 @@ func GetKeyBase() (keys.Keybase, error) {
 	return GetKeyBaseFromDir(rootDir)
 }
 
-// GetKeyBaseWithWritePerm initialize a keybase based on the configuration with write permissions.
-func GetKeyBaseWithWritePerm() (keys.Keybase, error) {
-	rootDir := viper.GetString(cli.HomeFlag)
-	return GetKeyBaseFromDirWithWritePerm(rootDir)
-}
-
-// GetKeyBaseFromDirWithWritePerm initializes a keybase at a particular dir with write permissions.
-func GetKeyBaseFromDirWithWritePerm(rootDir string) (keys.Keybase, error) {
-	return getLazyKeyBaseFromDir(rootDir)
-}
-
 // GetKeyBaseFromDir initializes a read-only keybase at a particular dir.
 func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	// Disabled because of the inability to create a new keys database directory

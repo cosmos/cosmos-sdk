@@ -105,7 +105,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		kb = client.MockKeyBase()
 		encryptPassword = app.DefaultKeyPass
 	} else {
-		kb, err = GetKeyBaseWithWritePerm()
+		kb, err = GetKeyBase()
 		if err != nil {
 			return err
 		}
@@ -332,7 +332,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		var kb keys.Keybase
 		var m AddNewKey
 
-		kb, err := GetKeyBaseWithWritePerm()
+		kb, err := GetKeyBase()
 		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
@@ -435,7 +435,7 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		kb, err := GetKeyBaseWithWritePerm()
+		kb, err := GetKeyBase()
 		CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err)
 
 		if name == "" {

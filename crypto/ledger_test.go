@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/tests"
+
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
 
@@ -29,7 +31,7 @@ func TestPublicKey(t *testing.T) {
 	pubKeyAddr, err := sdk.Bech32ifyAccPub(priv.PubKey())
 	require.NoError(t, err)
 	require.Equal(t, "cosmospub1addwnpepqd87l8xhcnrrtzxnkql7k55ph8fr9jarf4hn6udwukfprlalu8lgw0urza0",
-		pubKeyAddr, "Is your device using test mnemonic: %s ?", TestMnemonic)
+		pubKeyAddr, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
 
 	require.Equal(t, "5075624b6579536563703235366b317b303334464546394344374334433633353838443342303"+
 		"3464542353238314239443233324342413334443646334437314145453539323131464642464531464538377d",
@@ -72,7 +74,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t,
 			expectedAnswers[i], pubKeyAddr,
-			"Is your device using test mnemonic: %s ?", TestMnemonic)
+			"Is your device using test mnemonic: %s ?", tests.TestMnemonic)
 
 		// Store and restore
 		serializedPk := priv.Bytes()
@@ -114,7 +116,7 @@ func TestSignaturesHD(t *testing.T) {
 		require.Nil(t, err)
 
 		valid := pub.VerifyBytes(msg, sig)
-		require.True(t, valid, "Is your device using test mnemonic: %s ?", TestMnemonic)
+		require.True(t, valid, "Is your device using test mnemonic: %s ?", tests.TestMnemonic)
 	}
 }
 

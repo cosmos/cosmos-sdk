@@ -624,9 +624,12 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress,
 			ubd.RemoveEntry(int64(i))
 			i--
 
-			_, err := k.bankKeeper.UndelegateCoins(ctx, ubd.DelegatorAddr, sdk.Coins{entry.Balance})
-			if err != nil {
-				return err
+			// track undelegation only when remaining or truncated shares are non-zero
+			if !entry.Balance.IsZero() {
+				_, err := k.bankKeeper.UndelegateCoins(ctx, ubd.DelegatorAddr, sdk.Coins{entry.Balance})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

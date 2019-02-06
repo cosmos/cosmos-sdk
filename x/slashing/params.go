@@ -34,11 +34,11 @@ func ParamKeyTable() params.KeyTable {
 
 // Params - used for initializing default parameter for slashing at genesis
 type Params struct {
-	MaxEvidenceAge          time.Duration `json:"max-evidence-age"`
-	SignedBlocksWindow      int64         `json:"signed-blocks-window"`
-	MinSignedPerWindow      sdk.Dec       `json:"min-signed-per-window"`
-	DowntimeJailDuration    time.Duration `json:"downtime-jail-duration"`
-	SlashFractionDoubleSign sdk.Dec       `json:"slash-fraction-double-sign"`
+	MaxEvidenceAge          time.Duration `json:"max_evidence_age"`
+	SignedBlocksWindow      int64         `json:"signed_blocks_window"`
+	MinSignedPerWindow      sdk.Dec       `json:"min_signed_per_window"`
+	DowntimeJailDuration    time.Duration `json:"downtime_jail_duration"`
+	SlashFractionDoubleSign sdk.Dec       `json:"slash_fraction_double_sign"`
 }
 
 func (p Params) String() string {

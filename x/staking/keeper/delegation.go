@@ -239,7 +239,7 @@ func (k Keeper) UBDQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterato
 }
 
 // Returns a concatenated list of all the timeslices inclusively previous to
-// curTime, and deletes the timeslices from the queue
+// currTime, and deletes the timeslices from the queue
 func (k Keeper) DequeueAllMatureUBDQueue(ctx sdk.Context,
 	currTime time.Time) (matureUnbonds []types.DVPair) {
 

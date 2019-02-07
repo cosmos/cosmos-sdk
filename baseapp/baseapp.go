@@ -41,8 +41,7 @@ const (
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	// TODO: make logger private and add getter
-	Logger      log.Logger
+	logger      log.Logger
 	name        string               // application name from abci.Info
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
@@ -50,9 +49,8 @@ type BaseApp struct {
 	queryRouter QueryRouter          // router for redirecting query calls
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
-	// TODO: change name to basekey, consensuskey
 	// set upon LoadVersion or LoadLatestVersion.
-	mainKey *sdk.KVStoreKey // Main KVStore in cms
+	baseKey *sdk.KVStoreKey // Main KVStore in cms
 
 	// may be nil
 	anteHandler      sdk.AnteHandler  // ante handler for fee and auth
@@ -93,7 +91,7 @@ var _ abci.Application = (*BaseApp)(nil)
 // Accepts variable number of option functions, which act on the BaseApp to set configuration choices
 func NewBaseApp(name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp)) *BaseApp {
 	app := &BaseApp{
-		Logger:         logger,
+		logger:         logger,
 		name:           name,
 		db:             db,
 		cms:            store.NewCommitMultiStore(db),
@@ -119,24 +117,21 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 	app.cms.SetTracer(w)
 }
 
-// TODO: merge MountStores + MountStoresTransient and type assert
 // Mount IAVL or DB stores to the provided keys in the BaseApp multistore
-func (app *BaseApp) MountStores(keys ...*sdk.KVStoreKey) {
+func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
 	for _, key := range keys {
-		if !app.fauxMerkleMode {
-			app.MountStore(key, sdk.StoreTypeIAVL)
-		} else {
-			// StoreTypeDB doesn't do anything upon commit, and it doesn't
-			// retain history, but it's useful for faster simulation.
-			app.MountStore(key, sdk.StoreTypeDB)
+		switch key.(type) {
+		case *sdk.KVStoreKey:
+			if !app.fauxMerkleMode {
+				app.MountStore(key, sdk.StoreTypeIAVL)
+			} else {
+				// StoreTypeDB doesn't do anything upon commit, and it doesn't
+				// retain history, but it's useful for faster simulation.
+				app.MountStore(key, sdk.StoreTypeDB)
+			}
+		case *sdk.TransientStoreKey:
+			app.MountStore(key, sdk.StoreTypeTransient)
 		}
-	}
-}
-
-// Mount stores to the provided keys in the BaseApp multistore
-func (app *BaseApp) MountStoresTransient(keys ...*sdk.TransientStoreKey) {
-	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeTransient)
 	}
 }
 
@@ -152,22 +147,22 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 
 // load latest application version
 // panics if called more than once on a running baseapp
-func (app *BaseApp) LoadLatestVersion(mainKey *sdk.KVStoreKey) error {
+func (app *BaseApp) LoadLatestVersion(baseKey *sdk.KVStoreKey) error {
 	err := app.cms.LoadLatestVersion()
 	if err != nil {
 		return err
 	}
-	return app.initFromMainStore(mainKey)
+	return app.initFromMainStore(baseKey)
 }
 
 // load application version
 // panics if called more than once on a running baseapp
-func (app *BaseApp) LoadVersion(version int64, mainKey *sdk.KVStoreKey) error {
+func (app *BaseApp) LoadVersion(version int64, baseKey *sdk.KVStoreKey) error {
 	err := app.cms.LoadVersion(version)
 	if err != nil {
 		return err
 	}
-	return app.initFromMainStore(mainKey)
+	return app.initFromMainStore(baseKey)
 }
 
 // the last CommitID of the multistore
@@ -181,19 +176,19 @@ func (app *BaseApp) LastBlockHeight() int64 {
 }
 
 // initializes the remaining logic from app.cms
-func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
+func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
 
 	// main store should exist.
-	mainStore := app.cms.GetKVStore(mainKey)
+	mainStore := app.cms.GetKVStore(baseKey)
 	if mainStore == nil {
 		return errors.New("baseapp expects MultiStore with 'main' KVStore")
 	}
 
-	// memoize mainKey
-	if app.mainKey != nil {
-		panic("app.mainKey expected to be nil; duplicate init?")
+	// memoize baseKey
+	if app.baseKey != nil {
+		panic("app.baseKey expected to be nil; duplicate init?")
 	}
-	app.mainKey = mainKey
+	app.baseKey = baseKey
 
 	// load consensus params from the main store
 	consensusParamsBz := mainStore.Get(mainConsensusParamsKey)
@@ -221,17 +216,6 @@ func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }
 
-// TODO: check if it is used by tests only and move to test_common.go
-// NewContext returns a new Context with the correct store, the given header, and nil txBytes.
-func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
-	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).
-			WithMinGasPrices(app.minGasPrices)
-	}
-
-	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
-}
-
 type state struct {
 	ms  sdk.CacheMultiStore
 	ctx sdk.Context
@@ -250,7 +234,7 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinGasPrices(app.minGasPrices),
+		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
 	}
 }
 
@@ -260,7 +244,7 @@ func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.Logger),
+		ctx: sdk.NewContext(ms, header, false, app.logger),
 	}
 }
 
@@ -275,7 +259,7 @@ func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) 
 	if err != nil {
 		panic(err)
 	}
-	mainStore := app.cms.GetKVStore(app.mainKey)
+	mainStore := app.cms.GetKVStore(app.baseKey)
 	mainStore.Set(mainConsensusParamsKey, consensusParamsBz)
 }
 
@@ -439,10 +423,10 @@ func handleQueryP2P(app *BaseApp, path []string, req abci.RequestQuery) (res abc
 	if len(path) >= 4 {
 		// TODO: assign path[x] to variables or switch by path[2]
 		if path[1] == "filter" {
-			if path[2] == "addr" {
+			switch path[2] {
+			case "addr":
 				return app.FilterPeerByAddrPort(path[3])
-			}
-			if path[2] == "pubkey" {
+			case "pubkey":
 				// TODO: check it
 				// TODO: this should be changed to `id`
 				// NOTE: this changed in tendermint and we didn't notice...
@@ -471,7 +455,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 
 	// Cache wrap the commit-multistore for safety.
 	ctx := sdk.NewContext(
-		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger,
+		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.logger,
 	).WithMinGasPrices(app.minGasPrices)
 
 	// Passes the rest of the path as an argument to the querier.
@@ -662,9 +646,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		Data:      data,
 		Log:       strings.Join(logs, "\n"),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
-		// TODO: FeeAmount/FeeDenom
-		// TODO: update sdk result to contain just fees
-		Tags: tags,
+		Fees:      sdk.Coins{},
+		Tags:      tags,
 	}
 
 	return result
@@ -845,7 +828,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
 	// TODO: this is missing a module identifier and dumps byte array
-	app.Logger.Debug("Commit synced",
+	app.logger.Debug("Commit synced",
 		"commit", fmt.Sprintf("%X", commitID),
 	)
 

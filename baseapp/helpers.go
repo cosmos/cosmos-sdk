@@ -23,6 +23,15 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 	return app.runTx(runTxModeDeliver, nil, tx)
 }
 
+func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
+	if isCheckTx {
+		return sdk.NewContext(app.checkState.ms, header, true, app.logger).
+			WithMinGasPrices(app.minGasPrices)
+	}
+
+	return sdk.NewContext(app.deliverState.ms, header, false, app.logger)
+}
+
 // RunForever BasecoinApp execution and cleanup
 func RunForever(app abci.Application) {
 

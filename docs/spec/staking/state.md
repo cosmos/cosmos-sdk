@@ -44,10 +44,10 @@ type Params struct {
 
 Validators objects should be primarily stored and accessed by the
 `OperatorAddr`, an SDK validator address for the operator of the validator. Two
-additional indexes are maintained per validator object in order to fulfill
+additional indices are maintained per validator object in order to fulfill
 required lookups for slashing and validator-set updates. A third special index
 (`LastValidatorPower`) is also maintained which however remains constant
-throughout each block, unlike the first two indexes which mirror the validator
+throughout each block, unlike the first two indices which mirror the validator
 records within a block. 
 
 - Validators: `0x21 | OperatorAddr -> amino(validator)`
@@ -259,5 +259,5 @@ queue is kept.
 
 The stored object as each key is an array of validator operator addresses from
 which the validator object can be accessed.  Typically it is expected that only
-a single validator record will operate a given timestamp however it is possible
+a single validator record will be associated with a given timestamp however it is possible
 that multiple validators exist in the queue at the same location.

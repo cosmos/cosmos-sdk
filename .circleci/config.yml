@@ -208,7 +208,7 @@ jobs:
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
-            - "profiles/*"
+            - coverage.txt
       - store_artifacts:
           path: /tmp/logs
 

@@ -245,7 +245,9 @@ func (app *BaseApp) Seal() { app.sealed = true }
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
 
-// TODO: add godoc that it is called only by InitChain(), initChainFromMainStore(), Commit()
+// setCheckState sets checkState with the cached multistore and
+// the context wrapping it.
+// It is called by InitChain() and Commit()
 func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
@@ -254,8 +256,10 @@ func (app *BaseApp) setCheckState(header abci.Header) {
 	}
 }
 
-// TODO: add godoc that it is called only by BeginBlock() and InitChain()
-// TODO: deliverState is set nil in Commit()
+// setCheckState sets checkState with the cached multistore and
+// the context wrapping it.
+// It is called by InitChain() and BeginBlock(),
+// and deliverState is set nil on Commit().
 func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
@@ -443,16 +447,16 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res a
 func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 {
-		// TODO: assign path[x] to variables or switch by path[2]
-		if path[1] == "filter" {
-			switch path[2] {
+		cmd, typ, arg := path[1], path[2], path[3]
+		if cmd == "filter" {
+			switch typ {
 			case "addr":
-				return app.FilterPeerByAddrPort(path[3])
+				return app.FilterPeerByAddrPort(arg)
 			case "pubkey":
 				// TODO: check it
 				// TODO: this should be changed to `id`
 				// NOTE: this changed in tendermint and we didn't notice...
-				return app.FilterPeerByPubKey(path[3])
+				return app.FilterPeerByPubKey(arg)
 			}
 		} else {
 			msg := "Expected second parameter to be filter"
@@ -511,7 +515,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		))
 	}
 
-	// TODO: make interdependent state setting clear
 	// Initialize the DeliverTx state. If this is the first block, it should
 	// already be initialized in InitChain. Otherwise app.deliverState will be
 	// nil, since it is reset on Commit.

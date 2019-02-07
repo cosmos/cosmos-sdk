@@ -1,6 +1,7 @@
 # State Transitions
 
 This document describes the state transition operations pertaining to:
+
  - Validators
  - Delegations
  - Slashing
@@ -9,6 +10,7 @@ This document describes the state transition operations pertaining to:
 ## Validators
 
 ### Non-Bonded to Bonded
+
 When a validator is bonded from any other state the following operations occur:  
  - set `Validator.BondHeight` to current height
  - set `validator.Status` to `Bonded`

@@ -122,6 +122,8 @@ following delegation and commission default parameters:
 				return err
 			}
 
+			fmt.Println(msg)
+
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
 			if err := utils.PrintUnsignedStdTx(w, txBldr, cliCtx, []sdk.Msg{msg}, true); err != nil {

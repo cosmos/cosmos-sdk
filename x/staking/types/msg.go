@@ -91,6 +91,7 @@ func (msg MsgCreateValidator) MarshalJSON() ([]byte, error) {
 		ValidatorAddr: msg.ValidatorAddr,
 		PubKey:        sdk.MustBech32ifyConsPub(msg.PubKey),
 		Value:         msg.Value,
+		MinSelfBond:   msg.MinSelfBond,
 	})
 }
 
@@ -108,6 +109,7 @@ func (msg *MsgCreateValidator) UnmarshalJSON(bz []byte) error {
 	msg.ValidatorAddr = msgCreateValJSON.ValidatorAddr
 	msg.PubKey = sdk.MustGetConsPubKeyBech32(msgCreateValJSON.PubKey)
 	msg.Value = msgCreateValJSON.Value
+	msg.MinSelfBond = msgCreateValJSON.MinSelfBond
 
 	return nil
 }

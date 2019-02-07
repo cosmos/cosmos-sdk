@@ -87,44 +87,44 @@ func TestCreateLedger(t *testing.T) {
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
 	db := dbm.NewMemDB()
-	cStore := New(db)
+	cstore := New(db)
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
 	p1, p2 := "1234", "really-secure!@#$"
 
 	// Check empty state
-	l, err := cStore.List()
+	l, err := cstore.List()
 	require.Nil(t, err)
 	assert.Empty(t, l)
 
-	_, _, err = cStore.CreateMnemonic(n1, English, p1, Ed25519)
+	_, _, err = cstore.CreateMnemonic(n1, English, p1, Ed25519)
 	require.Error(t, err, "ed25519 keys are currently not supported by keybase")
 
 	// create some keys
-	_, err = cStore.Get(n1)
+	_, err = cstore.Get(n1)
 	require.Error(t, err)
-	i, _, err := cStore.CreateMnemonic(n1, English, p1, algo)
+	i, _, err := cstore.CreateMnemonic(n1, English, p1, algo)
 
 	require.NoError(t, err)
 	require.Equal(t, n1, i.GetName())
-	_, _, err = cStore.CreateMnemonic(n2, English, p2, algo)
+	_, _, err = cstore.CreateMnemonic(n2, English, p2, algo)
 	require.NoError(t, err)
 
 	// we can get these keys
-	i2, err := cStore.Get(n2)
+	i2, err := cstore.Get(n2)
 	require.NoError(t, err)
-	_, err = cStore.Get(n3)
+	_, err = cstore.Get(n3)
 	require.NotNil(t, err)
-	_, err = cStore.GetByAddress(accAddr(i2))
+	_, err = cstore.GetByAddress(accAddr(i2))
 	require.NoError(t, err)
 	addr, err := types.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 	require.NoError(t, err)
-	_, err = cStore.GetByAddress(addr)
+	_, err = cstore.GetByAddress(addr)
 	require.NotNil(t, err)
 
 	// list shows them in order
-	keyS, err := cStore.List()
+	keyS, err := cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
 	// note these are in alphabetical order
@@ -133,37 +133,37 @@ func TestKeyManagement(t *testing.T) {
 	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
 
 	// deleting a key removes it
-	err = cStore.Delete("bad name", "foo", false)
+	err = cstore.Delete("bad name", "foo", false)
 	require.NotNil(t, err)
-	err = cStore.Delete(n1, p1, false)
+	err = cstore.Delete(n1, p1, false)
 	require.NoError(t, err)
-	keyS, err = cStore.List()
+	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
-	_, err = cStore.Get(n1)
+	_, err = cstore.Get(n1)
 	require.Error(t, err)
 
 	// create an offline key
 	o1 := "offline"
 	priv1 := ed25519.GenPrivKey()
 	pub1 := priv1.PubKey()
-	i, err = cStore.CreateOffline(o1, pub1)
+	i, err = cstore.CreateOffline(o1, pub1)
 	require.Nil(t, err)
 	require.Equal(t, pub1, i.GetPubKey())
 	require.Equal(t, o1, i.GetName())
-	keyS, err = cStore.List()
+	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(keyS))
 
 	// delete the offline key
-	err = cStore.Delete(o1, "", false)
+	err = cstore.Delete(o1, "", false)
 	require.NoError(t, err)
-	keyS, err = cStore.List()
+	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
 
 	// addr cache gets nuked - and test skip flag
-	err = cStore.Delete(n2, "", true)
+	err = cstore.Delete(n2, "", true)
 	require.NoError(t, err)
 	require.False(t, db.Has(addrKey(i2.GetAddress())))
 }

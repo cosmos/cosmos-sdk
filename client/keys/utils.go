@@ -229,12 +229,12 @@ func PostProcessResponse(w http.ResponseWriter, cdc *codec.Codec, response inter
 		}
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
 	case []byte:
 		output = response.([]byte)
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(output)
+	_, _ = w.Write(output)
 }

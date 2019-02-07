@@ -42,4 +42,18 @@ func Test_RunMnemonicCmdUser(t *testing.T) {
 	defer cleanUp2()
 	err = runMnemonicCmd(cmdUser, []string{})
 	require.NoError(t, err)
+
+	// Now provide "good" entropy but no answer
+	fakeEntropy = strings.Repeat(":)", 40) + "\n" // entropy + accept count
+	cleanUp3 := client.OverrideStdin(bufio.NewReader(strings.NewReader(fakeEntropy)))
+	defer cleanUp3()
+	err = runMnemonicCmd(cmdUser, []string{})
+	require.Error(t, err)
+
+	// Now provide "good" entropy but say no
+	fakeEntropy = strings.Repeat(":)", 40) + "\nn\n" // entropy + accept count
+	cleanUp4 := client.OverrideStdin(bufio.NewReader(strings.NewReader(fakeEntropy)))
+	defer cleanUp4()
+	err = runMnemonicCmd(cmdUser, []string{})
+	require.NoError(t, err)
 }

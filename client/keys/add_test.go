@@ -3,9 +3,11 @@ package keys
 import (
 	"bufio"
 	"net/http"
-	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
 
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -15,8 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
@@ -37,135 +37,72 @@ func Test_runAddCmdBasic(t *testing.T) {
 	assert.NotNil(t, kbHome)
 	defer kbCleanUp()
 	viper.Set(cli.HomeFlag, kbHome)
+
+	/// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
+	// Now enter password
+	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
+	defer cleanUp1()
+	err = runAddCmd(cmd, []string{"keyname1"})
+	assert.NoError(t, err)
 
-	{
-		// Now enter password
-		cleanUp := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
-		defer cleanUp()
-		err = runAddCmd(cmd, []string{"keyname"})
-		assert.NoError(t, err)
-	}
+	/// Test Text - Replace? >> FAIL
+	viper.Set(cli.OutputFlag, OutputFormatText)
+	// Now enter password
+	cleanUp2 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
+	defer cleanUp2()
+	err = runAddCmd(cmd, []string{"keyname1"})
+	assert.Error(t, err)
+
+	/// Test Text - Replace? Answer >> PASS
+	viper.Set(cli.OutputFlag, OutputFormatText)
+	// Now enter password
+	cleanUp3 := client.OverrideStdin(bufio.NewReader(strings.NewReader("y\ntest1234\ntest1234\n")))
+	defer cleanUp3()
+	err = runAddCmd(cmd, []string{"keyname1"})
+	assert.NoError(t, err)
+
+	// Check JSON
+	viper.Set(cli.OutputFlag, OutputFormatJSON)
+	// Now enter password
+	cleanUp4 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
+	defer cleanUp4()
+	err = runAddCmd(cmd, []string{"keyname2"})
+	assert.NoError(t, err)
 }
 
-func Test_printCreate(t *testing.T) {
-	type args struct {
-		info         keys.Info
-		showMnemonic bool
-		mnemonic     string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := printCreate(tt.args.info, tt.args.showMnemonic, tt.args.mnemonic); (err != nil) != tt.wantErr {
-				t.Errorf("printCreate() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+type MockResponseWriter struct {
+	dataHeaderStatus int
+	dataBody         []byte
 }
 
-func Test_generateMnemonic(t *testing.T) {
-	type args struct {
-		algo keys.SigningAlgo
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := generateMnemonic(tt.args.algo); got != tt.want {
-				t.Errorf("generateMnemonic() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func (MockResponseWriter) Header() http.Header {
+	panic("Unexpected call!")
+}
+
+func (w *MockResponseWriter) Write(data []byte) (int, error) {
+	w.dataBody = append(w.dataBody, data...)
+	return len(data), nil
+}
+
+func (w *MockResponseWriter) WriteHeader(statusCode int) {
+	w.dataHeaderStatus = statusCode
 }
 
 func TestCheckAndWriteErrorResponse(t *testing.T) {
-	type args struct {
-		w       http.ResponseWriter
-		httpErr int
-		err     error
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := CheckAndWriteErrorResponse(tt.args.w, tt.args.httpErr, tt.args.err); got != tt.want {
-				t.Errorf("CheckAndWriteErrorResponse() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+	mockRW := MockResponseWriter{}
 
-func TestAddNewKeyRequestHandler(t *testing.T) {
-	type args struct {
-		indent bool
-	}
-	tests := []struct {
-		name string
-		args args
-		want http.HandlerFunc
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := AddNewKeyRequestHandler(tt.args.indent); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("AddNewKeyRequestHandler() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+	mockRW.WriteHeader(100)
+	assert.Equal(t, 100, mockRW.dataHeaderStatus)
 
-func TestSeedRequestHandler(t *testing.T) {
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			SeedRequestHandler(tt.args.w, tt.args.r)
-		})
-	}
-}
+	detected := CheckAndWriteErrorResponse(&mockRW, http.StatusBadRequest, errors.New("some ERROR"))
+	require.True(t, detected)
+	require.Equal(t, http.StatusBadRequest, mockRW.dataHeaderStatus)
+	require.Equal(t, "some ERROR", string(mockRW.dataBody[:]))
 
-func TestRecoverRequestHandler(t *testing.T) {
-	type args struct {
-		indent bool
-	}
-	tests := []struct {
-		name string
-		args args
-		want http.HandlerFunc
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := RecoverRequestHandler(tt.args.indent); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("RecoverRequestHandler() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	mockRW = MockResponseWriter{}
+	detected = CheckAndWriteErrorResponse(&mockRW, http.StatusBadRequest, nil)
+	require.False(t, detected)
+	require.Equal(t, 0, mockRW.dataHeaderStatus)
+	require.Equal(t, "", string(mockRW.dataBody[:]))
 }

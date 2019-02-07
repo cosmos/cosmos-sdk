@@ -38,11 +38,9 @@ func Test_runDeleteCmd(t *testing.T) {
 	// Now
 	kb, err := NewKeyBaseFromHomeFlag()
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName1,
-		tests.TestMnemonic, "", "", 0, 0)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
 	assert.NoError(t, err)
-	_, err = kb.CreateAccount(fakeKeyName2,
-		tests.TestMnemonic, "", "", 0, 1)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
 	assert.NoError(t, err)
 
 	err = runDeleteCmd(deleteKeyCommand, []string{"blah"})

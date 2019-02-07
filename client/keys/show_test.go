@@ -1,119 +1,89 @@
 package keys
 
 import (
-	"net/http"
-	"reflect"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/stretchr/testify/assert"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/crypto"
 )
 
-func Test_multiSigKey_GetName(t *testing.T) {
-	tests := []struct {
-		name string
-		m    multiSigKey
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.m.GetName(); got != tt.want {
-				t.Errorf("multiSigKey.GetName() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+func Test_multiSigKey_Properties(t *testing.T) {
+	tmpKey1 := secp256k1.GenPrivKeySecp256k1([]byte("mySecret"))
 
-func Test_multiSigKey_GetType(t *testing.T) {
-	tests := []struct {
-		name string
-		m    multiSigKey
-		want keys.KeyType
-	}{
-		// TODO: Add test cases.
+	tmp := multiSigKey{
+		name: "myMultisig",
+		key:  tmpKey1.PubKey(),
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.m.GetType(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("multiSigKey.GetType() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func Test_multiSigKey_GetPubKey(t *testing.T) {
-	tests := []struct {
-		name string
-		m    multiSigKey
-		want crypto.PubKey
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.m.GetPubKey(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("multiSigKey.GetPubKey() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_multiSigKey_GetAddress(t *testing.T) {
-	tests := []struct {
-		name string
-		m    multiSigKey
-		want sdk.AccAddress
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.m.GetAddress(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("multiSigKey.GetAddress() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	assert.Equal(t, "myMultisig", tmp.GetName())
+	assert.Equal(t, keys.TypeLocal, tmp.GetType())
+	assert.Equal(t, "015ABFFB09DB738A45745A91E8C401423ECE4016", tmp.GetPubKey().Address().String())
+	assert.Equal(t, "cosmos1q9dtl7cfmdec53t5t2g733qpgglvusqk6xdntl", tmp.GetAddress().String())
 }
 
 func Test_showKeysCmd(t *testing.T) {
-	tests := []struct {
-		name string
-		want *cobra.Command
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := showKeysCmd(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("showKeysCmd() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	cmd := showKeysCmd()
+	assert.NotNil(t, cmd)
+	assert.Equal(t, "false", cmd.Flag(FlagAddress).DefValue)
+	assert.Equal(t, "false", cmd.Flag(FlagPublicKey).DefValue)
 }
 
 func Test_runShowCmd(t *testing.T) {
-	type args struct {
-		cmd  *cobra.Command
-		args []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := runShowCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
-				t.Errorf("runShowCmd() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	cmd := showKeysCmd()
+
+	err := runShowCmd(cmd, []string{})
+	assert.EqualError(t, err, "not enough arguments")
+
+	err = runShowCmd(cmd, []string{"invalid"})
+	assert.EqualError(t, err, "Key invalid not found")
+
+	err = runShowCmd(cmd, []string{"invalid1", "invalid2"})
+	assert.EqualError(t, err, "Key invalid1 not found")
+
+	// Prepare a key base
+	// Now add a temporary keybase
+	kbHome, cleanUp, err := tests.GetTempDir("Test_runShowCmd")
+	assert.NoError(t, err)
+	defer cleanUp()
+	viper.Set(cli.HomeFlag, kbHome)
+
+	fakeKeyName1 := "runShowCmd_Key1"
+	fakeKeyName2 := "runShowCmd_Key2"
+	kb, err := NewKeyBaseFromHomeFlag()
+	assert.NoError(t, err)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
+	assert.NoError(t, err)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
+	assert.NoError(t, err)
+
+	// Now try single key
+	err = runShowCmd(cmd, []string{fakeKeyName1})
+	assert.EqualError(t, err, "invalid Bech32 prefix encoding provided: ")
+
+	// Now try single key - set bech to acc
+	viper.Set(FlagBechPrefix, "acc")
+	err = runShowCmd(cmd, []string{fakeKeyName1})
+	assert.NoError(t, err)
+
+	// Now try multisig key - set bech to acc
+	viper.Set(FlagBechPrefix, "acc")
+	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
+	assert.EqualError(t, err, "threshold must be a positive integer")
+
+	// Now try multisig key - set bech to acc + threshold=2
+	viper.Set(FlagBechPrefix, "acc")
+	viper.Set(flagMultiSigThreshold, 2)
+	err = runShowCmd(cmd, []string{fakeKeyName1, fakeKeyName2})
+	assert.NoError(t, err)
+
+	// TODO: Capture stdout and compare
 }
 
 func Test_validateMultisigThreshold(t *testing.T) {
@@ -126,7 +96,11 @@ func Test_validateMultisigThreshold(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"zeros", args{0, 0}, true},
+		{"1-0", args{1, 0}, true},
+		{"1-1", args{1, 1}, false},
+		{"1-2", args{1, 1}, false},
+		{"1-2", args{2, 1}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -147,7 +121,11 @@ func Test_getBechKeyOut(t *testing.T) {
 		want    bechKeyOutFn
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"empty", args{""}, nil, true},
+		{"wrong", args{"???"}, nil, true},
+		{"acc", args{"acc"}, Bech32KeyOutput, false},
+		{"val", args{"val"}, Bech32ValKeyOutput, false},
+		{"cons", args{"cons"}, Bech32ConsKeyOutput, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -156,29 +134,16 @@ func Test_getBechKeyOut(t *testing.T) {
 				t.Errorf("getBechKeyOut() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getBechKeyOut() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func TestGetKeyRequestHandler(t *testing.T) {
-	type args struct {
-		indent bool
-	}
-	tests := []struct {
-		name string
-		args args
-		want http.HandlerFunc
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetKeyRequestHandler(tt.args.indent); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetKeyRequestHandler() = %v, want %v", got, tt.want)
+			if !tt.wantErr {
+				assert.NotNil(t, got)
 			}
+
+			// TODO: Still not possible to compare functions
+			// Maybe in next release: https://github.com/stretchr/testify/issues/182
+			//if &got != &tt.want {
+			//	t.Errorf("getBechKeyOut() = %v, want %v", got, tt.want)
+			//}
 		})
 	}
 }

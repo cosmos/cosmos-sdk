@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"errors"
@@ -393,7 +394,7 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 		kb.writeLocalKey(name, key, newpass)
 		return nil
 	default:
-		return fmt.Errorf("locally stored key required")
+		return fmt.Errorf("locally stored key required. Received: %v", reflect.TypeOf(info).String())
 	}
 }
 

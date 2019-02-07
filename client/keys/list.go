@@ -39,13 +39,13 @@ func QueryKeysRequestHandler(indent bool) http.HandlerFunc {
 		kb, err := NewKeyBaseFromHomeFlag()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
 		infos, err := kb.List()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
 		// an empty list will be JSONized as null, but we want to keep the empty list
@@ -56,7 +56,7 @@ func QueryKeysRequestHandler(indent bool) http.HandlerFunc {
 		keysOutput, err := Bech32KeysOutput(infos)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			_, _ = w.Write([]byte(err.Error()))
 			return
 		}
 		PostProcessResponse(w, cdc, keysOutput, indent)

@@ -1,64 +1,67 @@
 package keys
 
 import (
-	"net/http"
-	"reflect"
+	"bufio"
+	"strings"
 	"testing"
 
-	"github.com/spf13/cobra"
+	"github.com/cosmos/cosmos-sdk/client"
+
+	"github.com/cosmos/cosmos-sdk/tests"
+	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_updateKeyCommand(t *testing.T) {
-	tests := []struct {
-		name string
-		want *cobra.Command
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := updateKeyCommand(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("updateKeyCommand() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	cmd := updateKeyCommand()
+	assert.NotNil(t, cmd)
+	// No flags  or defaults to validate
 }
 
 func Test_runUpdateCmd(t *testing.T) {
-	type args struct {
-		cmd  *cobra.Command
-		args []string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := runUpdateCmd(tt.args.cmd, tt.args.args); (err != nil) != tt.wantErr {
-				t.Errorf("runUpdateCmd() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
+	fakeKeyName1 := "runUpdateCmd_Key1"
+	fakeKeyName2 := "runUpdateCmd_Key2"
 
-func TestUpdateKeyRequestHandler(t *testing.T) {
-	type args struct {
-		w http.ResponseWriter
-		r *http.Request
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			UpdateKeyRequestHandler(tt.args.w, tt.args.r)
-		})
-	}
+	cmd := updateKeyCommand()
+
+	err := runUpdateCmd(cmd, []string{})
+	assert.EqualError(t, err, "not enough arguments")
+
+	// fails because it requests a password
+	err = runUpdateCmd(cmd, []string{fakeKeyName1})
+	assert.EqualError(t, err, "EOF")
+
+	cleanUp := client.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\n")))
+	defer cleanUp()
+
+	// try again
+	err = runUpdateCmd(cmd, []string{fakeKeyName1})
+	assert.EqualError(t, err, "Key runUpdateCmd_Key1 not found")
+
+	// Prepare a key base
+	// Now add a temporary keybase
+	kbHome, cleanUp1, err := tests.GetTempDir("Test_runShowCmd")
+	assert.NoError(t, err)
+	defer cleanUp1()
+	viper.Set(cli.HomeFlag, kbHome)
+
+	kb, err := NewKeyBaseFromHomeFlag()
+	assert.NoError(t, err)
+	_, err = kb.CreateAccount(fakeKeyName1, tests.TestMnemonic, "", "", 0, 0)
+	assert.NoError(t, err)
+	_, err = kb.CreateAccount(fakeKeyName2, tests.TestMnemonic, "", "", 0, 1)
+	assert.NoError(t, err)
+
+	// Try again now that we have keys
+	cleanUp2 := client.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\nNew1234\nNew1234")))
+	defer cleanUp2()
+
+	// Incorrect key type
+	err = runUpdateCmd(cmd, []string{fakeKeyName1})
+	assert.EqualError(t, err, "locally stored key required. Received: keys.offlineInfo")
+
+	// TODO: Check for other type types?
+
 }

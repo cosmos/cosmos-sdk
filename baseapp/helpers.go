@@ -25,6 +25,8 @@ func (app *BaseApp) Deliver(tx sdk.Tx) (result sdk.Result) {
 	return app.runTx(runTxModeDeliver, nil, tx)
 }
 
+// Context with current {check, deliver}State of the app
+// used by tests
 func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
 	if isCheckTx {
 		return sdk.NewContext(app.checkState.ms, header, true, app.logger).

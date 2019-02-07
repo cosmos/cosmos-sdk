@@ -114,6 +114,11 @@ func (app *BaseApp) Name() string {
 	return app.name
 }
 
+// Logger returns the logger of the BaseApp.
+func (app *BaseApp) Logger() log.Logger {
+	return app.logger
+}
+
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {

@@ -79,6 +79,9 @@ func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	return getLazyKeyBaseFromDir(rootDir)
 }
 
+// NewInMemoryKeyBase returns a storage-less keybase.
+func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
+
 func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 	return keys.NewLazyKeybase(KeyDBName, filepath.Join(rootDir, "keys")), nil
 }

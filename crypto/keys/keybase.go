@@ -83,6 +83,9 @@ func New(db dbm.DB) Keybase {
 	}
 }
 
+// NewInMemory creates a new keybase on top of in-memory storage instance.
+func NewInMemory() Keybase { return dbKeybase{dbm.NewMemDB()} }
+
 // CreateMnemonic generates a new key and persists it to storage, encrypted
 // using the provided password.
 // It returns the generated mnemonic and the key Info.

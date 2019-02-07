@@ -181,7 +181,7 @@ func UnmarshalUBD(cdc *codec.Codec, value []byte) (ubd UnbondingDelegation, err 
 }
 
 // nolint
-// TODO this will be slower than comparing the struct values
+// inefficient but only used in testing
 func (d UnbondingDelegation) Equal(d2 UnbondingDelegation) bool {
 	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d)
 	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d2)
@@ -303,7 +303,7 @@ func UnmarshalRED(cdc *codec.Codec, value []byte) (red Redelegation, err error) 
 }
 
 // nolint
-// TODO: this is less efficient than comparing struct fields
+// inefficient but only used in tests
 func (d Redelegation) Equal(d2 Redelegation) bool {
 	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d)
 	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&d2)

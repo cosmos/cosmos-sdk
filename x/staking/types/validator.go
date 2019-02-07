@@ -331,6 +331,7 @@ func (v Validator) SetInitialCommission(commission Commission) (Validator, sdk.E
 }
 
 // AddTokensFromDel adds tokens to a validator
+// CONTRACT: Tokens are assumed to have come from not-bonded pool.
 func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool, sdk.Dec) {
 
 	// bondedShare/delegatedShare
@@ -339,7 +340,6 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 		panic("zero exRate should not happen")
 	}
 
-	// TODO: This is unobvious from the name of the function, either justify or move outside.
 	if v.Status == sdk.Bonded {
 		pool = pool.notBondedTokensToBonded(amount)
 	}
@@ -354,6 +354,7 @@ func (v Validator) AddTokensFromDel(pool Pool, amount sdk.Int) (Validator, Pool,
 // RemoveDelShares removes delegator shares from a validator.
 // NOTE: because token fractions are left in the valiadator,
 //       the exchange rate of future shares of this validator can increase.
+// CONTRACT: Tokens are assumed to move to the not-bonded pool.
 func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Pool, sdk.Int) {
 
 	remainingShares := v.DelegatorShares.Sub(delShares)
@@ -375,7 +376,6 @@ func (v Validator) RemoveDelShares(pool Pool, delShares sdk.Dec) (Validator, Poo
 	}
 
 	v.DelegatorShares = remainingShares
-	// TODO: This is unobvious from the name of the function, either justify or move outside.
 	if v.Status == sdk.Bonded {
 		pool = pool.bondedTokensToNotBonded(issuedTokens)
 	}

@@ -8,7 +8,7 @@ BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags \
 	"-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
 	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps)"
-LEDGER_ENABLED ?= true
+LEDGER_ENABLED ?= false
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
 	github.com/alecthomas/gometalinter \
@@ -198,7 +198,7 @@ test_sim_gaia_profile:
 		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 test_cover:
-	@export VERSION=$(VERSION); bash tests/test_cover.sh
+	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
 
 test_lint:
 	gometalinter --config=tools/gometalinter.json ./...

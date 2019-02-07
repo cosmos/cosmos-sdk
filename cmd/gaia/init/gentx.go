@@ -26,12 +26,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const (
-	defaultAmount                  = "100" + stakingTypes.DefaultBondDenom
+var (
+	defaultTokens                  = staking.TokensFromTendermintPower(100)
+	defaultAmount                  = defaultTokens.String() + staking.DefaultBondDenom
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
@@ -64,10 +65,15 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			ip, err := server.ExternalIP()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP, "+
-					"consequently the tx's memo field will be unset: %s", err)
+			// Read --nodeID, if empty take it from priv_validator.json
+			if nodeIDString := viper.GetString(cli.FlagNodeID); nodeIDString != "" {
+				nodeID = nodeIDString
+			}
+
+			ip := viper.GetString(cli.FlagIP)
+			if ip == "" {
+				fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
+					"the tx's memo field will be unset")
 			}
 
 			genDoc, err := LoadGenesisDoc(cdc, config.GenesisFile())
@@ -80,7 +86,7 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			kb, err := keys.GetKeyBaseFromDir(viper.GetString(flagClientHome))
+			kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 			if err != nil {
 				return err
 			}
@@ -126,7 +132,8 @@ following delegation and commission default parameters:
 
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
-			if err := utils.PrintUnsignedStdTx(w, txBldr, cliCtx, []sdk.Msg{msg}, true); err != nil {
+			cliCtx = cliCtx.WithOutput(w)
+			if err = utils.PrintUnsignedStdTx(txBldr, cliCtx, []sdk.Msg{msg}, true); err != nil {
 				return err
 			}
 
@@ -160,11 +167,15 @@ following delegation and commission default parameters:
 		},
 	}
 
+	ip, _ := server.ExternalIP()
+
 	cmd.Flags().String(tmcli.HomeFlag, app.DefaultNodeHome, "node's home directory")
 	cmd.Flags().String(flagClientHome, app.DefaultCLIHome, "client's home directory")
 	cmd.Flags().String(client.FlagName, "", "name of private key with which to sign the gentx")
 	cmd.Flags().String(client.FlagOutputDocument, "",
 		"write the genesis transaction JSON document to the given file instead of the default location")
+	cmd.Flags().String(cli.FlagIP, ip, "The node's public IP")
+	cmd.Flags().String(cli.FlagNodeID, "", "The node's NodeID")
 	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
 	cmd.Flags().AddFlagSet(cli.FsMinSelfBond)
 	cmd.Flags().AddFlagSet(cli.FsAmount)
@@ -209,7 +220,7 @@ func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID st
 	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
 	viper.Set(cli.FlagIP, ip)                                      // --ip
 	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
-	viper.Set(cli.FlagGenesisFormat, true)                         // --genesis-format
+	viper.Set(client.FlagGenerateOnly, true)                       // --genesis-format
 	viper.Set(cli.FlagMoniker, config.Moniker)                     // --moniker
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))

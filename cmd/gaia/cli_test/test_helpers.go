@@ -38,10 +38,10 @@ const (
 )
 
 var startCoins = sdk.Coins{
-	sdk.NewInt64Coin(feeDenom, 1000000),
-	sdk.NewInt64Coin(fee2Denom, 1000000),
-	sdk.NewInt64Coin(fooDenom, 1000),
-	sdk.NewInt64Coin(denom, 150),
+	sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
+	sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
+	sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
+	sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
 }
 
 //___________________________________________________________________________________
@@ -153,7 +153,7 @@ func (f *Fixtures) UnsafeResetAll(flags ...string) {
 // GDInit is gaiad init
 // NOTE: GDInit sets the ChainID for the Fixtures instance
 func (f *Fixtures) GDInit(moniker string, flags ...string) {
-	cmd := fmt.Sprintf("gaiad init -o --moniker=%s --home=%s", moniker, f.GDHome)
+	cmd := fmt.Sprintf("gaiad init -o --home=%s %s", f.GDHome, moniker)
 	_, stderr := tests.ExecuteT(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 
 	var chainID string
@@ -269,7 +269,7 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 
 // TxSend is gaiacli tx send
 func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("gaiacli tx send %v --amount=%s --to=%s --from=%s", f.Flags(), amount, to, from)
+	cmd := fmt.Sprintf("gaiacli tx send %s %s %v --from=%s", to, amount, f.Flags(), from)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -309,7 +309,7 @@ func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.
 
 // TxStakingUnbond is gaiacli tx staking unbond
 func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
-	cmd := fmt.Sprintf("gaiacli tx staking unbond %v --from=%s --validator=%s --shares-amount=%v", f.Flags(), from, validator, shares)
+	cmd := fmt.Sprintf("gaiacli tx staking unbond %s %v --from=%s %v", validator, shares, from, f.Flags())
 	return executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 

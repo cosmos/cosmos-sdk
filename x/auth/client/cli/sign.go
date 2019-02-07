@@ -30,10 +30,10 @@ const (
 // GetSignCommand returns the sign command
 func GetSignCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sign <file>",
+		Use:   "sign [file]",
 		Short: "Sign transactions generated offline",
 		Long: `Sign transactions created with the --generate-only flag.
-Read a transaction from <file>, sign it, and print its JSON encoding.
+Read a transaction from [file], sign it, and print its JSON encoding.
 
 If the flag --signature-only flag is on, it outputs a JSON representation
 of the generated signature only.
@@ -85,7 +85,7 @@ func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error
 		txBldr := authtxb.NewTxBuilderFromCLI()
 
 		if viper.GetBool(flagValidateSigs) {
-			if !printAndValidateSigs(cliCtx, txBldr.GetChainID(), stdTx, offline) {
+			if !printAndValidateSigs(cliCtx, txBldr.ChainID(), stdTx, offline) {
 				return fmt.Errorf("signatures validation failed")
 			}
 

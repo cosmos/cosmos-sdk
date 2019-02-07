@@ -18,6 +18,13 @@ type cachedValidator struct {
 	marshalled string // marshalled amino bytes for the validator object (not operator address)
 }
 
+func newCachedValidator(val types.Validator, marshalled string) cachedValidator {
+	return cachedValidator{
+		val:        val,
+		marshalled: marshalled,
+	}
+}
+
 // get a single validator
 func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -37,8 +44,8 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 
 	// amino bytes weren't found in cache, so amino unmarshal and add it to the cache
 	validator = types.MustUnmarshalValidator(k.cdc, value)
-	cachedVal := cachedValidator{validator, strValue}
-	k.validatorCache[strValue] = cachedValidator{validator, strValue}
+	cachedVal := newCachedValidator(validator, strValue)
+	k.validatorCache[strValue] = newCachedValidator(validator, strValue)
 	k.validatorCacheList.PushBack(cachedVal)
 
 	// if the cache is too big, pop off the last element from it

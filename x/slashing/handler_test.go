@@ -8,24 +8,25 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
-	amtInt := int64(100)
-	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
+	amt := types.TokensFromTendermintPower(100)
+	addr, val := addrs[0], pks[0]
 	msg := NewTestMsgCreateValidator(addr, val, amt)
 	got := staking.NewHandler(sk)(ctx, msg)
-	require.True(t, got.IsOK())
+	require.True(t, got.IsOK(), "%v", got)
 	staking.EndBlocker(ctx, sk)
 
 	require.Equal(
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
-	require.True(sdk.IntEq(t, amt, sk.Validator(ctx, addr).GetPower()))
+	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
 	// assert non-jailed validator can't be unjailed
 	got = slh(ctx, NewMsgUnjail(addr))
@@ -50,7 +51,7 @@ func TestCannotUnjailUnlessMeetMinSelfBond(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
-	require.True(sdk.IntEq(t, amt, sk.Validator(ctx, addr).GetPower()))
+	require.True(sdk.IntEq(t, amt, sdk.NewInt(sk.Validator(ctx, addr).GetTendermintPower())))
 
 	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.OneDec())
 	got = staking.NewHandler(sk)(ctx, undelegateMsg)
@@ -72,8 +73,8 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	stakingKeeper.SetParams(ctx, stakingParams)
 
 	// create a validator
-	amount := int64(10)
-	valPubKey, bondAmount := pks[0], sdk.NewInt(amount)
+	bondAmount := staking.TokensFromTendermintPower(10)
+	valPubKey := pks[0]
 	valAddr, consAddr := addrs[1], sdk.ConsAddress(addrs[0])
 
 	msgCreateVal := NewTestMsgCreateValidator(valAddr, valPubKey, bondAmount)
@@ -84,12 +85,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	staking.EndBlocker(ctx, stakingKeeper)
 
 	// set dummy signing info
-	newInfo := ValidatorSigningInfo{
-		StartHeight:         int64(0),
-		IndexOffset:         int64(0),
-		JailedUntil:         time.Unix(0, 0),
-		MissedBlocksCounter: int64(0),
-	}
+	newInfo := NewValidatorSigningInfo(0, 0, time.Unix(0, 0), false, 0)
 	slashingKeeper.SetValidatorSigningInfo(ctx, consAddr, newInfo)
 
 	// delegate tokens to the validator
@@ -98,7 +94,7 @@ func TestJailedValidatorDelegations(t *testing.T) {
 	got = staking.NewHandler(stakingKeeper)(ctx, msgDelegate)
 	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
-	unbondShares := sdk.NewDec(10)
+	unbondShares := sdk.NewDecFromInt(bondAmount)
 
 	// unbond validator total self-delegations (which should jail the validator)
 	msgUndelegate := staking.NewMsgUndelegate(sdk.AccAddress(valAddr), valAddr, unbondShares)

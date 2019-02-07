@@ -85,7 +85,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	var genesisAccounts []GenesisAccount
 
-	amount := int64(r.Intn(1e6))
+	amount := int64(r.Intn(1e12))
 	numInitiallyBonded := int64(r.Intn(250))
 	numAccs := int64(len(accs))
 	if numInitiallyBonded > numAccs {

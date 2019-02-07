@@ -36,8 +36,8 @@ type Validator struct {
 	UnbondingHeight         int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
-	Commission  Commission  `json:"commission"` // commission parameters
-	MinSelfBond MinSelfBond `json:"min_self_bond"`
+	Commission  Commission `json:"commission"`    // commission parameters
+	MinSelfBond sdk.Int    `json:"min_self_bond"` // validator's self declared minimum self bond
 }
 
 // Validators is a collection of Validator
@@ -64,6 +64,7 @@ func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Des
 		UnbondingHeight:         int64(0),
 		UnbondingCompletionTime: time.Unix(0, 0).UTC(),
 		Commission:              NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+		MinSelfBond:             sdk.OneInt(),
 	}
 }
 
@@ -104,10 +105,11 @@ func (v Validator) String() string {
   Bond Height:                %d
   Unbonding Height:           %d
   Unbonding Completion Time:  %v
+  Minimum Self Bond:  		  %v
   Commission:                 %s`, v.OperatorAddr, bechConsPubKey,
 		v.Jailed, sdk.BondStatusToString(v.Status), v.Tokens,
 		v.DelegatorShares, v.Description, v.BondHeight,
-		v.UnbondingHeight, v.UnbondingCompletionTime, v.Commission)
+		v.UnbondingHeight, v.UnbondingCompletionTime, v.MinSelfBond, v.Commission)
 }
 
 //___________________________________________________________________
@@ -128,7 +130,8 @@ type bechValidator struct {
 	UnbondingHeight         int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
-	Commission Commission `json:"commission"` // commission parameters
+	Commission  Commission `json:"commission"`    // commission parameters
+	MinSelfBond sdk.Int    `json:"min_self_bond"` // minimum self bond
 }
 
 // MarshalJSON marshals the validator to JSON using Bech32
@@ -149,6 +152,7 @@ func (v Validator) MarshalJSON() ([]byte, error) {
 		BondHeight:              v.BondHeight,
 		UnbondingHeight:         v.UnbondingHeight,
 		UnbondingCompletionTime: v.UnbondingCompletionTime,
+		MinSelfBond:             v.MinSelfBond,
 		Commission:              v.Commission,
 	})
 }
@@ -175,6 +179,7 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 		UnbondingHeight:         bv.UnbondingHeight,
 		UnbondingCompletionTime: bv.UnbondingCompletionTime,
 		Commission:              bv.Commission,
+		MinSelfBond:             bv.MinSelfBond,
 	}
 	return nil
 }
@@ -424,6 +429,7 @@ func (v Validator) GetConsAddr() sdk.ConsAddress     { return sdk.ConsAddress(v.
 func (v Validator) GetPower() sdk.Int                { return v.BondedTokens() }
 func (v Validator) GetTokens() sdk.Int               { return v.Tokens }
 func (v Validator) GetCommission() sdk.Dec           { return v.Commission.Rate }
+func (v Validator) GetMinSelfBond() sdk.Int          { return v.MinSelfBond }
 func (v Validator) GetDelegatorShares() sdk.Dec      { return v.DelegatorShares }
 func (v Validator) GetBondHeight() int64             { return v.BondHeight }
 func (v Validator) GetDelegatorShareExRate() sdk.Dec { return v.DelegatorShareExRate() }

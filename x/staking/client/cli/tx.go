@@ -47,6 +47,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(FsAmount)
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(FsCommissionCreate)
+	cmd.Flags().AddFlagSet(FsMinSelfBond)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	cmd.Flags().Bool(FlagGenesisFormat, false, "Export the transaction in gen-tx format; it implies --generate-only")
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", FlagGenesisFormat))
@@ -91,18 +92,18 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				newRate = &rate
 			}
 
-			minSelfBondAmountString := viper.GetString(FlagMinSelfBond)
-			minSelfBondMaxDecreaseRateString := viper.GetString(FlagMinSelfBondMaxDecreaseRate)
+			var newMinSelfBond *sdk.Int
 
-			var minSelfBond staking.MinSelfBondMsg
-			if minSelfBondAmountString != "" || minSelfBondMaxDecreaseRateString != "" {
-
-				minSelfBondAmount, ok := sdk.NewIntFromString(minSelfBondAmountString)
-
-				minSelfBond = staking.NewMinSelfBondMsg(minSelfBondAmount, minSelfBondMaxDecreaseRate)
+			minSelfBondString := viper.GetString(FlagMinSelfBond)
+			if minSelfBondString != "" {
+				msb, ok := sdk.NewIntFromString(minSelfBondString)
+				if !ok {
+					return fmt.Errorf(staking.ErrMinSelfBondInvalid(staking.DefaultCodespace).Error())
+				}
+				newMinSelfBond = &msb
 			}
 
-			msg := staking.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
+			msg := staking.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfBond)
 
 			if cliCtx.GenerateOnly {
 				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
@@ -284,6 +285,13 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		return txBldr, nil, err
 	}
 
+	// get the initial validator min self bond
+	msbStr := viper.GetString(FlagMinSelfBond)
+	minSelfBond, ok := sdk.NewIntFromString(msbStr)
+	if !ok {
+		return txBldr, nil, fmt.Errorf(staking.ErrMinSelfBondInvalid(staking.DefaultCodespace).Error())
+	}
+
 	delAddr := viper.GetString(FlagAddressDelegator)
 
 	var msg sdk.Msg
@@ -294,11 +302,11 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		}
 
 		msg = staking.NewMsgCreateValidatorOnBehalfOf(
-			delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+			delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfBond,
 		)
 	} else {
 		msg = staking.NewMsgCreateValidator(
-			sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+			sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfBond,
 		)
 	}
 

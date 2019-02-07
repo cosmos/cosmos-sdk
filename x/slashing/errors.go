@@ -16,6 +16,7 @@ const (
 	CodeValidatorJailed       CodeType = 102
 	CodeValidatorNotJailed    CodeType = 103
 	CodeMissingSelfDelegation CodeType = 104
+	CodeSelfDelegationTooLow  CodeType = 105
 )
 
 func ErrNoValidatorForAddress(codespace sdk.CodespaceType) sdk.Error {
@@ -36,4 +37,8 @@ func ErrValidatorNotJailed(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrMissingSelfDelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeMissingSelfDelegation, "validator has no self-delegation; cannot be unjailed")
+}
+
+func ErrSelfDelegationTooLow(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeValidatorNotJailed, "validator's self delegation less than MinSelfBond, cannot be unjailed")
 }

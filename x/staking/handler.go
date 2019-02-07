@@ -131,11 +131,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return err.Result()
 	}
 
-	minSelfBond := NewMinSelfBondWithTime(msg.MinSelfBond.Amount, msg.MinSelfBond.MaxDailyDecreaseRate, ctx.BlockHeader().Time)
-	if minSelfBond.Validate() != nil {
-		return err.Result()
-	}
-	validator.MinSelfBond = minSelfBond
+	validator.MinSelfBond = msg.MinSelfBond
 
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByConsAddr(ctx, validator)
@@ -187,11 +183,13 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 	}
 
 	if msg.MinSelfBond != nil {
-		newMinSelfBond, err := validator.MinSelfBond.UpdateMinSelfBond(*msg.MinSelfBond, ctx.BlockHeader().Time)
-		if err != nil {
-			return err.Result()
+		if !(*msg.MinSelfBond).GT(validator.MinSelfBond) {
+			return ErrMinSelfBondDecreased(k.Codespace()).Result()
 		}
-		validator.MinSelfBond = newMinSelfBond
+		if (*msg.MinSelfBond).GT(validator.Tokens) {
+			return ErrSelfBondBelowMinimum(k.Codespace()).Result()
+		}
+		validator.MinSelfBond = (*msg.MinSelfBond)
 	}
 
 	k.SetValidator(ctx, validator)

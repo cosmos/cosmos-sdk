@@ -521,16 +521,17 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 	// subtract shares from delegator
 	delegation.Shares = delegation.Shares.Sub(shares)
 
+	isValidatorOperator := bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr)
+
+	// if the delegation is the operator of the validator and it below the Minimum Self Bond
+	// trigger a jail validator
+	if isValidatorOperator && !validator.Jailed && validator.DelegatorShareExRate().Mul(delegation.Shares).TruncateInt().LT(validator.MinSelfBond) {
+		k.jailValidator(ctx, validator)
+		validator = k.mustGetValidator(ctx, validator.OperatorAddr)
+	}
+
 	// remove the delegation
 	if delegation.Shares.IsZero() {
-
-		// if the delegation is the operator of the validator then
-		// trigger a jail validator
-		if bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr) && !validator.Jailed {
-			k.jailValidator(ctx, validator)
-			validator = k.mustGetValidator(ctx, validator.OperatorAddr)
-		}
-
 		k.RemoveDelegation(ctx, delegation)
 	} else {
 		// update the delegation

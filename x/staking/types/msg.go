@@ -24,7 +24,7 @@ var (
 type MsgCreateValidator struct {
 	Description   Description    `json:"description"`
 	Commission    CommissionMsg  `json:"commission"`
-	MinSelfBond   MinSelfBondMsg `json:"min_self_bond"`
+	MinSelfBond   sdk.Int        `json:"min_self_bond"`
 	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	PubKey        crypto.PubKey  `json:"pubkey"`
@@ -34,7 +34,7 @@ type MsgCreateValidator struct {
 type msgCreateValidatorJSON struct {
 	Description   Description    `json:"description"`
 	Commission    CommissionMsg  `json:"commission"`
-	MinSelfBond   MinSelfBondMsg `json:"min_self_bond"`
+	MinSelfBond   sdk.Int        `json:"min_self_bond"`
 	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	PubKey        string         `json:"pubkey"`
@@ -43,16 +43,16 @@ type msgCreateValidatorJSON struct {
 
 // Default way to create validator. Delegator address and validator address are the same
 func NewMsgCreateValidator(valAddr sdk.ValAddress, pubkey crypto.PubKey,
-	selfDelegation sdk.Coin, description Description, commission CommissionMsg) MsgCreateValidator {
+	selfDelegation sdk.Coin, description Description, commission CommissionMsg, minSelfBond sdk.Int) MsgCreateValidator {
 
 	return NewMsgCreateValidatorOnBehalfOf(
-		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description, commission,
+		sdk.AccAddress(valAddr), valAddr, pubkey, selfDelegation, description, commission, minSelfBond,
 	)
 }
 
 // Creates validator msg by delegator address on behalf of validator address
 func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	pubkey crypto.PubKey, value sdk.Coin, description Description, commission CommissionMsg) MsgCreateValidator {
+	pubkey crypto.PubKey, value sdk.Coin, description Description, commission CommissionMsg, minSelfBond sdk.Int) MsgCreateValidator {
 	return MsgCreateValidator{
 		Description:   description,
 		DelegatorAddr: delAddr,
@@ -60,6 +60,7 @@ func NewMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddr
 		PubKey:        pubkey,
 		Value:         value,
 		Commission:    commission,
+		MinSelfBond:   minSelfBond,
 	}
 }
 
@@ -134,6 +135,12 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	if msg.Commission == (CommissionMsg{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission must be included")
 	}
+	if !msg.MinSelfBond.GT(sdk.ZeroInt()) {
+		return ErrMinSelfBondInvalid(DefaultCodespace)
+	}
+	if msg.Value.Amount.LT(msg.MinSelfBond) {
+		return ErrSelfBondBelowMinimum(DefaultCodespace)
+	}
 
 	return nil
 }
@@ -150,11 +157,11 @@ type MsgEditValidator struct {
 	// distinguish if an update was intended.
 	//
 	// REF: #2373
-	CommissionRate *sdk.Dec        `json:"commission_rate"`
-	MinSelfBond    *MinSelfBondMsg `json:"min_self_bond"`
+	CommissionRate *sdk.Dec `json:"commission_rate"`
+	MinSelfBond    *sdk.Int `json:"min_self_bond"`
 }
 
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfBond *MinSelfBondMsg) MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfBond *sdk.Int) MsgEditValidator {
 	return MsgEditValidator{
 		Description:    description,
 		CommissionRate: newRate,
@@ -184,6 +191,10 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 
 	if msg.Description == (Description{}) {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "transaction must include some information to modify")
+	}
+
+	if msg.MinSelfBond != nil && !msg.MinSelfBond.GT(sdk.ZeroInt()) {
+		return ErrMinSelfBondInvalid(DefaultCodespace)
 	}
 
 	return nil

@@ -91,24 +91,16 @@ func ErrCommissionGTMaxChangeRate(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be changed more than max change rate")
 }
 
-func ErrMinSelfBondUpdateTime(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond cannot be changed more than once in 24h")
+func ErrSelfBondBelowMinimum(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator's self bond must be greater than their minimum self bond")
 }
 
 func ErrMinSelfBondInvalid(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond must be a positive integer")
 }
 
-func ErrMinSelfBondTooLow(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond cannot be set that low")
-}
-
-func ErrMinSelfBondMaxDailyDecreaseRateInvalid(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "the maximum allowable MinSelfBond decrease rate must be a non negative integer")
-}
-
-func ErrMinSelfBondMaxDailyDecreaseRateIncreased(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "the maximum allowable MinSelfBond decrease rate cannot be increased")
+func ErrMinSelfBondDecreased(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond cannot be decrease")
 }
 
 func ErrSelfBondUpdateTime(codespace sdk.CodespaceType) sdk.Error {

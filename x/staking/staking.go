@@ -14,8 +14,6 @@ type (
 	Validators              = types.Validators
 	Description             = types.Description
 	Commission              = types.Commission
-	MinSelfBond             = types.MinSelfBond
-	MinSelfBondMsg          = types.MinSelfBondMsg
 	Delegation              = types.Delegation
 	Delegations             = types.Delegations
 	UnbondingDelegation     = types.UnbondingDelegation
@@ -72,20 +70,17 @@ var (
 	KeyMaxValidators  = types.KeyMaxValidators
 	KeyBondDenom      = types.KeyBondDenom
 
-	DefaultParams          = types.DefaultParams
-	DefaultBondDenom       = types.DefaultBondDenom
-	InitialPool            = types.InitialPool
-	NewValidator           = types.NewValidator
-	NewDescription         = types.NewDescription
-	NewCommission          = types.NewCommission
-	NewCommissionMsg       = types.NewCommissionMsg
-	NewCommissionWithTime  = types.NewCommissionWithTime
-	NewMinSelfBond         = types.NewMinSelfBond
-	NewMinSelfBondWithTime = types.NewMinSelfBondWithTime
-	NewMinSelfBondMsg      = types.NewMinSelfBondMsg
-	NewGenesisState        = types.NewGenesisState
-	DefaultGenesisState    = types.DefaultGenesisState
-	RegisterCodec          = types.RegisterCodec
+	DefaultParams         = types.DefaultParams
+	DefaultBondDenom      = types.DefaultBondDenom
+	InitialPool           = types.InitialPool
+	NewValidator          = types.NewValidator
+	NewDescription        = types.NewDescription
+	NewCommission         = types.NewCommission
+	NewCommissionMsg      = types.NewCommissionMsg
+	NewCommissionWithTime = types.NewCommissionWithTime
+	NewGenesisState       = types.NewGenesisState
+	DefaultGenesisState   = types.DefaultGenesisState
+	RegisterCodec         = types.RegisterCodec
 
 	NewMsgCreateValidator           = types.NewMsgCreateValidator
 	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf
@@ -164,6 +159,10 @@ var (
 	ErrBothShareMsgsGiven    = types.ErrBothShareMsgsGiven
 	ErrNeitherShareMsgsGiven = types.ErrNeitherShareMsgsGiven
 	ErrMissingSignature      = types.ErrMissingSignature
+
+	ErrMinSelfBondInvalid   = types.ErrMinSelfBondInvalid
+	ErrMinSelfBondDecreased = types.ErrMinSelfBondDecreased
+	ErrSelfBondBelowMinimum = types.ErrSelfBondBelowMinimum
 )
 
 var (

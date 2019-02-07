@@ -259,9 +259,9 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// test removing all self delegation from a validator which should
-// shift it from the bonded to unbonded state
-func TestUndelegateSelfDelegation(t *testing.T) {
+// test undelegating self delegation from a validator pushing it below MinSelfBond
+// shift it from the bonded to unbonding state and jailed
+func TestUndelegateSelfDelegationBelowMinSelfBond(t *testing.T) {
 
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
@@ -269,6 +269,7 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+	validator.MinSelfBond = sdk.NewInt(10)
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, sdk.NewInt(10))
 	require.Equal(t, int64(10), issuedShares.RoundInt64())
 	keeper.SetPool(ctx, pool)
@@ -296,7 +297,7 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, delegation)
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDec(10))
+	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDec(6))
 	require.NoError(t, err)
 
 	// end block
@@ -305,8 +306,9 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, int64(10), validator.Tokens.Int64())
+	require.Equal(t, int64(14), validator.Tokens.Int64())
 	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.True(t, validator.Jailed)
 }
 
 func TestUndelegateFromUnbondingValidator(t *testing.T) {

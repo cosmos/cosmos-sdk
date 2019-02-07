@@ -646,7 +646,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		Data:      data,
 		Log:       strings.Join(logs, "\n"),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
-		Fees:      sdk.Coins{},
 		Tags:      tags,
 	}
 

@@ -203,7 +203,8 @@ jobs:
             export PATH="$GOBIN:$PATH"
             export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
             make install
-            GOCACHE=off go test -race -timeout 8m -covermode=atomic -coverprofile=coverage.txt -failfast ./...
+            PKGS="$(go list github.com/cosmos/cosmos-sdk/... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation')"
+            GOCACHE=off go test -race -timeout 8m -covermode=atomic -coverprofile=/tmp/workspace/coverage.txt -failfast $PKGS
       - persist_to_workspace:
           root: /tmp/workspace
           paths:

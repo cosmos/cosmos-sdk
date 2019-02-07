@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -34,15 +35,22 @@ const (
 	feeDenom     = "feetoken"
 	fee2Denom    = "fee2token"
 	keyBaz       = "baz"
+	keyVesting   = "vesting"
 	keyFooBarBaz = "foobarbaz"
 )
 
-var startCoins = sdk.Coins{
-	sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
-	sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
-	sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
-	sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
-}
+var (
+	startCoins = sdk.Coins{
+		sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
+		sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
+		sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
+		sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
+	}
+
+	vestingCoins = sdk.Coins{
+		sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(500000)),
+	}
+)
 
 //___________________________________________________________________________________
 // Fixtures
@@ -108,6 +116,7 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 	f.KeysAdd(keyFoo)
 	f.KeysAdd(keyBar)
 	f.KeysAdd(keyBaz)
+	f.KeysAdd(keyVesting)
 	f.KeysAdd(keyFooBarBaz, "--multisig-threshold=2", fmt.Sprintf(
 		"--multisig=%s,%s,%s", keyFoo, keyBar, keyBaz))
 
@@ -120,6 +129,12 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 
 	// Start an account with tokens
 	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
+	f.AddGenesisAccount(
+		f.KeyAddress(keyVesting), startCoins,
+		fmt.Sprintf("--vesting-amount=%s", vestingCoins),
+		fmt.Sprintf("--vesting-start-time=%d", time.Now().UTC().UnixNano()),
+		fmt.Sprintf("--vesting-end-time=%d", time.Now().Add(60*time.Second).UTC().UnixNano()),
+	)
 	f.GenTx(keyFoo)
 	f.CollectGenTxs()
 	return

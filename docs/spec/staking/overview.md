@@ -32,18 +32,18 @@ native staking token of the chain.
    - Validator
    - Delegation
    - Slashing
- 2. **[Messages](messages.md)**	
+ 3. **[Messages](messages.md)**	
    - MsgCreateValidator
    - MsgEditValidator
    - MsgDelegate
    - MsgBeginUnbonding
    - MsgBeginRedelegate
- 3. **[End-Block](end_block.md)**	
+ 4. **[End-Block](end_block.md)**	
    - Validator Set Changes
    - Queues 
    - Unbonding Validators
    - Unbonding Delegations
    - Redelegations
- 4. **[Hooks](hooks.md)**	
- 5. **[Tags](tags.md)**	
+ 5. **[Hooks](hooks.md)**	
+ 6. **[Tags](tags.md)**	
 

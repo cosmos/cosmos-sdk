@@ -532,10 +532,13 @@ func TestGaiaCLIQueryTxPagination(t *testing.T) {
 	fooAddr := f.KeyAddress(keyFoo)
 	barAddr := f.KeyAddress(keyBar)
 
+	accFoo := f.QueryAccount(fooAddr)
+	seq := accFoo.GetSequence()
+
 	for i := 1; i <= 30; i++ {
-		success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, int64(i)))
+		success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, int64(i)), fmt.Sprintf("--sequence=%d", seq))
 		require.True(t, success)
-		tests.WaitForNextNBlocksTM(1, f.Port)
+		seq++
 	}
 
 	// perPage = 15, 2 pages

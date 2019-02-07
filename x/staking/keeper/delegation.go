@@ -523,7 +523,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 
 	isValidatorOperator := bytes.Equal(delegation.DelegatorAddr, validator.OperatorAddr)
 
-	// if the delegation is the operator of the validator and it below the Minimum Self Bond
+	// if the delegation is the operator of the validator and undelegating will decrease the validator's self bond below their minimum
 	// trigger a jail validator
 	if isValidatorOperator && !validator.Jailed && validator.DelegatorShareExRate().Mul(delegation.Shares).TruncateInt().LT(validator.MinSelfBond) {
 		k.jailValidator(ctx, validator)

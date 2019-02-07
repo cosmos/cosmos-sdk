@@ -52,13 +52,13 @@ type BaseApp struct {
 	// set upon LoadVersion or LoadLatestVersion.
 	baseKey *sdk.KVStoreKey // Main KVStore in cms
 
-	anteHandler      sdk.AnteHandler  // ante handler for fee and auth
-	initChainer      sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker     sdk.BeginBlocker // logic to run before any txs
-	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
-	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
-	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
-	fauxMerkleMode   bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
+	initChainer    sdk.InitChainer  // initialize state with validators and state blob
+	beginBlocker   sdk.BeginBlocker // logic to run before any txs
+	endBlocker     sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	addrPeerFilter sdk.PeerFilter   // filter peers by address and port
+	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
+	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// --------------------
 	// Volatile state
@@ -348,10 +348,10 @@ func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
-// FilterPeerByPubKey filters peers by a public key.
-func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
-	if app.pubkeyPeerFilter != nil {
-		return app.pubkeyPeerFilter(info)
+// FilterPeerByIDfilters peers by node ID.
+func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
+	if app.idPeerFilter != nil {
+		return app.idPeerFilter(info)
 	}
 	return abci.ResponseQuery{}
 }
@@ -452,11 +452,8 @@ func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) (res abci.
 			switch typ {
 			case "addr":
 				return app.FilterPeerByAddrPort(arg)
-			case "pubkey":
-				// TODO: check it
-				// TODO: this should be changed to `id`
-				// NOTE: this changed in tendermint and we didn't notice...
-				return app.FilterPeerByPubKey(arg)
+			case "id":
+				return app.FilterPeerByID(arg)
 			}
 		} else {
 			msg := "Expected second parameter to be filter"

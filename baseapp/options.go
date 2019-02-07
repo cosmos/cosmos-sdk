@@ -84,11 +84,11 @@ func (app *BaseApp) SetAddrPeerFilter(pf sdk.PeerFilter) {
 	app.addrPeerFilter = pf
 }
 
-func (app *BaseApp) SetPubKeyPeerFilter(pf sdk.PeerFilter) {
+func (app *BaseApp) SetIDPeerFilter(pf sdk.PeerFilter) {
 	if app.sealed {
-		panic("SetPubKeyPeerFilter() on sealed BaseApp")
+		panic("SetIDPeerFilter() on sealed BaseApp")
 	}
-	app.pubkeyPeerFilter = pf
+	app.idPeerFilter = pf
 }
 
 func (app *BaseApp) SetFauxMerkleMode() {

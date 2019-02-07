@@ -76,6 +76,7 @@ IMPROVEMENTS
   * [\#3497](https://github.com/cosmos/cosmos-sdk/issues/3497) `gaiad gentx` supports `--ip` and `--node-id` flags to override defaults.
   * [\#3518](https://github.com/cosmos/cosmos-sdk/issues/3518) Fix flow in
   `keys add` to show the mnemonic by default.
+  * [\#3517](https://github.com/cosmos/cosmos-sdk/pull/3517) Increased test coverage
 
 * Gaia
   * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account

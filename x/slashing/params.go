@@ -41,12 +41,12 @@ func ParamKeyTable() params.KeyTable {
 
 // Params - used for initializing default parameter for slashing at genesis
 type Params struct {
-	MaxEvidenceAge          time.Duration `json:"max-evidence-age"`
-	SignedBlocksWindow      int64         `json:"signed-blocks-window"`
-	MinSignedPerWindow      sdk.Dec       `json:"min-signed-per-window"`
-	DowntimeJailDuration    time.Duration `json:"downtime-jail-duration"`
-	SlashFractionDoubleSign sdk.Dec       `json:"slash-fraction-double-sign"`
-	SlashFractionDowntime   sdk.Dec       `json:"slash-fraction-downtime"`
+	MaxEvidenceAge          time.Duration `json:"max_evidence_age"`
+	SignedBlocksWindow      int64         `json:"signed_blocks_window"`
+	MinSignedPerWindow      sdk.Dec       `json:"min_signed_per_window"`
+	DowntimeJailDuration    time.Duration `json:"downtime_jail_duration"`
+	SlashFractionDoubleSign sdk.Dec       `json:"slash_fraction_double_sign"`
+	SlashFractionDowntime   sdk.Dec       `json:"slash_fraction_downtime"`
 }
 
 func (p Params) String() string {
@@ -103,7 +103,10 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 	var minSignedPerWindow sdk.Dec
 	k.paramspace.Get(ctx, KeyMinSignedPerWindow, &minSignedPerWindow)
 	signedBlocksWindow := k.SignedBlocksWindow(ctx)
-	return sdk.NewDec(signedBlocksWindow).Mul(minSignedPerWindow).RoundInt64()
+
+	// NOTE: RoundInt64 will never panic as minSignedPerWindow is
+	//       less than 1.
+	return minSignedPerWindow.MulInt64(signedBlocksWindow).RoundInt64()
 }
 
 // Downtime unbond duration

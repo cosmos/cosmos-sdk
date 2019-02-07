@@ -49,7 +49,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// if we get to a zero-power validator (which we don't bond),
 		// there are no more possible bonded validators
-		if validator.Tokens.IsZero() {
+		if validator.PotentialTendermintPower() == 0 {
 			break
 		}
 
@@ -71,15 +71,15 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		oldPowerBytes, found := last[valAddrBytes]
 
 		// calculate the new power bytes
-		newPower := validator.BondedTokens().Int64()
-		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(sdk.NewInt(newPower))
+		newPower := validator.TendermintPower()
+		newPowerBytes := k.cdc.MustMarshalBinaryLengthPrefixed(newPower)
 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
 			updates = append(updates, validator.ABCIValidatorUpdate())
 
 			// set validator power on lookup index
-			k.SetLastValidatorPower(ctx, valAddr, sdk.NewInt(newPower))
+			k.SetLastValidatorPower(ctx, valAddr, newPower)
 		}
 
 		// validator still in the validator set, so delete from the copy

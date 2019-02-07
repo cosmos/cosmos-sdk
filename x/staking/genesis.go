@@ -81,7 +81,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 				panic("expected validator, not found")
 			}
 			update := validator.ABCIValidatorUpdate()
-			update.Power = lv.Power.Int64() // keep the next-val-set offset, use the last power for the first block
+			update.Power = lv.Power // keep the next-val-set offset, use the last power for the first block
 			res = append(res, update)
 		}
 	} else {
@@ -111,7 +111,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 		return false
 	})
 	var lastValidatorPowers []types.LastValidatorPower
-	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power sdk.Int) (stop bool) {
+	keeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) (stop bool) {
 		lastValidatorPowers = append(lastValidatorPowers, types.LastValidatorPower{addr, power})
 		return false
 	})
@@ -134,7 +134,7 @@ func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisVali
 	keeper.IterateLastValidators(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
 			PubKey: validator.GetConsPubKey(),
-			Power:  validator.GetPower().Int64(),
+			Power:  validator.GetTendermintPower(),
 			Name:   validator.GetMoniker(),
 		})
 

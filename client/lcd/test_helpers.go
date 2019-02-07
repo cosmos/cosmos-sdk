@@ -15,6 +15,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rest"
@@ -23,26 +26,22 @@ import (
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	cryptoKeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authRest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
-	bankRest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	bankrest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrrest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govRest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
+	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	slashingRest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
+	slashingrest "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingRest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/require"
+	stakingrest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
@@ -59,9 +58,6 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmrpc "github.com/tendermint/tendermint/rpc/lib/server"
 	tmtypes "github.com/tendermint/tendermint/types"
-
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrRest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 )
 
 // makePathname creates a unique pathname for each test. It will panic if it
@@ -101,30 +97,6 @@ func GetConfig() *tmcfg.Config {
 	config.RPC.GRPCListenAddress = grpcAddr
 
 	return config
-}
-
-// GetKeyBase returns the LCD test keybase. It also requires that a directory
-// could be made and a keybase could be fetched.
-//
-// NOTE: memDB cannot be used because the request is expecting to interact with
-// the default location.
-func GetKeyBase(t *testing.T) crkeys.Keybase {
-	dir, err := ioutil.TempDir("", "lcd_test")
-	require.NoError(t, err)
-
-	viper.Set(cli.HomeFlag, dir)
-
-	keybase, err := keys.GetKeyBaseWithWritePerm()
-	require.NoError(t, err)
-
-	return keybase
-}
-
-// GetTestKeyBase fetches the current testing keybase
-func GetTestKeyBase(t *testing.T) crkeys.Keybase {
-	keybase, err := keys.GetKeyBaseWithWritePerm()
-	require.NoError(t, err)
-	return keybase
 }
 
 // CreateAddr adds an address to the key store and returns an address and seed.
@@ -197,14 +169,27 @@ func (b AddrSeedSlice) Swap(i, j int) {
 	b[j], b[i] = b[i], b[j]
 }
 
+// InitClientHome initialises client home dir.
+func InitClientHome(t *testing.T, dir string) string {
+	var err error
+	if dir == "" {
+		dir, err = ioutil.TempDir("", "lcd_test")
+		require.NoError(t, err)
+	}
+	// TODO: this should be set in NewRestServer
+	// and pass down the CLIContext to achieve
+	// parallelism.
+	viper.Set(cli.HomeFlag, dir)
+	return dir
+}
+
 // TODO: Make InitializeTestLCD safe to call in multiple tests at the same time
 // InitializeTestLCD starts Tendermint and the LCD in process, listening on
 // their respective sockets where nValidators is the total number of validators
 // and initAddrs are the accounts to initialize with some steak tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.
-func InitializeTestLCD(
-	t *testing.T, nValidators int, initAddrs []sdk.AccAddress,
-) (cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
+func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress, minting bool) (
+	cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
 
 	if nValidators < 1 {
 		panic("InitializeTestLCD must use at least one validator")
@@ -239,16 +224,19 @@ func InitializeTestLCD(
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
 		pubKey := privVal.GetPubKey()
-		delegation := 100
+
+		power := int64(100)
 		if i > 0 {
 			pubKey = ed25519.GenPrivKey().PubKey()
-			delegation = 1
+			power = 1
 		}
+		startTokens := staking.TokensFromTendermintPower(power)
+
 		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(operAddr),
 			pubKey,
-			sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(int64(delegation))),
-			staking.Description{Moniker: fmt.Sprintf("validator-%d", i+1)},
+			sdk.NewCoin(staking.DefaultBondDenom, startTokens),
+			staking.NewDescription(fmt.Sprintf("validator-%d", i+1), "", "", ""),
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
 		)
 		stdSignMsg := txbuilder.StdSignMsg{
@@ -260,12 +248,14 @@ func InitializeTestLCD(
 		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
 		txBytes, err := cdc.MarshalJSON(tx)
 		require.Nil(t, err)
+
 		genTxs = append(genTxs, txBytes)
 		valConsPubKeys = append(valConsPubKeys, pubKey)
 		valOperAddrs = append(valOperAddrs, sdk.ValAddress(operAddr))
 
 		accAuth := auth.NewBaseAccountWithAddress(sdk.AccAddress(operAddr))
-		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 150)}
+		accTokens := staking.TokensFromTendermintPower(150)
+		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
 		accs = append(accs, gapp.NewGenesisAccount(&accAuth))
 	}
 
@@ -279,15 +269,21 @@ func InitializeTestLCD(
 	// add some tokens to init accounts
 	for _, addr := range initAddrs {
 		accAuth := auth.NewBaseAccountWithAddress(addr)
-		accAuth.Coins = sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 100)}
+		accTokens := staking.TokensFromTendermintPower(100)
+		accAuth.Coins = sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, accTokens)}
 		acc := gapp.NewGenesisAccount(&accAuth)
 		genesisState.Accounts = append(genesisState.Accounts, acc)
-		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(sdk.NewInt(100))
+		genesisState.StakingData.Pool.NotBondedTokens = genesisState.StakingData.Pool.NotBondedTokens.Add(accTokens)
 	}
 
-	inflationMin := sdk.MustNewDecFromStr("10000.0")
+	inflationMin := sdk.ZeroDec()
+	if minting {
+		inflationMin = sdk.MustNewDecFromStr("10000.0")
+		genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
+	} else {
+		genesisState.MintData.Params.InflationMax = inflationMin
+	}
 	genesisState.MintData.Minter.Inflation = inflationMin
-	genesisState.MintData.Params.InflationMax = sdk.MustNewDecFromStr("15000.0")
 	genesisState.MintData.Params.InflationMin = inflationMin
 
 	appState, err := codec.MarshalJSONIndent(cdc, genesisState)
@@ -302,9 +298,6 @@ func InitializeTestLCD(
 	viper.Set(client.FlagChainID, genDoc.ChainID)
 	// TODO Set to false once the upstream Tendermint proof verification issue is fixed.
 	viper.Set(client.FlagTrustNode, true)
-	dir, err := ioutil.TempDir("", "lcd_test")
-	require.NoError(t, err)
-	viper.Set(cli.HomeFlag, dir)
 
 	node, err := startTM(config, logger, genDoc, privVal, app)
 	require.NoError(t, err)
@@ -335,6 +328,7 @@ func startTM(
 	tmcfg *tmcfg.Config, logger log.Logger, genDoc *tmtypes.GenesisDoc,
 	privVal tmtypes.PrivValidator, app abci.Application,
 ) (*nm.Node, error) {
+
 	genDocProvider := func() (*tmtypes.GenesisDoc, error) { return genDoc, nil }
 	dbProvider := func(*nm.DBContext) (dbm.DB, error) { return dbm.NewMemDB(), nil }
 	nodeKey, err := p2p.LoadOrGenNodeKey(tmcfg.NodeKeyFile())
@@ -369,7 +363,6 @@ func startTM(
 // startLCD starts the LCD.
 func startLCD(logger log.Logger, listenAddr string, cdc *codec.Codec, t *testing.T) (net.Listener, error) {
 	rs := NewRestServer(cdc)
-	rs.setKeybase(GetTestKeyBase(t))
 	registerRoutes(rs)
 	listener, err := tmrpc.Listen(listenAddr, tmrpc.Config{})
 	if err != nil {
@@ -384,12 +377,12 @@ func registerRoutes(rs *RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	authRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, auth.StoreKey)
-	bankRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	distrRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distr.StoreKey)
-	stakingRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	slashingRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	govRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
+	authrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, auth.StoreKey)
+	bankrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	distrrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distr.StoreKey)
+	stakingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	slashingrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	govrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
 // Request makes a test LCD test request. It returns a response object and a
@@ -678,7 +671,7 @@ func doTransferWithGas(
 	kb := client.MockKeyBase()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
-		"receive_address", cryptoKeys.English, gapp.DefaultKeyPass, cryptoKeys.SigningAlgo("secp256k1"),
+		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
 	)
 	require.Nil(t, err)
 
@@ -700,7 +693,7 @@ func doTransferWithGas(
 	)
 
 	sr := rest.SendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1)},
+		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 
@@ -720,7 +713,7 @@ func doTransferWithGasAccAuto(
 	kb := client.MockKeyBase()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
-		"receive_address", cryptoKeys.English, gapp.DefaultKeyPass, cryptoKeys.SigningAlgo("secp256k1"),
+		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
 	)
 	require.Nil(t, err)
 
@@ -733,7 +726,7 @@ func doTransferWithGasAccAuto(
 	)
 
 	sr := rest.SendReq{
-		Amount:  sdk.Coins{sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 1)},
+		Amount:  sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, 1)},
 		BaseReq: baseReq,
 	}
 
@@ -755,7 +748,8 @@ type sendReq struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doDelegate(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
+	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Int, fees sdk.Coins) (resultTx sdk.TxResponse) {
+
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
@@ -765,7 +759,7 @@ func doDelegate(t *testing.T, port, name, password string,
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		Delegation:    sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, amount),
+		Delegation:    sdk.NewCoin(staking.DefaultBondDenom, amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -788,7 +782,7 @@ type msgDelegationsInput struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doUndelegate(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
+	delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Int, fees sdk.Coins) (resultTx sdk.TxResponse) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
@@ -799,7 +793,7 @@ func doUndelegate(t *testing.T, port, name, password string,
 		BaseReq:       baseReq,
 		DelegatorAddr: delAddr,
 		ValidatorAddr: valAddr,
-		SharesAmount:  sdk.NewDec(amount),
+		SharesAmount:  sdk.NewDecFromInt(amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -823,7 +817,8 @@ type msgUndelegateInput struct {
 
 // POST /staking/delegators/{delegatorAddr}/delegations Submit delegation
 func doBeginRedelegation(t *testing.T, port, name, password string,
-	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
+	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount sdk.Int,
+	fees sdk.Coins) (resultTx sdk.TxResponse) {
 
 	acc := getAccount(t, port, delAddr)
 	accnum := acc.GetAccountNumber()
@@ -837,7 +832,7 @@ func doBeginRedelegation(t *testing.T, port, name, password string,
 		DelegatorAddr:    delAddr,
 		ValidatorSrcAddr: valSrcAddr,
 		ValidatorDstAddr: valDstAddr,
-		SharesAmount:     sdk.NewDec(amount),
+		SharesAmount:     sdk.NewDecFromInt(amount),
 	}
 	req, err := cdc.MarshalJSON(msg)
 	require.NoError(t, err)
@@ -1056,7 +1051,9 @@ func getStakingParams(t *testing.T, port string) staking.Params {
 // ICS 22 - Gov
 // ----------------------------------------------------------------------
 // POST /gov/proposals Submit a proposal
-func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
+func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress,
+	amount sdk.Int, fees sdk.Coins) (resultTx sdk.TxResponse) {
+
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
 	sequence := acc.GetSequence()
@@ -1068,7 +1065,7 @@ func doSubmitProposal(t *testing.T, port, seed, name, password string, proposerA
 		Description:    "test",
 		ProposalType:   "Text",
 		Proposer:       proposerAddr,
-		InitialDeposit: sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))},
+		InitialDeposit: sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, amount)},
 		BaseReq:        baseReq,
 	}
 
@@ -1151,7 +1148,8 @@ func getProposalsFilterStatus(t *testing.T, port string, status gov.ProposalStat
 }
 
 // POST /gov/proposals/{proposalId}/deposits Deposit tokens to a proposal
-func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64, amount int64, fees sdk.Coins) (resultTx sdk.TxResponse) {
+func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk.AccAddress, proposalID uint64,
+	amount sdk.Int, fees sdk.Coins) (resultTx sdk.TxResponse) {
 
 	acc := getAccount(t, port, proposerAddr)
 	accnum := acc.GetAccountNumber()
@@ -1161,7 +1159,7 @@ func doDeposit(t *testing.T, port, seed, name, password string, proposerAddr sdk
 
 	dr := rest.DepositReq{
 		Depositor: proposerAddr,
-		Amount:    sdk.Coins{sdk.NewCoin(stakingTypes.DefaultBondDenom, sdk.NewInt(amount))},
+		Amount:    sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, amount)},
 		BaseReq:   baseReq,
 	}
 

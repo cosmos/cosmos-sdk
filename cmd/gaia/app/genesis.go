@@ -23,14 +23,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (
 	// bonded tokens given to genesis validators/accounts
-	freeFermionVal  = int64(100)
-	freeFermionsAcc = sdk.NewInt(150)
-	bondDenom       = stakingTypes.DefaultBondDenom
+	freeFermionsAcc = staking.TokensFromTendermintPower(150)
+	bondDenom       = staking.DefaultBondDenom
 )
 
 // State to Unmarshal

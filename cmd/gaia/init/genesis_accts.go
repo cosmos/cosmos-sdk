@@ -28,7 +28,7 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 
 			addr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				kb, err := keys.GetKeyBaseFromDir(viper.GetString(flagClientHome))
+				kb, err := keys.NewKeyBaseFromDir(viper.GetString(flagClientHome))
 				if err != nil {
 					return err
 				}

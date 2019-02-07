@@ -15,13 +15,22 @@ BREAKING CHANGES
     - `--insecure` flag is removed.
     - `--tls` is now used to enable secure layer.
   - [\#3451](https://github.com/cosmos/cosmos-sdk/pull/3451) `gaiacli` now returns transactions in plain text including tags.
+  - [\#3497](https://github.com/cosmos/cosmos-sdk/issues/3497) `gaiad init` now takes moniker as required arguments, not as parameter.
+  * [\#3501](https://github.com/cosmos/cosmos-sdk/issues/3501) Change validator
+  address Bech32 encoding to consensus address in `tendermint-validator-set`.
 
 * Gaia
   *  [\#3457](https://github.com/cosmos/cosmos-sdk/issues/3457) Changed governance tally validatorGovInfo to use sdk.Int power instead of sdk.Dec
 
 * SDK
+  * \#2513 Tendermint updates are adjusted by 10^-6 relative to staking tokens, 
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
   * [\#3490](https://github.com/cosmos/cosmos-sdk/issues/3490) ReadRESTReq() returns bool to avoid callers to write error responses twice.
+  * [\#3502](https://github.com/cosmos/cosmos-sdk/pull/3502) Fixes issue when comparing genesis states
+  * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Various clean ups:
+    - Replace all GetKeyBase* functions family in favor of NewKeyBaseFromDir and NewKeyBaseFromHomeFlag.
+    - Remove Get prefix from all TxBuilder's getters.
+  * [\#3522](https://github.com/cosmos/cosmos-sdk/pull/3522) Get rid of double negatives: Coins.IsNotNegative() -> Coins.IsAnyNegative().
 
 * Tendermint
 
@@ -43,6 +52,8 @@ FEATURES
 * SDK
   * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
   * [\#3477][distribution] new query endpoint "delegator_validators"
+  * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Provided a lazy loading implementation of Keybase that locks the underlying
+    storage only for the time needed to perform the required operation. Also added Keybase reference to TxBuilder struct.
 
 * Tendermint
 
@@ -57,9 +68,13 @@ IMPROVEMENTS
     * `from` field in the `base_req` body can be a Keybase name or account address
   * [\#3423](https://github.com/cosmos/cosmos-sdk/issues/3423) Allow simulation
   (auto gas) to work with generate only.
+  * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) REST server calls to keybase does not lock the underlying storage anymore.
 
 * Gaia CLI  (`gaiacli`)
   * [\#3476](https://github.com/cosmos/cosmos-sdk/issues/3476) New `withdraw-all-rewards` command to withdraw all delegations rewards for delegators.
+  * [\#3497](https://github.com/cosmos/cosmos-sdk/issues/3497) `gaiad gentx` supports `--ip` and `--node-id` flags to override defaults.
+  * [\#3518](https://github.com/cosmos/cosmos-sdk/issues/3518) Fix flow in
+  `keys add` to show the mnemonic by default.
 
 * Gaia
   * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account
@@ -75,6 +90,9 @@ IMPROVEMENTS
   * [\#2605] x/params add subkey accessing
   * [\#2986](https://github.com/cosmos/cosmos-sdk/pull/2986) Store Refactor
   * \#3435 Test that store implementations do not allow nil values
+  * \#2509 Sanitize all usage of Dec.RoundInt64()
+  * [\#556](https://github.com/cosmos/cosmos-sdk/issues/556) Increase `BaseApp`
+  test coverage.
 
 * Tendermint
 

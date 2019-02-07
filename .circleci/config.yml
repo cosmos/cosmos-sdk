@@ -201,12 +201,9 @@ jobs:
           name: Run tests
           command: |
             export PATH="$GOBIN:$PATH"
-            make install
             export VERSION="$(git describe --tags --long | sed 's/v\(.*\)/\1/')"
-            for pkg in $(go list github.com/cosmos/cosmos-sdk/... | grep -v github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test | grep -v '/simulation' | circleci tests split --split-by=timings); do
-              id=$(basename "$pkg")
-              GOCACHE=off go test -timeout 8m -race -coverprofile=/tmp/workspace/profiles/$id.out -covermode=atomic "$pkg" | tee "/tmp/logs/$id-$RANDOM.log"
-            done
+            make install
+            GOCACHE=off go test -race -timeout 8m -covermode=atomic -coverprofile=coverage.txt -failfast ./...
       - persist_to_workspace:
           root: /tmp/workspace
           paths:
@@ -222,15 +219,6 @@ jobs:
           at: /tmp/workspace
       - checkout
       - *dependencies
-      - run:
-          name: gather
-          command: |
-            set -ex
-
-            echo "mode: atomic" > coverage.txt
-            for prof in $(ls /tmp/workspace/profiles/); do
-              tail -n +2 /tmp/workspace/profiles/"$prof" >> coverage.txt
-            done
       - run:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt

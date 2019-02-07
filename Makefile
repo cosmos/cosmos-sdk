@@ -198,7 +198,7 @@ test_sim_gaia_profile:
 		-SimulationEnabled=true -SimulationNumBlocks=$(SIM_NUM_BLOCKS) -SimulationBlockSize=$(SIM_BLOCK_SIZE) -SimulationCommit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 test_cover:
-	@export VERSION=$(VERSION); bash -x tests/test_cover.sh
+	@export VERSION=$(VERSION); GOCACHE=off go test -race -timeout 8m -covermode=atomic -coverprofile=coverage.txt -failfast ./...
 
 test_lint:
 	gometalinter --config=tools/gometalinter.json ./...

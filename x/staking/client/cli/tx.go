@@ -91,6 +91,17 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				newRate = &rate
 			}
 
+			minSelfBondAmountString := viper.GetString(FlagMinSelfBond)
+			minSelfBondMaxDecreaseRateString := viper.GetString(FlagMinSelfBondMaxDecreaseRate)
+
+			var minSelfBond staking.MinSelfBondMsg
+			if minSelfBondAmountString != "" || minSelfBondMaxDecreaseRateString != "" {
+
+				minSelfBondAmount, ok := sdk.NewIntFromString(minSelfBondAmountString)
+
+				minSelfBond = staking.NewMinSelfBondMsg(minSelfBondAmount, minSelfBondMaxDecreaseRate)
+			}
+
 			msg := staking.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
 
 			if cliCtx.GenerateOnly {

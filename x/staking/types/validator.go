@@ -36,7 +36,8 @@ type Validator struct {
 	UnbondingHeight         int64     `json:"unbonding_height"` // if unbonding, height at which this validator has begun unbonding
 	UnbondingCompletionTime time.Time `json:"unbonding_time"`   // if unbonding, min time for the validator to complete unbonding
 
-	Commission Commission `json:"commission"` // commission parameters
+	Commission  Commission  `json:"commission"` // commission parameters
+	MinSelfBond MinSelfBond `json:"min_self_bond"`
 }
 
 // Validators is a collection of Validator

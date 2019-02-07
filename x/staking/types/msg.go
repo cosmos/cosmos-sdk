@@ -24,6 +24,7 @@ var (
 type MsgCreateValidator struct {
 	Description   Description    `json:"description"`
 	Commission    CommissionMsg  `json:"commission"`
+	MinSelfBond   MinSelfBondMsg `json:"min_self_bond"`
 	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	PubKey        crypto.PubKey  `json:"pubkey"`
@@ -33,6 +34,7 @@ type MsgCreateValidator struct {
 type msgCreateValidatorJSON struct {
 	Description   Description    `json:"description"`
 	Commission    CommissionMsg  `json:"commission"`
+	MinSelfBond   MinSelfBondMsg `json:"min_self_bond"`
 	DelegatorAddr sdk.AccAddress `json:"delegator_address"`
 	ValidatorAddr sdk.ValAddress `json:"validator_address"`
 	PubKey        string         `json:"pubkey"`
@@ -143,19 +145,21 @@ type MsgEditValidator struct {
 	Description
 	ValidatorAddr sdk.ValAddress `json:"address"`
 
-	// We pass a reference to the new commission rate as it's not mandatory to
+	// We pass a reference to the new commission rate and min self bond as it's not mandatory to
 	// update. If not updated, the deserialized rate will be zero with no way to
 	// distinguish if an update was intended.
 	//
 	// REF: #2373
-	CommissionRate *sdk.Dec `json:"commission_rate"`
+	CommissionRate *sdk.Dec        `json:"commission_rate"`
+	MinSelfBond    *MinSelfBondMsg `json:"min_self_bond"`
 }
 
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec) MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfBond *MinSelfBondMsg) MsgEditValidator {
 	return MsgEditValidator{
 		Description:    description,
 		CommissionRate: newRate,
 		ValidatorAddr:  valAddr,
+		MinSelfBond:    newMinSelfBond,
 	}
 }
 

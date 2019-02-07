@@ -91,6 +91,30 @@ func ErrCommissionGTMaxChangeRate(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be changed more than max change rate")
 }
 
+func ErrMinSelfBondUpdateTime(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond cannot be changed more than once in 24h")
+}
+
+func ErrMinSelfBondInvalid(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond must be a positive integer")
+}
+
+func ErrMinSelfBondTooLow(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond cannot be set that low")
+}
+
+func ErrMinSelfBondMaxDailyDecreaseRateInvalid(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "the maximum allowable MinSelfBond decrease rate must be a non negative integer")
+}
+
+func ErrMinSelfBondMaxDailyDecreaseRateIncreased(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "the maximum allowable MinSelfBond decrease rate cannot be increased")
+}
+
+func ErrSelfBondUpdateTime(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond cannot be changed more than once in 24h")
+}
+
 func ErrNilDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "delegator address is nil")
 }

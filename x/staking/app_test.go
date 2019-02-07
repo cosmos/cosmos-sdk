@@ -148,7 +148,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	// edit the validator
 	description = NewDescription("bar_moniker", "", "", "")
-	editValidatorMsg := NewMsgEditValidator(sdk.ValAddress(addr1), description, nil)
+	editValidatorMsg := NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil)
 
 	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{editValidatorMsg}, []uint64{0}, []uint64{2}, true, true, priv1)
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)

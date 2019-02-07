@@ -26,7 +26,7 @@ This guide helps you create a single validator node that runs a network locally 
 cd $HOME
 
 # Initialize the genesis.json file that will help you to bootstrap the network
-gaiad init --chain-id testing --moniker testing
+gaiad init --chain-id=testing testing
 
 # Create a key to hold your validator account
 gaiacli keys add validator

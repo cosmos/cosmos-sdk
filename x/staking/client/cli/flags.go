@@ -26,9 +26,8 @@ const (
 	FlagCommissionMaxRate       = "commission-max-rate"
 	FlagCommissionMaxChangeRate = "commission-max-change-rate"
 
-	FlagGenesisFormat = "genesis-format"
-	FlagNodeID        = "node-id"
-	FlagIP            = "ip"
+	FlagNodeID = "node-id"
+	FlagIP     = "ip"
 )
 
 // common flagsets to add to various functions

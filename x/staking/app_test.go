@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/mock"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // getMockApp returns an initialized mock application for this module.
@@ -52,7 +51,8 @@ func getInitChainer(mapp *mock.App, keeper Keeper) sdk.InitChainer {
 		mapp.InitChainer(ctx, req)
 
 		stakingGenesis := DefaultGenesisState()
-		stakingGenesis.Pool.NotBondedTokens = sdk.NewInt(100000)
+		tokens := TokensFromTendermintPower(100000)
+		stakingGenesis.Pool.NotBondedTokens = tokens
 
 		validators, err := InitGenesis(ctx, keeper, stakingGenesis)
 		if err != nil {
@@ -97,8 +97,10 @@ func checkDelegation(
 func TestStakingMsgs(t *testing.T) {
 	mApp, keeper := getMockApp(t)
 
-	genCoin := sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 42)
-	bondCoin := sdk.NewInt64Coin(stakingTypes.DefaultBondDenom, 10)
+	genTokens := TokensFromTendermintPower(42)
+	bondTokens := TokensFromTendermintPower(10)
+	genCoin := sdk.NewCoin(DefaultBondDenom, genTokens)
+	bondCoin := sdk.NewCoin(DefaultBondDenom, bondTokens)
 
 	acc1 := &auth.BaseAccount{
 		Address: addr1,
@@ -127,7 +129,7 @@ func TestStakingMsgs(t *testing.T) {
 	validator := checkValidator(t, mApp, keeper, sdk.ValAddress(addr1), true)
 	require.Equal(t, sdk.ValAddress(addr1), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.True(sdk.IntEq(t, sdk.NewInt(10), validator.BondedTokens()))
+	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 
 	// addr1 create validator on behalf of addr2
 	createValidatorMsgOnBehalfOf := NewMsgCreateValidatorOnBehalfOf(
@@ -141,10 +143,10 @@ func TestStakingMsgs(t *testing.T) {
 	validator = checkValidator(t, mApp, keeper, sdk.ValAddress(addr2), true)
 	require.Equal(t, sdk.ValAddress(addr2), validator.OperatorAddr)
 	require.Equal(t, sdk.Bonded, validator.Status)
-	require.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
+	require.True(sdk.IntEq(t, bondTokens, validator.Tokens))
 
 	// check the bond that should have been created as well
-	checkDelegation(t, mApp, keeper, addr1, sdk.ValAddress(addr1), true, sdk.NewDec(10))
+	checkDelegation(t, mApp, keeper, addr1, sdk.ValAddress(addr1), true, sdk.NewDecFromInt(bondTokens))
 
 	// edit the validator
 	description = NewDescription("bar_moniker", "", "", "")
@@ -160,10 +162,10 @@ func TestStakingMsgs(t *testing.T) {
 
 	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{delegateMsg}, []uint64{0}, []uint64{1}, true, true, priv2)
 	mock.CheckBalance(t, mApp, addr2, sdk.Coins{genCoin.Minus(bondCoin)})
-	checkDelegation(t, mApp, keeper, addr2, sdk.ValAddress(addr1), true, sdk.NewDec(10))
+	checkDelegation(t, mApp, keeper, addr2, sdk.ValAddress(addr1), true, sdk.NewDecFromInt(bondTokens))
 
 	// begin unbonding
-	beginUnbondingMsg := NewMsgUndelegate(addr2, sdk.ValAddress(addr1), sdk.NewDec(10))
+	beginUnbondingMsg := NewMsgUndelegate(addr2, sdk.ValAddress(addr1), sdk.NewDecFromInt(bondTokens))
 	mock.SignCheckDeliver(t, mApp.Cdc, mApp.BaseApp, []sdk.Msg{beginUnbondingMsg}, []uint64{0}, []uint64{2}, true, true, priv2)
 
 	// delegation should exist anymore

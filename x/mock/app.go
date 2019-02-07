@@ -59,10 +59,10 @@ func NewApp() *App {
 		Cdc:              cdc,
 		KeyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
 		KeyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
-		TotalCoinsSupply: sdk.Coins{},
 		KeyFeeCollection: sdk.NewKVStoreKey("fee"),
 		KeyParams:        sdk.NewKVStoreKey("params"),
 		TKeyParams:       sdk.NewTransientStoreKey("transient_params"),
+		TotalCoinsSupply: sdk.Coins{},
 	}
 
 	app.ParamsKeeper = params.NewKeeper(app.Cdc, app.KeyParams, app.TKeyParams)
@@ -135,6 +135,16 @@ type AddrKeys struct {
 	PrivKey crypto.PrivKey
 }
 
+func NewAddrKeys(address sdk.AccAddress, pubKey crypto.PubKey,
+	privKey crypto.PrivKey) AddrKeys {
+
+	return AddrKeys{
+		Address: address,
+		PubKey:  pubKey,
+		PrivKey: privKey,
+	}
+}
+
 // implement `Interface` in sort package.
 type AddrKeysSlice []AddrKeys
 
@@ -161,7 +171,9 @@ func (b AddrKeysSlice) Swap(i, j int) {
 
 // CreateGenAccounts generates genesis accounts loaded with coins, and returns
 // their addresses, pubkeys, and privkeys.
-func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account, addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account,
+	addrs []sdk.AccAddress, pubKeys []crypto.PubKey, privKeys []crypto.PrivKey) {
+
 	addrKeysSlice := AddrKeysSlice{}
 
 	for i := 0; i < numAccs; i++ {
@@ -169,11 +181,7 @@ func CreateGenAccounts(numAccs int, genCoins sdk.Coins) (genAccs []auth.Account,
 		pubKey := privKey.PubKey()
 		addr := sdk.AccAddress(pubKey.Address())
 
-		addrKeysSlice = append(addrKeysSlice, AddrKeys{
-			Address: addr,
-			PubKey:  pubKey,
-			PrivKey: privKey,
-		})
+		addrKeysSlice = append(addrKeysSlice, NewAddrKeys(addr, pubKey, privKey))
 	}
 
 	sort.Sort(addrKeysSlice)

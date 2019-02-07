@@ -10,11 +10,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestBeginBlocker(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
-	addr, pk, amt := addrs[2], pks[2], sdk.NewInt(100)
+	power := int64(100)
+	amt := types.TokensFromTendermintPower(power)
+	addr, pk := addrs[2], pks[2]
 
 	// bond the validator
 	got := staking.NewHandler(sk)(ctx, NewTestMsgCreateValidator(addr, pk, amt))
@@ -24,7 +27,7 @@ func TestBeginBlocker(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
-	require.True(sdk.IntEq(t, amt, sk.Validator(ctx, addr).GetPower()))
+	require.Equal(t, amt, sk.Validator(ctx, addr).GetBondedTokens())
 
 	val := abci.Validator{
 		Address: pk.Address(),

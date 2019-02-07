@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -116,14 +115,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 				return err
 			}
 
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// Build and sign the transaction, then broadcast to Tendermint
-			// proposalID must be returned, and it is a part of response.
-			cliCtx.PrintResponse = true
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
 
@@ -169,7 +161,7 @@ func parseSubmitProposalFlags() (*proposal, error) {
 
 // GetCmdDeposit implements depositing tokens for an active proposal.
 func GetCmdDeposit(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "deposit [proposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for activing proposal",
@@ -221,21 +213,14 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 				return err
 			}
 
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// Build and sign the transaction, then broadcast to a Tendermint node.
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	return cmd
 }
 
 // GetCmdVote implements creating a new vote command.
 func GetCmdVote(queryRoute string, cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
@@ -278,15 +263,7 @@ $ gaiacli tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			// If generate only print the transaction
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-
-			// Build and sign the transaction, then broadcast to a Tendermint node.
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	return cmd
 }

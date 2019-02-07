@@ -29,7 +29,8 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	}
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
-	slashAmountDec := sdk.NewDec(power).Mul(slashFactor)
+	amount := types.TokensFromTendermintPower(power)
+	slashAmountDec := sdk.NewDecFromInt(amount).Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348

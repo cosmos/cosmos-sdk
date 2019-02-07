@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
 	keybase "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -50,22 +49,6 @@ func NewRestServer(cdc *codec.Codec) *RestServer {
 
 		log: logger,
 	}
-}
-
-func (rs *RestServer) setKeybase(kb keybase.Keybase) {
-	// If a keybase is passed in, set it and return
-	if kb != nil {
-		rs.KeyBase = kb
-		return
-	}
-
-	// Otherwise get the keybase and set it
-	kb, err := keys.GetKeyBase() //XXX
-	if err != nil {
-		fmt.Printf("Failed to open Keybase: %s, exiting...", err)
-		os.Exit(1)
-	}
-	rs.KeyBase = kb
 }
 
 // Start starts the rest server
@@ -136,7 +119,6 @@ func ServeCommand(cdc *codec.Codec, registerRoutesFn func(*RestServer)) *cobra.C
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			rs := NewRestServer(cdc)
 
-			rs.setKeybase(nil)
 			registerRoutesFn(rs)
 
 			// Start the rest server and return error if one exists

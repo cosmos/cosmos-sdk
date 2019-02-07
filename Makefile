@@ -147,7 +147,7 @@ test_cli:
 test_ledger:
     # First test with mock
 	@go test `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
-    # Now test with a rel device
+    # Now test with a real device
 	@go test -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test_unit:

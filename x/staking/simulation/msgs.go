@@ -82,13 +82,11 @@ func SimulateMsgEditValidator(k staking.Keeper) simulation.Operation {
 		address := val.GetOperator()
 		newCommissionRate := simulation.RandomDecAmount(r, val.Commission.MaxRate)
 
-		var newMinSelfBond sdk.Int
-		msg := staking.NewMsgEditValidator(address, description, &newCommissionRate, &newMinSelfBond)
+		msg := staking.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
 		if msg.ValidateBasic() != nil {
 			return "", nil, fmt.Errorf("expected msg to pass ValidateBasic: %s", msg.GetSignBytes())
 		}
-
 		ctx, write := ctx.CacheContext()
 		result := handler(ctx, msg)
 		if result.IsOK() {

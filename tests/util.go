@@ -5,7 +5,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"strings"
 
@@ -197,26 +200,17 @@ func ExtractPortFromAddress(listenAddress string) string {
 	return stringList[2]
 }
 
+// NewTestCaseDir creates a new temporary directory for a test case.
+// Returns the directory path and a cleanup function.
+// nolint: errcheck
+func NewTestCaseDir(t *testing.T) (string, func()) {
+	dir, err := ioutil.TempDir("", t.Name()+"_")
+	require.NoError(t, err)
+	return dir, func() { os.RemoveAll(dir) }
+}
+
 var cdc = amino.NewCodec()
 
 func init() {
 	ctypes.RegisterAmino(cdc)
-}
-
-// GetTempDir creates a temporary directory and returns a clean up function
-// to be deferred
-func GetTempDir(prefix string) (string, func(), error) {
-	rootDir, err := ioutil.TempDir("", prefix)
-	if err != nil {
-		return "", nil, err
-	}
-
-	cleanUp := func() {
-		err := os.RemoveAll(rootDir)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return rootDir, cleanUp, nil
 }

@@ -233,6 +233,14 @@ jobs:
               tail -n +2 /tmp/workspace/profiles/"$prof" >> coverage.txt
             done
       - run:
+          name: filter out DONTCOVER
+          command: |
+            excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER' | xargs realpath --relative-to=$GOPATH/src)"
+            for filename in ${excludelist}; do
+              echo "Excluding ${filename} ..."
+              sed -i "\%${filename}:%d" coverage.txt
+            done
+      - run:
           name: upload
           command: bash <(curl -s https://codecov.io/bash) -f coverage.txt
 

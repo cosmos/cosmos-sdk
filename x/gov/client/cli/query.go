@@ -511,3 +511,5 @@ $ gaiacli query gov proposer 1
 		},
 	}
 }
+
+// DONTCOVER

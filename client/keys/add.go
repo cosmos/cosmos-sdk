@@ -95,10 +95,6 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 	var err error
 	var encryptPassword string
 
-	if len(args) < 1 {
-		return errors.New("not enough arguments")
-	}
-
 	buf := client.BufferStdin()
 	name := args[0]
 

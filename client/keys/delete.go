@@ -47,9 +47,6 @@ gaiacli.
 }
 
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return errors.New("a name must be provided")
-	}
 	name := args[0]
 
 	kb, err := NewKeyBaseFromHomeFlag()

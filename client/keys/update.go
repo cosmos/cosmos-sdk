@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pkg/errors"
-
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/spf13/cobra"
 
@@ -28,10 +26,6 @@ func updateKeyCommand() *cobra.Command {
 }
 
 func runUpdateCmd(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return errors.New("not enough arguments")
-	}
-
 	name := args[0]
 
 	buf := client.BufferStdin()

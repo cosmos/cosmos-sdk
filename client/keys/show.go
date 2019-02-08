@@ -64,10 +64,6 @@ func showKeysCmd() *cobra.Command {
 func runShowCmd(cmd *cobra.Command, args []string) (err error) {
 	var info keys.Info
 
-	if len(args) < 1 {
-		return errors.New("not enough arguments")
-	}
-
 	if len(args) == 1 {
 		info, err = GetKeyInfo(args[0])
 		if err != nil {

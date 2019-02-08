@@ -25,7 +25,7 @@ BREAKING CHANGES
   *  Reintroduce OR semantics for tx fees
 
 * SDK
-  * \#2513 Tendermint updates are adjusted by 10^-6 relative to staking tokens, 
+  * \#2513 Tendermint updates are adjusted by 10^-6 relative to staking tokens,
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
   * [\#3490](https://github.com/cosmos/cosmos-sdk/issues/3490) ReadRESTReq() returns bool to avoid callers to write error responses twice.
   * [\#3502](https://github.com/cosmos/cosmos-sdk/pull/3502) Fixes issue when comparing genesis states
@@ -73,6 +73,7 @@ IMPROVEMENTS
   * [\#3423](https://github.com/cosmos/cosmos-sdk/issues/3423) Allow simulation
   (auto gas) to work with generate only.
   * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) REST server calls to keybase does not lock the underlying storage anymore.
+  * [\#3523](https://github.com/cosmos/cosmos-sdk/pull/3523) Added `/tx/encode` endpoint to serialize a JSON tx to base64-encoded Amino.
 
 * Gaia CLI  (`gaiacli`)
   * [\#3476](https://github.com/cosmos/cosmos-sdk/issues/3476) New `withdraw-all-rewards` command to withdraw all delegations rewards for delegators.
@@ -80,6 +81,7 @@ IMPROVEMENTS
   * [\#3518](https://github.com/cosmos/cosmos-sdk/issues/3518) Fix flow in
   `keys add` to show the mnemonic by default.
   * [\#3517](https://github.com/cosmos/cosmos-sdk/pull/3517) Increased test coverage
+  * [\#3523](https://github.com/cosmos/cosmos-sdk/pull/3523) Added `tx encode` command to serialize a JSON tx to base64-encoded Amino.
 
 * Gaia
   * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account

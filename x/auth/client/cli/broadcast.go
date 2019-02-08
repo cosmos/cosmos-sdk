@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -10,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 // GetSignCommand returns the sign command
@@ -27,7 +25,7 @@ $ gaiacli tx broadcast ./mytxn.json
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			cliCtx := context.NewCLIContext().WithCodec(codec)
-			stdTx, err := readAndUnmarshalStdTx(cliCtx.Codec, args[0])
+			stdTx, err := authclient.ReadStdTxFromFile(cliCtx.Codec, args[0])
 			if err != nil {
 				return
 			}
@@ -44,20 +42,4 @@ $ gaiacli tx broadcast ./mytxn.json
 	}
 
 	return client.PostCommands(cmd)[0]
-}
-
-func readAndUnmarshalStdTx(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {
-	var bytes []byte
-	if filename == "-" {
-		bytes, err = ioutil.ReadAll(os.Stdin)
-	} else {
-		bytes, err = ioutil.ReadFile(filename)
-	}
-	if err != nil {
-		return
-	}
-	if err = cdc.UnmarshalJSON(bytes, &stdTx); err != nil {
-		return
-	}
-	return
 }

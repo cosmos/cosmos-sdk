@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -15,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 )
 
@@ -75,7 +75,7 @@ be generated via the 'multisign' command.
 
 func makeSignCmd(cdc *amino.Codec) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) (err error) {
-		stdTx, err := readAndUnmarshalStdTx(cdc, args[0])
+		stdTx, err := authclient.ReadStdTxFromFile(cdc, args[0])
 		if err != nil {
 			return
 		}
@@ -221,15 +221,4 @@ func printAndValidateSigs(
 
 	fmt.Println("")
 	return success
-}
-
-func readAndUnmarshalStdTx(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {
-	var bytes []byte
-	if bytes, err = ioutil.ReadFile(filename); err != nil {
-		return
-	}
-	if err = cdc.UnmarshalJSON(bytes, &stdTx); err != nil {
-		return
-	}
-	return
 }

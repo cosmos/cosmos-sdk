@@ -1,6 +1,7 @@
 package lcd
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -421,6 +422,46 @@ func TestCoinSendGenerateSignAndBroadcast(t *testing.T) {
 	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &resultTx))
 	require.Equal(t, uint32(0), resultTx.Code)
 	require.Equal(t, gasEstimate, resultTx.GasWanted)
+}
+
+func TestEncodeTx(t *testing.T) {
+	// Setup
+	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
+	require.NoError(t, err)
+	addr, seed := CreateAddr(t, name1, pw, kb)
+	cleanup, _, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
+	defer cleanup()
+
+	// Make a transaction to test with
+	res, body, _ := doTransferWithGas(t, port, seed, name1, memo, "", addr, "2", 1, false, true, fees)
+	var tx auth.StdTx
+	cdc.UnmarshalJSON([]byte(body), &tx)
+
+	// Build the request
+	encodeReq := struct {
+		Tx auth.StdTx `json:"tx"`
+	}{Tx: tx}
+	encodedJSON, _ := cdc.MarshalJSON(encodeReq)
+	res, body = Request(t, port, "POST", "/tx/encode", encodedJSON)
+
+	// Make sure it came back ok, and that we can decode it back to the transaction
+	// 200 response
+	require.Equal(t, http.StatusOK, res.StatusCode, body)
+	encodeResp := struct {
+		Tx string `json:"tx"`
+	}{}
+
+	// No error decoding the JSON
+	require.Nil(t, cdc.UnmarshalJSON([]byte(body), &encodeResp))
+
+	// Check that the base64 decodes
+	decodedBytes, err := base64.StdEncoding.DecodeString(encodeResp.Tx)
+	require.Nil(t, err)
+
+	// Check that the transaction decodes as expected
+	var decodedTx auth.StdTx
+	require.Nil(t, cdc.UnmarshalBinaryLengthPrefixed(decodedBytes, &decodedTx))
+	require.Equal(t, memo, decodedTx.Memo)
 }
 
 func TestTxs(t *testing.T) {

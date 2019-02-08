@@ -294,9 +294,15 @@ func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, strin
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
-// TxBroadcast is gaiacli tx sign
+// TxBroadcast is gaiacli tx broadcast
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("gaiacli tx broadcast %v %v", f.Flags(), fileName)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// TxEncode is gaiacli tx encode
+func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("gaiacli tx encode %v %v", f.Flags(), fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -640,7 +646,8 @@ func queryTags(tags []string) (out string) {
 	return strings.TrimSuffix(out, "&")
 }
 
-func writeToNewTempFile(t *testing.T, s string) *os.File {
+// Write the given string to a new temporary file
+func WriteToNewTempFile(t *testing.T, s string) *os.File {
 	fp, err := ioutil.TempFile(os.TempDir(), "cosmos_cli_test_")
 	require.Nil(t, err)
 	_, err = fp.WriteString(s)

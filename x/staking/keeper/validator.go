@@ -201,9 +201,6 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(GetValidatorByConsAddrKey(sdk.ConsAddress(validator.ConsPubKey.Address())))
 	store.Delete(GetValidatorsByPowerIndexKey(validator))
 
-	// delete the queue record
-	k.DeleteValidatorQueue(ctx, validator)
-
 	// call hook if present
 	if k.hooks != nil {
 		k.hooks.AfterValidatorRemoved(ctx, validator.ConsAddress(), validator.OperatorAddr)

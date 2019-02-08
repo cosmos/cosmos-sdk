@@ -375,6 +375,70 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	}
 }
 
+func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
+	validatorAddr := sdk.ValAddress(keep.Addrs[0])
+
+	initPower := int64(100)
+	initBond := types.TokensFromTendermintPower(100)
+	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
+	_ = setInstantUnbondPeriod(keeper, ctx)
+
+	// create validator
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
+	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
+
+	// must end-block
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	// verify the self-delegation exists
+	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.True(t, found)
+	gotBond := bond.Shares.RoundInt()
+	require.Equal(t, initBond, gotBond,
+		"initBond: %v\ngotBond: %v\nbond: %v\n",
+		initBond, gotBond, bond)
+
+	newMinSelfDelegation := sdk.OneInt()
+	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfDelegation)
+	got = handleMsgEditValidator(ctx, msgEditValidator, keeper)
+	require.False(t, got.IsOK(), "should not be able to decrease minSelfDelegation")
+}
+
+func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
+	validatorAddr := sdk.ValAddress(keep.Addrs[0])
+
+	initPower := int64(100)
+	initBond := types.TokensFromTendermintPower(100)
+	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
+	_ = setInstantUnbondPeriod(keeper, ctx)
+
+	// create validator
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
+	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
+
+	// must end-block
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	// verify the self-delegation exists
+	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.True(t, found)
+	gotBond := bond.Shares.RoundInt()
+	require.Equal(t, initBond, gotBond,
+		"initBond: %v\ngotBond: %v\nbond: %v\n",
+		initBond, gotBond, bond)
+
+	newMinSelfDelegation := initBond.Add(sdk.OneInt())
+	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfDelegation)
+	got = handleMsgEditValidator(ctx, msgEditValidator, keeper)
+	require.False(t, got.IsOK(), "should not be able to increase minSelfDelegation above current self delegation")
+}
+
 func TestIncrementsMsgUnbond(t *testing.T) {
 	initPower := int64(1000)
 	initBond := TokensFromTendermintPower(initPower)

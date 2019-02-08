@@ -43,6 +43,7 @@ func GetCmdCreateValidator(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().AddFlagSet(FsAmount)
 	cmd.Flags().AddFlagSet(fsDescriptionCreate)
 	cmd.Flags().AddFlagSet(FsCommissionCreate)
+	cmd.Flags().AddFlagSet(FsMinSelfDelegation)
 	cmd.Flags().AddFlagSet(fsDelegator)
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", client.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
@@ -87,7 +88,20 @@ func GetCmdEditValidator(cdc *codec.Codec) *cobra.Command {
 				newRate = &rate
 			}
 
-			msg := staking.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate)
+			var newMinSelfDelegation *sdk.Int
+
+			minSelfDelegationString := viper.GetString(FlagMinSelfDelegation)
+			if minSelfDelegationString != "" {
+				msb, ok := sdk.NewIntFromString(minSelfDelegationString)
+				if !ok {
+					return fmt.Errorf(staking.ErrMinSelfDelegationInvalid(staking.DefaultCodespace).Error())
+				}
+				newMinSelfDelegation = &msb
+			}
+
+			msg := staking.NewMsgEditValidator(sdk.ValAddress(valAddr), description, newRate, newMinSelfDelegation)
+
+			// build and sign the transaction, then broadcast to Tendermint
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
@@ -238,6 +252,13 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		return txBldr, nil, err
 	}
 
+	// get the initial validator min self delegation
+	msbStr := viper.GetString(FlagMinSelfDelegation)
+	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
+	if !ok {
+		return txBldr, nil, fmt.Errorf(staking.ErrMinSelfDelegationInvalid(staking.DefaultCodespace).Error())
+	}
+
 	delAddr := viper.GetString(FlagAddressDelegator)
 
 	var msg sdk.Msg
@@ -248,11 +269,11 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 		}
 
 		msg = staking.NewMsgCreateValidatorOnBehalfOf(
-			delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+			delAddr, sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfDelegation,
 		)
 	} else {
 		msg = staking.NewMsgCreateValidator(
-			sdk.ValAddress(valAddr), pk, amount, description, commissionMsg,
+			sdk.ValAddress(valAddr), pk, amount, description, commissionMsg, minSelfDelegation,
 		)
 	}
 

@@ -238,6 +238,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 			sdk.NewCoin(staking.DefaultBondDenom, startTokens),
 			staking.NewDescription(fmt.Sprintf("validator-%d", i+1), "", "", ""),
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+			sdk.OneInt(),
 		)
 		stdSignMsg := txbuilder.StdSignMsg{
 			ChainID: genDoc.ChainID,

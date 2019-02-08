@@ -126,6 +126,8 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return err.Result()
 	}
 
+	validator.MinSelfDelegation = msg.MinSelfDelegation
+
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByConsAddr(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)
@@ -176,6 +178,16 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		k.BeforeValidatorModified(ctx, msg.ValidatorAddr)
 
 		validator.Commission = commission
+	}
+
+	if msg.MinSelfDelegation != nil {
+		if !(*msg.MinSelfDelegation).GT(validator.MinSelfDelegation) {
+			return ErrMinSelfDelegationDecreased(k.Codespace()).Result()
+		}
+		if (*msg.MinSelfDelegation).GT(validator.Tokens) {
+			return ErrSelfDelegationBelowMinimum(k.Codespace()).Result()
+		}
+		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
 	}
 
 	k.SetValidator(ctx, validator)

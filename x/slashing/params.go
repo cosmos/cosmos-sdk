@@ -18,10 +18,10 @@ const (
 
 // The Double Sign Jail period ends at Max Time supported by Amino (Dec 31, 9999 - 23:59:59 GMT)
 var (
-	DoubleSignJailEndTime                  = time.Unix(253402300799, 0)
-	DefaultMinSignedPerWindow      sdk.Dec = sdk.NewDecWithPrec(5, 1)
-	DefaultSlashFractionDoubleSign sdk.Dec = sdk.NewDec(1).Quo(sdk.NewDec(20))
-	DefaultSlashFractionDowntime   sdk.Dec = sdk.NewDec(1).Quo(sdk.NewDec(100))
+	DoubleSignJailEndTime          = time.Unix(253402300799, 0)
+	DefaultMinSignedPerWindow      = sdk.NewDecWithPrec(5, 1)
+	DefaultSlashFractionDoubleSign = sdk.NewDec(1).Quo(sdk.NewDec(20))
+	DefaultSlashFractionDowntime   = sdk.NewDec(1).Quo(sdk.NewDec(100))
 )
 
 // Parameter store keys

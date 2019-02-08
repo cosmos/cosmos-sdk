@@ -46,6 +46,7 @@ type Validator interface {
 	GetBondedTokens() Int         // validator bonded tokens
 	GetTendermintPower() int64    // validation power in tendermint
 	GetCommission() Dec           // validator commission rate
+	GetMinSelfDelegation() Int    // validator minimum self delegation
 	GetDelegatorShares() Dec      // total outstanding delegator shares
 	GetDelegatorShareExRate() Dec // tokens per delegator share exchange rate
 }

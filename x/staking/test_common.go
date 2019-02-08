@@ -28,7 +28,7 @@ var (
 
 func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) MsgCreateValidator {
 	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg,
+		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, sdk.OneInt(),
 	)
 }
 
@@ -38,7 +38,15 @@ func NewTestMsgCreateValidatorWithCommission(address sdk.ValAddress, pubKey cryp
 	commission := NewCommissionMsg(commissionRate, sdk.OneDec(), sdk.ZeroDec())
 
 	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commission,
+		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commission, sdk.OneInt(),
+	)
+}
+
+func NewTestMsgCreateValidatorWithMinSelfDelegation(address sdk.ValAddress, pubKey crypto.PubKey,
+	amt sdk.Int, minSelfDelegation sdk.Int) MsgCreateValidator {
+
+	return types.NewMsgCreateValidator(
+		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, minSelfDelegation,
 	)
 }
 
@@ -51,5 +59,5 @@ func NewTestMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.Val
 	valPubKey crypto.PubKey, amt sdk.Int) MsgCreateValidator {
 
 	amount := sdk.NewCoin(types.DefaultBondDenom, amt)
-	return NewMsgCreateValidatorOnBehalfOf(delAddr, valAddr, valPubKey, amount, Description{}, commissionMsg)
+	return NewMsgCreateValidatorOnBehalfOf(delAddr, valAddr, valPubKey, amount, Description{}, commissionMsg, sdk.OneInt())
 }

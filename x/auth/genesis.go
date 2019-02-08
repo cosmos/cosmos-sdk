@@ -8,32 +8,35 @@ import (
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	Params Params `json:"params"`
+	CollectedFees sdk.Coins `json:"collected_fees"`
+	Params        Params    `json:"params"`
 }
 
 // NewGenesisState - Create a new genesis state
-func NewGenesisState(params Params) GenesisState {
+func NewGenesisState(collectedFees sdk.Coins, params Params) GenesisState {
 	return GenesisState{
-		Params: params,
+		Params:        params,
+		CollectedFees: collectedFees,
 	}
 }
 
 // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(DefaultParams())
+	return NewGenesisState(sdk.Coins{}, DefaultParams())
 }
 
 // InitGenesis - Init store state from genesis data
 func InitGenesis(ctx sdk.Context, ak AccountKeeper, fck FeeCollectionKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
-	fck.setCollectedFees(ctx, sdk.Coins{})
+	fck.setCollectedFees(ctx, data.CollectedFees)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper, fck FeeCollectionKeeper) GenesisState {
+	collectedFees := fck.GetCollectedFees(ctx)
 	params := ak.GetParams(ctx)
 
-	return NewGenesisState(params)
+	return NewGenesisState(collectedFees, params)
 }
 
 // ValidateGenesis performs basic validation of auth genesis data returning an

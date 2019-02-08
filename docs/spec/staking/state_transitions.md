@@ -12,7 +12,6 @@ This document describes the state transition operations pertaining to:
 ### Non-Bonded to Bonded
 
 When a validator is bonded from any other state the following operations occur:  
- - set `Validator.BondHeight` to current height
  - set `validator.Status` to `Bonded`
  - update the `Pool` object with tokens moved from `NotBondedTokens` to `BondedTokens`
  - delete record the existing record from `ValidatorByPowerIndex`

@@ -76,7 +76,9 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return AccAddress{}, nil
 	}
 
-	bz, err := GetFromBech32(address, Bech32PrefixAccAddr)
+	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
+
+	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +155,9 @@ func (aa AccAddress) String() string {
 		return ""
 	}
 
-	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixAccAddr, aa.Bytes())
+	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
+
+	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixAccAddr, aa.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -202,7 +206,9 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 		return ValAddress{}, nil
 	}
 
-	bz, err := GetFromBech32(address, Bech32PrefixValAddr)
+	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
+
+	bz, err := GetFromBech32(address, bech32PrefixValAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +286,9 @@ func (va ValAddress) String() string {
 		return ""
 	}
 
-	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixValAddr, va.Bytes())
+	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
+
+	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixValAddr, va.Bytes())
 	if err != nil {
 		panic(err)
 	}
@@ -329,7 +337,9 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 		return ConsAddress{}, nil
 	}
 
-	bz, err := GetFromBech32(address, Bech32PrefixConsAddr)
+	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
+
+	bz, err := GetFromBech32(address, bech32PrefixConsAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -412,7 +422,9 @@ func (ca ConsAddress) String() string {
 		return ""
 	}
 
-	bech32Addr, err := bech32.ConvertAndEncode(Bech32PrefixConsAddr, ca.Bytes())
+	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
+
+	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixConsAddr, ca.Bytes())
 	if err != nil {
 		panic(err)
 	}

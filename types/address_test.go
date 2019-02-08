@@ -219,7 +219,7 @@ func TestConfiguredPrefix(t *testing.T) {
 			config := types.GetConfig()
 			config.SetBech32PrefixForAccount(prefix+"acc", prefix+"pub")
 			acc := types.AccAddress(pub.Address())
-			require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"))
+			require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"), acc.String())
 			bech32Pub := types.MustBech32ifyAccPub(pub)
 			require.True(t, strings.HasPrefix(bech32Pub, prefix+"pub"))
 

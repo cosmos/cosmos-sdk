@@ -13,8 +13,9 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tendermint/libs/db"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func init() {
@@ -73,9 +74,9 @@ func TestKeyManagement(t *testing.T) {
 	require.Equal(t, i2.GetPubKey(), keyS[0].GetPubKey())
 
 	// deleting a key removes it
-	err = cstore.Delete("bad name", "foo")
+	err = cstore.Delete("bad name", "foo", false)
 	require.NotNil(t, err)
-	err = cstore.Delete(n1, p1)
+	err = cstore.Delete(n1, p1, false)
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
@@ -96,16 +97,14 @@ func TestKeyManagement(t *testing.T) {
 	require.Equal(t, 2, len(keyS))
 
 	// delete the offline key
-	err = cstore.Delete(o1, "no")
-	require.NotNil(t, err)
-	err = cstore.Delete(o1, "yes")
+	err = cstore.Delete(o1, "", false)
 	require.NoError(t, err)
 	keyS, err = cstore.List()
 	require.NoError(t, err)
 	require.Equal(t, 1, len(keyS))
 
-	// addr cache gets nuked
-	err = cstore.Delete(n2, p2)
+	// addr cache gets nuked - and test skip flag
+	err = cstore.Delete(n2, "", true)
 	require.NoError(t, err)
 	require.False(t, db.Has(addrKey(i2.GetAddress())))
 }
@@ -338,14 +337,14 @@ func TestSeedPhrase(t *testing.T) {
 	assert.NotEmpty(t, mnemonic)
 
 	// now, let us delete this key
-	err = cstore.Delete(n1, p1)
+	err = cstore.Delete(n1, p1, false)
 	require.Nil(t, err, "%+v", err)
 	_, err = cstore.Get(n1)
 	require.NotNil(t, err)
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, 0)
-	newInfo, err := cstore.Derive(n2, mnemonic, defaultBIP39Passphrase, p2, params)
+	newInfo, err := cstore.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())

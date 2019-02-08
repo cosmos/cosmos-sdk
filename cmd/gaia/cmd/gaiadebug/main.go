@@ -10,12 +10,13 @@ import (
 	"strconv"
 	"strings"
 
-	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
+	gaia "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 func init() {
@@ -192,8 +193,9 @@ func runAddrCmd(cmd *cobra.Command, args []string) error {
 	valAddr := sdk.ValAddress(addr)
 
 	fmt.Println("Address:", addr)
-	fmt.Println("Bech32 Acc:", accAddr)
-	fmt.Println("Bech32 Val:", valAddr)
+	fmt.Printf("Address (hex): %X\n", addr)
+	fmt.Printf("Bech32 Acc: %s\n", accAddr)
+	fmt.Printf("Bech32 Val: %s\n", valAddr)
 	return nil
 }
 

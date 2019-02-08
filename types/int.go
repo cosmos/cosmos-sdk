@@ -16,7 +16,11 @@ func equal(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 0 }
 
 func gt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
 
+func gte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) >= 0 }
+
 func lt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
+
+func lte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
 
 func add(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }
 
@@ -36,6 +40,15 @@ func min(i *big.Int, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == 1 {
 		return new(big.Int).Set(i2)
 	}
+
+	return new(big.Int).Set(i)
+}
+
+func max(i *big.Int, i2 *big.Int) *big.Int {
+	if i.Cmp(i2) == -1 {
+		return new(big.Int).Set(i2)
+	}
+
 	return new(big.Int).Set(i)
 }
 
@@ -152,6 +165,16 @@ func (i Int) IsZero() bool {
 	return i.i.Sign() == 0
 }
 
+// IsNegative returns true if Int is negative
+func (i Int) IsNegative() bool {
+	return i.i.Sign() == -1
+}
+
+// IsPositive returns true if Int is positive
+func (i Int) IsPositive() bool {
+	return i.i.Sign() == 1
+}
+
 // Sign returns sign of Int
 func (i Int) Sign() int {
 	return i.i.Sign()
@@ -167,9 +190,20 @@ func (i Int) GT(i2 Int) bool {
 	return gt(i.i, i2.i)
 }
 
+// GTE returns true if receiver Int is greater than or equal to the parameter
+// Int.
+func (i Int) GTE(i2 Int) bool {
+	return gte(i.i, i2.i)
+}
+
 // LT returns true if first Int is lesser than second
 func (i Int) LT(i2 Int) bool {
 	return lt(i.i, i2.i)
+}
+
+// LTE returns true if first Int is less than or equal to second
+func (i Int) LTE(i2 Int) bool {
+	return lte(i.i, i2.i)
 }
 
 // Add adds Int from another
@@ -253,9 +287,14 @@ func (i Int) Neg() (res Int) {
 	return Int{neg(i.i)}
 }
 
-// Return the minimum of the ints
+// return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
+}
+
+// MaxInt returns the maximum between two integers.
+func MaxInt(i, i2 Int) Int {
+	return Int{max(i.BigInt(), i2.BigInt())}
 }
 
 // Human readable string
@@ -321,11 +360,11 @@ func NewUint(n uint64) Uint {
 
 // NewUintFromBigUint constructs Uint from big.Uint
 func NewUintFromBigInt(i *big.Int) Uint {
-	// Check overflow
-	if i.Sign() == -1 || i.Sign() == 1 && i.BitLen() > 256 {
+	res := Uint{i}
+	if UintOverflow(res) {
 		panic("Uint overflow")
 	}
-	return Uint{i}
+	return res
 }
 
 // NewUintFromString constructs Uint from string
@@ -352,11 +391,12 @@ func NewUintWithDecimal(n uint64, dec int) Uint {
 	i := new(big.Int)
 	i.Mul(new(big.Int).SetUint64(n), exp)
 
-	// Check overflow
-	if i.Sign() == -1 || i.Sign() == 1 && i.BitLen() > 256 {
+	res := Uint{i}
+	if UintOverflow(res) {
 		panic("NewUintWithDecimal() out of bound")
 	}
-	return Uint{i}
+
+	return res
 }
 
 // ZeroUint returns Uint value with zero
@@ -407,8 +447,7 @@ func (i Uint) LT(i2 Uint) bool {
 // Add adds Uint from another
 func (i Uint) Add(i2 Uint) (res Uint) {
 	res = Uint{add(i.i, i2.i)}
-	// Check overflow
-	if res.Sign() == -1 || res.Sign() == 1 && res.i.BitLen() > 256 {
+	if UintOverflow(res) {
 		panic("Uint overflow")
 	}
 	return
@@ -422,11 +461,21 @@ func (i Uint) AddRaw(i2 uint64) Uint {
 // Sub subtracts Uint from another
 func (i Uint) Sub(i2 Uint) (res Uint) {
 	res = Uint{sub(i.i, i2.i)}
-	// Check overflow
-	if res.Sign() == -1 || res.Sign() == 1 && res.i.BitLen() > 256 {
+	if UintOverflow(res) {
 		panic("Uint overflow")
 	}
 	return
+}
+
+// SafeSub attempts to subtract one Uint from another. A boolean is also returned
+// indicating if the result contains integer overflow.
+func (i Uint) SafeSub(i2 Uint) (Uint, bool) {
+	res := Uint{sub(i.i, i2.i)}
+	if UintOverflow(res) {
+		return res, true
+	}
+
+	return res, false
 }
 
 // SubRaw subtracts uint64 from Uint
@@ -436,15 +485,15 @@ func (i Uint) SubRaw(i2 uint64) Uint {
 
 // Mul multiples two Uints
 func (i Uint) Mul(i2 Uint) (res Uint) {
-	// Check overflow
 	if i.i.BitLen()+i2.i.BitLen()-1 > 256 {
 		panic("Uint overflow")
 	}
+
 	res = Uint{mul(i.i, i2.i)}
-	// Check overflow
-	if res.Sign() == -1 || res.Sign() == 1 && res.i.BitLen() > 256 {
+	if UintOverflow(res) {
 		panic("Uint overflow")
 	}
+
 	return
 }
 
@@ -483,6 +532,11 @@ func (i Uint) ModRaw(i2 uint64) Uint {
 // Return the minimum of the Uints
 func MinUint(i1, i2 Uint) Uint {
 	return Uint{min(i1.BigInt(), i2.BigInt())}
+}
+
+// MaxUint returns the maximum between two unsigned integers.
+func MaxUint(i, i2 Uint) Uint {
+	return Uint{max(i.BigInt(), i2.BigInt())}
 }
 
 // Human readable string
@@ -528,6 +582,12 @@ func (i *Uint) UnmarshalJSON(bz []byte) error {
 }
 
 //__________________________________________________________________________
+
+// UintOverflow returns true if a given unsigned integer overflows and false
+// otherwise.
+func UintOverflow(x Uint) bool {
+	return x.i.Sign() == -1 || x.i.Sign() == 1 && x.i.BitLen() > 256
+}
 
 // intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {

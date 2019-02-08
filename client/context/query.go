@@ -10,7 +10,7 @@ import (
 
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -69,7 +69,7 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 	if err != nil {
 		return nil, err
 	} else if len(res) == 0 {
-		return nil, err
+		return nil, ErrInvalidAccount(address)
 	}
 
 	account, err := ctx.AccDecoder(res)
@@ -81,18 +81,18 @@ func (ctx CLIContext) GetAccount(address []byte) (auth.Account, error) {
 }
 
 // GetFromAddress returns the from address from the context's name.
-func (ctx CLIContext) GetFromAddress() (sdk.AccAddress, error) {
-	return ctx.fromAddress, nil
+func (ctx CLIContext) GetFromAddress() sdk.AccAddress {
+	return ctx.FromAddress
 }
 
 // GetFromName returns the key name for the current context.
-func (ctx CLIContext) GetFromName() (string, error) {
-	return ctx.fromName, nil
+func (ctx CLIContext) GetFromName() string {
+	return ctx.FromName
 }
 
 // GetAccountNumber returns the next account number for the given account
 // address.
-func (ctx CLIContext) GetAccountNumber(address []byte) (int64, error) {
+func (ctx CLIContext) GetAccountNumber(address []byte) (uint64, error) {
 	account, err := ctx.GetAccount(address)
 	if err != nil {
 		return 0, err
@@ -103,7 +103,7 @@ func (ctx CLIContext) GetAccountNumber(address []byte) (int64, error) {
 
 // GetAccountSequence returns the sequence number for the given account
 // address.
-func (ctx CLIContext) GetAccountSequence(address []byte) (int64, error) {
+func (ctx CLIContext) GetAccountSequence(address []byte) (uint64, error) {
 	account, err := ctx.GetAccount(address)
 	if err != nil {
 		return 0, err
@@ -115,11 +115,7 @@ func (ctx CLIContext) GetAccountSequence(address []byte) (int64, error) {
 // EnsureAccountExists ensures that an account exists for a given context. An
 // error is returned if it does not.
 func (ctx CLIContext) EnsureAccountExists() error {
-	addr, err := ctx.GetFromAddress()
-	if err != nil {
-		return err
-	}
-
+	addr := ctx.GetFromAddress()
 	accountBytes, err := ctx.QueryStore(auth.AddressStoreKey(addr), ctx.AccountStore)
 	if err != nil {
 		return err
@@ -168,7 +164,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 
 	resp := result.Response
 	if !resp.IsOK() {
-		return res, errors.Errorf(resp.Log)
+		return res, errors.New(resp.Log)
 	}
 
 	// data from trusted node or subspace query doesn't need verification
@@ -210,7 +206,7 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 	}
 
 	// TODO: Instead of reconstructing, stash on CLIContext field?
-	prt := store.DefaultProofRuntime()
+	prt := rootmulti.DefaultProofRuntime()
 
 	// TODO: Better convention for path?
 	storeName, err := parseQueryStorePath(queryPath)
@@ -222,6 +218,13 @@ func (ctx CLIContext) verifyProof(queryPath string, resp abci.ResponseQuery) err
 	kp = kp.AppendKey([]byte(storeName), merkle.KeyEncodingURL)
 	kp = kp.AppendKey(resp.Key, merkle.KeyEncodingURL)
 
+	if resp.Value == nil {
+		err = prt.VerifyAbsence(resp.Proof, commit.Header.AppHash, kp.String())
+		if err != nil {
+			return errors.Wrap(err, "failed to prove merkle proof")
+		}
+		return nil
+	}
 	err = prt.VerifyValue(resp.Proof, commit.Header.AppHash, kp.String(), resp.Value)
 	if err != nil {
 		return errors.Wrap(err, "failed to prove merkle proof")
@@ -250,7 +253,7 @@ func isQueryStoreWithProof(path string) bool {
 		return false
 	case paths[0] != "store":
 		return false
-	case store.RequireProof("/" + paths[2]):
+	case rootmulti.RequireProof("/" + paths[2]):
 		return true
 	}
 

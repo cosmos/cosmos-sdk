@@ -20,8 +20,10 @@ func getMockApp(t *testing.T) *mock.App {
 
 	RegisterCodec(mapp.Cdc)
 	keyIBC := sdk.NewKVStoreKey("ibc")
-	ibcMapper := NewMapper(mapp.Cdc, keyIBC, mapp.RegisterCodespace(DefaultCodespace))
-	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper)
+	ibcMapper := NewMapper(mapp.Cdc, keyIBC, DefaultCodespace)
+	bankKeeper := bank.NewBaseKeeper(mapp.AccountKeeper,
+		mapp.ParamsKeeper.Subspace(bank.DefaultParamspace),
+		bank.DefaultCodespace)
 	mapp.Router().AddRoute("ibc", NewHandler(ibcMapper, bankKeeper))
 
 	require.NoError(t, mapp.CompleteSetup(keyIBC))
@@ -70,10 +72,10 @@ func TestIBCMsgs(t *testing.T) {
 		Sequence:  0,
 	}
 
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{transferMsg}, []int64{0}, []int64{0}, true, true, priv1)
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{transferMsg}, []uint64{0}, []uint64{0}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, emptyCoins)
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{transferMsg}, []int64{0}, []int64{1}, false, false, priv1)
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{receiveMsg}, []int64{0}, []int64{2}, true, true, priv1)
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{transferMsg}, []uint64{0}, []uint64{1}, false, false, priv1)
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{receiveMsg}, []uint64{0}, []uint64{2}, true, true, priv1)
 	mock.CheckBalance(t, mapp, addr1, coins)
-	mock.SignCheckDeliver(t, mapp.BaseApp, []sdk.Msg{receiveMsg}, []int64{0}, []int64{2}, false, false, priv1)
+	mock.SignCheckDeliver(t, mapp.Cdc, mapp.BaseApp, []sdk.Msg{receiveMsg}, []uint64{0}, []uint64{2}, false, false, priv1)
 }

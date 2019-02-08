@@ -7,13 +7,15 @@ import (
 )
 
 const (
-	defaultMinimumFees = ""
+	defaultMinGasPrices = ""
 )
 
 // BaseConfig defines the server's basic configuration
 type BaseConfig struct {
-	// Tx minimum fee
-	MinFees string `mapstructure:"minimum_fees"`
+	// The minimum gas prices a validator is willing to accept for processing a
+	// transaction. A transaction's fees must meet the minimum of any denomination
+	// specified in this config (e.g. 0.01photino;0.0001stake).
+	MinGasPrices string `mapstructure:"minimum-gas-prices"`
 }
 
 // Config defines the server's top level configuration
@@ -21,17 +23,27 @@ type Config struct {
 	BaseConfig `mapstructure:",squash"`
 }
 
-// SetMinimumFee sets the minimum fee.
-func (c *Config) SetMinimumFees(fees sdk.Coins) { c.MinFees = fees.String() }
+// SetMinGasPrices sets the validator's minimum gas prices.
+func (c *Config) SetMinGasPrices(gasPrices sdk.DecCoins) {
+	c.MinGasPrices = gasPrices.String()
+}
 
-// SetMinimumFee sets the minimum fee.
-func (c *Config) MinimumFees() sdk.Coins {
-	fees, err := sdk.ParseCoins(c.MinFees)
+// GetMinGasPrices returns the validator's minimum gas prices based on the set
+// configuration.
+func (c *Config) GetMinGasPrices() sdk.DecCoins {
+	gasPrices, err := sdk.ParseDecCoins(c.MinGasPrices)
 	if err != nil {
-		panic(fmt.Sprintf("invalid minimum fees: %v", err))
+		panic(fmt.Sprintf("invalid minimum gas prices: %v", err))
 	}
-	return fees
+
+	return gasPrices
 }
 
 // DefaultConfig returns server's default configuration.
-func DefaultConfig() *Config { return &Config{BaseConfig{MinFees: defaultMinimumFees}} }
+func DefaultConfig() *Config {
+	return &Config{
+		BaseConfig{
+			MinGasPrices: defaultMinGasPrices,
+		},
+	}
+}

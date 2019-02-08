@@ -1,10 +1,11 @@
 package gov
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // GenesisState - all staking state that must be provided at genesis
@@ -41,21 +42,108 @@ func NewGenesisState(startingProposalID uint64, dp DepositParams, vp VotingParam
 
 // get raw genesis raw message for testing
 func DefaultGenesisState() GenesisState {
+	minDepositTokens := staking.TokensFromTendermintPower(10)
 	return GenesisState{
 		StartingProposalID: 1,
 		DepositParams: DepositParams{
-			MinDeposit:       sdk.Coins{sdk.NewInt64Coin(stakeTypes.DefaultBondDenom, 10)},
+			MinDeposit:       sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, minDepositTokens)},
 			MaxDepositPeriod: time.Duration(172800) * time.Second,
 		},
 		VotingParams: VotingParams{
 			VotingPeriod: time.Duration(172800) * time.Second,
 		},
 		TallyParams: TallyParams{
+			Quorum:            sdk.NewDecWithPrec(334, 3),
 			Threshold:         sdk.NewDecWithPrec(5, 1),
 			Veto:              sdk.NewDecWithPrec(334, 3),
 			GovernancePenalty: sdk.NewDecWithPrec(1, 2),
 		},
 	}
+}
+
+// Checks whether 2 GenesisState structs are equivalent.
+func (data GenesisState) Equal(data2 GenesisState) bool {
+	if data.StartingProposalID != data2.StartingProposalID ||
+		!data.DepositParams.Equal(data2.DepositParams) ||
+		data.VotingParams != data2.VotingParams ||
+		data.TallyParams != data2.TallyParams {
+		return false
+	}
+
+	if len(data.Deposits) != len(data2.Deposits) {
+		return false
+	}
+	for i := range data.Deposits {
+		deposit1 := data.Deposits[i]
+		deposit2 := data2.Deposits[i]
+		if deposit1.ProposalID != deposit2.ProposalID ||
+			!deposit1.Deposit.Equals(deposit2.Deposit) {
+			return false
+		}
+	}
+
+	if len(data.Votes) != len(data2.Votes) {
+		return false
+	}
+	for i := range data.Votes {
+		vote1 := data.Votes[i]
+		vote2 := data2.Votes[i]
+		if vote1.ProposalID != vote2.ProposalID ||
+			!vote1.Vote.Equals(vote2.Vote) {
+			return false
+		}
+	}
+
+	if len(data.Proposals) != len(data2.Proposals) {
+		return false
+	}
+	for i := range data.Proposals {
+		if !ProposalEqual(data.Proposals[i], data2.Proposals[i]) {
+			return false
+		}
+	}
+
+	return true
+
+}
+
+// Returns if a GenesisState is empty or has data in it
+func (data GenesisState) IsEmpty() bool {
+	emptyGenState := GenesisState{}
+	return data.Equal(emptyGenState)
+}
+
+// ValidateGenesis TODO https://github.com/cosmos/cosmos-sdk/issues/3007
+func ValidateGenesis(data GenesisState) error {
+	threshold := data.TallyParams.Threshold
+	if threshold.IsNegative() || threshold.GT(sdk.OneDec()) {
+		return fmt.Errorf("Governance vote threshold should be positive and less or equal to one, is %s",
+			threshold.String())
+	}
+
+	veto := data.TallyParams.Veto
+	if veto.IsNegative() || veto.GT(sdk.OneDec()) {
+		return fmt.Errorf("Governance vote veto threshold should be positive and less or equal to one, is %s",
+			veto.String())
+	}
+
+	govPenalty := data.TallyParams.GovernancePenalty
+	if govPenalty.IsNegative() || govPenalty.GT(sdk.OneDec()) {
+		return fmt.Errorf("Governance vote veto threshold should be positive and less or equal to one, is %s",
+			govPenalty.String())
+	}
+
+	if data.DepositParams.MaxDepositPeriod > data.VotingParams.VotingPeriod {
+		return fmt.Errorf("Governance deposit period should be less than or equal to the voting period (%ds), is %ds",
+			data.VotingParams.VotingPeriod, data.DepositParams.MaxDepositPeriod)
+	}
+
+	if !data.DepositParams.MinDeposit.IsValid() {
+		return fmt.Errorf("Governance deposit amount must be a valid sdk.Coins amount, is %s",
+			data.DepositParams.MinDeposit.String())
+	}
+
+	return nil
 }
 
 // InitGenesis - store genesis parameters
@@ -69,12 +157,18 @@ func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
 	k.setVotingParams(ctx, data.VotingParams)
 	k.setTallyParams(ctx, data.TallyParams)
 	for _, deposit := range data.Deposits {
-		k.setDeposit(ctx, deposit.ProposalID, deposit.Deposit.Depositer, deposit.Deposit)
+		k.setDeposit(ctx, deposit.ProposalID, deposit.Deposit.Depositor, deposit.Deposit)
 	}
 	for _, vote := range data.Votes {
 		k.setVote(ctx, vote.ProposalID, vote.Vote.Voter, vote.Vote)
 	}
 	for _, proposal := range data.Proposals {
+		switch proposal.GetStatus() {
+		case StatusDepositPeriod:
+			k.InsertInactiveProposalQueue(ctx, proposal.GetDepositEndTime(), proposal.GetProposalID())
+		case StatusVotingPeriod:
+			k.InsertActiveProposalQueue(ctx, proposal.GetVotingEndTime(), proposal.GetProposalID())
+		}
 		k.SetProposal(ctx, proposal)
 	}
 }
@@ -91,12 +185,14 @@ func ExportGenesis(ctx sdk.Context, k Keeper) GenesisState {
 	for _, proposal := range proposals {
 		proposalID := proposal.GetProposalID()
 		depositsIterator := k.GetDeposits(ctx, proposalID)
+		defer depositsIterator.Close()
 		for ; depositsIterator.Valid(); depositsIterator.Next() {
 			var deposit Deposit
 			k.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), &deposit)
 			deposits = append(deposits, DepositWithMetadata{proposalID, deposit})
 		}
 		votesIterator := k.GetVotes(ctx, proposalID)
+		defer votesIterator.Close()
 		for ; votesIterator.Valid(); votesIterator.Next() {
 			var vote Vote
 			k.cdc.MustUnmarshalBinaryLengthPrefixed(votesIterator.Value(), &vote)

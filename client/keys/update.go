@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
+	"github.com/cosmos/cosmos-sdk/client"
+	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
 )
 
 func updateKeyCommand() *cobra.Command {
@@ -27,7 +29,7 @@ func runUpdateCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	buf := client.BufferStdin()
-	kb, err := GetKeyBaseWithWritePerm()
+	kb, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
 	}
@@ -75,7 +77,7 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kb, err = GetKeyBaseWithWritePerm()
+	kb, err = NewKeyBaseFromHomeFlag()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

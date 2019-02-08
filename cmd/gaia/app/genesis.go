@@ -9,6 +9,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/bank"
+
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,23 +22,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 var (
 	// bonded tokens given to genesis validators/accounts
-	freeFermionVal  = int64(100)
-	freeFermionsAcc = sdk.NewInt(150)
-	bondDenom       = stakeTypes.DefaultBondDenom
+	freeFermionsAcc = staking.TokensFromTendermintPower(150)
+	bondDenom       = staking.DefaultBondDenom
 )
 
 // State to Unmarshal
 type GenesisState struct {
 	Accounts     []GenesisAccount      `json:"accounts"`
 	AuthData     auth.GenesisState     `json:"auth"`
-	StakeData    stake.GenesisState    `json:"stake"`
+	BankData     bank.GenesisState     `json:"bank"`
+	StakingData  staking.GenesisState  `json:"staking"`
 	MintData     mint.GenesisState     `json:"mint"`
 	DistrData    distr.GenesisState    `json:"distr"`
 	GovData      gov.GenesisState      `json:"gov"`
@@ -41,13 +44,17 @@ type GenesisState struct {
 	GenTxs       []json.RawMessage     `json:"gentxs"`
 }
 
-func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState, stakeData stake.GenesisState, mintData mint.GenesisState,
-	distrData distr.GenesisState, govData gov.GenesisState, slashingData slashing.GenesisState) GenesisState {
+func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState,
+	bankData bank.GenesisState,
+	stakingData staking.GenesisState, mintData mint.GenesisState,
+	distrData distr.GenesisState, govData gov.GenesisState,
+	slashingData slashing.GenesisState) GenesisState {
 
 	return GenesisState{
 		Accounts:     accounts,
 		AuthData:     authData,
-		StakeData:    stakeData,
+		BankData:     bankData,
+		StakingData:  stakingData,
 		MintData:     mintData,
 		DistrData:    distrData,
 		GovData:      govData,
@@ -55,12 +62,30 @@ func NewGenesisState(accounts []GenesisAccount, authData auth.GenesisState, stak
 	}
 }
 
-// nolint
+// Sanitize sorts accounts and coin sets.
+func (gs GenesisState) Sanitize() {
+	sort.Slice(gs.Accounts, func(i, j int) bool {
+		return gs.Accounts[i].AccountNumber < gs.Accounts[j].AccountNumber
+	})
+
+	for _, acc := range gs.Accounts {
+		acc.Coins = acc.Coins.Sort()
+	}
+}
+
+// GenesisAccount defines an account initialized at genesis.
 type GenesisAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`
-	Sequence      int64          `json:"sequence_number"`
-	AccountNumber int64          `json:"account_number"`
+	Sequence      uint64         `json:"sequence_number"`
+	AccountNumber uint64         `json:"account_number"`
+
+	// vesting account fields
+	OriginalVesting  sdk.Coins `json:"original_vesting"`  // total vesting coins upon initialization
+	DelegatedFree    sdk.Coins `json:"delegated_free"`    // delegated vested coins at time of delegation
+	DelegatedVesting sdk.Coins `json:"delegated_vesting"` // delegated vesting coins at time of delegation
+	StartTime        int64     `json:"start_time"`        // vesting start time (UNIX Epoch time)
+	EndTime          int64     `json:"end_time"`          // vesting end time (UNIX Epoch time)
 }
 
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
@@ -73,24 +98,59 @@ func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
 }
 
 func NewGenesisAccountI(acc auth.Account) GenesisAccount {
-	return GenesisAccount{
+	gacc := GenesisAccount{
 		Address:       acc.GetAddress(),
 		Coins:         acc.GetCoins(),
 		AccountNumber: acc.GetAccountNumber(),
 		Sequence:      acc.GetSequence(),
 	}
+
+	vacc, ok := acc.(auth.VestingAccount)
+	if ok {
+		gacc.OriginalVesting = vacc.GetOriginalVesting()
+		gacc.DelegatedFree = vacc.GetDelegatedFree()
+		gacc.DelegatedVesting = vacc.GetDelegatedVesting()
+		gacc.StartTime = vacc.GetStartTime()
+		gacc.EndTime = vacc.GetEndTime()
+	}
+
+	return gacc
 }
 
 // convert GenesisAccount to auth.BaseAccount
-func (ga *GenesisAccount) ToAccount() (acc *auth.BaseAccount) {
-	return &auth.BaseAccount{
+func (ga *GenesisAccount) ToAccount() auth.Account {
+	bacc := &auth.BaseAccount{
 		Address:       ga.Address,
 		Coins:         ga.Coins.Sort(),
 		AccountNumber: ga.AccountNumber,
 		Sequence:      ga.Sequence,
 	}
-}
 
+	if !ga.OriginalVesting.IsZero() {
+		baseVestingAcc := &auth.BaseVestingAccount{
+			BaseAccount:      bacc,
+			OriginalVesting:  ga.OriginalVesting,
+			DelegatedFree:    ga.DelegatedFree,
+			DelegatedVesting: ga.DelegatedVesting,
+			EndTime:          ga.EndTime,
+		}
+
+		if ga.StartTime != 0 && ga.EndTime != 0 {
+			return &auth.ContinuousVestingAccount{
+				BaseVestingAccount: baseVestingAcc,
+				StartTime:          ga.StartTime,
+			}
+		} else if ga.EndTime != 0 {
+			return &auth.DelayedVestingAccount{
+				BaseVestingAccount: baseVestingAcc,
+			}
+		} else {
+			panic(fmt.Sprintf("invalid genesis vesting account: %+v", ga))
+		}
+	}
+
+	return bacc
+}
 
 // Create the core parameters for genesis initialization for gaia
 // note that the pubkey input is this machines pubkey
@@ -106,34 +166,37 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 		return genesisState, errors.New("there must be at least one genesis tx")
 	}
 
-	stakeData := genesisState.StakeData
+	stakingData := genesisState.StakingData
 	for i, genTx := range appGenTxs {
 		var tx auth.StdTx
 		if err := cdc.UnmarshalJSON(genTx, &tx); err != nil {
 			return genesisState, err
 		}
+
 		msgs := tx.GetMsgs()
 		if len(msgs) != 1 {
 			return genesisState, errors.New(
 				"must provide genesis StdTx with exactly 1 CreateValidator message")
 		}
-		if _, ok := msgs[0].(stake.MsgCreateValidator); !ok {
+
+		if _, ok := msgs[0].(staking.MsgCreateValidator); !ok {
 			return genesisState, fmt.Errorf(
 				"Genesis transaction %v does not contain a MsgCreateValidator", i)
 		}
 	}
 
 	for _, acc := range genesisState.Accounts {
-		// create the genesis account, give'm few steaks and a buncha token with there name
 		for _, coin := range acc.Coins {
 			if coin.Denom == bondDenom {
-				stakeData.Pool.LooseTokens = stakeData.Pool.LooseTokens.
-					Add(sdk.NewDecFromInt(coin.Amount)) // increase the supply
+				stakingData.Pool.NotBondedTokens = stakingData.Pool.NotBondedTokens.
+					Add(coin.Amount) // increase the supply
 			}
 		}
 	}
-	genesisState.StakeData = stakeData
+
+	genesisState.StakingData = stakingData
 	genesisState.GenTxs = appGenTxs
+
 	return genesisState, nil
 }
 
@@ -141,7 +204,9 @@ func GaiaAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []js
 func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
-		StakeData:    stake.DefaultGenesisState(),
+		AuthData:     auth.DefaultGenesisState(),
+		BankData:     bank.DefaultGenesisState(),
+		StakingData:  staking.DefaultGenesisState(),
 		MintData:     mint.DefaultGenesisState(),
 		DistrData:    distr.DefaultGenesisState(),
 		GovData:      gov.DefaultGenesisState(),
@@ -154,30 +219,71 @@ func NewDefaultGenesisState() GenesisState {
 // TODO: No validators are both bonded and jailed (#2088)
 // TODO: Error if there is a duplicate validator (#1708)
 // TODO: Ensure all state machine parameters are in genesis (#1704)
-func GaiaValidateGenesisState(genesisState GenesisState) (err error) {
-	err = validateGenesisStateAccounts(genesisState.Accounts)
-	if err != nil {
-		return
+func GaiaValidateGenesisState(genesisState GenesisState) error {
+	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
+		return err
 	}
-	// skip stakeData validation as genesis is created from txs
+
+	// skip stakingData validation as genesis is created from txs
 	if len(genesisState.GenTxs) > 0 {
 		return nil
 	}
-	return stake.ValidateGenesis(genesisState.StakeData)
+
+	if err := auth.ValidateGenesis(genesisState.AuthData); err != nil {
+		return err
+	}
+	if err := bank.ValidateGenesis(genesisState.BankData); err != nil {
+		return err
+	}
+	if err := staking.ValidateGenesis(genesisState.StakingData); err != nil {
+		return err
+	}
+	if err := mint.ValidateGenesis(genesisState.MintData); err != nil {
+		return err
+	}
+	if err := distr.ValidateGenesis(genesisState.DistrData); err != nil {
+		return err
+	}
+	if err := gov.ValidateGenesis(genesisState.GovData); err != nil {
+		return err
+	}
+
+	return slashing.ValidateGenesis(genesisState.SlashingData)
 }
 
-// Ensures that there are no duplicate accounts in the genesis state,
-func validateGenesisStateAccounts(accs []GenesisAccount) (err error) {
+// validateGenesisStateAccounts performs validation of genesis accounts. It
+// ensures that there are no duplicate accounts in the genesis state and any
+// provided vesting accounts are valid.
+func validateGenesisStateAccounts(accs []GenesisAccount) error {
 	addrMap := make(map[string]bool, len(accs))
-	for i := 0; i < len(accs); i++ {
-		acc := accs[i]
-		strAddr := string(acc.Address)
-		if _, ok := addrMap[strAddr]; ok {
-			return fmt.Errorf("Duplicate account in genesis state: Address %v", acc.Address)
+	for _, acc := range accs {
+		addrStr := acc.Address.String()
+
+		// disallow any duplicate accounts
+		if _, ok := addrMap[addrStr]; ok {
+			return fmt.Errorf("duplicate account found in genesis state; address: %s", addrStr)
 		}
-		addrMap[strAddr] = true
+
+		// validate any vesting fields
+		if !acc.OriginalVesting.IsZero() {
+			if acc.EndTime == 0 {
+				return fmt.Errorf("missing end time for vesting account; address: %s", addrStr)
+			}
+
+			if acc.StartTime >= acc.EndTime {
+				return fmt.Errorf(
+					"vesting start time must before end time; address: %s, start: %s, end: %s",
+					addrStr,
+					time.Unix(acc.StartTime, 0).UTC().Format(time.RFC3339),
+					time.Unix(acc.EndTime, 0).UTC().Format(time.RFC3339),
+				)
+			}
+		}
+
+		addrMap[addrStr] = true
 	}
-	return
+
+	return nil
 }
 
 // GaiaAppGenState but with JSON
@@ -208,11 +314,11 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 	if err := cdc.UnmarshalJSON(genDoc.AppState, &appState); err != nil {
 		return appGenTxs, persistentPeers, err
 	}
+
 	addrMap := make(map[string]GenesisAccount, len(appState.Accounts))
 	for i := 0; i < len(appState.Accounts); i++ {
 		acc := appState.Accounts[i]
-		strAddr := string(acc.Address)
-		addrMap[strAddr] = acc
+		addrMap[acc.Address.String()] = acc
 	}
 
 	// addresses and IPs (and port) validator server info
@@ -252,17 +358,31 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 				"each genesis transaction must provide a single genesis message")
 		}
 
-		// validate the validator address and funds against the accounts in the state
-		msg := msgs[0].(stake.MsgCreateValidator)
-		addr := string(sdk.AccAddress(msg.ValidatorAddr))
-		acc, ok := addrMap[addr]
-		if !ok {
-			return appGenTxs, persistentPeers, fmt.Errorf(
-				"account %v not in genesis.json: %+v", addr, addrMap)
+		msg := msgs[0].(staking.MsgCreateValidator)
+		// validate delegator and validator addresses and funds against the accounts in the state
+		delAddr := msg.DelegatorAddr.String()
+		valAddr := sdk.AccAddress(msg.ValidatorAddr).String()
+
+		delAcc, delOk := addrMap[delAddr]
+		_, valOk := addrMap[valAddr]
+
+		accsNotInGenesis := []string{}
+		if !delOk {
+			accsNotInGenesis = append(accsNotInGenesis, delAddr)
 		}
-		if acc.Coins.AmountOf(msg.Delegation.Denom).LT(msg.Delegation.Amount) {
-			err = fmt.Errorf("insufficient fund for the delegation: %s < %s",
-				acc.Coins.AmountOf(msg.Delegation.Denom), msg.Delegation.Amount)
+		if !valOk {
+			accsNotInGenesis = append(accsNotInGenesis, valAddr)
+		}
+		if len(accsNotInGenesis) != 0 {
+			return appGenTxs, persistentPeers, fmt.Errorf(
+				"account(s) %v not in genesis.json: %+v", strings.Join(accsNotInGenesis, " "), addrMap)
+		}
+
+		if delAcc.Coins.AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
+			return appGenTxs, persistentPeers, fmt.Errorf(
+				"insufficient fund for delegation %v: %v < %v",
+				delAcc.Address, delAcc.Coins.AmountOf(msg.Value.Denom), msg.Value.Amount,
+			)
 		}
 
 		// exclude itself from persistent peers
@@ -279,11 +399,13 @@ func CollectStdTxs(cdc *codec.Codec, moniker string, genTxsDir string, genDoc tm
 
 func NewDefaultGenesisAccount(addr sdk.AccAddress) GenesisAccount {
 	accAuth := auth.NewBaseAccountWithAddress(addr)
-	coins :=sdk.Coins{
-		{"fooToken", sdk.NewInt(1000)},
-		{bondDenom, freeFermionsAcc},
+	coins := sdk.Coins{
+		sdk.NewCoin("footoken", sdk.NewInt(1000)),
+		sdk.NewCoin(bondDenom, freeFermionsAcc),
 	}
+
 	coins.Sort()
+
 	accAuth.Coins = coins
 	return NewGenesisAccount(&accAuth)
 }

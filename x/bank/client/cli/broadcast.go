@@ -3,21 +3,27 @@ package cli
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/spf13/cobra"
 	amino "github.com/tendermint/go-amino"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // GetSignCommand returns the sign command
 func GetBroadcastCommand(codec *amino.Codec) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "broadcast <file>",
+		Use:   "broadcast [file_path]",
 		Short: "Broadcast transactions generated offline",
-		Long: `Broadcast transactions created with the --generate-only flag and signed with the sign command.
-Read a transaction from <file> and broadcast it to a node. If you supply a dash (-) argument
-in place of an input filename, the command reads from standard input.`,
+		Long: strings.TrimSpace(`Broadcast transactions created with the --generate-only flag and signed with the sign command.
+Read a transaction from [file_path] and broadcast it to a node. If you supply a dash (-) argument
+in place of an input filename, the command reads from standard input.
+
+$ gaiacli tx broadcast ./mytxn.json
+`),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			cliCtx := context.NewCLIContext().WithCodec(codec)
@@ -31,12 +37,13 @@ in place of an input filename, the command reads from standard input.`,
 				return
 			}
 
-			_, err = cliCtx.BroadcastTx(txBytes)
+			res, err := cliCtx.BroadcastTx(txBytes)
+			cliCtx.PrintOutput(res)
 			return err
 		},
 	}
 
-	return cmd
+	return client.PostCommands(cmd)[0]
 }
 
 func readAndUnmarshalStdTx(cdc *amino.Codec, filename string) (stdTx auth.StdTx, err error) {

@@ -1,31 +1,75 @@
 package bank
 
 import (
-	"encoding/json"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// name to identify transaction routes
+const RouterKey = "bank"
+
 // MsgSend - high level transaction of the coin module
 type MsgSend struct {
-	Inputs  []Input  `json:"inputs"`
-	Outputs []Output `json:"outputs"`
+	FromAddress sdk.AccAddress `json:"from_address"`
+	ToAddress   sdk.AccAddress `json:"to_address"`
+	Amount      sdk.Coins      `json:"amount"`
 }
 
 var _ sdk.Msg = MsgSend{}
 
 // NewMsgSend - construct arbitrary multi-in, multi-out send msg.
-func NewMsgSend(in []Input, out []Output) MsgSend {
-	return MsgSend{Inputs: in, Outputs: out}
+func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) MsgSend {
+	return MsgSend{FromAddress: fromAddr, ToAddress: toAddr, Amount: amount}
 }
 
 // Implements Msg.
 // nolint
-func (msg MsgSend) Route() string { return "bank" } // TODO: "bank/send"
+func (msg MsgSend) Route() string { return RouterKey }
 func (msg MsgSend) Type() string  { return "send" }
 
 // Implements Msg.
 func (msg MsgSend) ValidateBasic() sdk.Error {
+	if msg.FromAddress.Empty() {
+		return sdk.ErrInvalidAddress("missing sender address")
+	}
+	if msg.ToAddress.Empty() {
+		return sdk.ErrInvalidAddress("missing recipient address")
+	}
+	if !msg.Amount.IsPositive() {
+		return sdk.ErrInsufficientCoins("send amount must be positive")
+	}
+	return nil
+}
+
+// Implements Msg.
+func (msg MsgSend) GetSignBytes() []byte {
+	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
+}
+
+// Implements Msg.
+func (msg MsgSend) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{msg.FromAddress}
+}
+
+// MsgMultiSend - high level transaction of the coin module
+type MsgMultiSend struct {
+	Inputs  []Input  `json:"inputs"`
+	Outputs []Output `json:"outputs"`
+}
+
+var _ sdk.Msg = MsgMultiSend{}
+
+// NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
+func NewMsgMultiSend(in []Input, out []Output) MsgMultiSend {
+	return MsgMultiSend{Inputs: in, Outputs: out}
+}
+
+// Implements Msg.
+// nolint
+func (msg MsgMultiSend) Route() string { return RouterKey }
+func (msg MsgMultiSend) Type() string  { return "multisend" }
+
+// Implements Msg.
+func (msg MsgMultiSend) ValidateBasic() sdk.Error {
 	// this just makes sure all the inputs and outputs are properly formatted,
 	// not that they actually have the money inside
 	if len(msg.Inputs) == 0 {
@@ -34,115 +78,22 @@ func (msg MsgSend) ValidateBasic() sdk.Error {
 	if len(msg.Outputs) == 0 {
 		return ErrNoOutputs(DefaultCodespace).TraceSDK("")
 	}
-	// make sure all inputs and outputs are individually valid
-	var totalIn, totalOut sdk.Coins
-	for _, in := range msg.Inputs {
-		if err := in.ValidateBasic(); err != nil {
-			return err.TraceSDK("")
-		}
-		totalIn = totalIn.Plus(in.Coins)
-	}
-	for _, out := range msg.Outputs {
-		if err := out.ValidateBasic(); err != nil {
-			return err.TraceSDK("")
-		}
-		totalOut = totalOut.Plus(out.Coins)
-	}
-	// make sure inputs and outputs match
-	if !totalIn.IsEqual(totalOut) {
-		return sdk.ErrInvalidCoins(totalIn.String()).TraceSDK("inputs and outputs don't match")
-	}
-	return nil
+
+	return ValidateInputsOutputs(msg.Inputs, msg.Outputs)
 }
 
 // Implements Msg.
-func (msg MsgSend) GetSignBytes() []byte {
-	var inputs, outputs []json.RawMessage
-	for _, input := range msg.Inputs {
-		inputs = append(inputs, input.GetSignBytes())
-	}
-	for _, output := range msg.Outputs {
-		outputs = append(outputs, output.GetSignBytes())
-	}
-	b, err := msgCdc.MarshalJSON(struct {
-		Inputs  []json.RawMessage `json:"inputs"`
-		Outputs []json.RawMessage `json:"outputs"`
-	}{
-		Inputs:  inputs,
-		Outputs: outputs,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+func (msg MsgMultiSend) GetSignBytes() []byte {
+	return sdk.MustSortJSON(msgCdc.MustMarshalJSON(msg))
 }
 
 // Implements Msg.
-func (msg MsgSend) GetSigners() []sdk.AccAddress {
+func (msg MsgMultiSend) GetSigners() []sdk.AccAddress {
 	addrs := make([]sdk.AccAddress, len(msg.Inputs))
 	for i, in := range msg.Inputs {
 		addrs[i] = in.Address
 	}
 	return addrs
-}
-
-//----------------------------------------
-// MsgIssue
-
-// MsgIssue - high level transaction of the coin module
-type MsgIssue struct {
-	Banker  sdk.AccAddress `json:"banker"`
-	Outputs []Output       `json:"outputs"`
-}
-
-var _ sdk.Msg = MsgIssue{}
-
-// NewMsgIssue - construct arbitrary multi-in, multi-out send msg.
-func NewMsgIssue(banker sdk.AccAddress, out []Output) MsgIssue {
-	return MsgIssue{Banker: banker, Outputs: out}
-}
-
-// Implements Msg.
-// nolint
-func (msg MsgIssue) Route() string { return "bank" } // TODO: "bank/issue"
-func (msg MsgIssue) Type() string  { return "issue" }
-
-// Implements Msg.
-func (msg MsgIssue) ValidateBasic() sdk.Error {
-	// XXX
-	if len(msg.Outputs) == 0 {
-		return ErrNoOutputs(DefaultCodespace).TraceSDK("")
-	}
-	for _, out := range msg.Outputs {
-		if err := out.ValidateBasic(); err != nil {
-			return err.TraceSDK("")
-		}
-	}
-	return nil
-}
-
-// Implements Msg.
-func (msg MsgIssue) GetSignBytes() []byte {
-	var outputs []json.RawMessage
-	for _, output := range msg.Outputs {
-		outputs = append(outputs, output.GetSignBytes())
-	}
-	b, err := msgCdc.MarshalJSON(struct {
-		Banker  sdk.AccAddress    `json:"banker"`
-		Outputs []json.RawMessage `json:"outputs"`
-	}{
-		Banker:  msg.Banker,
-		Outputs: outputs,
-	})
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
-}
-
-// Implements Msg.
-func (msg MsgIssue) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Banker}
 }
 
 //----------------------------------------
@@ -152,15 +103,6 @@ func (msg MsgIssue) GetSigners() []sdk.AccAddress {
 type Input struct {
 	Address sdk.AccAddress `json:"address"`
 	Coins   sdk.Coins      `json:"coins"`
-}
-
-// Return bytes to sign for Input
-func (in Input) GetSignBytes() []byte {
-	bin, err := msgCdc.MarshalJSON(in)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bin)
 }
 
 // ValidateBasic - validate transaction input
@@ -177,13 +119,12 @@ func (in Input) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// NewInput - create a transaction input, used with MsgSend
+// NewInput - create a transaction input, used with MsgMultiSend
 func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
-	input := Input{
+	return Input{
 		Address: addr,
 		Coins:   coins,
 	}
-	return input
 }
 
 //----------------------------------------
@@ -193,15 +134,6 @@ func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 type Output struct {
 	Address sdk.AccAddress `json:"address"`
 	Coins   sdk.Coins      `json:"coins"`
-}
-
-// Return bytes to sign for Output
-func (out Output) GetSignBytes() []byte {
-	bin, err := msgCdc.MarshalJSON(out)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(bin)
 }
 
 // ValidateBasic - validate transaction output
@@ -218,11 +150,40 @@ func (out Output) ValidateBasic() sdk.Error {
 	return nil
 }
 
-// NewOutput - create a transaction output, used with MsgSend
+// NewOutput - create a transaction output, used with MsgMultiSend
 func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
-	output := Output{
+	return Output{
 		Address: addr,
 		Coins:   coins,
 	}
-	return output
+}
+
+// ----------------------------------------------------------------------------
+// Auxiliary
+
+// ValidateInputsOutputs validates that each respective input and output is
+// valid and that the sum of inputs is equal to the sum of outputs.
+func ValidateInputsOutputs(inputs []Input, outputs []Output) sdk.Error {
+	var totalIn, totalOut sdk.Coins
+
+	for _, in := range inputs {
+		if err := in.ValidateBasic(); err != nil {
+			return err.TraceSDK("")
+		}
+		totalIn = totalIn.Plus(in.Coins)
+	}
+
+	for _, out := range outputs {
+		if err := out.ValidateBasic(); err != nil {
+			return err.TraceSDK("")
+		}
+		totalOut = totalOut.Plus(out.Coins)
+	}
+
+	// make sure inputs and outputs match
+	if !totalIn.IsEqual(totalOut) {
+		return sdk.ErrInvalidCoins(totalIn.String()).TraceSDK("inputs and outputs don't match")
+	}
+
+	return nil
 }

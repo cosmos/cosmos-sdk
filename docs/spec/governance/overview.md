@@ -42,7 +42,7 @@ If proposal's deposit does not reach `MinDeposit` before `MaxDepositPeriod`, pro
 There is one instance where Atom holders that deposits can be refunded:
 * If the proposal is accepted.
 
-Then, deposits will automatically be refunded to their respective depositer.
+Then, deposits will automatically be refunded to their respective depositor.
 
 ### Proposal types
 
@@ -110,10 +110,6 @@ option that casts a `NoWithVeto` vote.*
 
 Quorum is defined as the minimum percentage of voting power that needs to be 
 casted on a proposal for the result to be valid. 
-
-In the initial version of the governance module, there will be no quorum 
-enforced by the protocol. Participation is ensured via the combination of 
-inheritance and validator's punishment for non-voting.
 
 ### Threshold
 

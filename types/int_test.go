@@ -145,6 +145,13 @@ func minint(i1, i2 int64) int64 {
 	return i2
 }
 
+func maxint(i1, i2 int64) int64 {
+	if i1 > i2 {
+		return i1
+	}
+	return i2
+}
+
 func TestArithInt(t *testing.T) {
 	for d := 0; d < 1000; d++ {
 		n1 := int64(rand.Int31())
@@ -165,6 +172,7 @@ func TestArithInt(t *testing.T) {
 			{i1.MulRaw(n2), n1 * n2},
 			{i1.DivRaw(n2), n1 / n2},
 			{MinInt(i1, i2), minint(n1, n2)},
+			{MaxInt(i1, i2), maxint(n1, n2)},
 			{i1.Neg(), -n1},
 		}
 
@@ -226,6 +234,13 @@ func minuint(i1, i2 uint64) uint64 {
 	return i2
 }
 
+func maxuint(i1, i2 uint64) uint64 {
+	if i1 > i2 {
+		return i1
+	}
+	return i2
+}
+
 func TestArithUint(t *testing.T) {
 	for d := 0; d < 1000; d++ {
 		n1 := uint64(rand.Uint32())
@@ -244,6 +259,7 @@ func TestArithUint(t *testing.T) {
 			{i1.MulRaw(n2), n1 * n2},
 			{i1.DivRaw(n2), n1 / n2},
 			{MinUint(i1, i2), minuint(n1, n2)},
+			{MaxUint(i1, i2), maxuint(n1, n2)},
 		}
 
 		for tcnum, tc := range cases {
@@ -588,5 +604,30 @@ func TestEncodingTableUint(t *testing.T) {
 		err = (&i).UnmarshalAmino(str)
 		require.Nil(t, err, "Error unmarshaling Int. tc #%d, err %s", tcnum, err)
 		require.Equal(t, tc.i, i, "Unmarshaled value is different from expected. tc #%d", tcnum)
+	}
+}
+
+func TestSafeSub(t *testing.T) {
+	testCases := []struct {
+		x, y     Uint
+		expected uint64
+		overflow bool
+	}{
+		{NewUint(0), NewUint(0), 0, false},
+		{NewUint(10), NewUint(5), 5, false},
+		{NewUint(5), NewUint(10), 5, true},
+		{NewUint(math.MaxUint64), NewUint(0), math.MaxUint64, false},
+	}
+
+	for i, tc := range testCases {
+		res, overflow := tc.x.SafeSub(tc.y)
+		require.Equal(
+			t, tc.overflow, overflow,
+			"invalid overflow result; x: %s, y: %s, tc: #%d", tc.x, tc.y, i,
+		)
+		require.Equal(
+			t, tc.expected, res.BigInt().Uint64(),
+			"invalid subtraction result; x: %s, y: %s, tc: #%d", tc.x, tc.y, i,
+		)
 	}
 }

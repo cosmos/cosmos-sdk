@@ -1,76 +1,26 @@
 # Subspace
 
-## Basic Usage
+`Subspace` is a prefixed subspace of the parameter store. Each module who use the parameter store will take a `Subspace`, not the `Keeper`, to isolate permission to access. 
 
-First, declare parameter space and parameter keys for the module. Then include params.Subspace in the keeper. Since we prefix the keys with the spacename, it is recommended to use the same name with the module's.
+## Key
 
-```go
-const (
-	DefaultParamspace = "mymodule"
-)
+Parameter keys are human readable alphanumeric strings. A parameter for the key `"ExampleParameter"` is stored under `[]byte("SubspaceName" + "/" + "ExampleParameter")`, where `"SubspaceName"` is the name of the subspace. 
 
-const (
-	KeyParameter1 = "myparameter1"
-	KeyParameter2 = "myparameter2"
-)
+Subkeys are secondary parameter keys those are used along with a primary parameter key. Subkeys can be used for grouping or dynamic parameter key generation during runtime.
 
-type Keeper struct {
-	cdc *wire.Codec
-	key sdk.StoreKey
+## KeyTable
 
-	ps params.Subspace
-}
-```
+All of the paramter keys that will be used should be registered at the compile time. `KeyTable` is essentially a `map[string]attribute`, where the `string` is a parameter key.
 
-Pass a params.Subspace to NewKeeper with DefaultParamSubspace (or another)
+Currently, `attribute` only consists of `reflect.Type`, which indicates the parameter type. It is needed even if the state machine has no error, because the paraeter can be modified externally, for example via the governance.
 
-```go
-app.myKeeper = mymodule.NewKeeper(cdc, key, app.paramStore.SubStore(mymodule.DefaultParamspace))
-```
+Only primary keys have to be registered on the `KeyTable`. Subkeys inherit the attribute of the primary key.
 
-`NewKeeper` should register a `TypeTable`, which defines a map from parameter keys from types.
+## ParamSet
 
-```go
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, space params.Subspace) Keeper {
-    return Keeper {
-        cdc: cdc,
-        key: key,
-        ps: space.WithTypeTable(ParamTypeTable()),
-    }
-}
-```
+Modules often define a struct of parameters. Instead of calling methods with each of those parameters, when the struct implements `ParamSet`, it can be used with the following methods:
 
-Now we can access to the paramstore using Paramstore Keys
+* `KeyTable.RegisterParamSet()`: registers all parameters in the struct
+* `Subspace.{Get, Set}ParamSet()`: Get to & Set from the struct
 
-```go
-var param MyStruct
-k.ps.Get(KeyParameter1, &param)
-k.ps.Set(KeyParameter2, param)
-```
-
-# Genesis Usage
-
-Declare a struct for parameters and make it implement params.ParamSet. It will then be able to be passed to SetParamSet.
-
-```go
-type MyParams struct {
-	Parameter1 uint64
-	Parameter2 string
-}
-
-// Implements params.ParamSet
-// KeyValuePairs must return the list of (ParamKey, PointerToTheField)
-func (p *MyParams) KeyValuePairs() params.KeyValuePairs {
-	return params.KeyFieldPairs {
-		{KeyParameter1, &p.Parameter1},
-		{KeyParameter2, &p.Parameter2},
-	}
-}
-
-func InitGenesis(ctx sdk.Context, k Keeper, data GenesisState) {
-	k.ps.SetParamSet(ctx, &data.params)
-}
-```
-
-The method is pointer receiver because there could be a case that we read from the store and set the result to the struct.
-
+The implementor should be a pointer in order to use `GetParamSet()`

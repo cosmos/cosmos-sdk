@@ -8,25 +8,25 @@ import (
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cryptokeys "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
 	"github.com/spf13/viper"
 
-	"github.com/cosmos/cosmos-sdk/client/keys"
-	cskeys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	tmlite "github.com/tendermint/tendermint/lite"
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const ctxAccStoreName = "acc"
-
 var (
-	verifier tmlite.Verifier
+	verifier     tmlite.Verifier
+	verifierHome string
 )
 
 // CLIContext implements a typical CLI context created in SDK modules for
@@ -35,7 +35,9 @@ type CLIContext struct {
 	Codec         *codec.Codec
 	AccDecoder    auth.AccountDecoder
 	Client        rpcclient.Client
+	Keybase       cryptokeys.Keybase
 	Output        io.Writer
+	OutputFormat  string
 	Height        int64
 	NodeURI       string
 	From          string
@@ -43,13 +45,13 @@ type CLIContext struct {
 	TrustNode     bool
 	UseLedger     bool
 	Async         bool
-	JSON          bool
 	PrintResponse bool
 	Verifier      tmlite.Verifier
-	DryRun        bool
+	VerifierHome  string
+	Simulate      bool
 	GenerateOnly  bool
-	fromAddress   types.AccAddress
-	fromName      string
+	FromAddress   sdk.AccAddress
+	FromName      string
 	Indent        bool
 }
 
@@ -64,30 +66,35 @@ func NewCLIContext() CLIContext {
 	}
 
 	from := viper.GetString(client.FlagFrom)
-	fromAddress, fromName := fromFields(from)
+	fromAddress, fromName, err := GetFromFields(from)
+	if err != nil {
+		fmt.Printf("failed to get from fields: %v", err)
+		os.Exit(1)
+	}
 
 	// We need to use a single verifier for all contexts
-	if verifier == nil {
+	if verifier == nil || verifierHome != viper.GetString(cli.HomeFlag) {
 		verifier = createVerifier()
+		verifierHome = viper.GetString(cli.HomeFlag)
 	}
 
 	return CLIContext{
 		Client:        rpc,
 		Output:        os.Stdout,
 		NodeURI:       nodeURI,
-		AccountStore:  ctxAccStoreName,
+		AccountStore:  auth.StoreKey,
 		From:          viper.GetString(client.FlagFrom),
+		OutputFormat:  viper.GetString(cli.OutputFlag),
 		Height:        viper.GetInt64(client.FlagHeight),
 		TrustNode:     viper.GetBool(client.FlagTrustNode),
 		UseLedger:     viper.GetBool(client.FlagUseLedger),
 		Async:         viper.GetBool(client.FlagAsync),
-		JSON:          viper.GetBool(client.FlagJson),
 		PrintResponse: viper.GetBool(client.FlagPrintResponse),
 		Verifier:      verifier,
-		DryRun:        viper.GetBool(client.FlagDryRun),
+		Simulate:      viper.GetBool(client.FlagDryRun),
 		GenerateOnly:  viper.GetBool(client.FlagGenerateOnly),
-		fromAddress:   fromAddress,
-		fromName:      fromName,
+		FromAddress:   fromAddress,
+		FromName:      fromName,
 		Indent:        viper.GetBool(client.FlagIndentResponse),
 	}
 }
@@ -138,47 +145,28 @@ func createVerifier() tmlite.Verifier {
 	return verifier
 }
 
-func fromFields(from string) (fromAddr types.AccAddress, fromName string) {
-	if from == "" {
-		return nil, ""
-	}
-
-	keybase, err := keys.GetKeyBase()
-	if err != nil {
-		fmt.Println("no keybase found")
-		os.Exit(1)
-	}
-
-	var info cskeys.Info
-	if addr, err := types.AccAddressFromBech32(from); err == nil {
-		info, err = keybase.GetByAddress(addr)
-		if err != nil {
-			fmt.Printf("could not find key %s\n", from)
-			os.Exit(1)
-		}
-	} else {
-		info, err = keybase.Get(from)
-		if err != nil {
-			fmt.Printf("could not find key %s\n", from)
-			os.Exit(1)
-		}
-	}
-
-	fromAddr = info.GetAddress()
-	fromName = info.GetName()
-	return
-}
-
 // WithCodec returns a copy of the context with an updated codec.
 func (ctx CLIContext) WithCodec(cdc *codec.Codec) CLIContext {
 	ctx.Codec = cdc
 	return ctx
 }
 
+// GetAccountDecoder gets the account decoder for auth.DefaultAccount.
+func GetAccountDecoder(cdc *codec.Codec) auth.AccountDecoder {
+	return func(accBytes []byte) (acct auth.Account, err error) {
+		err = cdc.UnmarshalBinaryBare(accBytes, &acct)
+		if err != nil {
+			panic(err)
+		}
+
+		return acct, err
+	}
+}
+
 // WithAccountDecoder returns a copy of the context with an updated account
 // decoder.
-func (ctx CLIContext) WithAccountDecoder(decoder auth.AccountDecoder) CLIContext {
-	ctx.AccDecoder = decoder
+func (ctx CLIContext) WithAccountDecoder(cdc *codec.Codec) CLIContext {
+	ctx.AccDecoder = GetAccountDecoder(cdc)
 	return ctx
 }
 
@@ -230,4 +218,82 @@ func (ctx CLIContext) WithUseLedger(useLedger bool) CLIContext {
 func (ctx CLIContext) WithVerifier(verifier tmlite.Verifier) CLIContext {
 	ctx.Verifier = verifier
 	return ctx
+}
+
+// WithGenerateOnly returns a copy of the context with updated GenerateOnly value
+func (ctx CLIContext) WithGenerateOnly(generateOnly bool) CLIContext {
+	ctx.GenerateOnly = generateOnly
+	return ctx
+}
+
+// WithSimulation returns a copy of the context with updated Simulate value
+func (ctx CLIContext) WithSimulation(simulate bool) CLIContext {
+	ctx.Simulate = simulate
+	return ctx
+}
+
+// WithFromName returns a copy of the context with an updated from account name.
+func (ctx CLIContext) WithFromName(name string) CLIContext {
+	ctx.FromName = name
+	return ctx
+}
+
+// WithFromAddress returns a copy of the context with an updated from account
+// address.
+func (ctx CLIContext) WithFromAddress(addr sdk.AccAddress) CLIContext {
+	ctx.FromAddress = addr
+	return ctx
+}
+
+// PrintOutput prints output while respecting output and indent flags
+// NOTE: pass in marshalled structs that have been unmarshaled
+// because this function will panic on marshaling errors
+func (ctx CLIContext) PrintOutput(toPrint fmt.Stringer) (err error) {
+	var out []byte
+
+	switch ctx.OutputFormat {
+	case "text":
+		out = []byte(toPrint.String())
+	case "json":
+		if ctx.Indent {
+			out, err = ctx.Codec.MarshalJSONIndent(toPrint, "", " ")
+		} else {
+			out, err = ctx.Codec.MarshalJSON(toPrint)
+		}
+	}
+
+	if err != nil {
+		return
+	}
+
+	fmt.Println(string(out))
+	return
+}
+
+// GetFromFields returns a from account address and Keybase name given either
+// an address or key name.
+func GetFromFields(from string) (sdk.AccAddress, string, error) {
+	if from == "" {
+		return nil, "", nil
+	}
+
+	keybase, err := keys.NewKeyBaseFromHomeFlag()
+	if err != nil {
+		return nil, "", err
+	}
+
+	var info cryptokeys.Info
+	if addr, err := sdk.AccAddressFromBech32(from); err == nil {
+		info, err = keybase.GetByAddress(addr)
+		if err != nil {
+			return nil, "", err
+		}
+	} else {
+		info, err = keybase.Get(from)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	return info.GetAddress(), info.GetName(), nil
 }

@@ -7,10 +7,22 @@ import (
 // validatorGovInfo used for tallying
 type validatorGovInfo struct {
 	Address         sdk.ValAddress // address of the validator operator
-	Power           sdk.Dec        // Power of a Validator
+	BondedTokens    sdk.Int        // Power of a Validator
 	DelegatorShares sdk.Dec        // Total outstanding delegator shares
 	Minus           sdk.Dec        // Minus of validator, used to compute validator's voting power
 	Vote            VoteOption     // Vote of the validator
+}
+
+func newValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegatorShares,
+	minus sdk.Dec, vote VoteOption) validatorGovInfo {
+
+	return validatorGovInfo{
+		Address:         address,
+		BondedTokens:    bondedTokens,
+		DelegatorShares: delegatorShares,
+		Minus:           minus,
+		Vote:            vote,
+	}
 }
 
 func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tallyResults TallyResult) {
@@ -24,13 +36,13 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 	currValidators := make(map[string]validatorGovInfo)
 
 	keeper.vs.IterateBondedValidatorsByPower(ctx, func(index int64, validator sdk.Validator) (stop bool) {
-		currValidators[validator.GetOperator().String()] = validatorGovInfo{
-			Address:         validator.GetOperator(),
-			Power:           validator.GetPower(),
-			DelegatorShares: validator.GetDelegatorShares(),
-			Minus:           sdk.ZeroDec(),
-			Vote:            OptionEmpty,
-		}
+		currValidators[validator.GetOperator().String()] = newValidatorGovInfo(
+			validator.GetOperator(),
+			validator.GetBondedTokens(),
+			validator.GetDelegatorShares(),
+			sdk.ZeroDec(),
+			OptionEmpty,
+		)
 		return false
 	})
 
@@ -57,7 +69,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 					currValidators[valAddrStr] = val
 
 					delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
-					votingPower := val.Power.Mul(delegatorShare)
+					votingPower := delegatorShare.MulInt(val.BondedTokens)
 
 					results[vote.Option] = results[vote.Option].Add(votingPower)
 					totalVotingPower = totalVotingPower.Add(votingPower)
@@ -78,22 +90,25 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 		sharesAfterMinus := val.DelegatorShares.Sub(val.Minus)
 		percentAfterMinus := sharesAfterMinus.Quo(val.DelegatorShares)
-		votingPower := val.Power.Mul(percentAfterMinus)
+		votingPower := percentAfterMinus.MulInt(val.BondedTokens)
 
 		results[val.Vote] = results[val.Vote].Add(votingPower)
 		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
 	tallyParams := keeper.GetTallyParams(ctx)
+	tallyResults = NewTallyResultFromMap(results)
 
-	tallyResults = TallyResult{
-		Yes:        results[OptionYes],
-		Abstain:    results[OptionAbstain],
-		No:         results[OptionNo],
-		NoWithVeto: results[OptionNoWithVeto],
+	// If there is no staked coins, the proposal fails
+	if keeper.vs.TotalPower(ctx).IsZero() {
+		return false, tallyResults
 	}
-
-	// If no one votes, proposal fails
+	// If there is not enough quorum of votes, the proposal fails
+	percentVoting := totalVotingPower.Quo(sdk.NewDecFromInt(keeper.vs.TotalPower(ctx)))
+	if percentVoting.LT(tallyParams.Quorum) {
+		return false, tallyResults
+	}
+	// If no one votes (everyone abstains), proposal fails
 	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroDec()) {
 		return false, tallyResults
 	}

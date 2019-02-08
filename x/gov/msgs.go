@@ -6,8 +6,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// name to idetify transaction types
-const MsgRoute = "gov"
+// Governance message types and routes
+const (
+	TypeMsgDeposit        = "deposit"
+	TypeMsgVote           = "vote"
+	TypeMsgSubmitProposal = "submit_proposal"
+
+	MaxDescriptionLength int = 5000
+	MaxTitleLength       int = 140
+)
 
 var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
@@ -32,16 +39,22 @@ func NewMsgSubmitProposal(title string, description string, proposalType Proposa
 }
 
 //nolint
-func (msg MsgSubmitProposal) Route() string { return MsgRoute }
-func (msg MsgSubmitProposal) Type() string  { return "submit_proposal" }
+func (msg MsgSubmitProposal) Route() string { return RouterKey }
+func (msg MsgSubmitProposal) Type() string  { return TypeMsgSubmitProposal }
 
 // Implements Msg.
 func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if len(msg.Title) == 0 {
-		return ErrInvalidTitle(DefaultCodespace, msg.Title) // TODO: Proper Error
+		return ErrInvalidTitle(DefaultCodespace, "No title present in proposal")
+	}
+	if len(msg.Title) > MaxTitleLength {
+		return ErrInvalidTitle(DefaultCodespace, fmt.Sprintf("Proposal title is longer than max length of %d", MaxTitleLength))
 	}
 	if len(msg.Description) == 0 {
-		return ErrInvalidDescription(DefaultCodespace, msg.Description) // TODO: Proper Error
+		return ErrInvalidDescription(DefaultCodespace, "No description present in proposal")
+	}
+	if len(msg.Description) > MaxDescriptionLength {
+		return ErrInvalidDescription(DefaultCodespace, fmt.Sprintf("Proposal description is longer than max length of %d", MaxDescriptionLength))
 	}
 	if !validProposalType(msg.ProposalType) {
 		return ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
@@ -52,7 +65,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if !msg.InitialDeposit.IsValid() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
 	}
-	if !msg.InitialDeposit.IsNotNegative() {
+	if msg.InitialDeposit.IsAnyNegative() {
 		return sdk.ErrInvalidCoins(msg.InitialDeposit.String())
 	}
 	return nil
@@ -69,11 +82,8 @@ func (msg MsgSubmitProposal) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgSubmitProposal) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := msgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // Implements Msg.
@@ -85,32 +95,32 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 // MsgDeposit
 type MsgDeposit struct {
 	ProposalID uint64         `json:"proposal_id"` // ID of the proposal
-	Depositer  sdk.AccAddress `json:"depositer"`   // Address of the depositer
+	Depositor  sdk.AccAddress `json:"depositor"`   // Address of the depositor
 	Amount     sdk.Coins      `json:"amount"`      // Coins to add to the proposal's deposit
 }
 
-func NewMsgDeposit(depositer sdk.AccAddress, proposalID uint64, amount sdk.Coins) MsgDeposit {
+func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) MsgDeposit {
 	return MsgDeposit{
 		ProposalID: proposalID,
-		Depositer:  depositer,
+		Depositor:  depositor,
 		Amount:     amount,
 	}
 }
 
 // Implements Msg.
 // nolint
-func (msg MsgDeposit) Route() string { return MsgRoute }
-func (msg MsgDeposit) Type() string  { return "deposit" }
+func (msg MsgDeposit) Route() string { return RouterKey }
+func (msg MsgDeposit) Type() string  { return TypeMsgDeposit }
 
 // Implements Msg.
 func (msg MsgDeposit) ValidateBasic() sdk.Error {
-	if len(msg.Depositer) == 0 {
-		return sdk.ErrInvalidAddress(msg.Depositer.String())
+	if len(msg.Depositor) == 0 {
+		return sdk.ErrInvalidAddress(msg.Depositor.String())
 	}
 	if !msg.Amount.IsValid() {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
 	}
-	if !msg.Amount.IsNotNegative() {
+	if msg.Amount.IsAnyNegative() {
 		return sdk.ErrInvalidCoins(msg.Amount.String())
 	}
 	if msg.ProposalID < 0 {
@@ -120,7 +130,7 @@ func (msg MsgDeposit) ValidateBasic() sdk.Error {
 }
 
 func (msg MsgDeposit) String() string {
-	return fmt.Sprintf("MsgDeposit{%s=>%v: %v}", msg.Depositer, msg.ProposalID, msg.Amount)
+	return fmt.Sprintf("MsgDeposit{%s=>%v: %v}", msg.Depositor, msg.ProposalID, msg.Amount)
 }
 
 // Implements Msg.
@@ -130,16 +140,13 @@ func (msg MsgDeposit) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgDeposit) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := msgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // Implements Msg.
 func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Depositer}
+	return []sdk.AccAddress{msg.Depositor}
 }
 
 //-----------------------------------------------------------
@@ -160,8 +167,8 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) MsgV
 
 // Implements Msg.
 // nolint
-func (msg MsgVote) Route() string { return MsgRoute }
-func (msg MsgVote) Type() string  { return "vote" }
+func (msg MsgVote) Route() string { return RouterKey }
+func (msg MsgVote) Type() string  { return TypeMsgVote }
 
 // Implements Msg.
 func (msg MsgVote) ValidateBasic() sdk.Error {
@@ -188,11 +195,8 @@ func (msg MsgVote) Get(key interface{}) (value interface{}) {
 
 // Implements Msg.
 func (msg MsgVote) GetSignBytes() []byte {
-	b, err := msgCdc.MarshalJSON(msg)
-	if err != nil {
-		panic(err)
-	}
-	return sdk.MustSortJSON(b)
+	bz := msgCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
 }
 
 // Implements Msg.

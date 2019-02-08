@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,7 +28,6 @@ func BlockCommand() *cobra.Command {
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
-	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
 	return cmd
 }
 
@@ -131,7 +131,7 @@ func BlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }
 
@@ -150,6 +150,6 @@ func LatestBlockRequestHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

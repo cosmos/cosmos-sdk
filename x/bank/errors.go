@@ -7,10 +7,11 @@ import (
 
 // Bank errors reserve 100 ~ 199.
 const (
-	DefaultCodespace sdk.CodespaceType = 2
+	DefaultCodespace sdk.CodespaceType = "bank"
 
 	CodeInvalidInput  sdk.CodeType = 101
 	CodeInvalidOutput sdk.CodeType = 102
+	CodeSendDisabled  sdk.CodeType = 103
 )
 
 // NOTE: Don't stringer this, we'll put better messages in later.
@@ -42,6 +43,10 @@ func ErrInvalidOutput(codespace sdk.CodespaceType, msg string) sdk.Error {
 
 func ErrNoOutputs(codespace sdk.CodespaceType) sdk.Error {
 	return newError(codespace, CodeInvalidOutput, "")
+}
+
+func ErrSendDisabled(codespace sdk.CodespaceType) sdk.Error {
+	return newError(codespace, CodeSendDisabled, "")
 }
 
 //----------------------------------------

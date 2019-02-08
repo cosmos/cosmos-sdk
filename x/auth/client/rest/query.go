@@ -4,11 +4,10 @@ import (
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 
 	"github.com/gorilla/mux"
 )
@@ -17,11 +16,11 @@ import (
 func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec, storeName string) {
 	r.HandleFunc(
 		"/auth/accounts/{address}",
-		QueryAccountRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
+		QueryAccountRequestHandlerFn(storeName, cdc, context.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(
 		"/bank/balances/{address}",
-		QueryBalancesRequestHandlerFn(storeName, cdc, authcmd.GetAccountDecoder(cdc), cliCtx),
+		QueryBalancesRequestHandlerFn(storeName, cdc, context.GetAccountDecoder(cdc), cliCtx),
 	).Methods("GET")
 	r.HandleFunc(
 		"/tx/sign",
@@ -40,13 +39,13 @@ func QueryAccountRequestHandlerFn(
 
 		addr, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -59,11 +58,11 @@ func QueryAccountRequestHandlerFn(
 		// decode the value
 		account, err := decoder(res)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, account, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, account, cliCtx.Indent)
 	}
 }
 
@@ -79,13 +78,13 @@ func QueryBalancesRequestHandlerFn(
 
 		addr, err := sdk.AccAddressFromBech32(bech32addr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
 		res, err := cliCtx.QueryStore(auth.AddressStoreKey(addr), storeName)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -98,10 +97,10 @@ func QueryBalancesRequestHandlerFn(
 		// decode the value
 		account, err := decoder(res)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		utils.PostProcessResponse(w, cdc, account.GetCoins(), cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, account.GetCoins(), cliCtx.Indent)
 	}
 }

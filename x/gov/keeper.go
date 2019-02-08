@@ -11,8 +11,17 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-// Parameter store default namestore
 const (
+	// StoreKey is the store key string for gov
+	StoreKey = "gov"
+
+	// RouterKey is the message route for gov
+	RouterKey = "gov"
+
+	// QuerierRoute is the querier route for gov
+	QuerierRoute = "gov"
+
+	// Parameter store default namestore
 	DefaultParamspace = "gov"
 )
 
@@ -26,9 +35,9 @@ var (
 	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
 
-// Type declaration for parameters
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable(
+// Key declaration for parameters
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable(
 		ParamStoreKeyDepositParams, DepositParams{},
 		ParamStoreKeyVotingParams, VotingParams{},
 		ParamStoreKeyTallyParams, TallyParams{},
@@ -71,7 +80,7 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, p
 	return Keeper{
 		storeKey:     key,
 		paramsKeeper: paramsKeeper,
-		paramSpace:   paramSpace.WithTypeTable(ParamTypeTable()),
+		paramSpace:   paramSpace.WithKeyTable(ParamKeyTable()),
 		ck:           ck,
 		ds:           ds,
 		vs:           ds.GetValidatorSet(),
@@ -90,14 +99,14 @@ func (keeper Keeper) NewTextProposal(ctx sdk.Context, title string, description 
 		return nil
 	}
 	var proposal Proposal = &TextProposal{
-		ProposalID:   proposalID,
-		Title:        title,
-		Description:  description,
-		ProposalType: proposalType,
-		Status:       StatusDepositPeriod,
-		TallyResult:  EmptyTallyResult(),
-		TotalDeposit: sdk.Coins{},
-		SubmitTime:   ctx.BlockHeader().Time,
+		ProposalID:       proposalID,
+		Title:            title,
+		Description:      description,
+		ProposalType:     proposalType,
+		Status:           StatusDepositPeriod,
+		FinalTallyResult: EmptyTallyResult(),
+		TotalDeposit:     sdk.Coins{},
+		SubmitTime:       ctx.BlockHeader().Time,
 	}
 
 	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
@@ -139,7 +148,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 }
 
 // Get Proposal from store by ProposalID
-func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositerAddr sdk.AccAddress, status ProposalStatus, numLatest uint64) []Proposal {
+func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositorAddr sdk.AccAddress, status ProposalStatus, numLatest uint64) []Proposal {
 
 	maxProposalID, err := keeper.peekCurrentProposalID(ctx)
 	if err != nil {
@@ -160,8 +169,8 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddr
 			}
 		}
 
-		if depositerAddr != nil && len(depositerAddr) != 0 {
-			_, found := keeper.GetDeposit(ctx, proposalID, depositerAddr)
+		if depositorAddr != nil && len(depositorAddr) != 0 {
+			_, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
 			if !found {
 				continue
 			}
@@ -340,10 +349,10 @@ func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sd
 // =====================================================
 // Deposits
 
-// Gets the deposit of a specific depositer on a specific proposal
-func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositerAddr sdk.AccAddress) (Deposit, bool) {
+// Gets the deposit of a specific depositor on a specific proposal
+func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress) (Deposit, bool) {
 	store := ctx.KVStore(keeper.storeKey)
-	bz := store.Get(KeyDeposit(proposalID, depositerAddr))
+	bz := store.Get(KeyDeposit(proposalID, depositorAddr))
 	if bz == nil {
 		return Deposit{}, false
 	}
@@ -352,15 +361,15 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositerAdd
 	return deposit, true
 }
 
-func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID uint64, depositerAddr sdk.AccAddress, deposit Deposit) {
+func (keeper Keeper) setDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, deposit Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshalBinaryLengthPrefixed(deposit)
-	store.Set(KeyDeposit(proposalID, depositerAddr), bz)
+	store.Set(KeyDeposit(proposalID, depositorAddr), bz)
 }
 
-// Adds or updates a deposit of a specific depositer on a specific proposal
+// Adds or updates a deposit of a specific depositor on a specific proposal
 // Activates voting period when appropriate
-func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositerAddr sdk.AccAddress, depositAmount sdk.Coins) (sdk.Error, bool) {
+func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (sdk.Error, bool) {
 	// Checks to see if proposal exists
 	proposal := keeper.GetProposal(ctx, proposalID)
 	if proposal == nil {
@@ -372,8 +381,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositerAdd
 		return ErrAlreadyFinishedProposal(keeper.codespace, proposalID), false
 	}
 
-	// Send coins from depositer's account to DepositedCoinsAccAddr account
-	_, err := keeper.ck.SendCoins(ctx, depositerAddr, DepositedCoinsAccAddr, depositAmount)
+	// Send coins from depositor's account to DepositedCoinsAccAddr account
+	_, err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
 	if err != nil {
 		return err, false
 	}
@@ -391,13 +400,13 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositerAdd
 	}
 
 	// Add or update deposit object
-	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositerAddr)
+	currDeposit, found := keeper.GetDeposit(ctx, proposalID, depositorAddr)
 	if !found {
-		newDeposit := Deposit{depositerAddr, proposalID, depositAmount}
-		keeper.setDeposit(ctx, proposalID, depositerAddr, newDeposit)
+		newDeposit := Deposit{depositorAddr, proposalID, depositAmount}
+		keeper.setDeposit(ctx, proposalID, depositorAddr, newDeposit)
 	} else {
 		currDeposit.Amount = currDeposit.Amount.Plus(depositAmount)
-		keeper.setDeposit(ctx, proposalID, depositerAddr, currDeposit)
+		keeper.setDeposit(ctx, proposalID, depositorAddr, currDeposit)
 	}
 
 	return nil, activatedVotingPeriod
@@ -413,27 +422,25 @@ func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) sdk.Iterato
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
-
+	defer depositsIterator.Close()
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
-		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositer, deposit.Amount)
+		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, deposit.Depositor, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
 		}
 
 		store.Delete(depositsIterator.Key())
 	}
-
-	depositsIterator.Close()
 }
 
 // Deletes all the deposits on a specific proposal without refunding them
 func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
-
+	defer depositsIterator.Close()
 	for ; depositsIterator.Valid(); depositsIterator.Next() {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
@@ -445,8 +452,6 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 
 		store.Delete(depositsIterator.Key())
 	}
-
-	depositsIterator.Close()
 }
 
 // =====================================================

@@ -9,10 +9,12 @@ import (
 
 	bapp "github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 const (
-	app1Name = "App1"
+	app1Name      = "App1"
+	bankCodespace = "BANK"
 )
 
 func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
@@ -21,7 +23,7 @@ func NewApp1(logger log.Logger, db dbm.DB) *bapp.BaseApp {
 	app := bapp.NewBaseApp(app1Name, logger, db, tx1Decoder)
 
 	// Create a key for accessing the account store.
-	keyAccount := sdk.NewKVStoreKey("acc")
+	keyAccount := sdk.NewKVStoreKey(auth.StoreKey)
 
 	// Register message routes.
 	// Note the handler gets access to the account store.
@@ -107,7 +109,7 @@ func handleMsgSend(key *sdk.KVStoreKey) sdk.Handler {
 		if !ok {
 			// Create custom error message and return result
 			// Note: Using unreserved error codespace
-			return sdk.NewError(2, 1, "MsgSend is malformed").Result()
+			return sdk.NewError(bankCodespace, 1, "MsgSend is malformed").Result()
 		}
 
 		// Load the store.
@@ -137,7 +139,7 @@ func handleFrom(store sdk.KVStore, from sdk.AccAddress, amt sdk.Coins) sdk.Resul
 	accBytes := store.Get(from)
 	if accBytes == nil {
 		// Account was not added to store. Return the result of the error.
-		return sdk.NewError(2, 101, "Account not added to store").Result()
+		return sdk.NewError(bankCodespace, 101, "Account not added to store").Result()
 	}
 
 	// Unmarshal the JSON account bytes.
@@ -152,7 +154,7 @@ func handleFrom(store sdk.KVStore, from sdk.AccAddress, amt sdk.Coins) sdk.Resul
 	senderCoins := acc.Coins.Minus(amt)
 
 	// If any coin has negative amount, return insufficient coins error.
-	if !senderCoins.IsNotNegative() {
+	if senderCoins.IsAnyNegative() {
 		return sdk.ErrInsufficientCoins("Insufficient coins in account").Result()
 	}
 

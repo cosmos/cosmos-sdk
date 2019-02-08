@@ -1,53 +1,93 @@
 package keys
 
 import (
+	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
-	keyerror "github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
+	"github.com/spf13/viper"
+
 	"github.com/gorilla/mux"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/keyerror"
+
 	"github.com/spf13/cobra"
+)
+
+const (
+	flagYes   = "yes"
+	flagForce = "force"
 )
 
 func deleteKeyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>",
 		Short: "Delete the given key",
-		RunE:  runDeleteCmd,
-		Args:  cobra.ExactArgs(1),
+		Long: `Delete a key from the store.
+
+Note that removing offline or ledger keys will remove
+only the public key references stored locally, i.e.
+private keys stored in a ledger device cannot be deleted with
+gaiacli.
+`,
+		RunE: runDeleteCmd,
+		Args: cobra.ExactArgs(1),
 	}
+
+	cmd.Flags().BoolP(flagYes, "y", false,
+		"Skip confirmation prompt when deleting offline or ledger key references")
+	cmd.Flags().BoolP(flagForce, "f", false,
+		"Remove the key unconditionally without asking for the passphrase")
 	return cmd
 }
 
 func runDeleteCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	kb, err := GetKeyBaseWithWritePerm()
+	kb, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return err
 	}
 
-	_, err = kb.Get(name)
+	info, err := kb.Get(name)
 	if err != nil {
 		return err
 	}
 
 	buf := client.BufferStdin()
-	oldpass, err := client.GetPassword(
-		"DANGER - enter password to permanently delete key:", buf)
-	if err != nil {
-		return err
+	if info.GetType() == keys.TypeLedger || info.GetType() == keys.TypeOffline {
+		if !viper.GetBool(flagYes) {
+			if err := confirmDeletion(buf); err != nil {
+				return err
+			}
+		}
+		if err := kb.Delete(name, "", true); err != nil {
+			return err
+		}
+		fmt.Fprintln(os.Stderr, "Public key reference deleted")
+		return nil
 	}
 
-	err = kb.Delete(name, oldpass)
+	// skip passphrase check if run with --force
+	skipPass := viper.GetBool(flagForce)
+	var oldpass string
+	if !skipPass {
+		if oldpass, err = client.GetPassword(
+			"DANGER - enter password to permanently delete key:", buf); err != nil {
+			return err
+		}
+	}
+
+	err = kb.Delete(name, oldpass, skipPass)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Password deleted forever (uh oh!)")
+	fmt.Fprintln(os.Stderr, "Key deleted forever (uh oh!)")
 	return nil
 }
 
@@ -74,14 +114,14 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kb, err = GetKeyBaseWithWritePerm()
+	kb, err = NewKeyBaseFromHomeFlag()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	err = kb.Delete(name, m.Password)
+	err = kb.Delete(name, m.Password, false)
 	if keyerror.IsErrKeyNotFound(err) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
@@ -97,4 +137,15 @@ func DeleteKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func confirmDeletion(buf *bufio.Reader) error {
+	answer, err := client.GetConfirmation("Key reference will be deleted. Continue?", buf)
+	if err != nil {
+		return err
+	}
+	if !answer {
+		return errors.New("aborted")
+	}
+	return nil
 }

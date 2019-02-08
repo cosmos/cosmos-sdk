@@ -10,12 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	"github.com/cosmos/cosmos-sdk/x/stake"
-	stakeTypes "github.com/cosmos/cosmos-sdk/x/stake/types"
-)
-
-const (
-	denom = stakeTypes.DefaultBondDenom
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
@@ -23,7 +18,7 @@ const (
 // future operations.
 // TODO: Vote more intelligently, so we can actually do some checks regarding votes passing or failing
 // TODO: Actually check that validator slashings happened
-func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk stake.Keeper) simulation.Operation {
+func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk staking.Keeper) simulation.Operation {
 	handler := gov.NewHandler(k)
 	// The states are:
 	// column 1: All validators vote
@@ -183,7 +178,7 @@ func operationSimulateMsgVote(k gov.Keeper, acc simulation.Account, proposalID u
 func randomDeposit(r *rand.Rand) sdk.Coins {
 	// TODO Choose based on account balance and min deposit
 	amount := int64(r.Intn(20)) + 1
-	return sdk.Coins{sdk.NewInt64Coin(denom, amount)}
+	return sdk.Coins{sdk.NewInt64Coin(staking.DefaultBondDenom, amount)}
 }
 
 // Pick a random proposal ID
@@ -192,7 +187,7 @@ func randomProposalID(r *rand.Rand, k gov.Keeper, ctx sdk.Context) (proposalID u
 	if lastProposalID < 1 {
 		return 0, false
 	}
-	proposalID = uint64(r.Intn(int(lastProposalID)))
+	proposalID = uint64(r.Intn(1+int(lastProposalID)) - 1)
 	return proposalID, true
 }
 

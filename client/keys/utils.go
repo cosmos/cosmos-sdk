@@ -2,34 +2,27 @@ package keys
 
 import (
 	"fmt"
-	"github.com/syndtr/goleveldb/leveldb/opt"
+	"net/http"
 	"path/filepath"
 
 	"github.com/spf13/viper"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/tendermint/tendermint/libs/cli"
-	dbm "github.com/tendermint/tendermint/libs/db"
 
 	"github.com/cosmos/cosmos-sdk/client"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"net/http"
 )
 
 // KeyDBName is the directory under root where we store the keys
 const KeyDBName = "keys"
-
-// keybase is used to make GetKeyBase a singleton
-var keybase keys.Keybase
 
 type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
 
 // GetKeyInfo returns key info for a given name. An error is returned if the
 // keybase cannot be retrieved or getting the info fails.
 func GetKeyInfo(name string) (keys.Info, error) {
-	keybase, err := GetKeyBase()
+	keybase, err := NewKeyBaseFromHomeFlag()
 	if err != nil {
 		return nil, err
 	}
@@ -75,58 +68,22 @@ func ReadPassphraseFromStdin(name string) (string, error) {
 	return passphrase, nil
 }
 
-// TODO make keybase take a database not load from the directory
-
-// GetKeyBase initializes a read-only KeyBase based on the configuration.
-func GetKeyBase() (keys.Keybase, error) {
+// NewKeyBaseFromHomeFlag initializes a Keybase based on the configuration.
+func NewKeyBaseFromHomeFlag() (keys.Keybase, error) {
 	rootDir := viper.GetString(cli.HomeFlag)
-	return GetKeyBaseFromDir(rootDir)
+	return NewKeyBaseFromDir(rootDir)
 }
 
-// GetKeyBaseWithWritePerm initialize a keybase based on the configuration with write permissions.
-func GetKeyBaseWithWritePerm() (keys.Keybase, error) {
-	rootDir := viper.GetString(cli.HomeFlag)
-	return GetKeyBaseFromDirWithWritePerm(rootDir)
+// NewKeyBaseFromDir initializes a keybase at a particular dir.
+func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
+	return getLazyKeyBaseFromDir(rootDir)
 }
 
-// GetKeyBaseFromDirWithWritePerm initializes a keybase at a particular dir with write permissions.
-func GetKeyBaseFromDirWithWritePerm(rootDir string) (keys.Keybase, error) {
-	return getKeyBaseFromDirWithOpts(rootDir, nil)
-}
+// NewInMemoryKeyBase returns a storage-less keybase.
+func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
-// GetKeyBaseFromDir initializes a read-only keybase at a particular dir.
-func GetKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	// Disabled because of the inability to create a new keys database directory
-	// in the instance of when ReadOnly is set to true.
-	//
-	// ref: syndtr/goleveldb#240
-	// return getKeyBaseFromDirWithOpts(rootDir, &opt.Options{ReadOnly: true})
-	return getKeyBaseFromDirWithOpts(rootDir, nil)
-}
-
-func getKeyBaseFromDirWithOpts(rootDir string, o *opt.Options) (keys.Keybase, error) {
-	if keybase == nil {
-		db, err := dbm.NewGoLevelDBWithOpts(KeyDBName, filepath.Join(rootDir, "keys"), o)
-		if err != nil {
-			return nil, err
-		}
-		keybase = client.GetKeyBase(db)
-	}
-	return keybase, nil
-}
-
-// used to set the keybase manually in test
-func SetKeyBase(kb keys.Keybase) {
-	keybase = kb
-}
-
-// used for outputting keys.Info over REST
-type KeyOutput struct {
-	Name    string `json:"name"`
-	Type    string `json:"type"`
-	Address string `json:"address"`
-	PubKey  string `json:"pub_key"`
-	Seed    string `json:"seed,omitempty"`
+func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
+	return keys.NewLazyKeybase(KeyDBName, filepath.Join(rootDir, "keys")), nil
 }
 
 // create a list of KeyOutput in bech32 format

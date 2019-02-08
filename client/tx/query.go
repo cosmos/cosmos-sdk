@@ -5,20 +5,18 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/tendermint/tendermint/libs/common"
-
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/utils"
+	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/spf13/viper"
 )
 
 // QueryTxCmd implements the default command for a tx query.
@@ -45,8 +43,6 @@ func QueryTxCmd(cdc *codec.Codec) *cobra.Command {
 
 	cmd.Flags().StringP(client.FlagNode, "n", "tcp://localhost:26657", "Node to connect to")
 	viper.BindPFlag(client.FlagNode, cmd.Flags().Lookup(client.FlagNode))
-	cmd.Flags().String(client.FlagChainID, "", "Chain ID of Tendermint node")
-	viper.BindPFlag(client.FlagChainID, cmd.Flags().Lookup(client.FlagChainID))
 	cmd.Flags().Bool(client.FlagTrustNode, false, "Trust connected full node (don't verify proofs for responses)")
 	viper.BindPFlag(client.FlagTrustNode, cmd.Flags().Lookup(client.FlagTrustNode))
 	return cmd
@@ -100,26 +96,13 @@ func ValidateTxResult(cliCtx context.CLIContext, res *ctypes.ResultTx) error {
 	return nil
 }
 
-func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (Info, error) {
+func formatTxResult(cdc *codec.Codec, res *ctypes.ResultTx) (sdk.TxResponse, error) {
 	tx, err := parseTx(cdc, res.Tx)
 	if err != nil {
-		return Info{}, err
+		return sdk.TxResponse{}, err
 	}
 
-	return Info{
-		Hash:   res.Hash,
-		Height: res.Height,
-		Tx:     tx,
-		Result: res.TxResult,
-	}, nil
-}
-
-// Info is used to prepare info to display
-type Info struct {
-	Hash   common.HexBytes        `json:"hash"`
-	Height int64                  `json:"height"`
-	Tx     sdk.Tx                 `json:"tx"`
-	Result abci.ResponseDeliverTx `json:"result"`
+	return sdk.NewResponseResultTx(res, tx), nil
 }
 
 func parseTx(cdc *codec.Codec, txBytes []byte) (sdk.Tx, error) {
@@ -143,9 +126,9 @@ func QueryTxRequestHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.H
 
 		output, err := queryTx(cdc, cliCtx, hashHexStr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, output, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, output, cliCtx.Indent)
 	}
 }

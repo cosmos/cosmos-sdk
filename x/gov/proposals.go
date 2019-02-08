@@ -3,9 +3,8 @@ package gov
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -28,8 +27,8 @@ type Proposal interface {
 	GetStatus() ProposalStatus
 	SetStatus(ProposalStatus)
 
-	GetTallyResult() TallyResult
-	SetTallyResult(TallyResult)
+	GetFinalTallyResult() TallyResult
+	SetFinalTallyResult(TallyResult)
 
 	GetSubmitTime() time.Time
 	SetSubmitTime(time.Time)
@@ -45,6 +44,21 @@ type Proposal interface {
 
 	GetVotingEndTime() time.Time
 	SetVotingEndTime(time.Time)
+
+	String() string
+}
+
+// Proposals is an array of proposal
+type Proposals []Proposal
+
+func (p Proposals) String() string {
+	out := "ID - (Status) [Type] Title\n"
+	for _, prop := range p {
+		out += fmt.Sprintf("%d - (%s) [%s] %s\n",
+			prop.GetProposalID(), prop.GetStatus(),
+			prop.GetProposalType(), prop.GetTitle())
+	}
+	return strings.TrimSpace(out)
 }
 
 // checks if two proposals are equal
@@ -54,7 +68,7 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 		proposalA.GetDescription() == proposalB.GetDescription() &&
 		proposalA.GetProposalType() == proposalB.GetProposalType() &&
 		proposalA.GetStatus() == proposalB.GetStatus() &&
-		proposalA.GetTallyResult().Equals(proposalB.GetTallyResult()) &&
+		proposalA.GetFinalTallyResult().Equals(proposalB.GetFinalTallyResult()) &&
 		proposalA.GetSubmitTime().Equal(proposalB.GetSubmitTime()) &&
 		proposalA.GetDepositEndTime().Equal(proposalB.GetDepositEndTime()) &&
 		proposalA.GetTotalDeposit().IsEqual(proposalB.GetTotalDeposit()) &&
@@ -73,8 +87,8 @@ type TextProposal struct {
 	Description  string       `json:"description"`   //  Description of the proposal
 	ProposalType ProposalKind `json:"proposal_type"` //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
 
-	Status      ProposalStatus `json:"proposal_status"` //  Status of the Proposal {Pending, Active, Passed, Rejected}
-	TallyResult TallyResult    `json:"tally_result"`    //  Result of Tallys
+	Status           ProposalStatus `json:"proposal_status"`    //  Status of the Proposal {Pending, Active, Passed, Rejected}
+	FinalTallyResult TallyResult    `json:"final_tally_result"` //  Result of Tallys
 
 	SubmitTime     time.Time `json:"submit_time"`      //  Time of the block where TxGovSubmitProposal was included
 	DepositEndTime time.Time `json:"deposit_end_time"` // Time that the Proposal would expire if deposit amount isn't met
@@ -98,11 +112,13 @@ func (tp TextProposal) GetProposalType() ProposalKind              { return tp.P
 func (tp *TextProposal) SetProposalType(proposalType ProposalKind) { tp.ProposalType = proposalType }
 func (tp TextProposal) GetStatus() ProposalStatus                  { return tp.Status }
 func (tp *TextProposal) SetStatus(status ProposalStatus)           { tp.Status = status }
-func (tp TextProposal) GetTallyResult() TallyResult                { return tp.TallyResult }
-func (tp *TextProposal) SetTallyResult(tallyResult TallyResult)    { tp.TallyResult = tallyResult }
-func (tp TextProposal) GetSubmitTime() time.Time                   { return tp.SubmitTime }
-func (tp *TextProposal) SetSubmitTime(submitTime time.Time)        { tp.SubmitTime = submitTime }
-func (tp TextProposal) GetDepositEndTime() time.Time               { return tp.DepositEndTime }
+func (tp TextProposal) GetFinalTallyResult() TallyResult           { return tp.FinalTallyResult }
+func (tp *TextProposal) SetFinalTallyResult(tallyResult TallyResult) {
+	tp.FinalTallyResult = tallyResult
+}
+func (tp TextProposal) GetSubmitTime() time.Time            { return tp.SubmitTime }
+func (tp *TextProposal) SetSubmitTime(submitTime time.Time) { tp.SubmitTime = submitTime }
+func (tp TextProposal) GetDepositEndTime() time.Time        { return tp.DepositEndTime }
 func (tp *TextProposal) SetDepositEndTime(depositEndTime time.Time) {
 	tp.DepositEndTime = depositEndTime
 }
@@ -115,6 +131,20 @@ func (tp *TextProposal) SetVotingStartTime(votingStartTime time.Time) {
 func (tp TextProposal) GetVotingEndTime() time.Time { return tp.VotingEndTime }
 func (tp *TextProposal) SetVotingEndTime(votingEndTime time.Time) {
 	tp.VotingEndTime = votingEndTime
+}
+
+func (tp TextProposal) String() string {
+	return fmt.Sprintf(`Proposal %d:
+  Title:              %s
+  Type:               %s
+  Status:             %s
+  Submit Time:        %s
+  Deposit End Time:   %s
+  Total Deposit:      %s
+  Voting Start Time:  %s
+  Voting End Time:    %s`, tp.ProposalID, tp.Title, tp.ProposalType,
+		tp.Status, tp.SubmitTime, tp.DepositEndTime,
+		tp.TotalDeposit, tp.VotingStartTime, tp.VotingEndTime)
 }
 
 //-----------------------------------------------------------
@@ -145,7 +175,7 @@ func ProposalTypeFromString(str string) (ProposalKind, error) {
 	case "SoftwareUpgrade":
 		return ProposalTypeSoftwareUpgrade, nil
 	default:
-		return ProposalKind(0xff), errors.Errorf("'%s' is not a valid proposal type", str)
+		return ProposalKind(0xff), fmt.Errorf("'%s' is not a valid proposal type", str)
 	}
 }
 
@@ -246,7 +276,7 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	case "":
 		return StatusNil, nil
 	default:
-		return ProposalStatus(0xff), errors.Errorf("'%s' is not a valid proposal status", str)
+		return ProposalStatus(0xff), fmt.Errorf("'%s' is not a valid proposal status", str)
 	}
 }
 
@@ -330,6 +360,24 @@ type TallyResult struct {
 	NoWithVeto sdk.Dec `json:"no_with_veto"`
 }
 
+func NewTallyResult(yes, abstain, no, noWithVeto sdk.Dec) TallyResult {
+	return TallyResult{
+		Yes:        yes,
+		Abstain:    abstain,
+		No:         no,
+		NoWithVeto: noWithVeto,
+	}
+}
+
+func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
+	return TallyResult{
+		Yes:        results[OptionYes],
+		Abstain:    results[OptionAbstain],
+		No:         results[OptionNo],
+		NoWithVeto: results[OptionNoWithVeto],
+	}
+}
+
 // checks if two proposals are equal
 func EmptyTallyResult() TallyResult {
 	return TallyResult{
@@ -341,9 +389,17 @@ func EmptyTallyResult() TallyResult {
 }
 
 // checks if two proposals are equal
-func (resultA TallyResult) Equals(resultB TallyResult) bool {
-	return (resultA.Yes.Equal(resultB.Yes) &&
-		resultA.Abstain.Equal(resultB.Abstain) &&
-		resultA.No.Equal(resultB.No) &&
-		resultA.NoWithVeto.Equal(resultB.NoWithVeto))
+func (tr TallyResult) Equals(comp TallyResult) bool {
+	return (tr.Yes.Equal(comp.Yes) &&
+		tr.Abstain.Equal(comp.Abstain) &&
+		tr.No.Equal(comp.No) &&
+		tr.NoWithVeto.Equal(comp.NoWithVeto))
+}
+
+func (tr TallyResult) String() string {
+	return fmt.Sprintf(`Tally Result:
+  Yes:        %s
+  Abstain:    %s
+  No:         %s
+  NoWithVeto: %s`, tr.Yes, tr.Abstain, tr.No, tr.NoWithVeto)
 }

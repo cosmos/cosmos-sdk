@@ -5,12 +5,12 @@ Welcome to the `Gaia` docs. `Gaia` is the current name of the Cosmos SDK applica
 ## Join the Cosmos Hub public testnet
 
 - [Install the `gaia` application](./installation.md)
-- [Join the current testnet](./join-testnet.md)
+- [Set up a full node and join the current public testnet](./join-testnet.md)
 - [Upgrade to a validator node](./validators/validator-setup.md)
 
 ## Setup your own `gaia` testnet
 
-- [Setup your own `gaia` testnet](./networks.md)
+- [Setup your own `gaia` testnet](./deploy-testnet.md)
 
 ## Additional resources
 

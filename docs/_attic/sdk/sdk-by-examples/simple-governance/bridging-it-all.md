@@ -56,7 +56,7 @@ type SimpleGovApp struct {
 
 Let us do a quick reminder so that it is  clear why we need these stores and keepers. Our application is primarily based on the `simple_governance` module. However, we have established in section [Keepers for our app](module-keeper.md) that our module needs access to two other modules: the `bank` module and the `stake` module. We also need the `auth` module for basic account functionalities. Finally, we need access to the main multistore to declare the stores of each of the module we use.
 
-## CLI and Rest server 
+## CLI and Rest server
 
 We will need to add the newly created commands to our application. To do so, go to the `cmd` folder inside your root  directory:
 
@@ -66,7 +66,7 @@ cd cmd
 ```
 `simplegovd` is the folder that stores the command for running the server daemon, whereas `simplegovcli` defines the commands of your application.
 
-### Application CLI 
+### Application CLI
 
 **File: [`cmd/simplegovcli/maing.go`](https://github.com/cosmos/cosmos-sdk/blob/fedekunze/module_tutorial/examples/simpleGov/cmd/simplegovcli/main.go)**
 
@@ -191,9 +191,9 @@ var cdc = MakeCodec()
     var app = &SimpleGovApp{
         BaseApp:              bam.NewBaseApp(appName, cdc, logger, db),
         cdc:                  cdc,
-        capKeyMainStore:      sdk.NewKVStoreKey("main"),
-        capKeyAccountStore:   sdk.NewKVStoreKey("acc"),
-        capKeyStakingStore:   sdk.NewKVStoreKey("stake"),
+        capKeyMainStore:      sdk.NewKVStoreKey(bam.MainStoreKey),
+        capKeyAccountStore:   sdk.NewKVStoreKey(auth.StoreKey),
+        capKeyStakingStore:   sdk.NewKVStoreKey(stake.StoreKey),
         capKeySimpleGovStore: sdk.NewKVStoreKey("simpleGov"),
     }
 ```

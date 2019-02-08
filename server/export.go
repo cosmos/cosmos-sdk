@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -58,7 +57,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 			jailWhiteList := viper.GetStringSlice(flagJailWhitelist)
 			appState, validators, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
 			if err != nil {
-				return errors.Errorf("error exporting state: %v\n", err)
+				return fmt.Errorf("error exporting state: %v", err)
 			}
 
 			doc, err := tmtypes.GenesisDocFromFile(ctx.Config.GenesisFile())

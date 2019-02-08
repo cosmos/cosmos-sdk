@@ -6,9 +6,10 @@ import (
 	"os"
 	"strings"
 
+	"errors"
+
 	"github.com/bgentry/speakeasy"
 	"github.com/mattn/go-isatty"
-	"github.com/pkg/errors"
 )
 
 // MinPassLength is the minimum acceptable password length
@@ -36,7 +37,7 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	if len(pass) < MinPassLength {
 		// Return the given password to the upstream client so it can handle a
 		// non-STDIN failure gracefully.
-		return pass, errors.Errorf("password must be at least %d characters", MinPassLength)
+		return pass, fmt.Errorf("password must be at least %d characters", MinPassLength)
 	}
 
 	return pass, nil

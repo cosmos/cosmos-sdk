@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/pkg/errors"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -101,7 +99,7 @@ $ gaiacli gov submit-proposal --title="Test Proposal" --description="My awesome 
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(amount) {
-				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", from)
+				return fmt.Errorf("address %s doesn't have enough coins to pay for this transaction", from)
 			}
 
 			proposalType, err := gov.ProposalTypeFromString(proposal.Type)
@@ -204,7 +202,7 @@ $ gaiacli tx gov deposit 1 10stake --from mykey
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(amount) {
-				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", from)
+				return fmt.Errorf("address %s doesn't have enough coins to pay for this transaction", from)
 			}
 
 			msg := gov.NewMsgDeposit(from, proposalID, amount)

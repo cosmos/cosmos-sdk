@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
@@ -9,7 +11,6 @@ import (
 	authtxb "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -53,7 +54,7 @@ func SendTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			// ensure account has enough coins
 			if !account.GetCoins().IsAllGTE(coins) {
-				return errors.Errorf("Address %s doesn't have enough coins to pay for this transaction.", from)
+				return fmt.Errorf("address %s doesn't have enough coins to pay for this transaction", from)
 			}
 
 			// build and sign the transaction, then broadcast to Tendermint

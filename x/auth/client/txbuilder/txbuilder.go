@@ -1,6 +1,7 @@
 package context
 
 import (
+	"fmt"
 	"strings"
 
 	crkeys "github.com/cosmos/cosmos-sdk/crypto/keys"
@@ -10,7 +11,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"github.com/spf13/viper"
 )
 
@@ -179,7 +181,7 @@ func (bldr TxBuilder) WithAccountNumber(accnum uint64) TxBuilder {
 func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
 	chainID := bldr.chainID
 	if chainID == "" {
-		return StdSignMsg{}, errors.Errorf("chain ID required but not specified")
+		return StdSignMsg{}, fmt.Errorf("chain ID required but not specified")
 	}
 
 	fees := bldr.fees

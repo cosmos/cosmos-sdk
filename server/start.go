@@ -1,7 +1,8 @@
 package server
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -76,7 +77,7 @@ func startStandAlone(ctx *Context, appCreator AppCreator) error {
 
 	svr, err := server.NewServer(addr, "socket", app)
 	if err != nil {
-		return errors.Errorf("error creating listener: %v\n", err)
+		return fmt.Errorf("error creating listener: %v", err)
 	}
 
 	svr.SetLogger(ctx.Logger.With("module", "abci-server"))

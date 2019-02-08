@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -14,7 +14,7 @@ func getShares(sharesAmountStr string, delAddr sdk.AccAddress, valAddr sdk.ValAd
 	}
 
 	if !sharesAmount.GT(sdk.ZeroDec()) {
-		return sharesAmount, errors.Errorf("shares amount must be positive number (ex. 123, 1.23456789)")
+		return sharesAmount, errors.New("shares amount must be positive number (ex. 123, 1.23456789)")
 	}
 
 	return
@@ -22,7 +22,7 @@ func getShares(sharesAmountStr string, delAddr sdk.AccAddress, valAddr sdk.ValAd
 
 func buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr string) (commission types.CommissionMsg, err error) {
 	if rateStr == "" || maxRateStr == "" || maxChangeRateStr == "" {
-		return commission, errors.Errorf("must specify all validator commission parameters")
+		return commission, errors.New("must specify all validator commission parameters")
 	}
 
 	rate, err := sdk.NewDecFromStr(rateStr)

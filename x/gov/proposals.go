@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -177,7 +175,7 @@ func ProposalTypeFromString(str string) (ProposalKind, error) {
 	case "SoftwareUpgrade":
 		return ProposalTypeSoftwareUpgrade, nil
 	default:
-		return ProposalKind(0xff), errors.Errorf("'%s' is not a valid proposal type", str)
+		return ProposalKind(0xff), fmt.Errorf("'%s' is not a valid proposal type", str)
 	}
 }
 
@@ -278,7 +276,7 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	case "":
 		return StatusNil, nil
 	default:
-		return ProposalStatus(0xff), errors.Errorf("'%s' is not a valid proposal status", str)
+		return ProposalStatus(0xff), fmt.Errorf("'%s' is not a valid proposal status", str)
 	}
 }
 

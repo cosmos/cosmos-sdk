@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pkg/errors"
+	"errors"
 
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"

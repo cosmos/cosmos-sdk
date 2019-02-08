@@ -1,7 +1,7 @@
 package context
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -39,11 +39,11 @@ func (ctx CLIContext) BroadcastTxAndAwaitCommit(tx []byte) (sdk.TxResponse, erro
 	}
 
 	if !res.CheckTx.IsOK() {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), errors.Errorf(res.CheckTx.Log)
+		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.CheckTx.Log)
 	}
 
 	if !res.DeliverTx.IsOK() {
-		return sdk.NewResponseFormatBroadcastTxCommit(res), errors.Errorf(res.DeliverTx.Log)
+		return sdk.NewResponseFormatBroadcastTxCommit(res), fmt.Errorf(res.DeliverTx.Log)
 	}
 
 	return sdk.NewResponseFormatBroadcastTxCommit(res), err

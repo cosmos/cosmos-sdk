@@ -7,8 +7,9 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"errors"
+
 	"github.com/gogo/protobuf/proto"
-	"github.com/pkg/errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"

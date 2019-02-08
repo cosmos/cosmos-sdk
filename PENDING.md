@@ -85,6 +85,7 @@ IMPROVEMENTS
   for tx size in the ante handler.
   * [\#3454](https://github.com/cosmos/cosmos-sdk/pull/3454) Add `--jail-whitelist` to `gaiad export` to enable testing of complex exports
   * [\#3424](https://github.com/cosmos/cosmos-sdk/issues/3424) Allow generation of gentxs with empty memo field.
+  * \#3507 General cleanup, removal of unnecessary struct fields, undelegation bugfix, and comment clarification in x/staking and x/slashing
 
 * SDK
   * [\#2605] x/params add subkey accessing

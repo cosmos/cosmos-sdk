@@ -164,11 +164,12 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 	// initialize BaseApp
 	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint, app.keyDistr,
-		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
+		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams,
+		app.tkeyParams, app.tkeyStaking, app.tkeyDistr,
+	)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
-	app.MountStoresTransient(app.tkeyParams, app.tkeyStaking, app.tkeyDistr)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {
@@ -354,10 +355,6 @@ func (h StakingHooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAd
 func (h StakingHooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.AfterValidatorBonded(ctx, consAddr, valAddr)
 	h.sh.AfterValidatorBonded(ctx, consAddr, valAddr)
-}
-func (h StakingHooks) AfterValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.dh.AfterValidatorPowerDidChange(ctx, consAddr, valAddr)
-	h.sh.AfterValidatorPowerDidChange(ctx, consAddr, valAddr)
 }
 func (h StakingHooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)

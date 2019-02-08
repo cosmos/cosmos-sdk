@@ -53,16 +53,15 @@ func TestUnbondingDelegationString(t *testing.T) {
 func TestRedelegationEqual(t *testing.T) {
 	r1 := NewRedelegation(sdk.AccAddress(addr1), addr2, addr3, 0,
 		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0),
-		sdk.NewDec(0), sdk.NewDec(0))
+		sdk.NewDec(0))
 	r2 := NewRedelegation(sdk.AccAddress(addr1), addr2, addr3, 0,
 		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0),
-		sdk.NewDec(0), sdk.NewDec(0))
+		sdk.NewDec(0))
 
 	ok := r1.Equal(r2)
 	require.True(t, ok)
 
 	r2.Entries[0].SharesDst = sdk.NewDec(10)
-	r2.Entries[0].SharesSrc = sdk.NewDec(20)
 	r2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
 
 	ok = r1.Equal(r2)
@@ -72,7 +71,7 @@ func TestRedelegationEqual(t *testing.T) {
 func TestRedelegationString(t *testing.T) {
 	r := NewRedelegation(sdk.AccAddress(addr1), addr2, addr3, 0,
 		time.Unix(0, 0), sdk.NewInt64Coin(DefaultBondDenom, 0),
-		sdk.NewDec(10), sdk.NewDec(20))
+		sdk.NewDec(10))
 
 	require.NotEmpty(t, r.String())
 }

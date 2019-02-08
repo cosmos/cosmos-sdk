@@ -40,9 +40,9 @@ func TestCannotUnjailUnlessMeetMinSelfBond(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
-	addr, val, amt := addrs[0], pks[0], sdk.NewInt(amtInt)
+	addr, val, amt := addrs[0], pks[0], types.TokensFromTendermintPower(amtInt)
 	msg := NewTestMsgCreateValidator(addr, val, amt)
-	msg.MinSelfBond = sdk.NewInt(100)
+	msg.MinSelfBond = amt
 	got := staking.NewHandler(sk)(ctx, msg)
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)
@@ -51,7 +51,6 @@ func TestCannotUnjailUnlessMeetMinSelfBond(t *testing.T) {
 		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
 		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
 	)
-	require.True(sdk.IntEq(t, amt, sdk.NewInt(sk.Validator(ctx, addr).GetTendermintPower())))
 
 	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.OneDec())
 	got = staking.NewHandler(sk)(ctx, undelegateMsg)

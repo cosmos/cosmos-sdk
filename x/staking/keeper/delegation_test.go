@@ -511,7 +511,7 @@ func TestGetRedelegationsFromValidator(t *testing.T) {
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0), sdk.NewInt64Coin(types.DefaultBondDenom, 5),
-		sdk.NewDec(5), sdk.NewDec(5))
+		sdk.NewDec(5))
 
 	// set and retrieve a record
 	keeper.SetRedelegation(ctx, rd)
@@ -535,7 +535,7 @@ func TestRedelegation(t *testing.T) {
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
 		time.Unix(0, 0), sdk.NewInt64Coin(types.DefaultBondDenom, 5),
-		sdk.NewDec(5), sdk.NewDec(5))
+		sdk.NewDec(5))
 
 	// test shouldn't have and redelegations
 	has := keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
@@ -563,7 +563,6 @@ func TestRedelegation(t *testing.T) {
 	require.True(t, has)
 
 	// modify a records, save, and retrieve
-	rd.Entries[0].SharesSrc = sdk.NewDec(21)
 	rd.Entries[0].SharesDst = sdk.NewDec(21)
 	keeper.SetRedelegation(ctx, rd)
 
@@ -791,7 +790,6 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	ubd, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.True(t, ubd.Entries[0].Balance.IsEqual(sdk.NewCoin(params.BondDenom, redelegateTokens)))
 	assert.Equal(t, blockHeight, ubd.Entries[0].CreationHeight)
 	assert.True(t, blockTime.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 }

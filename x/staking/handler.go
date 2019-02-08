@@ -1,7 +1,6 @@
 package staking
 
 import (
-	"bytes"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -87,20 +86,16 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, sdk.T
 	return validatorUpdates, resTags
 }
 
-//_____________________________________________________________________
-
 // These functions assume everything has been authenticated,
 // now we just perform action and save
 
 func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k keeper.Keeper) sdk.Result {
 	// check to see if the pubkey or sender has been registered before
-	_, found := k.GetValidator(ctx, msg.ValidatorAddr)
-	if found {
+	if _, found := k.GetValidator(ctx, msg.ValidatorAddr); found {
 		return ErrValidatorOwnerExists(k.Codespace()).Result()
 	}
 
-	_, found = k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey))
-	if found {
+	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(msg.PubKey)); found {
 		return ErrValidatorPubKeyExists(k.Codespace()).Result()
 	}
 
@@ -137,6 +132,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 	k.SetValidatorByConsAddr(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
+	// call the after-creation hook
 	k.AfterValidatorCreated(ctx, validator.OperatorAddr)
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
@@ -178,7 +174,9 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 			return err.Result()
 		}
 
+		// call the before-modification hook since we're about to update the commission
 		k.BeforeValidatorModified(ctx, msg.ValidatorAddr)
+
 		validator.Commission = commission
 	}
 
@@ -213,10 +211,6 @@ func handleMsgDelegate(ctx sdk.Context, msg types.MsgDelegate, k keeper.Keeper) 
 
 	if msg.Value.Denom != k.GetParams(ctx).BondDenom {
 		return ErrBadDenom(k.Codespace()).Result()
-	}
-
-	if validator.Jailed && !bytes.Equal(validator.OperatorAddr, msg.DelegatorAddr) {
-		return ErrValidatorJailed(k.Codespace()).Result()
 	}
 
 	_, err := k.Delegate(ctx, msg.DelegatorAddr, msg.Value, validator, true)

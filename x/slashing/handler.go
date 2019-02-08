@@ -35,6 +35,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrSelfDelegationTooLow(k.codespace).Result()
 	}
 
+	// cannot be unjailed if not jailed
 	if !validator.GetJailed() {
 		return ErrValidatorNotJailed(k.codespace).Result()
 	}
@@ -46,6 +47,7 @@ func handleMsgUnjail(ctx sdk.Context, msg MsgUnjail, k Keeper) sdk.Result {
 		return ErrNoValidatorForAddress(k.codespace).Result()
 	}
 
+	// cannot be unjailed if tombstoned
 	if info.Tombstoned {
 		return ErrValidatorJailed(k.codespace).Result()
 	}

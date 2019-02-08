@@ -150,7 +150,6 @@ func (app *GaiaApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []st
 			panic("expected validator, not found")
 		}
 
-		validator.BondHeight = 0
 		validator.UnbondingHeight = 0
 		valConsAddrs = append(valConsAddrs, validator.ConsAddress())
 		if applyWhiteList && !whiteListMap[addr.String()] {

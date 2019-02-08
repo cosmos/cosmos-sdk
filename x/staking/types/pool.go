@@ -8,13 +8,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Pool - dynamic parameters of the current state
+// Pool - tracking bonded and not-bonded token supply of the bond denomination
 type Pool struct {
-	NotBondedTokens sdk.Int `json:"not_bonded_tokens"` // tokens which are not bonded in a validator
-	BondedTokens    sdk.Int `json:"bonded_tokens"`     // reserve of bonded tokens
+	NotBondedTokens sdk.Int `json:"not_bonded_tokens"` // tokens which are not bonded to a validator (unbonded or unbonding)
+	BondedTokens    sdk.Int `json:"bonded_tokens"`     // tokens which are currently bonded to a validator
 }
 
 // nolint
+// TODO: This is slower than comparing struct fields directly
 func (p Pool) Equal(p2 Pool) bool {
 	bz1 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p)
 	bz2 := MsgCdc.MustMarshalBinaryLengthPrefixed(&p2)
@@ -29,16 +30,12 @@ func InitialPool() Pool {
 	}
 }
 
-//____________________________________________________________________
-
 // Sum total of all staking tokens in the pool
 func (p Pool) TokenSupply() sdk.Int {
 	return p.NotBondedTokens.Add(p.BondedTokens)
 }
 
-//____________________________________________________________________
-
-// get the bond ratio of the global state
+// Get the fraction of the staking token which is currently bonded
 func (p Pool) BondedRatio() sdk.Dec {
 	supply := p.TokenSupply()
 	if supply.IsPositive() {
@@ -47,8 +44,6 @@ func (p Pool) BondedRatio() sdk.Dec {
 	}
 	return sdk.ZeroDec()
 }
-
-//_______________________________________________________________________
 
 func (p Pool) notBondedTokensToBonded(bondedTokens sdk.Int) Pool {
 	p.BondedTokens = p.BondedTokens.Add(bondedTokens)

@@ -34,6 +34,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 		// Manually set indices for the first time
 		keeper.SetValidatorByConsAddr(ctx, validator)
 		keeper.SetValidatorByPowerIndex(ctx, validator)
+
+		// Call the creation hook if not exported
 		if !data.Exported {
 			keeper.AfterValidatorCreated(ctx, validator.OperatorAddr)
 		}
@@ -45,10 +47,12 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	}
 
 	for _, delegation := range data.Bonds {
+		// Call the before-creation hook if not exported
 		if !data.Exported {
 			keeper.BeforeDelegationCreated(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 		}
 		keeper.SetDelegation(ctx, delegation)
+		// Call the after-modification hook if not exported
 		if !data.Exported {
 			keeper.AfterDelegationModified(ctx, delegation.DelegatorAddr, delegation.ValidatorAddr)
 		}
@@ -147,18 +151,11 @@ func ValidateGenesis(data types.GenesisState) error {
 	if err != nil {
 		return err
 	}
-	err = validateParams(data.Params)
+	err = data.Params.Validate()
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func validateParams(params types.Params) error {
-	if params.BondDenom == "" {
-		return fmt.Errorf("staking parameter BondDenom can't be an empty string")
-	}
 	return nil
 }
 
@@ -168,10 +165,10 @@ func validateGenesisStateValidators(validators []types.Validator) (err error) {
 		val := validators[i]
 		strKey := string(val.ConsPubKey.Bytes())
 		if _, ok := addrMap[strKey]; ok {
-			return fmt.Errorf("duplicate validator in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
+			return fmt.Errorf("duplicate validator in genesis state: moniker %v, address %v", val.Description.Moniker, val.ConsAddress())
 		}
 		if val.Jailed && val.Status == sdk.Bonded {
-			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, Address %v", val.Description.Moniker, val.ConsAddress())
+			return fmt.Errorf("validator is bonded and jailed in genesis state: moniker %v, address %v", val.Description.Moniker, val.ConsAddress())
 		}
 		if val.DelegatorShares.IsZero() && val.Status != sdk.Unbonding {
 			return fmt.Errorf("bonded/unbonded genesis validator cannot have zero delegator shares, validator: %v", val)

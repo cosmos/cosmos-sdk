@@ -248,7 +248,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		app.SetAddrPeerFilter(nil)
 	})
 	require.Panics(t, func() {
-		app.SetPubKeyPeerFilter(nil)
+		app.SetIDPeerFilter(nil)
 	})
 	require.Panics(t, func() {
 		app.SetFauxMerkleMode()
@@ -743,7 +743,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	{
 		emptyTx := &txTest{}
 		err := app.Deliver(emptyTx)
-		require.EqualValues(t, sdk.CodeInternal, err.Code)
+		require.EqualValues(t, sdk.CodeUnknownRequest, err.Code)
 		require.EqualValues(t, sdk.CodespaceRoot, err.Codespace)
 	}
 
@@ -1195,14 +1195,14 @@ func TestP2PQuery(t *testing.T) {
 		})
 	}
 
-	pubkeyPeerFilterOpt := func(bapp *BaseApp) {
-		bapp.SetPubKeyPeerFilter(func(pubkey string) abci.ResponseQuery {
-			require.Equal(t, "testpubkey", pubkey)
+	idPeerFilterOpt := func(bapp *BaseApp) {
+		bapp.SetIDPeerFilter(func(id string) abci.ResponseQuery {
+			require.Equal(t, "testid", id)
 			return abci.ResponseQuery{Code: uint32(4)}
 		})
 	}
 
-	app := setupBaseApp(t, addrPeerFilterOpt, pubkeyPeerFilterOpt)
+	app := setupBaseApp(t, addrPeerFilterOpt, idPeerFilterOpt)
 
 	addrQuery := abci.RequestQuery{
 		Path: "/p2p/filter/addr/1.1.1.1:8000",
@@ -1210,9 +1210,9 @@ func TestP2PQuery(t *testing.T) {
 	res := app.Query(addrQuery)
 	require.Equal(t, uint32(3), res.Code)
 
-	pubkeyQuery := abci.RequestQuery{
-		Path: "/p2p/filter/pubkey/testpubkey",
+	idQuery := abci.RequestQuery{
+		Path: "/p2p/filter/id/testid",
 	}
-	res = app.Query(pubkeyQuery)
+	res = app.Query(idQuery)
 	require.Equal(t, uint32(4), res.Code)
 }

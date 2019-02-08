@@ -21,6 +21,7 @@ var (
 //______________________________________________________________________
 
 // MsgCreateValidator - struct for bonding transactions
+// TODO: Why does this need to contain a denomination in `Value`
 type MsgCreateValidator struct {
 	Description   Description    `json:"description"`
 	Commission    CommissionMsg  `json:"commission"`
@@ -122,13 +123,14 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
+	// note that unmarshaling from bech32 ensures either empty or valid
 	if msg.DelegatorAddr == nil {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !(msg.Value.Amount.GT(sdk.ZeroInt())) {
+	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	if msg.Description == (Description{}) {
@@ -146,8 +148,6 @@ func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 
 	return nil
 }
-
-//______________________________________________________________________
 
 // MsgEditValidator - struct for editing a validator
 type MsgEditValidator struct {
@@ -199,12 +199,17 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 		return ErrMinSelfBondInvalid(DefaultCodespace)
 	}
 
+	if msg.CommissionRate != nil {
+		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.LT(sdk.ZeroDec()) {
+			return sdk.NewError(DefaultCodespace, CodeInvalidInput, "commission rate must be between 0 and 1, inclusive")
+		}
+	}
+
 	return nil
 }
 
-//______________________________________________________________________
-
 // MsgDelegate - struct for bonding transactions
+// TODO: Why do we need to store the denomination in `Value`
 type MsgDelegate struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
@@ -240,7 +245,7 @@ func (msg MsgDelegate) ValidateBasic() sdk.Error {
 	if msg.ValidatorAddr == nil {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if !(msg.Value.Amount.GT(sdk.ZeroInt())) {
+	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
 		return ErrBadDelegationAmount(DefaultCodespace)
 	}
 	return nil
@@ -296,8 +301,6 @@ func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
 	}
 	return nil
 }
-
-//______________________________________________________________________
 
 // MsgUndelegate - struct for unbonding transactions
 type MsgUndelegate struct {

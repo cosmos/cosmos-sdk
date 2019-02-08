@@ -646,7 +646,6 @@ func TestBonding(t *testing.T) {
 	redelegation := getRedelegations(t, port, addr, operAddrs[0], operAddrs[1])
 	require.Len(t, redelegation, 1)
 	require.Len(t, redelegation[0].Entries, 1)
-	require.Equal(t, rdTokens, redelegation[0].Entries[0].Balance.Amount)
 
 	delegatorUbds := getDelegatorUnbondingDelegations(t, port, addr)
 	require.Len(t, delegatorUbds, 1)
@@ -656,7 +655,6 @@ func TestBonding(t *testing.T) {
 	delegatorReds := getRedelegations(t, port, addr, nil, nil)
 	require.Len(t, delegatorReds, 1)
 	require.Len(t, delegatorReds[0].Entries, 1)
-	require.Equal(t, rdTokens, delegatorReds[0].Entries[0].Balance.Amount)
 
 	validatorUbds := getValidatorUnbondingDelegations(t, port, operAddrs[0])
 	require.Len(t, validatorUbds, 1)
@@ -666,7 +664,6 @@ func TestBonding(t *testing.T) {
 	validatorReds := getRedelegations(t, port, nil, operAddrs[0], nil)
 	require.Len(t, validatorReds, 1)
 	require.Len(t, validatorReds[0].Entries, 1)
-	require.Equal(t, rdTokens, validatorReds[0].Entries[0].Balance.Amount)
 
 	// TODO Undonding status not currently implemented
 	// require.Equal(t, sdk.Unbonding, bondedValidators[0].Status)

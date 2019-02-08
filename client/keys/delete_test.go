@@ -26,8 +26,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName2 := "runDeleteCmd_Key2"
 
 	// Now add a temporary keybase
-	kbHome, cleanUp, err := tests.GetTempDir("Test_runDeleteCmd")
-	assert.NoError(t, err)
+	kbHome, cleanUp := tests.NewTestCaseDir(t)
 	defer cleanUp()
 	viper.Set(cli.HomeFlag, kbHome)
 

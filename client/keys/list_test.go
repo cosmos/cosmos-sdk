@@ -21,15 +21,13 @@ func Test_runListCmd(t *testing.T) {
 	cmdBasic := listKeysCmd()
 
 	// Prepare some keybases
-	kbHome1, cleanUp1, err := tests.GetTempDir("Test_runListCmd")
+	kbHome1, cleanUp1 := tests.NewTestCaseDir(t)
 	defer cleanUp1()
-	assert.NoError(t, err)
 	// Do nothing, leave home1 empty
 
-	kbHome2, cleanUp2, err := tests.GetTempDir("Test_runListCmd")
+	kbHome2, cleanUp2 := tests.NewTestCaseDir(t)
 	defer cleanUp2()
 	viper.Set(cli.HomeFlag, kbHome2)
-	assert.NoError(t, err)
 
 	kb, err := NewKeyBaseFromHomeFlag()
 	assert.NoError(t, err)

@@ -7,14 +7,13 @@ import (
 )
 
 func listKeysCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "list",
 		Short: "List all keys",
 		Long: `Return a list of all public keys stored by this key manager
 along with their associated name and address.`,
 		RunE: runListCmd,
 	}
-	return cmd
 }
 
 func runListCmd(cmd *cobra.Command, args []string) error {

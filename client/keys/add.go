@@ -14,8 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"errors"
+
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -297,7 +298,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 		}
 		fmt.Fprintln(os.Stderr, string(jsonString))
 	default:
-		return errors.Errorf("I can't speak: %s", output)
+		return fmt.Errorf("I can't speak: %s", output)
 	}
 
 	return nil

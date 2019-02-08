@@ -8,8 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
+	"errors"
+
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/crypto/multisig"

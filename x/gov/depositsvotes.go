@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pkg/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -98,7 +96,7 @@ func VoteOptionFromString(str string) (VoteOption, error) {
 	case "NoWithVeto":
 		return OptionNoWithVeto, nil
 	default:
-		return VoteOption(0xff), errors.Errorf("'%s' is not a valid vote option", str)
+		return VoteOption(0xff), fmt.Errorf("'%s' is not a valid vote option", str)
 	}
 }
 

@@ -248,7 +248,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		app.SetAddrPeerFilter(nil)
 	})
 	require.Panics(t, func() {
-		app.SetPubKeyPeerFilter(nil)
+		app.SetIDPeerFilter(nil)
 	})
 	require.Panics(t, func() {
 		app.SetFauxMerkleMode()
@@ -1196,7 +1196,7 @@ func TestP2PQuery(t *testing.T) {
 	}
 
 	pubkeyPeerFilterOpt := func(bapp *BaseApp) {
-		bapp.SetPubKeyPeerFilter(func(pubkey string) abci.ResponseQuery {
+		bapp.SetIDPeerFilter(func(pubkey string) abci.ResponseQuery {
 			require.Equal(t, "testpubkey", pubkey)
 			return abci.ResponseQuery{Code: uint32(4)}
 		})

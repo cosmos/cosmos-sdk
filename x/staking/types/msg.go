@@ -21,7 +21,6 @@ var (
 //______________________________________________________________________
 
 // MsgCreateValidator - struct for bonding transactions
-// TODO: Why does this need to contain a denomination in `Value`
 type MsgCreateValidator struct {
 	Description   Description    `json:"description"`
 	Commission    CommissionMsg  `json:"commission"`
@@ -192,7 +191,6 @@ func (msg MsgEditValidator) ValidateBasic() sdk.Error {
 }
 
 // MsgDelegate - struct for bonding transactions
-// TODO: Why do we need to store the denomination in `Value`
 type MsgDelegate struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"`

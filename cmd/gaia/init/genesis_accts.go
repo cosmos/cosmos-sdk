@@ -53,9 +53,6 @@ func AddGenesisAccountCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command 
 				return err
 			}
 
-			coins.Sort()
-			vestingAmt.Sort()
-
 			genFile := config.GenesisFile()
 			if !common.FileExists(genFile) {
 				return fmt.Errorf("%s does not exist, run `gaiad init` first", genFile)

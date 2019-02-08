@@ -11,7 +11,7 @@ type StakingKeeper interface {
 	ValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) sdk.Validator
 	TotalPower(ctx sdk.Context) sdk.Int
 	GetLastTotalPower(ctx sdk.Context) sdk.Int
-	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) sdk.Int
+	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) int64
 }
 
 // expected coin keeper

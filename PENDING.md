@@ -103,6 +103,7 @@ IMPROVEMENTS
   * \#2509 Sanitize all usage of Dec.RoundInt64()
   * [\#556](https://github.com/cosmos/cosmos-sdk/issues/556) Increase `BaseApp`
   test coverage.
+  * \#3357 develop state-transitions.md for staking spec, missing states added to `state.md`
   * [\#3552](https://github.com/cosmos/cosmos-sdk/pull/3552) Validate bit length when
   deserializing `Int` types.
 

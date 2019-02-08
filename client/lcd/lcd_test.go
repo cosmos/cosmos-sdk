@@ -610,7 +610,7 @@ func TestBonding(t *testing.T) {
 
 	ubd := getUnbondingDelegation(t, port, addr, operAddrs[0])
 	require.Len(t, ubd.Entries, 1)
-	require.Equal(t, delTokens.DivRaw(2), ubd.Entries[0].Balance.Amount)
+	require.Equal(t, delTokens.DivRaw(2), ubd.Entries[0].Balance)
 
 	// test redelegation
 	rdTokens := staking.TokensFromTendermintPower(30)
@@ -650,7 +650,7 @@ func TestBonding(t *testing.T) {
 	delegatorUbds := getDelegatorUnbondingDelegations(t, port, addr)
 	require.Len(t, delegatorUbds, 1)
 	require.Len(t, delegatorUbds[0].Entries, 1)
-	require.Equal(t, rdTokens, delegatorUbds[0].Entries[0].Balance.Amount)
+	require.Equal(t, rdTokens, delegatorUbds[0].Entries[0].Balance)
 
 	delegatorReds := getRedelegations(t, port, addr, nil, nil)
 	require.Len(t, delegatorReds, 1)
@@ -659,7 +659,7 @@ func TestBonding(t *testing.T) {
 	validatorUbds := getValidatorUnbondingDelegations(t, port, operAddrs[0])
 	require.Len(t, validatorUbds, 1)
 	require.Len(t, validatorUbds[0].Entries, 1)
-	require.Equal(t, rdTokens, validatorUbds[0].Entries[0].Balance.Amount)
+	require.Equal(t, rdTokens, validatorUbds[0].Entries[0].Balance)
 
 	validatorReds := getRedelegations(t, port, nil, operAddrs[0], nil)
 	require.Len(t, validatorReds, 1)

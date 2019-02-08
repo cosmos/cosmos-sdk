@@ -372,7 +372,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	validatorUbds := f.QueryStakingUnbondingDelegationsFrom(barVal)
 	require.Len(t, validatorUbds, 1)
 	require.Len(t, validatorUbds[0].Entries, 1)
-	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.Amount.String())
+	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.String())
 
 	f.Cleanup()
 }

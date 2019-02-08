@@ -2,11 +2,14 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"math/big"
 	"math/rand"
 )
+
+const maxBitLen = 255
 
 func newIntegerFromString(s string) (*big.Int, bool) {
 	return new(big.Int).SetString(s, 0)
@@ -58,9 +61,21 @@ func marshalAmino(i *big.Int) (string, error) {
 	return string(bz), err
 }
 
+func unmarshalText(i *big.Int, text string) error {
+	if err := i.UnmarshalText([]byte(text)); err != nil {
+		return err
+	}
+
+	if i.BitLen() > maxBitLen {
+		return fmt.Errorf("integer out of range: %s", text)
+	}
+
+	return nil
+}
+
 // UnmarshalAmino for custom decoding scheme
 func unmarshalAmino(i *big.Int, text string) (err error) {
-	return i.UnmarshalText([]byte(text))
+	return unmarshalText(i, text)
 }
 
 // MarshalJSON for custom encoding scheme
@@ -81,12 +96,13 @@ func unmarshalJSON(i *big.Int, bz []byte) error {
 	if err != nil {
 		return err
 	}
-	return i.UnmarshalText([]byte(text))
+
+	return unmarshalText(i, text)
 }
 
 // Int wraps integer with 256 bit range bound
 // Checks overflow, underflow and division by zero
-// Exists in range from -(2^255-1) to 2^255-1
+// Exists in range from -(2^maxBitLen-1) to 2^maxBitLen-1
 type Int struct {
 	i *big.Int
 }
@@ -103,7 +119,7 @@ func NewInt(n int64) Int {
 
 // NewIntFromBigInt constructs Int from big.Int
 func NewIntFromBigInt(i *big.Int) Int {
-	if i.BitLen() > 255 {
+	if i.BitLen() > maxBitLen {
 		panic("NewIntFromBigInt() out of bound")
 	}
 	return Int{i}
@@ -116,7 +132,7 @@ func NewIntFromString(s string) (res Int, ok bool) {
 		return
 	}
 	// Check overflow
-	if i.BitLen() > 255 {
+	if i.BitLen() > maxBitLen {
 		ok = false
 		return
 	}
@@ -134,7 +150,7 @@ func NewIntWithDecimal(n int64, dec int) Int {
 	i.Mul(big.NewInt(n), exp)
 
 	// Check overflow
-	if i.BitLen() > 255 {
+	if i.BitLen() > maxBitLen {
 		panic("NewIntWithDecimal() out of bound")
 	}
 	return Int{i}
@@ -210,7 +226,7 @@ func (i Int) LTE(i2 Int) bool {
 func (i Int) Add(i2 Int) (res Int) {
 	res = Int{add(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > 255 {
+	if res.i.BitLen() > maxBitLen {
 		panic("Int overflow")
 	}
 	return
@@ -225,7 +241,7 @@ func (i Int) AddRaw(i2 int64) Int {
 func (i Int) Sub(i2 Int) (res Int) {
 	res = Int{sub(i.i, i2.i)}
 	// Check overflow
-	if res.i.BitLen() > 255 {
+	if res.i.BitLen() > maxBitLen {
 		panic("Int overflow")
 	}
 	return
@@ -239,12 +255,12 @@ func (i Int) SubRaw(i2 int64) Int {
 // Mul multiples two Ints
 func (i Int) Mul(i2 Int) (res Int) {
 	// Check overflow
-	if i.i.BitLen()+i2.i.BitLen()-1 > 255 {
+	if i.i.BitLen()+i2.i.BitLen()-1 > maxBitLen {
 		panic("Int overflow")
 	}
 	res = Int{mul(i.i, i2.i)}
 	// Check overflow if sign of both are same
-	if res.i.BitLen() > 255 {
+	if res.i.BitLen() > maxBitLen {
 		panic("Int overflow")
 	}
 	return

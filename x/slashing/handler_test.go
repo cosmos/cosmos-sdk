@@ -35,6 +35,35 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	require.EqualValues(t, DefaultCodespace, got.Codespace)
 }
 
+func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
+	// initial setup
+	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
+	slh := NewHandler(keeper)
+	amtInt := int64(100)
+	addr, val, amt := addrs[0], pks[0], types.TokensFromTendermintPower(amtInt)
+	msg := NewTestMsgCreateValidator(addr, val, amt)
+	msg.MinSelfDelegation = amt
+	got := staking.NewHandler(sk)(ctx, msg)
+	require.True(t, got.IsOK())
+	staking.EndBlocker(ctx, sk)
+
+	require.Equal(
+		t, ck.GetCoins(ctx, sdk.AccAddress(addr)),
+		sdk.Coins{sdk.NewCoin(sk.GetParams(ctx).BondDenom, initCoins.Sub(amt))},
+	)
+
+	undelegateMsg := staking.NewMsgUndelegate(sdk.AccAddress(addr), addr, sdk.OneDec())
+	got = staking.NewHandler(sk)(ctx, undelegateMsg)
+
+	require.True(t, sk.Validator(ctx, addr).GetJailed())
+
+	// assert non-jailed validator can't be unjailed
+	got = slh(ctx, NewMsgUnjail(addr))
+	require.False(t, got.IsOK(), "allowed unjail of validator with less than MinSelfDelegation")
+	require.EqualValues(t, CodeValidatorNotJailed, got.Code)
+	require.EqualValues(t, DefaultCodespace, got.Codespace)
+}
+
 func TestJailedValidatorDelegations(t *testing.T) {
 	ctx, _, stakingKeeper, _, slashingKeeper := createTestInput(t, DefaultParams())
 

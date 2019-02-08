@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"os"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,10 +13,14 @@ import (
 
 // GetCmdUnjail implements the create unjail validator command.
 func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "unjail",
 		Args:  cobra.NoArgs,
 		Short: "unjail validator previously jailed for downtime",
+		Long: `unjail a jailed validator:
+
+$ gaiacli tx slashing unjail --from mykey
+`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			txBldr := authtxb.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 			cliCtx := context.NewCLIContext().
@@ -28,12 +30,7 @@ func GetCmdUnjail(cdc *codec.Codec) *cobra.Command {
 			valAddr := cliCtx.GetFromAddress()
 
 			msg := slashing.NewMsgUnjail(sdk.ValAddress(valAddr))
-			if cliCtx.GenerateOnly {
-				return utils.PrintUnsignedStdTx(os.Stdout, txBldr, cliCtx, []sdk.Msg{msg}, false)
-			}
-			return utils.CompleteAndBroadcastTxCLI(txBldr, cliCtx, []sdk.Msg{msg})
+			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg}, false)
 		},
 	}
-
-	return cmd
 }

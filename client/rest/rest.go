@@ -153,7 +153,7 @@ func CompleteAndBroadcastTxREST(
 		}
 
 		if baseReq.Simulate {
-			WriteSimulationResponse(w, cdc, txBldr.GetGas())
+			WriteSimulationResponse(w, cdc, txBldr.Gas())
 			return
 		}
 	}
@@ -237,7 +237,7 @@ func WriteGenerateStdTxResponse(
 		}
 	}
 
-	stdMsg, err := txBldr.Build(msgs)
+	stdMsg, err := txBldr.BuildSignMsg(msgs)
 	if err != nil {
 		WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 		return

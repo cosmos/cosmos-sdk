@@ -270,15 +270,10 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.Equal(t, bondAmount, bond.Shares.RoundInt())
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
 
-	// verify a delegator cannot create a new delegation to the now jailed validator
-	msgDelegate = NewTestMsgDelegate(delAddr, valAddr, bondAmount)
-	got = handleMsgDelegate(ctx, msgDelegate, keeper)
-	require.False(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
-
 	// verify the validator can still self-delegate
 	msgSelfDelegate := NewTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
 	got = handleMsgDelegate(ctx, msgSelfDelegate, keeper)
-	require.True(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
+	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
 	// verify validator bonded shares
 	validator, found = keeper.GetValidator(ctx, valAddr)
@@ -378,6 +373,70 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 			"i: %v\nexpDelegatorAcc: %v\ngotDelegatorAcc: %v\nvalidator: %v\nbond: %v\n",
 			i, expDelegatorAcc, gotDelegatorAcc, validator, bond)
 	}
+}
+
+func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
+	validatorAddr := sdk.ValAddress(keep.Addrs[0])
+
+	initPower := int64(100)
+	initBond := types.TokensFromTendermintPower(100)
+	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
+	_ = setInstantUnbondPeriod(keeper, ctx)
+
+	// create validator
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
+	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
+
+	// must end-block
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	// verify the self-delegation exists
+	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.True(t, found)
+	gotBond := bond.Shares.RoundInt()
+	require.Equal(t, initBond, gotBond,
+		"initBond: %v\ngotBond: %v\nbond: %v\n",
+		initBond, gotBond, bond)
+
+	newMinSelfDelegation := sdk.OneInt()
+	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfDelegation)
+	got = handleMsgEditValidator(ctx, msgEditValidator, keeper)
+	require.False(t, got.IsOK(), "should not be able to decrease minSelfDelegation")
+}
+
+func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
+	validatorAddr := sdk.ValAddress(keep.Addrs[0])
+
+	initPower := int64(100)
+	initBond := types.TokensFromTendermintPower(100)
+	ctx, _, keeper := keep.CreateTestInput(t, false, initPower)
+	_ = setInstantUnbondPeriod(keeper, ctx)
+
+	// create validator
+	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
+	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
+	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
+	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
+
+	// must end-block
+	updates := keeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	require.Equal(t, 1, len(updates))
+
+	// verify the self-delegation exists
+	bond, found := keeper.GetDelegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
+	require.True(t, found)
+	gotBond := bond.Shares.RoundInt()
+	require.Equal(t, initBond, gotBond,
+		"initBond: %v\ngotBond: %v\nbond: %v\n",
+		initBond, gotBond, bond)
+
+	newMinSelfDelegation := initBond.Add(sdk.OneInt())
+	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfDelegation)
+	got = handleMsgEditValidator(ctx, msgEditValidator, keeper)
+	require.False(t, got.IsOK(), "should not be able to increase minSelfDelegation above current self delegation")
 }
 
 func TestIncrementsMsgUnbond(t *testing.T) {
@@ -612,10 +671,6 @@ func TestJailValidator(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.True(t, validator.Jailed, "%v", validator)
-
-	// test that this address cannot yet be bonded too because is jailed
-	got = handleMsgDelegate(ctx, msgDelegate, keeper)
-	require.False(t, got.IsOK(), "expected error, got %v", got)
 
 	// test that the delegator can still withdraw their bonds
 	msgUndelegateDelegator := NewMsgUndelegate(delegatorAddr, validatorAddr, sdk.NewDec(10))
@@ -1184,13 +1239,12 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ubd, found := keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance.Amount)
+	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance)
 
 	// redelegation should have been slashed by half
 	redelegation, found := keeper.GetRedelegation(ctx, del, valA, valB)
 	require.True(t, found)
 	require.Len(t, redelegation.Entries, 1)
-	require.Equal(t, rdTokens.DivRaw(2), redelegation.Entries[0].Balance.Amount)
 
 	// destination delegation should have been slashed by half
 	delegation, found = keeper.GetDelegation(ctx, del, valB)
@@ -1210,13 +1264,12 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ubd, found = keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance.Amount)
+	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance)
 
 	// redelegation should be unchanged
 	redelegation, found = keeper.GetRedelegation(ctx, del, valA, valB)
 	require.True(t, found)
 	require.Len(t, redelegation.Entries, 1)
-	require.Equal(t, rdTokens.DivRaw(2), redelegation.Entries[0].Balance.Amount)
 
 	// destination delegation should be unchanged
 	delegation, found = keeper.GetDelegation(ctx, del, valB)

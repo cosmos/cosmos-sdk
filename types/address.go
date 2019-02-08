@@ -86,7 +86,7 @@ func (aa AccAddress) Equals(aa2 Address) bool {
 		return true
 	}
 
-	return bytes.Compare(aa.Bytes(), aa2.Bytes()) == 0
+	return bytes.Equal(aa.Bytes(), aa2.Bytes())
 }
 
 // Returns boolean for whether an AccAddress is empty
@@ -96,7 +96,7 @@ func (aa AccAddress) Empty() bool {
 	}
 
 	aa2 := AccAddress{}
-	return bytes.Compare(aa.Bytes(), aa2.Bytes()) == 0
+	return bytes.Equal(aa.Bytes(), aa2.Bytes())
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -155,7 +155,7 @@ func (aa AccAddress) String() string {
 func (aa AccAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", aa.String())))
+		s.Write([]byte(aa.String()))
 	case 'p':
 		s.Write([]byte(fmt.Sprintf("%p", aa)))
 	default:
@@ -202,7 +202,7 @@ func (va ValAddress) Equals(va2 Address) bool {
 		return true
 	}
 
-	return bytes.Compare(va.Bytes(), va2.Bytes()) == 0
+	return bytes.Equal(va.Bytes(), va2.Bytes())
 }
 
 // Returns boolean for whether an AccAddress is empty
@@ -212,7 +212,7 @@ func (va ValAddress) Empty() bool {
 	}
 
 	va2 := ValAddress{}
-	return bytes.Compare(va.Bytes(), va2.Bytes()) == 0
+	return bytes.Equal(va.Bytes(), va2.Bytes())
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -272,7 +272,7 @@ func (va ValAddress) String() string {
 func (va ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", va.String())))
+		s.Write([]byte(va.String()))
 	case 'p':
 		s.Write([]byte(fmt.Sprintf("%p", va)))
 	default:
@@ -324,7 +324,7 @@ func (ca ConsAddress) Equals(ca2 Address) bool {
 		return true
 	}
 
-	return bytes.Compare(ca.Bytes(), ca2.Bytes()) == 0
+	return bytes.Equal(ca.Bytes(), ca2.Bytes())
 }
 
 // Returns boolean for whether an ConsAddress is empty
@@ -334,7 +334,7 @@ func (ca ConsAddress) Empty() bool {
 	}
 
 	ca2 := ConsAddress{}
-	return bytes.Compare(ca.Bytes(), ca2.Bytes()) == 0
+	return bytes.Equal(ca.Bytes(), ca2.Bytes())
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -394,7 +394,7 @@ func (ca ConsAddress) String() string {
 func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(fmt.Sprintf("%s", ca.String())))
+		s.Write([]byte(ca.String()))
 	case 'p':
 		s.Write([]byte(fmt.Sprintf("%p", ca)))
 	default:

@@ -5,11 +5,12 @@ import (
 	"os"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/pkg/errors"
 	tmbtcec "github.com/tendermint/btcd/btcec"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	tmsecp256k1 "github.com/tendermint/tendermint/crypto/secp256k1"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 )
 
 var (
@@ -45,9 +46,6 @@ type (
 
 // NewPrivKeyLedgerSecp256k1 will generate a new key and store the public key
 // for later use.
-//
-// CONTRACT: The ledger device, ledgerDevice, must be loaded and set prior to
-// any creation of a PrivKeyLedgerSecp256k1.
 func NewPrivKeyLedgerSecp256k1(path hd.BIP44Params) (tmcrypto.PrivKey, error) {
 	device, err := getLedgerDevice()
 	if err != nil {
@@ -103,8 +101,8 @@ func (pkl PrivKeyLedgerSecp256k1) Bytes() []byte {
 // Equals implements the PrivKey interface. It makes sure two private keys
 // refer to the same public key.
 func (pkl PrivKeyLedgerSecp256k1) Equals(other tmcrypto.PrivKey) bool {
-	if ledger, ok := other.(*PrivKeyLedgerSecp256k1); ok {
-		return pkl.CachedPubKey.Equals(ledger.CachedPubKey)
+	if otherKey, ok := other.(PrivKeyLedgerSecp256k1); ok {
+		return pkl.CachedPubKey.Equals(otherKey.CachedPubKey)
 	}
 	return false
 }

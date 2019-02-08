@@ -1,15 +1,18 @@
 package server
 
+// DONTCOVER
+
 import (
 	"fmt"
+	"os"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"io/ioutil"
 	"path"
 
+	"github.com/tendermint/tendermint/libs/cli"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,17 +30,18 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 		Use:   "export",
 		Short: "Export state to JSON",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			home := viper.GetString("home")
+			config := ctx.Config
+			config.SetRoot(viper.GetString(cli.HomeFlag))
+
 			traceWriterFile := viper.GetString(flagTraceStore)
-			emptyState, err := isEmptyState(home)
+			emptyState, err := isEmptyState(config.RootDir)
 			if err != nil {
 				return err
 			}
 
 			if emptyState || appExporter == nil {
-				fmt.Println("WARNING: State is not initialized. Returning genesis file.")
-				genesisFile := path.Join(home, "config", "genesis.json")
-				genesis, err := ioutil.ReadFile(genesisFile)
+				fmt.Fprintln(os.Stderr, "WARNING: State is not initialized. Returning genesis file.")
+				genesis, err := ioutil.ReadFile(config.GenesisFile())
 				if err != nil {
 					return err
 				}
@@ -45,7 +49,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 				return nil
 			}
 
-			db, err := openDB(home)
+			db, err := openDB(config.RootDir)
 			if err != nil {
 				return err
 			}
@@ -58,7 +62,7 @@ func ExportCmd(ctx *Context, cdc *codec.Codec, appExporter AppExporter) *cobra.C
 			jailWhiteList := viper.GetStringSlice(flagJailWhitelist)
 			appState, validators, err := appExporter(ctx.Logger, db, traceWriter, height, forZeroHeight, jailWhiteList)
 			if err != nil {
-				return errors.Errorf("error exporting state: %v\n", err)
+				return fmt.Errorf("error exporting state: %v", err)
 			}
 
 			doc, err := tmtypes.GenesisDocFromFile(ctx.Config.GenesisFile())

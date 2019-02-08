@@ -10,12 +10,13 @@ type CodeType = sdk.CodeType
 
 const (
 	// Default slashing codespace
-	DefaultCodespace sdk.CodespaceType = "SLASH"
+	DefaultCodespace sdk.CodespaceType = ModuleName
 
 	CodeInvalidValidator      CodeType = 101
 	CodeValidatorJailed       CodeType = 102
 	CodeValidatorNotJailed    CodeType = 103
 	CodeMissingSelfDelegation CodeType = 104
+	CodeSelfDelegationTooLow  CodeType = 105
 )
 
 func ErrNoValidatorForAddress(codespace sdk.CodespaceType) sdk.Error {
@@ -36,4 +37,8 @@ func ErrValidatorNotJailed(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrMissingSelfDelegation(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeMissingSelfDelegation, "validator has no self-delegation; cannot be unjailed")
+}
+
+func ErrSelfDelegationTooLowToUnjail(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeValidatorNotJailed, "validator's self delegation less than MinSelfDelegation, cannot be unjailed")
 }

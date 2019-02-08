@@ -10,7 +10,6 @@ import (
 
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -18,6 +17,8 @@ import (
 	tmliteProxy "github.com/tendermint/tendermint/lite/proxy"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 )
 
 // GetNode returns an RPC client. If the context's client is not defined, an
@@ -164,7 +165,7 @@ func (ctx CLIContext) query(path string, key cmn.HexBytes) (res []byte, err erro
 
 	resp := result.Response
 	if !resp.IsOK() {
-		return res, errors.Errorf(resp.Log)
+		return res, errors.New(resp.Log)
 	}
 
 	// data from trusted node or subspace query doesn't need verification

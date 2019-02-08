@@ -21,12 +21,19 @@ BREAKING CHANGES
 
 * Gaia
   *  [\#3457](https://github.com/cosmos/cosmos-sdk/issues/3457) Changed governance tally validatorGovInfo to use sdk.Int power instead of sdk.Dec
+  *  [\#3495](https://github.com/cosmos/cosmos-sdk/issues/3495) Added Validator Minimum Self Delegation
+  *  Reintroduce OR semantics for tx fees
 
 * SDK
-  * \#2513 Tendermint updates are adjusted by 10^-6 relative to staking tokens, 
+  * \#2513 Tendermint updates are adjusted by 10^-6 relative to staking tokens,
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
   * [\#3490](https://github.com/cosmos/cosmos-sdk/issues/3490) ReadRESTReq() returns bool to avoid callers to write error responses twice.
   * [\#3502](https://github.com/cosmos/cosmos-sdk/pull/3502) Fixes issue when comparing genesis states
+  * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Various clean ups:
+    - Replace all GetKeyBase\* functions family in favor of NewKeyBaseFromDir and NewKeyBaseFromHomeFlag.
+    - Remove Get prefix from all TxBuilder's getters.
+  * [\#3522](https://github.com/cosmos/cosmos-sdk/pull/3522) Get rid of double negatives: Coins.IsNotNegative() -> Coins.IsAnyNegative().
+  * \#3561 Don't unnecessarily store denominations in staking
 
 * Tendermint
 
@@ -40,6 +47,8 @@ FEATURES
   * [\#3429](https://github.com/cosmos/cosmos-sdk/issues/3429) Support querying
   for all delegator distribution rewards.
   * \#3449 Proof verification now works with absence proofs
+  * [\#3484](https://github.com/cosmos/cosmos-sdk/issues/3484) Add support
+  vesting accounts to the add-genesis-account command.
 
 * Gaia
   - [\#3397](https://github.com/cosmos/cosmos-sdk/pull/3397) Implement genesis file sanitization to avoid failures at chain init.
@@ -48,6 +57,8 @@ FEATURES
 * SDK
   * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
   * [\#3477][distribution] new query endpoint "delegator_validators"
+  * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Provided a lazy loading implementation of Keybase that locks the underlying
+    storage only for the time needed to perform the required operation. Also added Keybase reference to TxBuilder struct.
 
 * Tendermint
 
@@ -62,10 +73,16 @@ IMPROVEMENTS
     * `from` field in the `base_req` body can be a Keybase name or account address
   * [\#3423](https://github.com/cosmos/cosmos-sdk/issues/3423) Allow simulation
   (auto gas) to work with generate only.
+  * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) REST server calls to keybase does not lock the underlying storage anymore.
+  * [\#3523](https://github.com/cosmos/cosmos-sdk/pull/3523) Added `/tx/encode` endpoint to serialize a JSON tx to base64-encoded Amino.
 
 * Gaia CLI  (`gaiacli`)
   * [\#3476](https://github.com/cosmos/cosmos-sdk/issues/3476) New `withdraw-all-rewards` command to withdraw all delegations rewards for delegators.
-  - [\#3497](https://github.com/cosmos/cosmos-sdk/issues/3497) `gaiad gentx` supports `--ip` and `--node-id` flags to override defaults.
+  * [\#3497](https://github.com/cosmos/cosmos-sdk/issues/3497) `gaiad gentx` supports `--ip` and `--node-id` flags to override defaults.
+  * [\#3518](https://github.com/cosmos/cosmos-sdk/issues/3518) Fix flow in
+  `keys add` to show the mnemonic by default.
+  * [\#3517](https://github.com/cosmos/cosmos-sdk/pull/3517) Increased test coverage
+  * [\#3523](https://github.com/cosmos/cosmos-sdk/pull/3523) Added `tx encode` command to serialize a JSON tx to base64-encoded Amino.
 
 * Gaia
   * [\#3418](https://github.com/cosmos/cosmos-sdk/issues/3418) Add vesting account
@@ -75,6 +92,7 @@ IMPROVEMENTS
   for tx size in the ante handler.
   * [\#3454](https://github.com/cosmos/cosmos-sdk/pull/3454) Add `--jail-whitelist` to `gaiad export` to enable testing of complex exports
   * [\#3424](https://github.com/cosmos/cosmos-sdk/issues/3424) Allow generation of gentxs with empty memo field.
+  * \#3507 General cleanup, removal of unnecessary struct fields, undelegation bugfix, and comment clarification in x/staking and x/slashing
 
 * SDK
   * [\#2605] x/params add subkey accessing

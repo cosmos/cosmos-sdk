@@ -12,8 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gcutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 
+	"errors"
+
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 
 	govClientUtils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 )

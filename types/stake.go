@@ -46,8 +46,8 @@ type Validator interface {
 	GetBondedTokens() Int         // validator bonded tokens
 	GetTendermintPower() int64    // validation power in tendermint
 	GetCommission() Dec           // validator commission rate
+	GetMinSelfDelegation() Int    // validator minimum self delegation
 	GetDelegatorShares() Dec      // total outstanding delegator shares
-	GetBondHeight() int64         // height in which the validator became active
 	GetDelegatorShareExRate() Dec // tokens per delegator share exchange rate
 }
 
@@ -123,7 +123,6 @@ type StakingHooks interface {
 
 	AfterValidatorBonded(ctx Context, consAddr ConsAddress, valAddr ValAddress)         // Must be called when a validator is bonded
 	AfterValidatorBeginUnbonding(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Must be called when a validator begins unbonding
-	AfterValidatorPowerDidChange(ctx Context, consAddr ConsAddress, valAddr ValAddress) // Called at EndBlock when a validator's power did change
 
 	BeforeDelegationCreated(ctx Context, delAddr AccAddress, valAddr ValAddress)        // Must be called when a delegation is created
 	BeforeDelegationSharesModified(ctx Context, delAddr AccAddress, valAddr ValAddress) // Must be called when a delegation's shares are modified

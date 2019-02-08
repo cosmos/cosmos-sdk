@@ -19,7 +19,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// end block to bond validator
@@ -74,7 +74,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	valPower := int64(100)
 	valTokens := staking.TokensFromTendermintPower(valPower)
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission)
+		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
 	got := sh(ctx, msg)
 	require.True(t, got.IsOK(), "%v", got)
 
@@ -137,7 +137,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	valTokens := staking.TokensFromTendermintPower(power)
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission)
+		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// end block to bond validator
@@ -209,7 +209,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// end block to bond validator
@@ -271,7 +271,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	valTokens := staking.TokensFromTendermintPower(power)
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission)
+		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// assert correct initial balance
@@ -327,7 +327,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	valTokens := staking.TokensFromTendermintPower(power)
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission)
+		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// end block to bond validator
@@ -394,7 +394,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	power := int64(100)
 	valTokens := staking.TokensFromTendermintPower(power)
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission)
+		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// end block to bond validator
@@ -464,7 +464,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	// create validator with 50% commission
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission)
+		sdk.NewCoin(staking.DefaultBondDenom, sdk.NewInt(100)), staking.Description{}, commission, sdk.OneInt())
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// end block to bond validator

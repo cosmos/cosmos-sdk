@@ -85,7 +85,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	var genesisAccounts []GenesisAccount
 
-	amount := int64(r.Intn(1e6))
+	amount := int64(r.Intn(1e12))
 	numInitiallyBonded := int64(r.Intn(250))
 	numAccs := int64(len(accs))
 	if numInitiallyBonded > numAccs {
@@ -301,8 +301,8 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$ -SimulationCommit=true -cpuprofile cpu.out
 func BenchmarkFullGaiaSimulation(b *testing.B) {
 	// Setup Gaia application
-	var logger log.Logger
-	logger = log.NewNopLogger()
+	logger := log.NewNopLogger()
+
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
 	db, _ = dbm.NewGoLevelDB("Simulation", dir)
@@ -417,10 +417,7 @@ func TestGaiaImportExport(t *testing.T) {
 	fmt.Printf("Exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
-	if err != nil {
-		panic(err)
-	}
-
+	require.NoError(t, err)
 	fmt.Printf("Importing genesis...\n")
 
 	newDir, _ := ioutil.TempDir("", "goleveldb-gaia-sim-2")

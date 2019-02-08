@@ -1,63 +1,20 @@
 package cli
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func getShares(
-	storeName string, cdc *codec.Codec, sharesAmountStr,
-	sharesPercentStr string, delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-) (sharesAmount sdk.Dec, err error) {
+func getShares(sharesAmountStr string, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sharesAmount sdk.Dec, err error) {
+	sharesAmount, err = sdk.NewDecFromStr(sharesAmountStr)
+	if err != nil {
+		return sharesAmount, err
+	}
 
-	switch {
-	case sharesAmountStr != "" && sharesPercentStr != "":
-		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
-
-	case sharesAmountStr == "" && sharesPercentStr == "":
-		return sharesAmount, errors.Errorf("can either specify the amount OR the percent of the shares, not both")
-
-	case sharesAmountStr != "":
-		sharesAmount, err = sdk.NewDecFromStr(sharesAmountStr)
-		if err != nil {
-			return sharesAmount, err
-		}
-		if !sharesAmount.GT(sdk.ZeroDec()) {
-			return sharesAmount, errors.Errorf("shares amount must be positive number (ex. 123, 1.23456789)")
-		}
-
-	case sharesPercentStr != "":
-		var sharesPercent sdk.Dec
-		sharesPercent, err = sdk.NewDecFromStr(sharesPercentStr)
-		if err != nil {
-			return sharesAmount, err
-		}
-		if !sharesPercent.GT(sdk.ZeroDec()) || !sharesPercent.LTE(sdk.OneDec()) {
-			return sharesAmount, errors.Errorf("shares percent must be >0 and <=1 (ex. 0.01, 0.75, 1)")
-		}
-
-		// make a query to get the existing delegation shares
-		key := staking.GetDelegationKey(delAddr, valAddr)
-		cliCtx := context.NewCLIContext().
-			WithCodec(cdc).
-			WithAccountDecoder(cdc)
-
-		resQuery, err := cliCtx.QueryStore(key, storeName)
-		if err != nil {
-			return sharesAmount, errors.Errorf("cannot find delegation to determine percent Error: %v", err)
-		}
-
-		delegation, err := types.UnmarshalDelegation(cdc, resQuery)
-		if err != nil {
-			return sdk.ZeroDec(), err
-		}
-
-		sharesAmount = sharesPercent.Mul(delegation.Shares)
+	if !sharesAmount.GT(sdk.ZeroDec()) {
+		return sharesAmount, errors.New("shares amount must be positive number (ex. 123, 1.23456789)")
 	}
 
 	return
@@ -65,7 +22,7 @@ func getShares(
 
 func buildCommissionMsg(rateStr, maxRateStr, maxChangeRateStr string) (commission types.CommissionMsg, err error) {
 	if rateStr == "" || maxRateStr == "" || maxChangeRateStr == "" {
-		return commission, errors.Errorf("must specify all validator commission parameters")
+		return commission, errors.New("must specify all validator commission parameters")
 	}
 
 	rate, err := sdk.NewDecFromStr(rateStr)

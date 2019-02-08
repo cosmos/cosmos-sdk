@@ -178,7 +178,7 @@ func TestQueryDelegation(t *testing.T) {
 	keeper.SetValidatorByPowerIndex(ctx, val2)
 
 	delTokens := types.TokensFromTendermintPower(20)
-	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin(types.DefaultBondDenom, delTokens), val1, true)
+	keeper.Delegate(ctx, addrAcc2, delTokens, val1, true)
 
 	// apply TM updates
 	keeper.ApplyAndReturnValidatorSetUpdates(ctx)
@@ -386,7 +386,7 @@ func TestQueryRedelegations(t *testing.T) {
 	keeper.SetValidator(ctx, val2)
 
 	delAmount := types.TokensFromTendermintPower(100)
-	keeper.Delegate(ctx, addrAcc2, sdk.NewCoin(types.DefaultBondDenom, delAmount), val1, true)
+	keeper.Delegate(ctx, addrAcc2, delAmount, val1, true)
 	_ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
 	rdAmount := types.TokensFromTendermintPower(20)

@@ -334,6 +334,39 @@ paths:
           description: The Tx was malformated
         500:
           description: Server internal error
+  /tx/encode:
+    post:
+      tags:
+        - ICS20
+      summary: Encode a transaction to wire format
+      description: Encode a transaction (signed or not) from JSON to base64-encoded Amino serialized bytes
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: tx
+          description: The transaction to encode
+          required: true
+          schema:
+            type: object
+            properties:
+              tx:
+                $ref: "#/definitions/StdTx"
+      responses:
+        200:
+          description: Transaction was successfully decoded and re-encoded
+          schema:
+            type: object
+            properties:
+              tx:
+                type: string
+                example: The base64-encoded Amino-serialized bytes for the transaction
+        400:
+          description: The Tx was malformated
+        500:
+          description: Server internal error
   /bank/balances/{address}:
     get:
       summary: Get the account balances

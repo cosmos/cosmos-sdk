@@ -262,7 +262,7 @@ func (coins Coins) Minus(coinsB Coins) Coins {
 // negative coin amount was returned.
 func (coins Coins) SafeMinus(coinsB Coins) (Coins, bool) {
 	diff := coins.safePlus(coinsB.negative())
-	return diff, !diff.IsNotNegative()
+	return diff, diff.IsAnyNegative()
 }
 
 // IsAllGT returns true if for every denom in coins, the denom is present at a
@@ -284,7 +284,7 @@ func (coins Coins) IsAllGTE(coinsB Coins) bool {
 		return true
 	}
 
-	return diff.IsNotNegative()
+	return !diff.IsAnyNegative()
 }
 
 // IsAllLT returns True iff for every denom in coins, the denom is present at
@@ -297,6 +297,26 @@ func (coins Coins) IsAllLT(coinsB Coins) bool {
 // a smaller or equal amount in coinsB.
 func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	return coinsB.IsAllGTE(coins)
+}
+
+// IsAnyGTE returns true iff coins contains at least one denom that is present
+// at a greater or equal amount in coinsB; it returns false otherwise.
+//
+// NOTE: IsAnyGTE operates under the invariant that both coin sets are sorted
+// by denominations and there exists no zero coins.
+func (coins Coins) IsAnyGTE(coinsB Coins) bool {
+	if len(coinsB) == 0 {
+		return false
+	}
+
+	for _, coin := range coins {
+		amt := coinsB.AmountOf(coin.Denom)
+		if coin.Amount.GTE(amt) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // IsZero returns true if there are no coins or all coins are zero.
@@ -380,22 +400,22 @@ func (coins Coins) IsPositive() bool {
 	return true
 }
 
-// IsNotNegative returns true if there is no coin amount with a negative value
-// (even no coins is true here).
-//
+// IsAnyNegative returns true if there is at least one coin whose amount
+// is negative; returns false otherwise. It returns false if the coin set
+// is empty too.
 // TODO: Remove once unsigned integers are used.
-func (coins Coins) IsNotNegative() bool {
+func (coins Coins) IsAnyNegative() bool {
 	if len(coins) == 0 {
-		return true
+		return false
 	}
 
 	for _, coin := range coins {
 		if coin.IsNegative() {
-			return false
+			return true
 		}
 	}
 
-	return true
+	return false
 }
 
 // negative returns a set of coins with all amount negative.

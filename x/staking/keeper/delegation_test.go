@@ -133,7 +133,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
 	ubd := types.NewUnbondingDelegation(addrDels[0], addrVals[0], 0,
-		time.Unix(0, 0), sdk.NewInt64Coin(types.DefaultBondDenom, 5))
+		time.Unix(0, 0), sdk.NewInt(5))
 
 	// set and retrieve a record
 	keeper.SetUnbondingDelegation(ctx, ubd)
@@ -142,7 +142,7 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.True(t, ubd.Equal(resUnbond))
 
 	// modify a records, save, and retrieve
-	ubd.Entries[0].Balance = sdk.NewInt64Coin(types.DefaultBondDenom, 21)
+	ubd.Entries[0].Balance = sdk.NewInt(21)
 	keeper.SetUnbondingDelegation(ctx, ubd)
 
 	resUnbonds := keeper.GetUnbondingDelegations(ctx, addrDels[0], 5)
@@ -250,9 +250,10 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// test removing all self delegation from a validator which should
-// shift it from the bonded to unbonded state
-func TestUndelegateSelfDelegation(t *testing.T) {
+// test undelegating self delegation from a validator pushing it below MinSelfDelegation
+// shift it from the bonded to unbonding state and jailed
+func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
+
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
 	startTokens := types.TokensFromTendermintPower(20)
@@ -260,9 +261,12 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 
 	//create a validator with a self-delegation
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
+
 	valTokens := types.TokensFromTendermintPower(10)
+	validator.MinSelfDelegation = valTokens
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
+
 	keeper.SetPool(ctx, pool)
 	validator = TestingUpdateValidator(keeper, ctx, validator, true)
 	pool = keeper.GetPool(ctx)
@@ -281,7 +285,7 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 	keeper.SetDelegation(ctx, delegation)
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(valTokens))
+	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(types.TokensFromTendermintPower(6)))
 	require.NoError(t, err)
 
 	// end block
@@ -290,8 +294,9 @@ func TestUndelegateSelfDelegation(t *testing.T) {
 
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
 	require.True(t, found)
-	require.Equal(t, delTokens, validator.Tokens)
+	require.Equal(t, types.TokensFromTendermintPower(14), validator.Tokens)
 	require.Equal(t, sdk.Unbonding, validator.Status)
+	require.True(t, validator.Jailed)
 }
 
 func TestUndelegateFromUnbondingValidator(t *testing.T) {
@@ -361,7 +366,7 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.True(t, ubd.Entries[0].Balance.IsEqual(sdk.NewInt64Coin(params.BondDenom, 6)))
+	require.True(t, ubd.Entries[0].Balance.Equal(sdk.NewInt(6)))
 	assert.Equal(t, blockHeight, ubd.Entries[0].CreationHeight)
 	assert.True(t, blockTime.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 }
@@ -505,8 +510,8 @@ func TestGetRedelegationsFromValidator(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(0, 0), sdk.NewInt64Coin(types.DefaultBondDenom, 5),
-		sdk.NewDec(5), sdk.NewDec(5))
+		time.Unix(0, 0), sdk.NewInt(5),
+		sdk.NewDec(5))
 
 	// set and retrieve a record
 	keeper.SetRedelegation(ctx, rd)
@@ -529,8 +534,8 @@ func TestRedelegation(t *testing.T) {
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 0,
-		time.Unix(0, 0), sdk.NewInt64Coin(types.DefaultBondDenom, 5),
-		sdk.NewDec(5), sdk.NewDec(5))
+		time.Unix(0, 0), sdk.NewInt(5),
+		sdk.NewDec(5))
 
 	// test shouldn't have and redelegations
 	has := keeper.HasReceivingRedelegation(ctx, addrDels[0], addrVals[1])
@@ -558,7 +563,6 @@ func TestRedelegation(t *testing.T) {
 	require.True(t, has)
 
 	// modify a records, save, and retrieve
-	rd.Entries[0].SharesSrc = sdk.NewDec(21)
 	rd.Entries[0].SharesDst = sdk.NewDec(21)
 	keeper.SetRedelegation(ctx, rd)
 
@@ -786,7 +790,6 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	ubd, found := keeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.True(t, ubd.Entries[0].Balance.IsEqual(sdk.NewCoin(params.BondDenom, redelegateTokens)))
 	assert.Equal(t, blockHeight, ubd.Entries[0].CreationHeight)
 	assert.True(t, blockTime.Add(params.UnbondingTime).Equal(ubd.Entries[0].CompletionTime))
 }

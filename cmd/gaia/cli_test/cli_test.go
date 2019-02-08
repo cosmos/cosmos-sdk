@@ -1,12 +1,14 @@
 package clitest
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,6 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -89,13 +92,13 @@ func TestGaiaCLIMinimumFees(t *testing.T) {
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure tx w/ correct fees pass
-	txFees := fmt.Sprintf("--fees=%s,%s", sdk.NewInt64Coin(feeDenom, 2), sdk.NewInt64Coin(fee2Denom, 2))
+	txFees := fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 2))
 	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fee2Denom, 10), txFees)
 	require.True(f.T, success)
 	tests.WaitForNextNBlocksTM(1, f.Port)
 
 	// Ensure tx w/ improper fees fails
-	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 5))
+	txFees = fmt.Sprintf("--fees=%s", sdk.NewInt64Coin(feeDenom, 1))
 	success, _, _ = f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, 10), txFees)
 	require.False(f.T, success)
 
@@ -372,7 +375,7 @@ func TestGaiaCLICreateValidator(t *testing.T) {
 	validatorUbds := f.QueryStakingUnbondingDelegationsFrom(barVal)
 	require.Len(t, validatorUbds, 1)
 	require.Len(t, validatorUbds[0].Entries, 1)
-	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.Amount.String())
+	require.Equal(t, remainingTokens.String(), validatorUbds[0].Entries[0].Balance.String())
 
 	f.Cleanup()
 }
@@ -532,12 +535,13 @@ func TestGaiaCLIQueryTxPagination(t *testing.T) {
 	fooAddr := f.KeyAddress(keyFoo)
 	barAddr := f.KeyAddress(keyBar)
 
+	accFoo := f.QueryAccount(fooAddr)
+	seq := accFoo.GetSequence()
+
 	for i := 1; i <= 30; i++ {
-		success := executeWrite(t, fmt.Sprintf(
-			"gaiacli tx send %s --amount=%dfootoken --to=%s --from=foo",
-			f.Flags(), i, barAddr), app.DefaultKeyPass)
+		success, _, _ := f.TxSend(keyFoo, barAddr, sdk.NewInt64Coin(fooDenom, int64(i)), fmt.Sprintf("--sequence=%d", seq))
 		require.True(t, success)
-		tests.WaitForNextNBlocksTM(1, f.Port)
+		seq++
 	}
 
 	// perPage = 15, 2 pages
@@ -586,7 +590,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	require.Empty(t, stderr)
 
 	// write  unsigned tx to file
-	unsignedTxFile := writeToNewTempFile(t, stdout)
+	unsignedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(unsignedTxFile.Name())
 
 	// validate we can successfully sign
@@ -599,7 +603,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	require.Equal(t, fooAddr.String(), stdTx.GetSigners()[0].String())
 
 	// write signed tx to file
-	signedTxFile := writeToNewTempFile(t, stdout)
+	signedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(signedTxFile.Name())
 
 	// validate signatures
@@ -609,7 +613,7 @@ func TestGaiaCLIValidateSignatures(t *testing.T) {
 	// modify the transaction
 	stdTx.Memo = "MODIFIED-ORIGINAL-TX-BAD"
 	bz := marshalStdTx(t, stdTx)
-	modSignedTxFile := writeToNewTempFile(t, string(bz))
+	modSignedTxFile := WriteToNewTempFile(t, string(bz))
 	defer os.Remove(modSignedTxFile.Name())
 
 	// validate signature validation failure due to different transaction sig bytes
@@ -658,7 +662,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, len(msg.Msgs), 1)
 
 	// Write the output to disk
-	unsignedTxFile := writeToNewTempFile(t, stdout)
+	unsignedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Test sign --validate-signatures
@@ -675,7 +679,7 @@ func TestGaiaCLISendGenerateSignAndBroadcast(t *testing.T) {
 	require.Equal(t, fooAddr.String(), msg.GetSigners()[0].String())
 
 	// Write the output to disk
-	signedTxFile := writeToNewTempFile(t, stdout)
+	signedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(signedTxFile.Name())
 
 	// Test sign --validate-signatures
@@ -731,7 +735,7 @@ func TestGaiaCLIMultisignInsufficientCosigners(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	unsignedTxFile := writeToNewTempFile(t, stdout)
+	unsignedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Sign with foo's key
@@ -739,7 +743,7 @@ func TestGaiaCLIMultisignInsufficientCosigners(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	fooSignatureFile := writeToNewTempFile(t, stdout)
+	fooSignatureFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(fooSignatureFile.Name())
 
 	// Multisign, not enough signatures
@@ -747,7 +751,7 @@ func TestGaiaCLIMultisignInsufficientCosigners(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	signedTxFile := writeToNewTempFile(t, stdout)
+	signedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(signedTxFile.Name())
 
 	// Validate the multisignature
@@ -757,6 +761,42 @@ func TestGaiaCLIMultisignInsufficientCosigners(t *testing.T) {
 	// Broadcast the transaction
 	success, _, _ = f.TxBroadcast(signedTxFile.Name())
 	require.False(t, success)
+}
+
+func TestGaiaCLIEncode(t *testing.T) {
+	t.Parallel()
+	f := InitFixtures(t)
+
+	// start gaiad server
+	proc := f.GDStart()
+	defer proc.Stop(false)
+
+	cdc := app.MakeCodec()
+
+	// Build a testing transaction and write it to disk
+	barAddr := f.KeyAddress(keyBar)
+	sendTokens := staking.TokensFromTendermintPower(10)
+	success, stdout, stderr := f.TxSend(keyFoo, barAddr, sdk.NewCoin(denom, sendTokens), "--generate-only", "--memo", "deadbeef")
+	require.True(t, success)
+	require.Empty(t, stderr)
+
+	// Write it to disk
+	jsonTxFile := WriteToNewTempFile(t, stdout)
+	defer os.Remove(jsonTxFile.Name())
+
+	// Run the encode command, and trim the extras from the stdout capture
+	success, base64Encoded, _ := f.TxEncode(jsonTxFile.Name())
+	require.True(t, success)
+	trimmedBase64 := strings.Trim(base64Encoded, "\"\n")
+
+	// Decode the base64
+	decodedBytes, err := base64.StdEncoding.DecodeString(trimmedBase64)
+	require.Nil(t, err)
+
+	// Check that the transaction decodes as epxceted
+	var decodedTx auth.StdTx
+	require.Nil(t, cdc.UnmarshalBinaryLengthPrefixed(decodedBytes, &decodedTx))
+	require.Equal(t, "deadbeef", decodedTx.Memo)
 }
 
 func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
@@ -784,7 +824,7 @@ func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	unsignedTxFile := writeToNewTempFile(t, stdout)
+	unsignedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Sign with foo's key
@@ -792,7 +832,7 @@ func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	fooSignatureFile := writeToNewTempFile(t, stdout)
+	fooSignatureFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(fooSignatureFile.Name())
 
 	// Sign with baz's key
@@ -800,7 +840,7 @@ func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	bazSignatureFile := writeToNewTempFile(t, stdout)
+	bazSignatureFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(bazSignatureFile.Name())
 
 	// Multisign, keys in different order
@@ -809,7 +849,7 @@ func TestGaiaCLIMultisignSortSignatures(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	signedTxFile := writeToNewTempFile(t, stdout)
+	signedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(signedTxFile.Name())
 
 	// Validate the multisignature
@@ -847,7 +887,7 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	require.Empty(t, stderr)
 
 	// Write the output to disk
-	unsignedTxFile := writeToNewTempFile(t, stdout)
+	unsignedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(unsignedTxFile.Name())
 
 	// Sign with foo's key
@@ -855,7 +895,7 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	fooSignatureFile := writeToNewTempFile(t, stdout)
+	fooSignatureFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(fooSignatureFile.Name())
 
 	// Sign with bar's key
@@ -863,7 +903,7 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	barSignatureFile := writeToNewTempFile(t, stdout)
+	barSignatureFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(barSignatureFile.Name())
 
 	// Multisign
@@ -872,7 +912,7 @@ func TestGaiaCLIMultisign(t *testing.T) {
 	require.True(t, success)
 
 	// Write the output to disk
-	signedTxFile := writeToNewTempFile(t, stdout)
+	signedTxFile := WriteToNewTempFile(t, stdout)
 	defer os.Remove(signedTxFile.Name())
 
 	// Validate the multisignature

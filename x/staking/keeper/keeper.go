@@ -54,16 +54,12 @@ func (k *Keeper) SetHooks(sh sdk.StakingHooks) *Keeper {
 	return k
 }
 
-//_________________________________________________________________________
-
 // return the codespace
 func (k Keeper) Codespace() sdk.CodespaceType {
 	return k.codespace
 }
 
-//_______________________________________________________________________
-
-// load the pool
+// get the pool
 func (k Keeper) GetPool(ctx sdk.Context) (pool types.Pool) {
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(PoolKey)
@@ -80,8 +76,6 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.Pool) {
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(pool)
 	store.Set(PoolKey, b)
 }
-
-//_______________________________________________________________________
 
 // Load the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) (power sdk.Int) {

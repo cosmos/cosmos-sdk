@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -34,15 +35,22 @@ const (
 	feeDenom     = "feetoken"
 	fee2Denom    = "fee2token"
 	keyBaz       = "baz"
+	keyVesting   = "vesting"
 	keyFooBarBaz = "foobarbaz"
 )
 
-var startCoins = sdk.Coins{
-	sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
-	sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
-	sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
-	sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
-}
+var (
+	startCoins = sdk.Coins{
+		sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(1000000)),
+		sdk.NewCoin(fee2Denom, staking.TokensFromTendermintPower(1000000)),
+		sdk.NewCoin(fooDenom, staking.TokensFromTendermintPower(1000)),
+		sdk.NewCoin(denom, staking.TokensFromTendermintPower(150)),
+	}
+
+	vestingCoins = sdk.Coins{
+		sdk.NewCoin(feeDenom, staking.TokensFromTendermintPower(500000)),
+	}
+)
 
 //___________________________________________________________________________________
 // Fixtures
@@ -108,6 +116,7 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 	f.KeysAdd(keyFoo)
 	f.KeysAdd(keyBar)
 	f.KeysAdd(keyBaz)
+	f.KeysAdd(keyVesting)
 	f.KeysAdd(keyFooBarBaz, "--multisig-threshold=2", fmt.Sprintf(
 		"--multisig=%s,%s,%s", keyFoo, keyBar, keyBaz))
 
@@ -120,6 +129,12 @@ func InitFixtures(t *testing.T) (f *Fixtures) {
 
 	// Start an account with tokens
 	f.AddGenesisAccount(f.KeyAddress(keyFoo), startCoins)
+	f.AddGenesisAccount(
+		f.KeyAddress(keyVesting), startCoins,
+		fmt.Sprintf("--vesting-amount=%s", vestingCoins),
+		fmt.Sprintf("--vesting-start-time=%d", time.Now().UTC().UnixNano()),
+		fmt.Sprintf("--vesting-end-time=%d", time.Now().Add(60*time.Second).UTC().UnixNano()),
+	)
 	f.GenTx(keyFoo)
 	f.CollectGenTxs()
 	return
@@ -269,7 +284,7 @@ func (f *Fixtures) CLIConfig(key, value string, flags ...string) {
 
 // TxSend is gaiacli tx send
 func (f *Fixtures) TxSend(from string, to sdk.AccAddress, amount sdk.Coin, flags ...string) (bool, string, string) {
-	cmd := fmt.Sprintf("gaiacli tx send %v --amount=%s --to=%s --from=%s", f.Flags(), amount, to, from)
+	cmd := fmt.Sprintf("gaiacli tx send %s %s %v --from=%s", to, amount, f.Flags(), from)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -279,9 +294,15 @@ func (f *Fixtures) TxSign(signer, fileName string, flags ...string) (bool, strin
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
-// TxBroadcast is gaiacli tx sign
+// TxBroadcast is gaiacli tx broadcast
 func (f *Fixtures) TxBroadcast(fileName string, flags ...string) (bool, string, string) {
 	cmd := fmt.Sprintf("gaiacli tx broadcast %v %v", f.Flags(), fileName)
+	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
+}
+
+// TxEncode is gaiacli tx encode
+func (f *Fixtures) TxEncode(fileName string, flags ...string) (bool, string, string) {
+	cmd := fmt.Sprintf("gaiacli tx encode %v %v", f.Flags(), fileName)
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -303,12 +324,13 @@ func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.
 	cmd := fmt.Sprintf("gaiacli tx staking create-validator %v --from=%s --pubkey=%s", f.Flags(), from, consPubKey)
 	cmd += fmt.Sprintf(" --amount=%v --moniker=%v --commission-rate=%v", amount, from, "0.05")
 	cmd += fmt.Sprintf(" --commission-max-rate=%v --commission-max-change-rate=%v", "0.20", "0.10")
+	cmd += fmt.Sprintf(" --min-self-delegation=%v", "1")
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
 // TxStakingUnbond is gaiacli tx staking unbond
 func (f *Fixtures) TxStakingUnbond(from, shares string, validator sdk.ValAddress, flags ...string) bool {
-	cmd := fmt.Sprintf("gaiacli tx staking unbond %v --from=%s --validator=%s --shares-amount=%v", f.Flags(), from, validator, shares)
+	cmd := fmt.Sprintf("gaiacli tx staking unbond %s %v --from=%s %v", validator, shares, from, f.Flags())
 	return executeWrite(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 
@@ -624,7 +646,8 @@ func queryTags(tags []string) (out string) {
 	return strings.TrimSuffix(out, "&")
 }
 
-func writeToNewTempFile(t *testing.T, s string) *os.File {
+// Write the given string to a new temporary file
+func WriteToNewTempFile(t *testing.T, s string) *os.File {
 	fp, err := ioutil.TempFile(os.TempDir(), "cosmos_cli_test_")
 	require.Nil(t, err)
 	_, err = fp.WriteString(s)

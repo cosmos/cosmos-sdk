@@ -14,11 +14,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/go-bip39"
+	"errors"
+
 	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/cosmos/go-bip39"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/multisig"
@@ -88,7 +90,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func runAddCmd(cmd *cobra.Command, args []string) error {
+func runAddCmd(_ *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var err error
 	var encryptPassword string
@@ -97,7 +99,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	interactive := viper.GetBool(flagInteractive)
-	showMnemonic := viper.GetBool(flagNoBackup)
+	showMnemonic := !viper.GetBool(flagNoBackup)
 
 	if viper.GetBool(flagDryRun) {
 		// we throw this away, so don't enforce args,
@@ -105,7 +107,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		kb = client.MockKeyBase()
 		encryptPassword = app.DefaultKeyPass
 	} else {
-		kb, err = GetKeyBaseWithWritePerm()
+		kb, err = NewKeyBaseFromHomeFlag()
 		if err != nil {
 			return err
 		}
@@ -263,7 +265,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 	output := viper.Get(cli.OutputFlag)
 
 	switch output {
-	case "text":
+	case OutputFormatText:
 		fmt.Fprintln(os.Stderr)
 		printKeyInfo(info, Bech32KeyOutput)
 
@@ -274,7 +276,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 			fmt.Fprintln(os.Stderr, "")
 			fmt.Fprintln(os.Stderr, mnemonic)
 		}
-	case "json":
+	case OutputFormatJSON:
 		out, err := Bech32KeyOutput(info)
 		if err != nil {
 			return err
@@ -296,7 +298,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 		}
 		fmt.Fprintln(os.Stderr, string(jsonString))
 	default:
-		return errors.Errorf("I can't speak: %s", output)
+		return fmt.Errorf("I can't speak: %s", output)
 	}
 
 	return nil
@@ -332,7 +334,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 		var kb keys.Keybase
 		var m AddNewKey
 
-		kb, err := GetKeyBaseWithWritePerm()
+		kb, err := NewKeyBaseFromHomeFlag()
 		if CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err) {
 			return
 		}
@@ -435,7 +437,7 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		kb, err := GetKeyBaseWithWritePerm()
+		kb, err := NewKeyBaseFromHomeFlag()
 		CheckAndWriteErrorResponse(w, http.StatusInternalServerError, err)
 
 		if name == "" {

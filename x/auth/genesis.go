@@ -8,24 +8,24 @@ import (
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	CollectedFees sdk.Coins `json:"collected_fees"` // collected fees
+	CollectedFees sdk.Coins `json:"collected_fees"`
 	Params        Params    `json:"params"`
 }
 
-// Create a new genesis state
+// NewGenesisState - Create a new genesis state
 func NewGenesisState(collectedFees sdk.Coins, params Params) GenesisState {
 	return GenesisState{
-		CollectedFees: collectedFees,
 		Params:        params,
+		CollectedFees: collectedFees,
 	}
 }
 
-// Return a default genesis state
+// DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
 	return NewGenesisState(sdk.Coins{}, DefaultParams())
 }
 
-// Init store state from genesis data
+// InitGenesis - Init store state from genesis data
 func InitGenesis(ctx sdk.Context, ak AccountKeeper, fck FeeCollectionKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
 	fck.setCollectedFees(ctx, data.CollectedFees)
@@ -57,6 +57,5 @@ func ValidateGenesis(data GenesisState) error {
 	if data.Params.TxSizeCostPerByte == 0 {
 		return fmt.Errorf("invalid tx size cost per byte: %d", data.Params.TxSizeCostPerByte)
 	}
-
 	return nil
 }

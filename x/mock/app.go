@@ -238,7 +238,7 @@ func GenTx(msgs []sdk.Msg, accnums []uint64, seq []uint64, priv ...crypto.PrivKe
 // GeneratePrivKeys generates a total n Ed25519 private keys.
 func GeneratePrivKeys(n int) (keys []crypto.PrivKey) {
 	// TODO: Randomize this between ed25519 and secp256k1
-	keys = make([]crypto.PrivKey, n, n)
+	keys = make([]crypto.PrivKey, n)
 	for i := 0; i < n; i++ {
 		keys[i] = ed25519.GenPrivKey()
 	}
@@ -249,8 +249,8 @@ func GeneratePrivKeys(n int) (keys []crypto.PrivKey) {
 // GeneratePrivKeyAddressPairs generates a total of n private key, address
 // pairs.
 func GeneratePrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.AccAddress) {
-	keys = make([]crypto.PrivKey, n, n)
-	addrs = make([]sdk.AccAddress, n, n)
+	keys = make([]crypto.PrivKey, n)
+	addrs = make([]sdk.AccAddress, n)
 	for i := 0; i < n; i++ {
 		if rand.Int63()%2 == 0 {
 			keys[i] = secp256k1.GenPrivKey()
@@ -265,8 +265,8 @@ func GeneratePrivKeyAddressPairs(n int) (keys []crypto.PrivKey, addrs []sdk.AccA
 // GeneratePrivKeyAddressPairsFromRand generates a total of n private key, address
 // pairs using the provided randomness source.
 func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.PrivKey, addrs []sdk.AccAddress) {
-	keys = make([]crypto.PrivKey, n, n)
-	addrs = make([]sdk.AccAddress, n, n)
+	keys = make([]crypto.PrivKey, n)
+	addrs = make([]sdk.AccAddress, n)
 	for i := 0; i < n; i++ {
 		secret := make([]byte, 32)
 		_, err := rand.Read(secret)
@@ -287,7 +287,7 @@ func GeneratePrivKeyAddressPairsFromRand(rand *rand.Rand, n int) (keys []crypto.
 // provided addresses and coin denominations.
 // nolint: errcheck
 func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []string) {
-	accts := make([]auth.Account, len(addrs), len(addrs))
+	accts := make([]auth.Account, len(addrs))
 	randCoinIntervals := []BigInterval{
 		{sdk.NewIntWithDecimal(1, 0), sdk.NewIntWithDecimal(1, 1)},
 		{sdk.NewIntWithDecimal(1, 2), sdk.NewIntWithDecimal(1, 3)},
@@ -295,7 +295,7 @@ func RandomSetGenesis(r *rand.Rand, app *App, addrs []sdk.AccAddress, denoms []s
 	}
 
 	for i := 0; i < len(accts); i++ {
-		coins := make([]sdk.Coin, len(denoms), len(denoms))
+		coins := make([]sdk.Coin, len(denoms))
 
 		// generate a random coin for each denomination
 		for j := 0; j < len(denoms); j++ {
@@ -328,7 +328,7 @@ func GetAllAccounts(mapper auth.AccountKeeper, ctx sdk.Context) []auth.Account {
 // that they differ only by having the sequence numbers incremented between
 // every transaction.
 func GenSequenceOfTxs(msgs []sdk.Msg, accnums []uint64, initSeqNums []uint64, numToGenerate int, priv ...crypto.PrivKey) []auth.StdTx {
-	txs := make([]auth.StdTx, numToGenerate, numToGenerate)
+	txs := make([]auth.StdTx, numToGenerate)
 	for i := 0; i < numToGenerate; i++ {
 		txs[i] = GenTx(msgs, accnums, initSeqNums, priv...)
 		incrementAllSequenceNumbers(initSeqNums)

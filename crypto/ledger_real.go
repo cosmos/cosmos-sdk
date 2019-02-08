@@ -1,10 +1,8 @@
-// +build cgo,ledger
+// +build cgo,ledger,!test_ledger_mock
 
 package crypto
 
-import (
-	ledger "github.com/zondax/ledger-cosmos-go"
-)
+import ledger "github.com/zondax/ledger-cosmos-go"
 
 // If ledger support (build tag) has been enabled, which implies a CGO dependency,
 // set the discoverLedger function which is responsible for loading the Ledger

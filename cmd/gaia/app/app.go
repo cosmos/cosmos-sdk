@@ -355,10 +355,6 @@ func (h StakingHooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAdd
 	h.dh.AfterValidatorBonded(ctx, consAddr, valAddr)
 	h.sh.AfterValidatorBonded(ctx, consAddr, valAddr)
 }
-func (h StakingHooks) AfterValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	h.dh.AfterValidatorPowerDidChange(ctx, consAddr, valAddr)
-	h.sh.AfterValidatorPowerDidChange(ctx, consAddr, valAddr)
-}
 func (h StakingHooks) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	h.dh.AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)
 	h.sh.AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)

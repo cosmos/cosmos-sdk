@@ -30,12 +30,6 @@ func (k Keeper) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, 
 	}
 }
 
-func (k Keeper) AfterValidatorPowerDidChange(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
-	if k.hooks != nil {
-		k.hooks.AfterValidatorPowerDidChange(ctx, consAddr, valAddr)
-	}
-}
-
 func (k Keeper) AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	if k.hooks != nil {
 		k.hooks.AfterValidatorBeginUnbonding(ctx, consAddr, valAddr)

@@ -18,6 +18,8 @@ func gt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == 1 }
 
 func lt(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) == -1 }
 
+func lte(i *big.Int, i2 *big.Int) bool { return i.Cmp(i2) <= 0 }
+
 func add(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Add(i, i2) }
 
 func sub(i *big.Int, i2 *big.Int) *big.Int { return new(big.Int).Sub(i, i2) }
@@ -189,6 +191,11 @@ func (i Int) GT(i2 Int) bool {
 // LT returns true if first Int is lesser than second
 func (i Int) LT(i2 Int) bool {
 	return lt(i.i, i2.i)
+}
+
+// LTE returns true if first Int is less than or equal to second
+func (i Int) LTE(i2 Int) bool {
+	return lte(i.i, i2.i)
 }
 
 // Add adds Int from another

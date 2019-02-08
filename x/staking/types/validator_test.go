@@ -12,16 +12,16 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-func TestValidatorEqual(t *testing.T) {
+func TestValidatorTestEquivalent(t *testing.T) {
 	val1 := NewValidator(addr1, pk1, Description{})
 	val2 := NewValidator(addr1, pk1, Description{})
 
-	ok := val1.Equal(val2)
+	ok := val1.TestEquivalent(val2)
 	require.True(t, ok)
 
 	val2 = NewValidator(addr2, pk2, Description{})
 
-	ok = val1.Equal(val2)
+	ok = val1.TestEquivalent(val2)
 	require.False(t, ok)
 }
 

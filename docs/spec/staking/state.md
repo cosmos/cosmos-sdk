@@ -187,7 +187,6 @@ type RedelegationEntry struct {
     CompletionTime time.Time // unix time for redelegation completion
     InitialBalance sdk.Coin  // initial balance when redelegation started
     Balance        sdk.Coin  // current balance (current value held in destination validator)
-    SharesSrc      sdk.Dec   // amount of source-validator shares removed by redelegation
     SharesDst      sdk.Dec   // amount of destination-validator shares created by redelegation
 }
 ```

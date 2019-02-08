@@ -132,7 +132,6 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	for i := 0; i < len(validators); i++ {
 		moniker := fmt.Sprintf("val#%d", int64(i))
 		val := types.NewValidator(sdk.ValAddress(Addrs[i]), PKs[i], types.Description{Moniker: moniker})
-		val.BondHeight = int64(i)
 		delTokens := types.TokensFromTendermintPower(int64((i + 1) * 10))
 		val, pool, _ = val.AddTokensFromDel(pool, delTokens)
 
@@ -282,7 +281,8 @@ func TestValidatorBasics(t *testing.T) {
 
 	// remove a record
 	validators[1].Status = sdk.Unbonded                     // First must set to Unbonded.
-	keeper.SetValidator(ctx, validators[1])                 // ...
+	validators[1].Tokens = sdk.ZeroInt()                    // ...remove all tokens
+	keeper.SetValidator(ctx, validators[1])                 // ...set the validator
 	keeper.RemoveValidator(ctx, validators[1].OperatorAddr) // Now it can be removed.
 	_, found = keeper.GetValidator(ctx, addrVals[1])
 	require.False(t, found)
@@ -341,8 +341,6 @@ func GetValidatorSortingUnmixed(t *testing.T) {
 	require.Equal(t, len(resValidators), n)
 	assert.True(ValEq(t, validators[3], resValidators[0]))
 	assert.True(ValEq(t, validators[4], resValidators[1]))
-	require.Equal(t, int64(0), resValidators[0].BondHeight, "%v", resValidators)
-	require.Equal(t, int64(0), resValidators[1].BondHeight, "%v", resValidators)
 
 	// no change in voting power - no change in sort
 	ctx = ctx.WithBlockHeight(20)
@@ -511,9 +509,8 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	require.Equal(t, nMax, uint16(len(resValidators)))
 	assert.True(ValEq(t, validators[0], resValidators[0]))
 	assert.True(ValEq(t, validators[2], resValidators[1]))
-	validator, exists := keeper.GetValidator(ctx, validators[3].OperatorAddr)
-	require.Equal(t, exists, true)
-	require.Equal(t, int64(40), validator.BondHeight)
+	_, exists := keeper.GetValidator(ctx, validators[3].OperatorAddr)
+	require.True(t, exists)
 }
 
 func TestValidatorBondHeight(t *testing.T) {

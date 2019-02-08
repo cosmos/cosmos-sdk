@@ -270,15 +270,10 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.Equal(t, bondAmount, bond.Shares.RoundInt())
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
 
-	// verify a delegator cannot create a new delegation to the now jailed validator
-	msgDelegate = NewTestMsgDelegate(delAddr, valAddr, bondAmount)
-	got = handleMsgDelegate(ctx, msgDelegate, keeper)
-	require.False(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
-
 	// verify the validator can still self-delegate
 	msgSelfDelegate := NewTestMsgDelegate(sdk.AccAddress(valAddr), valAddr, bondAmount)
 	got = handleMsgDelegate(ctx, msgSelfDelegate, keeper)
-	require.True(t, got.IsOK(), "expected delegation to not be ok, got %v", got)
+	require.True(t, got.IsOK(), "expected delegation to be ok, got %v", got)
 
 	// verify validator bonded shares
 	validator, found = keeper.GetValidator(ctx, valAddr)
@@ -612,10 +607,6 @@ func TestJailValidator(t *testing.T) {
 	validator, found := keeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
 	require.True(t, validator.Jailed, "%v", validator)
-
-	// test that this address cannot yet be bonded too because is jailed
-	got = handleMsgDelegate(ctx, msgDelegate, keeper)
-	require.False(t, got.IsOK(), "expected error, got %v", got)
 
 	// test that the delegator can still withdraw their bonds
 	msgUndelegateDelegator := NewMsgUndelegate(delegatorAddr, validatorAddr, sdk.NewDec(10))
@@ -1190,7 +1181,6 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	redelegation, found := keeper.GetRedelegation(ctx, del, valA, valB)
 	require.True(t, found)
 	require.Len(t, redelegation.Entries, 1)
-	require.Equal(t, rdTokens.DivRaw(2), redelegation.Entries[0].Balance.Amount)
 
 	// destination delegation should have been slashed by half
 	delegation, found = keeper.GetDelegation(ctx, del, valB)
@@ -1216,7 +1206,6 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	redelegation, found = keeper.GetRedelegation(ctx, del, valA, valB)
 	require.True(t, found)
 	require.Len(t, redelegation.Entries, 1)
-	require.Equal(t, rdTokens.DivRaw(2), redelegation.Entries[0].Balance.Amount)
 
 	// destination delegation should be unchanged
 	delegation, found = keeper.GetDelegation(ctx, del, valB)

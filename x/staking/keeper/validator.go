@@ -84,8 +84,6 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 	return validator
 }
 
-//___________________________________________________________________________
-
 // set the main record holding validator details
 func (k Keeper) SetValidator(ctx sdk.Context, validator types.Validator) {
 	store := ctx.KVStore(k.storeKey)
@@ -121,8 +119,6 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 	store := ctx.KVStore(k.storeKey)
 	store.Set(GetValidatorsByPowerIndexKey(validator), validator.OperatorAddr)
 }
-
-//___________________________________________________________________________
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
@@ -190,16 +186,14 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	if !found {
 		return
 	}
+
 	if validator.Status != sdk.Unbonded {
 		panic("Cannot call RemoveValidator on bonded or unbonding validators")
 	}
 
-	// if any tokens remain, remove from pool (burning the tokens).
-	// this happens if shares are zero but tokens are not.
-	// TODO: Remove once https://github.com/cosmos/cosmos-sdk/pull/2958 is merged
-	pool := k.GetPool(ctx)
-	pool.NotBondedTokens = pool.NotBondedTokens.Sub(validator.Tokens)
-	k.SetPool(ctx, pool)
+	if validator.Tokens.GT(sdk.ZeroInt()) {
+		panic("validator being removed should never have positive tokens")
+	}
 
 	// delete the old validator record
 	store := ctx.KVStore(k.storeKey)
@@ -214,7 +208,6 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 
 }
 
-//___________________________________________________________________________
 // get groups of validators
 
 // get the set of all validators with no limits, used during genesis dump
@@ -392,7 +385,7 @@ func (k Keeper) UnbondAllMatureValidatorQueue(ctx sdk.Context) {
 		for _, valAddr := range timeslice {
 			val, found := k.GetValidator(ctx, valAddr)
 			if !found {
-				continue
+				panic("validator in the unbonding queue was not found")
 			}
 			if val.GetStatus() != sdk.Unbonding {
 				panic("unexpected validator in unbonding queue, status was not unbonding")

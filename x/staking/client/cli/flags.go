@@ -61,7 +61,7 @@ func init() {
 	FsCommissionCreate.String(FlagCommissionRate, "", "The initial commission rate percentage")
 	FsCommissionCreate.String(FlagCommissionMaxRate, "", "The maximum commission rate percentage")
 	FsCommissionCreate.String(FlagCommissionMaxChangeRate, "", "The maximum commission change rate percentage (per day)")
-	FsMinSelfDelegation.String(FlagMinSelfDelegation, "", "The minimum self bond required on the validator")
+	FsMinSelfDelegation.String(FlagMinSelfDelegation, "", "The minimum self delegation required on the validator")
 	fsDescriptionEdit.String(FlagMoniker, types.DoNotModifyDesc, "The validator's name")
 	fsDescriptionEdit.String(FlagIdentity, types.DoNotModifyDesc, "The (optional) identity signature (ex. UPort or Keybase)")
 	fsDescriptionEdit.String(FlagWebsite, types.DoNotModifyDesc, "The validator's (optional) website")

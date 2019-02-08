@@ -108,7 +108,7 @@ func (v Validator) String() string {
   Description:                %s
   Unbonding Height:           %d
   Unbonding Completion Time:  %v
-  Minimum Self Bond:  		  %v
+  Minimum Self Delegation:    %v
   Commission:                 %s`, v.OperatorAddr, bechConsPubKey,
 		v.Jailed, sdk.BondStatusToString(v.Status), v.Tokens,
 		v.DelegatorShares, v.Description,

@@ -54,7 +54,7 @@ following delegation and commission default parameters:
 	commission rate:             %s
 	commission max rate:         %s
 	commission max change rate:  %s
-	minimum self bond:           %s
+	minimum self delegation:     %s
 `, defaultAmount, defaultCommissionRate, defaultCommissionMaxRate, defaultCommissionMaxChangeRate, defaultMinSelfDelegation),
 		RunE: func(cmd *cobra.Command, args []string) error {
 

@@ -436,7 +436,7 @@ func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 	newMinSelfDelegation := initBond.Add(sdk.OneInt())
 	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfDelegation)
 	got = handleMsgEditValidator(ctx, msgEditValidator, keeper)
-	require.False(t, got.IsOK(), "should not be able to increase minSelfDelegation above current self bond")
+	require.False(t, got.IsOK(), "should not be able to increase minSelfDelegation above current self delegation")
 }
 
 func TestIncrementsMsgUnbond(t *testing.T) {

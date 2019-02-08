@@ -3,6 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"io"
+	"reflect"
 	"runtime/debug"
 	"strings"
 
@@ -140,6 +141,8 @@ func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
 			}
 		case *sdk.TransientStoreKey:
 			app.MountStore(key, sdk.StoreTypeTransient)
+		default:
+			panic("Unrecognized store key type " + reflect.TypeOf(key).Name())
 		}
 	}
 }
@@ -448,20 +451,21 @@ func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) (res abci.
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 {
 		cmd, typ, arg := path[1], path[2], path[3]
-		if cmd == "filter" {
+		switch cmd {
+		case "filter":
 			switch typ {
 			case "addr":
 				return app.FilterPeerByAddrPort(arg)
 			case "id":
 				return app.FilterPeerByID(arg)
 			}
-		} else {
+		default:
 			msg := "Expected second parameter to be filter"
 			return sdk.ErrUnknownRequest(msg).QueryResult()
 		}
 	}
 
-	msg := "Expected path is p2p filter <addr|pubkey> <parameter>"
+	msg := "Expected path is p2p filter <addr|id> <parameter>"
 	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 

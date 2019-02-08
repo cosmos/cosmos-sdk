@@ -8,7 +8,7 @@ BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags \
 	"-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
 	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps)"
-LEDGER_ENABLED ?= false
+LEDGER_ENABLED ?= true
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
 	github.com/alecthomas/gometalinter \

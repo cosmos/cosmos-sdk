@@ -94,7 +94,7 @@ func TestTxBuilderBuild(t *testing.T) {
 			tc.fields.ChainID, tc.fields.Memo, tc.fields.Fees, tc.fields.GasPrices,
 		)
 
-		got, err := bldr.Build(tc.msgs)
+		got, err := bldr.BuildSignMsg(tc.msgs)
 		require.Equal(t, tc.wantErr, (err != nil), "TxBuilder.Build() error = %v, wantErr %v, tc %d", err, tc.wantErr, i)
 		if !reflect.DeepEqual(got, tc.want) {
 			t.Errorf("TxBuilder.Build() = %v, want %v", got, tc.want)

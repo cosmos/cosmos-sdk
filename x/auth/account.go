@@ -7,7 +7,6 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -62,6 +61,7 @@ type VestingAccount interface {
 }
 
 // AccountDecoder unmarshals account bytes
+// TODO: Think about removing
 type AccountDecoder func(accountBytes []byte) (Account, error)
 
 //-----------------------------------------------------------------------------
@@ -90,8 +90,8 @@ func (acc BaseAccount) String() string {
 	}
 
 	return fmt.Sprintf(`Account:
-	Address:       %s
-	Pubkey:        %s
+  Address:       %s
+  Pubkey:        %s
   Coins:         %s
   AccountNumber: %d
   Sequence:      %d`,
@@ -99,23 +99,24 @@ func (acc BaseAccount) String() string {
 	)
 }
 
-// Prototype function for BaseAccount
+// ProtoBaseAccount - a prototype function for BaseAccount
 func ProtoBaseAccount() Account {
 	return &BaseAccount{}
 }
 
+// NewBaseAccountWithAddress - returns a new base account with a given address
 func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 	return BaseAccount{
 		Address: addr,
 	}
 }
 
-// Implements sdk.Account.
+// GetAddress - Implements sdk.Account.
 func (acc BaseAccount) GetAddress() sdk.AccAddress {
 	return acc.Address
 }
 
-// Implements sdk.Account.
+// SetAddress - Implements sdk.Account.
 func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 	if len(acc.Address) != 0 {
 		return errors.New("cannot override BaseAccount address")
@@ -124,45 +125,45 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 	return nil
 }
 
-// Implements sdk.Account.
+// GetPubKey - Implements sdk.Account.
 func (acc BaseAccount) GetPubKey() crypto.PubKey {
 	return acc.PubKey
 }
 
-// Implements sdk.Account.
+// SetPubKey - Implements sdk.Account.
 func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
 	acc.PubKey = pubKey
 	return nil
 }
 
-// Implements sdk.Account.
+// GetCoins - Implements sdk.Account.
 func (acc *BaseAccount) GetCoins() sdk.Coins {
 	return acc.Coins
 }
 
-// Implements sdk.Account.
+// SetCoins - Implements sdk.Account.
 func (acc *BaseAccount) SetCoins(coins sdk.Coins) error {
 	acc.Coins = coins
 	return nil
 }
 
-// Implements Account
+// GetAccountNumber - Implements Account
 func (acc *BaseAccount) GetAccountNumber() uint64 {
 	return acc.AccountNumber
 }
 
-// Implements Account
+// SetAccountNumber - Implements Account
 func (acc *BaseAccount) SetAccountNumber(accNumber uint64) error {
 	acc.AccountNumber = accNumber
 	return nil
 }
 
-// Implements sdk.Account.
+// GetSequence - Implements sdk.Account.
 func (acc *BaseAccount) GetSequence() uint64 {
 	return acc.Sequence
 }
 
-// Implements sdk.Account.
+// SetSequence - Implements sdk.Account.
 func (acc *BaseAccount) SetSequence(seq uint64) error {
 	acc.Sequence = seq
 	return nil
@@ -198,8 +199,8 @@ func (bva BaseVestingAccount) String() string {
 	}
 
 	return fmt.Sprintf(`Vesting Account:
-	Address:          %s
-	Pubkey:           %s
+  Address:          %s
+  Pubkey:           %s
   Coins:            %s
   AccountNumber:    %d
   Sequence:         %d
@@ -345,6 +346,7 @@ type ContinuousVestingAccount struct {
 	StartTime int64 // when the coins start to vest
 }
 
+// NewContinuousVestingAccount returns a new ContinuousVestingAccount
 func NewContinuousVestingAccount(
 	baseAcc *BaseAccount, StartTime, EndTime int64,
 ) *ContinuousVestingAccount {
@@ -369,8 +371,8 @@ func (cva ContinuousVestingAccount) String() string {
 	}
 
 	return fmt.Sprintf(`Continuous Vesting Account:
-	Address:          %s
-	Pubkey:           %s
+  Address:          %s
+  Pubkey:           %s
   Coins:            %s
   AccountNumber:    %d
   Sequence:         %d
@@ -454,6 +456,7 @@ type DelayedVestingAccount struct {
 	*BaseVestingAccount
 }
 
+// NewDelayedVestingAccount returns a DelayedVestingAccount
 func NewDelayedVestingAccount(baseAcc *BaseAccount, EndTime int64) *DelayedVestingAccount {
 	baseVestingAcc := &BaseVestingAccount{
 		BaseAccount:     baseAcc,
@@ -501,18 +504,4 @@ func (dva *DelayedVestingAccount) GetStartTime() int64 {
 // GetEndTime returns the time when vesting ends for a delayed vesting account.
 func (dva *DelayedVestingAccount) GetEndTime() int64 {
 	return dva.EndTime
-}
-
-//-----------------------------------------------------------------------------
-// Codec
-
-// Most users shouldn't use this, but this comes in handy for tests.
-func RegisterBaseAccount(cdc *codec.Codec) {
-	cdc.RegisterInterface((*Account)(nil), nil)
-	cdc.RegisterInterface((*VestingAccount)(nil), nil)
-	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
-	cdc.RegisterConcrete(&BaseVestingAccount{}, "cosmos-sdk/BaseVestingAccount", nil)
-	cdc.RegisterConcrete(&ContinuousVestingAccount{}, "cosmos-sdk/ContinuousVestingAccount", nil)
-	cdc.RegisterConcrete(&DelayedVestingAccount{}, "cosmos-sdk/DelayedVestingAccount", nil)
-	codec.RegisterCrypto(cdc)
 }

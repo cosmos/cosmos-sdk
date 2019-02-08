@@ -174,11 +174,9 @@ func (bldr TxBuilder) WithAccountNumber(accnum uint64) TxBuilder {
 	return bldr
 }
 
-// Build builds a single message to be signed from a TxBuilder given a set of
+// BuildSignMsg builds a single message to be signed from a TxBuilder given a set of
 // messages. It returns an error if a fee is supplied but cannot be parsed.
-//
-// TODO: Should consider renaming to BuildSignMsg.
-func (bldr TxBuilder) Build(msgs []sdk.Msg) (StdSignMsg, error) {
+func (bldr TxBuilder) BuildSignMsg(msgs []sdk.Msg) (StdSignMsg, error) {
 	chainID := bldr.chainID
 	if chainID == "" {
 		return StdSignMsg{}, fmt.Errorf("chain ID required but not specified")
@@ -226,7 +224,7 @@ func (bldr TxBuilder) Sign(name, passphrase string, msg StdSignMsg) ([]byte, err
 // with the built message given a name, passphrase, and a set of
 // messages.
 func (bldr TxBuilder) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]byte, error) {
-	msg, err := bldr.Build(msgs)
+	msg, err := bldr.BuildSignMsg(msgs)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +235,7 @@ func (bldr TxBuilder) BuildAndSign(name, passphrase string, msgs []sdk.Msg) ([]b
 // BuildTxForSim creates a StdSignMsg and encodes a transaction with the
 // StdSignMsg with a single empty StdSignature for tx simulation.
 func (bldr TxBuilder) BuildTxForSim(msgs []sdk.Msg) ([]byte, error) {
-	signMsg, err := bldr.Build(msgs)
+	signMsg, err := bldr.BuildSignMsg(msgs)
 	if err != nil {
 		return nil, err
 	}

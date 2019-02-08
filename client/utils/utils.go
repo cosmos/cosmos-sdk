@@ -294,7 +294,7 @@ func buildUnsignedStdTxOffline(txBldr authtxb.TxBuilder, cliCtx context.CLIConte
 		fmt.Fprintf(os.Stderr, "estimated gas = %v\n", txBldr.Gas())
 	}
 
-	stdSignMsg, err := txBldr.Build(msgs)
+	stdSignMsg, err := txBldr.BuildSignMsg(msgs)
 	if err != nil {
 		return
 	}

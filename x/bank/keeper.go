@@ -9,9 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
-//-----------------------------------------------------------------------------
-// Keeper
-
 var _ Keeper = (*BaseKeeper)(nil)
 
 // Keeper defines a module interface that facilitates the transfer of coins
@@ -28,8 +25,7 @@ type Keeper interface {
 	UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) (sdk.Tags, sdk.Error)
 }
 
-// BaseKeeper manages transfers between accounts. It implements the Keeper
-// interface.
+// BaseKeeper manages transfers between accounts. It implements the Keeper interface.
 type BaseKeeper struct {
 	BaseSendKeeper
 
@@ -93,9 +89,6 @@ func (keeper BaseKeeper) UndelegateCoins(ctx sdk.Context, addr sdk.AccAddress, a
 	return undelegateCoins(ctx, keeper.ak, addr, amt)
 }
 
-//-----------------------------------------------------------------------------
-// Send Keeper
-
 // SendKeeper defines a module interface that facilitates the transfer of coins
 // between accounts without the possibility of creating coins.
 type SendKeeper interface {
@@ -109,7 +102,7 @@ type SendKeeper interface {
 
 var _ SendKeeper = (*BaseSendKeeper)(nil)
 
-// SendKeeper only allows transfers between accounts without the possibility of
+// BaseSendKeeper only allows transfers between accounts without the possibility of
 // creating coins. It implements the SendKeeper interface.
 type BaseSendKeeper struct {
 	BaseViewKeeper
@@ -144,13 +137,10 @@ func (keeper BaseSendKeeper) GetSendEnabled(ctx sdk.Context) bool {
 	return enabled
 }
 
-// nolint: errcheck
+// SetSendEnabled sets the send enabled
 func (keeper BaseSendKeeper) SetSendEnabled(ctx sdk.Context, enabled bool) {
 	keeper.paramSpace.Set(ctx, ParamStoreKeySendEnabled, &enabled)
 }
-
-//-----------------------------------------------------------------------------
-// View Keeper
 
 var _ ViewKeeper = (*BaseViewKeeper)(nil)
 
@@ -188,9 +178,6 @@ func (keeper BaseViewKeeper) HasCoins(ctx sdk.Context, addr sdk.AccAddress, amt 
 func (keeper BaseViewKeeper) Codespace() sdk.CodespaceType {
 	return keeper.codespace
 }
-
-//-----------------------------------------------------------------------------
-// Auxiliary
 
 func getCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress) sdk.Coins {
 	acc := am.GetAccount(ctx, addr)

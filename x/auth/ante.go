@@ -22,6 +22,7 @@ var (
 )
 
 func init() {
+	// This decodes a valid hex string into a sepc256k1Pubkey for use in transaction simulation
 	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
 	copy(simSecp256k1Pubkey[:], bz)
 }
@@ -192,12 +193,7 @@ func processSig(
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
-	err = acc.SetSequence(acc.GetSequence() + 1)
-	if err != nil {
-		// Handle w/ #870
-		panic(err)
-	}
-
+	acc.SetSequence(acc.GetSequence() + 1)
 	return acc, res
 }
 
@@ -327,7 +323,7 @@ func DeductFees(blockTime time.Time, acc Account, fee StdFee) (Account, sdk.Resu
 }
 
 // EnsureSufficientMempoolFees verifies that the given transaction has supplied
-// enough fees to cover a proposer's minimum fees. An result object is returned
+// enough fees to cover a proposer's minimum fees. A result object is returned
 // indicating success or failure.
 //
 // Contract: This should only be called during CheckTx as it cannot be part of

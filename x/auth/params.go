@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -41,7 +40,7 @@ type Params struct {
 	SigVerifyCostSecp256k1 uint64 `json:"sig_verify_cost_secp256k1"`
 }
 
-// ParamTable for staking module
+// ParamKeyTable for auth module
 func ParamKeyTable() params.KeyTable {
 	return params.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -80,35 +79,11 @@ func DefaultParams() Params {
 // String implements the stringer interface.
 func (p Params) String() string {
 	var sb strings.Builder
-
 	sb.WriteString("Params: \n")
 	sb.WriteString(fmt.Sprintf("MaxMemoCharacters: %d\n", p.MaxMemoCharacters))
 	sb.WriteString(fmt.Sprintf("TxSigLimit: %d\n", p.TxSigLimit))
 	sb.WriteString(fmt.Sprintf("TxSizeCostPerByte: %d\n", p.TxSizeCostPerByte))
 	sb.WriteString(fmt.Sprintf("SigVerifyCostED25519: %d\n", p.SigVerifyCostED25519))
 	sb.WriteString(fmt.Sprintf("SigVerifyCostSecp256k1: %d\n", p.SigVerifyCostSecp256k1))
-
 	return sb.String()
-}
-
-// MustUnmarshalParams deserializes raw Params bytes into a Params structure. It
-// will panic upon failure.
-func MustUnmarshalParams(cdc *codec.Codec, value []byte) Params {
-	params, err := UnmarshalParams(cdc, value)
-	if err != nil {
-		panic(err)
-	}
-
-	return params
-}
-
-// UnmarshalParams deserializes raw Params bytes into a Params structure. It will
-// return an error upon failure.
-func UnmarshalParams(cdc *codec.Codec, value []byte) (params Params, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(value, &params)
-	if err != nil {
-		return Params{}, err
-	}
-
-	return
 }

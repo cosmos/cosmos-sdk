@@ -8,35 +8,32 @@ import (
 
 // GenesisState - all auth state that must be provided at genesis
 type GenesisState struct {
-	CollectedFees sdk.Coins `json:"collected_fees"` // collected fees
-	Params        Params    `json:"params"`
+	Params Params `json:"params"`
 }
 
-// Create a new genesis state
-func NewGenesisState(collectedFees sdk.Coins, params Params) GenesisState {
+// NewGenesisState - Create a new genesis state
+func NewGenesisState(params Params) GenesisState {
 	return GenesisState{
-		CollectedFees: collectedFees,
-		Params:        params,
+		Params: params,
 	}
 }
 
-// Return a default genesis state
+// DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() GenesisState {
-	return NewGenesisState(sdk.Coins{}, DefaultParams())
+	return NewGenesisState(DefaultParams())
 }
 
-// Init store state from genesis data
+// InitGenesis - Init store state from genesis data
 func InitGenesis(ctx sdk.Context, ak AccountKeeper, fck FeeCollectionKeeper, data GenesisState) {
 	ak.SetParams(ctx, data.Params)
-	fck.setCollectedFees(ctx, data.CollectedFees)
+	fck.setCollectedFees(ctx, sdk.Coins{})
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper
 func ExportGenesis(ctx sdk.Context, ak AccountKeeper, fck FeeCollectionKeeper) GenesisState {
-	collectedFees := fck.GetCollectedFees(ctx)
 	params := ak.GetParams(ctx)
 
-	return NewGenesisState(collectedFees, params)
+	return NewGenesisState(params)
 }
 
 // ValidateGenesis performs basic validation of auth genesis data returning an
@@ -57,6 +54,5 @@ func ValidateGenesis(data GenesisState) error {
 	if data.Params.TxSizeCostPerByte == 0 {
 		return fmt.Errorf("invalid tx size cost per byte: %d", data.Params.TxSizeCostPerByte)
 	}
-
 	return nil
 }

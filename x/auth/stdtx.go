@@ -103,10 +103,10 @@ func (tx StdTx) GetSigners() []sdk.AccAddress {
 	return signers
 }
 
-//nolint
+// GetMemo returns the memo
 func (tx StdTx) GetMemo() string { return tx.Memo }
 
-// Signatures returns the signature of signers who signed the Msg.
+// GetSignatures returns the signature of signers who signed the Msg.
 // GetSignatures returns the signature of signers who signed the Msg.
 // CONTRACT: Length returned is same as length of
 // pubkeys returned from MsgKeySigners, and the order
@@ -126,6 +126,7 @@ type StdFee struct {
 	Gas    uint64    `json:"gas"`
 }
 
+// NewStdFee returns a new instance of StdFee
 func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
 	return StdFee{
 		Amount: amount,
@@ -133,7 +134,7 @@ func NewStdFee(gas uint64, amount sdk.Coins) StdFee {
 	}
 }
 
-// fee bytes for signing later
+// Bytes for signing later
 func (fee StdFee) Bytes() []byte {
 	// normalize. XXX
 	// this is a sign of something ugly
@@ -185,13 +186,13 @@ func StdSignBytes(chainID string, accnum uint64, sequence uint64, fee StdFee, ms
 	return sdk.MustSortJSON(bz)
 }
 
-// Standard Signature
+// StdSignature represents a sig
 type StdSignature struct {
 	crypto.PubKey `json:"pub_key"` // optional
 	Signature     []byte           `json:"signature"`
 }
 
-// logic for standard transaction decoding
+// DefaultTxDecoder logic for standard transaction decoding
 func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, sdk.Error) {
 		var tx = StdTx{}
@@ -204,14 +205,14 @@ func DefaultTxDecoder(cdc *codec.Codec) sdk.TxDecoder {
 		// are registered by MakeTxCodec
 		err := cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
 		if err != nil {
-			return nil, sdk.ErrTxDecode("").TraceSDK(err.Error())
+			return nil, sdk.ErrTxDecode("error decoding transaction").TraceSDK(err.Error())
 		}
 
 		return tx, nil
 	}
 }
 
-// logic for standard transaction encoding
+// DefaultTxEncoder logic for standard transaction encoding
 func DefaultTxEncoder(cdc *codec.Codec) sdk.TxEncoder {
 	return func(tx sdk.Tx) ([]byte, error) {
 		return cdc.MarshalBinaryLengthPrefixed(tx)

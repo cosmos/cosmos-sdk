@@ -22,6 +22,7 @@ BREAKING CHANGES
 * Gaia
   *  [\#3457](https://github.com/cosmos/cosmos-sdk/issues/3457) Changed governance tally validatorGovInfo to use sdk.Int power instead of sdk.Dec
   *  [\#3495](https://github.com/cosmos/cosmos-sdk/issues/3495) Added Validator Minimum Self Bond
+  *  Reintroduce OR semantics for tx fees
 
 * SDK
   * \#2513 Tendermint updates are adjusted by 10^-6 relative to staking tokens, 

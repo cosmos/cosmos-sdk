@@ -299,6 +299,26 @@ func (coins Coins) IsAllLTE(coinsB Coins) bool {
 	return coinsB.IsAllGTE(coins)
 }
 
+// IsAnyGTE returns true iff coins contains at least one denom that is present
+// at a greater or equal amount in coinsB; it returns false otherwise.
+//
+// NOTE: IsAnyGTE operates under the invariant that both coin sets are sorted
+// by denominations and there exists no zero coins.
+func (coins Coins) IsAnyGTE(coinsB Coins) bool {
+	if len(coinsB) == 0 {
+		return false
+	}
+
+	for _, coin := range coins {
+		amt := coinsB.AmountOf(coin.Denom)
+		if coin.Amount.GTE(amt) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // IsZero returns true if there are no coins or all coins are zero.
 func (coins Coins) IsZero() bool {
 	for _, coin := range coins {

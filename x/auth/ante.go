@@ -345,7 +345,7 @@ func EnsureSufficientMempoolFees(ctx sdk.Context, stdFee StdFee) sdk.Result {
 			requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
 
-		if !stdFee.Amount.IsAllGTE(requiredFees) {
+		if !stdFee.Amount.IsAnyGTE(requiredFees) {
 			return sdk.ErrInsufficientFee(
 				fmt.Sprintf(
 					"insufficient fees; got: %q required: %q", stdFee.Amount, requiredFees,

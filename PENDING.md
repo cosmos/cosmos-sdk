@@ -92,6 +92,7 @@ IMPROVEMENTS
   * \#2509 Sanitize all usage of Dec.RoundInt64()
   * [\#556](https://github.com/cosmos/cosmos-sdk/issues/556) Increase `BaseApp`
   test coverage.
+  * Validate bit length when deserializing `Int` types.
 
 * Tendermint
 

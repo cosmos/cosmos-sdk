@@ -26,11 +26,8 @@ func Test_runUpdateCmd(t *testing.T) {
 
 	cmd := updateKeyCommand()
 
-	err := runUpdateCmd(cmd, []string{})
-	assert.EqualError(t, err, "not enough arguments")
-
 	// fails because it requests a password
-	err = runUpdateCmd(cmd, []string{fakeKeyName1})
+	err := runUpdateCmd(cmd, []string{fakeKeyName1})
 	assert.EqualError(t, err, "EOF")
 
 	cleanUp := client.OverrideStdin(bufio.NewReader(strings.NewReader("pass1234\n")))

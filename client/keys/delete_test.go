@@ -25,10 +25,6 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName1 := "runDeleteCmd_Key1"
 	fakeKeyName2 := "runDeleteCmd_Key2"
 
-	err := runDeleteCmd(deleteKeyCommand, []string{})
-	require.Error(t, err)
-	require.Equal(t, "a name must be provided", err.Error())
-
 	// Now add a temporary keybase
 	kbHome, cleanUp, err := tests.GetTempDir("Test_runDeleteCmd")
 	assert.NoError(t, err)

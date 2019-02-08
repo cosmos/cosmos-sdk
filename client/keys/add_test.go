@@ -23,12 +23,8 @@ func Test_runAddCmdBasic(t *testing.T) {
 	cmd := addKeyCommand()
 	assert.NotNil(t, cmd)
 
-	// Empty
-	err := runAddCmd(cmd, []string{})
-	assert.EqualError(t, err, "not enough arguments")
-
 	// Missing input (enter password)
-	err = runAddCmd(cmd, []string{"keyname"})
+	err := runAddCmd(cmd, []string{"keyname"})
 	assert.EqualError(t, err, "EOF")
 
 	// Prepare a keybase

@@ -38,10 +38,7 @@ func Test_showKeysCmd(t *testing.T) {
 func Test_runShowCmd(t *testing.T) {
 	cmd := showKeysCmd()
 
-	err := runShowCmd(cmd, []string{})
-	assert.EqualError(t, err, "not enough arguments")
-
-	err = runShowCmd(cmd, []string{"invalid"})
+	err := runShowCmd(cmd, []string{"invalid"})
 	assert.EqualError(t, err, "Key invalid not found")
 
 	err = runShowCmd(cmd, []string{"invalid1", "invalid2"})

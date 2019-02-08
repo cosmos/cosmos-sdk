@@ -303,7 +303,7 @@ func (f *Fixtures) TxStakingCreateValidator(from, consPubKey string, amount sdk.
 	cmd := fmt.Sprintf("gaiacli tx staking create-validator %v --from=%s --pubkey=%s", f.Flags(), from, consPubKey)
 	cmd += fmt.Sprintf(" --amount=%v --moniker=%v --commission-rate=%v", amount, from, "0.05")
 	cmd += fmt.Sprintf(" --commission-max-rate=%v --commission-max-change-rate=%v", "0.20", "0.10")
-	cmd += fmt.Sprintf(" --min-self-bond=%v", "1")
+	cmd += fmt.Sprintf(" --min-self-delegation=%v", "1")
 	return executeWriteRetStdStreams(f.T, addFlags(cmd, flags), app.DefaultKeyPass)
 }
 

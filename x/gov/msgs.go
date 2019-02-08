@@ -59,7 +59,7 @@ func (msg MsgSubmitProposal) ValidateBasic() sdk.Error {
 	if !validProposalType(msg.ProposalType) {
 		return ErrInvalidProposalType(DefaultCodespace, msg.ProposalType)
 	}
-	if len(msg.Proposer) == 0 {
+	if msg.Proposer.Empty() {
 		return sdk.ErrInvalidAddress(msg.Proposer.String())
 	}
 	if !msg.InitialDeposit.IsValid() {
@@ -172,7 +172,7 @@ func (msg MsgVote) Type() string  { return TypeMsgVote }
 
 // Implements Msg.
 func (msg MsgVote) ValidateBasic() sdk.Error {
-	if len(msg.Voter.Bytes()) == 0 {
+	if msg.Voter.Empty() {
 		return sdk.ErrInvalidAddress(msg.Voter.String())
 	}
 	if msg.ProposalID < 0 {

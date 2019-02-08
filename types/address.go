@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/encoding/amino"
@@ -71,10 +72,19 @@ func AccAddressFromHex(address string) (addr AccAddress, err error) {
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
 func AccAddressFromBech32(address string) (addr AccAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return AccAddress{}, nil
+	}
+
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
+
 	bz, err := GetFromBech32(address, bech32PrefixAccAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(bz) != AddrLen {
+		return nil, errors.New("Incorrect address length")
 	}
 
 	return AccAddress(bz), nil
@@ -141,7 +151,12 @@ func (aa AccAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (aa AccAddress) String() string {
+	if aa.Empty() {
+		return ""
+	}
+
 	bech32PrefixAccAddr := GetConfig().GetBech32AccountAddrPrefix()
+
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixAccAddr, aa.Bytes())
 	if err != nil {
 		panic(err)
@@ -187,10 +202,19 @@ func ValAddressFromHex(address string) (addr ValAddress, err error) {
 
 // ValAddressFromBech32 creates a ValAddress from a Bech32 string.
 func ValAddressFromBech32(address string) (addr ValAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return ValAddress{}, nil
+	}
+
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
+
 	bz, err := GetFromBech32(address, bech32PrefixValAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(bz) != AddrLen {
+		return nil, errors.New("Incorrect address length")
 	}
 
 	return ValAddress(bz), nil
@@ -258,7 +282,12 @@ func (va ValAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (va ValAddress) String() string {
+	if va.Empty() {
+		return ""
+	}
+
 	bech32PrefixValAddr := GetConfig().GetBech32ValidatorAddrPrefix()
+
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixValAddr, va.Bytes())
 	if err != nil {
 		panic(err)
@@ -304,10 +333,19 @@ func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 
 // ConsAddressFromBech32 creates a ConsAddress from a Bech32 string.
 func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return ConsAddress{}, nil
+	}
+
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
+
 	bz, err := GetFromBech32(address, bech32PrefixConsAddr)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(bz) != AddrLen {
+		return nil, errors.New("Incorrect address length")
 	}
 
 	return ConsAddress(bz), nil
@@ -380,7 +418,12 @@ func (ca ConsAddress) Bytes() []byte {
 
 // String implements the Stringer interface.
 func (ca ConsAddress) String() string {
+	if ca.Empty() {
+		return ""
+	}
+
 	bech32PrefixConsAddr := GetConfig().GetBech32ConsensusAddrPrefix()
+
 	bech32Addr, err := bech32.ConvertAndEncode(bech32PrefixConsAddr, ca.Bytes())
 	if err != nil {
 		panic(err)

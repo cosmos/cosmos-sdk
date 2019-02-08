@@ -35,6 +35,7 @@ BREAKING CHANGES
   * [\#3522](https://github.com/cosmos/cosmos-sdk/pull/3522) Get rid of double negatives: Coins.IsNotNegative() -> Coins.IsAnyNegative().
   * \#3561 Don't unnecessarily store denominations in staking
 
+
 * Tendermint
 
 
@@ -59,6 +60,7 @@ FEATURES
   * [\#3477][distribution] new query endpoint "delegator_validators"
   * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Provided a lazy loading implementation of Keybase that locks the underlying
     storage only for the time needed to perform the required operation. Also added Keybase reference to TxBuilder struct.
+  * [types] [\#2580](https://github.com/cosmos/cosmos-sdk/issues/2580) Addresses now Bech32 empty addresses to an empty string
 
 * Tendermint
 

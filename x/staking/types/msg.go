@@ -123,10 +123,10 @@ func (msg MsgCreateValidator) GetSignBytes() []byte {
 // quick validity check
 func (msg MsgCreateValidator) ValidateBasic() sdk.Error {
 	// note that unmarshaling from bech32 ensures either empty or valid
-	if msg.DelegatorAddr == nil {
+	if msg.DelegatorAddr.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorAddr == nil {
+	if msg.ValidatorAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
@@ -186,7 +186,7 @@ func (msg MsgEditValidator) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgEditValidator) ValidateBasic() sdk.Error {
-	if msg.ValidatorAddr == nil {
+	if msg.ValidatorAddr.Empty() {
 		return sdk.NewError(DefaultCodespace, CodeInvalidInput, "nil validator address")
 	}
 
@@ -237,10 +237,10 @@ func (msg MsgDelegate) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgDelegate) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
+	if msg.DelegatorAddr.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorAddr == nil {
+	if msg.ValidatorAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.Value.Amount.LTE(sdk.ZeroInt()) {
@@ -285,13 +285,13 @@ func (msg MsgBeginRedelegate) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgBeginRedelegate) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
+	if msg.DelegatorAddr.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorSrcAddr == nil {
+	if msg.ValidatorSrcAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorDstAddr == nil {
+	if msg.ValidatorDstAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.SharesAmount.LTE(sdk.ZeroDec()) {
@@ -328,10 +328,10 @@ func (msg MsgUndelegate) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgUndelegate) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
+	if msg.DelegatorAddr.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorAddr == nil {
+	if msg.ValidatorAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	if msg.SharesAmount.LTE(sdk.ZeroDec()) {

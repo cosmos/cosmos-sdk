@@ -69,7 +69,9 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 
 // NewAccount creates a new account
 func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc Account) Account {
-	acc.SetAccountNumber(ak.GetNextAccountNumber(ctx))
+	if err := acc.SetAccountNumber(ak.GetNextAccountNumber(ctx)); err != nil {
+		panic(err)
+	}
 	return acc
 }
 
@@ -149,7 +151,11 @@ func (ak AccountKeeper) setSequence(ctx sdk.Context, addr sdk.AccAddress, newSeq
 	if acc == nil {
 		return sdk.ErrUnknownAddress(addr.String())
 	}
-	acc.SetSequence(newSequence)
+
+	if err := acc.SetSequence(newSequence); err != nil {
+		panic(err)
+	}
+
 	ak.SetAccount(ctx, acc)
 	return nil
 }

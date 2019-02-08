@@ -193,7 +193,10 @@ func processSig(
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
 
-	acc.SetSequence(acc.GetSequence() + 1)
+	if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
+		panic(err)
+	}
+
 	return acc, res
 }
 

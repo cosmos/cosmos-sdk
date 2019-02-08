@@ -46,6 +46,8 @@ FEATURES
   * [\#3429](https://github.com/cosmos/cosmos-sdk/issues/3429) Support querying
   for all delegator distribution rewards.
   * \#3449 Proof verification now works with absence proofs
+  * [\#3484](https://github.com/cosmos/cosmos-sdk/issues/3484) Add support
+  vesting accounts to the add-genesis-account command.
 
 * Gaia
   - [\#3397](https://github.com/cosmos/cosmos-sdk/pull/3397) Implement genesis file sanitization to avoid failures at chain init.

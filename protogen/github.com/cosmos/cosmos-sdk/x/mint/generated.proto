@@ -1,0 +1,23 @@
+syntax = "proto3";
+package github.com.cosmos.cosmossdk.x.mint;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+option go_package = "mint";
+
+// Minter represents the minting state
+message Minter {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// mint parameters
+message Params {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string mint_denom = 1;
+	uint64 blocks_per_year = 2;
+}
+

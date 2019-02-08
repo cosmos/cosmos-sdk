@@ -19,6 +19,7 @@ var (
 
 // StdTx is a standard way to wrap a Msg with Fee and Signatures.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
+//proteus:generate
 type StdTx struct {
 	Msgs       []sdk.Msg      `json:"msg"`
 	Fee        StdFee         `json:"fee"`

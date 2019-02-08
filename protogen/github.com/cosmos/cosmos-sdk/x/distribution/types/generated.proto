@@ -1,0 +1,127 @@
+syntax = "proto3";
+package github.com.cosmos.cosmossdk.x.distribution.types;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+option go_package = "types";
+
+// starting info for a delegator reward period
+// tracks the previous validator period, the delegation's amount
+// of staking token, and the creation height (to check later on
+// if any slashes have occurred)
+// NOTE that even though validators are slashed to whole staking tokens, the
+// delegators within the validator may be left with less than a full token,
+// thus sdk.Dec is used
+message DelegatorStartingInfo {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 previous_period = 1;
+	uint64 height = 2;
+}
+
+// used for import / export via genesis json
+message DelegatorStartingInfoRecord {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	github.com.cosmos.cosmossdk.x.distribution.types.DelegatorStartingInfo starting_info = 1 [(gogoproto.nullable) = false];
+}
+
+// the address for where distributions rewards are withdrawn to by default
+// this struct is only used at genesis to feed in default withdraw addresses
+message DelegatorWithdrawInfo {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// global fee pool for distribution
+message FeePool {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// msg struct for changing the withdraw address for a delegator (or validator self-delegation)
+message MsgSetWithdrawAddress {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// msg struct for delegation withdraw from a single validator
+message MsgWithdrawDelegatorReward {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// msg struct for validator withdraw
+message MsgWithdrawValidatorCommission {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// used for import / export via genesis json
+message ValidatorAccumulatedCommissionRecord {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// current rewards and current period for a validator
+// kept as a running counter and incremented each block
+// as long as the validator's tokens remain constant
+message ValidatorCurrentRewards {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 period = 1;
+}
+
+// used for import / export via genesis json
+message ValidatorCurrentRewardsRecord {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	github.com.cosmos.cosmossdk.x.distribution.types.ValidatorCurrentRewards rewards = 1 [(gogoproto.nullable) = false];
+}
+
+// historical rewards for a validator
+// height is implicit within the store key
+// cumulative reward ratio is the sum from the zeroeth period
+// until this period of rewards / tokens, per the spec
+// The reference count indicates the number of objects
+// which might need to reference this historical entry
+// at any point.
+// ReferenceCount =
+//    number of outstanding delegations which ended the associated period (and might need to read that record)
+//  + number of slashes which ended the associated period (and might need to read that record)
+//  + one per validator for the zeroeth period, set on initialization
+message ValidatorHistoricalRewards {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	uint32 reference_count = 1 [(gogoproto.casttype) = "uint16"];
+}
+
+// used for import / export via genesis json
+message ValidatorHistoricalRewardsRecord {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 period = 1;
+	github.com.cosmos.cosmossdk.x.distribution.types.ValidatorHistoricalRewards rewards = 2 [(gogoproto.nullable) = false];
+}
+
+// validator slash event
+// height is implicit within the store key
+// needed to calculate appropriate amounts of staking token
+// for delegations which withdraw after a slash has occurred
+message ValidatorSlashEvent {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 validator_period = 1;
+}
+
+// used for import / export via genesis json
+message ValidatorSlashEventRecord {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 height = 1;
+	github.com.cosmos.cosmossdk.x.distribution.types.ValidatorSlashEvent event = 2 [(gogoproto.nullable) = false];
+}
+

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package github.com.cosmos.cosmossdk.x.bank.client.rest;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+option go_package = "rest";
+

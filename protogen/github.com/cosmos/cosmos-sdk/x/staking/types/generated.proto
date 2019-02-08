@@ -1,0 +1,162 @@
+syntax = "proto3";
+package github.com.cosmos.cosmossdk.x.staking.types;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+option go_package = "types";
+
+// Commission defines a commission parameters for a given validator.
+message Commission {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	google.protobuf.Timestamp update_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+// CommissionMsg defines a commission message to be used for creating a
+// validator.
+message CommissionMsg {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// Delegation represents the bond with tokens held by an account. It is
+// owned by one delegator, and is associated with the voting power of one
+// validator.
+message Delegation {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// Description - description fields for a validator
+message Description {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string moniker = 1;
+	string identity = 2;
+	string website = 3;
+	string details = 4;
+}
+
+// Last validator power, needed for validator set update logic
+message LastValidatorPower {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	int64 power = 1;
+}
+
+// MsgDelegate - struct for bonding transactions
+message MsgBeginRedelegate {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// MsgCreateValidator - struct for bonding transactions
+// TODO: Why does this need to contain a denomination in `Value`
+message MsgCreateValidator {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	github.com.cosmos.cosmossdk.x.staking.types.Description description = 1 [(gogoproto.nullable) = false];
+	github.com.cosmos.cosmossdk.x.staking.types.CommissionMsg commission = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgDelegate - struct for bonding transactions
+// TODO: Why do we need to store the denomination in `Value`
+message MsgDelegate {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// MsgEditValidator - struct for editing a validator
+message MsgEditValidator {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string moniker = 1;
+	string identity = 2;
+	string website = 3;
+	string details = 4;
+}
+
+// MsgUndelegate - struct for unbonding transactions
+message MsgUndelegate {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// Params defines the high level settings for staking
+message Params {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	google.protobuf.Duration unbonding_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+	uint32 max_validators = 2 [(gogoproto.casttype) = "uint16"];
+	uint32 max_entries = 3 [(gogoproto.casttype) = "uint16"];
+	string bond_denom = 4;
+}
+
+// Pool - tracking bonded and not-bonded token supply of the bond denomination
+message Pool {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// Redelegation contains the list of a particular delegator's
+// redelegating bonds from a particular source validator to a
+// particular destination validator
+message Redelegation {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	repeated github.com.cosmos.cosmossdk.x.staking.types.RedelegationEntry entries = 1 [(gogoproto.nullable) = false];
+}
+
+// RedelegationEntry - entry to a Redelegation
+// TODO: Why do we need to store the initial balance as `sdk.Coin` instead of just the amount
+message RedelegationEntry {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	int64 creation_height = 1;
+	google.protobuf.Timestamp completion_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+// UnbondingDelegation stores all of a single delegator's unbonding bonds
+// for a single validator in an time-ordered list
+message UnbondingDelegation {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	repeated github.com.cosmos.cosmossdk.x.staking.types.UnbondingDelegationEntry entries = 1 [(gogoproto.nullable) = false];
+}
+
+// UnbondingDelegationEntry - entry to an UnbondingDelegation
+message UnbondingDelegationEntry {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	int64 creation_height = 1;
+	google.protobuf.Timestamp completion_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+// Validator defines the total amount of bond shares and their exchange rate to
+// coins. Slashing results in a decrease in the exchange rate, allowing correct
+// calculation of future undelegations without iterating over delegators.
+// When coins are delegated to this validator, the validator is credited with a
+// delegation whose number of bond shares is based on the amount of coins delegated
+// divided by the current exchange rate. Voting power can be calculated as total
+// bonded shares multiplied by exchange rate.
+message Validator {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	bool jailed = 1;
+	github.com.cosmos.cosmossdk.x.staking.types.Description description = 2 [(gogoproto.nullable) = false];
+	int64 unbonding_height = 3;
+	google.protobuf.Timestamp unbonding_completion_time = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+	github.com.cosmos.cosmossdk.x.staking.types.Commission commission = 5 [(gogoproto.nullable) = false];
+}
+

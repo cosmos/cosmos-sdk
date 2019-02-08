@@ -11,6 +11,7 @@ var cdc = codec.New()
 var _ sdk.Msg = &MsgUnjail{}
 
 // MsgUnjail - struct for unjailing jailed validator
+//proteus:generate
 type MsgUnjail struct {
 	ValidatorAddr sdk.ValAddress `json:"address"` // address of the validator operator
 }

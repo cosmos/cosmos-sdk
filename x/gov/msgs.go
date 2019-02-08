@@ -20,6 +20,7 @@ var _, _, _ sdk.Msg = MsgSubmitProposal{}, MsgDeposit{}, MsgVote{}
 
 //-----------------------------------------------------------
 // MsgSubmitProposal
+//proteus:generate
 type MsgSubmitProposal struct {
 	Title          string         `json:"title"`           //  Title of the proposal
 	Description    string         `json:"description"`     //  Description of the proposal
@@ -93,6 +94,7 @@ func (msg MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 
 //-----------------------------------------------------------
 // MsgDeposit
+//proteus:generate
 type MsgDeposit struct {
 	ProposalID uint64         `json:"proposal_id"` // ID of the proposal
 	Depositor  sdk.AccAddress `json:"depositor"`   // Address of the depositor
@@ -151,6 +153,7 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 
 //-----------------------------------------------------------
 // MsgVote
+//proteus:generate
 type MsgVote struct {
 	ProposalID uint64         `json:"proposal_id"` // ID of the proposal
 	Voter      sdk.AccAddress `json:"voter"`       //  address of the voter

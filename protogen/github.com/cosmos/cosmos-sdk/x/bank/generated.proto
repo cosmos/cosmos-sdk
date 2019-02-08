@@ -1,0 +1,35 @@
+syntax = "proto3";
+package github.com.cosmos.cosmossdk.x.bank;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+option go_package = "bank";
+
+// Transaction Input
+message Input {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// MsgMultiSend - high level transaction of the coin module
+message MsgMultiSend {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	repeated github.com.cosmos.cosmossdk.x.bank.Input inputs = 1 [(gogoproto.nullable) = false];
+	repeated github.com.cosmos.cosmossdk.x.bank.Output outputs = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgSend - high level transaction of the coin module
+message MsgSend {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// Transaction Output
+message Output {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+}
+

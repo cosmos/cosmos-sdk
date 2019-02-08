@@ -1,0 +1,48 @@
+syntax = "proto3";
+package github.com.cosmos.cosmossdk.types;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+option go_package = "types";
+
+// Coin hold some amount of one currency.
+// 
+// CONTRACT: A coin will never hold a negative amount of any denomination.
+// 
+// TODO: Make field members private for further safety.
+message Coin {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	string denom = 1;
+	github.com.cosmos.cosmossdk.types.Int amount = 2 [(gogoproto.nullable) = false];
+}
+
+// NOTE: never use new(Dec) or else we will panic unmarshalling into the
+// nil embedded big.Int
+message Dec {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// Int wraps integer with 256 bit range bound
+// Checks overflow, underflow and division by zero
+// Exists in range from -(2^255-1) to 2^255-1
+message Int {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// A KVPair where the Key and Value are both strings, rather than []byte
+message StringTag {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	string key = 1;
+	string value = 2;
+}
+

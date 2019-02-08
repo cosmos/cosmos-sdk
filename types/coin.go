@@ -15,6 +15,7 @@ import (
 // CONTRACT: A coin will never hold a negative amount of any denomination.
 //
 // TODO: Make field members private for further safety.
+//proteus:generate
 type Coin struct {
 	Denom string `json:"denom"`
 
@@ -121,6 +122,7 @@ func (coin Coin) IsNegative() bool {
 // Coins
 
 // Coins is a set of Coin, one per currency
+//proteus:generate
 type Coins []Coin
 
 func (coins Coins) String() string {

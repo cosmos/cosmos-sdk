@@ -8,6 +8,7 @@ import (
 const RouterKey = "bank"
 
 // MsgSend - high level transaction of the coin module
+//proteus:generate
 type MsgSend struct {
 	FromAddress sdk.AccAddress `json:"from_address"`
 	ToAddress   sdk.AccAddress `json:"to_address"`
@@ -51,6 +52,7 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 }
 
 // MsgMultiSend - high level transaction of the coin module
+//proteus:generate
 type MsgMultiSend struct {
 	Inputs  []Input  `json:"inputs"`
 	Outputs []Output `json:"outputs"`

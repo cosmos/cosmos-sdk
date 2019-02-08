@@ -83,6 +83,7 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 
 //-----------------------------------------------------------
 // Text Proposals
+//proteus:generate
 type TextProposal struct {
 	ProposalID   uint64       `json:"proposal_id"`   //  ID of the proposal
 	Title        string       `json:"title"`         //  Title of the proposal

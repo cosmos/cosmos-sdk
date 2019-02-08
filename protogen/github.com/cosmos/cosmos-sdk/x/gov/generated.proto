@@ -1,0 +1,123 @@
+syntax = "proto3";
+package github.com.cosmos.cosmossdk.x.gov;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+option go_package = "gov";
+
+// Deposit
+message Deposit {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"];
+}
+
+// Param around Deposits for governance
+message DepositParams {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	google.protobuf.Duration max_deposit_period = 1 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+}
+
+// DepositWithMetadata (just for genesis)
+message DepositWithMetadata {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"];
+	github.com.cosmos.cosmossdk.x.gov.Deposit deposit = 2 [(gogoproto.nullable) = false];
+}
+
+// -----------------------------------------------------------
+// MsgDeposit
+message MsgDeposit {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"];
+}
+
+// -----------------------------------------------------------
+// MsgSubmitProposal
+message MsgSubmitProposal {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	string title = 1;
+	string description = 2;
+	uint32 proposal_type = 3 [(gogoproto.casttype) = "ProposalKind"];
+}
+
+// -----------------------------------------------------------
+// MsgVote
+message MsgVote {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"];
+	uint32 option = 2 [(gogoproto.casttype) = "VoteOption"];
+}
+
+// Param around Tallying votes in governance
+message TallyParams {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// -----------------------------------------------------------
+// Tally Results
+message TallyResult {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+}
+
+// -----------------------------------------------------------
+// Text Proposals
+message TextProposal {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"];
+	string title = 2;
+	string description = 3;
+	uint32 proposal_type = 4 [(gogoproto.casttype) = "ProposalKind"];
+	uint32 status = 5 [(gogoproto.casttype) = "ProposalStatus"];
+	github.com.cosmos.cosmossdk.x.gov.TallyResult final_tally_result = 6 [(gogoproto.nullable) = false];
+	google.protobuf.Timestamp submit_time = 7 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+	google.protobuf.Timestamp deposit_end_time = 8 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+	google.protobuf.Timestamp voting_start_time = 9 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+	google.protobuf.Timestamp voting_end_time = 10 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+// Vote
+message Vote {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"];
+	uint32 option = 2 [(gogoproto.casttype) = "VoteOption"];
+}
+
+// VoteWithMetadata (just for genesis)
+message VoteWithMetadata {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	uint64 proposal_id = 1 [(gogoproto.customname) = "ProposalID"];
+	github.com.cosmos.cosmossdk.x.gov.Vote vote = 2 [(gogoproto.nullable) = false];
+}
+
+// Param around Voting in governance
+message VotingParams {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.goproto_stringer) = false;
+	option (gogoproto.typedecl) = false;
+	google.protobuf.Duration voting_period = 1 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
+}
+

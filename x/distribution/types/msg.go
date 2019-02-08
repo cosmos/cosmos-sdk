@@ -12,6 +12,7 @@ const MsgRoute = "distr"
 var _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorCommission{}
 
 // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
+//proteus:generate
 type MsgSetWithdrawAddress struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	WithdrawAddr  sdk.AccAddress `json:"withdraw_addr"`
@@ -50,6 +51,7 @@ func (msg MsgSetWithdrawAddress) ValidateBasic() sdk.Error {
 }
 
 // msg struct for delegation withdraw from a single validator
+//proteus:generate
 type MsgWithdrawDelegatorReward struct {
 	DelegatorAddr sdk.AccAddress `json:"delegator_addr"`
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
@@ -88,6 +90,7 @@ func (msg MsgWithdrawDelegatorReward) ValidateBasic() sdk.Error {
 }
 
 // msg struct for validator withdraw
+//proteus:generate
 type MsgWithdrawValidatorCommission struct {
 	ValidatorAddr sdk.ValAddress `json:"validator_addr"`
 }

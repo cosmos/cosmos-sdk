@@ -91,20 +91,16 @@ func ErrCommissionGTMaxChangeRate(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "commission cannot be changed more than max change rate")
 }
 
-func ErrSelfBondBelowMinimum(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "validator's self bond must be greater than their minimum self bond")
+func ErrSelfDelegationBelowMinimum(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator's self delegation must be greater than their minimum self bond")
 }
 
-func ErrMinSelfBondInvalid(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond must be a positive integer")
+func ErrMinSelfDelegationInvalid(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self delegation must be a positive integer")
 }
 
-func ErrMinSelfBondDecreased(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond cannot be decrease")
-}
-
-func ErrSelfBondUpdateTime(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self bond cannot be changed more than once in 24h")
+func ErrMinSelfDelegationDecreased(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "minimum self delegation cannot be decrease")
 }
 
 func ErrNilDelegatorAddr(codespace sdk.CodespaceType) sdk.Error {

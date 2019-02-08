@@ -375,7 +375,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	}
 }
 
-func TestEditValidatorDecreaseMinSelfBond(t *testing.T) {
+func TestEditValidatorDecreaseMinSelfDelegation(t *testing.T) {
 	validatorAddr := sdk.ValAddress(keep.Addrs[0])
 
 	initPower := int64(100)
@@ -385,7 +385,7 @@ func TestEditValidatorDecreaseMinSelfBond(t *testing.T) {
 
 	// create validator
 	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
-	msgCreateValidator.MinSelfBond = sdk.NewInt(2)
+	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
@@ -401,13 +401,13 @@ func TestEditValidatorDecreaseMinSelfBond(t *testing.T) {
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
 
-	newMinSelfBond := sdk.OneInt()
-	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfBond)
+	newMinSelfDelegation := sdk.OneInt()
+	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfDelegation)
 	got = handleMsgEditValidator(ctx, msgEditValidator, keeper)
-	require.False(t, got.IsOK(), "should not be able to decrease minSelfBond")
+	require.False(t, got.IsOK(), "should not be able to decrease minSelfDelegation")
 }
 
-func TestEditValidatorIncreaseMinSelfBondBeyondCurrentBond(t *testing.T) {
+func TestEditValidatorIncreaseMinSelfDelegationBeyondCurrentBond(t *testing.T) {
 	validatorAddr := sdk.ValAddress(keep.Addrs[0])
 
 	initPower := int64(100)
@@ -417,7 +417,7 @@ func TestEditValidatorIncreaseMinSelfBondBeyondCurrentBond(t *testing.T) {
 
 	// create validator
 	msgCreateValidator := NewTestMsgCreateValidator(validatorAddr, keep.PKs[0], initBond)
-	msgCreateValidator.MinSelfBond = sdk.NewInt(2)
+	msgCreateValidator.MinSelfDelegation = sdk.NewInt(2)
 	got := handleMsgCreateValidator(ctx, msgCreateValidator, keeper)
 	require.True(t, got.IsOK(), "expected create-validator to be ok, got %v", got)
 
@@ -433,10 +433,10 @@ func TestEditValidatorIncreaseMinSelfBondBeyondCurrentBond(t *testing.T) {
 		"initBond: %v\ngotBond: %v\nbond: %v\n",
 		initBond, gotBond, bond)
 
-	newMinSelfBond := initBond.Add(sdk.OneInt())
-	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfBond)
+	newMinSelfDelegation := initBond.Add(sdk.OneInt())
+	msgEditValidator := NewMsgEditValidator(validatorAddr, Description{}, nil, &newMinSelfDelegation)
 	got = handleMsgEditValidator(ctx, msgEditValidator, keeper)
-	require.False(t, got.IsOK(), "should not be able to increase minSelfBond above current self bond")
+	require.False(t, got.IsOK(), "should not be able to increase minSelfDelegation above current self bond")
 }
 
 func TestIncrementsMsgUnbond(t *testing.T) {

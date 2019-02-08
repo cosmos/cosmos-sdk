@@ -250,9 +250,9 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// test undelegating self delegation from a validator pushing it below MinSelfBond
+// test undelegating self delegation from a validator pushing it below MinSelfDelegation
 // shift it from the bonded to unbonding state and jailed
-func TestUndelegateSelfDelegationBelowMinSelfBond(t *testing.T) {
+func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 
 	ctx, _, keeper := CreateTestInput(t, false, 0)
 	pool := keeper.GetPool(ctx)
@@ -263,7 +263,7 @@ func TestUndelegateSelfDelegationBelowMinSelfBond(t *testing.T) {
 	validator := types.NewValidator(addrVals[0], PKs[0], types.Description{})
 
 	valTokens := types.TokensFromTendermintPower(10)
-	validator.MinSelfBond = valTokens
+	validator.MinSelfDelegation = valTokens
 	validator, pool, issuedShares := validator.AddTokensFromDel(pool, valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 

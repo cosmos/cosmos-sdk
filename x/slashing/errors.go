@@ -40,5 +40,5 @@ func ErrMissingSelfDelegation(codespace sdk.CodespaceType) sdk.Error {
 }
 
 func ErrSelfDelegationTooLow(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeValidatorNotJailed, "validator's self delegation less than MinSelfBond, cannot be unjailed")
+	return sdk.NewError(codespace, CodeValidatorNotJailed, "validator's self delegation less than MinSelfDelegation, cannot be unjailed")
 }

@@ -42,11 +42,11 @@ func NewTestMsgCreateValidatorWithCommission(address sdk.ValAddress, pubKey cryp
 	)
 }
 
-func NewTestMsgCreateValidatorWithMinSelfBond(address sdk.ValAddress, pubKey crypto.PubKey,
-	amt sdk.Int, minSelfBond sdk.Int) MsgCreateValidator {
+func NewTestMsgCreateValidatorWithMinSelfDelegation(address sdk.ValAddress, pubKey crypto.PubKey,
+	amt sdk.Int, minSelfDelegation sdk.Int) MsgCreateValidator {
 
 	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, minSelfBond,
+		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, minSelfDelegation,
 	)
 }
 

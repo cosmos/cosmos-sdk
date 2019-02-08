@@ -36,7 +36,7 @@ var (
 	defaultCommissionRate          = "0.1"
 	defaultCommissionMaxRate       = "0.2"
 	defaultCommissionMaxChangeRate = "0.01"
-	defaultMinSelfBond             = "1"
+	defaultMinSelfDelegation       = "1"
 )
 
 // GenTxCmd builds the gaiad gentx command.
@@ -55,7 +55,7 @@ following delegation and commission default parameters:
 	commission max rate:         %s
 	commission max change rate:  %s
 	minimum self bond:           %s
-`, defaultAmount, defaultCommissionRate, defaultCommissionMaxRate, defaultCommissionMaxChangeRate, defaultMinSelfBond),
+`, defaultAmount, defaultCommissionRate, defaultCommissionMaxRate, defaultCommissionMaxChangeRate, defaultMinSelfDelegation),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			config := ctx.Config
@@ -128,8 +128,6 @@ following delegation and commission default parameters:
 				return err
 			}
 
-			fmt.Println(msg)
-
 			// write the unsigned transaction to the buffer
 			w := bytes.NewBuffer([]byte{})
 			cliCtx = cliCtx.WithOutput(w)
@@ -177,7 +175,7 @@ following delegation and commission default parameters:
 	cmd.Flags().String(cli.FlagIP, ip, "The node's public IP")
 	cmd.Flags().String(cli.FlagNodeID, "", "The node's NodeID")
 	cmd.Flags().AddFlagSet(cli.FsCommissionCreate)
-	cmd.Flags().AddFlagSet(cli.FsMinSelfBond)
+	cmd.Flags().AddFlagSet(cli.FsMinSelfDelegation)
 	cmd.Flags().AddFlagSet(cli.FsAmount)
 	cmd.Flags().AddFlagSet(cli.FsPk)
 	cmd.MarkFlagRequired(client.FlagName)
@@ -237,8 +235,8 @@ func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID st
 	if viper.GetString(cli.FlagCommissionMaxChangeRate) == "" {
 		viper.Set(cli.FlagCommissionMaxChangeRate, defaultCommissionMaxChangeRate)
 	}
-	if viper.GetString(cli.FlagMinSelfBond) == "" {
-		viper.Set(cli.FlagMinSelfBond, defaultMinSelfBond)
+	if viper.GetString(cli.FlagMinSelfDelegation) == "" {
+		viper.Set(cli.FlagMinSelfDelegation, defaultMinSelfDelegation)
 	}
 }
 

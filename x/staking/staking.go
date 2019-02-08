@@ -165,9 +165,9 @@ var (
 	ErrNeitherShareMsgsGiven = types.ErrNeitherShareMsgsGiven
 	ErrMissingSignature      = types.ErrMissingSignature
 
-	ErrMinSelfBondInvalid   = types.ErrMinSelfBondInvalid
-	ErrMinSelfBondDecreased = types.ErrMinSelfBondDecreased
-	ErrSelfBondBelowMinimum = types.ErrSelfBondBelowMinimum
+	ErrMinSelfDelegationInvalid   = types.ErrMinSelfDelegationInvalid
+	ErrMinSelfDelegationDecreased = types.ErrMinSelfDelegationDecreased
+	ErrSelfDelegationBelowMinimum = types.ErrSelfDelegationBelowMinimum
 )
 
 var (

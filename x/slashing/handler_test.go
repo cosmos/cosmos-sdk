@@ -35,14 +35,14 @@ func TestCannotUnjailUnlessJailed(t *testing.T) {
 	require.EqualValues(t, DefaultCodespace, got.Codespace)
 }
 
-func TestCannotUnjailUnlessMeetMinSelfBond(t *testing.T) {
+func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
 	addr, val, amt := addrs[0], pks[0], types.TokensFromTendermintPower(amtInt)
 	msg := NewTestMsgCreateValidator(addr, val, amt)
-	msg.MinSelfBond = amt
+	msg.MinSelfDelegation = amt
 	got := staking.NewHandler(sk)(ctx, msg)
 	require.True(t, got.IsOK())
 	staking.EndBlocker(ctx, sk)

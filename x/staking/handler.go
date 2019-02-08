@@ -126,7 +126,7 @@ func handleMsgCreateValidator(ctx sdk.Context, msg types.MsgCreateValidator, k k
 		return err.Result()
 	}
 
-	validator.MinSelfBond = msg.MinSelfBond
+	validator.MinSelfDelegation = msg.MinSelfDelegation
 
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByConsAddr(ctx, validator)
@@ -180,14 +180,14 @@ func handleMsgEditValidator(ctx sdk.Context, msg types.MsgEditValidator, k keepe
 		validator.Commission = commission
 	}
 
-	if msg.MinSelfBond != nil {
-		if !(*msg.MinSelfBond).GT(validator.MinSelfBond) {
-			return ErrMinSelfBondDecreased(k.Codespace()).Result()
+	if msg.MinSelfDelegation != nil {
+		if !(*msg.MinSelfDelegation).GT(validator.MinSelfDelegation) {
+			return ErrMinSelfDelegationDecreased(k.Codespace()).Result()
 		}
-		if (*msg.MinSelfBond).GT(validator.Tokens) {
-			return ErrSelfBondBelowMinimum(k.Codespace()).Result()
+		if (*msg.MinSelfDelegation).GT(validator.Tokens) {
+			return ErrSelfDelegationBelowMinimum(k.Codespace()).Result()
 		}
-		validator.MinSelfBond = (*msg.MinSelfBond)
+		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
 	}
 
 	k.SetValidator(ctx, validator)

@@ -23,7 +23,7 @@ func TestMsgCreateValidator(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
 		commissionMsg                             CommissionMsg
-		minSelfBond                               sdk.Int
+		minSelfDelegation                         sdk.Int
 		validatorAddr                             sdk.ValAddress
 		pubkey                                    crypto.PubKey
 		bond                                      sdk.Coin
@@ -42,7 +42,7 @@ func TestMsgCreateValidator(t *testing.T) {
 
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
-		msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.commissionMsg, tc.minSelfBond)
+		msg := NewMsgCreateValidator(tc.validatorAddr, tc.pubkey, tc.bond, description, tc.commissionMsg, tc.minSelfDelegation)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -67,9 +67,9 @@ func TestMsgEditValidator(t *testing.T) {
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
 		newRate := sdk.ZeroDec()
-		newMinSelfBond := sdk.OneInt()
+		newMinSelfDelegation := sdk.OneInt()
 
-		msg := NewMsgEditValidator(tc.validatorAddr, description, &newRate, &newMinSelfBond)
+		msg := NewMsgEditValidator(tc.validatorAddr, description, &newRate, &newMinSelfDelegation)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test: %v", tc.name)
 		} else {
@@ -86,7 +86,7 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, details string
 		commissionMsg                             CommissionMsg
-		minSelfBond                               sdk.Int
+		minSelfDelegation                         sdk.Int
 		delegatorAddr                             sdk.AccAddress
 		validatorAddr                             sdk.ValAddress
 		validatorPubKey                           crypto.PubKey
@@ -108,7 +108,7 @@ func TestMsgCreateValidatorOnBehalfOf(t *testing.T) {
 	for _, tc := range tests {
 		description := NewDescription(tc.moniker, tc.identity, tc.website, tc.details)
 		msg := NewMsgCreateValidatorOnBehalfOf(
-			tc.delegatorAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description, tc.commissionMsg, tc.minSelfBond,
+			tc.delegatorAddr, tc.validatorAddr, tc.validatorPubKey, tc.bond, description, tc.commissionMsg, tc.minSelfDelegation,
 		)
 
 		if tc.expectPass {

@@ -520,7 +520,7 @@ func (k Keeper) unbond(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValA
 
 	// if the delegation is the operator of the validator and undelegating will decrease the validator's self bond below their minimum
 	// trigger a jail validator
-	if isValidatorOperator && !validator.Jailed && validator.DelegatorShareExRate().Mul(delegation.Shares).TruncateInt().LT(validator.MinSelfBond) {
+	if isValidatorOperator && !validator.Jailed && validator.DelegatorShareExRate().Mul(delegation.Shares).TruncateInt().LT(validator.MinSelfDelegation) {
 		k.jailValidator(ctx, validator)
 		validator = k.mustGetValidator(ctx, validator.OperatorAddr)
 	}

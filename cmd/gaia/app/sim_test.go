@@ -417,10 +417,7 @@ func TestGaiaImportExport(t *testing.T) {
 	fmt.Printf("Exporting genesis...\n")
 
 	appState, _, err := app.ExportAppStateAndValidators(false, []string{})
-	if err != nil {
-		panic(err)
-	}
-
+	require.NoError(t, err)
 	fmt.Printf("Importing genesis...\n")
 
 	newDir, _ := ioutil.TempDir("", "goleveldb-gaia-sim-2")

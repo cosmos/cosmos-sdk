@@ -22,7 +22,7 @@ import (
 var (
 	flagOnlyFromValidator = "only-from-validator"
 	flagIsValidator       = "is-validator"
-	flagComission         = "comission"
+	flagComission         = "commission"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -48,7 +48,7 @@ func GetCmdWithdrawRewards(cdc *codec.Codec) *cobra.Command {
 		Long: strings.TrimSpace(`witdraw rewards from a given delegation address, and optionally withdraw validator commission if the delegation address given is a validator operator:
 
 $ gaiacli tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey
-$ gaiacli tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey --comission
+$ gaiacli tx distr withdraw-rewards cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj --from mykey --commission
 `),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -108,7 +108,7 @@ func GetCmdSetWithdrawAddr(cdc *codec.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
-		Long: strings.TrimSpace(`Set the withdraw address for rewards assoicated with a delegator address:
+		Long: strings.TrimSpace(`Set the withdraw address for rewards associated with a delegator address:
 
 $ gaiacli tx set-withdraw-addr cosmos1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey
 `),

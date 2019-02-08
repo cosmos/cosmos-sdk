@@ -28,8 +28,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 	assert.EqualError(t, err, "EOF")
 
 	// Prepare a keybase
-	kbHome, kbCleanUp, err := tests.GetTempDir("Test_runDeleteCmd")
-	assert.NoError(t, err)
+	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	assert.NotNil(t, kbHome)
 	defer kbCleanUp()
 	viper.Set(cli.HomeFlag, kbHome)

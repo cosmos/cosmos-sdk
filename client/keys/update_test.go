@@ -39,8 +39,7 @@ func Test_runUpdateCmd(t *testing.T) {
 
 	// Prepare a key base
 	// Now add a temporary keybase
-	kbHome, cleanUp1, err := tests.GetTempDir("Test_runShowCmd")
-	assert.NoError(t, err)
+	kbHome, cleanUp1 := tests.NewTestCaseDir(t)
 	defer cleanUp1()
 	viper.Set(cli.HomeFlag, kbHome)
 

@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	bip39 "github.com/bartekn/go-bip39"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 const (

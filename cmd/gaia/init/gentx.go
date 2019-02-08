@@ -1,5 +1,7 @@
 package init
 
+// DONTCOVER
+
 import (
 	"bytes"
 	"fmt"

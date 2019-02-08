@@ -301,8 +301,8 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/cosmos/cosmos-sdk/cmd/gaia/app -bench ^BenchmarkFullGaiaSimulation$ -SimulationCommit=true -cpuprofile cpu.out
 func BenchmarkFullGaiaSimulation(b *testing.B) {
 	// Setup Gaia application
-	var logger log.Logger
-	logger = log.NewNopLogger()
+	logger := log.NewNopLogger()
+
 	var db dbm.DB
 	dir, _ := ioutil.TempDir("", "goleveldb-gaia-sim")
 	db, _ = dbm.NewGoLevelDB("Simulation", dir)

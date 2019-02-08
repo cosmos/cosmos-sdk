@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"strings"
@@ -200,4 +201,22 @@ var cdc = amino.NewCodec()
 
 func init() {
 	ctypes.RegisterAmino(cdc)
+}
+
+// GetTempDir creates a temporary directory and returns a clean up function
+// to be deferred
+func GetTempDir(prefix string) (string, func(), error) {
+	rootDir, err := ioutil.TempDir("", prefix)
+	if err != nil {
+		return "", nil, err
+	}
+
+	cleanUp := func() {
+		err := os.RemoveAll(rootDir)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return rootDir, cleanUp, nil
 }

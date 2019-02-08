@@ -90,7 +90,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func runAddCmd(cmd *cobra.Command, args []string) error {
+func runAddCmd(_ *cobra.Command, args []string) error {
 	var kb keys.Keybase
 	var err error
 	var encryptPassword string
@@ -265,7 +265,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 	output := viper.Get(cli.OutputFlag)
 
 	switch output {
-	case "text":
+	case OutputFormatText:
 		fmt.Fprintln(os.Stderr)
 		printKeyInfo(info, Bech32KeyOutput)
 
@@ -276,7 +276,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 			fmt.Fprintln(os.Stderr, "")
 			fmt.Fprintln(os.Stderr, mnemonic)
 		}
-	case "json":
+	case OutputFormatJSON:
 		out, err := Bech32KeyOutput(info)
 		if err != nil {
 			return err

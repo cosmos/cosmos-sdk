@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	keys "github.com/cosmos/cosmos-sdk/crypto/keys"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 
 	"github.com/spf13/cobra"
 
@@ -73,14 +73,14 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&m)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
 	kb, err = NewKeyBaseFromHomeFlag()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
@@ -89,15 +89,15 @@ func UpdateKeyRequestHandler(w http.ResponseWriter, r *http.Request) {
 	err = kb.Update(name, m.OldPassword, getNewpass)
 	if keyerror.IsErrKeyNotFound(err) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	} else if keyerror.IsErrWrongPassword(err) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 

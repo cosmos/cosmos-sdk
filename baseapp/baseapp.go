@@ -770,7 +770,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			)
 
 			if ctx.BlockGasMeter().GasConsumed() < startingGas {
-				panic(sdk.ErrorGasOverflow{"tx gas summation"})
+				panic(sdk.ErrorGasOverflow{Descriptor: "tx gas summation"})
 			}
 		}
 	}()

@@ -145,10 +145,13 @@ test_cli:
 	@go test -p 4 `go list github.com/cosmos/cosmos-sdk/cmd/gaia/cli_test` -tags=cli_test
 
 test_ledger:
-	@go test `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_real_ledger'
+    # First test with mock
+	@go test `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger test_ledger_mock'
+    # Now test with a real device
+	@go test -v `go list github.com/cosmos/cosmos-sdk/crypto` -tags='cgo ledger'
 
 test_unit:
-	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION)
+	@VERSION=$(VERSION) go test $(PACKAGES_NOSIMULATION) -tags='test_ledger_mock'
 
 test_race:
 	@VERSION=$(VERSION) go test -race $(PACKAGES_NOSIMULATION)

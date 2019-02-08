@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"errors"
@@ -147,13 +148,13 @@ func (kb dbKeybase) CreateLedger(name string, algo SigningAlgo, account uint32, 
 	}
 	pub := priv.PubKey()
 
-	return kb.writeLedgerKey(pub, *hdPath, name), nil
+	return kb.writeLedgerKey(name, pub, *hdPath), nil
 }
 
 // CreateOffline creates a new reference to an offline keypair
 // It returns the created key info
 func (kb dbKeybase) CreateOffline(name string, pub tmcrypto.PubKey) (Info, error) {
-	return kb.writeOfflineKey(pub, name), nil
+	return kb.writeOfflineKey(name, pub), nil
 }
 
 func (kb *dbKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath string) (info Info, err error) {
@@ -167,10 +168,10 @@ func (kb *dbKeybase) persistDerivedKey(seed []byte, passwd, name, fullHdPath str
 	// if we have a password, use it to encrypt the private key and store it
 	// else store the public key only
 	if passwd != "" {
-		info = kb.writeLocalKey(secp256k1.PrivKeySecp256k1(derivedPriv), name, passwd)
+		info = kb.writeLocalKey(name, secp256k1.PrivKeySecp256k1(derivedPriv), passwd)
 	} else {
 		pubk := secp256k1.PrivKeySecp256k1(derivedPriv).PubKey()
-		info = kb.writeOfflineKey(pubk, name)
+		info = kb.writeOfflineKey(name, pubk)
 	}
 	return
 }
@@ -342,7 +343,7 @@ func (kb dbKeybase) ImportPubKey(name string, armor string) (err error) {
 	if err != nil {
 		return
 	}
-	kb.writeOfflineKey(pubKey, name)
+	kb.writeOfflineKey(name, pubKey)
 	return
 }
 
@@ -390,10 +391,10 @@ func (kb dbKeybase) Update(name, oldpass string, getNewpass func() (string, erro
 		if err != nil {
 			return err
 		}
-		kb.writeLocalKey(key, name, newpass)
+		kb.writeLocalKey(name, key, newpass)
 		return nil
 	default:
-		return fmt.Errorf("locally stored key required")
+		return fmt.Errorf("locally stored key required. Received: %v", reflect.TypeOf(info).String())
 	}
 }
 
@@ -402,29 +403,29 @@ func (kb dbKeybase) CloseDB() {
 	kb.db.Close()
 }
 
-func (kb dbKeybase) writeLocalKey(priv tmcrypto.PrivKey, name, passphrase string) Info {
+func (kb dbKeybase) writeLocalKey(name string, priv tmcrypto.PrivKey, passphrase string) Info {
 	// encrypt private key using passphrase
 	privArmor := mintkey.EncryptArmorPrivKey(priv, passphrase)
 	// make Info
 	pub := priv.PubKey()
 	info := newLocalInfo(name, pub, privArmor)
-	kb.writeInfo(info, name)
+	kb.writeInfo(name, info)
 	return info
 }
 
-func (kb dbKeybase) writeLedgerKey(pub tmcrypto.PubKey, path hd.BIP44Params, name string) Info {
+func (kb dbKeybase) writeLedgerKey(name string, pub tmcrypto.PubKey, path hd.BIP44Params) Info {
 	info := newLedgerInfo(name, pub, path)
-	kb.writeInfo(info, name)
+	kb.writeInfo(name, info)
 	return info
 }
 
-func (kb dbKeybase) writeOfflineKey(pub tmcrypto.PubKey, name string) Info {
+func (kb dbKeybase) writeOfflineKey(name string, pub tmcrypto.PubKey) Info {
 	info := newOfflineInfo(name, pub)
-	kb.writeInfo(info, name)
+	kb.writeInfo(name, info)
 	return info
 }
 
-func (kb dbKeybase) writeInfo(info Info, name string) {
+func (kb dbKeybase) writeInfo(name string, info Info) {
 	// write the info by key
 	key := infoKey(name)
 	kb.db.SetSync(key, writeInfo(info))

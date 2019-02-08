@@ -12,6 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
+const (
+	noOperation = "no-operation"
+)
+
 // SimulateMsgCreateValidator
 func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulation.Operation {
 	handler := staking.NewHandler(k)
@@ -39,7 +43,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 		}
 
 		if amount.Equal(sdk.ZeroInt()) {
-			return "no-operation", nil, nil
+			return noOperation, nil, nil
 		}
 
 		selfDelegation := sdk.NewCoin(denom, amount)
@@ -146,13 +150,13 @@ func SimulateMsgUndelegate(m auth.AccountKeeper, k staking.Keeper) simulation.Op
 		delegatorAddress := delegatorAcc.Address
 		delegations := k.GetAllDelegatorDelegations(ctx, delegatorAddress)
 		if len(delegations) == 0 {
-			return "no-operation", nil, nil
+			return noOperation, nil, nil
 		}
 		delegation := delegations[r.Intn(len(delegations))]
 
 		numShares := simulation.RandomDecAmount(r, delegation.Shares)
 		if numShares.Equal(sdk.ZeroDec()) {
-			return "no-operation", nil, nil
+			return noOperation, nil, nil
 		}
 		msg := staking.MsgUndelegate{
 			DelegatorAddr: delegatorAddress,
@@ -194,7 +198,7 @@ func SimulateMsgBeginRedelegate(m auth.AccountKeeper, k staking.Keeper) simulati
 			amount = simulation.RandomAmount(r, amount)
 		}
 		if amount.Equal(sdk.ZeroInt()) {
-			return "no-operation", nil, nil
+			return noOperation, nil, nil
 		}
 		msg := staking.MsgBeginRedelegate{
 			DelegatorAddr:    delegatorAddress,

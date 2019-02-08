@@ -631,3 +631,23 @@ func TestSafeSub(t *testing.T) {
 		)
 	}
 }
+
+func TestSerializationOverflow(t *testing.T) {
+	bx, _ := new(big.Int).SetString("91888242871839275229946405745257275988696311157297823662689937894645226298583", 10)
+	x := Int{bx}
+	y := new(Int)
+
+	// require amino deserialization to fail due to overflow
+	xStr, err := x.MarshalAmino()
+	require.NoError(t, err)
+
+	err = y.UnmarshalAmino(xStr)
+	require.Error(t, err)
+
+	// require JSON deserialization to fail due to overflow
+	bz, err := x.MarshalJSON()
+	require.NoError(t, err)
+
+	err = y.UnmarshalJSON(bz)
+	require.Error(t, err)
+}

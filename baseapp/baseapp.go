@@ -3,6 +3,7 @@ package baseapp
 import (
 	"fmt"
 	"io"
+	"reflect"
 	"runtime/debug"
 	"strings"
 
@@ -41,7 +42,7 @@ const (
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct {
 	// initialized on creation
-	Logger      log.Logger
+	logger      log.Logger
 	name        string               // application name from abci.Info
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
@@ -50,15 +51,15 @@ type BaseApp struct {
 	txDecoder   sdk.TxDecoder        // unmarshal []byte into sdk.Tx
 
 	// set upon LoadVersion or LoadLatestVersion.
-	mainKey *sdk.KVStoreKey // Main KVStore in cms
+	baseKey *sdk.KVStoreKey // Main KVStore in cms
 
-	anteHandler      sdk.AnteHandler  // ante handler for fee and auth
-	initChainer      sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker     sdk.BeginBlocker // logic to run before any txs
-	endBlocker       sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
-	addrPeerFilter   sdk.PeerFilter   // filter peers by address and port
-	pubkeyPeerFilter sdk.PeerFilter   // filter peers by public key
-	fauxMerkleMode   bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
+	initChainer    sdk.InitChainer  // initialize state with validators and state blob
+	beginBlocker   sdk.BeginBlocker // logic to run before any txs
+	endBlocker     sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
+	addrPeerFilter sdk.PeerFilter   // filter peers by address and port
+	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
+	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// --------------------
 	// Volatile state
@@ -93,7 +94,7 @@ func NewBaseApp(
 ) *BaseApp {
 
 	app := &BaseApp{
-		Logger:         logger,
+		logger:         logger,
 		name:           name,
 		db:             db,
 		cms:            store.NewCommitMultiStore(db),
@@ -114,6 +115,11 @@ func (app *BaseApp) Name() string {
 	return app.name
 }
 
+// Logger returns the logger of the BaseApp.
+func (app *BaseApp) Logger() log.Logger {
+	return app.logger
+}
+
 // SetCommitMultiStoreTracer sets the store tracer on the BaseApp's underlying
 // CommitMultiStore.
 func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
@@ -122,23 +128,22 @@ func (app *BaseApp) SetCommitMultiStoreTracer(w io.Writer) {
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
-func (app *BaseApp) MountStores(keys ...*sdk.KVStoreKey) {
+func (app *BaseApp) MountStores(keys ...sdk.StoreKey) {
 	for _, key := range keys {
-		if !app.fauxMerkleMode {
-			app.MountStore(key, sdk.StoreTypeIAVL)
-		} else {
-			// StoreTypeDB doesn't do anything upon commit, and it doesn't
-			// retain history, but it's useful for faster simulation.
-			app.MountStore(key, sdk.StoreTypeDB)
+		switch key.(type) {
+		case *sdk.KVStoreKey:
+			if !app.fauxMerkleMode {
+				app.MountStore(key, sdk.StoreTypeIAVL)
+			} else {
+				// StoreTypeDB doesn't do anything upon commit, and it doesn't
+				// retain history, but it's useful for faster simulation.
+				app.MountStore(key, sdk.StoreTypeDB)
+			}
+		case *sdk.TransientStoreKey:
+			app.MountStore(key, sdk.StoreTypeTransient)
+		default:
+			panic("Unrecognized store key type " + reflect.TypeOf(key).Name())
 		}
-	}
-}
-
-// MountStoresTransient mounts transient stores to the provided keys in the
-// BaseApp multistore.
-func (app *BaseApp) MountStoresTransient(keys ...*sdk.TransientStoreKey) {
-	for _, key := range keys {
-		app.MountStore(key, sdk.StoreTypeTransient)
 	}
 }
 
@@ -156,22 +161,22 @@ func (app *BaseApp) MountStore(key sdk.StoreKey, typ sdk.StoreType) {
 
 // LoadLatestVersion loads the latest application version. It will panic if
 // called more than once on a running BaseApp.
-func (app *BaseApp) LoadLatestVersion(mainKey *sdk.KVStoreKey) error {
+func (app *BaseApp) LoadLatestVersion(baseKey *sdk.KVStoreKey) error {
 	err := app.cms.LoadLatestVersion()
 	if err != nil {
 		return err
 	}
-	return app.initFromMainStore(mainKey)
+	return app.initFromMainStore(baseKey)
 }
 
 // LoadVersion loads the BaseApp application version. It will panic if called
 // more than once on a running baseapp.
-func (app *BaseApp) LoadVersion(version int64, mainKey *sdk.KVStoreKey) error {
+func (app *BaseApp) LoadVersion(version int64, baseKey *sdk.KVStoreKey) error {
 	err := app.cms.LoadVersion(version)
 	if err != nil {
 		return err
 	}
-	return app.initFromMainStore(mainKey)
+	return app.initFromMainStore(baseKey)
 }
 
 // LastCommitID returns the last CommitID of the multistore.
@@ -185,17 +190,17 @@ func (app *BaseApp) LastBlockHeight() int64 {
 }
 
 // initializes the remaining logic from app.cms
-func (app *BaseApp) initFromMainStore(mainKey *sdk.KVStoreKey) error {
-	mainStore := app.cms.GetKVStore(mainKey)
+func (app *BaseApp) initFromMainStore(baseKey *sdk.KVStoreKey) error {
+	mainStore := app.cms.GetKVStore(baseKey)
 	if mainStore == nil {
 		return errors.New("baseapp expects MultiStore with 'main' KVStore")
 	}
 
-	// memoize mainKey
-	if app.mainKey != nil {
-		panic("app.mainKey expected to be nil; duplicate init?")
+	// memoize baseKey
+	if app.baseKey != nil {
+		panic("app.baseKey expected to be nil; duplicate init?")
 	}
-	app.mainKey = mainKey
+	app.baseKey = baseKey
 
 	// Load the consensus params from the main store. If the consensus params are
 	// nil, it will be saved later during InitChain.
@@ -224,17 +229,6 @@ func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }
 
-// NewContext returns a new Context with the correct store, the given header,
-// and nil txBytes.
-func (app *BaseApp) NewContext(isCheckTx bool, header abci.Header) sdk.Context {
-	if isCheckTx {
-		return sdk.NewContext(app.checkState.ms, header, true, app.Logger).
-			WithMinGasPrices(app.minGasPrices)
-	}
-
-	return sdk.NewContext(app.deliverState.ms, header, false, app.Logger)
-}
-
 // Router returns the router of the BaseApp.
 func (app *BaseApp) Router() Router {
 	if app.sealed {
@@ -254,19 +248,26 @@ func (app *BaseApp) Seal() { app.sealed = true }
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
 
+// setCheckState sets checkState with the cached multistore and
+// the context wrapping it.
+// It is called by InitChain() and Commit()
 func (app *BaseApp) setCheckState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.checkState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.Logger).WithMinGasPrices(app.minGasPrices),
+		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
 	}
 }
 
+// setCheckState sets checkState with the cached multistore and
+// the context wrapping it.
+// It is called by InitChain() and BeginBlock(),
+// and deliverState is set nil on Commit().
 func (app *BaseApp) setDeliverState(header abci.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.deliverState = &state{
 		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.Logger),
+		ctx: sdk.NewContext(ms, header, false, app.logger),
 	}
 }
 
@@ -281,7 +282,7 @@ func (app *BaseApp) storeConsensusParams(consensusParams *abci.ConsensusParams) 
 	if err != nil {
 		panic(err)
 	}
-	mainStore := app.cms.GetKVStore(app.mainKey)
+	mainStore := app.cms.GetKVStore(app.baseKey)
 	mainStore.Set(mainConsensusParamsKey, consensusParamsBz)
 }
 
@@ -350,10 +351,10 @@ func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
 	return abci.ResponseQuery{}
 }
 
-// FilterPeerByPubKey filters peers by a public key.
-func (app *BaseApp) FilterPeerByPubKey(info string) abci.ResponseQuery {
-	if app.pubkeyPeerFilter != nil {
-		return app.pubkeyPeerFilter(info)
+// FilterPeerByIDfilters peers by node ID.
+func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
+	if app.idPeerFilter != nil {
+		return app.idPeerFilter(info)
 	}
 	return abci.ResponseQuery{}
 }
@@ -449,22 +450,22 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) (res a
 func handleQueryP2P(app *BaseApp, path []string, _ abci.RequestQuery) (res abci.ResponseQuery) {
 	// "/p2p" prefix for p2p queries
 	if len(path) >= 4 {
-		if path[1] == "filter" {
-			if path[2] == "addr" {
-				return app.FilterPeerByAddrPort(path[3])
+		cmd, typ, arg := path[1], path[2], path[3]
+		switch cmd {
+		case "filter":
+			switch typ {
+			case "addr":
+				return app.FilterPeerByAddrPort(arg)
+			case "id":
+				return app.FilterPeerByID(arg)
 			}
-			if path[2] == "pubkey" {
-				// TODO: this should be changed to `id`
-				// NOTE: this changed in tendermint and we didn't notice...
-				return app.FilterPeerByPubKey(path[3])
-			}
-		} else {
+		default:
 			msg := "Expected second parameter to be filter"
 			return sdk.ErrUnknownRequest(msg).QueryResult()
 		}
 	}
 
-	msg := "Expected path is p2p filter <addr|pubkey> <parameter>"
+	msg := "Expected path is p2p filter <addr|id> <parameter>"
 	return sdk.ErrUnknownRequest(msg).QueryResult()
 }
 
@@ -485,7 +486,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) (res 
 
 	// cache wrap the commit-multistore for safety
 	ctx := sdk.NewContext(
-		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.Logger,
+		app.cms.CacheMultiStore(), app.checkState.ctx.BlockHeader(), true, app.logger,
 	).WithMinGasPrices(app.minGasPrices)
 
 	// Passes the rest of the path as an argument to the querier.
@@ -543,7 +544,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	// set the signed validators for addition to context in deliverTx
-	// TODO: communicate this result to the address to pubkey map in slashing
 	app.voteInfos = req.LastCommitInfo.GetVotes()
 	return
 }
@@ -599,8 +599,7 @@ func (app *BaseApp) DeliverTx(txBytes []byte) (res abci.ResponseDeliverTx) {
 // validateBasicTxMsgs executes basic validator calls for messages.
 func validateBasicTxMsgs(msgs []sdk.Msg) sdk.Error {
 	if msgs == nil || len(msgs) == 0 {
-		// TODO: Probably shouldn't be ErrInternal. Maybe ErrInvalidMessage?
-		return sdk.ErrInternal("Tx.GetMsgs() must return at least one message in list")
+		return sdk.ErrUnknownRequest("Tx.GetMsgs() must return at least one message in list")
 	}
 
 	for _, msg := range msgs {
@@ -654,6 +653,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 
 		// NOTE: GasWanted is determined by ante handler and GasUsed by the GasMeter.
 
+		// Result.Data must be length prefixed in order to separate each result
 		data = append(data, msgResult.Data...)
 		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
 		tags = append(tags, msgResult.Tags...)
@@ -676,8 +676,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		Data:      data,
 		Log:       strings.Join(logs, "\n"),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
-		// TODO: FeeAmount/FeeDenom
-		Tags: tags,
+		Tags:      tags,
 	}
 
 	return result
@@ -805,12 +804,13 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte, tx sdk.Tx) (result sdk
 			ctx = newCtx.WithMultiStore(ms)
 		}
 
+		gasWanted = result.GasWanted
+
 		if abort {
 			return result
 		}
 
 		msCache.Write()
-		gasWanted = result.GasWanted
 	}
 
 	if mode == runTxModeCheck {
@@ -855,8 +855,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// write the Deliver state and commit the MultiStore
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
-
-	app.Logger.Debug("Commit synced", "commit", fmt.Sprintf("%X", commitID))
+	app.logger.Debug("Commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	// Reset the Check state to the latest committed.
 	//

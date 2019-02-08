@@ -164,11 +164,12 @@ func NewGaiaApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest b
 
 	// initialize BaseApp
 	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint, app.keyDistr,
-		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams)
+		app.keySlashing, app.keyGov, app.keyFeeCollection, app.keyParams,
+		app.tkeyParams, app.tkeyStaking, app.tkeyDistr,
+	)
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
-	app.MountStoresTransient(app.tkeyParams, app.tkeyStaking, app.tkeyDistr)
 	app.SetEndBlocker(app.EndBlocker)
 
 	if loadLatest {

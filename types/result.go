@@ -17,6 +17,8 @@ type Result struct {
 	Codespace CodespaceType
 
 	// Data is any data returned from the app.
+	// Data has to be length prefixed in order to separate
+	// results from multiple msgs executions
 	Data []byte
 
 	// Log is just debug information. NOTE: nondeterministic.
@@ -27,10 +29,6 @@ type Result struct {
 
 	// GasUsed is the amount of gas actually consumed. NOTE: unimplemented
 	GasUsed uint64
-
-	// Tx fee amount and denom.
-	FeeAmount int64
-	FeeDenom  string
 
 	// Tags are used for transaction indexing and pubsub.
 	Tags Tags

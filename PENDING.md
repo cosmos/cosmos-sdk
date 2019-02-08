@@ -30,9 +30,10 @@ BREAKING CHANGES
   * [\#3490](https://github.com/cosmos/cosmos-sdk/issues/3490) ReadRESTReq() returns bool to avoid callers to write error responses twice.
   * [\#3502](https://github.com/cosmos/cosmos-sdk/pull/3502) Fixes issue when comparing genesis states
   * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Various clean ups:
-    - Replace all GetKeyBase* functions family in favor of NewKeyBaseFromDir and NewKeyBaseFromHomeFlag.
+    - Replace all GetKeyBase\* functions family in favor of NewKeyBaseFromDir and NewKeyBaseFromHomeFlag.
     - Remove Get prefix from all TxBuilder's getters.
   * [\#3522](https://github.com/cosmos/cosmos-sdk/pull/3522) Get rid of double negatives: Coins.IsNotNegative() -> Coins.IsAnyNegative().
+  * \#3561 Don't unnecessarily store denominations in staking
 
 * Tendermint
 

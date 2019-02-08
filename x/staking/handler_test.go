@@ -1239,7 +1239,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ubd, found := keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance.Amount)
+	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance)
 
 	// redelegation should have been slashed by half
 	redelegation, found := keeper.GetRedelegation(ctx, del, valA, valB)
@@ -1264,7 +1264,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	ubd, found = keeper.GetUnbondingDelegation(ctx, del, valA)
 	require.True(t, found)
 	require.Len(t, ubd.Entries, 1)
-	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance.Amount)
+	require.Equal(t, ubdTokens.DivRaw(2), ubd.Entries[0].Balance)
 
 	// redelegation should be unchanged
 	redelegation, found = keeper.GetRedelegation(ctx, del, valA, valB)

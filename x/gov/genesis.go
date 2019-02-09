@@ -1,11 +1,16 @@
 package gov
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+)
+
+const (
+	DefaultPeriod time.Duration = 86400 * 2 * time.Second // 2 days
 )
 
 // GenesisState - all staking state that must be provided at genesis
@@ -47,10 +52,10 @@ func DefaultGenesisState() GenesisState {
 		StartingProposalID: 1,
 		DepositParams: DepositParams{
 			MinDeposit:       sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, minDepositTokens)},
-			MaxDepositPeriod: time.Duration(172800) * time.Second,
+			MaxDepositPeriod: DefaultPeriod,
 		},
 		VotingParams: VotingParams{
-			VotingPeriod: time.Duration(172800) * time.Second,
+			VotingPeriod: DefaultPeriod,
 		},
 		TallyParams: TallyParams{
 			Quorum:            sdk.NewDecWithPrec(334, 3),
@@ -63,48 +68,9 @@ func DefaultGenesisState() GenesisState {
 
 // Checks whether 2 GenesisState structs are equivalent.
 func (data GenesisState) Equal(data2 GenesisState) bool {
-	if data.StartingProposalID != data2.StartingProposalID ||
-		!data.DepositParams.Equal(data2.DepositParams) ||
-		data.VotingParams != data2.VotingParams ||
-		data.TallyParams != data2.TallyParams {
-		return false
-	}
-
-	if len(data.Deposits) != len(data2.Deposits) {
-		return false
-	}
-	for i := range data.Deposits {
-		deposit1 := data.Deposits[i]
-		deposit2 := data2.Deposits[i]
-		if deposit1.ProposalID != deposit2.ProposalID ||
-			!deposit1.Deposit.Equals(deposit2.Deposit) {
-			return false
-		}
-	}
-
-	if len(data.Votes) != len(data2.Votes) {
-		return false
-	}
-	for i := range data.Votes {
-		vote1 := data.Votes[i]
-		vote2 := data2.Votes[i]
-		if vote1.ProposalID != vote2.ProposalID ||
-			!vote1.Vote.Equals(vote2.Vote) {
-			return false
-		}
-	}
-
-	if len(data.Proposals) != len(data2.Proposals) {
-		return false
-	}
-	for i := range data.Proposals {
-		if !ProposalEqual(data.Proposals[i], data2.Proposals[i]) {
-			return false
-		}
-	}
-
-	return true
-
+	b1 := msgCdc.MustMarshalBinaryBare(data)
+	b2 := msgCdc.MustMarshalBinaryBare(data2)
+	return bytes.Equal(b1, b2)
 }
 
 // Returns if a GenesisState is empty or has data in it
@@ -113,7 +79,7 @@ func (data GenesisState) IsEmpty() bool {
 	return data.Equal(emptyGenState)
 }
 
-// ValidateGenesis TODO https://github.com/cosmos/cosmos-sdk/issues/3007
+// ValidateGenesis
 func ValidateGenesis(data GenesisState) error {
 	threshold := data.TallyParams.Threshold
 	if threshold.IsNegative() || threshold.GT(sdk.OneDec()) {

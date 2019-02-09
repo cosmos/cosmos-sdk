@@ -26,7 +26,6 @@
   version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:093bf93a65962e8191e3e8cd8fc6c363f83d43caca9739c906531ba7210a9904"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
@@ -54,6 +53,14 @@
   pruneopts = "UT"
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
+
+[[projects]]
+  digest = "1:fed20bf7f0da387c96d4cfc140a95572e5aba4bb984beb7de910e090ae39849b"
+  name = "github.com/ethereum/go-ethereum"
+  packages = ["crypto/secp256k1"]
+  pruneopts = "UT"
+  revision = "7fa3509e2eaf1a4ebc12344590e5699406690f15"
+  version = "v1.8.22"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -288,7 +295,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5833c61ebbd625a6bad8e5a1ada2b3e13710cf3272046953a2c8915340fe60a3"
+  digest = "1:c65f369bae3dff3a0382e38f3fe4f62cdfecba59cb6429ee323b75afdd4f3ba3"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -297,7 +304,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "488faf799f863e27e50c516468f76ae8f1da20a5"
+  revision = "de1b801bf34b80cd00f14087dc5a994bfe0296bc"
 
 [[projects]]
   digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
@@ -429,7 +436,7 @@
   version = "v0.12.0"
 
 [[projects]]
-  digest = "1:22a0fe58c626dd09549eb9451688fab5a2c8bef04d478c907f747d6151d431fd"
+  digest = "1:89f6fe8d02b427996828fbf43720ed1297a2e92c930b98dd302767b5ad796579"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -495,7 +502,7 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "v0.29.0"
+  revision = "v0.30.0-rc0"
 
 [[projects]]
   digest = "1:b73f5e117bc7c6e8fc47128f20db48a873324ad5cfeeebfc505e85c58682b5e4"

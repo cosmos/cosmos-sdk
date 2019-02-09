@@ -27,7 +27,7 @@ BREAKING CHANGES
   *  Reintroduce OR semantics for tx fees
 
 * SDK
-  * \#2513 Tendermint updates are adjusted by 10^-6 relative to staking tokens,
+  * [\#2513](https://github.com/cosmos/cosmos-sdk/issues/2513) Tendermint updates are adjusted by 10^-6 relative to staking tokens,
   * [\#3487](https://github.com/cosmos/cosmos-sdk/pull/3487) Move HTTP/REST utilities out of client/utils into a new dedicated client/rest package.
   * [\#3490](https://github.com/cosmos/cosmos-sdk/issues/3490) ReadRESTReq() returns bool to avoid callers to write error responses twice.
   * [\#3502](https://github.com/cosmos/cosmos-sdk/pull/3502) Fixes issue when comparing genesis states
@@ -35,7 +35,7 @@ BREAKING CHANGES
     - Replace all GetKeyBase\* functions family in favor of NewKeyBaseFromDir and NewKeyBaseFromHomeFlag.
     - Remove Get prefix from all TxBuilder's getters.
   * [\#3522](https://github.com/cosmos/cosmos-sdk/pull/3522) Get rid of double negatives: Coins.IsNotNegative() -> Coins.IsAnyNegative().
-  * \#3561 Don't unnecessarily store denominations in staking
+  * [\#3561](https://github.com/cosmos/cosmos-sdk/issues/3561) Don't unnecessarily store denominations in staking
 
 
 FEATURES
@@ -46,16 +46,16 @@ FEATURES
 * Gaia CLI  (`gaiacli`)
   * [\#3429](https://github.com/cosmos/cosmos-sdk/issues/3429) Support querying
   for all delegator distribution rewards.
-  * \#3449 Proof verification now works with absence proofs
+  * [\#3449](https://github.com/cosmos/cosmos-sdk/issues/3449) Proof verification now works with absence proofs
   * [\#3484](https://github.com/cosmos/cosmos-sdk/issues/3484) Add support
   vesting accounts to the add-genesis-account command.
 
 * Gaia
   - [\#3397](https://github.com/cosmos/cosmos-sdk/pull/3397) Implement genesis file sanitization to avoid failures at chain init.
-  * \#3428 Run the simulation from a particular genesis state loaded from a file
+  * [\#3428](https://github.com/cosmos/cosmos-sdk/issues/3428) Run the simulation from a particular genesis state loaded from a file
 
 * SDK
-  * \#3270 [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
+  * [\#3270](https://github.com/cosmos/cosmos-sdk/issues/3270) [x/staking] limit number of ongoing unbonding delegations /redelegations per pair/trio
   * [\#3477][distribution] new query endpoint "delegator_validators"
   * [\#3514](https://github.com/cosmos/cosmos-sdk/pull/3514) Provided a lazy loading implementation of Keybase that locks the underlying
     storage only for the time needed to perform the required operation. Also added Keybase reference to TxBuilder struct.
@@ -91,16 +91,16 @@ IMPROVEMENTS
   for tx size in the ante handler.
   * [\#3454](https://github.com/cosmos/cosmos-sdk/pull/3454) Add `--jail-whitelist` to `gaiad export` to enable testing of complex exports
   * [\#3424](https://github.com/cosmos/cosmos-sdk/issues/3424) Allow generation of gentxs with empty memo field.
-  * \#3507 General cleanup, removal of unnecessary struct fields, undelegation bugfix, and comment clarification in x/staking and x/slashing
+  * [\#3507](https://github.com/cosmos/cosmos-sdk/issues/3507) General cleanup, removal of unnecessary struct fields, undelegation bugfix, and comment clarification in x/staking and x/slashing
 
 * SDK
   * [\#2605] x/params add subkey accessing
   * [\#2986](https://github.com/cosmos/cosmos-sdk/pull/2986) Store Refactor
-  * \#3435 Test that store implementations do not allow nil values
-  * \#2509 Sanitize all usage of Dec.RoundInt64()
+  * [\#3435](https://github.com/cosmos/cosmos-sdk/issues/3435) Test that store implementations do not allow nil values
+  * [\#2509](https://github.com/cosmos/cosmos-sdk/issues/2509) Sanitize all usage of Dec.RoundInt64()
   * [\#556](https://github.com/cosmos/cosmos-sdk/issues/556) Increase `BaseApp`
   test coverage.
-  * \#3357 develop state-transitions.md for staking spec, missing states added to `state.md`
+  * [\#3357](https://github.com/cosmos/cosmos-sdk/issues/3357) develop state-transitions.md for staking spec, missing states added to `state.md`
   * [\#3552](https://github.com/cosmos/cosmos-sdk/pull/3552) Validate bit length when
   deserializing `Int` types.
 

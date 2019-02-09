@@ -6,22 +6,22 @@ import (
 
 // validatorGovInfo used for tallying
 type validatorGovInfo struct {
-	Address         sdk.ValAddress // address of the validator operator
-	BondedTokens    sdk.Int        // Power of a Validator
-	DelegatorShares sdk.Dec        // Total outstanding delegator shares
-	Minus           sdk.Dec        // Minus of validator, used to compute validator's voting power
-	Vote            VoteOption     // Vote of the validator
+	Address             sdk.ValAddress // address of the validator operator
+	BondedTokens        sdk.Int        // Power of a Validator
+	DelegatorShares     sdk.Dec        // Total outstanding delegator shares
+	DelegatorDeductions sdk.Dec        // Delegator deductions from validator's delegators voting independently
+	Vote                VoteOption     // Vote of the validator
 }
 
 func newValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegatorShares,
-	minus sdk.Dec, vote VoteOption) validatorGovInfo {
+	delegatorDeductions sdk.Dec, vote VoteOption) validatorGovInfo {
 
 	return validatorGovInfo{
-		Address:         address,
-		BondedTokens:    bondedTokens,
-		DelegatorShares: delegatorShares,
-		Minus:           minus,
-		Vote:            vote,
+		Address:             address,
+		BondedTokens:        bondedTokens,
+		DelegatorShares:     delegatorShares,
+		DelegatorDeductions: delegatorDeductions,
+		Vote:                vote,
 	}
 }
 
@@ -65,7 +65,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 				valAddrStr := delegation.GetValidatorAddr().String()
 
 				if val, ok := currValidators[valAddrStr]; ok {
-					val.Minus = val.Minus.Add(delegation.GetShares())
+					val.DelegatorDeductions = val.DelegatorDeductions.Add(delegation.GetShares())
 					currValidators[valAddrStr] = val
 
 					delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
@@ -88,9 +88,9 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 			continue
 		}
 
-		sharesAfterMinus := val.DelegatorShares.Sub(val.Minus)
-		percentAfterMinus := sharesAfterMinus.Quo(val.DelegatorShares)
-		votingPower := percentAfterMinus.MulInt(val.BondedTokens)
+		sharesAfterDeductions := val.DelegatorShares.Sub(val.DelegatorDeductions)
+		percentAfterDeductions := sharesAfterDeductions.Quo(val.DelegatorShares)
+		votingPower := percentAfterDeductions.MulInt(val.BondedTokens)
 
 		results[val.Vote] = results[val.Vote].Add(votingPower)
 		totalVotingPower = totalVotingPower.Add(votingPower)

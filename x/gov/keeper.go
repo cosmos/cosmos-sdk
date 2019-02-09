@@ -34,7 +34,7 @@ var (
 	ParamStoreKeyVotingParams  = []byte("votingparams")
 	ParamStoreKeyTallyParams   = []byte("tallyparams")
 
-	// TODO: Find another way to implement this without using accounts.
+	// TODO: Find another way to implement this without using accounts, or find a cleaner way to implement it using accounts.
 	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
 	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
@@ -379,17 +379,17 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// Send coins from depositor's account to DepositedCoinsAccAddr account
+	// TODO: Don't use an account for this purpose; it's clumsy and prone to misuse.
 	_, err := keeper.ck.SendCoins(ctx, depositorAddr, DepositedCoinsAccAddr, depositAmount)
 	if err != nil {
 		return err, false
 	}
 
-	// Update Proposal
+	// Update proposal
 	proposal.SetTotalDeposit(proposal.GetTotalDeposit().Plus(depositAmount))
 	keeper.SetProposal(ctx, proposal)
 
-	// Check if deposit tipped proposal into voting period
-	// Active voting period if so
+	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
 	if proposal.GetStatus() == StatusDepositPeriod && proposal.GetTotalDeposit().IsAllGTE(keeper.GetDepositParams(ctx).MinDeposit) {
 		keeper.activateVotingPeriod(ctx, proposal)
@@ -409,13 +409,13 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return nil, activatedVotingPeriod
 }
 
-// Gets all the deposits on a specific proposal
+// Gets all the deposits on a specific proposal as an sdk.Iterator
 func (keeper Keeper) GetDeposits(ctx sdk.Context, proposalID uint64) sdk.Iterator {
 	store := ctx.KVStore(keeper.storeKey)
 	return sdk.KVStorePrefixIterator(store, KeyDepositsSubspace(proposalID))
 }
 
-// Returns and deletes all the deposits on a specific proposal
+// Refunds and deletes all the deposits on a specific proposal
 func (keeper Keeper) RefundDeposits(ctx sdk.Context, proposalID uint64) {
 	store := ctx.KVStore(keeper.storeKey)
 	depositsIterator := keeper.GetDeposits(ctx, proposalID)
@@ -442,6 +442,7 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 		deposit := &Deposit{}
 		keeper.cdc.MustUnmarshalBinaryLengthPrefixed(depositsIterator.Value(), deposit)
 
+		// TODO: Find a way to do this without using accounts.
 		_, err := keeper.ck.SendCoins(ctx, DepositedCoinsAccAddr, BurnedDepositCoinsAccAddr, deposit.Amount)
 		if err != nil {
 			panic("should not happen")
@@ -451,7 +452,6 @@ func (keeper Keeper) DeleteDeposits(ctx sdk.Context, proposalID uint64) {
 	}
 }
 
-// =====================================================
 // ProposalQueues
 
 // Returns an iterator for all the proposals in the Active Queue that expire by endTime

@@ -2,6 +2,7 @@ package keys
 
 import (
 	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,26 +10,84 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
-
+	"github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-
 	dbm "github.com/tendermint/tendermint/libs/db"
-
-	"github.com/cosmos/cosmos-sdk/types"
 )
 
 func init() {
 	mintkey.BcryptSecurityParameter = 1
 }
 
+func TestKeybaseOpenClose(t *testing.T) {
+	dir, err := ioutil.TempDir("", "TestKeybaseOpenClose")
+	assert.Nil(t, err)
+
+	kb := New(dbm.NewDB("TestKeybaseOpenClose", dbm.LevelDBBackend, dir))
+	kb.CloseDB()
+
+	// The DB has been closed. At the moment, the expected behaviour is to panic
+	assert.Panics(t, func() {
+		_, _ = kb.CreateAccount(
+			"some_account",
+			"key pair crucial catch public canyon evil outer stage ten gym tornado",
+			"", "", 0, 1)
+	})
+}
+
+func TestLanguage(t *testing.T) {
+	kb := New(dbm.NewMemDB())
+	_, _, err := kb.CreateMnemonic("something", Japanese, "no_pass", Secp256k1)
+	assert.Error(t, err)
+	assert.Equal(t, "unsupported language: only english is supported", err.Error())
+}
+
+func TestCreateAccountInvalidMnemonic(t *testing.T) {
+	kb := New(dbm.NewMemDB())
+	_, err := kb.CreateAccount(
+		"some_account",
+		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
+		"", "", 0, 1)
+	assert.Error(t, err)
+	assert.Equal(t, "Invalid mnemonic", err.Error())
+}
+
+func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
+	kb := New(dbm.NewMemDB())
+	_, err := kb.CreateLedger("some_account", Ed25519, 0, 1)
+	assert.Error(t, err)
+	assert.Equal(t, "unsupported signing algo: only secp256k1 is supported", err.Error())
+}
+
+func TestCreateLedger(t *testing.T) {
+	kb := New(dbm.NewMemDB())
+
+	// test_cover and test_unit will result in different answers
+	// test_cover does not compile some dependencies so ledger is disabled
+	// test_unit may add a ledger mock
+	// both cases are acceptable
+	ledger, err := kb.CreateLedger("some_account", Secp256k1, 0, 1)
+
+	if err != nil {
+		assert.Error(t, err)
+		assert.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
+		assert.Nil(t, ledger)
+	} else {
+		// The mock is available, check that the address is correct
+		pubKey := ledger.GetPubKey()
+		addr, err := sdk.Bech32ifyAccPub(pubKey)
+		assert.NoError(t, err)
+		assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", addr)
+	}
+}
+
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
 	db := dbm.NewMemDB()
-	cstore := New(
-		db,
-	)
+	cstore := New(db)
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -112,9 +171,7 @@ func TestKeyManagement(t *testing.T) {
 // TestSignVerify does some detailed checks on how we sign and validate
 // signatures
 func TestSignVerify(t *testing.T) {
-	cstore := New(
-		dbm.NewMemDB(),
-	)
+	cstore := New(dbm.NewMemDB())
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
@@ -344,7 +401,7 @@ func TestSeedPhrase(t *testing.T) {
 
 	// let us re-create it from the mnemonic-phrase
 	params := *hd.NewFundraiserParams(0, 0)
-	newInfo, err := cstore.Derive(n2, mnemonic, defaultBIP39Passphrase, p2, params)
+	newInfo, err := cstore.Derive(n2, mnemonic, DefaultBIP39Passphrase, p2, params)
 	require.NoError(t, err)
 	require.Equal(t, n2, newInfo.GetName())
 	require.Equal(t, info.GetPubKey().Address(), newInfo.GetPubKey().Address())

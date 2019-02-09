@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -375,7 +376,8 @@ func ParseDecCoins(coinsStr string) (coins DecCoins, err error) {
 		return nil, nil
 	}
 
-	coinStrs := strings.Split(coinsStr, ",")
+	splitRe := regexp.MustCompile(",|;")
+	coinStrs := splitRe.Split(coinsStr, -1)
 	for _, coinStr := range coinStrs {
 		coin, err := ParseDecCoin(coinStr)
 		if err != nil {

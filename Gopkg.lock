@@ -2,22 +2,6 @@
 
 
 [[projects]]
-  digest = "1:7736fc6da04620727f8f3aa2ced8d77be8e074a302820937aa5993848c769b27"
-  name = "github.com/ZondaX/hid-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "48b08affede2cea076a3cf13b2e3f72ed262b743"
-  version = "v0.4.0"
-
-[[projects]]
-  digest = "1:1ba351898f7efc68c7c9ff3145b920e478f716b077fdaaf06b967c5d883fa988"
-  name = "github.com/ZondaX/ledger-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "c3225ab10c2f53397d4aa419a588466493572b22"
-  version = "v0.4.0"
-
-[[projects]]
   branch = "master"
   digest = "1:09a7f74eb6bb3c0f14d8926610c87f569c5cff68e978d30e9a3540aeb626fdf0"
   name = "github.com/bartekn/go-bip39"
@@ -42,12 +26,11 @@
   version = "v0.1.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:093bf93a65962e8191e3e8cd8fc6c363f83d43caca9739c906531ba7210a9904"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "UT"
-  revision = "7d2daa5bfef28c5e282571bc06416516936115ee"
+  revision = "ed77733ec07dfc8a513741138419b8d9d3de9d2d"
 
 [[projects]]
   digest = "1:386de157f7d19259a7f9c81f26ce011223ce0f090353c1152ffdf730d7d10ac2"
@@ -70,6 +53,14 @@
   pruneopts = "UT"
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
+
+[[projects]]
+  digest = "1:fed20bf7f0da387c96d4cfc140a95572e5aba4bb984beb7de910e090ae39849b"
+  name = "github.com/ethereum/go-ethereum"
+  packages = ["crypto/secp256k1"]
+  pruneopts = "UT"
+  revision = "7fa3509e2eaf1a4ebc12344590e5699406690f15"
+  version = "v1.8.22"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -149,20 +140,12 @@
   revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
-  digest = "1:c79fb010be38a59d657c48c6ba1d003a8aa651fa56b579d959d74573b7dff8e1"
-  name = "github.com/gorilla/context"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
-  version = "v1.1.1"
-
-[[projects]]
-  digest = "1:e73f5b0152105f18bc131fba127d9949305c8693f8a762588a82a48f61756f5f"
+  digest = "1:ca59b1175189b3f0e9f1793d2c350114be36eaabbe5b9f554b35edee1de50aea"
   name = "github.com/gorilla/mux"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e3702bed27f0d39777b0b37b664b6280e8ef8fbf"
-  version = "v1.6.2"
+  revision = "a7962380ca08b5a188038c69871b8d3fbdf31e89"
+  version = "v1.7.0"
 
 [[projects]]
   digest = "1:7b5c6e2eeaa9ae5907c391a91c132abfd5c9e8a784a341b5625e750c67e6825d"
@@ -296,11 +279,10 @@
   name = "github.com/prometheus/client_model"
   packages = ["go"]
   pruneopts = "UT"
-  revision = "5c3871d89910bfb32f5fcab2aa4b9ec68e65a99f"
+  revision = "fd36f4220a901265f90734c3183c5f0c91daa0b8"
 
 [[projects]]
-  branch = "master"
-  digest = "1:db712fde5d12d6cdbdf14b777f0c230f4ff5ab0be8e35b239fc319953ed577a4"
+  digest = "1:35cf6bdf68db765988baa9c4f10cc5d7dda1126a54bd62e252dbcd0b1fc8da90"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
@@ -308,11 +290,12 @@
     "model",
   ]
   pruneopts = "UT"
-  revision = "4724e9255275ce38f7179b2478abeae4e28c904f"
+  revision = "cfeb6f9992ffa54aaa4f2170ade4067ee478b250"
+  version = "v0.2.0"
 
 [[projects]]
   branch = "master"
-  digest = "1:d39e7c7677b161c2dd4c635a2ac196460608c7d8ba5337cc8cae5825a2681f8f"
+  digest = "1:c65f369bae3dff3a0382e38f3fe4f62cdfecba59cb6429ee323b75afdd4f3ba3"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -321,7 +304,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "1dc9a6cbc91aacc3e8b2d63db4d2e957a5394ac4"
+  revision = "de1b801bf34b80cd00f14087dc5a994bfe0296bc"
 
 [[projects]]
   digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
@@ -347,15 +330,15 @@
   version = "v1.6.0"
 
 [[projects]]
-  digest = "1:6a4a11ba764a56d2758899ec6f3848d24698d48442ebce85ee7a3f63284526cd"
+  digest = "1:3e39bafd6c2f4bf3c76c3bfd16a2e09e016510ad5db90dc02b88e2f565d6d595"
   name = "github.com/spf13/afero"
   packages = [
     ".",
     "mem",
   ]
   pruneopts = "UT"
-  revision = "d40851caa0d747393da1ffb28f7f9d8b4eeffebd"
-  version = "v1.1.2"
+  revision = "f4711e4db9e9a1d3887343acb72b2bbfc2f686f5"
+  version = "v1.2.1"
 
 [[projects]]
   digest = "1:08d65904057412fc0270fc4812a1c90c594186819243160dc779a402d4b6d0bc"
@@ -453,7 +436,7 @@
   version = "v0.12.0"
 
 [[projects]]
-  digest = "1:22a0fe58c626dd09549eb9451688fab5a2c8bef04d478c907f747d6151d431fd"
+  digest = "1:89f6fe8d02b427996828fbf43720ed1297a2e92c930b98dd302767b5ad796579"
   name = "github.com/tendermint/tendermint"
   packages = [
     "abci/client",
@@ -519,15 +502,31 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "v0.29.0"
+  revision = "v0.30.0-rc0"
 
 [[projects]]
-  digest = "1:a7485b2a69f996923f9d3406a9a853fd8eb31818515e985a830d71f88f6a925b"
+  digest = "1:b73f5e117bc7c6e8fc47128f20db48a873324ad5cfeeebfc505e85c58682b5e4"
+  name = "github.com/zondax/hid"
+  packages = ["."]
+  pruneopts = "T"
+  revision = "302fd402163c34626286195dfa9adac758334acc"
+  version = "v0.9.0"
+
+[[projects]]
+  digest = "1:fca24169988a61ea725d1326de30910d8049fe68bcbc194d28803f9a76dda380"
   name = "github.com/zondax/ledger-cosmos-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d4aed6d929a703bb555a2d79fe9c470afe61f648"
-  version = "v0.9.2"
+  revision = "69fdb8ce5e5b9d9c3b22b9248e117b231d4f06dd"
+  version = "v0.9.7"
+
+[[projects]]
+  digest = "1:f8e4c0b959174a1fa5946b12f1f2ac7ea5651bef20a9e4a8dac55dbffcaa6cd6"
+  name = "github.com/zondax/ledger-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "69c15f1333a9b6866e5f66096561c7d138894bc5"
+  version = "v0.8.0"
 
 [[projects]]
   digest = "1:6f6dc6060c4e9ba73cf28aa88f12a69a030d3d19d518ef8e931879eaa099628d"
@@ -612,7 +611,7 @@
   revision = "383e8b2c3b9e36c4076b235b32537292176bae20"
 
 [[projects]]
-  digest = "1:9edd250a3c46675d0679d87540b30c9ed253b19bd1fd1af08f4f5fb3c79fc487"
+  digest = "1:9ab5a33d8cb5c120602a34d2e985ce17956a4e8c2edce7e6961568f95e40c09a"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -648,8 +647,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "df014850f6dee74ba2fc94874043a9f3f75fbfd8"
-  version = "v1.17.0"
+  revision = "a02b0774206b209466313a0b525d2c738fe407eb"
+  version = "v1.18.0"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -680,7 +679,7 @@
     "github.com/spf13/viper",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
-    "github.com/syndtr/goleveldb/leveldb/opt",
+    "github.com/tendermint/btcd/btcec",
     "github.com/tendermint/go-amino",
     "github.com/tendermint/iavl",
     "github.com/tendermint/tendermint/abci/server",

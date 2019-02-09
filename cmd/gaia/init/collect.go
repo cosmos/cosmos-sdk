@@ -1,5 +1,7 @@
 package init
 
+// DONTCOVER
+
 import (
 	"encoding/json"
 	"path/filepath"
@@ -44,7 +46,7 @@ func CollectGenTxsCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			genDoc, err := loadGenesisDoc(cdc, config.GenesisFile())
+			genDoc, err := LoadGenesisDoc(cdc, config.GenesisFile())
 			if err != nil {
 				return err
 			}

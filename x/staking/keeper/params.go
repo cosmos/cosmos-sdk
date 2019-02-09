@@ -10,12 +10,12 @@ import (
 
 // Default parameter namespace
 const (
-	DefaultParamspace = "staking"
+	DefaultParamspace = types.ModuleName
 )
 
 // ParamTable for staking module
-func ParamTypeTable() params.TypeTable {
-	return params.NewTypeTable().RegisterParamSet(&types.Params{})
+func ParamKeyTable() params.KeyTable {
+	return params.NewKeyTable().RegisterParamSet(&types.Params{})
 }
 
 // UnbondingTime
@@ -30,6 +30,13 @@ func (k Keeper) MaxValidators(ctx sdk.Context) (res uint16) {
 	return
 }
 
+// MaxEntries - Maximum number of simultaneous unbonding
+// delegations or redelegations (per pair/trio)
+func (k Keeper) MaxEntries(ctx sdk.Context) (res uint16) {
+	k.paramstore.Get(ctx, types.KeyMaxEntries, &res)
+	return
+}
+
 // BondDenom - Bondable coin denomination
 func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 	k.paramstore.Get(ctx, types.KeyBondDenom, &res)
@@ -37,11 +44,13 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 }
 
 // Get all parameteras as types.Params
-func (k Keeper) GetParams(ctx sdk.Context) (res types.Params) {
-	res.UnbondingTime = k.UnbondingTime(ctx)
-	res.MaxValidators = k.MaxValidators(ctx)
-	res.BondDenom = k.BondDenom(ctx)
-	return
+func (k Keeper) GetParams(ctx sdk.Context) types.Params {
+	return types.NewParams(
+		k.UnbondingTime(ctx),
+		k.MaxValidators(ctx),
+		k.MaxEntries(ctx),
+		k.BondDenom(ctx),
+	)
 }
 
 // set the params

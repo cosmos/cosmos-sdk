@@ -632,27 +632,22 @@ func TestSafeSub(t *testing.T) {
 	}
 }
 
-func TestAddUint64Overflow(t *testing.T) {
-	testCases := []struct {
-		a, b     uint64
-		result   uint64
-		overflow bool
-	}{
-		{0, 0, 0, false},
-		{100, 100, 200, false},
-		{math.MaxUint64 / 2, math.MaxUint64/2 + 1, math.MaxUint64, false},
-		{math.MaxUint64 / 2, math.MaxUint64/2 + 2, 0, true},
-	}
+func TestSerializationOverflow(t *testing.T) {
+	bx, _ := new(big.Int).SetString("91888242871839275229946405745257275988696311157297823662689937894645226298583", 10)
+	x := Int{bx}
+	y := new(Int)
 
-	for i, tc := range testCases {
-		res, overflow := AddUint64Overflow(tc.a, tc.b)
-		require.Equal(
-			t, tc.overflow, overflow,
-			"invalid overflow result; tc: #%d, a: %d, b: %d", i, tc.a, tc.b,
-		)
-		require.Equal(
-			t, tc.result, res,
-			"invalid uint64 result; tc: #%d, a: %d, b: %d", i, tc.a, tc.b,
-		)
-	}
+	// require amino deserialization to fail due to overflow
+	xStr, err := x.MarshalAmino()
+	require.NoError(t, err)
+
+	err = y.UnmarshalAmino(xStr)
+	require.Error(t, err)
+
+	// require JSON deserialization to fail due to overflow
+	bz, err := x.MarshalJSON()
+	require.NoError(t, err)
+
+	err = y.UnmarshalJSON(bz)
+	require.Error(t, err)
 }

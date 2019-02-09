@@ -10,6 +10,53 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
+func TestEqualProposalID(t *testing.T) {
+	state1 := GenesisState{}
+	state2 := GenesisState{}
+	require.Equal(t, state1, state2)
+
+	// Proposals
+	state1.StartingProposalID = 1
+	require.NotEqual(t, state1, state2)
+	require.False(t, state1.Equal(state2))
+
+	state2.StartingProposalID = 1
+	require.Equal(t, state1, state2)
+	require.True(t, state1.Equal(state2))
+}
+
+func TestEqualProposals(t *testing.T) {
+	// Generate mock app and keepers
+	mapp, keeper, _, addrs, _, _ := getMockApp(t, 2, GenesisState{}, nil)
+	SortAddresses(addrs)
+	mapp.BeginBlock(abci.RequestBeginBlock{})
+	ctx := mapp.BaseApp.NewContext(false, abci.Header{})
+
+	// Create two proposals
+	proposal1 := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+	proposal2 := keeper.NewTextProposal(ctx, "Test", "description", ProposalTypeText)
+
+	// They are similar but their IDs should be different
+	require.NotEqual(t, proposal1, proposal2)
+	require.False(t, ProposalEqual(proposal1, proposal2))
+
+	// Now create two genesis blocks
+	state1 := GenesisState{Proposals: []Proposal{proposal1}}
+	state2 := GenesisState{Proposals: []Proposal{proposal2}}
+	require.NotEqual(t, state1, state2)
+	require.False(t, state1.Equal(state2))
+
+	// Now make proposals identical by setting both IDs to 55
+	proposal1.SetProposalID(55)
+	proposal2.SetProposalID(55)
+	require.Equal(t, proposal1, proposal1)
+	require.True(t, ProposalEqual(proposal1, proposal2))
+
+	// State should be identical now..
+	require.Equal(t, state1, state2)
+	require.True(t, state1.Equal(state2))
+}
+
 func TestImportExportQueues(t *testing.T) {
 
 	// Generate mock app and keepers

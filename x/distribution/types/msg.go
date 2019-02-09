@@ -40,10 +40,10 @@ func (msg MsgSetWithdrawAddress) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgSetWithdrawAddress) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
+	if msg.DelegatorAddr.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.WithdrawAddr == nil {
+	if msg.WithdrawAddr.Empty() {
 		return ErrNilWithdrawAddr(DefaultCodespace)
 	}
 	return nil
@@ -78,10 +78,10 @@ func (msg MsgWithdrawDelegatorReward) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgWithdrawDelegatorReward) ValidateBasic() sdk.Error {
-	if msg.DelegatorAddr == nil {
+	if msg.DelegatorAddr.Empty() {
 		return ErrNilDelegatorAddr(DefaultCodespace)
 	}
-	if msg.ValidatorAddr == nil {
+	if msg.ValidatorAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	return nil
@@ -114,7 +114,7 @@ func (msg MsgWithdrawValidatorCommission) GetSignBytes() []byte {
 
 // quick validity check
 func (msg MsgWithdrawValidatorCommission) ValidateBasic() sdk.Error {
-	if msg.ValidatorAddr == nil {
+	if msg.ValidatorAddr.Empty() {
 		return ErrNilValidatorAddr(DefaultCodespace)
 	}
 	return nil

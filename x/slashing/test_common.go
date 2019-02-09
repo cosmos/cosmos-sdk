@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
@@ -37,7 +36,7 @@ var (
 		sdk.ValAddress(pks[1].Address()),
 		sdk.ValAddress(pks[2].Address()),
 	}
-	initCoins = sdk.NewInt(200)
+	initCoins = staking.TokensFromTendermintPower(200)
 )
 
 func createTestCodec() *codec.Codec {
@@ -72,11 +71,11 @@ func createTestInput(t *testing.T, defaults Params) (sdk.Context, bank.Keeper, s
 	paramsKeeper := params.NewKeeper(cdc, keyParams, tkeyParams)
 	accountKeeper := auth.NewAccountKeeper(cdc, keyAcc, paramsKeeper.Subspace(auth.DefaultParamspace), auth.ProtoBaseAccount)
 
-	ck := bank.NewBaseKeeper(accountKeeper)
+	ck := bank.NewBaseKeeper(accountKeeper, paramsKeeper.Subspace(bank.DefaultParamspace), bank.DefaultCodespace)
 	sk := staking.NewKeeper(cdc, keyStaking, tkeyStaking, ck, paramsKeeper.Subspace(staking.DefaultParamspace), staking.DefaultCodespace)
 	genesis := staking.DefaultGenesisState()
 
-	genesis.Pool.NotBondedTokens = sdk.NewInt(initCoins.MulRaw(int64(len(addrs))).Int64())
+	genesis.Pool.NotBondedTokens = initCoins.MulRaw(int64(len(addrs)))
 
 	_, err = staking.InitGenesis(ctx, sk, genesis)
 	require.Nil(t, err)
@@ -116,8 +115,8 @@ func testAddr(addr string) sdk.AccAddress {
 func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
 	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return staking.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(stakingTypes.DefaultBondDenom, amt),
-		staking.Description{}, commission,
+		address, pubKey, sdk.NewCoin(staking.DefaultBondDenom, amt),
+		staking.Description{}, commission, sdk.OneInt(),
 	)
 }
 

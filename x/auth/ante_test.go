@@ -595,9 +595,9 @@ func TestConsumeSignatureVerificationGas(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.wantPanic {
-				require.Panics(t, func() { consumeSignatureVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params) })
+				require.Panics(t, func() { consumeSigVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params) })
 			} else {
-				consumeSignatureVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
+				consumeSigVerificationGas(tt.args.meter, tt.args.sig, tt.args.pubkey, tt.args.params)
 				require.Equal(t, tt.gasConsumed, tt.args.meter.GasConsumed(), fmt.Sprintf("%d != %d", tt.gasConsumed, tt.args.meter.GasConsumed()))
 			}
 		})
@@ -710,8 +710,8 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 	input := setupTestInput()
 	ctx := input.ctx.WithMinGasPrices(
 		sdk.DecCoins{
-			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(1000000, sdk.Precision)), // 0.0001photino
-			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000, sdk.Precision)),     // 0.000001stake
+			sdk.NewDecCoinFromDec("photino", sdk.NewDecWithPrec(50000000000000, sdk.Precision)), // 0.0001photino
+			sdk.NewDecCoinFromDec("stake", sdk.NewDecWithPrec(10000000000000, sdk.Precision)),   // 0.000001stake
 		},
 	)
 
@@ -719,14 +719,16 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 		input      StdFee
 		expectedOK bool
 	}{
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 5)}), false},
 		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 1)}), false},
-		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 20)}), false},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("stake", 2)}), true},
+		{NewStdFee(200000, sdk.Coins{sdk.NewInt64Coin("photino", 10)}), true},
 		{
 			NewStdFee(
 				200000,
 				sdk.Coins{
-					sdk.NewInt64Coin("photino", 20),
-					sdk.NewInt64Coin("stake", 1),
+					sdk.NewInt64Coin("photino", 10),
+					sdk.NewInt64Coin("stake", 2),
 				},
 			),
 			true,
@@ -735,9 +737,9 @@ func TestEnsureSufficientMempoolFees(t *testing.T) {
 			NewStdFee(
 				200000,
 				sdk.Coins{
-					sdk.NewInt64Coin("atom", 2),
-					sdk.NewInt64Coin("photino", 20),
-					sdk.NewInt64Coin("stake", 1),
+					sdk.NewInt64Coin("atom", 5),
+					sdk.NewInt64Coin("photino", 10),
+					sdk.NewInt64Coin("stake", 2),
 				},
 			),
 			true,

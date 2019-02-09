@@ -6,12 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-//-----------------------------------------------------------
 // Proposal interface
 type Proposal interface {
 	GetProposalID() uint64
@@ -81,7 +78,6 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 	return false
 }
 
-//-----------------------------------------------------------
 // Text Proposals
 type TextProposal struct {
 	ProposalID   uint64       `json:"proposal_id"`   //  ID of the proposal
@@ -149,11 +145,9 @@ func (tp TextProposal) String() string {
 		tp.TotalDeposit, tp.VotingStartTime, tp.VotingEndTime)
 }
 
-//-----------------------------------------------------------
 // ProposalQueue
 type ProposalQueue []uint64
 
-//-----------------------------------------------------------
 // ProposalKind
 
 // Type that represents Proposal Type as a byte
@@ -167,7 +161,7 @@ const (
 	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
 )
 
-// String to proposalType byte.  Returns ff if invalid.
+// String to proposalType byte. Returns 0xff if invalid.
 func ProposalTypeFromString(str string) (ProposalKind, error) {
 	switch str {
 	case "Text":
@@ -177,7 +171,7 @@ func ProposalTypeFromString(str string) (ProposalKind, error) {
 	case "SoftwareUpgrade":
 		return ProposalTypeSoftwareUpgrade, nil
 	default:
-		return ProposalKind(0xff), errors.Errorf("'%s' is not a valid proposal type", str)
+		return ProposalKind(0xff), fmt.Errorf("'%s' is not a valid proposal type", str)
 	}
 }
 
@@ -249,7 +243,6 @@ func (pt ProposalKind) Format(s fmt.State, verb rune) {
 	}
 }
 
-//-----------------------------------------------------------
 // ProposalStatus
 
 // Type that represents Proposal Status as a byte
@@ -278,7 +271,7 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	case "":
 		return StatusNil, nil
 	default:
-		return ProposalStatus(0xff), errors.Errorf("'%s' is not a valid proposal status", str)
+		return ProposalStatus(0xff), fmt.Errorf("'%s' is not a valid proposal status", str)
 	}
 }
 
@@ -353,22 +346,39 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	}
 }
 
-//-----------------------------------------------------------
 // Tally Results
 type TallyResult struct {
-	Yes        sdk.Dec `json:"yes"`
-	Abstain    sdk.Dec `json:"abstain"`
-	No         sdk.Dec `json:"no"`
-	NoWithVeto sdk.Dec `json:"no_with_veto"`
+	Yes        sdk.Int `json:"yes"`
+	Abstain    sdk.Int `json:"abstain"`
+	No         sdk.Int `json:"no"`
+	NoWithVeto sdk.Int `json:"no_with_veto"`
+}
+
+func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
+	return TallyResult{
+		Yes:        yes,
+		Abstain:    abstain,
+		No:         no,
+		NoWithVeto: noWithVeto,
+	}
+}
+
+func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
+	return TallyResult{
+		Yes:        results[OptionYes].TruncateInt(),
+		Abstain:    results[OptionAbstain].TruncateInt(),
+		No:         results[OptionNo].TruncateInt(),
+		NoWithVeto: results[OptionNoWithVeto].TruncateInt(),
+	}
 }
 
 // checks if two proposals are equal
 func EmptyTallyResult() TallyResult {
 	return TallyResult{
-		Yes:        sdk.ZeroDec(),
-		Abstain:    sdk.ZeroDec(),
-		No:         sdk.ZeroDec(),
-		NoWithVeto: sdk.ZeroDec(),
+		Yes:        sdk.ZeroInt(),
+		Abstain:    sdk.ZeroInt(),
+		No:         sdk.ZeroInt(),
+		NoWithVeto: sdk.ZeroInt(),
 	}
 }
 

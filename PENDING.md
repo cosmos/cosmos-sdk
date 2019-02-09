@@ -2,9 +2,9 @@
 
 BREAKING CHANGES
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
 
-* Gaia CLI  (`gaiacli`)
+* Gaia CLI
 
 * Gaia
 
@@ -12,12 +12,11 @@ BREAKING CHANGES
 
 * Tendermint
 
-
 FEATURES
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
 
-* Gaia CLI  (`gaiacli`)
+* Gaia CLI
 
 * Gaia
 
@@ -28,9 +27,9 @@ FEATURES
 
 IMPROVEMENTS
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
 
-* Gaia CLI  (`gaiacli`)
+* Gaia CLI
 
 * Gaia
 
@@ -41,9 +40,9 @@ IMPROVEMENTS
 
 BUG FIXES
 
-* Gaia REST API (`gaiacli advanced rest-server`)
+* Gaia REST API
 
-* Gaia CLI  (`gaiacli`)
+* Gaia CLI
 
 * Gaia
 

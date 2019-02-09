@@ -5,17 +5,14 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/tendermint/tendermint/crypto/ed25519"
-
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 var invalidStrs = []string{
-	"",
 	"hello, world!",
 	"0xAA",
 	"AAA",
@@ -33,6 +30,24 @@ func testMarshal(t *testing.T, original interface{}, res interface{}, marshal fu
 	err = unmarshal(bz)
 	require.Nil(t, err)
 	require.Equal(t, original, res)
+}
+
+func TestEmptyAddresses(t *testing.T) {
+	require.Equal(t, (types.AccAddress{}).String(), "")
+	require.Equal(t, (types.ValAddress{}).String(), "")
+	require.Equal(t, (types.ConsAddress{}).String(), "")
+
+	accAddr, err := types.AccAddressFromBech32("")
+	require.True(t, accAddr.Empty())
+	require.Nil(t, err)
+
+	valAddr, err := types.ValAddressFromBech32("")
+	require.True(t, valAddr.Empty())
+	require.Nil(t, err)
+
+	consAddr, err := types.ConsAddressFromBech32("")
+	require.True(t, consAddr.Empty())
+	require.Nil(t, err)
 }
 
 func TestRandBech32PubkeyConsistency(t *testing.T) {
@@ -202,7 +217,7 @@ func TestConfiguredPrefix(t *testing.T) {
 			config := types.GetConfig()
 			config.SetBech32PrefixForAccount(prefix+"acc", prefix+"pub")
 			acc := types.AccAddress(pub.Address())
-			require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"))
+			require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"), acc.String())
 			bech32Pub := types.MustBech32ifyAccPub(pub)
 			require.True(t, strings.HasPrefix(bech32Pub, prefix+"pub"))
 

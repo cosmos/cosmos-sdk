@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/client/utils"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -122,13 +122,13 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 
 		_, err := sdk.AccAddressFromBech32(delegatorAddr)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		node, err := cliCtx.GetNode()
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -144,7 +144,7 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		isBondTx := contains(typesQuerySlice, "bond")
 		isUnbondTx := contains(typesQuerySlice, "unbond")
 		isRedTx := contains(typesQuerySlice, "redelegate")
-		var txs = []tx.Info{}
+		var txs = []sdk.TxResponse{}
 		var actions []string
 
 		switch {
@@ -152,16 +152,16 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 			actions = append(actions, staking.MsgDelegate{}.Type())
 		case isUnbondTx:
 			actions = append(actions, staking.MsgUndelegate{}.Type())
-			actions = append(actions, string(tags.ActionCompleteUnbonding))
+			actions = append(actions, tags.ActionCompleteUnbonding)
 		case isRedTx:
 			actions = append(actions, staking.MsgBeginRedelegate{}.Type())
-			actions = append(actions, string(tags.ActionCompleteRedelegation))
+			actions = append(actions, tags.ActionCompleteRedelegation)
 		case noQuery:
 			actions = append(actions, staking.MsgDelegate{}.Type())
 			actions = append(actions, staking.MsgUndelegate{}.Type())
-			actions = append(actions, string(tags.ActionCompleteUnbonding))
+			actions = append(actions, tags.ActionCompleteUnbonding)
 			actions = append(actions, staking.MsgBeginRedelegate{}.Type())
-			actions = append(actions, string(tags.ActionCompleteRedelegation))
+			actions = append(actions, tags.ActionCompleteRedelegation)
 		default:
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -170,17 +170,17 @@ func delegatorTxsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Han
 		for _, action := range actions {
 			foundTxs, errQuery := queryTxs(node, cliCtx, cdc, action, delegatorAddr)
 			if errQuery != nil {
-				utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			}
 			txs = append(txs, foundTxs...)
 		}
 
 		res, err := cdc.MarshalJSON(txs)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -201,7 +201,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Ha
 		if len(bechDelegatorAddr) != 0 {
 			delegatorAddr, err := sdk.AccAddressFromBech32(bechDelegatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
 			params.DelegatorAddr = delegatorAddr
@@ -210,7 +210,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Ha
 		if len(bechSrcValidatorAddr) != 0 {
 			srcValidatorAddr, err := sdk.ValAddressFromBech32(bechSrcValidatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
 			params.SrcValidatorAddr = srcValidatorAddr
@@ -219,7 +219,7 @@ func redelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Ha
 		if len(bechDstValidatorAddr) != 0 {
 			dstValidatorAddr, err := sdk.ValAddressFromBech32(bechDstValidatorAddr)
 			if err != nil {
-				utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+				rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 				return
 			}
 			params.DstValidatorAddr = dstValidatorAddr
@@ -227,16 +227,16 @@ func redelegationsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Ha
 
 		bz, err := cdc.MarshalJSON(params)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		res, err := cliCtx.QueryWithData("custom/staking/redelegations", bz)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -260,10 +260,10 @@ func validatorsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handl
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData("custom/staking/validators", nil)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -287,10 +287,10 @@ func poolHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFunc
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData("custom/staking/pool", nil)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }
 
@@ -299,9 +299,9 @@ func paramsHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := cliCtx.QueryWithData("custom/staking/parameters", nil)
 		if err != nil {
-			utils.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-		utils.PostProcessResponse(w, cdc, res, cliCtx.Indent)
+		rest.PostProcessResponse(w, cdc, res, cliCtx.Indent)
 	}
 }

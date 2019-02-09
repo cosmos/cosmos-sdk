@@ -15,8 +15,6 @@ following hooks can registered with staking:
    - called when a validator is bonded
  - `AfterValidatorBeginUnbonding(Context, ConsAddress, ValAddress)`
    - called when a validator begins unbonding
- - `AfterValidatorPowerDidChange(Context, ConsAddress, ValAddress)`
-   - called at EndBlock when a validator's power is changed
  - `BeforeDelegationCreated(Context, AccAddress, ValAddress)`
    - called when a delegation is created
  - `BeforeDelegationSharesModified(Context, AccAddress, ValAddress)`

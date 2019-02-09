@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	// Default period for deposits & voting
 	DefaultPeriod time.Duration = 86400 * 2 * time.Second // 2 days
 )
 

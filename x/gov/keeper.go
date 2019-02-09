@@ -257,7 +257,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 // Params
 
 // Returns the current DepositParams from the global param store
-// nolint: errcheck
 func (keeper Keeper) GetDepositParams(ctx sdk.Context) DepositParams {
 	var depositParams DepositParams
 	keeper.paramSpace.Get(ctx, ParamStoreKeyDepositParams, &depositParams)
@@ -265,7 +264,6 @@ func (keeper Keeper) GetDepositParams(ctx sdk.Context) DepositParams {
 }
 
 // Returns the current VotingParams from the global param store
-// nolint: errcheck
 func (keeper Keeper) GetVotingParams(ctx sdk.Context) VotingParams {
 	var votingParams VotingParams
 	keeper.paramSpace.Get(ctx, ParamStoreKeyVotingParams, &votingParams)
@@ -273,24 +271,20 @@ func (keeper Keeper) GetVotingParams(ctx sdk.Context) VotingParams {
 }
 
 // Returns the current TallyParam from the global param store
-// nolint: errcheck
 func (keeper Keeper) GetTallyParams(ctx sdk.Context) TallyParams {
 	var tallyParams TallyParams
 	keeper.paramSpace.Get(ctx, ParamStoreKeyTallyParams, &tallyParams)
 	return tallyParams
 }
 
-// nolint: errcheck
 func (keeper Keeper) setDepositParams(ctx sdk.Context, depositParams DepositParams) {
 	keeper.paramSpace.Set(ctx, ParamStoreKeyDepositParams, &depositParams)
 }
 
-// nolint: errcheck
 func (keeper Keeper) setVotingParams(ctx sdk.Context, votingParams VotingParams) {
 	keeper.paramSpace.Set(ctx, ParamStoreKeyVotingParams, &votingParams)
 }
 
-// nolint: errcheck
 func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams TallyParams) {
 	keeper.paramSpace.Set(ctx, ParamStoreKeyTallyParams, &tallyParams)
 }

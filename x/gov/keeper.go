@@ -34,6 +34,7 @@ var (
 	ParamStoreKeyVotingParams  = []byte("votingparams")
 	ParamStoreKeyTallyParams   = []byte("tallyparams")
 
+	// TODO: Find another way to implement this without using accounts.
 	DepositedCoinsAccAddr     = sdk.AccAddress(crypto.AddressHash([]byte("govDepositedCoins")))
 	BurnedDepositCoinsAccAddr = sdk.AccAddress(crypto.AddressHash([]byte("govBurnedDepositCoins")))
 )
@@ -92,7 +93,6 @@ func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, paramsKeeper params.Keeper, p
 	}
 }
 
-// =====================================================
 // Proposals
 
 // Creates a NewProposal
@@ -127,10 +127,8 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) Proposal {
 	if bz == nil {
 		return nil
 	}
-
 	var proposal Proposal
 	keeper.cdc.MustUnmarshalBinaryLengthPrefixed(bz, &proposal)
-
 	return proposal
 }
 
@@ -151,6 +149,10 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 }
 
 // Get Proposal from store by ProposalID
+// voterAddr will filter proposals by whether or not that address has voted on them
+// depositorAddr will filter proposals by whether or not that address has deposited to them
+// status will filter proposals by status
+// numLatest will fetch a specified number of the most recent proposals, or 0 for all proposals
 func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddress, depositorAddr sdk.AccAddress, status ProposalStatus, numLatest uint64) []Proposal {
 
 	maxProposalID, err := keeper.peekCurrentProposalID(ctx)
@@ -195,6 +197,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, voterAddr sdk.AccAddr
 	return matchingProposals
 }
 
+// Set the initial proposal ID
 func (keeper Keeper) setInitialProposalID(ctx sdk.Context, proposalID uint64) sdk.Error {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := store.Get(KeyNextProposalID)
@@ -251,7 +254,6 @@ func (keeper Keeper) activateVotingPeriod(ctx sdk.Context, proposal Proposal) {
 	keeper.InsertActiveProposalQueue(ctx, proposal.GetVotingEndTime(), proposal.GetProposalID())
 }
 
-// =====================================================
 // Params
 
 // Returns the current DepositParams from the global param store
@@ -293,7 +295,6 @@ func (keeper Keeper) setTallyParams(ctx sdk.Context, tallyParams TallyParams) {
 	keeper.paramSpace.Set(ctx, ParamStoreKeyTallyParams, &tallyParams)
 }
 
-// =====================================================
 // Votes
 
 // Adds a vote on a specific proposal
@@ -349,7 +350,6 @@ func (keeper Keeper) deleteVote(ctx sdk.Context, proposalID uint64, voterAddr sd
 	store.Delete(KeyVote(proposalID, voterAddr))
 }
 
-// =====================================================
 // Deposits
 
 // Gets the deposit of a specific depositor on a specific proposal

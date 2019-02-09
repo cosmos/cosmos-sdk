@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-//-----------------------------------------------------------
 // Proposal interface
 type Proposal interface {
 	GetProposalID() uint64
@@ -79,7 +78,6 @@ func ProposalEqual(proposalA Proposal, proposalB Proposal) bool {
 	return false
 }
 
-//-----------------------------------------------------------
 // Text Proposals
 type TextProposal struct {
 	ProposalID   uint64       `json:"proposal_id"`   //  ID of the proposal
@@ -147,11 +145,9 @@ func (tp TextProposal) String() string {
 		tp.TotalDeposit, tp.VotingStartTime, tp.VotingEndTime)
 }
 
-//-----------------------------------------------------------
 // ProposalQueue
 type ProposalQueue []uint64
 
-//-----------------------------------------------------------
 // ProposalKind
 
 // Type that represents Proposal Type as a byte
@@ -165,7 +161,7 @@ const (
 	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
 )
 
-// String to proposalType byte.  Returns ff if invalid.
+// String to proposalType byte. Returns 0xff if invalid.
 func ProposalTypeFromString(str string) (ProposalKind, error) {
 	switch str {
 	case "Text":
@@ -247,7 +243,6 @@ func (pt ProposalKind) Format(s fmt.State, verb rune) {
 	}
 }
 
-//-----------------------------------------------------------
 // ProposalStatus
 
 // Type that represents Proposal Status as a byte
@@ -351,8 +346,8 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	}
 }
 
-//-----------------------------------------------------------
 // Tally Results
+// TODO: Can these be sdk.Int?
 type TallyResult struct {
 	Yes        sdk.Dec `json:"yes"`
 	Abstain    sdk.Dec `json:"abstain"`

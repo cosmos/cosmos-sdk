@@ -76,13 +76,13 @@ func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 		feePool := d.GetFeePool(ctx)
 
 		// add outstanding fees
-		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(staking.DefaultBondDenom)))
+		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx))))
 
 		// add community pool
-		loose = loose.Add(feePool.CommunityPool.AmountOf(staking.DefaultBondDenom))
+		loose = loose.Add(feePool.CommunityPool.AmountOf(k.BondDenom(ctx)))
 
 		// add yet-to-be-withdrawn
-		loose = loose.Add(d.GetOutstandingRewards(ctx).AmountOf(staking.DefaultBondDenom))
+		loose = loose.Add(d.GetOutstandingRewards(ctx).AmountOf(k.BondDenom(ctx)))
 
 		// Not-bonded tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators

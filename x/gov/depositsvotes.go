@@ -55,6 +55,9 @@ func (d Deposit) String() string {
 type Deposits []Deposit
 
 func (d Deposits) String() string {
+	if len(d) == 0 {
+		return "[]"
+	}
 	out := fmt.Sprintf("Deposits for Proposal %d:", d[0].ProposalID)
 	for _, dep := range d {
 		out += fmt.Sprintf("\n  %s: %s", dep.Depositor, dep.Amount)

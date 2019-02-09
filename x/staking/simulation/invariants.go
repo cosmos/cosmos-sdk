@@ -54,7 +54,7 @@ func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 		loose := sdk.ZeroDec()
 		bonded := sdk.ZeroDec()
 		am.IterateAccounts(ctx, func(acc auth.Account) bool {
-			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(staking.DefaultBondDenom)))
+			loose = loose.Add(sdk.NewDecFromInt(acc.GetCoins().AmountOf(k.BondDenom(ctx))))
 			return false
 		})
 		k.IterateUnbondingDelegations(ctx, func(_ int64, ubd staking.UnbondingDelegation) bool {
@@ -76,13 +76,13 @@ func SupplyInvariants(ck bank.Keeper, k staking.Keeper,
 		feePool := d.GetFeePool(ctx)
 
 		// add outstanding fees
-		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(staking.DefaultBondDenom)))
+		loose = loose.Add(sdk.NewDecFromInt(f.GetCollectedFees(ctx).AmountOf(k.BondDenom(ctx))))
 
 		// add community pool
-		loose = loose.Add(feePool.CommunityPool.AmountOf(staking.DefaultBondDenom))
+		loose = loose.Add(feePool.CommunityPool.AmountOf(k.BondDenom(ctx)))
 
 		// add yet-to-be-withdrawn
-		loose = loose.Add(d.GetOutstandingRewards(ctx).AmountOf(staking.DefaultBondDenom))
+		loose = loose.Add(d.GetOutstandingRewards(ctx).AmountOf(k.BondDenom(ctx)))
 
 		// Not-bonded tokens should equal coin supply plus unbonding delegations
 		// plus tokens on unbonded validators

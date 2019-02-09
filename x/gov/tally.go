@@ -27,13 +27,13 @@ func newValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegator
 
 // TODO: Break into several smaller functions for clarity
 func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tallyResults TallyResult) {
-	results := make(map[VoteOption]sdk.Int)
-	results[OptionYes] = sdk.ZeroInt()
-	results[OptionAbstain] = sdk.ZeroInt()
-	results[OptionNo] = sdk.ZeroInt()
-	results[OptionNoWithVeto] = sdk.ZeroInt()
+	results := make(map[VoteOption]sdk.Dec)
+	results[OptionYes] = sdk.ZeroDec()
+	results[OptionAbstain] = sdk.ZeroDec()
+	results[OptionNo] = sdk.ZeroDec()
+	results[OptionNoWithVeto] = sdk.ZeroDec()
 
-	totalVotingPower := sdk.ZeroInt()
+	totalVotingPower := sdk.ZeroDec()
 	currValidators := make(map[string]validatorGovInfo)
 
 	// fetch all the bonded validators, insert them into currValidators
@@ -73,8 +73,8 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 					delegatorShare := delegation.GetShares().Quo(val.DelegatorShares)
 					votingPower := delegatorShare.MulInt(val.BondedTokens)
 
-					results[vote.Option] = results[vote.Option].Add(votingPower.TruncateInt())
-					totalVotingPower = totalVotingPower.Add(votingPower.TruncateInt())
+					results[vote.Option] = results[vote.Option].Add(votingPower)
+					totalVotingPower = totalVotingPower.Add(votingPower)
 				}
 
 				return false
@@ -92,7 +92,7 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 
 		sharesAfterDeductions := val.DelegatorShares.Sub(val.DelegatorDeductions)
 		fractionAfterDeductions := sharesAfterDeductions.Quo(val.DelegatorShares)
-		votingPower := fractionAfterDeductions.MulInt(val.BondedTokens).TruncateInt()
+		votingPower := fractionAfterDeductions.MulInt(val.BondedTokens)
 
 		results[val.Vote] = results[val.Vote].Add(votingPower)
 		totalVotingPower = totalVotingPower.Add(votingPower)
@@ -107,20 +107,20 @@ func tally(ctx sdk.Context, keeper Keeper, proposal Proposal) (passes bool, tall
 		return false, tallyResults
 	}
 	// If there is not enough quorum of votes, the proposal fails
-	percentVoting := sdk.NewDecFromInt(totalVotingPower).Quo(sdk.NewDecFromInt(keeper.vs.TotalPower(ctx)))
+	percentVoting := totalVotingPower.Quo(sdk.NewDecFromInt(keeper.vs.TotalPower(ctx)))
 	if percentVoting.LT(tallyParams.Quorum) {
 		return false, tallyResults
 	}
 	// If no one votes (everyone abstains), proposal fails
-	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroInt()) {
+	if totalVotingPower.Sub(results[OptionAbstain]).Equal(sdk.ZeroDec()) {
 		return false, tallyResults
 	}
 	// If more than 1/3 of voters veto, proposal fails
-	if sdk.NewDecFromInt(results[OptionNoWithVeto]).Quo(sdk.NewDecFromInt(totalVotingPower)).GT(tallyParams.Veto) {
+	if results[OptionNoWithVeto].Quo(totalVotingPower).GT(tallyParams.Veto) {
 		return false, tallyResults
 	}
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
-	if sdk.NewDecFromInt(results[OptionYes]).Quo(sdk.NewDecFromInt(totalVotingPower.Sub(results[OptionAbstain]))).GT(tallyParams.Threshold) {
+	if results[OptionYes].Quo(totalVotingPower.Sub(results[OptionAbstain])).GT(tallyParams.Threshold) {
 		return true, tallyResults
 	}
 	// If more than 1/2 of non-abstaining voters vote No, proposal fails

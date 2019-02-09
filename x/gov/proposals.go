@@ -347,7 +347,6 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 }
 
 // Tally Results
-// TODO: Can these be sdk.Int?
 type TallyResult struct {
 	Yes        sdk.Int `json:"yes"`
 	Abstain    sdk.Int `json:"abstain"`
@@ -364,12 +363,12 @@ func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
 	}
 }
 
-func NewTallyResultFromMap(results map[VoteOption]sdk.Int) TallyResult {
+func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 	return TallyResult{
-		Yes:        results[OptionYes],
-		Abstain:    results[OptionAbstain],
-		No:         results[OptionNo],
-		NoWithVeto: results[OptionNoWithVeto],
+		Yes:        results[OptionYes].TruncateInt(),
+		Abstain:    results[OptionAbstain].TruncateInt(),
+		No:         results[OptionNo].TruncateInt(),
+		NoWithVeto: results[OptionNoWithVeto].TruncateInt(),
 	}
 }
 

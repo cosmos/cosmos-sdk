@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DefaultCodespace sdk.CodespaceType = "GOV"
+	DefaultCodespace sdk.CodespaceType = ModuleName
 
 	CodeUnknownProposal         sdk.CodeType = 1
 	CodeInactiveProposal        sdk.CodeType = 2
@@ -23,7 +23,6 @@ const (
 	CodeInvalidProposalStatus   sdk.CodeType = 11
 )
 
-//----------------------------------------
 // Error constructors
 
 func ErrUnknownProposal(codespace sdk.CodespaceType, proposalID uint64) sdk.Error {

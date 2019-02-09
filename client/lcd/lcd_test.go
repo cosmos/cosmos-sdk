@@ -870,7 +870,7 @@ func TestVote(t *testing.T) {
 	require.Equal(t, gov.OptionYes, vote.Option)
 
 	tally := getTally(t, port, proposalID)
-	require.Equal(t, sdk.ZeroDec(), tally.Yes, "tally should be 0 as the address is not bonded")
+	require.Equal(t, sdk.ZeroInt(), tally.Yes, "tally should be 0 as the address is not bonded")
 
 	// create bond TX
 	delTokens := staking.TokensFromTendermintPower(60)
@@ -885,7 +885,7 @@ func TestVote(t *testing.T) {
 	expectedBalance = coins[0]
 
 	tally = getTally(t, port, proposalID)
-	require.Equal(t, sdk.NewDecFromInt(delTokens), tally.Yes, "tally should be equal to the amount delegated")
+	require.Equal(t, delTokens, tally.Yes, "tally should be equal to the amount delegated")
 
 	// change vote option
 	resultTx = doVote(t, port, seed, name1, pw, addr, proposalID, "No", fees)
@@ -897,8 +897,8 @@ func TestVote(t *testing.T) {
 	require.Equal(t, expectedBalance.Amount, acc.GetCoins().AmountOf(staking.DefaultBondDenom))
 
 	tally = getTally(t, port, proposalID)
-	require.Equal(t, sdk.ZeroDec(), tally.Yes, "tally should be 0 the user changed the option")
-	require.Equal(t, sdk.NewDecFromInt(delTokens), tally.No, "tally should be equal to the amount delegated")
+	require.Equal(t, sdk.ZeroInt(), tally.Yes, "tally should be 0 the user changed the option")
+	require.Equal(t, delTokens, tally.No, "tally should be equal to the amount delegated")
 }
 
 func TestUnjail(t *testing.T) {

@@ -13,6 +13,7 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 	resTags := sdk.NewTags()
 
 	inactiveIterator := keeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	defer inactiveIterator.Close()
 	for ; inactiveIterator.Valid(); inactiveIterator.Next() {
 		var proposalID uint64
 
@@ -35,9 +36,9 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		)
 	}
 
-	inactiveIterator.Close()
-
+	// fetch active proposals whose voting periods have ended (are passed the block time)
 	activeIterator := keeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+	defer activeIterator.Close()
 	for ; activeIterator.Valid(); activeIterator.Next() {
 		var proposalID uint64
 
@@ -70,8 +71,6 @@ func EndBlocker(ctx sdk.Context, keeper Keeper) sdk.Tags {
 		resTags = resTags.AppendTag(tags.ProposalID, fmt.Sprintf("%d", proposalID))
 		resTags = resTags.AppendTag(tags.ProposalResult, tagValue)
 	}
-
-	activeIterator.Close()
 
 	return resTags
 }

@@ -349,13 +349,13 @@ func (status ProposalStatus) Format(s fmt.State, verb rune) {
 // Tally Results
 // TODO: Can these be sdk.Int?
 type TallyResult struct {
-	Yes        sdk.Dec `json:"yes"`
-	Abstain    sdk.Dec `json:"abstain"`
-	No         sdk.Dec `json:"no"`
-	NoWithVeto sdk.Dec `json:"no_with_veto"`
+	Yes        sdk.Int `json:"yes"`
+	Abstain    sdk.Int `json:"abstain"`
+	No         sdk.Int `json:"no"`
+	NoWithVeto sdk.Int `json:"no_with_veto"`
 }
 
-func NewTallyResult(yes, abstain, no, noWithVeto sdk.Dec) TallyResult {
+func NewTallyResult(yes, abstain, no, noWithVeto sdk.Int) TallyResult {
 	return TallyResult{
 		Yes:        yes,
 		Abstain:    abstain,
@@ -364,7 +364,7 @@ func NewTallyResult(yes, abstain, no, noWithVeto sdk.Dec) TallyResult {
 	}
 }
 
-func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
+func NewTallyResultFromMap(results map[VoteOption]sdk.Int) TallyResult {
 	return TallyResult{
 		Yes:        results[OptionYes],
 		Abstain:    results[OptionAbstain],
@@ -376,10 +376,10 @@ func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 // checks if two proposals are equal
 func EmptyTallyResult() TallyResult {
 	return TallyResult{
-		Yes:        sdk.ZeroDec(),
-		Abstain:    sdk.ZeroDec(),
-		No:         sdk.ZeroDec(),
-		NoWithVeto: sdk.ZeroDec(),
+		Yes:        sdk.ZeroInt(),
+		Abstain:    sdk.ZeroInt(),
+		No:         sdk.ZeroInt(),
+		NoWithVeto: sdk.ZeroInt(),
 	}
 }
 

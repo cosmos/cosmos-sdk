@@ -56,10 +56,10 @@ func RegisterRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) 
 
 type postProposalReq struct {
 	BaseReq        rest.BaseReq   `json:"base_req"`
-	Title          string         `json:"title"`           //  Title of the proposal
-	Description    string         `json:"description"`     //  Description of the proposal
-	ProposalType   string         `json:"proposal_type"`   //  Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
-	Proposer       sdk.AccAddress `json:"proposer"`        //  Address of the proposer
+	Title          string         `json:"title"`           // Title of the proposal
+	Description    string         `json:"description"`     // Description of the proposal
+	ProposalType   string         `json:"proposal_type"`   // Type of proposal. Initial set {PlainTextProposal, SoftwareUpgradeProposal}
+	Proposer       sdk.AccAddress `json:"proposer"`        // Address of the proposer
 	InitialDeposit sdk.Coins      `json:"initial_deposit"` // Coins to add to the proposal's deposit
 }
 
@@ -71,8 +71,8 @@ type depositReq struct {
 
 type voteReq struct {
 	BaseReq rest.BaseReq   `json:"base_req"`
-	Voter   sdk.AccAddress `json:"voter"`  //  address of the voter
-	Option  string         `json:"option"` //  option from OptionSet chosen by the voter
+	Voter   sdk.AccAddress `json:"voter"`  // address of the voter
+	Option  string         `json:"option"` // option from OptionSet chosen by the voter
 }
 
 func postProposalHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {

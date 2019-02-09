@@ -66,7 +66,7 @@ $ sudo snap alias gaia.gaiacli gaiacli
 ```
 
 ::: warning
-Note that the binaries provided by the snap package save their data into **$HOME/snap/gaia/** instead **$HOME**.
+Note that the binaries provided by the snap package save their data into **$HOME/snap/gaia/** instead of **$HOME**.
 :::
 
 Please refer to [Snap documentation](https://docs.snapcraft.io/installing-snapd/6735) for specific information on how to install `snap` on your distribution.

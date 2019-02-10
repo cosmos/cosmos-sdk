@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	"errors"
 
@@ -399,7 +400,7 @@ func AddNewKeyRequestHandler(indent bool) http.HandlerFunc {
 
 		keyOutput.Mnemonic = mnemonic
 
-		PostProcessResponse(w, cdc, keyOutput, indent)
+		rest.PostProcessResponse(w, cdc, keyOutput, indent)
 	}
 }
 
@@ -488,6 +489,6 @@ func RecoverRequestHandler(indent bool) http.HandlerFunc {
 			return
 		}
 
-		PostProcessResponse(w, cdc, keyOutput, indent)
+		rest.PostProcessResponse(w, cdc, keyOutput, indent)
 	}
 }

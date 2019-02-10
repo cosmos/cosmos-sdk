@@ -3,7 +3,7 @@ package tx
 import (
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	"io/ioutil"
 
@@ -50,7 +50,8 @@ func BroadcastTxRequest(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 		case flagAsync:
 			res, err = cliCtx.BroadcastTxAsync(m.TxBytes)
 		default:
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, "unsupported return type. supported types: block, sync, async")
+			rest.WriteErrorResponse(w, http.StatusInternalServerError,
+				"unsupported return type. supported types: block, sync, async")
 			return
 		}
 		if err != nil {

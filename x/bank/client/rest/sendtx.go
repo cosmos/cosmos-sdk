@@ -3,15 +3,16 @@ package rest
 import (
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
+	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
+	clientRest "github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	"github.com/gorilla/mux"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // RegisterRoutes - Central function to define routes that get registered by the main application
@@ -62,7 +63,7 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 			}
 
 			msg := bank.NewMsgSend(fromAddr, toAddr, req.Amount)
-			rest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientRest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
@@ -76,6 +77,6 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
 		msg := bank.NewMsgSend(cliCtx.GetFromAddress(), toAddr, req.Amount)
 
-		rest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientRest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

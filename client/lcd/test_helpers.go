@@ -20,7 +20,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/keys"
-	"github.com/cosmos/cosmos-sdk/client/rest"
+
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	gapp "github.com/cosmos/cosmos-sdk/cmd/gaia/app"
@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/tests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	txbuilder "github.com/cosmos/cosmos-sdk/x/auth/client/txbuilder"
@@ -653,7 +654,7 @@ func doSign(t *testing.T, port, name, password, chainID string, accnum, sequence
 
 // POST /tx/broadcast Send a signed Tx
 func doBroadcast(t *testing.T, port string, msg auth.StdTx) sdk.TxResponse {
-	tx := rest.BroadcastReq{Tx: msg, Return: "block"}
+	tx := authrest.BroadcastReq{Tx: msg, Return: "block"}
 	req, err := cdc.MarshalJSON(tx)
 	require.Nil(t, err)
 	res, body := Request(t, port, "POST", "/tx/broadcast", req)

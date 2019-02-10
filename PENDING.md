@@ -9,6 +9,7 @@ BREAKING CHANGES
 * Gaia
 
 * SDK
+ * \#3580 Migrate HTTP request/response types and utilities to types/rest.
 
 * Tendermint
 

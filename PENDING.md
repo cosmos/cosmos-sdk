@@ -47,5 +47,6 @@ BUG FIXES
 * Gaia
 
 * SDK
+  * [\#3582](https://github.com/cosmos/cosmos-sdk/pull/3582) Running `make test_unit was failing due to a missing tag
 
 * Tendermint

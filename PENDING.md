@@ -45,7 +45,6 @@ BUG FIXES
 * Gaia CLI
   * [\#3586](https://github.com/cosmos/cosmos-sdk/pull/3586) Incomplete ledger derivation paths in keybase 
 
-
 * Gaia
 
 * SDK

@@ -79,7 +79,6 @@ func TestPublicKeyHDPath(t *testing.T) {
 		// Store and restore
 		serializedPk := priv.Bytes()
 		require.NotNil(t, serializedPk)
-		fmt.Print(len(serializedPk))
 		require.True(t, len(serializedPk) >= 50)
 
 		privKeys[i] = priv

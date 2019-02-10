@@ -4,10 +4,11 @@ package keys
 
 import (
 	"bufio"
-	"github.com/cosmos/cosmos-sdk/crypto/keys"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/spf13/viper"
 	"github.com/tendermint/tendermint/libs/cli"

@@ -70,9 +70,14 @@ func NewResponseResultTx(res *ctypes.ResultTx, tx Tx) TxResponse {
 }
 
 func NewResponseFormatBroadcastTxCommit(res *ctypes.ResultBroadcastTxCommit) TxResponse {
+	var txHash string
+	if res.Hash != nil {
+		txHash = res.Hash.String()
+	}
+
 	return TxResponse{
 		Height:    res.Height,
-		TxHash:    res.Hash.String(),
+		TxHash:    txHash,
 		Code:      res.DeliverTx.Code,
 		Data:      res.DeliverTx.Data,
 		Log:       res.DeliverTx.Log,

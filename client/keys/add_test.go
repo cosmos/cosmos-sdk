@@ -20,50 +20,41 @@ import (
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
-	cmd := addKeyCommand()
-	assert.NotNil(t, cmd)
-
-	// Missing input (enter password)
-	err := runAddCmd(cmd, []string{"keyname"})
-	assert.EqualError(t, err, "EOF")
-
 	// Prepare a keybase
 	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
 	assert.NotNil(t, kbHome)
 	defer kbCleanUp()
-	viper.Set(cli.HomeFlag, kbHome)
+
+	// Missing input (enter password)
+	assert.EqualError(t, runAddCmd(kbHome, []string{"keyname"}), "EOF")
 
 	/// Test Text
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp1()
-	err = runAddCmd(cmd, []string{"keyname1"})
-	assert.NoError(t, err)
+	assert.NoError(t, runAddCmd(kbHome, []string{"keyname1"}))
 
 	/// Test Text - Replace? >> FAIL
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	cleanUp2 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp2()
-	err = runAddCmd(cmd, []string{"keyname1"})
-	assert.Error(t, err)
+	assert.Error(t, runAddCmd(kbHome, []string{"keyname1"}))
 
 	/// Test Text - Replace? Answer >> PASS
 	viper.Set(cli.OutputFlag, OutputFormatText)
 	// Now enter password
 	cleanUp3 := client.OverrideStdin(bufio.NewReader(strings.NewReader("y\ntest1234\ntest1234\n")))
 	defer cleanUp3()
-	err = runAddCmd(cmd, []string{"keyname1"})
-	assert.NoError(t, err)
+	assert.NoError(t, runAddCmd(kbHome, []string{"keyname1"}))
 
 	// Check JSON
 	viper.Set(cli.OutputFlag, OutputFormatJSON)
 	// Now enter password
 	cleanUp4 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
 	defer cleanUp4()
-	err = runAddCmd(cmd, []string{"keyname2"})
-	assert.NoError(t, err)
+	assert.NoError(t, runAddCmd(kbHome, []string{"keyname2"}))
 }
 
 type MockResponseWriter struct {

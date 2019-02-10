@@ -65,7 +65,9 @@ required through --multisig-threshold. The keys are sorted by address, unless
 the flag --nosort is set.
 `,
 		Args: cobra.ExactArgs(1),
-		RunE: runAddCmd,
+		RunE: func(_ *cobra.Command, args []string) error {
+			return runAddCmd(viper.GetString(cli.HomeFlag), args)
+		},
 	}
 	cmd.Flags().StringSlice(flagMultisig, nil, "Construct and store a multisig public key (implies --pubkey)")
 	cmd.Flags().Uint(flagMultiSigThreshold, 1, "K out of N required signatures. For use in conjunction with --multisig")
@@ -90,7 +92,7 @@ input
 output
 	- armor encrypted private key (saved to file)
 */
-func runAddCmd(_ *cobra.Command, args []string) error {
+func runAddCmd(home string, args []string) error {
 	var kb keys.Keybase
 	var err error
 	var encryptPassword string
@@ -107,7 +109,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 		kb = client.MockKeyBase()
 		encryptPassword = app.DefaultKeyPass
 	} else {
-		kb, err = NewKeyBaseFromHomeFlag()
+		kb, err = NewKeyBaseFromDir(home)
 		if err != nil {
 			return err
 		}

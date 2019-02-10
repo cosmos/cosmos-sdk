@@ -36,11 +36,11 @@ const (
 // m / purpose' / coin_type' / account' / change / address_index
 // call String() on a BIP44Params instance.
 type BIP44Params struct {
-	purpose    uint32
-	coinType   uint32
-	account    uint32
-	change     bool
-	addressIdx uint32
+	purpose    uint32	`json:"purpose"`
+	coinType   uint32	`json:"count"`
+	account    uint32	`json:"account"`
+	change     bool		`json:"change"`
+	addressIdx uint32	`json:"index"`
 }
 
 // NewParams creates a BIP 44 parameter object from the params:

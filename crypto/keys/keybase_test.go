@@ -74,13 +74,28 @@ func TestCreateLedger(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
 		assert.Nil(t, ledger)
-	} else {
-		// The mock is available, check that the address is correct
-		pubKey := ledger.GetPubKey()
-		addr, err := sdk.Bech32ifyAccPub(pubKey)
-		assert.NoError(t, err)
-		assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", addr)
+		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
+		return
 	}
+
+	// The mock is available, check that the address is correct
+	pubKey := ledger.GetPubKey()
+	pk, err := sdk.Bech32ifyAccPub(pubKey)
+	assert.NoError(t, err)
+	assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", pk)
+
+	// Check that restoring the key gets the same results
+	restoredKey, err := kb.Get("some_account")
+	assert.NotNil(t, restoredKey)
+	assert.Equal(t, "some_account", restoredKey.GetName())
+	assert.Equal(t, TypeLedger, restoredKey.GetType())
+	pubKey = restoredKey.GetPubKey()
+	pk, err = sdk.Bech32ifyAccPub(pubKey)
+	assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", pk)
+
+	linfo := restoredKey.(ledgerInfo)
+	assert.Equal(t, "44'/118'/0'/0/0", linfo.Path.String())
+
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well

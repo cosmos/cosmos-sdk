@@ -66,6 +66,34 @@ func Test_runAddCmdBasic(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func Test_runAddCmdLedger(t *testing.T) {
+	cmd := addKeyCommand()
+	assert.NotNil(t, cmd)
+
+	// Prepare a keybase
+	kbHome, kbCleanUp := tests.NewTestCaseDir(t)
+	assert.NotNil(t, kbHome)
+	defer kbCleanUp()
+	viper.Set(cli.HomeFlag, kbHome)
+	viper.Set(client.FlagUseLedger, true)
+
+	/// Test Text
+	viper.Set(cli.OutputFlag, OutputFormatText)
+	// Now enter password
+	cleanUp1 := client.OverrideStdin(bufio.NewReader(strings.NewReader("test1234\ntest1234\n")))
+	defer cleanUp1()
+	err := runAddCmd(cmd, []string{"keyname1"})
+	assert.NoError(t, err)
+
+	// Now check that it has been stored properly
+	kb, err := NewKeyBaseFromHomeFlag()
+	key1, err := kb.Get("keyname1")
+	assert.NoError(t, err)
+	assert.NotNil(t, key1)
+
+	assert.Equal(t, "keyname1", key1.GetName())
+}
+
 type MockResponseWriter struct {
 	dataHeaderStatus int
 	dataBody         []byte

@@ -284,9 +284,9 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcr
 			return nil, err
 		}
 	case ledgerInfo:
-		return nil, errors.New("Only works on local private keys")
+		return nil, errors.New("only works on local private keys")
 	case offlineInfo:
-		return nil, errors.New("Only works on local private keys")
+		return nil, errors.New("only works on local private keys")
 	}
 	return priv, nil
 }
@@ -428,7 +428,8 @@ func (kb dbKeybase) writeOfflineKey(name string, pub tmcrypto.PubKey) Info {
 func (kb dbKeybase) writeInfo(name string, info Info) {
 	// write the info by key
 	key := infoKey(name)
-	kb.db.SetSync(key, writeInfo(info))
+	serializedInfo := writeInfo(info)
+	kb.db.SetSync(key, serializedInfo)
 	// store a pointer to the infokey by address for fast lookup
 	kb.db.SetSync(addrKey(info.GetAddress()), key)
 }

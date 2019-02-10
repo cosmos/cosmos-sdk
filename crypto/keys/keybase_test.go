@@ -68,7 +68,7 @@ func TestCreateLedger(t *testing.T) {
 	// test_cover does not compile some dependencies so ledger is disabled
 	// test_unit may add a ledger mock
 	// both cases are acceptable
-	ledger, err := kb.CreateLedger("some_account", Secp256k1, 0, 1)
+	ledger, err := kb.CreateLedger("some_account", Secp256k1, 3, 1)
 
 	if err != nil {
 		assert.Error(t, err)
@@ -82,7 +82,7 @@ func TestCreateLedger(t *testing.T) {
 	pubKey := ledger.GetPubKey()
 	pk, err := sdk.Bech32ifyAccPub(pubKey)
 	assert.NoError(t, err)
-	assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", pk)
+	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
 	// Check that restoring the key gets the same results
 	restoredKey, err := kb.Get("some_account")
@@ -91,10 +91,10 @@ func TestCreateLedger(t *testing.T) {
 	assert.Equal(t, TypeLedger, restoredKey.GetType())
 	pubKey = restoredKey.GetPubKey()
 	pk, err = sdk.Bech32ifyAccPub(pubKey)
-	assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", pk)
+	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
 
 	linfo := restoredKey.(ledgerInfo)
-	assert.Equal(t, "44'/118'/0'/0/0", linfo.GetPath().String())
+	assert.Equal(t, "44'/118'/3'/0/1", linfo.GetPath().String())
 
 }
 

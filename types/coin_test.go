@@ -377,6 +377,7 @@ func TestParse(t *testing.T) {
 		expected Coins // if valid is true, make sure this is returned
 	}{
 		{"", true, nil},
+		{"0", false, nil}, // // empty denom
 		{"1foo", true, Coins{{"foo", one}}},
 		{"10bar", true, Coins{{"bar", NewInt(10)}}},
 		{"99bar,1foo", true, Coins{{"bar", NewInt(99)}, {"foo", one}}},
@@ -388,6 +389,11 @@ func TestParse(t *testing.T) {
 		{"11me coin, 12you coin", false, nil}, // no spaces in coin names
 		{"1.2btc", false, nil},                // amount must be integer
 		{"5foo-bar", false, nil},              // once more, only letters in coin name
+		{"5foo,-3bar", false, nil},            // all coins must pass validation
+		{"5.2foo", false, nil},                // decimal coin
+		{"-5foo", false, nil},                 // negative coin
+		{"0foo", false, nil},                  // invalid zero
+		{"-0foo", false, nil},                 // negative zero
 	}
 
 	for tcIndex, tc := range cases {

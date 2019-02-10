@@ -104,7 +104,7 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 	if viper.GetBool(flagDryRun) {
 		// we throw this away, so don't enforce args,
 		// we want to get a new random seed phrase quickly
-		kb = client.MockKeyBase()
+		kb = keys.NewInMemory()
 		encryptPassword = app.DefaultKeyPass
 	} else {
 		kb, err = NewKeyBaseFromHomeFlag()
@@ -309,7 +309,7 @@ func printCreate(info keys.Info, showMnemonic bool, mnemonic string) error {
 
 // function to just create a new seed to display in the UI before actually persisting it in the keybase
 func generateMnemonic(algo keys.SigningAlgo) string {
-	kb := client.MockKeyBase()
+	kb := keys.NewInMemory()
 	pass := app.DefaultKeyPass
 	name := "inmemorykey"
 	_, seed, _ := kb.CreateMnemonic(name, keys.English, pass, algo)

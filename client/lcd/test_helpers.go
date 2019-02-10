@@ -682,7 +682,7 @@ func doTransferWithGas(
 ) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
 	// create receive address
-	kb := client.MockKeyBase()
+	kb := crkeys.NewInMemory()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
 		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),
@@ -724,7 +724,7 @@ func doTransferWithGasAccAuto(
 ) (res *http.Response, body string, receiveAddr sdk.AccAddress) {
 
 	// create receive address
-	kb := client.MockKeyBase()
+	kb := crkeys.NewInMemory()
 
 	receiveInfo, _, err := kb.CreateMnemonic(
 		"receive_address", crkeys.English, gapp.DefaultKeyPass, crkeys.SigningAlgo("secp256k1"),

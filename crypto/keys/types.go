@@ -150,6 +150,10 @@ func (i ledgerInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+func (i ledgerInfo) GetPath() hd.BIP44Params {
+	return i.Path
+}
+
 // offlineInfo is the public information about an offline key
 type offlineInfo struct {
 	Name   string        `json:"name"`
@@ -181,11 +185,13 @@ func (i offlineInfo) GetAddress() types.AccAddress {
 
 // encoding info
 func writeInfo(i Info) []byte {
-	return cdc.MustMarshalBinaryLengthPrefixed(i)
+//	return cdc.MustMarshalBinaryLengthPrefixed(i)
+	return cdc.MustMarshalJSON(i)
 }
 
 // decoding info
 func readInfo(bz []byte) (info Info, err error) {
-	err = cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	err = cdc.UnmarshalJSON(bz, &info)
+//	err = cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
 	return
 }

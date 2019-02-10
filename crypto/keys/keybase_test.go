@@ -94,7 +94,7 @@ func TestCreateLedger(t *testing.T) {
 	assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", pk)
 
 	linfo := restoredKey.(ledgerInfo)
-	assert.Equal(t, "44'/118'/0'/0/0", linfo.Path.String())
+	assert.Equal(t, "44'/118'/0'/0/0", linfo.GetPath().String())
 
 }
 

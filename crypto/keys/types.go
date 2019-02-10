@@ -185,13 +185,11 @@ func (i offlineInfo) GetAddress() types.AccAddress {
 
 // encoding info
 func writeInfo(i Info) []byte {
-//	return cdc.MustMarshalBinaryLengthPrefixed(i)
-	return cdc.MustMarshalJSON(i)
+	return cdc.MustMarshalBinaryLengthPrefixed(i)
 }
 
 // decoding info
 func readInfo(bz []byte) (info Info, err error) {
-	err = cdc.UnmarshalJSON(bz, &info)
-//	err = cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
+	err = cdc.UnmarshalBinaryLengthPrefixed(bz, &info)
 	return
 }

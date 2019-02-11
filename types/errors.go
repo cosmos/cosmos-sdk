@@ -262,7 +262,7 @@ func (err *sdkError) ABCILog() string {
 		panic(errors.Wrap(err, "failed to encode ABCI error log"))
 	}
 
-	return buff.String()
+	return strings.TrimSpace(buff.String())
 }
 
 func (err *sdkError) Result() Result {

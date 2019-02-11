@@ -34,7 +34,7 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
-  * [\#3601] Improve SDK funds related error messages and allow for unicode in
+  * [\#3604] Improve SDK funds related error messages and allow for unicode in
   JSON ABCI log.
 
 * Tendermint

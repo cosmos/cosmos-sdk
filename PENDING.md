@@ -45,6 +45,7 @@ BUG FIXES
 * Gaia CLI
 
 * Gaia
+  * [\#3585] Fix setting the tx hash in `NewResponseFormatBroadcastTxCommit`.
 
 * SDK
 

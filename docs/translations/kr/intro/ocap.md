@@ -34,9 +34,9 @@
 
 ## 실전에서의 오브젝트 가능성 모델(Ocaps)
 
-Ocaps의 핵심 아이디어는 특정 일을 수행하는데 필요한 정보만을 공개하는 것이다.
+Ocaps의 핵심 아이디어는 특정 일을 수행하는데 필요한 정보만을 공개하는 것입니다.
 
-예를 들어, 다음의 코드는 오브젝트 가능성 원칙을 위해한다:
+예를 들어, 다음의 코드는 오브젝트 가능성 원칙을 위해합니다:
 
 ```go
 type AppAccount struct {...}
@@ -47,30 +47,22 @@ var account := &AppAccount{
 var sumValue := externalModule.ComputeSumValue(account)
 ```
 
-위 코드의 `ComputeSumValue` 메소드는 순수한(pure) 함수를 암시하지만, 포인터 밸류를 받아드리는 것의 암시된 가능성(implied capability)은 해당 밸류를 변경할 수 있는 가능성이다. 서명 메소드는 그대로 포인터 밸류를 받아들이지 않고 해당 밸류의 사본을 사용하는 것이 바람직하다.
+위 코드의 `ComputeSumValue` 메소드는 순수한(pure) 함수를 암시하지만, 포인터 밸류를 받아드리는 것의 암시된 가능성(implied capability)은 해당 밸류를 변경할 수 있는 가능성입니다. 서명 메소드는 그대로 포인터 밸류를 받아들이지 않고 해당 밸류의 사본을 사용하는 것이 바람직합니다.
 
 ```go
 var sumValue := externalModule.ComputeSumValue(*account)
 ```
 
-코스모스 SDK에서 이 원칙을 응용한 것을 [basecoin 예시 폴더](../examples/basecoin)에서 확인이 가능하다.
+코스모스 SDK에서 이 원칙을 응용한 것을 [gaia 앱](../gaia/app/app.go)에서 확인이 가능합니다.
 
 ```go
-// File: cosmos-sdk/docs/examples/basecoin/app/init_handlers.go
-package app
-
-import (
-    "github.com/cosmos/cosmos-sdk/x/bank"
-    "github.com/cosmos/cosmos-sdk/x/sketchy"
-)
-
-func (app *BasecoinApp) initRouterHandlers() {
-
-    // All handlers must be added here.
-    // The order matters.
-    app.router.AddRoute("bank", bank.NewHandler(app.accountKeeper))
-    app.router.AddRoute("sketchy", sketchy.NewHandler())
-}
+// register message routes
+app.Router().
+  AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
+  AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
+  AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
+  AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
+  AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
 ```
 
-Basecoin 예시에 따르면 sketchy 핸들러에게 어카운트 매퍼(account mapper)가 제공되지 않지만, bank handler에게는 제공이 된다(트랜잭션 실행에 대한 컨텍스트(context)가 포함되어 제공된다).
+

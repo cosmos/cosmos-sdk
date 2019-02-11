@@ -123,7 +123,7 @@ gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
 
 각 트랜잭션은 수수료(fee)를 지정하거나 가스 가격(gas price)을 지정할 수 있지만, 두 값을 함께 지정하는 것은 불가능합니다. 대다수의 유저는 지정된 비용만을 수수료로 사용하기 위해 수수료(fee)를 지정하는 방식으로 트랜잭션을 발생할 것으로 예상됩니다.
 
-각 검증인은 최소 가스 가격(minimum gas price)를 (다수 토큰 사용 가능) 설정할 수 있으며 이 값을 기준으로 `CheckTx` 단계에서 특정 트랜잭션을 블록에 포함시킬지 확인합니다. `gasPrices >= minGasPrices`일때 검증인은 트랜잭션을 처리합니다. 참고로 트랜잭션 전파시 검증인이 요구하는 토큰을 사용하셔야 합니다.
+각 검증인은 최소 가스 가격(minimum gas price)를 (다수 토큰 사용 가능) 설정할 수 있으며 이 값을 기준으로 `CheckTx` 단계에서 특정 트랜잭션을 블록에 포함시킬지 확인합니다. `gasPrices >= minGasPrices`일때 검증인은 트랜잭션을 처리합니다. 참고로 트랜잭션 전파시 검증인이 요구하는 토큰 중 하나를 수수료 지불 토큰으로 사용하셔야 합니다.
 
 __참고__: 위와 같은 메커니즘에서 일부 검증인은 멤풀에 있는 트랜잭션 중 높은 `gasPrice`의 트랜잭션을 우선적으로 처리할 수 있습니다. 그렇기 때문에 높은 수수료는 트랜잭션 처리 우선 순위를 높힐 수 있습니다.
 
@@ -162,11 +162,9 @@ gaiacli query account <account_cosmos>
 한 계정에서 다른 계정으로 토큰/코인을 전송하기 위해서는 다음 명령어를 이용하시면 됩니다:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmos> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmos>
 ```
 
 ::: warning 참고
@@ -193,22 +191,18 @@ gaiacli query account <account_cosmos> --block=<block_height>
 트랜잭션을 실제 전파하지 않고 시뮬레이션을 하시려면 명령어 뒤에 `--dry-run` 플래그를 추가하세요:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmosaccaddr> \
   --dry-run
 ```
 
 또한 트랜잭션을 빌드한 후 해당 트랜잭션을 JSON 포맷으로 STDOUT에 프린트 하시기를 원하면 `--generate-only`를 명령어에 추가하시면 됩니다:
 
 ```bash
-gaiacli tx send \
-  --amount=10faucetToken \
+gaiacli tx send <destination_cosmosaccaddr> 10faucetToken \
   --chain-id=<chain_id> \
   --from=<key_name> \
-  --to=<destination_cosmosaccaddr> \
   --generate-only > unsignedSendTx.json
 ```
 
@@ -694,10 +688,8 @@ gaiacli keys show --address p1p2p3
 위 주소를 기반으로 멀티시그 트랜잭션을 생성하는 과정의 첫 단계는 다음과 같습니다:
 
 ```bash
-gaiacli tx send \
+gaiacli tx send cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned 10stake \
   --from=<multisig_address> \
-  --to=cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned \
-  --amount=10stake \
   --generate-only > unsignedTx.json
 ```
 

@@ -6,9 +6,9 @@
 
 # Stake
 
-`x/stake` 모듈은 코스모스 위임형 지분증명(Delegated-Proof-of-Stake) 시스템에서 사용됩니다.
+`x/staking` 모듈은 코스모스 위임형 지분증명(Delegated-Proof-of-Stake) 시스템에서 사용됩니다.
 
-[API 문서](https://godoc.org/github.com/cosmos/cosmos-sdk/x/stake)를 확인하세요.
+[API 문서](https://godoc.org/github.com/cosmos/cosmos-sdk/x/staking)를 확인하세요.
 
 관련 스펙은 [여기](https://github.com/cosmos/cosmos-sdk/tree/develop/docs/spec/staking)에서 확인하실 수 있습니다.
 

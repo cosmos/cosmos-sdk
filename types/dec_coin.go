@@ -60,6 +60,12 @@ func NewDecCoinFromCoin(coin Coin) DecCoin {
 	}
 }
 
+// NewInt64DecCoin returns a new DecCoin with a denomination and amount. It will
+// panic if the amount is negative or denom is invalid.
+func NewInt64DecCoin(denom string, amount int64) DecCoin {
+	return NewDecCoin(denom, NewInt(amount))
+}
+
 // SameDenomAs returns true if the two DecCoin have the same denom.
 func (coin DecCoin) SameDenomAs(other DecCoin) bool {
 	return (coin.Denom == other.Denom)
@@ -159,15 +165,18 @@ func (coins DecCoins) String() string {
 	return out[:len(out)-1]
 }
 
-// return the coins with trunctated decimals, and return the change
+// TruncateDecimal returns the coins with truncated decimals and returns the
+// change.
 func (coins DecCoins) TruncateDecimal() (Coins, DecCoins) {
 	changeSum := DecCoins{}
 	out := make(Coins, len(coins))
+
 	for i, coin := range coins {
 		truncated, change := coin.TruncateDecimal()
 		out[i] = truncated
 		changeSum = changeSum.Plus(DecCoins{change})
 	}
+
 	return out, changeSum
 }
 

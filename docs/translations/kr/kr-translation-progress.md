@@ -30,6 +30,7 @@ Please refer to the official english version of the documentation for the latest
 ### [`gaia`](../gaia/)
 - *Last update [78a2135](https://github.com/dogemos/cosmos-sdk/commit/78a21353da978d6c2a9b711f29b3874ff9ca14ae#diff-3302fe357e01f0996ddb0f10adec85f0)*
 - Needs grammatical/technical revision
+- Added delegator-guide-cli.md (02/11)
 
 ### [`intro`](../intro/)
 - Needs grammatical/technical revision

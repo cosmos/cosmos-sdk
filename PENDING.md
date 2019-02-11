@@ -34,6 +34,8 @@ IMPROVEMENTS
 * Gaia
 
 * SDK
+  * [\#3601] JSON-stringify the ABCI log response which includes the log and message
+  index.
 
 * Tendermint
 

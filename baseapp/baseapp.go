@@ -667,7 +667,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		// construct usable logs in multi-message transactions
 		log := indexedABCILog{MsgIndex: msgIdx, Log: msgResult.Log}
 		logRaw := codec.Cdc.MustMarshalJSON(log)
-		logs = append(logs, string(logRaw))
+		logs = append(logs, strings.TrimSpace(string(logRaw)))
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {

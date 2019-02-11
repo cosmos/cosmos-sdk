@@ -112,4 +112,4 @@ API는 엔드포인트의 카테고리에 따라 ICS 스탠다드로 나뉘어�
 
 서비스 제공자에게 더 많은 유연성을 제공하기 위해서 미서명 트랜잭션을 생성, [서명](https://cosmos.network/rpc/#/ICS20/post_tx_sign)과 [전달](https://cosmos.network/rpc/#/ICS20/post_tx_broadcast) 등의 다양한 API 엔드포인트가 제공됩니다. 이는 서비스 제공자가 자체 서명 메커니즘을 이용할 수 있게 합니다.
 
-미서명 트랜잭션을 생성하기 위해서는 (예를 들어 [코인 전송](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers)) `?generate_only` 플래그를 이용하셔야 합니다.
+미서명 트랜잭션을 생성하기 위해서는 (예를 들어 [코인 전송](https://cosmos.network/rpc/#/ICS20/post_bank_accounts__address__transfers))을 생성하기 위해서는 `base_req` body에서 `generate_only` 플래그를 이용하셔야 합니다.

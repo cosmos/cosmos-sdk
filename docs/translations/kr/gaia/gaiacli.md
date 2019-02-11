@@ -12,7 +12,17 @@ Must specify these options: --chain-id  when --trust-node is false
 라이트 클라이언트 증거를 검증할지 선택하셔야 합니다. 만약 쿼리를 요청하고 있는 노드를 신뢰할 수 있다면, `--trust-node=true`를 입력하시고, 그렇지 않다면 `--chain-id`를 입력하세요.
 :::
 
-`gaiacli`는 코스모스 네스트넷에서 이루어지는 트랜잭션과 계정을 관리하는 커맨드 라인 인터페이스입니다. 다음은 유용할 수 있는 `gaiacli` 명령어입니다:
+`gaiacli`는 코스모스 테스트넷에서 이루어지는 트랜잭션과 계정을 관리하는 커맨드 라인 인터페이스입니다. 다음은 유용할 수 있는 `gaiacli` 명령어입니다:
+
+`gaiacli`의 설정 파일은 `$HOME/.gaiacli/config/config.toml` 경로에 저장되며, 파일 수정 또는 `gaiacli config` 명령어를 통해 수정할 수 있습니다:
+
+```bash
+gaiacli config chain-id gaia-9004
+```
+
+명령어 사용에 관련한 정보는 help를 참고하세요: `gaiacli config --help`.
+
+이 문서에는 유용한 `gaiacli` 명령어와 예시가 포함되어있습니다.
 
 ### 키(Keys)
 
@@ -42,7 +52,7 @@ Must specify these options: --chain-id  when --trust-node is false
 
 자금을 받거나, 트랜잭션을 전송하거나, 스테이킹을 하기 위해서는 프라이빗 키(`sk`)와 퍼블릭 키(`pk`) 쌍이 필요합니다.
 
-새로운 _secp256k1_키를 생성하기 위해서는:
+새로운 _secp256k1_ 키를 생성하기 위해서는:
 
 ```bash
 gaiacli keys add <account_name>
@@ -84,15 +94,50 @@ gaiad tendermint show-validator
 다수의 키에 동일한 passphrase를 이용하는 것을 추천하지 않습니다. 텐더민트 팀과 인터체인 재단은 자산 손실에 대한 책임을 지지 않습니다.
 :::
 
-#### 멀티시그 퍼블릭 키
+#### 멀티시그 퍼블릭 키 생성하기
 
 새로운 멀티시그 퍼블릭키를 생성하고 확인하시려면 다음과 같은 명령을 입력하세요:
 
 ```bash
-gaiacli show --multisig-threshold K name1 name2 name3 [...]
+gaiacli keys add --multisig=name1,name2,name3[...] --multisig-threshold=K new_key_name
 ```
 
-여기서 `K`는 트랜잭션이 승인되기 위해서 필요한 최소의 키 숫자입니다.
+여기서 `K`는 트랜잭션이 승인되기 위해서 필요한 최소의 키 개수입니다.
+
+`--multisig` 플래그는 로컬 데이터베이스에 `new_key_name`으로 저장될 멀티시그 퍼블릭 키를 생성할때 사용되는 다수의 퍼블릭 키들의 값을 뜻합니다. `--multisig` 값에 포함될 키들은 로컬 데이터베이스에 존재하는 상태여야 합니다. `--nosort` 플래그가 정의된지 않은 경우, 멀티시그 조합에 필요한 키들이 입력되는 순서는 무관합니다. 예를 들어 다음 두 명령어는 두개의 동일한 멀티시그 퍼블릭 키를 생성합니다:
+
+```bash
+gaiacli keys add --multisig=foo,bar,baz --multisig-threshold=2 multisig_address
+gaiacli keys add --multisig=baz,foo,bar --multisig-threshold=2 multisig_address
+```
+
+멀티시그 키의 주소는 다음과 같이 빠르게 생성하여 커맨드라인에 프린트할 수 있습니다:
+
+```bash
+gaiacli keys show --multisig-threshold K name1 name2 name3 [...]
+```
+
+멀티시그 트랜잭션를 생성, 사인, 전파하는 방법은 [멀티시그 트랜잭션](#멀티시그-트랜잭션) 항목을 참고하세요.
+
+### 수수료와 가스
+
+각 트랜잭션은 수수료(fee)를 지정하거나 가스 가격(gas price)을 지정할 수 있지만, 두 값을 함께 지정하는 것은 불가능합니다. 대다수의 유저는 지정된 비용만을 수수료로 사용하기 위해 수수료(fee)를 지정하는 방식으로 트랜잭션을 발생할 것으로 예상됩니다.
+
+각 검증인은 최소 가스 가격(minimum gas price)를 (다수 토큰 사용 가능) 설정할 수 있으며 이 값을 기준으로 `CheckTx` 단계에서 특정 트랜잭션을 블록에 포함시킬지 확인합니다. `gasPrices >= minGasPrices`일때 검증인은 트랜잭션을 처리합니다. 참고로 트랜잭션 전파시 검증인이 요구하는 토큰을 사용하셔야 합니다.
+
+__참고__: 위와 같은 메커니즘에서 일부 검증인은 멤풀에 있는 트랜잭션 중 높은 `gasPrice`의 트랜잭션을 우선적으로 처리할 수 있습니다. 그렇기 때문에 높은 수수료는 트랜잭션 처리 우선 순위를 높힐 수 있습니다.
+
+예시)
+
+```bash
+gaiacli tx send ... --fees=100photino
+```
+
+또는
+
+```bash
+gaiacli tx send ... --gas-prices=0.000001stake
+```
 
 ### 계정
 
@@ -167,6 +212,10 @@ gaiacli tx send \
   --generate-only > unsignedSendTx.json
 ```
 
+::: tip 참고
+시뮬레이션은 퍼블릭 키를 필요로 하고 generate only는 키베이스를 사용하지 않기 때문에 시뮬레이션은 tx generate only 기능과 함께 사용될 수 없습니다.
+:::
+
 이제 `--generate-only`를 통해 프린트된 트랜잭션 파일을 서명하시려면 다음 명령어를 통해 키를 입력하시면 됩니다:
 
 ```bash
@@ -206,6 +255,12 @@ gaiacli query txs --tags='<tag>:<value>'
 
 ```bash
 gaiacli query txs --tags='<tag1>:<value1>&<tag2>:<value2>'
+```
+
+페이지네이션은 `page`와 `limit` 값으로 지원됩니다.
+
+```bash
+gaiacli query txs --tags='<tag>:<value>' --page=1 --limit=20
 ```
 
 ::: tip 참고
@@ -312,15 +367,14 @@ gaiacli keys show [name] --bech val
 위임 요청을 검증인에게 전송한 경우, 관련 정보를 다음 명령을 통해 조회하실 수 있습니다:
 
 ```bash
-gaiacli query staking delegation \
-	--address-delegator=<account_cosmos> \
-	--validator=<account_cosmosval>
+gaiacli query staking delegation <delegator_addr> <validator_addr>
+
 ```
 
-만약 검증인에 대한 모든 위임 상태를 확인하고 싶으실 경우 다음 명령을 이용하세요:
+만약 특정 검증인에 대한 모든 위임 상태를 확인하고 싶으실 경우 다음 명령을 이용하세요:
 
 ```bash
-gaiacli query staking delegations <account_cosmos>
+gaiacli query staking delegation <delegator_addr>
 ```
 
 과거 위임 기록에 대해서는 `--height` 플래그를 추가 하셔서 해당 블록 높이에 대한 기록을 조회하실 수 있습니다.
@@ -345,9 +399,7 @@ gaiacli tx staking unbond \
 언본딩 절차를 시작하신 후 관련 정보를 조회하는 방법은 다음과 같습니다:
 
 ```bash
-gaiacli query staking unbonding-delegation \
-	--address-delegator=<account_cosmos> \
-	--validator=<account_cosmosval> \
+gaiacli query staking unbonding-delegation <delegator_addr> <validator_addr>
 ```
 
 또는 모든 언본딩 정보를 확인하고 싶으신 경우:
@@ -359,7 +411,7 @@ gaiacli query staking unbonding-delegations <account_cosmos>
 추가적으로 특정 검증인으로 부터 언본딩하는 정보를 확인하고 싶으신 경우:
 
 ```bash
-  gaiacli query staking unbonding-delegations-from <account_cosmosval>
+gaiacli query staking unbonding-delegations-from <account_cosmosval>
 ```
 
 과거 언본딩 정보는 `--height` 플래그를 통해서 특정 블록 높이에 대한 언본딩 정보를 조회할 수 있습니다.
@@ -386,10 +438,7 @@ gaiacli tx staking redelegate \
 재위임을 시작하신 후, 다음 명령을 통해서 관련 정보를 조회하실 수 있습니다:
 
 ```bash
-gaiacli query staking redelegation \
-	--address-delegator=<account_cosmos> \
-	--addr-validator-source=<account_cosmosval> \
-	--addr-validator-dest=<account_cosmosval> \
+gaiacli query staking redelegation <delegator_addr> <src_val_addr> <dst_val_addr>
 ```
 
 모든 검증인에 대한 재위임을 확인하고 싶으신 경우:
@@ -411,7 +460,7 @@ gaiacli query staking redelegations <account_cosmos>
 파라미터는 스테이킹의 하이-레벨 설정을 정의합니다. 현재 값은 다음 명령어를 통해서 조회할 수 있습니다:
 
 ```bash
-gaiacli query staking parameters
+gaiacli query staking params
 ```
 
 위 명령어는 다음과 같은 정보를 표기합니다:
@@ -566,3 +615,152 @@ gaiacli query gov param voting
 gaiacli query gov param tallying
 gaiacli query gov param deposit
 ```
+
+### 스테이킹 리워드 분배
+
+#### 리워드 분배 파라미터 조회
+
+현재 리워드 분배 파라미터 값을 조회하기 위해서는:
+
+```bash
+gaiacli query distr params
+```
+
+#### 수령되지 않은 리워드를 받기
+
+수령하지 않은 리워드를 수령하기 위해서는:
+
+```bash
+gaiacli query distr outstanding-rewards
+```
+
+#### 검증인 커미션 조회
+
+특정 검증인의 커미션을 조회하기 위해서는:
+
+```bash
+gaiacli query distr commission <validator_address>
+```
+
+#### 검증인 슬래싱 조회
+
+특정 검증인의 슬래싱 기록을 조회하기 위해서는:
+
+```bash
+gaiacli query distr slashes <validator_address> <start_height> <end_height>
+```
+
+#### 특정 검증인에서 수령되지 않은 리워드 조회
+
+위임자의 특정 검증인에서 발생된 미수령 리워드를 조회하기 위해서는:
+
+```bash
+gaiacli query distr rewards <delegator_address> <validator_address>
+```
+
+#### 위임자의 수령 대기중인 모든 리워드 조회
+
+위임자의 모든 수령 대기 리워드를 조회하기 위해서는:
+
+```bash
+gaiacli query distr rewards <delegator_address>
+```
+
+### 멀티시그 트랜잭션
+
+멀티시그 트랜잭션을 서명하기 위해서는 다수의 프라이빗 기가 필요합니다. 그렇기 때문에 멀티시그 계정에서 트랜잭션을 생성하고 서명하기 위해서는 여러 인원간의 협동이 필요합니다. 멀티시그 키 보유자 누구나 트랜잭션을 생성할 수 있으며, 멀티시그 퍼블릭키를 생성하고 트랜잭션을 전파하기 위해서는 키 소유자 중 최소 한명이 다른 키 소유자들의 모든 퍼블릭 키를 로컬 데이터베이스에 보유해야합니다.
+
+예를 들어 멀티시그 키가 `p1`, `p2`, `p3` 키로 이루어진다면, `p1` 키 보유자는 `p2`와 `p3`의 키가 있어야 멀티시그 계정의 퍼블릭 키를 생성할 수 있습니다.
+
+```
+gaiacli keys add \
+  --pubkey=cosmospub1addwnpepqtd28uwa0yxtwal5223qqr5aqf5y57tc7kk7z8qd4zplrdlk5ez5kdnlrj4 \
+  p2
+ gaiacli keys add \
+  --pubkey=cosmospub1addwnpepqgj04jpm9wrdml5qnss9kjxkmxzywuklnkj0g3a3f8l5wx9z4ennz84ym5t \
+  p3
+ gaiacli keys add \
+  --multisig-threshold=2
+  --multisig=p1,p2,p3
+  p1p2p3
+```
+
+이제 새로운 멀티시그 키 `p1p2p3`이 보관되었으며 이 주소를 기반으로 멀티 트랜잭션이 서명됩니다:
+
+```bash
+gaiacli keys show --address p1p2p3
+```
+
+위 주소를 기반으로 멀티시그 트랜잭션을 생성하는 과정의 첫 단계는 다음과 같습니다:
+
+```bash
+gaiacli tx send \
+  --from=<multisig_address> \
+  --to=cosmos1570v2fq3twt0f0x02vhxpuzc9jc4yl30q2qned \
+  --amount=10stake \
+  --generate-only > unsignedTx.json
+```
+
+`unsignedTx.json` 파일은 서명되지 않은 트랜잭션을 JSON 형태로 보관합니다. 이제 `p1`은 본인의 프라이빗 키를 사용해 트랜잭션을 서명할 수 있습니다:
+
+```bash
+gaiacli tx sign \
+  --multisig=<multisig_address> \
+  --name=p1 \
+  --output-document=p1signature.json \
+  unsignedTx.json
+```
+
+서명이 생성된 후, `p1`은 `unsignedTx.json`과 `p1signature.json`을 `p2` 또는 `p3`에게 전다합니다. `p2`와 `p3`은 이를 기반으로 서명을 진행합니다:
+
+```bash
+gaiacli tx sign \
+  --multisig=<multisig_address> \
+  --name=p2 \
+  --output-document=p2signature.json \
+  unsignedTx.json
+```
+
+`p1p2p3`은 3명 중 2명의 서명을 필요로 하는 멀티시그 키입니다. 그렇기 때문에 `p1`이 서명한 트랜잭션에 하나의 프라이빗 키만 더해지면 트랜잭션이 유효합니다. 이제 다른 키 보유자들은 필요한 서명 파일을 결합하여 멀티시그 트랜잭션을 생성할 수 있습니다:
+
+```bash
+gaiacli tx multisign \
+  unsignedTx.json \
+  p1p2p3 \
+  p1signature.json p2signature.json > signedTx.json
+```
+
+서명된 트랜잭션은 다음과 같은 명령을 실행하여 노드에 전파합니다:
+
+```bash
+gaiacli tx broadcast signedTx.json
+```
+
+## Shell 완료 스크립트
+
+흔히 사용되는 `Bash`와 `Zsh` 같은 UNIX의 완료 스크립트(completion script)는 `completion` 명령어를 사용해 생성될 수 있습니다. 이 명령은 `gaiad`와 `gaiacli`에서 사용 가능합니다.
+
+`Bash` 완료 스크립트를 생성하기 위해서는 다음 명령어를 실행하세요:
+
+```bash
+gaiad completion > gaiad_completion
+gaiacli completion > gaiacli_completion
+```
+
+`Zsh` 완료 스크립트를 생성하기 위해서는 다음 명령어를 실행하세요:
+
+```bash
+gaiad completion --zsh > gaiad_completion
+gaiacli completion --zsh > gaiacli_completion
+```
+
+::: tip 참고
+대다수의 UNIX 시스템에서는 이런 스크립트를 `.bashrc` 또는 `.bash_profile`을 사용해 로딩할 수 있습니다:
+
+```bash
+echo '. gaiad_completion' >> ~/.bashrc
+echo '. gaiacli_completion' >> ~/.bashrc
+```
+
+셸 자동 완성을 사용하시려면 사용하시는 OS의 매뉴얼을 참고하십시오.
+:::

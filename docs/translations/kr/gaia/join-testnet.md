@@ -72,7 +72,7 @@ gaiad unsafe-reset-all
 ```bash
 cd $GOPATH/src/github.com/cosmos/cosmos-sdk
 git fetch --all && git checkout master
-make update_tools && make get_vendor_deps && make install
+make update_tools install
 ```
 
 ::: tip

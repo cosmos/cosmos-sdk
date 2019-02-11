@@ -14,7 +14,7 @@ echo "export PATH=$PATH:$GOBIN" >> ~/.bash_profile
 ```
 
 ::: tip
-코스모스 SDK를 운영하기 위해서는 **Go 1.11.4+** 이상 버전이 필요합니다.
+코스모스 SDK를 운영하기 위해서는 **Go 1.11.ㅎ+** 이상 버전이 필요합니다.
 :::
 
 ### 바이너리 설치하기
@@ -26,7 +26,7 @@ mkdir -p $GOPATH/src/github.com/cosmos
 cd $GOPATH/src/github.com/cosmos
 git clone https://github.com/cosmos/cosmos-sdk
 cd cosmos-sdk && git checkout master
-make tools && make get_vendor_deps && make install
+make tools install
 ```
 
 > *참고*: 여기에서 문제가 발생한다면, Go의 최신 스테이블 버전이 설치되어있는지 확인하십시오.

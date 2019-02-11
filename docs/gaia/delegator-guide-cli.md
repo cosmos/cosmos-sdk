@@ -57,11 +57,11 @@ Not available yet.
 
 [**Install from source**](https://cosmos.network/docs/gaia/installation.html)
 
-:::tip
+::: tip
 `gaiacli` is used from a terminal. To open the terminal, follow these steps:
-    + **Windows**: `Start` > `All Programs` > `Accessories` > `Command Prompt`
-    + **MacOS**: `Finder` > `Applications` > `Utilities` > `Terminal`
-    + **Linux**: `Ctrl` + `Alt` + `T`
+- **Windows**: `Start` > `All Programs` > `Accessories` > `Command Prompt`
+- **MacOS**: `Finder` > `Applications` > `Utilities` > `Terminal`
+- **Linux**: `Ctrl` + `Alt` + `T`
 :::
 
 ## Cosmos Accounts

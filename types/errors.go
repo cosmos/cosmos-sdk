@@ -259,7 +259,7 @@ func (err *sdkError) ABCILog() string {
 	enc.SetEscapeHTML(false)
 
 	if err := enc.Encode(jsonErr); err != nil {
-		panic(errors.Wrap(err, "failed to encode error for ABCI log"))
+		panic(errors.Wrap(err, "failed to encode ABCI error log"))
 	}
 
 	return buff.String()

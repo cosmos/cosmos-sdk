@@ -18,9 +18,9 @@ type DecCoin struct {
 	Amount Dec    `json:"amount"`
 }
 
-func NewDecCoin(denom string, amount int64) DecCoin {
-	if amount < 0 {
-		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
+func NewDecCoin(denom string, amount Int) DecCoin {
+	if amount.LT(ZeroInt()) {
+		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
 	}
 	if strings.ToLower(denom) != denom {
 		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
@@ -28,7 +28,7 @@ func NewDecCoin(denom string, amount int64) DecCoin {
 
 	return DecCoin{
 		Denom:  denom,
-		Amount: NewDec(amount),
+		Amount: NewDecFromInt(amount),
 	}
 }
 
@@ -60,6 +60,33 @@ func NewDecCoinFromCoin(coin Coin) DecCoin {
 	}
 }
 
+// SameDenomAs returns true if the two DecCoin have the same denom.
+func (coin DecCoin) SameDenomAs(other DecCoin) bool {
+	return (coin.Denom == other.Denom)
+}
+
+// IsZero returns if the DecCoin amount is zero.
+func (coin DecCoin) IsZero() bool {
+	return coin.Amount.IsZero()
+}
+
+// IsGTE returns true if they are the same type and the receiver is
+// an equal or greater value.
+func (coin DecCoin) IsGTE(other DecCoin) bool {
+	return coin.SameDenomAs(other) && (!coin.Amount.LT(other.Amount))
+}
+
+// IsLT returns true if they are the same type and the receiver is
+// a smaller value.
+func (coin DecCoin) IsLT(other DecCoin) bool {
+	return coin.SameDenomAs(other) && coin.Amount.LT(other.Amount)
+}
+
+// IsEqual returns true if the two sets of Coins have the same value.
+func (coin DecCoin) IsEqual(other DecCoin) bool {
+	return coin.SameDenomAs(other) && (coin.Amount.Equal(other.Amount))
+}
+
 // Adds amounts of two coins with same denom
 func (coin DecCoin) Plus(coinB DecCoin) DecCoin {
 	if coin.Denom != coinB.Denom {
@@ -88,6 +115,13 @@ func (coin DecCoin) TruncateDecimal() (Coin, DecCoin) {
 // TODO: Remove once unsigned integers are used.
 func (coin DecCoin) IsPositive() bool {
 	return coin.Amount.IsPositive()
+}
+
+// IsNegative returns true if the coin amount is negative and false otherwise.
+//
+// TODO: Remove once unsigned integers are used.
+func (coin DecCoin) IsNegative() bool {
+	return coin.Amount.Sign() == -1
 }
 
 // String implements the Stringer interface for DecCoin. It returns a

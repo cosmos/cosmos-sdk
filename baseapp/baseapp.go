@@ -628,9 +628,14 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 	return
 }
 
+type indexedABCILog struct {
+	MsgIndex int    `json:"msg_index"`
+	Log      string `json:"log"`
+}
+
 // runMsgs iterates through all the messages and executes them.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	logs := make([]string, 0, len(msgs))
+	logs := make([]string, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
 	var data []byte   // NOTE: we just append them all (?!)
 	var tags sdk.Tags // also just append them all
@@ -659,16 +664,17 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
 		tags = append(tags, msgResult.Tags...)
 
+		// construct usable logs in multi-message transactions
+		log := indexedABCILog{MsgIndex: msgIdx, Log: msgResult.Log}
+		logRaw := codec.Cdc.MustMarshalJSON(log)
+		logs = append(logs, string(logRaw))
+
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
-			logs = append(logs, fmt.Sprintf("Msg %d failed: %s", msgIdx, msgResult.Log))
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
-
-		// construct usable logs in multi-message transactions
-		logs = append(logs, fmt.Sprintf("Msg %d: %s", msgIdx, msgResult.Log))
 	}
 
 	result = sdk.Result{

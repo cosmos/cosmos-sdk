@@ -630,6 +630,7 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) (ctx sdk.Con
 
 type indexedABCILog struct {
 	MsgIndex int    `json:"msg_index"`
+	Success  bool   `json:"success"`
 	Log      string `json:"log"`
 }
 
@@ -664,17 +665,22 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
 		tags = append(tags, msgResult.Tags...)
 
-		// construct usable logs in multi-message transactions
 		log := indexedABCILog{MsgIndex: msgIdx, Log: msgResult.Log}
-		logRaw := codec.Cdc.MustMarshalJSON(log)
-		logs = append(logs, strings.TrimSpace(string(logRaw)))
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
+			log.Success = false
+			logRaw := codec.Cdc.MustMarshalJSON(log)
+			logs = append(logs, strings.TrimSpace(string(logRaw)))
+
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
+
+		log.Success = true
+		logRaw := codec.Cdc.MustMarshalJSON(log)
+		logs = append(logs, strings.TrimSpace(string(logRaw)))
 	}
 
 	result = sdk.Result{

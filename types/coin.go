@@ -310,7 +310,7 @@ func (coins Coins) IsAnyGTE(coinsB Coins) bool {
 
 	for _, coin := range coins {
 		amt := coinsB.AmountOf(coin.Denom)
-		if coin.Amount.GTE(amt) {
+		if coin.Amount.GTE(amt) && !amt.IsZero() {
 			return true
 		}
 	}

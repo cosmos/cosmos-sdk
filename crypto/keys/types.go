@@ -150,6 +150,10 @@ func (i ledgerInfo) GetAddress() types.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
+func (i ledgerInfo) GetPath() hd.BIP44Params {
+	return i.Path
+}
+
 // offlineInfo is the public information about an offline key
 type offlineInfo struct {
 	Name   string        `json:"name"`

@@ -77,6 +77,6 @@ func SendRequestHandlerFn(cdc *codec.Codec, kb keys.Keybase, cliCtx context.CLIC
 		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
 		msg := bank.NewMsgSend(cliCtx.GetFromAddress(), toAddr, req.Amount)
 
-		clientrest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }

@@ -86,7 +86,7 @@ func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 			return
 		}
 
-		clientrest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, msgs, cdc)
 	}
 }
 
@@ -126,7 +126,7 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 			return
 		}
 
-		clientrest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -161,7 +161,7 @@ func setDelegatorWithdrawalAddrHandlerFn(cdc *codec.Codec, cliCtx context.CLICon
 			return
 		}
 
-		clientrest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -197,7 +197,7 @@ func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 			return
 		}
 
-		clientrest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, cliCtx, req.BaseReq, msgs, cdc)
 	}
 }
 

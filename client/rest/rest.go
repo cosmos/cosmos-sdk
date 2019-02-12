@@ -22,10 +22,8 @@ import (
 // tx gas simulation and estimation.
 //
 // NOTE: Also see CompleteAndBroadcastTxCLI.
-func CompleteAndBroadcastTxREST(
-	w http.ResponseWriter, r *http.Request, cliCtx context.CLIContext,
-	baseReq rest.BaseReq, msgs []sdk.Msg, cdc *codec.Codec,
-) {
+func CompleteAndBroadcastTxREST(w http.ResponseWriter, cliCtx context.CLIContext,
+	baseReq rest.BaseReq, msgs []sdk.Msg, cdc *codec.Codec) {
 
 	gasAdj, ok := rest.ParseFloat64OrReturnBadRequest(w, baseReq.GasAdjustment, client.DefaultGasAdjustment)
 	if !ok {

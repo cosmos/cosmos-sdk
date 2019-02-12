@@ -22,7 +22,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) (res [
 	// initialized for the validator set e.g. with a one-block offset - the
 	// first TM block is at height 1, so state updates applied from
 	// genesis.json are in block 0.
-	ctx = ctx.WithBlockHeight(1 - types.ValidatorUpdateDelay)
+	ctx = ctx.WithBlockHeight(1 - sdk.ValidatorUpdateDelay)
 
 	keeper.SetPool(ctx, data.Pool)
 	keeper.SetParams(ctx, data.Params)

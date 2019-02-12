@@ -13,8 +13,8 @@ import (
 	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 )
 
-func (app *GaiaApp) runtimeInvariants() []simulation.Invariant {
-	return []simulation.Invariant{
+func (app *GaiaApp) runtimeInvariants() []sdk.Invariant {
+	return []sdk.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
 		distrsim.NonNegativeOutstandingInvariant(app.distrKeeper),
 		stakingsim.SupplyInvariants(app.bankKeeper, app.stakingKeeper,

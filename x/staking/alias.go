@@ -72,7 +72,6 @@ var (
 	KeyBondDenom      = types.KeyBondDenom
 
 	DefaultParams         = types.DefaultParams
-	DefaultBondDenom      = types.DefaultBondDenom
 	InitialPool           = types.InitialPool
 	NewValidator          = types.NewValidator
 	NewDescription        = types.NewDescription
@@ -82,10 +81,6 @@ var (
 	NewGenesisState       = types.NewGenesisState
 	DefaultGenesisState   = types.DefaultGenesisState
 	RegisterCodec         = types.RegisterCodec
-
-	ValidatorUpdateDelay      = types.ValidatorUpdateDelay
-	TokensToTendermintPower   = types.TokensToTendermintPower
-	TokensFromTendermintPower = types.TokensFromTendermintPower
 
 	NewMsgCreateValidator           = types.NewMsgCreateValidator
 	NewMsgCreateValidatorOnBehalfOf = types.NewMsgCreateValidatorOnBehalfOf

@@ -494,7 +494,7 @@ BREAKING CHANGES
   * [gaiad init] [\#2602](https://github.com/cosmos/cosmos-sdk/issues/2602) New genesis workflow
 
 * SDK
-  * [simulation] [\#2665](https://github.com/cosmos/cosmos-sdk/issues/2665) only argument to simulation.Invariant is now app
+  * [simulation] [\#2665](https://github.com/cosmos/cosmos-sdk/issues/2665) only argument to sdk.Invariant is now app
 
 * Tendermint
   * Upgrade to version 0.26.0

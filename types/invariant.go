@@ -1,4 +1,4 @@
-package simulation
+package types
 
 import (
 	"fmt"
@@ -7,14 +7,14 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 )
 
 // An Invariant is a function which tests a particular invariant.
 // If the invariant has been broken, it should return an error
 // containing a descriptive message about what happened.
 // The simulator will then halt and print the logs.
-type Invariant func(ctx sdk.Context) error
+type Invariant func(ctx Context) error
 
 // group of Invarient
 type Invariants []Invariant
@@ -32,4 +32,15 @@ func (invs Invariants) assertAll(t *testing.T, app *baseapp.BaseApp,
 			t.Fatal()
 		}
 	}
+}
+
+// GetAllAccounts returns all accounts in the accountKeeper.
+func GetAllAccounts(mapper auth.AccountKeeper, ctx sdk.Context) []auth.Account {
+	accounts := []auth.Account{}
+	appendAccount := func(acc auth.Account) (stop bool) {
+		accounts = append(accounts, acc)
+		return false
+	}
+	mapper.IterateAccounts(ctx, appendAccount)
+	return accounts
 }

@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // SimulateSubmittingVotingAndSlashingForProposal simulates creating a msg Submit Proposal
@@ -18,7 +17,7 @@ import (
 // future operations.
 // TODO: Vote more intelligently, so we can actually do some checks regarding votes passing or failing
 // TODO: Actually check that validator slashings happened
-func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper, sk staking.Keeper) simulation.Operation {
+func SimulateSubmittingVotingAndSlashingForProposal(k gov.Keeper) simulation.Operation {
 	handler := gov.NewHandler(k)
 	// The states are:
 	// column 1: All validators vote

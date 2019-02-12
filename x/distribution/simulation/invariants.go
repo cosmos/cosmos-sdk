@@ -6,12 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // AllInvariants runs all invariants of the distribution module
-func AllInvariants(d distr.Keeper, stk staking.Keeper) simulation.Invariant {
+func AllInvariants(d distr.Keeper, stk types.StakingKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		err := CanWithdrawInvariant(d, stk)(ctx)
 		if err != nil {
@@ -30,7 +28,7 @@ func AllInvariants(d distr.Keeper, stk staking.Keeper) simulation.Invariant {
 }
 
 // NonNegativeOutstandingInvariant checks that outstanding unwithdrawn fees are never negative
-func NonNegativeOutstandingInvariant(k distr.Keeper) simulation.Invariant {
+func NonNegativeOutstandingInvariant(k distr.Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		outstanding := k.GetOutstandingRewards(ctx)
 		if outstanding.HasNegative() {
@@ -41,7 +39,7 @@ func NonNegativeOutstandingInvariant(k distr.Keeper) simulation.Invariant {
 }
 
 // CanWithdrawInvariant checks that current rewards can be completely withdrawn
-func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invariant {
+func CanWithdrawInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 
 		// cache, we don't want to write changes
@@ -70,7 +68,7 @@ func CanWithdrawInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invarian
 }
 
 // ReferenceCountInvariant checks that the number of historical rewards records is correct
-func ReferenceCountInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invariant {
+func ReferenceCountInvariant(k distr.Keeper, sk types.StakingKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 
 		valCount := uint64(0)
@@ -80,17 +78,21 @@ func ReferenceCountInvariant(k distr.Keeper, sk staking.Keeper) simulation.Invar
 		})
 		dels := sk.GetAllDelegations(ctx)
 		slashCount := uint64(0)
-		k.IterateValidatorSlashEvents(ctx, func(_ sdk.ValAddress, _ uint64, _ types.ValidatorSlashEvent) (stop bool) {
-			slashCount++
-			return false
-		})
+		k.IterateValidatorSlashEvents(ctx,
+			func(_ sdk.ValAddress, _ uint64, _ types.ValidatorSlashEvent) (stop bool) {
+				slashCount++
+				return false
+			})
 
-		// one record per validator (last tracked period), one record per delegation (previous period), one record per slash (previous period)
+		// one record per validator (last tracked period), one record per
+		// delegation (previous period), one record per slash (previous period)
 		expected := valCount + uint64(len(dels)) + slashCount
 		count := k.GetValidatorHistoricalReferenceCount(ctx)
 
 		if count != expected {
-			return fmt.Errorf("unexpected number of historical rewards records: expected %v (%v vals + %v dels + %v slashes), got %v", expected, valCount, len(dels), slashCount, count)
+			return fmt.Errorf("unexpected number of historical rewards records: "+
+				"expected %v (%v vals + %v dels + %v slashes), got %v",
+				expected, valCount, len(dels), slashCount, count)
 		}
 
 		return nil

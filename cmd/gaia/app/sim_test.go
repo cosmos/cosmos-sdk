@@ -281,8 +281,8 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 	}
 }
 
-func invariants(app *GaiaApp) []simulation.Invariant {
-	return []simulation.Invariant{
+func invariants(app *GaiaApp) []sdk.Invariant {
+	return []sdk.Invariant{
 		simulation.PeriodicInvariant(banksim.NonnegativeBalanceInvariant(app.accountKeeper), period, 0),
 		simulation.PeriodicInvariant(govsim.AllInvariants(), period, 0),
 		simulation.PeriodicInvariant(distrsim.AllInvariants(app.distrKeeper, app.stakingKeeper), period, 0),
@@ -571,7 +571,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			simulation.SimulateFromSeed(
 				t, app.BaseApp, appStateFn, seed,
 				testAndRunTxs(app),
-				[]simulation.Invariant{},
+				[]sdk.Invariant{},
 				50,
 				100,
 				true,

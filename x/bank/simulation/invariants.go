@@ -6,14 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/mock"
-	"github.com/cosmos/cosmos-sdk/x/mock/simulation"
 )
 
 // NonnegativeBalanceInvariant checks that all accounts in the application have non-negative balances
-func NonnegativeBalanceInvariant(mapper auth.AccountKeeper) simulation.Invariant {
+func NonnegativeBalanceInvariant(mapper auth.AccountKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) error {
-		accts := mock.GetAllAccounts(mapper, ctx)
+		accts := sdk.GetAllAccounts(mapper, ctx)
 		for _, acc := range accts {
 			coins := acc.GetCoins()
 			if coins.IsAnyNegative() {
@@ -28,7 +26,7 @@ func NonnegativeBalanceInvariant(mapper auth.AccountKeeper) simulation.Invariant
 
 // TotalCoinsInvariant checks that the sum of the coins across all accounts
 // is what is expected
-func TotalCoinsInvariant(mapper auth.AccountKeeper, totalSupplyFn func() sdk.Coins) simulation.Invariant {
+func TotalCoinsInvariant(mapper auth.AccountKeeper, totalSupplyFn func() sdk.Coins) sdk.Invariant {
 	return func(ctx sdk.Context) error {
 		totalCoins := sdk.Coins{}
 

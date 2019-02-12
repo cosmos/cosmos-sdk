@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Have to change these parameters for tests
@@ -402,7 +401,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	ctx = ctx.WithBlockHeight(height)
 
 	// validator added back in
-	delTokens := types.TokensFromTendermintPower(3)
+	delTokens := sdk.TokensFromTendermintPower(3)
 	got = sh(ctx, newTestMsgDelegate(sdk.AccAddress(addrs[2]), addrs[0], delTokens))
 	require.True(t, got.IsOK())
 	validatorUpdates, _ = staking.EndBlocker(ctx, sk)

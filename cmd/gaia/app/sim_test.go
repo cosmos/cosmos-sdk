@@ -221,7 +221,7 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 
 	stakingGenesis.Pool.NotBondedTokens = sdk.NewInt((amount * numAccs) + (numInitiallyBonded * amount))
 	stakingGenesis.Validators = validators
-	stakingGenesis.Bonds = delegations
+	stakingGenesis.Delegations = delegations
 
 	distrGenesis := distr.GenesisState{
 		FeePool:             distr.InitialFeePool(),
@@ -270,7 +270,7 @@ func testAndRunTxs(app *GaiaApp) []simulation.WeightedOperation {
 		{50, distrsim.SimulateMsgSetWithdrawAddress(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawDelegatorReward(app.accountKeeper, app.distrKeeper)},
 		{50, distrsim.SimulateMsgWithdrawValidatorCommission(app.accountKeeper, app.distrKeeper)},
-		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper, app.stakingKeeper)},
+		{5, govsim.SimulateSubmittingVotingAndSlashingForProposal(app.govKeeper)},
 		{100, govsim.SimulateMsgDeposit(app.govKeeper)},
 		{100, stakingsim.SimulateMsgCreateValidator(app.accountKeeper, app.stakingKeeper)},
 		{5, stakingsim.SimulateMsgEditValidator(app.stakingKeeper)},
@@ -286,8 +286,8 @@ func invariants(app *GaiaApp) []sdk.Invariant {
 		simulation.PeriodicInvariant(banksim.NonnegativeBalanceInvariant(app.accountKeeper), period, 0),
 		simulation.PeriodicInvariant(govsim.AllInvariants(), period, 0),
 		simulation.PeriodicInvariant(distrsim.AllInvariants(app.distrKeeper, app.stakingKeeper), period, 0),
-		simulation.PeriodicInvariant(stakingsim.AllInvariants(app.bankKeeper, app.stakingKeeper,
-			app.feeCollectionKeeper, app.distrKeeper, app.accountKeeper), period, 0),
+		simulation.PeriodicInvariant(stakingsim.AllInvariants(app.stakingKeeper, app.feeCollectionKeeper,
+			app.distrKeeper, app.accountKeeper), period, 0),
 		simulation.PeriodicInvariant(slashingsim.AllInvariants(), period, 0),
 	}
 }

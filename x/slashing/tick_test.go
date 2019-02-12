@@ -10,13 +10,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestBeginBlocker(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	power := int64(100)
-	amt := types.TokensFromTendermintPower(power)
+	amt := sdk.TokensFromTendermintPower(power)
 	addr, pk := addrs[2], pks[2]
 
 	// bond the validator

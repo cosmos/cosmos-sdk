@@ -8,14 +8,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestCannotUnjailUnlessJailed(t *testing.T) {
 	// initial setup
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
-	amt := types.TokensFromTendermintPower(100)
+	amt := sdk.TokensFromTendermintPower(100)
 	addr, val := addrs[0], pks[0]
 	msg := NewTestMsgCreateValidator(addr, val, amt)
 	got := staking.NewHandler(sk)(ctx, msg)
@@ -40,7 +39,7 @@ func TestCannotUnjailUnlessMeetMinSelfDelegation(t *testing.T) {
 	ctx, ck, sk, _, keeper := createTestInput(t, DefaultParams())
 	slh := NewHandler(keeper)
 	amtInt := int64(100)
-	addr, val, amt := addrs[0], pks[0], types.TokensFromTendermintPower(amtInt)
+	addr, val, amt := addrs[0], pks[0], sdk.TokensFromTendermintPower(amtInt)
 	msg := NewTestMsgCreateValidator(addr, val, amt)
 	msg.MinSelfDelegation = amt
 	got := staking.NewHandler(sk)(ctx, msg)

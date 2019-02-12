@@ -86,7 +86,7 @@ func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
 func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return keys.New(KeyDBName, filepath.Join(rootDir, "keys")), nil
+	return keys.New(DefaultKeyDBName, filepath.Join(rootDir, "keys")), nil
 }
 
 // create a list of KeyOutput in bech32 format

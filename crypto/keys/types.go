@@ -7,9 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
-// DefaultKeyDBName is the client's subdirectory where keys are stored.
-const DefaultKeyDBName = "keys"
-
 // Keybase exposes operations on a generic keystore
 type Keybase interface {
 	// CRUD on the keystore

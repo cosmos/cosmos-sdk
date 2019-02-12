@@ -18,6 +18,9 @@ import (
 const (
 	OutputFormatText = "text"
 	OutputFormatJSON = "json"
+
+	// defaultKeyDBName is the client's subdirectory where keys are stored.
+	defaultKeyDBName = "keys"
 )
 
 type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
@@ -86,7 +89,7 @@ func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
 func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return keys.New(DefaultKeyDBName, filepath.Join(rootDir, "keys")), nil
+	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
 }
 
 // create a list of KeyOutput in bech32 format

@@ -14,11 +14,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// KeyDBName is the directory under root where we store the keys
+// available output formats.
 const (
-	KeyDBName        = "keys"
 	OutputFormatText = "text"
 	OutputFormatJSON = "json"
+
+	// defaultKeyDBName is the client's subdirectory where keys are stored.
+	defaultKeyDBName = "keys"
 )
 
 type bechKeyOutFn func(keyInfo keys.Info) (KeyOutput, error)
@@ -87,7 +89,7 @@ func NewKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
 func NewInMemoryKeyBase() keys.Keybase { return keys.NewInMemory() }
 
 func getLazyKeyBaseFromDir(rootDir string) (keys.Keybase, error) {
-	return keys.NewLazyKeybase(KeyDBName, filepath.Join(rootDir, "keys")), nil
+	return keys.New(defaultKeyDBName, filepath.Join(rootDir, "keys")), nil
 }
 
 // create a list of KeyOutput in bech32 format

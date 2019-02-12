@@ -1,51 +1,34 @@
-package keys
+package keys_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	. "github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 func init() {
 	mintkey.BcryptSecurityParameter = 1
 }
 
-func TestKeybaseOpenClose(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestKeybaseOpenClose")
-	assert.Nil(t, err)
-
-	kb := New(dbm.NewDB("TestKeybaseOpenClose", dbm.LevelDBBackend, dir))
-	kb.CloseDB()
-
-	// The DB has been closed. At the moment, the expected behaviour is to panic
-	assert.Panics(t, func() {
-		_, _ = kb.CreateAccount(
-			"some_account",
-			"key pair crucial catch public canyon evil outer stage ten gym tornado",
-			"", "", 0, 1)
-	})
-}
-
 func TestLanguage(t *testing.T) {
-	kb := New(dbm.NewMemDB())
+	kb := NewInMemory()
 	_, _, err := kb.CreateMnemonic("something", Japanese, "no_pass", Secp256k1)
 	assert.Error(t, err)
 	assert.Equal(t, "unsupported language: only english is supported", err.Error())
 }
 
 func TestCreateAccountInvalidMnemonic(t *testing.T) {
-	kb := New(dbm.NewMemDB())
+	kb := NewInMemory()
 	_, err := kb.CreateAccount(
 		"some_account",
 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
@@ -55,39 +38,53 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 }
 
 func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
-	kb := New(dbm.NewMemDB())
+	kb := NewInMemory()
 	_, err := kb.CreateLedger("some_account", Ed25519, 0, 1)
 	assert.Error(t, err)
 	assert.Equal(t, "unsupported signing algo: only secp256k1 is supported", err.Error())
 }
 
 func TestCreateLedger(t *testing.T) {
-	kb := New(dbm.NewMemDB())
+	kb := NewInMemory()
 
 	// test_cover and test_unit will result in different answers
 	// test_cover does not compile some dependencies so ledger is disabled
 	// test_unit may add a ledger mock
 	// both cases are acceptable
-	ledger, err := kb.CreateLedger("some_account", Secp256k1, 0, 1)
+	ledger, err := kb.CreateLedger("some_account", Secp256k1, 3, 1)
 
 	if err != nil {
 		assert.Error(t, err)
 		assert.Equal(t, "ledger nano S: support for ledger devices is not available in this executable", err.Error())
 		assert.Nil(t, ledger)
-	} else {
-		// The mock is available, check that the address is correct
-		pubKey := ledger.GetPubKey()
-		addr, err := sdk.Bech32ifyAccPub(pubKey)
-		assert.NoError(t, err)
-		assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", addr)
+		t.Skip("ledger nano S: support for ledger devices is not available in this executable")
+		return
 	}
+
+	// The mock is available, check that the address is correct
+	pubKey := ledger.GetPubKey()
+	pk, err := sdk.Bech32ifyAccPub(pubKey)
+	assert.NoError(t, err)
+	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+
+	// Check that restoring the key gets the same results
+	restoredKey, err := kb.Get("some_account")
+	assert.NotNil(t, restoredKey)
+	assert.Equal(t, "some_account", restoredKey.GetName())
+	assert.Equal(t, TypeLedger, restoredKey.GetType())
+	pubKey = restoredKey.GetPubKey()
+	pk, err = sdk.Bech32ifyAccPub(pubKey)
+	assert.Equal(t, "cosmospub1addwnpepqdszcr95mrqqs8lw099aa9h8h906zmet22pmwe9vquzcgvnm93eqygufdlv", pk)
+
+	linfo := restoredKey.(ledgerInfo)
+	assert.Equal(t, "44'/118'/3'/0/1", linfo.GetPath().String())
+
 }
 
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
-	db := dbm.NewMemDB()
-	cstore := New(db)
+	cstore := NewInMemory()
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -165,13 +162,12 @@ func TestKeyManagement(t *testing.T) {
 	// addr cache gets nuked - and test skip flag
 	err = cstore.Delete(n2, "", true)
 	require.NoError(t, err)
-	require.False(t, db.Has(addrKey(i2.GetAddress())))
 }
 
 // TestSignVerify does some detailed checks on how we sign and validate
 // signatures
 func TestSignVerify(t *testing.T) {
-	cstore := New(dbm.NewMemDB())
+	cstore := NewInMemory()
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
@@ -253,12 +249,8 @@ func assertPassword(t *testing.T, cstore Keybase, name, pass, badpass string) {
 
 // TestExportImport tests exporting and importing
 func TestExportImport(t *testing.T) {
-
 	// make the storage with reasonable defaults
-	db := dbm.NewMemDB()
-	cstore := New(
-		db,
-	)
+	cstore := NewInMemory()
 
 	info, _, err := cstore.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -286,10 +278,7 @@ func TestExportImport(t *testing.T) {
 //
 func TestExportImportPubKey(t *testing.T) {
 	// make the storage with reasonable defaults
-	db := dbm.NewMemDB()
-	cstore := New(
-		db,
-	)
+	cstore := NewInMemory()
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
@@ -327,11 +316,8 @@ func TestExportImportPubKey(t *testing.T) {
 
 // TestAdvancedKeyManagement verifies update, import, export functionality
 func TestAdvancedKeyManagement(t *testing.T) {
-
 	// make the storage with reasonable defaults
-	cstore := New(
-		dbm.NewMemDB(),
-	)
+	cstore := NewInMemory()
 
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
@@ -379,9 +365,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 func TestSeedPhrase(t *testing.T) {
 
 	// make the storage with reasonable defaults
-	cstore := New(
-		dbm.NewMemDB(),
-	)
+	cstore := NewInMemory()
 
 	algo := Secp256k1
 	n1, n2 := "lost-key", "found-again"
@@ -410,9 +394,7 @@ func TestSeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	cstore := New(
-		dbm.NewMemDB(),
-	)
+	cstore := NewInMemory()
 
 	sec := Secp256k1
 

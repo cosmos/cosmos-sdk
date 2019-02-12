@@ -77,14 +77,15 @@ type dbKeybase struct {
 	db dbm.DB
 }
 
-// New creates a new keybase instance using the passed DB for reading and writing keys.
-func New(db dbm.DB) Keybase {
+// newDbKeybase creates a new keybase instance using the passed DB for reading and writing keys.
+func newDbKeybase(db dbm.DB) Keybase {
 	return dbKeybase{
 		db: db,
 	}
 }
 
-// NewInMemory creates a new keybase on top of in-memory storage instance.
+// NewInMemory creates a transient keybase on top of in-memory storage
+// instance useful for testing purposes and on-the-fly key generation.
 func NewInMemory() Keybase { return dbKeybase{dbm.NewMemDB()} }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted
@@ -284,9 +285,9 @@ func (kb dbKeybase) ExportPrivateKeyObject(name string, passphrase string) (tmcr
 			return nil, err
 		}
 	case ledgerInfo:
-		return nil, errors.New("Only works on local private keys")
+		return nil, errors.New("only works on local private keys")
 	case offlineInfo:
-		return nil, errors.New("Only works on local private keys")
+		return nil, errors.New("only works on local private keys")
 	}
 	return priv, nil
 }
@@ -428,7 +429,8 @@ func (kb dbKeybase) writeOfflineKey(name string, pub tmcrypto.PubKey) Info {
 func (kb dbKeybase) writeInfo(name string, info Info) {
 	// write the info by key
 	key := infoKey(name)
-	kb.db.SetSync(key, writeInfo(info))
+	serializedInfo := writeInfo(info)
+	kb.db.SetSync(key, serializedInfo)
 	// store a pointer to the infokey by address for fast lookup
 	kb.db.SetSync(addrKey(info.GetAddress()), key)
 }

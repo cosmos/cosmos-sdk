@@ -33,25 +33,25 @@ const (
 
 // BIP44Params wraps BIP 44 params (5 level BIP 32 path).
 // To receive a canonical string representation ala
-// m / purpose' / coin_type' / account' / change / address_index
+// m / purpose' / coinType' / account' / change / addressIndex
 // call String() on a BIP44Params instance.
 type BIP44Params struct {
-	purpose    uint32
-	coinType   uint32
-	account    uint32
-	change     bool
-	addressIdx uint32
+	Purpose      uint32 `json:"purpose"`
+	CoinType     uint32 `json:"coinType"`
+	Account      uint32 `json:"account"`
+	Change       bool   `json:"change"`
+	AddressIndex uint32 `json:"addressIndex"`
 }
 
 // NewParams creates a BIP 44 parameter object from the params:
-// m / purpose' / coin_type' / account' / change / address_index
+// m / purpose' / coinType' / account' / change / addressIndex
 func NewParams(purpose, coinType, account uint32, change bool, addressIdx uint32) *BIP44Params {
 	return &BIP44Params{
-		purpose:    purpose,
-		coinType:   coinType,
-		account:    account,
-		change:     change,
-		addressIdx: addressIdx,
+		Purpose:      purpose,
+		CoinType:     coinType,
+		Account:      account,
+		Change:       change,
+		AddressIndex: addressIdx,
 	}
 }
 
@@ -105,11 +105,11 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 	}
 
 	return &BIP44Params{
-		purpose:    purpose,
-		coinType:   coinType,
-		account:    account,
-		change:     change > 0,
-		addressIdx: addressIdx,
+		Purpose:      purpose,
+		CoinType:     coinType,
+		Account:      account,
+		Change:       change > 0,
+		AddressIndex: addressIdx,
 	}, nil
 }
 
@@ -139,32 +139,32 @@ func NewFundraiserParams(account uint32, addressIdx uint32) *BIP44Params {
 // DerivationPath returns the BIP44 fields as an array.
 func (p BIP44Params) DerivationPath() []uint32 {
 	change := uint32(0)
-	if p.change {
+	if p.Change {
 		change = 1
 	}
 	return []uint32{
-		p.purpose,
-		p.coinType,
-		p.account,
+		p.Purpose,
+		p.CoinType,
+		p.Account,
 		change,
-		p.addressIdx,
+		p.AddressIndex,
 	}
 }
 
 func (p BIP44Params) String() string {
 	var changeStr string
-	if p.change {
+	if p.Change {
 		changeStr = "1"
 	} else {
 		changeStr = "0"
 	}
-	// m / purpose' / coin_type' / account' / change / address_index
+	// m / Purpose' / coin_type' / Account' / Change / address_index
 	return fmt.Sprintf("%d'/%d'/%d'/%s/%d",
-		p.purpose,
-		p.coinType,
-		p.account,
+		p.Purpose,
+		p.CoinType,
+		p.Account,
 		changeStr,
-		p.addressIdx)
+		p.AddressIndex)
 }
 
 // ComputeMastersFromSeed returns the master public key, master secret, and chain code in hex.

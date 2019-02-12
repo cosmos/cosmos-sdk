@@ -77,14 +77,15 @@ type dbKeybase struct {
 	db dbm.DB
 }
 
-// New creates a new keybase instance using the passed DB for reading and writing keys.
-func New(db dbm.DB) Keybase {
+// newDbKeybase creates a new keybase instance using the passed DB for reading and writing keys.
+func newDbKeybase(db dbm.DB) Keybase {
 	return dbKeybase{
 		db: db,
 	}
 }
 
-// NewInMemory creates a new keybase on top of in-memory storage instance.
+// NewInMemory creates a transient keybase on top of in-memory storage
+// instance useful for testing purposes and on-the-fly key generation.
 func NewInMemory() Keybase { return dbKeybase{dbm.NewMemDB()} }
 
 // CreateMnemonic generates a new key and persists it to storage, encrypted

@@ -15,7 +15,8 @@ type lazyKeybase struct {
 	dir  string
 }
 
-func NewLazyKeybase(name, dir string) Keybase {
+// New creates a new instance of a lazy keybase.
+func New(name, dir string) Keybase {
 	return lazyKeybase{name: name, dir: dir}
 }
 
@@ -25,7 +26,7 @@ func (lkb lazyKeybase) List() ([]Info, error) {
 		return nil, err
 	}
 	defer db.Close()
-	return New(db).List()
+	return newDbKeybase(db).List()
 }
 
 func (lkb lazyKeybase) Get(name string) (Info, error) {
@@ -34,7 +35,7 @@ func (lkb lazyKeybase) Get(name string) (Info, error) {
 		return nil, err
 	}
 	defer db.Close()
-	return New(db).Get(name)
+	return newDbKeybase(db).Get(name)
 }
 
 func (lkb lazyKeybase) GetByAddress(address types.AccAddress) (Info, error) {
@@ -43,7 +44,7 @@ func (lkb lazyKeybase) GetByAddress(address types.AccAddress) (Info, error) {
 		return nil, err
 	}
 	defer db.Close()
-	return New(db).GetByAddress(address)
+	return newDbKeybase(db).GetByAddress(address)
 }
 
 func (lkb lazyKeybase) Delete(name, passphrase string, skipPass bool) error {
@@ -52,7 +53,7 @@ func (lkb lazyKeybase) Delete(name, passphrase string, skipPass bool) error {
 		return err
 	}
 	defer db.Close()
-	return New(db).Delete(name, passphrase, skipPass)
+	return newDbKeybase(db).Delete(name, passphrase, skipPass)
 }
 
 func (lkb lazyKeybase) Sign(name, passphrase string, msg []byte) ([]byte, crypto.PubKey, error) {
@@ -61,7 +62,7 @@ func (lkb lazyKeybase) Sign(name, passphrase string, msg []byte) ([]byte, crypto
 		return nil, nil, err
 	}
 	defer db.Close()
-	return New(db).Sign(name, passphrase, msg)
+	return newDbKeybase(db).Sign(name, passphrase, msg)
 }
 
 func (lkb lazyKeybase) CreateMnemonic(name string, language Language, passwd string, algo SigningAlgo) (info Info, seed string, err error) {
@@ -70,7 +71,7 @@ func (lkb lazyKeybase) CreateMnemonic(name string, language Language, passwd str
 		return nil, "", err
 	}
 	defer db.Close()
-	return New(db).CreateMnemonic(name, language, passwd, algo)
+	return newDbKeybase(db).CreateMnemonic(name, language, passwd, algo)
 }
 
 func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd string, account uint32, index uint32) (Info, error) {
@@ -79,7 +80,7 @@ func (lkb lazyKeybase) CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd 
 		return nil, err
 	}
 	defer db.Close()
-	return New(db).CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, account, index)
+	return newDbKeybase(db).CreateAccount(name, mnemonic, bip39Passwd, encryptPasswd, account, index)
 }
 
 func (lkb lazyKeybase) Derive(name, mnemonic, bip39Passwd, encryptPasswd string, params hd.BIP44Params) (Info, error) {
@@ -88,7 +89,7 @@ func (lkb lazyKeybase) Derive(name, mnemonic, bip39Passwd, encryptPasswd string,
 		return nil, err
 	}
 	defer db.Close()
-	return New(db).Derive(name, mnemonic, bip39Passwd, encryptPasswd, params)
+	return newDbKeybase(db).Derive(name, mnemonic, bip39Passwd, encryptPasswd, params)
 }
 
 func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, account uint32, index uint32) (info Info, err error) {
@@ -97,7 +98,7 @@ func (lkb lazyKeybase) CreateLedger(name string, algo SigningAlgo, account uint3
 		return nil, err
 	}
 	defer db.Close()
-	return New(db).CreateLedger(name, algo, account, index)
+	return newDbKeybase(db).CreateLedger(name, algo, account, index)
 }
 
 func (lkb lazyKeybase) CreateOffline(name string, pubkey crypto.PubKey) (info Info, err error) {
@@ -106,7 +107,7 @@ func (lkb lazyKeybase) CreateOffline(name string, pubkey crypto.PubKey) (info In
 		return nil, err
 	}
 	defer db.Close()
-	return New(db).CreateOffline(name, pubkey)
+	return newDbKeybase(db).CreateOffline(name, pubkey)
 }
 
 func (lkb lazyKeybase) Update(name, oldpass string, getNewpass func() (string, error)) error {
@@ -115,7 +116,7 @@ func (lkb lazyKeybase) Update(name, oldpass string, getNewpass func() (string, e
 		return err
 	}
 	defer db.Close()
-	return New(db).Update(name, oldpass, getNewpass)
+	return newDbKeybase(db).Update(name, oldpass, getNewpass)
 }
 
 func (lkb lazyKeybase) Import(name string, armor string) (err error) {
@@ -124,7 +125,7 @@ func (lkb lazyKeybase) Import(name string, armor string) (err error) {
 		return err
 	}
 	defer db.Close()
-	return New(db).Import(name, armor)
+	return newDbKeybase(db).Import(name, armor)
 }
 
 func (lkb lazyKeybase) ImportPubKey(name string, armor string) (err error) {
@@ -133,7 +134,7 @@ func (lkb lazyKeybase) ImportPubKey(name string, armor string) (err error) {
 		return err
 	}
 	defer db.Close()
-	return New(db).ImportPubKey(name, armor)
+	return newDbKeybase(db).ImportPubKey(name, armor)
 }
 
 func (lkb lazyKeybase) Export(name string) (armor string, err error) {
@@ -142,7 +143,7 @@ func (lkb lazyKeybase) Export(name string) (armor string, err error) {
 		return "", err
 	}
 	defer db.Close()
-	return New(db).Export(name)
+	return newDbKeybase(db).Export(name)
 }
 
 func (lkb lazyKeybase) ExportPubKey(name string) (armor string, err error) {
@@ -151,7 +152,7 @@ func (lkb lazyKeybase) ExportPubKey(name string) (armor string, err error) {
 		return "", err
 	}
 	defer db.Close()
-	return New(db).ExportPubKey(name)
+	return newDbKeybase(db).ExportPubKey(name)
 }
 
 func (lkb lazyKeybase) ExportPrivateKeyObject(name string, passphrase string) (crypto.PrivKey, error) {
@@ -160,7 +161,7 @@ func (lkb lazyKeybase) ExportPrivateKeyObject(name string, passphrase string) (c
 		return nil, err
 	}
 	defer db.Close()
-	return New(db).ExportPrivateKeyObject(name, passphrase)
+	return newDbKeybase(db).ExportPrivateKeyObject(name, passphrase)
 }
 
 func (lkb lazyKeybase) CloseDB() {}

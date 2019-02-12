@@ -2,7 +2,6 @@ package keys
 
 import (
 	"fmt"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,42 +9,24 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mintkey"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
-	dbm "github.com/tendermint/tendermint/libs/db"
 )
 
 func init() {
 	mintkey.BcryptSecurityParameter = 1
 }
 
-func TestKeybaseOpenClose(t *testing.T) {
-	dir, err := ioutil.TempDir("", "TestKeybaseOpenClose")
-	assert.Nil(t, err)
-
-	kb := New(dbm.NewDB("TestKeybaseOpenClose", dbm.LevelDBBackend, dir))
-	kb.CloseDB()
-
-	// The DB has been closed. At the moment, the expected behaviour is to panic
-	assert.Panics(t, func() {
-		_, _ = kb.CreateAccount(
-			"some_account",
-			"key pair crucial catch public canyon evil outer stage ten gym tornado",
-			"", "", 0, 1)
-	})
-}
-
 func TestLanguage(t *testing.T) {
-	kb := New(dbm.NewMemDB())
+	kb := NewInMemory()
 	_, _, err := kb.CreateMnemonic("something", Japanese, "no_pass", Secp256k1)
 	assert.Error(t, err)
 	assert.Equal(t, "unsupported language: only english is supported", err.Error())
 }
 
 func TestCreateAccountInvalidMnemonic(t *testing.T) {
-	kb := New(dbm.NewMemDB())
+	kb := NewInMemory()
 	_, err := kb.CreateAccount(
 		"some_account",
 		"malarkey pair crucial catch public canyon evil outer stage ten gym tornado",
@@ -55,14 +36,14 @@ func TestCreateAccountInvalidMnemonic(t *testing.T) {
 }
 
 func TestCreateLedgerUnsupportedAlgo(t *testing.T) {
-	kb := New(dbm.NewMemDB())
+	kb := NewInMemory()
 	_, err := kb.CreateLedger("some_account", Ed25519, 0, 1)
 	assert.Error(t, err)
 	assert.Equal(t, "unsupported signing algo: only secp256k1 is supported", err.Error())
 }
 
 func TestCreateLedger(t *testing.T) {
-	kb := New(dbm.NewMemDB())
+	kb := NewInMemory()
 
 	// test_cover and test_unit will result in different answers
 	// test_cover does not compile some dependencies so ledger is disabled
@@ -101,8 +82,7 @@ func TestCreateLedger(t *testing.T) {
 // TestKeyManagement makes sure we can manipulate these keys well
 func TestKeyManagement(t *testing.T) {
 	// make the storage with reasonable defaults
-	db := dbm.NewMemDB()
-	cstore := New(db)
+	cstore := NewInMemory()
 
 	algo := Secp256k1
 	n1, n2, n3 := "personal", "business", "other"
@@ -133,7 +113,7 @@ func TestKeyManagement(t *testing.T) {
 	require.NotNil(t, err)
 	_, err = cstore.GetByAddress(accAddr(i2))
 	require.NoError(t, err)
-	addr, err := types.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
+	addr, err := sdk.AccAddressFromBech32("cosmos1yq8lgssgxlx9smjhes6ryjasmqmd3ts2559g0t")
 	require.NoError(t, err)
 	_, err = cstore.GetByAddress(addr)
 	require.NotNil(t, err)
@@ -180,13 +160,12 @@ func TestKeyManagement(t *testing.T) {
 	// addr cache gets nuked - and test skip flag
 	err = cstore.Delete(n2, "", true)
 	require.NoError(t, err)
-	require.False(t, db.Has(addrKey(i2.GetAddress())))
 }
 
 // TestSignVerify does some detailed checks on how we sign and validate
 // signatures
 func TestSignVerify(t *testing.T) {
-	cstore := New(dbm.NewMemDB())
+	cstore := NewInMemory()
 	algo := Secp256k1
 
 	n1, n2, n3 := "some dude", "a dudette", "dude-ish"
@@ -268,12 +247,8 @@ func assertPassword(t *testing.T, cstore Keybase, name, pass, badpass string) {
 
 // TestExportImport tests exporting and importing
 func TestExportImport(t *testing.T) {
-
 	// make the storage with reasonable defaults
-	db := dbm.NewMemDB()
-	cstore := New(
-		db,
-	)
+	cstore := NewInMemory()
 
 	info, _, err := cstore.CreateMnemonic("john", English, "secretcpw", Secp256k1)
 	require.NoError(t, err)
@@ -301,10 +276,7 @@ func TestExportImport(t *testing.T) {
 //
 func TestExportImportPubKey(t *testing.T) {
 	// make the storage with reasonable defaults
-	db := dbm.NewMemDB()
-	cstore := New(
-		db,
-	)
+	cstore := NewInMemory()
 
 	// CreateMnemonic a private-public key pair and ensure consistency
 	notPasswd := "n9y25ah7"
@@ -342,11 +314,8 @@ func TestExportImportPubKey(t *testing.T) {
 
 // TestAdvancedKeyManagement verifies update, import, export functionality
 func TestAdvancedKeyManagement(t *testing.T) {
-
 	// make the storage with reasonable defaults
-	cstore := New(
-		dbm.NewMemDB(),
-	)
+	cstore := NewInMemory()
 
 	algo := Secp256k1
 	n1, n2 := "old-name", "new name"
@@ -394,9 +363,7 @@ func TestAdvancedKeyManagement(t *testing.T) {
 func TestSeedPhrase(t *testing.T) {
 
 	// make the storage with reasonable defaults
-	cstore := New(
-		dbm.NewMemDB(),
-	)
+	cstore := NewInMemory()
 
 	algo := Secp256k1
 	n1, n2 := "lost-key", "found-again"
@@ -425,9 +392,7 @@ func TestSeedPhrase(t *testing.T) {
 
 func ExampleNew() {
 	// Select the encryption and storage for your cryptostore
-	cstore := New(
-		dbm.NewMemDB(),
-	)
+	cstore := NewInMemory()
 
 	sec := Secp256k1
 
@@ -475,6 +440,6 @@ func ExampleNew() {
 	// signed by Bob
 }
 
-func accAddr(info Info) types.AccAddress {
-	return (types.AccAddress)(info.GetPubKey().Address())
+func accAddr(info Info) sdk.AccAddress {
+	return (sdk.AccAddress)(info.GetPubKey().Address())
 }

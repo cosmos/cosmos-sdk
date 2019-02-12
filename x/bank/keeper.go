@@ -230,7 +230,9 @@ func subtractCoins(ctx sdk.Context, ak auth.AccountKeeper, addr sdk.AccAddress, 
 	// So the check here is sufficient instead of subtracting from oldCoins.
 	_, hasNeg := spendableCoins.SafeMinus(amt)
 	if hasNeg {
-		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", spendableCoins, amt))
+		return amt, nil, sdk.ErrInsufficientCoins(
+			fmt.Sprintf("insufficient account funds; %s < %s", spendableCoins, amt),
+		)
 	}
 
 	newCoins := oldCoins.Minus(amt) // should not panic as spendable coins was already checked
@@ -246,7 +248,9 @@ func addCoins(ctx sdk.Context, am auth.AccountKeeper, addr sdk.AccAddress, amt s
 	newCoins := oldCoins.Plus(amt)
 
 	if newCoins.IsAnyNegative() {
-		return amt, nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+		return amt, nil, sdk.ErrInsufficientCoins(
+			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
+		)
 	}
 
 	err := setCoins(ctx, am, addr, newCoins)
@@ -319,7 +323,9 @@ func delegateCoins(
 
 	_, hasNeg := oldCoins.SafeMinus(amt)
 	if hasNeg {
-		return nil, sdk.ErrInsufficientCoins(fmt.Sprintf("%s < %s", oldCoins, amt))
+		return nil, sdk.ErrInsufficientCoins(
+			fmt.Sprintf("insufficient account funds; %s < %s", oldCoins, amt),
+		)
 	}
 
 	if err := trackDelegation(acc, ctx.BlockHeader().Time, amt); err != nil {

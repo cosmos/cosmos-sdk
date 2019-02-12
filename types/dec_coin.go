@@ -22,9 +22,6 @@ func NewDecCoin(denom string, amount int64) DecCoin {
 	if amount < 0 {
 		panic(fmt.Sprintf("negative decimal coin amount: %v\n", amount))
 	}
-	if len(strings.TrimSpace(denom)) == 0 {
-		panic(errors.New("denom cannot be an empty string\n"))
-	}
 	if strings.ToLower(denom) != denom {
 		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
 	}

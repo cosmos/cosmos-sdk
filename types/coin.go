@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -30,9 +29,6 @@ type Coin struct {
 func NewCoin(denom string, amount Int) Coin {
 	if amount.LT(ZeroInt()) {
 		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
-	}
-	if len(strings.TrimSpace(denom)) == 0 {
-		panic(errors.New("denom cannot be an empty string\n"))
 	}
 	if strings.ToLower(denom) != denom {
 		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))

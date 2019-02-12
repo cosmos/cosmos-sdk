@@ -58,7 +58,7 @@ $ sudo snap install --edge gaia
 At the time of writing, only the following [architectures are supported](https://build.snapcraft.io/user/cosmos/cosmos-sdk): `amd64` `i386` `arm64` `armhf` `ppc64el` `s390x`.
 :::
 
-`snap` installs Gaia binaries as `gaia.gaiad` and `gaia.gaiacli`. It is recommended to create commands aliases for user's convenience once the package is installed:
+`snap` installs Gaia binaries as `gaia.gaiad` and `gaia.gaiacli`. It is recommended to create commands aliases for the user's convenience once the package is installed:
 
 ```
 $ sudo snap alias gaia.gaiad gaiad

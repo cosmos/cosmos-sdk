@@ -10,19 +10,19 @@ type BondStatus byte
 
 // nolint
 const (
-	Unbonded  BondStatus = 0x00
-	Unbonding BondStatus = 0x01
-	Bonded    BondStatus = 0x02
+	Unbonded BondStatus = iota
+	Unbonding
+	Bonded
 )
 
 //BondStatusToString for pretty prints of Bond Status
 func BondStatusToString(b BondStatus) string {
 	switch b {
-	case 0x00:
+	case Unbonded:
 		return "Unbonded"
-	case 0x01:
+	case Unbonding:
 		return "Unbonding"
-	case 0x02:
+	case Bonded:
 		return "Bonded"
 	default:
 		panic("improper use of BondStatusToString")

@@ -80,11 +80,11 @@ type VoteOption byte
 
 //nolint
 const (
-	OptionEmpty      VoteOption = 0x00
-	OptionYes        VoteOption = 0x01
-	OptionAbstain    VoteOption = 0x02
-	OptionNo         VoteOption = 0x03
-	OptionNoWithVeto VoteOption = 0x04
+	OptionEmpty VoteOption = iota
+	OptionYes
+	OptionAbstain
+	OptionNo
+	OptionNoWithVeto
 )
 
 // String to proposalType byte.  Returns ff if invalid.

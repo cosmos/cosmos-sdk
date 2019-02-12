@@ -155,10 +155,10 @@ type ProposalKind byte
 
 //nolint
 const (
-	ProposalTypeNil             ProposalKind = 0x00
-	ProposalTypeText            ProposalKind = 0x01
-	ProposalTypeParameterChange ProposalKind = 0x02
-	ProposalTypeSoftwareUpgrade ProposalKind = 0x03
+	ProposalTypeNil ProposalKind = iota
+	ProposalTypeText
+	ProposalTypeParameterChange
+	ProposalTypeSoftwareUpgrade
 )
 
 // String to proposalType byte. Returns 0xff if invalid.
@@ -250,11 +250,11 @@ type ProposalStatus byte
 
 //nolint
 const (
-	StatusNil           ProposalStatus = 0x00
-	StatusDepositPeriod ProposalStatus = 0x01
-	StatusVotingPeriod  ProposalStatus = 0x02
-	StatusPassed        ProposalStatus = 0x03
-	StatusRejected      ProposalStatus = 0x04
+	StatusNil ProposalStatus = iota
+	StatusDepositPeriod
+	StatusVotingPeriod
+	StatusPassed
+	StatusRejected
 )
 
 // ProposalStatusToString turns a string into a ProposalStatus

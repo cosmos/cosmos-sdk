@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
-	clientRest "github.com/cosmos/cosmos-sdk/client/rest"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/common"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -82,11 +82,11 @@ func withdrawDelegatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 		}
 
 		if req.BaseReq.GenerateOnly {
-			clientRest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
 			return
 		}
 
-		clientRest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
 	}
 }
 
@@ -122,11 +122,11 @@ func withdrawDelegationRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 		}
 
 		if req.BaseReq.GenerateOnly {
-			clientRest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		clientRest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -157,11 +157,11 @@ func setDelegatorWithdrawalAddrHandlerFn(cdc *codec.Codec, cliCtx context.CLICon
 		}
 
 		if req.BaseReq.GenerateOnly {
-			clientRest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 			return
 		}
 
-		clientRest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
 	}
 }
 
@@ -193,11 +193,11 @@ func withdrawValidatorRewardsHandlerFn(cdc *codec.Codec, cliCtx context.CLIConte
 		}
 
 		if req.BaseReq.GenerateOnly {
-			clientRest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
+			clientrest.WriteGenerateStdTxResponse(w, cdc, cliCtx, req.BaseReq, msgs)
 			return
 		}
 
-		clientRest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
+		clientrest.CompleteAndBroadcastTxREST(w, r, cliCtx, req.BaseReq, msgs, cdc)
 	}
 }
 

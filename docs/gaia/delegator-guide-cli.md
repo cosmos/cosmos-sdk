@@ -57,11 +57,11 @@ Not available yet.
 
 [**Install from source**](https://cosmos.network/docs/gaia/installation.html)
 
-:::tip
+::: tip
 `gaiacli` is used from a terminal. To open the terminal, follow these steps:
-    + **Windows**: `Start` > `All Programs` > `Accessories` > `Command Prompt`
-    + **MacOS**: `Finder` > `Applications` > `Utilities` > `Terminal`
-    + **Linux**: `Ctrl` + `Alt` + `T`
+- **Windows**: `Start` > `All Programs` > `Accessories` > `Command Prompt`
+- **MacOS**: `Finder` > `Applications` > `Utilities` > `Terminal`
+- **Linux**: `Ctrl` + `Alt` + `T`
 :::
 
 ## Cosmos Accounts
@@ -367,10 +367,10 @@ The transaction `fees` are the product of `gas` and `gasPrice`. As a user, you h
 gaiacli tx staking delegate <validatorAddress> <amountToBond> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
 
 
-// Withdraw all rewards from a given validator
-// ex value for flags: <validatorAddress>=cosmosvaloper18thamkhnj9wz8pa4nhnp9rldprgant57pk2m8s, <gasPrice>=0.001stake 
+// Withdraw all rewards
+// ex value for flag: <gasPrice>=0.001stake 
 
-gaiacli tx distr withdraw-rewards <validatorAddress> --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
+gaiacli tx distr withdraw-all-rewards --from <delegatorKeyName> --gas auto --gas-prices <gasPrice>
 
 
 // Unbond a certain amount of Atoms from a given validator 

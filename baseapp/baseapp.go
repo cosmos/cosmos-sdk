@@ -636,7 +636,7 @@ type indexedABCILog struct {
 
 // runMsgs iterates through all the messages and executes them.
 func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (result sdk.Result) {
-	logs := make([]string, 0, len(msgs)) // a list of JSON-encoded logs with msg index
+	idxlogs := make([]indexedABCILog, 0, len(msgs)) // a list of JSON-encoded logs with msg index
 
 	var data []byte   // NOTE: we just append them all (?!)
 	var tags sdk.Tags // also just append them all
@@ -665,29 +665,28 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (re
 		tags = append(tags, sdk.MakeTag(sdk.TagAction, msg.Type()))
 		tags = append(tags, msgResult.Tags...)
 
-		log := indexedABCILog{MsgIndex: msgIdx, Log: msgResult.Log}
+		idxLog := indexedABCILog{MsgIndex: msgIdx, Log: msgResult.Log}
 
 		// stop execution and return on first failed message
 		if !msgResult.IsOK() {
-			log.Success = false
-			logRaw := codec.Cdc.MustMarshalJSON(log)
-			logs = append(logs, strings.TrimSpace(string(logRaw)))
+			idxLog.Success = false
+			idxlogs = append(idxlogs, idxLog)
 
 			code = msgResult.Code
 			codespace = msgResult.Codespace
 			break
 		}
 
-		log.Success = true
-		logRaw := codec.Cdc.MustMarshalJSON(log)
-		logs = append(logs, strings.TrimSpace(string(logRaw)))
+		idxLog.Success = true
+		idxlogs = append(idxlogs, idxLog)
 	}
 
+	logJSON := codec.Cdc.MustMarshalJSON(idxlogs)
 	result = sdk.Result{
 		Code:      code,
 		Codespace: codespace,
 		Data:      data,
-		Log:       strings.Join(logs, "\n"),
+		Log:       strings.TrimSpace(string(logJSON)),
 		GasUsed:   ctx.GasMeter().GasConsumed(),
 		Tags:      tags,
 	}

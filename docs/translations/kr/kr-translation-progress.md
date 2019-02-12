@@ -22,9 +22,6 @@ Please refer to the official english version of the documentation for the latest
 ### [`concepts`](../concepts/)
 - Synced until commit [14ebc65](https://github.com/cosmos/cosmos-sdk/commit/14ebc65daffd63e1adf17995c103aac9380207ef#diff-f874f370376bf359320af0543de53fcf)
 
-### [`examples`](../examples/)
-- Redacted from until completion
-
 ### [`spec`](../spec/)
 - Redacted from until completion
 

@@ -57,5 +57,7 @@ BUG FIXES
 
 * SDK
   * [\#3582](https://github.com/cosmos/cosmos-sdk/pull/3582) Running `make test_unit was failing due to a missing tag
+  * [\#3617] Fix fee comparison when the required fees does not contain any denom
+  present in the tx fees.
 
 * Tendermint

@@ -27,11 +27,10 @@ type Coin struct {
 // NewCoin returns a new coin with a denomination and amount. It will panic if
 // the amount is negative.
 func NewCoin(denom string, amount Int) Coin {
+	validateDenom(denom)
+
 	if amount.LT(ZeroInt()) {
 		panic(fmt.Sprintf("negative coin amount: %v\n", amount))
-	}
-	if strings.ToLower(denom) != denom {
-		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
 	}
 
 	return Coin{
@@ -354,9 +353,7 @@ func (coins Coins) Empty() bool {
 
 // Returns the amount of a denom from coins
 func (coins Coins) AmountOf(denom string) Int {
-	if strings.ToLower(denom) != denom {
-		panic(fmt.Sprintf("denom cannot contain upper case characters: %s\n", denom))
-	}
+	validateDenom(denom)
 
 	switch len(coins) {
 	case 0:
@@ -486,6 +483,15 @@ var (
 	reCoin    = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reAmt, reSpc, reDnm))
 	reDecCoin = regexp.MustCompile(fmt.Sprintf(`^(%s)%s(%s)$`, reDecAmt, reSpc, reDnm))
 )
+
+func validateDenom(denom string) {
+	if len(denom) < 3 || len(denom) > 16 {
+		panic(fmt.Sprintf("invalid denom length: %s", denom))
+	}
+	if strings.ToLower(denom) != denom {
+		panic(fmt.Sprintf("denom cannot contain upper case characters: %s", denom))
+	}
+}
 
 // ParseCoin parses a cli input for one coin type, returning errors if invalid.
 // This returns an error on an empty string as well.

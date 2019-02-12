@@ -33,7 +33,7 @@ func AllInvariants(d distr.Keeper, stk staking.Keeper) simulation.Invariant {
 func NonNegativeOutstandingInvariant(k distr.Keeper) simulation.Invariant {
 	return func(ctx sdk.Context) error {
 		outstanding := k.GetOutstandingRewards(ctx)
-		if outstanding.HasNegative() {
+		if outstanding.IsAnyNegative() {
 			return fmt.Errorf("negative outstanding coins: %v", outstanding)
 		}
 		return nil

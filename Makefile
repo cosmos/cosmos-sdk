@@ -4,10 +4,6 @@ VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 BUILD_TAGS = netgo
 CAT := $(if $(filter $(OS),Windows_NT),type,cat)
-BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags \
-	"-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
-	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps)"
 LEDGER_ENABLED ?= true
 GOTOOLS = \
 	github.com/golang/dep/cmd/dep \
@@ -50,6 +46,14 @@ ifeq ($(LEDGER_ENABLED),true)
     endif
   endif
 endif
+
+### Update Build flags
+BUILD_FLAGS = -tags "${BUILD_TAGS}" -ldflags \
+	'-X github.com/cosmos/cosmos-sdk/version.Version=${VERSION} \
+	-X github.com/cosmos/cosmos-sdk/version.Commit=${COMMIT} \
+	-X github.com/cosmos/cosmos-sdk/version.VendorDirHash=$(shell $(CAT) vendor-deps) \
+    -X "github.com/cosmos/cosmos-sdk/version.BuildTags=${BUILD_TAGS}"'
+
 
 build:
 ifeq ($(OS),Windows_NT)

@@ -270,28 +270,31 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	power := int64(100)
 	valTokens := staking.TokensFromTendermintPower(power)
 	commission := staking.NewCommissionMsg(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	msg := staking.NewMsgCreateValidator(valOpAddr1, valConsPk1,
-		sdk.NewCoin(staking.DefaultBondDenom, valTokens), staking.Description{}, commission, sdk.OneInt())
+	msg := staking.NewMsgCreateValidator(
+		valOpAddr1, valConsPk1,
+		sdk.NewCoin(staking.DefaultBondDenom, valTokens),
+		staking.Description{}, commission, sdk.OneInt(),
+	)
 	require.True(t, sh(ctx, msg).IsOK())
 
 	// assert correct initial balance
 	expTokens := balanceTokens.Sub(valTokens)
 	require.Equal(t,
-		sdk.Coins{{staking.DefaultBondDenom, expTokens}},
-		ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins())
+		sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, expTokens)},
+		ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins(),
+	)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, sk)
-
-	// set zero outstanding rewards
-	k.SetOutstandingRewards(ctx, sdk.DecCoins{})
 
 	// fetch validator and delegation
 	val := sk.Validator(ctx, valOpAddr1)
 
 	// allocate some rewards
 	initial := staking.TokensFromTendermintPower(10)
-	tokens := sdk.DecCoins{{staking.DefaultBondDenom, sdk.NewDecFromInt(initial)}}
+	tokens := sdk.DecCoins{sdk.NewDecCoin(staking.DefaultBondDenom, initial)}
+
+	k.SetOutstandingRewards(ctx, tokens)
 	k.AllocateTokensToValidator(ctx, val, tokens)
 
 	// historical count should be 2 (initial + latest for delegation)
@@ -305,14 +308,20 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// assert correct balance
 	exp := balanceTokens.Sub(valTokens).Add(initial.DivRaw(2))
-	require.Equal(t, sdk.Coins{{staking.DefaultBondDenom, exp}}, ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins())
+	require.Equal(t,
+		sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, exp)},
+		ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins(),
+	)
 
 	// withdraw commission
 	require.Nil(t, k.WithdrawValidatorCommission(ctx, valOpAddr1))
 
 	// assert correct balance
 	exp = balanceTokens.Sub(valTokens).Add(initial)
-	require.Equal(t, sdk.Coins{{staking.DefaultBondDenom, exp}}, ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins())
+	require.Equal(t,
+		sdk.Coins{sdk.NewCoin(staking.DefaultBondDenom, exp)},
+		ak.GetAccount(ctx, sdk.AccAddress(valOpAddr1)).GetCoins(),
+	)
 }
 
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {

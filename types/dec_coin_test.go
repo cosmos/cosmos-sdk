@@ -8,61 +8,61 @@ import (
 
 func TestNewDecCoin(t *testing.T) {
 	require.NotPanics(t, func() {
-		NewInt64DecCoin("a", 5)
+		NewInt64DecCoin("aaa", 5)
 	})
 	require.NotPanics(t, func() {
-		NewInt64DecCoin("a", 0)
+		NewInt64DecCoin("aaa", 0)
 	})
 	require.Panics(t, func() {
-		NewInt64DecCoin("A", 5)
+		NewInt64DecCoin("AAA", 5)
 	})
 	require.Panics(t, func() {
-		NewInt64DecCoin("a", -5)
+		NewInt64DecCoin("aaa", -5)
 	})
 }
 
 func TestNewDecCoinFromDec(t *testing.T) {
 	require.NotPanics(t, func() {
-		NewDecCoinFromDec("a", NewDec(5))
+		NewDecCoinFromDec("aaa", NewDec(5))
 	})
 	require.NotPanics(t, func() {
-		NewDecCoinFromDec("a", ZeroDec())
+		NewDecCoinFromDec("aaa", ZeroDec())
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromDec("A", NewDec(5))
+		NewDecCoinFromDec("AAA", NewDec(5))
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromDec("a", NewDec(-5))
+		NewDecCoinFromDec("aaa", NewDec(-5))
 	})
 }
 
 func TestNewDecCoinFromCoin(t *testing.T) {
 	require.NotPanics(t, func() {
-		NewDecCoinFromCoin(Coin{"a", NewInt(5)})
+		NewDecCoinFromCoin(Coin{"aaa", NewInt(5)})
 	})
 	require.NotPanics(t, func() {
-		NewDecCoinFromCoin(Coin{"a", NewInt(0)})
+		NewDecCoinFromCoin(Coin{"aaa", NewInt(0)})
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromCoin(Coin{"A", NewInt(5)})
+		NewDecCoinFromCoin(Coin{"AAA", NewInt(5)})
 	})
 	require.Panics(t, func() {
-		NewDecCoinFromCoin(Coin{"a", NewInt(-5)})
+		NewDecCoinFromCoin(Coin{"aaa", NewInt(-5)})
 	})
 }
 
 func TestDecCoinIsPositive(t *testing.T) {
-	dc := NewInt64DecCoin("a", 5)
+	dc := NewInt64DecCoin("aaa", 5)
 	require.True(t, dc.IsPositive())
 
-	dc = NewInt64DecCoin("a", 0)
+	dc = NewInt64DecCoin("aaa", 0)
 	require.False(t, dc.IsPositive())
 }
 
 func TestPlusDecCoin(t *testing.T) {
-	decCoinA1 := NewDecCoinFromDec("a", NewDecWithPrec(11, 1))
-	decCoinA2 := NewDecCoinFromDec("a", NewDecWithPrec(22, 1))
-	decCoinB1 := NewDecCoinFromDec("b", NewDecWithPrec(11, 1))
+	decCoinA1 := NewDecCoinFromDec("aaa", NewDecWithPrec(11, 1))
+	decCoinA2 := NewDecCoinFromDec("aaa", NewDecWithPrec(22, 1))
+	decCoinB1 := NewDecCoinFromDec("bbb", NewDecWithPrec(11, 1))
 
 	// regular add
 	res := decCoinA1.Plus(decCoinA1)
@@ -84,9 +84,9 @@ func TestPlusDecCoins(t *testing.T) {
 		inputTwo DecCoins
 		expected DecCoins
 	}{
-		{DecCoins{{"a", one}, {"b", one}}, DecCoins{{"a", one}, {"b", one}}, DecCoins{{"a", two}, {"b", two}}},
-		{DecCoins{{"a", zero}, {"b", one}}, DecCoins{{"a", zero}, {"b", zero}}, DecCoins{{"b", one}}},
-		{DecCoins{{"a", zero}, {"b", zero}}, DecCoins{{"a", zero}, {"b", zero}}, DecCoins(nil)},
+		{DecCoins{{"aaa", one}, {"bbb", one}}, DecCoins{{"aaa", one}, {"bbb", one}}, DecCoins{{"aaa", two}, {"bbb", two}}},
+		{DecCoins{{"aaa", zero}, {"bbb", one}}, DecCoins{{"aaa", zero}, {"bbb", zero}}, DecCoins{{"bbb", one}}},
+		{DecCoins{{"aaa", zero}, {"bbb", zero}}, DecCoins{{"aaa", zero}, {"bbb", zero}}, DecCoins(nil)},
 	}
 
 	for tcIndex, tc := range cases {
@@ -150,14 +150,14 @@ func TestDecCoinsIsValid(t *testing.T) {
 		expected bool
 	}{
 		{DecCoins{}, true},
-		{DecCoins{DecCoin{"a", NewDec(5)}}, true},
-		{DecCoins{DecCoin{"a", NewDec(5)}, DecCoin{"b", NewDec(100000)}}, true},
-		{DecCoins{DecCoin{"a", NewDec(-5)}}, false},
-		{DecCoins{DecCoin{"A", NewDec(5)}}, false},
-		{DecCoins{DecCoin{"a", NewDec(5)}, DecCoin{"B", NewDec(100000)}}, false},
-		{DecCoins{DecCoin{"a", NewDec(5)}, DecCoin{"b", NewDec(-100000)}}, false},
-		{DecCoins{DecCoin{"a", NewDec(-5)}, DecCoin{"b", NewDec(100000)}}, false},
-		{DecCoins{DecCoin{"A", NewDec(5)}, DecCoin{"b", NewDec(100000)}}, false},
+		{DecCoins{DecCoin{"aaa", NewDec(5)}}, true},
+		{DecCoins{DecCoin{"aaa", NewDec(5)}, DecCoin{"bbb", NewDec(100000)}}, true},
+		{DecCoins{DecCoin{"aaa", NewDec(-5)}}, false},
+		{DecCoins{DecCoin{"AAA", NewDec(5)}}, false},
+		{DecCoins{DecCoin{"aaa", NewDec(5)}, DecCoin{"B", NewDec(100000)}}, false},
+		{DecCoins{DecCoin{"aaa", NewDec(5)}, DecCoin{"bbb", NewDec(-100000)}}, false},
+		{DecCoins{DecCoin{"aaa", NewDec(-5)}, DecCoin{"bbb", NewDec(100000)}}, false},
+		{DecCoins{DecCoin{"AAA", NewDec(5)}, DecCoin{"bbb", NewDec(100000)}}, false},
 	}
 
 	for i, tc := range testCases {

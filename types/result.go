@@ -119,7 +119,7 @@ func (r TxResponse) String() string {
 	}
 
 	if r.Log != "" {
-		sb.WriteString(fmt.Sprintf("  Log: \n    %s\n", r.Log))
+		sb.WriteString(fmt.Sprintf("  Log: %s\n", r.Log))
 	}
 
 	if r.Info != "" {

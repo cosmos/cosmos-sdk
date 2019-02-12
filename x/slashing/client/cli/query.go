@@ -25,7 +25,7 @@ $ gaiacli query slashing signing-info cosmosvalconspub1zcjduepqfhvwcmt7p06fvdgex
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			pk, err := sdk.GetConsPubKeyBech32(args[0])
+			pk, err := sdk.ConsPubKeyFromBech32(args[0])
 			if err != nil {
 				return err
 			}

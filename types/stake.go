@@ -2,7 +2,6 @@ package types
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 // status of a validator
@@ -40,7 +39,7 @@ type Validator interface {
 	GetMoniker() string           // moniker of the validator
 	GetStatus() BondStatus        // status of the validator
 	GetOperator() ValAddress      // operator address to receive/return validators coins
-	GetConsPubKey() crypto.PubKey // validation consensus pubkey
+	GetConsPubKey() ConsPubKey    // validation consensus pubkey
 	GetConsAddr() ConsAddress     // validation consensus address
 	GetTokens() Int               // validation tokens
 	GetBondedTokens() Int         // validator bonded tokens

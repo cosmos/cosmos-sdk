@@ -106,16 +106,13 @@ func Bech32KeysOutput(infos []keys.Info) ([]KeyOutput, error) {
 // create a KeyOutput in bech32 format
 func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
 	accAddr := sdk.AccAddress(info.GetPubKey().Address().Bytes())
-	bechPubKey, err := sdk.Bech32ifyAccPub(info.GetPubKey())
-	if err != nil {
-		return KeyOutput{}, err
-	}
+	accPubKey := sdk.AccPubKeyFromCryptoPubKey(info.GetPubKey())
 
 	return KeyOutput{
 		Name:    info.GetName(),
 		Type:    info.GetType().String(),
 		Address: accAddr.String(),
-		PubKey:  bechPubKey,
+		PubKey:  accPubKey.String(),
 	}, nil
 }
 
@@ -123,34 +120,26 @@ func Bech32KeyOutput(info keys.Info) (KeyOutput, error) {
 // information.
 func Bech32ConsKeyOutput(keyInfo keys.Info) (KeyOutput, error) {
 	consAddr := sdk.ConsAddress(keyInfo.GetPubKey().Address().Bytes())
-
-	bechPubKey, err := sdk.Bech32ifyConsPub(keyInfo.GetPubKey())
-	if err != nil {
-		return KeyOutput{}, err
-	}
+	consPubKey := sdk.ConsPubKeyFromCryptoPubKey(keyInfo.GetPubKey())
 
 	return KeyOutput{
 		Name:    keyInfo.GetName(),
 		Type:    keyInfo.GetType().String(),
 		Address: consAddr.String(),
-		PubKey:  bechPubKey,
+		PubKey:  consPubKey.String(),
 	}, nil
 }
 
 // Bech32ValKeyOutput returns key output for a validator's key information.
 func Bech32ValKeyOutput(keyInfo keys.Info) (KeyOutput, error) {
 	valAddr := sdk.ValAddress(keyInfo.GetPubKey().Address().Bytes())
-
-	bechPubKey, err := sdk.Bech32ifyValPub(keyInfo.GetPubKey())
-	if err != nil {
-		return KeyOutput{}, err
-	}
+	valPubKey := sdk.ValPubKeyFromCryptoPubKey(keyInfo.GetPubKey())
 
 	return KeyOutput{
 		Name:    keyInfo.GetName(),
 		Type:    keyInfo.GetType().String(),
 		Address: valAddr.String(),
-		PubKey:  bechPubKey,
+		PubKey:  valPubKey.String(),
 	}, nil
 }
 

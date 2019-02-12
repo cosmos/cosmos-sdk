@@ -193,8 +193,8 @@ func createTestAddrs(numAddrs int) []sdk.AccAddress {
 }
 
 // nolint: unparam
-func createTestPubKeys(numPubKeys int) []crypto.PubKey {
-	var publicKeys []crypto.PubKey
+func createTestPubKeys(numPubKeys int) []sdk.ConsPubKey {
+	var publicKeys []sdk.ConsPubKey
 	var buffer bytes.Buffer
 
 	//start at 10 to avoid changing 1 to 01, 2 to 02, etc
@@ -202,7 +202,7 @@ func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 		numString := strconv.Itoa(i)
 		buffer.WriteString("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AF") //base pubkey string
 		buffer.WriteString(numString)                                                       //adding on final two digits to make pubkeys unique
-		publicKeys = append(publicKeys, NewPubKey(buffer.String()))
+		publicKeys = append(publicKeys, sdk.ConsPubKeyFromCryptoPubKey(NewPubKey(buffer.String())))
 		buffer.Reset()
 	}
 	return publicKeys

@@ -40,9 +40,9 @@ var (
 	valAccAddr2 = sdk.AccAddress(valOpPk2.Address())
 	valAccAddr3 = sdk.AccAddress(valOpPk3.Address())
 
-	valConsPk1   = ed25519.GenPrivKey().PubKey()
-	valConsPk2   = ed25519.GenPrivKey().PubKey()
-	valConsPk3   = ed25519.GenPrivKey().PubKey()
+	valConsPk1   = sdk.ConsPubKeyFromCryptoPubKey(ed25519.GenPrivKey().PubKey())
+	valConsPk2   = sdk.ConsPubKeyFromCryptoPubKey(ed25519.GenPrivKey().PubKey())
+	valConsPk3   = sdk.ConsPubKeyFromCryptoPubKey(ed25519.GenPrivKey().PubKey())
 	valConsAddr1 = sdk.ConsAddress(valConsPk1.Address())
 	valConsAddr2 = sdk.ConsAddress(valConsPk2.Address())
 	valConsAddr3 = sdk.ConsAddress(valConsPk3.Address())

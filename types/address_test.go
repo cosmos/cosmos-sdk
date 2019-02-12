@@ -56,35 +56,20 @@ func TestRandBech32PubkeyConsistency(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		rand.Read(pub[:])
 
-		mustBech32AccPub := types.MustBech32ifyAccPub(pub)
-		bech32AccPub, err := types.Bech32ifyAccPub(pub)
+		accPub := types.AccPubKeyFromCryptoPubKey(pub)
+		bech32AccPub := accPub.String()
+		accPub, err := types.AccPubKeyFromBech32(bech32AccPub)
 		require.Nil(t, err)
-		require.Equal(t, bech32AccPub, mustBech32AccPub)
 
-		mustBech32ValPub := types.MustBech32ifyValPub(pub)
-		bech32ValPub, err := types.Bech32ifyValPub(pub)
+		valPub := types.ValPubKeyFromCryptoPubKey(pub)
+		bech32ValPub := valPub.String()
+		valPub, err = types.ValPubKeyFromBech32(bech32ValPub)
 		require.Nil(t, err)
-		require.Equal(t, bech32ValPub, mustBech32ValPub)
 
-		mustBech32ConsPub := types.MustBech32ifyConsPub(pub)
-		bech32ConsPub, err := types.Bech32ifyConsPub(pub)
+		consPub := types.ConsPubKeyFromCryptoPubKey(pub)
+		bech32ConsPub := consPub.String()
+		consPub, err = types.ConsPubKeyFromBech32(bech32ConsPub)
 		require.Nil(t, err)
-		require.Equal(t, bech32ConsPub, mustBech32ConsPub)
-
-		mustAccPub := types.MustGetAccPubKeyBech32(bech32AccPub)
-		accPub, err := types.GetAccPubKeyBech32(bech32AccPub)
-		require.Nil(t, err)
-		require.Equal(t, accPub, mustAccPub)
-
-		mustValPub := types.MustGetValPubKeyBech32(bech32ValPub)
-		valPub, err := types.GetValPubKeyBech32(bech32ValPub)
-		require.Nil(t, err)
-		require.Equal(t, valPub, mustValPub)
-
-		mustConsPub := types.MustGetConsPubKeyBech32(bech32ConsPub)
-		consPub, err := types.GetConsPubKeyBech32(bech32ConsPub)
-		require.Nil(t, err)
-		require.Equal(t, consPub, mustConsPub)
 
 		require.Equal(t, valPub, accPub)
 		require.Equal(t, valPub, consPub)
@@ -218,19 +203,22 @@ func TestConfiguredPrefix(t *testing.T) {
 			config.SetBech32PrefixForAccount(prefix+"acc", prefix+"pub")
 			acc := types.AccAddress(pub.Address())
 			require.True(t, strings.HasPrefix(acc.String(), prefix+"acc"), acc.String())
-			bech32Pub := types.MustBech32ifyAccPub(pub)
+			accPub := types.AccPubKeyFromCryptoPubKey(pub)
+			bech32Pub := accPub.String()
 			require.True(t, strings.HasPrefix(bech32Pub, prefix+"pub"))
 
 			config.SetBech32PrefixForValidator(prefix+"valaddr", prefix+"valpub")
 			val := types.ValAddress(pub.Address())
 			require.True(t, strings.HasPrefix(val.String(), prefix+"valaddr"))
-			bech32ValPub := types.MustBech32ifyValPub(pub)
+			valPub := types.ValPubKeyFromCryptoPubKey(pub)
+			bech32ValPub := valPub.String()
 			require.True(t, strings.HasPrefix(bech32ValPub, prefix+"valpub"))
 
 			config.SetBech32PrefixForConsensusNode(prefix+"consaddr", prefix+"conspub")
 			cons := types.ConsAddress(pub.Address())
 			require.True(t, strings.HasPrefix(cons.String(), prefix+"consaddr"))
-			bech32ConsPub := types.MustBech32ifyConsPub(pub)
+			consPub := types.ConsPubKeyFromCryptoPubKey(pub)
+			bech32ConsPub := consPub.String()
 			require.True(t, strings.HasPrefix(bech32ConsPub, prefix+"conspub"))
 		}
 

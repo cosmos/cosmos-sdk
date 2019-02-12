@@ -133,7 +133,7 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) types.GenesisState {
 func WriteValidators(ctx sdk.Context, keeper Keeper) (vals []tmtypes.GenesisValidator) {
 	keeper.IterateLastValidators(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
 		vals = append(vals, tmtypes.GenesisValidator{
-			PubKey: validator.GetConsPubKey(),
+			PubKey: validator.GetConsPubKey().CryptoPubKey(),
 			Power:  validator.GetTendermintPower(),
 			Name:   validator.GetMoniker(),
 		})

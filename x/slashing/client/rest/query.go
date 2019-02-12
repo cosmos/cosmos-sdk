@@ -32,7 +32,7 @@ func signingInfoHandlerFn(cliCtx context.CLIContext, storeName string, cdc *code
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		pk, err := sdk.GetConsPubKeyBech32(vars["validatorPubKey"])
+		pk, err := sdk.ConsPubKeyFromBech32(vars["validatorPubKey"])
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return

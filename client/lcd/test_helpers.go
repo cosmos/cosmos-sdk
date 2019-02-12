@@ -45,7 +45,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -189,7 +188,7 @@ func InitClientHome(t *testing.T, dir string) string {
 // and initAddrs are the accounts to initialize with some steak tokens. It
 // returns a cleanup function, a set of validator public keys, and a port.
 func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress, minting bool) (
-	cleanup func(), valConsPubKeys []crypto.PubKey, valOperAddrs []sdk.ValAddress, port string) {
+	cleanup func(), valConsPubKeys []sdk.ConsPubKey, valOperAddrs []sdk.ValAddress, port string) {
 
 	if nValidators < 1 {
 		panic("InitializeTestLCD must use at least one validator")
@@ -223,11 +222,11 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 	for i := 0; i < nValidators; i++ {
 		operPrivKey := secp256k1.GenPrivKey()
 		operAddr := operPrivKey.PubKey().Address()
-		pubKey := privVal.GetPubKey()
+		pubKey := sdk.ConsPubKeyFromCryptoPubKey(privVal.GetPubKey())
 
 		power := int64(100)
 		if i > 0 {
-			pubKey = ed25519.GenPrivKey().PubKey()
+			pubKey = sdk.ConsPubKeyFromCryptoPubKey(ed25519.GenPrivKey().PubKey())
 			power = 1
 		}
 		startTokens := staking.TokensFromTendermintPower(power)
@@ -246,7 +245,7 @@ func InitializeTestLCD(t *testing.T, nValidators int, initAddrs []sdk.AccAddress
 		}
 		sig, err := operPrivKey.Sign(stdSignMsg.Bytes())
 		require.Nil(t, err)
-		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, PubKey: operPrivKey.PubKey()}}, "")
+		tx := auth.NewStdTx([]sdk.Msg{msg}, auth.StdFee{}, []auth.StdSignature{{Signature: sig, AccPubKey: sdk.AccPubKeyFromCryptoPubKey(operPrivKey.PubKey())}}, "")
 		txBytes, err := cdc.MarshalJSON(tx)
 		require.Nil(t, err)
 

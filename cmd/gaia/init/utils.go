@@ -9,7 +9,6 @@ import (
 
 	amino "github.com/tendermint/go-amino"
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
@@ -18,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/cmd/gaia/app"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
@@ -62,12 +62,12 @@ func ExportGenesisFileWithTime(
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
 func InitializeNodeValidatorFiles(
-	config *cfg.Config) (nodeID string, valPubKey crypto.PubKey, err error,
+	config *cfg.Config) (nodeID string, consPubKey sdk.ConsPubKey, err error,
 ) {
 
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
-		return nodeID, valPubKey, err
+		return nodeID, consPubKey, err
 	}
 
 	nodeID = string(nodeKey.ID())
@@ -75,17 +75,17 @@ func InitializeNodeValidatorFiles(
 
 	pvKeyFile := config.PrivValidatorKeyFile()
 	if err := common.EnsureDir(filepath.Dir(pvKeyFile), 0777); err != nil {
-		return nodeID, valPubKey, nil
+		return nodeID, consPubKey, nil
 	}
 
 	pvStateFile := config.PrivValidatorStateFile()
 	if err := common.EnsureDir(filepath.Dir(pvStateFile), 0777); err != nil {
-		return nodeID, valPubKey, nil
+		return nodeID, consPubKey, nil
 	}
 
-	valPubKey = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey()
+	consPubKey = sdk.ConsPubKeyFromCryptoPubKey(privval.LoadOrGenFilePV(pvKeyFile, pvStateFile).GetPubKey())
 
-	return nodeID, valPubKey, nil
+	return nodeID, consPubKey, nil
 }
 
 // LoadGenesisDoc reads and unmarshals GenesisDoc from the given file.

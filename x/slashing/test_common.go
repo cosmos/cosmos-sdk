@@ -26,12 +26,11 @@ import (
 // TODO remove dependencies on staking (should only refer to validator set type from sdk)
 
 var (
-	pks = []crypto.PubKey{
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
-		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
-	}
-	addrs = []sdk.ValAddress{
+	pk0, _ = sdk.ConsPubKeyFromHex("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50")
+	pk1, _ = sdk.ConsPubKeyFromHex("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51")
+	pk2, _ = sdk.ConsPubKeyFromHex("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52")
+	pks    = []sdk.ConsPubKey{pk0, pk1, pk2}
+	addrs  = []sdk.ValAddress{
 		sdk.ValAddress(pks[0].Address()),
 		sdk.ValAddress(pks[1].Address()),
 		sdk.ValAddress(pks[2].Address()),
@@ -112,10 +111,10 @@ func testAddr(addr string) sdk.AccAddress {
 	return res
 }
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) staking.MsgCreateValidator {
+func NewTestMsgCreateValidator(address sdk.ValAddress, consPubKey sdk.ConsPubKey, amt sdk.Int) staking.MsgCreateValidator {
 	commission := staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 	return staking.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(staking.DefaultBondDenom, amt),
+		address, consPubKey, sdk.NewCoin(staking.DefaultBondDenom, amt),
 		staking.Description{}, commission, sdk.OneInt(),
 	)
 }

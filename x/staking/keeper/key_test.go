@@ -24,7 +24,7 @@ var (
 func TestGetValidatorPowerRank(t *testing.T) {
 	valAddr1 := sdk.ValAddress(addr1)
 	emptyDesc := types.Description{}
-	val1 := types.NewValidator(valAddr1, pk1, emptyDesc)
+	val1 := types.NewValidator(valAddr1, sdk.ConsPubKeyFromCryptoPubKey(pk1), emptyDesc)
 	val1.Tokens = sdk.ZeroInt()
 	val2, val3, val4 := val1, val1, val1
 	val2.Tokens = sdk.NewInt(1)

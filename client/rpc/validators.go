@@ -102,14 +102,11 @@ func (rvo ResultValidatorsOutput) String() string {
 }
 
 func bech32ValidatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
-	bechValPubkey, err := sdk.Bech32ifyConsPub(validator.PubKey)
-	if err != nil {
-		return ValidatorOutput{}, err
-	}
+	consPubkey := sdk.ConsPubKeyFromCryptoPubKey(validator.PubKey)
 
 	return ValidatorOutput{
 		Address:          sdk.ConsAddress(validator.Address),
-		PubKey:           bechValPubkey,
+		PubKey:           consPubkey.String(),
 		ProposerPriority: validator.ProposerPriority,
 		VotingPower:      validator.VotingPower,
 	}, nil

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -33,7 +32,7 @@ const (
 // bonded shares multiplied by exchange rate.
 type Validator struct {
 	OperatorAddr            sdk.ValAddress `json:"operator_address"`    // address of the validator's operator; bech encoded in JSON
-	ConsPubKey              crypto.PubKey  `json:"consensus_pubkey"`    // the consensus public key of the validator; bech encoded in JSON
+	ConsPubKey              sdk.ConsPubKey `json:"consensus_pubkey"`    // the consensus public key of the validator; bech encoded in JSON
 	Jailed                  bool           `json:"jailed"`              // has the validator been jailed from bonded status?
 	Status                  sdk.BondStatus `json:"status"`              // validator status (bonded/unbonding/unbonded)
 	Tokens                  sdk.Int        `json:"tokens"`              // delegated tokens (incl. self-delegation)
@@ -56,7 +55,7 @@ func (v Validators) String() (out string) {
 }
 
 // NewValidator - initialize a new validator
-func NewValidator(operator sdk.ValAddress, pubKey crypto.PubKey, description Description) Validator {
+func NewValidator(operator sdk.ValAddress, pubKey sdk.ConsPubKey, description Description) Validator {
 	return Validator{
 		OperatorAddr:            operator,
 		ConsPubKey:              pubKey,
@@ -94,10 +93,6 @@ func UnmarshalValidator(cdc *codec.Codec, value []byte) (validator Validator, er
 
 // String returns a human readable string representation of a validator.
 func (v Validator) String() string {
-	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
-	if err != nil {
-		panic(err)
-	}
 	return fmt.Sprintf(`Validator
   Operator Address:           %s
   Validator Consensus Pubkey: %s
@@ -109,73 +104,10 @@ func (v Validator) String() string {
   Unbonding Height:           %d
   Unbonding Completion Time:  %v
   Minimum Self Delegation:    %v
-  Commission:                 %s`, v.OperatorAddr, bechConsPubKey,
+  Commission:                 %s`, v.OperatorAddr, v.ConsPubKey,
 		v.Jailed, sdk.BondStatusToString(v.Status), v.Tokens,
 		v.DelegatorShares, v.Description,
 		v.UnbondingHeight, v.UnbondingCompletionTime, v.MinSelfDelegation, v.Commission)
-}
-
-// this is a helper struct used for JSON de- and encoding only
-type bechValidator struct {
-	OperatorAddr            sdk.ValAddress `json:"operator_address"`    // the bech32 address of the validator's operator
-	ConsPubKey              string         `json:"consensus_pubkey"`    // the bech32 consensus public key of the validator
-	Jailed                  bool           `json:"jailed"`              // has the validator been jailed from bonded status?
-	Status                  sdk.BondStatus `json:"status"`              // validator status (bonded/unbonding/unbonded)
-	Tokens                  sdk.Int        `json:"tokens"`              // delegated tokens (incl. self-delegation)
-	DelegatorShares         sdk.Dec        `json:"delegator_shares"`    // total shares issued to a validator's delegators
-	Description             Description    `json:"description"`         // description terms for the validator
-	UnbondingHeight         int64          `json:"unbonding_height"`    // if unbonding, height at which this validator has begun unbonding
-	UnbondingCompletionTime time.Time      `json:"unbonding_time"`      // if unbonding, min time for the validator to complete unbonding
-	Commission              Commission     `json:"commission"`          // commission parameters
-	MinSelfDelegation       sdk.Int        `json:"min_self_delegation"` // minimum self delegation
-}
-
-// MarshalJSON marshals the validator to JSON using Bech32
-func (v Validator) MarshalJSON() ([]byte, error) {
-	bechConsPubKey, err := sdk.Bech32ifyConsPub(v.ConsPubKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return codec.Cdc.MarshalJSON(bechValidator{
-		OperatorAddr:            v.OperatorAddr,
-		ConsPubKey:              bechConsPubKey,
-		Jailed:                  v.Jailed,
-		Status:                  v.Status,
-		Tokens:                  v.Tokens,
-		DelegatorShares:         v.DelegatorShares,
-		Description:             v.Description,
-		UnbondingHeight:         v.UnbondingHeight,
-		UnbondingCompletionTime: v.UnbondingCompletionTime,
-		MinSelfDelegation:       v.MinSelfDelegation,
-		Commission:              v.Commission,
-	})
-}
-
-// UnmarshalJSON unmarshals the validator from JSON using Bech32
-func (v *Validator) UnmarshalJSON(data []byte) error {
-	bv := &bechValidator{}
-	if err := codec.Cdc.UnmarshalJSON(data, bv); err != nil {
-		return err
-	}
-	consPubKey, err := sdk.GetConsPubKeyBech32(bv.ConsPubKey)
-	if err != nil {
-		return err
-	}
-	*v = Validator{
-		OperatorAddr:            bv.OperatorAddr,
-		ConsPubKey:              consPubKey,
-		Jailed:                  bv.Jailed,
-		Tokens:                  bv.Tokens,
-		Status:                  bv.Status,
-		DelegatorShares:         bv.DelegatorShares,
-		Description:             bv.Description,
-		UnbondingHeight:         bv.UnbondingHeight,
-		UnbondingCompletionTime: bv.UnbondingCompletionTime,
-		Commission:              bv.Commission,
-		MinSelfDelegation:       bv.MinSelfDelegation,
-	}
-	return nil
 }
 
 // only the vitals
@@ -261,7 +193,7 @@ func (d Description) EnsureLength() (Description, sdk.Error) {
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
+		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey.CryptoPubKey()),
 		Power:  v.TendermintPower(),
 	}
 }
@@ -270,7 +202,7 @@ func (v Validator) ABCIValidatorUpdate() abci.ValidatorUpdate {
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	return abci.ValidatorUpdate{
-		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey),
+		PubKey: tmtypes.TM2PB.PubKey(v.ConsPubKey.CryptoPubKey()),
 		Power:  0,
 	}
 }
@@ -444,7 +376,7 @@ func (v Validator) GetJailed() bool                  { return v.Jailed }
 func (v Validator) GetMoniker() string               { return v.Description.Moniker }
 func (v Validator) GetStatus() sdk.BondStatus        { return v.Status }
 func (v Validator) GetOperator() sdk.ValAddress      { return v.OperatorAddr }
-func (v Validator) GetConsPubKey() crypto.PubKey     { return v.ConsPubKey }
+func (v Validator) GetConsPubKey() sdk.ConsPubKey    { return v.ConsPubKey }
 func (v Validator) GetConsAddr() sdk.ConsAddress     { return sdk.ConsAddress(v.ConsPubKey.Address()) }
 func (v Validator) GetTokens() sdk.Int               { return v.Tokens }
 func (v Validator) GetBondedTokens() sdk.Int         { return v.BondedTokens() }

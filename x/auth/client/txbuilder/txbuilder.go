@@ -285,7 +285,7 @@ func MakeSignature(keybase crkeys.Keybase, name, passphrase string,
 		return
 	}
 	return auth.StdSignature{
-		PubKey:    pubkey,
+		AccPubKey: sdk.AccPubKeyFromCryptoPubKey(pubkey),
 		Signature: sigBytes,
 	}, nil
 }

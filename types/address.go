@@ -96,7 +96,7 @@ func (aa AccAddress) Equals(aa2 Address) bool {
 		return true
 	}
 
-	return bytes.Equal(aa.Bytes(), aa2.Bytes())
+	return bytes.Compare(aa.Bytes(), aa2.Bytes()) == 0
 }
 
 // Returns boolean for whether an AccAddress is empty
@@ -106,7 +106,7 @@ func (aa AccAddress) Empty() bool {
 	}
 
 	aa2 := AccAddress{}
-	return bytes.Equal(aa.Bytes(), aa2.Bytes())
+	return bytes.Compare(aa.Bytes(), aa2.Bytes()) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -170,7 +170,7 @@ func (aa AccAddress) String() string {
 func (aa AccAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(aa.String()))
+		s.Write([]byte(fmt.Sprintf("%s", aa.String())))
 	case 'p':
 		s.Write([]byte(fmt.Sprintf("%p", aa)))
 	default:
@@ -226,7 +226,7 @@ func (va ValAddress) Equals(va2 Address) bool {
 		return true
 	}
 
-	return bytes.Equal(va.Bytes(), va2.Bytes())
+	return bytes.Compare(va.Bytes(), va2.Bytes()) == 0
 }
 
 // Returns boolean for whether an AccAddress is empty
@@ -236,7 +236,7 @@ func (va ValAddress) Empty() bool {
 	}
 
 	va2 := ValAddress{}
-	return bytes.Equal(va.Bytes(), va2.Bytes())
+	return bytes.Compare(va.Bytes(), va2.Bytes()) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -301,7 +301,7 @@ func (va ValAddress) String() string {
 func (va ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(va.String()))
+		s.Write([]byte(fmt.Sprintf("%s", va.String())))
 	case 'p':
 		s.Write([]byte(fmt.Sprintf("%p", va)))
 	default:
@@ -352,7 +352,7 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 }
 
 // get ConsAddress from pubkey
-func GetConsAddress(pubkey crypto.PubKey) ConsAddress {
+func GetConsAddress(pubkey ConsPubKey) ConsAddress {
 	return ConsAddress(pubkey.Address())
 }
 
@@ -362,7 +362,7 @@ func (ca ConsAddress) Equals(ca2 Address) bool {
 		return true
 	}
 
-	return bytes.Equal(ca.Bytes(), ca2.Bytes())
+	return bytes.Compare(ca.Bytes(), ca2.Bytes()) == 0
 }
 
 // Returns boolean for whether an ConsAddress is empty
@@ -372,7 +372,7 @@ func (ca ConsAddress) Empty() bool {
 	}
 
 	ca2 := ConsAddress{}
-	return bytes.Equal(ca.Bytes(), ca2.Bytes())
+	return bytes.Compare(ca.Bytes(), ca2.Bytes()) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -437,7 +437,7 @@ func (ca ConsAddress) String() string {
 func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(ca.String()))
+		s.Write([]byte(fmt.Sprintf("%s", ca.String())))
 	case 'p':
 		s.Write([]byte(fmt.Sprintf("%p", ca)))
 	default:
@@ -449,140 +449,439 @@ func (ca ConsAddress) Format(s fmt.State, verb rune) {
 // auxiliary
 // ----------------------------------------------------------------------------
 
-// Bech32ifyAccPub returns a Bech32 encoded string containing the
-// Bech32PrefixAccPub prefix for a given account PubKey.
-func Bech32ifyAccPub(pub crypto.PubKey) (string, error) {
+// AccPubKey wrapper type around crypto.PubKey
+type AccPubKey struct {
+	crypto.PubKey
+}
+
+func NewEmptyAccPubKey() AccPubKey {
+	return AccPubKey{}
+}
+
+// AccPubKeyFromHex creates an AccPubKey from a crypto.PubKey.
+func AccPubKeyFromCryptoPubKey(cryptoPubKey crypto.PubKey) (pubKey AccPubKey) {
+	return AccPubKey{cryptoPubKey}
+}
+
+// AccPubKeyFromHex creates an AccPubKey from a crypto.PubKey.
+func (apk AccPubKey) CryptoPubKey() crypto.PubKey {
+	return apk.PubKey
+}
+
+// AccPubKeyFromHex creates an AccPubKey from a hex string.
+func AccPubKeyFromHex(hexPubKey string) (pubKey AccPubKey, err error) {
+	if len(hexPubKey) == 0 {
+		return pubKey, errors.New("decoding hexPubKey failed: must provide a pubkey")
+	}
+
+	bz, err := hex.DecodeString(hexPubKey)
+	if err != nil {
+		return pubKey, err
+	}
+
+	pk, err := cryptoAmino.PubKeyFromBytes(bz)
+	if err != nil {
+		return pubKey, err
+	}
+
+	return AccPubKeyFromCryptoPubKey(pk), nil
+}
+
+// AccPubKeyFromBech32 creates an AccPubKey from a Bech32 string.
+func AccPubKeyFromBech32(bechPubKey string) (pubKey AccPubKey, err error) {
+	if len(strings.TrimSpace(bechPubKey)) == 0 {
+		return pubKey, nil
+	}
+
 	bech32PrefixAccPub := GetConfig().GetBech32AccountPubPrefix()
-	return bech32.ConvertAndEncode(bech32PrefixAccPub, pub.Bytes())
+
+	bz, err := GetFromBech32(bechPubKey, bech32PrefixAccPub)
+	if err != nil {
+		return pubKey, err
+	}
+
+	pk, err := cryptoAmino.PubKeyFromBytes(bz)
+	if err != nil {
+		return pubKey, err
+	}
+
+	return AccPubKeyFromCryptoPubKey(pk), nil
 }
 
-// MustBech32ifyAccPub returns the result of Bech32ifyAccPub panicing on failure.
-func MustBech32ifyAccPub(pub crypto.PubKey) string {
-	enc, err := Bech32ifyAccPub(pub)
+// Returns boolean for whether two AccPubKey are Equal
+func (apk AccPubKey) Equals(apk2 AccPubKey) bool {
+	return (apk.Empty() && apk2.Empty()) ||
+		apk.CryptoPubKey().Equals(apk2.CryptoPubKey())
+}
+
+// Returns boolean for whether an AccPubKey is empty
+func (apk AccPubKey) Empty() bool {
+	return apk == (NewEmptyAccPubKey()) ||
+		apk.CryptoPubKey() == nil ||
+		len(apk.Bytes()) == 0
+}
+
+// Marshal returns the raw pubkey bytes. It is needed for protobuf
+// compatibility.
+func (apk AccPubKey) Marshal() ([]byte, error) {
+	return apk.Bytes(), nil
+}
+
+// Unmarshal sets the address to the given data. It is needed for protobuf
+// compatibility.
+func (apk *AccPubKey) Unmarshal(data []byte) error {
+	pk, err := cryptoAmino.PubKeyFromBytes(data)
+	if err != nil {
+		return err
+	}
+	*apk = AccPubKeyFromCryptoPubKey(pk)
+	return nil
+}
+
+// MarshalJSON marshals to JSON using Bech32.
+func (apk AccPubKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(apk.String())
+}
+
+// UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
+func (apk *AccPubKey) UnmarshalJSON(data []byte) error {
+	var s string
+
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return nil
+	}
+
+	apk2, err := AccPubKeyFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*apk = apk2
+	return nil
+}
+
+// String implements the Stringer interface.
+func (apk AccPubKey) String() string {
+	if apk.Empty() {
+		return ""
+	}
+
+	bech32AccountPubPrefix := GetConfig().GetBech32AccountPubPrefix()
+
+	bech32Pub, err := bech32.ConvertAndEncode(bech32AccountPubPrefix, apk.Bytes())
 	if err != nil {
 		panic(err)
 	}
 
-	return enc
+	return bech32Pub
 }
 
-// Bech32ifyValPub returns a Bech32 encoded string containing the
-// Bech32PrefixValPub prefix for a given validator operator's PubKey.
-func Bech32ifyValPub(pub crypto.PubKey) (string, error) {
-	bech32PrefixValPub := GetConfig().GetBech32ValidatorPubPrefix()
-	return bech32.ConvertAndEncode(bech32PrefixValPub, pub.Bytes())
+// Format implements the fmt.Formatter interface.
+// nolint: errcheck
+func (apk AccPubKey) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(fmt.Sprintf("%s", apk.String())))
+	case 'p':
+		s.Write([]byte(fmt.Sprintf("%p", apk.Bytes())))
+	default:
+		s.Write([]byte(fmt.Sprintf("%X", apk.Bytes())))
+	}
 }
 
-// MustBech32ifyValPub returns the result of Bech32ifyValPub panicing on failure.
-func MustBech32ifyValPub(pub crypto.PubKey) string {
-	enc, err := Bech32ifyValPub(pub)
+// ValPubKey wrapper type around crypto.PubKey
+type ValPubKey struct {
+	crypto.PubKey
+}
+
+// Returns a new empty ValPubKey
+func NewEmptyValPubKey() ValPubKey {
+	return ValPubKey{}
+}
+
+// ValPubKeyFromCryptoPubKey creates an ValPubKey from a crypto.PubKey.
+func ValPubKeyFromCryptoPubKey(cryptoPubKey crypto.PubKey) ValPubKey {
+	return ValPubKey{cryptoPubKey}
+}
+
+// ValPubKeyFromHex creates an ValPubKey from a crypto.PubKey.
+func (vpk ValPubKey) CryptoPubKey() crypto.PubKey {
+	return vpk.PubKey
+}
+
+// AccPubKeyFromHex creates an AccPubKey from a hex string.
+func ValPubKeyFromHex(hexPubKey string) (pubKey ValPubKey, err error) {
+	if len(hexPubKey) == 0 {
+		return pubKey, errors.New("decoding hexPubKey failed: must provide a pubkey")
+	}
+
+	bz, err := hex.DecodeString(hexPubKey)
+	if err != nil {
+		return pubKey, err
+	}
+
+	pk, err := cryptoAmino.PubKeyFromBytes(bz)
+	if err != nil {
+		return pubKey, err
+	}
+
+	return ValPubKeyFromCryptoPubKey(pk), nil
+}
+
+// AccPubKeyFromBech32 creates an AccPubKey from a Bech32 string.
+func ValPubKeyFromBech32(bechPubKey string) (pubKey ValPubKey, err error) {
+	if len(strings.TrimSpace(bechPubKey)) == 0 {
+		return pubKey, nil
+	}
+
+	bech32ValidatorPubPrefix := GetConfig().GetBech32ValidatorPubPrefix()
+
+	bz, err := GetFromBech32(bechPubKey, bech32ValidatorPubPrefix)
+	if err != nil {
+		return pubKey, err
+	}
+
+	pk, err := cryptoAmino.PubKeyFromBytes(bz)
+	if err != nil {
+		return pubKey, err
+	}
+
+	return ValPubKeyFromCryptoPubKey(pk), nil
+}
+
+// Returns boolean for whether two AccPubKey are Equal
+func (vpk ValPubKey) Equals(vpk2 ValPubKey) bool {
+	return (vpk.Empty() && vpk2.Empty()) ||
+		vpk.CryptoPubKey().Equals(vpk2.CryptoPubKey())
+}
+
+// Returns boolean for whether an AccPubKey is empty
+func (vpk ValPubKey) Empty() bool {
+	return vpk == (NewEmptyValPubKey()) ||
+		vpk.CryptoPubKey() == nil ||
+		len(vpk.Bytes()) == 0
+}
+
+// Marshal returns the raw pubkey bytes. It is needed for protobuf
+// compatibility.
+func (vpk ValPubKey) Marshal() ([]byte, error) {
+	return vpk.Bytes(), nil
+}
+
+// Unmarshal sets the address to the given data. It is needed for protobuf
+// compatibility.
+func (vpk *ValPubKey) Unmarshal(data []byte) error {
+	pk, err := cryptoAmino.PubKeyFromBytes(data)
+	if err != nil {
+		return err
+	}
+	*vpk = ValPubKeyFromCryptoPubKey(pk)
+	return nil
+}
+
+// MarshalJSON marshals to JSON using Bech32.
+func (vpk ValPubKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(vpk.String())
+}
+
+// UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
+func (vpk *ValPubKey) UnmarshalJSON(data []byte) error {
+	var s string
+
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return nil
+	}
+
+	vpk2, err := ValPubKeyFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*vpk = vpk2
+	return nil
+}
+
+// Bytes returns the raw address bytes.
+func (vpk ValPubKey) Bytes() []byte {
+	return vpk.Bytes()
+}
+
+// String implements the Stringer interface.
+func (vpk ValPubKey) String() string {
+	if vpk.Empty() {
+		return ""
+	}
+
+	bech32ValidatorPubPrefix := GetConfig().GetBech32ValidatorPubPrefix()
+
+	bech32Pub, err := bech32.ConvertAndEncode(bech32ValidatorPubPrefix, vpk.Bytes())
 	if err != nil {
 		panic(err)
 	}
 
-	return enc
+	return bech32Pub
 }
 
-// Bech32ifyConsPub returns a Bech32 encoded string containing the
-// Bech32PrefixConsPub prefixfor a given consensus node's PubKey.
-func Bech32ifyConsPub(pub crypto.PubKey) (string, error) {
-	bech32PrefixConsPub := GetConfig().GetBech32ConsensusPubPrefix()
-	return bech32.ConvertAndEncode(bech32PrefixConsPub, pub.Bytes())
+// Format implements the fmt.Formatter interface.
+// nolint: errcheck
+func (vpk ValPubKey) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(fmt.Sprintf("%s", vpk.String())))
+	case 'p':
+		s.Write([]byte(fmt.Sprintf("%p", vpk.Bytes())))
+	default:
+		s.Write([]byte(fmt.Sprintf("%X", vpk.Bytes())))
+	}
 }
 
-// MustBech32ifyConsPub returns the result of Bech32ifyConsPub panicing on
-// failure.
-func MustBech32ifyConsPub(pub crypto.PubKey) string {
-	enc, err := Bech32ifyConsPub(pub)
+// ConsPubKey wrapper type around crypto.PubKey
+type ConsPubKey struct {
+	crypto.PubKey
+}
+
+// Returns a new empty ConsPubKey
+func NewEmptyConsPubKey() ConsPubKey {
+	return ConsPubKey{}
+}
+
+// ConsPubKeyFromCryptoPubKey creates an ConsPubKey from a crypto.PubKey.
+func ConsPubKeyFromCryptoPubKey(cryptoPubKey crypto.PubKey) ConsPubKey {
+	return ConsPubKey{cryptoPubKey}
+}
+
+// ConsPubKeyFromHex returns the crypto.PubKey wrapped by a ConsPubKey.
+func (cpk ConsPubKey) CryptoPubKey() crypto.PubKey {
+	return cpk.PubKey
+}
+
+// ConsPubKeyFromHex creates an ConsPubKey from a hex string.
+func ConsPubKeyFromHex(hexPubKey string) (pubKey ConsPubKey, err error) {
+	if len(hexPubKey) == 0 {
+		return pubKey, errors.New("decoding hexPubKey failed: must provide a pubkey")
+	}
+
+	bz, err := hex.DecodeString(hexPubKey)
+	if err != nil {
+		return pubKey, err
+	}
+
+	pk, err := cryptoAmino.PubKeyFromBytes(bz)
+	if err != nil {
+		return pubKey, err
+	}
+
+	return ConsPubKeyFromCryptoPubKey(pk), nil
+}
+
+// AccPubKeyFromBech32 creates an AccPubKey from a Bech32 string.
+func ConsPubKeyFromBech32(bechPubKey string) (pubKey ConsPubKey, err error) {
+	if len(strings.TrimSpace(bechPubKey)) == 0 {
+		return pubKey, nil
+	}
+
+	bech32PrefixAccPub := GetConfig().GetBech32ConsensusPubPrefix()
+
+	bz, err := GetFromBech32(bechPubKey, bech32PrefixAccPub)
+	if err != nil {
+		return pubKey, err
+	}
+
+	pk, err := cryptoAmino.PubKeyFromBytes(bz)
+	if err != nil {
+		return pubKey, err
+	}
+
+	return ConsPubKeyFromCryptoPubKey(pk), nil
+}
+
+// Returns boolean for whether two AccPubKey are Equal
+func (cpk ConsPubKey) Equals(cpk2 ConsPubKey) bool {
+	return (cpk.Empty() && cpk2.Empty()) ||
+		cpk.CryptoPubKey().Equals(cpk2.CryptoPubKey())
+}
+
+// Returns boolean for whether an AccPubKey is empty
+func (cpk ConsPubKey) Empty() bool {
+	return cpk == (NewEmptyConsPubKey()) ||
+		cpk.CryptoPubKey() == nil ||
+		len(cpk.Bytes()) == 0
+}
+
+// Marshal returns the raw pubkey bytes. It is needed for protobuf
+// compatibility.
+func (cpk ConsPubKey) Marshal() ([]byte, error) {
+	return cpk.Bytes(), nil
+}
+
+// Unmarshal sets the address to the given data. It is needed for protobuf
+// compatibility.
+func (cpk *ConsPubKey) Unmarshal(data []byte) error {
+	pk, err := cryptoAmino.PubKeyFromBytes(data)
+	if err != nil {
+		return err
+	}
+	*cpk = ConsPubKeyFromCryptoPubKey(pk)
+	return nil
+}
+
+// MarshalJSON marshals to JSON using Bech32.
+func (cpk ConsPubKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(cpk.String())
+}
+
+// UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
+func (cpk *ConsPubKey) UnmarshalJSON(data []byte) error {
+	var s string
+
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return nil
+	}
+
+	cpk2, err := ConsPubKeyFromBech32(s)
+	if err != nil {
+		return err
+	}
+
+	*cpk = cpk2
+	return nil
+}
+
+// Bytes returns the raw address bytes.
+func (cpk ConsPubKey) Bytes() []byte {
+	return cpk.Bytes()
+}
+
+// String implements the Stringer interface.
+func (cpk ConsPubKey) String() string {
+	if cpk.Empty() {
+		return ""
+	}
+
+	bech32ConsensusAddrPrefix := GetConfig().GetBech32ConsensusAddrPrefix()
+
+	bech32Pub, err := bech32.ConvertAndEncode(bech32ConsensusAddrPrefix, cpk.Bytes())
 	if err != nil {
 		panic(err)
 	}
 
-	return enc
+	return bech32Pub
 }
 
-// GetAccPubKeyBech32 creates a PubKey for an account with a given public key
-// string using the Bech32 Bech32PrefixAccPub prefix.
-func GetAccPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
-	bech32PrefixAccPub := GetConfig().GetBech32AccountPubPrefix()
-	bz, err := GetFromBech32(pubkey, bech32PrefixAccPub)
-	if err != nil {
-		return nil, err
+// Format implements the fmt.Formatter interface.
+// nolint: errcheck
+func (cpk ConsPubKey) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 's':
+		s.Write([]byte(fmt.Sprintf("%s", cpk.String())))
+	case 'p':
+		s.Write([]byte(fmt.Sprintf("%p", cpk.Bytes())))
+	default:
+		s.Write([]byte(fmt.Sprintf("%X", cpk.Bytes())))
 	}
-
-	pk, err = cryptoAmino.PubKeyFromBytes(bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return pk, nil
-}
-
-// MustGetAccPubKeyBech32 returns the result of GetAccPubKeyBech32 panicing on
-// failure.
-func MustGetAccPubKeyBech32(pubkey string) (pk crypto.PubKey) {
-	pk, err := GetAccPubKeyBech32(pubkey)
-	if err != nil {
-		panic(err)
-	}
-
-	return pk
-}
-
-// GetValPubKeyBech32 creates a PubKey for a validator's operator with a given
-// public key string using the Bech32 Bech32PrefixValPub prefix.
-func GetValPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
-	bech32PrefixValPub := GetConfig().GetBech32ValidatorPubPrefix()
-	bz, err := GetFromBech32(pubkey, bech32PrefixValPub)
-	if err != nil {
-		return nil, err
-	}
-
-	pk, err = cryptoAmino.PubKeyFromBytes(bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return pk, nil
-}
-
-// MustGetValPubKeyBech32 returns the result of GetValPubKeyBech32 panicing on
-// failure.
-func MustGetValPubKeyBech32(pubkey string) (pk crypto.PubKey) {
-	pk, err := GetValPubKeyBech32(pubkey)
-	if err != nil {
-		panic(err)
-	}
-
-	return pk
-}
-
-// GetConsPubKeyBech32 creates a PubKey for a consensus node with a given public
-// key string using the Bech32 Bech32PrefixConsPub prefix.
-func GetConsPubKeyBech32(pubkey string) (pk crypto.PubKey, err error) {
-	bech32PrefixConsPub := GetConfig().GetBech32ConsensusPubPrefix()
-	bz, err := GetFromBech32(pubkey, bech32PrefixConsPub)
-	if err != nil {
-		return nil, err
-	}
-
-	pk, err = cryptoAmino.PubKeyFromBytes(bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return pk, nil
-}
-
-// MustGetConsPubKeyBech32 returns the result of GetConsPubKeyBech32 panicing on
-// failure.
-func MustGetConsPubKeyBech32(pubkey string) (pk crypto.PubKey) {
-	pk, err := GetConsPubKeyBech32(pubkey)
-	if err != nil {
-		panic(err)
-	}
-
-	return pk
 }
 
 // GetFromBech32 decodes a bytestring from a Bech32 encoded string.

@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +13,11 @@ import (
 )
 
 var (
-	pubkeys = []crypto.PubKey{ed25519.GenPrivKey().PubKey(), ed25519.GenPrivKey().PubKey(), ed25519.GenPrivKey().PubKey()}
+	pubkeys = []sdk.ConsPubKey{
+		sdk.ConsPubKeyFromCryptoPubKey(ed25519.GenPrivKey().PubKey()),
+		sdk.ConsPubKeyFromCryptoPubKey(ed25519.GenPrivKey().PubKey()),
+		sdk.ConsPubKeyFromCryptoPubKey(ed25519.GenPrivKey().PubKey()),
+	}
 
 	testDescription   = staking.NewDescription("T", "E", "S", "T")
 	testCommissionMsg = staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
@@ -426,19 +429,19 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 
 	valTokens1 := staking.TokensFromTendermintPower(25)
 	val1CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[0]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(staking.DefaultBondDenom, valTokens1), testDescription, testCommissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addrs[0]), pubkeys[0], sdk.NewCoin(staking.DefaultBondDenom, valTokens1), testDescription, testCommissionMsg, sdk.OneInt(),
 	)
 	stakingHandler(ctx, val1CreateMsg)
 
 	valTokens2 := staking.TokensFromTendermintPower(6)
 	val2CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[1]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(staking.DefaultBondDenom, valTokens2), testDescription, testCommissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addrs[1]), pubkeys[1], sdk.NewCoin(staking.DefaultBondDenom, valTokens2), testDescription, testCommissionMsg, sdk.OneInt(),
 	)
 	stakingHandler(ctx, val2CreateMsg)
 
 	valTokens3 := staking.TokensFromTendermintPower(7)
 	val3CreateMsg := staking.NewMsgCreateValidator(
-		sdk.ValAddress(addrs[2]), ed25519.GenPrivKey().PubKey(), sdk.NewCoin(staking.DefaultBondDenom, valTokens3), testDescription, testCommissionMsg, sdk.OneInt(),
+		sdk.ValAddress(addrs[2]), pubkeys[2], sdk.NewCoin(staking.DefaultBondDenom, valTokens3), testDescription, testCommissionMsg, sdk.OneInt(),
 	)
 	stakingHandler(ctx, val3CreateMsg)
 

@@ -1,7 +1,6 @@
 package staking
 
 import (
-	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,27 +25,27 @@ var (
 	commissionMsg = NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
-func NewTestMsgCreateValidator(address sdk.ValAddress, pubKey crypto.PubKey, amt sdk.Int) MsgCreateValidator {
+func NewTestMsgCreateValidator(address sdk.ValAddress, consPubKey sdk.ConsPubKey, amt sdk.Int) MsgCreateValidator {
 	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, sdk.OneInt(),
+		address, consPubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, sdk.OneInt(),
 	)
 }
 
-func NewTestMsgCreateValidatorWithCommission(address sdk.ValAddress, pubKey crypto.PubKey,
+func NewTestMsgCreateValidatorWithCommission(address sdk.ValAddress, consPubKey sdk.ConsPubKey,
 	amt sdk.Int, commissionRate sdk.Dec) MsgCreateValidator {
 
 	commission := NewCommissionMsg(commissionRate, sdk.OneDec(), sdk.ZeroDec())
 
 	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commission, sdk.OneInt(),
+		address, consPubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commission, sdk.OneInt(),
 	)
 }
 
-func NewTestMsgCreateValidatorWithMinSelfDelegation(address sdk.ValAddress, pubKey crypto.PubKey,
+func NewTestMsgCreateValidatorWithMinSelfDelegation(address sdk.ValAddress, consPubKey sdk.ConsPubKey,
 	amt sdk.Int, minSelfDelegation sdk.Int) MsgCreateValidator {
 
 	return types.NewMsgCreateValidator(
-		address, pubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, minSelfDelegation,
+		address, consPubKey, sdk.NewCoin(types.DefaultBondDenom, amt), Description{}, commissionMsg, minSelfDelegation,
 	)
 }
 
@@ -56,8 +55,8 @@ func NewTestMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.
 }
 
 func NewTestMsgCreateValidatorOnBehalfOf(delAddr sdk.AccAddress, valAddr sdk.ValAddress,
-	valPubKey crypto.PubKey, amt sdk.Int) MsgCreateValidator {
+	consPubKey sdk.ConsPubKey, amt sdk.Int) MsgCreateValidator {
 
 	amount := sdk.NewCoin(types.DefaultBondDenom, amt)
-	return NewMsgCreateValidatorOnBehalfOf(delAddr, valAddr, valPubKey, amount, Description{}, commissionMsg, sdk.OneInt())
+	return NewMsgCreateValidatorOnBehalfOf(delAddr, valAddr, consPubKey, amount, Description{}, commissionMsg, sdk.OneInt())
 }

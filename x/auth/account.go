@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -20,8 +18,8 @@ type Account interface {
 	GetAddress() sdk.AccAddress
 	SetAddress(sdk.AccAddress) error // errors if already set.
 
-	GetPubKey() crypto.PubKey // can return nil.
-	SetPubKey(crypto.PubKey) error
+	GetPubKey() sdk.AccPubKey // can return nil.
+	SetPubKey(sdk.AccPubKey) error
 
 	GetAccountNumber() uint64
 	SetAccountNumber(uint64) error
@@ -76,26 +74,20 @@ var _ Account = (*BaseAccount)(nil)
 type BaseAccount struct {
 	Address       sdk.AccAddress `json:"address"`
 	Coins         sdk.Coins      `json:"coins"`
-	PubKey        crypto.PubKey  `json:"public_key"`
+	PubKey        sdk.AccPubKey  `json:"public_key"`
 	AccountNumber uint64         `json:"account_number"`
 	Sequence      uint64         `json:"sequence"`
 }
 
 // String implements fmt.Stringer
 func (acc BaseAccount) String() string {
-	var pubkey string
-
-	if acc.PubKey != nil {
-		pubkey = sdk.MustBech32ifyAccPub(acc.PubKey)
-	}
-
 	return fmt.Sprintf(`Account:
   Address:       %s
   Pubkey:        %s
   Coins:         %s
   AccountNumber: %d
   Sequence:      %d`,
-		acc.Address, pubkey, acc.Coins, acc.AccountNumber, acc.Sequence,
+		acc.Address, acc.PubKey, acc.Coins, acc.AccountNumber, acc.Sequence,
 	)
 }
 
@@ -126,12 +118,12 @@ func (acc *BaseAccount) SetAddress(addr sdk.AccAddress) error {
 }
 
 // GetPubKey - Implements sdk.Account.
-func (acc BaseAccount) GetPubKey() crypto.PubKey {
+func (acc BaseAccount) GetPubKey() sdk.AccPubKey {
 	return acc.PubKey
 }
 
 // SetPubKey - Implements sdk.Account.
-func (acc *BaseAccount) SetPubKey(pubKey crypto.PubKey) error {
+func (acc *BaseAccount) SetPubKey(pubKey sdk.AccPubKey) error {
 	acc.PubKey = pubKey
 	return nil
 }
@@ -192,12 +184,6 @@ type BaseVestingAccount struct {
 
 // String implements fmt.Stringer
 func (bva BaseVestingAccount) String() string {
-	var pubkey string
-
-	if bva.PubKey != nil {
-		pubkey = sdk.MustBech32ifyAccPub(bva.PubKey)
-	}
-
 	return fmt.Sprintf(`Vesting Account:
   Address:          %s
   Pubkey:           %s
@@ -208,7 +194,7 @@ func (bva BaseVestingAccount) String() string {
   DelegatedFree:    %s
   DelegatedVesting: %s
   EndTime:          %d `,
-		bva.Address, pubkey, bva.Coins, bva.AccountNumber, bva.Sequence,
+		bva.Address, bva.PubKey, bva.Coins, bva.AccountNumber, bva.Sequence,
 		bva.OriginalVesting, bva.DelegatedFree, bva.DelegatedVesting, bva.EndTime,
 	)
 }
@@ -364,12 +350,6 @@ func NewContinuousVestingAccount(
 }
 
 func (cva ContinuousVestingAccount) String() string {
-	var pubkey string
-
-	if cva.PubKey != nil {
-		pubkey = sdk.MustBech32ifyAccPub(cva.PubKey)
-	}
-
 	return fmt.Sprintf(`Continuous Vesting Account:
   Address:          %s
   Pubkey:           %s
@@ -381,7 +361,7 @@ func (cva ContinuousVestingAccount) String() string {
   DelegatedVesting: %s
   StartTime:        %d
   EndTime:          %d `,
-		cva.Address, pubkey, cva.Coins, cva.AccountNumber, cva.Sequence,
+		cva.Address, cva.PubKey, cva.Coins, cva.AccountNumber, cva.Sequence,
 		cva.OriginalVesting, cva.DelegatedFree, cva.DelegatedVesting,
 		cva.StartTime, cva.EndTime,
 	)

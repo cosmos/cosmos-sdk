@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/viper"
 
 	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/common"
 
@@ -62,7 +61,7 @@ following delegation and commission default parameters:
 
 			config := ctx.Config
 			config.SetRoot(viper.GetString(tmcli.HomeFlag))
-			nodeID, valPubKey, err := InitializeNodeValidatorFiles(ctx.Config)
+			nodeID, consPubKey, err := InitializeNodeValidatorFiles(ctx.Config)
 			if err != nil {
 				return err
 			}
@@ -100,15 +99,15 @@ following delegation and commission default parameters:
 			}
 
 			// Read --pubkey, if empty take it from priv_validator.json
-			if valPubKeyString := viper.GetString(cli.FlagPubKey); valPubKeyString != "" {
-				valPubKey, err = sdk.GetConsPubKeyBech32(valPubKeyString)
+			if consPubKeyString := viper.GetString(cli.FlagPubKey); consPubKeyString != "" {
+				consPubKey, err = sdk.ConsPubKeyFromBech32(consPubKeyString)
 				if err != nil {
 					return err
 				}
 			}
 
 			// Set flags for creating gentx
-			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, valPubKey)
+			prepareFlagsForTxCreateValidator(config, nodeID, ip, genDoc.ChainID, consPubKey)
 
 			// Fetch the amount of coins staked
 			amount := viper.GetString(cli.FlagAmount)
@@ -213,15 +212,15 @@ func accountInGenesis(genesisState app.GenesisState, key sdk.AccAddress, coins s
 }
 
 func prepareFlagsForTxCreateValidator(config *cfg.Config, nodeID, ip, chainID string,
-	valPubKey crypto.PubKey) {
+	consPubKey sdk.ConsPubKey) {
 	viper.Set(tmcli.HomeFlag, viper.GetString(flagClientHome)) // --home
 	viper.Set(client.FlagChainID, chainID)
-	viper.Set(client.FlagFrom, viper.GetString(client.FlagName))   // --from
-	viper.Set(cli.FlagNodeID, nodeID)                              // --node-id
-	viper.Set(cli.FlagIP, ip)                                      // --ip
-	viper.Set(cli.FlagPubKey, sdk.MustBech32ifyConsPub(valPubKey)) // --pubkey
-	viper.Set(client.FlagGenerateOnly, true)                       // --genesis-format
-	viper.Set(cli.FlagMoniker, config.Moniker)                     // --moniker
+	viper.Set(client.FlagFrom, viper.GetString(client.FlagName)) // --from
+	viper.Set(cli.FlagNodeID, nodeID)                            // --node-id
+	viper.Set(cli.FlagIP, ip)                                    // --ip
+	viper.Set(cli.FlagPubKey, consPubKey.String())               // --pubkey
+	viper.Set(client.FlagGenerateOnly, true)                     // --genesis-format
+	viper.Set(cli.FlagMoniker, config.Moniker)                   // --moniker
 	if config.Moniker == "" {
 		viper.Set(cli.FlagMoniker, viper.GetString(client.FlagName))
 	}

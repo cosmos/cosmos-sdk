@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"github.com/tendermint/tendermint/crypto"
-
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -129,10 +127,10 @@ func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, process func(Account) (
 }
 
 // GetPubKey Returns the PubKey of the account at address
-func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (crypto.PubKey, sdk.Error) {
+func (ak AccountKeeper) GetPubKey(ctx sdk.Context, addr sdk.AccAddress) (sdk.AccPubKey, sdk.Error) {
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
-		return nil, sdk.ErrUnknownAddress(addr.String())
+		return sdk.NewEmptyAccPubKey(), sdk.ErrUnknownAddress(addr.String())
 	}
 	return acc.GetPubKey(), nil
 }

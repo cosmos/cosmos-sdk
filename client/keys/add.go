@@ -166,11 +166,11 @@ func runAddCmd(_ *cobra.Command, args []string) error {
 	}
 
 	if viper.GetString(FlagPublicKey) != "" {
-		pk, err := sdk.GetAccPubKeyBech32(viper.GetString(FlagPublicKey))
+		pk, err := sdk.AccPubKeyFromBech32(viper.GetString(FlagPublicKey))
 		if err != nil {
 			return err
 		}
-		_, err = kb.CreateOffline(name, pk)
+		_, err = kb.CreateOffline(name, pk.CryptoPubKey())
 		if err != nil {
 			return err
 		}

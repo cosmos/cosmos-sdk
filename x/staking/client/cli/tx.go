@@ -231,7 +231,7 @@ func BuildCreateValidatorMsg(cliCtx context.CLIContext, txBldr authtxb.TxBuilder
 	valAddr := cliCtx.GetFromAddress()
 	pkStr := viper.GetString(FlagPubKey)
 
-	pk, err := sdk.GetConsPubKeyBech32(pkStr)
+	pk, err := sdk.ConsPubKeyFromBech32(pkStr)
 	if err != nil {
 		return txBldr, nil, err
 	}

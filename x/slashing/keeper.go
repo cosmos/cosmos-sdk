@@ -195,9 +195,9 @@ func (k Keeper) handleValidatorSignature(ctx sdk.Context, addr crypto.Address, p
 	k.SetValidatorSigningInfo(ctx, consAddr, signInfo)
 }
 
-func (k Keeper) addPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
-	addr := pubkey.Address()
-	k.setAddrPubkeyRelation(ctx, addr, pubkey)
+func (k Keeper) addPubkey(ctx sdk.Context, consPubkey sdk.ConsPubKey) {
+	addr := consPubkey.Address()
+	k.setAddrPubkeyRelation(ctx, addr, consPubkey)
 }
 
 func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
@@ -210,9 +210,9 @@ func (k Keeper) getPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKe
 	return pubkey, nil
 }
 
-func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey crypto.PubKey) {
+func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, consPubkey sdk.ConsPubKey) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryLengthPrefixed(pubkey)
+	bz := k.cdc.MustMarshalBinaryLengthPrefixed(consPubkey)
 	store.Set(getAddrPubkeyRelationKey(addr), bz)
 }
 

@@ -76,7 +76,7 @@ func appStateFromGenesisFileFn(r *rand.Rand, accs []simulation.Account, genesisT
 		privkeySeed := make([]byte, 15)
 		r.Read(privkeySeed)
 		privKey := secp256k1.GenPrivKeySecp256k1(privkeySeed)
-		newAccs = append(newAccs, simulation.Account{privKey, privKey.PubKey(), acc.Address})
+		newAccs = append(newAccs, simulation.Account{privKey, sdk.AccPubKeyFromCryptoPubKey(privKey.PubKey()), acc.Address})
 	}
 	return genesis.AppState, newAccs, genesis.ChainID
 }
@@ -211,7 +211,9 @@ func appStateRandomizedFn(r *rand.Rand, accs []simulation.Account, genesisTimest
 		valAddr := sdk.ValAddress(accs[i].Address)
 		valAddrs[i] = valAddr
 
-		validator := staking.NewValidator(valAddr, accs[i].PubKey, staking.Description{})
+		consPubKey := sdk.ConsPubKeyFromCryptoPubKey(accs[i].PubKey.CryptoPubKey())
+
+		validator := staking.NewValidator(valAddr, consPubKey, staking.Description{})
 		validator.Tokens = sdk.NewInt(amount)
 		validator.DelegatorShares = sdk.NewDec(amount)
 		delegation := staking.Delegation{accs[i].Address, valAddr, sdk.NewDec(amount)}

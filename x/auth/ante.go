@@ -185,10 +185,10 @@ func processSig(
 		// contain a pubkey, so we must account for tx size of including a
 		// StdSignature (Amino encoding) and simulate gas consumption
 		// (assuming a SECP256k1 simulation key).
-		consumeSimSigGas(ctx.GasMeter(), pubKey, sig, params)
+		consumeSimSigGas(ctx.GasMeter(), pubKey.CryptoPubKey(), sig, params)
 	}
 
-	consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey, params)
+	consumeSigVerificationGas(ctx.GasMeter(), sig.Signature, pubKey.CryptoPubKey(), params)
 	if !simulate && !pubKey.VerifyBytes(signBytes, sig.Signature) {
 		return nil, sdk.ErrUnauthorized("signature verification failed").Result()
 	}
@@ -201,7 +201,7 @@ func processSig(
 }
 
 func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignature, params Params) {
-	simSig := StdSignature{PubKey: pubkey}
+	simSig := StdSignature{AccPubKey: sdk.AccPubKeyFromCryptoPubKey(pubkey)}
 	if len(sig.Signature) == 0 {
 		simSig.Signature = simSecp256k1Sig[:]
 	}
@@ -221,7 +221,7 @@ func consumeSimSigGas(gasmeter sdk.GasMeter, pubkey crypto.PubKey, sig StdSignat
 // ProcessPubKey verifies that the given account address matches that of the
 // StdSignature. In addition, it will set the public key of the account if it
 // has not been set.
-func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey, sdk.Result) {
+func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (sdk.AccPubKey, sdk.Result) {
 	// If pubkey is not known for account, set it from the StdSignature.
 	pubKey := acc.GetPubKey()
 	if simulate {
@@ -229,21 +229,21 @@ func ProcessPubKey(acc Account, sig StdSignature, simulate bool) (crypto.PubKey,
 		// account's pubkey is nil, both signature verification and gasKVStore.Set()
 		// shall consume the largest amount, i.e. it takes more gas to verify
 		// secp256k1 keys than ed25519 ones.
-		if pubKey == nil {
-			return simSecp256k1Pubkey, sdk.Result{}
+		if pubKey.Empty() {
+			return sdk.AccPubKeyFromCryptoPubKey(simSecp256k1Pubkey), sdk.Result{}
 		}
 
 		return pubKey, sdk.Result{}
 	}
 
-	if pubKey == nil {
-		pubKey = sig.PubKey
-		if pubKey == nil {
-			return nil, sdk.ErrInvalidPubKey("PubKey not found").Result()
+	if pubKey.Empty() {
+		pubKey = sig.AccPubKey
+		if pubKey.Empty() {
+			return pubKey, sdk.ErrInvalidPubKey("PubKey not found").Result()
 		}
 
 		if !bytes.Equal(pubKey.Address(), acc.GetAddress()) {
-			return nil, sdk.ErrInvalidPubKey(
+			return pubKey, sdk.ErrInvalidPubKey(
 				fmt.Sprintf("PubKey does not match Signer address %s", acc.GetAddress())).Result()
 		}
 	}

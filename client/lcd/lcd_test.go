@@ -72,7 +72,7 @@ func TestKeyRecover(t *testing.T) {
 	mnemonic := getKeysSeed(t, port)
 	expectedInfo, _ := kb.CreateAccount(myName1, mnemonic, "", pw, 0, 0)
 	expectedAddress := expectedInfo.GetAddress().String()
-	expectedPubKey := sdk.MustBech32ifyAccPub(expectedInfo.GetPubKey())
+	expectedPubKey := sdk.AccPubKeyFromCryptoPubKey(expectedInfo.GetPubKey()).String()
 
 	// recover key
 	doRecoverKey(t, port, myName2, pw, mnemonic, 0, 0)
@@ -98,7 +98,7 @@ func TestKeyRecoverHDPath(t *testing.T) {
 
 			expectedInfo, _ := kb.CreateAccount(name1Idx, mnemonic, "", pw, account, index)
 			expectedAddress := expectedInfo.GetAddress().String()
-			expectedPubKey := sdk.MustBech32ifyAccPub(expectedInfo.GetPubKey())
+			expectedPubKey := sdk.AccPubKeyFromCryptoPubKey(expectedInfo.GetPubKey()).String()
 
 			// recover key
 			doRecoverKey(t, port, name2Idx, pw, mnemonic, account, index)
@@ -905,12 +905,12 @@ func TestUnjail(t *testing.T) {
 	kb, err := keys.NewKeyBaseFromDir(InitClientHome(t, ""))
 	require.NoError(t, err)
 	addr, _ := CreateAddr(t, name1, pw, kb)
-	cleanup, valPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
+	cleanup, consPubKeys, _, port := InitializeTestLCD(t, 1, []sdk.AccAddress{addr}, true)
 	defer cleanup()
 
 	// XXX: any less than this and it fails
 	tests.WaitForHeight(3, port)
-	pkString, _ := sdk.Bech32ifyConsPub(valPubKeys[0])
+	pkString := (consPubKeys[0]).String()
 	signingInfo := getSigningInfo(t, port, pkString)
 	tests.WaitForHeight(4, port)
 	require.Equal(t, true, signingInfo.IndexOffset > 0)

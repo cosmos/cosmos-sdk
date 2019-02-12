@@ -15,7 +15,7 @@ import (
 // (e.g. number of coins)
 type Account struct {
 	PrivKey crypto.PrivKey
-	PubKey  crypto.PubKey
+	PubKey  sdk.AccPubKey
 	Address sdk.AccAddress
 }
 
@@ -45,7 +45,7 @@ func RandomAccounts(r *rand.Rand, n int) []Account {
 			accs[i].PrivKey = ed25519.GenPrivKeyFromSecret(privkeySeed)
 		}
 
-		accs[i].PubKey = accs[i].PrivKey.PubKey()
+		accs[i].PubKey = sdk.AccPubKeyFromCryptoPubKey(accs[i].PrivKey.PubKey())
 		accs[i].Address = sdk.AccAddress(accs[i].PubKey.Address())
 	}
 

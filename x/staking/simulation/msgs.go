@@ -47,7 +47,7 @@ func SimulateMsgCreateValidator(m auth.AccountKeeper, k staking.Keeper) simulati
 		}
 
 		selfDelegation := sdk.NewCoin(denom, amount)
-		msg := staking.NewMsgCreateValidator(address, acc.PubKey,
+		msg := staking.NewMsgCreateValidator(address, sdk.ConsPubKeyFromCryptoPubKey(acc.PubKey.CryptoPubKey()),
 			selfDelegation, description, commission, sdk.OneInt())
 
 		if msg.ValidateBasic() != nil {

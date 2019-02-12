@@ -24,7 +24,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmconfig "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/crypto"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
@@ -105,7 +104,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 
 	monikers := make([]string, numValidators)
 	nodeIDs := make([]string, numValidators)
-	valPubKeys := make([]crypto.PubKey, numValidators)
+	consPubKeys := make([]sdk.ConsPubKey, numValidators)
 
 	gaiaConfig := srvconfig.DefaultConfig()
 	gaiaConfig.MinGasPrices = viper.GetString(server.FlagMinGasPrices)
@@ -147,7 +146,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 			return err
 		}
 
-		nodeIDs[i], valPubKeys[i], err = InitializeNodeValidatorFiles(config)
+		nodeIDs[i], consPubKeys[i], err = InitializeNodeValidatorFiles(config)
 		if err != nil {
 			_ = os.RemoveAll(outDir)
 			return err
@@ -205,7 +204,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 		valTokens := staking.TokensFromTendermintPower(100)
 		msg := staking.NewMsgCreateValidator(
 			sdk.ValAddress(addr),
-			valPubKeys[i],
+			consPubKeys[i],
 			sdk.NewCoin(stakingtypes.DefaultBondDenom, valTokens),
 			staking.NewDescription(nodeDirName, "", "", ""),
 			staking.NewCommissionMsg(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
@@ -246,7 +245,7 @@ func initTestnet(config *tmconfig.Config, cdc *codec.Codec) error {
 	}
 
 	err := collectGenFiles(
-		cdc, config, chainID, monikers, nodeIDs, valPubKeys, numValidators,
+		cdc, config, chainID, monikers, nodeIDs, consPubKeys, numValidators,
 		outDir, viper.GetString(flagNodeDirPrefix), viper.GetString(flagNodeDaemonHome),
 	)
 	if err != nil {
@@ -288,7 +287,7 @@ func initGenFiles(
 
 func collectGenFiles(
 	cdc *codec.Codec, config *tmconfig.Config, chainID string,
-	monikers, nodeIDs []string, valPubKeys []crypto.PubKey,
+	monikers, nodeIDs []string, consPubKeys []sdk.ConsPubKey,
 	numValidators int, outDir, nodeDirPrefix, nodeDaemonHomeName string,
 ) error {
 
@@ -304,8 +303,8 @@ func collectGenFiles(
 
 		config.SetRoot(nodeDir)
 
-		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
-		initCfg := newInitConfig(chainID, gentxsDir, moniker, nodeID, valPubKey)
+		nodeID, consPubKey := nodeIDs[i], consPubKeys[i]
+		initCfg := newInitConfig(chainID, gentxsDir, moniker, nodeID, consPubKey)
 
 		genDoc, err := LoadGenesisDoc(cdc, config.GenesisFile())
 		if err != nil {

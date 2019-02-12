@@ -537,7 +537,7 @@ func TestProcessPubKey(t *testing.T) {
 	acc1 := input.ak.NewAccountWithAddress(ctx, addr1)
 	acc2 := input.ak.NewAccountWithAddress(ctx, addr2)
 
-	acc2.SetPubKey(priv2.PubKey())
+	acc2.SetPubKey(sdk.AccPubKeyFromCryptoPubKey(priv2.PubKey()))
 
 	type args struct {
 		acc      Account
@@ -552,8 +552,8 @@ func TestProcessPubKey(t *testing.T) {
 		{"no sigs, simulate off", args{acc1, StdSignature{}, false}, true},
 		{"no sigs, simulate on", args{acc1, StdSignature{}, true}, false},
 		{"no sigs, account with pub, simulate on", args{acc2, StdSignature{}, true}, false},
-		{"pubkey doesn't match addr, simulate off", args{acc1, StdSignature{PubKey: priv2.PubKey()}, false}, true},
-		{"pubkey doesn't match addr, simulate on", args{acc1, StdSignature{PubKey: priv2.PubKey()}, true}, false},
+		{"pubkey doesn't match addr, simulate off", args{acc1, StdSignature{AccPubKey: sdk.AccPubKeyFromCryptoPubKey(priv2.PubKey())}, false}, true},
+		{"pubkey doesn't match addr, simulate on", args{acc1, StdSignature{AccPubKey: sdk.AccPubKeyFromCryptoPubKey(priv2.PubKey())}, true}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -66,9 +66,9 @@ func newCoins() sdk.Coins {
 	}
 }
 
-func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
+func keyPubAddr() (crypto.PrivKey, sdk.AccPubKey, sdk.AccAddress) {
 	key := ed25519.GenPrivKey()
-	pub := key.PubKey()
+	pub := sdk.AccPubKeyFromCryptoPubKey(key.PubKey())
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr
 }
@@ -83,7 +83,7 @@ func newTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, accNums 
 			panic(err)
 		}
 
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
+		sigs[i] = StdSignature{AccPubKey: sdk.AccPubKeyFromCryptoPubKey(priv.PubKey()), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, "")
@@ -100,7 +100,7 @@ func newTestTxWithMemo(ctx sdk.Context, msgs []sdk.Msg, privs []crypto.PrivKey, 
 			panic(err)
 		}
 
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
+		sigs[i] = StdSignature{AccPubKey: sdk.AccPubKeyFromCryptoPubKey(priv.PubKey()), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, memo)
@@ -115,7 +115,7 @@ func newTestTxWithSignBytes(msgs []sdk.Msg, privs []crypto.PrivKey, accNums []ui
 			panic(err)
 		}
 
-		sigs[i] = StdSignature{PubKey: priv.PubKey(), Signature: sig}
+		sigs[i] = StdSignature{AccPubKey: sdk.AccPubKeyFromCryptoPubKey(priv.PubKey()), Signature: sig}
 	}
 
 	tx := NewStdTx(msgs, fee, sigs, memo)

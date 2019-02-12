@@ -106,10 +106,11 @@ func runPubKeyCmd(cmd *cobra.Command, args []string) error {
 		pubkeyBytes, err2 = base64.StdEncoding.DecodeString(pubkeyString)
 		if err2 != nil {
 			var err3 error
-			pubKeyI, err3 = sdk.GetAccPubKeyBech32(pubkeyString)
+			pubKeyAcc, err3 := sdk.AccPubKeyFromBech32(pubkeyString)
+			pubKeyI = pubKeyAcc.CryptoPubKey()
 			if err3 != nil {
 				var err4 error
-				pubKeyI, err4 = sdk.GetValPubKeyBech32(pubkeyString)
+				pubKeyVal, err4 := sdk.ValPubKeyFromBech32(pubkeyString)
 
 				if err4 != nil {
 					return fmt.Errorf(`Expected hex, base64, or bech32. Got errors:
@@ -120,6 +121,8 @@ func runPubKeyCmd(cmd *cobra.Command, args []string) error {
 			`, err, err2, err3, err4)
 
 				}
+
+				pubKeyI = pubKeyVal.CryptoPubKey()
 			}
 
 		}
@@ -138,25 +141,16 @@ func runPubKeyCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	accPub, err := sdk.Bech32ifyAccPub(pubKey)
-	if err != nil {
-		return err
-	}
-	valPub, err := sdk.Bech32ifyValPub(pubKey)
-	if err != nil {
-		return err
-	}
+	accPub := sdk.AccPubKeyFromCryptoPubKey(pubKey)
+	valPub := sdk.ValPubKeyFromCryptoPubKey(pubKey)
+	consPub := sdk.ConsPubKeyFromCryptoPubKey(pubKey)
 
-	consenusPub, err := sdk.Bech32ifyConsPub(pubKey)
-	if err != nil {
-		return err
-	}
 	fmt.Println("Address:", pubKey.Address())
 	fmt.Printf("Hex: %X\n", pubkeyBytes)
 	fmt.Println("JSON (base64):", string(pubKeyJSONBytes))
-	fmt.Println("Bech32 Acc:", accPub)
-	fmt.Println("Bech32 Validator Operator:", valPub)
-	fmt.Println("Bech32 Validator Consensus:", consenusPub)
+	fmt.Println("Bech32 Acc:", accPub.String())
+	fmt.Println("Bech32 Validator Operator:", valPub.String())
+	fmt.Println("Bech32 Validator Consensus:", consPub.String())
 	return nil
 }
 

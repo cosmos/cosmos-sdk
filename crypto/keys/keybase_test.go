@@ -77,7 +77,7 @@ func TestCreateLedger(t *testing.T) {
 	} else {
 		// The mock is available, check that the address is correct
 		pubKey := ledger.GetPubKey()
-		addr, err := sdk.Bech32ifyAccPub(pubKey)
+		addr := sdk.AccPubKeyFromCryptoPubKey(pubKey).String()
 		assert.NoError(t, err)
 		assert.Equal(t, "cosmospub1addwnpepqfsdqjr68h7wjg5wacksmqaypasnra232fkgu5sxdlnlu8j22ztxvlqvd65", addr)
 	}

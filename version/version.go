@@ -18,7 +18,7 @@ type versionInfo struct {
 	CosmosSDK     string `json:"cosmos_sdk"`
 	GitCommit     string `json:"commit"`
 	VendorDirHash string `json:"vendor_hash"`
-	BuildTags     string `json:"tags"`
+	BuildTags     string `json:"build_tags"`
 	GoVersion     string `json:"go"`
 }
 

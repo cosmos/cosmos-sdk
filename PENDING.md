@@ -36,7 +36,7 @@ IMPROVEMENTS
 * SDK
 
 * Tendermint
-
+  * [\#3618] Upgrade to Tendermint 0.30.03
 
 BUG FIXES
 
